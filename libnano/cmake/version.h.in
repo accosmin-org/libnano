@@ -1,0 +1,10 @@
+#pragma once
+
+namespace nano
+{
+    constexpr int major_version = @PROJECT_VERSION_MAJOR@;
+    constexpr int minor_version = @PROJECT_VERSION_MINOR@;
+    constexpr int patch_version = @PROJECT_VERSION_PATCH@;
+
+    constexpr const char* git_commit_hash = "@PROJECT_GIT_COMMIT_HASH@";
+}

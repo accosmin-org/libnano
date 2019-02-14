@@ -37,11 +37,11 @@ highlight ColorColumn ctermbg=darkgray
 " Text search
 highlight Search cterm=NONE ctermfg=NONE ctermbg=darkgray
 
-set path+=libnan
-set path+=libnan/include/nan
-set path+=libnan/src
-set path+=libnan/app
-set path+=libnan/test
+set path+=libnano
+set path+=libnano/include/nano
+set path+=libnano/src
+set path+=libnano/app
+set path+=libnano/test
 set path+=example
 
 " Trim trailing whitespaces when saving
