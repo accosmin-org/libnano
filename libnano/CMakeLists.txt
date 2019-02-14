@@ -3,6 +3,8 @@ project(libnano VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
+
 ##############################################################################
 # setup versioning: library version & git hash commit
 
@@ -16,6 +18,7 @@ configure_file(
 
 ##############################################################################
 # setup library
+
 add_library(nano
     src/arch.cpp)
 
@@ -26,17 +29,9 @@ target_include_directories(nano
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_compile_options(nano
-    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Werror -pedantic>
-    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Werror -pedantic>
-    )
-
-target_compile_features(nano
-    PUBLIC cxx_std_14
-    PRIVATE cxx_std_14)
+configure(nano)
 
 ##############################################################################
 # setup command line utilities
@@ -44,10 +39,12 @@ target_compile_features(nano
 
 ##############################################################################
 # setup unit tests
-# todo
+
+add_subdirectory(test)
 
 ##############################################################################
 # setup installation
+
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
 
@@ -55,8 +52,7 @@ install(TARGETS nano
     EXPORT nano-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
 
@@ -67,31 +63,29 @@ install(DIRECTORY include/
 install(EXPORT nano-targets
     FILE NANOTargets.cmake
     NAMESPACE NANO::
-    DESTINATION ${INSTALL_CONFIGDIR}
-)
+    DESTINATION ${INSTALL_CONFIGDIR})
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
+    COMPATIBILITY AnyNewerVersion)
 
 configure_package_config_file(
     ${CMAKE_CURRENT_LIST_DIR}/cmake/NANOConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
-)
+    INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
-    DESTINATION ${INSTALL_CONFIGDIR}
-)
+    DESTINATION ${INSTALL_CONFIGDIR})
 
 export(EXPORT nano-targets
     FILE ${CMAKE_CURRENT_BINARY_DIR}/NANOTargets.cmake
     NAMESPACE NANO::)
+
+##############################################################################
 
 message(STATUS "-----------------------------------------------------------------------------" "")
 message(STATUS "SYSTEM:                        " "${CMAKE_SYSTEM_NAME}")
