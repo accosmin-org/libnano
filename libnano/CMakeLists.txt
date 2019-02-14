@@ -31,7 +31,7 @@ target_include_directories(nano
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-configure(nano)
+target_compile_configure(nano)
 
 ##############################################################################
 # setup command line utilities

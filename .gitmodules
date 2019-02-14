@@ -1,0 +1,3 @@
+[submodule "deps/utest"]
+	path = deps/utest
+	url = https://github.com/accosmin/utest

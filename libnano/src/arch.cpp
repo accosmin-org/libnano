@@ -1,4 +1,4 @@
-#include <libnan/arch.h>
+#include <nano/arch.h>
 
 #if defined(__APPLE__)
     #include <sys/sysctl.h>
