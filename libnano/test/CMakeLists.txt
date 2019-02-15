@@ -1,6 +1,3 @@
-include(CTest)
-enable_testing()
-
 make_test(test_core_string NANO::nano)
 make_test(test_core_stats NANO::nano)
 make_test(test_core_chrono NANO::nano)

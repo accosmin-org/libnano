@@ -1,7 +1,10 @@
 get_filename_component(NANO_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 
-list(APPEND CMAKE_MODULE_PATH ${NANO_CMAKE_DIR})
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+if(NOT WIN32)
+    find_package(Threads REQUIRED)
+endif()
 
 if(NOT TARGET NANO::NANO)
     include("${NANO_CMAKE_DIR}/NANOTargets.cmake")

@@ -17,6 +17,14 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/include/nano/version.h")
 
 ##############################################################################
+# setup dependencies
+
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+if(NOT WIN32)
+    find_package(Threads REQUIRED)
+endif()
+
+##############################################################################
 # setup library
 
 add_library(nano
@@ -31,6 +39,11 @@ target_include_directories(nano
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+if(NOT WIN32)
+    target_link_libraries(nano
+        PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
 target_compile_configure(nano)
 
 ##############################################################################
@@ -39,6 +52,9 @@ target_compile_configure(nano)
 
 ##############################################################################
 # setup unit tests
+
+include(CTest)
+enable_testing()
 
 add_subdirectory(test)
 
