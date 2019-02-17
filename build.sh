@@ -1,8 +1,10 @@
 #!/bin/bash
 
 basedir=$(pwd)
-
 installdir=${basedir}/install
+
+export CXXFLAGS="${CXXFLAGS} -Wshadow"
+export PATH="${PATH}:${installdir}"
 
 # build and test library
 cd ${basedir}
@@ -15,7 +17,6 @@ ninja install || exit 1
 
 # build examples
 cd ${basedir}
-PATH=${PATH}:${installdir}
 cmake -GNinja -Hexample -Bbuild/example -DCMAKE_BUILD_TYPE=Debug || exit 1
 #cmake --build build/example || exit 1
 cd build/example
