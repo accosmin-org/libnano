@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(libnano VERSION 1.0.0 LANGUAGES CXX)
 
+##################################################################################################
+# setup project
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
-
-##############################################################################
-# setup versioning: library version & git hash commit
 
 exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
     ARGS "rev-parse HEAD"
@@ -16,7 +15,7 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/nano/version.h")
 
-##############################################################################
+##################################################################################################
 # setup dependencies
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -24,7 +23,7 @@ if(NOT WIN32)
     find_package(Threads REQUIRED)
 endif()
 
-##############################################################################
+##################################################################################################
 # setup library
 
 add_library(nano
@@ -47,11 +46,11 @@ endif()
 
 target_compile_configure(nano)
 
-##############################################################################
+##################################################################################################
 # setup command line utilities
 # todo
 
-##############################################################################
+##################################################################################################
 # setup unit tests
 
 include(CTest)
@@ -59,7 +58,7 @@ enable_testing()
 
 add_subdirectory(test)
 
-##############################################################################
+##################################################################################################
 # setup installation
 
 include(GNUInstallDirs)
@@ -102,7 +101,7 @@ export(EXPORT nano-targets
     FILE ${CMAKE_CURRENT_BINARY_DIR}/NANOTargets.cmake
     NAMESPACE NANO::)
 
-##############################################################################
+##################################################################################################
 
 message(STATUS "-----------------------------------------------------------------------------" "")
 message(STATUS "SYSTEM:                        " "${CMAKE_SYSTEM_NAME}")
@@ -119,3 +118,5 @@ message(STATUS "CMAKE_EXE_LINKER_FLAGS:        " "${CMAKE_EXE_LINKER_FLAGS}")
 message(STATUS "------------------------------------------------------------------------------" "")
 message(STATUS "BUILD TYPE:                    " "${CMAKE_BUILD_TYPE}")
 message(STATUS "------------------------------------------------------------------------------" "")
+
+##################################################################################################
