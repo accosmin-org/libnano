@@ -96,7 +96,7 @@ namespace nano
         ///
         template <typename... tsizes>
         explicit tensor_t(const tsizes... dims) :
-            m_dims({dims...}),
+            m_dims({{dims...}}),
             m_storage(this->size())
         {
             static_assert(tstorage::resizable, "tensor not resizable");

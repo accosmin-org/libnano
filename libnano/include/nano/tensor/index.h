@@ -28,7 +28,7 @@ namespace nano
     template <std::size_t trank>
     auto cat_dims(const tensor_size_t size, const tensor_dims_t<trank>& dims)
     {
-        tensor_dims_t<trank + 1> xdims{size};
+        tensor_dims_t<trank + 1> xdims{{size}};
         std::get<0>(xdims) = size;
         std::copy(dims.cbegin(), dims.cend(), xdims.begin() + 1);
         return xdims;
