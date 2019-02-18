@@ -263,7 +263,7 @@ matrix:
       env: TEST="memcheck (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build', 'memcheck']
+          packages: ['gcc-7', 'g++-7', 'ninja-build', 'valgrind']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
