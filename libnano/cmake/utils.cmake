@@ -1,9 +1,9 @@
 # function to setup compilation flags for various targets
 function(target_compile_configure target)
     target_compile_options(${target}
-        PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -Werror -pedantic>
-        PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -Werror -pedantic>
-        PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -Werror -pedantic>)
+        PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic>
+        PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>
+        PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -pedantic>)
 
     target_compile_features(${target}
         PUBLIC cxx_std_14

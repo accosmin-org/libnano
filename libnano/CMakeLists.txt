@@ -41,6 +41,7 @@ target_include_directories(nano
 
 if(NOT WIN32)
     target_link_libraries(nano
+        PUBLIC ${CMAKE_THREAD_LIBS_INIT}
         PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
@@ -117,10 +118,4 @@ message(STATUS "CXX MINSIZEREL FLAGS:          " "${CMAKE_CXX_FLAGS_MINSIZEREL}"
 message(STATUS "CMAKE_EXE_LINKER_FLAGS:        " "${CMAKE_EXE_LINKER_FLAGS}")
 message(STATUS "------------------------------------------------------------------------------" "")
 message(STATUS "BUILD TYPE:                    " "${CMAKE_BUILD_TYPE}")
-message(STATUS "------------------------------------------------------------------------------" "")
-message(STATUS "ASAN                           " "${CMAKE_WITH_ASAN}")
-message(STATUS "MSAN                           " "${CMAKE_WITH_MSAN}")
-message(STATUS "TSAN                           " "${CMAKE_WITH_TSAN}")
-message(STATUS "TESTS                          " "${CMAKE_WITH_TESTS}")
-message(STATUS "CCACHE                         " "${CMAKE_WITH_CCACHE}")
 message(STATUS "------------------------------------------------------------------------------" "")
