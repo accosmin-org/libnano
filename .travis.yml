@@ -10,8 +10,6 @@ before_script:
       brew install cmake ninja
       export PATH="/usr/local/opt/ccache/libexec:$PATH"
     fi
-  - mkdir build
-  - cd build
 
 matrix:
   include:
