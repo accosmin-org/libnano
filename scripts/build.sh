@@ -268,27 +268,27 @@ while [ "$1" != "" ]; do
         --suffix)           shift
                             suffix $1
                             ;;
-        --config)           config
+        --config)           config || exit 1
                             ;;
-        --build)            build
+        --build)            build || exit 1
                             ;;
-        --tests)            tests
+        --tests)            tests || exit 1
                             ;;
-        --install)          install
+        --install)          install || exit 1
                             ;;
-        --cppcheck)         cppcheck
+        --cppcheck)         cppcheck || exit 1
                             ;;
-        --codecov)          codecov
+        --codecov)          codecov || exit 1
                             ;;
-        --memcheck)         memcheck
+        --memcheck)         memcheck || exit 1
                             ;;
         --clang-tidy-check) shift
-                            clang_tidy $1
+                            clang_tidy $1 || exit 1
                             ;;
         --clang-tidy-suffix) shift
                             clang_tidy_suffix=$1
                             ;;
-        --build-example)    build_example
+        --build-example)    build_example || exit 1
                             ;;
 		*)                  echo "unrecognized option $1"
 					        echo
