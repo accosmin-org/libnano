@@ -82,15 +82,15 @@ function cppcheck {
     version=1.87
     rm -rf cppcheck-${version}
 
-    wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz
-    tar -xvf ${version}.tar.gz
+    wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
+    tar -xvf ${version}.tar.gz || return 1
 
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
     cd cppcheck-${version} && mkdir build && cd build
-    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck || return 1
     ninja > build.log 2>&1
-    ninja install
+    ninja install || return 1
     cd ../../
     export CXXFLAGS="${OLD_CXXFLAGS}"
 
@@ -105,7 +105,7 @@ function cppcheck {
         --enable=all --quiet --std=c++14 --error-exitcode=0 --inline-suppr --force \
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
-        --suppress=unmatchedSuppression
+        --suppress=unmatchedSuppression || return 1
 }
 
 function codecov {
