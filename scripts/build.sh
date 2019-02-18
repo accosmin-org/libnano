@@ -85,11 +85,14 @@ function cppcheck {
     wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz
     tar -xvf ${version}.tar.gz
 
+    OLD_CXXFLAGS=${CXXFLAGS}
+    export CXXFLAGS=""
     cd cppcheck-${version} && mkdir build && cd build
     cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck
     ninja > build.log 2>&1
     ninja install
     cd ../../
+    export CXXFLAGS="${OLD_CXXFLAGS}"
 
     /tmp/cppcheck/bin/cppcheck --version
 
