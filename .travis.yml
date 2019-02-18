@@ -7,8 +7,15 @@ before_script:
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       brew update
-      brew install cmake ninja
+      brew install cmake ninja eigen
       export PATH="/usr/local/opt/ccache/libexec:$PATH"
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      sudo add-apt-repository ppa:nschloe/eigen-backports -y
+      sudo apt-get update -qq
+      sudo apt-get install -y --allow-unauthenticated libeigen3-dev
+      export CCACHE_CPP2=true
     fi
 
 matrix:
