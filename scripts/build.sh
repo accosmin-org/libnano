@@ -109,10 +109,7 @@ function cppcheck {
 }
 
 function codecov {
-    cd ${libnanodir}
-
-    bash <(curl -s https://codecov.io/bash) -R .. -g "**/app/**" -g "**/test/**" || return 1
-    rm -f *#*
+    bash <(curl -s https://codecov.io/bash) -R ${basedir} || return 1
 }
 
 function memcheck {
