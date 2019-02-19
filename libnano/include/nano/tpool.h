@@ -29,7 +29,7 @@ namespace nano
         /// \brief enqueue a new task to execute
         ///
         template <typename tfunction>
-        future_t enqueue(tfunction&& f)
+        auto enqueue(tfunction&& f)
         {
             auto task = tpool_task_t(f);
             auto future = task.get_future();
@@ -103,7 +103,7 @@ namespace nano
     /// \brief RAII object to wait for a given set of futures (aka barrier).
     ///
     template <typename tfuture>
-    class tpool_section_t
+    class tpool_section_t : private std::vector<tfuture>
     {
     public:
         ///
@@ -112,9 +112,9 @@ namespace nano
         ~tpool_section_t()
         {
             // block until all futures are done
-            for (const auto& future : m_futures)
+            for (auto it = this->begin(); it != this->end(); ++ it)
             {
-                future.wait();
+                it->wait();
             }
         }
 
@@ -123,13 +123,8 @@ namespace nano
         ///
         void push_back(tfuture future)
         {
-            m_futures.emplace_back(std::move(future));
+            this->emplace_back(std::move(future));
         }
-
-    private:
-
-        // attributes
-        std::vector<tfuture>    m_futures;
     };
 
     ///
