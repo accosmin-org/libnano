@@ -25,9 +25,9 @@ namespace nano
         static constexpr bool owns_memory = true;
 
         tensor_vstorage_t() = default;
-        tensor_vstorage_t(tensor_vstorage_t&&) = default;
+        tensor_vstorage_t(tensor_vstorage_t&&) noexcept = default;
         tensor_vstorage_t(const tensor_vstorage_t&) = default;
-        tensor_vstorage_t& operator=(tensor_vstorage_t&&) = default;
+        tensor_vstorage_t& operator=(tensor_vstorage_t&&) noexcept = default;
         tensor_vstorage_t& operator=(const tensor_vstorage_t&) = default;
 
         explicit tensor_vstorage_t(const tstorage& data) : m_data(data) {}
@@ -72,10 +72,10 @@ namespace nano
         static constexpr bool owns_memory = false;
 
         tensor_pstorage_t() = default;
-        tensor_pstorage_t(tensor_pstorage_t&&) = default;
+        tensor_pstorage_t(tensor_pstorage_t&&) noexcept = default;
         tensor_pstorage_t(const tensor_pstorage_t&) = delete;
-        tensor_pstorage_t& operator=(tensor_pstorage_t&& other) { return copy(other); }
-        tensor_pstorage_t& operator=(const tensor_pstorage_t& other) { return copy(other); }
+        tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept { copy(other); return *this; }
+        tensor_pstorage_t& operator=(const tensor_pstorage_t& other) { copy(other); return *this; }
 
         tensor_pstorage_t(const tstorage& data, const tensor_size_t size) :
             m_data(data), m_size(size)
@@ -97,13 +97,15 @@ namespace nano
         template <typename tscalar2>
         tensor_pstorage_t& operator=(const tensor_vstorage_t<tscalar2>& other)
         {
-            return copy(other);
+            copy(other);
+            return *this;
         }
 
         template <typename tscalar2>
         tensor_pstorage_t& operator=(const tensor_pstorage_t<tscalar2>& other)
         {
-            return copy(other);
+            copy(other);
+            return *this;
         }
 
         auto data() { return m_data; }

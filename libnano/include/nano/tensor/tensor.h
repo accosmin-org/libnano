@@ -134,8 +134,8 @@ namespace nano
         tensor_t(const tensor_t&) = default;
         tensor_t& operator=(const tensor_t&) = default;
 
-        tensor_t(tensor_t&&) = default;
-        tensor_t& operator=(tensor_t&&) = default;
+        tensor_t(tensor_t&&) noexcept = default;
+        tensor_t& operator=(tensor_t&&) noexcept = default;
 
         ///
         /// \brief copy constructor from different types (e.g. const from non-const scalars)

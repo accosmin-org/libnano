@@ -12,11 +12,11 @@ namespace nano
     {
     public:
 
-        probe_t(const std::string& basename = std::string(),
-                const std::string& fullname = std::string(),
+        probe_t(std::string basename = std::string(),
+                std::string fullname = std::string(),
                 const int64_t flops = 1) :
-                m_basename(basename),
-                m_fullname(fullname),
+                m_basename(std::move(basename)),
+                m_fullname(std::move(fullname)),
                 m_flops(flops)
         {
         }
