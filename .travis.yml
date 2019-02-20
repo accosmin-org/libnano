@@ -12,9 +12,6 @@ before_script:
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      sudo add-apt-repository ppa:nschloe/eigen-backports -y
-      sudo apt-get update -qq
-      sudo apt-get install -y --allow-unauthenticated libeigen3-dev
       export CCACHE_CPP2=true
     fi
 
@@ -25,7 +22,7 @@ matrix:
       env: TEST="build (gcc-5)"
       addons:
         apt:
-          packages: ['gcc-5', 'g++-5', 'ninja-build']
+          packages: ['gcc-5', 'g++-5', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -37,7 +34,7 @@ matrix:
       env: TEST="build (gcc-6)"
       addons:
         apt:
-          packages: ['gcc-6', 'g++-6', 'ninja-build']
+          packages: ['gcc-6', 'g++-6', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -49,7 +46,7 @@ matrix:
       env: TEST="build (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -61,7 +58,7 @@ matrix:
       env: TEST="build (gcc-8)"
       addons:
         apt:
-          packages: ['gcc-8', 'g++-8', 'ninja-build']
+          packages: ['gcc-8', 'g++-8', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -73,7 +70,7 @@ matrix:
       env: TEST="build (clang-3.8)"
       addons:
         apt:
-          packages: ['clang-3.8', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-3.8', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-3.8
           update: true
@@ -85,7 +82,7 @@ matrix:
       env: TEST="build (clang-4.0)"
       addons:
         apt:
-          packages: ['clang-4.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-4.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-4.0
           update: true
@@ -97,7 +94,7 @@ matrix:
       env: TEST="build (clang-5.0)"
       addons:
         apt:
-          packages: ['clang-5.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-5.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-5.0
           update: true
@@ -109,7 +106,7 @@ matrix:
       env: TEST="build (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -124,7 +121,7 @@ matrix:
       env: TEST="ASAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -136,7 +133,7 @@ matrix:
       env: TEST="LSAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -148,7 +145,7 @@ matrix:
       env: TEST="USAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -160,7 +157,7 @@ matrix:
       env: TEST="TSAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -174,7 +171,7 @@ matrix:
       env: TEST="clang-tidy-misc (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -187,7 +184,7 @@ matrix:
       env: TEST="clang-tidy-bugprone (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -200,7 +197,7 @@ matrix:
       env: TEST="clang-tidy-modernize (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -213,7 +210,7 @@ matrix:
       env: TEST="clang-tidy-performance (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -226,7 +223,7 @@ matrix:
       env: TEST="clang-tidy-portability (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -239,7 +236,7 @@ matrix:
       env: TEST="clang-tidy-clang-analyzer (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
@@ -251,7 +248,7 @@ matrix:
       env: TEST="cppcheck"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -263,7 +260,7 @@ matrix:
       env: TEST="memcheck (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build', 'valgrind']
+          packages: ['gcc-7', 'g++-7', 'libeigen3-dev', 'ninja-build', 'valgrind']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
@@ -275,7 +272,7 @@ matrix:
       env: TEST="codecov (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'gcovr', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'gcovr', 'libeigen3-dev', 'ninja-build']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
