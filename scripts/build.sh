@@ -11,31 +11,26 @@ export CXXFLAGS="${CXXFLAGS} -Wshadow -Werror"
 
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
-    export LDFLAGS="${LDFLAGS} -fsanitize=address"
 }
 
 function lsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=leak -fno-omit-frame-pointer"
-    export LDFLAGS="${LDFLAGS} -fsanitize=leak"
 }
 
 function usan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined -fno-omit-frame-pointer"
-    export LDFLAGS="${LDFLAGS} -fsanitize=undefined"
 }
 
 function msan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer"
-    export LDFLAGS="${LDFLAGS} -fsanitize=memory"
 }
 
 function tsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer"
-    export LDFLAGS="${LDFLAGS} -fsanitize=thread"
 }
 
 function gold {
-    export CXXFLAGS="${CXXFLAGS} -fuse-gold"
+    export CXXFLAGS="${CXXFLAGS} -fuse-ld=gold"
 }
 
 function libcpp {
