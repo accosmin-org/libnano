@@ -7,7 +7,7 @@ before_script:
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       brew update
-      brew install cmake ninja eigen
+      brew install ninja eigen
       export PATH="/usr/local/opt/ccache/libexec:$PATH"
     fi
   - |
