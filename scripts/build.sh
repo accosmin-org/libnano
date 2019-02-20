@@ -34,6 +34,10 @@ function tsan {
     export LDFLAGS="${LDFLAGS} -fsanitize=thread"
 }
 
+function gold {
+    export CXXFLAGS="${CXXFLAGS} -fuse-gold"
+}
+
 function libcpp {
     export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
     export LDFLAGS="${LDFLAGS} -lc++abi"
@@ -234,6 +238,10 @@ options:
         setup compiler and linker flags to use the undefined behaviour sanitizer
     --tsan
         setup compiler and linker flags to use the thread sanitizer
+    --msan
+        setup compiler and linker flags to use the memory sanitizer
+    --gold
+        setup compiler and linker flags to use the gold linker
     --libcpp
         setup compiler and linker flags to use libc++
     --coverage
@@ -281,6 +289,8 @@ while [ "$1" != "" ]; do
         --tsan)             tsan
                             ;;
         --msan)             msan
+                            ;;
+        --gold)             gold
                             ;;
         --libcpp)           libcpp
                             ;;
