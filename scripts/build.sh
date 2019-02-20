@@ -24,6 +24,11 @@ function usan {
     export LDFLAGS="${LDFLAGS} -fsanitize=undefined"
 }
 
+function msan {
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer"
+    export LDFLAGS="${LDFLAGS} -fsanitize=memory"
+}
+
 function tsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer"
     export LDFLAGS="${LDFLAGS} -fsanitize=thread"
@@ -137,18 +142,18 @@ function memcheck {
     utests=$(ls test/test_* | grep -v .log)
     for utest in ${utests}
     do
-            printf "Running %s ...\n" ${utest}
-            log=${utest/test\//}.log
-            /tmp/valgrind/bin/valgrind --tool=memcheck \
-                --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
-                --log-file=${log} ${utest} || return 1
+        printf "Running %s ...\n" ${utest}
+        log=${utest/test\//}.log
+        /tmp/valgrind/bin/valgrind --tool=memcheck \
+            --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
+            --log-file=${log} ${utest} || return 1
 
-            if [[ $? -gt 0 ]]
-            then
-                    cat ${log}
-                    returncode=1
-            fi
-            printf "\n"
+        if [[ $? -gt 0 ]]
+        then
+            cat ${log}
+            returncode=1
+        fi
+        printf "\n"
     done
 
     return ${returncode}
@@ -156,18 +161,18 @@ function memcheck {
 
 function spinner()
 {
-        local pid=$!
-        local delay=0.75
-        local spinstr='|/-\'
-        while [ "$(ps a | awk '{print $1}' | grep $pid)" ]
-        do
-                local temp=${spinstr#?}
-                printf " [%c] " "$spinstr"
-                local spinstr=$temp${spinstr%"$temp"}
-                sleep $delay
-                printf "\r"
-        done
-        printf "      \r"
+    local pid=$!
+    local delay=0.75
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]
+    do
+        local temp=${spinstr#?}
+        printf " [%c] " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+            printf "\r"
+    done
+    printf "      \r"
 }
 
 function clang_tidy {
@@ -274,6 +279,8 @@ while [ "$1" != "" ]; do
         --usan)             usan
                             ;;
         --tsan)             tsan
+                            ;;
+        --msan)             msan
                             ;;
         --libcpp)           libcpp
                             ;;
