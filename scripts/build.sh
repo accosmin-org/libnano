@@ -83,18 +83,18 @@ function cppcheck {
     rm -rf cppcheck-${version}
 
     wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
-    tar -xvf ${version}.tar.gz || return 1
+    tar -xvf ${version}.tar.gz > /dev/null || return 1
 
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
     cd cppcheck-${version} && mkdir build && cd build
-    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck || return 1
-    ninja > build.log 2>&1
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log || return 1
+    ninja > build.log || return 1
     ninja install || return 1
     cd ../../
     export CXXFLAGS="${OLD_CXXFLAGS}"
 
-    /tmp/cppcheck/bin/cppcheck --version
+    /tmp/cppcheck/bin/cppcheck --version || return 1
 
     # NB: the warnings are not fatal (exitcode=0) as they are usually false alarms!
     #--suppress=shadowFunction
@@ -115,19 +115,34 @@ function codecov {
 function memcheck {
     cd ${libnanodir}
 
+    version=3.14.0
+    wget -N http://www.valgrind.org/downloads/valgrind-${version}.tar.bz2 || return 1
+    tar -xvf valgrind-${version}.tar.bz2 > /dev/null || return 1
+
+    OLD_CXXFLAGS=${CXXFLAGS}
+    export CXXFLAGS=""
+    cd valgrind-${version}
+    ./autogen.sh > autogen.log || return 1
+    ./configure --prefix=/tmp/valgrind > config.log || return 1
+    make -j > build.log || return 1
+    make install > install.log || return 1
+    cd ..
+    export CXXFLAGS="${OLD_CXXFLAGS}"
+
     returncode=0
-    valgrind --version
+    /tmp/valgrind/bin/valgrind --version || return 1
 
     # NB: not using ctest directly because I cannot pass options to memcheck!
     #ctest --output-on-failure -T memcheck
 
-    utests=$(ls test/test_*)
+    utests=$(ls test/test_* | grep -v .log)
     for utest in ${utests}
     do
             printf "Running %s ...\n" ${utest}
-            log=${utest/tests\//}.log
-            valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
-                    --log-file=${log} ${utest}
+            log=${utest/test\//}.log
+            /tmp/valgrind/bin/valgrind --tool=memcheck \
+                --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
+                --log-file=${log} ${utest} || return 1
 
             if [[ $? -gt 0 ]]
             then
