@@ -118,7 +118,7 @@ function codecov {
 function coveralls {
     cd ${basedir}
 
-    coveralls --exclude build --exclude install --gcov-options '\-lp'
+    coveralls --exclude lib --exclude tests --gcov-options '\-lp'
 }
 
 function memcheck {
