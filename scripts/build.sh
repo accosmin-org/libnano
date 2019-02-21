@@ -40,7 +40,7 @@ function libcpp {
 
 function coverage {
     export CXXFLAGS="${CXXFLAGS} -fno-inline -fprofile-arcs -ftest-coverage"
-    #export LDFLAGS="${LDFLAGS} --coverage"
+    export LDFLAGS="${LDFLAGS} --coverage"
 }
 
 function suffix {
@@ -112,13 +112,13 @@ function cppcheck {
 }
 
 function codecov {
-    bash <(curl -s https://codecov.io/bash) -R ${basedir} -d -K || return 1
+    bash <(curl -s https://codecov.io/bash) -R ${basedir} || return 1
 }
 
 function coveralls {
     cd ${basedir}
 
-    coveralls --exclude lib --exclude tests --gcov-options '\-lp'
+    coveralls --root ${basedir} --gcov-options '\-lp'
 }
 
 function memcheck {
