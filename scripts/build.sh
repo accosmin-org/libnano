@@ -40,7 +40,7 @@ function libcpp {
 
 function coverage {
     export CXXFLAGS="${CXXFLAGS} -fno-inline -fprofile-arcs -ftest-coverage"
-    export LDFLAGS="${LDFLAGS} --coverage"
+    #export LDFLAGS="${LDFLAGS} --coverage"
 }
 
 function suffix {
@@ -112,7 +112,13 @@ function cppcheck {
 }
 
 function codecov {
-    bash <(curl -s https://codecov.io/bash) -R ${basedir} || return 1
+    bash <(curl -s https://codecov.io/bash) -R ${basedir} -d -K || return 1
+}
+
+function coveralls {
+    cd ${basedir}
+
+    coveralls --exclude build --exclude install --gcov-options '\-lp'
 }
 
 function memcheck {
@@ -255,6 +261,8 @@ options:
         run cppcheck (static code analyzer)
     --codecov
         upload code coverage results to codecov.io
+    --coveralls
+        upload code coverage results to coveralls.io
     --memcheck
         run the unit tests through memcheck
     --clang-tidy-check <check>
@@ -305,6 +313,8 @@ while [ "$1" != "" ]; do
         --cppcheck)         cppcheck || exit 1
                             ;;
         --codecov)          codecov || exit 1
+                            ;;
+        --coveralls)        coveralls || exit 1
                             ;;
         --memcheck)         memcheck || exit 1
                             ;;

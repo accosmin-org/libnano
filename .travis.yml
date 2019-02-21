@@ -284,6 +284,19 @@ matrix:
         - sudo -H pip install coverage
         - CXX=g++-7 bash scripts/build.sh --coverage --config --build --tests --codecov
 
+    - os: linux
+      compiler: gcc
+      env: TEST="coveralls (gcc-7)"
+      addons:
+        apt:
+          packages: ['gcc-7', 'g++-7', 'gcovr', 'ninja-build']
+          sources: &sources
+            - ubuntu-toolchain-r-test
+          update: true
+      script:
+        - pip install --user cpp-coveralls
+        - CXX=g++-7 bash scripts/build.sh --coverage --config --build --tests --coveralls
+
     #- os: osx
     #  compiler: clang
     #  osx_image: xcode7.3
