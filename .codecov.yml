@@ -8,5 +8,5 @@ comment:
   behavior: default
 
 ignore:
-  - "**/app/**"
-  - "**/test/**"
+  - "**/app/**/*"
+  - "**/test/**/*"
