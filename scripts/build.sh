@@ -114,7 +114,7 @@ function cppcheck {
 function codecov {
     cd ${basedir}
 
-    bash <(curl -s https://codecov.io/bash) -R ${basedir} -g "**/app/**" -g "**/test/**" || return 1
+    bash <(curl -s https://codecov.io/bash) -R ${basedir} || return 1
 }
 
 function coveralls {
