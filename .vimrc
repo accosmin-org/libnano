@@ -38,7 +38,7 @@ highlight ColorColumn ctermbg=darkgray
 highlight Search cterm=NONE ctermfg=NONE ctermbg=darkgray
 
 set path+=libnano
-set path+=libnano/include/nano
+set path+=libnano/include
 set path+=libnano/src
 set path+=libnano/app
 set path+=libnano/test

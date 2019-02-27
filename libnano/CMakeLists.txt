@@ -5,6 +5,8 @@ project(libnano VERSION 1.0.0 LANGUAGES CXX)
 # setup project
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include(GNUInstallDirs)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 
 exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
@@ -14,6 +16,13 @@ exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/nano/version.h")
+
+set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY")
+set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_DONT_PARALLELIZE -DEIGEN_DEFAULT_TO_ROW_MAJOR")
+
+set(CMAKE_CXX_FLAGS_RELEASE             "${CMAKE_CXX_FLAGS_RELEASE} -DEIGEN_NO_DEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO      "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DEIGEN_NO_DEBUG")
+set(CMAKE_CXX_FLAGS_MINSIZEREL          "${CMAKE_CXX_FLAGS_MINSIZEREL} -DEIGEN_NO_DEBUG")
 
 ##################################################################################################
 # setup dependencies
@@ -27,9 +36,13 @@ endif()
 # setup library
 
 add_library(nano
-    src/arch.cpp)
+    src/arch.cpp
+    src/table.cpp
+    src/logger.cpp
+    src/cmdline.cpp)
 
 add_library(NANO::nano ALIAS nano)
+target_compile_configure(nano)
 
 target_include_directories(nano
     PUBLIC
@@ -44,24 +57,21 @@ if(NOT WIN32)
         PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-target_compile_configure(nano)
-
 ##################################################################################################
 # setup command line utilities
-# todo
+
+add_subdirectory(app)
 
 ##################################################################################################
 # setup unit tests
 
 include(CTest)
 enable_testing()
-
 add_subdirectory(test)
 
 ##################################################################################################
 # setup installation
 
-include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
 
 install(TARGETS nano

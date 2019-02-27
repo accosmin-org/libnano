@@ -5,6 +5,7 @@ installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_tidy_suffix=""
+build_type="Debug"
 
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Wshadow -Werror"
@@ -33,6 +34,10 @@ function gold {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=gold"
 }
 
+function native {
+    export CXXFLAGS="${CXXFLAGS} -mtune=native -march=native"
+}
+
 function libcpp {
     export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
     export LDFLAGS="${LDFLAGS} -lc++abi"
@@ -53,8 +58,9 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake -GNinja -Hlibnano -B${libnanodir} -DCMAKE_BUILD_TYPE=Debug \
-        -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
+    cmake -GNinja -Hlibnano -B${libnanodir} -DCMAKE_BUILD_TYPE=${build_type} -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_INSTALL_RPATH=${installdir}/lib \
+        -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
 
 function build {
@@ -245,12 +251,16 @@ options:
         setup compiler and linker flags to use the memory sanitizer
     --gold
         setup compiler and linker flags to use the gold linker
+    --native
+        setup compiler flags to optimize for the native platform
     --libcpp
         setup compiler and linker flags to use libc++
     --coverage
         setup compiler and linker flags to setup code coverage
     --suffix <string>
         suffix for the build and installation directories
+    --build-type [Debug,Release,RelWithDebInfo,MinSizeRel]
+        build type as defined by CMake
     --config
         generate build using CMake
     --build
@@ -267,7 +277,7 @@ options:
         upload code coverage results to coveralls.io
     --memcheck
         run the unit tests through memcheck
-    --clang-tidy-check <check>
+    --clang-tidy-check <check name>
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
         suffix for the clang-tidy binaries (e.g. -6.0)
@@ -297,12 +307,17 @@ while [ "$1" != "" ]; do
                             ;;
         --gold)             gold
                             ;;
+        --native)           native
+                            ;;
         --libcpp)           libcpp
                             ;;
         --coverage)         coverage
                             ;;
         --suffix)           shift
                             suffix $1
+                            ;;
+        --build-type)       shift
+                            build_type=$1
                             ;;
         --config)           config || exit 1
                             ;;
