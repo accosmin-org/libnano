@@ -48,7 +48,8 @@ target_compile_configure(nano)
 target_include_directories(nano
     PUBLIC
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/../deps/json/include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -84,6 +85,10 @@ install(TARGETS nano
 set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
 
 install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/../deps/json/include/nlohmann
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

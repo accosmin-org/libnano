@@ -1,3 +1,4 @@
+make_test(test_core_json NANO::nano)
 make_test(test_core_stats NANO::nano)
 make_test(test_core_tpool NANO::nano)
 make_test(test_core_table NANO::nano)

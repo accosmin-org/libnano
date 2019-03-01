@@ -1,3 +1,6 @@
 [submodule "deps/utest"]
 	path = deps/utest
 	url = https://github.com/accosmin/utest
+[submodule "deps/json"]
+	path = deps/json
+	url = https://github.com/nlohmann/json.git
