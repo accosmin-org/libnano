@@ -10,3 +10,5 @@ make_test(test_core_cmdline NANO::nano)
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_tensor NANO::nano)
 make_test(test_tensor_integral NANO::nano)
+
+make_test(test_function NANO::nano)

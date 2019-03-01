@@ -39,7 +39,8 @@ add_library(nano
     src/arch.cpp
     src/table.cpp
     src/logger.cpp
-    src/cmdline.cpp)
+    src/cmdline.cpp
+    src/function.cpp)
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)
