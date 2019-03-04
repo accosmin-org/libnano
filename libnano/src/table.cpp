@@ -113,14 +113,14 @@ row_t& table_t::delim()
     return *m_rows.rbegin();
 }
 
-std::size_t table_t::cols() const
+size_t table_t::cols() const
 {
     const auto op = [] (const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
     const auto it = std::max_element(m_rows.begin(), m_rows.end(), op);
     return (it == m_rows.end()) ? size_t(0) : it->cols();
 }
 
-std::size_t table_t::rows() const
+size_t table_t::rows() const
 {
     return m_rows.size();
 }

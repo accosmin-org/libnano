@@ -13,7 +13,7 @@ namespace nano
     ///
     /// \brief dimensions of a multi-dimensional tensor.
     ///
-    template <std::size_t trank>
+    template <size_t trank>
     using tensor_dims_t = std::array<tensor_size_t, trank>;
 
     ///
@@ -25,7 +25,7 @@ namespace nano
         return tensor_dims_t<sizeof...(sizes)>({{sizes...}});
     }
 
-    template <std::size_t trank>
+    template <size_t trank>
     auto cat_dims(const tensor_size_t size, const tensor_dims_t<trank>& dims)
     {
         tensor_dims_t<trank + 1> xdims{{size}};
@@ -37,7 +37,7 @@ namespace nano
     namespace detail
     {
         // todo: simplify this part with C++17 using "if constexpr"
-        template <std::size_t idim, std::size_t trank>
+        template <size_t idim, size_t trank>
         struct product_t
         {
             static tensor_size_t get(const tensor_dims_t<trank>& dims)
@@ -46,7 +46,7 @@ namespace nano
             }
         };
 
-        template <std::size_t trank>
+        template <size_t trank>
         struct product_t<trank, trank>
         {
             static tensor_size_t get(const tensor_dims_t<trank>&)
@@ -55,19 +55,19 @@ namespace nano
             }
         };
 
-        template <std::size_t idim, std::size_t trank>
+        template <size_t idim, size_t trank>
         tensor_size_t product(const tensor_dims_t<trank>& dims)
         {
             return product_t<idim, trank>::get(dims);
         }
 
-        template <std::size_t idim, std::size_t trank>
+        template <size_t idim, size_t trank>
         tensor_size_t get_index(const tensor_dims_t<trank>&, const tensor_size_t index)
         {
             return index;
         }
 
-        template <std::size_t idim, std::size_t trank, typename... tindices>
+        template <size_t idim, size_t trank, typename... tindices>
         tensor_size_t get_index(const tensor_dims_t<trank>& dims,
             const tensor_size_t index, const tindices... indices)
         {
@@ -75,13 +75,13 @@ namespace nano
             return index * product<idim + 1>(dims) + get_index<idim + 1>(dims, indices...);
         }
 
-        template <std::size_t idim, std::size_t trank>
+        template <size_t idim, size_t trank>
         tensor_size_t get_index0(const tensor_dims_t<trank>&)
         {
                 return 0;
         }
 
-        template <std::size_t idim, std::size_t trank, typename... tindices>
+        template <size_t idim, size_t trank, typename... tindices>
         tensor_size_t get_index0(const tensor_dims_t<trank>& dims,
             const tensor_size_t index, const tindices... indices)
         {
@@ -89,10 +89,10 @@ namespace nano
             return index * product<idim + 1>(dims) + get_index0<idim + 1>(dims, indices...);
         }
 
-        template <std::size_t idim, std::size_t trank>
+        template <size_t idim, size_t trank>
         struct dims_t
         {
-            template <std::size_t trankx>
+            template <size_t trankx>
             static void set(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
             {
                 static_assert(idim >= trank - trankx && idim < trank, "");
@@ -101,16 +101,16 @@ namespace nano
             }
         };
 
-        template <std::size_t trank>
+        template <size_t trank>
         struct dims_t<trank, trank>
         {
-            template <std::size_t trankx>
+            template <size_t trankx>
             static void set(const tensor_dims_t<trank>&, tensor_dims_t<trankx>&)
             {
             }
         };
 
-        template <std::size_t trank, std::size_t trankx>
+        template <size_t trank, size_t trankx>
         void get_dims0(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
         {
             dims_t<trank - trankx, trank>::set(dims, dimsx);
@@ -120,7 +120,7 @@ namespace nano
     ///
     /// \brief index a multi-dimensional tensor.
     ///
-    template <std::size_t trank, typename... tindices>
+    template <size_t trank, typename... tindices>
     tensor_size_t index(const tensor_dims_t<trank>& dims, const tindices... indices)
     {
         static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -131,7 +131,7 @@ namespace nano
     ///
     /// \brief index a multi-dimensional tensor (assuming the last dimensions that are ignored are zero).
     ///
-    template <std::size_t trank, typename... tindices>
+    template <size_t trank, typename... tindices>
     tensor_size_t index0(const tensor_dims_t<trank>& dims, const tindices... indices)
     {
         static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -142,7 +142,7 @@ namespace nano
     /// \brief gather the missing dimensions in a multi-dimensional tensor
     ///     (assuming the last dimensions that are ignored are zero).
     ///
-    template <std::size_t trank, typename... tindices, std::size_t trankx = trank - sizeof...(tindices)>
+    template <size_t trank, typename... tindices, size_t trankx = trank - sizeof...(tindices)>
     tensor_dims_t<trankx> dims0(const tensor_dims_t<trank>& dims, const tindices...)
     {
         static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -156,7 +156,7 @@ namespace nano
     ///
     /// \brief size of a multi-dimensional tensor (#elements).
     ///
-    template <std::size_t trank>
+    template <size_t trank>
     tensor_size_t size(const tensor_dims_t<trank>& dims)
     {
         static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -166,13 +166,13 @@ namespace nano
     ///
     /// \brief compare two tensor by dimension.
     ///
-    template <std::size_t trank>
+    template <size_t trank>
     bool operator==(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
     {
         return std::operator==(dims1, dims2);
     }
 
-    template <std::size_t trank>
+    template <size_t trank>
     bool operator!=(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
     {
         return std::operator!=(dims1, dims2);
@@ -181,17 +181,17 @@ namespace nano
     ///
     /// \brief stream tensor dimensions.
     ///
-    template <std::size_t trank>
+    template <size_t trank>
     std::ostream& operator<<(std::ostream& os, const tensor_dims_t<trank>& dims)
     {
-        for (std::size_t d = 0; d < dims.size(); ++ d)
+        for (size_t d = 0; d < dims.size(); ++ d)
         {
             os << dims[d] << (d + 1 == dims.size() ? "" : "x");
         }
         return os;
     }
 
-    template <std::size_t trank>
+    template <size_t trank>
     std::ostream& operator<<(std::ostream& os, const std::vector<tensor_dims_t<trank>>& dims)
     {
         os << "[";

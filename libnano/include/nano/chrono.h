@@ -119,16 +119,16 @@ namespace nano
     /// \brief robustly measure a function call (in the given time units).
     ///
     template <typename tunits, typename toperator>
-    tunits measure(const toperator& op, const std::size_t trials,
-        const std::size_t min_trial_iterations = 1,
+    tunits measure(const toperator& op, const size_t trials,
+        const size_t min_trial_iterations = 1,
         const microseconds_t min_trial_duration = microseconds_t(1000))
     {
         const auto run_opx = [&] (const size_t times)
         {
             const timer_t timer;
-            for (std::size_t i = 0; i < times; ++ i)
+            for (size_t i = 0; i < times; ++ i)
             {
-                    op();
+                op();
             }
             return timer.microseconds();
         };
@@ -139,7 +139,7 @@ namespace nano
         };
 
         // calibrate the number of function calls to achieve the minimum time resolution
-        std::size_t trial_iterations = std::max(std::size_t(1), min_trial_iterations);
+        size_t trial_iterations = std::max(size_t(1), min_trial_iterations);
         for (microseconds_t usecs(0); usecs < min_trial_duration; trial_iterations *= 2)
         {
             usecs = run_opx(trial_iterations);
@@ -147,7 +147,7 @@ namespace nano
 
         // measure multiple times for robustness
         picoseconds_t duration = run_trial(trial_iterations);
-        for (std::size_t t = 1; t < trials; ++ t)
+        for (size_t t = 1; t < trials; ++ t)
         {
             duration = std::min(duration, run_trial(trial_iterations));
         }

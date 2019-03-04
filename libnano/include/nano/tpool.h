@@ -176,7 +176,7 @@ namespace nano
         ///
         /// \brief number of available worker threads
         ///
-        std::size_t workers() const
+        size_t workers() const
         {
             return m_workers.size();
         }
@@ -184,7 +184,7 @@ namespace nano
         ///
         /// \brief number of tasks still enqueued
         ///
-        std::size_t tasks() const
+        size_t tasks() const
         {
             const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
             return m_queue.m_tasks.size();
@@ -194,7 +194,7 @@ namespace nano
 
         tpool_t()
         {
-            const auto n_workers = static_cast<std::size_t>(physical_cpus());
+            const auto n_workers = static_cast<size_t>(physical_cpus());
 
             m_workers.reserve(n_workers);
             for (size_t i = 0; i < n_workers; ++ i)

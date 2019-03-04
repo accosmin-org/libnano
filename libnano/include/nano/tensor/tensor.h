@@ -6,31 +6,31 @@
 
 namespace nano
 {
-    template <typename tstorage, std::size_t trank>
+    template <typename tstorage, size_t trank>
     class tensor_t;
 
     ///
     /// \brief tensor that owns the allocated memory.
     ///
-    template <typename tscalar, std::size_t trank>
+    template <typename tscalar, size_t trank>
     using tensor_mem_t = tensor_t<tensor_vstorage_t<tscalar>, trank>;
 
     ///
     /// \brief tensor mapping a non-constant array.
     ///
-    template <typename tscalar, std::size_t trank>
+    template <typename tscalar, size_t trank>
     using tensor_map_t = tensor_t<tensor_pstorage_t<tscalar>, trank>;
 
     ///
     /// \brief tensor mapping a constant array.
     ///
-    template <typename tscalar, std::size_t trank>
+    template <typename tscalar, size_t trank>
     using tensor_cmap_t = tensor_t<tensor_pstorage_t<const tscalar>, trank>;
 
     ///
     /// \brief map non-constant data to tensors
     ///
-    template <typename tscalar_, std::size_t trank>
+    template <typename tscalar_, size_t trank>
     auto map_tensor(tscalar_* data, const tensor_dims_t<trank>& dims)
     {
         using tscalar = typename std::remove_const<tscalar_>::type;
@@ -40,7 +40,7 @@ namespace nano
     ///
     /// \brief map constant data to tensors
     ///
-    template <typename tscalar_, std::size_t trank>
+    template <typename tscalar_, size_t trank>
     auto map_tensor(const tscalar_* data, const tensor_dims_t<trank>& dims)
     {
         using tscalar = typename std::remove_const<tscalar_>::type;
@@ -68,7 +68,7 @@ namespace nano
     ///
     /// \brief tensor.
     ///
-    template <typename tstorage, std::size_t trank>
+    template <typename tstorage, size_t trank>
     class tensor_t
     {
     public:

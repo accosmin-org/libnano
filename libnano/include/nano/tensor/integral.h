@@ -7,7 +7,7 @@ namespace nano
     ///
     /// \brief compute the integral of a tensor of arbitrary rank (aka the sum-area table).
     ///
-    template <std::size_t trank>
+    template <size_t trank>
     struct integral_t
     {
         template <typename tstoragei, typename tstorageo>
@@ -38,7 +38,7 @@ namespace nano
         }
     };
 
-    template <typename tstoragei, typename tstorageo, std::size_t trank>
+    template <typename tstoragei, typename tstorageo, size_t trank>
     void integral(const tensor_t<tstoragei, trank>& itensor, tensor_t<tstorageo, trank>& otensor)
     {
         assert(itensor.dims() == otensor.dims());
