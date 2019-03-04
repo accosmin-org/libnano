@@ -30,7 +30,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-5 bash scripts/build.sh --config --build --tests --install --build-example
+        - CXX=g++-5 bash scripts/build.sh --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
@@ -42,7 +42,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-6 bash scripts/build.sh --config --build --tests --install --build-example
+        - CXX=g++-6 bash scripts/build.sh --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
@@ -54,7 +54,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --config --build --tests --install --build-example
+        - CXX=g++-7 bash scripts/build.sh --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
@@ -66,7 +66,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-8 bash scripts/build.sh --config --build --tests --install --build-example
+        - CXX=g++-8 bash scripts/build.sh --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
@@ -78,7 +78,7 @@ matrix:
             - llvm-toolchain-xenial-3.8
           update: true
       script:
-        - CXX=clang++-3.8 bash scripts/build.sh --libcpp --config --build --tests --install --build-example
+        - CXX=clang++-3.8 bash scripts/build.sh --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
@@ -90,7 +90,7 @@ matrix:
             - llvm-toolchain-xenial-4.0
           update: true
       script:
-        - CXX=clang++-4.0 bash scripts/build.sh --libcpp --config --build --tests --install --build-example
+        - CXX=clang++-4.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
@@ -102,7 +102,7 @@ matrix:
             - llvm-toolchain-xenial-5.0
           update: true
       script:
-        - CXX=clang++-5.0 bash scripts/build.sh --libcpp --config --build --tests --install --build-example
+        - CXX=clang++-5.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
@@ -115,7 +115,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --build --tests --install --build-example
+        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
@@ -127,7 +127,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --asan --config --build --tests
+        - CXX=g++-7 bash scripts/build.sh --asan --config --build --test
 
     - os: linux
       compiler: gcc
@@ -139,7 +139,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --lsan --config --build --tests
+        - CXX=g++-7 bash scripts/build.sh --lsan --config --build --test
 
     - os: linux
       compiler: gcc
@@ -151,7 +151,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --gold --usan --config --build --tests
+        - CXX=g++-7 bash scripts/build.sh --gold --usan --config --build --test
 
     - os: linux
       compiler: gcc
@@ -163,7 +163,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --tsan --config --build --tests
+        - CXX=g++-7 bash scripts/build.sh --tsan --config --build --test
 
     # todo: support for MSAN
 
@@ -280,7 +280,7 @@ matrix:
       script:
         - sudo -H pip install --upgrade pip
         - sudo -H pip install coverage
-        - CXX=g++-7 bash scripts/build.sh --coverage --config --build --tests --codecov
+        - CXX=g++-7 bash scripts/build.sh --coverage --config --build --test --codecov
 
     #- os: linux
     #  compiler: gcc
@@ -294,32 +294,32 @@ matrix:
     #  script:
     #    - sudo -H pip install --upgrade pip
     #    - sudo -H pip install cpp-coveralls
-    #    - CXX=g++-7 bash scripts/build.sh --coverage --config --build --tests --coveralls
+    #    - CXX=g++-7 bash scripts/build.sh --coverage --config --build --test --coveralls
 
     - os: osx
       compiler: clang
       osx_image: xcode7.3
       env: TEST="build (xcode7.3)"
       script:
-        - bash scripts/build.sh --config --build --tests --install --build-example
+        - bash scripts/build.sh --config --build --test --install --build-example
 
     - os: osx
       compiler: clang
       osx_image: xcode8.3
       env: TEST="build (xcode8.3)"
       script:
-        - bash scripts/build.sh --config --build --tests --install --build-example
+        - bash scripts/build.sh --config --build --test --install --build-example
 
     - os: osx
       compiler: clang
       osx_image: xcode9.4
       env: TEST="build (xcode9.4)"
       script:
-        - bash scripts/build.sh --config --build --tests --install --build-example
+        - bash scripts/build.sh --config --build --test --install --build-example
 
     - os: osx
       compiler: clang
       osx_image: xcode10
       env: TEST="build (xcode10)"
       script:
-        - bash scripts/build.sh --config --build --tests --install --build-example
+        - bash scripts/build.sh --config --build --test --install --build-example

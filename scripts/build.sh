@@ -265,7 +265,7 @@ options:
         generate build using CMake
     --build
         compile the library, the unit tests and the command line applications
-    --tests
+    --test
         run the unit tests
     --install
         install the library and the command line applications
@@ -323,7 +323,7 @@ while [ "$1" != "" ]; do
                             ;;
         --build)            build || exit 1
                             ;;
-        --tests)            tests || exit 1
+        --test)             tests || exit 1
                             ;;
         --install)          install || exit 1
                             ;;
