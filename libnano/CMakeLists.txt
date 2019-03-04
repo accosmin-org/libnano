@@ -35,40 +35,8 @@ endif()
 ##################################################################################################
 # setup library
 
-add_library(nano
-    src/arch.cpp
-    src/table.cpp
-    src/logger.cpp
-    src/solver.cpp
-    src/solver/solver_gd.cpp
-    src/solver/solver_cgd.cpp
-    src/solver/solver_lbfgs.cpp
-    src/solver/solver_quasi.cpp
-    src/solver/lsearch_init.cpp
-    src/solver/lsearch_backtrack.cpp
-    src/solver/lsearch_cgdescent.cpp
-    src/solver/lsearch_lemarechal.cpp
-    src/solver/lsearch_morethuente.cpp
-    src/solver/lsearch_nocedalwright.cpp
-    src/cmdline.cpp
-    src/function.cpp)
-
-add_library(NANO::nano ALIAS nano)
-target_compile_configure(nano)
-
-target_include_directories(nano
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/../deps/json/include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-if(NOT WIN32)
-    target_link_libraries(nano
-        PUBLIC ${CMAKE_THREAD_LIBS_INIT}
-        PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-endif()
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
+add_subdirectory(src)
 
 ##################################################################################################
 # setup command line utilities
@@ -84,16 +52,6 @@ add_subdirectory(test)
 
 ##################################################################################################
 # setup installation
-
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
-
-install(TARGETS nano
-    EXPORT nano-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
 
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
