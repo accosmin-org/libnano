@@ -39,6 +39,17 @@ add_library(nano
     src/arch.cpp
     src/table.cpp
     src/logger.cpp
+    src/solver.cpp
+    src/solver/solver_gd.cpp
+    src/solver/solver_cgd.cpp
+    src/solver/solver_lbfgs.cpp
+    src/solver/solver_quasi.cpp
+    src/solver/lsearch_init.cpp
+    src/solver/lsearch_backtrack.cpp
+    src/solver/lsearch_cgdescent.cpp
+    src/solver/lsearch_lemarechal.cpp
+    src/solver/lsearch_morethuente.cpp
+    src/solver/lsearch_nocedalwright.cpp
     src/cmdline.cpp
     src/function.cpp)
 
