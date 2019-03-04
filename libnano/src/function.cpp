@@ -1,21 +1,21 @@
 #include <nano/function.h>
-#include "functions/trid.h"
-#include "functions/qing.h"
-#include "functions/cauchy.h"
-#include "functions/sphere.h"
-#include "functions/powell.h"
-#include "functions/sargan.h"
-#include "functions/zakharov.h"
-#include "functions/quadratic.h"
-#include "functions/rosenbrock.h"
-#include "functions/exponential.h"
-#include "functions/dixon_price.h"
-#include "functions/axis_ellipsoid.h"
-#include "functions/chung_reynolds.h"
-#include "functions/styblinski_tang.h"
-#include "functions/rotated_ellipsoid.h"
-#include "functions/schumer_steiglitz.h"
-#include "functions/geometric_optimization.h"
+#include <nano/function/trid.h>
+#include <nano/function/qing.h>
+#include <nano/function/cauchy.h>
+#include <nano/function/sphere.h>
+#include <nano/function/powell.h>
+#include <nano/function/sargan.h>
+#include <nano/function/zakharov.h>
+#include <nano/function/quadratic.h>
+#include <nano/function/rosenbrock.h>
+#include <nano/function/exponential.h>
+#include <nano/function/dixon_price.h>
+#include <nano/function/axis_ellipsoid.h>
+#include <nano/function/chung_reynolds.h>
+#include <nano/function/styblinski_tang.h>
+#include <nano/function/rotated_ellipsoid.h>
+#include <nano/function/schumer_steiglitz.h>
+#include <nano/function/geometric_optimization.h>
 
 using namespace nano;
 
