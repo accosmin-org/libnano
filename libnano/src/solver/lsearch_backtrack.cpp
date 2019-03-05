@@ -2,6 +2,17 @@
 
 using namespace nano;
 
+void lsearch_backtrack_t::to_json(json_t& json) const
+{
+    nano::to_json(json, "decrement", m_decrement);
+}
+
+void lsearch_backtrack_t::from_json(const json_t& json)
+{
+    nano::from_json(json, "decrement", m_decrement);
+    // todo: check parameters!
+}
+
 bool lsearch_backtrack_t::get(const solver_state_t& state0, scalar_t t, solver_state_t& state)
 {
     const auto decmin = scalar_t(0.1);

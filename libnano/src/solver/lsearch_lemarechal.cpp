@@ -3,6 +3,17 @@
 
 using namespace nano;
 
+void lsearch_lemarechal_t::to_json(json_t& json) const
+{
+    nano::to_json(json, "increment", m_increment);
+}
+
+void lsearch_lemarechal_t::from_json(const json_t& json)
+{
+    nano::from_json(json, "increment", m_increment);
+    // todo: check parameters!
+}
+
 bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_state_t& state)
 {
     lsearch_step_t L = state0;
@@ -30,7 +41,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
 
                 if (R.t < epsilon0<scalar_t>())
                 {
-                    t *= 3;
+                    t *= m_increment;
                 }
                 else
                 {

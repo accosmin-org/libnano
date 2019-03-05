@@ -186,7 +186,7 @@ static int unsafe_main(int argc, const char* argv[])
     std::vector<std::pair<string_t, rsolver_t>> solvers;
     const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_strat)
     {
-        auto solver = get_solver(solver_id);
+        auto solver = get_solvers().get(solver_id);
         if (cmdline.has("c1"))
         {
             solver->from_json(nano::to_json("c1", cmdline.get<scalar_t>("c1")));

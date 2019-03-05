@@ -7,18 +7,21 @@
 namespace nano
 {
     class solver_t;
+    class lsearch_init_t;
+    class lsearch_strategy_t;
+
     using solver_factory_t = factory_t<solver_t>;
+    using lsearch_init_factory_t = factory_t<lsearch_init_t>;
+    using lsearch_strategy_factory_t = factory_t<lsearch_strategy_t>;
+
     using rsolver_t = solver_factory_t::trobject;
 
     ///
-    /// \brief returns all registered solvers.
+    /// \brief returns all registered solvers and line-search algorithms.
     ///
     NANO_PUBLIC solver_factory_t& get_solvers();
-
-    ///
-    /// \brief returns the solver with the given id.
-    ///
-    inline auto get_solver(const string_t& id) { return get_solvers().get(id); }
+    NANO_PUBLIC lsearch_init_factory_t& get_lsearch_inits();
+    NANO_PUBLIC lsearch_strategy_factory_t& get_lsearch_strategies();
 
     class solver_state_t;
     using ref_solver_state_t = std::reference_wrapper<const solver_state_t>;
@@ -285,7 +288,7 @@ namespace nano
     /// \brief compute the initial step length of the line search procedure.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
     ///
-    class lsearch_init_t
+    class lsearch_init_t : public json_configurable_t
     {
     public:
 
@@ -312,7 +315,7 @@ namespace nano
     ///
     /// \brief compute the step length of the line search procedure.
     ///
-    class lsearch_strategy_t
+    class lsearch_strategy_t : public json_configurable_t
     {
     public:
 

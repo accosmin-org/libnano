@@ -3,6 +3,14 @@
 
 using namespace nano;
 
+void lsearch_morethuente_t::to_json(json_t&) const
+{
+}
+
+void lsearch_morethuente_t::from_json(const json_t&)
+{
+}
+
 ///
 /// \brief see dcstep routine in MINPACK-2 (see http://ftp.mcs.anl.gov/pub/MINPACK-2/csrch/)
 ///

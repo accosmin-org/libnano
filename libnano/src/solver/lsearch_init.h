@@ -13,7 +13,9 @@ namespace nano
     public:
 
         lsearch_unit_init_t() = default;
-        scalar_t get(const solver_state_t&, const int iteration) override;
+        void to_json(json_t&) const final {}
+        void from_json(const json_t&) final {}
+        scalar_t get(const solver_state_t&, const int iteration) final;
     };
 
     class lsearch_linear_init_t final : public lsearch_init_t
@@ -21,7 +23,9 @@ namespace nano
     public:
 
         lsearch_linear_init_t() = default;
-        scalar_t get(const solver_state_t&, const int iteration) override;
+        void to_json(json_t&) const final {}
+        void from_json(const json_t&) final {}
+        scalar_t get(const solver_state_t&, const int iteration) final;
 
     private:
 
@@ -34,7 +38,9 @@ namespace nano
     public:
 
         lsearch_quadratic_init_t() = default;
-        scalar_t get(const solver_state_t&, const int iteration) override;
+        void to_json(json_t&) const final {}
+        void from_json(const json_t&) final {}
+        scalar_t get(const solver_state_t&, const int iteration) final;
 
     private:
 
@@ -50,6 +56,8 @@ namespace nano
     public:
 
         lsearch_cgdescent_init_t() = default;
-        scalar_t get(const solver_state_t&, const int iteration) override;
+        void to_json(json_t&) const final {}
+        void from_json(const json_t&) final {}
+        scalar_t get(const solver_state_t&, const int iteration) final;
     };
 }

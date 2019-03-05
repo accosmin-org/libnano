@@ -17,6 +17,8 @@ namespace nano
     public:
 
         lsearch_morethuente_t() = default;
+        void to_json(json_t&) const final;
+        void from_json(const json_t&) final;
         bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
     };
 }

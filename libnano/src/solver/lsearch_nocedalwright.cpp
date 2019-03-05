@@ -3,6 +3,17 @@
 
 using namespace nano;
 
+void lsearch_nocedalwright_t::to_json(json_t& json) const
+{
+    nano::to_json(json, "increment", m_increment);
+}
+
+void lsearch_nocedalwright_t::from_json(const json_t& json)
+{
+    nano::from_json(json, "increment", m_increment);
+    // todo: check parameters!
+}
+
 bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
     lsearch_step_t lo, lsearch_step_t hi, solver_state_t& state) const
 {
@@ -65,7 +76,7 @@ bool lsearch_nocedalwright_t::get(const solver_state_t& state0, scalar_t t, solv
         }
 
         prev = curr;
-        t *= 3;
+        t *= m_increment;
     }
 
     return false;
