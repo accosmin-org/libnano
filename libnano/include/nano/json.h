@@ -67,7 +67,7 @@ namespace nano
 
         virtual ~json_configurable_t() noexcept = default;
 
-        virtual void to_json(json_t&) const = 0;
-        virtual void from_json(const json_t&) = 0;
+        virtual void to_json(json_t&) const {}
+        virtual void from_json(const json_t&) {}
     };
 }

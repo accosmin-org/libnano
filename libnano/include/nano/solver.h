@@ -293,7 +293,6 @@ namespace nano
     public:
 
         lsearch_init_t() = default;
-        virtual ~lsearch_init_t() = default;
 
         ///
         /// \brief returns the initial step length given the current state
@@ -320,7 +319,6 @@ namespace nano
     public:
 
         lsearch_strategy_t() = default;
-        virtual ~lsearch_strategy_t() = default;
 
         ///
         /// \brief

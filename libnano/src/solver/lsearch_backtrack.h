@@ -13,13 +13,14 @@ namespace nano
     public:
 
         lsearch_backtrack_t() = default;
+        bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
+
         void to_json(json_t&) const final;
         void from_json(const json_t&) final;
-        bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
 
     private:
 
         // attributes
-        scalar_t    m_decrement{static_cast<scalar_t>(0.5)};///<
+        scalar_t    m_ro{static_cast<scalar_t>(0.5)};   ///<
     };
 }

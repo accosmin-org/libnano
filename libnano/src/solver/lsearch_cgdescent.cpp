@@ -6,7 +6,12 @@ using namespace nano;
 void lsearch_cgdescent_t::to_json(json_t& json) const
 {
     nano::to_json(json,
-        "epsilon0", m_epsilon0, "theta", m_theta, "gamma", m_gamma, "delta", m_delta, "omega", m_omega, "ro", m_ro);
+        "epsilon0", m_epsilon0,
+        "theta", m_theta,
+        "gamma", m_gamma,
+        "delta", m_delta,
+        "omega", m_omega,
+        "ro", m_ro);
 }
 
 void lsearch_cgdescent_t::from_json(const json_t& json)
@@ -207,7 +212,7 @@ bool lsearch_cgdescent_t::get(const solver_state_t& state0, const scalar_t t0, s
         // update search interval
         if (b.t - a.t > m_gamma * prev_width)
         {
-            if (    evaluate(state0, (a.t + b.t) / 2, a, b, c) ||
+            if (evaluate(state0, (a.t + b.t) / 2, a, b, c) ||
                 update(state0, a, b, c))
             {
                 return true;
