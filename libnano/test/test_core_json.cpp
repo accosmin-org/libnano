@@ -27,4 +27,40 @@ UTEST_CASE(from_json)
     UTEST_CHECK_EQUAL(floating, 1.0f);
 }
 
+UTEST_CASE(from_range_range_ok)
+{
+    const auto json = to_json("value", 1);
+
+    int value = 0;
+    UTEST_CHECK_NOTHROW(from_json_range(json, "value", value, -1, +10));
+    UTEST_CHECK_EQUAL(value, 1);
+}
+
+UTEST_CASE(from_range_range_nok)
+{
+    const auto json = to_json("value", 1);
+
+    int value = 0;
+    UTEST_CHECK_THROW(from_json_range(json, "value", value, +2, +10), std::runtime_error);
+    UTEST_CHECK_EQUAL(value, 1);
+}
+
+UTEST_CASE(from_range_range_invalid)
+{
+    const auto json = to_json("value", "this-is-not-a-valid-integer");
+
+    int value = 0;
+    UTEST_CHECK_THROW(from_json_range(json, "value", value, +5, +10), std::exception);
+    UTEST_CHECK_EQUAL(value, 0);
+}
+
+UTEST_CASE(from_range_range_missing)
+{
+    const auto json = to_json("valuex", 3);
+
+    int value = 0;
+    UTEST_CHECK_NOTHROW(from_json_range(json, "value", value, +5, +10));
+    UTEST_CHECK_EQUAL(value, 0);
+}
+
 UTEST_END_MODULE()
