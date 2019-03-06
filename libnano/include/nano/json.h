@@ -31,7 +31,7 @@ namespace nano
     }
 
     ///
-    /// \brief deserialize attributes from JSON if present.
+    /// \brief deserialize attributes from JSON (if present).
     ///
     inline size_t from_json(const json_t&)
     {
@@ -63,8 +63,7 @@ namespace nano
     /// NB: an exception is thrown otherwise.
     ///
     template <typename tscalar>
-    void from_json_range(const json_t& json, const char* name, tscalar& value,
-        const tscalar min, const tscalar max)
+    void from_json_range(const json_t& json, const char* name, tscalar& value, const tscalar min, const tscalar max)
     {
         const auto count = from_json(json, name, value);
         if (count > 0 && (value < min || value > max))

@@ -1,5 +1,4 @@
-#include "solver_quasi.h"
-#include <deque>
+#include "quasi.h"
 
 using namespace nano;
 

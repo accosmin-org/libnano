@@ -1,17 +1,17 @@
 #include <mutex>
 #include <nano/numeric.h>
 
-#include "solver/solver_gd.h"
-#include "solver/solver_cgd.h"
-#include "solver/solver_lbfgs.h"
-#include "solver/solver_quasi.h"
+#include "solver/gd.h"
+#include "solver/cgd.h"
+#include "solver/lbfgs.h"
+#include "solver/quasi.h"
 
-#include "solver/lsearch_init.h"
-#include "solver/lsearch_backtrack.h"
-#include "solver/lsearch_cgdescent.h"
-#include "solver/lsearch_lemarechal.h"
-#include "solver/lsearch_morethuente.h"
-#include "solver/lsearch_nocedalwright.h"
+#include "lsearch/init.h"
+#include "lsearch/backtrack.h"
+#include "lsearch/cgdescent.h"
+#include "lsearch/lemarechal.h"
+#include "lsearch/morethuente.h"
+#include "lsearch/nocedalwright.h"
 
 using namespace nano;
 

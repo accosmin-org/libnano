@@ -1,5 +1,5 @@
+#include "morethuente.h"
 #include <nano/numeric.h>
-#include "lsearch_morethuente.h"
 
 using namespace nano;
 

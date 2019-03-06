@@ -1,5 +1,5 @@
 #include <nano/numeric.h>
-#include "lsearch_nocedalwright.h"
+#include "nocedalwright.h"
 
 using namespace nano;
 

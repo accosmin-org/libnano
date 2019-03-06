@@ -1,5 +1,5 @@
 #include <deque>
-#include "solver_lbfgs.h"
+#include "lbfgs.h"
 
 using namespace nano;
 

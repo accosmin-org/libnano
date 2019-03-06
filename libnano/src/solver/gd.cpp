@@ -1,4 +1,4 @@
-#include "solver_gd.h"
+#include "gd.h"
 
 using namespace nano;
 

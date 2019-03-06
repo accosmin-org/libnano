@@ -1,5 +1,5 @@
+#include "lemarechal.h"
 #include <nano/numeric.h>
-#include "lsearch_lemarechal.h"
 
 using namespace nano;
 

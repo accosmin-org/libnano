@@ -1,4 +1,4 @@
-#include "lsearch_init.h"
+#include "init.h"
 
 using namespace nano;
 

@@ -4,16 +4,16 @@ add_library(nano
     table.cpp
     logger.cpp
     solver.cpp
-    solver/solver_gd.cpp
-    solver/solver_cgd.cpp
-    solver/solver_lbfgs.cpp
-    solver/solver_quasi.cpp
-    solver/lsearch_init.cpp
-    solver/lsearch_backtrack.cpp
-    solver/lsearch_cgdescent.cpp
-    solver/lsearch_lemarechal.cpp
-    solver/lsearch_morethuente.cpp
-    solver/lsearch_nocedalwright.cpp
+    solver/gd.cpp
+    solver/cgd.cpp
+    solver/lbfgs.cpp
+    solver/quasi.cpp
+    lsearch/init.cpp
+    lsearch/backtrack.cpp
+    lsearch/cgdescent.cpp
+    lsearch/lemarechal.cpp
+    lsearch/morethuente.cpp
+    lsearch/nocedalwright.cpp
     cmdline.cpp
     function.cpp)
 
