@@ -1,4 +1,5 @@
 #include "init.h"
+#include <nano/numeric.h>
 
 using namespace nano;
 
@@ -45,6 +46,24 @@ scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state, const int it
 
     m_prevf = state.f;
     return t0;
+}
+
+void lsearch_cgdescent_init_t::to_json(json_t& json) const
+{
+    nano::to_json(json,
+        "phi0", strcat(m_phi0, "(0,1)"),
+        "phi1", strcat(m_phi0, "(0,1)"),
+        "phi2", strcat(m_phi0, "(1, inf)"));
+}
+
+void lsearch_cgdescent_init_t::from_json(const json_t& json)
+{
+    const auto eps = epsilon0<scalar_t>();
+    const auto inf = 1 / eps;
+
+    from_json_range(json, "phi0", m_phi0, eps, 1 - eps);
+    from_json_range(json, "phi1", m_phi1, eps, 1 - eps);
+    from_json_range(json, "phi2", m_phi2, 1 + eps, inf);
 }
 
 scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state, const int iteration)
