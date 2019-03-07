@@ -11,7 +11,9 @@ void lsearch_backtrack_t::to_json(json_t& json) const
 
 void lsearch_backtrack_t::from_json(const json_t& json)
 {
-    nano::from_json_range(json, "ro", m_ro, epsilon0<scalar_t>(), 1 - epsilon0<scalar_t>());
+    const auto eps = epsilon0<scalar_t>();
+
+    nano::from_json_range(json, "ro", m_ro, eps, 1 - eps);
 }
 
 bool lsearch_backtrack_t::get(const solver_state_t& state0, scalar_t t, solver_state_t& state)

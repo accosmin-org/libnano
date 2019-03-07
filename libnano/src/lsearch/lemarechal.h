@@ -20,6 +20,6 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_increment{3};     ///<
+        scalar_t    m_ro{3};     ///< extrapolation factor
     };
 }

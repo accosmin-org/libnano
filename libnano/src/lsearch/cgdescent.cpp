@@ -6,19 +6,25 @@ using namespace nano;
 void lsearch_cgdescent_t::to_json(json_t& json) const
 {
     nano::to_json(json,
-        "epsilon0", m_epsilon0,
-        "theta", m_theta,
-        "gamma", m_gamma,
-        "delta", m_delta,
-        "omega", m_omega,
-        "ro", m_ro);
+        "epsilon", strcat(m_epsilon0, "(0,inf)"),
+        "theta", strcat(m_theta, "(0,1)"),
+        "gamma", strcat(m_gamma, "(0,1)"),
+        "delta", strcat(m_delta, "[0,1]"),
+        "omega", strcat(m_omega, "[0,1]"),
+        "ro", strcat(m_ro, "(1,inf)"));
 }
 
 void lsearch_cgdescent_t::from_json(const json_t& json)
 {
-    nano::from_json(json,
-        "epsilon0", m_epsilon0, "theta", m_theta, "gamma", m_gamma, "delta", m_delta, "omega", m_omega, "ro", m_ro);
-    // todo: check parameters!
+    const auto eps = epsilon0<scalar_t>();
+    const auto inf = 1 / eps;
+
+    nano::from_json_range(json, "epsilon", m_epsilon0, eps, inf);
+    nano::from_json_range(json, "theta", m_theta, eps, 1 - eps);
+    nano::from_json_range(json, "gamma", m_gamma, eps, 1 - eps);
+    nano::from_json_range(json, "delta", m_delta, 0, 1);
+    nano::from_json_range(json, "omega", m_omega, 0, 1);
+    nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
 bool lsearch_cgdescent_t::updateU(const solver_state_t& state0,

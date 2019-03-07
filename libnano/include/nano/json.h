@@ -62,11 +62,12 @@ namespace nano
     /// \brief retrieve the attribute with the given name and check that is within the [min, max] range.
     /// NB: an exception is thrown otherwise.
     ///
-    template <typename tscalar>
-    void from_json_range(const json_t& json, const char* name, tscalar& value, const tscalar min, const tscalar max)
+    template <typename tscalar, typename tscalar_min, typename tscalar_max>
+    void from_json_range(const json_t& json, const char* name, tscalar& value,
+        const tscalar_min min, const tscalar_max max)
     {
         const auto count = from_json(json, name, value);
-        if (count > 0 && (value < min || value > max))
+        if (count > 0 && (value < static_cast<tscalar>(min) || value > static_cast<tscalar>(max)))
         {
             throw std::runtime_error(strcat("invalid ", name, " parameter"));
         }

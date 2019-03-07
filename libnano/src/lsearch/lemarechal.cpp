@@ -5,13 +5,15 @@ using namespace nano;
 
 void lsearch_lemarechal_t::to_json(json_t& json) const
 {
-    nano::to_json(json, "increment", m_increment);
+    nano::to_json(json, "ro", strcat(m_ro, "(1,inf)"));
 }
 
 void lsearch_lemarechal_t::from_json(const json_t& json)
 {
-    nano::from_json(json, "increment", m_increment);
-    // todo: check parameters!
+    const auto eps = epsilon0<scalar_t>();
+    const auto inf = 1 / eps;
+
+    nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
 bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_state_t& state)
@@ -41,7 +43,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
 
                 if (R.t < epsilon0<scalar_t>())
                 {
-                    t *= m_increment;
+                    t *= m_ro;
                 }
                 else
                 {
