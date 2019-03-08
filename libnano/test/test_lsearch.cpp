@@ -19,12 +19,20 @@ UTEST_CASE(strategy_backtrack)
     lsearch->c1(scalar_t{1e-4});
     lsearch->c2(scalar_t{9e-1});
     lsearch->max_iterations(100);
+    lsearch->logger([] (const solver_state_t& state)
+    {
+        std::cout
+            << "\t: t=" << state.t << ",f=" << state.f
+            << ",g=" << state.convergence_criterion() << "\n";
+    });
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo condition
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        std::cout << "evaluating function " << function->name() << "...\n";
+
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);

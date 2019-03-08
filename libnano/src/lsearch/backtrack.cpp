@@ -22,14 +22,16 @@ bool lsearch_backtrack_t::get(const solver_state_t& state0, scalar_t t, solver_s
     {
         if (!state.update(state0, t))
         {
+            log(state);
             return false;
         }
         else if (!state.has_armijo(state0, c1()))
         {
+            log(state);
             t *= m_ro;
         }
         else
-        {
+        {   log(state);
             return true;
         }
     }

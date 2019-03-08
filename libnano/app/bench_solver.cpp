@@ -96,7 +96,7 @@ static auto trim(const json_t& json)
 }
 
 static void check_solver(const function_t& function, const rsolver_t& solver, const string_t& id,
-    const std::vector<vector_t>& x0s, const size_t iterations, const scalar_t epsilon,
+    const std::vector<vector_t>& x0s,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats)
 {
     json_t json;
@@ -106,7 +106,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver, co
     std::vector<solver_state_t> states(x0s.size());
     nano::loopi(x0s.size(), [&] (const size_t i)
     {
-        states[i] = solver->minimize(iterations, epsilon, function, x0s[i]);
+        states[i] = solver->minimize(function, x0s[i]);
     });
 
     for (const auto& state : states)
@@ -117,8 +117,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver, co
 }
 
 static void check_function(const function_t& function, const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
-    const size_t trials, const size_t iterations, const scalar_t epsilon,
-    solver_config_stats_t& gstats)
+    const size_t trials, solver_config_stats_t& gstats)
 {
     // generate fixed random trials
     std::vector<vector_t> x0s(trials);
@@ -133,7 +132,7 @@ static void check_function(const function_t& function, const std::vector<std::pa
         const auto& id = id_solver.first;
         const auto& solver = id_solver.second;
 
-        check_solver(function, solver, id, x0s, iterations, epsilon, fstats, gstats);
+        check_solver(function, solver, id, x0s, fstats, gstats);
     }
 
     // show per-problem statistics
@@ -203,6 +202,8 @@ static int unsafe_main(int argc, const char* argv[])
         {
             solver->from_json(nano::to_json("strat", *ls_strat));
         }
+        solver->epsilon(epsilon);
+        solver->max_iterations(iterations);
 
         solvers.emplace_back(solver_id, std::move(solver));
     };
@@ -227,7 +228,7 @@ static int unsafe_main(int argc, const char* argv[])
     solver_config_stats_t gstats;
     for (const auto& function : (is_convex ? get_convex_functions : get_functions)(min_dims, max_dims, fregex))
     {
-        check_function(*function, solvers, trials, iterations, epsilon, gstats);
+        check_function(*function, solvers, trials, gstats);
     }
 
     show_table("Solver", gstats);

@@ -19,15 +19,14 @@ void solver_cgd_base_t<tcgd_update>::to_json(json_t& json) const
 }
 
 template <typename tcgd_update>
-solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const size_t max_iterations, const scalar_t epsilon,
-    const solver_function_t& function, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const solver_function_t& function, const vector_t& x0) const
 {
     lsearch_t lsearch(m_init, m_strat, m_c1, m_c2);
 
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
 
-    for (size_t i = 0; i < max_iterations; ++ i, ++ cstate.m_iterations)
+    for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
     {
         // descent direction
         if (i == 0)
@@ -56,7 +55,7 @@ solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const size_t max_iterati
         // line-search
         pstate = cstate;
         const auto iter_ok = lsearch(cstate);
-        if (solver_t::done(logger, function, cstate, epsilon, iter_ok))
+        if (solver_t::done(function, cstate, iter_ok))
         {
             break;
         }

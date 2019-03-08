@@ -318,7 +318,10 @@ namespace nano
     {
     public:
 
-        lsearch_strategy_t() = default;
+        ///
+        /// logging operator: op(solver_state_t), called for each trial of the line-search length.
+        ///
+        using logger_t = std::function<void(const solver_state_t&)>;
 
         ///
         /// \brief
@@ -330,6 +333,7 @@ namespace nano
         ///
         auto& c1(const scalar_t c1) { m_c1 = c1; return *this; }
         auto& c2(const scalar_t c2) { m_c2 = c2; return *this; }
+        auto& logger(const logger_t& logger) { m_logger = logger; return *this; }
         auto& max_iterations(const int max_iterations) { m_max_iterations = max_iterations; return *this; }
 
         ///
@@ -355,12 +359,26 @@ namespace nano
             return scalar_t(1) / stpmin();
         }
 
+    protected:
+
+        ///
+        /// \brief log the current line-search trial length (if the logger is provided)
+        ///
+        void log(const solver_state_t& state) const
+        {
+            if (m_logger)
+            {
+                m_logger(state);
+            }
+        }
+
     private:
 
         // attributes
         scalar_t    m_c1{static_cast<scalar_t>(1e-4)};      ///< sufficient decrease rate
         scalar_t    m_c2{static_cast<scalar_t>(0.1)};       ///< sufficient curvature
         int         m_max_iterations{40};                   ///< #maximum iterations
+        logger_t    m_logger;                               ///<
     };
 
     ///
@@ -503,44 +521,50 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        solver_state_t minimize(
-            const size_t max_iterations, const scalar_t epsilon,
-            const function_t& f, const vector_t& x0,
-            const logger_t& logger = logger_t()) const
+        solver_state_t minimize(const function_t& f, const vector_t& x0) const
         {
             assert(f.size() == x0.size());
-            return minimize(max_iterations, epsilon, solver_function_t(f), x0, logger);
+            return minimize(solver_function_t(f), x0);
         }
+
+        ///
+        /// \brief change parameters
+        ///
+        auto& logger(const logger_t& logger) { m_logger = logger; return *this; }
+        auto& epsilon(const scalar_t epsilon) { m_epsilon = epsilon; return *this; }
+        auto& max_iterations(const int max_iterations) { m_max_iterations = max_iterations; return *this; }
+
+        ///
+        /// \brief access functions
+        ///
+        auto epsilon() const { return m_epsilon; }
+        auto max_iterations() const { return m_max_iterations; }
 
     protected:
 
         ///
         /// \brief minimize the given function starting from the initial point x0
         ///
-        virtual solver_state_t minimize(
-            const size_t max_iterations, const scalar_t epsilon,
-            const solver_function_t&, const vector_t& x0,
-            const logger_t& logger) const = 0;
+        virtual solver_state_t minimize(const solver_function_t&, const vector_t& x0) const = 0;
 
         ///
         /// \brief log the current optimization state (if the logger is provided)
         ///
-        static auto log(const logger_t& logger, const solver_state_t& state)
+        auto log(const solver_state_t& state) const
         {
-            return !logger ? true : logger(state);
+            return !m_logger ? true : m_logger(state);
         }
 
         ///
         /// \brief check if the optimization is done (convergence or error) after an iteration
         ///
-        static bool done(const logger_t& logger, const solver_function_t& function, solver_state_t& state,
-            const scalar_t epsilon, const bool iter_ok)
+        bool done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
         {
             state.m_fcalls = function.fcalls();
             state.m_gcalls = function.gcalls();
 
             const auto step_ok = iter_ok && state;
-            const auto converged = state.converged(epsilon);
+            const auto converged = state.converged(epsilon());
 
             if (converged || !step_ok)
             {
@@ -548,10 +572,10 @@ namespace nano
                 state.m_status = converged ?
                     solver_state_t::status::converged :
                     solver_state_t::status::failed;
-                log(logger, state);
+                log(state);
                 return true;
             }
-            else if (!log(logger, state))
+            else if (!log(state))
             {
                 // stopping was requested
                 state.m_status = solver_state_t::status::stopped;
@@ -561,5 +585,12 @@ namespace nano
             // OK, go on with the optimization
             return false;
         }
+
+    private:
+
+        // attributes
+        scalar_t    m_epsilon{1e-6};        ///< required precision (uper bounds the magnitude of the gradient)
+        int         m_max_iterations{1000}; ///< maximum number of iterations
+        logger_t    m_logger;               ///<
     };
 }
