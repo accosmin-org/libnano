@@ -28,11 +28,12 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
     {
         if (!state.update(state0, t))
         {
+            log(state);
             return false;
         }
-
-        if (state.has_armijo(state0, c1()))
+        else if (state.has_armijo(state0, c1()))
         {
+            log(state);
             if (state.has_wolfe(state0, c2()))
             {
                 return true;
@@ -53,6 +54,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
         }
         else
         {
+            log(state);
             R = state;
             t = lsearch_step_t::cubic(L, R);
         }

@@ -177,7 +177,7 @@ namespace nano
         // attributes
         const function_t*   function{nullptr};      ///<
         vector_t            x, g, d;                ///< parameter, gradient, descent direction
-        scalar_t            f{0}, t{1};             ///< function value, step size
+        scalar_t            f{0}, t{0};             ///< function value, step size
         status              m_status{status::max_iters};    ///< optimization status
         size_t              m_fcalls{0};            ///< #function value evaluations so far
         size_t              m_gcalls{0};            ///< #function gradient evaluations so far

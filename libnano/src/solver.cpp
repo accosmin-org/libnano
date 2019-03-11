@@ -133,6 +133,5 @@ bool lsearch_t::operator()(solver_state_t& state)
 
     // line-search step length
     auto state0 = state;
-    state0.t = 0;
     return m_strategy->get(state0, t0, state) && state && (state < state0);
 }
