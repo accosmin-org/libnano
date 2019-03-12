@@ -148,8 +148,10 @@ bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t 
     // check overflow
     if (!c.update(state0, t))
     {
+        log(c);
         return true;
     }
+    log(c);
 
     // check Armijo+Wolfe conditions or the approximate versions
     const auto done =

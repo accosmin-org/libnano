@@ -247,6 +247,7 @@ bool lsearch_morethuente_t::get(const solver_state_t& state0, const scalar_t t0,
 
         // Obtain another function and derivative
         state.update(state0, stp);
+        log(state);
         f = state.f;
         g = state.dg();
     }

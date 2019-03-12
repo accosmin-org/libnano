@@ -23,11 +23,13 @@ bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
     {
         if (!state.update(state0, lsearch_step_t::cubic(lo, hi)))
         {
+            log(state);
             return false;
         }
 
         else if (!state.has_armijo(state0, c1()) || state.f >= lo.f)
         {
+            log(state);
             hi = state;
         }
 
@@ -58,8 +60,10 @@ bool lsearch_nocedalwright_t::get(const solver_state_t& state0, scalar_t t, solv
     {
         if (!state.update(state0, t))
         {
+            log(state);
             return false;
         }
+        log(state);
         curr = state;
 
         if (!state.has_armijo(state0, c1()) || (state.f >= prev.f && i > 1))

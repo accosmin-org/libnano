@@ -15,6 +15,7 @@ namespace nano
     using lsearch_strategy_factory_t = factory_t<lsearch_strategy_t>;
 
     using rsolver_t = solver_factory_t::trobject;
+    using rlsearch_strategy_t = lsearch_strategy_factory_t::trobject;
 
     ///
     /// \brief returns all registered solvers and line-search algorithms.
