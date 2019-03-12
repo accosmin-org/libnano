@@ -147,6 +147,7 @@ UTEST_CASE(strategy_nocedalwright)
 UTEST_CASE(strategy_cgdescent)
 {
     const auto lsearch = get_lsearch("cgdescent");
+    const auto epsilon = 1e-6;// todo: get the updated value of epsilon!!!
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo and the approximated Wolfe conditions
@@ -164,8 +165,9 @@ UTEST_CASE(strategy_cgdescent)
             UTEST_CHECK(lsearch->get(state0, t0, state));
             UTEST_CHECK(state);
             UTEST_CHECK(state0);
-            UTEST_CHECK(state.has_armijo(state0, lsearch->c1()));
-            UTEST_CHECK(state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()));
+            UTEST_CHECK(
+                (state.has_armijo(state0, lsearch->c1()) && state.has_wolfe(state0, lsearch->c1())) ||
+                (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2())));
         }
     }
 }
