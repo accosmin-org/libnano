@@ -5,16 +5,14 @@
 
 using namespace nano;
 
-static void test(
-    const solver_t& solver, const string_t& solver_id,
-    const function_t& function, const vector_t& x0, const int iterations = 10000)
+static void test(const solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
     const auto state0 = solver_state_t{function, x0};
     const auto f0 = state0.f;
     const auto g0 = state0.convergence_criterion();
 
     // minimize
-    const auto state = solver.minimize(iterations, epsilon2<scalar_t>(), function, x0);
+    const auto state = solver.minimize(function, x0);
     const auto x = state.x;
     const auto f = state.f;
     const auto g = state.convergence_criterion();
@@ -37,7 +35,7 @@ static void test(
     UTEST_CHECK_LESS_EQUAL(f, f0 + epsilon1<scalar_t>());
 
     // check convergence
-    UTEST_CHECK_LESS(g, epsilon2<scalar_t>());
+    UTEST_CHECK_LESS(g, solver.epsilon());
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
 }
 
@@ -116,7 +114,7 @@ UTEST_CASE(default_solvers)
 
         for (const auto& solver_id : get_solvers().ids())
         {
-            const auto solver = get_solver(solver_id);
+            const auto solver = get_solvers().get(solver_id);
             UTEST_REQUIRE(solver);
 
             for (auto t = 0; t < 10; ++ t)
@@ -135,7 +133,7 @@ UTEST_CASE(lsearch_strategies)
 
         for (const auto& solver_id : {"gd", "cgd", "lbfgs", "bfgs"})
         {
-            const auto solver = get_solver(solver_id);
+            const auto solver = get_solvers().get(solver_id);
             UTEST_REQUIRE(solver);
 
             for (const auto lsearch_strategy : enum_values<lsearch_t::strategy>())

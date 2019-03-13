@@ -12,6 +12,6 @@ make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_tensor NANO::nano)
 make_test(test_tensor_integral NANO::nano)
 
-#make_test(test_solver NANO::nano)
+make_test(test_solver NANO::nano)
 make_test(test_lsearch NANO::nano)
 make_test(test_function NANO::nano)

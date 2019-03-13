@@ -21,9 +21,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
     lsearch_step_t L = state0;
     lsearch_step_t R = L;
 
-    assert(L.t < epsilon0<scalar_t>());
-    assert(R.t < epsilon0<scalar_t>());
-
+    bool R_updated = false;
     for (int i = 1; i < max_iterations() && t < stpmax(); ++ i)
     {
         if (!state.update(state0, t))
@@ -42,7 +40,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
             {
                 L = state;
 
-                if (R.t < epsilon0<scalar_t>())
+                if (!R_updated)
                 {
                     t *= m_ro;
                 }
@@ -56,6 +54,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, scalar_t t, solver_
         {
             log(state);
             R = state;
+            R_updated = true;
             t = lsearch_step_t::cubic(L, R);
         }
     }

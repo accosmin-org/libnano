@@ -120,9 +120,9 @@ bool lsearch_t::operator()(solver_state_t& state)
 
     // check parameters
     if (!(  0 < m_strategy->c1() &&
-        m_strategy->c1() < scalar_t(0.5) &&
-        m_strategy->c1() < m_strategy->c2() &&
-        m_strategy->c2() < 1))
+            m_strategy->c1() < scalar_t(0.5) &&
+            m_strategy->c1() < m_strategy->c2() &&
+            m_strategy->c2() < 1))
     {
         return false;
     }
