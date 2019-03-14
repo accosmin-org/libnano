@@ -8,6 +8,7 @@ add_library(nano
     solver/cgd.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
+    lsearch.cpp
     lsearch/init.cpp
     lsearch/backtrack.cpp
     lsearch/cgdescent.cpp
