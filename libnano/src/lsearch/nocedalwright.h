@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/lsearch_algo.h>
 
 namespace nano
 {
@@ -8,7 +8,7 @@ namespace nano
     /// \brief the More&Thuente-like line-search algorithm described here:
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.60
     ///
-    class lsearch_nocedalwright_t final : public lsearch_strategy_t
+    class lsearch_nocedalwright_t final : public lsearch_algo_t
     {
     public:
 

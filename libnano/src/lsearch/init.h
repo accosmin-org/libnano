@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/lsearch_init.h>
 
 namespace nano
 {

@@ -125,7 +125,7 @@ UTEST_CASE(default_solvers)
     }
 }
 
-UTEST_CASE(lsearch_strategies)
+UTEST_CASE(various_lsearches)
 {
     for (const auto& function : get_convex_functions(1, 4))
     {
@@ -136,9 +136,9 @@ UTEST_CASE(lsearch_strategies)
             const auto solver = get_solvers().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& lsearch_id : get_lsearch_strategies().ids())
+            for (const auto& lsearch_id : get_lsearch_algos().ids())
             {
-                solver->lsearch(get_lsearch_strategies().get(lsearch_id));
+                solver->lsearch(get_lsearch_algos().get(lsearch_id));
 
                 for (auto t = 0; t < 10; ++ t)
                 {

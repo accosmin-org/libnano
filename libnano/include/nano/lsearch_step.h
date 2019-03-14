@@ -8,13 +8,21 @@ namespace nano
     /// \brief line-search step function:
     ///     phi(t) = f(x + t * d), f - the function to minimize and d - the descent direction.
     ///
-    struct lsearch_step_t
+    class lsearch_step_t
     {
+    public:
+
+        ///
+        /// \brief construction
+        ///
         lsearch_step_t() = default;
         lsearch_step_t(const lsearch_step_t&) = default;
         lsearch_step_t(const solver_state_t& state) : t(state.t), f(state.f), g(state.dg()) {}
         lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t gg) : t(tt), f(ff), g(gg) {}
 
+        ///
+        /// \brief assignment
+        ///
         lsearch_step_t& operator=(const lsearch_step_t&) = default;
         lsearch_step_t& operator=(const solver_state_t& state)
         {

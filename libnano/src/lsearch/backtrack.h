@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/lsearch_algo.h>
 
 namespace nano
 {
@@ -8,7 +8,7 @@ namespace nano
     /// \brief backtracking line-search that stops when the Armijo condition is satisfied,
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
-    class lsearch_backtrack_t final : public lsearch_strategy_t
+    class lsearch_backtrack_t final : public lsearch_algo_t
     {
     public:
 

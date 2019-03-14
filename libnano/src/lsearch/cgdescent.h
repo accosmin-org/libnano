@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/lsearch_algo.h>
 
 namespace nano
 {
@@ -14,7 +14,7 @@ namespace nano
     ///
     /// NB: The implementation follows the notation from (2).
     ///
-    class lsearch_cgdescent_t final : public lsearch_strategy_t
+    class lsearch_cgdescent_t final : public lsearch_algo_t
     {
     public:
 

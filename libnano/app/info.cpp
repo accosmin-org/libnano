@@ -30,7 +30,7 @@ static int unsafe_main(int argc, const char* argv[])
     // parse the command line
     cmdline_t cmdline("display the registered objects");
     cmdline.add("", "lsearch-init",         "initial line-search step lengths strategies");
-    cmdline.add("", "lsearch-strategy",     "line-search algorithms");
+    cmdline.add("", "lsearch-algo",         "line-search algorithms");
     cmdline.add("", "solver",               "numerical optimization algorithms");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
@@ -42,7 +42,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.process(argc, argv);
 
     const auto has_lsearch_init = cmdline.has("lsearch-init");
-    const auto has_lsearch_strategy = cmdline.has("lsearch-strategy");
+    const auto has_lsearch_algo = cmdline.has("lsearch-algo");
     const auto has_solver = cmdline.has("solver");
     const auto has_system = cmdline.has("system");
     const auto has_sys_logical = cmdline.has("sys-logical-cpus");
@@ -52,7 +52,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_git_hash = cmdline.has("git-hash");
 
     if (!has_lsearch_init &&
-        !has_lsearch_strategy &&
+        !has_lsearch_algo &&
         !has_solver &&
         !has_system &&
         !has_sys_logical &&
@@ -70,9 +70,9 @@ static int unsafe_main(int argc, const char* argv[])
     {
         print("lsearch-init", get_lsearch_inits());
     }
-    if (has_lsearch_strategy)
+    if (has_lsearch_algo)
     {
-        print("lsearch-strategy", get_lsearch_strategies());
+        print("lsearch-algo", get_lsearch_algos());
     }
     if (has_solver)
     {

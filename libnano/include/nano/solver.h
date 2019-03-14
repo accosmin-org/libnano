@@ -1,6 +1,7 @@
 #pragma once
 
-#include <nano/lsearch.h>
+#include <nano/lsearch_algo.h>
+#include <nano/lsearch_init.h>
 #include <nano/solver_function.h>
 
 namespace nano
@@ -54,7 +55,7 @@ namespace nano
         /// \brief change parameters
         ///
         void lsearch(rlsearch_init_t&&);
-        void lsearch(rlsearch_strategy_t&&);
+        void lsearch(rlsearch_algo_t&&);
         void logger(const logger_t& logger) { m_logger = logger; }
         void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
         void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }
@@ -93,10 +94,10 @@ namespace nano
     private:
 
         // attributes
-        scalar_t            m_epsilon{1e-6};                    ///< required precision (~magnitude of the gradient)
-        int                 m_max_iterations{1000};             ///< maximum number of iterations
-        logger_t            m_logger;                           ///<
-        rlsearch_init_t     m_lsearch_init;                     ///<
-        rlsearch_strategy_t m_lsearch_algo;                     ///<
+        scalar_t            m_epsilon{1e-6};            ///< required precision (~magnitude of the gradient)
+        int                 m_max_iterations{1000};     ///< maximum number of iterations
+        logger_t            m_logger;                   ///<
+        rlsearch_init_t     m_lsearch_init;             ///<
+        rlsearch_algo_t     m_lsearch_algo;             ///<
     };
 }

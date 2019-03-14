@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/lsearch_algo.h>
 
 namespace nano
 {
@@ -8,7 +8,7 @@ namespace nano
     /// \brief the line-search algorithm described here:
     ///     see "A view of line-searches", C. Lemarechal
     ///
-    class lsearch_lemarechal_t final : public lsearch_strategy_t
+    class lsearch_lemarechal_t final : public lsearch_algo_t
     {
     public:
 

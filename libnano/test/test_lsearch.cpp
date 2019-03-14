@@ -14,8 +14,8 @@ static auto get_state0(const rfunction_t& function)
 
 static auto get_lsearch(const string_t& id)
 {
-    std::cout << "evaluating lsearch strategy " << id << "...\n";
-    auto lsearch = get_lsearch_strategies().get(id);
+    std::cout << "evaluating lsearch method " << id << "...\n";
+    auto lsearch = get_lsearch_algos().get(id);
     UTEST_REQUIRE(lsearch);
     lsearch->c1(scalar_t{1e-4});
     lsearch->c2(scalar_t{9e-1});
@@ -23,7 +23,7 @@ static auto get_lsearch(const string_t& id)
     return lsearch;
 }
 
-static void set_logger(const rlsearch_strategy_t& lsearch, const scalar_t t0, const solver_state_t& state0)
+static void set_logger(const rlsearch_algo_t& lsearch, const scalar_t t0, const solver_state_t& state0)
 {
     std::cout << std::fixed << std::setprecision(8) << "....x0=" << state0.x.transpose() << "\n";
     lsearch->logger([&lsearch = lsearch, t0 = t0, &state0 = state0] (const solver_state_t& state)
@@ -41,7 +41,7 @@ static void set_logger(const rlsearch_strategy_t& lsearch, const scalar_t t0, co
 
 UTEST_BEGIN_MODULE(test_lsearch)
 
-UTEST_CASE(strategy_backtrack)
+UTEST_CASE(backtrack)
 {
     const auto lsearch = get_lsearch("backtrack");
 
@@ -66,7 +66,7 @@ UTEST_CASE(strategy_backtrack)
     }
 }
 
-UTEST_CASE(strategy_lemarechal)
+UTEST_CASE(lemarechal)
 {
     const auto lsearch = get_lsearch("lemarechal");
 
@@ -92,7 +92,7 @@ UTEST_CASE(strategy_lemarechal)
     }
 }
 
-UTEST_CASE(strategy_morethuente)
+UTEST_CASE(morethuente)
 {
     const auto lsearch = get_lsearch("morethuente");
 
@@ -118,7 +118,7 @@ UTEST_CASE(strategy_morethuente)
     }
 }
 
-UTEST_CASE(strategy_nocedalwright)
+UTEST_CASE(nocedalwright)
 {
     const auto lsearch = get_lsearch("nocedalwright");
 
@@ -144,7 +144,7 @@ UTEST_CASE(strategy_nocedalwright)
     }
 }
 
-UTEST_CASE(strategy_cgdescent)
+UTEST_CASE(cgdescent)
 {
     const auto lsearch = get_lsearch("cgdescent");
     const auto epsilon = 1e-6;// todo: get the updated value of epsilon!!!

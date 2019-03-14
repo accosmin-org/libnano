@@ -154,7 +154,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "c1",           "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",           "use this c2 value (see Wolfe line-search step condition)");
     cmdline.add("", "ls-init",      "use this regex to select the line-search initialization methods");
-    cmdline.add("", "ls-strat",     "use this regex to select the line-search strategies");
+    cmdline.add("", "ls-algo",      "use this regex to select the line-search methods");
 
     cmdline.process(argc, argv);
 
@@ -173,13 +173,13 @@ static int unsafe_main(int argc, const char* argv[])
         get_lsearch_inits().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
         strings_t{};
 
-    const auto ls_strats = cmdline.has("ls-strat") ?
-        get_lsearch_strategies().ids(std::regex(cmdline.get<string_t>("ls-strat"))) :
+    const auto ls_algos = cmdline.has("ls-algo") ?
+        get_lsearch_algos().ids(std::regex(cmdline.get<string_t>("ls-algo"))) :
         strings_t{};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_strat)
+    const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_algo)
     {
         auto solver = get_solvers().get(solver_id);
         if (cmdline.has("c1"))
@@ -194,9 +194,9 @@ static int unsafe_main(int argc, const char* argv[])
         {
             solver->lsearch(get_lsearch_inits().get(*ls_init));
         }
-        if (ls_strat)
+        if (ls_algo)
         {
-            solver->lsearch(get_lsearch_strategies().get(*ls_strat));
+            solver->lsearch(get_lsearch_algos().get(*ls_algo));
         }
         solver->epsilon(epsilon);
         solver->max_iterations(iterations);
@@ -207,15 +207,15 @@ static int unsafe_main(int argc, const char* argv[])
     for (const auto& id : get_solvers().ids(sregex))
     {
         const auto size_init = ls_inits.size() + 1;
-        const auto size_strat = ls_strats.size() + 1;
+        const auto size_algo = ls_algos.size() + 1;
 
         for (size_t i_init = 0; i_init < size_init; ++ i_init)
         {
-            for (size_t i_strat = 0; i_strat < size_strat; ++ i_strat)
+            for (size_t i_algo = 0; i_algo < size_algo; ++ i_algo)
             {
                 add_solver(id,
                     (i_init == ls_inits.size()) ? nullptr : &ls_inits[i_init],
-                    (i_strat == ls_strats.size()) ? nullptr : &ls_strats[i_strat]);
+                    (i_algo == ls_algos.size()) ? nullptr : &ls_algos[i_algo]);
             }
         }
     }

@@ -37,10 +37,10 @@ solver_factory_t& nano::get_solvers()
 
 solver_t::solver_t(const scalar_t c1, const scalar_t c2) :
     m_lsearch_init(get_lsearch_inits().get("quadratic")),
-    m_lsearch_algo(get_lsearch_strategies().get("morethuente"))
+    m_lsearch_algo(get_lsearch_algos().get("morethuente"))
 {
     if (!m_lsearch_init) throw std::runtime_error("invalid line-search initialization");
-    if (!m_lsearch_algo) throw std::runtime_error("invalid line-search strategy");
+    if (!m_lsearch_algo) throw std::runtime_error("invalid line-search algorithm");
 
     m_lsearch_algo->c1(c1);
     m_lsearch_algo->c2(c2);
@@ -76,9 +76,9 @@ void solver_t::lsearch(rlsearch_init_t&& init)
     m_lsearch_init = std::move(init);
 }
 
-void solver_t::lsearch(rlsearch_strategy_t&& algo)
+void solver_t::lsearch(rlsearch_algo_t&& algo)
 {
-    if (!algo) throw std::runtime_error("invalid line-search strategy");
+    if (!algo) throw std::runtime_error("invalid line-search algorithm");
 
     m_lsearch_algo = std::move(algo);
 }
@@ -96,7 +96,7 @@ bool solver_t::lsearch(solver_state_t& state) const
 
     // initial step length
     // fixme: is it safe to allow t0 to be greater than 1?!
-    const auto t0 = nano::clamp(m_lsearch_init->get(state), lsearch_strategy_t::stpmin(), scalar_t(1));
+    const auto t0 = nano::clamp(m_lsearch_init->get(state), lsearch_algo_t::stpmin(), scalar_t(1));
 
     // line-search step length
     auto state0 = state;
