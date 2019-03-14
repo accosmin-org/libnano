@@ -2,23 +2,23 @@
 
 using namespace nano;
 
-void solver_gd_t::from_json(const json_t& json)
+solver_gd_t::solver_gd_t() :
+    solver_t(1e-1, 9e-1)
 {
-    nano::from_json(json, "init", m_init, "strat", m_strat, "c1", m_c1, "c2", m_c2);
 }
 
 void solver_gd_t::to_json(json_t& json) const
 {
-    nano::to_json(json,
-        "init", to_string(m_init) + join(enum_values<lsearch_t::initializer>()),
-        "strat", to_string(m_strat) + join(enum_values<lsearch_t::strategy>()),
-        "c1", m_c1, "c2", m_c2);
+    solver_t::to_json(json);
+}
+
+void solver_gd_t::from_json(const json_t& json)
+{
+    solver_t::from_json(json);
 }
 
 solver_state_t solver_gd_t::minimize(const solver_function_t& function, const vector_t& x0) const
 {
-    lsearch_t lsearch(m_init, m_strat, m_c1, m_c2);
-
     auto cstate = solver_state_t{function, x0};
     for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
     {

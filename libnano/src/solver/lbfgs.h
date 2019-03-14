@@ -15,20 +15,14 @@ namespace nano
     {
     public:
 
-        solver_lbfgs_t() = default;
-
+        solver_lbfgs_t();
         void to_json(json_t&) const final;
         void from_json(const json_t&) final;
-
         solver_state_t minimize(const solver_function_t&, const vector_t& x0) const final;
 
     private:
 
         // attributes
-        lsearch_t::initializer  m_init{lsearch_t::initializer::quadratic};
-        lsearch_t::strategy     m_strat{lsearch_t::strategy::morethuente};
-        scalar_t                m_c1{static_cast<scalar_t>(1e-4)};
-        scalar_t                m_c2{static_cast<scalar_t>(9e-1)};
-        size_t                  m_history_size{6};      ///< history size (number of previous gradients to use)
+        size_t          m_history_size{6};      ///< history size (number of previous gradients to use)
     };
 }

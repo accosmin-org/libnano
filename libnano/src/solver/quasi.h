@@ -12,29 +12,19 @@ namespace nano
     ///     see "Introductory Lectures on Convex Optimization (Applied Optimization)",
     ///     by Y. Nesterov, 2013
     ///
-    template <typename tquasi_update>
-    class solver_quasi_base_t final : public solver_t
+    template <typename tquasi>
+    class solver_quasi_t final : public solver_t
     {
     public:
 
-        solver_quasi_base_t() = default;
-
+        solver_quasi_t();
         void to_json(json_t&) const final;
         void from_json(const json_t&) final;
-
         solver_state_t minimize(const solver_function_t&, const vector_t& x0) const final;
-
-    private:
-
-        // attributes
-        lsearch_t::initializer  m_init{lsearch_t::initializer::quadratic};
-        lsearch_t::strategy     m_strat{lsearch_t::strategy::morethuente};
-        scalar_t                m_c1{static_cast<scalar_t>(1e-4)};
-        scalar_t                m_c2{static_cast<scalar_t>(9e-1)};
     };
 
     ///
-    /// \brief Davidon–Fletcher–Powell (DFP).
+    /// \brief Davidon-Fletcher-Powell (DFP).
     ///
     struct quasi_step_DFP
     {
@@ -95,8 +85,8 @@ namespace nano
     };
 
     // create various quasi-Newton algorithms
-    using solver_quasi_dfp_t = solver_quasi_base_t<quasi_step_DFP>;
-    using solver_quasi_sr1_t = solver_quasi_base_t<quasi_step_SR1>;
-    using solver_quasi_bfgs_t = solver_quasi_base_t<quasi_step_BFGS>;
-    using solver_quasi_broyden_t = solver_quasi_base_t<quasi_step_broyden>;
+    using solver_quasi_dfp_t = solver_quasi_t<quasi_step_DFP>;
+    using solver_quasi_sr1_t = solver_quasi_t<quasi_step_SR1>;
+    using solver_quasi_bfgs_t = solver_quasi_t<quasi_step_BFGS>;
+    using solver_quasi_broyden_t = solver_quasi_t<quasi_step_broyden>;
 }

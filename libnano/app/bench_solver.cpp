@@ -1,3 +1,4 @@
+#include <iostream>
 #include <nano/solver.h>
 #include <nano/stats.h>
 #include <nano/table.h>
@@ -5,7 +6,6 @@
 #include <nano/logger.h>
 #include <nano/cmdline.h>
 #include <nano/numeric.h>
-#include <iostream>
 
 using namespace nano;
 
@@ -84,8 +84,6 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
 static auto trim(const json_t& json)
 {
     string_t config = json.dump();
-    config = nano::replace(config, join(enum_values<lsearch_t::initializer>()), "");
-    config = nano::replace(config, join(enum_values<lsearch_t::strategy>()), "");
     config = nano::replace(config, ",,", ",");
     config = nano::replace(config, "\"", "");
     config = nano::replace(config, ",}", "");
@@ -155,10 +153,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "convex",       "use only convex test functions");
     cmdline.add("", "c1",           "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",           "use this c2 value (see Wolfe line-search step condition)");
-    cmdline.add("", "ls-init",      "use this regex to select the line-search initialization methods " +
-        join(enum_values<lsearch_t::initializer>()));
-    cmdline.add("", "ls-strat",     "use this regex to select the line-search strategy methods " +
-        join(enum_values<lsearch_t::strategy>()));
+    cmdline.add("", "ls-init",      "use this regex to select the line-search initialization methods");
+    cmdline.add("", "ls-strat",     "use this regex to select the line-search strategies");
 
     cmdline.process(argc, argv);
 
@@ -174,12 +170,12 @@ static int unsafe_main(int argc, const char* argv[])
     const auto sregex = std::regex(cmdline.get<string_t>("solvers"));
 
     const auto ls_inits = cmdline.has("ls-init") ?
-        nano::enum_values<lsearch_t::initializer>(std::regex(cmdline.get<string_t>("ls-init"))) :
-        std::vector<lsearch_t::initializer>{};
+        get_lsearch_inits().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
+        strings_t{};
 
     const auto ls_strats = cmdline.has("ls-strat") ?
-        nano::enum_values<lsearch_t::strategy>(std::regex(cmdline.get<string_t>("ls-strat"))) :
-        std::vector<lsearch_t::strategy>{};
+        get_lsearch_strategies().ids(std::regex(cmdline.get<string_t>("ls-strat"))) :
+        strings_t{};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
@@ -196,11 +192,11 @@ static int unsafe_main(int argc, const char* argv[])
         }
         if (ls_init)
         {
-            solver->from_json(nano::to_json("init", *ls_init));
+            solver->lsearch(get_lsearch_inits().get(*ls_init));
         }
         if (ls_strat)
         {
-            solver->from_json(nano::to_json("strat", *ls_strat));
+            solver->lsearch(get_lsearch_strategies().get(*ls_strat));
         }
         solver->epsilon(epsilon);
         solver->max_iterations(iterations);

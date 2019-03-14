@@ -136,9 +136,9 @@ UTEST_CASE(lsearch_strategies)
             const auto solver = get_solvers().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto lsearch_strategy : enum_values<lsearch_t::strategy>())
+            for (const auto& lsearch_id : get_lsearch_strategies().ids())
             {
-                solver->from_json(to_json("strat", lsearch_strategy));
+                solver->lsearch(get_lsearch_strategies().get(lsearch_id));
 
                 for (auto t = 0; t < 10; ++ t)
                 {

@@ -3,25 +3,25 @@
 
 using namespace nano;
 
-void solver_lbfgs_t::from_json(const json_t& json)
+solver_lbfgs_t::solver_lbfgs_t() :
+    solver_t(1e-4, 9e-1)
 {
-    nano::from_json(json,
-        "init", m_init, "strat", m_strat,
-        "c1", m_c1, "c2", m_c2, "history", m_history_size);
 }
 
 void solver_lbfgs_t::to_json(json_t& json) const
 {
-    nano::to_json(json,
-        "init", to_string(m_init) + join(enum_values<lsearch_t::initializer>()),
-        "strat", to_string(m_strat) + join(enum_values<lsearch_t::strategy>()),
-        "c1", m_c1, "c2", m_c2, "history", m_history_size);
+    solver_t::to_json(json);
+    nano::to_json(json, "history", strcat(m_history_size, "(1,1000)"));
+}
+
+void solver_lbfgs_t::from_json(const json_t& json)
+{
+    solver_t::from_json(json);
+    nano::from_json_range(json, "history", m_history_size, 1, 1000);
 }
 
 solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const vector_t& x0) const
 {
-    lsearch_t lsearch(m_init, m_strat, m_c1, m_c2);
-
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
 

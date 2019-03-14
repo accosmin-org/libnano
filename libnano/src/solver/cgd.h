@@ -5,28 +5,22 @@
 namespace nano
 {
     ///
-    /// \brief conjugate gradient descent with line-search.
+    /// \brief non-linear conjugate gradient descent with line-search.
     ///
-    template <typename tcgd_update>
-    class solver_cgd_base_t final : public solver_t
+    template <typename tcgd>
+    class solver_cgd_t final : public solver_t
     {
     public:
 
-        solver_cgd_base_t() = default;
-
+        solver_cgd_t();
         void to_json(json_t&) const final;
         void from_json(const json_t&) final;
-
         solver_state_t minimize(const solver_function_t&, const vector_t& x0) const final;
 
     private:
 
         // attributes
-        lsearch_t::initializer  m_init{lsearch_t::initializer::quadratic};
-        lsearch_t::strategy     m_strat{lsearch_t::strategy::morethuente};
-        scalar_t                m_c1{static_cast<scalar_t>(1e-4)};
-        scalar_t                m_c2{static_cast<scalar_t>(1e-1)};
-        scalar_t                m_orthotest{static_cast<scalar_t>(0.1)};    ///< orthogonality test
+        scalar_t        m_orthotest{0.1};       ///< orthogonality test
     };
 
     ///
@@ -159,13 +153,13 @@ namespace nano
     };
 
     // create various CGD algorithms
-    using solver_cgd_n_t = solver_cgd_base_t<cgd_step_N>;
-    using solver_cgd_cd_t = solver_cgd_base_t<cgd_step_CD>;
-    using solver_cgd_dy_t = solver_cgd_base_t<cgd_step_DY>;
-    using solver_cgd_fr_t = solver_cgd_base_t<cgd_step_FR>;
-    using solver_cgd_hs_t = solver_cgd_base_t<cgd_step_HS>;
-    using solver_cgd_ls_t = solver_cgd_base_t<cgd_step_LS>;
-    using solver_cgd_prp_t = solver_cgd_base_t<cgd_step_PRP>;
-    using solver_cgd_dycd_t = solver_cgd_base_t<cgd_step_DYCD>;
-    using solver_cgd_dyhs_t = solver_cgd_base_t<cgd_step_DYHS>;
+    using solver_cgd_n_t = solver_cgd_t<cgd_step_N>;
+    using solver_cgd_cd_t = solver_cgd_t<cgd_step_CD>;
+    using solver_cgd_dy_t = solver_cgd_t<cgd_step_DY>;
+    using solver_cgd_fr_t = solver_cgd_t<cgd_step_FR>;
+    using solver_cgd_hs_t = solver_cgd_t<cgd_step_HS>;
+    using solver_cgd_ls_t = solver_cgd_t<cgd_step_LS>;
+    using solver_cgd_prp_t = solver_cgd_t<cgd_step_PRP>;
+    using solver_cgd_dycd_t = solver_cgd_t<cgd_step_DYCD>;
+    using solver_cgd_dyhs_t = solver_cgd_t<cgd_step_DYHS>;
 }

@@ -1,28 +1,33 @@
 #include "cgd.h"
+#include <nano/numeric.h>
 
 using namespace nano;
 
-template <typename tcgd_update>
-void solver_cgd_base_t<tcgd_update>::from_json(const json_t& json)
+template <typename tcgd>
+solver_cgd_t<tcgd>::solver_cgd_t() :
+    solver_t(1e-4, 1e-1)
 {
-    nano::from_json(json,
-        "init", m_init, "strat", m_strat, "c1", m_c1, "c2", m_c2, "orthotest", m_orthotest);
 }
 
-template <typename tcgd_update>
-void solver_cgd_base_t<tcgd_update>::to_json(json_t& json) const
+template <typename tcgd>
+void solver_cgd_t<tcgd>::to_json(json_t& json) const
 {
-    nano::to_json(json,
-        "init", to_string(m_init) + join(enum_values<lsearch_t::initializer>()),
-        "strat", to_string(m_strat) + join(enum_values<lsearch_t::strategy>()),
-        "c1", m_c1, "c2", m_c2, "orthotest", m_orthotest);
+    solver_t::to_json(json);
+    nano::to_json(json, "orthotest", strcat(m_orthotest, "(0,1)"));
 }
 
-template <typename tcgd_update>
-solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const solver_function_t& function, const vector_t& x0) const
+template <typename tcgd>
+void solver_cgd_t<tcgd>::from_json(const json_t& json)
 {
-    lsearch_t lsearch(m_init, m_strat, m_c1, m_c2);
+    const auto eps = epsilon0<scalar_t>();
 
+    solver_t::from_json(json);
+    nano::from_json_range(json, "orthotest", m_orthotest, eps, 1 - eps);
+}
+
+template <typename tcgd>
+solver_state_t solver_cgd_t<tcgd>::minimize(const solver_function_t& function, const vector_t& x0) const
+{
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
 
@@ -35,7 +40,7 @@ solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const solver_function_t&
         }
         else
         {
-            const scalar_t beta = tcgd_update::get(pstate, cstate);
+            const scalar_t beta = tcgd::get(pstate, cstate);
             cstate.d = -cstate.g + beta * pstate.d;
 
             // restart:
@@ -64,12 +69,12 @@ solver_state_t solver_cgd_base_t<tcgd_update>::minimize(const solver_function_t&
     return cstate;
 }
 
-template class nano::solver_cgd_base_t<cgd_step_HS>;
-template class nano::solver_cgd_base_t<cgd_step_FR>;
-template class nano::solver_cgd_base_t<cgd_step_PRP>;
-template class nano::solver_cgd_base_t<cgd_step_CD>;
-template class nano::solver_cgd_base_t<cgd_step_LS>;
-template class nano::solver_cgd_base_t<cgd_step_DY>;
-template class nano::solver_cgd_base_t<cgd_step_N>;
-template class nano::solver_cgd_base_t<cgd_step_DYCD>;
-template class nano::solver_cgd_base_t<cgd_step_DYHS>;
+template class nano::solver_cgd_t<cgd_step_HS>;
+template class nano::solver_cgd_t<cgd_step_FR>;
+template class nano::solver_cgd_t<cgd_step_PRP>;
+template class nano::solver_cgd_t<cgd_step_CD>;
+template class nano::solver_cgd_t<cgd_step_LS>;
+template class nano::solver_cgd_t<cgd_step_DY>;
+template class nano::solver_cgd_t<cgd_step_N>;
+template class nano::solver_cgd_t<cgd_step_DYCD>;
+template class nano::solver_cgd_t<cgd_step_DYHS>;
