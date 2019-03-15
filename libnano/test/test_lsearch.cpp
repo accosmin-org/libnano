@@ -12,13 +12,13 @@ static auto get_state0(const rfunction_t& function)
     return state0;
 }
 
-static auto get_lsearch(const string_t& id)
+static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scalar_t c2 = 9e-1)
 {
     std::cout << "evaluating lsearch method " << id << "...\n";
     auto lsearch = lsearch_strategy_t::all().get(id);
     UTEST_REQUIRE(lsearch);
-    lsearch->c1(scalar_t{1e-4});
-    lsearch->c2(scalar_t{9e-1});
+    lsearch->c1(c1);
+    lsearch->c2(c2);
     lsearch->max_iterations(100);
     return lsearch;
 }
@@ -40,7 +40,6 @@ static void set_logger(const rlsearch_strategy_t& lsearch, const scalar_t t0, co
 }
 
 // todo: extend the checks for different c1 and c2 values (1e-1+9e-1, 1e-4+1e-1, 1e-4+9e-1)
-// todo: check configuring line-search strategies
 // todo: verbose only when a failure is detected - add support for this in utest
 
 UTEST_BEGIN_MODULE(test_lsearch)

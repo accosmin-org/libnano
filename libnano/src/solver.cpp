@@ -11,8 +11,8 @@ solver_t::solver_t(const scalar_t c1, const scalar_t c2) :
     m_lsearch_init(lsearch_init_t::all().get("quadratic")),
     m_lsearch_strategy(lsearch_strategy_t::all().get("morethuente"))
 {
-    if (!m_lsearch_init) throw std::runtime_error("invalid line-search init");
-    if (!m_lsearch_strategy) throw std::runtime_error("invalid line-search strategy");
+    if (!m_lsearch_init) throw std::invalid_argument("invalid line-search init");
+    if (!m_lsearch_strategy) throw std::invalid_argument("invalid line-search strategy");
 
     m_lsearch_strategy->c1(c1);
     m_lsearch_strategy->c2(c2);
@@ -44,14 +44,14 @@ void solver_t::config(const json_t& json)
 
 void solver_t::lsearch(rlsearch_init_t&& init)
 {
-    if (!init) throw std::runtime_error("invalid line-search init");
+    if (!init) throw std::invalid_argument("invalid line-search init");
 
     m_lsearch_init = std::move(init);
 }
 
 void solver_t::lsearch(rlsearch_strategy_t&& strategy)
 {
-    if (!strategy) throw std::runtime_error("invalid line-search strategy");
+    if (!strategy) throw std::invalid_argument("invalid line-search strategy");
 
     m_lsearch_strategy = std::move(strategy);
 }

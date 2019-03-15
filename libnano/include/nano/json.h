@@ -69,7 +69,7 @@ namespace nano
         const auto count = from_json(json, name, value);
         if (count > 0 && (value < static_cast<tscalar>(min) || value > static_cast<tscalar>(max)))
         {
-            throw std::runtime_error(strcat("invalid ", name, " parameter"));
+            throw std::invalid_argument(strcat("invalid ", name, " parameter"));
         }
     }
 

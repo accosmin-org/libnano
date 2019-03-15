@@ -38,7 +38,6 @@ static void test(const solver_t& solver, const string_t& solver_id, const functi
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
 }
 
-// todo: check configuring solvers
 // todo: verbose only when a failure is detected - add support for this in utest
 
 UTEST_BEGIN_MODULE(test_solvers)
@@ -106,6 +105,49 @@ UTEST_CASE(state_convergence1)
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
+}
+
+UTEST_CASE(config_solvers)
+{
+    const auto valid0 = to_json("c1", 1e-4, "c2", 1e-1);
+    const auto valid1 = to_json("c1", 1e-4, "c2", 9e-1);
+    const auto valid2 = to_json("c1", 1e-1, "c2", 9e-1);
+
+    const auto invalid_c10 = to_json("c1", "not-a-scalar");
+    const auto invalid_c11 = to_json("c1", -1);
+    const auto invalid_c12 = to_json("c1", +0);
+    const auto invalid_c13 = to_json("c1", +1);
+    const auto invalid_c14 = to_json("c1", +2);
+
+    const auto invalid_c20 = to_json("c2", "not-a-scalar");
+    const auto invalid_c21 = to_json("c2", -1);
+    const auto invalid_c22 = to_json("c2", +0);
+    const auto invalid_c23 = to_json("c2", +1);
+    const auto invalid_c24 = to_json("c2", +2);
+    const auto invalid_c25 = to_json("c1", 1e-1, "c2", 1e-4, "why", "c1 > c2");
+
+    for (const auto& solver_id : solver_t::all().ids())
+    {
+        const auto solver = solver_t::all().get(solver_id);
+        UTEST_REQUIRE(solver);
+
+        UTEST_CHECK_NOTHROW(solver->config(valid0));
+        UTEST_CHECK_NOTHROW(solver->config(valid1));
+        UTEST_CHECK_NOTHROW(solver->config(valid2));
+
+        UTEST_CHECK_THROW(solver->config(invalid_c10), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c11), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c12), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c13), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c14), std::invalid_argument);
+
+        UTEST_CHECK_THROW(solver->config(invalid_c20), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c21), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c22), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c23), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c24), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->config(invalid_c25), std::invalid_argument);
+    }
 }
 
 UTEST_CASE(default_solvers)
