@@ -16,8 +16,8 @@ namespace nano
     public:
 
         solver_lbfgs_t();
-        void to_json(json_t&) const final;
-        void from_json(const json_t&) final;
+        json_t config() const final;
+        void config(const json_t&) final;
         solver_state_t minimize(const solver_function_t&, const vector_t& x0) const final;
 
     private:

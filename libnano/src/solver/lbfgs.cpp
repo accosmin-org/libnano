@@ -8,15 +8,16 @@ solver_lbfgs_t::solver_lbfgs_t() :
 {
 }
 
-void solver_lbfgs_t::to_json(json_t& json) const
+json_t solver_lbfgs_t::config() const
 {
-    solver_t::to_json(json);
-    nano::to_json(json, "history", strcat(m_history_size, "(1,1000)"));
+    json_t json = solver_t::config();
+    json["history"] = strcat(m_history_size, "(1,1000)");
+    return json;
 }
 
-void solver_lbfgs_t::from_json(const json_t& json)
+void solver_lbfgs_t::config(const json_t& json)
 {
-    solver_t::from_json(json);
+    solver_t::config(json);
     nano::from_json_range(json, "history", m_history_size, 1, 1000);
 }
 

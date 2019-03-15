@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/lsearch_algo.h>
+#include <nano/lsearch/strategy.h>
 
 namespace nano
 {
@@ -14,13 +14,14 @@ namespace nano
     ///
     /// NB: The implementation follows the notation from (2).
     ///
-    class lsearch_cgdescent_t final : public lsearch_algo_t
+    class lsearch_cgdescent_t final : public lsearch_strategy_t
     {
     public:
 
         lsearch_cgdescent_t() = default;
-        void to_json(json_t&) const final;
-        void from_json(const json_t&) final;
+
+        json_t config() const final;
+        void config(const json_t&) final;
         bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
 
     private:

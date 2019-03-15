@@ -97,8 +97,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver, co
     const std::vector<vector_t>& x0s,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats)
 {
-    json_t json;
-    solver->to_json(json);
+    const auto json = solver->config();
     const auto config = trim(json);
 
     std::vector<solver_state_t> states(x0s.size());
@@ -154,7 +153,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "c1",           "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",           "use this c2 value (see Wolfe line-search step condition)");
     cmdline.add("", "ls-init",      "use this regex to select the line-search initialization methods");
-    cmdline.add("", "ls-algo",      "use this regex to select the line-search methods");
+    cmdline.add("", "ls-strategy",  "use this regex to select the line-search methods");
 
     cmdline.process(argc, argv);
 
@@ -170,33 +169,33 @@ static int unsafe_main(int argc, const char* argv[])
     const auto sregex = std::regex(cmdline.get<string_t>("solvers"));
 
     const auto ls_inits = cmdline.has("ls-init") ?
-        get_lsearch_inits().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
+        lsearch_init_t::all().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
         strings_t{};
 
-    const auto ls_algos = cmdline.has("ls-algo") ?
-        get_lsearch_algos().ids(std::regex(cmdline.get<string_t>("ls-algo"))) :
+    const auto ls_strategies = cmdline.has("ls-strategy") ?
+        lsearch_strategy_t::all().ids(std::regex(cmdline.get<string_t>("ls-strategy"))) :
         strings_t{};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_algo)
+    const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_strategy)
     {
-        auto solver = get_solvers().get(solver_id);
+        auto solver = solver_t::all().get(solver_id);
         if (cmdline.has("c1"))
         {
-            solver->from_json(nano::to_json("c1", cmdline.get<scalar_t>("c1")));
+            solver->config(nano::to_json("c1", cmdline.get<scalar_t>("c1")));
         }
         if (cmdline.has("c2"))
         {
-            solver->from_json(nano::to_json("c2", cmdline.get<scalar_t>("c2")));
+            solver->config(nano::to_json("c2", cmdline.get<scalar_t>("c2")));
         }
         if (ls_init)
         {
-            solver->lsearch(get_lsearch_inits().get(*ls_init));
+            solver->lsearch(lsearch_init_t::all().get(*ls_init));
         }
-        if (ls_algo)
+        if (ls_strategy)
         {
-            solver->lsearch(get_lsearch_algos().get(*ls_algo));
+            solver->lsearch(lsearch_strategy_t::all().get(*ls_strategy));
         }
         solver->epsilon(epsilon);
         solver->max_iterations(iterations);
@@ -204,18 +203,18 @@ static int unsafe_main(int argc, const char* argv[])
         solvers.emplace_back(solver_id, std::move(solver));
     };
 
-    for (const auto& id : get_solvers().ids(sregex))
+    for (const auto& id : solver_t::all().ids(sregex))
     {
         const auto size_init = ls_inits.size() + 1;
-        const auto size_algo = ls_algos.size() + 1;
+        const auto size_strategy = ls_strategies.size() + 1;
 
         for (size_t i_init = 0; i_init < size_init; ++ i_init)
         {
-            for (size_t i_algo = 0; i_algo < size_algo; ++ i_algo)
+            for (size_t i_strategy = 0; i_strategy < size_strategy; ++ i_strategy)
             {
                 add_solver(id,
                     (i_init == ls_inits.size()) ? nullptr : &ls_inits[i_init],
-                    (i_algo == ls_algos.size()) ? nullptr : &ls_algos[i_algo]);
+                    (i_strategy == ls_strategies.size()) ? nullptr : &ls_strategies[i_strategy]);
             }
         }
     }

@@ -15,7 +15,7 @@ static auto get_state0(const rfunction_t& function)
 static auto get_lsearch(const string_t& id)
 {
     std::cout << "evaluating lsearch method " << id << "...\n";
-    auto lsearch = get_lsearch_algos().get(id);
+    auto lsearch = lsearch_strategy_t::all().get(id);
     UTEST_REQUIRE(lsearch);
     lsearch->c1(scalar_t{1e-4});
     lsearch->c2(scalar_t{9e-1});
@@ -23,7 +23,7 @@ static auto get_lsearch(const string_t& id)
     return lsearch;
 }
 
-static void set_logger(const rlsearch_algo_t& lsearch, const scalar_t t0, const solver_state_t& state0)
+static void set_logger(const rlsearch_strategy_t& lsearch, const scalar_t t0, const solver_state_t& state0)
 {
     std::cout << std::fixed << std::setprecision(8) << "....x0=" << state0.x.transpose() << "\n";
     lsearch->logger([&lsearch = lsearch, t0 = t0, &state0 = state0] (const solver_state_t& state)
@@ -38,6 +38,10 @@ static void set_logger(const rlsearch_algo_t& lsearch, const scalar_t t0, const 
             << ",awolfe=" << state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()) << "\n";
     });
 }
+
+// todo: extend the checks for different c1 and c2 values (1e-1+9e-1, 1e-4+1e-1, 1e-4+9e-1)
+// todo: check configuring line-search strategies
+// todo: verbose only when a failure is detected - add support for this in utest
 
 UTEST_BEGIN_MODULE(test_lsearch)
 

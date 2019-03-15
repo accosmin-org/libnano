@@ -1,129 +1,23 @@
-#include "init.h"
-#include <nano/numeric.h>
+#include <mutex>
+#include "init_unit.h"
+#include "init_linear.h"
+#include "init_cgdescent.h"
+#include "init_quadratic.h"
 
 using namespace nano;
 
-scalar_t lsearch_unit_init_t::get(const solver_state_t&, const int)
+lsearch_init_factory_t& lsearch_init_t::all()
 {
-    return 1;
-}
+    static lsearch_init_factory_t manager;
 
-scalar_t lsearch_linear_init_t::get(const solver_state_t& state, const int iteration)
-{
-    scalar_t t0;
-
-    const auto dg = state.dg();
-    switch (iteration)
+    static std::once_flag flag;
+    std::call_once(flag, [] ()
     {
-    case 0:
-        t0 = 1;
-        break;
+        manager.add<lsearch_unit_init_t>("unit", "unit line-search step length");
+        manager.add<lsearch_linear_init_t>("linear", "linearly interpolate the previous line-search step");
+        manager.add<lsearch_quadratic_init_t>("quadratic", "quadratically interpolate the previous line-search step");
+        manager.add<lsearch_cgdescent_init_t>("cgdescent", "the initial line-search step length described in CG-DESCENT");
+    });
 
-    default:
-        // NB: the line-search length is from the previous iteration!
-        t0 = state.t * m_prevdg / dg;
-        break;
-    }
-
-    m_prevdg = dg;
-    return t0;
-}
-
-scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state, const int iteration)
-{
-    scalar_t t0;
-
-    switch (iteration)
-    {
-    case 0:
-        t0 = 1;
-        break;
-
-    default:
-        t0 = scalar_t(1.01) * 2 * (state.f - m_prevf) / state.dg();
-        break;
-    }
-
-    m_prevf = state.f;
-    return t0;
-}
-
-void lsearch_cgdescent_init_t::to_json(json_t& json) const
-{
-    nano::to_json(json,
-        "phi0", strcat(m_phi0, "(0,1)"),
-        "phi1", strcat(m_phi0, "(0,1)"),
-        "phi2", strcat(m_phi0, "(1, inf)"));
-}
-
-void lsearch_cgdescent_init_t::from_json(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-    const auto inf = 1 / eps;
-
-    from_json_range(json, "phi0", m_phi0, eps, 1 - eps);
-    from_json_range(json, "phi1", m_phi1, eps, 1 - eps);
-    from_json_range(json, "phi2", m_phi2, 1 + eps, inf);
-}
-
-scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state, const int iteration)
-{
-    scalar_t t0;
-
-    const auto phi0 = scalar_t(0.01);
-    const auto phi1 = scalar_t(0.1);
-    const auto phi2 = scalar_t(2.0);
-
-    switch (iteration)
-    {
-    case 0:
-        {
-            const auto xnorm = state.x.lpNorm<Eigen::Infinity>();
-            const auto fnorm = std::fabs(state.f);
-
-            if (xnorm > 0)
-            {
-                t0 = phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
-            }
-            else if (fnorm > 0)
-            {
-                t0 = phi0 * fnorm / state.g.squaredNorm();
-            }
-            else
-            {
-                t0 = 1;
-            }
-        }
-        break;
-
-    default:
-        {
-            lsearch_step_t step0
-            {
-                0, state.f, state.dg()
-            };
-
-            lsearch_step_t stepx
-            {
-                state.t * phi1,
-                // NB: the line-search length is from the previous iteration!
-                state.function->vgrad(state.x + state.t * phi1 * state.d),
-                0
-            };
-
-            bool convexity = false;
-            const auto tq = lsearch_step_t::quadratic(step0, stepx, &convexity);
-            if (stepx.f < step0.f && convexity)
-            {
-                t0 = tq;
-            }
-            else
-            {
-                t0 = state.t * phi2;
-            }
-        }
-        break;
-    }
-
-    return t0;
+    return manager;
 }

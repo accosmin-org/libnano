@@ -7,14 +7,15 @@ solver_gd_t::solver_gd_t() :
 {
 }
 
-void solver_gd_t::to_json(json_t& json) const
+json_t solver_gd_t::config() const
 {
-    solver_t::to_json(json);
+    json_t json = solver_t::config();
+    return json;
 }
 
-void solver_gd_t::from_json(const json_t& json)
+void solver_gd_t::config(const json_t& json)
 {
-    solver_t::from_json(json);
+    solver_t::config(json);
 }
 
 solver_state_t solver_gd_t::minimize(const solver_function_t& function, const vector_t& x0) const

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <nano/lsearch_algo.h>
-#include <nano/lsearch_init.h>
-#include <nano/solver_function.h>
+#include <nano/lsearch/init.h>
+#include <nano/solver/function.h>
+#include <nano/lsearch/strategy.h>
 
 namespace nano
 {
@@ -11,12 +11,7 @@ namespace nano
     using rsolver_t = solver_factory_t::trobject;
 
     ///
-    /// \brief returns the registered solvers.
-    ///
-    NANO_PUBLIC solver_factory_t& get_solvers();
-
-    ///
-    /// \brief generic (batch) optimization algorithm typically using an adaptive line-search method.
+    /// \brief generic optimization algorithm typically using an adaptive line-search method.
     ///
     class NANO_PUBLIC solver_t : public json_configurable_t
     {
@@ -33,6 +28,11 @@ namespace nano
         solver_t(const scalar_t c1 = 1e-1, const scalar_t c2 = 9e-1);
 
         ///
+        /// \brief returns the available implementations
+        ///
+        static solver_factory_t& all();
+
+        ///
         /// \brief minimize the given function starting from the initial point x0 until:
         ///     - convergence is achieved (critical point, possiblly a local/global minima) or
         ///     - the maximum number of iterations is reached or
@@ -46,16 +46,16 @@ namespace nano
         }
 
         ///
-        /// \brief
+        /// \brief configure using JSON
         ///
-        void to_json(json_t&) const override;
-        void from_json(const json_t&) override;
+        json_t config() const override;
+        void config(const json_t&) override;
 
         ///
         /// \brief change parameters
         ///
         void lsearch(rlsearch_init_t&&);
-        void lsearch(rlsearch_algo_t&&);
+        void lsearch(rlsearch_strategy_t&&);
         void logger(const logger_t& logger) { m_logger = logger; }
         void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
         void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }
@@ -98,6 +98,6 @@ namespace nano
         int                 m_max_iterations{1000};     ///< maximum number of iterations
         logger_t            m_logger;                   ///<
         rlsearch_init_t     m_lsearch_init;             ///<
-        rlsearch_algo_t     m_lsearch_algo;             ///<
+        rlsearch_strategy_t m_lsearch_strategy;         ///<
     };
 }

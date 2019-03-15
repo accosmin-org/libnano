@@ -17,8 +17,7 @@ namespace
         table.delim();
         for (const auto& id : factory.ids())
         {
-            json_t json;
-            factory.get(id)->to_json(json);
+            const auto json = factory.get(id)->config();
             table.append() << id << factory.description(id) << json.dump();
         }
         std::cout << table;
@@ -29,9 +28,9 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("display the registered objects");
-    cmdline.add("", "lsearch-init",         "initial line-search step lengths strategies");
-    cmdline.add("", "lsearch-algo",         "line-search algorithms");
-    cmdline.add("", "solver",               "numerical optimization algorithms");
+    cmdline.add("", "lsearch-init",         "methods to estimate the initial line-search step length");
+    cmdline.add("", "lsearch-strategy",     "line-search methods");
+    cmdline.add("", "solver",               "numerical optimization methods");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
     cmdline.add("", "system",               "system: all available information");
@@ -42,7 +41,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.process(argc, argv);
 
     const auto has_lsearch_init = cmdline.has("lsearch-init");
-    const auto has_lsearch_algo = cmdline.has("lsearch-algo");
+    const auto has_lsearch_strategy = cmdline.has("lsearch-strategy");
     const auto has_solver = cmdline.has("solver");
     const auto has_system = cmdline.has("system");
     const auto has_sys_logical = cmdline.has("sys-logical-cpus");
@@ -52,7 +51,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_git_hash = cmdline.has("git-hash");
 
     if (!has_lsearch_init &&
-        !has_lsearch_algo &&
+        !has_lsearch_strategy &&
         !has_solver &&
         !has_system &&
         !has_sys_logical &&
@@ -68,15 +67,15 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch_init)
     {
-        print("lsearch-init", get_lsearch_inits());
+        print("lsearch-init", lsearch_init_t::all());
     }
-    if (has_lsearch_algo)
+    if (has_lsearch_strategy)
     {
-        print("lsearch-algo", get_lsearch_algos());
+        print("lsearch-strategy", lsearch_strategy_t::all());
     }
     if (has_solver)
     {
-        print("solver", get_solvers());
+        print("solver", solver_t::all());
     }
     if (has_system || has_sys_physical)
     {

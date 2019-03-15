@@ -9,15 +9,16 @@ solver_quasi_t<tquasi>::solver_quasi_t() :
 }
 
 template <typename tquasi>
-void solver_quasi_t<tquasi>::to_json(json_t& json) const
+json_t solver_quasi_t<tquasi>::config() const
 {
-    solver_t::to_json(json);
+    json_t json = solver_t::config();
+    return json;
 }
 
 template <typename tquasi>
-void solver_quasi_t<tquasi>::from_json(const json_t& json)
+void solver_quasi_t<tquasi>::config(const json_t& json)
 {
-    solver_t::from_json(json);
+    solver_t::config(json);
 }
 
 template <typename tquasi>

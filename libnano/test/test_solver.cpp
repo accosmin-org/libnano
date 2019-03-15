@@ -26,8 +26,7 @@ static void test(const solver_t& solver, const string_t& solver_id, const functi
             << "[" << to_string(state.m_status) << "]"
             << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
 
-        json_t json;
-        solver.to_json(json);
+        const auto json = solver.config();
         std::cout << " ... using " << json.dump() << "\n";
     }
 
@@ -38,6 +37,9 @@ static void test(const solver_t& solver, const string_t& solver_id, const functi
     UTEST_CHECK_LESS(g, solver.epsilon());
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
 }
+
+// todo: check configuring solvers
+// todo: verbose only when a failure is detected - add support for this in utest
 
 UTEST_BEGIN_MODULE(test_solvers)
 
@@ -112,9 +114,9 @@ UTEST_CASE(default_solvers)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : get_solvers().ids())
+        for (const auto& solver_id : solver_t::all().ids())
         {
-            const auto solver = get_solvers().get(solver_id);
+            const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
             for (auto t = 0; t < 10; ++ t)
@@ -133,12 +135,12 @@ UTEST_CASE(various_lsearches)
 
         for (const auto& solver_id : {"gd", "cgd", "lbfgs", "bfgs"})
         {
-            const auto solver = get_solvers().get(solver_id);
+            const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& lsearch_id : get_lsearch_algos().ids())
+            for (const auto& lsearch_id : lsearch_strategy_t::all().ids())
             {
-                solver->lsearch(get_lsearch_algos().get(lsearch_id));
+                solver->lsearch(lsearch_strategy_t::all().get(lsearch_id));
 
                 for (auto t = 0; t < 10; ++ t)
                 {

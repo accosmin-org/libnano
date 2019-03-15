@@ -3,12 +3,14 @@
 
 using namespace nano;
 
-void lsearch_nocedalwright_t::to_json(json_t& json) const
+json_t lsearch_nocedalwright_t::config() const
 {
-    nano::to_json(json, "ro", strcat(m_ro, "(1,inf)"));
+    json_t json;
+    json["ro"] = strcat(m_ro, "(1,inf)");
+    return json;
 }
 
-void lsearch_nocedalwright_t::from_json(const json_t& json)
+void lsearch_nocedalwright_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;

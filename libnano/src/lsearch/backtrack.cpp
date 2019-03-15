@@ -3,13 +3,14 @@
 
 using namespace nano;
 
-void lsearch_backtrack_t::to_json(json_t& json) const
+json_t lsearch_backtrack_t::config() const
 {
-    nano::to_json(json,
-        "ro", strcat(m_ro, "(0,1)"));
+    json_t json;
+    json["ro"] = strcat(m_ro, "(0,1)");
+    return json;
 }
 
-void lsearch_backtrack_t::from_json(const json_t& json)
+void lsearch_backtrack_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
 

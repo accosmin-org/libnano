@@ -3,18 +3,19 @@
 
 using namespace nano;
 
-void lsearch_cgdescent_t::to_json(json_t& json) const
+json_t lsearch_cgdescent_t::config() const
 {
-    nano::to_json(json,
-        "epsilon", strcat(m_epsilon0, "(0,inf)"),
-        "theta", strcat(m_theta, "(0,1)"),
-        "gamma", strcat(m_gamma, "(0,1)"),
-        "delta", strcat(m_delta, "[0,1]"),
-        "omega", strcat(m_omega, "[0,1]"),
-        "ro", strcat(m_ro, "(1,inf)"));
+    json_t json;
+    json["epsilon"] = strcat(m_epsilon0, "(0,inf)");
+    json["theta"] = strcat(m_theta, "(0,1)");
+    json["gamma"] = strcat(m_gamma, "(0,1)");
+    json["delta"] = strcat(m_delta, "[0,1]");
+    json["omega"] = strcat(m_omega, "[0,1]");
+    json["ro"] = strcat(m_ro, "(1,inf)");
+    return json;
 }
 
-void lsearch_cgdescent_t::from_json(const json_t& json)
+void lsearch_cgdescent_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
@@ -27,8 +28,7 @@ void lsearch_cgdescent_t::from_json(const json_t& json)
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
-bool lsearch_cgdescent_t::updateU(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearch_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     assert(0 < m_theta && m_theta < 1);
 
@@ -56,8 +56,7 @@ bool lsearch_cgdescent_t::updateU(const solver_state_t& state0,
     return false;
 }
 
-bool lsearch_cgdescent_t::update(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearch_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     if (c.t <= a.t || c.t >= b.t)
     {
@@ -80,8 +79,7 @@ bool lsearch_cgdescent_t::update(const solver_state_t& state0,
     }
 }
 
-bool lsearch_cgdescent_t::secant2(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearch_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     const auto a0 = a, b0 = b;
     const auto tc = interpolate(a0, b0);
@@ -110,8 +108,7 @@ bool lsearch_cgdescent_t::secant2(const solver_state_t& state0,
     }
 }
 
-bool lsearch_cgdescent_t::bracket(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearch_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     assert(m_ro > 1);
 

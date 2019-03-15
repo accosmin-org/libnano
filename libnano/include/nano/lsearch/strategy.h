@@ -2,24 +2,19 @@
 
 #include <nano/json.h>
 #include <nano/factory.h>
-#include <nano/solver_state.h>
-#include <nano/lsearch_step.h>
+#include <nano/lsearch/step.h>
+#include <nano/solver/state.h>
 
 namespace nano
 {
-    class lsearch_algo_t;
-    using lsearch_algo_factory_t = factory_t<lsearch_algo_t>;
-    using rlsearch_algo_t = lsearch_algo_factory_t::trobject;
-
-    ///
-    /// \brief returns the registered line-search algorithms.
-    ///
-    NANO_PUBLIC lsearch_algo_factory_t& get_lsearch_algos();
+    class lsearch_strategy_t;
+    using lsearch_strategy_factory_t = factory_t<lsearch_strategy_t>;
+    using rlsearch_strategy_t = lsearch_strategy_factory_t::trobject;
 
     ///
     /// \brief compute the step length of the line search procedure.
     ///
-    class lsearch_algo_t : public json_configurable_t
+    class lsearch_strategy_t : public json_configurable_t
     {
     public:
 
@@ -29,7 +24,17 @@ namespace nano
         using logger_t = std::function<void(const solver_state_t&)>;
 
         ///
-        /// \brief
+        /// \brief constructor
+        ///
+        lsearch_strategy_t() = default;
+
+        ///
+        /// \brief returns the available implementations
+        ///
+        static lsearch_strategy_factory_t& all();
+
+        ///
+        /// \brief compute the step length given the current state and initial step length.
         ///
         virtual bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t&) = 0;
 

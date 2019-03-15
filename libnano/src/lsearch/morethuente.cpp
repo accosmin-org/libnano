@@ -3,11 +3,14 @@
 
 using namespace nano;
 
-void lsearch_morethuente_t::to_json(json_t&) const
+json_t lsearch_morethuente_t::config() const
 {
+    json_t json;
+    // todo: expose all parameters here!
+    return json;
 }
 
-void lsearch_morethuente_t::from_json(const json_t&)
+void lsearch_morethuente_t::config(const json_t&)
 {
 }
 

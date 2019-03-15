@@ -10,18 +10,19 @@ solver_cgd_t<tcgd>::solver_cgd_t() :
 }
 
 template <typename tcgd>
-void solver_cgd_t<tcgd>::to_json(json_t& json) const
+json_t solver_cgd_t<tcgd>::config() const
 {
-    solver_t::to_json(json);
-    nano::to_json(json, "orthotest", strcat(m_orthotest, "(0,1)"));
+    json_t json = solver_t::config();
+    json["orthotest"] = strcat(m_orthotest, "(0,1)");
+    return json;
 }
 
 template <typename tcgd>
-void solver_cgd_t<tcgd>::from_json(const json_t& json)
+void solver_cgd_t<tcgd>::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
 
-    solver_t::from_json(json);
+    solver_t::config(json);
     nano::from_json_range(json, "orthotest", m_orthotest, eps, 1 - eps);
 }
 

@@ -1,15 +1,15 @@
 #include <mutex>
-#include "lsearch/backtrack.h"
-#include "lsearch/cgdescent.h"
-#include "lsearch/lemarechal.h"
-#include "lsearch/morethuente.h"
-#include "lsearch/nocedalwright.h"
+#include "backtrack.h"
+#include "cgdescent.h"
+#include "lemarechal.h"
+#include "morethuente.h"
+#include "nocedalwright.h"
 
 using namespace nano;
 
-lsearch_algo_factory_t& nano::get_lsearch_algos()
+lsearch_strategy_factory_t& lsearch_strategy_t::all()
 {
-    static lsearch_algo_factory_t manager;
+    static lsearch_strategy_factory_t manager;
 
     static std::once_flag flag;
     std::call_once(flag, [] ()

@@ -80,9 +80,10 @@ namespace nano
     {
     public:
 
+        json_configurable_t() = default;
         virtual ~json_configurable_t() noexcept = default;
 
-        virtual void to_json(json_t&) const {}
-        virtual void from_json(const json_t&) {}
+        virtual json_t config() const = 0;
+        virtual void config(const json_t&) = 0;
     };
 }

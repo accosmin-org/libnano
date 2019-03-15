@@ -8,9 +8,12 @@ add_library(nano
     solver/cgd.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
-    lsearch_algo.cpp
-    lsearch_init.cpp
     lsearch/init.cpp
+    lsearch/init_unit.cpp
+    lsearch/init_linear.cpp
+    lsearch/init_cgdescent.cpp
+    lsearch/init_quadratic.cpp
+    lsearch/strategy.cpp
     lsearch/backtrack.cpp
     lsearch/cgdescent.cpp
     lsearch/lemarechal.cpp
