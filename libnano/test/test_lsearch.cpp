@@ -14,7 +14,6 @@ static auto get_state0(const rfunction_t& function)
 
 static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scalar_t c2 = 9e-1)
 {
-    std::cout << "evaluating lsearch method " << id << "...\n";
     auto lsearch = lsearch_strategy_t::all().get(id);
     UTEST_REQUIRE(lsearch);
     lsearch->c1(c1);
@@ -23,20 +22,20 @@ static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scal
     return lsearch;
 }
 
-static void set_logger(const rlsearch_strategy_t& lsearch, const scalar_t t0, const solver_state_t& state0)
+static void set_logger(const rlsearch_strategy_t& lsearch, const string_t& function_name, const string_t& lsearch_id,
+    const scalar_t t0, const solver_state_t& state0)
 {
-    std::cout << std::fixed << std::setprecision(8) << "....x0=" << state0.x.transpose() << "\n";
-    lsearch->logger([&lsearch = lsearch, t0 = t0, &state0 = state0] (const solver_state_t& state)
+    lsearch->logger([&] (const solver_state_t& state)
     {
-        std::cout << std::fixed << std::setprecision(8) << "........"
-            << "t0=" << t0 << ",f0=" << state0.f
-            << ",t=" << state.t << ",f=" << state.f
-            << ",g=" << state.convergence_criterion()
+        std::cout << function_name << " " << lsearch_id << std::fixed << std::setprecision(8)
+            << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f
+            << ",t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, lsearch->c1())
             << ",wolfe=" << state.has_wolfe(state0, lsearch->c2())
             << ",swolfe=" << state.has_strong_wolfe(state0, lsearch->c2())
             << ",awolfe=" << state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()) << "\n";
     });
+    std::cout << std::endl;
 }
 
 // todo: extend the checks for different c1 and c2 values (1e-1+9e-1, 1e-4+1e-1, 1e-4+9e-1)
@@ -52,13 +51,11 @@ UTEST_CASE(backtrack)
     //  and the resulting point satisfies the Armijo condition
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        std::cout << ">>evaluating function " << function->name() << "...\n";
-
         for (auto i = 0; i < 100; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
-            set_logger(lsearch, t0, state0);
+            set_logger(lsearch, function->name(), "backtrack", t0, state0);
 
             solver_state_t state = state0;
             UTEST_CHECK(lsearch->get(state0, t0, state));
@@ -77,13 +74,11 @@ UTEST_CASE(lemarechal)
     //  and the resulting point satisfies the Armijo and the (non-strong) Wolfe conditions
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        std::cout << ">>evaluating function " << function->name() << "...\n";
-
         for (auto i = 0; i < 100; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
-            set_logger(lsearch, t0, state0);
+            set_logger(lsearch, function->name(), "lemarechal", t0, state0);
 
             solver_state_t state = state0;
             UTEST_CHECK(lsearch->get(state0, t0, state));
@@ -103,13 +98,11 @@ UTEST_CASE(morethuente)
     //  and the resulting point satisfies the Armijo and the strong Wolfe conditions
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        std::cout << ">>evaluating function " << function->name() << "...\n";
-
         for (auto i = 0; i < 100; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
-            set_logger(lsearch, t0, state0);
+            set_logger(lsearch, function->name(), "morethuente", t0, state0);
 
             solver_state_t state = state0;
             UTEST_CHECK(lsearch->get(state0, t0, state));
@@ -129,13 +122,11 @@ UTEST_CASE(nocedalwright)
     //  and the resulting point satisfies the Armijo and the strong Wolfe conditions
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        std::cout << ">>evaluating function " << function->name() << "...\n";
-
         for (auto i = 0; i < 100; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
-            set_logger(lsearch, t0, state0);
+            set_logger(lsearch, function->name(), "nocedalwright", t0, state0);
 
             solver_state_t state = state0;
             UTEST_CHECK(lsearch->get(state0, t0, state));
@@ -156,13 +147,11 @@ UTEST_CASE(cgdescent)
     //  and the resulting point satisfies the Armijo and the approximated Wolfe conditions
     for (const auto& function : get_functions(1, 4, std::regex(".+")))
     {
-        std::cout << ">>evaluating function " << function->name() << "...\n";
-
         for (auto i = 0; i < 100; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
-            set_logger(lsearch, t0, state0);
+            set_logger(lsearch, function->name(), "cgdescent", t0, state0);
 
             solver_state_t state = state0;
             UTEST_CHECK(lsearch->get(state0, t0, state));

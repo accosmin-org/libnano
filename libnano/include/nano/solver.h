@@ -56,6 +56,7 @@ namespace nano
         ///
         void lsearch(rlsearch_init_t&&);
         void lsearch(rlsearch_strategy_t&&);
+        void lsearch_logger(const lsearch_strategy_t::logger_t&);
         void logger(const logger_t& logger) { m_logger = logger; }
         void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
         void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }

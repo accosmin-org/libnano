@@ -56,6 +56,13 @@ void solver_t::lsearch(rlsearch_strategy_t&& strategy)
     m_lsearch_strategy = std::move(strategy);
 }
 
+void solver_t::lsearch_logger(const lsearch_strategy_t::logger_t& logger)
+{
+    assert(m_lsearch_strategy);
+
+    m_lsearch_strategy->logger(logger);
+}
+
 bool solver_t::lsearch(solver_state_t& state) const
 {
     assert(m_lsearch_init);
