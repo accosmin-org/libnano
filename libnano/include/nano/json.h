@@ -85,5 +85,12 @@ namespace nano
 
         virtual json_t config() const = 0;
         virtual void config(const json_t&) = 0;
+
+        json_t config_with_id(const string_t& id) const
+        {
+            auto json = config();
+            json["id"] = id;
+            return json;
+        }
     };
 }

@@ -7,12 +7,10 @@
 
 using namespace nano;
 
-solver_t::solver_t(const scalar_t c1, const scalar_t c2) :
-    m_lsearch_init(lsearch_init_t::all().get("quadratic")),
-    m_lsearch_strategy(lsearch_strategy_t::all().get("morethuente"))
+solver_t::solver_t(const scalar_t c1, const scalar_t c2)
 {
-    if (!m_lsearch_init) throw std::invalid_argument("invalid line-search init");
-    if (!m_lsearch_strategy) throw std::invalid_argument("invalid line-search strategy");
+    lsearch_init(string_t{"quadratic"});
+    lsearch_strategy(string_t{"morethuente"});
 
     m_lsearch_strategy->c1(c1);
     m_lsearch_strategy->c2(c2);
@@ -26,6 +24,9 @@ json_t solver_t::config() const
     json_t json;
     json["c1"] = strcat(c1, "(0,1)");
     json["c2"] = strcat(c2, "(c1,1)");
+    json["init"] = m_lsearch_init->config_with_id(m_lsearch_init_id);
+    json["strategy"] = m_lsearch_strategy->config_with_id(m_lsearch_strategy_id);
+
     return json;
 }
 
@@ -38,22 +39,67 @@ void solver_t::config(const json_t& json)
     nano::from_json_range(json, "c1", c1, eps, 1 - eps);
     nano::from_json_range(json, "c2", c2, c1, 1 - eps);
 
+    if (json.count("init"))
+    {
+        lsearch_init(json["init"]);
+    }
+    if (json.count("strategy"))
+    {
+        lsearch_strategy(json["strategy"]);
+    }
+
     m_lsearch_strategy->c1(c1);
     m_lsearch_strategy->c2(c2);
 }
 
-void solver_t::lsearch(rlsearch_init_t&& init)
+void solver_t::lsearch_init(const string_t& id)
 {
-    if (!init) throw std::invalid_argument("invalid line-search init");
+    lsearch_init(id, lsearch_init_t::all().get(id));
+}
 
+void solver_t::lsearch_init(const string_t& id, rlsearch_init_t&& init)
+{
+    if (!init)
+    {
+        throw std::invalid_argument("invalid line-search initialization (" + id + ")");
+    }
+
+    m_lsearch_init_id = id;
     m_lsearch_init = std::move(init);
 }
 
-void solver_t::lsearch(rlsearch_strategy_t&& strategy)
+void solver_t::lsearch_init(const json_t& json)
 {
-    if (!strategy) throw std::invalid_argument("invalid line-search strategy");
+    if (json.count("id") && m_lsearch_init_id != json["id"])
+    {
+        lsearch_init(json["id"]);
+    }
+    m_lsearch_init->config(json);
+}
 
+void solver_t::lsearch_strategy(const string_t& id)
+{
+    lsearch_strategy(id, lsearch_strategy_t::all().get(id));
+}
+
+void solver_t::lsearch_strategy(const string_t& id, rlsearch_strategy_t&& strategy)
+{
+    if (!strategy)
+    {
+        throw std::invalid_argument("invalid line-search strategy (" + id + ")");
+    }
+
+    m_lsearch_strategy_id = id;
     m_lsearch_strategy = std::move(strategy);
+}
+
+void solver_t::lsearch_strategy(const json_t& json)
+{
+    if (json.count("id") && m_lsearch_strategy_id != json["id"])
+    {
+        lsearch_strategy(json["id"]);
+    }
+    m_lsearch_strategy->config(json);
 }
 
 void solver_t::lsearch_logger(const lsearch_strategy_t::logger_t& logger)

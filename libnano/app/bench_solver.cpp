@@ -89,6 +89,7 @@ static auto trim(const json_t& json)
     config = nano::replace(config, ",}", "");
     config = nano::replace(config, "}", "");
     config = nano::replace(config, "{", "");
+    config = nano::replace(config, "id:", "");
 
     return config;
 }
@@ -148,7 +149,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "max-dims",     "maximum number of dimensions for each test function (if feasible)", "1000");
     cmdline.add("", "trials",       "number of random trials for each test function", "100");
     cmdline.add("", "iterations",   "maximum number of iterations", "1000");
-    cmdline.add("", "epsilon",      "convergence criterion", epsilon2<scalar_t>());
+    cmdline.add("", "epsilon",      "convergence criterion", 1e-6);
     cmdline.add("", "convex",       "use only convex test functions");
     cmdline.add("", "c1",           "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",           "use this c2 value (see Wolfe line-search step condition)");
@@ -191,11 +192,11 @@ static int unsafe_main(int argc, const char* argv[])
         }
         if (ls_init)
         {
-            solver->lsearch(lsearch_init_t::all().get(*ls_init));
+            solver->lsearch_init(*ls_init);
         }
         if (ls_strategy)
         {
-            solver->lsearch(lsearch_strategy_t::all().get(*ls_strategy));
+            solver->lsearch_strategy(*ls_strategy);
         }
         solver->epsilon(epsilon);
         solver->max_iterations(iterations);

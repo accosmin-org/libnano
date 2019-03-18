@@ -46,17 +46,29 @@ namespace nano
         }
 
         ///
-        /// \brief configure using JSON
+        /// \brief configure
         ///
         json_t config() const override;
         void config(const json_t&) override;
 
         ///
+        /// \brief change the line-search initialization
+        ///
+        void lsearch_init(const json_t&);
+        void lsearch_init(const string_t& id);
+        void lsearch_init(const string_t& id, rlsearch_init_t&&);
+
+        ///
+        /// \brief change the line-search strategy
+        ///
+        void lsearch_strategy(const json_t&);
+        void lsearch_strategy(const string_t& id);
+        void lsearch_logger(const lsearch_strategy_t::logger_t&);
+        void lsearch_strategy(const string_t& id, rlsearch_strategy_t&&);
+
+        ///
         /// \brief change parameters
         ///
-        void lsearch(rlsearch_init_t&&);
-        void lsearch(rlsearch_strategy_t&&);
-        void lsearch_logger(const lsearch_strategy_t::logger_t&);
         void logger(const logger_t& logger) { m_logger = logger; }
         void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
         void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }
@@ -98,6 +110,8 @@ namespace nano
         scalar_t            m_epsilon{1e-6};            ///< required precision (~magnitude of the gradient)
         int                 m_max_iterations{1000};     ///< maximum number of iterations
         logger_t            m_logger;                   ///<
+        string_t            m_lsearch_init_id;          ///<
+        string_t            m_lsearch_strategy_id;      ///<
         rlsearch_init_t     m_lsearch_init;             ///<
         rlsearch_strategy_t m_lsearch_strategy;         ///<
     };

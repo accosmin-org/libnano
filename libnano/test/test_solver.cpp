@@ -11,12 +11,12 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     const auto state0 = solver_state_t{function, x0};
 
     // log the optimization steps
-    std::cout << std::fixed << std::setprecision(8) << function.name() << " " << solver_id
-        << ": x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
+    std::cout << std::fixed << std::setprecision(8)
+        << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
+        << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
     solver->logger([&] (const solver_state_t& state)
     {
-        std::cout
-            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+        std::cout << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]"
             << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
@@ -25,8 +25,7 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state)
     {
-        std::cout
-            << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+        std::cout << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
     });
 
     // minimize
@@ -41,7 +40,6 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
 }
 
-// todo: extend the checks for different c1 and c2 values (1e-1+9e-1, 1e-4+1e-1, 1e-4+9e-1)
 // todo: verbose only when a failure is detected - add support for this in utest
 
 UTEST_BEGIN_MODULE(test_solvers)
@@ -184,9 +182,37 @@ UTEST_CASE(various_lsearches)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& lsearch_id : lsearch_strategy_t::all().ids())
+            for (const auto& lsearch_init_id : lsearch_init_t::all().ids())
             {
-                solver->lsearch(lsearch_strategy_t::all().get(lsearch_id));
+                for (const auto& lsearch_strategy_id : lsearch_strategy_t::all().ids())
+                {
+                    solver->lsearch_init(lsearch_init_id);
+                    solver->lsearch_strategy(lsearch_strategy_id);
+
+                    for (auto t = 0; t < 10; ++ t)
+                    {
+                        test(solver, solver_id, *function, vector_t::Random(function->size()));
+                    }
+                }
+            }
+        }
+    }
+}
+
+UTEST_CASE(various_tolerances)
+{
+    for (const auto& function : get_convex_functions(1, 4))
+    {
+        UTEST_REQUIRE(function);
+
+        for (const auto& solver_id : {"gd", "cgd", "lbfgs", "bfgs"})
+        {
+            const auto solver = solver_t::all().get(solver_id);
+            UTEST_REQUIRE(solver);
+
+            for (const auto& c12 : std::vector<std::pair<scalar_t, scalar_t>>{{1e-4, 1e-1}, {1e-4, 9e-1}, {1e-1, 9e-1}})
+            {
+                solver->config(to_json("c1", c12.first, "c2", c12.second));
 
                 for (auto t = 0; t < 10; ++ t)
                 {
