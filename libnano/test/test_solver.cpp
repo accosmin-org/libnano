@@ -11,12 +11,12 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     const auto state0 = solver_state_t{function, x0};
 
     // log the optimization steps
+    std::cout << std::fixed << std::setprecision(8) << function.name() << " " << solver_id
+        << ": x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
     solver->logger([&] (const solver_state_t& state)
     {
-        std::cout << function.name() << " " << solver_id << std::fixed << std::setprecision(8)
-            << ": x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion()
-            << ", i=" << state.m_iterations
-            << ", x=[" << state.x.transpose() << "],f=" << state.f << ",g=" << state.convergence_criterion()
+        std::cout
+            << "  >i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]"
             << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
@@ -25,9 +25,8 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state)
     {
-        std::cout << function.name() << " " << solver_id << std::fixed << std::setprecision(8)
-            << ": x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion()
-            << ", t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+        std::cout
+            << "    >t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
     });
 
     // minimize

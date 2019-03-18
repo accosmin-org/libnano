@@ -25,17 +25,17 @@ static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scal
 static void set_logger(const rlsearch_strategy_t& lsearch, const string_t& function_name, const string_t& lsearch_id,
     const scalar_t t0, const solver_state_t& state0)
 {
+    std::cout << std::fixed << std::setprecision(8) << function_name << " " << lsearch_id
+        << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
     lsearch->logger([&] (const solver_state_t& state)
     {
-        std::cout << function_name << " " << lsearch_id << std::fixed << std::setprecision(8)
-            << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f
-            << ",t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+        std::cout
+            << "    >t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, lsearch->c1())
             << ",wolfe=" << state.has_wolfe(state0, lsearch->c2())
             << ",swolfe=" << state.has_strong_wolfe(state0, lsearch->c2())
-            << ",awolfe=" << state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()) << "\n";
+            << ",awolfe=" << state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()) << ".\n";
     });
-    std::cout << std::endl;
 }
 
 // todo: extend the checks for different c1 and c2 values (1e-1+9e-1, 1e-4+1e-1, 1e-4+9e-1)
@@ -49,9 +49,9 @@ UTEST_CASE(backtrack)
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo condition
-    for (const auto& function : get_functions(1, 4, std::regex(".+")))
+    for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
@@ -72,9 +72,9 @@ UTEST_CASE(lemarechal)
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo and the (non-strong) Wolfe conditions
-    for (const auto& function : get_functions(1, 4, std::regex(".+")))
+    for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
@@ -96,9 +96,9 @@ UTEST_CASE(morethuente)
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo and the strong Wolfe conditions
-    for (const auto& function : get_functions(1, 4, std::regex(".+")))
+    for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
@@ -120,9 +120,9 @@ UTEST_CASE(nocedalwright)
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo and the strong Wolfe conditions
-    for (const auto& function : get_functions(1, 4, std::regex(".+")))
+    for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);
@@ -145,9 +145,9 @@ UTEST_CASE(cgdescent)
 
     // check that the line-search doesn't fail from various starting points
     //  and the resulting point satisfies the Armijo and the approximated Wolfe conditions
-    for (const auto& function : get_functions(1, 4, std::regex(".+")))
+    for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 100; ++ i)
+        for (auto i = 0; i < 10; ++ i)
         {
             const auto t0 = scalar_t{1};
             const auto state0 = get_state0(function);

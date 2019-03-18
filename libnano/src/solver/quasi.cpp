@@ -26,6 +26,7 @@ solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& functio
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
+    log(cstate);
 
     // current approximation of the Hessian
     matrix_t H = matrix_t::Identity(function.size(), function.size());

@@ -21,6 +21,8 @@ void solver_gd_t::config(const json_t& json)
 solver_state_t solver_gd_t::minimize(const solver_function_t& function, const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
+    log(cstate);
+
     for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
     {
         // descent direction

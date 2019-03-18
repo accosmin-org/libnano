@@ -25,6 +25,7 @@ solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
+    log(cstate);
 
     std::deque<vector_t> ss, ys;
     vector_t q, r;
