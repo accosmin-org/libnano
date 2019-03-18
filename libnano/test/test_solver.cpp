@@ -6,7 +6,8 @@
 
 using namespace nano;
 
-static void test(const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+static void test(
+    const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
     std::stringstream stream;
     const auto old_n_failures = n_failures.load();
