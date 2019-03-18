@@ -16,7 +16,7 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     solver->logger([&] (const solver_state_t& state)
     {
         std::cout
-            << "  >i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]"
             << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
@@ -26,7 +26,7 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     solver->lsearch_logger([&] (const solver_state_t& state)
     {
         std::cout
-            << "    >t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+            << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
     });
 
     // minimize

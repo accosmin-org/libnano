@@ -30,7 +30,7 @@ static void set_logger(const rlsearch_strategy_t& lsearch, const string_t& funct
     lsearch->logger([&] (const solver_state_t& state)
     {
         std::cout
-            << "    >t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, lsearch->c1())
             << ",wolfe=" << state.has_wolfe(state0, lsearch->c2())
             << ",swolfe=" << state.has_strong_wolfe(state0, lsearch->c2())
