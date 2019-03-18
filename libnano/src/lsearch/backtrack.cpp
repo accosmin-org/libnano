@@ -21,9 +21,8 @@ bool lsearch_backtrack_t::get(const solver_state_t& state0, scalar_t t, solver_s
 {
     for (int i = 0; i < max_iterations() && t > stpmin(); ++ i)
     {
-        if (!state.update(state0, t))
+        if (!scale(state0, t, state, m_ro, stpmin(), stpmax()))
         {
-            log(state);
             return false;
         }
         else if (!state.has_armijo(state0, c1()))
