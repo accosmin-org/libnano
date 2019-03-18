@@ -8,15 +8,20 @@ using namespace nano;
 
 static void test(const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
+    std::stringstream stream;
+    const auto old_n_failures = n_failures.load();
+
     const auto state0 = solver_state_t{function, x0};
 
-    // log the optimization steps
-    std::cout << std::fixed << std::setprecision(8)
+    stream << std::fixed << std::setprecision(8)
         << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
+
+    // log the optimization steps
     solver->logger([&] (const solver_state_t& state)
     {
-        std::cout << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+        stream
+            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]"
             << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
@@ -25,12 +30,13 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state)
     {
-        std::cout << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+        stream << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
     });
 
     // minimize
+    solver->epsilon(1e-6);
+    solver->max_iterations(100);
     const auto state = solver->minimize(function, x0);
-    std::cout << std::endl;
 
     // check function value decrease
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
@@ -38,9 +44,12 @@ static void test(const rsolver_t& solver, const string_t& solver_id, const funct
     // check convergence
     UTEST_CHECK_LESS(state.convergence_criterion(), solver->epsilon());
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
-}
 
-// todo: verbose only when a failure is detected - add support for this in utest
+    if (old_n_failures != n_failures.load())
+    {
+        std::cout << stream.str();
+    }
+}
 
 UTEST_BEGIN_MODULE(test_solvers)
 
