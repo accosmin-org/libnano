@@ -25,7 +25,11 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_t(const scalar_t c1 = 1e-1, const scalar_t c2 = 9e-1);
+        solver_t(
+            const scalar_t c1 = 1e-1,
+            const scalar_t c2 = 9e-1,
+            const string_t& lsearch_init = "quadratic",
+            const string_t& lsearch_strategy = "morethuente");
 
         ///
         /// \brief returns the available implementations

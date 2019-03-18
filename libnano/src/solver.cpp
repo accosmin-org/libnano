@@ -7,10 +7,11 @@
 
 using namespace nano;
 
-solver_t::solver_t(const scalar_t c1, const scalar_t c2)
+solver_t::solver_t(const scalar_t c1, const scalar_t c2,
+    const string_t& lsearch_init_id, const string_t& lsearch_strategy_id)
 {
-    lsearch_init(string_t{"quadratic"});
-    lsearch_strategy(string_t{"morethuente"});
+    lsearch_init(lsearch_init_id);
+    lsearch_strategy(lsearch_strategy_id);
 
     m_lsearch_strategy->c1(c1);
     m_lsearch_strategy->c2(c2);

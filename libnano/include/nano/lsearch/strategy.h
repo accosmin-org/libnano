@@ -87,7 +87,7 @@ namespace nano
         // attributes
         scalar_t    m_c1{static_cast<scalar_t>(1e-4)};      ///< sufficient decrease rate
         scalar_t    m_c2{static_cast<scalar_t>(0.1)};       ///< sufficient curvature
-        int         m_max_iterations{40};                   ///< #maximum iterations
+        int         m_max_iterations{100};                  ///< #maximum iterations
         logger_t    m_logger;                               ///<
     };
 }
