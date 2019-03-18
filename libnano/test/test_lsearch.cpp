@@ -25,15 +25,14 @@ enum class lsearch_type
 };
 
 static void test(
-    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function, const vector_t& x0,
-    const lsearch_type type)
+    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function,
+    const lsearch_type type, const vector_t& x0, const scalar_t t0)
 {
     std::stringstream stream;
     const auto old_n_failures = n_failures.load();
 
     auto state0 = solver_state_t{function, x0};
     state0.d = -state0.g;
-    const auto t0 = scalar_t{1};
     const auto epsilon = 1e-6;// todo: get the updated value of epsilon for CGDESCENT!!!
 
     stream
@@ -94,6 +93,20 @@ static void test(
     }
 }
 
+static void test(
+    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
+{
+    for (auto i = 0; i < 100; ++ i)
+    {
+        const scalar_t stpmin = lsearch_strategy_t::stpmin();
+        const scalar_t stpmax = lsearch_strategy_t::stpmax();
+        const scalar_t t0 = nano::clamp(std::pow(10.0, 2.0 - i / 20.0), stpmin, stpmax);
+        const vector_t x0 = vector_t::Random(function.size());
+
+        test(lsearch, lsearch_id, function, type, x0, t0);
+    }
+}
+
 UTEST_BEGIN_MODULE(test_lsearch)
 
 UTEST_CASE(backtrack)
@@ -103,10 +116,7 @@ UTEST_CASE(backtrack)
 
     for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 10; ++ i)
-        {
-            test(lsearch, lsearch_id, *function, vector_t::Random(function->size()), lsearch_type::backtrack);
-        }
+        test(lsearch, lsearch_id, *function, lsearch_type::backtrack);
     }
 }
 
@@ -117,10 +127,7 @@ UTEST_CASE(lemarechal)
 
     for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 10; ++ i)
-        {
-            test(lsearch, lsearch_id, *function, vector_t::Random(function->size()), lsearch_type::lemarechal);
-        }
+        test(lsearch, lsearch_id, *function, lsearch_type::lemarechal);
     }
 }
 
@@ -131,10 +138,7 @@ UTEST_CASE(morethuente)
 
     for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 10; ++ i)
-        {
-            test(lsearch, lsearch_id, *function, vector_t::Random(function->size()), lsearch_type::morethuente);
-        }
+        test(lsearch, lsearch_id, *function, lsearch_type::morethuente);
     }
 }
 
@@ -145,10 +149,7 @@ UTEST_CASE(nocedalwright)
 
     for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 10; ++ i)
-        {
-            test(lsearch, lsearch_id, *function, vector_t::Random(function->size()), lsearch_type::nocedalwright);
-        }
+        test(lsearch, lsearch_id, *function, lsearch_type::nocedalwright);
     }
 }
 
@@ -159,10 +160,7 @@ UTEST_CASE(cgdescent)
 
     for (const auto& function : get_functions(1, 16, std::regex(".+")))
     {
-        for (auto i = 0; i < 10; ++ i)
-        {
-            test(lsearch, lsearch_id, *function, vector_t::Random(function->size()), lsearch_type::cgdescent);
-        }
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
     }
 }
 
