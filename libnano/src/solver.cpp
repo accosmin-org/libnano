@@ -115,19 +115,8 @@ bool solver_t::lsearch(solver_state_t& state) const
     assert(m_lsearch_init);
     assert(m_lsearch_strategy);
 
-    // check descent direction
-    if (!state.has_descent())
-    {
-        return false;
-    }
-
-    // initial step length
-    // fixme: is it safe to allow t0 to be greater than 1?!
-    const auto t0 = nano::clamp(m_lsearch_init->get(state), lsearch_strategy_t::stpmin(), scalar_t(1));
-
-    // line-search step length
-    auto state0 = state;
-    return m_lsearch_strategy->get(state0, t0, state) && state && (state < state0);
+    const auto t0 = m_lsearch_init->get(state);
+    return m_lsearch_strategy->get(state, t0);
 }
 
 bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const

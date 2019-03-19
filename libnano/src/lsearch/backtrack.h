@@ -16,7 +16,7 @@ namespace nano
 
         json_t config() const final;
         void config(const json_t&) final;
-        bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
+        bool get(const solver_state_t& state0, solver_state_t& state) final;
 
     private:
 

@@ -34,9 +34,9 @@ namespace nano
         static lsearch_strategy_factory_t& all();
 
         ///
-        /// \brief compute the step length given the current state and initial step length.
+        /// \brief compute the step length starting from the given state and the initial estimate of the step length
         ///
-        virtual bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t&) = 0;
+        bool get(solver_state_t& state, const scalar_t t0);
 
         ///
         /// \brief change parameters
@@ -70,6 +70,11 @@ namespace nano
         }
 
     protected:
+
+        ///
+        /// \brief compute the step length given the previous state and the current state
+        ///
+        virtual bool get(const solver_state_t& state0, solver_state_t&) = 0;
 
         ///
         /// \brief log the current line-search trial length (if the logger is provided)

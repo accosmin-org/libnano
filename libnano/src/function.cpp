@@ -130,7 +130,10 @@ rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size
         append(std::make_unique<function_sphere_t>(dims), regex, funcs);
         append(std::make_unique<function_zakharov_t>(dims), regex, funcs);
         append(std::make_unique<function_quadratic_t>(dims), regex, funcs);
-        append(std::make_unique<function_rosenbrock_t>(dims), regex, funcs);
+        if (dims > 1)
+        {
+            append(std::make_unique<function_rosenbrock_t>(dims), regex, funcs);
+        }
         append(std::make_unique<function_exponential_t>(dims), regex, funcs);
         append(std::make_unique<function_dixon_price_t>(dims), regex, funcs);
         append(std::make_unique<function_chung_reynolds_t>(dims), regex, funcs);

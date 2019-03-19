@@ -152,18 +152,16 @@ static void dcstep(
     stp = stpf;
 }
 
-bool lsearch_morethuente_t::get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state)
+bool lsearch_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     const auto ftol = c1();
     const auto gtol = c2();
     const auto xtol = epsilon0<scalar_t>();
 
-    state.update(state0, t0);
-
     int stage = 1;
     bool brackt = false;
 
-    scalar_t stp = t0, f = state.f, g = state.dg();
+    scalar_t stp = state.t, f = state.f, g = state.dg();
     scalar_t stmin = 0, stmax = stp + stp * 4;
 
     scalar_t width = stpmax() - stpmin();

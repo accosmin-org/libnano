@@ -4,6 +4,7 @@
 #include "lemarechal.h"
 #include "morethuente.h"
 #include "nocedalwright.h"
+#include <nano/numeric.h>
 
 using namespace nano;
 
@@ -22,4 +23,35 @@ lsearch_strategy_factory_t& lsearch_strategy_t::all()
     });
 
     return manager;
+}
+
+bool lsearch_strategy_t::get(solver_state_t& state, scalar_t t)
+{
+    // check descent direction
+    if (!state.has_descent())
+    {
+        return false;
+    }
+
+    // adjust the initial step length if it produces an invalid state
+    const auto state0 = state;
+
+    t = std::isfinite(t) ? nano::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
+    for (int i = 0; i < max_iterations(); ++ i)
+    {
+        const auto ok = state.update(state0, t);
+        log(state);
+
+        if (!ok)
+        {
+            t *= 0.5;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // line-search step length
+    return get(state0, state) && state && (state < state0);
 }

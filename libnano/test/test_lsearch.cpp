@@ -52,7 +52,7 @@ static void test(
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
     auto state = state0;
-    UTEST_CHECK(lsearch->get(state0, t0, state));
+    UTEST_CHECK(lsearch->get(state, t0));
     UTEST_CHECK(state);
     UTEST_CHECK(state0);
 
@@ -96,11 +96,11 @@ static void test(
 static void test(
     const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
 {
-    for (auto i = 0; i < 100; ++ i)
+    for (auto i = 0; i < 20; ++ i)
     {
         const scalar_t stpmin = lsearch_strategy_t::stpmin();
         const scalar_t stpmax = lsearch_strategy_t::stpmax();
-        const scalar_t t0 = nano::clamp(std::pow(10.0, 2.0 - i / 20.0), stpmin, stpmax);
+        const scalar_t t0 = nano::clamp(std::pow(3.0, 2.0 - i / 5.0), stpmin, stpmax);
         const vector_t x0 = vector_t::Random(function.size());
 
         test(lsearch, lsearch_id, function, type, x0, t0);

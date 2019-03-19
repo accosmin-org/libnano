@@ -22,14 +22,13 @@ namespace nano
 
         json_t config() const final;
         void config(const json_t&) final;
-        bool get(const solver_state_t& state0, const scalar_t t0, solver_state_t& state) final;
+        bool get(const solver_state_t& state0, solver_state_t& state) final;
 
     private:
 
-        bool evaluate(const solver_state_t&, const scalar_t,
-            solver_state_t&);
-        bool evaluate(const solver_state_t&, const scalar_t, const lsearch_step_t&, const lsearch_step_t&,
-            solver_state_t&);
+        bool evaluate(const solver_state_t&, const solver_state_t&);
+        bool evaluate(const solver_state_t&, const scalar_t, solver_state_t&);
+        bool evaluate(const solver_state_t&, const scalar_t, const lsearch_step_t&, const lsearch_step_t&, solver_state_t&);
 
         bool update(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
         bool updateU(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
