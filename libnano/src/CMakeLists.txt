@@ -9,7 +9,7 @@ add_library(nano
     solver/lbfgs.cpp
     solver/quasi.cpp
     lsearch/init.cpp
-    lsearch/init_unit.cpp
+    lsearch/init_const.cpp
     lsearch/init_linear.cpp
     lsearch/init_cgdescent.cpp
     lsearch/init_quadratic.cpp
