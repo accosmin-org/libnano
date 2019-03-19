@@ -36,7 +36,7 @@ static void test(
     const auto epsilon = 1e-6;// todo: get the updated value of epsilon for CGDESCENT!!!
 
     stream
-        << std::fixed << std::setprecision(8) << function.name() << " " << lsearch_id
+        << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id
         << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
 
     // log the line-search trials

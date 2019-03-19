@@ -22,28 +22,25 @@ void lsearch_cgdescent_init_t::config(const json_t& json)
     from_json_range(json, "phi2", m_phi2, 1 + eps, inf);
 }
 
-scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state, const int iteration)
+scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state)
 {
     scalar_t t0;
 
-    const auto phi0 = scalar_t(0.01);
-    const auto phi1 = scalar_t(0.1);
-    const auto phi2 = scalar_t(2.0);
-
-    switch (iteration)
+    switch (state.m_iterations)
     {
     case 0:
+    case 1:
         {
             const auto xnorm = state.x.lpNorm<Eigen::Infinity>();
             const auto fnorm = std::fabs(state.f);
 
             if (xnorm > 0)
             {
-                t0 = phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
+                t0 = m_phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
             }
             else if (fnorm > 0)
             {
-                t0 = phi0 * fnorm / state.g.squaredNorm();
+                t0 = m_phi0 * fnorm / state.g.squaredNorm();
             }
             else
             {
@@ -61,9 +58,9 @@ scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state, const int it
 
             lsearch_step_t stepx
             {
-                state.t * phi1,
+                state.t * m_phi1,
                 // NB: the line-search length is from the previous iteration!
-                state.function->vgrad(state.x + state.t * phi1 * state.d),
+                state.function->vgrad(state.x + state.t * m_phi1 * state.d),
                 0
             };
 
@@ -75,7 +72,7 @@ scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state, const int it
             }
             else
             {
-                t0 = state.t * phi2;
+                t0 = state.t * m_phi2;
             }
         }
         break;

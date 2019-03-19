@@ -6,6 +6,7 @@ using namespace nano;
 json_t lsearch_quadratic_init_t::config() const
 {
     json_t json;
+    // todo: alpha=1.01 as parameter
     return json;
 }
 
@@ -13,13 +14,14 @@ void lsearch_quadratic_init_t::config(const json_t&)
 {
 }
 
-scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state, const int iteration)
+scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state)
 {
     scalar_t t0;
 
-    switch (iteration)
+    switch (state.m_iterations)
     {
     case 0:
+    case 1:
         t0 = 1;
         break;
 

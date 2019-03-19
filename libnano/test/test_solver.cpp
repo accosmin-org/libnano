@@ -14,17 +14,15 @@ static void test(
 
     const auto state0 = solver_state_t{function, x0};
 
-    stream << std::fixed << std::setprecision(8)
+    stream << std::fixed << std::setprecision(16)
         << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
 
     // log the optimization steps
     solver->logger([&] (const solver_state_t& state)
     {
-        stream
-            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << to_string(state.m_status) << "]"
-            << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+        stream << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
 
