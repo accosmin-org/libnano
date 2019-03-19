@@ -72,30 +72,6 @@ namespace nano
     protected:
 
         ///
-        /// \brief geometrically scale the line-search step length while:
-        ///     - the state is not valid (e.g. overflows)
-        ///     - and is within the given range
-        ///
-        bool scale(const solver_state_t& state0, scalar_t& t, solver_state_t& state, const scalar_t ro,
-            const scalar_t tmin, const scalar_t tmax) const
-        {
-            for (int i = 0; i < max_iterations() && t > tmin && t < tmax; ++ i)
-            {
-                if (state.update(state0, t))
-                {
-                    log(state);
-                    return true;
-                }
-                else
-                {
-                    log(state);
-                    t *= ro;
-                }
-            }
-            return false;
-        }
-
-        ///
         /// \brief log the current line-search trial length (if the logger is provided)
         ///
         void log(const solver_state_t& state) const
