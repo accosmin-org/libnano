@@ -147,6 +147,13 @@ bool solver_t::done(const solver_function_t& function, solver_state_t& state, co
     return false;
 }
 
+bool solver_t::log(solver_state_t& state) const
+{
+    const auto status = !m_logger ? true : m_logger(state);
+    state.m_iterations ++;
+    return status;
+}
+
 solver_factory_t& solver_t::all()
 {
     static solver_factory_t manager;

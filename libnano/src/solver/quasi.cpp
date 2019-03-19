@@ -31,7 +31,7 @@ solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& functio
     // current approximation of the Hessian
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
+    for (int i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         cstate.d = -H * cstate.g;

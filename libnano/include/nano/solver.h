@@ -93,10 +93,7 @@ namespace nano
         ///
         /// \brief log the current optimization state (if the logger is provided)
         ///
-        auto log(const solver_state_t& state) const
-        {
-            return !m_logger ? true : m_logger(state);
-        }
+        bool log(solver_state_t& state) const;
 
         ///
         /// \brief update the current state using line-search

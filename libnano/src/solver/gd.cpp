@@ -23,7 +23,7 @@ solver_state_t solver_gd_t::minimize(const solver_function_t& function, const ve
     auto cstate = solver_state_t{function, x0};
     log(cstate);
 
-    for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
+    for (int i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         cstate.d = -cstate.g;

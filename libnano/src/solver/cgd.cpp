@@ -33,7 +33,7 @@ solver_state_t solver_cgd_t<tcgd>::minimize(const solver_function_t& function, c
     auto pstate = cstate;
     log(cstate);
 
-    for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
+    for (int i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         if (i == 0)

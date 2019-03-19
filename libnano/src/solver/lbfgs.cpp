@@ -30,7 +30,7 @@ solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const
     std::deque<vector_t> ss, ys;
     vector_t q, r;
 
-    for (int i = 0; i < max_iterations(); ++ i, ++ cstate.m_iterations)
+    for (int i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)
