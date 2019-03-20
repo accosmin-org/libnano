@@ -82,6 +82,8 @@ namespace nano
         ///
         auto epsilon() const { return m_epsilon; }
         auto max_iterations() const { return m_max_iterations; }
+        auto c1() const { assert(m_lsearch_strategy); return m_lsearch_strategy->c1(); }
+        auto c2() const { assert(m_lsearch_strategy); return m_lsearch_strategy->c2(); }
 
     protected:
 

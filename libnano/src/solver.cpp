@@ -90,8 +90,19 @@ void solver_t::lsearch_strategy(const string_t& id, rlsearch_strategy_t&& strate
         throw std::invalid_argument("invalid line-search strategy (" + id + ")");
     }
 
+    const auto had_lsearch_strategy = static_cast<bool>(m_lsearch_strategy);
+    const auto c1 = had_lsearch_strategy ? m_lsearch_strategy->c1() : scalar_t(0);
+    const auto c2 = had_lsearch_strategy ? m_lsearch_strategy->c2() : scalar_t(0);
+
     m_lsearch_strategy_id = id;
     m_lsearch_strategy = std::move(strategy);
+
+    // NB: keep the tolerances when changing the line-search strategies
+    if (had_lsearch_strategy)
+    {
+        m_lsearch_strategy->c1(c1);
+        m_lsearch_strategy->c2(c2);
+    }
 }
 
 void solver_t::lsearch_strategy(const json_t& json)
