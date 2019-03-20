@@ -64,7 +64,7 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, solver_state_t& sta
 
         // next trial
         state.update(state0, state.t);
-        log(state);
+        log(state0, state);
     }
 
     return false;

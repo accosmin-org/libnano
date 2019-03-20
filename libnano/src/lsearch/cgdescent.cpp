@@ -144,7 +144,7 @@ bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t 
 {
     // check overflow
     const auto ok = c.update(state0, t);
-    log(c);
+    log(state0, c);
 
     return (!ok) ? true : evaluate(state0, c);
 }

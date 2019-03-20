@@ -40,7 +40,7 @@ bool lsearch_strategy_t::get(solver_state_t& state, scalar_t t)
     for (int i = 0; i < max_iterations(); ++ i)
     {
         const auto ok = state.update(state0, t);
-        log(state);
+        log(state0, state);
 
         if (!ok)
         {

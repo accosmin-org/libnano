@@ -19,9 +19,9 @@ namespace nano
     public:
 
         ///
-        /// logging operator: op(solver_state_t), called for each trial of the line-search length.
+        /// logging operator: op(solver_state_at_0, solver_state_at_t), called for each trial of the line-search length.
         ///
-        using logger_t = std::function<void(const solver_state_t&)>;
+        using logger_t = std::function<void(const solver_state_t&, const solver_state_t&)>;
 
         ///
         /// \brief constructor
@@ -79,11 +79,11 @@ namespace nano
         ///
         /// \brief log the current line-search trial length (if the logger is provided)
         ///
-        void log(const solver_state_t& state) const
+        void log(const solver_state_t& state0, const solver_state_t& state) const
         {
             if (m_logger)
             {
-                m_logger(state);
+                m_logger(state0, state);
             }
         }
 

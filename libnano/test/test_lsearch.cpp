@@ -24,23 +24,10 @@ enum class lsearch_type
     cgdescent
 };
 
-static void test(
-    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function,
-    const lsearch_type type, const vector_t& x0, const scalar_t t0)
+static void setup_logger(const rlsearch_strategy_t& lsearch, std::stringstream& stream)
 {
-    std::stringstream stream;
-    const auto old_n_failures = n_failures.load();
-
-    auto state0 = solver_state_t{function, x0};
-    state0.d = -state0.g;
-    const auto epsilon = 1e-6;// todo: get the updated value of epsilon for CGDESCENT!!!
-
-    stream
-        << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id
-        << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
-
     // log the line-search trials
-    lsearch->logger([&] (const solver_state_t& state)
+    lsearch->logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
         stream
             << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
@@ -49,12 +36,29 @@ static void test(
             << ",swolfe=" << state.has_strong_wolfe(state0, lsearch->c2())
             << ",awolfe=" << state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()) << ".\n";
     });
+}
+
+static void test(
+    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function,
+    const lsearch_type type, const vector_t& x0, const scalar_t t0)
+{
+    const auto old_n_failures = n_failures.load();
+
+    auto state0 = solver_state_t{function, x0};
+    UTEST_CHECK(state0);
+    state0.d = -state0.g;
+    const auto epsilon = 1e-6;// todo: get the updated value of epsilon for CGDESCENT!!!
+
+    std::stringstream stream;
+    stream
+        << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id
+        << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
+    setup_logger(lsearch, stream);
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
     auto state = state0;
     UTEST_CHECK(lsearch->get(state, t0));
     UTEST_CHECK(state);
-    UTEST_CHECK(state0);
 
     switch (type)
     {

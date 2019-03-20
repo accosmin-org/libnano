@@ -6,31 +6,41 @@
 
 using namespace nano;
 
-static void test(
-    const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+static void setup_logger(const rsolver_t& solver, std::stringstream& stream)
 {
-    std::stringstream stream;
-    const auto old_n_failures = n_failures.load();
-
-    const auto state0 = solver_state_t{function, x0};
-
-    stream << std::fixed << std::setprecision(16)
-        << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
-        << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
-
     // log the optimization steps
     solver->logger([&] (const solver_state_t& state)
     {
-        stream << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+        stream
+            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
 
     // log the line-search steps
-    solver->lsearch_logger([&] (const solver_state_t& state)
+    solver->lsearch_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
-        stream << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+        stream
+            << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << ",armijo=" << state.has_armijo(state0, solver->c1())
+            << ",wolfe=" << state.has_wolfe(state0, solver->c2())
+            << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
     });
+}
+
+static void test(
+    const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+{
+    const auto old_n_failures = n_failures.load();
+    const auto state0 = solver_state_t{function, x0};
+
+    std::stringstream stream;
+    stream
+        << std::fixed << std::setprecision(16)
+        << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
+        << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
+
+    setup_logger(solver, stream);
 
     // minimize
     solver->epsilon(1e-6);
