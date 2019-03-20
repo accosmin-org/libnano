@@ -119,7 +119,7 @@ namespace nano
     template <typename tscalar>
     tscalar epsilon0()
     {
-        return 10 * epsilon<tscalar>();
+        return roundpow10(10 * epsilon<tscalar>());
     }
 
     template <typename tscalar>

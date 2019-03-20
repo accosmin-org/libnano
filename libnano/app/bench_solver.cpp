@@ -148,18 +148,18 @@ static int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-    cmdline.add("", "solvers",      "use this regex to select the solvers to benchmark", ".+");
-    cmdline.add("", "functions",    "use this regex to select the functions to benchmark", ".+");
-    cmdline.add("", "min-dims",     "minimum number of dimensions for each test function (if feasible)", "100");
-    cmdline.add("", "max-dims",     "maximum number of dimensions for each test function (if feasible)", "1000");
-    cmdline.add("", "trials",       "number of random trials for each test function", "100");
-    cmdline.add("", "iterations",   "maximum number of iterations", "1000");
-    cmdline.add("", "epsilon",      "convergence criterion", 1e-6);
-    cmdline.add("", "convex",       "use only convex test functions");
-    cmdline.add("", "c1",           "use this c1 value (see Armijo-Goldstein line-search step condition)");
-    cmdline.add("", "c2",           "use this c2 value (see Wolfe line-search step condition)");
-    cmdline.add("", "ls-init",      "use this regex to select the line-search initialization methods");
-    cmdline.add("", "ls-strategy",  "use this regex to select the line-search methods");
+    cmdline.add("", "solver",           "use this regex to select the solvers to benchmark", ".+");
+    cmdline.add("", "function",         "use this regex to select the functions to benchmark", ".+");
+    cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "100");
+    cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1000");
+    cmdline.add("", "trials",           "number of random trials for each test function", "100");
+    cmdline.add("", "iterations",       "maximum number of iterations", "1000");
+    cmdline.add("", "epsilon",          "convergence criterion", 1e-6);
+    cmdline.add("", "convex",           "use only convex test functions");
+    cmdline.add("", "c1",               "use this c1 value (see Armijo-Goldstein line-search step condition)");
+    cmdline.add("", "c2",               "use this c2 value (see Wolfe line-search step condition)");
+    cmdline.add("", "lsearch-init",     "use this regex to select the line-search initialization methods");
+    cmdline.add("", "lsearch-strategy", "use this regex to select the line-search methods");
 
     cmdline.process(argc, argv);
 
@@ -171,15 +171,15 @@ static int unsafe_main(int argc, const char* argv[])
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto is_convex = cmdline.has("convex");
 
-    const auto fregex = std::regex(cmdline.get<string_t>("functions"));
-    const auto sregex = std::regex(cmdline.get<string_t>("solvers"));
+    const auto fregex = std::regex(cmdline.get<string_t>("function"));
+    const auto sregex = std::regex(cmdline.get<string_t>("solver"));
 
-    const auto ls_inits = cmdline.has("ls-init") ?
-        lsearch_init_t::all().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
+    const auto ls_inits = cmdline.has("lsearch-init") ?
+        lsearch_init_t::all().ids(std::regex(cmdline.get<string_t>("lsearch-init"))) :
         strings_t{""};
 
-    const auto ls_strategies = cmdline.has("ls-strategy") ?
-        lsearch_strategy_t::all().ids(std::regex(cmdline.get<string_t>("ls-strategy"))) :
+    const auto ls_strategies = cmdline.has("lsearch-strategy") ?
+        lsearch_strategy_t::all().ids(std::regex(cmdline.get<string_t>("lsearch-strategy"))) :
         strings_t{""};
 
     // construct the list of solver configurations to evaluate

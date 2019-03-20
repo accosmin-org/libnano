@@ -27,6 +27,8 @@ json_t solver_t::config() const
     json["c2"] = strcat(c2, "(c1,1)");
     json["init"] = m_lsearch_init->config_with_id(m_lsearch_init_id);
     json["strategy"] = m_lsearch_strategy->config_with_id(m_lsearch_strategy_id);
+    json["epsilon"] = strcat(m_epsilon, "(1e-12,1e-4)");
+    json["max_iterations"] = strcat(m_max_iterations, "(1,1000000)");
 
     return json;
 }
@@ -39,6 +41,8 @@ void solver_t::config(const json_t& json)
     auto c2 = m_lsearch_strategy->c2();
     nano::from_json_range(json, "c1", c1, eps, 1 - eps);
     nano::from_json_range(json, "c2", c2, c1, 1 - eps);
+    nano::from_json_range(json, "epsilon", m_epsilon, 1e-12 + eps, 1e-4 - eps);
+    nano::from_json_range(json, "max_iterations", m_max_iterations, 1, 1000 * 1000);
 
     if (json.count("init"))
     {
