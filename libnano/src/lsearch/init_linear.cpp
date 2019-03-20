@@ -18,17 +18,14 @@ scalar_t lsearch_linear_init_t::get(const solver_state_t& state)
     scalar_t t0;
 
     const auto dg = state.dg();
-    switch (state.m_iterations)
+    if (state.m_iterations <= 1)
     {
-    case 0:
-    case 1:
         t0 = 1;
-        break;
-
-    default:
+    }
+    else
+    {
         // NB: the line-search length is from the previous iteration!
         t0 = state.t * m_prevdg / dg;
-        break;
     }
 
     m_prevdg = dg;

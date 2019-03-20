@@ -96,14 +96,15 @@ static void test(
 static void test(
     const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
 {
-    for (auto i = 0; i < 20; ++ i)
+    for (const auto& c12 : std::vector<std::pair<scalar_t, scalar_t>>{{1e-4, 1e-1}, {1e-4, 9e-1}, {1e-1, 9e-1}})
     {
-        const scalar_t stpmin = lsearch_strategy_t::stpmin();
-        const scalar_t stpmax = lsearch_strategy_t::stpmax();
-        const scalar_t t0 = nano::clamp(std::pow(3.0, 2.0 - i / 5.0), stpmin, stpmax);
-        const vector_t x0 = vector_t::Random(function.size());
+        lsearch->c1(c12.first);
+        lsearch->c2(c12.second);
 
-        test(lsearch, lsearch_id, function, type, x0, t0);
+        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 1e-1);
+        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 3e-1);
+        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 1e+0);
+        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 3e+1);
     }
 }
 

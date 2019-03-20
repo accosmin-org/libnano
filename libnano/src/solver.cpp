@@ -97,7 +97,7 @@ void solver_t::lsearch_strategy(const string_t& id, rlsearch_strategy_t&& strate
     m_lsearch_strategy_id = id;
     m_lsearch_strategy = std::move(strategy);
 
-    // NB: keep the tolerances when changing the line-search strategies
+    // NB: keep the tolerances when changing the line-search strategy
     if (had_lsearch_strategy)
     {
         m_lsearch_strategy->c1(c1);

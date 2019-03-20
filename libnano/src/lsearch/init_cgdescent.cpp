@@ -26,56 +26,49 @@ scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state)
 {
     scalar_t t0;
 
-    switch (state.m_iterations)
+    if (state.m_iterations <= 1)
     {
-    case 0:
-    case 1:
+        const auto xnorm = state.x.lpNorm<Eigen::Infinity>();
+        const auto fnorm = std::fabs(state.f);
+
+        if (xnorm > 0)
         {
-            const auto xnorm = state.x.lpNorm<Eigen::Infinity>();
-            const auto fnorm = std::fabs(state.f);
-
-            if (xnorm > 0)
-            {
-                t0 = m_phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
-            }
-            else if (fnorm > 0)
-            {
-                t0 = m_phi0 * fnorm / state.g.squaredNorm();
-            }
-            else
-            {
-                t0 = 1;
-            }
+            t0 = m_phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
         }
-        break;
-
-    default:
+        else if (fnorm > 0)
         {
-            lsearch_step_t step0
-            {
-                0, state.f, state.dg()
-            };
-
-            lsearch_step_t stepx
-            {
-                state.t * m_phi1,
-                // NB: the line-search length is from the previous iteration!
-                state.function->vgrad(state.x + state.t * m_phi1 * state.d),
-                0
-            };
-
-            bool convexity = false;
-            const auto tq = lsearch_step_t::quadratic(step0, stepx, &convexity);
-            if (stepx.f < step0.f && convexity)
-            {
-                t0 = tq;
-            }
-            else
-            {
-                t0 = state.t * m_phi2;
-            }
+            t0 = m_phi0 * fnorm / state.g.squaredNorm();
         }
-        break;
+        else
+        {
+            t0 = 1;
+        }
+    }
+    else
+    {
+        lsearch_step_t step0
+        {
+            0, state.f, state.dg()
+        };
+
+        lsearch_step_t stepx
+        {
+            state.t * m_phi1,
+            // NB: the line-search length is from the previous iteration!
+            state.function->vgrad(state.x + state.t * m_phi1 * state.d),
+            0
+        };
+
+        bool convexity = false;
+        const auto tq = lsearch_step_t::quadratic(step0, stepx, &convexity);
+        if (stepx.f < step0.f && convexity)
+        {
+            t0 = tq;
+        }
+        else
+        {
+            t0 = state.t * m_phi2;
+        }
     }
 
     return t0;

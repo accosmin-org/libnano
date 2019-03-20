@@ -181,9 +181,9 @@ bool lsearch_morethuente_t::get(const solver_state_t& state0, solver_state_t& st
 
         // Check if further progress can be made
         if (brackt && (stp <= stmin || stp >= stmax))       return true;
-        if (brackt && stmax - stmin <= xtol * stmax)        return true;
-        if (stp == stpmax() && f <= ftest && g <= gtest)    return true;
-        if (stp == stpmin() && (f > ftest || g >= gtest))   return true;
+        if (brackt && (stmax - stmin) <= xtol * stmax)      return true;
+        if (stp >= stpmax() && f <= ftest && g <= gtest)    return true;
+        if (stp <= stpmin() && (f > ftest || g >= gtest))   return true;
 
         // Check convergence
         if (f <= ftest && std::fabs(g) <= gtol * (-ginit))

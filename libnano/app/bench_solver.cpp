@@ -97,7 +97,8 @@ static auto trim(const json_t& json)
     return config;
 }
 
-static void check_solver(const function_t& function, const rsolver_t& solver, const string_t& id,
+static void check_solver(const function_t& function,
+    const rsolver_t& solver, const string_t& solver_id,
     const std::vector<vector_t>& x0s,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats)
 {
@@ -112,12 +113,13 @@ static void check_solver(const function_t& function, const rsolver_t& solver, co
 
     for (const auto& state : states)
     {
-        fstats[std::make_pair(id, config)].update(state);
-        gstats[std::make_pair(id, config)].update(state);
+        fstats[std::make_pair(solver_id, config)].update(state);
+        gstats[std::make_pair(solver_id, config)].update(state);
     }
 }
 
-static void check_function(const function_t& function, const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
+static void check_function(const function_t& function,
+    const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
     const size_t trials, solver_config_stats_t& gstats)
 {
     // generate fixed random trials
