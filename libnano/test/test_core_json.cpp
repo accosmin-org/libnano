@@ -41,7 +41,7 @@ UTEST_CASE(from_range_range_nok)
     const auto json = to_json("value", 1);
 
     int value = 0;
-    UTEST_CHECK_THROW(from_json_range(json, "value", value, +2, +10), std::runtime_error);
+    UTEST_CHECK_THROW(from_json_range(json, "value", value, +2, +10), std::invalid_argument);
     UTEST_CHECK_EQUAL(value, 1);
 }
 
