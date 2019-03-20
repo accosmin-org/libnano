@@ -6,11 +6,12 @@
 
 using namespace nano;
 
-static void setup_logger(const rsolver_t& solver, std::stringstream& stream)
+static void setup_logger(const rsolver_t& solver, std::stringstream& stream, size_t& iterations, size_t& fcalls)
 {
     // log the optimization steps
     solver->logger([&] (const solver_state_t& state)
     {
+        ++ iterations;
         stream
             << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
@@ -20,6 +21,7 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream)
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
+        ++ fcalls;
         stream
             << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, solver->c1())
@@ -40,7 +42,8 @@ static void test(
         << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
 
-    setup_logger(solver, stream);
+    size_t iterations = 0, fcalls = 1;
+    setup_logger(solver, stream, iterations, fcalls);
 
     // minimize
     solver->epsilon(1e-6);
@@ -53,6 +56,10 @@ static void test(
     // check convergence
     UTEST_CHECK_LESS(state.convergence_criterion(), solver->epsilon());
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
+
+    UTEST_CHECK_EQUAL(iterations, state.m_iterations);
+    UTEST_CHECK_EQUAL(fcalls, state.m_fcalls);
+    UTEST_CHECK_GREATER_EQUAL(fcalls, state.m_gcalls);
 
     if (old_n_failures != n_failures.load())
     {
