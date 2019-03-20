@@ -84,12 +84,15 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
 static auto trim(const json_t& json)
 {
     string_t config = json.dump();
-    config = nano::replace(config, ",,", ",");
     config = nano::replace(config, "\"", "");
-    config = nano::replace(config, ",}", "");
-    config = nano::replace(config, "}", "");
-    config = nano::replace(config, "{", "");
-    config = nano::replace(config, "id:", "");
+    config = nano::replace(config, "(0,1)", "");
+    config = nano::replace(config, "[0,1]", "");
+    config = nano::replace(config, "(1,2)", "");
+    config = nano::replace(config, "(0,10)", "");
+    config = nano::replace(config, "(c1,1)", "");
+    config = nano::replace(config, "(0,inf)", "");
+    config = nano::replace(config, "(1,inf)", "");
+    config = nano::replace(config, "(1,1000)", "");
 
     return config;
 }
@@ -171,15 +174,15 @@ static int unsafe_main(int argc, const char* argv[])
 
     const auto ls_inits = cmdline.has("ls-init") ?
         lsearch_init_t::all().ids(std::regex(cmdline.get<string_t>("ls-init"))) :
-        strings_t{};
+        strings_t{""};
 
     const auto ls_strategies = cmdline.has("ls-strategy") ?
         lsearch_strategy_t::all().ids(std::regex(cmdline.get<string_t>("ls-strategy"))) :
-        strings_t{};
+        strings_t{""};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (const auto& solver_id, const auto* ls_init, const auto* ls_strategy)
+    const auto add_solver = [&] (const auto& solver_id, const auto& ls_init, const auto& ls_strategy)
     {
         auto solver = solver_t::all().get(solver_id);
         if (cmdline.has("c1"))
@@ -190,13 +193,13 @@ static int unsafe_main(int argc, const char* argv[])
         {
             solver->config(nano::to_json("c2", cmdline.get<scalar_t>("c2")));
         }
-        if (ls_init)
+        if (!ls_init.empty())
         {
-            solver->lsearch_init(*ls_init);
+            solver->lsearch_init(ls_init);
         }
-        if (ls_strategy)
+        if (!ls_strategy.empty())
         {
-            solver->lsearch_strategy(*ls_strategy);
+            solver->lsearch_strategy(ls_strategy);
         }
         solver->epsilon(epsilon);
         solver->max_iterations(iterations);
@@ -206,16 +209,11 @@ static int unsafe_main(int argc, const char* argv[])
 
     for (const auto& id : solver_t::all().ids(sregex))
     {
-        const auto size_init = ls_inits.size() + 1;
-        const auto size_strategy = ls_strategies.size() + 1;
-
-        for (size_t i_init = 0; i_init < size_init; ++ i_init)
+        for (const auto& iid : ls_inits)
         {
-            for (size_t i_strategy = 0; i_strategy < size_strategy; ++ i_strategy)
+            for (const auto& sid : ls_strategies)
             {
-                add_solver(id,
-                    (i_init == ls_inits.size()) ? nullptr : &ls_inits[i_init],
-                    (i_strategy == ls_strategies.size()) ? nullptr : &ls_strategies[i_strategy]);
+                add_solver(id, iid, sid);
             }
         }
     }

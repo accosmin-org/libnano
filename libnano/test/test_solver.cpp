@@ -29,7 +29,10 @@ static void test(
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state)
     {
-        stream << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion() << ".\n";
+        stream << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << ",armijo=" << state.has_armijo(state0, solver->c1())
+            << ",wolfe=" << state.has_wolfe(state0, solver->c2())
+            << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
     });
 
     // minimize
