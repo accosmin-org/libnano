@@ -24,8 +24,7 @@ scalar_t lsearch_linear_init_t::get(const solver_state_t& state)
     }
     else
     {
-        // NB: the line-search length is from the previous iteration!
-        t0 = state.t * m_prevdg / dg;
+        t0 = clamp(state.t * m_prevdg / dg, state.t * 0.25, 1);
     }
 
     m_prevdg = dg;

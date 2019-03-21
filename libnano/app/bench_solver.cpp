@@ -93,6 +93,8 @@ static auto trim(const json_t& json)
     config = nano::replace(config, "(0,inf)", "");
     config = nano::replace(config, "(1,inf)", "");
     config = nano::replace(config, "(1,1000)", "");
+    config = nano::replace(config, "(1,1000000)", "");
+    config = nano::replace(config, "(1e-12,1e-4)", "");
 
     return config;
 }

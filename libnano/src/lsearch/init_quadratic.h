@@ -24,6 +24,5 @@ namespace nano
         // attributes
         scalar_t    m_prevf{0};     ///< previous function value
         scalar_t    m_prevdg{1};    ///< previous direction dot product
-        scalar_t    m_ro{1.01};     ///<
     };
 }

@@ -6,7 +6,7 @@
 
 using namespace nano;
 
-static void setup_logger(const rsolver_t& solver, std::stringstream& stream, size_t& iterations, size_t& fcalls)
+static void setup_logger(const rsolver_t& solver, std::stringstream& stream, size_t& iterations)
 {
     // log the optimization steps
     solver->logger([&] (const solver_state_t& state)
@@ -21,7 +21,6 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     // log the line-search steps
     solver->lsearch_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
-        ++ fcalls;
         stream
             << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, solver->c1())
@@ -42,12 +41,12 @@ static void test(
         << function.name() << " " << solver_id << "[" << solver->config().dump() << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
 
-    size_t iterations = 0, fcalls = 1;
-    setup_logger(solver, stream, iterations, fcalls);
+    size_t iterations = 0;
+    setup_logger(solver, stream, iterations);
 
     // minimize
     solver->epsilon(1e-6);
-    solver->max_iterations(100);
+    solver->max_iterations(1000);
     const auto state = solver->minimize(function, x0);
 
     // check function value decrease
@@ -56,10 +55,7 @@ static void test(
     // check convergence
     UTEST_CHECK_LESS(state.convergence_criterion(), solver->epsilon());
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
-
     UTEST_CHECK_EQUAL(iterations, state.m_iterations);
-    UTEST_CHECK_EQUAL(fcalls, state.m_fcalls);
-    UTEST_CHECK_GREATER_EQUAL(fcalls, state.m_gcalls);
 
     if (old_n_failures != n_failures.load())
     {
@@ -188,10 +184,7 @@ UTEST_CASE(default_solvers)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (auto t = 0; t < 10; ++ t)
-            {
-                test(solver, solver_id, *function, vector_t::Random(function->size()));
-            }
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }
 }
@@ -214,10 +207,7 @@ UTEST_CASE(various_lsearches)
                     solver->lsearch_init(lsearch_init_id);
                     solver->lsearch_strategy(lsearch_strategy_id);
 
-                    for (auto t = 0; t < 10; ++ t)
-                    {
-                        test(solver, solver_id, *function, vector_t::Random(function->size()));
-                    }
+                    test(solver, solver_id, *function, vector_t::Random(function->size()));
                 }
             }
         }
@@ -239,10 +229,7 @@ UTEST_CASE(various_tolerances)
             {
                 solver->config(to_json("c1", c12.first, "c2", c12.second));
 
-                for (auto t = 0; t < 10; ++ t)
-                {
-                    test(solver, solver_id, *function, vector_t::Random(function->size()));
-                }
+                test(solver, solver_id, *function, vector_t::Random(function->size()));
             }
         }
     }
