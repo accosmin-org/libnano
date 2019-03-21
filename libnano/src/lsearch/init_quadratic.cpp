@@ -27,9 +27,10 @@ scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state)
     }
     else
     {
-        t0 = std::min(scalar_t(1), m_ro * 2 * (state.f - m_prevf) / state.dg());
+        t0 = std::min(scalar_t(1), m_ro * 2 * (state.f - m_prevf) / m_prevdg);
     }
 
     m_prevf = state.f;
+    m_prevdg = state.dg();
     return t0;
 }
