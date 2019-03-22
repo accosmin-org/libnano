@@ -21,6 +21,6 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_alpha{1};     ///<
+        scalar_t    m_t0{1};    ///< the constant line-search step length to return
     };
 }

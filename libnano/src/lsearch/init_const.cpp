@@ -6,18 +6,19 @@ using namespace nano;
 json_t lsearch_const_init_t::config() const
 {
     json_t json;
-    json["alpha"] = strcat(m_alpha, "(0,10)");
+    json["t0"] = strcat(m_t0, "(0,inf)");
     return json;
 }
 
 void lsearch_const_init_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
+    const auto inf = 1 / eps;
 
-    from_json_range(json, "alpha", m_alpha, eps, 10 - eps);
+    from_json_range(json, "t0", m_t0, eps, inf);
 }
 
 scalar_t lsearch_const_init_t::get(const solver_state_t&)
 {
-    return m_alpha;
+    return m_t0;
 }
