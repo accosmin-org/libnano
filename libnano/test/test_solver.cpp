@@ -48,6 +48,7 @@ static void test(
     solver->epsilon(1e-6);
     solver->max_iterations(1000);
     const auto state = solver->minimize(function, x0);
+    UTEST_CHECK(state);
 
     // check function value decrease
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
