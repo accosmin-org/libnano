@@ -196,7 +196,7 @@ UTEST_CASE(various_lsearches)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : {"gd", "cgd", "lbfgs", "bfgs"})
+        for (const auto& solver_id : solver_t::all().ids(std::regex("gd|cgd|lbfgs|bfgs")))
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
@@ -221,7 +221,7 @@ UTEST_CASE(various_tolerances)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : {"gd", "cgd", "lbfgs", "bfgs"})
+        for (const auto& solver_id : solver_t::all().ids(std::regex("gd|cgd|lbfgs|bfgs")))
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
