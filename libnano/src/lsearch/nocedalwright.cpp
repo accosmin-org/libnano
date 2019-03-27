@@ -23,18 +23,17 @@ bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
 {
     for (int i = 0; i < max_iterations() && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++ i)
     {
-        if (!state.update(state0, lsearch_step_t::cubic(lo, hi)))
+        const auto ok = state.update(state0, lsearch_step_t::cubic(lo, hi));
+        log(state0, state);
+
+        if (!ok)
         {
-            log(state0, state);
             return false;
         }
-
         else if (!state.has_armijo(state0, c1()) || state.f >= lo.f)
         {
-            log(state0, state);
             hi = state;
         }
-
         else
         {
             if (state.has_strong_wolfe(state0, c2()))
