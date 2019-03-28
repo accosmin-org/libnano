@@ -7,6 +7,8 @@ namespace nano
     ///
     /// \brief the More&Thuente-like line-search algorithm described here:
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.60
+    /// todo: this algorithm may have been first described in Fletcher's "Practical methods of optimization"
+    ///     rename the class accordingly if this is the case
     ///
     class lsearch_nocedalwright_t final : public lsearch_strategy_t
     {
