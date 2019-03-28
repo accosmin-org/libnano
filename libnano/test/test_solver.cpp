@@ -29,10 +29,9 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     });
 }
 
-static void test(
-    const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+static void test(const rsolver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
-    const auto old_n_failures = n_failures.load();
+    const auto old_n_failures = utest_n_failures.load();
     const auto state0 = solver_state_t{function, x0};
 
     std::stringstream stream;
@@ -46,7 +45,7 @@ static void test(
 
     // minimize
     solver->epsilon(1e-6);
-    solver->max_iterations(1000);
+    solver->max_iterations(5000);
     const auto state = solver->minimize(function, x0);
     UTEST_CHECK(state);
 
@@ -58,7 +57,7 @@ static void test(
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
     UTEST_CHECK_EQUAL(iterations, state.m_iterations);
 
-    if (old_n_failures != n_failures.load())
+    if (old_n_failures != utest_n_failures.load())
     {
         std::cout << stream.str();
     }
@@ -174,13 +173,20 @@ UTEST_CASE(config_solvers)
     }
 }
 
-UTEST_CASE(default_solvers)
+const auto functions = get_convex_functions(1, 4);
+
+const auto all_solver_ids = solver_t::all().ids();
+const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
+const auto all_lsearch_init_ids = lsearch_init_t::all().ids();
+const auto all_lsearch_strategy_ids = lsearch_strategy_t::all().ids(std::regex("backtrack|morethuente"));//!!!
+
+UTEST_CASE(all_default_solvers)
 {
-    for (const auto& function : get_convex_functions(1, 4))
+    for (const auto& function : functions)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : solver_t::all().ids())
+        for (const auto& solver_id : all_solver_ids)
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
@@ -190,20 +196,20 @@ UTEST_CASE(default_solvers)
     }
 }
 
-UTEST_CASE(various_lsearches)
+UTEST_CASE(best_solvers_with_lsearches)
 {
-    for (const auto& function : get_convex_functions(1, 4))
+    for (const auto& function : functions)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : solver_t::all().ids(std::regex("gd|cgd|lbfgs|bfgs")))
+        for (const auto& solver_id : best_solver_ids)
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& lsearch_init_id : lsearch_init_t::all().ids())
+            for (const auto& lsearch_init_id : all_lsearch_init_ids)
             {
-                for (const auto& lsearch_strategy_id : lsearch_strategy_t::all().ids())
+                for (const auto& lsearch_strategy_id : all_lsearch_strategy_ids)
                 {
                     solver->lsearch_init(lsearch_init_id);
                     solver->lsearch_strategy(lsearch_strategy_id);
@@ -215,23 +221,25 @@ UTEST_CASE(various_lsearches)
     }
 }
 
-UTEST_CASE(various_tolerances)
+UTEST_CASE(best_solvers_with_tolerances)
 {
     for (const auto& function : get_convex_functions(1, 4))
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : solver_t::all().ids(std::regex("gd|cgd|lbfgs|bfgs")))
+        for (const auto& solver_id : best_solver_ids)
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& c12 : std::vector<std::pair<scalar_t, scalar_t>>{{1e-4, 1e-1}, {1e-4, 9e-1}, {1e-1, 9e-1}})
-            {
-                solver->config(to_json("c1", c12.first, "c2", c12.second));
+            solver->config(to_json("c1", 1e-4, "c2", 1e-1));
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-                test(solver, solver_id, *function, vector_t::Random(function->size()));
-            }
+            solver->config(to_json("c1", 1e-4, "c2", 9e-1));
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
+
+            solver->config(to_json("c1", 1e-1, "c2", 9e-1));
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }
 }

@@ -42,7 +42,7 @@ static void test(
     const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function,
     const lsearch_type type, const vector_t& x0, const scalar_t t0)
 {
-    const auto old_n_failures = n_failures.load();
+    const auto old_n_failures = utest_n_failures.load();
 
     auto state0 = solver_state_t{function, x0};
     UTEST_CHECK(state0);
@@ -91,7 +91,7 @@ static void test(
         break;
     }
 
-    if (old_n_failures != n_failures.load())
+    if (old_n_failures != utest_n_failures.load())
     {
         std::cout << stream.str();
     }
