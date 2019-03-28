@@ -155,7 +155,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "100");
     cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1000");
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
-    cmdline.add("", "iterations",       "maximum number of iterations", "1000");
+    cmdline.add("", "max-iterations",   "maximum number of iterations", "1000");
     cmdline.add("", "epsilon",          "convergence criterion", 1e-6);
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "c1",               "use this c1 value (see Armijo-Goldstein line-search step condition)");
@@ -169,7 +169,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
     const auto trials = cmdline.get<size_t>("trials");
-    const auto iterations = cmdline.get<size_t>("iterations");
+    const auto max_iterations = cmdline.get<size_t>("max-iterations");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto is_convex = cmdline.has("convex");
 
@@ -206,7 +206,7 @@ static int unsafe_main(int argc, const char* argv[])
             solver->lsearch_strategy(ls_strategy);
         }
         solver->epsilon(epsilon);
-        solver->max_iterations(iterations);
+        solver->max_iterations(max_iterations);
 
         solvers.emplace_back(solver_id, std::move(solver));
     };
