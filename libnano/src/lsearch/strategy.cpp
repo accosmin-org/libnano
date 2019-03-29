@@ -25,6 +25,13 @@ lsearch_strategy_factory_t& lsearch_strategy_t::all()
     return manager;
 }
 
+static auto make_state0(const solver_state_t& state)
+{
+    auto state0 = state;
+    state0.t = 0;
+    return state0;
+}
+
 bool lsearch_strategy_t::get(solver_state_t& state, scalar_t t)
 {
     // check descent direction
@@ -34,7 +41,7 @@ bool lsearch_strategy_t::get(solver_state_t& state, scalar_t t)
     }
 
     // adjust the initial step length if it produces an invalid state
-    const auto state0 = state;
+    const auto state0 = make_state0(state);
 
     t = std::isfinite(t) ? nano::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
     for (int i = 0; i < max_iterations(); ++ i)
