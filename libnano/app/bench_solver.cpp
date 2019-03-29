@@ -186,7 +186,8 @@ static int unsafe_main(int argc, const char* argv[])
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (const auto& solver_id, const auto& ls_init, const auto& ls_strategy)
+    const auto add_solver = [&] (
+        const string_t& solver_id, const string_t& ls_init, const string_t& ls_strategy)
     {
         auto solver = solver_t::all().get(solver_id);
         if (cmdline.has("c1"))
