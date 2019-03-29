@@ -120,7 +120,6 @@ namespace nano
         ///
         bool has_approx_armijo(const solver_state_t& state0, const scalar_t epsilon) const
         {
-            assert(epsilon > 0);
             return f <= state0.f + epsilon;
         }
 

@@ -45,6 +45,7 @@ int main(const int, char* argv[])
     for (auto trial = 0; trial < 10; ++ trial)
     {
         const auto x0 = nano::vector_t::Random(objective.size());
+
         std::cout << std::fixed << std::setprecision(12)
             << "check_grad[" << (trial + 1) << "/" << trials
             << "]: dg=" << objective.grad_accuracy(x0) << std::endl;
@@ -61,15 +62,15 @@ int main(const int, char* argv[])
         "c1", 1e-4,
         "c2", 9e-1,
         "history", history,
-        "epsilon", epsilon,
-        "max_iterations", max_iterations));
+        "eps", epsilon,
+        "maxit", max_iterations));
 
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++ trial)
     {
         const auto x0 = nano::vector_t::Random(objective.size());
-
         const auto state = solver->minimize(objective, x0);
+
         std::cout << std::fixed << std::setprecision(12)
             << "minimize[" << (trial + 1) << "/" << trials
             << "]: f0=" << objective.vgrad(x0, nullptr)

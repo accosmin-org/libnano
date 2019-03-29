@@ -205,7 +205,7 @@ static int unsafe_main(int argc, const char* argv[])
         {
             solver->lsearch_strategy(ls_strategy);
         }
-        solver->config(nano::to_json("epsilon", epsilon, "max_iterations", max_iterations));
+        solver->config(nano::to_json("eps", epsilon, "maxit", max_iterations));
 
         solvers.emplace_back(solver_id, std::move(solver));
     };
