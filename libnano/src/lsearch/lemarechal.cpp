@@ -35,9 +35,6 @@ bool lsearch_lemarechal_t::get(const solver_state_t& state0, solver_state_t& sta
     lsearch_step_t L = state0;
     lsearch_step_t R = L;
 
-    assert(L.t < epsilon0<scalar_t>());
-    assert(R.t < epsilon0<scalar_t>());
-
     bool R_updated = false;
     for (int i = 1; i < max_iterations() && state.t > stpmin() && state.t < stpmax(); ++ i)
     {
