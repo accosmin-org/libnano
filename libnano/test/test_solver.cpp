@@ -178,7 +178,7 @@ const auto functions = get_convex_functions(1, 4);
 const auto all_solver_ids = solver_t::all().ids();
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
 const auto all_lsearch_init_ids = lsearch_init_t::all().ids();
-const auto all_lsearch_strategy_ids = lsearch_strategy_t::all().ids(std::regex("backtrack|morethuente|lemarechal"));//!!!
+const auto all_lsearch_strategy_ids = lsearch_strategy_t::all().ids();
 
 UTEST_CASE(all_default_solvers)
 {
