@@ -23,7 +23,7 @@ bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
 {
     for (int i = 0; i < max_iterations() && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++ i)
     {
-        const auto ok = state.update(state0, lsearch_step_t::cubic(lo, hi));
+        const auto ok = state.update(state0, lsearch_step_t::interpolate(lo, hi));
         log(state0, state);
 
         if (!ok)
