@@ -83,6 +83,31 @@ namespace nano
             return (u.t + v.t) / 2;
         }
 
+        ///
+        /// \brief interpolation of two line-search steps.
+        ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
+        ///         until the interpolated point is valid and resides within the given range.
+        ///
+        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v)
+        {
+            const auto tmin = std::min(u.t, v.t);
+            const auto tmax = std::max(u.t, v.t);
+
+            const auto tc = cubic(u, v);
+            if (std::isfinite(tc) && tc > tmin && tc < tmax)
+            {
+                return tc;
+            }
+
+            const auto tq = quadratic(u, v);
+            if (std::isfinite(tq) && tq > tmin && tq < tmax)
+            {
+                return tq;
+            }
+
+            return bisect(u, v);
+        }
+
         // attributes
         scalar_t t{0};  ///< line-search step
         scalar_t f{0};  ///< line-search function value
