@@ -8,4 +8,4 @@ comment:
   behavior: default
 
 ignore:
-  - "libnano/test/test*.cpp"
+  - "**/test_*"
