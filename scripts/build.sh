@@ -120,7 +120,7 @@ function cppcheck {
 function codecov {
     cd ${basedir}
 
-    bash <(curl -s https://codecov.io/bash) -R ${basedir} || return 1
+    bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
 function coveralls {
