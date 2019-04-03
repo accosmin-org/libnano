@@ -69,6 +69,32 @@ int main(const int, char* argv[])
     for (auto trial = 0; trial < trials; ++ trial)
     {
         const auto x0 = nano::vector_t::Random(objective.size());
+
+        std::cout << std::fixed << std::setprecision(12)
+            << "minimize[" << (trial + 1) << "/" << trials
+            << "]: f0=" << objective.vgrad(x0, nullptr)
+            << "...\n";
+
+        // log the optimization steps
+        solver->logger([&] (const nano::solver_state_t& state)
+        {
+            std::cout
+                << "\titer=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls
+                << ".\n";
+            return true;
+        });
+
+        // log the line-search steps
+        solver->lsearch_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
+        {
+            std::cout
+                << "\t\tlsearch: t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                << ",armijo=" << state.has_armijo(state0, solver->c1())
+                << ",wolfe=" << state.has_wolfe(state0, solver->c2())
+                << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
+        });
+
         const auto state = solver->minimize(objective, x0);
 
         std::cout << std::fixed << std::setprecision(12)
@@ -81,7 +107,7 @@ int main(const int, char* argv[])
             << ", fcalls=" << state.m_fcalls
             << ", gcalls=" << state.m_gcalls
             << ", status=" << nano::to_string(state.m_status)
-            << std::endl;
+            << "\n" << std::endl;
     }
 
     return EXIT_SUCCESS;
