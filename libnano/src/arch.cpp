@@ -3,6 +3,8 @@
 #if defined(__APPLE__)
     #include <sys/sysctl.h>
 #elif defined(__linux__)
+    #include <string>
+    #include <cstdio>
     #include <unistd.h>
     #include <sys/sysinfo.h>
 #else
@@ -43,16 +45,33 @@ namespace nano
 
     unsigned int physical_cpus()
     {
-        unsigned int registers[4];
-        __asm__ __volatile__ ("cpuid " :
-            "=a" (registers[0]),
-            "=b" (registers[1]),
-            "=c" (registers[2]),
-            "=d" (registers[3])
-            : "a" (1), "c" (0));
-        const unsigned CPUFeatureSet = registers[3];
-        const bool hyperthreading = (CPUFeatureSet & (1u << 28)) != 0u;
-        return hyperthreading ? (logical_cpus() / 2) : logical_cpus();
+        unsigned int threads_per_core = 1;
+
+        FILE* fp = popen("lscpu | grep 'Thread' | cut -d ':' -f 2", "r");
+        if (fp)
+        {
+            char text[16] = {'\0'};
+            while (fgets(text, sizeof(text), fp))
+            {
+                try
+                {
+                    threads_per_core = static_cast<unsigned int>(std::stoi(text));
+                }
+                catch (std::exception&)
+                {
+                }
+            }
+        }
+
+        const auto threads = logical_cpus();
+        if (threads_per_core >= 1 && threads_per_core < threads)
+        {
+            return threads / threads_per_core;
+        }
+        else
+        {
+            return threads;
+        }
     }
 
     unsigned long long int memsize()
