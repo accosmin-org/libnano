@@ -131,14 +131,13 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats,
     const bool log_failures)
 {
+    // todo: use all threads to speed-up the benchmark
+    // NB: the line-search strategies are not all thread safe!
     std::vector<solver_state_t> states(x0s.size());
-    nano::loopi(x0s.size(), [&] (const size_t i)
-    {
-        states[i] = solver->minimize(function, x0s[i]);
-    });
-
     for (size_t i = 0; i < x0s.size(); ++ i)
     {
+        states[i] = solver->minimize(function, x0s[i]);
+
         // log in full detail the optimization trajectory if it fails
         if (states[i].m_status != solver_state_t::status::converged && log_failures)
         {
