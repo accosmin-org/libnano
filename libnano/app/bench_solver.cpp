@@ -33,9 +33,7 @@ struct solver_stat_t
     stats_t     m_costs;    ///< computation cost as a function of function value and gradient calls
 };
 
-using solver_config_stats_t = std::map<
-    std::pair<string_t, string_t>,  ///< key: {solver id, solver config}
-    solver_stat_t>;                 ///< value: solver statistics
+using solver_config_stats_t = std::map<string_t, solver_stat_t>;
 
 static void show_table(const string_t& table_name, const solver_config_stats_t& stats)
 {
@@ -44,7 +42,7 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
     // show global statistics
     table_t table;
     table.header()
-        << colspan(2) << table_name
+        << table_name
         << "gnorm"
         << "#fails"
         << "#iters"
@@ -57,15 +55,13 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
 
     for (const auto& it : stats)
     {
-        const auto& id = it.first.first;
-        const auto& config = it.first.second;
+        const auto& name = it.first;
         const auto& stat = it.second;
 
         if (stat.m_fcalls)
         {
             table.append()
-            << id
-            << config
+            << name
             << stat.m_crits.avg()
             << static_cast<size_t>(stat.m_fails.sum1())
             << static_cast<size_t>(stat.m_iters.avg())
@@ -77,36 +73,14 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         }
     }
 
-    table.sort(nano::make_less_from_string<scalar_t>(), {3, 9});
+    table.sort(nano::make_less_from_string<scalar_t>(), {2, 8});
     std::cout << table;
 }
 
-static auto trim(const json_t& json)
-{
-    string_t config = json.dump();
-    config = nano::replace(config, "\"", "");
-    config = nano::replace(config, "(0,1)", "");
-    config = nano::replace(config, "[0,1]", "");
-    config = nano::replace(config, "(1,2)", "");
-    config = nano::replace(config, "(c1,1)", "");
-    config = nano::replace(config, "(0,inf)", "");
-    config = nano::replace(config, "(1,inf)", "");
-    config = nano::replace(config, "[1,inf)", "");
-    config = nano::replace(config, "(1,1000)", "");
-    config = nano::replace(config, "(1,1000000)", "");
-    config = nano::replace(config, "(1e-12,1e-4)", "");
-
-    return config;
-}
-
-static void check_solver(const function_t& function,
-    const rsolver_t& solver, const string_t& solver_id,
-    const std::vector<vector_t>& x0s,
+static void check_solver(const function_t& function, const rsolver_t& solver,
+    const string_t& name, const std::vector<vector_t>& x0s,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats)
 {
-    const auto json = solver->config();
-    const auto config = trim(json);
-
     std::vector<solver_state_t> states(x0s.size());
     nano::loopi(x0s.size(), [&] (const size_t i)
     {
@@ -115,8 +89,8 @@ static void check_solver(const function_t& function,
 
     for (const auto& state : states)
     {
-        fstats[std::make_pair(solver_id, config)].update(state);
-        gstats[std::make_pair(solver_id, config)].update(state);
+        fstats[name].update(state);
+        gstats[name].update(state);
     }
 }
 
@@ -134,10 +108,10 @@ static void check_function(const function_t& function,
     // evaluate all possible combinations (solver & line-search)
     for (const auto& id_solver : id_solvers)
     {
-        const auto& id = id_solver.first;
+        const auto& name = id_solver.first;
         const auto& solver = id_solver.second;
 
-        check_solver(function, solver, id, x0s, fstats, gstats);
+        check_solver(function, solver, name, x0s, fstats, gstats);
     }
 
     // show per-problem statistics
@@ -208,7 +182,11 @@ static int unsafe_main(int argc, const char* argv[])
         }
         solver->config(nano::to_json("eps", epsilon, "maxit", max_iterations));
 
-        solvers.emplace_back(solver_id, std::move(solver));
+        string_t name = solver_id;
+        name += "[ls-init:" + (ls_init.empty() ? string_t("default") : ls_init) + "]";
+        name += "[ls-strategy:" + (ls_strategy.empty() ? string_t("default") : ls_strategy) + "]";
+
+        solvers.emplace_back(name, std::move(solver));
     };
 
     for (const auto& id : solver_t::all().ids(sregex))
