@@ -41,10 +41,10 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        auto& c1(const scalar_t c1) { m_c1 = c1; return *this; }
-        auto& c2(const scalar_t c2) { m_c2 = c2; return *this; }
-        auto& logger(const logger_t& logger) { m_logger = logger; return *this; }
-        auto& max_iterations(const int max_iterations) { m_max_iterations = max_iterations; return *this; }
+        void c1(const scalar_t c1) { m_c1 = c1; }
+        void c2(const scalar_t c2) { m_c2 = c2; }
+        void logger(const logger_t& logger) { m_logger = logger; }
+        void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }
 
         ///
         /// \brief access functions

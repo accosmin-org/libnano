@@ -71,5 +71,6 @@ scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state)
         }
     }
 
+    log(state, t0);
     return t0;
 }

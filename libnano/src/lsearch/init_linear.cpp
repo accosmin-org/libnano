@@ -37,5 +37,7 @@ scalar_t lsearch_linear_init_t::get(const solver_state_t& state)
     }
 
     m_prevdg = dg;
+
+    log(state, t0);
     return t0;
 }

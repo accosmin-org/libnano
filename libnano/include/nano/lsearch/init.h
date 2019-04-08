@@ -20,6 +20,11 @@ namespace nano
     public:
 
         ///
+        /// logging operator: op(solver_state, proposed_line_search_step_length_length).
+        ///
+        using logger_t = std::function<void(const solver_state_t&, const scalar_t)>;
+
+        ///
         /// \brief constructor
         ///
         lsearch_init_t() = default;
@@ -34,5 +39,28 @@ namespace nano
         /// NB: may keep track of the previous states
         ///
         virtual scalar_t get(const solver_state_t& state) = 0;
+
+        ///
+        /// \brief change parameters
+        ///
+        void logger(const logger_t& logger) { m_logger = logger; }
+
+    protected:
+
+        ///
+        /// \brief log the current line-search trial length (if the logger is provided)
+        ///
+        void log(const solver_state_t& state, const scalar_t t) const
+        {
+            if (m_logger)
+            {
+                m_logger(state, t);
+            }
+        }
+
+    private:
+
+        // attributes
+        logger_t    m_logger;                               ///<
     };
 }

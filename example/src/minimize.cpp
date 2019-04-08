@@ -86,10 +86,17 @@ int main(const int, char* argv[])
         });
 
         // log the line-search steps
-        solver->lsearch_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
+        solver->lsearch_init_logger([&] (const nano::solver_state_t& state0, const nano::scalar_t t0)
         {
             std::cout
-                << "\t\tlsearch: t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
+                << ",t0=" << t0 <<".\n";
+        });
+
+        solver->lsearch_strategy_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
+        {
+            std::cout
+                << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
                 << ",armijo=" << state.has_armijo(state0, solver->c1())
                 << ",wolfe=" << state.has_wolfe(state0, solver->c2())
                 << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";

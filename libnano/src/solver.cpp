@@ -118,7 +118,14 @@ void solver_t::lsearch_strategy(const json_t& json)
     m_lsearch_strategy->config(json);
 }
 
-void solver_t::lsearch_logger(const lsearch_strategy_t::logger_t& logger)
+void solver_t::lsearch_init_logger(const lsearch_init_t::logger_t& logger)
+{
+    assert(m_lsearch_init);
+
+    m_lsearch_init->logger(logger);
+}
+
+void solver_t::lsearch_strategy_logger(const lsearch_strategy_t::logger_t& logger)
 {
     assert(m_lsearch_strategy);
 

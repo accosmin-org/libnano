@@ -19,7 +19,14 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     });
 
     // log the line-search steps
-    solver->lsearch_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+    solver->lsearch_init_logger([&] (const solver_state_t& state0, const scalar_t t)
+    {
+        stream
+            << "\t\tt=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
+            << ",t=" << t << ".\n";
+    });
+
+    solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
         stream
             << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()

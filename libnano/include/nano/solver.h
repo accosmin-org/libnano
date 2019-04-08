@@ -61,14 +61,15 @@ namespace nano
         void lsearch_init(const json_t&);
         void lsearch_init(const string_t& id);
         void lsearch_init(const string_t& id, rlsearch_init_t&&);
+        void lsearch_init_logger(const lsearch_init_t::logger_t&);
 
         ///
         /// \brief change the line-search strategy
         ///
         void lsearch_strategy(const json_t&);
         void lsearch_strategy(const string_t& id);
-        void lsearch_logger(const lsearch_strategy_t::logger_t&);
         void lsearch_strategy(const string_t& id, rlsearch_strategy_t&&);
+        void lsearch_strategy_logger(const lsearch_strategy_t::logger_t&);
 
         ///
         /// \brief change parameters

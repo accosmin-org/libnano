@@ -18,7 +18,8 @@ void lsearch_const_init_t::config(const json_t& json)
     from_json_range(json, "t0", m_t0, eps, inf);
 }
 
-scalar_t lsearch_const_init_t::get(const solver_state_t&)
+scalar_t lsearch_const_init_t::get(const solver_state_t& state)
 {
+    log(state, m_t0);
     return m_t0;
 }

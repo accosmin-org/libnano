@@ -37,5 +37,7 @@ scalar_t lsearch_quadratic_init_t::get(const solver_state_t& state)
 
     m_prevf = state.f;
     m_prevdg = state.dg();
+
+    log(state, t0);
     return t0;
 }
