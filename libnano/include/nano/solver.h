@@ -85,6 +85,8 @@ namespace nano
         auto max_iterations() const { return m_max_iterations; }
         auto c1() const { assert(m_lsearch_strategy); return m_lsearch_strategy->c1(); }
         auto c2() const { assert(m_lsearch_strategy); return m_lsearch_strategy->c2(); }
+        const auto& lsearch_init_id() const { return m_lsearch_init_id; }
+        const auto& lsearch_strategy_id() const { return m_lsearch_strategy_id; }
 
     protected:
 

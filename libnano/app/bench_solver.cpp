@@ -34,7 +34,9 @@ struct solver_stat_t
     stats_t     m_costs;    ///< computation cost as a function of function value and gradient calls
 };
 
-using solver_config_stats_t = std::map<string_t, solver_stat_t>;
+using solver_config_stats_t = std::map<
+    std::tuple<string_t, string_t, string_t>,
+    solver_stat_t>;
 
 static void show_table(const string_t& table_name, const solver_config_stats_t& stats)
 {
@@ -44,6 +46,8 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
     table_t table;
     table.header()
         << table_name
+        << "ls-init"
+        << "ls-strategy"
         << "gnorm"
         << "#fails"
         << "#iters"
@@ -56,13 +60,12 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
 
     for (const auto& it : stats)
     {
-        const auto& name = it.first;
         const auto& stat = it.second;
 
         if (stat.m_fcalls)
         {
             table.append()
-            << name
+            << std::get<0>(it.first) << std::get<1>(it.first) << std::get<2>(it.first)
             << stat.m_crits.avg()
             << static_cast<size_t>(stat.m_fails.sum1())
             << static_cast<size_t>(stat.m_iters.avg())
@@ -74,13 +77,13 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         }
     }
 
-    table.sort(nano::make_less_from_string<scalar_t>(), {2, 8});
+    table.sort(nano::make_less_from_string<scalar_t>(), {4, 10});
     std::cout << table;
 }
 
 static void check_solver(const function_t& function, const rsolver_t& solver,
-    const string_t& solver_name, const std::vector<vector_t>& x0s,
-    solver_config_stats_t& fstats, solver_config_stats_t& gstats,
+    const string_t& solver_id, const string_t& lsearch_init_id, const string_t& lsearch_strategy_id,
+    const std::vector<vector_t>& x0s, solver_config_stats_t& fstats, solver_config_stats_t& gstats,
     const bool log_failures)
 {
     std::vector<solver_state_t> states(x0s.size());
@@ -90,20 +93,23 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     });
 
     // log in full detail the optimization trajectory if it fails
-    for (size_t i = 0; i < x0s.size() && log_failures; ++ i)
+    for (size_t i = 0; i < x0s.size(); ++ i)
     {
-        if (states[i].m_status != solver_state_t::status::converged)
+        if (states[i].m_status != solver_state_t::status::converged && log_failures)
         {
             std::cout << std::fixed << std::setprecision(10);
-            std::cout << function.name() << " - " << solver_name << std::endl;
+            std::cout << function.name()
+                << " solver[" << solver_id
+                << "],ls-init[" << lsearch_init_id
+                << "],ls-strategy[" << lsearch_strategy_id << "]" << std::endl;
 
             solver->logger([&] (const solver_state_t& state)
             {
                 std::cout
-                    << "iteration=" << state.m_iterations
+                    << "descent: i=" << state.m_iterations
                     << ",f=" << state.f << ",g=" << state.convergence_criterion()
                     << "[" << to_string(state.m_status) << "]"
-                    << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+                    << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << "." << std::endl;
                 return true;
             });
 
@@ -111,7 +117,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
             {
                 std::cout
                     << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
-                    << ",t=" << t << ".\n";
+                    << ",t=" << t << "." << std::endl;
             });
 
             solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
@@ -120,10 +126,11 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
                     << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
                     << ",armijo=" << state.has_armijo(state0, solver->c1())
                     << ",wolfe=" << state.has_wolfe(state0, solver->c2())
-                    << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
+                    << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << "." << std::endl;
             });
 
-            solver->minimize(function, x0s[i]);
+            const auto state = solver->minimize(function, x0s[i]);
+            assert(state.m_status == states[i].m_status);
 
             solver->logger({});
             solver->lsearch_init_logger({});
@@ -133,8 +140,8 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
 
     for (const auto& state : states)
     {
-        fstats[solver_name].update(state);
-        gstats[solver_name].update(state);
+        fstats[std::make_tuple(solver_id, lsearch_init_id, lsearch_strategy_id)].update(state);
+        gstats[std::make_tuple(solver_id, lsearch_init_id, lsearch_strategy_id)].update(state);
     }
 }
 
@@ -152,10 +159,11 @@ static void check_function(const function_t& function,
     // evaluate all possible combinations (solver & line-search)
     for (const auto& id_solver : id_solvers)
     {
-        const auto& name = id_solver.first;
+        const auto& solver_id = id_solver.first;
         const auto& solver = id_solver.second;
 
-        check_solver(function, solver, name, x0s, fstats, gstats, log_failures);
+        check_solver(function, solver, solver_id, solver->lsearch_init_id(), solver->lsearch_strategy_id(),
+            x0s, fstats, gstats, log_failures);
     }
 
     // show per-problem statistics
@@ -228,11 +236,7 @@ static int unsafe_main(int argc, const char* argv[])
         }
         solver->config(nano::to_json("eps", epsilon, "maxit", max_iterations));
 
-        string_t name = solver_id;
-        name += "[ls-init:" + (ls_init.empty() ? string_t("default") : ls_init) + "]";
-        name += "[ls-strategy:" + (ls_strategy.empty() ? string_t("default") : ls_strategy) + "]";
-
-        solvers.emplace_back(name, std::move(solver));
+        solvers.emplace_back(solver_id, std::move(solver));
     };
 
     for (const auto& id : solver_t::all().ids(sregex))

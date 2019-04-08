@@ -250,7 +250,7 @@ namespace nano
 
             if (begin < end)
             {
-                section.push_back(pool.enqueue([&, begin, end, thread]()
+                section.push_back(pool.enqueue([&op=op, begin=begin, end=end, thread=thread]()
                 {
                     for (auto index = begin; index < end; ++ index)
                     {

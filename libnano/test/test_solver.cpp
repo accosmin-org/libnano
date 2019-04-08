@@ -13,7 +13,7 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     {
         ++ iterations;
         stream
-            << "\titeration=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "\tdescent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
