@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <nano/solver.h>
 #include <nano/stats.h>
@@ -78,8 +79,9 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
 }
 
 static void check_solver(const function_t& function, const rsolver_t& solver,
-    const string_t& name, const std::vector<vector_t>& x0s,
-    solver_config_stats_t& fstats, solver_config_stats_t& gstats)
+    const string_t& solver_name, const std::vector<vector_t>& x0s,
+    solver_config_stats_t& fstats, solver_config_stats_t& gstats,
+    const bool log_failures)
 {
     std::vector<solver_state_t> states(x0s.size());
     nano::loopi(x0s.size(), [&] (const size_t i)
@@ -87,16 +89,58 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
         states[i] = solver->minimize(function, x0s[i]);
     });
 
+    // log in full detail the optimization trajectory if it fails
+    for (size_t i = 0; i < x0s.size() && log_failures; ++ i)
+    {
+        if (states[i].m_status != solver_state_t::status::converged)
+        {
+            std::cout << std::fixed << std::setprecision(10);
+            std::cout << function.name() << " - " << solver_name << std::endl;
+
+            solver->logger([&] (const solver_state_t& state)
+            {
+                std::cout
+                    << "iteration=" << state.m_iterations
+                    << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                    << "[" << to_string(state.m_status) << "]"
+                    << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+                return true;
+            });
+
+            solver->lsearch_init_logger([&] (const solver_state_t& state0, const scalar_t t)
+            {
+                std::cout
+                    << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
+                    << ",t=" << t << ".\n";
+            });
+
+            solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+            {
+                std::cout
+                    << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                    << ",armijo=" << state.has_armijo(state0, solver->c1())
+                    << ",wolfe=" << state.has_wolfe(state0, solver->c2())
+                    << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
+            });
+
+            solver->minimize(function, x0s[i]);
+
+            solver->logger({});
+            solver->lsearch_init_logger({});
+            solver->lsearch_strategy_logger({});
+        }
+    }
+
     for (const auto& state : states)
     {
-        fstats[name].update(state);
-        gstats[name].update(state);
+        fstats[solver_name].update(state);
+        gstats[solver_name].update(state);
     }
 }
 
 static void check_function(const function_t& function,
     const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
-    const size_t trials, solver_config_stats_t& gstats)
+    const size_t trials, solver_config_stats_t& gstats, const bool log_failures)
 {
     // generate fixed random trials
     std::vector<vector_t> x0s(trials);
@@ -111,7 +155,7 @@ static void check_function(const function_t& function,
         const auto& name = id_solver.first;
         const auto& solver = id_solver.second;
 
-        check_solver(function, solver, name, x0s, fstats, gstats);
+        check_solver(function, solver, name, x0s, fstats, gstats, log_failures);
     }
 
     // show per-problem statistics
@@ -136,6 +180,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "c2",               "use this c2 value (see Wolfe line-search step condition)");
     cmdline.add("", "lsearch-init",     "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearch-strategy", "use this regex to select the line-search methods");
+    cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
 
     cmdline.process(argc, argv);
 
@@ -146,6 +191,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto max_iterations = cmdline.get<size_t>("max-iterations");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto is_convex = cmdline.has("convex");
+    const auto log_failures = cmdline.has("log-failures");
 
     const auto fregex = std::regex(cmdline.get<string_t>("function"));
     const auto sregex = std::regex(cmdline.get<string_t>("solver"));
@@ -204,7 +250,7 @@ static int unsafe_main(int argc, const char* argv[])
     solver_config_stats_t gstats;
     for (const auto& function : (is_convex ? get_convex_functions : get_functions)(min_dims, max_dims, fregex))
     {
-        check_function(*function, solvers, trials, gstats);
+        check_function(*function, solvers, trials, gstats, log_failures);
     }
 
     show_table("Solver", gstats);

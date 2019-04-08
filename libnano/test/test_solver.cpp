@@ -13,7 +13,7 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     {
         ++ iterations;
         stream
-            << "\ti=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "\titeration=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
@@ -22,14 +22,14 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     solver->lsearch_init_logger([&] (const solver_state_t& state0, const scalar_t t)
     {
         stream
-            << "\t\tt=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
+            << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
             << ",t=" << t << ".\n";
     });
 
     solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
         stream
-            << "\t\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
             << ",armijo=" << state.has_armijo(state0, solver->c1())
             << ",wolfe=" << state.has_wolfe(state0, solver->c2())
             << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << ".\n";
