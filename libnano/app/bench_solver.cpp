@@ -175,7 +175,7 @@ static void check_function(const function_t& function,
     }
 
     // show per-problem statistics
-    show_table(function.name(), fstats);
+    show_table(align(function.name(), 36), fstats);
 }
 
 static int unsafe_main(int argc, const char* argv[])
@@ -265,7 +265,7 @@ static int unsafe_main(int argc, const char* argv[])
         check_function(*function, solvers, trials, gstats, log_failures);
     }
 
-    show_table("Solver", gstats);
+    show_table(align("Solver", 36), gstats);
 
     // OK
     return EXIT_SUCCESS;
