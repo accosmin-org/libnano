@@ -22,9 +22,7 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_t0{1};        ///< line-search step length to return in the first iteration
-        scalar_t    m_tro{0.25};    ///< minimum line-search step length ratio to the previous iteration
-        scalar_t    m_tmax{1};      ///< maximum line-search step length
+        scalar_t    m_tro{1.01};    ///<
         scalar_t    m_prevf{0};     ///< previous function value
         scalar_t    m_prevdg{1};    ///< previous direction dot product
     };
