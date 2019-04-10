@@ -6,7 +6,7 @@
 namespace nano
 {
     ///
-    /// \brief compute the step length of the line search procedure.
+    /// \brief line-search procedure.
     ///
     class lsearch_t
     {
@@ -36,7 +36,7 @@ namespace nano
     private:
 
         // attributes
-        rlsearch_init_t         m_init;                 ///<
-        rlsearch_strategy_t     m_strategy;             ///<
+        rlsearch_init_t         m_init;         ///< procedure to guess the initial step length
+        rlsearch_strategy_t     m_strategy;     ///< procedure to adjust the step length
     };
 }
