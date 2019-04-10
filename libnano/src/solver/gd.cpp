@@ -18,7 +18,8 @@ void solver_gd_t::config(const json_t& json)
     solver_t::config(json);
 }
 
-solver_state_t solver_gd_t::minimize(const solver_function_t& function, const vector_t& x0) const
+solver_state_t solver_gd_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
+    const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
     log(cstate);
@@ -29,7 +30,7 @@ solver_state_t solver_gd_t::minimize(const solver_function_t& function, const ve
         cstate.d = -cstate.g;
 
         // line-search
-        const auto iter_ok = lsearch(cstate);
+        const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok))
         {
             break;

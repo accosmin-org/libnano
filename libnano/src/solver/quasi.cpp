@@ -22,7 +22,8 @@ void solver_quasi_t<tquasi>::config(const json_t& json)
 }
 
 template <typename tquasi>
-solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& function, const vector_t& x0) const
+solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& function, const lsearch_t& lsearch,
+    const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
@@ -46,7 +47,7 @@ solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& functio
 
         // line-search
         pstate = cstate;
-        const auto iter_ok = lsearch(cstate);
+        const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok))
         {
             break;

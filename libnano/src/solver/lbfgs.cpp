@@ -21,7 +21,8 @@ void solver_lbfgs_t::config(const json_t& json)
     nano::from_json_range(json, "history", m_history_size, 1, 1000);
 }
 
-solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const vector_t& x0) const
+solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
+    const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
@@ -82,7 +83,7 @@ solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const
 
         // line-search
         pstate = cstate;
-        const auto iter_ok = lsearch(cstate);
+        const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok))
         {
             break;

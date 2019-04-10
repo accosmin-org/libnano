@@ -7,8 +7,8 @@ json_t lsearch_cgdescent_init_t::config() const
 {
     json_t json;
     json["phi0"] = strcat(m_phi0, "(0,1)");
-    json["phi1"] = strcat(m_phi0, "(0,1)");
-    json["phi2"] = strcat(m_phi0, "(1,inf)");
+    json["phi1"] = strcat(m_phi1, "(0,1)");
+    json["phi2"] = strcat(m_phi2, "(1,inf)");
     return json;
 }
 

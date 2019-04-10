@@ -8,23 +8,19 @@
 using namespace nano;
 
 solver_t::solver_t(const scalar_t c1, const scalar_t c2,
-    const string_t& lsearch_init_id, const string_t& lsearch_strategy_id)
+    const string_t& lsearch_init_id, const string_t& lsearch_strategy_id) :
+    m_c1(c1),
+    m_c2(c2)
 {
     lsearch_init(lsearch_init_id);
     lsearch_strategy(lsearch_strategy_id);
-
-    m_lsearch_strategy->c1(c1);
-    m_lsearch_strategy->c2(c2);
 }
 
 json_t solver_t::config() const
 {
-    const auto c1 = m_lsearch_strategy->c1();
-    const auto c2 = m_lsearch_strategy->c2();
-
     json_t json;
-    json["c1"] = strcat(c1, "(0,1)");
-    json["c2"] = strcat(c2, "(c1,1)");
+    json["c1"] = strcat(m_c1, "(0,1)");
+    json["c2"] = strcat(m_c2, "(c1,1)");
     json["init"] = m_lsearch_init->config_with_id(m_lsearch_init_id);
     json["strategy"] = m_lsearch_strategy->config_with_id(m_lsearch_strategy_id);
     json["eps"] = strcat(m_epsilon, "(1e-12,1e-4)");
@@ -37,10 +33,8 @@ void solver_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
 
-    auto c1 = m_lsearch_strategy->c1();
-    auto c2 = m_lsearch_strategy->c2();
-    nano::from_json_range(json, "c1", c1, eps, 1 - eps);
-    nano::from_json_range(json, "c2", c2, c1, 1 - eps);
+    nano::from_json_range(json, "c1", m_c1, eps, 1 - eps);
+    nano::from_json_range(json, "c2", m_c2, m_c1, 1 - eps);
     nano::from_json_range(json, "eps", m_epsilon, 1e-12 + eps, 1e-4 - eps);
     nano::from_json_range(json, "maxit", m_max_iterations, 1, 1000 * 1000);
 
@@ -52,9 +46,6 @@ void solver_t::config(const json_t& json)
     {
         lsearch_strategy(json["strategy"]);
     }
-
-    m_lsearch_strategy->c1(c1);
-    m_lsearch_strategy->c2(c2);
 }
 
 void solver_t::lsearch_init(const string_t& id)
@@ -94,19 +85,8 @@ void solver_t::lsearch_strategy(const string_t& id, rlsearch_strategy_t&& strate
         throw std::invalid_argument("invalid line-search strategy (" + id + ")");
     }
 
-    const auto had_lsearch_strategy = static_cast<bool>(m_lsearch_strategy);
-    const auto c1 = had_lsearch_strategy ? m_lsearch_strategy->c1() : scalar_t(0);
-    const auto c2 = had_lsearch_strategy ? m_lsearch_strategy->c2() : scalar_t(0);
-
     m_lsearch_strategy_id = id;
     m_lsearch_strategy = std::move(strategy);
-
-    // NB: keep the tolerances when changing the line-search strategy
-    if (had_lsearch_strategy)
-    {
-        m_lsearch_strategy->c1(c1);
-        m_lsearch_strategy->c2(c2);
-    }
 }
 
 void solver_t::lsearch_strategy(const json_t& json)
@@ -116,29 +96,6 @@ void solver_t::lsearch_strategy(const json_t& json)
         lsearch_strategy(json["id"]);
     }
     m_lsearch_strategy->config(json);
-}
-
-void solver_t::lsearch_init_logger(const lsearch_init_t::logger_t& logger)
-{
-    assert(m_lsearch_init);
-
-    m_lsearch_init->logger(logger);
-}
-
-void solver_t::lsearch_strategy_logger(const lsearch_strategy_t::logger_t& logger)
-{
-    assert(m_lsearch_strategy);
-
-    m_lsearch_strategy->logger(logger);
-}
-
-bool solver_t::lsearch(solver_state_t& state) const
-{
-    assert(m_lsearch_init);
-    assert(m_lsearch_strategy);
-
-    const auto t0 = m_lsearch_init->get(state);
-    return m_lsearch_strategy->get(state, t0);
 }
 
 bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
@@ -174,6 +131,29 @@ bool solver_t::log(solver_state_t& state) const
     const auto status = !m_logger ? true : m_logger(state);
     state.m_iterations ++;
     return status;
+}
+
+solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
+{
+    assert(f.size() == x0.size());
+
+    // NB: create new line-search objects:
+    //  - to have the solver thread-safe
+    //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
+    auto lsearch_init = lsearch_init_t::all().get(m_lsearch_init_id);
+    lsearch_init->logger(m_lsearch_init_logger);
+    lsearch_init->config(m_lsearch_init->config());
+
+    auto lsearch_strategy = lsearch_strategy_t::all().get(m_lsearch_strategy_id);
+    lsearch_strategy->c1(m_c1);
+    lsearch_strategy->c2(m_c2);
+    lsearch_strategy->logger(m_lsearch_strategy_logger);
+    lsearch_strategy->config(m_lsearch_strategy->config());
+
+    auto function = solver_function_t{f};
+    auto lsearch = lsearch_t{std::move(lsearch_init), std::move(lsearch_strategy)};
+
+    return minimize(function, lsearch, x0);
 }
 
 solver_factory_t& solver_t::all()
