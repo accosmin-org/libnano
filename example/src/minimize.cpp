@@ -79,21 +79,22 @@ int main(const int, char* argv[])
         solver->logger([&] (const nano::solver_state_t& state)
         {
             std::cout
-                << "\titer=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                << "\tdescent: i=" << state.m_iterations
+                << ",f=" << state.f << ",g=" << state.convergence_criterion()
                 << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls
                 << ".\n";
             return true;
         });
 
         // log the line-search steps
-        solver->lsearch_init_logger([&] (const nano::solver_state_t& state0, const nano::scalar_t t0)
+        solver->lsearch0_logger([&] (const nano::solver_state_t& state0, const nano::scalar_t t0)
         {
             std::cout
                 << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
                 << ",t0=" << t0 <<".\n";
         });
 
-        solver->lsearch_strategy_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
+        solver->lsearchk_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
         {
             std::cout
                 << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
