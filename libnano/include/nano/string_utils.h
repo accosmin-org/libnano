@@ -464,6 +464,7 @@ namespace nano
 
     ///
     /// \brief tokenize a string using the given delimeters
+    /// todo: return a vector of std::string_view when moving to C++17
     ///
     inline auto split(const string_t& str, const char* delimeters)
     {

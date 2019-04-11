@@ -199,4 +199,26 @@ UTEST_CASE(table_sort)
     }
 }
 
+UTEST_CASE(table_stream_single_line)
+{
+    nano::table_t table;
+    table.header() << "head" << "col1" << "col2";
+    table.delim();
+    table.append() << "row1" << "v11" << "v12";
+    table.append() << nano::colspan(2) << "row2+v21" << "v22";
+    table.append() << nano::colspan(3) << "row3+v31+v32";
+
+    std::stringstream stream;
+    stream << table;
+    UTEST_CHECK_EQUAL(stream.str(),
+        "|------|------|------|\n"\
+        "| head | col1 | col2 |\n"\
+        "|------|------|------|\n"\
+        "| row1 | v11  | v12  |\n"\
+        "| row2+v21    | v22  |\n"\
+        "| row3+v31+v32       |\n"\
+        "|------|------|------|\n"
+    );
+}
+
 UTEST_END_MODULE()
