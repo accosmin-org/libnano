@@ -7,7 +7,7 @@ using namespace nano;
 
 static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scalar_t c2 = 9e-1)
 {
-    auto lsearch = lsearch_strategy_t::all().get(id);
+    auto lsearch = lsearchk_t::all().get(id);
     UTEST_REQUIRE(lsearch);
     lsearch->c1(c1);
     lsearch->c2(c2);
@@ -24,7 +24,7 @@ enum class lsearch_type
     cgdescent
 };
 
-static void setup_logger(const rlsearch_strategy_t& lsearch, std::stringstream& stream)
+static void setup_logger(const rlsearchk_t& lsearch, std::stringstream& stream)
 {
     // log the line-search trials
     lsearch->logger([&] (const solver_state_t& state0, const solver_state_t& state)
@@ -39,7 +39,7 @@ static void setup_logger(const rlsearch_strategy_t& lsearch, std::stringstream& 
 }
 
 static void test(
-    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function,
+    const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function,
     const lsearch_type type, const vector_t& x0, const scalar_t t0)
 {
     const auto old_n_failures = utest_n_failures.load();
@@ -98,7 +98,7 @@ static void test(
 }
 
 static void test(
-    const rlsearch_strategy_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
+    const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
 {
     for (const auto& c12 : std::vector<std::pair<scalar_t, scalar_t>>{{1e-4, 1e-1}, {1e-4, 9e-1}, {1e-1, 9e-1}})
     {

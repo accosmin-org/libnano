@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/lsearch/strategy.h>
+#include <nano/lsearch/lsearchk.h>
 
 namespace nano
 {
@@ -8,11 +8,11 @@ namespace nano
     /// \brief the line-search algorithm described here:
     ///     see "A view of line-searches", C. Lemarechal
     ///
-    class lsearch_lemarechal_t final : public lsearch_strategy_t
+    class lsearchk_lemarechal_t final : public lsearchk_t
     {
     public:
 
-        lsearch_lemarechal_t() = default;
+        lsearchk_lemarechal_t() = default;
 
         json_t config() const final;
         void config(const json_t&) final;

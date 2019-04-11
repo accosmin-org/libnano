@@ -1,12 +1,14 @@
 #pragma once
 
-#include <nano/lsearch/init.h>
-#include <nano/lsearch/strategy.h>
+#include <nano/lsearch/lsearch0.h>
+#include <nano/lsearch/lsearchk.h>
 
 namespace nano
 {
     ///
-    /// \brief line-search procedure.
+    /// \brief line-search procedure using two steps:
+    ///     - estimate the initial step length and
+    ///     - adjust the step length to satisfy the associated conditions (e.g. Armijo-Goldstein or Wolfe).
     ///
     class lsearch_t
     {
@@ -15,9 +17,9 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearch_t(rlsearch_init_t&& init, rlsearch_strategy_t&& strategy) :
-            m_init(std::move(init)),
-            m_strategy(std::move(strategy))
+        lsearch_t(rlsearch0_t&& lsearch0, rlsearchk_t&& lsearchk) :
+            m_lsearch0(std::move(lsearch0)),
+            m_lsearchk(std::move(lsearchk))
         {
         }
 
@@ -26,17 +28,17 @@ namespace nano
         ///
         bool get(solver_state_t& state) const
         {
-            assert(m_init);
-            assert(m_strategy);
+            assert(m_lsearch0);
+            assert(m_lsearchk);
 
-            const auto t0 = m_init->get(state);
-            return m_strategy->get(state, t0);
+            const auto t0 = m_lsearch0->get(state);
+            return m_lsearchk->get(state, t0);
         }
 
     private:
 
         // attributes
-        rlsearch_init_t         m_init;         ///< procedure to guess the initial step length
-        rlsearch_strategy_t     m_strategy;     ///< procedure to adjust the step length
+        rlsearch0_t         m_lsearch0;     ///< procedure to guess the initial step length
+        rlsearchk_t         m_lsearchk;     ///< procedure to adjust the step length
     };
 }

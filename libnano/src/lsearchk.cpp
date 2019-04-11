@@ -1,25 +1,25 @@
 #include <mutex>
-#include "backtrack.h"
-#include "cgdescent.h"
-#include "lemarechal.h"
-#include "morethuente.h"
-#include "nocedalwright.h"
 #include <nano/numeric.h>
+#include "lsearchk/backtrack.h"
+#include "lsearchk/cgdescent.h"
+#include "lsearchk/lemarechal.h"
+#include "lsearchk/morethuente.h"
+#include "lsearchk/nocedalwright.h"
 
 using namespace nano;
 
-lsearch_strategy_factory_t& lsearch_strategy_t::all()
+lsearchk_factory_t& lsearchk_t::all()
 {
-    static lsearch_strategy_factory_t manager;
+    static lsearchk_factory_t manager;
 
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        manager.add<lsearch_backtrack_t>("backtrack", "backtracking using Armijo conditions");
-        manager.add<lsearch_cgdescent_t>("cgdescent", "CG-DESCENT using strong Wolfe conditions");
-        manager.add<lsearch_lemarechal_t>("lemarechal", "LeMarechal using regular Wolfe conditions");
-        manager.add<lsearch_morethuente_t>("morethuente", "More&Thuente using strong Wolfe conditions");
-        manager.add<lsearch_nocedalwright_t>("nocedalwright", "Nocedal&Wright using strong Wolfe conditions");
+        manager.add<lsearchk_backtrack_t>("backtrack", "backtracking using Armijo conditions");
+        manager.add<lsearchk_cgdescent_t>("cgdescent", "CG-DESCENT using strong Wolfe conditions");
+        manager.add<lsearchk_lemarechal_t>("lemarechal", "LeMarechal using regular Wolfe conditions");
+        manager.add<lsearchk_morethuente_t>("morethuente", "More&Thuente using strong Wolfe conditions");
+        manager.add<lsearchk_nocedalwright_t>("nocedalwright", "Nocedal&Wright using strong Wolfe conditions");
     });
 
     return manager;
@@ -32,7 +32,7 @@ static auto make_state0(const solver_state_t& state)
     return state0;
 }
 
-bool lsearch_strategy_t::get(solver_state_t& state, scalar_t t)
+bool lsearchk_t::get(solver_state_t& state, scalar_t t)
 {
     // check descent direction
     if (!state.has_descent())

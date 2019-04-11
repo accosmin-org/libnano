@@ -7,14 +7,14 @@
 
 namespace nano
 {
-    class lsearch_strategy_t;
-    using lsearch_strategy_factory_t = factory_t<lsearch_strategy_t>;
-    using rlsearch_strategy_t = lsearch_strategy_factory_t::trobject;
+    class lsearchk_t;
+    using lsearchk_factory_t = factory_t<lsearchk_t>;
+    using rlsearchk_t = lsearchk_factory_t::trobject;
 
     ///
     /// \brief compute the step length of the line search procedure.
     ///
-    class lsearch_strategy_t : public json_configurable_t
+    class lsearchk_t : public json_configurable_t
     {
     public:
 
@@ -26,12 +26,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearch_strategy_t() = default;
+        lsearchk_t() = default;
 
         ///
         /// \brief returns the available implementations
         ///
-        static lsearch_strategy_factory_t& all();
+        static lsearchk_factory_t& all();
 
         ///
         /// \brief compute the step length starting from the given state and the initial estimate of the step length

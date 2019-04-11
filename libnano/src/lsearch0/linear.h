@@ -1,18 +1,18 @@
 #pragma once
 
-#include <nano/lsearch/init.h>
+#include <nano/lsearch/lsearch0.h>
 
 namespace nano
 {
     ///
-    /// \brief constant step length (useful for LBFGS, Quasi-Newton and Newton methods).
+    /// \brief use linear interpolation of the previous line-search step lengths.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
     ///
-    class lsearch_const_init_t final : public lsearch_init_t
+    class lsearch0_linear_t final : public lsearch0_t
     {
     public:
 
-        lsearch_const_init_t() = default;
+        lsearch0_linear_t() = default;
 
         json_t config() const final;
         void config(const json_t&) final;
@@ -21,6 +21,7 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_t0{1};    ///< the constant line-search step length to return
+        scalar_t    m_tro{1.01};    ///<
+        scalar_t    m_prevdg{1};    ///< previous direction dot product
     };
 }

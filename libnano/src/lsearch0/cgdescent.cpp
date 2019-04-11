@@ -1,9 +1,9 @@
+#include "cgdescent.h"
 #include <nano/numeric.h>
-#include "init_cgdescent.h"
 
 using namespace nano;
 
-json_t lsearch_cgdescent_init_t::config() const
+json_t lsearch0_cgdescent_t::config() const
 {
     json_t json;
     json["phi0"] = strcat(m_phi0, "(0,1)");
@@ -12,7 +12,7 @@ json_t lsearch_cgdescent_init_t::config() const
     return json;
 }
 
-void lsearch_cgdescent_init_t::config(const json_t& json)
+void lsearch0_cgdescent_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
@@ -22,7 +22,7 @@ void lsearch_cgdescent_init_t::config(const json_t& json)
     from_json_range(json, "phi2", m_phi2, 1 + eps, inf);
 }
 
-scalar_t lsearch_cgdescent_init_t::get(const solver_state_t& state)
+scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
 {
     scalar_t t0;
 

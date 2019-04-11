@@ -8,12 +8,12 @@
 using namespace nano;
 
 solver_t::solver_t(const scalar_t c1, const scalar_t c2,
-    const string_t& lsearch_init_id, const string_t& lsearch_strategy_id) :
+    const string_t& lsearch0_id, const string_t& lsearchk_id) :
     m_c1(c1),
     m_c2(c2)
 {
-    lsearch_init(lsearch_init_id);
-    lsearch_strategy(lsearch_strategy_id);
+    lsearch0(lsearch0_id);
+    lsearchk(lsearchk_id);
 }
 
 json_t solver_t::config() const
@@ -21,10 +21,10 @@ json_t solver_t::config() const
     json_t json;
     json["c1"] = strcat(m_c1, "(0,1)");
     json["c2"] = strcat(m_c2, "(c1,1)");
-    json["init"] = m_lsearch_init->config_with_id(m_lsearch_init_id);
-    json["strategy"] = m_lsearch_strategy->config_with_id(m_lsearch_strategy_id);
-    json["eps"] = strcat(m_epsilon, "(1e-12,1e-4)");
-    json["maxit"] = strcat(m_max_iterations, "(1,1000000)");
+    json["lsearch0"] = m_lsearch0->config_with_id(m_lsearch0_id);
+    json["lsearchk"] = m_lsearchk->config_with_id(m_lsearchk_id);
+    json["epsilon"] = strcat(m_epsilon, "(1e-12,1e-4)");
+    json["max_iterations"] = strcat(m_max_iterations, "(1,1000000)");
 
     return json;
 }
@@ -35,67 +35,67 @@ void solver_t::config(const json_t& json)
 
     nano::from_json_range(json, "c1", m_c1, eps, 1 - eps);
     nano::from_json_range(json, "c2", m_c2, m_c1, 1 - eps);
-    nano::from_json_range(json, "eps", m_epsilon, 1e-12 + eps, 1e-4 - eps);
-    nano::from_json_range(json, "maxit", m_max_iterations, 1, 1000 * 1000);
+    nano::from_json_range(json, "epsilon", m_epsilon, 1e-12 + eps, 1e-4 - eps);
+    nano::from_json_range(json, "max_iterations", m_max_iterations, 1, 1000 * 1000);
 
-    if (json.count("init"))
+    if (json.count("lsearch0"))
     {
-        lsearch_init(json["init"]);
+        lsearch0(json["lsearch0"]);
     }
-    if (json.count("strategy"))
+    if (json.count("lsearchk"))
     {
-        lsearch_strategy(json["strategy"]);
+        lsearchk(json["lsearchk"]);
     }
 }
 
-void solver_t::lsearch_init(const string_t& id)
+void solver_t::lsearch0(const string_t& id)
 {
-    lsearch_init(id, lsearch_init_t::all().get(id));
+    lsearch0(id, lsearch0_t::all().get(id));
 }
 
-void solver_t::lsearch_init(const string_t& id, rlsearch_init_t&& init)
+void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
 {
     if (!init)
     {
         throw std::invalid_argument("invalid line-search initialization (" + id + ")");
     }
 
-    m_lsearch_init_id = id;
-    m_lsearch_init = std::move(init);
+    m_lsearch0_id = id;
+    m_lsearch0 = std::move(init);
 }
 
-void solver_t::lsearch_init(const json_t& json)
+void solver_t::lsearch0(const json_t& json)
 {
-    if (json.count("id") && m_lsearch_init_id != json["id"])
+    if (json.count("id") && m_lsearch0_id != json["id"])
     {
-        lsearch_init(json["id"]);
+        lsearch0(json["id"]);
     }
-    m_lsearch_init->config(json);
+    m_lsearch0->config(json);
 }
 
-void solver_t::lsearch_strategy(const string_t& id)
+void solver_t::lsearchk(const string_t& id)
 {
-    lsearch_strategy(id, lsearch_strategy_t::all().get(id));
+    lsearchk(id, lsearchk_t::all().get(id));
 }
 
-void solver_t::lsearch_strategy(const string_t& id, rlsearch_strategy_t&& strategy)
+void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
 {
     if (!strategy)
     {
         throw std::invalid_argument("invalid line-search strategy (" + id + ")");
     }
 
-    m_lsearch_strategy_id = id;
-    m_lsearch_strategy = std::move(strategy);
+    m_lsearchk_id = id;
+    m_lsearchk = std::move(strategy);
 }
 
-void solver_t::lsearch_strategy(const json_t& json)
+void solver_t::lsearchk(const json_t& json)
 {
-    if (json.count("id") && m_lsearch_strategy_id != json["id"])
+    if (json.count("id") && m_lsearchk_id != json["id"])
     {
-        lsearch_strategy(json["id"]);
+        lsearchk(json["id"]);
     }
-    m_lsearch_strategy->config(json);
+    m_lsearchk->config(json);
 }
 
 bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
@@ -140,18 +140,18 @@ solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
     // NB: create new line-search objects:
     //  - to have the solver thread-safe
     //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
-    auto lsearch_init = lsearch_init_t::all().get(m_lsearch_init_id);
-    lsearch_init->logger(m_lsearch_init_logger);
-    lsearch_init->config(m_lsearch_init->config());
+    auto lsearch0 = lsearch0_t::all().get(m_lsearch0_id);
+    lsearch0->logger(m_lsearch0_logger);
+    lsearch0->config(m_lsearch0->config());
 
-    auto lsearch_strategy = lsearch_strategy_t::all().get(m_lsearch_strategy_id);
-    lsearch_strategy->c1(m_c1);
-    lsearch_strategy->c2(m_c2);
-    lsearch_strategy->logger(m_lsearch_strategy_logger);
-    lsearch_strategy->config(m_lsearch_strategy->config());
+    auto lsearchk = lsearchk_t::all().get(m_lsearchk_id);
+    lsearchk->c1(m_c1);
+    lsearchk->c2(m_c2);
+    lsearchk->logger(m_lsearchk_logger);
+    lsearchk->config(m_lsearchk->config());
 
     auto function = solver_function_t{f};
-    auto lsearch = lsearch_t{std::move(lsearch_init), std::move(lsearch_strategy)};
+    auto lsearch = lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 
     return minimize(function, lsearch, x0);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/lsearch/strategy.h>
+#include <nano/lsearch/lsearchk.h>
 
 namespace nano
 {
@@ -8,11 +8,11 @@ namespace nano
     /// \brief backtracking line-search that stops when the Armijo condition is satisfied,
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
-    class lsearch_backtrack_t final : public lsearch_strategy_t
+    class lsearchk_backtrack_t final : public lsearchk_t
     {
     public:
 
-        lsearch_backtrack_t() = default;
+        lsearchk_backtrack_t() = default;
 
         json_t config() const final;
         void config(const json_t&) final;

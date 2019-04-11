@@ -16,9 +16,6 @@ namespace nano
     {
     public:
 
-        using lsearch_init_logger_t = lsearch_init_t::logger_t;
-        using lsearch_strategy_logger_t = lsearch_strategy_t::logger_t;
-
         ///
         /// logging operator: op(state), returns false if the optimization should stop
         ///
@@ -30,8 +27,8 @@ namespace nano
         solver_t(
             const scalar_t c1 = 1e-1,
             const scalar_t c2 = 9e-1,
-            const string_t& lsearch_init = "quadratic",
-            const string_t& lsearch_strategy = "morethuente");
+            const string_t& lsearch0 = "quadratic",
+            const string_t& lsearchk = "morethuente");
 
         ///
         /// \brief returns the available implementations
@@ -54,28 +51,28 @@ namespace nano
         void config(const json_t&) override;
 
         ///
-        /// \brief set logging callbacks
+        /// \brief set the logging callbacks
         ///
         void logger(const logger_t& logger) { m_logger = logger; }
-        void lsearch_init_logger(const lsearch_init_logger_t& logger) { m_lsearch_init_logger = logger; }
-        void lsearch_strategy_logger(const lsearch_strategy_logger_t& logger) { m_lsearch_strategy_logger = logger; }
+        void lsearch0_logger(const lsearch0_t::logger_t& logger) { m_lsearch0_logger = logger; }
+        void lsearchk_logger(const lsearchk_t::logger_t& logger) { m_lsearchk_logger = logger; }
 
         ///
-        /// \brief change the line-search initialization
+        /// \brief set the line-search initialization
         ///
-        void lsearch_init(const json_t&);
-        void lsearch_init(const string_t& id);
-        void lsearch_init(const string_t& id, rlsearch_init_t&&);
+        void lsearch0(const json_t&);
+        void lsearch0(const string_t& id);
+        void lsearch0(const string_t& id, rlsearch0_t&&);
 
         ///
-        /// \brief change the line-search strategy
+        /// \brief set the line-search strategy
         ///
-        void lsearch_strategy(const json_t&);
-        void lsearch_strategy(const string_t& id);
-        void lsearch_strategy(const string_t& id, rlsearch_strategy_t&&);
+        void lsearchk(const json_t&);
+        void lsearchk(const string_t& id);
+        void lsearchk(const string_t& id, rlsearchk_t&&);
 
         ///
-        /// \brief change parameters
+        /// \brief set parameters
         ///
         void c1(const scalar_t tol) { m_c1 = tol; }
         void c2(const scalar_t tol) { m_c2 = tol; }
@@ -89,8 +86,8 @@ namespace nano
         auto c2() const { return m_c2; }
         auto epsilon() const { return m_epsilon; }
         auto max_iterations() const { return m_max_iterations; }
-        const auto& lsearch_init_id() const { return m_lsearch_init_id; }
-        const auto& lsearch_strategy_id() const { return m_lsearch_strategy_id; }
+        const auto& lsearch0_id() const { return m_lsearch0_id; }
+        const auto& lsearchk_id() const { return m_lsearchk_id; }
 
     protected:
 
@@ -110,12 +107,6 @@ namespace nano
         ///
         bool done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const;
 
-        ///
-        /// \brief construct line-search
-        ///
-        rlsearch_init_t make_lsearch_init() const;
-        rlsearch_strategy_t make_lsearch_strategy() const;
-
     private:
 
         // attributes
@@ -124,11 +115,11 @@ namespace nano
         scalar_t                    m_epsilon{1e-6};            ///< required precision (~magnitude of the gradient)
         int                         m_max_iterations{1000};     ///< maximum number of iterations
         logger_t                    m_logger;                   ///<
-        string_t                    m_lsearch_init_id;          ///<
-        rlsearch_init_t             m_lsearch_init;             ///<
-        lsearch_init_logger_t       m_lsearch_init_logger;      ///<
-        string_t                    m_lsearch_strategy_id;      ///<
-        rlsearch_strategy_t         m_lsearch_strategy;         ///<
-        lsearch_strategy_logger_t   m_lsearch_strategy_logger;  ///<
+        string_t                    m_lsearch0_id;              ///<
+        rlsearch0_t                 m_lsearch0;                 ///<
+        lsearch0_t::logger_t        m_lsearch0_logger;          ///<
+        string_t                    m_lsearchk_id;              ///<
+        rlsearchk_t                 m_lsearchk;                 ///<
+        lsearchk_t::logger_t        m_lsearchk_logger;          ///<
     };
 }

@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-json_t lsearch_cgdescent_t::config() const
+json_t lsearchk_cgdescent_t::config() const
 {
     json_t json;
     json["epsilon"] = strcat(m_epsilon0, "(0,inf)");
@@ -15,7 +15,7 @@ json_t lsearch_cgdescent_t::config() const
     return json;
 }
 
-void lsearch_cgdescent_t::config(const json_t& json)
+void lsearchk_cgdescent_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
@@ -28,7 +28,7 @@ void lsearch_cgdescent_t::config(const json_t& json)
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
-bool lsearch_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearchk_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     assert(0 < m_theta && m_theta < 1);
 
@@ -56,7 +56,7 @@ bool lsearch_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& 
     return false;
 }
 
-bool lsearch_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearchk_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     if (c.t <= a.t || c.t >= b.t)
     {
@@ -79,7 +79,7 @@ bool lsearch_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a
     }
 }
 
-bool lsearch_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearchk_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     const auto a0 = a, b0 = b;
     const auto tc = interpolate(a0, b0);
@@ -108,7 +108,7 @@ bool lsearch_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& 
     }
 }
 
-bool lsearch_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+bool lsearchk_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     assert(m_ro > 1);
 
@@ -140,7 +140,7 @@ bool lsearch_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& 
     return false;
 }
 
-bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t, solver_state_t& c)
+bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t, solver_state_t& c)
 {
     // check overflow
     const auto ok = c.update(state0, t);
@@ -149,7 +149,7 @@ bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t 
     return (!ok) ? true : evaluate(state0, c);
 }
 
-bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
+bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
 {
     // check Armijo+Wolfe conditions or the approximate versions
     const auto done =
@@ -165,7 +165,7 @@ bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const solver_st
     return done;
 }
 
-bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t,
+bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t,
     const lsearch_step_t& a, const lsearch_step_t& b, solver_state_t& c)
 {
     if (evaluate(state0, t, c))
@@ -183,7 +183,7 @@ bool lsearch_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t 
     return false;
 }
 
-bool lsearch_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     // estimate an upper bound of the function value
     // (to be used for the approximate Wolfe condition)

@@ -1,26 +1,36 @@
 # create library
-add_library(nano
-    arch.cpp
-    table.cpp
-    logger.cpp
+
+set(lsearch0_sources
+    lsearch0.cpp
+    lsearch0/linear.cpp
+    lsearch0/constant.cpp
+    lsearch0/cgdescent.cpp
+    lsearch0/quadratic.cpp)
+
+set(lsearchk_sources
+    lsearchk.cpp
+    lsearchk/backtrack.cpp
+    lsearchk/cgdescent.cpp
+    lsearchk/lemarechal.cpp
+    lsearchk/morethuente.cpp
+    lsearchk/nocedalwright.cpp)
+
+set(solver_sources
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
     solver/lbfgs.cpp
-    solver/quasi.cpp
-    lsearch/init.cpp
-    lsearch/init_const.cpp
-    lsearch/init_linear.cpp
-    lsearch/init_cgdescent.cpp
-    lsearch/init_quadratic.cpp
-    lsearch/strategy.cpp
-    lsearch/backtrack.cpp
-    lsearch/cgdescent.cpp
-    lsearch/lemarechal.cpp
-    lsearch/morethuente.cpp
-    lsearch/nocedalwright.cpp
+    solver/quasi.cpp)
+
+add_library(nano
+    arch.cpp
+    table.cpp
+    logger.cpp
     cmdline.cpp
-    function.cpp)
+    function.cpp
+    ${solver_sources}
+    ${lsearch0_sources}
+    ${lsearchk_sources})
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

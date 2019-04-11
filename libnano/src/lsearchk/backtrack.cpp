@@ -2,17 +2,17 @@
 
 using namespace nano;
 
-json_t lsearch_backtrack_t::config() const
+json_t lsearchk_backtrack_t::config() const
 {
     json_t json;
     return json;
 }
 
-void lsearch_backtrack_t::config(const json_t&)
+void lsearchk_backtrack_t::config(const json_t&)
 {
 }
 
-bool lsearch_backtrack_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     for (int i = 0; i < max_iterations(); ++ i)
     {

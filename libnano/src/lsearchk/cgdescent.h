@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/lsearch/strategy.h>
+#include <nano/lsearch/lsearchk.h>
 
 namespace nano
 {
@@ -14,11 +14,11 @@ namespace nano
     ///
     /// NB: The implementation follows the notation from (2).
     ///
-    class lsearch_cgdescent_t final : public lsearch_strategy_t
+    class lsearchk_cgdescent_t final : public lsearchk_t
     {
     public:
 
-        lsearch_cgdescent_t() = default;
+        lsearchk_cgdescent_t() = default;
 
         json_t config() const final;
         void config(const json_t&) final;

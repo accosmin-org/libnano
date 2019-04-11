@@ -7,15 +7,16 @@
 
 namespace nano
 {
-    class lsearch_init_t;
-    using lsearch_init_factory_t = factory_t<lsearch_init_t>;
-    using rlsearch_init_t = lsearch_init_factory_t::trobject;
+    class lsearch0_t;
+    using lsearch0_factory_t = factory_t<lsearch0_t>;
+    using rlsearch0_t = lsearch0_factory_t::trobject;
 
     ///
     /// \brief estimate the initial step length of the line-search procedure.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
+    ///     see "Practical methods of optimization", Fletcher, chapter 2
     ///
-    class lsearch_init_t : public json_configurable_t
+    class lsearch0_t : public json_configurable_t
     {
     public:
 
@@ -27,12 +28,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearch_init_t() = default;
+        lsearch0_t() = default;
 
         ///
         /// \brief returns the available implementations
         ///
-        static lsearch_init_factory_t& all();
+        static lsearch0_factory_t& all();
 
         ///
         /// \brief returns the initial step length given the current state

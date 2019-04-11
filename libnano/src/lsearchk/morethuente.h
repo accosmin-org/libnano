@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/lsearch/strategy.h>
+#include <nano/lsearch/lsearchk.h>
 
 namespace nano
 {
@@ -12,11 +12,11 @@ namespace nano
     /// NB: this implementation ports the 'dcsrch' and the 'dcstep' Fortran routines from MINPACK-2.
     ///     see http://ftp.mcs.anl.gov/pub/MINPACK-2/csrch/
     ///
-    class lsearch_morethuente_t final : public lsearch_strategy_t
+    class lsearchk_morethuente_t final : public lsearchk_t
     {
     public:
 
-        lsearch_morethuente_t() = default;
+        lsearchk_morethuente_t() = default;
 
         json_t config() const final;
         void config(const json_t&) final;

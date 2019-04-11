@@ -28,8 +28,8 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("display the registered objects");
-    cmdline.add("", "lsearch-init",         "methods to estimate the initial line-search step length");
-    cmdline.add("", "lsearch-strategy",     "line-search methods");
+    cmdline.add("", "lsearch0",             "methods to estimate the initial line-search step length");
+    cmdline.add("", "lsearchk",             "strategies to compute the line-search step length");
     cmdline.add("", "solver",               "numerical optimization methods");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
@@ -40,8 +40,8 @@ static int unsafe_main(int argc, const char* argv[])
 
     cmdline.process(argc, argv);
 
-    const auto has_lsearch_init = cmdline.has("lsearch-init");
-    const auto has_lsearch_strategy = cmdline.has("lsearch-strategy");
+    const auto has_lsearch0 = cmdline.has("lsearch0");
+    const auto has_lsearchk = cmdline.has("lsearchk");
     const auto has_solver = cmdline.has("solver");
     const auto has_system = cmdline.has("system");
     const auto has_sys_logical = cmdline.has("sys-logical-cpus");
@@ -50,8 +50,8 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
-    if (!has_lsearch_init &&
-        !has_lsearch_strategy &&
+    if (!has_lsearch0 &&
+        !has_lsearchk &&
         !has_solver &&
         !has_system &&
         !has_sys_logical &&
@@ -65,13 +65,13 @@ static int unsafe_main(int argc, const char* argv[])
     }
 
     // check arguments and options
-    if (has_lsearch_init)
+    if (has_lsearch0)
     {
-        print("lsearch-init", lsearch_init_t::all());
+        print("lsearch0", lsearch0_t::all());
     }
-    if (has_lsearch_strategy)
+    if (has_lsearchk)
     {
-        print("lsearch-strategy", lsearch_strategy_t::all());
+        print("lsearchk", lsearchk_t::all());
     }
     if (has_solver)
     {

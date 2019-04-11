@@ -3,14 +3,14 @@
 
 using namespace nano;
 
-json_t lsearch_nocedalwright_t::config() const
+json_t lsearchk_nocedalwright_t::config() const
 {
     json_t json;
     json["ro"] = strcat(m_ro, "(1,inf)");
     return json;
 }
 
-void lsearch_nocedalwright_t::config(const json_t& json)
+void lsearchk_nocedalwright_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
@@ -18,7 +18,7 @@ void lsearch_nocedalwright_t::config(const json_t& json)
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
-bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
+bool lsearchk_nocedalwright_t::zoom(const solver_state_t& state0,
     lsearch_step_t lo, lsearch_step_t hi, solver_state_t& state) const
 {
     for (int i = 0; i < max_iterations() && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++ i)
@@ -52,7 +52,7 @@ bool lsearch_nocedalwright_t::zoom(const solver_state_t& state0,
     return false;
 }
 
-bool lsearch_nocedalwright_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_nocedalwright_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     lsearch_step_t prev = state0;
     lsearch_step_t curr = state;

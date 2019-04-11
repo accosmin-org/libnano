@@ -46,8 +46,8 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
     table_t table;
     table.header()
         << table_name
-        << "ls-init"
-        << "ls-strategy"
+        << "lsearch0"
+        << "lsearchk"
         << "gnorm"
         << "#fails"
         << "#iters"
@@ -87,8 +87,8 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     std::cout << std::fixed << std::setprecision(10);
     std::cout << function.name()
         << " solver[" << solver_id
-        << "],ls-init[" << solver->lsearch_init_id()
-        << "],ls-strategy[" << solver->lsearch_strategy_id() << "]" << std::endl;
+        << "],lsearch0[" << solver->lsearch0_id()
+        << "],lsearchk[" << solver->lsearchk_id() << "]" << std::endl;
 
     solver->logger([&] (const solver_state_t& state)
     {
@@ -99,14 +99,14 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
         return true;
     });
 
-    solver->lsearch_init_logger([&] (const solver_state_t& state0, const scalar_t t)
+    solver->lsearch0_logger([&] (const solver_state_t& state0, const scalar_t t)
     {
         std::cout
             << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
             << ",t=" << t << "." << std::endl;
     });
 
-    solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+    solver->lsearchk_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
         std::cout
             << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
@@ -120,8 +120,8 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
 
     // NB: need to reset the logger for the next batch of tests!
     solver->logger({});
-    solver->lsearch_init_logger({});
-    solver->lsearch_strategy_logger({});
+    solver->lsearch0_logger({});
+    solver->lsearchk_logger({});
 
     return state;
 }
@@ -147,7 +147,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
         }
     }
 
-    const auto key = std::make_tuple(solver_id, solver->lsearch_init_id(), solver->lsearch_strategy_id());
+    const auto key = std::make_tuple(solver_id, solver->lsearch0_id(), solver->lsearchk_id());
     for (const auto& state : states)
     {
         fstats[key].update(state);
@@ -195,8 +195,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "c1",               "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",               "use this c2 value (see Wolfe line-search step condition)");
-    cmdline.add("", "lsearch-init",     "use this regex to select the line-search initialization methods");
-    cmdline.add("", "lsearch-strategy", "use this regex to select the line-search methods");
+    cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
+    cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
 
     cmdline.process(argc, argv);
@@ -213,48 +213,37 @@ static int unsafe_main(int argc, const char* argv[])
     const auto fregex = std::regex(cmdline.get<string_t>("function"));
     const auto sregex = std::regex(cmdline.get<string_t>("solver"));
 
-    const auto ls_inits = cmdline.has("lsearch-init") ?
-        lsearch_init_t::all().ids(std::regex(cmdline.get<string_t>("lsearch-init"))) :
+    const auto lsearch0s = cmdline.has("lsearch0") ?
+        lsearch0_t::all().ids(std::regex(cmdline.get<string_t>("lsearch0"))) :
         strings_t{""};
 
-    const auto ls_strategies = cmdline.has("lsearch-strategy") ?
-        lsearch_strategy_t::all().ids(std::regex(cmdline.get<string_t>("lsearch-strategy"))) :
+    const auto lsearchks = cmdline.has("lsearchk") ?
+        lsearchk_t::all().ids(std::regex(cmdline.get<string_t>("lsearchk"))) :
         strings_t{""};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (
-        const string_t& solver_id, const string_t& ls_init, const string_t& ls_strategy)
+    const auto add_solver = [&] (const string_t& solver_id, const string_t& lsearch0, const string_t& lsearchk)
     {
         auto solver = solver_t::all().get(solver_id);
-        if (cmdline.has("c1"))
-        {
-            solver->config(nano::to_json("c1", cmdline.get<scalar_t>("c1")));
-        }
-        if (cmdline.has("c2"))
-        {
-            solver->config(nano::to_json("c2", cmdline.get<scalar_t>("c2")));
-        }
-        if (!ls_init.empty())
-        {
-            solver->lsearch_init(ls_init);
-        }
-        if (!ls_strategy.empty())
-        {
-            solver->lsearch_strategy(ls_strategy);
-        }
-        solver->config(nano::to_json("eps", epsilon, "maxit", max_iterations));
+
+        solver->epsilon(epsilon);
+        solver->max_iterations(max_iterations);
+        if (!lsearch0.empty()) { solver->lsearch0(lsearch0); }
+        if (!lsearchk.empty()) { solver->lsearchk(lsearchk); }
+        if (cmdline.has("c1")) { solver->c1(cmdline.get<scalar_t>("c1")); }
+        if (cmdline.has("c2")) { solver->c2(cmdline.get<scalar_t>("c2")); }
 
         solvers.emplace_back(solver_id, std::move(solver));
     };
 
     for (const auto& id : solver_t::all().ids(sregex))
     {
-        for (const auto& iid : ls_inits)
+        for (const auto& lsearch0 : lsearch0s)
         {
-            for (const auto& sid : ls_strategies)
+            for (const auto& lsearchk : lsearchks)
             {
-                add_solver(id, iid, sid);
+                add_solver(id, lsearch0, lsearchk);
             }
         }
     }

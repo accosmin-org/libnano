@@ -19,14 +19,14 @@ static void setup_logger(const rsolver_t& solver, std::stringstream& stream, siz
     });
 
     // log the line-search steps
-    solver->lsearch_init_logger([&] (const solver_state_t& state0, const scalar_t t)
+    solver->lsearch0_logger([&] (const solver_state_t& state0, const scalar_t t)
     {
         stream
             << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
             << ",t=" << t << ".\n";
     });
 
-    solver->lsearch_strategy_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+    solver->lsearchk_logger([&] (const solver_state_t& state0, const solver_state_t& state)
     {
         stream
             << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
@@ -184,8 +184,8 @@ const auto functions = get_convex_functions(1, 4);
 
 const auto all_solver_ids = solver_t::all().ids();
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
-const auto all_lsearch_init_ids = lsearch_init_t::all().ids();
-const auto all_lsearch_strategy_ids = lsearch_strategy_t::all().ids();
+const auto all_lsearch0_ids = lsearch0_t::all().ids();
+const auto all_lsearchk_ids = lsearchk_t::all().ids();
 
 UTEST_CASE(all_default_solvers)
 {
@@ -214,12 +214,12 @@ UTEST_CASE(best_solvers_with_lsearches)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            for (const auto& lsearch_init_id : all_lsearch_init_ids)
+            for (const auto& lsearch0_id : all_lsearch0_ids)
             {
-                for (const auto& lsearch_strategy_id : all_lsearch_strategy_ids)
+                for (const auto& lsearchk_id : all_lsearchk_ids)
                 {
-                    solver->lsearch_init(lsearch_init_id);
-                    solver->lsearch_strategy(lsearch_strategy_id);
+                    solver->lsearch0(lsearch0_id);
+                    solver->lsearchk(lsearchk_id);
 
                     test(solver, solver_id, *function, vector_t::Random(function->size()));
                 }
