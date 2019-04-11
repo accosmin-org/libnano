@@ -10,12 +10,12 @@ using namespace nano;
 namespace
 {
     template <typename tobject>
-    void print(const string_t& name, const factory_t<tobject>& factory)
+    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
     {
         table_t table;
         table.header() << name << "description" << "configuration";
         table.delim();
-        for (const auto& id : factory.ids())
+        for (const auto& id : factory.ids(std::regex(regex)))
         {
             const auto json = factory.get(id)->config();
             table.append() << id << factory.description(id) << json.dump();
@@ -28,9 +28,9 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("display the registered objects");
-    cmdline.add("", "lsearch0",             "methods to estimate the initial line-search step length");
-    cmdline.add("", "lsearchk",             "strategies to compute the line-search step length");
-    cmdline.add("", "solver",               "numerical optimization methods");
+    cmdline.add("", "lsearch0",             "regex to select the line-search initialization methods", ".+");
+    cmdline.add("", "lsearchk",             "regex to select the line-search strategies", ".+");
+    cmdline.add("", "solver",               "regex to select the numerical optimization methods", ".+");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
     cmdline.add("", "system",               "system: all available information");
@@ -67,15 +67,15 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch0)
     {
-        print("lsearch0", lsearch0_t::all());
+        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
     }
     if (has_lsearchk)
     {
-        print("lsearchk", lsearchk_t::all());
+        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
     }
     if (has_solver)
     {
-        print("solver", solver_t::all());
+        print("solver", solver_t::all(), cmdline.get<string_t>("solver"));
     }
     if (has_system || has_sys_physical)
     {

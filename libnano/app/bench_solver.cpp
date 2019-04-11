@@ -185,8 +185,8 @@ static int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-    cmdline.add("", "solver",           "use this regex to select the solvers to benchmark", ".+");
-    cmdline.add("", "function",         "use this regex to select the functions to benchmark", ".+");
+    cmdline.add("", "solver",           "regex to select the solvers to benchmark", ".+");
+    cmdline.add("", "function",         "regex to select the functions to benchmark", ".+");
     cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "100");
     cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1000");
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
