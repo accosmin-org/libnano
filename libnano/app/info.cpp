@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <nano/table.h>
 #include <nano/logger.h>
@@ -18,7 +19,16 @@ namespace
         for (const auto& id : factory.ids(std::regex(regex)))
         {
             const auto json = factory.get(id)->config();
-            table.append() << id << factory.description(id) << json.dump();
+            const auto path = name + "_" + id + ".json";
+
+            std::ofstream out(path);
+            if (out.is_open())
+            {
+                out << json.dump(4) << std::endl;
+            }
+
+            table.append() << id << factory.description(id) << path;
+
         }
         std::cout << table;
     }
