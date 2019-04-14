@@ -19,7 +19,7 @@ namespace
         for (const auto& id : factory.ids(std::regex(regex)))
         {
             const auto json = factory.get(id)->config();
-            const auto path = strcat(name + "_" + id + ".json");
+            const auto path = strcat(name, "_", id, ".json");
 
             std::ofstream out(path);
             if (out.is_open())
