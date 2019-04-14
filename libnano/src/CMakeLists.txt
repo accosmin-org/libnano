@@ -38,6 +38,7 @@ target_compile_configure(nano)
 target_include_directories(nano
     PUBLIC
         $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/../deps/json/include>
     PRIVATE

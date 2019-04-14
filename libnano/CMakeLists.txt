@@ -15,7 +15,7 @@ exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/nano/version.h")
+    "${CMAKE_CURRENT_BINARY_DIR}/nano/version.h")
 
 set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY")
 set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_DONT_PARALLELIZE -DEIGEN_DEFAULT_TO_ROW_MAJOR")
@@ -56,6 +56,9 @@ add_subdirectory(test)
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+
+install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/../deps/json/include/nlohmann
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

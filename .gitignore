@@ -37,4 +37,3 @@
 # CMake-generated files and folders
 build
 install
-libnano/include/nano/version.h
