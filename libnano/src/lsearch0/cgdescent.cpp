@@ -6,6 +6,7 @@ using namespace nano;
 json_t lsearch0_cgdescent_t::config() const
 {
     json_t json;
+    json["_"] = "see CG-DESCENT papers";
     json["phi0"] = strcat(m_phi0, "(0,1)");
     json["phi1"] = strcat(m_phi1, "(0,1)");
     json["phi2"] = strcat(m_phi2, "(1,inf)");

@@ -6,6 +6,7 @@ using namespace nano;
 json_t lsearch0_constant_t::config() const
 {
     json_t json;
+    json["_"] = "t0 := t0";
     json["t0"] = strcat(m_t0, "(0,inf)");
     return json;
 }

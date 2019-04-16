@@ -22,7 +22,8 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_tro{1.01};    ///<
+        scalar_t    m_alpha{1.01};  ///< correction to truncate to 1
+        scalar_t    m_beta{10.0};   ///< factor relative to epsilon to safeguard the interpolated step length
         scalar_t    m_prevf{0};     ///< previous function value
         scalar_t    m_prevdg{1};    ///< previous direction dot product
     };
