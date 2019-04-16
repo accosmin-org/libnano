@@ -296,12 +296,13 @@ matrix:
     #    - sudo -H pip install cpp-coveralls
     #    - CXX=g++-7 bash scripts/build.sh --coverage --config --build --test --coveralls
 
-    - os: osx
-      compiler: clang
-      osx_image: xcode7.3
-      env: TEST="build (xcode7.3)"
-      script:
-        - bash scripts/build.sh --config --build --test --install --build-example
+    # NB: disabled because brew's formula for Eigen is too costly (e.g. it pulls openssl!!!)
+    #- os: osx
+    #  compiler: clang
+    #  osx_image: xcode7.3
+    #  env: TEST="build (xcode7.3)"
+    #  script:
+    #    - bash scripts/build.sh --config --build --test --install --build-example
 
     - os: osx
       compiler: clang
