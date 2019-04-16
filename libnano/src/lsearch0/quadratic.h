@@ -7,7 +7,7 @@ namespace nano
     ///
     /// \brief use quadratic interpolation of the previous line-search step lengths.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
-    ///     see errata: http://users.iems.northwestern.edu/~nocedal/book/2ndprint.pdf
+    ///     see "Practical methods of optimization", Fletcher, p.38-39
     ///
     class lsearch0_quadratic_t final : public lsearch0_t
     {

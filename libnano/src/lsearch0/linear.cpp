@@ -6,7 +6,7 @@ using namespace nano;
 json_t lsearch0_linear_t::config() const
 {
     json_t json;
-    json["tro"] = strcat(m_tro, "(0,1)");
+    json["tro"] = strcat(m_tro, "(1,inf)");
     return json;
 }
 
@@ -29,7 +29,7 @@ scalar_t lsearch0_linear_t::get(const solver_state_t& state)
     }
     else
     {
-        t0 = std::min(scalar_t(1), m_tro * state.t * m_prevdg / dg);
+        t0 = std::min(scalar_t(1), - m_tro * std::max(- state.t * m_prevdg, 10 * epsilon()) / dg);
     }
 
     m_prevdg = dg;

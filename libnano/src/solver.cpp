@@ -141,6 +141,7 @@ solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
     //  - to have the solver thread-safe
     //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
     auto lsearch0 = lsearch0_t::all().get(m_lsearch0_id);
+    lsearch0->epsilon(epsilon());
     lsearch0->logger(m_lsearch0_logger);
     lsearch0->config(m_lsearch0->config());
 

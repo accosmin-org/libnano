@@ -28,7 +28,7 @@ scalar_t lsearch0_quadratic_t::get(const solver_state_t& state)
     }
     else
     {
-        t0 = std::min(scalar_t(1), m_tro * 2 * (state.f - m_prevf) / m_prevdg);
+        t0 = std::min(scalar_t(1), - m_tro * 2 * std::max(m_prevf - state.f, 10 * epsilon()) / m_prevdg);
     }
 
     m_prevf = state.f;

@@ -45,6 +45,12 @@ namespace nano
         /// \brief change parameters
         ///
         void logger(const logger_t& logger) { m_logger = logger; }
+        void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
+
+        ///
+        /// \brief access functions
+        ///
+        auto epsilon() const { return m_epsilon; }
 
     protected:
 
@@ -62,6 +68,7 @@ namespace nano
     private:
 
         // attributes
-        logger_t    m_logger;                               ///<
+        logger_t    m_logger;           ///<
+        scalar_t    m_epsilon{0};       ///< tolerance of the convergence criterion
     };
 }
