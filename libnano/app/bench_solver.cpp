@@ -1,10 +1,11 @@
 #include <iomanip>
 #include <iostream>
-#include <nano/solver.h>
 #include <nano/stats.h>
 #include <nano/table.h>
 #include <nano/tpool.h>
+#include <nano/chrono.h>
 #include <nano/logger.h>
+#include <nano/solver.h>
 #include <nano/cmdline.h>
 #include <nano/numeric.h>
 
@@ -24,14 +25,15 @@ struct solver_stat_t
         m_costs(static_cast<scalar_t>(state.m_fcalls + 2 * state.m_gcalls));
     }
 
-    stats_t     m_crits;    ///< convergence criterion
-    stats_t     m_fails;    ///< #convergence failures
-    stats_t     m_iters;    ///< #optimization iterations
-    stats_t     m_errors;   ///< #internal errors (e.g. line-search failed)
-    stats_t     m_maxits;   ///< #maximum iterations reached
-    stats_t     m_fcalls;   ///< #function value calls
-    stats_t     m_gcalls;   ///< #gradient calls
-    stats_t     m_costs;    ///< computation cost as a function of function value and gradient calls
+    stats_t     m_crits;            ///< convergence criterion
+    stats_t     m_fails;            ///< #convergence failures
+    stats_t     m_iters;            ///< #optimization iterations
+    stats_t     m_errors;           ///< #internal errors (e.g. line-search failed)
+    stats_t     m_maxits;           ///< #maximum iterations reached
+    stats_t     m_fcalls;           ///< #function value calls
+    stats_t     m_gcalls;           ///< #gradient calls
+    stats_t     m_costs;            ///< computation cost as a function of function value and gradient calls
+    int64_t     m_milliseconds{0};  ///< total number of milliseconds
 };
 
 using solver_config_stats_t = std::map<
@@ -55,7 +57,8 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         << "#maxits"
         << "#fcalls"
         << "#gcalls"
-        << "cost";
+        << "cost"
+        << "[ms]";
     table.delim();
 
     for (const auto& it : stats)
@@ -73,7 +76,8 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
             << static_cast<size_t>(stat.m_maxits.sum1())
             << static_cast<size_t>(stat.m_fcalls.avg())
             << static_cast<size_t>(stat.m_gcalls.avg())
-            << static_cast<size_t>(stat.m_costs.avg());
+            << static_cast<size_t>(stat.m_costs.avg())
+            << stat.m_milliseconds;
         }
     }
 
@@ -131,11 +135,15 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats,
     const bool log_failures)
 {
+    const auto timer = nano::timer_t{};
+
     std::vector<solver_state_t> states(x0s.size());
     loopi(x0s.size(), [&] (const size_t i)
     {
         states[i] = solver->minimize(function, x0s[i]);
     });
+
+    const auto milliseconds = timer.milliseconds().count();
 
     for (size_t i = 0; i < x0s.size(); ++ i)
     {
@@ -150,11 +158,16 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     }
 
     const auto key = std::make_tuple(solver_id, solver->lsearch0_id(), solver->lsearchk_id());
+    auto& fstat = fstats[key];
+    auto& gstat = gstats[key];
+
     for (const auto& state : states)
     {
-        fstats[key].update(state);
-        gstats[key].update(state);
+        fstat.update(state);
+        gstat.update(state);
     }
+    fstat.m_milliseconds += milliseconds;
+    gstat.m_milliseconds += milliseconds;
 }
 
 static void check_function(const function_t& function,
