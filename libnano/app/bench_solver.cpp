@@ -140,7 +140,9 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     for (size_t i = 0; i < x0s.size(); ++ i)
     {
         // log in full detail the optimization trajectory if it fails
-        if (states[i].m_status != solver_state_t::status::converged && log_failures)
+        if (log_failures &&
+            states[i].m_status != solver_state_t::status::max_iters &&
+            states[i].m_status != solver_state_t::status::converged)
         {
             const auto state = log_solver(function, solver, solver_id, x0s[i]);
             assert(state.m_status == states[i].m_status);
