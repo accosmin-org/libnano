@@ -79,6 +79,9 @@ bool lsearchk_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& 
 
 bool lsearchk_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
+    // NB: using safeguarded cubic interpolation instead of the secant interpolation
+    //  because it converges faster and it is not numerically robust!
+
     const auto a0 = a, b0 = b;
     const auto tc = lsearch_step_t::interpolate(a0, b0);
 
@@ -92,12 +95,12 @@ bool lsearchk_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t&
     }
     else if (std::fabs(tc - a.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::secant(a0, a), c) ||
+        return  evaluate(state0, lsearch_step_t::interpolate(a0, a), c) ||
                 update(state0, a, b, c);
     }
     else if (std::fabs(tc - b.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::secant(b0, b), c) ||
+        return  evaluate(state0, lsearch_step_t::interpolate(b0, b), c) ||
                 update(state0, a, b, c);
     }
     else
