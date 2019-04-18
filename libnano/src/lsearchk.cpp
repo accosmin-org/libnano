@@ -61,5 +61,5 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t)
     }
 
     // line-search step length
-    return get(state0, state) && state && (state < state0);
+    return get(state0, state) && state;
 }

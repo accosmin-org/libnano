@@ -13,6 +13,9 @@ namespace nano
     ///     by William W. Hager & HongChao Zhang, 2006
     ///
     /// NB: The implementation follows the notation from (2).
+    /// NB: The implementation uses criterion V3 from (2):
+    ///     Armijo-Wolfe conditions until the iterations are getting too close and then
+    ///     approximate Wolfe conditions onwards
     ///
     class lsearchk_cgdescent_t final : public lsearchk_t
     {
@@ -28,39 +31,14 @@ namespace nano
 
         bool evaluate(const solver_state_t&, const solver_state_t&);
         bool evaluate(const solver_state_t&, const scalar_t, solver_state_t&);
-        bool evaluate(const solver_state_t&, const scalar_t, const lsearch_step_t&, const lsearch_step_t&, solver_state_t&);
 
         bool update(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
         bool updateU(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
         bool secant2(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
         bool bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
 
-        static auto interpolate(const lsearch_step_t& a, const lsearch_step_t& b)
-        {
-            const auto tc = lsearch_step_t::cubic(a, b);
-            const auto ts = lsearch_step_t::secant(a, b);
-            const auto tb = lsearch_step_t::bisect(a, b);
-
-            const auto tmin = std::min(a.t, b.t);
-            const auto tmax = std::max(a.t, b.t);
-
-            if (std::isfinite(tc) && tmin < tc && tc < tmax)
-            {
-                return tc;
-            }
-            else if (std::isfinite(ts) && tmin < ts && ts < tmax)
-            {
-                return ts;
-            }
-            else
-            {
-                return tb;
-            }
-        }
-
         // attributes
-        scalar_t    m_epsilon0{static_cast<scalar_t>(1e-6)};///<
-        scalar_t    m_epsilon{0};                           ///<
+        scalar_t    m_epsilon{static_cast<scalar_t>(1e-6)}; ///<
         scalar_t    m_theta{static_cast<scalar_t>(0.5)};    ///<
         scalar_t    m_gamma{static_cast<scalar_t>(0.66)};   ///<
         scalar_t    m_delta{static_cast<scalar_t>(0.7)};    ///<
