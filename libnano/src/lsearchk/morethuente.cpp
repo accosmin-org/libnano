@@ -3,17 +3,6 @@
 
 using namespace nano;
 
-json_t lsearchk_morethuente_t::config() const
-{
-    json_t json;
-    // todo: expose all parameters here!
-    return json;
-}
-
-void lsearchk_morethuente_t::config(const json_t&)
-{
-}
-
 ///
 /// \brief see dcstep routine in MINPACK-2 (see http://ftp.mcs.anl.gov/pub/MINPACK-2/csrch/)
 ///
@@ -150,6 +139,17 @@ static void dcstep(
     }
 
     stp = stpf;
+}
+
+json_t lsearchk_morethuente_t::config() const
+{
+    json_t json;
+    // todo: expose all parameters here!
+    return json;
+}
+
+void lsearchk_morethuente_t::config(const json_t&)
+{
 }
 
 bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)

@@ -201,6 +201,11 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
     // iteratively update the search interval [a, b]
     for (int i = 0; i < max_iterations(); ++ i)
     {
+        assert(a.t < b.t);
+        assert(a.f <= state0.f + m_epsilon * m_sumC);
+        assert(a.g < 0);
+        assert(b.g >= 0);
+
         // secant interpolation
         const auto prev_width = b.t - a.t;
         if (secant2(state0, a, b, c))
