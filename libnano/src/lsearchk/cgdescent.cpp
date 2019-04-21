@@ -28,18 +28,19 @@ void lsearchk_cgdescent_t::config(const json_t& json)
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
 }
 
-bool lsearchk_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t& state0,
+    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int i = 0; i < max_iterations() && (b.t - a.t) > stpmin(); ++ i)
     {
         if (evaluate(state0, (1 - m_theta) * a.t + m_theta * b.t, c))
         {
-            return true;
+            return status::exit;
         }
         else if (!c.has_descent())
         {
             b = c;
-            return false;
+            return status::done;
         }
         else if (c.has_approx_armijo(state0, m_epsilon * m_sumC))
         {
@@ -51,24 +52,25 @@ bool lsearchk_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t&
         }
     }
 
-    return false;
+    return status::fail;
 }
 
-bool lsearchk_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& state0,
+    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     if (c.t <= a.t || c.t >= b.t)
     {
-        return false;
+        return status::done;
     }
     else if (!c.has_descent())
     {
         b = c;
-        return false;
+        return status::done;
     }
     else if (c.has_approx_armijo(state0, m_epsilon * m_sumC))
     {
         a = c;
-        return false;
+        return status::done;
     }
     else
     {
@@ -77,42 +79,44 @@ bool lsearchk_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& 
     }
 }
 
-bool lsearchk_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t& state0,
+    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
     // NB: using safeguarded cubic interpolation instead of the secant interpolation
     //  because it converges faster and it is not numerically robust!
 
     const auto a0 = a, b0 = b;
-    const auto tc = lsearch_step_t::interpolate(a0, b0);
+    const auto tc = lsearch_step_t::secant(a0, b0);
 
     if (evaluate(state0, tc, c))
     {
-        return true;
+        return status::exit;
     }
-    else if (update(state0, a, b, c))
+
+    const auto status = update(state0, a, b, c);
+    if (status != status::done)
     {
-        return true;
+        return status;
     }
     else if (std::fabs(tc - a.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::interpolate(a0, a), c) ||
-                update(state0, a, b, c);
+        return  evaluate(state0, lsearch_step_t::secant(a0, a), c) ?
+                status::exit : update(state0, a, b, c);
     }
     else if (std::fabs(tc - b.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::interpolate(b0, b), c) ||
-                update(state0, a, b, c);
+        return  evaluate(state0, lsearch_step_t::secant(b0, b), c) ?
+                status::exit : update(state0, a, b, c);
     }
     else
     {
-        return false;
+        return status::fail;
     }
 }
 
-bool lsearchk_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::bracket(const solver_state_t& state0,
+    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
-    assert(m_ro > 1);
-
     auto last_a = a;
     for (int i = 0; i < max_iterations(); ++ i)
     {
@@ -120,7 +124,7 @@ bool lsearchk_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t&
         {
             a = last_a;
             b = c;
-            return false;
+            return status::done;
         }
         else if (!c.has_approx_armijo(state0, m_epsilon * m_sumC))
         {
@@ -133,12 +137,12 @@ bool lsearchk_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t&
             last_a = c;
             if (evaluate(state0, m_ro * c.t, c))
             {
-                return true;
+                return status::exit;
             }
         }
     }
 
-    return false;
+    return status::fail;
 }
 
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t, solver_state_t& c)
@@ -193,33 +197,38 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
 
     // bracket the initial step size
     lsearch_step_t a = state0, b = c;
-    if (bracket(state0, a, b, c))
+    switch (bracket(state0, a, b, c))
     {
-        return true;
+    case status::exit:  return true;
+    case status::fail:  return false;
+    default:            break;
     }
 
     // iteratively update the search interval [a, b]
     for (int i = 0; i < max_iterations(); ++ i)
     {
-        assert(a.t < b.t);
-        assert(a.f <= state0.f + m_epsilon * m_sumC);
-        assert(a.g < 0);
-        assert(b.g >= 0);
-
         // secant interpolation
         const auto prev_width = b.t - a.t;
-        if (secant2(state0, a, b, c))
+        switch (secant2(state0, a, b, c))
         {
-            return true;
+        case status::exit:  return true;
+        case status::fail:  return false;
+        default:            break;
         }
 
         // update search interval
         if (b.t - a.t > m_gamma * prev_width)
         {
-            if (evaluate(state0, (a.t + b.t) / 2, c) ||
-                update(state0, a, b, c))
+            if (evaluate(state0, (a.t + b.t) / 2, c))
             {
                 return true;
+            }
+
+            switch (update(state0, a, b, c))
+            {
+            case status::exit:  return true;
+            case status::fail:  return false;
+            default:            break;
             }
         }
     }

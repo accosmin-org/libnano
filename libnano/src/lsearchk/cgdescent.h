@@ -17,6 +17,10 @@ namespace nano
     ///     Armijo-Wolfe conditions until the iterations are getting too close and then
     ///     approximate Wolfe conditions onwards
     ///
+    /// NB: This strategy converges:
+    ///     - for convex problems with any descent algorithm,
+    ///     - for non-convex problems with CGD-N only.
+    ///
     class lsearchk_cgdescent_t final : public lsearchk_t
     {
     public:
@@ -29,13 +33,20 @@ namespace nano
 
     private:
 
+        enum class status
+        {
+            exit,           ///< exit criterion generated (Wolfe + approximate Wolfe)
+            fail,           ///< search failed
+            done            ///< search succeeded, apply next step
+        };
+
         bool evaluate(const solver_state_t&, const solver_state_t&);
         bool evaluate(const solver_state_t&, const scalar_t, solver_state_t&);
 
-        bool update(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        bool updateU(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        bool secant2(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        bool bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
+        status update(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
+        status updateU(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
+        status secant2(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
+        status bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
 
         // attributes
         scalar_t    m_epsilon{static_cast<scalar_t>(1e-6)}; ///<
