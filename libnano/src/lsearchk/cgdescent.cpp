@@ -58,7 +58,7 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t&
 lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& state0,
     lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
-    if (c.t <= a.t || c.t >= b.t)
+    if (!c || c.t <= a.t || c.t >= b.t)
     {
         return status::done;
     }
@@ -82,9 +82,6 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& 
 lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t& state0,
     lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
 {
-    // NB: using safeguarded cubic interpolation instead of the secant interpolation
-    //  because it converges faster and it is not numerically robust!
-
     const auto a0 = a, b0 = b;
     const auto tc = lsearch_step_t::secant(a0, b0);
 
@@ -93,10 +90,10 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t&
         return status::exit;
     }
 
-    const auto status = update(state0, a, b, c);
-    if (status != status::done)
+    const auto update_status = update(state0, a, b, c);
+    if (update_status != status::done)
     {
-        return status;
+        return update_status;
     }
     else if (std::fabs(tc - a.t) < epsilon0<scalar_t>())
     {
