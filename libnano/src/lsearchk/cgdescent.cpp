@@ -144,15 +144,14 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::bracket(const solver_state_t&
 
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t t, solver_state_t& c)
 {
-    // check overflow
-    const auto ok = c.update(state0, t);
-    log(state0, c);
-
-    return (!ok) ? true : evaluate(state0, c);
+    c.update(state0, t);
+    return evaluate(state0, c);
 }
 
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
 {
+    log(state0, state);
+
     if (!m_approx)
     {
         // check Armijo+Wolfe conditions
