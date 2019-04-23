@@ -112,6 +112,8 @@ static void test(
     }
 }
 
+const auto functions = get_convex_functions(1, 16, std::regex(".+"));
+
 UTEST_BEGIN_MODULE(test_lsearch)
 
 UTEST_CASE(backtrack)
@@ -119,7 +121,7 @@ UTEST_CASE(backtrack)
     const auto lsearch_id = "backtrack";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    for (const auto& function : get_functions(1, 16, std::regex(".+")))
+    for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::backtrack);
     }
@@ -130,7 +132,7 @@ UTEST_CASE(lemarechal)
     const auto lsearch_id = "lemarechal";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    for (const auto& function : get_functions(1, 16, std::regex(".+")))
+    for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::lemarechal);
     }
@@ -141,7 +143,7 @@ UTEST_CASE(morethuente)
     const auto lsearch_id = "morethuente";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    for (const auto& function : get_functions(1, 16, std::regex(".+")))
+    for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::morethuente);
     }
@@ -152,7 +154,7 @@ UTEST_CASE(nocedalwright)
     const auto lsearch_id = "nocedalwright";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    for (const auto& function : get_functions(1, 16, std::regex(".+")))
+    for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::nocedalwright);
     }
@@ -163,7 +165,7 @@ UTEST_CASE(cgdescent)
     const auto lsearch_id = "cgdescent";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    for (const auto& function : get_functions(1, 16, std::regex(".+")))
+    for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
     }

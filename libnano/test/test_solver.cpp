@@ -230,7 +230,7 @@ UTEST_CASE(best_solvers_with_lsearches)
 
 UTEST_CASE(best_solvers_with_tolerances)
 {
-    for (const auto& function : get_convex_functions(1, 4))
+    for (const auto& function : functions)
     {
         UTEST_REQUIRE(function);
 
