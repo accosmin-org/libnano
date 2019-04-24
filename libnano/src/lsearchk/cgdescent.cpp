@@ -107,7 +107,7 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t&
     }
     else
     {
-        return status::fail;
+        return status::done;
     }
 }
 
