@@ -11,26 +11,29 @@ using namespace nano;
 namespace
 {
     template <typename tobject>
-    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
+    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex,
+        const bool as_table, const bool as_json)
     {
-        table_t table;
-        table.header() << name << "description" << "configuration";
-        table.delim();
-        for (const auto& id : factory.ids(std::regex(regex)))
+        if (as_table)
         {
-            const auto json = factory.get(id)->config();
-            const auto path = strcat(name, "_", id, ".json");
-
-            std::ofstream out(path);
-            if (out.is_open())
+            table_t table;
+            table.header() << name << "description";
+            table.delim();
+            for (const auto& id : factory.ids(std::regex(regex)))
             {
-                out << json.dump(4) << std::endl;
+                table.append() << id << factory.description(id);
             }
-
-            table.append() << id << factory.description(id) << path;
-
+            std::cout << table;
         }
-        std::cout << table;
+
+        if (as_json)
+        {
+            for (const auto& id : factory.ids(std::regex(regex)))
+            {
+                const auto json = factory.get(id)->config_with_id(id);
+                std::cout << json.dump(4) << std::endl;
+            }
+        }
     }
 }
 
@@ -41,6 +44,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearch0",             "regex to select the line-search initialization methods", ".+");
     cmdline.add("", "lsearchk",             "regex to select the line-search strategies", ".+");
     cmdline.add("", "solver",               "regex to select the numerical optimization methods", ".+");
+    cmdline.add("", "as-table",             "display the selected objects in a table");
+    cmdline.add("", "as-json",              "display the default configuration for the selected objects as JSON");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
     cmdline.add("", "system",               "system: all available information");
@@ -53,6 +58,8 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_lsearch0 = cmdline.has("lsearch0");
     const auto has_lsearchk = cmdline.has("lsearchk");
     const auto has_solver = cmdline.has("solver");
+    const auto has_as_table = cmdline.has("as-table");
+    const auto has_as_json = cmdline.has("as-json");
     const auto has_system = cmdline.has("system");
     const auto has_sys_logical = cmdline.has("sys-logical-cpus");
     const auto has_sys_physical = cmdline.has("sys-physical-cpus");
@@ -77,15 +84,15 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch0)
     {
-        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
+        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"), has_as_table, has_as_json);
     }
     if (has_lsearchk)
     {
-        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
+        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"), has_as_table, has_as_json);
     }
     if (has_solver)
     {
-        print("solver", solver_t::all(), cmdline.get<string_t>("solver"));
+        print("solver", solver_t::all(), cmdline.get<string_t>("solver"), has_as_table, has_as_json);
     }
     if (has_system || has_sys_physical)
     {
