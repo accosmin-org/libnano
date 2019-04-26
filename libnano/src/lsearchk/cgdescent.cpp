@@ -12,6 +12,8 @@ json_t lsearchk_cgdescent_t::config() const
     json["delta"] = strcat(m_delta, "[0,1]");
     json["omega"] = strcat(m_omega, "[0,1]");
     json["ro"] = strcat(m_ro, "(1,inf)");
+    json["criterion"] = to_string(m_criterion);
+    json["criteria"] = join(enum_values<criterion>());
     return json;
 }
 
@@ -26,6 +28,7 @@ void lsearchk_cgdescent_t::config(const json_t& json)
     nano::from_json_range(json, "delta", m_delta, 0, 1);
     nano::from_json_range(json, "omega", m_omega, 0, 1);
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
+    nano::from_json(json, "criterion", m_criterion);
 }
 
 lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t& state0,
@@ -152,29 +155,35 @@ bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t
 
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
 {
-    if (!m_approx)
+    switch (m_criterion)
     {
-        // check Armijo+Wolfe conditions
-        if (state.has_armijo(state0, c1()) &&
-            state.has_wolfe(state0, c2()))
+    case criterion::wolfe:
+        return  state.has_armijo(state0, c1()) &&
+                state.has_wolfe(state0, c2());
+
+    case criterion::approx_wolfe:
+        return  state.has_approx_armijo(state0, m_epsilon * m_sumC) &&
+                state.has_approx_wolfe(state0, c1(), c2());
+
+    case criterion::wolfe_approx_wolfe:
+    default:
+        if (!m_approx)
         {
-            // decide if to switch permanently to the approximate Wolfe conditions
-            m_approx = std::fabs(state.f - state0.f) <= m_omega * m_sumC;
-            return true;
+            if (state.has_armijo(state0, c1()) &&
+                state.has_wolfe(state0, c2()))
+            {
+                // decide if to switch permanently to the approximate Wolfe conditions
+                m_approx = std::fabs(state.f - state0.f) <= m_omega * m_sumC;
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            return  state.has_approx_armijo(state0, m_epsilon * m_sumC) &&
+                    state.has_approx_wolfe(state0, c1(), c2());
         }
     }
-
-    else
-    {
-        // check approximate Wolfe conditions
-        if (state.has_approx_armijo(state0, m_epsilon * m_sumC) &&
-            state.has_approx_wolfe(state0, c1(), c2()))
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
