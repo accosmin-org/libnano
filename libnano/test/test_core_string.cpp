@@ -55,6 +55,7 @@ UTEST_CASE(enum_string)
 
     UTEST_CHECK(nano::from_string<enum_type>("type1") == enum_type::type1);
     UTEST_CHECK(nano::from_string<enum_type>("type3") == enum_type::type3);
+    UTEST_CHECK(nano::from_string<enum_type>("type3[") == enum_type::type3);
 
     UTEST_CHECK_THROW(nano::from_string<enum_type>("????"), std::invalid_argument);
     UTEST_CHECK_THROW(nano::from_string<enum_type>("type"), std::invalid_argument);

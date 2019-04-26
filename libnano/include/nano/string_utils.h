@@ -214,6 +214,14 @@ namespace nano
                 }
             }
 
+            for (const auto& elem : enum_string<tenum>())
+            {
+                if (str.find(elem.second) == 0)
+                {
+                    return elem.first;
+                }
+            }
+
             const auto msg = string_t("invalid ") + typeid(tenum).name() + " <" + str + ">!";
             throw std::invalid_argument(msg);
         }
