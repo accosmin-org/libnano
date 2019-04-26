@@ -180,7 +180,7 @@ UTEST_CASE(config_solvers)
     }
 }
 
-const auto functions = get_convex_functions(1, 4);
+const auto functions = get_convex_functions(4, 4);
 
 const auto all_solver_ids = solver_t::all().ids();
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
