@@ -12,8 +12,7 @@ json_t lsearchk_cgdescent_t::config() const
     json["delta"] = strcat(m_delta, "[0,1]");
     json["omega"] = strcat(m_omega, "[0,1]");
     json["ro"] = strcat(m_ro, "(1,inf)");
-    json["criterion"] = to_string(m_criterion);
-    json["criteria"] = join(enum_values<criterion>());
+    json["criterion"] = strcat(m_criterion, join(enum_values<criterion>()));
     return json;
 }
 
