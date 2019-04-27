@@ -78,7 +78,7 @@ namespace nano
         ///
         /// \brief bisection interpolation of two line-search steps.
         ///
-        static auto bisect(const lsearch_step_t& u, const lsearch_step_t& v)
+        static auto bisection(const lsearch_step_t& u, const lsearch_step_t& v)
         {
             return (u.t + v.t) / 2;
         }
@@ -105,7 +105,7 @@ namespace nano
                 return tq;
             }
 
-            return bisect(u, v);
+            return bisection(u, v);
         }
 
         // attributes

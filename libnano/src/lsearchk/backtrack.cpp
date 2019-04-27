@@ -33,11 +33,19 @@ bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& sta
             {
                 break;
             }
-            // NB: if cubic interpolation fails, fallback to bisection!
+            // NB: if cubic interpolation fails, fallback to quadratic!
 
-        case interpolation::bisect:
+        case interpolation::quadratic:
+            t = lsearch_step_t::quadratic(state0, state);
+            if (std::isfinite(t) && t < state0.t && t > state.t)
+            {
+                break;
+            }
+            // NB: if quadratic interpolation fails, fallback to bisection!
+
+        case interpolation::bisection:
         default:
-            t = lsearch_step_t::bisect(state0, state);
+            t = lsearch_step_t::bisection(state0, state);
             break;
         }
 
