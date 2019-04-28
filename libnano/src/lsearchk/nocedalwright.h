@@ -26,6 +26,7 @@ namespace nano
         bool zoom(const solver_state_t&, lsearch_step_t lo, lsearch_step_t hi, solver_state_t&) const;
 
         // attributes
-        scalar_t    m_ro{3};    ///< extrapolation factor
+        interpolation   m_interpolation{interpolation::cubic};  ///<
+        scalar_t        m_ro{3};                                ///< extrapolation factor
     };
 }

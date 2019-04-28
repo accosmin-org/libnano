@@ -12,18 +12,6 @@ namespace nano
     {
     public:
 
-        ///
-        /// \brief interpolation method using the information at:
-        ///     - step length zero (aka state0)
-        ///     - the current step length (aka state).
-        ///
-        enum class interpolation
-        {
-            bisection,              ///<
-            quadratic,              ///<
-            cubic                   ///<
-        };
-
         lsearchk_backtrack_t() = default;
 
         json_t config() const final;
@@ -33,17 +21,6 @@ namespace nano
     private:
 
         // attributes
-        interpolation   m_method{interpolation::cubic}; ///<
+        interpolation   m_interpolation{interpolation::cubic};  ///<
     };
-
-    template <>
-    inline enum_map_t<lsearchk_backtrack_t::interpolation> enum_string<lsearchk_backtrack_t::interpolation>()
-    {
-        return
-        {
-            { lsearchk_backtrack_t::interpolation::bisection,   "bisection"},
-            { lsearchk_backtrack_t::interpolation::quadratic,   "quadratic"},
-            { lsearchk_backtrack_t::interpolation::cubic,       "cubic"}
-        };
-    }
 }

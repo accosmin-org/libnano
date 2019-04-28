@@ -21,6 +21,7 @@ namespace nano
     private:
 
         // attributes
-        scalar_t    m_ro{3};     ///< extrapolation factor
+        interpolation   m_interpolation{interpolation::cubic};  ///<
+        scalar_t        m_ro{3};                                ///< extrapolation factor
     };
 }

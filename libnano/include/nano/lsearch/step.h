@@ -13,6 +13,16 @@ namespace nano
     public:
 
         ///
+        /// \brief interpolation method using the information at two trials.
+        ///
+        enum class interpolation
+        {
+            bisection,              ///<
+            quadratic,              ///<
+            cubic                   ///<
+        };
+
+        ///
         /// \brief construction
         ///
         lsearch_step_t() = default;
@@ -88,24 +98,29 @@ namespace nano
         ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
         ///         until the interpolated point is valid and resides within the given range.
         ///
-        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v)
+        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v,
+            const interpolation method)
         {
             const auto tmin = std::min(u.t, v.t);
             const auto tmax = std::max(u.t, v.t);
 
             const auto tc = cubic(u, v);
-            if (std::isfinite(tc) && tc > tmin && tc < tmax)
-            {
-                return tc;
-            }
-
             const auto tq = quadratic(u, v);
-            if (std::isfinite(tq) && tq > tmin && tq < tmax)
-            {
-                return tq;
-            }
+            const auto tb = bisection(u, v);
 
-            return bisection(u, v);
+            switch (method)
+            {
+            case interpolation::cubic:
+                return  (std::isfinite(tc) && tc > tmin && tc < tmax) ? tc :
+                        (std::isfinite(tq) && tq > tmin && tq < tmax) ? tq : tb;
+
+            case interpolation::quadratic:
+                return  (std::isfinite(tq) && tq > tmin && tq < tmax) ? tq : tb;
+
+            case interpolation::bisection:
+            default:
+                return tb;
+            }
         }
 
         // attributes
@@ -113,4 +128,15 @@ namespace nano
         scalar_t f{0};  ///< line-search function value
         scalar_t g{0};  ///< line-search gradient
     };
+
+    template <>
+    inline enum_map_t<lsearch_step_t::interpolation> enum_string<lsearch_step_t::interpolation>()
+    {
+        return
+        {
+            { lsearch_step_t::interpolation::bisection,     "bisection"},
+            { lsearch_step_t::interpolation::quadratic,     "quadratic"},
+            { lsearch_step_t::interpolation::cubic,         "cubic"}
+        };
+    }
 }

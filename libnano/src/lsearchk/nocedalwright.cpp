@@ -7,6 +7,7 @@ json_t lsearchk_nocedalwright_t::config() const
 {
     json_t json;
     json["ro"] = strcat(m_ro, "(1,inf)");
+    json["interpolation"] = strcat(m_interpolation, join(enum_values<interpolation>()));
     return json;
 }
 
@@ -16,6 +17,7 @@ void lsearchk_nocedalwright_t::config(const json_t& json)
     const auto inf = 1 / eps;
 
     nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
+    nano::from_json(json, "interpolation", m_interpolation);
 }
 
 bool lsearchk_nocedalwright_t::zoom(const solver_state_t& state0,
@@ -23,7 +25,7 @@ bool lsearchk_nocedalwright_t::zoom(const solver_state_t& state0,
 {
     for (int i = 0; i < max_iterations() && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++ i)
     {
-        const auto ok = state.update(state0, lsearch_step_t::interpolate(lo, hi));
+        const auto ok = state.update(state0, lsearch_step_t::interpolate(lo, hi, m_interpolation));
         log(state0, state);
 
         if (!ok)
