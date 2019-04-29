@@ -32,7 +32,7 @@ bool lsearchk_fletcher_t::zoom(const solver_state_t& state0,
         const auto tmin = lo.t + std::min(m_tau2, c2()) * (hi.t - lo.t);
         const auto tmax = hi.t - m_tau3 * (hi.t - lo.t);
         const auto next = lsearch_step_t::interpolate(lo, hi, m_interpolation);
-        const auto ok = state.update(state0, clamp(next, tmin, tmax));
+        const auto ok = state.update(state0, clamp(next, std::min(tmin, tmax), std::max(tmin, tmax)));
         log(state0, state);
 
         if (!ok)
@@ -84,7 +84,7 @@ bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& stat
         // next trial
         const auto tmin = 2 * curr.t - prev.t;
         const auto tmax = curr.t + m_tau1 * (curr.t - prev.t);
-        const auto next = lsearch_step_t::interpolate(prev, curr, m_interpolation);
+        const auto next = state.t * 3;//lsearch_step_t::interpolate(prev, curr, m_interpolation);
         const auto ok = state.update(state0, clamp(next, tmin, tmax));
         log(state0, state);
 
