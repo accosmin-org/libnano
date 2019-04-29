@@ -17,11 +17,11 @@ static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scal
 
 enum class lsearch_type
 {
-    backtrack = 0,
+    fletcher,
+    backtrack,
+    cgdescent,
     lemarechal,
     morethuente,
-    nocedalwright,
-    cgdescent
 };
 
 static void setup_logger(const rlsearchk_t& lsearch, std::stringstream& stream)
@@ -76,7 +76,7 @@ static void test(
         UTEST_CHECK(state.has_strong_wolfe(state0, lsearch->c2()));
         break;
 
-    case lsearch_type::nocedalwright:
+    case lsearch_type::fletcher:
         UTEST_CHECK(state.has_armijo(state0, lsearch->c1()));
         UTEST_CHECK(state.has_strong_wolfe(state0, lsearch->c2()));
         break;
@@ -149,14 +149,14 @@ UTEST_CASE(morethuente)
     }
 }
 
-UTEST_CASE(nocedalwright)
+UTEST_CASE(fletcher)
 {
-    const auto lsearch_id = "nocedalwright";
+    const auto lsearch_id = "fletcher";
     const auto lsearch = get_lsearch(lsearch_id);
 
     for (const auto& function : functions)
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::nocedalwright);
+        test(lsearch, lsearch_id, *function, lsearch_type::fletcher);
     }
 }
 

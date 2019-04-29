@@ -1,31 +1,38 @@
+#include "fletcher.h"
 #include <nano/numeric.h>
-#include "nocedalwright.h"
 
 using namespace nano;
 
-json_t lsearchk_nocedalwright_t::config() const
+json_t lsearchk_fletcher_t::config() const
 {
     json_t json;
-    json["ro"] = strcat(m_ro, "(1,inf)");
+    json["tau1"] = strcat(m_tau1, "(1,inf)");
+    json["tau2"] = strcat(m_tau2, "(0,0.5)");
+    json["tau3"] = strcat(m_tau3, "(tau2,0.5)");
     json["interpolation"] = strcat(m_interpolation, join(enum_values<interpolation>()));
     return json;
 }
 
-void lsearchk_nocedalwright_t::config(const json_t& json)
+void lsearchk_fletcher_t::config(const json_t& json)
 {
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
 
-    nano::from_json_range(json, "ro", m_ro, 1 + eps, inf);
+    nano::from_json_range(json, "tau1", m_tau1, 1 + eps, inf);
+    nano::from_json_range(json, "tau2", m_tau2, eps, 0.5 + eps);
+    nano::from_json_range(json, "tau3", m_tau3, m_tau2 + eps, 0.5 + eps);
     nano::from_json(json, "interpolation", m_interpolation);
 }
 
-bool lsearchk_nocedalwright_t::zoom(const solver_state_t& state0,
+bool lsearchk_fletcher_t::zoom(const solver_state_t& state0,
     lsearch_step_t lo, lsearch_step_t hi, solver_state_t& state) const
 {
     for (int i = 0; i < max_iterations() && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++ i)
     {
-        const auto ok = state.update(state0, lsearch_step_t::interpolate(lo, hi, m_interpolation));
+        const auto tmin = lo.t + std::min(m_tau2, c2()) * (hi.t - lo.t);
+        const auto tmax = hi.t - m_tau3 * (hi.t - lo.t);
+        const auto next = lsearch_step_t::interpolate(lo, hi, m_interpolation);
+        const auto ok = state.update(state0, clamp(next, tmin, tmax));
         log(state0, state);
 
         if (!ok)
@@ -54,7 +61,7 @@ bool lsearchk_nocedalwright_t::zoom(const solver_state_t& state0,
     return false;
 }
 
-bool lsearchk_nocedalwright_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     lsearch_step_t prev = state0;
     lsearch_step_t curr = state;
@@ -74,16 +81,18 @@ bool lsearchk_nocedalwright_t::get(const solver_state_t& state0, solver_state_t&
             return zoom(state0, curr, prev, state);
         }
 
-        prev = curr;
-        state.t *= m_ro;
-
         // next trial
-        const auto ok = state.update(state0, state.t);
+        const auto tmin = 2 * curr.t - prev.t;
+        const auto tmax = curr.t + m_tau1 * (curr.t - prev.t);
+        const auto next = lsearch_step_t::interpolate(prev, curr, m_interpolation);
+        const auto ok = state.update(state0, clamp(next, tmin, tmax));
         log(state0, state);
+
         if (!ok)
         {
             return false;
         }
+        prev = curr;
         curr = state;
     }
 

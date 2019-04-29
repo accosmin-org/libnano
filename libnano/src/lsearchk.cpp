@@ -1,10 +1,10 @@
 #include <mutex>
 #include <nano/numeric.h>
+#include "lsearchk/fletcher.h"
 #include "lsearchk/backtrack.h"
 #include "lsearchk/cgdescent.h"
 #include "lsearchk/lemarechal.h"
 #include "lsearchk/morethuente.h"
-#include "lsearchk/nocedalwright.h"
 
 using namespace nano;
 
@@ -19,7 +19,7 @@ lsearchk_factory_t& lsearchk_t::all()
         manager.add<lsearchk_cgdescent_t>("cgdescent", "CG-DESCENT (regular and approximate Wolfe conditions)");
         manager.add<lsearchk_lemarechal_t>("lemarechal", "LeMarechal (regular Wolfe conditions)");
         manager.add<lsearchk_morethuente_t>("morethuente", "More&Thuente (strong Wolfe conditions)");
-        manager.add<lsearchk_nocedalwright_t>("nocedalwright", "Nocedal&Wright (strong Wolfe conditions)");
+        manager.add<lsearchk_fletcher_t>("fletcher", "Fletcher (strong Wolfe conditions)");
     });
 
     return manager;

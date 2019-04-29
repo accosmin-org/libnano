@@ -9,11 +9,11 @@ set(lsearch0_sources
 
 set(lsearchk_sources
     lsearchk.cpp
+    lsearchk/fletcher.cpp
     lsearchk/backtrack.cpp
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
-    lsearchk/morethuente.cpp
-    lsearchk/nocedalwright.cpp)
+    lsearchk/morethuente.cpp)
 
 set(solver_sources
     solver.cpp

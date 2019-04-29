@@ -96,14 +96,10 @@ namespace nano
         ///
         /// \brief interpolation of two line-search steps.
         ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
-        ///         until the interpolated point is valid and resides within the given range.
+        ///         until the interpolated point is valid.
         ///
-        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v,
-            const interpolation method)
+        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, const interpolation method)
         {
-            const auto tmin = std::min(u.t, v.t);
-            const auto tmax = std::max(u.t, v.t);
-
             const auto tc = cubic(u, v);
             const auto tq = quadratic(u, v);
             const auto tb = bisection(u, v);
@@ -111,15 +107,15 @@ namespace nano
             switch (method)
             {
             case interpolation::cubic:
-                return  (std::isfinite(tc) && tc > tmin && tc < tmax) ? tc :
-                        (std::isfinite(tq) && tq > tmin && tq < tmax) ? tq : tb;
+                return  std::isfinite(tc) ? tc :
+                        std::isfinite(tq) ? tq : tb;
 
             case interpolation::quadratic:
-                return  (std::isfinite(tq) && tq > tmin && tq < tmax) ? tq : tb;
+                return  std::isfinite(tq) ? tq : tb;
 
             case interpolation::bisection:
             default:
-                return tb;
+                return  tb;
             }
         }
 
