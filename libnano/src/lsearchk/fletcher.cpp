@@ -6,7 +6,7 @@ using namespace nano;
 json_t lsearchk_fletcher_t::config() const
 {
     json_t json;
-    json["tau1"] = strcat(m_tau1, "(1,inf)");
+    json["tau1"] = strcat(m_tau1, "(2,inf)");
     json["tau2"] = strcat(m_tau2, "(0,0.5)");
     json["tau3"] = strcat(m_tau3, "(tau2,0.5)");
     json["interpolation"] = strcat(m_interpolation, join(enum_values<interpolation>()));
@@ -18,7 +18,7 @@ void lsearchk_fletcher_t::config(const json_t& json)
     const auto eps = epsilon0<scalar_t>();
     const auto inf = 1 / eps;
 
-    nano::from_json_range(json, "tau1", m_tau1, 1 + eps, inf);
+    nano::from_json_range(json, "tau1", m_tau1, 2 + eps, inf);
     nano::from_json_range(json, "tau2", m_tau2, eps, 0.5 + eps);
     nano::from_json_range(json, "tau3", m_tau3, m_tau2 + eps, 0.5 + eps);
     nano::from_json(json, "interpolation", m_interpolation);
@@ -82,9 +82,9 @@ bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& stat
         }
 
         // next trial
-        const auto tmin = 2 * curr.t - prev.t;
+        const auto tmin = 3 * curr.t - prev.t;
         const auto tmax = curr.t + m_tau1 * (curr.t - prev.t);
-        const auto next = state.t * 3;//lsearch_step_t::interpolate(prev, curr, m_interpolation);
+        const auto next = lsearch_step_t::interpolate(prev, curr, m_interpolation);
         const auto ok = state.update(state0, clamp(next, tmin, tmax));
         log(state0, state);
 
