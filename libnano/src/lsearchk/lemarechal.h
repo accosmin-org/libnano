@@ -22,6 +22,6 @@ namespace nano
 
         // attributes
         interpolation   m_interpolation{interpolation::cubic};  ///<
-        scalar_t        m_ro{3};                                ///< extrapolation factor
+        scalar_t        m_tau1{9};                              ///< extrapolation factor
     };
 }

@@ -82,7 +82,7 @@ bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& stat
         }
 
         // next trial
-        const auto tmin = 3 * curr.t - prev.t;
+        const auto tmin = curr.t + 2 * (curr.t - prev.t);
         const auto tmax = curr.t + m_tau1 * (curr.t - prev.t);
         const auto next = lsearch_step_t::interpolate(prev, curr, m_interpolation);
         const auto ok = state.update(state0, clamp(next, tmin, tmax));
