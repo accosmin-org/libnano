@@ -63,4 +63,3 @@ solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& functio
 template class nano::solver_quasi_t<quasi_step_DFP>;
 template class nano::solver_quasi_t<quasi_step_SR1>;
 template class nano::solver_quasi_t<quasi_step_BFGS>;
-template class nano::solver_quasi_t<quasi_step_broyden>;

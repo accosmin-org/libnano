@@ -179,7 +179,6 @@ solver_factory_t& solver_t::all()
         manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");
         manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");
         manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
-        manager.add<solver_quasi_broyden_t>("broyden", "quasi-newton method (Broyden)");
     });
 
     return manager;

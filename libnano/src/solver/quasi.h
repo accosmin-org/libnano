@@ -6,11 +6,9 @@ namespace nano
 {
     ///
     /// \brief quasi-Newton methods.
-    ///     see "Numerical Optimization",
-    ///     by J. Nocedal, S. Wright, 2006
-    ///
-    ///     see "Introductory Lectures on Convex Optimization (Applied Optimization)",
-    ///     by Y. Nesterov, 2013
+    ///     see (1) "Practical methods of optimization", Fletcher, 2nd edition
+    ///     see (2) "Numerical optimization", Nocedal & Wright, 2nd edition
+    ///     see (3) "Introductory Lectures on Convex Optimization (Applied Optimization)", Nesterov, 2013
     ///
     template <typename tquasi>
     class solver_quasi_t final : public solver_t
@@ -70,23 +68,8 @@ namespace nano
         }
     };
 
-    ///
-    /// \brief Broyden's method.
-    ///
-    struct quasi_step_broyden
-    {
-        static auto get(const matrix_t& H, const solver_state_t& prev, const solver_state_t& curr)
-        {
-            const auto dx = curr.x - prev.x;
-            const auto dg = curr.g - prev.g;
-
-            return  H + (dx - H * dg) * dx.transpose() * H / (dx.transpose() * H * dg);
-        }
-    };
-
     // create various quasi-Newton algorithms
     using solver_quasi_dfp_t = solver_quasi_t<quasi_step_DFP>;
     using solver_quasi_sr1_t = solver_quasi_t<quasi_step_SR1>;
     using solver_quasi_bfgs_t = solver_quasi_t<quasi_step_BFGS>;
-    using solver_quasi_broyden_t = solver_quasi_t<quasi_step_broyden>;
 }
