@@ -5,6 +5,13 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_json)
 
+UTEST_CASE(to_json_empty)
+{
+    json_t json;
+    UTEST_CHECK_NOTHROW(to_json(json));
+    UTEST_CHECK_EQUAL(json.dump(), "null");
+}
+
 UTEST_CASE(to_json)
 {
     json_t json;
