@@ -2,6 +2,56 @@
 
 using namespace nano;
 
+namespace nano
+{
+    ///
+    /// \brief Davidon-Fletcher-Powell (DFP).
+    ///
+    struct quasi_step_DFP
+    {
+        static auto get(const matrix_t& H, const solver_state_t& prev, const solver_state_t& curr)
+        {
+            const auto dx = curr.x - prev.x;
+            const auto dg = curr.g - prev.g;
+
+            return  H + (dx * dx.transpose()) / dx.dot(dg) -
+                    (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
+        }
+    };
+
+    ///
+    /// \brief Symmetric Rank One (SR1).
+    ///
+    struct quasi_step_SR1
+    {
+        static auto get(const matrix_t& H, const solver_state_t& prev, const solver_state_t& curr)
+        {
+            const auto dx = curr.x - prev.x;
+            const auto dg = curr.g - prev.g;
+
+            return  H + (dx - H * dg) * (dx - H * dg).transpose() /
+                    (dx - H * dg).dot(dg);
+        }
+    };
+
+    ///
+    /// \brief Broyden-Fletcher-Goldfarb-Shanno (BFGS).
+    ///
+    struct quasi_step_BFGS
+    {
+        static auto get(const matrix_t& H, const solver_state_t& prev, const solver_state_t& curr)
+        {
+            const auto dx = curr.x - prev.x;
+            const auto dg = curr.g - prev.g;
+
+            const auto I = matrix_t::Identity(H.rows(), H.cols());
+
+            return  (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
+                    dx * dx.transpose() / dx.dot(dg);
+        }
+    };
+}
+
 template <typename tquasi>
 solver_quasi_t<tquasi>::solver_quasi_t() :
     solver_t(1e-4, 9e-1)
