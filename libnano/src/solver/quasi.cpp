@@ -55,7 +55,7 @@ namespace nano
         {
             const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
 
-            return  (1 - phi) * quasi_step_DFP::get(H, dx, dg) *
+            return  (1 - phi) * quasi_step_DFP::get(H, dx, dg) +
                     phi * quasi_step_BFGS::get(H, dx, dg);
         }
     };
