@@ -9,40 +9,120 @@ namespace nano
     ///      see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
     ///      see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
     ///
-    template <typename tcgd>
-    class solver_cgd_t final : public solver_t
+    class solver_cgd_t : public solver_t
     {
     public:
 
         solver_cgd_t();
-        json_t config() const final;
-        void config(const json_t&) final;
+        json_t config() const override;
+        void config(const json_t&) override;
         solver_state_t minimize(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
     private:
+
+        ///
+        /// \brief compute the adjustment factor for the descent direction
+        ///
+        virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
 
         // attributes
         scalar_t        m_orthotest{0.1};       ///< orthogonality test
     };
 
-    struct cgd_step_N;
-    struct cgd_step_CD;
-    struct cgd_step_DY;
-    struct cgd_step_FR;
-    struct cgd_step_HS;
-    struct cgd_step_LS;
-    struct cgd_step_PRP;
-    struct cgd_step_DYCD;
-    struct cgd_step_DYHS;
+    ///
+    /// \brief CGD update parameters (Hager and Zhang, 2005 - see (1)) aka CG_DESCENT
+    ///
+    class solver_cgd_n_t final : public solver_cgd_t
+    {
+    public:
 
-    // create various CGD algorithms
-    using solver_cgd_n_t = solver_cgd_t<cgd_step_N>;
-    using solver_cgd_cd_t = solver_cgd_t<cgd_step_CD>;
-    using solver_cgd_dy_t = solver_cgd_t<cgd_step_DY>;
-    using solver_cgd_fr_t = solver_cgd_t<cgd_step_FR>;
-    using solver_cgd_hs_t = solver_cgd_t<cgd_step_HS>;
-    using solver_cgd_ls_t = solver_cgd_t<cgd_step_LS>;
-    using solver_cgd_prp_t = solver_cgd_t<cgd_step_PRP>;
-    using solver_cgd_dycd_t = solver_cgd_t<cgd_step_DYCD>;
-    using solver_cgd_dyhs_t = solver_cgd_t<cgd_step_DYHS>;
+        json_t config() const final;
+        void config(const json_t&) final;
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+
+    private:
+
+        // attributes
+        scalar_t        m_eta{0.01};            ///< see CG_DESCENT
+    };
+
+    ///
+    /// \brief CGD update parameters (Fletcher - Conjugate Descent, 1987 - see (1))
+    ///
+    class solver_cgd_cd_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Dai and Yuan, 1999 - see (1))
+    ///
+    class solver_cgd_dy_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Fletcher and Reeves, 1964 - see (1))
+    ///
+    class solver_cgd_fr_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Hestenes and Stiefel, 1952 - see (1))
+    ///
+    class solver_cgd_hs_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Liu and Storey, 1991 - see (1))
+    ///
+    class solver_cgd_ls_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Polak and Ribiere, 1969 - see (1))
+    ///
+    class solver_cgd_prp_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Dai, 2002 - see (2), page 22)
+    ///
+    class solver_cgd_dycd_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (Dai and Yuan, 2001  - see (2), page 21)
+    ///
+    class solver_cgd_dyhs_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
 }
