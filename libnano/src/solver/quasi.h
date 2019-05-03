@@ -24,9 +24,11 @@ namespace nano
     struct quasi_step_DFP;
     struct quasi_step_SR1;
     struct quasi_step_BFGS;
+    struct quasi_step_Hoshino;
 
     // create various quasi-Newton algorithms
     using solver_quasi_dfp_t = solver_quasi_t<quasi_step_DFP>;
     using solver_quasi_sr1_t = solver_quasi_t<quasi_step_SR1>;
     using solver_quasi_bfgs_t = solver_quasi_t<quasi_step_BFGS>;
+    using solver_quasi_hoshino_t = solver_quasi_t<quasi_step_Hoshino>;
 }
