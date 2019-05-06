@@ -1,87 +1,64 @@
 #include "quasi.h"
+#include <nano/numeric.h>
 
 using namespace nano;
 
-namespace nano
+namespace
 {
-    ///
-    /// \brief Davidon-Fletcher-Powell (DFP).
-    ///
-    struct quasi_step_DFP
+    template <typename tvector>
+    void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r = 1e-8)
     {
-        template <typename tvector>
-        static auto get(const matrix_t& H, const tvector& dx, const tvector& dg)
-        {
-            return  H + (dx * dx.transpose()) / dx.dot(dg) -
-                    (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
-        }
-    };
+        const auto denom = (dx - H * dg).dot(dg);
+        const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
 
-    ///
-    /// \brief Symmetric Rank One (SR1).
-    ///
-    struct quasi_step_SR1
+        if (apply)
+        {
+            H += (dx - H * dg) * (dx - H * dg).transpose() / denom;
+        }
+    }
+
+    template <typename tvector>
+    auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
     {
-        template <typename tvector>
-        static auto get(const matrix_t& H, const tvector& dx, const tvector& dg)
-        {
-            return  H + (dx - H * dg) * (dx - H * dg).transpose() /
-                    (dx - H * dg).dot(dg);
-        }
-    };
+        return  H + (dx * dx.transpose()) / dx.dot(dg) -
+                (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
+    }
 
-    ///
-    /// \brief Broyden-Fletcher-Goldfarb-Shanno (BFGS).
-    ///
-    struct quasi_step_BFGS
+    template <typename tvector>
+    auto BFGS(const matrix_t& H, const tvector& dx, const tvector& dg)
     {
-        template <typename tvector>
-        static auto get(const matrix_t& H, const tvector& dx, const tvector& dg)
-        {
-            const auto I = matrix_t::Identity(H.rows(), H.cols());
+        const auto I = matrix_t::Identity(H.rows(), H.cols());
 
-            return  (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
-                    dx * dx.transpose() / dx.dot(dg);
-        }
-    };
+        return  (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
+                dx * dx.transpose() / dx.dot(dg);
+    }
 
-    ///
-    /// \brief Hoshino formula (part of Broyden family) for the convex class.
-    ///
-    struct quasi_step_Hoshino
+    template <typename tvector>
+    auto HOSHINO(const matrix_t& H, const tvector& dx, const tvector& dg)
     {
-        template <typename tvector>
-        static auto get(const matrix_t& H, const tvector& dx, const tvector& dg)
-        {
-            const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
+        const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
 
-            return  (1 - phi) * quasi_step_DFP::get(H, dx, dg) +
-                    phi * quasi_step_BFGS::get(H, dx, dg);
-        }
-    };
+        return  (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
+    }
 }
 
-template <typename tquasi>
-solver_quasi_t<tquasi>::solver_quasi_t() :
+solver_quasi_t::solver_quasi_t() :
     solver_t(1e-4, 9e-1)
 {
 }
 
-template <typename tquasi>
-json_t solver_quasi_t<tquasi>::config() const
+json_t solver_quasi_t::config() const
 {
     json_t json = solver_t::config();
     return json;
 }
 
-template <typename tquasi>
-void solver_quasi_t<tquasi>::config(const json_t& json)
+void solver_quasi_t::config(const json_t& json)
 {
     solver_t::config(json);
 }
 
-template <typename tquasi>
-solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& function, const lsearch_t& lsearch,
+solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
     const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
@@ -113,15 +90,43 @@ solver_state_t solver_quasi_t<tquasi>::minimize(const solver_function_t& functio
         }
 
         // update approximation of the Hessian
-        const auto dx = cstate.x - pstate.x;
-        const auto dg = cstate.g - pstate.g;
-        H = tquasi::get(H, dx, dg);
+        update(pstate, cstate, H);
     }
 
     return cstate;
 }
 
-template class nano::solver_quasi_t<quasi_step_DFP>;
-template class nano::solver_quasi_t<quasi_step_SR1>;
-template class nano::solver_quasi_t<quasi_step_BFGS>;
-template class nano::solver_quasi_t<quasi_step_Hoshino>;
+json_t solver_quasi_sr1_t::config() const
+{
+    json_t json = solver_t::config();
+    json["r"] = strcat(m_r, "(0,1)");
+    return json;
+}
+
+void solver_quasi_sr1_t::config(const json_t& json)
+{
+    const auto eps = epsilon0<scalar_t>();
+
+    solver_quasi_t::config(json);
+    nano::from_json_range(json, "r", m_r, eps, 1 - eps);
+}
+
+void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
+{
+    ::SR1(H, curr.x - prev.x, curr.g - prev.g, m_r);
+}
+
+void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
+{
+    H = ::DFP(H, curr.x - prev.x, curr.g - prev.g);
+}
+
+void solver_quasi_bfgs_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
+{
+    H = ::BFGS(H, curr.x - prev.x, curr.g - prev.g);
+}
+
+void solver_quasi_hoshino_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
+{
+    H = ::HOSHINO(H, curr.x - prev.x, curr.g - prev.g);
+}
