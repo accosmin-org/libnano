@@ -14,6 +14,15 @@ namespace nano
     {
     public:
 
+        ///
+        /// \brief methods to initialize the first approximation of the Hessian's inverse.
+        ///
+        enum class initialization
+        {
+            identity,       ///< H0 = I
+            scaled,         ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
+        };
+
         solver_quasi_t();
         json_t config() const override;
         void config(const json_t&) override;
@@ -23,6 +32,8 @@ namespace nano
 
         virtual void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const = 0;
 
+        // attributes
+        initialization  m_initialization{initialization::identity}; ///<
     };
 
     ///
@@ -39,7 +50,7 @@ namespace nano
     private:
 
         // attributes
-        scalar_t        m_r{1e-8};      ///< threshold to skip updates when the denominator is too small
+        scalar_t        m_r{1e-8};      ///< threshold to skip updates when the denominator is too small - see (2)
     };
 
     ///
@@ -71,4 +82,14 @@ namespace nano
 
         void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const final;
     };
+
+    template <>
+    inline enum_map_t<solver_quasi_t::initialization> enum_string<solver_quasi_t::initialization>()
+    {
+        return
+        {
+            { solver_quasi_t::initialization::identity,     "identity" },
+            { solver_quasi_t::initialization::scaled,       "scaled" }
+        };
+    }
 }

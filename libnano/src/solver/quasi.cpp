@@ -50,11 +50,13 @@ solver_quasi_t::solver_quasi_t() :
 json_t solver_quasi_t::config() const
 {
     json_t json = solver_t::config();
+    json["init"] = strcat(m_initialization, join(enum_values<initialization>()));
     return json;
 }
 
 void solver_quasi_t::config(const json_t& json)
 {
+    nano::from_json(json, "init", m_initialization);
     solver_t::config(json);
 }
 
@@ -65,7 +67,7 @@ solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const
     auto pstate = cstate;
     log(cstate);
 
-    // current approximation of the Hessian
+    // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
     for (int i = 0; i < max_iterations(); ++ i)
@@ -88,6 +90,25 @@ solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const
         {
             break;
         }
+
+        // initialize the Hessian's inverse
+        if (i == 0)
+        {
+            switch (m_initialization)
+            {
+            case initialization::scaled:
+                {
+                    const auto dx = cstate.x - pstate.x;
+                    const auto dg = cstate.g - pstate.g;
+                    H = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
+                }
+                break;
+
+            default:
+                break;
+            }
+        }
+
 
         // update approximation of the Hessian
         update(pstate, cstate, H);
