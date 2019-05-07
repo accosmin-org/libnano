@@ -165,13 +165,13 @@ solver_factory_t& solver_t::all()
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_cgd_prp_t>("cgd", "conjugate gradient descent (default)");
-        manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N)");
-        manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS)");
+        manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
+        manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
+        manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
         manager.add<solver_cgd_fr_t>("cgd-fr", "conjugate gradient descent (FR)");
-        manager.add<solver_cgd_prp_t>("cgd-prp", "conjugate gradient descent (PRP+)");
+        manager.add<solver_cgd_pr_t>("cgd-pr", "conjugate gradient descent (PR+)");
         manager.add<solver_cgd_cd_t>("cgd-cd", "conjugate gradient descent (CD)");
-        manager.add<solver_cgd_ls_t>("cgd-ls", "conjugate gradient descent (LS)");
+        manager.add<solver_cgd_ls_t>("cgd-ls", "conjugate gradient descent (LS+)");
         manager.add<solver_cgd_dy_t>("cgd-dy", "conjugate gradient descent (DY)");
         manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
         manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");

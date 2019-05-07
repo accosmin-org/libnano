@@ -3,6 +3,73 @@
 
 using namespace nano;
 
+namespace
+{
+    scalar_t HS(const solver_state_t& prev, const solver_state_t& curr)     // HS(+) - see (1)
+    {
+        return  std::max(scalar_t(0),
+                curr.g.dot(curr.g - prev.g) /
+                prev.d.dot(curr.g - prev.g));
+    }
+
+    scalar_t FR(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        return  curr.g.squaredNorm() /
+                prev.g.squaredNorm();
+    }
+
+    scalar_t PR(const solver_state_t& prev, const solver_state_t& curr)     // PR(+) - see (1)
+    {
+        return  std::max(scalar_t(0),
+                curr.g.dot(curr.g - prev.g) /
+                prev.g.squaredNorm());
+    }
+
+    scalar_t CD(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        return -curr.g.squaredNorm() /
+                prev.d.dot(prev.g);
+    }
+
+    scalar_t LS(const solver_state_t& prev, const solver_state_t& curr)     // LS(+) - see (1)
+    {
+        return  std::max(scalar_t(0),
+                -curr.g.dot(curr.g - prev.g) /
+                prev.d.dot(prev.g));
+    }
+
+    scalar_t DY(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        return  curr.g.squaredNorm() /
+                prev.d.dot(curr.g - prev.g);
+    }
+
+    scalar_t N(const solver_state_t& prev, const solver_state_t& curr, scalar_t eta)      // N(+) - see (3)
+    {
+        const auto y = curr.g - prev.g;
+        const auto div = +1 / prev.d.dot(y);
+
+        const auto pd2 = prev.d.lpNorm<2>();
+        const auto pg2 = prev.g.lpNorm<2>();
+        eta = -1 / (pd2 * std::min(eta, pg2));
+
+        return  std::max(eta,
+                div * (y - 2 * prev.d * y.squaredNorm() * div).dot(curr.g));
+    }
+
+    scalar_t DYHS(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        return  std::max(scalar_t(0),
+                std::min(DY(prev, curr), HS(prev, curr)));
+    }
+
+    scalar_t DYCD(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        return  curr.g.squaredNorm() /
+                std::max(prev.d.dot(curr.g - prev.g), -prev.d.dot(prev.g));
+    }
+}
+
 solver_cgd_t::solver_cgd_t() :
     solver_t(1e-4, 1e-1)
 {
@@ -70,39 +137,32 @@ solver_state_t solver_cgd_t::minimize(const solver_function_t& function, const l
 
 scalar_t solver_cgd_hs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return  curr.g.dot(curr.g - prev.g) /
-            prev.d.dot(curr.g - prev.g);
+    return ::HS(prev, curr);
 }
 
 scalar_t solver_cgd_fr_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return  curr.g.squaredNorm() /
-            prev.g.squaredNorm();
+    return ::FR(prev, curr);
 }
 
-scalar_t solver_cgd_prp_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
+scalar_t solver_cgd_pr_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return  std::max(scalar_t(0),            // PRP(+)
-            curr.g.dot(curr.g - prev.g) /
-            prev.g.squaredNorm());
+    return ::PR(prev, curr);
 }
 
 scalar_t solver_cgd_cd_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return -curr.g.squaredNorm() /
-            prev.d.dot(prev.g);
+    return ::CD(prev, curr);
 }
 
 scalar_t solver_cgd_ls_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return -curr.g.dot(curr.g - prev.g) /
-            prev.d.dot(prev.g);
+    return ::LS(prev, curr);
 }
 
 scalar_t solver_cgd_dy_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return  curr.g.squaredNorm() /
-            prev.d.dot(curr.g - prev.g);
+    return ::DY(prev, curr);
 }
 
 json_t solver_cgd_n_t::config() const
@@ -122,29 +182,15 @@ void solver_cgd_n_t::config(const json_t& json)
 
 scalar_t solver_cgd_n_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    const auto y = curr.g - prev.g;
-    const auto div = +1 / prev.d.dot(y);
-
-    const auto pd2 = prev.d.lpNorm<2>();
-    const auto pg2 = prev.g.lpNorm<2>();
-    const auto eta = -1 / (pd2 * std::min(m_eta, pg2));
-
-    // N+ (see modification in
-    //      "A NEW CONJUGATE GRADIENT METHOD WITH GUARANTEED DESCENT AND AN EFFICIENT LINE SEARCH")
-    return  std::max(eta,
-            div * (y - 2 * prev.d * y.squaredNorm() * div).dot(curr.g));
-}
-
-scalar_t solver_cgd_dyhs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
-{
-    const auto dy = curr.g.squaredNorm() / prev.d.dot(curr.g - prev.g);
-    const auto hs = curr.g.dot(curr.g - prev.g) / prev.d.dot(curr.g - prev.g);
-
-    return std::max(scalar_t(0), std::min(dy, hs));
+    return ::N(prev, curr, m_eta);
 }
 
 scalar_t solver_cgd_dycd_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return  curr.g.squaredNorm() /
-            std::max(prev.d.dot(curr.g - prev.g), -prev.d.dot(prev.g));
+    return ::DYCD(prev, curr);
+}
+
+scalar_t solver_cgd_dyhs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
+{
+    return ::DYHS(prev, curr);
 }

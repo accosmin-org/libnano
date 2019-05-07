@@ -6,8 +6,9 @@ namespace nano
 {
     ///
     /// \brief non-linear conjugate gradient descent with line-search.
-    ///      see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
-    ///      see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
+    ///     see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
+    ///     see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
+    ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager & Zhang
     ///
     class solver_cgd_t : public solver_t
     {
@@ -99,7 +100,7 @@ namespace nano
     ///
     /// \brief CGD update parameters (Polak and Ribiere, 1969 - see (1))
     ///
-    class solver_cgd_prp_t final : public solver_cgd_t
+    class solver_cgd_pr_t final : public solver_cgd_t
     {
     public:
 
