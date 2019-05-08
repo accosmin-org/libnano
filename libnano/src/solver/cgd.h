@@ -9,6 +9,7 @@ namespace nano
     ///     see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
     ///     see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
     ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager & Zhang
+    ///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
     class solver_cgd_t : public solver_t
     {
@@ -121,6 +122,16 @@ namespace nano
     /// \brief CGD update parameters (Dai and Yuan, 2001  - see (2), page 21)
     ///
     class solver_cgd_dyhs_t final : public solver_cgd_t
+    {
+    public:
+
+        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+    };
+
+    ///
+    /// \brief CGD update parameters (FR-PR - see (4), formula 5.48)
+    ///
+    class solver_cgd_frpr_t final : public solver_cgd_t
     {
     public:
 

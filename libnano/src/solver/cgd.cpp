@@ -5,11 +5,10 @@ using namespace nano;
 
 namespace
 {
-    scalar_t HS(const solver_state_t& prev, const solver_state_t& curr)     // HS(+) - see (1)
+    scalar_t HS(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  std::max(scalar_t(0),
-                curr.g.dot(curr.g - prev.g) /
-                prev.d.dot(curr.g - prev.g));
+        return  curr.g.dot(curr.g - prev.g) /
+                prev.d.dot(curr.g - prev.g);
     }
 
     scalar_t FR(const solver_state_t& prev, const solver_state_t& curr)
@@ -18,11 +17,10 @@ namespace
                 prev.g.squaredNorm();
     }
 
-    scalar_t PR(const solver_state_t& prev, const solver_state_t& curr)     // PR(+) - see (1)
+    scalar_t PR(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  std::max(scalar_t(0),
-                curr.g.dot(curr.g - prev.g) /
-                prev.g.squaredNorm());
+        return  curr.g.dot(curr.g - prev.g) /
+                prev.g.squaredNorm();
     }
 
     scalar_t CD(const solver_state_t& prev, const solver_state_t& curr)
@@ -31,11 +29,10 @@ namespace
                 prev.d.dot(prev.g);
     }
 
-    scalar_t LS(const solver_state_t& prev, const solver_state_t& curr)     // LS(+) - see (1)
+    scalar_t LS(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  std::max(scalar_t(0),
-                -curr.g.dot(curr.g - prev.g) /
-                prev.d.dot(prev.g));
+        return  -curr.g.dot(curr.g - prev.g) /
+                prev.d.dot(prev.g);
     }
 
     scalar_t DY(const solver_state_t& prev, const solver_state_t& curr)
@@ -67,6 +64,15 @@ namespace
     {
         return  curr.g.squaredNorm() /
                 std::max(prev.d.dot(curr.g - prev.g), -prev.d.dot(prev.g));
+    }
+
+    scalar_t FRPR(const solver_state_t& prev, const solver_state_t& curr)
+    {
+        const auto fr = ::FR(prev, curr);
+        const auto pr = ::PR(prev, curr);
+
+        return  (pr < fr) ? -fr :
+                (std::fabs(pr) <= fr) ? pr : fr;
     }
 }
 
@@ -137,7 +143,8 @@ solver_state_t solver_cgd_t::minimize(const solver_function_t& function, const l
 
 scalar_t solver_cgd_hs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return ::HS(prev, curr);
+    // HS+ - see (1)
+    return std::max(::HS(prev, curr), scalar_t(0));
 }
 
 scalar_t solver_cgd_fr_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
@@ -147,7 +154,8 @@ scalar_t solver_cgd_fr_t::beta(const solver_state_t& prev, const solver_state_t&
 
 scalar_t solver_cgd_pr_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return ::PR(prev, curr);
+    // PR+ - see (1)
+    return std::max(::PR(prev, curr), scalar_t(0));
 }
 
 scalar_t solver_cgd_cd_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
@@ -157,7 +165,8 @@ scalar_t solver_cgd_cd_t::beta(const solver_state_t& prev, const solver_state_t&
 
 scalar_t solver_cgd_ls_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return ::LS(prev, curr);
+    // LS+ - see (1)
+    return std::max(::LS(prev, curr), scalar_t(0));
 }
 
 scalar_t solver_cgd_dy_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
@@ -193,4 +202,9 @@ scalar_t solver_cgd_dycd_t::beta(const solver_state_t& prev, const solver_state_
 scalar_t solver_cgd_dyhs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
     return ::DYHS(prev, curr);
+}
+
+scalar_t solver_cgd_frpr_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
+{
+    return ::FRPR(prev, curr);
 }
