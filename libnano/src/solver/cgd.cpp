@@ -71,7 +71,7 @@ namespace
         const auto fr = ::FR(prev, curr);
         const auto pr = ::PR(prev, curr);
 
-        return  (pr < fr) ? -fr :
+        return  (pr < -fr) ? -fr :
                 (std::fabs(pr) <= fr) ? pr : fr;
     }
 }
