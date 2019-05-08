@@ -6,14 +6,20 @@ using namespace nano;
 namespace
 {
     template <typename tvector>
-    void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r = 1e-8)
+    auto SR1(const matrix_t& H, const tvector& dx, const tvector& dg)
+    {
+        return  H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
+    }
+
+    template <typename tvector>
+    void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
     {
         const auto denom = (dx - H * dg).dot(dg);
         const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
 
         if (apply)
         {
-            H += (dx - H * dg) * (dx - H * dg).transpose() / denom;
+            H = SR1(H, dx, dg);
         }
     }
 
@@ -40,6 +46,25 @@ namespace
 
         return  (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
     }
+
+    template <typename tvector>
+    void FLETCHER(matrix_t& H, const tvector& dx, const tvector& dg)
+    {
+        const auto phi = dx.dot(dg) / (dx.dot(dg) - dg.transpose() * H * dg);
+
+        if (phi < scalar_t(0))
+        {
+            H = DFP(H, dx, dg);
+        }
+        else if (phi > scalar_t(1))
+        {
+            H = BFGS(H, dx, dg);
+        }
+        else
+        {
+            H = SR1(H, dx, dg);
+        }
+    }
 }
 
 solver_quasi_t::solver_quasi_t() :
@@ -50,13 +75,13 @@ solver_quasi_t::solver_quasi_t() :
 json_t solver_quasi_t::config() const
 {
     json_t json = solver_t::config();
-    json["init"] = strcat(m_initialization, join(enum_values<initialization>()));
+    json["H0"] = strcat(m_initialization, join(enum_values<initialization>()));
     return json;
 }
 
 void solver_quasi_t::config(const json_t& json)
 {
-    nano::from_json(json, "init", m_initialization);
+    nano::from_json(json, "H0", m_initialization);
     solver_t::config(json);
 }
 
@@ -109,7 +134,6 @@ solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const
             }
         }
 
-
         // update approximation of the Hessian
         update(pstate, cstate, H);
     }
@@ -150,4 +174,9 @@ void solver_quasi_bfgs_t::update(const solver_state_t& prev, const solver_state_
 void solver_quasi_hoshino_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
     H = ::HOSHINO(H, curr.x - prev.x, curr.g - prev.g);
+}
+
+void solver_quasi_fletcher_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
+{
+    ::FLETCHER(H, curr.x - prev.x, curr.g - prev.g);
 }

@@ -180,6 +180,7 @@ solver_factory_t& solver_t::all()
         manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");
         manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
         manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
+        manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
     });
 
     return manager;

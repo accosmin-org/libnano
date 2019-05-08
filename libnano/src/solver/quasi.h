@@ -9,6 +9,7 @@ namespace nano
     ///     see (1) "Practical methods of optimization", Fletcher, 2nd edition
     ///     see (2) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///     see (3) "Introductory Lectures on Convex Optimization (Applied Optimization)", Nesterov, 2013
+    ///     see (4) "A new approach to variable metric algorithms", Fletcher, 1972
     ///
     class solver_quasi_t : public solver_t
     {
@@ -45,7 +46,7 @@ namespace nano
 
         json_t config() const final;
         void config(const json_t&) final;
-        void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
 
     private:
 
@@ -60,7 +61,7 @@ namespace nano
     {
     public:
 
-        void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
     };
 
     ///
@@ -70,7 +71,7 @@ namespace nano
     {
     public:
 
-        void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
     };
 
     ///
@@ -80,7 +81,17 @@ namespace nano
     {
     public:
 
-        void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+    };
+
+    ///
+    /// \brief Fletcher switch (SR1 truncated to the convex class) - see (4).
+    ///
+    class solver_quasi_fletcher_t final : public solver_quasi_t
+    {
+    public:
+
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
     };
 
     template <>
