@@ -23,11 +23,11 @@ namespace
     }
 
     // multi-threaded
-    template <typename tscalar, typename toperator>
+    template <int tchunk_size, typename tscalar, typename toperator>
     tscalar test_mt(const size_t size, const toperator op)
     {
-        std::vector<tscalar> results(size);
-        nano::loopi(size, [&results = results, size = size, op = op] (const size_t i)
+        std::vector<tscalar> results(size, -1);
+        nano::loopi<tchunk_size>(size, [&results = results, size = size, op = op] (const size_t i)
         {
             assert(i < size);
             NANO_UNUSED1_RELEASE(size);
@@ -107,8 +107,23 @@ UTEST_CASE(evaluate)
     for (size_t size = min_size; size <= max_size; size *= 3)
     {
         const auto st = test_st<scalar_t>(size, op);
-        const auto mt = test_mt<scalar_t>(size, op);
-        UTEST_CHECK_CLOSE(st, mt, nano::epsilon1<scalar_t>());
+        const auto mt_m1 = test_mt<-1, scalar_t>(size, op);
+        const auto mt_p0 = test_mt<+0, scalar_t>(size, op);
+        const auto mt_p1 = test_mt<+1, scalar_t>(size, op);
+        const auto mt_p2 = test_mt<+2, scalar_t>(size, op);
+        const auto mt_p3 = test_mt<+3, scalar_t>(size, op);
+        const auto mt_p33 = test_mt<+33, scalar_t>(size, op);
+        const auto mt_p333 = test_mt<+333, scalar_t>(size, op);
+        const auto mt_p3333 = test_mt<+3333, scalar_t>(size, op);
+
+        UTEST_CHECK_CLOSE(st, mt_m1, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p0, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p1, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p2, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p3, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p33, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p333, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(st, mt_p3333, nano::epsilon1<scalar_t>());
     }
 }
 
