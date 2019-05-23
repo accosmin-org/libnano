@@ -240,7 +240,9 @@ namespace nano
         auto& pool = tpool_t::instance();
 
         const auto workers = static_cast<tsize>(pool.workers());
-        const auto thread_chunk = (tchunk_size > 0) ? tchunk_size : ((size + workers - 1) / workers);
+        const auto thread_chunk = (tchunk_size > 0) ?
+            static_cast<tsize>(tchunk_size) :
+            ((size + workers - 1) / workers);
 
         tpool_section_t<future_t> section;
         for (tsize thread = 0, begin = 0; begin < size; thread = (thread + 1) % workers)
