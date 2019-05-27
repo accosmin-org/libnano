@@ -13,7 +13,7 @@ namespace nano
     ///
     template <typename tobject, typename... targs>
     class factory_t
-	{
+    {
     public:
         using trobject = std::unique_ptr<tobject>;
         using tmaker = std::function<trobject(targs&&...)>;
