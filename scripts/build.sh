@@ -7,6 +7,12 @@ exampledir=${basedir}/build/example
 clang_tidy_suffix=""
 build_type="Debug"
 
+generator=""
+build_shared="ON"
+
+cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
+threads=$((cores+1))
+
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Wshadow -Werror"
 
@@ -58,31 +64,33 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake -GNinja -Hlibnano -B${libnanodir} -DCMAKE_BUILD_TYPE=${build_type} -DBUILD_SHARED_LIBS=ON \
+    cmake ${generator} -Hlibnano -B${libnanodir} \
+        -DCMAKE_BUILD_TYPE=${build_type} \
+        -DBUILD_SHARED_LIBS=${build_shared} \
         -DCMAKE_INSTALL_RPATH=${installdir}/lib \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
 
 function build {
     cd ${libnanodir}
-    ninja -k1000 || return 1
+    cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
 function tests {
     cd ${libnanodir}
-    ctest --output-on-failure -j || return 1
+    ctest --output-on-failure -j ${threads} || return 1
 }
 
 function install {
     cd ${libnanodir}
-    ninja install || return 1
+    cmake --build ${libnanodir} --target install || return 1
 }
 
 function build_example {
     cd ${basedir}
-    cmake -GNinja -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=Debug || return 1
+    cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=Debug || return 1
     cd ${exampledir}
-    ninja -k1000 || return 1
+    cmake --build ${exampledir} -- -j ${threads} || return 1
 }
 
 function cppcheck {
@@ -92,14 +100,14 @@ function cppcheck {
     rm -rf cppcheck-${version}
 
     wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
-    tar -xvf ${version}.tar.gz > /dev/null || return 1
+    tar -xf ${version}.tar.gz > /dev/null || return 1
 
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
     cd cppcheck-${version} && mkdir build && cd build
-    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log || return 1
-    ninja > build.log || return 1
-    ninja install || return 1
+    cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log || return 1
+    cmake --build . -- -j ${threads} > build.log || return 1
+    cmake --build . --target install || return 1
     cd ../../
     export CXXFLAGS="${OLD_CXXFLAGS}"
 
@@ -115,6 +123,10 @@ function cppcheck {
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
         --suppress=unmatchedSuppression || return 1
+}
+
+function install_json {
+    bash ${basedir}/scripts/install_json.sh || return 1
 }
 
 function codecov {
@@ -134,7 +146,7 @@ function memcheck {
 
     version=3.14.0
     wget -N http://www.valgrind.org/downloads/valgrind-${version}.tar.bz2 || return 1
-    tar -xvf valgrind-${version}.tar.bz2 > /dev/null || return 1
+    tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
 
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
@@ -206,8 +218,8 @@ function clang_tidy {
 
     printf "running $check ...\n"
     log=clang_tidy_${check}.log
-    run-clang-tidy${clang_tidy_suffix}.py -clang-tidy-binary \
-        clang-tidy${clang_tidy_suffix} -header-filter=.*/nano/.* -checks=-*,${check}* > $log&
+    run-clang-tidy${clang_tidy_suffix}.py -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
+        -header-filter=.* -checks=-*,${check}* -quiet > $log&
     spinner
 
     cat $log | grep warning: | grep -oE "[^ ]+$" | sort | uniq -c
@@ -283,6 +295,14 @@ options:
         suffix for the clang-tidy binaries (e.g. -6.0)
     --build-example
         build example project
+    --generator
+        overwrite the default build generator (e.g. --generator Ninja to use Ninja as the build system)
+    --shared
+        build libnano as a shared library (default)
+    --static
+        build libnano as a static library
+    --install-json
+        install json dependency system-wide
 EOF
 	exit 1
 }
@@ -342,6 +362,15 @@ while [ "$1" != "" ]; do
                             clang_tidy_suffix=$1
                             ;;
         --build-example)    build_example || exit 1
+                            ;;
+        --generator)        shift
+                            generator="-G$1"
+                            ;;
+        --shared)           build_shared="ON"
+                            ;;
+        --static)           build_shared="OFF"
+                            ;;
+        --install-json)     install_json || exit 1
                             ;;
 		*)                  echo "unrecognized option $1"
 					        echo

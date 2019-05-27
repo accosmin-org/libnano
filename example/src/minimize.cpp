@@ -40,7 +40,7 @@ int main(const int, char* argv[])
     // construct an objective function
     const auto objective = objective_t{13};
 
-    // check the objective function
+    // check the objective function's gradient using central finite-difference
     const auto trials = 10;
     for (auto trial = 0; trial < 10; ++ trial)
     {

@@ -7,14 +7,16 @@ before_script:
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       brew update
-      brew install ninja eigen
+      brew tap nlohmann/json
+      brew install nlohmann_json --with-cmake
+      brew install eigen
       export PATH="/usr/local/opt/ccache/libexec:$PATH"
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       sudo add-apt-repository ppa:nschloe/eigen-backports -y
       sudo apt-get update -qq
-      sudo apt-get install -y --allow-unauthenticated libeigen3-dev
+      sudo apt-get install -y --allow-unauthenticated cmake libeigen3-dev
       export CCACHE_CPP2=true
     fi
 
@@ -25,145 +27,145 @@ matrix:
       env: TEST="build (gcc-5)"
       addons:
         apt:
-          packages: ['gcc-5', 'g++-5', 'ninja-build']
+          packages: ['gcc-5', 'g++-5']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-5 bash scripts/build.sh --config --build --test --install --build-example
+        - CXX=g++-5 bash scripts/build.sh --install-json --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
       env: TEST="build (gcc-6)"
       addons:
         apt:
-          packages: ['gcc-6', 'g++-6', 'ninja-build']
+          packages: ['gcc-6', 'g++-6']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-6 bash scripts/build.sh --config --build --test --install --build-example
+        - CXX=g++-6 bash scripts/build.sh --install-json --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
       env: TEST="build (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --config --build --test --install --build-example
+        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
       env: TEST="build (gcc-8)"
       addons:
         apt:
-          packages: ['gcc-8', 'g++-8', 'ninja-build']
+          packages: ['gcc-8', 'g++-8']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-8 bash scripts/build.sh --config --build --test --install --build-example
+        - CXX=g++-8 bash scripts/build.sh --install-json --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
       env: TEST="build (clang-3.8)"
       addons:
         apt:
-          packages: ['clang-3.8', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-3.8', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-3.8
           update: true
       script:
-        - CXX=clang++-3.8 bash scripts/build.sh --libcpp --config --build --test --install --build-example
+        - CXX=clang++-3.8 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
       env: TEST="build (clang-4.0)"
       addons:
         apt:
-          packages: ['clang-4.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-4.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-4.0
           update: true
       script:
-        - CXX=clang++-4.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
+        - CXX=clang++-4.0 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
       env: TEST="build (clang-5.0)"
       addons:
         apt:
-          packages: ['clang-5.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-5.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-5.0
           update: true
       script:
-        - CXX=clang++-5.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
+        - CXX=clang++-5.0 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: clang
       env: TEST="build (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --build --test --install --build-example
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
       env: TEST="ASAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --asan --config --build --test
+        - CXX=g++-7 bash scripts/build.sh --install-json --asan --config --build --test
 
     - os: linux
       compiler: gcc
       env: TEST="LSAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --lsan --config --build --test
+        - CXX=g++-7 bash scripts/build.sh --install-json --lsan --config --build --test
 
     - os: linux
       compiler: gcc
       env: TEST="USAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --gold --usan --config --build --test
+        - CXX=g++-7 bash scripts/build.sh --install-json --gold --usan --config --build --test
 
     - os: linux
       compiler: gcc
       env: TEST="TSAN (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --tsan --config --build --test
+        - CXX=g++-7 bash scripts/build.sh --install-json --tsan --config --build --test
 
     # todo: support for MSAN
 
@@ -172,131 +174,130 @@ matrix:
       env: TEST="clang-tidy-misc (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check misc
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check misc
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-bugprone (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check bugprone
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check bugprone
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-modernize (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check modernize
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check modernize
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-performance (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check performance
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check performance
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-portability (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check portability
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check portability
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-clang-analyzer (clang-6.0)"
       addons:
         apt:
-          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev', 'ninja-build']
+          packages: ['clang-6.0', 'clang-tidy-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
             - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check clang-analyzer
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check clang-analyzer
 
     - os: linux
       env: TEST="cppcheck"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build']
+          packages: ['gcc-7', 'g++-7']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --config --cppcheck
+        - CXX=g++-7 bash scripts/build.sh --install-json --config --cppcheck
 
     - os: linux
       compiler: gcc
       env: TEST="memcheck (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'ninja-build', 'valgrind']
+          packages: ['gcc-7', 'g++-7', 'valgrind']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --config --build --memcheck
+        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --memcheck
 
     - os: linux
       compiler: gcc
       env: TEST="codecov (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'gcovr', 'ninja-build']
+          packages: ['gcc-7', 'g++-7', 'gcovr']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
         - sudo -H pip install --upgrade pip
         - sudo -H pip install coverage
-        - CXX=g++-7 bash scripts/build.sh --coverage --config --build --test --codecov
+        - CXX=g++-7 bash scripts/build.sh --install-json --coverage --config --build --test --codecov
 
     #- os: linux
     #  compiler: gcc
     #  env: TEST="coveralls (gcc-7)"
     #  addons:
     #    apt:
-    #      packages: ['gcc-7', 'g++-7', 'gcovr', 'ninja-build']
+    #      packages: ['gcc-7', 'g++-7', 'gcovr']
     #      sources: &sources
     #        - ubuntu-toolchain-r-test
     #      update: true
     #  script:
     #    - sudo -H pip install --upgrade pip
     #    - sudo -H pip install cpp-coveralls
-    #    - CXX=g++-7 bash scripts/build.sh --coverage --config --build --test --coveralls
+    #    - CXX=g++-7 bash scripts/build.sh --install-json --coverage --config --build --test --coveralls
 
-    # NB: disabled because brew's formula for Eigen is too costly (e.g. it pulls openssl!!!)
     #- os: osx
     #  compiler: clang
     #  osx_image: xcode7.3

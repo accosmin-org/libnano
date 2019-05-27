@@ -40,7 +40,7 @@ namespace nano
 
         json_t config() const final;
         void config(const json_t&) final;
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
 
     private:
 
@@ -55,7 +55,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -65,7 +65,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -75,7 +75,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -85,7 +85,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -95,7 +95,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -105,7 +105,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -115,7 +115,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -125,7 +125,7 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -135,6 +135,6 @@ namespace nano
     {
     public:
 
-        virtual scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 }

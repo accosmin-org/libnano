@@ -27,10 +27,12 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL          "${CMAKE_CXX_FLAGS_MINSIZEREL} -DEIGEN_N
 ##################################################################################################
 # setup dependencies
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 if(NOT WIN32)
     find_package(Threads REQUIRED)
 endif()
+
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(nlohmann_json 3.2 REQUIRED)
 
 ##################################################################################################
 # setup library
@@ -59,10 +61,6 @@ install(DIRECTORY include/
 
 install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/../deps/json/include/nlohmann
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
 install(EXPORT nano-targets
     FILE NANOTargets.cmake

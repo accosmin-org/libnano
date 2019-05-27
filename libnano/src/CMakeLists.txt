@@ -40,9 +40,14 @@ target_include_directories(nano
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/../deps/json/include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_link_libraries(nano
+    PUBLIC Eigen3::Eigen)
+
+#target_link_libraries(nano
+#    PUBLIC nlohmann_json::nholmann_json)
 
 if(NOT WIN32)
     target_link_libraries(nano

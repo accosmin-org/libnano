@@ -16,7 +16,7 @@ function(make_test test libs)
     target_compile_definitions(${test}
         PRIVATE UTEST_WITH_EIGEN)
     target_include_directories(${test}
-        SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/../deps/utest>)
+        SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/utest>)
     target_link_libraries(${test}
         PRIVATE ${libs})
     add_test(${test} ${test})
