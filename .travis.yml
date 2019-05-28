@@ -119,18 +119,18 @@ matrix:
       script:
         - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
-    - os: linux
-      compiler: clang
-      env: TEST="build (clang-7)"
-      addons:
-        apt:
-          packages: ['clang-7', 'libc++-dev', 'libc++abi-dev']
-          sources: &sources
-            - llvm-toolchain-xenial-7
-            - ubuntu-toolchain-r-test
-          update: true
-      script:
-        - CXX=clang++-7 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
+    #- os: linux
+    #  compiler: clang
+    #  env: TEST="build (clang-7)"
+    #  addons:
+    #    apt:
+    #      packages: ['clang-7', 'libc++-dev', 'libc++abi-dev']
+    #      sources: &sources
+    #        - llvm-toolchain-xenial-7
+    #        - ubuntu-toolchain-r-test
+    #      update: true
+    #  script:
+    #    - CXX=clang++-7 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
       compiler: gcc
