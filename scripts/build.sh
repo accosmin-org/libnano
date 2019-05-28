@@ -51,8 +51,7 @@ function libcpp {
 
 function coverage {
     export CXXFLAGS="${CXXFLAGS} -fno-inline -fno-omit-frame-pointer -fno-inline-small-functions -fno-default-inline"
-    export CXXFLAGS="${CXXFLAGS} -fprofile-arcs -ftest-coverage"
-    export LDFLAGS="${LDFLAGS} --coverage"
+    export CXXFLAGS="${CXXFLAGS} -coverage -O0"
 }
 
 function suffix {
@@ -139,7 +138,7 @@ function codecov {
 function coveralls {
     cd ${basedir}
 
-    coveralls --root ${basedir} --gcov-options '\-lp'
+    coveralls --root ${basedir} --gcov-options '\-lp' || return 1
 }
 
 function memcheck {
