@@ -50,7 +50,8 @@ function libcpp {
 }
 
 function coverage {
-    export CXXFLAGS="${CXXFLAGS} -fno-inline -fno-omit-frame-pointer -fprofile-arcs -ftest-coverage"
+    export CXXFLAGS="${CXXFLAGS} -fno-inline -fno-omit-frame-pointer -fno-inline-small-functions -fno-default-inline"
+    export CXXFLAGS="${CXXFLAGS} -fprofile-arcs -ftest-coverage"
     export LDFLAGS="${LDFLAGS} --coverage"
 }
 
