@@ -51,8 +51,8 @@ target_link_libraries(nano
 
 if(NOT WIN32)
     target_link_libraries(nano
-        PUBLIC ${CMAKE_THREAD_LIBS_INIT}
-        PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+        PUBLIC Threads::Threads
+        PRIVATE Threads::Threads)
 endif()
 
 # install library

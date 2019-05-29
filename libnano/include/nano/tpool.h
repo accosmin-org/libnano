@@ -206,15 +206,6 @@ namespace nano
             {
                 m_threads.emplace_back(std::ref(m_workers[i]));
             }
-
-#if defined(__APPLE__) || defined(__linux__)
-            // pin each thread to a separate core
-            for (size_t i = 0, mod = logical_cpus() / n_workers; i < n_workers; ++ i)
-            {
-                assert(mod >= 1);
-                setaffinity(i, i * mod);
-            }
-#endif
         }
 
         void stop()
@@ -231,16 +222,6 @@ namespace nano
                 thread.join();
             }
         }
-
-#if defined(__APPLE__) || defined(__linux__)
-        bool setaffinity(const size_t ithread, const size_t icore)
-        {
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(icore, &cpuset);
-            return 0 == pthread_setaffinity_np(m_threads[ithread].native_handle(), sizeof(cpu_set_t), &cpuset);
-        }
-#endif
 
     private:
 

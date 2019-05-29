@@ -28,6 +28,7 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL          "${CMAKE_CXX_FLAGS_MINSIZEREL} -DEIGEN_N
 # setup dependencies
 
 if(NOT WIN32)
+    set(THREADS_PREFER_PTHREAD_FLAG OFF)
     find_package(Threads REQUIRED)
 endif()
 
