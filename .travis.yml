@@ -142,7 +142,9 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --asan --config --build --test
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+        - CXX=g++-7 bash scripts/build.sh --install-json --asan --gold --config --build --test
 
     - os: linux
       compiler: gcc
@@ -154,7 +156,9 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --lsan --config --build --test
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+        - CXX=g++-7 bash scripts/build.sh --install-json --lsan --gold --config --build --test
 
     - os: linux
       compiler: gcc
@@ -166,6 +170,8 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
         - CXX=g++-7 bash scripts/build.sh --install-json --gold --usan --config --build --test
 
     - os: linux
@@ -178,7 +184,9 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --tsan --config --build --test
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+        - sudo update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+        - CXX=g++-7 bash scripts/build.sh --install-json --gold --tsan --config --build --test
 
     # todo: support for MSAN
 
