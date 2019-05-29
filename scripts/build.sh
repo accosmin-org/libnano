@@ -51,8 +51,7 @@ function libcpp {
 
 function coverage {
     export CXXFLAGS="${CXXFLAGS} -fno-inline -fno-omit-frame-pointer -fno-inline-small-functions -fno-default-inline"
-    export CXXFLAGS="${CXXFLAGS} -fprofile-arcs -ftest-coverage"
-    export LDFLAGS="${LDFLAGS} --coverage"
+    export CXXFLAGS="${CXXFLAGS} -coverage -O0"
 }
 
 function suffix {
@@ -133,13 +132,17 @@ function install_json {
 function codecov {
     cd ${basedir}
 
-    bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
+    lcov --directory . --capture --output-file coverage.info
+    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' --output-file coverage.info
+    lcov --list coverage.info
+    bash <(curl -s https://codecov.io/bash) -f coverage.info || return 1
+    #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
 function coveralls {
     cd ${basedir}
 
-    coveralls --root ${basedir} --gcov-options '\-lp'
+    coveralls --root ${basedir} --gcov-options '\-lp' || return 1
 }
 
 function memcheck {

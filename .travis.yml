@@ -288,7 +288,7 @@ matrix:
       env: TEST="codecov (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'gcovr']
+          packages: ['gcc-7', 'g++-7', 'gcovr', 'lcov']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
