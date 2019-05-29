@@ -132,9 +132,10 @@ function install_json {
 function codecov {
     cd ${basedir}
 
-    lcov --directory . --capture --output-file coverage.info
-    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' --output-file coverage.info
-    lcov --list coverage.info
+    lcov --directory . --capture --rc lcov_branch_coverage=1 --output-file coverage.info || return 1
+    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' --rc lcov_branch_coverage=1 --output-file coverage.info || return 1
+    lcov --list coverage.info --rc lcov_branch_coverage=1 || return 1
+    genhtml --rc lcov_branch_coverage=1 --output lcovhtml coverage.info || return 1
     bash <(curl -s https://codecov.io/bash) -f coverage.info || return 1
     #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
