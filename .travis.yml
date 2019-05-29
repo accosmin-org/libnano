@@ -133,52 +133,56 @@ matrix:
     #    - CXX=clang++-7 bash scripts/build.sh --install-json --libcpp --config --build --test --install --build-example
 
     - os: linux
-      compiler: gcc
-      env: TEST="ASAN (gcc-7)"
+      compiler: clang
+      env: TEST="ASAN (clang-6.0)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
+            - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --asan --gold --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --asan --libcpp --config --build --test
 
     - os: linux
-      compiler: gcc
-      env: TEST="LSAN (gcc-7)"
+      compiler: clang
+      env: TEST="LSAN (clang-6.0)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
+            - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --lsan --gold --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --lsan --libcpp --config --build --test
 
     - os: linux
-      compiler: gcc
-      env: TEST="USAN (gcc-7)"
+      compiler: clang
+      env: TEST="USAN (clang-6.0)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
+            - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --gold --usan --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --usan --libcpp --config --build --test
 
     - os: linux
-      compiler: gcc
-      env: TEST="TSAN (gcc-7)"
+      compiler: clang
+      env: TEST="TSAN (clang-6.0)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7']
+          packages: ['clang-6.0', 'libc++-dev', 'libc++abi-dev']
           sources: &sources
+            - llvm-toolchain-xenial-6.0
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --gold --tsan --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --tsan --libcpp --config --build --test
 
     # todo: support for MSAN
 
