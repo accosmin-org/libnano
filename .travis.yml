@@ -265,6 +265,7 @@ matrix:
         - CXX=clang++-6.0 bash scripts/build.sh --install-json --libcpp --config --clang-tidy-suffix -6.0 --clang-tidy-check clang-analyzer
 
     - os: linux
+      compiler: gcc
       env: TEST="cppcheck"
       addons:
         apt:
