@@ -24,7 +24,7 @@ UTEST_CASE(parse)
     UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3");
     UTEST_CHECK_EQUAL(cmdline.get<int>("iterations"), 7);
 }
-/*
+
 UTEST_CASE(error_invalid_arg)
 {
     nano::cmdline_t cmdline("unit testing");
@@ -48,7 +48,7 @@ UTEST_CASE(error_unknown_arg)
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
-*/
+
 UTEST_CASE(parse_config_file)
 {
     nano::cmdline_t cmdline("unit testing");

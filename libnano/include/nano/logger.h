@@ -89,27 +89,14 @@ namespace nano
     void critical(const tresult& result, const tstring& message)
     {
         const timer_t timer;
-        try
+        if (static_cast<bool>(result))
         {
-            if (static_cast<bool>(result))
-            {
-                log_info() << message << " done in [" << timer.elapsed() << "].";
-            }
-            else
-            {
-                log_error() << message << " failed after [" << timer.elapsed() << "]!";
-                exit(EXIT_FAILURE);
-            }
+            log_info() << message << " done in [" << timer.elapsed() << "].";
         }
-        catch (std::exception& e)
+        else
         {
-            log_error() << message << " failed with std::exception [" << e.what() << "] after [" << timer.elapsed() << "]!";
-            exit(EXIT_FAILURE);
-        }
-        catch (...)
-        {
-            log_error() << message << " failed with unknown exception after [" << timer.elapsed() << "]!";
-            exit(EXIT_FAILURE);
+            log_error() << message << " failed after [" << timer.elapsed() << "]!";
+            throw std::runtime_error("critical check failed");
         }
     }
 

@@ -85,7 +85,7 @@ struct cmdline_t::impl_t
         usage();
     }
 
-    [[noreturn]] void usage() const
+    void usage() const
     {
         std::cout << m_title << std::endl;
 
@@ -103,7 +103,7 @@ struct cmdline_t::impl_t
         }
 
         std::cout << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("invalid command line arguments");
     }
 
     string_t        m_title;
