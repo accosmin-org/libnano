@@ -21,8 +21,21 @@ UTEST_CASE(parse)
     UTEST_CHECK(!cmdline.has("h"));
     UTEST_CHECK(!cmdline.has("help"));
 
-    UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3");
     UTEST_CHECK_EQUAL(cmdline.get<int>("iterations"), 7);
+    UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3");
+}
+
+UTEST_CASE(empty)
+{
+    nano::cmdline_t cmdline("unit testing");
+
+    UTEST_CHECK(!cmdline.has("h"));
+    UTEST_CHECK(!cmdline.has("help"));
+    UTEST_CHECK_THROW(cmdline.has("v"), std::runtime_error);
+
+    UTEST_CHECK_THROW(cmdline.get<int>("version"), std::runtime_error);
+    UTEST_CHECK_THROW(cmdline.get<std::string>("f"), std::runtime_error);
+    UTEST_CHECK_THROW(cmdline.get<std::string>("file"), std::runtime_error);
 }
 
 UTEST_CASE(error_invalid_arg)
