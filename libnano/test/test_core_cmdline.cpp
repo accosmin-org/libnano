@@ -4,6 +4,19 @@
 
 UTEST_BEGIN_MODULE(test_core_cmdline)
 
+UTEST_CASE(empty)
+{
+    nano::cmdline_t cmdline("unit testing");
+
+    UTEST_CHECK(!cmdline.has("h"));
+    UTEST_CHECK(!cmdline.has("help"));
+    UTEST_CHECK_THROW(cmdline.has("v"), std::runtime_error);
+
+    UTEST_CHECK_THROW(cmdline.get<int>("version"), std::runtime_error);
+    UTEST_CHECK_THROW(cmdline.get<std::string>("f"), std::runtime_error);
+    UTEST_CHECK_THROW(cmdline.get<std::string>("file"), std::runtime_error);
+}
+
 UTEST_CASE(parse)
 {
     nano::cmdline_t cmdline("unit testing");
@@ -25,20 +38,7 @@ UTEST_CASE(parse)
     UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3");
 }
 
-UTEST_CASE(empty)
-{
-    nano::cmdline_t cmdline("unit testing");
-
-    UTEST_CHECK(!cmdline.has("h"));
-    UTEST_CHECK(!cmdline.has("help"));
-    UTEST_CHECK_THROW(cmdline.has("v"), std::runtime_error);
-
-    UTEST_CHECK_THROW(cmdline.get<int>("version"), std::runtime_error);
-    UTEST_CHECK_THROW(cmdline.get<std::string>("f"), std::runtime_error);
-    UTEST_CHECK_THROW(cmdline.get<std::string>("file"), std::runtime_error);
-}
-
-UTEST_CASE(error_invalid_arg)
+UTEST_CASE(error_invalid_arg1)
 {
     nano::cmdline_t cmdline("unit testing");
     cmdline.add("v", "version", "version");
@@ -46,6 +46,30 @@ UTEST_CASE(error_invalid_arg)
 
     const int argc = 4;
     const char* argv[] = { "", "v", "--version", "7" };
+
+    UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
+}
+
+UTEST_CASE(error_invalid_arg2)
+{
+    nano::cmdline_t cmdline("unit testing");
+    cmdline.add("v", "version", "version");
+    cmdline.add("", "iterations", "number of iterations", "127");
+
+    const int argc = 4;
+    const char* argv[] = { "", "--version", "7", "-", "--version", "13" };
+
+    UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
+}
+
+UTEST_CASE(error_invalid_arg3)
+{
+    nano::cmdline_t cmdline("unit testing");
+    cmdline.add("v", "version", "version");
+    cmdline.add("", "iterations", "number of iterations", "127");
+
+    const int argc = 4;
+    const char* argv[] = { "", "--version", "11", "--" };
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
