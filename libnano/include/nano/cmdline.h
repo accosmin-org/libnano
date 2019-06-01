@@ -11,9 +11,9 @@ namespace nano
     ///
     /// \brief command line option.
     ///
-    struct option_t
+    struct cmdline_option_t
     {
-        explicit option_t(
+        explicit cmdline_option_t(
             string_t short_name = string_t(),
             string_t name = string_t(),
             string_t description = string_t(),
@@ -51,7 +51,7 @@ namespace nano
         bool        m_given{false};
     };
 
-    inline bool operator==(const option_t& option, const string_t& name_or_short_name)
+    inline bool operator==(const cmdline_option_t& option, const string_t& name_or_short_name)
     {
         return  option.m_short_name == name_or_short_name ||
                 option.m_name == name_or_short_name;
@@ -196,7 +196,7 @@ namespace nano
         }
 
         // attributes
-        using options_t = std::vector<option_t>;
+        using options_t = std::vector<cmdline_option_t>;
         string_t        m_title;        ///<
         options_t       m_options;      ///<
     };
