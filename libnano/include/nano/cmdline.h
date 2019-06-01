@@ -76,7 +76,11 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit cmdline_t(const string_t& title);
+        explicit cmdline_t(string_t title) :
+            m_title(std::move(title))
+        {
+            add("h", "help", "usage");
+        }
 
         ///
         /// \brief add new option by name and short name (without dash)
@@ -196,12 +200,6 @@ namespace nano
         string_t        m_title;        ///<
         options_t       m_options;      ///<
     };
-
-    inline cmdline_t::cmdline_t(const string_t& title) :
-        m_title(std::move(title))
-    {
-        add("h", "help", "usage");
-    }
 
     inline void cmdline_t::process(const int argc, const char* argv[])
     {
