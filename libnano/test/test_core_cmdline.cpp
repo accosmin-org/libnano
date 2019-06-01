@@ -34,25 +34,25 @@ UTEST_CASE(usage)
 )XXX");
 }
 
-UTEST_CASE(parse_charp)
+UTEST_CASE(parse_chars)
 {
     nano::cmdline_t cmdline("unit testing");
     cmdline.add("v", "version", "version", "0.3");
-    cmdline.add("", "iterations", "number of iterations", 127);
+    cmdline.add("", "iterations", "number of iterations");
 
-    const int argc = 4;
-    const char* argv[] = { "", "-v", "--iterations", "7" };
+    const int argc = 3;
+    const char* argv[] = { "", "-v", "0.3.0" };
 
-    cmdline.process(argc, argv);
+    UTEST_CHECK_NOTHROW(cmdline.process(argc, argv));
 
     UTEST_CHECK(cmdline.has("v"));
     UTEST_CHECK(cmdline.has("version"));
-    UTEST_CHECK(cmdline.has("iterations"));
+    UTEST_CHECK(!cmdline.has("iterations"));
     UTEST_CHECK(!cmdline.has("h"));
     UTEST_CHECK(!cmdline.has("help"));
 
-    UTEST_CHECK_EQUAL(cmdline.get<int>("iterations"), 7);
-    UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3");
+    UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3.0");
+    UTEST_CHECK_THROW(cmdline.get<int>("iterations"), std::runtime_error);
 }
 
 UTEST_CASE(parse_string)
