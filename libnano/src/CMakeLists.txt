@@ -26,6 +26,7 @@ add_library(nano
     arch.cpp
     table.cpp
     logger.cpp
+    cmdline.cpp
     function.cpp
     ${solver_sources}
     ${lsearch0_sources}

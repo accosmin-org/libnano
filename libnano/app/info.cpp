@@ -67,6 +67,12 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
+    if (cmdline.has("help"))
+    {
+        cmdline.usage();
+        return EXIT_SUCCESS;
+    }
+
     if (!has_lsearch0 &&
         !has_lsearchk &&
         !has_solver &&

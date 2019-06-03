@@ -216,6 +216,12 @@ static int unsafe_main(int argc, const char* argv[])
 
     cmdline.process(argc, argv);
 
+    if (cmdline.has("help"))
+    {
+        cmdline.usage();
+        return EXIT_SUCCESS;
+    }
+
     // check arguments and options
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");

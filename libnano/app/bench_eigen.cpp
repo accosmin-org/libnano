@@ -346,9 +346,16 @@ static int unsafe_main(int argc, const char* argv[])
     const auto blas2 = cmdline.has("blas2");
     const auto blas3 = cmdline.has("blas3");
 
+    if (cmdline.has("help"))
+    {
+        cmdline.usage();
+        return EXIT_SUCCESS;
+    }
+
     if (!blas1 && !blas2 && !blas3 && !copy)
     {
         cmdline.usage();
+        return EXIT_FAILURE;
     }
 
     table_t table;
