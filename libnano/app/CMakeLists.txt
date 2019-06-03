@@ -1,4 +1,5 @@
 make_app(info NANO::nano)
 make_app(bench_eigen NANO::nano)
+make_app(bench_tpool NANO::nano)
 make_app(bench_solver NANO::nano)
 make_app(bench_function NANO::nano)
