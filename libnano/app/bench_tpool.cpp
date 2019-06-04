@@ -25,11 +25,10 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
     return value;
 }
 
-template <int tchunk>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
     vector_t values = vector_t::Zero(tpool_t::instance().workers());
-    nano::loopit<tchunk>(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
+    nano::loopit(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
     {
         values(t) += loss(i, targets, outputs);
     });
@@ -59,7 +58,7 @@ static int unsafe_main(int argc, const char *argv[])
 
     table_t table;
     auto& header = table.header();
-    header << "function" << "st" << "mt" << "mt<32>" << "mt<64>" << "mt<128>" << "mt<256>" << "mt<512>" << "mt<1024>";
+    header << "problem" << "1thread" << strcat(tpool_t::instance().workers(), "threads");
     table.delim();
 
     // benchmark for different problem sizes and processing chunk sizes
@@ -75,39 +74,18 @@ static int unsafe_main(int argc, const char *argv[])
         auto& row = table.append();
         row << ("reduce[" + to_string(size / kilo) + "K]");
 
-        scalar_t retST, retMT, retMT32, retMT64, retMT128, retMT256, retMT512, retMT1024;
+        scalar_t retST, retMT;
 
         const auto deltaST = measure<nanoseconds_t>([&] { retST = reduce_st(targets, outputs); }, 16);
-        const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt<-1>(targets, outputs); }, 16);
-        const auto deltaMT32 = measure<nanoseconds_t>([&] { retMT32 = reduce_mt<32>(targets, outputs); }, 16);
-        const auto deltaMT64 = measure<nanoseconds_t>([&] { retMT64 = reduce_mt<64>(targets, outputs); }, 16);
-        const auto deltaMT128 = measure<nanoseconds_t>([&] { retMT128 = reduce_mt<128>(targets, outputs); }, 16);
-        const auto deltaMT256 = measure<nanoseconds_t>([&] { retMT256 = reduce_mt<256>(targets, outputs); }, 16);
-        const auto deltaMT512 = measure<nanoseconds_t>([&] { retMT512 = reduce_mt<512>(targets, outputs); }, 16);
-        const auto deltaMT1024 = measure<nanoseconds_t>([&] { retMT1024 = reduce_mt<1024>(targets, outputs); }, 16);
+        const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt(targets, outputs); }, 16);
 
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST.count());
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT32.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT64.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT128.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT256.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT512.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT1024.count());
 
-        std::cout << "ST = " << retST << std::endl;
-        std::cout << "MT = " << retMT
-            << "/" << retMT32 << "/" << retMT64 << "/" << retMT128
-            << "/" << retMT256 << "/" << retMT512 << "/" << retMT1024 << std::endl;
-
-        int cnt = 0;
-        for (const auto mt : std::vector<scalar_t>{retMT, retMT32, retMT64, retMT128, retMT256, retMT512, retMT1024})
+        if (std::fabs(retST - retMT) > 1e-6)
         {
-            if (std::fabs(retST - mt) > 1e-10)
-            {
-                std::cerr << "mis-matching sum: delta=" << std::fabs(retST - mt) << "), cnt = " << (++cnt) << "!" << std::endl;
-//                return EXIT_FAILURE;
-            }
+            std::cerr << "mis-matching sum: delta=" << std::fabs(retST - retMT) << ")!" << std::endl;
+            return EXIT_FAILURE;
         }
     }
 

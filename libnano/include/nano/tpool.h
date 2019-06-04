@@ -235,18 +235,16 @@ namespace nano
     /// \brief split a loop computation of the given size using a thread pool.
     /// NB: the operator receives the index to process and the assigned thread index: op(index, thread)
     ///
-    template <int tchunk_size = -1, typename tsize, typename toperator>
+    template <typename tsize, typename toperator>
     void loopit(const tsize size, const toperator& op)
     {
         auto& pool = tpool_t::instance();
 
         const auto workers = static_cast<tsize>(pool.workers());
-        const auto thread_chunk = (tchunk_size > 0) ?
-            static_cast<tsize>(tchunk_size) :
-            ((size + workers - 1) / workers);
+        const auto thread_chunk = (size + workers - 1) / workers;
 
         tpool_section_t<future_t> section;
-        for (tsize thread = 0, begin = 0; begin < size; thread = (thread + 1) % workers)
+        for (tsize thread = 0, begin = 0; begin < size; ++ thread)
         {
             const auto end = std::min(begin + thread_chunk, size);
             if (begin < end)
@@ -270,10 +268,10 @@ namespace nano
     /// \brief split a loop computation of the given size using a thread pool.
     /// NB: the operator receives the index to process: op(index)
     ///
-    template <int tchunk_size = -1, typename tsize, typename toperator>
+    template <typename tsize, typename toperator>
     void loopi(const tsize size, const toperator& op)
     {
-        loopit<tchunk_size>(size, [&] (const tsize index, const tsize thread)
+        loopit(size, [&] (const tsize index, const tsize thread)
         {
             NANO_UNUSED1(thread);
             op(index);
