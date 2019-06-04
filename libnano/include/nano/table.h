@@ -361,13 +361,13 @@ namespace nano
         template <typename tscalar>
         indices_t filter_less(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
         {
-            return filter(values, [threshold = threshold] (const auto& cv) { return cv < threshold; });
+            return filter(values, [threshold = threshold] (const auto& cvlt) { return cvlt < threshold; });
         }
 
         template <typename tscalar>
         indices_t filter_greater(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
         {
-            return filter(values, [threshold = threshold] (const auto& cv) { return cv > threshold; });
+            return filter(values, [threshold = threshold] (const auto& cvgt) { return cvgt > threshold; });
         }
     }
 
