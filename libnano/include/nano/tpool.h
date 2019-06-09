@@ -277,4 +277,50 @@ namespace nano
             op(index);
         });
     }
+
+    ///
+    /// \brief split a loop computation of the given size using a thread pool.
+    /// NB: the operator receives the range to process and the assigned thread index: op(begin, end, thread)
+    ///
+    template <typename tsize, typename toperator>
+    void looprt(const tsize size, const tsize chunk, const toperator& op)
+    {
+        auto& pool = tpool_t::instance();
+
+        assert(size >= tsize(0));
+        assert(chunk >= tsize(1));
+
+        const auto workers = static_cast<tsize>(pool.workers());
+
+        tpool_section_t<future_t> section;
+        for (tsize thread = 0, begin = 0; begin < size; thread = (thread + 1) % workers)
+        {
+            const auto end = std::min(begin + chunk, size);
+            if (begin < end)
+            {
+                section.push_back(pool.enqueue([&, begin=begin, end=end, thread=thread]()
+                {
+                    op(begin, end, thread);
+                }));
+            }
+
+            begin = end;
+        }
+
+        // NB: the section is destroyed here waiting for all tasks to finish!
+    }
+
+    ///
+    /// \brief split a loop computation of the given size using a thread pool.
+    /// NB: the operator receives the range to process: op(begin, end)
+    ///
+    template <typename tsize, typename toperator>
+    void loopr(const tsize size, const tsize chunk, const toperator& op)
+    {
+        looprt(size, chunk, [&] (const tsize begin, const tsize end, const tsize thread)
+        {
+            NANO_UNUSED1(thread);
+            op(begin, end);
+        });
+    }
 }
