@@ -48,7 +48,7 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 
 static scalar_t reduce_st(const tensor_size_t chunk, const matrix_t& targets, const matrix_t& outputs)
 {
-    scalar_t value = 0;
+    volatile scalar_t value = 0;
     for (tensor_size_t begin = 0; begin < targets.rows(); begin += chunk)
     {
         value += expr(begin, std::min(begin + chunk, targets.rows()), targets, outputs);
@@ -140,13 +140,13 @@ static int unsafe_main(int argc, const char *argv[])
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST16.count());
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
 
-        if (!close(retST, retMT, "MT", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST1, "ST1", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST2, "ST2", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST4, "ST4", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST8, "ST8", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST16, "ST16", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retMT, "MT", epsilon2<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retST1, "ST1", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retST2, "ST2", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retST4, "ST4", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retST8, "ST8", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retST16, "ST16", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
+        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
     }
 
     // print results
