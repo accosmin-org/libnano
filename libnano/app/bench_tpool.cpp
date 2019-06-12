@@ -8,60 +8,67 @@
 
 using namespace nano;
 
-template <typename tarray>
-static scalar_t expa(const tarray& targets, const tarray& outputs)
+struct exp_t
 {
-    return ((-targets * outputs).exp() + 1).log().sum();
-}
+    static const char* name() { return "exp"; }
 
-static scalar_t expi(const tensor_size_t i, const matrix_t& targets, const matrix_t& outputs)
+    template <typename tarray>
+    static scalar_t get(const tarray& targets, const tarray& outputs)
+    {
+        return (-targets * outputs).exp().sum();
+    }
+};
+
+struct log_t
+{
+    static const char* name() { return "log"; }
+
+    template <typename tarray>
+    static scalar_t get(const tarray& targets, const tarray& outputs)
+    {
+        return ((-targets * outputs).exp() + 1).log().sum();
+    }
+};
+
+struct mse_t
+{
+    static const char* name() { return "mse"; }
+
+    template <typename tarray>
+    static scalar_t get(const tarray& targets, const tarray& outputs)
+    {
+        return (targets - outputs).square().sum();
+    }
+};
+
+template <typename toperator>
+static scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& outputs)
 {
     assert(targets.rows() == outputs.rows());
     assert(targets.cols() == outputs.cols());
     assert(0 <= i && i < targets.rows());
 
-    return expa(
-        targets.row(i).array(),
-        outputs.row(i).array());
+    return toperator::get(targets.row(i).array(), outputs.row(i).array());
 }
 
-static scalar_t expr(const tensor_size_t begin, const tensor_size_t end, const matrix_t& targets, const matrix_t& outputs)
-{
-    assert(targets.rows() == outputs.rows());
-    assert(targets.cols() == outputs.cols());
-    assert(0 <= begin && begin < end && end <= targets.rows());
-
-    return expa(
-        targets.block(begin, 0, end - begin, targets.cols()).array(),
-        outputs.block(begin, 0, end - begin, outputs.cols()).array());
-}
-
+template <typename toperator>
 static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 {
     scalar_t value = 0;
-    for (tensor_size_t i = 0; i < targets.rows(); ++ i)
+    for (tensor_size_t i = 0, size = targets.rows(); i < size; ++ i)
     {
-        value += expi(i, targets, outputs);
+        value += sti<toperator>(i, targets, outputs);
     }
     return value;
 }
 
-static scalar_t reduce_st(const tensor_size_t chunk, const matrix_t& targets, const matrix_t& outputs)
-{
-    volatile scalar_t value = 0;
-    for (tensor_size_t begin = 0; begin < targets.rows(); begin += chunk)
-    {
-        value += expr(begin, std::min(begin + chunk, targets.rows()), targets, outputs);
-    }
-    return value;
-}
-
+template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
     vector_t values = vector_t::Zero(tpool_t::instance().workers());
     nano::loopit(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
     {
-        values(t) += expi(i, targets, outputs);
+        values(t) += sti<toperator>(i, targets, outputs);
     });
 
     return values.sum();
@@ -74,6 +81,37 @@ static bool close(const scalar_t v1, const scalar_t v2, const char* name, const 
         std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!" << std::endl;
         return false;
     }
+    return true;
+}
+
+template <typename toperator>
+static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_t& table)
+{
+    for (tensor_size_t size = min_size; size <= max_size; size *= 2)
+    {
+        matrix_t targets = matrix_t::Constant(size, 10, -1);
+        matrix_t outputs = matrix_t::Random(size, 10);
+        for (tensor_size_t i = 0; i < size; ++ i)
+        {
+            targets(i, i % 10) = +1;
+        }
+
+        auto& row = table.append();
+        const auto kilo = tensor_size_t(1024);
+        row << strcat("reduce-", toperator::name(), "[", to_string(size / kilo), "K]");
+
+        scalar_t retST, retMT;
+
+        const auto deltaST = measure<nanoseconds_t>([&] { retST = reduce_st<toperator>(targets, outputs); }, 16);
+        const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt<toperator>(targets, outputs); }, 16);
+
+        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST.count());
+        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
+
+        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return false; }
+    }
+
+    // OK
     return true;
 }
 
@@ -97,57 +135,17 @@ static int unsafe_main(int argc, const char *argv[])
     const auto cmd_min_size = clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, 1024 * kilo);
     const auto cmd_max_size = clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, 1024 * 1024 * kilo);
 
-    //todo: serial - parallel
-    //todo: index|range - index|range
-    //todo: exponential - 1K-1M
-    //todo: logistic - 1K-1M
-    //todo: square - 1K-1M
-
     table_t table;
     auto& header = table.header();
-    header << "problem" << "1thread" << "st1" << "st2" << "st4" << "st8" << "st16"
-        << strcat(tpool_t::instance().workers(), "threads");
+    header << "problem" << "1thread" << strcat(tpool_t::instance().workers(), "threads");
     table.delim();
 
     // benchmark for different problem sizes and processing chunk sizes
-    for (tensor_size_t size = cmd_min_size; size <= cmd_max_size; size *= 2)
-    {
-        matrix_t targets = matrix_t::Constant(size, 10, -1);
-        matrix_t outputs = matrix_t::Random(size, 10);
-        for (tensor_size_t i = 0; i < size; ++ i)
-        {
-            targets(i, i % 10) = +1;
-        }
-
-        auto& row = table.append();
-        row << ("reduce[" + to_string(size / kilo) + "K]");
-
-        scalar_t retST, retST1, retST2, retST4, retST8, retST16, retMT;
-
-        const auto deltaST = measure<nanoseconds_t>([&] { retST = reduce_st(targets, outputs); }, 16);
-        const auto deltaST1 = measure<nanoseconds_t>([&] { retST1 = reduce_st(1, targets, outputs); }, 16);
-        const auto deltaST2 = measure<nanoseconds_t>([&] { retST2 = reduce_st(2, targets, outputs); }, 16);
-        const auto deltaST4 = measure<nanoseconds_t>([&] { retST4 = reduce_st(4, targets, outputs); }, 16);
-        const auto deltaST8 = measure<nanoseconds_t>([&] { retST8 = reduce_st(8, targets, outputs); }, 16);
-        const auto deltaST16 = measure<nanoseconds_t>([&] { retST16 = reduce_st(16, targets, outputs); }, 16);
-        const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt(targets, outputs); }, 16);
-
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST1.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST2.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST4.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST8.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST16.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
-
-        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST1, "ST1", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST2, "ST2", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST4, "ST4", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST8, "ST8", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retST16, "ST16", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return EXIT_FAILURE; }
-    }
+    if (!evaluate<exp_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
+    table.delim();
+    if (!evaluate<log_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
+    table.delim();
+    if (!evaluate<mse_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
 
     // print results
     table.mark(make_marker_maximum_percentage_cols<double>(5));
