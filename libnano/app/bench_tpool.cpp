@@ -6,6 +6,10 @@
 #include <nano/tensor.h>
 #include <nano/cmdline.h>
 
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 using namespace nano;
 
 struct exp_t
@@ -74,6 +78,24 @@ static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
     return values.sum();
 }
 
+#if defined(_OPENMP)
+template <typename toperator>
+static scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
+{
+    vector_t values = vector_t::Zero(omp_get_max_threads());
+    const auto size = targets.rows();
+
+    #pragma omp parallel for
+    for (tensor_size_t i = 0; i < size; ++ i)
+    {
+        const auto t = omp_get_thread_num();
+        values(t) += sti<toperator>(i, targets, outputs);
+    }
+
+    return values.sum();
+}
+#endif
+
 static bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_t epsilon)
 {
     if (std::fabs(v1 - v2) > epsilon)
@@ -104,11 +126,21 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
         const auto deltaST = measure<nanoseconds_t>([&] { retST = reduce_st<toperator>(targets, outputs); }, 16);
         const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt<toperator>(targets, outputs); }, 16);
+        #ifdef _OPENMP
+        scalar_t retOP;
+        const auto deltaOP = measure<nanoseconds_t>([&] { retOP = reduce_op<toperator>(targets, outputs); }, 16);
+        #endif
 
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST.count());
         row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
+        #ifdef _OPENMP
+        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaOP.count());
+        #endif
 
         if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return false; }
+        #ifdef _OPENMP
+        if (!close(retST, retOP, "OP", epsilon1<scalar_t>() * size)) { return false; }
+        #endif
     }
 
     // OK
@@ -137,7 +169,10 @@ static int unsafe_main(int argc, const char *argv[])
 
     table_t table;
     auto& header = table.header();
-    header << "problem" << "1thread" << strcat(tpool_t::instance().workers(), "threads");
+    header << "problem" << "single" << strcat("tpool(x", tpool_t::instance().workers(), ")");
+    #ifdef _OPENMP
+    header << "OpenMP";
+    #endif
     table.delim();
 
     // benchmark for different problem sizes and processing chunk sizes
