@@ -4,6 +4,9 @@ project(libnano VERSION 1.0.0 LANGUAGES CXX)
 ##################################################################################################
 # setup project
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
