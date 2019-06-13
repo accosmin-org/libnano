@@ -103,9 +103,12 @@ namespace nano
     /// \brief RAII object to wait for a given set of futures (aka barrier).
     ///
     template <typename tfuture>
-    class tpool_section_t : private std::vector<tfuture>
+    class tpool_section_t : public std::vector<tfuture>
     {
     public:
+
+        using std::vector<tfuture>::vector;
+
         ///
         /// \brief destructor
         ///
@@ -116,14 +119,6 @@ namespace nano
             {
                 it->wait();
             }
-        }
-
-        ///
-        /// \brief add a new future to wait for.
-        ///
-        void push_back(tfuture future)
-        {
-            this->emplace_back(std::move(future));
         }
     };
 
@@ -181,15 +176,6 @@ namespace nano
             return m_workers.size();
         }
 
-        ///
-        /// \brief number of tasks still enqueued
-        ///
-        size_t tasks() const
-        {
-            const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
-            return m_queue.m_tasks.size();
-        }
-
     private:
 
         tpool_t()
@@ -232,32 +218,29 @@ namespace nano
     };
 
     ///
-    /// \brief split a loop computation of the given size using a thread pool.
-    /// NB: the operator receives the range to process and the assigned thread index: op(begin, end, thread)
+    /// \brief split a loop computation of the given size in fixed-sized chunks using a thread pool.
+    /// NB: the operator receives the range [begin, end) to process and the assigned thread index: op(begin, end, tnum)
     ///
     template <typename tsize, typename toperator>
-    void looprt(const tsize size, const tsize chunk, const toperator& op)
+    void loopr(const tsize size, const tsize chunk, const toperator& op)
     {
-        auto& pool = tpool_t::instance();
-
         assert(size >= tsize(0));
         assert(chunk >= tsize(1));
 
+        auto& pool = tpool_t::instance();
         const auto workers = static_cast<tsize>(pool.workers());
+        const auto tchunk = std::max((size + workers - 1) / workers, chunk);
 
         tpool_section_t<future_t> section;
-        for (tsize thread = 0, begin = 0; begin < size; thread = (thread + 1) % workers)
+        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
         {
-            const auto end = std::min(begin + chunk, size);
-            if (begin < end)
+            section.push_back(pool.enqueue([&op=op, size=size, chunk=chunk, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
             {
-                section.push_back(pool.enqueue([&, begin=begin, end=end, thread=thread]()
+                for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; begin += chunk)
                 {
-                    op(begin, end, thread);
-                }));
-            }
-
-            begin = end;
+                    op(begin, std::min(begin + chunk, tend), tnum);
+                }
+            }));
         }
 
         // NB: the section is destroyed here waiting for all tasks to finish!
@@ -265,50 +248,29 @@ namespace nano
 
     ///
     /// \brief split a loop computation of the given size using a thread pool.
-    /// NB: the operator receives the range to process: op(begin, end)
-    ///
-    template <typename tsize, typename toperator>
-    void loopr(const tsize size, const tsize chunk, const toperator& op)
-    {
-        looprt(size, chunk, [&] (const tsize begin, const tsize end, const tsize thread)
-        {
-            NANO_UNUSED1(thread);
-            op(begin, end);
-        });
-    }
-
-    ///
-    /// \brief split a loop computation of the given size using a thread pool.
-    /// NB: the operator receives the index to process and the assigned thread index: op(index, thread)
-    ///
-    template <typename tsize, typename toperator>
-    void loopit(const tsize size, const toperator& op)
-    {
-        auto& pool = tpool_t::instance();
-
-        const auto workers = static_cast<tsize>(pool.workers());
-        const auto thread_chunk = (size + workers - 1) / workers;
-
-        looprt(size, thread_chunk, [&] (const tsize begin, const tsize end, const tsize thread)
-        {
-            for (tsize i = begin; i < end; ++ i)
-            {
-                op(i, thread);
-            }
-        });
-    }
-
-    ///
-    /// \brief split a loop computation of the given size using a thread pool.
-    /// NB: the operator receives the index to process: op(index)
+    /// NB: the operator receives the index to process and the assigned thread index: op(index, tnum)
     ///
     template <typename tsize, typename toperator>
     void loopi(const tsize size, const toperator& op)
     {
-        loopit(size, [&] (const tsize index, const tsize thread)
+        assert(size >= tsize(0));
+
+        auto& pool = tpool_t::instance();
+        const auto workers = static_cast<tsize>(pool.workers());
+        const auto tchunk = (size + workers - 1) / workers;
+
+        tpool_section_t<future_t> section;
+        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
         {
-            NANO_UNUSED1(thread);
-            op(index);
-        });
+            section.push_back(pool.enqueue([&op=op, size=size, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            {
+                for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; ++ begin)
+                {
+                    op(begin, tnum);
+                }
+            }));
+        }
+
+        // NB: the section is destroyed here waiting for all tasks to finish!
     }
 }

@@ -70,7 +70,7 @@ template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
     vector_t values = vector_t::Zero(tpool_t::instance().workers());
-    nano::loopit(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
+    nano::loopi(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
     {
         values(t) += sti<toperator>(i, targets, outputs);
     });
@@ -119,7 +119,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
         }
 
         auto& row = table.append();
-        const auto kilo = tensor_size_t(1024);
+        const auto kilo = tensor_size_t(1<<10);
         row << strcat("reduce-", toperator::name(), "[", to_string(size / kilo), "K]");
 
         scalar_t retST, retMT;
@@ -163,9 +163,9 @@ static int unsafe_main(int argc, const char *argv[])
     }
 
     // check arguments and options
-    const auto kilo = tensor_size_t(1024);
-    const auto cmd_min_size = clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, 1024 * kilo);
-    const auto cmd_max_size = clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, 1024 * 1024 * kilo);
+    const auto kilo = tensor_size_t(1<<10), mega = tensor_size_t(1<<20), giga = tensor_size_t(1<<30);
+    const auto cmd_min_size = clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, mega);
+    const auto cmd_max_size = clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, giga);
 
     table_t table;
     auto& header = table.header();
