@@ -234,7 +234,7 @@ namespace nano
         tpool_section_t<future_t> section;
         for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op=op, size=size, chunk=chunk, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, chunk=chunk, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; begin += chunk)
                 {
@@ -262,7 +262,7 @@ namespace nano
         tpool_section_t<future_t> section;
         for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op=op, size=size, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; ++ begin)
                 {
