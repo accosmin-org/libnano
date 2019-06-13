@@ -69,7 +69,7 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(tpool_t::instance().workers());
+    vector_t values = vector_t::Zero(tpool_t::size());
     nano::loopi(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
     {
         values(t) += sti<toperator>(i, targets, outputs);
@@ -169,7 +169,7 @@ static int unsafe_main(int argc, const char *argv[])
 
     table_t table;
     auto& header = table.header();
-    header << "problem" << "single" << strcat("tpool(x", tpool_t::instance().workers(), ")");
+    header << "problem" << "single" << strcat("tpool(x", tpool_t::size(), ")");
     #ifdef _OPENMP
     header << "OpenMP";
     #endif

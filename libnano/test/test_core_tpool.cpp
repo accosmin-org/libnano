@@ -26,13 +26,11 @@ namespace
     template <typename toperator>
     auto test_loopi(const size_t size, const toperator op)
     {
-        const auto workers = tpool_t::instance().workers();
-
         std::vector<double> results(size, -1);
         nano::loopi(size, [&] (const size_t i, const size_t tnum)
         {
             UTEST_CHECK_LESS(i, size);
-            UTEST_CHECK_LESS(tnum, workers);
+            UTEST_CHECK_LESS(tnum, tpool_t::size());
 
             results[i] = op(i);
         });
@@ -44,14 +42,12 @@ namespace
     template <typename toperator>
     auto test_loopr(const size_t size, const size_t chunk, const toperator op)
     {
-        const auto workers = tpool_t::instance().workers();
-
         std::vector<double> results(size, -1);
         nano::loopr(size, chunk, [&] (const size_t begin, const size_t end, const size_t tnum)
         {
             UTEST_CHECK_LESS(begin, end);
-            UTEST_CHECK_LESS(tnum, workers);
             UTEST_CHECK_LESS_EQUAL(end, size);
+            UTEST_CHECK_LESS(tnum, tpool_t::size());
             UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
 
             for (auto i = begin; i < end; ++ i)
@@ -70,14 +66,13 @@ UTEST_CASE(empty)
 {
     auto& pool = tpool_t::instance();
 
-    UTEST_CHECK_EQUAL(pool.workers(), nano::physical_cpus());
+    UTEST_CHECK_EQUAL(pool.size(), std::thread::hardware_concurrency());
+    UTEST_CHECK_EQUAL(tpool_t::size(), std::thread::hardware_concurrency());
 }
 
 UTEST_CASE(enqueue)
 {
     auto& pool = tpool_t::instance();
-
-    UTEST_CHECK_EQUAL(pool.workers(), nano::physical_cpus());
 
     const size_t max_tasks = 1024;
     const auto tasks = urand<size_t>(1u, max_tasks, make_rng());

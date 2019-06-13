@@ -48,10 +48,6 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "as-json",              "display the default configuration for the selected objects as JSON");
     cmdline.add("", "version",              "library version");
     cmdline.add("", "git-hash",             "git commit hash");
-    cmdline.add("", "system",               "system: all available information");
-    cmdline.add("", "sys-logical-cpus",     "system: number of logical cpus");
-    cmdline.add("", "sys-physical-cpus",    "system: number of physical cpus");
-    cmdline.add("", "sys-memsize",          "system: memory size in GB");
 
     cmdline.process(argc, argv);
 
@@ -60,10 +56,6 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_solver = cmdline.has("solver");
     const auto has_as_table = cmdline.has("as-table");
     const auto has_as_json = cmdline.has("as-json");
-    const auto has_system = cmdline.has("system");
-    const auto has_sys_logical = cmdline.has("sys-logical-cpus");
-    const auto has_sys_physical = cmdline.has("sys-physical-cpus");
-    const auto has_sys_memsize = cmdline.has("sys-memsize");
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
@@ -76,10 +68,6 @@ static int unsafe_main(int argc, const char* argv[])
     if (!has_lsearch0 &&
         !has_lsearchk &&
         !has_solver &&
-        !has_system &&
-        !has_sys_logical &&
-        !has_sys_physical &&
-        !has_sys_memsize &&
         !has_version &&
         !has_git_hash)
     {
@@ -99,18 +87,6 @@ static int unsafe_main(int argc, const char* argv[])
     if (has_solver)
     {
         print("solver", solver_t::all(), cmdline.get<string_t>("solver"), has_as_table, has_as_json);
-    }
-    if (has_system || has_sys_physical)
-    {
-        std::cout << "physical CPUs..." << nano::physical_cpus() << std::endl;
-    }
-    if (has_system || has_sys_logical)
-    {
-        std::cout << "logical CPUs...." << nano::logical_cpus() << std::endl;
-    }
-    if (has_system || has_sys_memsize)
-    {
-        std::cout << "memsize........." << nano::memsize_gb() << "GB" << std::endl;
     }
     if (has_version)
     {

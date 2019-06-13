@@ -6,7 +6,6 @@
 #include <thread>
 #include <vector>
 #include <cassert>
-#include <nano/arch.h>
 #include <condition_variable>
 
 namespace nano
@@ -171,16 +170,16 @@ namespace nano
         ///
         /// \brief number of available worker threads
         ///
-        size_t workers() const
+        static size_t size()
         {
-            return m_workers.size();
+            return std::max(size_t(1), static_cast<size_t>(std::thread::hardware_concurrency()));
         }
 
     private:
 
         tpool_t()
         {
-            const auto n_workers = static_cast<size_t>(physical_cpus());
+            const auto n_workers = size();
 
             m_workers.reserve(n_workers);
             for (size_t i = 0; i < n_workers; ++ i)
@@ -228,7 +227,7 @@ namespace nano
         assert(chunk >= tsize(1));
 
         auto& pool = tpool_t::instance();
-        const auto workers = static_cast<tsize>(pool.workers());
+        const auto workers = static_cast<tsize>(pool.size());
         const auto tchunk = std::max((size + workers - 1) / workers, chunk);
 
         tpool_section_t<future_t> section;
@@ -256,7 +255,7 @@ namespace nano
         assert(size >= tsize(0));
 
         auto& pool = tpool_t::instance();
-        const auto workers = static_cast<tsize>(pool.workers());
+        const auto workers = static_cast<tsize>(pool.size());
         const auto tchunk = (size + workers - 1) / workers;
 
         tpool_section_t<future_t> section;

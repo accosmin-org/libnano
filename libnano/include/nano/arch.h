@@ -37,17 +37,3 @@
     #define NANO_UNUSED3_RELEASE(x, y, z)
     #define NANO_UNUSED4_RELEASE(x, y, z, u)
 #endif
-
-namespace nano
-{
-    // system information
-    NANO_PUBLIC unsigned int logical_cpus();
-    NANO_PUBLIC unsigned int physical_cpus();
-    NANO_PUBLIC unsigned long long int memsize();
-
-    inline unsigned int memsize_gb()
-    {
-        const unsigned long long int giga = 1LL << 30;
-        return static_cast<unsigned int>((memsize() + giga - 1) / giga);
-    }
-}
