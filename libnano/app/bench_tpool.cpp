@@ -63,7 +63,7 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
     {
         value += sti<toperator>(i, targets, outputs);
     }
-    return value;
+    return value / static_cast<scalar_t>(targets.rows());
 }
 
 template <typename toperator>
@@ -75,7 +75,7 @@ static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
         values(t) += sti<toperator>(i, targets, outputs);
     });
 
-    return values.sum();
+    return values.sum() / static_cast<scalar_t>(targets.rows());
 }
 
 #if defined(_OPENMP)
@@ -92,7 +92,7 @@ static scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
         values(t) += sti<toperator>(i, targets, outputs);
     }
 
-    return values.sum();
+    return values.sum() / static_cast<scalar_t>(targets.rows());
 }
 #endif
 
@@ -109,6 +109,14 @@ static bool close(const scalar_t v1, const scalar_t v2, const char* name, const 
 template <typename toperator>
 static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_t& table)
 {
+    std::vector<scalar_t> single_deltas;
+    std::vector<scalar_t> single_values;
+    std::vector<matrix_t> single_targets;
+    std::vector<matrix_t> single_outputs;
+
+    // single-thread
+    auto& row1 = table.append();
+    row1 << strcat("reduce-", toperator::name()) << "single";
     for (tensor_size_t size = min_size; size <= max_size; size *= 2)
     {
         matrix_t targets = matrix_t::Constant(size, 10, -1);
@@ -118,30 +126,49 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
             targets(i, i % 10) = +1;
         }
 
-        auto& row = table.append();
-        const auto kilo = tensor_size_t(1<<10);
-        row << strcat("reduce-", toperator::name(), "[", to_string(size / kilo), "K]");
+        scalar_t value;
+        const auto delta = measure<nanoseconds_t>([&] { value = reduce_st<toperator>(targets, outputs); }, 16);
+        row1 << "1.00";
 
-        scalar_t retST, retMT;
-
-        const auto deltaST = measure<nanoseconds_t>([&] { retST = reduce_st<toperator>(targets, outputs); }, 16);
-        const auto deltaMT = measure<nanoseconds_t>([&] { retMT = reduce_mt<toperator>(targets, outputs); }, 16);
-        #ifdef _OPENMP
-        scalar_t retOP;
-        const auto deltaOP = measure<nanoseconds_t>([&] { retOP = reduce_op<toperator>(targets, outputs); }, 16);
-        #endif
-
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaST.count());
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaMT.count());
-        #ifdef _OPENMP
-        row << precision(2) << static_cast<double>(deltaST.count()) / static_cast<double>(deltaOP.count());
-        #endif
-
-        if (!close(retST, retMT, "MT", epsilon1<scalar_t>() * size)) { return false; }
-        #ifdef _OPENMP
-        if (!close(retST, retOP, "OP", epsilon1<scalar_t>() * size)) { return false; }
-        #endif
+        single_deltas.push_back(static_cast<scalar_t>(delta.count()));
+        single_values.push_back(value);
+        single_targets.push_back(targets);
+        single_outputs.push_back(outputs);
     }
+
+    // multi-threaded (using the thread pool)
+    auto& row2 = table.append();
+    row2 << strcat("reduce-", toperator::name()) << strcat("tpool(x", tpool_t::size(), ")");
+    for (size_t i = 0; i < single_deltas.size(); ++ i)
+    {
+        const auto deltaST = single_deltas[i];
+        const auto valueST = single_values[i];
+        const auto& targets = single_targets[i];
+        const auto& outputs = single_outputs[i];
+
+        scalar_t valueMT;
+        const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_mt<toperator>(targets, outputs); }, 16);
+        row2 << precision(2) << deltaST / static_cast<double>(deltaMT.count());
+        if (!close(valueST, valueMT, "tpool", epsilon1<scalar_t>())) { return false; }
+    }
+
+#ifdef _OPENMP
+    // multi-threaded (using OpenMP)
+    auto& row3 = table.append();
+    row3 << strcat("reduce-", toperator::name()) << "openmp";
+    for (size_t i = 0; i < single_deltas.size(); ++ i)
+    {
+        const auto deltaST = single_deltas[i];
+        const auto valueST = single_values[i];
+        const auto& targets = single_targets[i];
+        const auto& outputs = single_outputs[i];
+
+        scalar_t valueMT;
+        const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_op<toperator>(targets, outputs); }, 16);
+        row3 << precision(2) << deltaST / static_cast<double>(deltaMT.count());
+        if (!close(valueST, valueMT, "openmp", epsilon1<scalar_t>())) { return false; }
+    }
+#endif
 
     // OK
     return true;
@@ -169,10 +196,11 @@ static int unsafe_main(int argc, const char *argv[])
 
     table_t table;
     auto& header = table.header();
-    header << "problem" << "single" << strcat("tpool(x", tpool_t::size(), ")");
-    #ifdef _OPENMP
-    header << "OpenMP";
-    #endif
+    header << "problem" << "method";
+    for (auto size = cmd_min_size; size <= cmd_max_size; size *= 2)
+    {
+        header << strcat(size / kilo, "K");
+    }
     table.delim();
 
     // benchmark for different problem sizes and processing chunk sizes
@@ -183,7 +211,6 @@ static int unsafe_main(int argc, const char *argv[])
     if (!evaluate<mse_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
 
     // print results
-    table.mark(make_marker_maximum_percentage_cols<double>(5));
     std::cout << table;
 
     // OK
