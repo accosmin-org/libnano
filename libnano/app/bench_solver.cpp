@@ -138,7 +138,7 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
     const auto timer = nano::timer_t{};
 
     std::vector<solver_state_t> states(x0s.size());
-    loopi(x0s.size(), [&] (const size_t i)
+    loopi(x0s.size(), [&] (const size_t i, const size_t)
     {
         states[i] = solver->minimize(function, x0s[i]);
     });

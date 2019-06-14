@@ -10,49 +10,53 @@ using namespace nano;
 namespace
 {
     // single-threaded
-    template <typename tscalar, typename toperator>
-    tscalar test_st(const size_t size, const toperator op)
+    template <typename toperator>
+    auto test_single(const size_t size, const toperator op)
     {
-        std::vector<tscalar> results(size);
+        std::vector<double> results(size);
         for (size_t i = 0; i < results.size(); ++ i)
         {
             results[i] = op(i);
         }
 
-        return std::accumulate(results.begin(), results.end(), tscalar(0));
+        return std::accumulate(results.begin(), results.end(), 0.0);
     }
 
     // multi-threaded (by index)
-    template <typename tscalar, typename toperator>
-    tscalar test_mti(const size_t size, const toperator op)
+    template <typename toperator>
+    auto test_loopi(const size_t size, const toperator op)
     {
-        std::vector<tscalar> results(size, -1);
-        nano::loopi(size, [&results = results, size = size, op = op] (const size_t i)
+        std::vector<double> results(size, -1);
+        nano::loopi(size, [&] (const size_t i, const size_t tnum)
         {
-            assert(i < size);
-            NANO_UNUSED1_RELEASE(size);
+            UTEST_CHECK_LESS(i, size);
+            UTEST_CHECK_LESS(tnum, tpool_t::size());
+
             results[i] = op(i);
         });
 
-        return std::accumulate(results.begin(), results.end(), tscalar(0));
+        return std::accumulate(results.begin(), results.end(), 0.0);
     }
 
     // multi-threaded (by range)
-    template <typename tscalar, typename toperator>
-    tscalar test_mtr(const size_t size, const size_t chunk, const toperator op)
+    template <typename toperator>
+    auto test_loopr(const size_t size, const size_t chunk, const toperator op)
     {
-        std::vector<tscalar> results(size, -1);
-        nano::loopr(size, chunk, [&results = results, size = size, op = op] (const size_t begin, const size_t end)
+        std::vector<double> results(size, -1);
+        nano::loopr(size, chunk, [&] (const size_t begin, const size_t end, const size_t tnum)
         {
-            assert(begin < end && end <= size);
-            NANO_UNUSED1_RELEASE(size);
+            UTEST_CHECK_LESS(begin, end);
+            UTEST_CHECK_LESS_EQUAL(end, size);
+            UTEST_CHECK_LESS(tnum, tpool_t::size());
+            UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
+
             for (auto i = begin; i < end; ++ i)
             {
                 results[i] = op(i);
             }
         });
 
-        return std::accumulate(results.begin(), results.end(), tscalar(0));
+        return std::accumulate(results.begin(), results.end(), 0.0);
     }
 }
 
@@ -62,23 +66,19 @@ UTEST_CASE(empty)
 {
     auto& pool = tpool_t::instance();
 
-    UTEST_CHECK_EQUAL(pool.workers(), nano::physical_cpus());
-    UTEST_CHECK_EQUAL(pool.tasks(), 0u);
+    UTEST_CHECK_EQUAL(pool.size(), std::thread::hardware_concurrency());
+    UTEST_CHECK_EQUAL(tpool_t::size(), std::thread::hardware_concurrency());
 }
 
 UTEST_CASE(enqueue)
 {
     auto& pool = tpool_t::instance();
 
-    UTEST_CHECK_EQUAL(pool.workers(), nano::physical_cpus());
-    UTEST_CHECK_EQUAL(pool.tasks(), 0u);
-
     const size_t max_tasks = 1024;
     const auto tasks = urand<size_t>(1u, max_tasks, make_rng());
 
-    std::vector<size_t> tasks_done;
-
     std::mutex mutex;
+    std::vector<size_t> tasks_done;
     {
         tpool_section_t<future_t> futures;
         for (size_t j = 0; j < tasks; ++ j)
@@ -97,9 +97,6 @@ UTEST_CASE(enqueue)
         }
     }
 
-    UTEST_CHECK_EQUAL(pool.workers(), nano::physical_cpus());
-    UTEST_CHECK_EQUAL(pool.tasks(), 0u);
-
     UTEST_CHECK_EQUAL(tasks_done.size(), tasks);
     for (size_t j = 0; j < tasks; ++ j)
     {
@@ -107,39 +104,34 @@ UTEST_CASE(enqueue)
     }
 }
 
-UTEST_CASE(evaluate)
+UTEST_CASE(loopi)
 {
-    const size_t min_size = 1;
-    const size_t max_size = 9 * 9 * 9 * 1;
+    const auto op = [] (const size_t i) { return std::sin(i); };
 
-    using scalar_t = double;
-
-    // operator to test
-    const auto op = [](const size_t i)
+    for (size_t size = 1; size <= size_t(123); size *= 3)
     {
-        const auto ii = static_cast<scalar_t>(i);
-        return ii * ii + 1 - ii;
-    };
+        const auto eps = epsilon1<double>();
+        const auto ref = test_single(size, op);
 
-    // test for different problems size
-    for (size_t size = min_size; size <= max_size; size *= 3)
+        UTEST_CHECK_CLOSE(ref, test_loopi(size, op), eps);
+    }
+}
+
+UTEST_CASE(loopr)
+{
+    const auto op = [] (const size_t i) { return std::cos(i); };
+
+    for (size_t size = 1; size <= size_t(128); size *= 2)
     {
-        const auto st = test_st<scalar_t>(size, op);
-        const auto mti = test_mti<scalar_t>(size, op);
-        const auto mtr1 = test_mtr<scalar_t>(size, 1, op);
-        const auto mtr2 = test_mtr<scalar_t>(size, 2, op);
-        const auto mtr3 = test_mtr<scalar_t>(size, 3, op);
-        const auto mtr4 = test_mtr<scalar_t>(size, 4, op);
-        const auto mtrm = test_mtr<scalar_t>(size, size, op);
-        const auto mtrM = test_mtr<scalar_t>(size, size + 1, op);
+        const auto eps = epsilon1<double>();
+        const auto ref = test_single(size, op);
 
-        UTEST_CHECK_CLOSE(st, mti, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtr1, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtr2, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtr3, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtr4, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtrm, nano::epsilon1<scalar_t>());
-        UTEST_CHECK_CLOSE(st, mtrM, nano::epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, 1, op), eps);
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, 2, op), eps);
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, 3, op), eps);
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, 4, op), eps);
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, size, op), eps);
+        UTEST_CHECK_CLOSE(ref, test_loopr(size, size + 1, op), eps);
     }
 }
 

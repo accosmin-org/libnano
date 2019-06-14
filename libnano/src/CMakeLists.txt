@@ -23,7 +23,6 @@ set(solver_sources
     solver/quasi.cpp)
 
 add_library(nano
-    arch.cpp
     table.cpp
     logger.cpp
     cmdline.cpp
