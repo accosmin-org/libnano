@@ -190,15 +190,4 @@ namespace nano
         }
         return os;
     }
-
-    template <size_t trank>
-    std::ostream& operator<<(std::ostream& os, const std::vector<tensor_dims_t<trank>>& dims)
-    {
-        os << "[";
-        for (size_t i = 0; i < dims.size(); ++ i)
-        {
-            os << dims[i] << (i + 1 == dims.size() ? "" : ",");
-        }
-        return os << "]";
-    }
 }

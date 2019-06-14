@@ -44,7 +44,9 @@ UTEST_CASE(to_string)
 UTEST_CASE(from_string)
 {
     UTEST_CHECK_EQUAL(nano::from_string<short>("1"), 1);
+    UTEST_CHECK_EQUAL(nano::from_string<float>("0.2f"), 0.2f);
     UTEST_CHECK_EQUAL(nano::from_string<long int>("124545"), 124545);
+    UTEST_CHECK_EQUAL(nano::from_string<unsigned long>("42"), 42u);
 }
 
 UTEST_CASE(enum_string)

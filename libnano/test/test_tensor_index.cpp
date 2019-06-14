@@ -1,9 +1,63 @@
+#include <sstream>
 #include <utest/utest.h>
 #include <nano/tensor/index.h>
 
 using namespace nano;
 
+template <size_t trank>
+std::string dims2str(const tensor_dims_t<trank>& dims)
+{
+    std::stringstream str;
+    str << dims;
+    return str.str();
+}
+
 UTEST_BEGIN_MODULE(test_tensor_index)
+
+UTEST_CASE(dims1d)
+{
+    const auto dims1 = nano::make_dims(3);
+    const auto dims2 = nano::make_dims(3);
+    const auto dims3 = nano::make_dims(1);
+
+    UTEST_CHECK_EQUAL(dims1, dims1);
+    UTEST_CHECK_EQUAL(dims1, dims2);
+    UTEST_CHECK_NOT_EQUAL(dims2, dims3);
+
+    UTEST_CHECK_EQUAL(dims2str(dims1), "3");
+    UTEST_CHECK_EQUAL(dims2str(dims2), "3");
+    UTEST_CHECK_EQUAL(dims2str(dims3), "1");
+}
+
+UTEST_CASE(dims2d)
+{
+    const auto dims1 = nano::make_dims(3, 7);
+    const auto dims2 = nano::make_dims(7, 5);
+    const auto dims3 = nano::make_dims(3, 7);
+
+    UTEST_CHECK_EQUAL(dims1, dims1);
+    UTEST_CHECK_EQUAL(dims1, dims3);
+    UTEST_CHECK_NOT_EQUAL(dims1, dims2);
+
+    UTEST_CHECK_EQUAL(dims2str(dims1), "3x7");
+    UTEST_CHECK_EQUAL(dims2str(dims2), "7x5");
+    UTEST_CHECK_EQUAL(dims2str(dims3), "3x7");
+}
+
+UTEST_CASE(dims3d)
+{
+    const auto dims1 = nano::make_dims(3, 7, 5);
+    const auto dims2 = nano::make_dims(7, 5, 3);
+    const auto dims3 = nano::make_dims(1, 1, 1);
+
+    UTEST_CHECK_EQUAL(dims1, dims1);
+    UTEST_CHECK_NOT_EQUAL(dims2, dims1);
+    UTEST_CHECK_NOT_EQUAL(dims2, dims3);
+
+    UTEST_CHECK_EQUAL(dims2str(dims1), "3x7x5");
+    UTEST_CHECK_EQUAL(dims2str(dims2), "7x5x3");
+    UTEST_CHECK_EQUAL(dims2str(dims3), "1x1x1");
+}
 
 UTEST_CASE(index1d)
 {
