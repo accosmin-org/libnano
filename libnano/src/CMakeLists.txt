@@ -22,11 +22,15 @@ set(solver_sources
     solver/lbfgs.cpp
     solver/quasi.cpp)
 
+set(loss_sources
+    loss.cpp)
+
 add_library(nano
     table.cpp
     logger.cpp
     cmdline.cpp
     function.cpp
+    ${loss_sources}
     ${solver_sources}
     ${lsearch0_sources}
     ${lsearchk_sources})

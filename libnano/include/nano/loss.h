@@ -25,13 +25,13 @@ namespace nano
         ///
         /// \brief returns the available implementations
         ///
-        static lsearch0_factory_t& all();
+        static loss_factory_t& all();
 
         ///
         /// \brief serialization to JSON not needed
         ///
-        void to_json(json_t&) const final;
-        void from_json(const json_t&) final;
+        json_t config() const final;
+        void config(const json_t&) final;
 
         ///
         /// \brief compute the error value
