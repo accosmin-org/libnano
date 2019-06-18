@@ -30,12 +30,12 @@ loss_factory_t& loss_t::all()
         manager.add<shinge_loss_t>("s-hinge",
             "single-label classification: l(y, t) = max(0, 1 - y*t)");
         manager.add<mhinge_loss_t>("m-hinge",
-            "multi-label classification: l(y, t) = max(0, 1 - y*t)");
+            "multi-label classification:  l(y, t) = max(0, 1 - y*t)");
 
         manager.add<sclassnll_loss_t>("s-classnll",
             "single-label classification: l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
         manager.add<mclassnll_loss_t>("m-classnll",
-            "multi-label classification: l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
+            "multi-label classification:  l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
 
         manager.add<slogistic_loss_t>("s-logistic",
             "single-label classification: l(y, t) = log(1 + exp(-y*t))");
