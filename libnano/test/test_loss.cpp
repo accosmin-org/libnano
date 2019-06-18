@@ -1,7 +1,7 @@
 #include <nano/loss.h>
-#include <utest/utest.h>
-#include <nano/cortex.h>
+#include <nano/mlearn.h>
 #include <nano/random.h>
+#include <utest/utest.h>
 #include <nano/numeric.h>
 #include <nano/function.h>
 
@@ -209,7 +209,7 @@ UTEST_CASE(multi_label_multi_class)
 
 UTEST_CASE(regression)
 {
-    for (const auto& loss_id : {"square", "cauchy"})
+    for (const auto& loss_id : {"absolute", "squared", "cauchy"})
     {
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);

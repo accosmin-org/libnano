@@ -1,10 +1,6 @@
 #include <mutex>
-#include "loss/hinge.h"
-#include "loss/square.h"
-#include "loss/cauchy.h"
-#include "loss/logistic.h"
-#include "loss/classnll.h"
-#include "loss/exponential.h"
+#include "loss/regression.h"
+#include "loss/classification.h"
 
 using namespace nano;
 
@@ -24,10 +20,12 @@ loss_factory_t& loss_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        manager.add<square_loss_t> ("square",
-            "multivariate regression:     l(y, t) = 1/2 * (y - t)^2");
         manager.add<cauchy_loss_t> ("cauchy",
             "multivariate regression:     l(y, t) = 1/2 * log(1 + (y - t)^2)");
+        manager.add<squared_loss_t> ("squared",
+            "multivariate regression:     l(y, t) = 1/2 * (y - t)^2");
+        manager.add<absolute_loss_t> ("absolute",
+            "multivariate regression:     l(y, t) = |y - t|");
 
         manager.add<shinge_loss_t>("s-hinge",
             "single-label classification: l(y, t) = max(0, 1 - y*t)");

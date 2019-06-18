@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <nano/loss.h>
-#include <nano/cortex.h>
+#include <nano/mlearn.h>
 
 namespace nano
 {
@@ -10,7 +10,7 @@ namespace nano
     /// \brief multi-class classification loss that predicts the labels with positive output.
     ///
     template <typename top>
-    class mclassification_t final : public loss_t
+    class mclassification_loss_t final : public loss_t
     {
     public:
 
@@ -44,7 +44,7 @@ namespace nano
     /// \brief single-class classification loss that predicts the label with the highest score.
     ///
     template <typename top>
-    class sclassification_t final : public loss_t
+    class sclassification_loss_t final : public loss_t
     {
     public:
 
@@ -83,4 +83,94 @@ namespace nano
             return vgrad;
         }
     };
+
+    namespace detail
+    {
+        ///
+        /// \brief class negative log-likelihood loss (also called cross-entropy loss).
+        ///
+        struct classnll_t
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return  std::log(output.exp().sum()) -
+                        std::log(((1 + target) * output.exp()).sum() / 2);
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return  output.exp() / output.exp().sum() -
+                        (1 + target) * output.exp() / ((1 + target) * output.exp()).sum();
+            }
+        };
+
+        ///
+        /// \brief multi-class exponential loss.
+        ///
+        struct exponential_t
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return (-target * output).exp().sum();
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return -target * (-target * output).exp();
+            }
+        };
+
+        ///
+        /// \brief multi-class logistic loss.
+        ///
+        struct logistic_t
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return  (1 + (-target * output).exp()).log().sum();
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return  -target * (-target * output).exp() /
+                    (1 + (-target * output).exp());
+            }
+        };
+
+        ///
+        /// \brief multi-class hinge loss.
+        ///
+        struct hinge_t
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return (1 - target * output).max(0).sum();
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return -target * (1 - target * output).sign();
+            }
+        };
+    }
+
+    using mhinge_loss_t = mclassification_loss_t<detail::hinge_t>;
+    using shinge_loss_t = sclassification_loss_t<detail::hinge_t>;
+
+    using sclassnll_loss_t = sclassification_loss_t<detail::classnll_t>;
+    using mclassnll_loss_t = mclassification_loss_t<detail::classnll_t>;
+
+    using mlogistic_loss_t = mclassification_loss_t<detail::logistic_t>;
+    using slogistic_loss_t = sclassification_loss_t<detail::logistic_t>;
+
+    using mexponential_loss_t = mclassification_loss_t<detail::exponential_t>;
+    using sexponential_loss_t = sclassification_loss_t<detail::exponential_t>;
 }

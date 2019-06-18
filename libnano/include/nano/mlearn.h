@@ -1,50 +1,9 @@
 #pragma once
 
 #include <nano/tensor.h>
-#include <nano/string_utils.h>
 
 namespace nano
 {
-    ///
-    /// \brief dataset splitting protocol.
-    ///
-    enum class protocol
-    {
-        train = 0,                  ///< training
-        valid,                      ///< validation (for tuning hyper-parameters)
-        test                        ///< testing
-    };
-
-    template <>
-    inline enum_map_t<protocol> enum_string<protocol>()
-    {
-        return
-        {
-            { protocol::train,    "train" },
-            { protocol::valid,    "valid" },
-            { protocol::test,     "test" }
-        };
-    }
-
-    ///
-    /// \brief dataset splitting fold.
-    ///
-    struct fold_t
-    {
-        size_t      m_index;        ///< fold index
-        protocol    m_protocol;     ///<
-    };
-
-    inline bool operator==(const fold_t& f1, const fold_t& f2)
-    {
-        return f1.m_index == f2.m_index && f1.m_protocol == f2.m_protocol;
-    }
-
-    inline bool operator<(const fold_t& f1, const fold_t& f2)
-    {
-        return f1.m_index < f2.m_index || (f1.m_index == f2.m_index && f1.m_protocol < f2.m_protocol);
-    }
-
     ///
     /// \brief target value of the positive class
     ///
@@ -97,18 +56,4 @@ namespace nano
         }
         return target;
     }
-
-    ///
-    /// \brief cast tensor dimensions to string.
-    ///
-    template <std::size_t trank>
-    struct to_string_t<tensor_dims_t<trank>>
-    {
-        static string_t cast(const tensor_dims_t<trank>& dims)
-        {
-            std::stringstream s;
-            s << dims;
-            return s.str();
-        }
-    };
 }
