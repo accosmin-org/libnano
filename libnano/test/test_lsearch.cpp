@@ -160,10 +160,35 @@ UTEST_CASE(fletcher)
     }
 }
 
-UTEST_CASE(cgdescent)
+UTEST_CASE(cgdescent_wolfe)
 {
     const auto lsearch_id = "cgdescent";
     const auto lsearch = get_lsearch(lsearch_id);
+    UTEST_REQUIRE_NOTHROW(lsearch->config(to_json("criterion", "wolfe")));
+
+    for (const auto& function : functions)
+    {
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
+    }
+}
+
+UTEST_CASE(cgdescent_approx_wolfe)
+{
+    const auto lsearch_id = "cgdescent";
+    const auto lsearch = get_lsearch(lsearch_id);
+    UTEST_REQUIRE_NOTHROW(lsearch->config(to_json("criterion", "approx_wolfe")));
+
+    for (const auto& function : functions)
+    {
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
+    }
+}
+
+UTEST_CASE(cgdescent_wolfe_approx_wolfe)
+{
+    const auto lsearch_id = "cgdescent";
+    const auto lsearch = get_lsearch(lsearch_id);
+    UTEST_REQUIRE_NOTHROW(lsearch->config(to_json("criterion", "wolfe_approx_wolfe")));
 
     for (const auto& function : functions)
     {
