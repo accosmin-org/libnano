@@ -19,9 +19,11 @@ enum class lsearch_type
 {
     fletcher,
     backtrack,
-    cgdescent,
     lemarechal,
     morethuente,
+    cgdescent_wolfe,
+    cgdescent_approx_wolfe,
+    cgdescent_wolfe_approx_wolfe,
 };
 
 static void setup_logger(const rlsearchk_t& lsearch, std::stringstream& stream)
@@ -81,7 +83,17 @@ static void test(
         UTEST_CHECK(state.has_strong_wolfe(state0, lsearch->c2()));
         break;
 
-    case lsearch_type::cgdescent:
+    case lsearch_type::cgdescent_wolfe:
+        UTEST_CHECK(state.has_armijo(state0, lsearch->c1()));
+        UTEST_CHECK(state.has_wolfe(state0, lsearch->c1()));
+        break;
+
+    case lsearch_type::cgdescent_approx_wolfe:
+        UTEST_CHECK(state.has_approx_armijo(state0, epsilon));
+        UTEST_CHECK(state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2()));
+        break;
+
+    case lsearch_type::cgdescent_wolfe_approx_wolfe:
         UTEST_CHECK(
             (state.has_armijo(state0, lsearch->c1()) && state.has_wolfe(state0, lsearch->c1())) ||
             (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2())));
@@ -168,7 +180,7 @@ UTEST_CASE(cgdescent_wolfe)
 
     for (const auto& function : functions)
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
     }
 }
 
@@ -180,7 +192,7 @@ UTEST_CASE(cgdescent_approx_wolfe)
 
     for (const auto& function : functions)
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
     }
 }
 
@@ -192,7 +204,7 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
 
     for (const auto& function : functions)
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent);
+        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
     }
 }
 
