@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/arch.h>
 #include <nano/json.h>
 #include <nano/tensor.h>
 #include <nano/factory.h>
@@ -17,7 +18,7 @@ namespace nano
     ///
     /// the loss function upper-bounds or approximates the true (usually non-smooth) error function to minimize.
     ///
-    class loss_t : public json_configurable_t
+    class NANO_PUBLIC loss_t : public json_configurable_t
     {
     public:
 

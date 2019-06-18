@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/arch.h>
 #include <nano/json.h>
 #include <nano/factory.h>
 #include <nano/lsearch/step.h>
@@ -14,7 +15,7 @@ namespace nano
     ///
     /// \brief compute the step length of the line search procedure.
     ///
-    class lsearchk_t : public json_configurable_t
+    class NANO_PUBLIC lsearchk_t : public json_configurable_t
     {
     public:
 

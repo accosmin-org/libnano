@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <algorithm>
+#include <nano/arch.h>
 #include <nano/string_utils.h>
 
 namespace nano
@@ -18,7 +18,7 @@ namespace nano
     ///     - each option must have a long name, while the short name (single character) is optional
     ///     - options need not have an associated value (they can be interpreted as boolean flags)
     ///
-    class cmdline_t
+    class NANO_PUBLIC cmdline_t
     {
     public:
 
