@@ -13,14 +13,14 @@ namespace nano
         static auto value(const tarray& target, const tarray& output)
         {
             return  std::log(output.exp().sum()) -
-                std::log(((1 + target) * output.exp()).sum() / 2);
+                    std::log(((1 + target) * output.exp()).sum() / 2);
         }
 
         template <typename tarray>
         static auto vgrad(const tarray& target, const tarray& output)
         {
             return  output.exp() / output.exp().sum() -
-                (1 + target) * output.exp() / ((1 + target) * output.exp()).sum();
+                    (1 + target) * output.exp() / ((1 + target) * output.exp()).sum();
         }
     };
 

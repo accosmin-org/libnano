@@ -18,7 +18,7 @@ namespace nano
         template <typename tarray>
         static auto vgrad(const tarray& target, const tarray& output)
         {
-            return  -target * (1 - target * output).sign();
+            return -target * (1 - target * output).sign();
         }
     };
 

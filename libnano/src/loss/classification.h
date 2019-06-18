@@ -13,6 +13,7 @@ namespace nano
     class mclassification_t final : public loss_t
     {
     public:
+
         scalar_t error(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const override
         {
             assert(target.dims() == output.dims());
@@ -46,6 +47,7 @@ namespace nano
     class sclassification_t final : public loss_t
     {
     public:
+
         scalar_t error(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const override
         {
             assert(target.dims() == output.dims());

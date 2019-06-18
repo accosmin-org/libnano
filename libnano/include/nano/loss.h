@@ -15,8 +15,7 @@ namespace nano
     ///     - the target value to predict (ground truth, annotation) and
     ///     - the model's output (prediction).
     ///
-    /// the loss function upper-bounds/approximates
-    /// the true (usually non-smooth) error function to minimize.
+    /// the loss function upper-bounds or approximates the true (usually non-smooth) error function to minimize.
     ///
     class loss_t : public json_configurable_t
     {
