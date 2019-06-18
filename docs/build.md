@@ -20,19 +20,18 @@ tree -L 2 -a
 |-- example
 |   |-- CMakeLists.txt
 |   `-- src
-|-- libnano
-|   |-- CMakeLists.txt
-|   |-- app
-|   |-- cmake
-|   |-- external
-|   |-- include
-|   |-- src
-|   `-- test
+|-- CMakeLists.txt
+|-- app
+|-- cmake
+|-- external
+|   `-- utest
+|-- include
+|   `-- nano
+|-- src
+|-- test
 `-- scripts
     `-- build.sh
 ```
-
-The headers, the source files, the unit tests and the command line utilities are stored in the folder ```libnano```. The external dependencies used as git submodules are stored in the folder ```deps```, while the folder ```example``` containes some example programs build using libnano.
 
 
 #### Dependencies

@@ -1,4 +1,4 @@
 [submodule "external/utest"]
-    path = libnano/external/utest
+	path = external/utest
     url = https://github.com/accosmin/utest
     branch = master

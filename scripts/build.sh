@@ -64,7 +64,7 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake ${generator} -Hlibnano -B${libnanodir} \
+    cmake ${generator} -H. -B${libnanodir} \
         -DCMAKE_BUILD_TYPE=${build_type} \
         -DBUILD_SHARED_LIBS=${build_shared} \
         -DCMAKE_INSTALL_RPATH=${installdir}/lib \
