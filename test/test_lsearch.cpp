@@ -85,7 +85,7 @@ static void test(
 
     case lsearch_type::cgdescent_wolfe:
         UTEST_CHECK(state.has_armijo(state0, lsearch->c1()));
-        UTEST_CHECK(state.has_wolfe(state0, lsearch->c1()));
+        UTEST_CHECK(state.has_wolfe(state0, lsearch->c2()));
         break;
 
     case lsearch_type::cgdescent_approx_wolfe:
@@ -95,7 +95,7 @@ static void test(
 
     case lsearch_type::cgdescent_wolfe_approx_wolfe:
         UTEST_CHECK(
-            (state.has_armijo(state0, lsearch->c1()) && state.has_wolfe(state0, lsearch->c1())) ||
+            (state.has_armijo(state0, lsearch->c1()) && state.has_wolfe(state0, lsearch->c2())) ||
             (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, lsearch->c1(), lsearch->c2())));
         break;
 
