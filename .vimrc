@@ -37,12 +37,14 @@ highlight ColorColumn ctermbg=darkgray
 " Text search
 highlight Search cterm=NONE ctermfg=NONE ctermbg=darkgray
 
-set path+=libnano
-set path+=libnano/include
-set path+=libnano/src
-set path+=libnano/app
-set path+=libnano/test
+set path+=src
+set path+=app
+set path+=test
+set path+=docs
+set path+=cmake
+set path+=include
 set path+=example
+set path+=scripts
 
 " Trim trailing whitespaces when saving
 function! StripTrailingWhitespaces()
