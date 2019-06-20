@@ -46,6 +46,6 @@ namespace nano
         ///
         /// \brief compute the loss gradient (wrt the output)
         ///
-        virtual tensor3d_t vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const = 0;
+        virtual void vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output, const tensor3d_map_t&) const = 0;
     };
 }

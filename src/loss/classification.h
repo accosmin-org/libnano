@@ -30,13 +30,13 @@ namespace nano
             return top::value(target.array(), output.array());
         }
 
-        tensor3d_t vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const override
+        void vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output,
+            const tensor3d_map_t& vgrad) const override
         {
             assert(target.dims() == output.dims());
+            assert(target.dims() == vgrad.dims());
 
-            tensor3d_t vgrad(target.dims());
             vgrad.array() = top::vgrad(target.array(), output.array());
-            return vgrad;
         }
     };
 
@@ -74,13 +74,13 @@ namespace nano
             return top::value(target.array(), output.array());
         }
 
-        tensor3d_t vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const override
+        void vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output,
+            const tensor3d_map_t& vgrad) const override
         {
             assert(target.dims() == output.dims());
+            assert(target.dims() == vgrad.dims());
 
-            tensor3d_t vgrad(target.dims());
             vgrad.array() = top::vgrad(target.array(), output.array());
-            return vgrad;
         }
     };
 

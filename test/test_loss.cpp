@@ -23,11 +23,10 @@ struct loss_function_t final : public function_t
 
         if (gx)
         {
-            const auto grads = m_loss->vgrad(m_target, output);
-            UTEST_REQUIRE_EQUAL(gx->size(), grads.size());
-            UTEST_REQUIRE(grads.array().isFinite().all());
+            gx->resize(m_target.size());
 
-            *gx = grads.vector();
+            m_loss->vgrad(m_target, output, map_tensor(gx->data(), m_target.dims()));
+            UTEST_REQUIRE(gx->array().isFinite().all());
         }
 
         const auto value = m_loss->value(m_target, output);
