@@ -124,7 +124,7 @@ static void test(
     }
 }
 
-const auto functions = get_convex_functions(1, 16, std::regex(".+"));
+const auto functions = get_functions(1, 16, std::regex(".+"));
 
 UTEST_BEGIN_MODULE(test_lsearch)
 
