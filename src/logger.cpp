@@ -68,12 +68,6 @@ logger_t& logger_t::endl()
     return *this;
 }
 
-logger_t& logger_t::done()
-{
-    m_stream << "<<< program finished correctly >>>";
-    return *this;
-}
-
 logger_t& logger_t::flush()
 {
     m_stream.flush();

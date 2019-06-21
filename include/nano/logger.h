@@ -47,7 +47,6 @@ namespace nano
         ///
         logger_t& newl();
         logger_t& endl();
-        logger_t& done();
         logger_t& flush();
 
     private:
@@ -63,7 +62,6 @@ namespace nano
     ///
     inline logger_t& newl(logger_t& logger)     { return logger.newl(); }
     inline logger_t& endl(logger_t& logger)     { return logger.endl(); }
-    inline logger_t& done(logger_t& logger)     { return logger.done(); }
     inline logger_t& flush(logger_t& logger)    { return logger.flush(); }
 
     ///
