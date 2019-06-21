@@ -7,13 +7,13 @@
 
 using namespace nano;
 
-static std::ostream& get_stream(const logger_t::type type)
+static std::ostream& get_stream(const logger_t::type type, std::ostream* cout, std::ostream* cerr)
 {
     switch (type)
     {
-    case logger_t::type::info:      return std::cout;
-    case logger_t::type::warn:      return std::cout;
-    case logger_t::type::error:     return std::cerr;
+    case logger_t::type::info:      return (cout ? *cout : std::cout);
+    case logger_t::type::warn:      return (cout ? *cout : std::cout);
+    case logger_t::type::error:     return (cerr ? *cerr : std::cerr);
     default:                        assert(false); return std::cout;
     }
 }
@@ -29,8 +29,8 @@ static char get_header(const logger_t::type type)
     }
 }
 
-logger_t::logger_t(const logger_t::type ltype, const bool flush_at_endl) :
-    m_stream(get_stream(ltype)),
+logger_t::logger_t(const logger_t::type ltype, const bool flush_at_endl, std::ostream* cout, std::ostream* cerr) :
+    m_stream(get_stream(ltype, cout, cerr)),
     m_precision(m_stream.precision()),
     m_flush(flush_at_endl)
 {

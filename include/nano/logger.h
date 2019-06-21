@@ -23,7 +23,8 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        logger_t(const type, const bool flush_at_endl = true);
+        logger_t(const type, const bool flush_at_destruction = true,
+            std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
 
         ///
         /// \brief destructor
@@ -67,17 +68,22 @@ namespace nano
     ///
     /// \brief specific [information, warning, error] line loggers.
     ///
-    inline logger_t log_info(const bool flush_at_destruction = true)
+    inline logger_t log_info(
+        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::info, flush_at_destruction);
+        return logger_t(logger_t::type::info, flush_at_destruction, cout, cerr);
     }
-    inline logger_t log_warning(const bool flush_at_destruction = true)
+
+    inline logger_t log_warning(
+        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::warn, flush_at_destruction);
+        return logger_t(logger_t::type::warn, flush_at_destruction, cout, cerr);
     }
-    inline logger_t log_error(const bool flush_at_destruction = true)
+
+    inline logger_t log_error(
+        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::error, flush_at_destruction);
+        return logger_t(logger_t::type::error, flush_at_destruction, cout, cerr);
     }
 
     ///
