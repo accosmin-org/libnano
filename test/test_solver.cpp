@@ -266,15 +266,17 @@ UTEST_CASE(quasi_with_initializations)
     {
         UTEST_REQUIRE(function);
 
-        const auto solver_id = "bfgs";
-        const auto solver = solver_t::all().get(solver_id);
-        UTEST_REQUIRE(solver);
+        for (const auto& solver_id : {"bfgs", "fletcher"})
+        {
+            const auto solver = solver_t::all().get(solver_id);
+            UTEST_REQUIRE(solver);
 
-        UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "identity")));
-        test(solver, solver_id, *function, vector_t::Random(function->size()));
+            UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "identity")));
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-        UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "scaled")));
-        test(solver, solver_id, *function, vector_t::Random(function->size()));
+            UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "scaled")));
+            test(solver, solver_id, *function, vector_t::Random(function->size()));
+        }
     }
 }
 
