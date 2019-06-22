@@ -188,7 +188,8 @@ UTEST_CASE(config_solvers)
     }
 }
 
-const auto functions = get_convex_functions(4, 4);
+const auto all_functions = get_functions(4, 4);
+const auto convex_functions = get_convex_functions(4, 4);
 
 const auto all_solver_ids = solver_t::all().ids();
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
@@ -197,7 +198,7 @@ const auto all_lsearchk_ids = lsearchk_t::all().ids();
 
 UTEST_CASE(all_default_solvers)
 {
-    for (const auto& function : functions)
+    for (const auto& function : convex_functions)
     {
         UTEST_REQUIRE(function);
 
@@ -213,7 +214,7 @@ UTEST_CASE(all_default_solvers)
 
 UTEST_CASE(best_solvers_with_lsearches)
 {
-    for (const auto& function : functions)
+    for (const auto& function : all_functions)
     {
         UTEST_REQUIRE(function);
 
@@ -226,8 +227,8 @@ UTEST_CASE(best_solvers_with_lsearches)
             {
                 for (const auto& lsearchk_id : all_lsearchk_ids)
                 {
-                    solver->lsearch0(lsearch0_id);
-                    solver->lsearchk(lsearchk_id);
+                    UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
+                    UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
                     test(solver, solver_id, *function, vector_t::Random(function->size()));
                 }
@@ -238,7 +239,7 @@ UTEST_CASE(best_solvers_with_lsearches)
 
 UTEST_CASE(best_solvers_with_tolerances)
 {
-    for (const auto& function : functions)
+    for (const auto& function : all_functions)
     {
         UTEST_REQUIRE(function);
 
@@ -247,15 +248,33 @@ UTEST_CASE(best_solvers_with_tolerances)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            solver->config(to_json("c1", 1e-4, "c2", 1e-1));
+            UTEST_REQUIRE_NOTHROW(solver->config(to_json("c1", 1e-4, "c2", 1e-1)));
             test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-            solver->config(to_json("c1", 1e-4, "c2", 9e-1));
+            UTEST_REQUIRE_NOTHROW(solver->config(to_json("c1", 1e-4, "c2", 9e-1)));
             test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-            solver->config(to_json("c1", 1e-1, "c2", 9e-1));
+            UTEST_REQUIRE_NOTHROW(solver->config(to_json("c1", 1e-1, "c2", 9e-1)));
             test(solver, solver_id, *function, vector_t::Random(function->size()));
         }
+    }
+}
+
+UTEST_CASE(quasi_with_initializations)
+{
+    for (const auto& function : convex_functions)
+    {
+        UTEST_REQUIRE(function);
+
+        const auto solver_id = "bfgs";
+        const auto solver = solver_t::all().get(solver_id);
+        UTEST_REQUIRE(solver);
+
+        UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "identity")));
+        test(solver, solver_id, *function, vector_t::Random(function->size()));
+
+        UTEST_REQUIRE_NOTHROW(solver->config(to_json("H0", "scaled")));
+        test(solver, solver_id, *function, vector_t::Random(function->size()));
     }
 }
 
