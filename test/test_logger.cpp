@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iomanip>
 #include <utest/utest.h>
 #include <nano/logger.h>
 #include <nano/string_utils.h>
@@ -10,19 +11,21 @@ UTEST_BEGIN_MODULE(test_logger)
 UTEST_CASE(info)
 {
     std::ostringstream stream_cout, stream_cerr;
-    log_info(true, &stream_cout, &stream_cerr) << "info message";
+    log_info(true, &stream_cout, &stream_cerr) << flush << "info message" << newl << endl;
 
-    UTEST_CHECK(ends_with(stream_cout.str(), "|i]: info message\n"));
+    UTEST_CHECK(ends_with(stream_cout.str(), "|i]: info message\n\n\n"));
     UTEST_CHECK_EQUAL(stream_cerr.str(), "");
 }
 
 UTEST_CASE(error)
 {
     std::ostringstream stream_cout, stream_cerr;
-    log_error(false, &stream_cout, &stream_cerr) << "error message";
+    stream_cerr << std::setprecision(3);
+    log_error(false, &stream_cout, &stream_cerr) << std::setprecision(7) << "error message";
 
     UTEST_CHECK_EQUAL(stream_cout.str(), "");
     UTEST_CHECK(ends_with(stream_cerr.str(), "|e]: error message\n"));
+    UTEST_CHECK_EQUAL(stream_cerr.precision(), 3);
 }
 
 UTEST_CASE(warning)
