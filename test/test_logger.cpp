@@ -37,4 +37,13 @@ UTEST_CASE(warning)
     UTEST_CHECK_EQUAL(stream_cerr.str(), "");
 }
 
+UTEST_CASE(unknown)
+{
+    std::ostringstream stream_cout, stream_cerr;
+    logger_t(static_cast<logger_t::type>(42), &stream_cout, &stream_cerr) << "unknown message";
+
+    UTEST_CHECK(ends_with(stream_cout.str(), "|?]: unknown message\n"));
+    UTEST_CHECK_EQUAL(stream_cerr.str(), "");
+}
+
 UTEST_END_MODULE()

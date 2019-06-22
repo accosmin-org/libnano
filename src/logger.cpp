@@ -14,7 +14,7 @@ static std::ostream& get_stream(const logger_t::type type, std::ostream* cout, s
     case logger_t::type::info:      return (cout ? *cout : std::cout);
     case logger_t::type::warn:      return (cout ? *cout : std::cout);
     case logger_t::type::error:     return (cerr ? *cerr : std::cerr);
-    default:                        assert(false); return std::cout; // LCOV_EXCL_LINE
+    default:                        return (cout ? *cout : std::cout);
     }
 }
 
@@ -25,7 +25,7 @@ static char get_header(const logger_t::type type)
     case logger_t::type::info:      return 'i';
     case logger_t::type::warn:      return 'w';
     case logger_t::type::error:     return 'e';
-    default:                        assert(false); return 'x';  // LCOV_EXCL_LINE
+    default:                        return '?';
     }
 }
 
