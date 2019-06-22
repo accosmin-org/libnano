@@ -23,8 +23,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        logger_t(const type, const bool flush_at_destruction = true,
-            std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
+        logger_t(const type, std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
 
         ///
         /// \brief destructor
@@ -32,7 +31,7 @@ namespace nano
         ~logger_t();
 
         ///
-        /// \brief log element
+        /// \brief log tokens
         ///
         template <typename T>
         logger_t& operator<<(const T& data)
@@ -40,50 +39,39 @@ namespace nano
             m_stream << data;
             return *this;
         }
-        logger_t& operator<<(std::ostream& (*pf)(std::ostream&));
-        logger_t& operator<<(logger_t& (*pf)(logger_t&));
 
         ///
-        /// \brief log tags
+        /// \brief log manipulators
         ///
-        logger_t& newl();
-        logger_t& endl();
-        logger_t& flush();
+        logger_t& operator<<(std::ostream& (*pf)(std::ostream&))
+        {
+            pf(m_stream);
+            return *this;
+        }
 
     private:
 
         // attributes
         std::ostream&   m_stream;       ///< stream to write into
         std::streamsize m_precision;    ///< original precision to restore
-        bool            m_flush{true};
     };
-
-    ///
-    /// \brief stream particular tags
-    ///
-    inline logger_t& newl(logger_t& logger)     { return logger.newl(); }
-    inline logger_t& endl(logger_t& logger)     { return logger.endl(); }
-    inline logger_t& flush(logger_t& logger)    { return logger.flush(); }
 
     ///
     /// \brief specific [information, warning, error] line loggers.
     ///
-    inline logger_t log_info(
-        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_info(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::info, flush_at_destruction, cout, cerr);
+        return logger_t(logger_t::type::info, cout, cerr);
     }
 
-    inline logger_t log_warning(
-        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_warning(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::warn, flush_at_destruction, cout, cerr);
+        return logger_t(logger_t::type::warn, cout, cerr);
     }
 
-    inline logger_t log_error(
-        const bool flush_at_destruction = true, std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_error(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
     {
-        return logger_t(logger_t::type::error, flush_at_destruction, cout, cerr);
+        return logger_t(logger_t::type::error, cout, cerr);
     }
 
     ///
