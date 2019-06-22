@@ -177,6 +177,14 @@ UTEST_CASE(config_solvers)
         UTEST_CHECK_THROW(solver->config(invalid_c23), std::invalid_argument);
         UTEST_CHECK_THROW(solver->config(invalid_c24), std::invalid_argument);
         UTEST_CHECK_THROW(solver->config(invalid_c25), std::invalid_argument);
+
+        UTEST_CHECK_THROW(solver->lsearch0("constant", rlsearch0_t()), std::invalid_argument);
+        UTEST_CHECK_NOTHROW(solver->lsearch0(lsearch0_t::all().get("constant")->config()));
+        UTEST_CHECK_NOTHROW(solver->lsearch0(lsearch0_t::all().get("constant")->config_with_id("constant")));
+
+        UTEST_CHECK_THROW(solver->lsearchk("backtrack", rlsearchk_t()), std::invalid_argument);
+        UTEST_CHECK_NOTHROW(solver->lsearchk(lsearchk_t::all().get("backtrack")->config()));
+        UTEST_CHECK_NOTHROW(solver->lsearchk(lsearchk_t::all().get("backtrack")->config_with_id("backtrack")));
     }
 }
 
