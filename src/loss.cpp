@@ -34,8 +34,6 @@ loss_factory_t& loss_t::all()
 
         manager.add<sclassnll_loss_t>("s-classnll",
             "single-label classification: l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
-        manager.add<mclassnll_loss_t>("m-classnll",
-            "multi-label classification:  l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
 
         manager.add<slogistic_loss_t>("s-logistic",
             "single-label classification: l(y, t) = log(1 + exp(-y*t))");

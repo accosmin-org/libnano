@@ -165,7 +165,7 @@ UTEST_CASE(single_label_multi_class)
 
 UTEST_CASE(multi_label_multi_class)
 {
-    for (const auto& loss_id : {"m-classnll", "m-logistic", "m-exponential", "m-hinge"})
+    for (const auto& loss_id : {"m-logistic", "m-exponential", "m-hinge"})
     {
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);

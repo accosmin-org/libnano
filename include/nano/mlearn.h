@@ -5,47 +5,50 @@
 namespace nano
 {
     ///
-    /// \brief target value of the positive class
+    /// \brief target value of the positive class.
     ///
     inline scalar_t pos_target() { return +1; }
 
     ///
-    /// \brief target value of the negative class
+    /// \brief target value of the negative class.
     ///
     inline scalar_t neg_target() { return -1; }
 
     ///
-    /// \brief check if a target value maps to a positive class
+    /// \brief check if a target value maps to a positive class.
     ///
     inline bool is_pos_target(const scalar_t target) { return target > 0; }
 
     ///
-    /// \brief target value for multi-class single and multi-label classification problems with [n_labels] classes
+    /// \brief target vector for single and multi-label classification problems with [n_labels] classes.
     ///
-    inline void class_target(vector_t&)
+    namespace detail
     {
-    }
-
-    template <typename... tindices>
-    inline void class_target(vector_t& target, const tensor_size_t index, const tindices... indices)
-    {
-        if (index >= 0 && index < target.size())
+        inline void class_target(vector_t&)
         {
-            target(index) = pos_target();
         }
-        class_target(target, indices...);
+
+        template <typename... tindices>
+        inline void class_target(vector_t& target, const tensor_size_t index, const tindices... indices)
+        {
+            if (index >= 0 && index < target.size())
+            {
+                target(index) = pos_target();
+            }
+            class_target(target, indices...);
+        }
     }
 
     template <typename... tindices>
     inline vector_t class_target(const tensor_size_t n_labels, const tindices... indices)
     {
         vector_t target = vector_t::Constant(n_labels, neg_target());
-        class_target(target, indices...);
+        detail::class_target(target, indices...);
         return target;
     }
 
     ///
-    /// \brief target value for multi-class multi-label classification problems based on the sign of the target
+    /// \brief target vector for multi-label classification problems based on the sign of the predictions.
     ///
     inline vector_t class_target(const vector_t& outputs)
     {

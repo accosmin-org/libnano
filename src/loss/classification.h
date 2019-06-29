@@ -139,7 +139,7 @@ namespace nano
             static auto vgrad(const tarray& target, const tarray& output)
             {
                 return  -target * (-target * output).exp() /
-                    (1 + (-target * output).exp());
+                        (1 + (-target * output).exp());
             }
         };
 
@@ -162,15 +162,12 @@ namespace nano
         };
     }
 
-    using mhinge_loss_t = mclassification_loss_t<detail::hinge_t>;
     using shinge_loss_t = sclassification_loss_t<detail::hinge_t>;
-
     using sclassnll_loss_t = sclassification_loss_t<detail::classnll_t>;
-    using mclassnll_loss_t = mclassification_loss_t<detail::classnll_t>;
-
-    using mlogistic_loss_t = mclassification_loss_t<detail::logistic_t>;
     using slogistic_loss_t = sclassification_loss_t<detail::logistic_t>;
-
-    using mexponential_loss_t = mclassification_loss_t<detail::exponential_t>;
     using sexponential_loss_t = sclassification_loss_t<detail::exponential_t>;
+
+    using mhinge_loss_t = mclassification_loss_t<detail::hinge_t>;
+    using mlogistic_loss_t = mclassification_loss_t<detail::logistic_t>;
+    using mexponential_loss_t = mclassification_loss_t<detail::exponential_t>;
 }
