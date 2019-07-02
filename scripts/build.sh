@@ -146,7 +146,7 @@ function coveralls {
     coveralls --root ${basedir} --gcov-options '\-lp' || return 1
 }
 
-function memcheck {
+function valgrind {
     cd ${libnanodir}
 
     version=3.14.0
@@ -166,16 +166,36 @@ function memcheck {
     returncode=0
     /tmp/valgrind/bin/valgrind --version || return 1
 
+    # MEMCHECK
+    ####################################################################################
     # NB: not using ctest directly because I cannot pass options to memcheck!
     #ctest --output-on-failure -T memcheck
 
     utests=$(ls test/test_* | grep -v .log)
     for utest in ${utests}
     do
-        printf "Running %s ...\n" ${utest}
-        log=${utest/test\//}.log
+        printf "Running memcheck@%s ...\n" ${utest}
+        log=memcheck_${utest/test\//}.log
         /tmp/valgrind/bin/valgrind --tool=memcheck \
             --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
+            --log-file=${log} ${utest} || return 1
+
+        if [[ $? -gt 0 ]]
+        then
+            cat ${log}
+            returncode=1
+        fi
+        printf "\n"
+    done
+
+    # HELGRIND
+    ####################################################################################
+    utests="test_tpool"
+    for utest in ${utests}
+    do
+        printf "Running helgrind@%s ...\n" ${utest}
+        log=helgrind_${utest/test\//}.log
+        /tmp/valgrind/bin/valgrind --tool=helgrind \
             --log-file=${log} ${utest} || return 1
 
         if [[ $? -gt 0 ]]
@@ -292,8 +312,8 @@ options:
         upload code coverage results to codecov.io
     --coveralls
         upload code coverage results to coveralls.io
-    --memcheck
-        run the unit tests through memcheck
+    --valgrind
+        run the unit tests through valgrind tools (e.g. memcheck, helgrind)
     --clang-tidy-check <check name>
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
@@ -358,7 +378,7 @@ while [ "$1" != "" ]; do
                             ;;
         --coveralls)        coveralls || exit 1
                             ;;
-        --memcheck)         memcheck || exit 1
+        --valgrind)         valgrind || exit 1
                             ;;
         --clang-tidy-check) shift
                             clang_tidy $1 || exit 1
