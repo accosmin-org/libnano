@@ -96,7 +96,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=1.87
+    version=1.88
     rm -rf cppcheck-${version}
 
     wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
