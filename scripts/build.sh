@@ -105,9 +105,9 @@ function cppcheck {
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
     cd cppcheck-${version} && mkdir build && cd build
-    cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log || return 1
-    cmake --build . -- -j ${threads} > build.log || return 1
-    cmake --build . --target install || return 1
+    cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
+    cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
+    cmake --build . --target install > install.log 2>&1 || return 1
     cd ../../
     export CXXFLAGS="${OLD_CXXFLAGS}"
 
@@ -156,10 +156,10 @@ function valgrind {
     OLD_CXXFLAGS=${CXXFLAGS}
     export CXXFLAGS=""
     cd valgrind-${version}
-    ./autogen.sh > autogen.log || return 1
-    ./configure --prefix=/tmp/valgrind > config.log || return 1
-    make -j > build.log || return 1
-    make install > install.log || return 1
+    ./autogen.sh > autogen.log 2>&1 || return 1
+    ./configure --prefix=/tmp/valgrind > config.log 2>&1 || return 1
+    make -j > build.log 2>&1 || return 1
+    make install > install.log 2>&1 || return 1
     cd ..
     export CXXFLAGS="${OLD_CXXFLAGS}"
 
