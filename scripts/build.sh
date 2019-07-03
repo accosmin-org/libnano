@@ -178,7 +178,7 @@ function valgrind {
         log=memcheck_${utest/test\//}.log
         /tmp/valgrind/bin/valgrind --tool=memcheck \
             --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
-            --log-file=${log} ${utest} || return 1
+            --log-file=${log} ${utest}
 
         if [[ $? -gt 0 ]]
         then
@@ -197,7 +197,7 @@ function valgrind {
         log=helgrind_${utest/test\//}.log
         /tmp/valgrind/bin/valgrind --tool=helgrind \
             --error-exitcode=1 \
-            --log-file=${log} ${utest} || return 1
+            --log-file=${log} ${utest}
 
         if [[ $? -gt 0 ]]
         then
