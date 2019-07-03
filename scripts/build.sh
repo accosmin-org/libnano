@@ -149,8 +149,8 @@ function coveralls {
 function valgrind {
     cd ${libnanodir}
 
-    version=3.14.0
-    wget -N http://www.valgrind.org/downloads/valgrind-${version}.tar.bz2 || return 1
+    version=3.15.0
+    wget -N https://sourceware.org/pub/valgrind/valgrind-${version}.tar.bz2 || return 1
     tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
 
     OLD_CXXFLAGS=${CXXFLAGS}
