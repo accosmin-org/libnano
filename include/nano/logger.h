@@ -23,7 +23,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        logger_t(const type, std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
+        explicit logger_t(const type, std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
 
         ///
         /// \brief destructor
