@@ -190,12 +190,13 @@ function valgrind {
 
     # HELGRIND
     ####################################################################################
-    utests="test_tpool"
+    utests="test/test_tpool"
     for utest in ${utests}
     do
         printf "Running helgrind@%s ...\n" ${utest}
         log=helgrind_${utest/test\//}.log
         /tmp/valgrind/bin/valgrind --tool=helgrind \
+            --error-exitcode=1 \
             --log-file=${log} ${utest} || return 1
 
         if [[ $? -gt 0 ]]
