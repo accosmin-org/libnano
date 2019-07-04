@@ -70,6 +70,38 @@ UTEST_CASE(empty)
     UTEST_CHECK_EQUAL(tpool_t::size(), std::thread::hardware_concurrency());
 }
 
+UTEST_CASE(future)
+{
+    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+
+    auto future = task.get_future();
+    task(2, 9);
+
+    UTEST_CHECK_EQUAL(future.get(), 512);
+}
+
+UTEST_CASE(future_join)
+{
+    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+
+    auto future = task.get_future();
+    auto thread = std::thread{std::move(task), 2, 10};
+    thread.join();
+
+    UTEST_CHECK_EQUAL(future.get(), 1024);
+}
+
+UTEST_CASE(future_detach)
+{
+    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+
+    auto future = task.get_future();
+    auto thread = std::thread{std::move(task), 2, 11};
+    thread.detach();
+
+    UTEST_CHECK_EQUAL(future.get(), 2048);
+}
+
 UTEST_CASE(enqueue)
 {
     auto& pool = tpool_t::instance();
