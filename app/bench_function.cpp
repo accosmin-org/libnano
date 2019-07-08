@@ -32,8 +32,15 @@ static void eval_func(const function_t& function, table_t& table)
         gx += g.template lpNorm<Eigen::Infinity>();
     }, trials).count();
 
+    scalar_t grad_accuracy = 0;
+    for (size_t i = 0; i < trials; ++ i)
+    {
+        grad_accuracy += function.grad_accuracy(vector_t::Random(dims));
+    }
+
     auto& row = table.append();
-    row << function.name() << fval_time << grad_time;
+    row << function.name() << fval_time << grad_time
+        << nano::precision(12) << (grad_accuracy / static_cast<scalar_t>(trials));
 }
 
 static int unsafe_main(int argc, const char* argv[])
@@ -58,7 +65,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto functions = std::regex(cmdline.get<string_t>("functions"));
 
     table_t table;
-    table.header() << "function" << "f(x) [ns]" << "f(x,g) [ns]";
+    table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
