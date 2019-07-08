@@ -99,17 +99,20 @@ function cppcheck {
     version=1.88
     rm -rf cppcheck-${version}
 
-    wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
-    tar -xf ${version}.tar.gz > /dev/null || return 1
+    installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
+    if [ "${installed_version}" != "Cppcheck ${version}" ]; then
+        wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
+        tar -xf ${version}.tar.gz > /dev/null || return 1
 
-    OLD_CXXFLAGS=${CXXFLAGS}
-    export CXXFLAGS=""
-    cd cppcheck-${version} && mkdir build && cd build
-    cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
-    cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
-    cmake --build . --target install > install.log 2>&1 || return 1
-    cd ../../
-    export CXXFLAGS="${OLD_CXXFLAGS}"
+        OLD_CXXFLAGS=${CXXFLAGS}
+        export CXXFLAGS=""
+        cd cppcheck-${version} && mkdir build && cd build
+        cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
+        cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
+        cmake --build . --target install > install.log 2>&1 || return 1
+        cd ../../
+        export CXXFLAGS="${OLD_CXXFLAGS}"
+    fi
 
     /tmp/cppcheck/bin/cppcheck --version || return 1
 
