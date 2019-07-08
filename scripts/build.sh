@@ -97,9 +97,8 @@ function cppcheck {
     cd ${libnanodir}
 
     version=1.88
-    rm -rf cppcheck-${version}
-
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
+
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
         wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
         tar -xf ${version}.tar.gz > /dev/null || return 1
@@ -153,18 +152,22 @@ function valgrind {
     cd ${libnanodir}
 
     version=3.15.0
-    wget -N https://sourceware.org/pub/valgrind/valgrind-${version}.tar.bz2 || return 1
-    tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
+    installed_version=$(/tmp/valgrind/bin/valgrind --version)
 
-    OLD_CXXFLAGS=${CXXFLAGS}
-    export CXXFLAGS=""
-    cd valgrind-${version}
-    ./autogen.sh > autogen.log 2>&1 || return 1
-    ./configure --prefix=/tmp/valgrind > config.log 2>&1 || return 1
-    make -j > build.log 2>&1 || return 1
-    make install > install.log 2>&1 || return 1
-    cd ..
-    export CXXFLAGS="${OLD_CXXFLAGS}"
+    if [ "${installed_version}" != "valgrind-${version}" ]; then
+        wget -N https://sourceware.org/pub/valgrind/valgrind-${version}.tar.bz2 || return 1
+        tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
+
+        OLD_CXXFLAGS=${CXXFLAGS}
+        export CXXFLAGS=""
+        cd valgrind-${version}
+        ./autogen.sh > autogen.log 2>&1 || return 1
+        ./configure --prefix=/tmp/valgrind > config.log 2>&1 || return 1
+        make -j > build.log 2>&1 || return 1
+        make install > install.log 2>&1 || return 1
+        cd ..
+        export CXXFLAGS="${OLD_CXXFLAGS}"
+    fi
 
     returncode=0
     /tmp/valgrind/bin/valgrind --version || return 1
