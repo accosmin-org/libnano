@@ -278,7 +278,7 @@ matrix:
 
     - os: linux
       compiler: gcc
-      env: TEST="valgrind (gcc-7)"
+      env: TEST="memcheck (gcc-7)"
       addons:
         apt:
           packages: ['gcc-7', 'g++-7', 'valgrind']
@@ -286,7 +286,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --valgrind
+        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --memcheck
 
     - os: linux
       compiler: gcc
