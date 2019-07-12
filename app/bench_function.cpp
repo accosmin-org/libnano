@@ -1,8 +1,6 @@
-#include <iostream>
 #include <nano/stats.h>
 #include <nano/table.h>
 #include <nano/logger.h>
-#include <nano/chrono.h>
 #include <nano/cmdline.h>
 #include <nano/function.h>
 

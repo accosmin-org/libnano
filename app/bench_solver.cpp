@@ -1,9 +1,6 @@
-#include <iomanip>
-#include <iostream>
 #include <nano/stats.h>
 #include <nano/table.h>
 #include <nano/tpool.h>
-#include <nano/chrono.h>
 #include <nano/logger.h>
 #include <nano/solver.h>
 #include <nano/cmdline.h>

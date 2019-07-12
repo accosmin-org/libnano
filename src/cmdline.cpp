@@ -115,16 +115,20 @@ void cmdline_t::process(const int argc, const char* argv[])
 
 void cmdline_t::process(const string_t& config)
 {
-    const auto tokens = nano::split(config, " \t\n\r");
-
-    std::vector<const char*> ptokens(1 + tokens.size());
-    ptokens[0] = nullptr;
-    for (size_t i = 0; i < tokens.size(); ++ i)
+    strings_t tokens;
+    for (auto tokenizer = tokenizer_t{config, " \t\n\r"}; tokenizer; ++ tokenizer)
     {
-        ptokens[i + 1] = tokens[i].data();
+        tokens.push_back(tokenizer.get());
     }
 
-    process(static_cast<int>(tokens.size() + 1), ptokens.data());
+    std::vector<const char*> ptokens;
+    ptokens.push_back(nullptr);
+    for (const auto& token : tokens)
+    {
+        ptokens.push_back(token.c_str());
+    }
+
+    process(static_cast<int>(ptokens.size()), ptokens.data());
 }
 
 void cmdline_t::process_config_file(const string_t& path)

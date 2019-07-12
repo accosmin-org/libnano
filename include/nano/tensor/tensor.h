@@ -348,6 +348,15 @@ namespace nano
         template <typename... tsizes>
         auto reshape(const tsizes... sizes) { return treshape(data(), sizes...); }
 
+        ///
+        /// \brief iterators for Eigen matrices for STL compatibility.
+        ///
+        auto begin() { return data(); }
+        auto begin() const { return data(); }
+
+        auto end() { return data() + size(); }
+        auto end() const { return data() + size(); }
+
     private:
 
         template <typename tarray>

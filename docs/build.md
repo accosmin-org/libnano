@@ -101,7 +101,9 @@ options:
     --coveralls
         upload code coverage results to coveralls.io
     --memcheck
-        run the unit tests through memcheck
+        run the unit tests through memcheck (e.g. detects unitialized variales, memory leaks, invalid memory accesses)
+    --helgrind
+        run the unit tests through helgrind (e.g. detects data races)
     --clang-tidy-check <check name>
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>

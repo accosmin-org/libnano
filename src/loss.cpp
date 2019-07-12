@@ -20,11 +20,11 @@ loss_factory_t& loss_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        manager.add<cauchy_loss_t> ("cauchy",
+        manager.add<cauchy_loss_t>("cauchy",
             "multivariate regression:     l(y, t) = 1/2 * log(1 + (y - t)^2)");
-        manager.add<squared_loss_t> ("squared",
+        manager.add<squared_loss_t>("squared",
             "multivariate regression:     l(y, t) = 1/2 * (y - t)^2");
-        manager.add<absolute_loss_t> ("absolute",
+        manager.add<absolute_loss_t>("absolute",
             "multivariate regression:     l(y, t) = |y - t|");
 
         manager.add<shinge_loss_t>("s-hinge",

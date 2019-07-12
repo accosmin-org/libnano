@@ -25,13 +25,17 @@ set(solver_sources
 set(loss_sources
     loss.cpp)
 
+set(dataset_sources
+    dataset.cpp
+    dataset/tabular.cpp)
+
 add_library(nano
     table.cpp
-    logger.cpp
     cmdline.cpp
     function.cpp
     ${loss_sources}
     ${solver_sources}
+    ${dataset_sources}
     ${lsearch0_sources}
     ${lsearchk_sources})
 

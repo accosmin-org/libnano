@@ -1,7 +1,9 @@
 #pragma once
 
-#include <ostream>
-#include <nano/arch.h>
+#include <ctime>
+#include <string>
+#include <iomanip>
+#include <iostream>
 #include <nano/chrono.h>
 
 namespace nano
@@ -9,7 +11,7 @@ namespace nano
     ///
     /// \brief logging object.
     ///
-    class NANO_PUBLIC logger_t
+    class logger_t
     {
     public:
 
@@ -23,12 +25,23 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit logger_t(const type, std::ostream* cout = nullptr, std::ostream* cerr = nullptr);
+        explicit logger_t(const type ltype, std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr) :
+            m_stream(get_stream(ltype, cout, cerr)),
+            m_precision(m_stream.precision())
+        {
+            const std::time_t t = std::time(nullptr);
+            m_stream << "[" << std::put_time(std::localtime(&t), "%F|%T") << "|" << get_header(ltype) << "]: ";
+            m_stream << std::fixed << std::setprecision(6);
+        }
 
         ///
         /// \brief destructor
         ///
-        ~logger_t();
+        ~logger_t()
+        {
+            m_stream << std::endl;
+            m_stream.precision(m_precision);
+        }
 
         ///
         /// \brief log tokens
@@ -51,6 +64,28 @@ namespace nano
 
     private:
 
+        static std::ostream& get_stream(const logger_t::type type, std::ostream* cout, std::ostream* cerr)
+        {
+            switch (type)
+            {
+            case logger_t::type::info:      return (cout ? *cout : std::cout);
+            case logger_t::type::warn:      return (cout ? *cout : std::cout);
+            case logger_t::type::error:     return (cerr ? *cerr : std::cerr);
+            default:                        return (cout ? *cout : std::cout);
+            }
+        }
+
+        static char get_header(const logger_t::type type)
+        {
+            switch (type)
+            {
+            case logger_t::type::info:      return 'i';
+            case logger_t::type::warn:      return 'w';
+            case logger_t::type::error:     return 'e';
+            default:                        return '?';
+            }
+        }
+
         // attributes
         std::ostream&   m_stream;       ///< stream to write into
         std::streamsize m_precision;    ///< original precision to restore
@@ -59,17 +94,17 @@ namespace nano
     ///
     /// \brief specific [information, warning, error] line loggers.
     ///
-    inline logger_t log_info(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_info(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
     {
         return logger_t(logger_t::type::info, cout, cerr);
     }
 
-    inline logger_t log_warning(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_warning(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
     {
         return logger_t(logger_t::type::warn, cout, cerr);
     }
 
-    inline logger_t log_error(std::ostream* cout = nullptr, std::ostream* cerr = nullptr)
+    inline logger_t log_error(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
     {
         return logger_t(logger_t::type::error, cout, cerr);
     }

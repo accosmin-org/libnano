@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/string.h>
 #include <nlohmann/json.hpp>
-#include <nano/string_utils.h>
 
 namespace nano
 {
@@ -59,17 +59,30 @@ namespace nano
     }
 
     ///
-    /// \brief retrieve the attribute with the given name and check that is within the [min, max] range.
-    /// NB: an exception is thrown otherwise.
+    /// \brief retrieve the attribute with the given name and
+    ///     checks that is within the [min, max] range and throws an exception otherwise.
     ///
     template <typename tscalar, typename tscalar_min, typename tscalar_max>
-    void from_json_range(const json_t& json, const char* name, tscalar& value,
-        const tscalar_min min, const tscalar_max max)
+    void from_json_range(const json_t& json, const char* name,
+        tscalar& value, const tscalar_min min, const tscalar_max max)
     {
         const auto count = from_json(json, name, value);
-        if (count > 0 && (value < static_cast<tscalar>(min) || value > static_cast<tscalar>(max)))
+        if (count && (value < static_cast<tscalar>(min) || value > static_cast<tscalar>(max)))
         {
-            throw std::invalid_argument(strcat("invalid ", name, " parameter"));
+            throw std::invalid_argument(
+                strcat("invalid JSON attribute '", name, "', expected to be in the range [", min, ",", max, "]"));
+        }
+    }
+
+    ///
+    /// \brief checks the presence of the attribute with the given name and throws an exception otherwise.
+    ///
+    inline void require_json(const json_t& json, const char* name)
+    {
+        if (!json.count(name))
+        {
+            throw std::invalid_argument(
+                strcat("missing JSON attribute '", name, "'"));
         }
     }
 

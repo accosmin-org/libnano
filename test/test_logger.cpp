@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <utest/utest.h>
 #include <nano/logger.h>
-#include <nano/string_utils.h>
+#include <nano/string.h>
 
 using namespace nano;
 

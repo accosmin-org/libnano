@@ -1,10 +1,10 @@
 #include <fstream>
-#include <iostream>
 #include <nano/loss.h>
 #include <nano/table.h>
 #include <nano/logger.h>
 #include <nano/solver.h>
 #include <nano/cmdline.h>
+#include <nano/dataset.h>
 #include <nano/version.h>
 
 using namespace nano;
@@ -46,6 +46,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearchk",             "regex to select line-search strategies", ".+");
     cmdline.add("", "solver",               "regex to select numerical optimization methods", ".+");
     cmdline.add("", "loss",                 "regex to select loss functions", ".+");
+    cmdline.add("", "dataset",              "regex to select datasets", ".+");
     cmdline.add("", "as-table",             "display the selected objects in a table");
     cmdline.add("", "as-json",              "display the default configuration for the selected objects as JSON");
     cmdline.add("", "version",              "library version");
@@ -57,6 +58,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_lsearchk = cmdline.has("lsearchk");
     const auto has_solver = cmdline.has("solver");
     const auto has_loss = cmdline.has("loss");
+    const auto has_dataset = cmdline.has("dataset");
     const auto has_as_table = cmdline.has("as-table");
     const auto has_as_json = cmdline.has("as-json");
     const auto has_version = cmdline.has("version");
@@ -72,6 +74,7 @@ static int unsafe_main(int argc, const char* argv[])
         !has_lsearchk &&
         !has_solver &&
         !has_loss &&
+        !has_dataset &&
         !has_version &&
         !has_git_hash)
     {
@@ -95,6 +98,10 @@ static int unsafe_main(int argc, const char* argv[])
     if (has_loss)
     {
         print("loss", loss_t::all(), cmdline.get<string_t>("loss"), has_as_table, has_as_json);
+    }
+    if (has_dataset)
+    {
+        print("dataset", dataset_t::all(), cmdline.get<string_t>("dataset"), has_as_table, has_as_json);
     }
     if (has_version)
     {

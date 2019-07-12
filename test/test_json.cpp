@@ -34,6 +34,18 @@ UTEST_CASE(from_json)
     UTEST_CHECK_EQUAL(floating, 1.0f);
 }
 
+UTEST_CASE(require_json)
+{
+    json_t json;
+    json["str"] = "string";
+    json["float"] = 1.0f;
+    json["int"] = 1;
+    UTEST_CHECK_NOTHROW(require_json(json, "str"));
+    UTEST_CHECK_NOTHROW(require_json(json, "float"));
+    UTEST_CHECK_NOTHROW(require_json(json, "int"));
+    UTEST_CHECK_THROW(require_json(json, "what"), std::invalid_argument);
+}
+
 UTEST_CASE(from_range_range_ok)
 {
     const auto json = to_json("value", 1);

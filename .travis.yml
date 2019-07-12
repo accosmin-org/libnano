@@ -290,6 +290,18 @@ matrix:
 
     - os: linux
       compiler: gcc
+      env: TEST="helgrind (gcc-7)"
+      addons:
+        apt:
+          packages: ['gcc-7', 'g++-7', 'valgrind']
+          sources: &sources
+            - ubuntu-toolchain-r-test
+          update: true
+      script:
+        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --helgrind || true
+
+    - os: linux
+      compiler: gcc
       env: TEST="codecov (gcc-7)"
       addons:
         apt:

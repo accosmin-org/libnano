@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <nano/arch.h>
-#include <nano/string_utils.h>
+#include <nano/string.h>
 
 namespace nano
 {

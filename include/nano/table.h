@@ -1,13 +1,40 @@
 #pragma once
 
+#include <limits>
 #include <cassert>
 #include <algorithm>
 #include <nano/arch.h>
 #include <nano/scalar.h>
-#include <nano/string_utils.h>
+#include <nano/string.h>
 
 namespace nano
 {
+    ///
+    /// \brief construct an operator to compare two strings numerically
+    ///
+    template <typename tscalar>
+    auto make_less_from_string()
+    {
+        return [] (const string_t& v1, const string_t& v2)
+        {
+            return  from_string<tscalar>(v1, std::numeric_limits<tscalar>::lowest()) <
+                    from_string<tscalar>(v2, std::numeric_limits<tscalar>::max());
+        };
+    }
+
+    ///
+    /// \brief construct an operator to compare two strings numerically
+    ///
+    template <typename tscalar>
+    auto make_greater_from_string()
+    {
+        return [] (const string_t& v1, const string_t& v2)
+        {
+            return  from_string<tscalar>(v1, std::numeric_limits<tscalar>::max()) >
+                    from_string<tscalar>(v2, std::numeric_limits<tscalar>::lowest());
+        };
+    }
+
     ///
     /// \brief cell in a table.
     ///
@@ -141,7 +168,7 @@ namespace nano
         /// \brief select the columns that satisfy the given operator
         ///
         template <typename tscalar, typename toperator>
-        indices_t select(const toperator& op) const;
+        std::vector<size_t> select(const toperator& op) const;
 
         ///
         /// \brief access functions
@@ -225,7 +252,7 @@ namespace nano
         /// e.g. toperator can be nano::make_[less|greater]_from_string<tscalar>
         ///
         template <typename toperator>
-        void sort(const toperator&, const indices_t& columns);
+        void sort(const toperator&, const std::vector<size_t>& columns);
 
         ///
         /// \brief mark row-wise the selected columns with the given operator
@@ -272,9 +299,9 @@ namespace nano
     }
 
     template <typename tscalar, typename toperator>
-    indices_t row_t::select(const toperator& op) const
+    std::vector<size_t> row_t::select(const toperator& op) const
     {
-        indices_t indices;
+        std::vector<size_t> indices;
         for (const auto& cv : collect<tscalar>())
         {
             if (op(cv.second))
@@ -286,7 +313,7 @@ namespace nano
     }
 
     template <typename toperator>
-    void table_t::sort(const toperator& comp, const indices_t& columns)
+    void table_t::sort(const toperator& comp, const std::vector<size_t>& columns)
     {
         std::stable_sort(m_rows.begin(), m_rows.end(), [&] (const row_t& row1, const row_t& row2)
         {
@@ -345,9 +372,9 @@ namespace nano
         }
 
         template <typename tscalar, typename toperator>
-        indices_t filter(const std::vector<std::pair<size_t, tscalar>>& values, const toperator& op)
+        std::vector<size_t> filter(const std::vector<std::pair<size_t, tscalar>>& values, const toperator& op)
         {
-            indices_t indices;
+            std::vector<size_t> indices;
             std::for_each(values.begin(), values.end(), [&] (const auto& cv)
             {
                 if (op(cv.second))
@@ -359,13 +386,13 @@ namespace nano
         }
 
         template <typename tscalar>
-        indices_t filter_less(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
+        std::vector<size_t> filter_less(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
         {
             return filter(values, [threshold = threshold] (const auto& cvlt) { return cvlt < threshold; });
         }
 
         template <typename tscalar>
-        indices_t filter_greater(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
+        std::vector<size_t> filter_greater(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
         {
             return filter(values, [threshold = threshold] (const auto& cvgt) { return cvgt > threshold; });
         }
@@ -381,7 +408,7 @@ namespace nano
         {
             const auto values = row.collect<tscalar>();
             const auto it = detail::min_element(values);
-            return (it == values.end()) ? indices_t{} : indices_t{it->first};
+            return (it == values.end()) ? std::vector<size_t>{} : std::vector<size_t>{it->first};
         };
     }
 
@@ -391,11 +418,11 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_col()
     {
-        return [=] (const row_t& row) -> indices_t
+        return [=] (const row_t& row) -> std::vector<size_t>
         {
             const auto values = row.collect<tscalar>();
             const auto it = detail::max_element(values);
-            return (it == values.end()) ? indices_t{} : indices_t{it->first};
+            return (it == values.end()) ? std::vector<size_t>{} : std::vector<size_t>{it->first};
         };
     }
 
@@ -409,7 +436,7 @@ namespace nano
         {
             const auto values = row.collect<tscalar>();
             const auto it = detail::max_element(values);
-            return (it == values.end()) ? indices_t{} : detail::filter_greater(values, it->second - epsilon);
+            return (it == values.end()) ? std::vector<size_t>{} : detail::filter_greater(values, it->second - epsilon);
         };
     }
 
@@ -423,7 +450,7 @@ namespace nano
         {
             const auto values = row.collect<tscalar>();
             const auto it = detail::min_element(values);
-            return (it == values.end()) ? indices_t{} : detail::filter_less(values, it->second + epsilon);
+            return (it == values.end()) ? std::vector<size_t>{} : detail::filter_less(values, it->second + epsilon);
         };
     }
 
@@ -439,7 +466,7 @@ namespace nano
             assert(percentage <= tscalar(99));
             const auto values = row.collect<tscalar>();
             const auto it = detail::max_element(values);
-            return  (it == values.end()) ? indices_t{} : detail::filter_greater(values,
+            return  (it == values.end()) ? std::vector<size_t>{} : detail::filter_greater(values,
                     it->second - percentage * (it->second < 0 ? -it->second : +it->second) / tscalar(100));
         };
     }
@@ -456,7 +483,7 @@ namespace nano
             assert(percentage <= tscalar(99));
             const auto values = row.collect<tscalar>();
             const auto it = detail::min_element(values);
-            return  (it == values.end()) ? indices_t{} : detail::filter_less(values,
+            return  (it == values.end()) ? std::vector<size_t>{} : detail::filter_less(values,
                     it->second + percentage * (it->second < 0 ? -it->second : +it->second) / tscalar(100));
         };
     }

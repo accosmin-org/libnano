@@ -148,9 +148,7 @@ function coveralls {
     coveralls --root ${basedir} --gcov-options '\-lp' || return 1
 }
 
-function valgrind {
-    cd ${libnanodir}
-
+function build_valgrind {
     version=3.15.0
     installed_version=$(/tmp/valgrind/bin/valgrind --version)
 
@@ -169,14 +167,18 @@ function valgrind {
         export CXXFLAGS="${OLD_CXXFLAGS}"
     fi
 
-    returncode=0
     /tmp/valgrind/bin/valgrind --version || return 1
+}
 
-    # MEMCHECK
-    ####################################################################################
+function memcheck {
+    cd ${libnanodir}
+
+    build_valgrind || return 1
+
     # NB: not using ctest directly because I cannot pass options to memcheck!
     #ctest --output-on-failure -T memcheck
 
+    returncode=0
     utests=$(ls test/test_* | grep -v .log)
     for utest in ${utests}
     do
@@ -194,8 +196,15 @@ function valgrind {
         printf "\n"
     done
 
-    # HELGRIND
-    ####################################################################################
+    return ${returncode}
+}
+
+function helgrind {
+    cd ${libnanodir}
+
+    build_valgrind || return 1
+
+    returncode=0
     utests="test/test_tpool"
     for utest in ${utests}
     do
@@ -209,7 +218,7 @@ function valgrind {
         then
             cat ${log}
             # NB: ignore for now the warnings reported by helgrind!
-            #returncode=1
+            returncode=1
         fi
         printf "\n"
     done
@@ -320,8 +329,10 @@ options:
         upload code coverage results to codecov.io
     --coveralls
         upload code coverage results to coveralls.io
-    --valgrind
-        run the unit tests through valgrind tools (e.g. memcheck, helgrind)
+    --memcheck
+        run the unit tests through memcheck (e.g. detects unitialized variales, memory leaks, invalid memory accesses)
+    --helgrind
+        run the unit tests through helgrind (e.g. detects data races)
     --clang-tidy-check <check name>
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
@@ -386,7 +397,9 @@ while [ "$1" != "" ]; do
                             ;;
         --coveralls)        coveralls || exit 1
                             ;;
-        --valgrind)         valgrind || exit 1
+        --memcheck)         memcheck || exit 1
+                            ;;
+        --helgrind)         helgrind || exit 1
                             ;;
         --clang-tidy-check) shift
                             clang_tidy $1 || exit 1

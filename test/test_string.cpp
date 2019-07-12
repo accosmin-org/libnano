@@ -1,7 +1,7 @@
 #include <set>
 #include <list>
 #include <utest/utest.h>
-#include <nano/string_utils.h>
+#include <nano/string.h>
 
 enum class enum_type
 {
@@ -90,26 +90,6 @@ UTEST_CASE(strcat)
     UTEST_CHECK_EQUAL(nano::strcat("str", nano::string_t("x"), 'a', 42, nano::string_t("end")), "strxa42end");
 }
 
-UTEST_CASE(make_less)
-{
-    const auto less = nano::make_less_from_string<int>();
-
-    UTEST_CHECK_EQUAL(less("1", "2"), true);
-    UTEST_CHECK_EQUAL(less("2", "1"), false);
-    UTEST_CHECK_EQUAL(less("x", "1"), true);
-    UTEST_CHECK_EQUAL(less("2", "x"), true);
-}
-
-UTEST_CASE(make_greater)
-{
-    const auto greater = nano::make_greater_from_string<int>();
-
-    UTEST_CHECK_EQUAL(greater("1", "2"), false);
-    UTEST_CHECK_EQUAL(greater("2", "1"), true);
-    UTEST_CHECK_EQUAL(greater("x", "1"), true);
-    UTEST_CHECK_EQUAL(greater("2", "x"), true);
-}
-
 UTEST_CASE(contains)
 {
     UTEST_CHECK_EQUAL(nano::contains("", 't'), false);
@@ -128,29 +108,44 @@ UTEST_CASE(resize)
 
 UTEST_CASE(split_str)
 {
-    const auto tokens = nano::split("= -token1 token2 something ", " =-");
-
-    UTEST_REQUIRE(tokens.size() == 3);
-    UTEST_CHECK_EQUAL(tokens[0], "token1");
-    UTEST_CHECK_EQUAL(tokens[1], "token2");
-    UTEST_CHECK_EQUAL(tokens[2], "something");
+    const auto str = nano::string_t{"= -token1 token2 something "};
+    for (auto tokenizer = nano::tokenizer_t{str, " =-"}; tokenizer; ++ tokenizer)
+    {
+        switch (tokenizer.count())
+        {
+        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "token1"); break;
+        case 2:     UTEST_CHECK_EQUAL(tokenizer.get(), "token2"); break;
+        case 3:     UTEST_CHECK_EQUAL(tokenizer.get(), "something"); break;
+        default:    UTEST_CHECK(false);
+        }
+    }
 }
 
 UTEST_CASE(split_char)
 {
-    const auto tokens = nano::split("= -token1 token2 something ", '-');
-
-    UTEST_REQUIRE(tokens.size() == 2);
-    UTEST_CHECK_EQUAL(tokens[0], "= ");
-    UTEST_CHECK_EQUAL(tokens[1], "token1 token2 something ");
+    const auto str = nano::string_t{"= -token1 token2 something "};
+    for (auto tokenizer = nano::tokenizer_t{str, "-"}; tokenizer; ++ tokenizer)
+    {
+        switch (tokenizer.count())
+        {
+        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "= "); break;
+        case 2:     UTEST_CHECK_EQUAL(tokenizer.get(), "token1 token2 something "); break;
+        default:    UTEST_CHECK(false);
+        }
+    }
 }
 
 UTEST_CASE(split_none)
 {
-    const auto tokens = nano::split("= -token1 token2 something ", "@");
-
-    UTEST_REQUIRE(tokens.size() == 1);
-    UTEST_CHECK_EQUAL(tokens[0], "= -token1 token2 something ");
+    const auto str = nano::string_t{"= -token1 token2 something "};
+    for (auto tokenizer = nano::tokenizer_t{str, "@"}; tokenizer; ++ tokenizer)
+    {
+        switch (tokenizer.count())
+        {
+        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "= -token1 token2 something "); break;
+        default:    UTEST_CHECK(false);
+        }
+    }
 }
 
 UTEST_CASE(lower)

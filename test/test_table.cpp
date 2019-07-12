@@ -12,17 +12,38 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::pair<size_t, t
     return os << "}";
 }
 
-std::ostream& operator<<(std::ostream& os, const nano::indices_t& indices)
+template <typename tscalar>
+std::ostream& operator<<(std::ostream& os, const std::vector<tscalar>& values)
 {
     os << "{";
-    for (const auto& index : indices)
+    for (const auto& value : values)
     {
-        os << "{" << index << "}";
+        os << "{" << value << "}";
     }
     return os << "}";
 }
 
 UTEST_BEGIN_MODULE(test_core_table)
+
+UTEST_CASE(make_less)
+{
+    const auto less = nano::make_less_from_string<int>();
+
+    UTEST_CHECK_EQUAL(less("1", "2"), true);
+    UTEST_CHECK_EQUAL(less("2", "1"), false);
+    UTEST_CHECK_EQUAL(less("x", "1"), true);
+    UTEST_CHECK_EQUAL(less("2", "x"), true);
+}
+
+UTEST_CASE(make_greater)
+{
+    const auto greater = nano::make_greater_from_string<int>();
+
+    UTEST_CHECK_EQUAL(greater("1", "2"), false);
+    UTEST_CHECK_EQUAL(greater("2", "1"), true);
+    UTEST_CHECK_EQUAL(greater("x", "1"), true);
+    UTEST_CHECK_EQUAL(greater("2", "x"), true);
+}
 
 UTEST_CASE(table)
 {
@@ -103,10 +124,10 @@ UTEST_CASE(table_rows)
         const auto indices1 = table.row(1).select<int>([] (const auto value) { return value >= 3000; });
         const auto indices2 = table.row(2).select<int>([] (const auto value) { return value >= 3000; });
         const auto indices3 = table.row(3).select<int>([] (const auto value) { return value >= 3000; });
-        UTEST_CHECK_EQUAL(indices0, (indices_t{}));
-        UTEST_CHECK_EQUAL(indices1, (indices_t{2, 3}));
-        UTEST_CHECK_EQUAL(indices2, (indices_t{1}));
-        UTEST_CHECK_EQUAL(indices3, (indices_t{}));
+        UTEST_CHECK_EQUAL(indices0, (std::vector<size_t>{}));
+        UTEST_CHECK_EQUAL(indices1, (std::vector<size_t>{2, 3}));
+        UTEST_CHECK_EQUAL(indices2, (std::vector<size_t>{1}));
+        UTEST_CHECK_EQUAL(indices3, (std::vector<size_t>{}));
     }
 }
 

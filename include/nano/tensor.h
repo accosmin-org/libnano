@@ -5,6 +5,9 @@
 
 namespace nano
 {
+    using scalar_t = double;
+    using indices_t = tensor_vector_t<tensor_size_t>;
+
     using vector_t = tensor_vector_t<scalar_t>;
     using matrix_t = tensor_matrix_t<scalar_t>;
 

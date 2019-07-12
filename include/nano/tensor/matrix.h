@@ -49,3 +49,33 @@ namespace nano
         return tresult(data, rows, cols);
     }
 }
+
+namespace Eigen
+{
+    ///
+    /// \brief iterators for Eigen matrices for STL compatibility.
+    ///
+    template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    auto begin(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    {
+        return m.data();
+    }
+
+    template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    auto begin(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    {
+        return m.data();
+    }
+
+    template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    auto end(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    {
+        return m.data() + m.size();
+    }
+
+    template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    auto end(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    {
+        return m.data() + m.size();
+    }
+}

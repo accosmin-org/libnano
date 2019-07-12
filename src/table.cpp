@@ -169,27 +169,28 @@ bool table_t::load(const string_t& path, const char* delimiter, const bool load_
     size_t count = 0, cols = 0;
     for (string_t line; std::getline(is, line); ++ count)
     {
-        const auto tokens = nano::split(line, delimiter);
-        if (!tokens.empty() && !line.empty())
+        if (line.empty())
+            continue;
+
+        auto* row = (!count && load_header) ? &header() : &append();
+
+        for (auto tokenizer = tokenizer_t{line, delimiter}; tokenizer; ++ tokenizer)
         {
-            if (!count && load_header)
-            {
-                header() << tokens;
-                delim();
-            }
-            else if (tokens.size() != cols && cols)
+            if (tokenizer.count() > cols && cols)
             {
                 return false;
             }
-            else
-            {
-                append() << tokens;
-            }
+            (*row) << tokenizer.get();
+        }
 
-            if (cols == 0)
-            {
-                cols = this->cols();
-            }
+        if (!count && load_header)
+        {
+            delim();
+        }
+
+        if (cols == 0)
+        {
+            cols = this->cols();
         }
     }
 
@@ -198,7 +199,7 @@ bool table_t::load(const string_t& path, const char* delimiter, const bool load_
 
 std::ostream& table_t::print(std::ostream& os) const
 {
-    sizes_t colsizes(this->cols(), 0);
+    std::vector<size_t> colsizes(this->cols(), 0);
 
     // size of the value columns (in characters) - step1: single column cells
     for (const auto& row : m_rows)
