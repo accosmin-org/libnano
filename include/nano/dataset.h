@@ -4,7 +4,7 @@
 #include <nano/json.h>
 #include <nano/mlearn.h>
 #include <nano/factory.h>
-#include <nano/feature.h>
+#include <nano/dataset/feature.h>
 
 namespace nano
 {

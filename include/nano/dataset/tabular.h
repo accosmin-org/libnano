@@ -5,20 +5,18 @@
 namespace nano
 {
     ///
-    /// \brief create machine learning dataset from tabular data (CSV files).
+    /// \brief interface to create machine learning datasets from tabular data (CSV files).
     ///
+    /// NB: the customization point (in the derived classes)
+    ///     consists of generating the training, validation and test dataset splits.
     ///
-    class tabular_dataset_t : public dataset_t
+    class NANO_PUBLIC tabular_dataset_t : public dataset_t
     {
     public:
 
         tabular_dataset_t() = default;
-        tabular_dataset_t(std::vector<feature_t> features);
 
         bool load() override;
-
-        json_t config() const override;
-        void config(const json_t&) override;
 
         size_t folds() const override;
         void shuffle(const fold_t&) override;
@@ -30,18 +28,23 @@ namespace nano
         tensor4d_t inputs(const fold_t&) const override;
         tensor4d_t targets(const fold_t&) const override;
 
-    protected:
-
         ///
         /// \brief generate a split into training, validation and test.
         ///
-        virtual void split(split_t&) const;
+        virtual void split(const tensor_size_t samples, split_t&) const = 0;
+
+        ///
+        /// \brief setup tabular dataset (e.g. csv paths, delimeter string, folds, features)
+        ///
+        void delim(string_t);
+        void paths(strings_t paths);
+        void folds(const size_t folds);
+        void features(std::vector<feature_t>, const size_t target = string_t::npos);
 
     private:
 
         auto samples() const { return m_inputs.size<0>(); }
 
-        bool split();
         bool parse(const string_t& path, tensor_size_t& row_offset);
 
         void store(const tensor_size_t row, const size_t feature, const scalar_t value);
@@ -50,13 +53,9 @@ namespace nano
         indices_t& indices(const fold_t&);
         const indices_t& indices(const fold_t&) const;
 
-        static tensor_size_t lines(const string_t& path);
-        static tensor4d_t index(const tensor4d_t&, const indices_t&);
-
     private:
 
         // attributes
-        tensor_size_t           m_train_per{80};///< percentage ot samples used for training (without the test samples)
         string_t                m_delim{","};   ///< CSV delimeter character
         strings_t               m_paths;        ///< CSV files to load one after the other
         size_t                  m_target{string_t::npos};///< index of the target column (if negative, then not provided)
