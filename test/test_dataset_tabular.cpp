@@ -372,6 +372,10 @@ UTEST_CASE(load_no_target)
             CSVFixture::check(inputs(row, 2, 0, 0), index, 2);
             CSVFixture::check(inputs(row, 3, 0, 0), index, 3);
         }
+
+        UTEST_CHECK_NOTHROW(dataset.shuffle(fold_t{f, protocol::train}));
+        UTEST_CHECK_NOTHROW(dataset.shuffle(fold_t{f, protocol::valid}));
+        UTEST_CHECK_NOTHROW(dataset.shuffle(fold_t{f, protocol::test}));
     }
 }
 
