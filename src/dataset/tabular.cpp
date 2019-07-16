@@ -5,7 +5,7 @@
 
 using namespace nano;
 
-static tensor_size_t lines(const string_t& path)
+static tensor_size_t lines(const string_t& path, const char skip)
 {
     string_t line;
     tensor_size_t count = 0;
@@ -13,7 +13,7 @@ static tensor_size_t lines(const string_t& path)
 
     while (std::getline(stream, line))
     {
-        if (!line.empty() && line[0] != '#')
+        if (!line.empty() && line[0] != skip)
         {
             ++ count;
         }
@@ -33,6 +33,11 @@ static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
     }
 
     return idata;
+}
+
+void tabular_dataset_t::skip(const char skip)
+{
+    m_skip = skip;
 }
 
 void tabular_dataset_t::delim(string_t delim)
@@ -83,7 +88,7 @@ bool tabular_dataset_t::load()
     tensor_size_t data_size = 0;
     for (const auto& path : m_paths)
     {
-        data_size += lines(path);
+        data_size += lines(path, m_skip);
     }
 
     tensor_size_t n_inputs = 0, n_targets = 0;
@@ -219,7 +224,7 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset)
     std::ifstream stream(path);
     for (tensor_size_t row = 0; std::getline(stream, line); )
     {
-        if (line.empty() || line[0] == '#')
+        if (line.empty() || line[0] == m_skip)
         {
             continue;
         }

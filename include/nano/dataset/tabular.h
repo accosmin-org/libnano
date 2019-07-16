@@ -36,6 +36,7 @@ namespace nano
         ///
         /// \brief setup tabular dataset (e.g. csv paths, delimeter string, folds, features)
         ///
+        void skip(char);
         void delim(string_t);
         void paths(strings_t paths);
         void folds(const size_t folds);
@@ -56,6 +57,7 @@ namespace nano
     private:
 
         // attributes
+        char                    m_skip{'#'};    ///< CSV character for lines to ignore
         string_t                m_delim{","};   ///< CSV delimeter character
         strings_t               m_paths;        ///< CSV files to load one after the other
         size_t                  m_target{string_t::npos};///< index of the target column (if negative, then not provided)

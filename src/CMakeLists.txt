@@ -28,6 +28,7 @@ set(loss_sources
 set(dataset_sources
     dataset.cpp
     dataset/iris.cpp
+    dataset/adult.cpp
     dataset/tabular.cpp)
 
 add_library(nano
