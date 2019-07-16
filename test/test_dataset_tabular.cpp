@@ -256,32 +256,32 @@ UTEST_CASE(noload_invalid_splits)
 {
     auto dataset = CSVFixture{};
 
-    dataset.split(-1, 20, 20, 26, 26, 30);
+    dataset.split(-1, 10, 20, 26, 26, 30);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
-    dataset.split(-1, 31, 20, 26, 26, 30);
+    dataset.split(20, 31, 20, 26, 26, 30);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
-    dataset.split(0, 20, -1, 26, 26, 30);
+    dataset.split(0, 20, -1, 1, 26, 30);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
-    dataset.split(0, 20, -1, 31, 26, 30);
+    dataset.split(0, 20, 30, 31, 26, 30);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
-    dataset.split(0, 20, 20, 26, -1, 30);
+    dataset.split(0, 20, 20, 26, -1, 1);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
-    dataset.split(0, 20, 20, 26, 26, 31);
+    dataset.split(0, 20, 20, 26, 29, 31);
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
