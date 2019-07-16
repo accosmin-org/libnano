@@ -19,4 +19,5 @@ make_test(test_function NANO::nano)
 make_test(test_loss NANO::nano)
 make_test(test_mlearn NANO::nano)
 
+make_test(test_dataset_iris NANO::nano)
 make_test(test_dataset_tabular NANO::nano)

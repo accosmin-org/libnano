@@ -1,5 +1,5 @@
 #include <mutex>
-#include <nano/dataset.h>
+#include "dataset/iris.h"
 
 using namespace nano;
 
@@ -10,7 +10,7 @@ dataset_factory_t& dataset_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        //manager.add<tabular_dataset_t>("tabular", "load tabular dataset from CSV file");
+        manager.add<iris_dataset_t>("iris", "Iris dataset - classify flowers by sepal and petal (Fisher, 1936)");
     });
 
     return manager;
