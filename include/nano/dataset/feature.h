@@ -141,21 +141,4 @@ namespace nano
                 f1.labels() == f2.labels() &&
                 f1.placeholder() == f2.placeholder();
     }
-
-    ///
-    /// \brief print a description of the given feature.
-    ///
-    inline std::ostream& operator<<(std::ostream& os, const feature_t& f)
-    {
-        os << "name=" << f.name() << ",labels[";
-        for (const auto& label : f.labels())
-        {
-            os << label;
-            if (&label != &(*(f.labels().rbegin())))
-            {
-                os << ",";
-            }
-        }
-        return os << "],placeholder=" << f.placeholder();
-    }
 }

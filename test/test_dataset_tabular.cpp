@@ -4,6 +4,20 @@
 
 using namespace nano;
 
+static std::ostream& operator<<(std::ostream& os, const feature_t& f)
+{
+    os << "name=" << f.name() << ",labels[";
+    for (const auto& label : f.labels())
+    {
+        os << label;
+        if (&label != &(*(f.labels().rbegin())))
+        {
+            os << ",";
+        }
+    }
+    return os << "],placeholder=" << f.placeholder();
+}
+
 class CSVFixture final : public tabular_dataset_t
 {
 public:
