@@ -3,6 +3,7 @@ dist: xenial
 language: cpp
 
 before_script:
+  - bash scripts/download_tasks.sh --iris
   - echo $TRAVIS_OS_NAME
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
