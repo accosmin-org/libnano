@@ -135,7 +135,7 @@ function codecov {
     cd ${basedir}
 
     lcov --directory . --capture --output-file coverage.info || return 1
-    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' --output-file coverage.info || return 1
+    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file coverage.info || return 1
     lcov --list coverage.info || return 1
     genhtml --output lcovhtml coverage.info || return 1
     bash <(curl -s https://codecov.io/bash) -f coverage.info || return 1
