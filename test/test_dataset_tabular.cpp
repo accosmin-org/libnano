@@ -20,7 +20,7 @@ public:
         write_test(test_path());
     }
 
-    ~CSVFixture()
+    ~CSVFixture() override
     {
         std::remove(data_path());
         std::remove(test_path());
