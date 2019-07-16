@@ -102,6 +102,12 @@ bool tabular_dataset_t::load()
         }
     }
 
+    if (data_size == 0)
+    {
+        log_error() << "tabular dataset: no data to read, check paths!";
+        return false;
+    }
+
     m_inputs.resize(data_size, n_inputs, 1, 1);
     m_targets.resize(data_size, n_targets, 1, 1);
 
@@ -128,31 +134,6 @@ bool tabular_dataset_t::load()
     {
         this->split(samples(), split);
 
-        const auto tr_min = split.m_tr_indices.minCoeff();
-        const auto tr_max = split.m_tr_indices.maxCoeff();
-
-        const auto vd_min = split.m_vd_indices.minCoeff();
-        const auto vd_max = split.m_vd_indices.maxCoeff();
-
-        const auto te_min = split.m_te_indices.minCoeff();
-        const auto te_max = split.m_te_indices.maxCoeff();
-
-        if (tr_min < 0 || tr_max >= samples())
-        {
-            log_error() << "tabular dataset: invalid training index, expected in the [0, " << samples() << ") range!";
-            return false;
-        }
-        if (vd_min < 0 || vd_max >= samples())
-        {
-            log_error() << "tabular dataset: invalid validation index, expected in the [0, " << samples() << ") range!";
-            return false;
-        }
-        if (te_min < 0 || te_max >= samples())
-        {
-            log_error() << "tabular dataset: invalid test index, expected in the [0, " << samples() << ") range!";
-            return false;
-        }
-
         if (split.m_tr_indices.size() == 0)
         {
             log_error() << "tabular dataset: invalid training set, expecting at least on element!";
@@ -174,6 +155,22 @@ bool tabular_dataset_t::load()
             log_error() << "tabular dataset: invalid split, got "
                 << (split.m_tr_indices.size() + split.m_vd_indices.size() + split.m_te_indices.size())
                 << " samples, expecting " << samples() << "!";
+            return false;
+        }
+
+        if (split.m_tr_indices.minCoeff() < 0 || split.m_tr_indices.maxCoeff() >= samples())
+        {
+            log_error() << "tabular dataset: invalid training index, expected in the [0, " << samples() << ") range!";
+            return false;
+        }
+        if (split.m_vd_indices.minCoeff() < 0 || split.m_vd_indices.maxCoeff() >= samples())
+        {
+            log_error() << "tabular dataset: invalid validation index, expected in the [0, " << samples() << ") range!";
+            return false;
+        }
+        if (split.m_te_indices.minCoeff() < 0 || split.m_te_indices.maxCoeff() >= samples())
+        {
+            log_error() << "tabular dataset: invalid test index, expected in the [0, " << samples() << ") range!";
             return false;
         }
     }

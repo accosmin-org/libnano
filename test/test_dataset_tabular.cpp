@@ -11,13 +11,7 @@ public:
     static auto data_path() { return "test_dataset_tabular_data.csv"; }
     static auto test_path() { return "test_dataset_tabular_test.csv"; }
 
-    CSVFixture(
-        const tensor_size_t tr_begin = 0, const tensor_size_t tr_end = 20,
-        const tensor_size_t vd_begin = 20, const tensor_size_t vd_end = 26,
-        const tensor_size_t te_begin = 26, const tensor_size_t te_end = 30) :
-        m_tr_begin(tr_begin), m_tr_end(tr_end),
-        m_vd_begin(vd_begin), m_vd_end(vd_end),
-        m_te_begin(te_begin), m_te_end(te_end)
+    CSVFixture()
     {
         std::remove(data_path());
         std::remove(test_path());
@@ -30,6 +24,16 @@ public:
     {
         std::remove(data_path());
         std::remove(test_path());
+    }
+
+    void split(
+        const tensor_size_t tr_begin, const tensor_size_t tr_end,
+        const tensor_size_t vd_begin, const tensor_size_t vd_end,
+        const tensor_size_t te_begin, const tensor_size_t te_end)
+    {
+        m_tr_begin = tr_begin; m_tr_end = tr_end;
+        m_vd_begin = vd_begin; m_vd_end = vd_end;
+        m_te_begin = te_begin; m_te_end = te_end;
     }
 
     json_t config() const override
@@ -155,7 +159,7 @@ static auto make_feature_cate()
 
 static auto make_feature_cate_opt()
 {
-    const auto feature = feature_t::make_discrete("cate", {"cate_opt0", "cate_opt1"}, "?");
+    const auto feature = feature_t::make_discrete("cate_opt", {"cate_opt0", "cate_opt1"}, "?");
 
     UTEST_CHECK(feature.discrete());
     UTEST_CHECK(feature.optional());
@@ -213,6 +217,99 @@ UTEST_CASE(config_with_target)
     UTEST_CHECK_EQUAL(dataset.ifeature(1), feature_cate);
     UTEST_CHECK_EQUAL(dataset.ifeature(2), feature_cate_opt);
     UTEST_CHECK_EQUAL(dataset.tfeature(), feature_cont);
+}
+
+UTEST_CASE(noload_no_data)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 4);
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_no_features)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_invalid_target)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 4);
+    UTEST_CHECK(!dataset.load());
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 1);
+    UTEST_CHECK(!dataset.load());
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 3);
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_invalid_splits)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.split(-1, 20, 20, 26, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(-1, 31, 20, 26, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, -1, 26, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, -1, 31, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 26, -1, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 26, 26, 31);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 0, 20, 26, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 20, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 26, 26, 26);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 27, 26, 30);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
+
+    dataset.split(0, 20, 20, 26, 26, 29);
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
+    UTEST_CHECK(!dataset.load());
 }
 
 UTEST_CASE(load_no_target)

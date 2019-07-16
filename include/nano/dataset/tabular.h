@@ -60,7 +60,7 @@ namespace nano
         strings_t               m_paths;        ///< CSV files to load one after the other
         size_t                  m_target{string_t::npos};///< index of the target column (if negative, then not provided)
         std::vector<feature_t>  m_features;     ///< describes all CSV columns
-        std::vector<split_t>    m_splits;       ///<
+        std::vector<split_t>    m_splits{10};   ///<
         tensor4d_t              m_inputs;       ///< (total number of samples, number of inputs, 1, 1)
         tensor4d_t              m_targets;      ///< (total number of samples, number of outputs, 1, 1)
     };
