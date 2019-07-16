@@ -237,7 +237,7 @@ UTEST_CASE(noload_no_data)
 {
     auto dataset = CSVFixture{};
 
-    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 4);
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 0);
     UTEST_CHECK(!dataset.load());
 }
 
@@ -246,6 +246,28 @@ UTEST_CASE(noload_no_features)
     auto dataset = CSVFixture{};
 
     dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_few_features)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate}, 0);
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_wrong_features)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont_opt, feature_cont, feature_cate, feature_cate_opt}, 1);
+    UTEST_CHECK(!dataset.load());
+
+    dataset.paths({CSVFixture::data_path(), CSVFixture::test_path()});
+    dataset.features({feature_cont, feature_cont_opt, feature_cate_opt, feature_cate}, 0);
     UTEST_CHECK(!dataset.load());
 }
 
