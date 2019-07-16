@@ -10,6 +10,8 @@ UTEST_CASE(config)
     auto dataset = dataset_t::all().get("iris");
     UTEST_REQUIRE(dataset);
 
+    UTEST_CHECK_NOTHROW(dataset->config());
+
     json_t json;
     json["folds"] = 0;
     UTEST_CHECK_THROW(dataset->config(json), std::invalid_argument);
