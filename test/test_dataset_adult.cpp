@@ -26,26 +26,6 @@ UTEST_CASE(config)
     json["folds"] = 10;
     json["train_per"] = 91;
     UTEST_CHECK_THROW(dataset->config(json), std::invalid_argument);
-
-    json["folds"] = 10;
-    json["train_per"] = 80;
-    json["valid_per"] = 9;
-    UTEST_CHECK_THROW(dataset->config(json), std::invalid_argument);
-
-    json["folds"] = 10;
-    json["train_per"] = 80;
-    json["valid_per"] = 91;
-    UTEST_CHECK_THROW(dataset->config(json), std::invalid_argument);
-
-    json["folds"] = 10;
-    json["train_per"] = 60;
-    json["valid_per"] = 40;
-    UTEST_CHECK_THROW(dataset->config(json), std::invalid_argument);
-
-    json["folds"] = 10;
-    json["train_per"] = 60;
-    json["valid_per"] = 30;
-    UTEST_CHECK_NOTHROW(dataset->config(json));
 }
 
 UTEST_CASE(load)
@@ -56,7 +36,6 @@ UTEST_CASE(load)
     json_t json;
     json["folds"] = 3;
     json["train_per"] = 60;
-    json["valid_per"] = 30;
     UTEST_CHECK_NOTHROW(dataset->config(json));
 
     UTEST_REQUIRE(dataset->load());
@@ -88,13 +67,17 @@ UTEST_CASE(load)
         const auto vd_targets = dataset->targets(fold_t{f, protocol::valid});
         const auto te_targets = dataset->targets(fold_t{f, protocol::test});
 
-        UTEST_CHECK_EQUAL(tr_inputs.dims(), make_dims(29305, 14, 1, 1));
-        UTEST_CHECK_EQUAL(vd_inputs.dims(), make_dims(14652, 14, 1, 1));
-        UTEST_CHECK_EQUAL(te_inputs.dims(), make_dims(4885, 14, 1, 1));
+        const auto tr_size = 60 * 32561 / 100;
+        const auto vd_size = 32561 - tr_size;
+        const auto te_size = 16281;
 
-        UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(29305, 2, 1, 1));
-        UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(14652, 2, 1, 1));
-        UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(4885, 2, 1, 1));
+        UTEST_CHECK_EQUAL(tr_inputs.dims(), make_dims(tr_size, 14, 1, 1));
+        UTEST_CHECK_EQUAL(vd_inputs.dims(), make_dims(vd_size, 14, 1, 1));
+        UTEST_CHECK_EQUAL(te_inputs.dims(), make_dims(te_size, 14, 1, 1));
+
+        UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(tr_size, 2, 1, 1));
+        UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(vd_size, 2, 1, 1));
+        UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(te_size, 2, 1, 1));
     }
 }
 

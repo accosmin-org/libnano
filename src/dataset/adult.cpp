@@ -70,7 +70,6 @@ json_t adult_dataset_t::config() const
     json["dir"] = m_dir;
     json["folds"] = strcat(m_folds, "[1,100]");
     json["train_per"] = strcat(m_train_per, "[10,90]");
-    json["valid_per"] = strcat(m_valid_per, "[10,90]");
     return json;
 }
 
@@ -79,24 +78,20 @@ void adult_dataset_t::config(const json_t& json)
     from_json(json, "dir", m_dir);
     from_json_range(json, "folds", m_folds, 1, 100);
     from_json_range(json, "train_per", m_train_per, 10, 90);
-    from_json_range(json, "valid_per", m_valid_per, 10, 90);
-
-    if (m_train_per + m_valid_per >= 100)
-    {
-        throw std::invalid_argument(
-            "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
-    }
 
     folds(m_folds);
 }
 
 void adult_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    if (samples != 48842)
+    const auto tr_vd_size = 32561;
+    const auto te_size = 16281;
+
+    if (samples != tr_vd_size + te_size)
     {
-        throw std::invalid_argument(strcat("adult dataset: received ", samples, " samples, expecting 48842"));
+        throw std::invalid_argument(strcat("adult dataset: received ", samples, " samples, expecting ", tr_vd_size + te_size));
     }
 
-    std::tie(split.m_tr_indices, split.m_vd_indices, split.m_te_indices) =
-        nano::split3(samples, m_train_per, m_valid_per);
+    split.m_te_indices = indices_t::LinSpaced(te_size, tr_vd_size, tr_vd_size + te_size);
+    std::tie(split.m_tr_indices, split.m_vd_indices) = nano::split2(tr_vd_size, m_train_per);
 }

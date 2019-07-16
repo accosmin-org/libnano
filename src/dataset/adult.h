@@ -22,7 +22,6 @@ namespace nano
         // attributes
         string_t        m_dir;              ///< directory where to load the data from
         size_t          m_folds{10};        ///<
-        tensor_size_t   m_train_per{80};    ///< percentage of training samples
-        tensor_size_t   m_valid_per{10};    ///< percentage of validation samples, the rest being testing samples
+        tensor_size_t   m_train_per{80};    ///< percentage of training samples (excluding the test samples)
     };
 }
