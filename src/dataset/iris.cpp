@@ -43,6 +43,8 @@ void iris_dataset_t::config(const json_t& json)
         throw std::invalid_argument(
             "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
     }
+
+    folds(m_folds);
 }
 
 void iris_dataset_t::split(const tensor_size_t samples, split_t& split) const
