@@ -37,3 +37,6 @@
 # CMake-generated files and folders
 build
 install
+
+coverage.info
+lcovhtml
