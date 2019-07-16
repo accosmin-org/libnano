@@ -11,7 +11,13 @@ public:
     static auto data_path() { return "test_dataset_tabular_data.csv"; }
     static auto test_path() { return "test_dataset_tabular_test.csv"; }
 
-    CSVFixture()
+    CSVFixture(
+        const tensor_size_t tr_begin = 0, const tensor_size_t tr_end = 20,
+        const tensor_size_t vd_begin = 20, const tensor_size_t vd_end = 26,
+        const tensor_size_t te_begin = 26, const tensor_size_t te_end = 30) :
+        m_tr_begin(tr_begin), m_tr_end(tr_end),
+        m_vd_begin(vd_begin), m_vd_end(vd_end),
+        m_te_begin(te_begin), m_te_end(te_end)
     {
         std::remove(data_path());
         std::remove(test_path());
@@ -39,9 +45,9 @@ public:
     {
         UTEST_CHECK_EQUAL(samples, 30);
 
-        split.m_tr_indices = indices_t::LinSpaced(20, 0, 20);
-        split.m_vd_indices = indices_t::LinSpaced(6, 20, 26);
-        split.m_te_indices = indices_t::LinSpaced(4, 26, 30);
+        split.m_tr_indices = indices_t::LinSpaced(m_tr_end - m_tr_begin, m_tr_begin, m_tr_end);
+        split.m_vd_indices = indices_t::LinSpaced(m_vd_end - m_vd_begin, m_vd_begin, m_vd_end);
+        split.m_te_indices = indices_t::LinSpaced(m_te_end - m_te_begin, m_te_begin, m_te_end);
     }
 
     static void write_data(const char* path)
@@ -58,6 +64,29 @@ public:
         UTEST_REQUIRE(os);
     }
 
+    static void check(const scalar_t value, int row, const int col)
+    {
+        ++ row;
+        switch (col)
+        {
+        case 0:     check(value, row); break;
+        case 1:     check(value, (row % 2 == 0) ? feature_t::placeholder_value() : (3.0 - 0.2 * row)); break;
+        case 2:     check(value, row % 3); break;
+        case 3:     check(value, (row % 4 == 0) ? feature_t::placeholder_value() : (row % 2)); break;
+        default:    UTEST_REQUIRE(false);
+        }
+    }
+
+    static void check(const scalar_t value, const scalar_t ground)
+    {
+        UTEST_CHECK_EQUAL(std::isfinite(value), std::isfinite(ground));
+
+        if (std::isfinite(value))
+        {
+            UTEST_CHECK_CLOSE(value, ground, 1e-8);
+        }
+    }
+
     static void write(std::ostream& os, const int begin, const int size)
     {
         for (auto index = begin; index < begin + size; ++ index)
@@ -72,6 +101,13 @@ public:
             if (index % 9 == 0) { os << "#\n"; }
         }
     }
+
+private:
+
+    // attributes
+    tensor_size_t   m_tr_begin{0}, m_tr_end{20};    ///<
+    tensor_size_t   m_vd_begin{20}, m_vd_end{26};   ///<
+    tensor_size_t   m_te_begin{26}, m_te_end{30};   ///<
 };
 
 static auto make_feature_cont()
@@ -214,6 +250,17 @@ UTEST_CASE(load_no_target)
         UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(20, 0, 1, 1));
         UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(6, 0, 1, 1));
         UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(4, 0, 1, 1));
+
+        for (auto index = 0; index < 30; ++ index)
+        {
+            const auto row = (index < 20) ? index : (index < 26 ? (index - 20) : (index - 26));
+            const auto& inputs = (index < 20) ? tr_inputs : (index < 26 ? vd_inputs : te_inputs);
+
+            CSVFixture::check(inputs(row, 0, 0, 0), index, 0);
+            CSVFixture::check(inputs(row, 1, 0, 0), index, 1);
+            CSVFixture::check(inputs(row, 2, 0, 0), index, 2);
+            CSVFixture::check(inputs(row, 3, 0, 0), index, 3);
+        }
     }
 }
 
@@ -251,6 +298,18 @@ UTEST_CASE(load_with_cont_target)
         UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(20, 1, 1, 1));
         UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(6, 1, 1, 1));
         UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(4, 1, 1, 1));
+
+        for (auto index = 0; index < 30; ++ index)
+        {
+            const auto row = (index < 20) ? index : (index < 26 ? (index - 20) : (index - 26));
+            const auto& inputs = (index < 20) ? tr_inputs : (index < 26 ? vd_inputs : te_inputs);
+            const auto& targets = (index < 20) ? tr_targets : (index < 26 ? vd_targets : te_targets);
+
+            CSVFixture::check(targets(row, 0, 0, 0), index, 0);
+            CSVFixture::check(inputs(row, 0, 0, 0), index, 1);
+            CSVFixture::check(inputs(row, 1, 0, 0), index, 2);
+            CSVFixture::check(inputs(row, 2, 0, 0), index, 3);
+        }
     }
 }
 
@@ -288,6 +347,20 @@ UTEST_CASE(load_with_cate_target)
         UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(20, 3, 1, 1));
         UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(6, 3, 1, 1));
         UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(4, 3, 1, 1));
+
+        for (auto index = 0; index < 30; ++ index)
+        {
+            const auto row = (index < 20) ? index : (index < 26 ? (index - 20) : (index - 26));
+            const auto& inputs = (index < 20) ? tr_inputs : (index < 26 ? vd_inputs : te_inputs);
+            const auto& targets = (index < 20) ? tr_targets : (index < 26 ? vd_targets : te_targets);
+
+            CSVFixture::check(inputs(row, 0, 0, 0), index, 0);
+            CSVFixture::check(inputs(row, 1, 0, 0), index, 1);
+            tensor_size_t cate = 0;
+            targets.vector(row).maxCoeff(&cate);
+            CSVFixture::check(cate, index, 2);
+            CSVFixture::check(inputs(row, 2, 0, 0), index, 3);
+        }
     }
 }
 

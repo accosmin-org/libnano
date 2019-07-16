@@ -72,7 +72,7 @@ bool tabular_dataset_t::load()
         return false;
     }
 
-    if (m_target != string_t::npos && !m_features[m_target].placeholder().empty())
+    if (m_target != string_t::npos && m_features[m_target].optional())
     {
         log_error() << "tabular dataset: the target feature (" << m_features[m_target].name()
             << ") cannot be optional!";
