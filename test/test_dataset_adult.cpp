@@ -41,6 +41,7 @@ UTEST_CASE(load)
     UTEST_REQUIRE(dataset->load());
     UTEST_CHECK_EQUAL(dataset->folds(), 3);
     UTEST_CHECK_EQUAL(dataset->ifeatures(), 14);
+    UTEST_CHECK(dataset->tfeature().discrete() && !dataset->tfeature().optional());
     UTEST_CHECK(!dataset->ifeature(0).discrete() && !dataset->ifeature(0).optional());
     UTEST_CHECK(dataset->ifeature(1).discrete() && dataset->ifeature(1).optional());
     UTEST_CHECK(!dataset->ifeature(2).discrete() && !dataset->ifeature(2).optional());
@@ -55,7 +56,6 @@ UTEST_CASE(load)
     UTEST_CHECK(!dataset->ifeature(11).discrete() && !dataset->ifeature(11).optional());
     UTEST_CHECK(!dataset->ifeature(12).discrete() && !dataset->ifeature(12).optional());
     UTEST_CHECK(dataset->ifeature(13).discrete() && dataset->ifeature(13).optional());
-    UTEST_CHECK(dataset->tfeature().discrete() && !dataset->tfeature().optional());
 
     for (size_t f = 0, folds = dataset->folds(); f < folds; ++ f)
     {

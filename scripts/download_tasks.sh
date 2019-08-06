@@ -55,6 +55,7 @@ function download_wine {
     mkdir -p ${dir}
 
     wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data -P ${dir}
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.names -P ${dir}
 }
 
 # IRIS dataset
