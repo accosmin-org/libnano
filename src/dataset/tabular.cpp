@@ -5,7 +5,7 @@
 
 using namespace nano;
 
-static tensor_size_t lines(const string_t& path, const char skip)
+static tensor_size_t lines(const string_t& path, const char skip, bool header)
 {
     string_t line;
     tensor_size_t count = 0;
@@ -15,7 +15,14 @@ static tensor_size_t lines(const string_t& path, const char skip)
     {
         if (!line.empty() && line[0] != skip)
         {
-            ++ count;
+            if (header && count == 0)
+            {
+                header = false;
+            }
+            else
+            {
+                ++ count;
+            }
         }
     }
 
@@ -38,6 +45,11 @@ static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
 void tabular_dataset_t::skip(const char skip)
 {
     m_skip = skip;
+}
+
+void tabular_dataset_t::header(const bool header)
+{
+    m_header = header;
 }
 
 void tabular_dataset_t::delim(string_t delim)
@@ -88,7 +100,7 @@ bool tabular_dataset_t::load()
     tensor_size_t data_size = 0;
     for (const auto& path : m_paths)
     {
-        data_size += lines(path, m_skip);
+        data_size += lines(path, m_skip, m_header);
     }
 
     tensor_size_t n_inputs = 0, n_targets = 0;
@@ -121,7 +133,7 @@ bool tabular_dataset_t::load()
     for (const auto& path : m_paths)
     {
         log_info() << "tabular dataset: reading " << path << "...";
-        if (!parse(path, row_offset))
+        if (!parse(path, row_offset, m_header))
         {
             return false;
         }
@@ -218,7 +230,7 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const ten
     }
 }
 
-bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset)
+bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset, bool header)
 {
     string_t line;
     std::ifstream stream(path);
@@ -226,6 +238,12 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset)
     {
         if (line.empty() || line[0] == m_skip)
         {
+            continue;
+        }
+
+        if (header && row == 0)
+        {
+            header = false;
             continue;
         }
 

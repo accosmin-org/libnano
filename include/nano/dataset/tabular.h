@@ -37,6 +37,7 @@ namespace nano
         /// \brief setup tabular dataset (e.g. csv paths, delimeter string, folds, features)
         ///
         void skip(char);
+        void header(bool);
         void delim(string_t);
         void paths(strings_t paths);
         void folds(const size_t folds);
@@ -46,7 +47,7 @@ namespace nano
 
         auto samples() const { return m_inputs.size<0>(); }
 
-        bool parse(const string_t& path, tensor_size_t& row_offset);
+        bool parse(const string_t& path, tensor_size_t& row_offset, const bool header);
 
         void store(const tensor_size_t row, const size_t feature, const scalar_t value);
         void store(const tensor_size_t row, const size_t feature, const tensor_size_t category);
@@ -58,6 +59,7 @@ namespace nano
 
         // attributes
         char                    m_skip{'#'};    ///< CSV character for lines to ignore
+        bool                    m_header{false};///< CSV header present
         string_t                m_delim{","};   ///< CSV delimeter character
         strings_t               m_paths;        ///< CSV files to load one after the other
         size_t                  m_target{string_t::npos};///< index of the target column (if negative, then not provided)

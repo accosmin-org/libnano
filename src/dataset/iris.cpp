@@ -9,6 +9,7 @@ iris_dataset_t::iris_dataset_t() :
     m_dir.append("/experiments/datasets/iris");
 
     delim(",");
+    header(false);
     paths({m_dir + "/iris.data"});
     features(
     {

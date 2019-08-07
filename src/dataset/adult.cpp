@@ -10,6 +10,7 @@ adult_dataset_t::adult_dataset_t() :
 
     skip('|');
     delim(", .");
+    header(false);
     paths({m_dir + "/adult.data", m_dir + "/adult.test"});
     features(
     {

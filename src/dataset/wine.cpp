@@ -9,6 +9,7 @@ wine_dataset_t::wine_dataset_t() :
     m_dir.append("/experiments/datasets/wine");
 
     delim(",");
+    header(false);
     paths({m_dir + "/wine.data"});
     features(
     {

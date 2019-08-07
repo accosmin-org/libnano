@@ -30,7 +30,8 @@ set(dataset_sources
     dataset/iris.cpp
     dataset/wine.cpp
     dataset/adult.cpp
-    dataset/tabular.cpp)
+    dataset/tabular.cpp
+    dataset/forest_fires.cpp)
 
 add_library(nano
     table.cpp
