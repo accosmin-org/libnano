@@ -5,7 +5,7 @@ installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_tidy_suffix=""
-build_type="Debug"
+build_type="RelWithDebInfo"
 
 generator=""
 build_shared="ON"

@@ -31,6 +31,7 @@ set(dataset_sources
     dataset/wine.cpp
     dataset/adult.cpp
     dataset/tabular.cpp
+    dataset/poker_hand.cpp
     dataset/forest_fires.cpp)
 
 add_library(nano

@@ -3,7 +3,7 @@ dist: xenial
 language: cpp
 
 before_script:
-  - bash scripts/download_tasks.sh --iris --adult --wine --forest-fires
+  - bash scripts/download_tasks.sh --iris --adult --wine --forest-fires --poker-hand
   - echo $TRAVIS_OS_NAME
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
@@ -313,7 +313,7 @@ matrix:
       script:
         - sudo -H pip install --upgrade pip
         - sudo -H pip install coverage
-        - CXX=g++-7 bash scripts/build.sh --install-json --coverage --config --build --test --codecov
+        - CXX=g++-7 bash scripts/build.sh --install-json --build-type Debug --coverage --config --build --test --codecov
 
     #- os: linux
     #  compiler: gcc

@@ -78,6 +78,16 @@ function download_forest_fires {
     wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.names -P ${dir}
 }
 
+# Poker Hand dataset
+function download_poker_hand {
+    local dir=${dir_data}/poker-hand
+    mkdir -p ${dir}
+
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-testing.data -P ${dir}
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-training-true.data -P ${dir}
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand.names -P ${dir}
+}
+
 # CALIFORNIA housing dataset
 function download_cal_housing {
     local dir=${dir_data}/cal-housing
@@ -110,6 +120,8 @@ options:
         download CIFAR-10 dataset
     --cifar100
         download CIFAR-100 dataset
+    --poker-hand
+        download Poker Hand dataset
     --cal-housing
         download California Housing dataset
     --forest-fires
@@ -139,6 +151,8 @@ while [ "$1" != "" ]; do
         --cifar10)          download_cifar10
                             ;;
         --cifar100)         download_cifar100
+                            ;;
+        --poker-hand)       download_poker_hand
                             ;;
         --cal-housing)      download_cal_housing
                             ;;
