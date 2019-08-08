@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <cassert>
 #include <type_traits>
 
 namespace nano
