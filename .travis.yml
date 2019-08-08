@@ -144,7 +144,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --install-json --asan --libcpp --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --build-type Debug --asan --libcpp --config --build --test
 
     - os: linux
       compiler: clang
@@ -157,7 +157,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --install-json --lsan --libcpp --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --build-type Debug --lsan --libcpp --config --build --test
 
     - os: linux
       compiler: clang
@@ -170,7 +170,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --install-json --usan --libcpp --config --build --test
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --build-type Debug --usan --libcpp --config --build --test
 
     - os: linux
       compiler: clang
@@ -183,7 +183,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=clang++-6.0 bash scripts/build.sh --install-json --tsan --libcpp --config --build --test || true
+        - CXX=clang++-6.0 bash scripts/build.sh --install-json --build-type Debug --tsan --libcpp --config --build --test || true
 
     # todo: support for MSAN
 
@@ -287,7 +287,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --memcheck
+        - CXX=g++-7 bash scripts/build.sh --install-json --build-type Debug --config --build --memcheck
 
     - os: linux
       compiler: gcc
@@ -299,7 +299,7 @@ matrix:
             - ubuntu-toolchain-r-test
           update: true
       script:
-        - CXX=g++-7 bash scripts/build.sh --install-json --config --build --helgrind || true
+        - CXX=g++-7 bash scripts/build.sh --install-json --build-type Debug --config --build --helgrind || true
 
     - os: linux
       compiler: gcc
@@ -327,7 +327,7 @@ matrix:
     #  script:
     #    - sudo -H pip install --upgrade pip
     #    - sudo -H pip install cpp-coveralls
-    #    - CXX=g++-7 bash scripts/build.sh --install-json --coverage --config --build --test --coveralls
+    #    - CXX=g++-7 bash scripts/build.sh --install-json --build-type Debug --coverage --config --build --test --coveralls
 
     #- os: osx
     #  compiler: clang
