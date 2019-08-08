@@ -8,9 +8,6 @@ forest_fires_dataset_t::forest_fires_dataset_t() :
 {
     m_dir.append("/experiments/datasets/forest-fires");
 
-    delim(",");
-    header(true);
-    paths({m_dir + "/forestfires.csv"});
     features(
     {
         feature_t::make_discrete("X", {"1", "2", "3", "4", "5", "6", "7", "8", "9"}),
@@ -27,7 +24,8 @@ forest_fires_dataset_t::forest_fires_dataset_t() :
         feature_t::make_scalar("rain"),
         feature_t::make_scalar("area")
     }, 12);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t forest_fires_dataset_t::config() const
@@ -53,6 +51,10 @@ void forest_fires_dataset_t::config(const json_t& json)
             "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
     }
 
+    csvs(
+    {
+        csv_t{m_dir + "/forestfires.csv"}.delim(",").header(true)
+    });
     folds(m_folds);
 }
 

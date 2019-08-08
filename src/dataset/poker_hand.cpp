@@ -8,9 +8,6 @@ poker_hand_dataset_t::poker_hand_dataset_t() :
 {
     m_dir.append("/experiments/datasets/poker-hand");
 
-    delim(",\r\n");
-    header(false);
-    paths({m_dir + "/poker-hand-training-true.data", m_dir + "/poker-hand-testing.data"});
     features(
     {
         feature_t::make_discrete("S1", {"1", "2", "3", "4"}),
@@ -25,7 +22,8 @@ poker_hand_dataset_t::poker_hand_dataset_t() :
         feature_t::make_discrete("C5", {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"}),
         feature_t::make_discrete("CLASS", {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
     }, 10);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t poker_hand_dataset_t::config() const
@@ -43,6 +41,11 @@ void poker_hand_dataset_t::config(const json_t& json)
     from_json_range(json, "folds", m_folds, 1, 100);
     from_json_range(json, "train_per", m_train_per, 10, 90);
 
+    csvs(
+    {
+        csv_t{m_dir + "/poker-hand-training-true.data"}.delim(",\r").header(false),
+        csv_t{m_dir + "/poker-hand-testing.data"}.delim(",\r").header(false)
+    });
     folds(m_folds);
 }
 

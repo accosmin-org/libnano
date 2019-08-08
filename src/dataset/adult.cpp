@@ -8,10 +8,6 @@ adult_dataset_t::adult_dataset_t() :
 {
     m_dir.append("/experiments/datasets/adult");
 
-    skip('|');
-    delim(", .");
-    header(false);
-    paths({m_dir + "/adult.data", m_dir + "/adult.test"});
     features(
     {
         feature_t::make_scalar("age"),
@@ -62,7 +58,8 @@ adult_dataset_t::adult_dataset_t() :
         }, "?"),
         feature_t::make_discrete("income", {">50K", "<=50K"})
     }, 14);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t adult_dataset_t::config() const
@@ -80,6 +77,11 @@ void adult_dataset_t::config(const json_t& json)
     from_json_range(json, "folds", m_folds, 1, 100);
     from_json_range(json, "train_per", m_train_per, 10, 90);
 
+    csvs(
+    {
+        csv_t{m_dir + "/adult.data"}.skip('|').delim(", .").header(false),
+        csv_t{m_dir + "/adult.test"}.skip('|').delim(", .").header(false)
+    });
     folds(m_folds);
 }
 

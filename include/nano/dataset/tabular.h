@@ -5,6 +5,24 @@
 namespace nano
 {
     ///
+    /// \brief stores information required to load a CSV file.
+    ///
+    struct csv_t
+    {
+        csv_t() = default;
+        csv_t(string_t path) : m_path(std::move(path)) {}
+
+        auto& skip(const char skip) { m_skip = skip; return *this; }
+        auto& header(const bool header) { m_header = header; return *this; }
+        auto& delim(string_t delim) { m_delim = std::move(delim); return *this; }
+
+        string_t    m_path;             ///<
+        string_t    m_delim{", \r"};    ///< delimiting characters
+        char        m_skip{'#'};        ///< skip lines starting with this character
+        bool        m_header{false};    ///< skip the first line with the header
+    };
+
+    ///
     /// \brief interface to create machine learning datasets from tabular data (CSV files).
     ///
     /// NB: the customization point (in the derived classes)
@@ -36,10 +54,7 @@ namespace nano
         ///
         /// \brief setup tabular dataset (e.g. csv paths, delimeter string, folds, features)
         ///
-        void skip(char);
-        void header(bool);
-        void delim(string_t);
-        void paths(strings_t paths);
+        void csvs(std::vector<csv_t>);
         void folds(const size_t folds);
         void features(std::vector<feature_t>, const size_t target = string_t::npos);
 
@@ -47,7 +62,7 @@ namespace nano
 
         auto samples() const { return m_inputs.size<0>(); }
 
-        bool parse(const string_t& path, tensor_size_t& row_offset, const bool header);
+        bool parse(const string_t& path, tensor_size_t& row_offset, const string_t&, const char skip, const bool header);
 
         void store(const tensor_size_t row, const size_t feature, const scalar_t value);
         void store(const tensor_size_t row, const size_t feature, const tensor_size_t category);
@@ -58,10 +73,7 @@ namespace nano
     private:
 
         // attributes
-        char                    m_skip{'#'};    ///< CSV character for lines to ignore
-        bool                    m_header{false};///< CSV header present
-        string_t                m_delim{","};   ///< CSV delimeter character
-        strings_t               m_paths;        ///< CSV files to load one after the other
+        std::vector<csv_t>      m_csvs;         ///<
         size_t                  m_target{string_t::npos};///< index of the target column (if negative, then not provided)
         std::vector<feature_t>  m_features;     ///< describes all CSV columns
         std::vector<split_t>    m_splits{10};   ///<

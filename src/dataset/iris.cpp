@@ -8,9 +8,6 @@ iris_dataset_t::iris_dataset_t() :
 {
     m_dir.append("/experiments/datasets/iris");
 
-    delim(",");
-    header(false);
-    paths({m_dir + "/iris.data"});
     features(
     {
         feature_t::make_scalar("sepal_length_cm"),
@@ -19,7 +16,8 @@ iris_dataset_t::iris_dataset_t() :
         feature_t::make_scalar("petal_width_cm"),
         feature_t::make_discrete("class", {"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
     }, 4);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t iris_dataset_t::config() const
@@ -45,6 +43,10 @@ void iris_dataset_t::config(const json_t& json)
             "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
     }
 
+    csvs(
+    {
+        csv_t{m_dir + "/iris.data"}.delim(",").header(false)
+    });
     folds(m_folds);
 }
 

@@ -8,9 +8,6 @@ wine_dataset_t::wine_dataset_t() :
 {
     m_dir.append("/experiments/datasets/wine");
 
-    delim(",");
-    header(false);
-    paths({m_dir + "/wine.data"});
     features(
     {
         feature_t::make_discrete("class", {"1", "2", "3"}),
@@ -28,7 +25,8 @@ wine_dataset_t::wine_dataset_t() :
         feature_t::make_scalar("OD280/OD315 of diluted wines"),
         feature_t::make_scalar("Proline"),
     }, 0);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t wine_dataset_t::config() const
@@ -54,6 +52,10 @@ void wine_dataset_t::config(const json_t& json)
             "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
     }
 
+    csvs(
+    {
+        csv_t{m_dir + "/wine.data"}.delim(",").header(false)
+    });
     folds(m_folds);
 }
 

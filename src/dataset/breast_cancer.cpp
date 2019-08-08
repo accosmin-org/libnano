@@ -8,9 +8,6 @@ breast_cancer_dataset_t::breast_cancer_dataset_t() :
 {
     m_dir.append("/experiments/datasets/breast-cancer");
 
-    delim(",");
-    header(false);
-    paths({m_dir + "/wdbc.data"});
     features(
     {
         feature_t::make_scalar("ID"),
@@ -49,7 +46,8 @@ breast_cancer_dataset_t::breast_cancer_dataset_t() :
         feature_t::make_scalar("symmetry3"),
         feature_t::make_scalar("fractal_dimension3")
     }, 1);
-    folds(m_folds);
+
+    config(config());
 }
 
 json_t breast_cancer_dataset_t::config() const
@@ -75,6 +73,10 @@ void breast_cancer_dataset_t::config(const json_t& json)
             "invalid JSON attributes 'train_per' and 'valid_per', expected to sum to less than 100");
     }
 
+    csvs(
+    {
+        csv_t{m_dir + "/wdbc.data"}.delim(",").header(false)
+    });
     folds(m_folds);
 }
 

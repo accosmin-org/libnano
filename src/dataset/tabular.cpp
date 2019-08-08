@@ -42,24 +42,9 @@ static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
     return idata;
 }
 
-void tabular_dataset_t::skip(const char skip)
+void tabular_dataset_t::csvs(std::vector<csv_t> csvs)
 {
-    m_skip = skip;
-}
-
-void tabular_dataset_t::header(const bool header)
-{
-    m_header = header;
-}
-
-void tabular_dataset_t::delim(string_t delim)
-{
-    m_delim = std::move(delim);
-}
-
-void tabular_dataset_t::paths(strings_t paths)
-{
-    m_paths = std::move(paths);
+    m_csvs = std::move(csvs);
 }
 
 void tabular_dataset_t::folds(const size_t folds)
@@ -98,9 +83,9 @@ bool tabular_dataset_t::load()
 
     // allocate storage
     tensor_size_t data_size = 0;
-    for (const auto& path : m_paths)
+    for (const auto& csv : m_csvs)
     {
-        data_size += lines(path, m_skip, m_header);
+        data_size += lines(csv.m_path, csv.m_skip, csv.m_header);
     }
 
     tensor_size_t n_inputs = 0, n_targets = 0;
@@ -130,10 +115,10 @@ bool tabular_dataset_t::load()
 
     // load data
     tensor_size_t row_offset = 0;
-    for (const auto& path : m_paths)
+    for (const auto& csv : m_csvs)
     {
-        log_info() << "tabular dataset: reading " << path << "...";
-        if (!parse(path, row_offset, m_header))
+        log_info() << "tabular dataset: reading " << csv.m_path << "...";
+        if (!parse(csv.m_path, row_offset, csv.m_delim, csv.m_skip, csv.m_header))
         {
             return false;
         }
@@ -230,13 +215,14 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const ten
     }
 }
 
-bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset, bool header)
+bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
+    const string_t& delim, const char skip, bool header)
 {
     string_t line;
     std::ifstream stream(path);
     for (tensor_size_t row = 0; std::getline(stream, line); )
     {
-        if (line.empty() || line[0] == m_skip)
+        if (line.empty() || line[0] == skip)
         {
             continue;
         }
@@ -253,7 +239,7 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset, b
             return false;
         }
 
-        for (auto tokenizer = tokenizer_t{line, m_delim.c_str()}; tokenizer; ++ tokenizer)
+        for (auto tokenizer = tokenizer_t{line, delim.c_str()}; tokenizer; ++ tokenizer)
         {
             if (tokenizer.count() > m_features.size())
             {
