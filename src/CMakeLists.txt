@@ -32,7 +32,8 @@ set(dataset_sources
     dataset/adult.cpp
     dataset/tabular.cpp
     dataset/poker_hand.cpp
-    dataset/forest_fires.cpp)
+    dataset/forest_fires.cpp
+    dataset/breast_cancer.cpp)
 
 add_library(nano
     table.cpp
