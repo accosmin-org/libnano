@@ -118,10 +118,20 @@ bool tabular_dataset_t::load()
     for (const auto& csv : m_csvs)
     {
         log_info() << "tabular dataset: reading " << csv.m_path << "...";
+
+        const auto old_row_offset = row_offset;
         if (!parse(csv.m_path, row_offset, csv.m_delim, csv.m_skip, csv.m_header))
         {
             return false;
         }
+
+        const auto samples_read = row_offset - old_row_offset;
+        if (csv.m_expected > 0 && samples_read != csv.m_expected)
+        {
+            log_error() << "tabular dataset: read " << samples_read << ", expecting " << csv.m_expected << " samples!";
+            return false;
+        }
+
         log_info() << "tabular dataset: read " << row_offset << " samples!";
     }
 

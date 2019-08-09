@@ -75,7 +75,7 @@ void breast_cancer_dataset_t::config(const json_t& json)
 
     csvs(
     {
-        csv_t{m_dir + "/wdbc.data"}.delim(",").header(false)
+        csv_t{m_dir + "/wdbc.data"}.delim(",").header(false).expected(569)
     });
     folds(m_folds);
 }

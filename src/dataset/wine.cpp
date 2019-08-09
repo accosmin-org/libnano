@@ -54,7 +54,7 @@ void wine_dataset_t::config(const json_t& json)
 
     csvs(
     {
-        csv_t{m_dir + "/wine.data"}.delim(",").header(false)
+        csv_t{m_dir + "/wine.data"}.delim(",").header(false).expected(178)
     });
     folds(m_folds);
 }

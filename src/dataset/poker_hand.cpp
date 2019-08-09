@@ -43,8 +43,8 @@ void poker_hand_dataset_t::config(const json_t& json)
 
     csvs(
     {
-        csv_t{m_dir + "/poker-hand-training-true.data"}.delim(",\r").header(false),
-        csv_t{m_dir + "/poker-hand-testing.data"}.delim(",\r").header(false)
+        csv_t{m_dir + "/poker-hand-training-true.data"}.delim(",\r").header(false).expected(25010),
+        csv_t{m_dir + "/poker-hand-testing.data"}.delim(",\r").header(false).expected(1000000)
     });
     folds(m_folds);
 }

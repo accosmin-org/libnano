@@ -53,7 +53,7 @@ void forest_fires_dataset_t::config(const json_t& json)
 
     csvs(
     {
-        csv_t{m_dir + "/forestfires.csv"}.delim(",").header(true)
+        csv_t{m_dir + "/forestfires.csv"}.delim(",").header(true).expected(517)
     });
     folds(m_folds);
 }

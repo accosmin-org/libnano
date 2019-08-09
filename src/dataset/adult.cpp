@@ -79,8 +79,8 @@ void adult_dataset_t::config(const json_t& json)
 
     csvs(
     {
-        csv_t{m_dir + "/adult.data"}.skip('|').delim(", .").header(false),
-        csv_t{m_dir + "/adult.test"}.skip('|').delim(", .").header(false)
+        csv_t{m_dir + "/adult.data"}.skip('|').delim(", .").header(false).expected(32561),
+        csv_t{m_dir + "/adult.test"}.skip('|').delim(", .").header(false).expected(16281)
     });
     folds(m_folds);
 }
