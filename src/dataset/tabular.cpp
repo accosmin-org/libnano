@@ -10,7 +10,6 @@ static tensor_size_t lines(const string_t& path, const char skip, bool header)
     string_t line;
     tensor_size_t count = 0;
     std::ifstream stream(path);
-
     while (std::getline(stream, line))
     {
         if (!line.empty() && line[0] != skip)

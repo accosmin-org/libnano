@@ -34,12 +34,12 @@ UTEST_CASE(load)
     UTEST_REQUIRE(dataset);
 
     json_t json;
-    json["folds"] = 3;
+    json["folds"] = 1;
     json["train_per"] = 60;
     UTEST_CHECK_NOTHROW(dataset->config(json));
 
     UTEST_REQUIRE(dataset->load());
-    UTEST_CHECK_EQUAL(dataset->folds(), 3);
+    UTEST_CHECK_EQUAL(dataset->folds(), 1);
     UTEST_CHECK_EQUAL(dataset->ifeatures(), 14);
     UTEST_CHECK(dataset->tfeature().discrete() && !dataset->tfeature().optional());
     UTEST_CHECK(!dataset->ifeature(0).discrete() && !dataset->ifeature(0).optional());
