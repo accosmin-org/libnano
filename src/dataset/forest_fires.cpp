@@ -10,19 +10,19 @@ forest_fires_dataset_t::forest_fires_dataset_t() :
 
     features(
     {
-        feature_t::make_discrete("X", {"1", "2", "3", "4", "5", "6", "7", "8", "9"}),
-        feature_t::make_discrete("Y", {"2", "3", "4", "5", "6", "7", "8", "9"}),
-        feature_t::make_discrete("month", {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}),
-        feature_t::make_discrete("day", {"mon", "tue", "wed", "thu", "fri", "sat", "sun"}),
-        feature_t::make_scalar("FFMC"),
-        feature_t::make_scalar("DMC"),
-        feature_t::make_scalar("DC"),
-        feature_t::make_scalar("ISI"),
-        feature_t::make_scalar("temp"),
-        feature_t::make_scalar("RH"),
-        feature_t::make_scalar("wind"),
-        feature_t::make_scalar("rain"),
-        feature_t::make_scalar("area")
+        feature_t{"X"}.labels({"1", "2", "3", "4", "5", "6", "7", "8", "9"}),
+        feature_t{"Y"}.labels({"2", "3", "4", "5", "6", "7", "8", "9"}),
+        feature_t{"month"}.labels({"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}),
+        feature_t{"day"}.labels({"mon", "tue", "wed", "thu", "fri", "sat", "sun"}),
+        feature_t{"FFMC"},
+        feature_t{"DMC"},
+        feature_t{"DC"},
+        feature_t{"ISI"},
+        feature_t{"temp"},
+        feature_t{"RH"},
+        feature_t{"wind"},
+        feature_t{"rain"},
+        feature_t{"area"}
     }, 12);
 
     config(config());

@@ -10,11 +10,11 @@ iris_dataset_t::iris_dataset_t() :
 
     features(
     {
-        feature_t::make_scalar("sepal_length_cm"),
-        feature_t::make_scalar("sepal_width_cm"),
-        feature_t::make_scalar("petal_length_cm"),
-        feature_t::make_scalar("petal_width_cm"),
-        feature_t::make_discrete("class", {"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
+        feature_t{"sepal_length_cm"},
+        feature_t{"sepal_width_cm"},
+        feature_t{"petal_length_cm"},
+        feature_t{"petal_width_cm"},
+        feature_t{"class"}.labels({"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
     }, 4);
 
     config(config());

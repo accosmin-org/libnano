@@ -130,7 +130,7 @@ private:
 
 static auto make_feature_cont()
 {
-    const auto feature = feature_t::make_scalar("cont");
+    const auto feature = feature_t{"cont"};
 
     UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
     UTEST_CHECK(!feature_t::missing(0));
@@ -145,7 +145,7 @@ static auto make_feature_cont()
 
 static auto make_feature_cont_opt()
 {
-    const auto feature = feature_t::make_scalar("cont_opt", "?");
+    const auto feature = feature_t{"cont_opt"}.placeholder("?");
 
     UTEST_CHECK(!feature.discrete());
     UTEST_CHECK(feature.optional());
@@ -157,7 +157,7 @@ static auto make_feature_cont_opt()
 
 static auto make_feature_cate()
 {
-    const auto feature = feature_t::make_discrete("cate", {"cate0", "cate1", "cate2"});
+    const auto feature = feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
 
     UTEST_CHECK(feature.discrete());
     UTEST_CHECK(!feature.optional());
@@ -173,7 +173,7 @@ static auto make_feature_cate()
 
 static auto make_feature_cate_opt()
 {
-    const auto feature = feature_t::make_discrete("cate_opt", {"cate_opt0", "cate_opt1"}, "?");
+    const auto feature = feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
 
     UTEST_CHECK(feature.discrete());
     UTEST_CHECK(feature.optional());

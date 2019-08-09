@@ -23,30 +23,9 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        feature_t(string_t&& name) :
+        feature_t(string_t name) :
             m_name(std::move(name))
         {
-        }
-
-        ///
-        /// \brief creates and returns a continuous feature using the given parameters
-        ///
-        static auto make_scalar(string_t name, string_t placeholder = string_t())
-        {
-            auto feature = feature_t{std::move(name)};
-            feature.m_placeholder = std::move(placeholder);
-            return feature;
-        }
-
-        ///
-        /// \brief creates and returns a categorical feature using the given parameters
-        ///
-        static auto make_discrete(string_t name, strings_t labels, string_t placeholder = string_t())
-        {
-            auto feature = feature_t{std::move(name)};
-            feature.m_labels = std::move(labels);
-            feature.m_placeholder = std::move(placeholder);
-            return feature;
         }
 
         ///
@@ -77,6 +56,24 @@ namespace nano
             {
                 m_labels.push_back(label.get<string_t>());
             }
+        }
+
+        ///
+        /// \brief set the placeholder (the feature becomes optional)
+        ///
+        auto& placeholder(string_t placeholder)
+        {
+            m_placeholder = std::move(placeholder);
+            return *this;
+        }
+
+        ///
+        /// \brief set the labels (the feature become discrete)
+        ///
+        auto& labels(strings_t labels)
+        {
+            m_labels = std::move(labels);
+            return *this;
         }
 
         ///
