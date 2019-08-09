@@ -87,13 +87,8 @@ void adult_dataset_t::config(const json_t& json)
 
 void adult_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    const auto tr_vd_size = 32561;
-    const auto te_size = 16281;
-
-    if (samples != tr_vd_size + te_size)
-    {
-        throw std::invalid_argument(strcat("adult dataset: received ", samples, " samples, expecting ", tr_vd_size + te_size));
-    }
+    const auto tr_vd_size = 32561, te_size = 16281;
+    assert(samples == tr_vd_size + te_size);
 
     split.m_te_indices = indices_t::LinSpaced(te_size, tr_vd_size, tr_vd_size + te_size);
     std::tie(split.m_tr_indices, split.m_vd_indices) = nano::split2(tr_vd_size, m_train_per);

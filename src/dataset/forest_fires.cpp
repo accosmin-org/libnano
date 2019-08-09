@@ -60,10 +60,7 @@ void forest_fires_dataset_t::config(const json_t& json)
 
 void forest_fires_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    if (samples != 517)
-    {
-        throw std::invalid_argument(strcat("wine dataset: received ", samples, " samples, expecting 517"));
-    }
+    assert(samples == 517);
 
     std::tie(split.m_tr_indices, split.m_vd_indices, split.m_te_indices) =
         nano::split3(samples, m_train_per, m_valid_per);

@@ -52,10 +52,7 @@ void iris_dataset_t::config(const json_t& json)
 
 void iris_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    if (samples != 150)
-    {
-        throw std::invalid_argument(strcat("iris dataset: received ", samples, " samples, expecting 150"));
-    }
+    assert(samples == 150);
 
     std::tie(split.m_tr_indices, split.m_vd_indices, split.m_te_indices) =
         nano::split3(samples, m_train_per, m_valid_per);

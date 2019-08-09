@@ -82,10 +82,7 @@ void breast_cancer_dataset_t::config(const json_t& json)
 
 void breast_cancer_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    if (samples != 569)
-    {
-        throw std::invalid_argument(strcat("breast_cancer dataset: received ", samples, " samples, expecting 569"));
-    }
+    assert(samples == 569);
 
     std::tie(split.m_tr_indices, split.m_vd_indices, split.m_te_indices) =
         nano::split3(samples, m_train_per, m_valid_per);

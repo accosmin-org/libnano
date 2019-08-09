@@ -51,13 +51,8 @@ void poker_hand_dataset_t::config(const json_t& json)
 
 void poker_hand_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
-    const auto tr_vd_size = 25010;
-    const auto te_size = 1000000;
-
-    if (samples != tr_vd_size + te_size)
-    {
-        throw std::invalid_argument(strcat("adult dataset: received ", samples, " samples, expecting ", tr_vd_size + te_size));
-    }
+    const auto tr_vd_size = 25010, te_size = 1000000;
+    assert(samples == tr_vd_size + te_size);
 
     split.m_te_indices = indices_t::LinSpaced(te_size, tr_vd_size, tr_vd_size + te_size);
     std::tie(split.m_tr_indices, split.m_vd_indices) = nano::split2(tr_vd_size, m_train_per);
