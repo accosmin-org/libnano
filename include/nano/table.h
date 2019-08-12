@@ -261,13 +261,6 @@ namespace nano
         void mark(const tmarker& marker, const char* marker_string = " (*)");
 
         ///
-        /// \brief save/load to/from CSV files using the given separator
-        /// the header is always written/read
-        ///
-        bool save(const string_t& path, const char* delim = ";") const;
-        bool load(const string_t& path, const char* delim = ";", const bool load_header = true);
-
-        ///
         /// \brief access functions
         ///
         size_t cols() const;

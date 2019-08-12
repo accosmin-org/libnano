@@ -56,18 +56,6 @@ UTEST_CASE(table)
 
     UTEST_CHECK_EQUAL(t1.rows(), 5u);
     UTEST_CHECK_EQUAL(t1.cols(), 3u);
-
-    const auto path = "table.csv";
-    const auto delim = ";";
-
-    UTEST_CHECK(t1.save(path, delim));
-
-    nano::table_t t2;
-    UTEST_CHECK(t2.load(path, delim));
-
-    UTEST_CHECK_EQUAL(t1, t2);
-
-    std::remove(path);
 }
 
 UTEST_CASE(table_rows)
