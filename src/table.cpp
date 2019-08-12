@@ -1,32 +1,6 @@
-#include <sstream>
-#include <numeric>
-#include <fstream>
-#include <iomanip>
 #include <nano/table.h>
-#include <nano/numeric.h>
 
 using namespace nano;
-
-string_t cell_t::format() const
-{
-    try
-    {
-        if (m_precision > 0)
-        {
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(m_precision) << from_string<double>(m_data);
-            return stream.str();
-        }
-        else
-        {
-            return m_data;
-        }
-    }
-    catch (std::exception&)
-    {
-        return m_data;
-    }
-}
 
 row_t::row_t(const mode t) :
     m_type(t)

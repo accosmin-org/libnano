@@ -2,15 +2,18 @@
 
 #include <limits>
 #include <cassert>
-#include <algorithm>
+#include <sstream>
+#include <numeric>
+#include <iomanip>
 #include <nano/arch.h>
 #include <nano/scalar.h>
 #include <nano/string.h>
+#include <nano/numeric.h>
 
 namespace nano
 {
     ///
-    /// \brief construct an operator to compare two strings numerically
+    /// \brief construct an operator to compare two strings numerically.
     ///
     template <typename tscalar>
     auto make_less_from_string()
@@ -23,7 +26,7 @@ namespace nano
     }
 
     ///
-    /// \brief construct an operator to compare two strings numerically
+    /// \brief construct an operator to compare two strings numerically.
     ///
     template <typename tscalar>
     auto make_greater_from_string()
@@ -38,9 +41,16 @@ namespace nano
     ///
     /// \brief cell in a table.
     ///
-    struct NANO_PUBLIC cell_t
+    struct cell_t
     {
+        ///
+        /// \brief default constructor
+        ///
         cell_t() = default;
+
+        ///
+        /// \brief constructor
+        ///
         cell_t(string_t data, const size_t span, const alignment align, const char fill, const int precision) :
             m_data(std::move(data)),
             m_span(span),
@@ -50,16 +60,37 @@ namespace nano
         {
         }
 
-        string_t format() const;
-        cell_t& precision(const int precision) { m_precision = precision; return *this; }
+        ///
+        /// \brief format the cell as atring
+        ///
+        string_t format() const
+        {
+            try
+            {
+                if (m_precision > 0)
+                {
+                    std::stringstream stream;
+                    stream << std::fixed << std::setprecision(m_precision) << from_string<double>(m_data);
+                    return stream.str();
+                }
+                else
+                {
+                    return m_data;
+                }
+            }
+            catch (std::exception&)
+            {
+                return m_data;
+            }
+        }
 
         // attributes
-        string_t    m_data;         ///<
-        string_t    m_mark;         ///<
-        size_t      m_span{1};          ///< column spanning
-        char        m_fill{' '};        ///< filling character for aligning cells
+        string_t    m_data;                     ///<
+        string_t    m_mark;                     ///<
+        size_t      m_span{1};                  ///< column spanning
+        char        m_fill{' '};                ///< filling character for aligning cells
         alignment   m_alignment{alignment::left};    ///<
-        int         m_precision{0};     ///< #digits to display for floating point values
+        int         m_precision{0};             ///< #digits to display for floating point values
     };
 
     ///
