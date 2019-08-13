@@ -87,6 +87,14 @@ function download_breast_cancer {
     wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.names -P ${dir}
 }
 
+function download_abalone {
+    local dir=${dir_data}/abalone
+    mkdir -p ${dir}
+
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data -P ${dir}
+    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.names -P ${dir}
+}
+
 # Process command line
 function usage {
     cat <<EOF
@@ -105,6 +113,8 @@ options:
         download Wine dataset
     --adult
         download Adult dataset
+    --abalone
+        download Abalone dataset
     --cifar10
         download CIFAR-10 dataset
     --cifar100
@@ -134,6 +144,8 @@ while [ "$1" != "" ]; do
         --adult)            download_adult
                             ;;
         --mnist)            download_mnist
+                            ;;
+        --abalone)          download_abalone
                             ;;
         --fashion-mnist)    download_fashion_mnist
                             ;;

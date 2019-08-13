@@ -30,6 +30,7 @@ set(dataset_sources
     dataset/iris.cpp
     dataset/wine.cpp
     dataset/adult.cpp
+    dataset/abalone.cpp
     dataset/tabular.cpp
     dataset/poker_hand.cpp
     dataset/forest_fires.cpp
