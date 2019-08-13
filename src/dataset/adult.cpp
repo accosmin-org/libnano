@@ -88,6 +88,7 @@ void adult_dataset_t::config(const json_t& json)
 void adult_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
     const auto tr_vd_size = 32561, te_size = 16281;
+    NANO_UNUSED1_RELEASE(samples);
     assert(samples == tr_vd_size + te_size);
 
     split.m_te_indices = indices_t::LinSpaced(te_size, tr_vd_size, tr_vd_size + te_size);

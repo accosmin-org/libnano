@@ -52,6 +52,7 @@ void poker_hand_dataset_t::config(const json_t& json)
 void poker_hand_dataset_t::split(const tensor_size_t samples, split_t& split) const
 {
     const auto tr_vd_size = 25010, te_size = 1000000;
+    NANO_UNUSED1_RELEASE(samples);
     assert(samples == tr_vd_size + te_size);
 
     split.m_te_indices = indices_t::LinSpaced(te_size, tr_vd_size, tr_vd_size + te_size);
