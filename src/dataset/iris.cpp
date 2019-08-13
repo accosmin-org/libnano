@@ -15,7 +15,7 @@ iris_dataset_t::iris_dataset_t() :
         feature_t{"petal_length_cm"},
         feature_t{"petal_width_cm"},
         feature_t{"class"}.labels({"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
-    }, 7);
+    }, 4);
 
     config(config());
 }
