@@ -1,110 +1,36 @@
+#include <sstream>
+#include <iomanip>
 #include <nano/table.h>
 
 using namespace nano;
 
-row_t::row_t(const mode t) :
-    m_type(t)
+string_t cell_t::format() const
 {
-}
-
-size_t row_t::cols() const
-{
-    return  std::accumulate(m_cells.begin(), m_cells.end(), size_t(0),
-            [] (const size_t size, const cell_t& cell) { return size + cell.m_span; });
-}
-
-cell_t* row_t::find(const size_t col)
-{
-    for (size_t icell = 0, icol = 0; icell < m_cells.size(); ++ icell)
+    try
     {
-        if (icol + m_cells[icell].m_span > col)
+        if (m_precision > 0)
         {
-            return &m_cells[icell];
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(m_precision) << from_string<double>(m_data);
+            return stream.str();
         }
-        icol += m_cells[icell].m_span;
-    }
-    return nullptr;
-}
-
-const cell_t* row_t::find(const size_t col) const
-{
-    for (size_t icell = 0, icol = 0; icell < m_cells.size(); ++ icell)
-    {
-        if (icol + m_cells[icell].m_span > col)
+        else
         {
-            return &m_cells[icell];
+            return m_data;
         }
-        icol += m_cells[icell].m_span;
     }
-    return nullptr;
-}
-
-void row_t::data(const size_t col, const string_t& str)
-{
-    cell_t* cell = find(col);
-    if (cell)
+    catch (std::exception&)
     {
-        cell->m_data = str;
+        return m_data;
     }
 }
 
-void row_t::mark(const size_t col, const string_t& str)
+std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
 {
-    cell_t* cell = find(col);
-    if (cell)
-    {
-        cell->m_mark = str;
-    }
-}
-
-string_t row_t::data(const size_t col) const
-{
-    const cell_t* cell = find(col);
-    return cell ? cell->m_data : string_t();
-}
-
-string_t row_t::mark(const size_t col) const
-{
-    const cell_t* cell = find(col);
-    return cell ? cell->m_mark : string_t();
-}
-
-row_t& table_t::header()
-{
-    m_rows.emplace_back(row_t::mode::header);
-    return *m_rows.rbegin();
-}
-
-row_t& table_t::append()
-{
-    m_rows.emplace_back(row_t::mode::data);
-    return *m_rows.rbegin();
-}
-
-row_t& table_t::delim()
-{
-    m_rows.emplace_back(row_t::mode::delim);
-    return *m_rows.rbegin();
-}
-
-size_t table_t::cols() const
-{
-    const auto op = [] (const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
-    const auto it = std::max_element(m_rows.begin(), m_rows.end(), op);
-    return (it == m_rows.end()) ? size_t(0) : it->cols();
-}
-
-size_t table_t::rows() const
-{
-    return m_rows.size();
-}
-
-std::ostream& table_t::print(std::ostream& os) const
-{
-    std::vector<size_t> colsizes(this->cols(), 0);
+    std::vector<size_t> colsizes(table.cols(), 0);
 
     // size of the value columns (in characters) - step1: single column cells
-    for (const auto& row : m_rows)
+    for (const auto& row : table.content())
     {
         size_t icol = 0;
         for (const auto& cell : row.cells())
@@ -126,7 +52,7 @@ std::ostream& table_t::print(std::ostream& os) const
     }
 
     // size of the value columns (in characters) - step2: make room for large multi column cells
-    for (const auto& row : m_rows)
+    for (const auto& row : table.content())
     {
         size_t icol = 0;
         for (const auto& cell : row.cells())
@@ -166,7 +92,7 @@ std::ostream& table_t::print(std::ostream& os) const
 
     // display rows
     print_row_delim();
-    for (const auto& row : m_rows)
+    for (const auto& row : table.content())
     {
         auto it = colsizes.begin();
         switch (row.type())
@@ -192,32 +118,4 @@ std::ostream& table_t::print(std::ostream& os) const
     print_row_delim();
 
     return os;
-}
-
-bool table_t::equals(const table_t& other) const
-{
-    return std::operator==(m_rows, other.m_rows);
-}
-
-std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
-{
-    return table.print(os);
-}
-
-bool nano::operator==(const cell_t& c1, const cell_t& c2)
-{
-    return  c1.m_data == c2.m_data &&
-            c1.m_span == c2.m_span &&
-            c1.m_alignment == c2.m_alignment;
-}
-
-bool nano::operator==(const row_t& r1, const row_t& r2)
-{
-    return  r1.type() == r2.type() &&
-            std::operator==(r1.cells(), r2.cells());
-}
-
-bool nano::operator==(const table_t& t1, const table_t& t2)
-{
-    return t1.equals(t2);
 }
