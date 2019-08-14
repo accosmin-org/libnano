@@ -33,16 +33,22 @@ public:
         write_data(data_path());
         write_test(test_path());
 
-        csvs({
-            csv_t{data_path()}.delim(",").header(false),
-            csv_t{test_path()}.delim(",").header(true)
-        });
+        paths();
     }
 
     ~CSVFixture() override
     {
         std::remove(data_path());
         std::remove(test_path());
+    }
+
+    void paths(const tensor_size_t data_expected = 20, const tensor_size_t test_expected = 10)
+    {
+        csvs(
+        {
+            csv_t{data_path()}.delim(",").header(false).expected(data_expected),
+            csv_t{test_path()}.delim(",").header(true).expected(test_expected)
+        });
     }
 
     void split(
@@ -275,6 +281,18 @@ UTEST_CASE(noload_wrong_features)
     UTEST_CHECK(!dataset.load());
 
     dataset.features({feature_cont, feature_cont_opt, feature_cate_opt, feature_cate}, 0);
+    UTEST_CHECK(!dataset.load());
+}
+
+UTEST_CASE(noload_wrong_expected)
+{
+    auto dataset = CSVFixture{};
+
+    dataset.paths(21, 10);
+    dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 0);
+    UTEST_CHECK(!dataset.load());
+
+    dataset.paths(20, 9);
     UTEST_CHECK(!dataset.load());
 }
 
