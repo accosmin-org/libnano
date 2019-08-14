@@ -23,7 +23,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        feature_t(string_t name) :
+        explicit feature_t(string_t name) :
             m_name(std::move(name))
         {
         }

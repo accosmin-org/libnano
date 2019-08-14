@@ -10,7 +10,7 @@ namespace nano
     struct csv_t
     {
         csv_t() = default;
-        csv_t(string_t path) : m_path(std::move(path)) {}
+        explicit csv_t(string_t path) : m_path(std::move(path)) {}
 
         auto& skip(const char skip) { m_skip = skip; return *this; }
         auto& header(const bool header) { m_header = header; return *this; }
