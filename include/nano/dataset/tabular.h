@@ -64,7 +64,8 @@ namespace nano
 
         auto samples() const { return m_inputs.size<0>(); }
 
-        bool parse(const string_t& path, tensor_size_t& row_offset, const string_t&, const char skip, const bool header);
+        bool parse(const string_t& path, const string_t& line, const string_t& delim,
+            const tensor_size_t line_index, const tensor_size_t row);
 
         void store(const tensor_size_t row, const size_t feature, const scalar_t value);
         void store(const tensor_size_t row, const size_t feature, const tensor_size_t category);

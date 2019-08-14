@@ -1,31 +1,32 @@
 #include <fstream>
+#include <nano/tpool.h>
 #include <nano/logger.h>
 #include <nano/mlearn.h>
 #include <nano/dataset/tabular.h>
 
 using namespace nano;
 
-static tensor_size_t lines(const string_t& path, const char skip, bool header)
+template <typename toperator>
+static auto parse(const string_t& path, const char skip, bool header, const toperator& op)
 {
     string_t line;
-    tensor_size_t count = 0;
-    std::ifstream stream(path);
-    while (std::getline(stream, line))
+    tensor_size_t line_index = 0;
+    for (std::ifstream stream(path); std::getline(stream, line); ++ line_index)
     {
-        if (!line.empty() && line[0] != skip)
+        if (header && line_index == 0)
         {
-            if (header && count == 0)
+            header = false;
+        }
+        else if (!line.empty() && line[0] != skip)
+        {
+            if (!op(line, line_index))
             {
-                header = false;
-            }
-            else
-            {
-                ++ count;
+                return false;
             }
         }
     }
 
-    return count;
+    return true;
 }
 
 static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
@@ -33,10 +34,11 @@ static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
     assert(indices.minCoeff() >= 0 && indices.maxCoeff() < data.size<0>());
 
     tensor4d_t idata(indices.size(), data.size<1>(), data.size<2>(), data.size<3>());
-    for (tensor_size_t i = 0, size = indices.size(); i < size; ++ i)
+
+    loopi(indices.size(), [&] (const tensor_size_t i, const tensor_size_t)
     {
         idata.tensor(i) = data.tensor(indices(i));
-    }
+    });
 
     return idata;
 }
@@ -84,7 +86,11 @@ bool tabular_dataset_t::load()
     tensor_size_t data_size = 0;
     for (const auto& csv : m_csvs)
     {
-        data_size += lines(csv.m_path, csv.m_skip, csv.m_header);
+        ::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t&, const tensor_size_t)
+        {
+            ++ data_size;
+            return true;
+        });
     }
 
     tensor_size_t n_inputs = 0, n_targets = 0;
@@ -113,30 +119,33 @@ bool tabular_dataset_t::load()
     m_targets.resize(data_size, n_targets, 1, 1);
 
     // load data
-    tensor_size_t row_offset = 0;
+    tensor_size_t row = 0;
     for (const auto& csv : m_csvs)
     {
         log_info() << "tabular dataset: reading " << csv.m_path << "...";
 
-        const auto old_row_offset = row_offset;
-        if (!parse(csv.m_path, row_offset, csv.m_delim, csv.m_skip, csv.m_header))
+        const auto old_row = row;
+        if (!::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t& line, const tensor_size_t line_index)
+            {
+                return this->parse(csv.m_path, line, csv.m_delim, line_index, row ++);
+            }))
         {
             return false;
         }
 
-        const auto samples_read = row_offset - old_row_offset;
+        const auto samples_read = row - old_row;
         if (csv.m_expected > 0 && samples_read != csv.m_expected)
         {
             log_error() << "tabular dataset: read " << samples_read << ", expecting " << csv.m_expected << " samples!";
             return false;
         }
 
-        log_info() << "tabular dataset: read " << row_offset << " samples!";
+        log_info() << "tabular dataset: read " << row << " samples!";
     }
 
-    if (row_offset != samples())
+    if (row != samples())
     {
-        log_error() << "tabular dataset: read " << row_offset << " samples, expecting " << samples() << "!";
+        log_error() << "tabular dataset: read " << row << " samples, expecting " << samples() << "!";
         return false;
     }
 
@@ -224,79 +233,60 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const ten
     }
 }
 
-bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
-    const string_t& delim, const char skip, bool header)
+bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const string_t& delim,
+    const tensor_size_t line_index, const tensor_size_t row)
 {
-    string_t line;
-    std::ifstream stream(path);
-    for (tensor_size_t row = 0, line_index = 0; std::getline(stream, line); ++ line_index)
+    if (row >= samples())
     {
-        if (line.empty() || line[0] == skip)
-        {
-            continue;
-        }
+        log_error() << "tabular dataset: too many samples, expecting " << samples() << "!";
+        return false;
+    }
 
-        if (header && row == 0)
+    for (auto tokenizer = tokenizer_t{line, delim.c_str()}; tokenizer; ++ tokenizer)
+    {
+        if (tokenizer.count() > m_features.size())
         {
-            header = false;
-            continue;
-        }
-
-        if (row_offset >= samples())
-        {
-            log_error() << "tabular dataset: too many samples, expecting " << samples() << "!";
+            log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                << ", expecting " << m_features.size() << " tokens!";
             return false;
         }
 
-        for (auto tokenizer = tokenizer_t{line, delim.c_str()}; tokenizer; ++ tokenizer)
+        const auto f = tokenizer.count() - 1;
+        const auto token = tokenizer.get();
+        const auto& feature = m_features[f];
+
+        if (token == feature.placeholder())
         {
-            if (tokenizer.count() > m_features.size())
+            assert(f != m_target);
+            store(row, f, feature_t::placeholder_value());
+        }
+        else if (!feature.discrete())
+        {
+            try
+            {
+                store(row, f, from_string<scalar_t>(token));
+            }
+            catch (std::exception& e)
             {
                 log_error() << "tabular dataset: invalid line " << path << ":" << line_index
-                    << ", expecting " << m_features.size() << " tokens!";
+                    << ", expecting arithmetic token [" << token << "] for feature [" << feature.name() << "]!";
+                return false;
+            }
+        }
+        else
+        {
+            const auto& labels = feature.labels();
+
+            const auto it = std::find(labels.begin(), labels.end(), token);
+            if (it == labels.end())
+            {
+                log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                    << ", invalid label [" << token << "] for feature [" << feature.name() << "]!";
                 return false;
             }
 
-            const auto f = tokenizer.count() - 1;
-            const auto token = tokenizer.get();
-            const auto& feature = m_features[f];
-
-            if (token == feature.placeholder())
-            {
-                assert(f != m_target);
-                store(row_offset, f, feature_t::placeholder_value());
-            }
-            else if (!feature.discrete())
-            {
-                try
-                {
-                    store(row_offset, f, from_string<scalar_t>(token));
-                }
-                catch (std::exception& e)
-                {
-                    log_error() << "tabular dataset: invalid line " << path << ":" << line_index
-                        << ", expecting arithmetic token [" << token << "] for feature [" << feature.name() << "]!";
-                    return false;
-                }
-            }
-            else
-            {
-                const auto& labels = feature.labels();
-
-                const auto it = std::find(labels.begin(), labels.end(), token);
-                if (it == labels.end())
-                {
-                    log_error() << "tabular dataset: invalid line " << path << ":" << line_index
-                        << ", invalid label [" << token << "] for feature [" << feature.name() << "]!";
-                    return false;
-                }
-
-                store(row_offset, f, std::distance(labels.begin(), it));
-            }
+            store(row, f, std::distance(labels.begin(), it));
         }
-
-        ++ row;
-        ++ row_offset;
     }
 
     return true;
