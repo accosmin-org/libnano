@@ -6,7 +6,7 @@ using namespace nano;
 wine_dataset_t::wine_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/wine");
+    m_dir.append("/libnano/datasets/wine");
 
     features(
     {

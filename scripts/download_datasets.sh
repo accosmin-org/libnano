@@ -1,7 +1,6 @@
 #!/bin/bash
 
-dir_exp=$HOME/experiments/results
-dir_data=$HOME/experiments/datasets
+dir_data=$HOME/libnano/datasets
 
 function download_mnist {
     local dir=${dir_data}/mnist/

@@ -6,7 +6,7 @@ using namespace nano;
 bank_marketing_dataset_t::bank_marketing_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/bank-marketing");
+    m_dir.append("/libnano/datasets/bank-marketing");
 
     features(
     {

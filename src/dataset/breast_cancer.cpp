@@ -6,7 +6,7 @@ using namespace nano;
 breast_cancer_dataset_t::breast_cancer_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/breast-cancer");
+    m_dir.append("/libnano/datasets/breast-cancer");
 
     features(
     {

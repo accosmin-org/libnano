@@ -6,7 +6,7 @@ using namespace nano;
 poker_hand_dataset_t::poker_hand_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/poker-hand");
+    m_dir.append("/libnano/datasets/poker-hand");
 
     features(
     {

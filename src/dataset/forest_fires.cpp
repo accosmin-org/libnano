@@ -6,7 +6,7 @@ using namespace nano;
 forest_fires_dataset_t::forest_fires_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/forest-fires");
+    m_dir.append("/libnano/datasets/forest-fires");
 
     features(
     {

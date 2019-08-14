@@ -6,7 +6,7 @@ using namespace nano;
 adult_dataset_t::adult_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/adult");
+    m_dir.append("/libnano/datasets/adult");
 
     features(
     {

@@ -6,7 +6,7 @@ using namespace nano;
 iris_dataset_t::iris_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/iris");
+    m_dir.append("/libnano/datasets/iris");
 
     features(
     {

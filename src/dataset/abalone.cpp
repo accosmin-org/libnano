@@ -6,7 +6,7 @@ using namespace nano;
 abalone_dataset_t::abalone_dataset_t() :
     m_dir(std::getenv("HOME"))
 {
-    m_dir.append("/experiments/datasets/abalone");
+    m_dir.append("/libnano/datasets/abalone");
 
     features(
     {
