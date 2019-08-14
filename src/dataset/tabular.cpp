@@ -229,7 +229,7 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
 {
     string_t line;
     std::ifstream stream(path);
-    for (tensor_size_t row = 0; std::getline(stream, line); )
+    for (tensor_size_t row = 0, line_index = 0; std::getline(stream, line); ++ line_index)
     {
         if (line.empty() || line[0] == skip)
         {
@@ -252,7 +252,7 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
         {
             if (tokenizer.count() > m_features.size())
             {
-                log_error() << "tabular dataset: invalid line " << path << ":" << row
+                log_error() << "tabular dataset: invalid line " << path << ":" << line_index
                     << ", expecting " << m_features.size() << " tokens!";
                 return false;
             }
@@ -274,8 +274,8 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
                 }
                 catch (std::exception& e)
                 {
-                    log_error() << "tabular dataset: invalid line " << path << ":" << row
-                        << ", expecting arithmetic token [" << token << "] for feature " << feature.name() << "!";
+                    log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                        << ", expecting arithmetic token [" << token << "] for feature [" << feature.name() << "]!";
                     return false;
                 }
             }
@@ -286,8 +286,8 @@ bool tabular_dataset_t::parse(const string_t& path, tensor_size_t& row_offset,
                 const auto it = std::find(labels.begin(), labels.end(), token);
                 if (it == labels.end())
                 {
-                    log_error() << "tabular dataset: invalid line " << path << ":" << row
-                        << ", invalid label [" << token << "] for feature " << feature.name() << "!";
+                    log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                        << ", invalid label [" << token << "] for feature [" << feature.name() << "]!";
                     return false;
                 }
 

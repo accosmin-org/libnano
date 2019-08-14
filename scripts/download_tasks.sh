@@ -95,6 +95,38 @@ function download_abalone {
     wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.names -P ${dir}
 }
 
+function download_bank_marketing {
+    local dir=${dir_data}/bank-marketing
+    mkdir -p ${dir}
+
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip -P ${dir}
+    wget -N http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip -P ${dir}
+
+    unzip -o ${dir}/bank.zip -d ${dir}
+    unzip -o ${dir}/bank-additional.zip -d ${dir}
+
+    mv -f ${dir}/bank-additional/* ${dir}
+    rm -rf ${dir}/__MACOSX
+    rm -rf ${dir}/bank-additional
+    rm -f ${dir}/*.zip
+}
+
+function download_all {
+    download_mnist
+    download_cifar10
+    download_cifar100
+    download_fashion_mnist
+
+    download_iris
+    download_wine
+    download_adult
+    download_abalone
+    download_poker_hand
+    download_forest_fires
+    download_breast_cancer
+    download_bank_marketing
+}
+
 # Process command line
 function usage {
     cat <<EOF
@@ -103,6 +135,8 @@ usage: $0 [OPTIONS]
 options:
     -h,--help
         print usage
+    --all
+        download all datasets
     --mnist
         download MNIST dataset
     --fashion-minst
@@ -125,6 +159,8 @@ options:
         download Forest Fires dataset
     --breast-cancer
         download Breast Cancer dataset
+    --bank-marketing
+        download Bank Marketing dataset
 EOF
     exit 1
 }
@@ -136,6 +172,8 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)        usage
+                            ;;
+        --all)              download_all
                             ;;
         --wine)             download_wine
                             ;;
@@ -158,6 +196,8 @@ while [ "$1" != "" ]; do
         --forest-fires)     download_forest_fires
                             ;;
         --breast-cancer)    download_breast_cancer
+                            ;;
+        --bank-marketing)   download_bank_marketing
                             ;;
         *)                  echo "unrecognized option $1"
                             echo
