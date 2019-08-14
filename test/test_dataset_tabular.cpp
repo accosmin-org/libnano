@@ -32,6 +32,11 @@ public:
 
         write_data(data_path());
         write_test(test_path());
+
+        csvs({
+            csv_t{data_path()}.delim(",").header(false),
+            csv_t{test_path()}.delim(",").header(true)
+        });
     }
 
     ~CSVFixture() override
@@ -71,14 +76,14 @@ public:
     static void write_data(const char* path)
     {
         std::ofstream os(path);
-        write(os, 1, 20);
+        write(os, 1, 20, false);
         UTEST_REQUIRE(os);
     }
 
     static void write_test(const char* path)
     {
         std::ofstream os(path);
-        write(os, 21, 10);
+        write(os, 21, 10, true);
         UTEST_REQUIRE(os);
     }
 
@@ -105,8 +110,13 @@ public:
         }
     }
 
-    static void write(std::ostream& os, const int begin, const int size)
+    static void write(std::ostream& os, const int begin, const int size, const bool header)
     {
+        if (header)
+        {
+            os << "cont,cont_opt,cate,cate_opt\n";
+        }
+
         for (auto index = begin; index < begin + size; ++ index)
         {
             os << index << ",";
@@ -237,6 +247,7 @@ UTEST_CASE(noload_no_data)
 {
     auto dataset = CSVFixture{};
 
+    dataset.csvs({});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 0);
     UTEST_CHECK(!dataset.load());
 }
@@ -245,7 +256,6 @@ UTEST_CASE(noload_no_features)
 {
     auto dataset = CSVFixture{};
 
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     UTEST_CHECK(!dataset.load());
 }
 
@@ -253,7 +263,6 @@ UTEST_CASE(noload_few_features)
 {
     auto dataset = CSVFixture{};
 
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate}, 0);
     UTEST_CHECK(!dataset.load());
 }
@@ -262,7 +271,6 @@ UTEST_CASE(noload_wrong_features)
 {
     auto dataset = CSVFixture{};
 
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont_opt, feature_cont, feature_cate, feature_cate_opt}, 1);
     UTEST_CHECK(!dataset.load());
 
@@ -274,7 +282,6 @@ UTEST_CASE(noload_invalid_target)
 {
     auto dataset = CSVFixture{};
 
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 4);
     UTEST_CHECK(!dataset.load());
 
@@ -290,7 +297,6 @@ UTEST_CASE(noload_invalid_splits)
     auto dataset = CSVFixture{};
 
     dataset.split(-1, 10, 10, 26, 26, 29);
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
     UTEST_CHECK(!dataset.load());
 
@@ -340,7 +346,6 @@ UTEST_CASE(load_no_target)
     auto dataset = CSVFixture{};
 
     dataset.folds(3);
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt});
 
     UTEST_REQUIRE(dataset.load());
@@ -392,7 +397,6 @@ UTEST_CASE(load_with_cont_target)
     auto dataset = CSVFixture{};
 
     dataset.folds(2);
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 0);
 
     UTEST_REQUIRE(dataset.load());
@@ -440,7 +444,6 @@ UTEST_CASE(load_with_cate_target)
     auto dataset = CSVFixture{};
 
     dataset.folds(7);
-    dataset.csvs({csv_t{CSVFixture::data_path()}, csv_t{CSVFixture::test_path()}});
     dataset.features({feature_cont, feature_cont_opt, feature_cate, feature_cate_opt}, 2);
 
     UTEST_REQUIRE(dataset.load());
