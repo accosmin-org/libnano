@@ -311,6 +311,28 @@ namespace nano
         auto tensor(const tindices... indices) { return ttensor(data(), indices...); }
 
         ///
+        /// \brief returns a copy of some (sub-)tensors using the given indices.
+        ///
+        /// NB: the indices are relative to the first dimension.
+        ///
+        template <typename tindices>
+        auto indexed(const tindices& indices) const
+        {
+            assert(indices.minCoeff() >= 0 && indices.maxCoeff() < size<0>());
+
+            auto dims = this->dims();
+            dims[0] = indices.size();
+
+            auto subtensor = tensor_mem_t<tscalar, trank>{dims};
+            for (tensor_size_t i = 0, size = indices.size(); i < size; ++ i)
+            {
+                subtensor.tensor(i) = tensor(indices(i));
+            }
+
+            return subtensor;
+        }
+
+        ///
         /// \brief access an element of the tensor
         ///
         tconst_reference operator()(const tensor_size_t index) const

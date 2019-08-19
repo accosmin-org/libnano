@@ -358,4 +358,27 @@ UTEST_CASE(tensor4d_subtensor_copying)
     UTEST_CHECK_EIGEN_CLOSE(tensor1.vector(), tensor2.vector(), 1);
 }
 
+UTEST_CASE(tensor4d_indexing)
+{
+    using tensor4d_t = nano::tensor_mem_t<int, 4>;
+
+    tensor4d_t tensor(5, 7, 3, 4);
+    tensor.random();
+
+    const int indices[] = {0, 1, 3, 2, 2, 3};
+    const auto subtensor = tensor.indexed(map_vector(indices, 6));
+
+    UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
+    UTEST_REQUIRE_EQUAL(subtensor.size<1>(), tensor.size<1>());
+    UTEST_REQUIRE_EQUAL(subtensor.size<2>(), tensor.size<2>());
+    UTEST_REQUIRE_EQUAL(subtensor.size<3>(), tensor.size<3>());
+
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(0), tensor.vector(0), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(1), tensor.vector(1), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(2), tensor.vector(3), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(3), tensor.vector(2), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(4), tensor.vector(2), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(5), tensor.vector(3), 1);
+}
+
 UTEST_END_MODULE()

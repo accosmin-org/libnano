@@ -29,20 +29,6 @@ static auto parse(const string_t& path, const char skip, bool header, const tope
     return true;
 }
 
-static tensor4d_t index4d(const tensor4d_t& data, const indices_t& indices)
-{
-    assert(indices.minCoeff() >= 0 && indices.maxCoeff() < data.size<0>());
-
-    tensor4d_t idata(indices.size(), data.size<1>(), data.size<2>(), data.size<3>());
-
-    loopi(indices.size(), [&] (const tensor_size_t i, const tensor_size_t)
-    {
-        idata.tensor(i) = data.tensor(indices(i));
-    });
-
-    return idata;
-}
-
 void tabular_dataset_t::csvs(std::vector<csv_t> csvs)
 {
     m_csvs = std::move(csvs);
@@ -328,12 +314,12 @@ const indices_t& tabular_dataset_t::indices(const fold_t& fold) const
 
 tensor4d_t tabular_dataset_t::inputs(const fold_t& fold) const
 {
-    return index4d(m_inputs, indices(fold));
+    return m_inputs.indexed(indices(fold));
 }
 
 tensor4d_t tabular_dataset_t::targets(const fold_t& fold) const
 {
-    return index4d(m_targets, indices(fold));
+    return m_targets.indexed(indices(fold));
 }
 
 void tabular_dataset_t::shuffle(const fold_t& fold)
