@@ -324,7 +324,7 @@ namespace nano
             dims[0] = indices.size();
 
             auto subtensor = tensor_mem_t<tscalar, trank>{dims};
-            for (tensor_size_t i = 0, size = indices.size(); i < size; ++ i)
+            for (tensor_size_t i = 0, indices_size = indices.size(); i < indices_size; ++ i)
             {
                 subtensor.tensor(i) = tensor(indices(i));
             }
