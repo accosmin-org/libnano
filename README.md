@@ -5,6 +5,8 @@ Numerical optimization routines and machine learning utilities using [Eigen3](ht
 
 1. [Introduction](docs/intro.md)
 
-1. [Build instructions](docs/build.md)
+2. [Build instructions](docs/build.md)
 
-1. [Numerical optimization module](docs/solver.md)
+3. [Numerical optimization module](docs/solver.md)
+
+4. [Machine learning datasets](docs/dataset.md)
