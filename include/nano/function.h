@@ -24,14 +24,14 @@ namespace nano
     /// \brief construct test functions having the number of dimensions within the given range.
     ///
     NANO_PUBLIC rfunctions_t get_functions(
-        const tensor_size_t min_dims, const tensor_size_t max_dims,
+        tensor_size_t min_dims, tensor_size_t max_dims,
         const std::regex& name_regex = std::regex(".+"));
 
     ///
     /// \brief construct convex test functions having the number of dimensions within the given range.
     ///
     NANO_PUBLIC rfunctions_t get_convex_functions(
-        const tensor_size_t min_dims, const tensor_size_t max_dims,
+        tensor_size_t min_dims, tensor_size_t max_dims,
         const std::regex& name_regex = std::regex(".+"));
 
     ///
@@ -43,8 +43,20 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        function_t(const char* name, const tensor_size_t size, const convexity convex);
-        function_t(string_t name, const tensor_size_t size, const convexity convex);
+        function_t(string_t name, tensor_size_t size, convexity convex);
+        function_t(const char* name, tensor_size_t size, convexity convex);
+
+        ///
+        /// \brief enable copying
+        ///
+        function_t(const function_t&) = default;
+        function_t& operator=(const function_t&) = default;
+
+        ///
+        /// \brief enable moving
+        ///
+        function_t(function_t&&) noexcept = default;
+        function_t& operator=(function_t&&) noexcept = default;
 
         ///
         /// \brief destructor
@@ -69,7 +81,7 @@ namespace nano
         ///
         /// \brief check if the function is convex along the [x1, x2] line
         ///
-        bool is_convex(const vector_t& x1, const vector_t& x2, const int steps) const;
+        bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
 
         ///
         /// \brief compute function value (and gradient if provided)

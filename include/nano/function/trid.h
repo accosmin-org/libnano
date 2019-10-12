@@ -18,7 +18,7 @@ namespace nano
 
         scalar_t vgrad(const vector_t& x, vector_t* gx) const override
         {
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = 2 * (x.array() - 1);
                 gx->segment(1, size() - 1) -= x.segment(0, size() - 1);

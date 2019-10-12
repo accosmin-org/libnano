@@ -1,17 +1,19 @@
-#include "morethuente.h"
-#include <nano/numeric.h>
+#include <nano/util/numeric.h>
+#include <nano/lsearchk/morethuente.h>
 
 using namespace nano;
 
-///
-/// \brief see dcstep routine in MINPACK-2 (see http://ftp.mcs.anl.gov/pub/MINPACK-2/csrch/)
-///
-static void dcstep(
+rlsearchk_t lsearchk_morethuente_t::clone() const
+{
+    return std::make_unique<lsearchk_morethuente_t>(*this);
+}
+
+void lsearchk_morethuente_t::dcstep(
     scalar_t& stx, scalar_t& fx, scalar_t& dx,
     scalar_t& sty, scalar_t& fy, scalar_t& dy,
     scalar_t& stp, scalar_t& fp, scalar_t& dp,
     bool& brackt,
-    const scalar_t stpmin, const scalar_t stpmax)
+    const scalar_t stpmin, const scalar_t stpmax) const
 {
     scalar_t stpc, stpq, stpf;
 
@@ -78,11 +80,11 @@ static void dcstep(
             }
             if (stp > stx)
             {
-                stpf = std::min(stpf, stp + (sty - stp) * .66);
+                stpf = std::min(stpf, stp + (sty - stp) * delta());
             }
             else
             {
-                stpf = std::max(stpf, stp + (sty - stp) * .66);
+                stpf = std::max(stpf, stp + (sty - stp) * delta());
             }
         }
         else
@@ -141,17 +143,6 @@ static void dcstep(
     stp = stpf;
 }
 
-json_t lsearchk_morethuente_t::config() const
-{
-    json_t json;
-    // todo: expose all parameters here!
-    return json;
-}
-
-void lsearchk_morethuente_t::config(const json_t&)
-{
-}
-
 bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     const auto ftol = c1();
@@ -171,7 +162,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
     scalar_t stx = 0, fx = finit, gx = ginit;
     scalar_t sty = 0, fy = finit, gy = ginit;
 
-    for (auto i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         const auto ftest = finit + stp * gtest;
         if (stage == 1 && f <= ftest && g >= scalar_t(0))
@@ -180,10 +171,10 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         }
 
         // Check if further progress can be made
-        if (brackt && (stp <= stmin || stp >= stmax))       return true;
-        if (brackt && (stmax - stmin) <= xtol * stmax)      return true;
-        if (stp >= stpmax() && f <= ftest && g <= gtest)    return true;
-        if (stp <= stpmin() && (f > ftest || g >= gtest))   return true;
+        if (brackt && (stp <= stmin || stp >= stmax))       { return true; }
+        if (brackt && (stmax - stmin) <= xtol * stmax)      { return true; }
+        if (stp >= stpmax() && f <= ftest && g <= gtest)    { return true; }
+        if (stp <= stpmin() && (f > ftest || g >= gtest))   { return true; }
 
         // Check convergence
         if (f <= ftest && std::fabs(g) <= gtol * (-ginit))

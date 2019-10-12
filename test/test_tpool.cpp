@@ -1,9 +1,9 @@
 #include <numeric>
 #include <nano/arch.h>
-#include <nano/tpool.h>
 #include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/util/tpool.h>
+#include <nano/util/numeric.h>
 
 using namespace nano;
 
@@ -107,7 +107,7 @@ UTEST_CASE(enqueue)
     auto& pool = tpool_t::instance();
 
     const size_t max_tasks = 1024;
-    const auto tasks = urand<size_t>(1u, max_tasks, make_rng());
+    const auto tasks = urand<size_t>(1U, max_tasks, make_rng());
 
     std::mutex mutex;
     std::vector<size_t> tasks_done;

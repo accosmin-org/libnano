@@ -1,40 +1,28 @@
 #include <fstream>
 #include <nano/loss.h>
-#include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
-#include <nano/cmdline.h>
-#include <nano/dataset.h>
+#include <nano/imclass.h>
+#include <nano/tabular.h>
 #include <nano/version.h>
+#include <nano/util/table.h>
+#include <nano/util/logger.h>
+#include <nano/util/cmdline.h>
 
 using namespace nano;
 
 namespace
 {
     template <typename tobject>
-    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex,
-        const bool as_table, const bool as_json)
+    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
     {
-        if (as_table)
+        table_t table;
+        table.header() << name << "description";
+        table.delim();
+        for (const auto& id : factory.ids(std::regex(regex)))
         {
-            table_t table;
-            table.header() << name << "description";
-            table.delim();
-            for (const auto& id : factory.ids(std::regex(regex)))
-            {
-                table.append() << id << factory.description(id);
-            }
-            std::cout << table;
+            table.append() << id << factory.description(id);
         }
-
-        if (as_json)
-        {
-            for (const auto& id : factory.ids(std::regex(regex)))
-            {
-                const auto json = factory.get(id)->config_with_id(id);
-                std::cout << json.dump(4) << std::endl;
-            }
-        }
+        std::cout << table;
     }
 }
 
@@ -42,15 +30,14 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("display the registered objects");
-    cmdline.add("", "lsearch0",             "regex to select line-search initialization methods", ".+");
-    cmdline.add("", "lsearchk",             "regex to select line-search strategies", ".+");
-    cmdline.add("", "solver",               "regex to select numerical optimization methods", ".+");
-    cmdline.add("", "loss",                 "regex to select loss functions", ".+");
-    cmdline.add("", "dataset",              "regex to select datasets", ".+");
-    cmdline.add("", "as-table",             "display the selected objects in a table");
-    cmdline.add("", "as-json",              "display the default configuration for the selected objects as JSON");
-    cmdline.add("", "version",              "library version");
-    cmdline.add("", "git-hash",             "git commit hash");
+    cmdline.add("", "lsearch0",         "regex to select line-search initialization methods", ".+");
+    cmdline.add("", "lsearchk",         "regex to select line-search strategies", ".+");
+    cmdline.add("", "solver",           "regex to select numerical optimization methods", ".+");
+    cmdline.add("", "loss",             "regex to select loss functions", ".+");
+    cmdline.add("", "imclass",          "regex to select image classification datasets", ".+");
+    cmdline.add("", "tabular",          "regex to select tabular datasets", ".+");
+    cmdline.add("", "version",          "library version");
+    cmdline.add("", "git-hash",         "git commit hash");
 
     cmdline.process(argc, argv);
 
@@ -58,9 +45,8 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_lsearchk = cmdline.has("lsearchk");
     const auto has_solver = cmdline.has("solver");
     const auto has_loss = cmdline.has("loss");
-    const auto has_dataset = cmdline.has("dataset");
-    const auto has_as_table = cmdline.has("as-table");
-    const auto has_as_json = cmdline.has("as-json");
+    const auto has_imclass = cmdline.has("imclass");
+    const auto has_tabular = cmdline.has("tabular");
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
@@ -74,7 +60,8 @@ static int unsafe_main(int argc, const char* argv[])
         !has_lsearchk &&
         !has_solver &&
         !has_loss &&
-        !has_dataset &&
+        !has_imclass &&
+        !has_tabular &&
         !has_version &&
         !has_git_hash)
     {
@@ -85,23 +72,27 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch0)
     {
-        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"), has_as_table, has_as_json);
+        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
     }
     if (has_lsearchk)
     {
-        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"), has_as_table, has_as_json);
+        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
     }
     if (has_solver)
     {
-        print("solver", solver_t::all(), cmdline.get<string_t>("solver"), has_as_table, has_as_json);
+        print("solver", solver_t::all(), cmdline.get<string_t>("solver"));
     }
     if (has_loss)
     {
-        print("loss", loss_t::all(), cmdline.get<string_t>("loss"), has_as_table, has_as_json);
+        print("loss", loss_t::all(), cmdline.get<string_t>("loss"));
     }
-    if (has_dataset)
+    if (has_imclass)
     {
-        print("dataset", dataset_t::all(), cmdline.get<string_t>("dataset"), has_as_table, has_as_json);
+        print("image classification dataset", imclass_dataset_t::all(), cmdline.get<string_t>("imclass"));
+    }
+    if (has_tabular)
+    {
+        print("tabular dataset", tabular_dataset_t::all(), cmdline.get<string_t>("tabular"));
     }
     if (has_version)
     {

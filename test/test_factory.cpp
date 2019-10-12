@@ -7,6 +7,10 @@ struct object_t
 {
     object_t() = default;
     virtual ~object_t() = default;
+    object_t(object_t&&) = default;
+    object_t(const object_t&) = default;
+    object_t& operator=(object_t&&) = default;
+    object_t& operator=(const object_t&) = default;
     virtual int get() const = 0;
 };
 

@@ -1,5 +1,4 @@
-#include "quasi.h"
-#include <nano/numeric.h>
+#include <nano/solver/quasi.h>
 
 using namespace nano;
 
@@ -72,19 +71,6 @@ solver_quasi_t::solver_quasi_t() :
 {
 }
 
-json_t solver_quasi_t::config() const
-{
-    json_t json = solver_t::config();
-    json["H0"] = strcat(m_initialization, join(enum_values<initialization>()));
-    return json;
-}
-
-void solver_quasi_t::config(const json_t& json)
-{
-    nano::from_json(json, "H0", m_initialization);
-    solver_t::config(json);
-}
-
 solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
     const vector_t& x0) const
 {
@@ -95,7 +81,7 @@ solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         cstate.d = -H * cstate.g;
@@ -141,24 +127,9 @@ solver_state_t solver_quasi_t::minimize(const solver_function_t& function, const
     return cstate;
 }
 
-json_t solver_quasi_sr1_t::config() const
-{
-    json_t json = solver_t::config();
-    json["r"] = strcat(m_r, "(0,1)");
-    return json;
-}
-
-void solver_quasi_sr1_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-
-    solver_quasi_t::config(json);
-    nano::from_json_range(json, "r", m_r, eps, 1 - eps);
-}
-
 void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    ::SR1(H, curr.x - prev.x, curr.g - prev.g, m_r);
+    ::SR1(H, curr.x - prev.x, curr.g - prev.g, r());
 }
 
 void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const

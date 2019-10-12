@@ -1,23 +1,11 @@
-#include "lemarechal.h"
-#include <nano/numeric.h>
+#include <nano/util/numeric.h>
+#include <nano/lsearchk/lemarechal.h>
 
 using namespace nano;
 
-json_t lsearchk_lemarechal_t::config() const
+rlsearchk_t lsearchk_lemarechal_t::clone() const
 {
-    json_t json;
-    json["tau1"] = strcat(m_tau1, "(2,inf)");
-    json["interpolation"] = strcat(m_interpolation, join(enum_values<interpolation>()));
-    return json;
-}
-
-void lsearchk_lemarechal_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-    const auto inf = 1 / eps;
-
-    nano::from_json_range(json, "tau1", m_tau1, 2 + eps, inf);
-    nano::from_json(json, "interpolation", m_interpolation);
+    return std::make_unique<lsearchk_lemarechal_t>(*this);
 }
 
 bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& state)
@@ -26,7 +14,7 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
     lsearch_step_t R = L;
 
     bool R_updated = false;
-    for (int i = 1; i < max_iterations(); ++ i)
+    for (int64_t i = 1; i < max_iterations(); ++ i)
     {
         scalar_t tmin, tmax;
         if (state.has_armijo(state0, c1()))
@@ -41,7 +29,7 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
                 if (!R_updated)
                 {
                     tmin = std::max(L.t, R.t) + 2 * std::fabs(L.t - R.t);
-                    tmax = std::max(L.t, R.t) + m_tau1 * std::fabs(L.t - R.t);
+                    tmax = std::max(L.t, R.t) + tau1() * std::fabs(L.t - R.t);
                 }
                 else
                 {

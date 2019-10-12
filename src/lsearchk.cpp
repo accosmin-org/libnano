@@ -1,10 +1,10 @@
 #include <mutex>
-#include <nano/numeric.h>
-#include "lsearchk/fletcher.h"
-#include "lsearchk/backtrack.h"
-#include "lsearchk/cgdescent.h"
-#include "lsearchk/lemarechal.h"
-#include "lsearchk/morethuente.h"
+#include <nano/util/numeric.h>
+#include <nano/lsearchk/fletcher.h>
+#include <nano/lsearchk/backtrack.h>
+#include <nano/lsearchk/cgdescent.h>
+#include <nano/lsearchk/lemarechal.h>
+#include <nano/lsearchk/morethuente.h>
 
 using namespace nano;
 
@@ -45,7 +45,7 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t)
     assert(state0.t < epsilon0<scalar_t>());
 
     t = std::isfinite(t) ? nano::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         const auto ok = state.update(state0, t);
         log(state0, state);

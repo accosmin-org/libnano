@@ -18,7 +18,7 @@ namespace nano
 
         scalar_t vgrad(const vector_t& x, vector_t* gx) const override
         {
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = 4 * x.array().cube() - 32 * x.array() + 5;
             }

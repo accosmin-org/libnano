@@ -1,5 +1,5 @@
-#include <nano/table.h>
 #include <utest/utest.h>
+#include <nano/util/table.h>
 
 template <typename tscalar>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::pair<size_t, tscalar>>& values)
@@ -54,8 +54,8 @@ UTEST_CASE(table)
     t1.append() << "row2" << "v21" << "v22";
     t1.append() << "row3" << "v21" << "v22";
 
-    UTEST_CHECK_EQUAL(t1.rows(), 5u);
-    UTEST_CHECK_EQUAL(t1.cols(), 3u);
+    UTEST_CHECK_EQUAL(t1.rows(), 5U);
+    UTEST_CHECK_EQUAL(t1.cols(), 3U);
 }
 
 UTEST_CASE(table_rows)
@@ -68,13 +68,13 @@ UTEST_CASE(table_rows)
     table.append() << "row2" << "3200" << colspan(2) << "2000";
     table.append() << "row3" << colspan(3) << "2500";
 
-    UTEST_CHECK_EQUAL(table.rows(), 4u);
-    UTEST_CHECK_EQUAL(table.cols(), 4u);
+    UTEST_CHECK_EQUAL(table.rows(), 4U);
+    UTEST_CHECK_EQUAL(table.cols(), 4U);
 
-    UTEST_CHECK_EQUAL(table.row(0).cols(), 4u);
-    UTEST_CHECK_EQUAL(table.row(1).cols(), 4u);
-    UTEST_CHECK_EQUAL(table.row(2).cols(), 4u);
-    UTEST_CHECK_EQUAL(table.row(3).cols(), 4u);
+    UTEST_CHECK_EQUAL(table.row(0).cols(), 4U);
+    UTEST_CHECK_EQUAL(table.row(1).cols(), 4U);
+    UTEST_CHECK_EQUAL(table.row(2).cols(), 4U);
+    UTEST_CHECK_EQUAL(table.row(3).cols(), 4U);
 
     UTEST_CHECK_EQUAL(table.row(0).data(0), "head"); UTEST_CHECK_EQUAL(table.row(0).mark(0), "");
     UTEST_CHECK_EQUAL(table.row(0).data(1), "colx"); UTEST_CHECK_EQUAL(table.row(0).mark(1), "");

@@ -1,6 +1,6 @@
 #include <vector>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/util/numeric.h>
 #include <nano/tensor/tensor.h>
 
 using namespace nano;
@@ -69,7 +69,7 @@ UTEST_CASE(tensor3d_map)
 
     std::vector<int> v;
     v.reserve(dims * rows * cols);
-    for (int i = 0; i < dims * rows * cols; ++ i)
+    for (tensor_size_t i = 0; i < dims * rows * cols; ++ i)
     {
         v.push_back(-35 + i);
     }
@@ -82,18 +82,18 @@ UTEST_CASE(tensor3d_map)
     UTEST_CHECK_EQUAL(tmap.cols(), cols);
     UTEST_CHECK_EQUAL(tmap.size(), dims * rows * cols);
 
-    for (int d = 0, i = 0; d < dims; ++ d)
+    for (tensor_size_t d = 0, i = 0; d < dims; ++ d)
     {
-        for (int r = 0; r < rows; ++ r)
+        for (tensor_size_t r = 0; r < rows; ++ r)
         {
-            for (int c = 0; c < cols; ++ c, ++ i)
+            for (tensor_size_t c = 0; c < cols; ++ c, ++ i)
             {
                 UTEST_CHECK_EQUAL(tmap(d, r, c), -35 + i);
             }
         }
     }
 
-    for (int i = 0; i < tmap.size(); ++ i)
+    for (tensor_size_t i = 0; i < tmap.size(); ++ i)
     {
         UTEST_CHECK_EQUAL(tmap(i), -35 + i);
     }
@@ -105,18 +105,18 @@ UTEST_CASE(tensor3d_map)
     UTEST_CHECK_EQUAL(tensor.rows(), rows);
     UTEST_CHECK_EQUAL(tensor.cols(), cols);
 
-    for (int d = 0, i = 0; d < dims; ++ d)
+    for (tensor_size_t d = 0, i = 0; d < dims; ++ d)
     {
-        for (int r = 0; r < rows; ++ r)
+        for (tensor_size_t r = 0; r < rows; ++ r)
         {
-            for (int c = 0; c < cols; ++ c, ++ i)
+            for (tensor_size_t c = 0; c < cols; ++ c, ++ i)
             {
                 UTEST_CHECK_EQUAL(tensor(d, r, c), -35 + i);
             }
         }
     }
 
-    for (int i = 0; i < tensor.size(); ++ i)
+    for (tensor_size_t i = 0; i < tensor.size(); ++ i)
     {
         UTEST_CHECK_EQUAL(tensor(i), -35 + i);
     }
@@ -187,7 +187,7 @@ UTEST_CASE(tensor4d_map)
 
     std::vector<int> v;
     v.reserve(dim1 * dim2 * rows * cols);
-    for (int i = 0; i < dim1 * dim2 * rows * cols; ++ i)
+    for (tensor_size_t i = 0; i < dim1 * dim2 * rows * cols; ++ i)
     {
         v.push_back(-35 + i);
     }
@@ -201,13 +201,13 @@ UTEST_CASE(tensor4d_map)
     UTEST_CHECK_EQUAL(tmap.cols(), cols);
     UTEST_CHECK_EQUAL(tmap.size(), dim1 * dim2 * rows * cols);
 
-    for (int d1 = 0, i = 0; d1 < dim1; ++ d1)
+    for (tensor_size_t d1 = 0, i = 0; d1 < dim1; ++ d1)
     {
-        for (int d2 = 0; d2 < dim2; ++ d2)
+        for (tensor_size_t d2 = 0; d2 < dim2; ++ d2)
         {
-            for (int r = 0; r < rows; ++ r)
+            for (tensor_size_t r = 0; r < rows; ++ r)
             {
-                for (int c = 0; c < cols; ++ c, ++ i)
+                for (tensor_size_t c = 0; c < cols; ++ c, ++ i)
                 {
                     UTEST_CHECK_EQUAL(tmap(d1, d2, r, c), -35 + i);
                 }
@@ -215,7 +215,7 @@ UTEST_CASE(tensor4d_map)
         }
     }
 
-    for (int i = 0; i < tmap.size(); ++ i)
+    for (tensor_size_t i = 0; i < tmap.size(); ++ i)
     {
         UTEST_CHECK_EQUAL(tmap(i), -35 + i);
     }
@@ -228,13 +228,13 @@ UTEST_CASE(tensor4d_map)
     UTEST_CHECK_EQUAL(tensor.rows(), rows);
     UTEST_CHECK_EQUAL(tensor.cols(), cols);
 
-    for (int d1 = 0, i = 0; d1 < dim1; ++ d1)
+    for (tensor_size_t d1 = 0, i = 0; d1 < dim1; ++ d1)
     {
-        for (int d2 = 0; d2 < dim2; ++ d2)
+        for (tensor_size_t d2 = 0; d2 < dim2; ++ d2)
         {
-            for (int r = 0; r < rows; ++ r)
+            for (tensor_size_t r = 0; r < rows; ++ r)
             {
-                for (int c = 0; c < cols; ++ c, ++ i)
+                for (tensor_size_t c = 0; c < cols; ++ c, ++ i)
                 {
                     UTEST_CHECK_EQUAL(tensor(d1, d2, r, c), -35 + i);
                 }
@@ -242,7 +242,7 @@ UTEST_CASE(tensor4d_map)
         }
     }
 
-    for (int i = 0; i < tensor.size(); ++ i)
+    for (tensor_size_t i = 0; i < tensor.size(); ++ i)
     {
         UTEST_CHECK_EQUAL(tensor(i), -35 + i);
     }
@@ -360,25 +360,25 @@ UTEST_CASE(tensor4d_subtensor_copying)
 
 UTEST_CASE(tensor4d_indexing)
 {
-    using tensor4d_t = nano::tensor_mem_t<int, 4>;
+    using tensor4d_t = nano::tensor_mem_t<int16_t, 4>;
 
     tensor4d_t tensor(5, 7, 3, 4);
     tensor.random();
 
-    const int indices[] = {0, 1, 3, 2, 2, 3};
-    const auto subtensor = tensor.indexed(map_vector(indices, 6));
+    const tensor_size_t indices[] = {0, 1, 3, 2, 2, 3};
+    const auto subtensor = tensor.indexed<int32_t>(map_vector(indices, 6));
 
     UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
     UTEST_REQUIRE_EQUAL(subtensor.size<1>(), tensor.size<1>());
     UTEST_REQUIRE_EQUAL(subtensor.size<2>(), tensor.size<2>());
     UTEST_REQUIRE_EQUAL(subtensor.size<3>(), tensor.size<3>());
 
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(0), tensor.vector(0), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(1), tensor.vector(1), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(2), tensor.vector(3), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(3), tensor.vector(2), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(4), tensor.vector(2), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(5), tensor.vector(3), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(0).cast<int16_t>(), tensor.vector(0), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(1).cast<int16_t>(), tensor.vector(1), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(2).cast<int16_t>(), tensor.vector(3), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(3).cast<int16_t>(), tensor.vector(2), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(4).cast<int16_t>(), tensor.vector(2), 1);
+    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(5).cast<int16_t>(), tensor.vector(3), 1);
 }
 
 UTEST_END_MODULE()

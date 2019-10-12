@@ -51,7 +51,7 @@ namespace nano
     /// \brief map non-constant data to tensors
     ///
     template <typename tscalar_, typename... tsizes>
-    auto map_tensor(tscalar_* data, const tsizes... dims)
+    auto map_tensor(tscalar_* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return map_tensor(data, make_dims(dims...));
     }
@@ -60,13 +60,13 @@ namespace nano
     /// \brief map constant data to tensors
     ///
     template <typename tscalar_, typename... tsizes>
-    auto map_tensor(const tscalar_* data, const tsizes... dims)
+    auto map_tensor(const tscalar_* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return map_tensor(data, make_dims(dims...));
     }
 
     ///
-    /// \brief tensor.
+    /// \brief tensor w/o owning the allocated continuous memory.
     ///
     template <typename tstorage, size_t trank>
     class tensor_t
@@ -141,7 +141,7 @@ namespace nano
         /// \brief copy constructor from different types (e.g. const from non-const scalars)
         ///
         template <typename tstorage2>
-        tensor_t(const tensor_t<tstorage2, trank>& other) :
+        tensor_t(const tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
             m_dims(other.dims()),
             m_storage(other.storage())
         {
@@ -157,6 +157,11 @@ namespace nano
             m_storage = other.storage();
             return *this;
         }
+
+        ///
+        /// \brief default destructor
+        ///
+        ~tensor_t() = default;
 
         ///
         /// \brief number of dimensions (aka the rank of the tensor)
@@ -312,10 +317,9 @@ namespace nano
 
         ///
         /// \brief returns a copy of some (sub-)tensors using the given indices.
-        ///
         /// NB: the indices are relative to the first dimension.
         ///
-        template <typename tindices>
+        template <typename tscalar_return, typename tindices>
         auto indexed(const tindices& indices) const
         {
             assert(indices.minCoeff() >= 0 && indices.maxCoeff() < size<0>());
@@ -323,10 +327,10 @@ namespace nano
             auto dims = this->dims();
             dims[0] = indices.size();
 
-            auto subtensor = tensor_mem_t<tscalar, trank>{dims};
+            auto subtensor = tensor_mem_t<tscalar_return, trank>{dims};
             for (tensor_size_t i = 0, indices_size = indices.size(); i < indices_size; ++ i)
             {
-                subtensor.tensor(i) = tensor(indices(i));
+                subtensor.vector(i) = vector(indices(i)).template cast<tscalar_return>();
             }
 
             return subtensor;
@@ -344,7 +348,7 @@ namespace nano
 
         treference operator()(const tensor_size_t index)
         {
-            assert(const_cast<const tstorage&>(m_storage).data() != nullptr);
+            assert(data() != nullptr);
             assert(index >= 0 && index < size());
             return data()[index];
         }

@@ -2,8 +2,8 @@
 #include <nano/mlearn.h>
 #include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 using namespace nano;
 
@@ -21,7 +21,7 @@ struct loss_function_t final : public function_t
         UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
         const auto output = map_tensor(x.data(), m_target.dims());
 
-        if (gx)
+        if (gx != nullptr)
         {
             gx->resize(m_target.size());
 
@@ -39,19 +39,6 @@ struct loss_function_t final : public function_t
 };
 
 UTEST_BEGIN_MODULE(test_loss)
-
-UTEST_CASE(config)
-{
-    for (const auto& loss_id : loss_t::all().ids())
-    {
-        const auto loss = loss_t::all().get(loss_id);
-
-        // NB: the loss functions are non-parametric!
-        auto json = loss->config();
-        UTEST_CHECK(json.empty());
-        UTEST_CHECK_NOTHROW(loss->config(json));
-    }
-}
 
 UTEST_CASE(gradient)
 {

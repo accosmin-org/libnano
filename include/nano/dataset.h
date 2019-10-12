@@ -1,73 +1,78 @@
 #pragma once
 
-#include <nano/arch.h>
-#include <nano/json.h>
 #include <nano/mlearn.h>
-#include <nano/factory.h>
-#include <nano/dataset/feature.h>
+#include <nano/parameter.h>
 
 namespace nano
 {
-    class dataset_t;
-    using dataset_factory_t = factory_t<dataset_t>;
-    using rdataset_t = dataset_factory_t::trobject;
-
     ///
-    /// \brief machine learning dataset consisting of a collection of fixed-size 3D input tensors
+    /// \brief machine learning dataset consisting of a collection of samples
     ///     split into training, validation and testing parts.
     ///
-    /// dataset_t's interface handles the following cases:
-    ///     - both supervised and unsupervised machine learning tasks
-    ///     - categorical and continuous features
-    ///     - missing feature values
-    ///
-    class NANO_PUBLIC dataset_t : public json_configurable_t
+    class dataset_t
     {
     public:
 
         ///
-        /// \brief returns the available implementations
+        /// \brief default constructor
         ///
-        static dataset_factory_t& all();
-
-        ///
-        /// \brief populate the dataset with samples
-        ///
-        virtual bool load() = 0;
+        dataset_t() = default;
 
         ///
         /// \brief returns the number of folds
         ///
-        virtual size_t folds() const = 0;
+        size_t folds() const
+        {
+            return m_splits.size();
+        }
 
         ///
-        /// \brief returns the total number of input features
+        /// \brief set the number of folds
         ///
-        virtual size_t ifeatures() const = 0;
+        void folds(const size_t folds)
+        {
+            m_folds = folds;
+            m_splits = std::vector<split_t>(folds, split_t{});
+        }
 
         ///
-        /// \brief returns the description of the given input feature
+        /// \brief randomly shuffle the samples associated to a given fold
         ///
-        virtual feature_t ifeature(const size_t index) const = 0;
+        void shuffle(const fold_t& fold)
+        {
+            auto& indices = this->indices(fold);
+            std::shuffle(begin(indices), end(indices), make_rng());
+        }
 
         ///
-        /// \brief returns the description of the target feature
+        /// \brief returns the percentage of training samples
         ///
-        virtual feature_t tfeature() const = 0;
+        tensor_size_t train_percentage() const
+        {
+            return m_trper.get();
+        }
 
         ///
-        /// \brief returns the inputs tensor of a given fold
+        /// \brief set the percentage of training samples
         ///
-        virtual tensor4d_t inputs(const fold_t&) const = 0;
+        void train_percentage(const tensor_size_t train_percentage)
+        {
+            m_trper = train_percentage;
+        }
 
-        ///
-        /// \brief returns the targets tensor of a given fold (if a supervised task)
-        ///
-        virtual tensor4d_t targets(const fold_t&) const = 0;
+    protected:
 
-        ///
-        /// \brief randomly shuffle the samples associated for the given fold
-        ///
-        virtual void shuffle(const fold_t&) = 0;
+        split_t& split(const size_t fold) { return m_splits.at(fold); }
+        const split_t& split(const size_t fold) const { return m_splits.at(fold); }
+
+        indices_t& indices(const fold_t& fold) { return split(fold.m_index).indices(fold); }
+        const indices_t& indices(const fold_t& fold) const { return split(fold.m_index).indices(fold); }
+
+    private:
+
+        // attributes
+        uparam1_t   m_folds{"dataset::folds", 1, LE, 10, LE, 100};      ///< number of folds
+        iparam1_t   m_trper{"dataset::train_per", 10, LE, 80, LE, 90};  ///< percentage of training samples (excluding the test samples)
+        splits_t    m_splits{10};                                       ///<
     };
 }

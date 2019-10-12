@@ -6,31 +6,47 @@
 The following command shows the structure of this project:
 
 ```
-tree -L 2 -a
 .
-|-- .codecov.yml
-|-- .travis.yml
-|-- .vimrc
-|-- LICENSE
-|-- README.md
-|-- docs
-|   |-- build.md
-|   |-- intro.md
-|   `-- solver.md
-|-- example
-|   |-- CMakeLists.txt
-|   `-- src
-|-- CMakeLists.txt
-|-- app
-|-- cmake
-|-- external
-|   `-- utest
-|-- include
-|   `-- nano
-|-- src
-|-- test
-`-- scripts
-    `-- build.sh
+├── .codecov.yml
+├── .git
+├── .gitignore
+├── .travis.yml
+├── .vimrc
+├── CMakeLists.txt
+├── LICENSE
+├── README.md
+├── app
+│   ├── CMakeLists.txt
+│   ├── *.cpp
+├── cmake
+│   ├── NANOConfig.cmake.in
+│   ├── utils.cmake
+│   └── version.h.in
+├── docs
+│   ├── build.md
+│   ├── intro.md
+│   └── solver.md
+├── example
+│   ├── CMakeLists.txt
+│   └── src
+├── utest
+├── include
+│   └── nano
+├── scripts
+│   ├── build.sh
+│   └── download_datasets.sh
+├── src
+│   ├── CMakeLists.txt
+│   ├── *.cpp
+│   ├── imclass
+│   ├── lsearch0
+│   ├── lsearchk
+│   ├── solver
+│   ├── tabular
+│   └── util
+└── test
+    ├── CMakeLists.txt
+    ├── test_*.cpp
 ```
 
 
@@ -40,7 +56,6 @@ System:
 * compiler supporting [C++14](https://isocpp.org/wiki/faq/cpp14)
 * [CMake](https://cmake.org)
 * [Eigen3](https://tuxfamily.org) - high-performance linear-algebra C++ library
-* [JSON for Modern C++](https://github.com/nlohmann/json) - to parametrize various algorithms
 
 Git submodules:
 * [utest](https://github.com/accosmin/utest) - (micro) header-only unit test library
@@ -58,12 +73,12 @@ Users can also invoke the main CMake script directly for other platforms or for 
 
 The following command displays the command line arguments supported by ```scripts/build.sh```:
 ```
-bash scripts/build.sh --help
+
 usage: scripts/build.sh [OPTIONS]
 
 options:
-	-h,--help
-		print usage
+    -h,--help
+        print usage
     --asan
         setup compiler and linker flags to use the address sanitizer
     --lsan
@@ -116,8 +131,6 @@ options:
         build libnano as a shared library (default)
     --static
         build libnano as a static library
-    --install-json
-        install json dependency system-wide
 ```
 
 The order of the command line arguments matter: the configuration parameters should be first and the actions should follow in the right order (e.g. configuration, then compilation, then testing and then installation). The build script and the CMake scripts do not override environmental variables like ```CXXFLAGS``` or ```LDFLAGS``` and as such the library can be easily wrapped by a package manager.
@@ -134,10 +147,10 @@ bash scripts/build.sh --suffix debug --build-type Debug --config --build --test
 bash scripts/build.sh --suffix release --build-type Release --native --config --build --test --install --build-example
 ```
 
-* install system-wide the library to process JSON:
+* build the Debug build and run the unit tests in the folder ```build/libnano/debug``` with memcheck:
 ```
-bash scripts/build.sh --install-json
+bash scripts/build.sh --suffix debug --build-type Debug --config --build --memcheck
 ```
 
 
-NB: Use the ```--native``` flag when compiling for ```Release``` builds to maximize performance on a given machine. This is because Eigen3 uses vectorization internally for the linear algebra operations. Please note that the resulting binaries may not be portable across various platforms.
+NB: Use the ```--native``` flag when compiling for ```Release``` builds to maximize performance on a given machine. This is because Eigen3 uses vectorization internally for the linear algebra operations. Please note that the resulting binaries may not be usable on another platform.

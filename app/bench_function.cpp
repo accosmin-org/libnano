@@ -1,8 +1,9 @@
-#include <nano/stats.h>
-#include <nano/table.h>
-#include <nano/logger.h>
-#include <nano/cmdline.h>
 #include <nano/function.h>
+#include <nano/util/stats.h>
+#include <nano/util/table.h>
+#include <nano/util/chrono.h>
+#include <nano/util/logger.h>
+#include <nano/util/cmdline.h>
 
 using namespace nano;
 

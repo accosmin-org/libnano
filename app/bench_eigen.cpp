@@ -1,19 +1,19 @@
-#include <nano/table.h>
 #include <nano/tensor.h>
-#include <nano/logger.h>
 #include <nano/random.h>
-#include <nano/cmdline.h>
+#include <nano/util/table.h>
+#include <nano/util/chrono.h>
+#include <nano/util/logger.h>
+#include <nano/util/cmdline.h>
 #include <nano/tensor/numeric.h>
 
 namespace
 {
     using namespace nano;
 
-    auto rng = make_rng();
-
     template <typename tscalar>
     auto make_scalar()
     {
+        auto rng = make_rng();
         return make_udist<tscalar>(-1, +1)(rng);
     }
 
@@ -21,7 +21,7 @@ namespace
     auto make_vector(const tensor_size_t dims)
     {
         tensor_vector_t<tscalar> x(dims);
-        nano::set_random(make_udist<tscalar>(-1, +1), rng, x);
+        x.setRandom();
         return x;
     }
 
@@ -29,7 +29,7 @@ namespace
     auto make_matrix(const tensor_size_t rows, const tensor_size_t cols)
     {
         tensor_matrix_t<tscalar> x(rows, cols);
-        nano::set_random(make_udist<tscalar>(-1, +1), rng, x);
+        x.setRandom();
         return x;
     }
 
@@ -275,8 +275,8 @@ namespace
         row << operation_name;
         foreach_dims(min, max, [&] (const tensor_size_t dims)
         {
-            const auto kilo = tensor_size_t(1) << 10;
-            const auto mega = tensor_size_t(1) << 20;
+            const auto kilo = tensor_size_t(1024);
+            const auto mega = kilo * kilo;
             const auto value = (dims < kilo) ? dims : (dims < mega ? (dims / kilo) : (dims / mega));
             const auto units = (dims < kilo) ? string_t("") : (dims < mega ? string_t("K") : string_t("M"));
             row << nano::strcat(value, units);
@@ -373,7 +373,10 @@ static int unsafe_main(int argc, const char* argv[])
         const auto min = 1024 * min_dims;
         const auto max = 1024 * max_dims;
 
-        if (copy) table.delim();
+        if (copy)
+        {
+            table.delim();
+        }
         header1(min, max, "vector dimension [GFLOPS]", table);
         header2(min, max, "operation (float)", table); ::blas1<float>(min, max, table); table.delim();
         header2(min, max, "operation (double)", table); ::blas1<double>(min, max, table); table.delim();
@@ -384,7 +387,10 @@ static int unsafe_main(int argc, const char* argv[])
         const auto min = min_dims;
         const auto max = max_dims;
 
-        if (copy || blas1) table.delim();
+        if (copy || blas1)
+        {
+            table.delim();
+        }
         header1(min, max, "vector dimension [GFLOPS]", table);
         header2(min, max, "operation (float)", table); ::blas2<float>(min, max, table); table.delim();
         header2(min, max, "operation (double)", table); ::blas2<double>(min, max, table); table.delim();
@@ -395,7 +401,10 @@ static int unsafe_main(int argc, const char* argv[])
         const auto min = min_dims;
         const auto max = max_dims;
 
-        if (copy || blas1 || blas2) table.delim();
+        if (copy || blas1 || blas2)
+        {
+            table.delim();
+        }
         header1(min, max, "matrix dimension [GFLOPS]", table);
         header2(min, max, "operation (float)", table); ::blas3<float>(min, max, table); table.delim();
         header2(min, max, "operation (double)", table); ::blas3<double>(min, max, table); table.delim();

@@ -27,9 +27,6 @@ map <F2> :retab <CR> :w <CR>
 nmap <F3> :set list!<CR>
 set listchars=tab:>-,trail:-
 
-" Toggle between header and implementation
-map <F4> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
-
 " Line extend: http://www.alexeyshmalko.com/2014/using-vim-as-c-cpp-ide/
 set colorcolumn=120
 highlight ColorColumn ctermbg=darkgray
@@ -46,11 +43,28 @@ set path+=include
 set path+=example
 set path+=scripts
 
+" Toggle between header and implementation
+" map <F4> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
+
+function! Mosh_Flip_Ext()
+    " Switch editing between .c* and .h* files (and more).
+    " Since .h file can be in a different dir, call find.
+    if match(expand("%"),'\.cpp') > 0
+        let s:flipname = substitute(expand("%"),'\.cpp\(.*\)','.h\1',"")
+        exe ":e " s:flipname
+    elseif match(expand("%"),"\\.h") > 0
+        let s:flipname = substitute(expand("%"),'\.h\(.*\)','.cpp\1',"")
+        exe ":e " s:flipname
+    endif
+endfun
+
+map <F4> :call Mosh_Flip_Ext()<CR>
+
 " Trim trailing whitespaces when saving
 function! StripTrailingWhitespaces()
-        let l = line(".")
-        let c = col(".")
-        %s/\s\+$//e
-        call cursor(l, c)
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    call cursor(l, c)
 endfunction
 autocmd BufWritePre     * :call StripTrailingWhitespaces()

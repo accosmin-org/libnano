@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -21,7 +21,7 @@ namespace nano
         {
             const auto x2sum = x.dot(x);
 
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = (scalar_t(1.2) + scalar_t(1.6) * x2sum) * x;
             }

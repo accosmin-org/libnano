@@ -1,8 +1,9 @@
-#include <nano/table.h>
-#include <nano/tpool.h>
-#include <nano/logger.h>
 #include <nano/tensor.h>
-#include <nano/cmdline.h>
+#include <nano/util/tpool.h>
+#include <nano/util/table.h>
+#include <nano/util/chrono.h>
+#include <nano/util/logger.h>
+#include <nano/util/cmdline.h>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -101,7 +102,10 @@ static bool close(const scalar_t v1, const scalar_t v2, const char* name, const 
         std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!" << std::endl;
         return false;
     }
-    return true;
+    else
+    {
+        return true;
+    }
 }
 
 template <typename toperator>
@@ -188,7 +192,7 @@ static int unsafe_main(int argc, const char *argv[])
     }
 
     // check arguments and options
-    const auto kilo = tensor_size_t(1<<10), mega = tensor_size_t(1<<20), giga = tensor_size_t(1<<30);
+    const auto kilo = tensor_size_t(1024), mega = kilo * kilo, giga = mega * kilo;
     const auto cmd_min_size = clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, mega);
     const auto cmd_max_size = clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, giga);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -27,7 +27,7 @@ namespace nano
                 fx += ct * nano::square(x(i + 1) - x(i) * x(i)) + nano::square(x(i) - 1);
             }
 
-            if (gx)
+            if (gx != nullptr)
             {
                 (*gx).setZero();
                 for (tensor_size_t i = 0; i + 1 < size(); ++ i)

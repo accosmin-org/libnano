@@ -1,26 +1,10 @@
-#include "cgdescent.h"
-#include <nano/numeric.h>
+#include <nano/lsearch0/cgdescent.h>
 
 using namespace nano;
 
-json_t lsearch0_cgdescent_t::config() const
+rlsearch0_t lsearch0_cgdescent_t::clone() const
 {
-    json_t json;
-    json["_"] = "see CG-DESCENT papers";
-    json["phi0"] = strcat(m_phi0, "(0,1)");
-    json["phi1"] = strcat(m_phi1, "(0,1)");
-    json["phi2"] = strcat(m_phi2, "(1,inf)");
-    return json;
-}
-
-void lsearch0_cgdescent_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-    const auto inf = 1 / eps;
-
-    from_json_range(json, "phi0", m_phi0, eps, 1 - eps);
-    from_json_range(json, "phi1", m_phi1, eps, 1 - eps);
-    from_json_range(json, "phi2", m_phi2, 1 + eps, inf);
+    return std::make_unique<lsearch0_cgdescent_t>(*this);
 }
 
 scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
@@ -34,11 +18,11 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
 
         if (xnorm > 0)
         {
-            t0 = m_phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
+            t0 = phi0() * xnorm / state.g.lpNorm<Eigen::Infinity>();
         }
         else if (fnorm > 0)
         {
-            t0 = m_phi0 * fnorm / state.g.squaredNorm();
+            t0 = phi0() * fnorm / state.g.squaredNorm();
         }
         else
         {
@@ -54,9 +38,9 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
 
         lsearch_step_t stepx
         {
-            state.t * m_phi1,
+            state.t * phi1(),
             // NB: the line-search length is from the previous iteration!
-            state.function->vgrad(state.x + state.t * m_phi1 * state.d),
+            state.function->vgrad(state.x + state.t * phi1() * state.d),
             0
         };
 
@@ -68,7 +52,7 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
         }
         else
         {
-            t0 = state.t * m_phi2;
+            t0 = state.t * phi2();
         }
     }
 

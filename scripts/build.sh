@@ -38,6 +38,7 @@ function tsan {
 
 function gold {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=gold"
+    export LDFLAGS="${LDFLAGS} -fuse-ld=gold"
 }
 
 function native {
@@ -96,7 +97,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=1.88
+    version=1.89
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
@@ -226,73 +227,113 @@ function helgrind {
     return ${returncode}
 }
 
-function spinner()
-{
-    local pid=$!
-    local delay=0.75
-    local spinstr='|/-\'
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]
-    do
-        local temp=${spinstr#?}
-        printf " [%c] " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-            printf "\r"
-    done
-    printf "      \r"
-}
-
 function clang_tidy {
     cd ${libnanodir}
 
     check=$1
 
-    # misc
-    # cert
-    # hicpp
-    # bugprone
-    # modernize
-    # performance
-    # portability
-    # readability
-    # clang-analyzer
-    # cppcoreguidelines
-
-    printf "running $check ...\n"
+    printf "Running $check ...\n"
     log=clang_tidy_${check}.log
+    log=${log//\*/ALL}
+    log=${log//,-/_NOT}
+    printf "Logging to ${log} ...\n"
     run-clang-tidy${clang_tidy_suffix}.py -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
-        -header-filter=.* -checks=-*,${check}* -quiet > $log&
-    spinner
+        -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
 
+    printf "\n"
+    started="0"
+    while read line; do
+        if [[ $line == *"Enabled checks:"* ]]; then
+            printf "${line}\n"
+            started="1"
+        elif [[ -z ${line} ]]; then
+            started="0"
+        elif [[ ${started} == "1" ]]; then
+            printf "    ${line}\n";
+        fi
+    done < ${log}
+
+    printf "\n"
     cat $log | grep warning: | grep -oE "[^ ]+$" | sort | uniq -c
     printf "\n"
 
     # show log only if any warning is detected
-    warnings=$(cat $log | grep warning: | sort -u | wc -l)
-    #grep warning: $log
+    warnings=$(cat $log | grep warning: | sort -u | grep -v Eigen | wc -l)
     if [[ $warnings -gt 0 ]]
     then
-            cat $log
+        grep warning: $log | sort -u
     fi
 
     # decide if should exit with failure
     if [[ $warnings -gt 0 ]]
     then
-            printf "failed with $warnings warnings!\n\n"
-            return 1
+        printf "failed with $warnings warnings!\n\n"
+        return 1
     else
-            printf "passed.\n"
-            return 0
+        printf "passed.\n"
+        return 0
     fi
 }
 
+function clang_tidy_misc {
+    clang_tidy "misc*,-misc-non-private-member-variables-in-classes"
+}
+
+function clang_tidy_cert {
+    clang_tidy "cert*"
+}
+
+function clang_tidy_hicpp {
+    clang_tidy "hicpp*,-hicpp-no-array-decay,-hicpp-avoid-c-arrays"
+}
+
+function clang_tidy_bugprone {
+    clang_tidy "bugprone*"
+}
+
+function clang_tidy_modernize {
+    clang_tidy "modernize*,-modernize-avoid-c-arrays"
+}
+
+function clang_tidy_performance {
+    clang_tidy "performance*"
+}
+
+function clang_tidy_portability {
+    clang_tidy "portability*"
+}
+
+function clang_tidy_readability {
+    checks="readability*"
+    checks="${checks},-readability-magic-numbers"
+    checks="${checks},-readability-named-parameter"
+    checks="${checks},-readability-isolate-declaration"
+    checks="${checks},-readability-else-after-return"
+    checks="${checks},-readability-convert-member-functions-to-static"
+    clang_tidy ${checks}
+}
+
+function clang_tidy_clang_analyzer {
+    clang_tidy "clang-analyzer*"
+}
+
+function clang_tidy_cppcoreguidelines {
+    checks="cppcoreguidelines*"
+    checks="${checks},-cppcoreguidelines-macro-usage"
+    checks="${checks},-cppcoreguidelines-avoid-c-arrays"
+    checks="${checks},-cppcoreguidelines-avoid-magic-numbers"
+    checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
+    checks="${checks},-cppcoreguidelines-pro-bounds-array-to-pointer-decay"
+    clang_tidy ${checks}
+}
+
 function usage {
-	cat <<EOF
+    cat <<EOF
 usage: $0 [OPTIONS]
 
 options:
-	-h,--help
-		print usage
+    -h,--help
+        print usage
     --asan
         setup compiler and linker flags to use the address sanitizer
     --lsan
@@ -337,6 +378,16 @@ options:
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
         suffix for the clang-tidy binaries (e.g. -6.0)
+    --clang-tidy-misc
+    --clang-tidy-cert
+    --clang-tidy-hicpp
+    --clang-tidy-bugprone
+    --clang-tidy-modernize
+    --clang-tidy-performance
+    --clang-tidy-portability
+    --clang-tidy-readability
+    --clang-tidy-clang-analyzer
+    --clang-tidy-cppcoreguidelines
     --build-example
         build example project
     --generator
@@ -345,85 +396,56 @@ options:
         build libnano as a shared library (default)
     --static
         build libnano as a static library
-    --install-json
-        install json dependency system-wide
 EOF
-	exit 1
+    exit 1
 }
 
 if [ "$1" == "" ]; then
-	usage
+    usage
 fi
 
 while [ "$1" != "" ]; do
-	case $1 in
-		-h | --help)        usage
-                            ;;
-        --asan)             asan
-                            ;;
-        --lsan)             lsan
-                            ;;
-        --usan)             usan
-                            ;;
-        --tsan)             tsan
-                            ;;
-        --msan)             msan
-                            ;;
-        --gold)             gold
-                            ;;
-        --native)           native
-                            ;;
-        --libcpp)           libcpp
-                            ;;
-        --coverage)         coverage
-                            ;;
-        --suffix)           shift
-                            suffix $1
-                            ;;
-        --build-type)       shift
-                            build_type=$1
-                            ;;
-        --config)           config || exit 1
-                            ;;
-        --build)            build || exit 1
-                            ;;
-        --test)             tests || exit 1
-                            ;;
-        --install)          install || exit 1
-                            ;;
-        --cppcheck)         cppcheck || exit 1
-                            ;;
-        --codecov)          codecov || exit 1
-                            ;;
-        --coveralls)        coveralls || exit 1
-                            ;;
-        --memcheck)         memcheck || exit 1
-                            ;;
-        --helgrind)         helgrind || exit 1
-                            ;;
-        --clang-tidy-check) shift
-                            clang_tidy $1 || exit 1
-                            ;;
-        --clang-tidy-suffix) shift
-                            clang_tidy_suffix=$1
-                            ;;
-        --build-example)    build_example || exit 1
-                            ;;
-        --generator)        shift
-                            generator="-G$1"
-                            ;;
-        --shared)           build_shared="ON"
-                            ;;
-        --static)           build_shared="OFF"
-                            ;;
-        --install-json)     install_json || exit 1
-                            ;;
-		*)                  echo "unrecognized option $1"
-					        echo
-					        usage
-					        ;;
-	esac
-	shift
+    case $1 in
+        -h | --help)                    usage;;
+        --asan)                         asan;;
+        --lsan)                         lsan;;
+        --usan)                         usan;;
+        --tsan)                         tsan;;
+        --msan)                         msan;;
+        --gold)                         gold;;
+        --native)                       native;;
+        --libcpp)                       libcpp;;
+        --coverage)                     coverage;;
+        --suffix)                       shift; suffix $1;;
+        --build-type)                   shift; build_type=$1;;
+        --config)                       config || exit 1;;
+        --build)                        build || exit 1;;
+        --test)                         tests || exit 1;;
+        --install)                      install || exit 1;;
+        --cppcheck)                     cppcheck || exit 1;;
+        --codecov)                      codecov || exit 1;;
+        --coveralls)                    coveralls || exit 1;;
+        --memcheck)                     memcheck || exit 1;;
+        --helgrind)                     helgrind || exit 1;;
+        --clang-tidy-check)             shift; clang_tidy $1 || exit 1;;
+        --clang-tidy-suffix)            shift; clang_tidy_suffix=$1;;
+        --clang-tidy-misc)              clang_tidy_misc || exit 1;;
+        --clang-tidy-cert)              clang_tidy_cert || exit 1;;
+        --clang-tidy-hicpp)             clang_tidy_hicpp || exit 1;;
+        --clang-tidy-bugprone)          clang_tidy_bugprone || exit 1;;
+        --clang-tidy-modernize)         clang_tidy_modernize || exit 1;;
+        --clang-tidy-performance)       clang_tidy_performance || exit 1;;
+        --clang-tidy-portability)       clang_tidy_portability || exit 1;;
+        --clang-tidy-readability)       clang_tidy_readability || exit 1;;
+        --clang-tidy-clang-analyzer)    clang_tidy_clang_analyzer || exit 1;;
+        --clang-tidy-cppcoreguidelines) clang_tidy_cppcoreguidelines || exit 1;;
+        --build-example)                build_example || exit 1;;
+        --generator)                    shift; generator="-G$1";;
+        --shared)                       build_shared="ON";;
+        --static)                       build_shared="OFF";;
+        *)                              echo "unrecognized option $1"; echo; usage;;
+    esac
+    shift
 done
 
 exit 0

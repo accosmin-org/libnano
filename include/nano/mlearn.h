@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <nano/random.h>
 #include <nano/string.h>
 #include <nano/tensor.h>
@@ -56,7 +57,7 @@ namespace nano
     inline tensor3d_t class_target(const tensor3d_t& outputs)
     {
         tensor3d_t target(outputs.dims());
-        for (auto i = 0; i < outputs.size(); ++ i)
+        for (tensor_size_t i = 0; i < outputs.size(); ++ i)
         {
             target(i) = is_pos_target(outputs(i)) ? pos_target() : neg_target();
         }
@@ -106,39 +107,99 @@ namespace nano
     ///
     /// \brief dataset splitting sample indices into training, validation and test.
     ///
-    struct split_t
+    class split_t
     {
+    public:
+
         ///
-        /// \brief returns the sample indices of the given fold.
+        /// \brief default constructor
         ///
-        auto& indices(const fold_t& fold)
+        split_t() = default;
+
+        ///
+        /// \brief constructor
+        ///
+        split_t(std::tuple<indices_t, indices_t>&& tr_vd_indices, indices_t te_indices) :
+            m_tr_indices(std::move(std::get<0>(tr_vd_indices))),
+            m_vd_indices(std::move(std::get<1>(tr_vd_indices))),
+            m_te_indices(std::move(te_indices))
         {
-            switch (fold.m_protocol)
-            {
-            case protocol::train:   return m_tr_indices;
-            case protocol::valid:   return m_vd_indices;
-            default:                return m_te_indices;
-            }
+        }
+
+        ///
+        /// \brief constructor
+        ///
+        split_t(std::tuple<indices_t, indices_t, indices_t>&& tr_vd_te_indices) :   // NOLINT(hicpp-explicit-conversions)
+            m_tr_indices(std::move(std::get<0>(tr_vd_te_indices))),
+            m_vd_indices(std::move(std::get<1>(tr_vd_te_indices))),
+            m_te_indices(std::move(std::get<2>(tr_vd_te_indices)))
+        {
+        }
+
+        ///
+        /// \returns true if the training, validation and test sample indices
+        ///     are valid relative to the given expected number of samples
+        ///
+        bool valid(const tensor_size_t samples) const
+        {
+            const auto tr = std::set<tensor_size_t>{begin(m_tr_indices), end(m_tr_indices)};
+            const auto vd = std::set<tensor_size_t>{begin(m_vd_indices), end(m_vd_indices)};
+            const auto te = std::set<tensor_size_t>{begin(m_te_indices), end(m_te_indices)};
+
+            return  m_tr_indices.size() > 0 &&
+                    m_vd_indices.size() > 0 &&
+                    m_te_indices.size() > 0 &&
+                    (m_tr_indices.minCoeff() >= 0 && m_tr_indices.maxCoeff() < samples) &&
+                    (m_vd_indices.minCoeff() >= 0 && m_vd_indices.maxCoeff() < samples) &&
+                    (m_te_indices.minCoeff() >= 0 && m_te_indices.maxCoeff() < samples) &&
+                    (m_tr_indices.size() + m_vd_indices.size() + m_te_indices.size() == samples) &&
+                    (std::find_if(vd.begin(), vd.end(), [&] (const auto i) { return tr.count(i) > 0; }) == vd.end()) &&
+                    (std::find_if(te.begin(), te.end(), [&] (const auto i) { return tr.count(i) > 0; }) == te.end());
         }
 
         ///
         /// \brief returns the sample indices of the given fold.
         ///
-        const auto& indices(const fold_t& fold) const
+        auto& indices(const protocol p)
         {
-            switch (fold.m_protocol)
+            switch (p)
             {
             case protocol::train:   return m_tr_indices;
             case protocol::valid:   return m_vd_indices;
             default:                return m_te_indices;
             }
         }
+        auto& indices(const fold_t& fold)
+        {
+            return indices(fold.m_protocol);
+        }
+
+        ///
+        /// \brief returns the sample indices of the given fold.
+        ///
+        const auto& indices(const protocol p) const
+        {
+            switch (p)
+            {
+            case protocol::train:   return m_tr_indices;
+            case protocol::valid:   return m_vd_indices;
+            default:                return m_te_indices;
+            }
+        }
+        const auto& indices(const fold_t& fold) const
+        {
+            return indices(fold.m_protocol);
+        }
+
+    private:
 
         // attributes
         indices_t           m_tr_indices;   ///< indices of the training samples
         indices_t           m_vd_indices;   ///< indices of the validation samples
         indices_t           m_te_indices;   ///< indices of the test samples
     };
+
+    using splits_t = std::vector<split_t>;
 
     ///
     /// \brief randomly split `count` elements in two disjoint sets:
@@ -189,7 +250,7 @@ namespace nano
 
         indices_t set1 = all.segment(0, size1);
         indices_t set2 = all.segment(size1, size2);
-        indices_t set3 = all.segment(size2, size3);
+        indices_t set3 = all.segment(size1 + size2, size3);
 
         std::sort(begin(set1), end(set1));
         std::sort(begin(set2), end(set2));

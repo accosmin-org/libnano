@@ -1,24 +1,11 @@
 #include <deque>
-#include "lbfgs.h"
+#include <nano/solver/lbfgs.h>
 
 using namespace nano;
 
 solver_lbfgs_t::solver_lbfgs_t() :
     solver_t(1e-4, 9e-1)
 {
-}
-
-json_t solver_lbfgs_t::config() const
-{
-    json_t json = solver_t::config();
-    json["history"] = strcat(m_history_size, "(1,1000)");
-    return json;
-}
-
-void solver_lbfgs_t::config(const json_t& json)
-{
-    solver_t::config(json);
-    nano::from_json_range(json, "history", m_history_size, 1, 1000);
 }
 
 solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
@@ -31,7 +18,7 @@ solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const
     std::deque<vector_t> ss, ys;
     vector_t q, r;
 
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)
@@ -95,7 +82,7 @@ solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const
         {
             ss.emplace_back(cstate.x - pstate.x);
             ys.emplace_back(cstate.g - pstate.g);
-            if (ss.size() > m_history_size)
+            if (ss.size() > history())
             {
                 ss.pop_front();
                 ys.pop_front();

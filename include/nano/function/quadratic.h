@@ -22,7 +22,7 @@ namespace nano
 
         scalar_t vgrad(const vector_t& x, vector_t* gx) const override
         {
-            if (gx)
+            if (gx != nullptr)
             {
                 gx->noalias() = m_a + m_A * x;
             }

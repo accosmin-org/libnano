@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/lsearch/lsearch0.h>
-#include <nano/lsearch/lsearchk.h>
+#include <nano/lsearch0.h>
+#include <nano/lsearchk.h>
 
 namespace nano
 {

@@ -7,5 +7,6 @@ add_executable(info src/info.cpp)
 add_executable(minimize src/minimize.cpp)
 
 find_package(NANO 1.0 REQUIRED)
+
 target_link_libraries(info NANO::NANO)
 target_link_libraries(minimize NANO::NANO)

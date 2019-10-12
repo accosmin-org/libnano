@@ -1,4 +1,4 @@
-#include "gd.h"
+#include <nano/solver/gd.h>
 
 using namespace nano;
 
@@ -7,24 +7,13 @@ solver_gd_t::solver_gd_t() :
 {
 }
 
-json_t solver_gd_t::config() const
-{
-    json_t json = solver_t::config();
-    return json;
-}
-
-void solver_gd_t::config(const json_t& json)
-{
-    solver_t::config(json);
-}
-
 solver_state_t solver_gd_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
     const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
     log(cstate);
 
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         cstate.d = -cstate.g;

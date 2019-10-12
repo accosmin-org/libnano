@@ -1,5 +1,4 @@
-#include "cgd.h"
-#include <nano/numeric.h>
+#include <nano/solver/cgd.h>
 
 using namespace nano;
 
@@ -81,21 +80,6 @@ solver_cgd_t::solver_cgd_t() :
 {
 }
 
-json_t solver_cgd_t::config() const
-{
-    json_t json = solver_t::config();
-    json["orthotest"] = strcat(m_orthotest, "(0,1)");
-    return json;
-}
-
-void solver_cgd_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-
-    solver_t::config(json);
-    nano::from_json_range(json, "orthotest", m_orthotest, eps, 1 - eps);
-}
-
 solver_state_t solver_cgd_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
     const vector_t& x0) const
 {
@@ -103,7 +87,7 @@ solver_state_t solver_cgd_t::minimize(const solver_function_t& function, const l
     auto pstate = cstate;
     log(cstate);
 
-    for (int i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         // descent direction
         if (i == 0)
@@ -123,7 +107,7 @@ solver_state_t solver_cgd_t::minimize(const solver_function_t& function, const l
             {
                 cstate.d = -cstate.g;
             }
-            else if (std::fabs(cstate.g.dot(pstate.g)) >= m_orthotest * cstate.g.dot(cstate.g))
+            else if (std::fabs(cstate.g.dot(pstate.g)) >= orthotest() * cstate.g.dot(cstate.g))
             {
                 cstate.d = -cstate.g;
             }
@@ -174,24 +158,9 @@ scalar_t solver_cgd_dy_t::beta(const solver_state_t& prev, const solver_state_t&
     return ::DY(prev, curr);
 }
 
-json_t solver_cgd_n_t::config() const
-{
-    json_t json = solver_cgd_t::config();
-    json["eta"] = strcat(m_eta, "(0,inf)");
-    return json;
-}
-
-void solver_cgd_n_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-
-    solver_cgd_t::config(json);
-    nano::from_json_range(json, "eta", m_eta, eps, 1 / eps);
-}
-
 scalar_t solver_cgd_n_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return ::N(prev, curr, m_eta);
+    return ::N(prev, curr, eta());
 }
 
 scalar_t solver_cgd_dycd_t::beta(const solver_state_t& prev, const solver_state_t& curr) const

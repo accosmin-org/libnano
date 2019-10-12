@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -28,7 +28,7 @@ namespace nano
                 fx += nano::quartic(x(i4 + 0) - x(i4 + 3)) * 10;
             }
 
-            if (gx)
+            if (gx != nullptr)
             {
                 for (tensor_size_t i = 0, i4 = 0; i < size() / 4; ++ i, i4 += 4)
                 {

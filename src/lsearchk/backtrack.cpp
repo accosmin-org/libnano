@@ -1,22 +1,15 @@
-#include "backtrack.h"
+#include <nano/lsearchk/backtrack.h>
 
 using namespace nano;
 
-json_t lsearchk_backtrack_t::config() const
+rlsearchk_t lsearchk_backtrack_t::clone() const
 {
-    json_t json;
-    json["interpolation"] = strcat(m_interpolation, join(enum_values<interpolation>()));
-    return json;
-}
-
-void lsearchk_backtrack_t::config(const json_t& json)
-{
-    nano::from_json(json, "interpolation", m_interpolation);
+    return std::make_unique<lsearchk_backtrack_t>(*this);
 }
 
 bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& state)
 {
-    for (int i = 0; i < max_iterations() && state; ++ i)
+    for (int64_t i = 0; i < max_iterations() && state; ++ i)
     {
         if (state.has_armijo(state0, c1()))
         {

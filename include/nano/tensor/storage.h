@@ -25,6 +25,7 @@ namespace nano
         static constexpr bool owns_memory = true;
 
         tensor_vstorage_t() = default;
+        ~tensor_vstorage_t() = default;
         tensor_vstorage_t(tensor_vstorage_t&&) noexcept = default;
         tensor_vstorage_t(const tensor_vstorage_t&) = default;
         tensor_vstorage_t& operator=(tensor_vstorage_t&&) noexcept = default;
@@ -72,6 +73,7 @@ namespace nano
         static constexpr bool owns_memory = false;
 
         tensor_pstorage_t() = default;
+        ~tensor_pstorage_t() = default;
         tensor_pstorage_t(tensor_pstorage_t&&) noexcept = default;
         tensor_pstorage_t(const tensor_pstorage_t&) = delete;
         tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept { copy(other); return *this; }

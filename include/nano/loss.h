@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/json.h>
 #include <nano/tensor.h>
 #include <nano/factory.h>
 
@@ -18,7 +17,7 @@ namespace nano
     ///
     /// the loss function upper-bounds or approximates the true (usually non-smooth) error function to minimize.
     ///
-    class NANO_PUBLIC loss_t : public json_configurable_t
+    class NANO_PUBLIC loss_t
     {
     public:
 
@@ -28,10 +27,22 @@ namespace nano
         static loss_factory_t& all();
 
         ///
-        /// \brief serialization to JSON not needed
+        /// \brief enable copying
         ///
-        json_t config() const final;
-        void config(const json_t&) final;
+        loss_t() = default;
+        loss_t(const loss_t&) = default;
+        loss_t& operator=(const loss_t&) = default;
+
+        ///
+        /// \brief enable moving
+        ///
+        loss_t(loss_t&&) noexcept = default;
+        loss_t& operator=(loss_t&&) noexcept = default;
+
+        ///
+        /// \brief destructor
+        ///
+        virtual ~loss_t() = default;
 
         ///
         /// \brief compute the error value

@@ -1,51 +1,18 @@
 #include <mutex>
-#include "solver/gd.h"
-#include "solver/cgd.h"
-#include "solver/lbfgs.h"
-#include "solver/quasi.h"
-#include <nano/numeric.h>
+#include <nano/solver/gd.h>
+#include <nano/solver/cgd.h>
+#include <nano/solver/lbfgs.h>
+#include <nano/solver/quasi.h>
+#include <nano/util/numeric.h>
 
 using namespace nano;
 
 solver_t::solver_t(const scalar_t c1, const scalar_t c2,
-    const string_t& lsearch0_id, const string_t& lsearchk_id) :
-    m_c1(c1),
-    m_c2(c2)
+    const string_t& lsearch0_id, const string_t& lsearchk_id)
 {
+    tolerance(c1, c2);
     lsearch0(lsearch0_id);
     lsearchk(lsearchk_id);
-}
-
-json_t solver_t::config() const
-{
-    json_t json;
-    json["c1"] = strcat(m_c1, "(0,1)");
-    json["c2"] = strcat(m_c2, "(c1,1)");
-    json["lsearch0"] = m_lsearch0->config_with_id(m_lsearch0_id);
-    json["lsearchk"] = m_lsearchk->config_with_id(m_lsearchk_id);
-    json["epsilon"] = strcat(m_epsilon, "(1e-12,1e-4)");
-    json["max_iterations"] = strcat(m_max_iterations, "(1,1000000)");
-
-    return json;
-}
-
-void solver_t::config(const json_t& json)
-{
-    const auto eps = epsilon0<scalar_t>();
-
-    nano::from_json_range(json, "c1", m_c1, eps, 1 - eps);
-    nano::from_json_range(json, "c2", m_c2, m_c1, 1 - eps);
-    nano::from_json_range(json, "epsilon", m_epsilon, 1e-12 + eps, 1e-4 - eps);
-    nano::from_json_range(json, "max_iterations", m_max_iterations, 1, 1000 * 1000);
-
-    if (json.count("lsearch0"))
-    {
-        lsearch0(json["lsearch0"]);
-    }
-    if (json.count("lsearchk"))
-    {
-        lsearchk(json["lsearchk"]);
-    }
 }
 
 void solver_t::lsearch0(const string_t& id)
@@ -64,15 +31,6 @@ void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
     m_lsearch0 = std::move(init);
 }
 
-void solver_t::lsearch0(const json_t& json)
-{
-    if (json.count("id") && m_lsearch0_id != json["id"])
-    {
-        lsearch0(json["id"]);
-    }
-    m_lsearch0->config(json);
-}
-
 void solver_t::lsearchk(const string_t& id)
 {
     lsearchk(id, lsearchk_t::all().get(id));
@@ -87,15 +45,6 @@ void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
 
     m_lsearchk_id = id;
     m_lsearchk = std::move(strategy);
-}
-
-void solver_t::lsearchk(const json_t& json)
-{
-    if (json.count("id") && m_lsearchk_id != json["id"])
-    {
-        lsearchk(json["id"]);
-    }
-    m_lsearchk->config(json);
 }
 
 bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
@@ -140,16 +89,13 @@ solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
     // NB: create new line-search objects:
     //  - to have the solver thread-safe
     //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
-    auto lsearch0 = lsearch0_t::all().get(m_lsearch0_id);
+    auto lsearch0 = m_lsearch0->clone();
     lsearch0->epsilon(epsilon());
     lsearch0->logger(m_lsearch0_logger);
-    lsearch0->config(m_lsearch0->config());
 
-    auto lsearchk = lsearchk_t::all().get(m_lsearchk_id);
-    lsearchk->c1(m_c1);
-    lsearchk->c2(m_c2);
+    auto lsearchk = m_lsearchk->clone();
+    lsearchk->tolerance(c1(), c2());
     lsearchk->logger(m_lsearchk_logger);
-    lsearchk->config(m_lsearchk->config());
 
     auto function = solver_function_t{f};
     auto lsearch = lsearch_t{std::move(lsearch0), std::move(lsearchk)};

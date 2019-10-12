@@ -25,25 +25,33 @@ set(solver_sources
 set(loss_sources
     loss.cpp)
 
-set(dataset_sources
-    dataset.cpp
-    dataset/iris.cpp
-    dataset/wine.cpp
-    dataset/adult.cpp
-    dataset/abalone.cpp
-    dataset/tabular.cpp
-    dataset/poker_hand.cpp
-    dataset/forest_fires.cpp
-    dataset/breast_cancer.cpp
-    dataset/bank_marketing.cpp)
+set(imclass_sources
+    imclass.cpp
+    imclass/cifar.cpp
+    imclass/mnist.cpp)
+
+set(util_sources
+    util/table.cpp
+    util/cmdline.cpp)
+
+set(tabular_sources
+    tabular.cpp
+    tabular/iris.cpp
+    tabular/wine.cpp
+    tabular/adult.cpp
+    tabular/abalone.cpp
+    tabular/poker_hand.cpp
+    tabular/forest_fires.cpp
+    tabular/breast_cancer.cpp
+    tabular/bank_marketing.cpp)
 
 add_library(nano
-    table.cpp
-    cmdline.cpp
     function.cpp
     ${loss_sources}
+    ${util_sources}
     ${solver_sources}
-    ${dataset_sources}
+    ${imclass_sources}
+    ${tabular_sources}
     ${lsearch0_sources}
     ${lsearchk_sources})
 
@@ -60,9 +68,6 @@ target_include_directories(nano
 
 target_link_libraries(nano
     PUBLIC Eigen3::Eigen)
-
-#target_link_libraries(nano
-#    PUBLIC nlohmann_json::nholmann_json)
 
 if(NOT WIN32)
     target_link_libraries(nano

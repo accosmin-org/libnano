@@ -38,8 +38,7 @@ if(NOT WIN32)
     find_package(Threads REQUIRED)
 endif()
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(nlohmann_json 3.2 REQUIRED)
+find_package(Eigen3 3.3 NO_MODULE REQUIRED)
 
 ##################################################################################################
 # setup library

@@ -19,7 +19,7 @@ namespace nano
 
         scalar_t vgrad(const vector_t& x, vector_t* gx) const override
         {
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = 2 * x.array() * m_bias.array();
             }

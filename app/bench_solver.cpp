@@ -1,10 +1,11 @@
-#include <nano/stats.h>
-#include <nano/table.h>
-#include <nano/tpool.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
-#include <nano/cmdline.h>
-#include <nano/numeric.h>
+#include <nano/util/stats.h>
+#include <nano/util/table.h>
+#include <nano/util/tpool.h>
+#include <nano/util/chrono.h>
+#include <nano/util/logger.h>
+#include <nano/util/cmdline.h>
+#include <nano/util/numeric.h>
 
 using namespace nano;
 
@@ -249,8 +250,9 @@ static int unsafe_main(int argc, const char* argv[])
         solver->max_iterations(max_iterations);
         if (!lsearch0.empty()) { solver->lsearch0(lsearch0); }
         if (!lsearchk.empty()) { solver->lsearchk(lsearchk); }
-        if (cmdline.has("c1")) { solver->c1(cmdline.get<scalar_t>("c1")); }
-        if (cmdline.has("c2")) { solver->c2(cmdline.get<scalar_t>("c2")); }
+        solver->tolerance(
+            cmdline.has("c1") ? cmdline.get<scalar_t>("c1") : solver->c1(),
+            cmdline.has("c2") ? cmdline.get<scalar_t>("c2") : solver->c2());
 
         solvers.emplace_back(solver_id, std::move(solver));
     };

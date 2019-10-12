@@ -20,7 +20,7 @@ namespace nano
         {
             const auto fx = std::exp(1 + x.dot(x) / scalar_t(size()));
 
-            if (gx)
+            if (gx != nullptr)
             {
                 gx->noalias() = (2 * fx / scalar_t(size())) * x;
             };

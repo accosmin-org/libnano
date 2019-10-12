@@ -20,7 +20,7 @@ namespace nano
         {
             const auto u = x.dot(x);
 
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = (4 * u) * x;
             }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -20,17 +20,17 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx) const override
         {
             scalar_t fx = 0, fi = 0;
-            for (auto i = 0; i < size(); i ++)
+            for (tensor_size_t i = 0; i < size(); i ++)
             {
                 fi += x(i);
                 fx += nano::square(fi);
-                if (gx)
+                if (gx != nullptr)
                 {
                     (*gx)(i) = 2 * fi;
                 }
             }
 
-            if (gx)
+            if (gx != nullptr)
             {
                 for (auto i = size() - 2; i >= 0; i --)
                 {

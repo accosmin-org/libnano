@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -24,7 +24,7 @@ namespace nano
             const scalar_t u = x.dot(x);
             const scalar_t v = x.dot(m_bias);
 
-            if (gx)
+            if (gx != nullptr)
             {
                 *gx = 2 * x + (2 * v + 4 * nano::cube(v)) * m_bias;
             }

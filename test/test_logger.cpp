@@ -1,7 +1,7 @@
 #include <sstream>
 #include <iomanip>
 #include <utest/utest.h>
-#include <nano/logger.h>
+#include <nano/util/logger.h>
 #include <nano/string.h>
 
 using namespace nano;
@@ -44,6 +44,12 @@ UTEST_CASE(unknown)
 
     UTEST_CHECK(ends_with(stream_cout.str(), "|?]: unknown message\n"));
     UTEST_CHECK_EQUAL(stream_cerr.str(), "");
+}
+
+UTEST_CASE(critical)
+{
+    UTEST_CHECK_NOTHROW(critical(false, "message"));
+    UTEST_CHECK_THROW(critical(true, "message"), std::runtime_error);
 }
 
 UTEST_END_MODULE()

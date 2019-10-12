@@ -1,17 +1,8 @@
 #include <mutex>
-#include "loss/regression.h"
-#include "loss/classification.h"
+#include <nano/loss/regression.h>
+#include <nano/loss/classification.h>
 
 using namespace nano;
-
-json_t loss_t::config() const
-{
-    return json_t{};
-}
-
-void loss_t::config(const json_t&)
-{
-}
 
 loss_factory_t& loss_t::all()
 {

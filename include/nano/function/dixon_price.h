@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 namespace nano
 {
@@ -23,7 +23,7 @@ namespace nano
             const auto xsegm0 = x.segment(0, size() - 1);
             const auto xsegm1 = x.segment(1, size() - 1);
 
-            if (gx)
+            if (gx != nullptr)
             {
                 const auto weight = m_bias.segment(1, size() - 1).array() *
                     2 * (2 * xsegm1.array().square() - xsegm0.array());

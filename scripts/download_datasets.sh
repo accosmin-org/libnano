@@ -10,6 +10,8 @@ function download_mnist {
     wget -N http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz -P ${dir}
     wget -N http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz -P ${dir}
     wget -N http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ${dir}
+
+    for file in ${dir}/*.gz; do gunzip -fk ${file}; done
 }
 
 function download_fashion_mnist {
@@ -20,6 +22,8 @@ function download_fashion_mnist {
     wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz -P ${dir}
     wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz -P ${dir}
     wget -N http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz -P ${dir}
+
+    for file in ${dir}/*.gz; do gunzip -fk ${file}; done
 }
 
 function download_cifar10 {
@@ -27,6 +31,8 @@ function download_cifar10 {
     mkdir -p ${dir}
 
     wget -N http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz -P ${dir}
+
+    for file in ${dir}/*.tar.gz; do tar -xzvf ${file} -C ${dir}; done
 }
 
 function download_cifar100 {
@@ -34,6 +40,8 @@ function download_cifar100 {
     mkdir -p ${dir}
 
     wget -N http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz -P ${dir}
+
+    for file in ${dir}/*.tar.gz; do tar -xvf ${file} -C ${dir}; done
 }
 
 function download_iris {

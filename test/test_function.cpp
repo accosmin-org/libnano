@@ -1,6 +1,6 @@
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/util/numeric.h>
 
 using namespace nano;
 

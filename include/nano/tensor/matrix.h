@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <type_traits>
-#include <eigen3/Eigen/Core>
 
 namespace nano
 {
@@ -28,7 +28,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>
     >
-    tresult map_matrix(tscalar_* data, const tsize rows, const tsize cols)
+    tresult map_matrix(tscalar_* data, const tsize rows, const tsize cols) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return tresult(data, rows, cols);
     }
@@ -44,7 +44,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>
     >
-    tresult map_matrix(const tscalar_* data, const tsize rows, const tsize cols)
+    tresult map_matrix(const tscalar_* data, const tsize rows, const tsize cols) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return tresult(data, rows, cols);
     }

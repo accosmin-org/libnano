@@ -84,7 +84,7 @@ namespace nano
         ///
         /// \brief check divergence
         ///
-        operator bool() const
+        operator bool() const // NOLINT(hicpp-explicit-conversions)
         {
             return std::isfinite(t) && std::isfinite(f) && std::isfinite(convergence_criterion());
         }

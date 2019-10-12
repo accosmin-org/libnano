@@ -25,7 +25,7 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
         {
             m_fcalls += 1;
-            m_gcalls += gx ? 1 : 0;
+            m_gcalls += (gx != nullptr) ? 1 : 0;
             return m_function.vgrad(x, gx);
         }
 

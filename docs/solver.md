@@ -68,7 +68,7 @@ for (const auto& solver_id : nano::solver_t::all().ids())
 
 Another possibility is to run the command line utility ```app/info``` to print the ID and a short description of all builtin solvers:
 ```
-./build/libnano/debug/app/info --solver .+ --as-table
+./build/libnano/debug/app/info --solver .+
 |----------|-----------------------------------------|
 | solver   | description                             |
 |----------|-----------------------------------------|
@@ -93,42 +93,23 @@ Another possibility is to run the command line utility ```app/info``` to print t
 |----------|-----------------------------------------|
 ```
 
-The same utility can be then used to show the default JSON configuration of a given solver of interest - the L-BFGS in our case like shown bellow:
+The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from ```example/src/minimize.cpp``` shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
 ```
-./build/libnano/debug/app/info --solver lbfgs --as-json
-{
-    "c1": "0.0001(0,1)",
-    "c2": "0.9(c1,1)",
-    "epsilon": "1e-06(1e-12,1e-4)",
-    "history": "6(1,1000)",
-    "id": "lbfgs",
-    "lsearch0": {
-        ...
-        "alpha": "1.01(1,inf)",
-        "beta": "10(1, inf)",
-        "id": "quadratic"
-    },
-    "lsearchk": {
-        "id": "morethuente"
-    },
-    "max_iterations": "1000(1,1000000)"
-}
-```
+#include <nano/solver/lbfgs.h>
 
-The default JSON configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from ```example/src/minimize.cpp``` shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations: 
-```
-const auto solver = nano::solver_t::all().get("lbfgs");
-auto json = nano::to_json("c1", 1e-4, "c2", 9e-1, "history", 6, "eps", 1e-6, "maxit", 100);
-json["lsearch0"]["id"] = "constant";
-json["lsearch0"]["t0"] = 1.0;
-json["lsearchk"]["id"] = "morethuente";
-solver->config(json);
+auto solver = nano::solver_lbfgs_t{};
+solver.history(6);
+solver.epsilon(1e-6);
+solver.max_iterations(100);
+solver.tolerance(1e-4, 9e-1);
+solver.lsearch0("constant");
+solver.lsearchk("morethuente");
 ```
 
 Then the optimal point is obtained by invoking the solver on the object like described below:
 ```
 const auto x0 = nano::vector_t::Random(objective.size());
-const auto state = solver->minimize(objective, x0);
+const auto state = solver.minimize(objective, x0);
 const auto& x = state.x;
 
 std::cout << std::fixed << std::setprecision(12)
@@ -175,3 +156,4 @@ The results are typical: the BFGS algorithm is faster in terms of function value
 
 * Implement methods using second-order oracle (e.g. Newton method)
 * Implement non-monotone line-search methods (e.g. Nesterov's accelerated gradient, Barzilai and Borwein method)
+* Implement stochastic gradient (descent) methods

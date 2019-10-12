@@ -4,10 +4,11 @@
 using namespace nano;
 
 template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 1>& tensor, const int index0)
+static auto check(const tensor_t<tstorage, 1>& tensor,
+    const tensor_size_t index0)
 {
     tscalar sum = 0;
-    for (int i0 = 0; i0 <= index0; ++ i0)
+    for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
         sum += tensor(i0);
     }
@@ -16,42 +17,57 @@ static auto check(const tensor_t<tstorage, 1>& tensor, const int index0)
 }
 
 template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 2>& tensor, const int index0, const int index1)
+static auto check(const tensor_t<tstorage, 2>& tensor,
+    const tensor_size_t index0, const tensor_size_t index1)
 {
     tscalar sum = 0;
-    for (int i0 = 0; i0 <= index0; ++ i0)
-    for (int i1 = 0; i1 <= index1; ++ i1)
+    for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
-        sum += tensor(i0, i1);
+        for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)
+        {
+            sum += tensor(i0, i1);
+        }
     }
 
     return sum;
 }
 
 template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 3>& tensor, const int index0, const int index1, const int index2)
+static auto check(const tensor_t<tstorage, 3>& tensor,
+    const tensor_size_t index0, const tensor_size_t index1, const tensor_size_t index2)
 {
     tscalar sum = 0;
-    for (int i0 = 0; i0 <= index0; ++ i0)
-    for (int i1 = 0; i1 <= index1; ++ i1)
-    for (int i2 = 0; i2 <= index2; ++ i2)
+    for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
-        sum += tensor(i0, i1, i2);
+        for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)
+        {
+            for (tensor_size_t i2 = 0; i2 <= index2; ++ i2)
+            {
+                sum += tensor(i0, i1, i2);
+            }
+        }
     }
 
     return sum;
 }
 
 template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 4>& tensor, const int index0, const int index1, const int index2, const int index3)
+static auto check(const tensor_t<tstorage, 4>& tensor,
+    const tensor_size_t index0, const tensor_size_t index1, const tensor_size_t index2, const tensor_size_t index3)
 {
     tscalar sum = 0;
-    for (int i0 = 0; i0 <= index0; ++ i0)
-    for (int i1 = 0; i1 <= index1; ++ i1)
-    for (int i2 = 0; i2 <= index2; ++ i2)
-    for (int i3 = 0; i3 <= index3; ++ i3)
+    for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
-        sum += tensor(i0, i1, i2, i3);
+        for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)
+        {
+            for (tensor_size_t i2 = 0; i2 <= index2; ++ i2)
+            {
+                for (tensor_size_t i3 = 0; i3 <= index3; ++ i3)
+                {
+                    sum += tensor(i0, i1, i2, i3);
+                }
+            }
+        }
     }
 
     return sum;
@@ -69,7 +85,7 @@ UTEST_CASE(integral1d)
     nano::integral(xtensor, itensor);
 
     UTEST_REQUIRE_EQUAL(xtensor.dims(), itensor.dims());
-    for (int i0 = 0; i0 < xtensor.size<0>(); ++ i0)
+    for (tensor_size_t i0 = 0; i0 < xtensor.size<0>(); ++ i0)
     {
         UTEST_CHECK_EQUAL(itensor(i0), check<int64_t>(xtensor, i0));
     }
@@ -85,10 +101,12 @@ UTEST_CASE(integral2d)
     nano::integral(xtensor, itensor);
 
     UTEST_REQUIRE_EQUAL(xtensor.dims(), itensor.dims());
-    for (int i0 = 0; i0 < xtensor.size<0>(); ++ i0)
-    for (int i1 = 0; i1 < xtensor.size<1>(); ++ i1)
+    for (tensor_size_t i0 = 0; i0 < xtensor.size<0>(); ++ i0)
     {
-        UTEST_CHECK_EQUAL(itensor(i0, i1), check<int64_t>(xtensor, i0, i1));
+        for (tensor_size_t i1 = 0; i1 < xtensor.size<1>(); ++ i1)
+        {
+            UTEST_CHECK_EQUAL(itensor(i0, i1), check<int64_t>(xtensor, i0, i1));
+        }
     }
 }
 
@@ -102,11 +120,15 @@ UTEST_CASE(integral3d)
     nano::integral(xtensor, itensor);
 
     UTEST_REQUIRE_EQUAL(xtensor.dims(), itensor.dims());
-    for (int i0 = 0; i0 < xtensor.size<0>(); ++ i0)
-    for (int i1 = 0; i1 < xtensor.size<1>(); ++ i1)
-    for (int i2 = 0; i2 < xtensor.size<2>(); ++ i2)
+    for (tensor_size_t i0 = 0; i0 < xtensor.size<0>(); ++ i0)
     {
-        UTEST_CHECK_EQUAL(itensor(i0, i1, i2), check<int64_t>(xtensor, i0, i1, i2));
+        for (tensor_size_t i1 = 0; i1 < xtensor.size<1>(); ++ i1)
+        {
+            for (tensor_size_t i2 = 0; i2 < xtensor.size<2>(); ++ i2)
+            {
+                UTEST_CHECK_EQUAL(itensor(i0, i1, i2), check<int64_t>(xtensor, i0, i1, i2));
+            }
+        }
     }
 }
 
@@ -120,12 +142,18 @@ UTEST_CASE(integral4d)
     nano::integral(xtensor, itensor);
 
     UTEST_REQUIRE_EQUAL(xtensor.dims(), itensor.dims());
-    for (int i0 = 0; i0 < xtensor.size<0>(); ++ i0)
-    for (int i1 = 0; i1 < xtensor.size<1>(); ++ i1)
-    for (int i2 = 0; i2 < xtensor.size<2>(); ++ i2)
-    for (int i3 = 0; i3 < xtensor.size<3>(); ++ i3)
+    for (tensor_size_t i0 = 0; i0 < xtensor.size<0>(); ++ i0)
     {
-        UTEST_CHECK_EQUAL(itensor(i0, i1, i2, i3), check<int64_t>(xtensor, i0, i1, i2, i3));
+        for (tensor_size_t i1 = 0; i1 < xtensor.size<1>(); ++ i1)
+        {
+            for (tensor_size_t i2 = 0; i2 < xtensor.size<2>(); ++ i2)
+            {
+                for (tensor_size_t i3 = 0; i3 < xtensor.size<3>(); ++ i3)
+                {
+                    UTEST_CHECK_EQUAL(itensor(i0, i1, i2, i3), check<int64_t>(xtensor, i0, i1, i2, i3));
+                }
+            }
+        }
     }
 }
 

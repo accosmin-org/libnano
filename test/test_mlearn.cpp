@@ -106,4 +106,72 @@ UTEST_CASE(sample_without_replacement_all)
     UTEST_CHECK_EQUAL(indices, indices_t::LinSpaced(100, 0, 100));
 }
 
+UTEST_CASE(split_valid)
+{
+    const auto split = split_t{nano::split3(100, 60, 30)};
+
+    UTEST_CHECK(split.valid(100));
+    UTEST_CHECK_EQUAL(split.indices(protocol::train).size(), 60);
+    UTEST_CHECK_EQUAL(split.indices(protocol::valid).size(), 30);
+    UTEST_CHECK_EQUAL(split.indices(protocol::test).size(), 10);
+
+    UTEST_CHECK(!split.valid(90));
+}
+
+UTEST_CASE(split_invalid_empty)
+{
+    const auto split = split_t{};
+
+    UTEST_CHECK(!split.valid(100));
+}
+
+UTEST_CASE(split_invalid_tr_out_of_range)
+{
+    auto split = split_t{nano::split3(100, 60, 30)};
+
+    split.indices(protocol::train)(0) = -1;
+    UTEST_CHECK(!split.valid(100));
+
+    split.indices(protocol::train)(0) = 101;
+    UTEST_CHECK(!split.valid(100));
+}
+
+UTEST_CASE(split_invalid_vd_out_of_range)
+{
+    auto split = split_t{nano::split3(100, 60, 30)};
+
+    split.indices(protocol::valid)(0) = -1;
+    UTEST_CHECK(!split.valid(100));
+
+    split.indices(protocol::valid)(0) = 101;
+    UTEST_CHECK(!split.valid(100));
+}
+
+UTEST_CASE(split_invalid_te_out_of_range)
+{
+    auto split = split_t{nano::split3(100, 60, 30)};
+
+    split.indices(protocol::test)(0) = -1;
+    UTEST_CHECK(!split.valid(100));
+
+    split.indices(protocol::test)(0) = 101;
+    UTEST_CHECK(!split.valid(100));
+}
+
+UTEST_CASE(split_invalid_tr_vd_intersects)
+{
+    auto split = split_t{nano::split3(100, 60, 30)};
+    split.indices(protocol::valid) = split.indices(protocol::train).segment(0, split.indices(protocol::valid).size());
+
+    UTEST_CHECK(!split.valid(100));
+}
+
+UTEST_CASE(split_invalid_tr_te_intersects)
+{
+    auto split = split_t{nano::split3(100, 60, 30)};
+    split.indices(protocol::test) = split.indices(protocol::train).segment(0, split.indices(protocol::test).size());
+
+    UTEST_CHECK(!split.valid(100));
+}
+
 UTEST_END_MODULE()

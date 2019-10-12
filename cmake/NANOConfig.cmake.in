@@ -1,8 +1,9 @@
 get_filename_component(NANO_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 3.3 NO_MODULE REQUIRED)
 if(NOT WIN32)
+    set(THREADS_PREFER_PTHREAD_FLAG OFF)
     find_package(Threads REQUIRED)
 endif()
 
