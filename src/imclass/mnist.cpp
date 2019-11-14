@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nano/util/logger.h>
+#include <nano/logger.h>
 #include <nano/imclass/mnist.h>
 
 using namespace nano;
@@ -121,7 +121,7 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
 }
 
 mnist_dataset_t::mnist_dataset_t() :
-    base_mnist_dataset_t(strcat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST")
+    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST")
 {
 }
 
@@ -132,7 +132,7 @@ feature_t mnist_dataset_t::tfeature() const
 }
 
 fashion_mnist_dataset_t::fashion_mnist_dataset_t() :
-    base_mnist_dataset_t(strcat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST")
+    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST")
 {
 }
 

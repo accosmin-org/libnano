@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& os, const strings_t& strings)
     return os;
 }
 
-UTEST_BEGIN_MODULE(test_core_factory)
+UTEST_BEGIN_MODULE(test_factory)
 
 UTEST_CASE(empty)
 {
@@ -48,6 +48,7 @@ UTEST_CASE(empty)
     UTEST_CHECK(!manager.has("ds1"));
     UTEST_CHECK(!manager.has("dd"));
     UTEST_CHECK(!manager.has(""));
+    UTEST_CHECK_EQUAL(manager.size(), 0U);
 }
 
 UTEST_CASE(retrieval)
@@ -62,6 +63,7 @@ UTEST_CASE(retrieval)
     UTEST_CHECK(manager.add<object1_t>(id1, "test obj1"));
     UTEST_CHECK(manager.add<object2_t>(id2, "test obj2"));
     UTEST_CHECK(manager.add<object3_t>(id3, "test obj3"));
+    UTEST_CHECK_EQUAL(manager.size(), 3U);
 
     // should not be able to register with the same id anymore
     UTEST_CHECK(!manager.add<object1_t>(id1, ""));
@@ -128,6 +130,7 @@ UTEST_CASE(retrieval_default)
     UTEST_CHECK(manager.add<object1_t>(id1, "test obj1"));
     UTEST_CHECK(manager.add<object2_t>(id2, "test obj2"));
     UTEST_CHECK(manager.add<object3_t>(id3, "test obj3"));
+    UTEST_CHECK_EQUAL(manager.size(), 3U);
 
     // check retrieval with the default arguments
     UTEST_REQUIRE(manager.has(id1));
@@ -141,6 +144,11 @@ UTEST_CASE(retrieval_default)
     UTEST_CHECK_EQUAL(manager.get(id1)->get(), 1);
     UTEST_CHECK_EQUAL(manager.get(id2)->get(), 2);
     UTEST_CHECK_EQUAL(manager.get(id3)->get(), 3);
+
+    UTEST_CHECK_EQUAL(manager.description("obj1"), "test obj1");
+    UTEST_CHECK_EQUAL(manager.description("obj2"), "test obj2");
+    UTEST_CHECK_EQUAL(manager.description("obj3"), "test obj3");
+    UTEST_CHECK_EQUAL(manager.description("none"), "");
 }
 
 UTEST_END_MODULE()

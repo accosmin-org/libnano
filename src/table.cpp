@@ -1,29 +1,6 @@
-#include <sstream>
-#include <iomanip>
-#include <nano/util/table.h>
+#include <nano/table.h>
 
 using namespace nano;
-
-string_t cell_t::format() const
-{
-    try
-    {
-        if (m_precision > 0)
-        {
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(m_precision) << from_string<double>(m_data);
-            return stream.str();
-        }
-        else
-        {
-            return m_data;
-        }
-    }
-    catch (std::exception&)
-    {
-        return m_data;
-    }
-}
 
 std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
 {
@@ -38,7 +15,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             const auto span = cell.m_span;
             if (span == 1)
             {
-                const auto size = cell.format().size() + cell.m_mark.size();
+                const auto size = cell.m_data.size() + cell.m_mark.size();
                 for (size_t c = 0; c < span; ++ c, ++ icol)
                 {
                     colsizes[icol] = std::max(colsizes[icol], idiv(size, span));
@@ -60,7 +37,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             const auto span = cell.m_span;
             if (span > 1)
             {
-                const auto size = cell.format().size() + cell.m_mark.size();
+                const auto size = cell.m_data.size() + cell.m_mark.size();
                 if (std::accumulate(colsizes.begin() + icol, colsizes.begin() + (icol + span), size_t(0)) < size)
                 {
                     for (size_t c = 0; c < span; ++ c, ++ icol)
@@ -107,7 +84,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
                 const auto colspan = static_cast<std::ptrdiff_t>(cell.m_span);
                 const auto colsize = std::accumulate(it, it + colspan, size_t(0));
                 const auto extsize = (cell.m_span - 1) * 3;
-                const auto coltext = cell.format() + cell.m_mark;
+                const auto coltext = cell.m_data + cell.m_mark;
                 os << "| " << align(coltext, colsize + extsize, cell.m_alignment, cell.m_fill) << " ";
                 std::advance(it, colspan);
             }

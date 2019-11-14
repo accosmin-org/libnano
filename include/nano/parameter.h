@@ -116,7 +116,7 @@ namespace nano
                     !m_mincomp.check(m_min, value) ||
                     !m_maxcomp.check(value, m_max))
             {
-                throw std::invalid_argument(strcat("invalid parameter '", m_name, "': !(",
+                throw std::invalid_argument(scat("invalid parameter '", m_name, "': !(",
                     m_min, m_mincomp.name(), value, m_maxcomp.name(), m_max, ")"));
             }
 
@@ -173,7 +173,7 @@ namespace nano
                     !m_valcomp.check(value1, value2) ||
                     !m_maxcomp.check(value2, m_max))
             {
-                throw std::invalid_argument(strcat("invalid parameter '", m_name, "': !(",
+                throw std::invalid_argument(scat("invalid parameter '", m_name, "': !(",
                     m_min, m_mincomp.name(), value1, m_valcomp.name(), value2, m_maxcomp.name(), m_max, ")"));
             }
 

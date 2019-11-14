@@ -1,9 +1,9 @@
+#include <nano/tpool.h>
+#include <nano/table.h>
+#include <nano/chrono.h>
+#include <nano/logger.h>
 #include <nano/tensor.h>
-#include <nano/util/tpool.h>
-#include <nano/util/table.h>
-#include <nano/util/chrono.h>
-#include <nano/util/logger.h>
-#include <nano/util/cmdline.h>
+#include <nano/cmdline.h>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -118,7 +118,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
     // single-thread
     auto& row1 = table.append();
-    row1 << strcat("reduce-", toperator::name()) << "single";
+    row1 << scat("reduce-", toperator::name()) << "single";
     for (tensor_size_t size = min_size; size <= max_size; size *= 2)
     {
         matrix_t targets = matrix_t::Constant(size, 10, -1);
@@ -140,7 +140,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
     // multi-threaded (using the thread pool)
     auto& row2 = table.append();
-    row2 << strcat("reduce-", toperator::name()) << strcat("tpool(x", tpool_t::size(), ")");
+    row2 << scat("reduce-", toperator::name()) << scat("tpool(x", tpool_t::size(), ")");
     for (size_t i = 0; i < single_deltas.size(); ++ i)
     {
         const auto deltaST = single_deltas[i];
@@ -150,14 +150,14 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
         scalar_t valueMT;
         const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_mt<toperator>(targets, outputs); }, 16);
-        row2 << precision(2) << deltaST / static_cast<double>(deltaMT.count());
+        row2 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
         if (!close(valueST, valueMT, "tpool", epsilon1<scalar_t>())) { return false; }
     }
 
 #ifdef _OPENMP
     // multi-threaded (using OpenMP)
     auto& row3 = table.append();
-    row3 << strcat("reduce-", toperator::name()) << "openmp";
+    row3 << scat("reduce-", toperator::name()) << "openmp";
     for (size_t i = 0; i < single_deltas.size(); ++ i)
     {
         const auto deltaST = single_deltas[i];
@@ -167,7 +167,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
         scalar_t valueMT;
         const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_op<toperator>(targets, outputs); }, 16);
-        row3 << precision(2) << deltaST / static_cast<double>(deltaMT.count());
+        row3 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
         if (!close(valueST, valueMT, "openmp", epsilon1<scalar_t>())) { return false; }
     }
 #endif
@@ -201,7 +201,7 @@ static int unsafe_main(int argc, const char *argv[])
     header << "problem" << "method";
     for (auto size = cmd_min_size; size <= cmd_max_size; size *= 2)
     {
-        header << strcat(size / kilo, "K");
+        header << scat(size / kilo, "K");
     }
     table.delim();
 

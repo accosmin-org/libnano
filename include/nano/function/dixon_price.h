@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/numeric.h>
 #include <nano/function.h>
-#include <nano/util/numeric.h>
 
 namespace nano
 {

@@ -6,6 +6,7 @@
 The following command shows the structure of this project:
 
 ```
+tree -L 2
 .
 ├── .codecov.yml
 ├── .git

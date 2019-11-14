@@ -7,6 +7,10 @@ Numerical optimization routines and machine learning utilities using [Eigen3](ht
 
 2. [Build instructions](docs/build.md)
 
-3. [Numerical optimization module](docs/solver.md)
+3. [Tensor module](docs/tensor.md)
 
-4. [Machine learning datasets](docs/dataset.md)
+4. [Numerical optimization module](docs/solver.md)
+
+5. [Machine learning datasets](docs/dataset.md)
+
+6. [Linear models](docs/linear.md)

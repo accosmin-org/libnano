@@ -79,7 +79,7 @@ int main(const int, char* argv[])
             std::cout
                 << "\tdescent: i=" << state.m_iterations
                 << ",f=" << state.f << ",g=" << state.convergence_criterion()
-                << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls
+                << "[" << state.m_status << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls
                 << ".\n";
             return true;
         });
@@ -112,7 +112,7 @@ int main(const int, char* argv[])
             << ", iters=" << state.m_iterations
             << ", fcalls=" << state.m_fcalls
             << ", gcalls=" << state.m_gcalls
-            << ", status=" << nano::to_string(state.m_status)
+            << ", status=" << state.m_status
             << "\n" << std::endl;
     }
 

@@ -72,7 +72,7 @@ namespace nano
         template <typename tvalue>
         void add(const string_t& short_name, const string_t& name, const string_t& description, tvalue default_value)
         {
-            add(short_name, name, description, to_string(default_value));
+            add(short_name, name, description, scat(default_value));
         }
 
         ///

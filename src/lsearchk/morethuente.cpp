@@ -1,4 +1,4 @@
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 #include <nano/lsearchk/morethuente.h>
 
 using namespace nano;

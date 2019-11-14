@@ -256,8 +256,8 @@ void ImageWidget::load()
     label += tr("  |-train...%1\n").arg(m_dataset->samples({size_t{0}, nano::protocol::train}));
     label += tr("  |-valid...%1\n").arg(m_dataset->samples({size_t{0}, nano::protocol::valid}));
     label += tr("  |-test....%1\n").arg(m_dataset->samples({size_t{0}, nano::protocol::test}));
-    label += tr("|-inputs....%1\n").arg(QString::fromStdString(nano::to_string(m_dataset->idim())));
-    label += tr("|-targets...%1 (%4)\n").arg(QString::fromStdString(nano::to_string(m_dataset->tdim())))
+    label += tr("|-inputs....%1\n").arg(QString::fromStdString(nano::scat(m_dataset->idim())));
+    label += tr("|-targets...%1 (%4)\n").arg(QString::fromStdString(nano::scat(m_dataset->tdim())))
         .arg(m_dataset->tfeature().discrete() ? "discrete" : "continuous");
 
     QFont font = m_dataLabel->font();

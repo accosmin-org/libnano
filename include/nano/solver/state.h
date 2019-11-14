@@ -181,6 +181,6 @@ namespace nano
 
     inline std::ostream& operator<<(std::ostream& os, const solver_state_t::status status)
     {
-        return os << to_string(status);
+        return os << scat(status);
     }
 }

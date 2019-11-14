@@ -55,7 +55,7 @@ adult_dataset_t::adult_dataset_t()
         feature_t{"income"}.labels({">50K", "<=50K"})
     }, 14);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/adult");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/adult");
     csvs(
     {
         csv_t{dir + "/adult.data"}.skip('|').delim(", .").header(false).expected(32561),

@@ -2,18 +2,20 @@
 #include <nano/mlearn.h>
 #include <nano/random.h>
 #include <utest/utest.h>
+#include <nano/numeric.h>
 #include <nano/function.h>
-#include <nano/util/numeric.h>
 
 using namespace nano;
 
 struct loss_function_t final : public function_t
 {
     loss_function_t(const rloss_t& loss, const tensor_size_t xmaps) :
-        function_t("loss", xmaps, convexity::no),
-        m_loss(loss), m_target(xmaps, 1, 1)
+        function_t("loss", 3 * xmaps, convexity::no),
+        m_loss(loss), m_target(3, xmaps, 1, 1), m_values(3)
     {
-        m_target = class_target(xmaps, 11 % xmaps);
+        m_target.tensor(0) = class_target(xmaps, 11 % xmaps);
+        m_target.tensor(1) = class_target(xmaps, 12 % xmaps);
+        m_target.tensor(2) = class_target(xmaps, 13 % xmaps);
     }
 
     scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
@@ -29,13 +31,14 @@ struct loss_function_t final : public function_t
             UTEST_REQUIRE(gx->array().isFinite().all());
         }
 
-        const auto value = m_loss->value(m_target, output);
-        UTEST_REQUIRE(std::isfinite(value));
-        return value;
+        m_loss->value(m_target, output, m_values.tensor());
+        UTEST_REQUIRE(m_values.array().isFinite().all());
+        return m_values.array().sum();
     }
 
     const rloss_t&      m_loss;
-    tensor3d_t          m_target;
+    tensor4d_t          m_target;
+    mutable tensor1d_t  m_values;
 };
 
 UTEST_BEGIN_MODULE(test_loss)
@@ -44,7 +47,6 @@ UTEST_CASE(gradient)
 {
     const tensor_size_t cmd_min_dims = 2;
     const tensor_size_t cmd_max_dims = 8;
-    const size_t cmd_tests = 128;
 
     // evaluate the analytical gradient vs. the finite difference approximation
     for (const auto& loss_id : loss_t::all().ids())
@@ -54,13 +56,10 @@ UTEST_CASE(gradient)
             const auto loss = loss_t::all().get(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
 
-            for (size_t t = 0; t < cmd_tests; ++ t)
-            {
-                vector_t x = vector_t::Random(cmd_dims) / 10;
+            vector_t x = vector_t::Random(function.size()) / 10;
 
-                UTEST_CHECK_GREATER(function.vgrad(x), scalar_t(0));
-                UTEST_CHECK_LESS(function.grad_accuracy(x), 2 * epsilon2<scalar_t>());
-            }
+            UTEST_CHECK_GREATER(function.vgrad(x), scalar_t(0));
+            UTEST_CHECK_LESS(function.grad_accuracy(x), 2 * epsilon2<scalar_t>());
         }
     }
 }
@@ -73,37 +72,26 @@ UTEST_CASE(single_class)
         UTEST_REQUIRE(loss);
 
         const auto n_classes = 1;
-        tensor3d_t target(n_classes, 1, 1);
-        tensor3d_t output(n_classes, 1, 1);
 
-        {
-            target = class_target(n_classes);
-            output = class_target(n_classes);
+        tensor4d_t targets(4, n_classes, 1, 1);
+        targets.tensor(0) = class_target(n_classes);
+        targets.tensor(1) = class_target(n_classes, 0);
+        targets.tensor(2) = class_target(n_classes);
+        targets.tensor(3) = class_target(n_classes, 0);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(0), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 0);
-            output = class_target(n_classes, 0);
+        tensor4d_t outputs(4, n_classes, 1, 1);
+        outputs.tensor(0) = class_target(n_classes);
+        outputs.tensor(1) = class_target(n_classes, 0);
+        outputs.tensor(2) = class_target(n_classes, 0);
+        outputs.tensor(3) = class_target(n_classes);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(0), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes);
-            output = class_target(n_classes, 0);
+        tensor1d_t errors;
+        loss->error(targets, outputs, errors);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 0);
-            output = class_target(n_classes);
-
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
+        UTEST_CHECK_CLOSE(errors(0), scalar_t(0), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(1), scalar_t(0), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(2), scalar_t(1), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(3), scalar_t(1), epsilon0<scalar_t>());
     }
 }
 
@@ -115,38 +103,26 @@ UTEST_CASE(single_label_multi_class)
         UTEST_REQUIRE(loss);
 
         const auto n_classes = 13;
-        tensor3d_t target(n_classes, 1, 1);
-        tensor3d_t output(n_classes, 1, 1);
 
-        {
-            target = class_target(n_classes, 11);
-            output = class_target(n_classes, 11);
+        tensor4d_t targets(4, n_classes, 1, 1);
+        targets.tensor(0) = class_target(n_classes, 11);
+        targets.tensor(1) = class_target(n_classes, 11);
+        targets.tensor(2) = class_target(n_classes, 11);
+        targets.tensor(3) = class_target(n_classes, 11);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(0), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 11);
-            output = class_target(n_classes, 12);
+        tensor4d_t outputs(4, n_classes, 1, 1);
+        outputs.tensor(0) = class_target(n_classes, 11);
+        outputs.tensor(1) = class_target(n_classes, 12);
+        outputs.tensor(2) = class_target(n_classes, 11); outputs.vector(2)(7) = pos_target() + 1;
+        outputs.tensor(3) = class_target(n_classes);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 11);
-            output = class_target(n_classes, 11);
-            output.vector()(7) = pos_target() + 1;
+        tensor1d_t errors;
+        loss->error(targets, outputs, errors);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 11);
-            output = class_target(n_classes);
-
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
+        UTEST_CHECK_CLOSE(errors(0), scalar_t(0), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(1), scalar_t(1), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(2), scalar_t(1), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(3), scalar_t(1), epsilon0<scalar_t>());
     }
 }
 
@@ -158,51 +134,32 @@ UTEST_CASE(multi_label_multi_class)
         UTEST_REQUIRE(loss);
 
         const auto n_classes = 13;
-        tensor3d_t target(n_classes, 1, 1);
-        tensor3d_t output(n_classes, 1, 1);
 
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes, 7, 9);
+        tensor4d_t targets(6, n_classes, 1, 1);
+        targets.tensor(0) = class_target(n_classes, 7, 9);
+        targets.tensor(1) = class_target(n_classes, 7, 9);
+        targets.tensor(2) = class_target(n_classes, 7, 9);
+        targets.tensor(3) = class_target(n_classes, 7, 9);
+        targets.tensor(4) = class_target(n_classes, 7, 9);
+        targets.tensor(5) = class_target(n_classes, 7, 9);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(0), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes);
+        tensor4d_t outputs(6, n_classes, 1, 1);
+        outputs.tensor(0) = class_target(n_classes, 7, 9);
+        outputs.tensor(1) = class_target(n_classes);
+        outputs.tensor(2) = class_target(n_classes, 5);
+        outputs.tensor(3) = class_target(n_classes, 7);
+        outputs.tensor(4) = class_target(n_classes, 5, 9);
+        outputs.tensor(5) = class_target(n_classes, 7, 9, 11);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(2), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes, 5);
+        tensor1d_t errors;
+        loss->error(targets, outputs, errors);
 
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(3), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes, 7);
-
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes, 5, 9);
-
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(2), epsilon0<scalar_t>());
-        }
-        {
-            target = class_target(n_classes, 7, 9);
-            output = class_target(n_classes, 7, 9, 11);
-
-            const auto error = loss->error(target, output);
-            UTEST_CHECK_CLOSE(error, scalar_t(1), epsilon0<scalar_t>());
-        }
+        UTEST_CHECK_CLOSE(errors(0), scalar_t(0), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(1), scalar_t(2), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(2), scalar_t(3), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(3), scalar_t(1), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(4), scalar_t(2), epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(errors(5), scalar_t(1), epsilon0<scalar_t>());
     }
 }
 
@@ -213,13 +170,14 @@ UTEST_CASE(regression)
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
-        tensor3d_t target(4, 1, 1);
+        tensor4d_t target(3, 4, 1, 1);
         target.random();
 
-        tensor3d_t output = target;
+        tensor4d_t output = target;
 
-        const auto error = loss->error(target, output);
-        UTEST_CHECK_LESS(error, epsilon0<scalar_t>());
+        tensor1d_t errors(3);
+        loss->error(target, output, errors.tensor());
+        UTEST_CHECK_LESS(errors.array().abs().maxCoeff(), epsilon0<scalar_t>());
     }
 }
 

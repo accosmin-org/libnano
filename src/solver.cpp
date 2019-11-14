@@ -1,9 +1,9 @@
 #include <mutex>
+#include <nano/numeric.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
-#include <nano/util/numeric.h>
 
 using namespace nano;
 

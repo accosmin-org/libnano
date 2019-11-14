@@ -1,9 +1,9 @@
+#include <nano/stats.h>
+#include <nano/table.h>
+#include <nano/chrono.h>
+#include <nano/logger.h>
+#include <nano/cmdline.h>
 #include <nano/function.h>
-#include <nano/util/stats.h>
-#include <nano/util/table.h>
-#include <nano/util/chrono.h>
-#include <nano/util/logger.h>
-#include <nano/util/cmdline.h>
 
 using namespace nano;
 
@@ -39,7 +39,7 @@ static void eval_func(const function_t& function, table_t& table)
 
     auto& row = table.append();
     row << function.name() << fval_time << grad_time
-        << nano::precision(12) << (grad_accuracy / static_cast<scalar_t>(trials));
+        << scat(std::setprecision(12), std::fixed, grad_accuracy / static_cast<scalar_t>(trials));
 }
 
 static int unsafe_main(int argc, const char* argv[])

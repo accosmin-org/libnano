@@ -166,8 +166,8 @@ namespace nano
         ///
         /// \brief disable moving
         ///
-        tpool_t(tpool_t&&) = delete;
-        tpool_t& operator=(tpool_t&&) = delete;
+        tpool_t(tpool_t&&) noexcept = delete;
+        tpool_t& operator=(tpool_t&&) noexcept = delete;
 
         ///
         /// \brief destructor

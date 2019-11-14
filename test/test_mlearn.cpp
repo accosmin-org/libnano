@@ -106,7 +106,19 @@ UTEST_CASE(sample_without_replacement_all)
     UTEST_CHECK_EQUAL(indices, indices_t::LinSpaced(100, 0, 100));
 }
 
-UTEST_CASE(split_valid)
+UTEST_CASE(split_valid2)
+{
+    const auto split = split_t{nano::split2(80, 60), indices_t::LinSpaced(20, 80, 100)};
+
+    UTEST_CHECK(split.valid(100));
+    UTEST_CHECK_EQUAL(split.indices(protocol::train).size(), 48);
+    UTEST_CHECK_EQUAL(split.indices(protocol::valid).size(), 32);
+    UTEST_CHECK_EQUAL(split.indices(protocol::test).size(), 20);
+
+    UTEST_CHECK(!split.valid(90));
+}
+
+UTEST_CASE(split_valid3)
 {
     const auto split = split_t{nano::split3(100, 60, 30)};
 

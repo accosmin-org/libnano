@@ -25,17 +25,16 @@ namespace nano
     };
 
     template <typename tenum>
-    using enum_map_t = std::vector<std::pair<tenum, string_t>>;
+    using enum_map_t = std::vector<std::pair<tenum, const char*>>;
 
     ///
     /// \brief maps all possible values of an enum to string.
-    /// NB: to specialize it, such that nano::to_string & nano::from_string work on a particular enum.
     ///
     template <typename tenum>
     enum_map_t<tenum> enum_string();
 
     ///
-    /// \brief collect all the values for an enum type.
+    /// \brief collect all the values of an enum type, optionally filtered by the given regular expression.
     ///
     template <typename tenum>
     auto enum_values(const std::regex& enum_regex = std::regex(".+"))
@@ -53,55 +52,6 @@ namespace nano
 
     namespace detail
     {
-        template <typename tvalue, typename = void>
-        struct to_string_t
-        {
-            static string_t cast(const tvalue value)
-            {
-                std::ostringstream ss;
-                ss.precision(16);
-                ss << value;
-                return ss.str();
-            }
-        };
-
-        template <>
-        struct to_string_t<string_t, void>
-        {
-            static string_t cast(const string_t& value)
-            {
-                return value;
-            }
-        };
-
-        template <>
-        struct to_string_t<const char*, void>
-        {
-            static string_t cast(const char* value)
-            {
-                return value;
-            }
-        };
-
-        template <typename tenum>
-        struct to_string_t<tenum, typename std::enable_if<std::is_enum<tenum>::value>::type>
-        {
-            static string_t cast(const tenum value)
-            {
-                for (const auto& elem : enum_string<tenum>())
-                {
-                    if (elem.first == value)
-                    {
-                        return elem.second;
-                    }
-                }
-
-                const auto str = std::to_string(static_cast<int>(value));
-                const auto msg = string_t("missing mapping for enumeration ") + typeid(tenum).name() + " <" + str + ">!";
-                throw std::invalid_argument(msg);
-            }
-        };
-
         template <typename, typename = void>
         struct from_string_t;
 
@@ -223,16 +173,6 @@ namespace nano
     }
 
     ///
-    /// \brief cast value to string.
-    ///
-    template <typename tvalue>
-    string_t to_string(const tvalue value)
-    {
-        /// todo: replace this with "if constepr" in c++17
-        return detail::to_string_t<tvalue>::cast(value);
-    }
-
-    ///
     /// \brief cast string to value.
     ///
     template <typename tvalue>
@@ -258,83 +198,63 @@ namespace nano
         }
     }
 
+    ///
+    /// \brief concatenate a list of potentially heterogeneous values into a formatted string.
+    ///
     namespace detail
     {
+        template <typename, bool>
+        struct scat_t;
+
         template <typename tvalue>
-        void strcat(string_t& str, const tvalue& value)
+        struct scat_t<tvalue, false>
         {
-            str += to_string(value);
-        }
+            static void scat(std::ostringstream& stream, const tvalue& value)
+            {
+                stream << value;
+            }
+        };
 
-        template <>
-        inline void strcat<string_t>(string_t& str, const string_t& value)
+        template <typename tvalue>
+        struct scat_t<tvalue, true>
         {
-            str += value;
-        }
+            static void scat(std::ostringstream& stream, const tvalue& value)
+            {
+                for (const auto& elem : enum_string<tvalue>())
+                {
+                    if (elem.first == value)
+                    {
+                        stream << elem.second;
+                        return;
+                    }
+                }
 
-        template <>
-        inline void strcat<char>(string_t& str, const char& value)
-        {
-            str += value;
-        }
+                const auto str = std::to_string(static_cast<int>(value));
+                const auto msg = string_t("missing mapping for enumeration ") + typeid(tvalue).name() + " <" + str + ">!";
+                throw std::invalid_argument(msg);
+            }
+        };
 
-        inline void strcat(string_t& str, const char* value)
+        template <typename tvalue>
+        void scat(std::ostringstream& stream, const tvalue& value)
         {
-            str += value;
+            scat_t<tvalue, std::is_enum<tvalue>::value>::scat(stream, value);
         }
 
         template <typename tvalue, typename... tvalues>
-        void strcat(string_t& str, const tvalue& value, const tvalues&... values)
+        void scat(std::ostringstream& stream, const tvalue& value, const tvalues&... values)
         {
-            strcat(str, value);
-            strcat(str, values...);
+            scat(stream, value);
+            scat(stream, values...);
         }
     }
 
-    ///
-    /// \brief concatenate a list of potentially heterogeneous values into a string
-    ///
     template <typename... tvalues>
-    string_t strcat(const tvalues&... values)
+    string_t scat(const tvalues&... values)
     {
-        string_t str;
-        detail::strcat(str, values...);
-        return str;
-    }
-
-    ///
-    /// \brief compact a list of values into a string using the given "glue" string.
-    ///
-    template <typename titerator>
-    string_t join(titerator begin, const titerator end, const char* glue = ",",
-        const char* prefix = "[", const char* suffix = "]")
-    {
-        string_t ret;
-        if (prefix)
-        {
-            ret += prefix;
-        }
-        for (; begin != end; )
-        {
-            detail::strcat(ret, *begin);
-            if (++ begin != end)
-            {
-                ret += glue;
-            }
-        }
-        if (suffix)
-        {
-            ret += suffix;
-        }
-
-        return ret;
-    }
-
-    template <typename tcontainer>
-    string_t join(const tcontainer& values, const char* glue = ",",
-        const char* prefix = "[", const char* suffix = "]")
-    {
-        return join(values.begin(), values.end(), glue, prefix, suffix);
+        std::ostringstream stream;
+        detail::scat(stream, values...);
+        return stream.str();
     }
 
     ///

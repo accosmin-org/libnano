@@ -9,14 +9,17 @@ make_test(test_cmdline NANO::nano)
 make_test(test_parameter NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
+make_test(test_tensor_stream NANO::nano)
 make_test(test_tensor_tensor NANO::nano)
 make_test(test_tensor_integral NANO::nano)
 
+make_test(test_tune NANO::nano)
 make_test(test_solver NANO::nano)
 make_test(test_lsearch NANO::nano)
 make_test(test_function NANO::nano)
 
 make_test(test_loss NANO::nano)
+make_test(test_linear NANO::nano)
 make_test(test_mlearn NANO::nano)
 
 make_test(test_tabular NANO::nano)

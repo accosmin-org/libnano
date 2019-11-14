@@ -13,7 +13,7 @@ iris_dataset_t::iris_dataset_t()
         feature_t{"class"}.labels({"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
     }, 4);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/iris");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/iris");
     csvs(
     {
         csv_t{dir + "/iris.data"}.delim(",").header(false).expected(150)

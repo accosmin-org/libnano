@@ -1,40 +1,28 @@
 # create library
 
-set(lsearch0_sources
+set(solver_sources
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp
     lsearch0/cgdescent.cpp
-    lsearch0/quadratic.cpp)
-
-set(lsearchk_sources
+    lsearch0/quadratic.cpp
     lsearchk.cpp
     lsearchk/fletcher.cpp
     lsearchk/backtrack.cpp
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
-    lsearchk/morethuente.cpp)
-
-set(solver_sources
+    lsearchk/morethuente.cpp
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp)
 
-set(loss_sources
-    loss.cpp)
-
-set(imclass_sources
+set(mlearn_sources
+    loss.cpp
     imclass.cpp
     imclass/cifar.cpp
-    imclass/mnist.cpp)
-
-set(util_sources
-    util/table.cpp
-    util/cmdline.cpp)
-
-set(tabular_sources
+    imclass/mnist.cpp
     tabular.cpp
     tabular/iris.cpp
     tabular/wine.cpp
@@ -43,17 +31,16 @@ set(tabular_sources
     tabular/poker_hand.cpp
     tabular/forest_fires.cpp
     tabular/breast_cancer.cpp
-    tabular/bank_marketing.cpp)
+    tabular/bank_marketing.cpp
+    linear/model.cpp
+    linear/function.cpp)
 
 add_library(nano
+    table.cpp
+    cmdline.cpp
     function.cpp
-    ${loss_sources}
-    ${util_sources}
     ${solver_sources}
-    ${imclass_sources}
-    ${tabular_sources}
-    ${lsearch0_sources}
-    ${lsearchk_sources})
+    ${mlearn_sources})
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

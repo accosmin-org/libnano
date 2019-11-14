@@ -1,9 +1,9 @@
+#include <nano/table.h>
+#include <nano/chrono.h>
+#include <nano/logger.h>
 #include <nano/tensor.h>
 #include <nano/random.h>
-#include <nano/util/table.h>
-#include <nano/util/chrono.h>
-#include <nano/util/logger.h>
-#include <nano/util/cmdline.h>
+#include <nano/cmdline.h>
 #include <nano/tensor/numeric.h>
 
 namespace
@@ -279,7 +279,7 @@ namespace
             const auto mega = kilo * kilo;
             const auto value = (dims < kilo) ? dims : (dims < mega ? (dims / kilo) : (dims / mega));
             const auto units = (dims < kilo) ? string_t("") : (dims < mega ? string_t("K") : string_t("M"));
-            row << nano::strcat(value, units);
+            row << nano::scat(value, units);
         });
         table.delim();
     }

@@ -8,7 +8,7 @@ before_script:
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       brew update
       brew tap nlohmann/json
-      brew install eigen qt5
+      brew install eigen
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
@@ -375,14 +375,14 @@ matrix:
       env: TEST="codecov (gcc-7)"
       addons:
         apt:
-          packages: ['gcc-7', 'g++-7', 'gcovr', 'lcov']
+          packages: ['gcc-7', 'g++-7', 'lcov']
           sources: &sources
             - ubuntu-toolchain-r-test
           update: true
       script:
         - sudo -H pip install --upgrade pip
         - sudo -H pip install coverage
-        - CXX=g++-7 bash scripts/build.sh --build-type Debug --coverage --config --build --test --codecov
+        - CXX=g++-7 GCOV=gcov-7 bash scripts/build.sh --build-type Debug --coverage --config --build --test --codecov
 
     #- os: linux
     #  compiler: gcc

@@ -1,11 +1,11 @@
+#include <nano/stats.h>
+#include <nano/table.h>
+#include <nano/tpool.h>
+#include <nano/chrono.h>
 #include <nano/solver.h>
-#include <nano/util/stats.h>
-#include <nano/util/table.h>
-#include <nano/util/tpool.h>
-#include <nano/util/chrono.h>
-#include <nano/util/logger.h>
-#include <nano/util/cmdline.h>
-#include <nano/util/numeric.h>
+#include <nano/logger.h>
+#include <nano/cmdline.h>
+#include <nano/numeric.h>
 
 using namespace nano;
 
@@ -96,8 +96,7 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     {
         std::cout
             << "descent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << to_string(state.m_status) << "]"
-            << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << "." << std::endl;
+            << "[" << state.m_status << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << "." << std::endl;
         return true;
     });
 

@@ -1,10 +1,10 @@
 #include <nano/tensor/index.h>
+#include <nano/table.h>
+#include <nano/chrono.h>
+#include <nano/logger.h>
+#include <nano/cmdline.h>
 #include <nano/imclass.h>
 #include <nano/tabular.h>
-#include <nano/util/table.h>
-#include <nano/util/chrono.h>
-#include <nano/util/logger.h>
-#include <nano/util/cmdline.h>
 
 using namespace nano;
 
@@ -12,7 +12,7 @@ template <typename tdataset>
 static void header(table_t& table, const std::unique_ptr<tdataset>& dataset)
 {
     table.append() << "folds" << colspan(3) << dataset->folds();
-    table.append() << "samples" << colspan(3) << strcat(
+    table.append() << "samples" << colspan(3) << scat(
         dataset->samples(), " = ",
         dataset->samples(fold_t{0U, protocol::train}), "+",
         dataset->samples(fold_t{0U, protocol::valid}), "+",
@@ -22,7 +22,7 @@ static void header(table_t& table, const std::unique_ptr<tdataset>& dataset)
 static void append(table_t& table, const char* type, const feature_t& feature)
 {
     table.append() << type << feature.name()
-        << (feature.discrete() ? strcat("discrete x", feature.labels().size()) : "continuous")
+        << (feature.discrete() ? scat("discrete x", feature.labels().size()) : "continuous")
         << (feature.optional() ? "optional" : "not optional");
 }
 
@@ -59,15 +59,15 @@ static int unsafe_main(int argc, const char* argv[])
             const auto start = nano::timer_t{};
 
             auto dataset = imclass_dataset_t::all().get(id);
-            critical(!dataset, strcat("invalid dataset '", id, "'"));
-            critical(!dataset->load(), strcat("failed to load dataset '", id, "'"));
+            critical(!dataset, scat("invalid dataset '", id, "'"));
+            critical(!dataset->load(), scat("failed to load dataset '", id, "'"));
             log_info() << ">>> loading done in " << start.elapsed() << ".";
 
             table_t table;
             header(table, dataset);
             table.delim();
-            table.append() << "input" << colspan(3) << dataset->idim();
-            table.append() << "target" << colspan(3) << strcat(dataset->tdim(), " (", dataset->tfeature().name(), ")");
+            table.append() << "input" << colspan(3) << scat(dataset->idim());
+            table.append() << "target" << colspan(3) << scat(dataset->tdim(), " (", dataset->tfeature().name(), ")");
             std::cout << table << std::endl;
         }
     }
@@ -80,8 +80,8 @@ static int unsafe_main(int argc, const char* argv[])
             const auto start = nano::timer_t{};
 
             auto dataset = tabular_dataset_t::all().get(id);
-            critical(!dataset, strcat("invalid dataset '", id, "'"));
-            critical(!dataset->load(), strcat("failed to load dataset '", id, "'"));
+            critical(!dataset, scat("invalid dataset '", id, "'"));
+            critical(!dataset->load(), scat("failed to load dataset '", id, "'"));
             log_info() << ">>> loading done in " << start.elapsed() << ".";
 
             table_t table;

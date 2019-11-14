@@ -1,5 +1,5 @@
+#include <nano/table.h>
 #include <utest/utest.h>
-#include <nano/util/table.h>
 
 template <typename tscalar>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::pair<size_t, tscalar>>& values)
@@ -23,7 +23,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<tscalar>& values)
     return os << "}";
 }
 
-UTEST_BEGIN_MODULE(test_core_table)
+UTEST_BEGIN_MODULE(test_table)
 
 UTEST_CASE(make_less)
 {

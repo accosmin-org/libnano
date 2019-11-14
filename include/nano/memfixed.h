@@ -115,14 +115,20 @@ namespace nano
         }
 
         ///
-        /// \brief returns the inputs and the targets as they are stored
+        /// \brief returns the inputs and targets as they are stored
         ///
         const auto& inputs() const { return m_inputs; }
         const auto& targets() const { return m_targets; }
 
+        ///
+        /// \brief returns the mutable input and target sample
+        ///
         auto input(const tensor_size_t sample) { return m_inputs.tensor(sample); }
         auto target(const tensor_size_t sample) { return m_targets.tensor(sample); }
 
+        ///
+        /// \brief returns the constant input and target sample
+        ///
         auto input(const tensor_size_t sample) const { return m_inputs.tensor(sample); }
         auto target(const tensor_size_t sample) const { return m_targets.tensor(sample); }
 

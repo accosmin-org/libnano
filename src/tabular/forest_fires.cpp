@@ -21,7 +21,7 @@ forest_fires_dataset_t::forest_fires_dataset_t()
         feature_t{"area"}
     }, 12);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/forest-fires");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/forest-fires");
     csvs(
     {
         csv_t{dir + "/forestfires.csv"}.delim(",").header(true).expected(517)

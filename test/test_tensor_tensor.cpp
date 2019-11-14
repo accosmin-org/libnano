@@ -1,6 +1,6 @@
 #include <vector>
 #include <utest/utest.h>
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 #include <nano/tensor/tensor.h>
 
 using namespace nano;
@@ -379,6 +379,27 @@ UTEST_CASE(tensor4d_indexing)
     UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(3).cast<int16_t>(), tensor.vector(2), 1);
     UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(4).cast<int16_t>(), tensor.vector(2), 1);
     UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(5).cast<int16_t>(), tensor.vector(3), 1);
+}
+
+UTEST_CASE(tensor4d_range)
+{
+    using tensor4d_t = nano::tensor_mem_t<int16_t, 4>;
+
+    tensor4d_t tensor(5, 7, 3, 4);
+    tensor.random();
+
+    const auto range1 = tensor.range(0, 2);
+    const auto range2 = tensor.tensor(2, 3).range(1, 1);
+
+    const auto dims1 = nano::make_dims(2, 7, 3, 4);
+    const auto dims2 = nano::make_dims(1, 4);
+
+    UTEST_REQUIRE_EQUAL(range1.dims(), dims1);
+    UTEST_REQUIRE_EQUAL(range2.dims(), dims2);
+
+    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(0), range1.vector(0), 1);
+    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(1), range1.vector(1), 1);
+    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(2, 3, 1), range2.vector(), 1);
 }
 
 UTEST_END_MODULE()

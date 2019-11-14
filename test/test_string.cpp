@@ -1,20 +1,19 @@
-#include <set>
-#include <list>
+#include <iomanip>
 #include <utest/utest.h>
 #include <nano/string.h>
-#include <nano/util/tokenizer.h>
-
-enum class enum_type
-{
-    type1,
-    type2,
-    type3
-};
+#include <nano/tokenizer.h>
 
 namespace nano
 {
+    enum class enum_type
+    {
+        type1,
+        type2,
+        type3
+    };
+
     template <>
-    enum_map_t<enum_type> enum_string<enum_type>()
+    enum_map_t<nano::enum_type> enum_string<nano::enum_type>()
     {
         return
         {
@@ -23,23 +22,28 @@ namespace nano
             { enum_type::type3,     "type3" }
         };
     }
-}
 
-std::ostream& operator<<(std::ostream& os, const std::vector<enum_type>& enums)
-{
-    for (const auto& e : enums)
+    std::ostream& operator<<(std::ostream& os, const std::vector<nano::enum_type>& enums)
     {
-        os << nano::to_string(e) << " ";
+        for (const auto& e : enums)
+        {
+            os << scat(e) << " ";
+        }
+        return os;
     }
-    return os;
 }
 
 UTEST_BEGIN_MODULE(test_string)
 
-UTEST_CASE(to_string)
+UTEST_CASE(scat)
 {
-    UTEST_CHECK_EQUAL(nano::to_string(1), "1");
-    UTEST_CHECK_EQUAL(nano::to_string(124545), "124545");
+    UTEST_CHECK_EQUAL(nano::scat(1), "1");
+    UTEST_CHECK_EQUAL(nano::scat(124545), "124545");
+    UTEST_CHECK_EQUAL(nano::scat(nano::string_t("str"), "x", 'a', 42, nano::string_t("end")), "strxa42end");
+    UTEST_CHECK_EQUAL(nano::scat("str", nano::string_t("x"), 'a', 42, nano::string_t("end")), "strxa42end");
+    UTEST_CHECK_EQUAL(nano::scat(nano::enum_type::type1, "str", nano::enum_type::type3, 42), "type1strtype342");
+    UTEST_CHECK_EQUAL(nano::scat("str", std::setprecision(0), std::fixed, 1.42, nano::string_t("F")), "str1F");
+    UTEST_CHECK_EQUAL(nano::scat("str", std::setprecision(1), std::fixed, 1.42, nano::string_t("F")), "str1.4F");
 }
 
 UTEST_CASE(from_string)
@@ -52,43 +56,26 @@ UTEST_CASE(from_string)
 
 UTEST_CASE(enum_string)
 {
-    UTEST_CHECK_EQUAL(nano::to_string(enum_type::type1), "type1");
-    UTEST_CHECK_THROW(nano::to_string(enum_type::type2), std::invalid_argument);
-    UTEST_CHECK_EQUAL(nano::to_string(enum_type::type3), "type3");
+    UTEST_CHECK_EQUAL(nano::scat(nano::enum_type::type1), "type1");
+    UTEST_CHECK_THROW(nano::scat(nano::enum_type::type2), std::invalid_argument);
+    UTEST_CHECK_EQUAL(nano::scat(nano::enum_type::type3), "type3");
 
-    UTEST_CHECK(nano::from_string<enum_type>("type1") == enum_type::type1);
-    UTEST_CHECK(nano::from_string<enum_type>("type3") == enum_type::type3);
-    UTEST_CHECK(nano::from_string<enum_type>("type3[") == enum_type::type3);
+    UTEST_CHECK(nano::from_string<nano::enum_type>("type1") == nano::enum_type::type1);
+    UTEST_CHECK(nano::from_string<nano::enum_type>("type3") == nano::enum_type::type3);
+    UTEST_CHECK(nano::from_string<nano::enum_type>("type3[") == nano::enum_type::type3);
 
-    UTEST_CHECK_THROW(nano::from_string<enum_type>("????"), std::invalid_argument);
-    UTEST_CHECK_THROW(nano::from_string<enum_type>("type"), std::invalid_argument);
-    UTEST_CHECK_THROW(nano::from_string<enum_type>("type2"), std::invalid_argument);
+    UTEST_CHECK_THROW(nano::from_string<nano::enum_type>("????"), std::invalid_argument);
+    UTEST_CHECK_THROW(nano::from_string<nano::enum_type>("type"), std::invalid_argument);
+    UTEST_CHECK_THROW(nano::from_string<nano::enum_type>("type2"), std::invalid_argument);
 }
 
 UTEST_CASE(enum_values)
 {
-    const auto enums13 = std::vector<enum_type>{enum_type::type1, enum_type::type3};
-    UTEST_CHECK_EQUAL(nano::enum_values<enum_type>(), enums13);
+    const auto enums13 = std::vector<nano::enum_type>{nano::enum_type::type1, nano::enum_type::type3};
+    UTEST_CHECK_EQUAL(nano::enum_values<nano::enum_type>(), enums13);
 
-    const auto enums3 = std::vector<enum_type>{enum_type::type3};
-    UTEST_CHECK_EQUAL(nano::enum_values<enum_type>(std::regex(".+3")), enums3);
-}
-
-UTEST_CASE(join)
-{
-    UTEST_CHECK_EQUAL(nano::join(std::vector<int>({ 1, 2, 3 }), "-", nullptr, nullptr),      "1-2-3");
-    UTEST_CHECK_EQUAL(nano::join(std::list<int>({ 1, 2, 3 }), "=", nullptr, nullptr),        "1=2=3");
-    UTEST_CHECK_EQUAL(nano::join(std::set<int>({ 1, 2, 3 }), ",", nullptr, nullptr),         "1,2,3");
-
-    UTEST_CHECK_EQUAL(nano::join(std::vector<int>({ 1, 2, 3 }), "-", "{", "}"),              "{1-2-3}");
-    UTEST_CHECK_EQUAL(nano::join(std::list<int>({ 1, 2, 3 }), "=", "XXX", "XXX"),            "XXX1=2=3XXX");
-    UTEST_CHECK_EQUAL(nano::join(std::set<int>({ 1, 2, 3 }), ",", nullptr, ")"),             "1,2,3)");
-}
-
-UTEST_CASE(strcat)
-{
-    UTEST_CHECK_EQUAL(nano::strcat(nano::string_t("str"), "x", 'a', 42, nano::string_t("end")), "strxa42end");
-    UTEST_CHECK_EQUAL(nano::strcat("str", nano::string_t("x"), 'a', 42, nano::string_t("end")), "strxa42end");
+    const auto enums3 = std::vector<nano::enum_type>{nano::enum_type::type3};
+    UTEST_CHECK_EQUAL(nano::enum_values<nano::enum_type>(std::regex(".+3")), enums3);
 }
 
 UTEST_CASE(contains)

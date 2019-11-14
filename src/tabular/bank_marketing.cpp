@@ -35,7 +35,7 @@ bank_marketing_dataset_t::bank_marketing_dataset_t()
         feature_t{"y"}.labels({"yes", "no"})
     }, 20);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/bank-marketing");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/bank-marketing");
     csvs(
     {
         csv_t{dir + "/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)

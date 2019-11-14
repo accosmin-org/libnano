@@ -135,11 +135,13 @@ function install_json {
 function codecov {
     cd ${basedir}
 
-    lcov --directory . --capture --output-file coverage.info || return 1
-    lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file coverage.info || return 1
-    lcov --list coverage.info || return 1
-    genhtml --output lcovhtml coverage.info || return 1
-    bash <(curl -s https://codecov.io/bash) -f coverage.info || return 1
+    local output=${basedir}/coverage.info
+
+    lcov --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
+    lcov --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
+    lcov --list ${output} || return 1
+    genhtml --output lcovhtml ${output} || return 1
+    bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
     #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 

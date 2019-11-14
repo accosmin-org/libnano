@@ -1,7 +1,7 @@
 #include <sstream>
 #include <iomanip>
 #include <utest/utest.h>
-#include <nano/util/logger.h>
+#include <nano/logger.h>
 #include <nano/string.h>
 
 using namespace nano;

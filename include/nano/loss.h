@@ -13,9 +13,10 @@ namespace nano
     ///
     /// \brief generic multivariate loss function of two parameters:
     ///     - the target value to predict (ground truth, annotation) and
-    ///     - the model's output (prediction).
+    ///     - the machine learning model's output (prediction).
     ///
-    /// the loss function upper-bounds or approximates the true (usually non-smooth) error function to minimize.
+    /// NB: usually the loss function upper-bounds or
+    ///     approximates the true (usually non-smooth) error function to minimize.
     ///
     class NANO_PUBLIC loss_t
     {
@@ -45,18 +46,34 @@ namespace nano
         virtual ~loss_t() = default;
 
         ///
-        /// \brief compute the error value
+        /// \brief compute the error value, the loss value and the loss' gradient wrt the output for the given samples
         ///
-        virtual scalar_t error(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const = 0;
+        /// NB: the targets and the outputs are given as 4D tensors,
+        ///     where the first index is the sample index
+        ///
+        virtual void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&&) const = 0;
+        virtual void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&&) const = 0;
+        virtual void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t&&) const = 0;
 
         ///
-        /// \brief compute the loss value (an upper bound of the usually non-continuous error function)
+        /// \brief overloads to simplify usage
         ///
-        virtual scalar_t value(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output) const = 0;
+        void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_t& errors) const
+        {
+            errors.resize(targets.size<0>());
+            error(targets, outputs, errors.tensor());
+        }
 
-        ///
-        /// \brief compute the loss gradient (wrt the output)
-        ///
-        virtual void vgrad(const tensor3d_cmap_t& target, const tensor3d_cmap_t& output, const tensor3d_map_t&) const = 0;
+        void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_t& values) const
+        {
+            values.resize(targets.size<0>());
+            value(targets, outputs, values.tensor());
+        }
+
+        void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_t& vgrads) const
+        {
+            vgrads.resize(targets.dims());
+            vgrad(targets, outputs, vgrads.tensor());
+        }
     };
 }

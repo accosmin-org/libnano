@@ -2,8 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/factory.h>
-#include <nano/feature.h>
-#include <nano/dataset.h>
+#include <nano/memfixed.h>
 #include <nano/tabular/csv.h>
 
 namespace nano
@@ -20,7 +19,7 @@ namespace nano
     ///     - the inputs can be both categorical and continuous
     ///     - missing feature values are supported
     ///
-    class NANO_PUBLIC tabular_dataset_t : public dataset_t
+    class NANO_PUBLIC tabular_dataset_t : public memfixed_dataset_t<scalar_t>
     {
     public:
 
@@ -49,22 +48,12 @@ namespace nano
         ///
         /// \brief default destructor
         ///
-        virtual ~tabular_dataset_t() = default;
+        ~tabular_dataset_t() override = default;
 
         ///
         /// \brief populate the dataset with samples
         ///
-        bool load();
-
-        ///
-        /// \brief returns the total number of samples
-        ///
-        tensor_size_t samples() const;
-
-        ///
-        /// \brief returns the number of samples associated to a given fold
-        ///
-        tensor_size_t samples(const fold_t&) const;
+        bool load() override;
 
         ///
         /// \brief returns the total number of input features
@@ -79,27 +68,7 @@ namespace nano
         ///
         /// \brief returns the description of the target feature (if a supervised task)
         ///
-        feature_t tfeature() const;
-
-        ///
-        /// \brief returns the inputs tensor for all samples in the given fold
-        ///
-        tensor4d_t inputs(const fold_t&) const;
-
-        ///
-        /// \brief returns the inputs tensor for the [begin, end) range of samples in the given fold
-        ///
-        tensor4d_t inputs(const fold_t&, tensor_size_t begin, tensor_size_t end) const;
-
-        ///
-        /// \brief returns the targets tensor for all samples in the given fold (if a supervised task)
-        ///
-        tensor4d_t targets(const fold_t&) const;
-
-        ///
-        /// \brief returns the targets tensor for the [begin, end) range of samples in the given fold (if a supervised task)
-        ///
-        tensor4d_t targets(const fold_t&, tensor_size_t begin, tensor_size_t end) const;
+        feature_t tfeature() const override;
 
         ///
         /// \brief set the CSV files to load
@@ -127,8 +96,6 @@ namespace nano
         // attributes
         csvs_t      m_csvs;                     ///< describes the CSV files
         features_t  m_features;                 ///< describes the columns in the CSV files (aka the features)
-        tensor4d_t  m_inputs;                   ///< (total number of samples, number of inputs, 1, 1)
-        tensor4d_t  m_targets;                  ///< (total number of samples, number of outputs, 1, 1)
         size_t      m_target{string_t::npos};   ///< index of the target column (if negative, then not provided)
     };
 }

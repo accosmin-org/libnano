@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <utest/utest.h>
 #include <nano/solver.h>
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 #include <nano/solver/quasi.h>
 #include <nano/function/sphere.h>
 
@@ -15,7 +15,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, size_t& it
         ++ iterations;
         stream
             << "\tdescent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << to_string(state.m_status) << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+            << "[" << state.m_status << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
 
@@ -72,6 +72,16 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
 }
 
 UTEST_BEGIN_MODULE(test_solvers)
+
+UTEST_CASE(state_str)
+{
+    for (const auto status : enum_values<solver_state_t::status>())
+    {
+        std::stringstream stream;
+        stream << status;
+        UTEST_CHECK_EQUAL(stream.str(), scat(status));
+    }
+}
 
 UTEST_CASE(state_valid)
 {

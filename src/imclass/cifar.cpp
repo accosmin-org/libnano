@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nano/util/logger.h>
+#include <nano/logger.h>
 #include <nano/imclass/cifar.h>
 
 using namespace nano;
@@ -104,7 +104,7 @@ bool cifar_dataset_t::iread(const file_t& file)
 }
 
 cifar10_dataset_t::cifar10_dataset_t() :
-    cifar_dataset_t(strcat(std::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10")
+    cifar_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10")
 {
     labels(10);
     file("cifar-10-batches-bin/data_batch_1.bin", 0, 10000, 1, 0);
@@ -122,7 +122,7 @@ feature_t cifar10_dataset_t::tfeature() const
 }
 
 cifar100c_dataset_t::cifar100c_dataset_t() :
-    cifar_dataset_t(strcat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100")
+    cifar_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100")
 {
     labels(20);
     file("cifar-100-binary/train.bin", 0, 50000, 2, 0);
@@ -140,7 +140,7 @@ feature_t cifar100c_dataset_t::tfeature() const
 }
 
 cifar100f_dataset_t::cifar100f_dataset_t() :
-    cifar_dataset_t(strcat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100")
+    cifar_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100")
 {
     labels(100);
     file("cifar-100-binary/train.bin", 0, 50000, 2, 1);

@@ -33,7 +33,7 @@ namespace nano
         ///
         /// \brief enable moving
         ///
-        solver_t(solver_t&&) = default;
+        solver_t(solver_t&&) noexcept = default;
         solver_t& operator=(solver_t&&) noexcept = default;
 
         ///
@@ -118,9 +118,9 @@ namespace nano
     private:
 
         // attributes
-        sparam2_t               m_tolerance{"solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};///<
-        sparam1_t               m_epsilon{"solver::epsilon", 0, LT, 1e-6, LT, 1e-4};        ///<
-        iparam1_t               m_max_iterations{"solver::maxiter", 1, LT, 1000, LT, 1e+6}; ///<
+        sparam2_t               m_tolerance{"solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};  ///<
+        sparam1_t               m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};            ///<
+        iparam1_t               m_max_iterations{"solver::maxiter", 1, LE, 1000, LT, 1e+6};     ///<
         logger_t                m_logger;                   ///<
         string_t                m_lsearch0_id;              ///<
         rlsearch0_t             m_lsearch0;                 ///<

@@ -30,19 +30,20 @@ namespace nano
         bool load() override
         {
             // create fixed random bias and weights
-            m_bias = vector_t::Random(size(m_odim));
-            m_weights = matrix_t::Zero(size(m_odim), size(m_idim));
-            for (tensor_size_t i = 0, isize = m_weights.cols(); i < isize; i += m_modulo)
+            m_bias = vector_t::Random(size(m_tdim));
+            m_weights = matrix_t::Zero(size(m_idim), size(m_tdim));
+            for (tensor_size_t i = 0, isize = m_weights.rows(); i < isize; i += m_modulo)
             {
-                m_weights.col(i).setRandom();
+                m_weights.row(i).setRandom();
             }
 
             // create samples: target = weights * input + bias + noise
-            resize(cat_dims(m_samples, m_idim), cat_dims(m_samples, m_odim));
+            resize(cat_dims(m_samples, m_idim), cat_dims(m_samples, m_tdim));
             for (tensor_size_t s = 0; s < m_samples; ++ s)
             {
                 input(s).random();
-                target(s).vector() = m_weights * input(s).vector() + m_bias + m_noise * vector_t::Random(m_bias.size());
+                target(s).vector() = m_weights.transpose() * input(s).vector() + m_bias;
+                target(s).vector() += m_noise * vector_t::Random(m_bias.size());
             }
 
             // create folds
@@ -69,7 +70,7 @@ namespace nano
         ///
         void noise(const scalar_t noise) { m_noise = noise; }
         void idim(const tensor3d_dim_t idim) { m_idim = idim; }
-        void odim(const tensor3d_dim_t odim) { m_odim = odim; }
+        void tdim(const tensor3d_dim_t tdim) { m_tdim = tdim; }
         void modulo(const tensor_size_t modulo) { m_modulo = modulo; }
         void samples(const tensor_size_t samples) { m_samples = samples; }
 
@@ -79,7 +80,7 @@ namespace nano
         auto noise() const { return m_noise; }
         auto modulo() const { return m_modulo; }
         const auto& idim() const { return m_idim; }
-        const auto& odim() const { return m_odim; }
+        const auto& tdim() const { return m_tdim; }
         const auto& bias() const { return m_bias; }
         const auto& weights() const { return m_weights; }
 
@@ -90,7 +91,7 @@ namespace nano
         tensor_size_t       m_modulo{1};        ///<
         tensor_size_t       m_samples{1000};    ///< total number of samples to generate (train + validation + test)
         tensor3d_dim_t      m_idim{{10, 1, 1}}; ///< dimension of an input sample
-        tensor3d_dim_t      m_odim{{3, 1, 1}};  ///< dimension of a target/output sample
+        tensor3d_dim_t      m_tdim{{3, 1, 1}};  ///< dimension of a target/output sample
         matrix_t            m_weights;          ///< 2D weight matrix that maps the input to the output
         vector_t            m_bias;             ///< 1D bias vector that offsets the output
     };

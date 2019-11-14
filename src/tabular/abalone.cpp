@@ -21,7 +21,7 @@ abalone_dataset_t::abalone_dataset_t()
         }),
     }, 8);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/abalone");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/abalone");
     csvs(
     {
         csv_t{dir + "/abalone.data"}.delim(",").header(false).expected(4177)

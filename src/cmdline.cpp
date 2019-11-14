@@ -1,7 +1,7 @@
 #include <cassert>
 #include <fstream>
-#include <nano/util/cmdline.h>
-#include <nano/util/tokenizer.h>
+#include <nano/cmdline.h>
+#include <nano/tokenizer.h>
 
 using namespace nano;
 
@@ -83,7 +83,7 @@ void cmdline_t::process(const int argc, const char* argv[])
             const string_t name = token.substr(2);
             if (name.empty())
             {
-                throw std::runtime_error(strcat("cmdline: invalid option name [", name, "/", token, "]"));
+                throw std::runtime_error(scat("cmdline: invalid option name [", name, "/", token, "]"));
             }
 
             store(name);
@@ -94,7 +94,7 @@ void cmdline_t::process(const int argc, const char* argv[])
             const string_t short_name = token.substr(1);
             if (short_name.size() != 1)
             {
-                throw std::runtime_error(strcat("cmdline: invalid short option name [", short_name, "/", token, "]"));
+                throw std::runtime_error(scat("cmdline: invalid short option name [", short_name, "/", token, "]"));
             }
 
             store(short_name);
@@ -105,7 +105,7 @@ void cmdline_t::process(const int argc, const char* argv[])
             const string_t& value = token;
             if (current_name_or_short_name.empty())
             {
-                throw std::runtime_error(strcat("cmdline: missing option before value [", value, "]"));
+                throw std::runtime_error(scat("cmdline: missing option before value [", value, "]"));
             }
 
             store(current_name_or_short_name, value);

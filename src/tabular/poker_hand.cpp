@@ -19,7 +19,7 @@ poker_hand_dataset_t::poker_hand_dataset_t()
         feature_t{"CLASS"}.labels({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
     }, 10);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/poker-hand");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/poker-hand");
     csvs(
     {
         csv_t{dir + "/poker-hand-training-true.data"}.delim(",\r").header(false).expected(25010),

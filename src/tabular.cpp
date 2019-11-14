@@ -1,17 +1,8 @@
 #include <mutex>
 #include <fstream>
+#include <nano/logger.h>
 #include <nano/tabular.h>
-#include <nano/util/logger.h>
-#include <nano/util/tokenizer.h>
-
-#include <nano/tabular/iris.h>
-#include <nano/tabular/wine.h>
-#include <nano/tabular/adult.h>
-#include <nano/tabular/abalone.h>
-#include <nano/tabular/poker_hand.h>
-#include <nano/tabular/forest_fires.h>
-#include <nano/tabular/breast_cancer.h>
-#include <nano/tabular/bank_marketing.h>
+#include <nano/tokenizer.h>
 
 using namespace nano;
 
@@ -105,8 +96,7 @@ bool tabular_dataset_t::load()
         return false;
     }
 
-    m_inputs.resize(data_size, n_inputs, 1, 1);
-    m_targets.resize(data_size, n_targets, 1, 1);
+    resize(make_dims(data_size, n_inputs, 1, 1), make_dims(data_size, n_targets, 1, 1));
 
     // load data
     tensor_size_t row = 0;
@@ -157,14 +147,14 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const sca
 {
     if (f != m_target)
     {
-        m_inputs(row, static_cast<tensor_size_t>((f > m_target) ? (f - 1) : (f)), 0, 0) = value;
+        input(row)(static_cast<tensor_size_t>((f > m_target) ? (f - 1) : (f)), 0, 0) = value;
     }
     else
     {
         assert(m_target < m_features.size());
-        assert(m_targets.dims() == make_dims(m_targets.size<0>(), 1, 1, 1));
+        assert(targets().dims() == make_dims(targets().size<0>(), 1, 1, 1));
 
-        m_targets(row, 0, 0, 0) = value;
+        target(row)(0, 0, 0) = value;
     }
 }
 
@@ -172,7 +162,7 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const ten
 {
     if (f != m_target)
     {
-        m_inputs(row, static_cast<tensor_size_t>((f > m_target) ? (f - 1) : (f)), 0, 0) = static_cast<scalar_t>(category);
+        input(row)(static_cast<tensor_size_t>((f > m_target) ? (f - 1) : (f)), 0, 0) = static_cast<scalar_t>(category);
     }
     else
     {
@@ -182,18 +172,18 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t f, const ten
         assert(feature.discrete());
         assert(category < labels_size);
         assert(m_target < m_features.size());
-        assert(m_targets.dims() == make_dims(m_targets.size<0>(), labels_size, 1, 1));
+        assert(targets().dims() == make_dims(targets().size<0>(), labels_size, 1, 1));
 
-        m_targets.tensor(row) = class_target(labels_size, category);
+        target(row) = class_target(labels_size, category);
     }
 }
 
 bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const string_t& delim,
     const tensor_size_t line_index, const tensor_size_t row)
 {
-    if (row >= m_inputs.size<0>())
+    if (row >= inputs().size<0>())
     {
-        log_error() << "tabular dataset: too many samples, expecting " << m_inputs.size<0>() << "!";
+        log_error() << "tabular dataset: too many samples, expecting " << inputs().size<0>() << "!";
         return false;
     }
 
@@ -267,35 +257,14 @@ feature_t tabular_dataset_t::tfeature() const
     return m_features.at(m_target);
 }
 
-tensor_size_t tabular_dataset_t::samples() const
-{
-    return m_inputs.size<0>();
-}
-
-tensor_size_t tabular_dataset_t::samples(const fold_t& fold) const
-{
-    return indices(fold).size();
-}
-
-tensor4d_t tabular_dataset_t::inputs(const fold_t& fold) const
-{
-    return m_inputs.indexed<scalar_t>(indices(fold));
-}
-
-tensor4d_t tabular_dataset_t::targets(const fold_t& fold) const
-{
-    return m_targets.indexed<scalar_t>(indices(fold));
-}
-
-tensor4d_t tabular_dataset_t::inputs(const fold_t& fold, const tensor_size_t begin, const tensor_size_t end) const
-{
-    return m_inputs.indexed<scalar_t>(indices(fold).segment(begin, end - begin));
-}
-
-tensor4d_t tabular_dataset_t::targets(const fold_t& fold, const tensor_size_t begin, const tensor_size_t end) const
-{
-    return m_targets.indexed<scalar_t>(indices(fold).segment(begin, end - begin));
-}
+#include <nano/tabular/iris.h>
+#include <nano/tabular/wine.h>
+#include <nano/tabular/adult.h>
+#include <nano/tabular/abalone.h>
+#include <nano/tabular/poker_hand.h>
+#include <nano/tabular/forest_fires.h>
+#include <nano/tabular/breast_cancer.h>
+#include <nano/tabular/bank_marketing.h>
 
 tabular_dataset_factory_t& tabular_dataset_t::all()
 {

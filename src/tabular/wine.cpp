@@ -22,7 +22,7 @@ wine_dataset_t::wine_dataset_t()
         feature_t{"Proline"},
     }, 0);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/wine");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/wine");
     csvs(
     {
         csv_t{dir + "/wine.data"}.delim(",").header(false).expected(178)

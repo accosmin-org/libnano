@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/random.h>
 #include <nano/tensor/vector.h>
 #include <nano/tensor/matrix.h>
 #include <nano/tensor/storage.h>
@@ -67,6 +68,9 @@ namespace nano
 
     ///
     /// \brief tensor w/o owning the allocated continuous memory.
+    ///
+    /// NB: all access operations (e.g. Eigen arrays, vectors or matrices or sub-tensors) are performed
+    ///     using only continuous memory.
     ///
     template <typename tstorage, size_t trank>
     class tensor_t
@@ -264,56 +268,95 @@ namespace nano
         const auto& storage() const { return m_storage; }
 
         ///
-        /// \brief access the tensor as a C-array
+        /// \brief access the tensor as a continuous C-array
         ///
-        auto data() const { return m_storage.data(); }
         auto data() { return m_storage.data(); }
+        auto data() const { return m_storage.data(); }
 
         ///
-        /// \brief access the tensor as a vector
-        ///     (assuming the last dimensions that are ignored are zero).
+        /// \brief access the whole tensor as an Eigen vector
         ///
-        auto vector() const { return map_vector(data(), size()); }
         auto vector() { return map_vector(data(), size()); }
+        auto vector() const { return map_vector(data(), size()); }
+
+        ///
+        /// \brief access a continuous part of the tensor as an Eigen vector
+        ///     (assuming the last dimensions that are ignored are zero)
+        ///
+        template <typename... tindices>
+        auto vector(const tindices... indices) { return tvector(data(), indices...); }
 
         template <typename... tindices>
         auto vector(const tindices... indices) const { return tvector(data(), indices...); }
 
-        template <typename... tindices>
-        auto vector(const tindices... indices) { return tvector(data(), indices...); }
+        ///
+        /// \brief access the whole tensor as an Eigen array
+        ///
+        auto array() { return vector().array(); }
+        auto array() const { return vector().array(); }
 
         ///
-        /// \brief access the tensor as an array
-        ///     (assuming the last dimensions that are ignored are zero).
+        /// \brief access a part of the tensor as an Eigen array
+        ///     (assuming the last dimensions that are ignored are zero)
         ///
-        auto array() const { return vector().array(); }
-        auto array() { return vector().array(); }
+        template <typename... tindices>
+        auto array(const tindices... indices) { return vector(indices...).array(); }
 
         template <typename... tindices>
         auto array(const tindices... indices) const { return vector(indices...).array(); }
 
-        template <typename... tindices>
-        auto array(const tindices... indices) { return vector(indices...).array(); }
-
         ///
-        /// \brief access the tensor as a matrix
-        ///     (assuming that the last two dimensions are ignored).
+        /// \brief access a part of the tensor as an Eigen matrix
+        ///     (assuming that the last two dimensions are ignored)
         ///
-        template <typename... tindices>
-        auto matrix(const tindices... indices) const { return tmatrix(data(), indices...); }
-
         template <typename... tindices>
         auto matrix(const tindices... indices) { return tmatrix(data(), indices...); }
 
+        template <typename... tindices>
+        auto matrix(const tindices... indices) const { return tmatrix(data(), indices...); }
+
         ///
-        /// \brief access the tensor as a (sub-)tensor
-        ///     (assuming the last dimensions that are ignored are zero).
+        /// \brief access a part of the tensor as a (sub-)tensor
+        ///     (assuming the last dimensions that are ignored are zero)
         ///
+        template <typename... tindices>
+        auto tensor(const tindices... indices) { return ttensor(data(), indices...); }
+
         template <typename... tindices>
         auto tensor(const tindices... indices) const { return ttensor(data(), indices...); }
 
-        template <typename... tindices>
-        auto tensor(const tindices... indices) { return ttensor(data(), indices...); }
+        ///
+        /// \brief access a part of the tensor as a (sub-)tensor
+        ///     (by taking the [begin, begin + delta) range of the first dimension)
+        ///
+        auto range(const tensor_size_t begin, const tensor_size_t delta)
+        {
+            return trange(data(), begin, begin + delta);
+        }
+
+        auto range(const tensor_size_t begin, const tensor_size_t delta) const
+        {
+            return trange(data(), begin, begin + delta);
+        }
+
+        ///
+        /// \brief copy some of (sub-)tensors using the given indices.
+        /// NB: the indices are relative to the first dimension.
+        ///
+        template <typename tscalar_return, typename tindices>
+        void indexed(const tindices& indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
+        {
+            assert(indices.minCoeff() >= 0 && indices.maxCoeff() < size<0>());
+
+            auto dims = this->dims();
+            dims[0] = indices.size();
+
+            subtensor.resize(dims);
+            for (tensor_size_t i = 0, indices_size = indices.size(); i < indices_size; ++ i)
+            {
+                subtensor.vector(i) = vector(indices(i)).template cast<tscalar_return>();
+            }
+        }
 
         ///
         /// \brief returns a copy of some (sub-)tensors using the given indices.
@@ -322,30 +365,14 @@ namespace nano
         template <typename tscalar_return, typename tindices>
         auto indexed(const tindices& indices) const
         {
-            assert(indices.minCoeff() >= 0 && indices.maxCoeff() < size<0>());
-
-            auto dims = this->dims();
-            dims[0] = indices.size();
-
-            auto subtensor = tensor_mem_t<tscalar_return, trank>{dims};
-            for (tensor_size_t i = 0, indices_size = indices.size(); i < indices_size; ++ i)
-            {
-                subtensor.vector(i) = vector(indices(i)).template cast<tscalar_return>();
-            }
-
+            auto subtensor = tensor_mem_t<tscalar_return, trank>{};
+            indexed(indices, subtensor);
             return subtensor;
         }
 
         ///
         /// \brief access an element of the tensor
         ///
-        tconst_reference operator()(const tensor_size_t index) const
-        {
-            assert(data() != nullptr);
-            assert(index >= 0 && index < size());
-            return data()[index];
-        }
-
         treference operator()(const tensor_size_t index)
         {
             assert(data() != nullptr);
@@ -353,10 +380,11 @@ namespace nano
             return data()[index];
         }
 
-        template <typename... tindices>
-        tconst_reference operator()(const tensor_size_t index, const tindices... indices) const
+        tconst_reference operator()(const tensor_size_t index) const
         {
-            return operator()(offset(index, indices...));
+            assert(data() != nullptr);
+            assert(index >= 0 && index < size());
+            return data()[index];
         }
 
         template <typename... tindices>
@@ -365,14 +393,20 @@ namespace nano
             return operator()(offset(index, indices...));
         }
 
+
+        template <typename... tindices>
+        tconst_reference operator()(const tensor_size_t index, const tindices... indices) const
+        {
+            return operator()(offset(index, indices...));
+        }
         ///
         /// \brief reshape to a new tensor (with the same number of elements)
         ///
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes) const { return treshape(data(), sizes...); }
+        auto reshape(const tsizes... sizes) { return treshape(data(), sizes...); }
 
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes) { return treshape(data(), sizes...); }
+        auto reshape(const tsizes... sizes) const { return treshape(data(), sizes...); }
 
         ///
         /// \brief iterators for Eigen matrices for STL compatibility.
@@ -401,8 +435,7 @@ namespace nano
         static void random(tarray&& array, const tscalar min, const tscalar max)
         {
             assert(min < max);
-            array.setRandom(); // [-1, +1]
-            array = (array + 1) * (max - min) / 2 + min;
+            urand(min, max, array.data(), array.data() + array.size(), make_rng());
         }
 
         template <typename tdata, typename... tindices>
@@ -432,6 +465,17 @@ namespace nano
             assert(nano::size(nano::make_dims(sizes...)) == size());
             return map_tensor(ptr, sizes...);
         }
+
+        template <typename tdata>
+        auto trange(tdata ptr, const tensor_size_t begin, const tensor_size_t end) const
+        {
+            assert(begin >= 0 && begin < end && end <= size<0>());
+            auto dims = this->dims();
+            dims[0] = end - begin;
+            return map_tensor(ptr + offset0(begin), dims);
+        }
+
+    private:
 
         // attributes
         tdims           m_dims;

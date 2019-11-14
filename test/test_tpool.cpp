@@ -1,9 +1,9 @@
 #include <numeric>
 #include <nano/arch.h>
+#include <nano/tpool.h>
 #include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/util/tpool.h>
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 
 using namespace nano;
 
@@ -60,7 +60,7 @@ namespace
     }
 }
 
-UTEST_BEGIN_MODULE(test_core_tpool)
+UTEST_BEGIN_MODULE(test_tpool)
 
 UTEST_CASE(empty)
 {

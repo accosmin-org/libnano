@@ -8,7 +8,7 @@
 #include <nano/arch.h>
 #include <nano/scalar.h>
 #include <nano/string.h>
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 
 namespace nano
 {
@@ -25,19 +25,13 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        cell_t(string_t data, const size_t span, const alignment align, const char fill, const int precision) :
+        cell_t(string_t data, const size_t span, const alignment align, const char fill) :
             m_data(std::move(data)),
             m_span(span),
             m_fill(fill),
-            m_alignment(align),
-            m_precision(precision)
+            m_alignment(align)
         {
         }
-
-        ///
-        /// \brief returns a formated string that represents the content of the cell
-        ///
-        string_t format() const;
 
         // attributes
         string_t    m_data;                     ///<
@@ -45,7 +39,6 @@ namespace nano
         size_t      m_span{1};                  ///< column spanning
         char        m_fill{' '};                ///< filling character for aligning cells
         alignment   m_alignment{alignment::left};///< text alignment within the cell
-        int         m_precision{0};             ///< #digits to display for floating point values
     };
 
     inline bool operator==(const cell_t& c1, const cell_t& c2)
@@ -69,17 +62,8 @@ namespace nano
         char        m_fill{' '};
     };
 
-    ///
-    /// \brief control precision for floating point cell values.
-    ///
-    struct precision_t
-    {
-        int         m_precision{0};
-    };
-
     inline colspan_t colspan(const size_t span) { return {span}; }
     inline colfill_t colfill(const char fill) { return {fill}; }
-    inline precision_t precision(const int precision) { return {precision}; }
 
     ///
     /// \brief row in a table, consisting of a list of cells.
@@ -114,17 +98,28 @@ namespace nano
         row_t& operator<<(const alignment align) { m_alignment = align; return *this; }
         row_t& operator<<(const colfill_t colfill) { m_colfill = colfill.m_fill; return *this; }
         row_t& operator<<(const colspan_t colspan) { m_colspan = colspan.m_span; return *this; }
-        row_t& operator<<(const precision_t precision) { m_precision = precision.m_precision; return *this; }
 
         ///
         /// \brief insert new cells using the current formatting settings
         ///
-        template <typename tscalar>
-        row_t& operator<<(tscalar value)
+        row_t& operator<<(const char* string)
         {
-            m_cells.emplace_back(to_string(value), m_colspan, m_alignment, m_colfill, m_precision);
+            m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
             m_cols += m_colspan;
-            return (*this) << colspan(1) << alignment::left << colfill(' ') << precision(0);
+            return (*this) << colspan(1) << alignment::left << colfill(' ');
+        }
+        row_t& operator<<(const string_t& string)
+        {
+            m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
+            m_cols += m_colspan;
+            return (*this) << colspan(1) << alignment::left << colfill(' ');
+        }
+        template <typename tscalar>
+        row_t& operator<<(const tscalar& value)
+        {
+            m_cells.emplace_back(scat(value), m_colspan, m_alignment, m_colfill);
+            m_cols += m_colspan;
+            return (*this) << colspan(1) << alignment::left << colfill(' ');
         }
         template <typename tscalar>
         row_t& operator<<(const std::vector<tscalar>& values)
@@ -179,7 +174,7 @@ namespace nano
                 {
                     try
                     {
-                        const auto value = nano::from_string<tscalar>(cell.m_data);
+                        const auto value = ::nano::from_string<tscalar>(cell.m_data);
                         for (size_t span = 0; span < cell.m_span; ++ span)
                         {
                             values.emplace_back(col + span, value);
@@ -228,7 +223,6 @@ namespace nano
         size_t              m_cols{0};              ///< current number of columns taking into account column spanning
         char                m_colfill{' '};         ///< current cell fill character
         size_t              m_colspan{1};           ///< current cell column span
-        int                 m_precision{0};         ///< current floating point precision
         alignment           m_alignment{alignment::left};///< current cell alignment
         std::vector<cell_t> m_cells;                ///<
     };

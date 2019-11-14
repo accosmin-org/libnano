@@ -1,6 +1,5 @@
 #include <mutex>
-#include <nano/loss/regression.h>
-#include <nano/loss/classification.h>
+#include <nano/loss/array.h>
 
 using namespace nano;
 

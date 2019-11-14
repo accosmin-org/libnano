@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/util/numeric.h>
+#include <nano/numeric.h>
 #include <nano/synthetic/affine.h>
 
 using namespace nano;
@@ -16,7 +16,7 @@ UTEST_CASE(affine)
     dataset.samples(100);
     dataset.train_percentage(50);
     dataset.idim(make_dims(7, 1, 1));
-    dataset.odim(make_dims(3, 1, 1));
+    dataset.tdim(make_dims(3, 1, 1));
 
     UTEST_REQUIRE(dataset.load());
 
@@ -28,13 +28,13 @@ UTEST_CASE(affine)
     UTEST_REQUIRE_EQUAL(bias.size(), 3);
 
     const auto& weights = dataset.weights();
-    UTEST_REQUIRE_EQUAL(weights.rows(), 3);
-    UTEST_REQUIRE_EQUAL(weights.cols(), 7);
-    for (tensor_size_t col = 0; col < weights.cols(); ++ col)
+    UTEST_REQUIRE_EQUAL(weights.rows(), 7);
+    UTEST_REQUIRE_EQUAL(weights.cols(), 3);
+    for (tensor_size_t row = 0; row < weights.rows(); ++ row)
     {
-        if ((col % dataset.modulo()) > 0)
+        if ((row % dataset.modulo()) > 0)
         {
-            UTEST_CHECK_EIGEN_CLOSE(weights.col(col), vector_t::Zero(weights.rows()), epsilon1<scalar_t>());
+            UTEST_CHECK_EIGEN_CLOSE(weights.row(row).transpose(), vector_t::Zero(weights.cols()), epsilon1<scalar_t>());
         }
     }
 
@@ -68,7 +68,7 @@ UTEST_CASE(affine)
             const auto& inputs = (s < 50) ? tr_inputs : (s < 75 ? vd_inputs : te_inputs);
             const auto& targets = (s < 50) ? tr_targets : (s < 75 ? vd_targets : te_targets);
 
-            UTEST_CHECK_EIGEN_CLOSE(targets.vector(row), weights * inputs.vector(row) + bias, epsilon1<scalar_t>());
+            UTEST_CHECK_EIGEN_CLOSE(targets.vector(row), weights.transpose() * inputs.vector(row) + bias, epsilon1<scalar_t>());
         }
     }
 }

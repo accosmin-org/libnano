@@ -43,7 +43,7 @@ breast_cancer_dataset_t::breast_cancer_dataset_t()
         feature_t{"fractal_dimension3"}
     }, 1);
 
-    const auto dir = strcat(std::getenv("HOME"), "/libnano/datasets/breast-cancer");
+    const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/breast-cancer");
     csvs(
     {
         csv_t{dir + "/wdbc.data"}.delim(",").header(false).expected(569)
