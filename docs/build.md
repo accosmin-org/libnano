@@ -3,52 +3,15 @@
 
 #### Structure
 
-The following command shows the structure of this project:
-
-```
-tree -L 2
-.
-├── .codecov.yml
-├── .git
-├── .gitignore
-├── .travis.yml
-├── .vimrc
-├── CMakeLists.txt
-├── LICENSE
-├── README.md
-├── app
-│   ├── CMakeLists.txt
-│   ├── *.cpp
-├── cmake
-│   ├── NANOConfig.cmake.in
-│   ├── utils.cmake
-│   └── version.h.in
-├── docs
-│   ├── build.md
-│   ├── intro.md
-│   └── solver.md
-├── example
-│   ├── CMakeLists.txt
-│   └── src
-├── utest
-├── include
-│   └── nano
-├── scripts
-│   ├── build.sh
-│   └── download_datasets.sh
-├── src
-│   ├── CMakeLists.txt
-│   ├── *.cpp
-│   ├── imclass
-│   ├── lsearch0
-│   ├── lsearchk
-│   ├── solver
-│   ├── tabular
-│   └── util
-└── test
-    ├── CMakeLists.txt
-    ├── test_*.cpp
-```
+The project is organized as follows:
+* [include/nano](../include/nano) - C++ headers files representing the library's interface.
+* [src](../src) - C++ source files with implementation details.
+* [app](../app) - command line C++ utilities mostly used for benchmarking various components.
+* [test](../test) - C++ unit tests run with [ctest](https://cmake.org/cmake/help/v3.16/manual/ctest.1.html#ctest-1).
+* [docs](../docs) - documentation written in Markdown.
+* [cmake](../cmake) - various CMake utilities (e.g. to simplify building unit tests).
+* [scripts](../scripts) - various Bash utilities (e.g. to simplify configuring and building of the library, to download datasets or to run experiments).
+* [example](../example) - example programs used for testing the setup of the library and for showcasing some of its functionality.
 
 
 #### Dependencies
@@ -66,15 +29,14 @@ Libnano is tested on Ubuntu using gcc (version 5+) and clang (version 3.8+) and 
 
 #### How to build
 
-The easiest way to build, test and install the library on Linux and OSX is to call ```scripts/build.sh``` with the appropriate command line arguments. This script is invoked to run various tests on continuous integrations plaforms like [Travis CI](https://travis-ci.org/accosmin/libnano/builds) and [Codecov](https://codecov.io/gh/accosmin/libnano).
+The easiest way to build, test and install the library on Linux and OSX is to call [scripts/build.sh](../scripts/build.sh) with the appropriate command line arguments. This script is invoked to run various tests on continuous integrations plaforms like [Travis CI](https://travis-ci.org/accosmin/libnano/builds) and [Codecov](https://codecov.io/gh/accosmin/libnano). See [.travis.yml](../.travis.yml) for examples.
 
 
-Users can also invoke the main CMake script directly for other platforms or for custom builds.
+Otherwise, users can also invoke the main CMake script directly for other platforms or for custom builds.
 
 
-The following command displays the command line arguments supported by ```scripts/build.sh```:
+The following command displays the command line arguments supported by [scripts/build.sh](../scripts/build.sh):
 ```
-
 usage: scripts/build.sh [OPTIONS]
 
 options:

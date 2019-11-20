@@ -84,7 +84,7 @@ namespace nano
         bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
 
         ///
-        /// \brief compute function value (and gradient if provided)
+        /// \brief evaluate the function's value at the give point (and its gradient if provided)
         ///
         virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 

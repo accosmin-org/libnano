@@ -10,7 +10,12 @@ namespace nano
     using rsolver_t = solver_factory_t::trobject;
 
     ///
-    /// \brief generic optimization algorithm typically using an adaptive line-search method.
+    /// \brief numerical optimization algorithms that use line-search along a descent direction
+    ///     to iteratively minimize a smooth lower-bounded function.
+    ///
+    /// NB: the resulting point (if enough iterations have been used) is either:
+    ///     - the global minimum if the function is convex or
+    ///     - a critical point (not necessarily a local minimum) otherwise.
     ///
     class NANO_PUBLIC solver_t
     {

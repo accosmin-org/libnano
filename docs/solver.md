@@ -12,12 +12,12 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the **function_t** and the **solver_t** interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility **app/info** like described below.
+Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
 
 
 #### Function
 
-The function to minimize must be an instance of *function_t*. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from ```example/src/minimize.cpp``` defines a quadratic function of arbitrary dimensions:
+The function to minimize must be an instance of *function_t*. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from the [example](../example/src/minimize.cpp) defines a quadratic function of arbitrary dimensions:
 
 ```
 #include <nano/function.h>
@@ -52,7 +52,7 @@ private:
 };
 ```
 
-Additionally the library implements various widely used functions for benchmarking numerical optimization algorithms (see [Test functions for optimization](https://en.wikipedia.org/wiki/Test_functions_for_optimization) for some examples). These are used by the command line utility ```app/bench_solver``` to benchmark the builtin optimization algorithms.
+Additionally the library implements various widely used functions for benchmarking numerical optimization algorithms (see [Test functions for optimization](https://en.wikipedia.org/wiki/Test_functions_for_optimization) for some examples). These are used by the command line utility [app/bench_solver](../app/bench_solver.cpp) to benchmark the builtin optimization algorithms.
 
 
 #### Solver
@@ -66,7 +66,7 @@ for (const auto& solver_id : nano::solver_t::all().ids())
 }
 ```
 
-Another possibility is to run the command line utility ```app/info``` to print the ID and a short description of all builtin solvers:
+Another possibility is to run the command line utility [app/info](../app/info.cpp) to print the ID and a short description of all builtin solvers:
 ```
 ./build/libnano/debug/app/info --solver .+
 |----------|-----------------------------------------|
@@ -93,7 +93,7 @@ Another possibility is to run the command line utility ```app/info``` to print t
 |----------|-----------------------------------------|
 ```
 
-The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from ```example/src/minimize.cpp``` shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
+The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/minimize.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
 ```
 #include <nano/solver/lbfgs.h>
 
@@ -129,7 +129,7 @@ Choosing the right optimization algorithm is usually done in terms of processing
 #### Example
 
 
-A working example for constructing and minimizing an objective function can be found in ```example/src/minimize.cpp```. The source shows additionally how to:
+A working example for constructing and minimizing an objective function can be found in the [example](../example/src/minimize.cpp). The source shows additionally how to:
 * compute objective function values at various points,
 * compute the accuracy of the gradient using central finite difference,
 * retrieve and configure the solver,
@@ -137,7 +137,7 @@ A working example for constructing and minimizing an objective function can be f
 * retrieve the optimization result.
 
 
-The command line utility ```app/bench_solver``` is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex builtin functions of dimensions from 16 to 32:
+The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex builtin functions of dimensions from 16 to 32:
 ```
 ./build/libnano/release/app/bench_solver --min-dims 16 --max-dims 32 --convex --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-iterations 1000 | tail -n 8
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|

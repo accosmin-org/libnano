@@ -61,7 +61,7 @@ scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
         const tensor4d_t& inputs, const tensor4d_t& targets, const tensor4d_t& outputs,
         const tensor_size_t begin, const tensor_size_t end, const size_t tnum)
     {
-        m_loss.value(targets, outputs, m_values.range(begin, end - begin));
+        m_loss.value(targets, outputs, m_values.slice(begin, end - begin));
 
         if (gx != nullptr)
         {
@@ -75,7 +75,7 @@ scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
 
             if (vAreg() > 0)
             {
-                const auto vvector = m_values.range(begin, end - begin).vector();
+                const auto vvector = m_values.slice(begin, end - begin).vector();
 
                 m_gb2s[tnum].vector() += gmatrix.transpose() * vvector;
                 m_gW2s[tnum].matrix() += (imatrix.array().colwise() * vvector.array()).matrix().transpose() * gmatrix;

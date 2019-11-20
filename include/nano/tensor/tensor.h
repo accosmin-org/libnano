@@ -329,14 +329,14 @@ namespace nano
         /// \brief access a part of the tensor as a (sub-)tensor
         ///     (by taking the [begin, begin + delta) range of the first dimension)
         ///
-        auto range(const tensor_size_t begin, const tensor_size_t delta)
+        auto slice(const tensor_size_t begin, const tensor_size_t delta)
         {
-            return trange(data(), begin, begin + delta);
+            return tslice(data(), begin, begin + delta);
         }
 
-        auto range(const tensor_size_t begin, const tensor_size_t delta) const
+        auto slice(const tensor_size_t begin, const tensor_size_t delta) const
         {
-            return trange(data(), begin, begin + delta);
+            return tslice(data(), begin, begin + delta);
         }
 
         ///
@@ -467,7 +467,7 @@ namespace nano
         }
 
         template <typename tdata>
-        auto trange(tdata ptr, const tensor_size_t begin, const tensor_size_t end) const
+        auto tslice(tdata ptr, const tensor_size_t begin, const tensor_size_t end) const
         {
             assert(begin >= 0 && begin < end && end <= size<0>());
             auto dims = this->dims();

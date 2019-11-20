@@ -177,12 +177,15 @@ namespace nano
     {
         return std::operator!=(dims1, dims2);
     }
+}
 
+namespace std // NOLINT(cert-dcl58-cpp)
+{
     ///
     /// \brief stream tensor dimensions.
     ///
     template <size_t trank>
-    std::ostream& operator<<(std::ostream& os, const tensor_dims_t<trank>& dims)
+    std::ostream& operator<<(std::ostream& os, const ::nano::tensor_dims_t<trank>& dims)
     {
         for (size_t d = 0; d < dims.size(); ++ d)
         {

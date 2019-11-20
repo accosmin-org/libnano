@@ -252,7 +252,7 @@ void linear_model_t::evaluate(const iterator_t& iterator, const fold_t& fold, co
         const tensor4d_t&, const tensor4d_t& targets, const tensor4d_t& outputs,
         const tensor_size_t begin, const tensor_size_t end, const size_t)
     {
-        loss.error(targets, outputs, errors.range(begin, end - begin));
+        loss.error(targets, outputs, errors.slice(begin, end - begin));
     });
 }
 
@@ -267,7 +267,7 @@ void linear_model_t::evaluate(const iterator_t& iterator, const fold_t& fold, co
         const tensor4d_t&, const tensor4d_t& targets, const tensor4d_t& outputs,
         const tensor_size_t begin, const tensor_size_t end, const size_t)
     {
-        loss.value(targets, outputs, values.range(begin, end - begin));
-        loss.error(targets, outputs, errors.range(begin, end - begin));
+        loss.value(targets, outputs, values.slice(begin, end - begin));
+        loss.error(targets, outputs, errors.slice(begin, end - begin));
     });
 }
