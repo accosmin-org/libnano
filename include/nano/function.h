@@ -13,6 +13,9 @@ namespace nano
     using rfunction_t = std::unique_ptr<function_t>;
     using rfunctions_t = std::vector<rfunction_t>;
 
+    ///
+    /// \brief
+    ///
     enum class convexity
     {
         yes,
@@ -24,14 +27,7 @@ namespace nano
     /// \brief construct test functions having the number of dimensions within the given range.
     ///
     NANO_PUBLIC rfunctions_t get_functions(
-        tensor_size_t min_dims, tensor_size_t max_dims,
-        const std::regex& name_regex = std::regex(".+"));
-
-    ///
-    /// \brief construct convex test functions having the number of dimensions within the given range.
-    ///
-    NANO_PUBLIC rfunctions_t get_convex_functions(
-        tensor_size_t min_dims, tensor_size_t max_dims,
+        tensor_size_t min_dims, tensor_size_t max_dims, convexity,
         const std::regex& name_regex = std::regex(".+"));
 
     ///
@@ -40,11 +36,11 @@ namespace nano
     class NANO_PUBLIC function_t
     {
     public:
+
         ///
         /// \brief constructor
         ///
-        function_t(string_t name, tensor_size_t size, convexity convex);
-        function_t(const char* name, tensor_size_t size, convexity convex);
+        function_t(string_t name, tensor_size_t size, tensor_size_t summands, convexity);
 
         ///
         /// \brief enable copying
@@ -74,9 +70,15 @@ namespace nano
         tensor_size_t size() const { return m_size; }
 
         ///
-        /// \brief check if the function is convex
+        /// \brief number of summands (if the function is a sum of various components),
+        ///     used by stochastic optimization methods.
         ///
-        bool is_convex() const { return m_convex == convexity::yes; }
+        tensor_size_t summands() const { return m_summands; }
+
+        ///
+        /// \brief compute the gradient accuracy (given vs. central finite difference approximation)
+        ///
+        scalar_t grad_accuracy(const vector_t& x) const;
 
         ///
         /// \brief check if the function is convex along the [x1, x2] line
@@ -84,20 +86,41 @@ namespace nano
         bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
 
         ///
-        /// \brief evaluate the function's value at the give point (and its gradient if provided)
+        /// \brief returns convexity state (if known)
+        ///
+        convexity convex() const { return m_convexity; }
+
+        ///
+        /// \brief evaluate the function's value at the give point (and its gradient if provided).
         ///
         virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
         ///
-        /// \brief compute the gradient accuracy (given vs. finite difference approximation)
+        /// \brief evaluate the function's value at the given point (and its gradient if provided),
+        ///     using the [begin, end) range of (a-priori shuffled) summands
+        ///     as expected by the stochastic optimization methods.
         ///
-        scalar_t grad_accuracy(const vector_t& x) const;
+        virtual scalar_t vgrad(const vector_t& x, tensor_size_t begin, tensor_size_t end, vector_t* gx = nullptr) const
+        {
+            (void)begin;
+            (void)end;
+            return vgrad(x, gx);
+        }
+
+        ///
+        /// \brief shuffle the summands (if possible)
+        ///     as expected by the stochastic optimization methods.
+        ///
+        virtual void shuffle() const
+        {
+        }
 
     private:
 
         // attributes
-        string_t        m_name;     ///<
-        tensor_size_t   m_size;     ///< #dimensions
-        convexity       m_convex;   ///<
+        string_t        m_name;                             ///<
+        tensor_size_t   m_size{0};                          ///< #dimensions
+        tensor_size_t   m_summands{1};                      ///< #components that are summed-up to form the function
+        convexity       m_convexity{convexity::unknown};    ///<
     };
 }

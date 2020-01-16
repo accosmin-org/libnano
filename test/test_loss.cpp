@@ -1,16 +1,16 @@
 #include <nano/loss.h>
-#include <nano/mlearn.h>
 #include <nano/random.h>
 #include <utest/utest.h>
 #include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/mlearn/class.h>
 
 using namespace nano;
 
 struct loss_function_t final : public function_t
 {
     loss_function_t(const rloss_t& loss, const tensor_size_t xmaps) :
-        function_t("loss", 3 * xmaps, convexity::no),
+        function_t("loss", 3 * xmaps, 1, convexity::no),
         m_loss(loss), m_target(3, xmaps, 1, 1), m_values(3)
     {
         m_target.tensor(0) = class_target(xmaps, 11 % xmaps);

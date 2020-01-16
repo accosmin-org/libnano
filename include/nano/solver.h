@@ -1,6 +1,8 @@
 #pragma once
 
-#include <nano/lsearch.h>
+#include <nano/factory.h>
+#include <nano/parameter.h>
+#include <nano/solver/state.h>
 #include <nano/solver/function.h>
 
 namespace nano
@@ -10,7 +12,7 @@ namespace nano
     using rsolver_t = solver_factory_t::trobject;
 
     ///
-    /// \brief numerical optimization algorithms that use line-search along a descent direction
+    /// \brief unconstrained numerical optimization algorithm
     ///     to iteratively minimize a smooth lower-bounded function.
     ///
     /// NB: the resulting point (if enough iterations have been used) is either:
@@ -29,11 +31,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit solver_t(
-            scalar_t c1 = 1e-1,
-            scalar_t c2 = 9e-1,
-            const string_t& lsearch0 = "quadratic",
-            const string_t& lsearchk = "morethuente");
+        solver_t() = default;
 
         ///
         /// \brief enable moving
@@ -64,51 +62,30 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const;
+        virtual solver_state_t minimize(const function_t&, const vector_t& x0) const = 0;
 
         ///
-        /// \brief set the logging callbacks
+        /// \brief set the logging callback
         ///
-        void logger(const logger_t& logger) { m_logger = logger; }
-        void lsearch0_logger(const lsearch0_t::logger_t& logger) { m_lsearch0_logger = logger; }
-        void lsearchk_logger(const lsearchk_t::logger_t& logger) { m_lsearchk_logger = logger; }
+        void logger(const logger_t& logger);
 
         ///
-        /// \brief set the line-search initialization
+        /// \brief change the desired accuracy (~ gradient magnitude, see state_t::converged)
         ///
-        void lsearch0(const string_t& id);
-        void lsearch0(const string_t& id, rlsearch0_t&&);
+        void epsilon(scalar_t epsilon);
 
         ///
-        /// \brief set the line-search strategy
+        /// \brief change the maximum number of iterations
         ///
-        void lsearchk(const string_t& id);
-        void lsearchk(const string_t& id, rlsearchk_t&&);
-
-        ///
-        /// \brief change parameters
-        ///
-        void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
-        void tolerance(const scalar_t c1, const scalar_t c2) { m_tolerance.set(c1, c2); }
-        void max_iterations(const int max_iterations) { m_max_iterations = max_iterations; }
+        void max_iterations(int max_iterations);
 
         ///
         /// \brief access functions
         ///
-        auto c1() const { return m_tolerance.get1(); }
-        auto c2() const { return m_tolerance.get2(); }
         auto epsilon() const { return m_epsilon.get(); }
         auto max_iterations() const { return m_max_iterations.get(); }
-        const auto& lsearch0_id() const { return m_lsearch0_id; }
-        const auto& lsearchk_id() const { return m_lsearchk_id; }
 
     protected:
-
-        ///
-        /// \brief minimize the given function starting from the initial point x0
-        ///     and using the given line-search strategy
-        ///
-        virtual solver_state_t minimize(const solver_function_t&, const lsearch_t&, const vector_t& x0) const = 0;
 
         ///
         /// \brief log the current optimization state (if the logger is provided)
@@ -123,15 +100,8 @@ namespace nano
     private:
 
         // attributes
-        sparam2_t               m_tolerance{"solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};  ///<
-        sparam1_t               m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};            ///<
-        iparam1_t               m_max_iterations{"solver::maxiter", 1, LE, 1000, LT, 1e+6};     ///<
-        logger_t                m_logger;                   ///<
-        string_t                m_lsearch0_id;              ///<
-        rlsearch0_t             m_lsearch0;                 ///<
-        lsearch0_t::logger_t    m_lsearch0_logger;          ///<
-        string_t                m_lsearchk_id;              ///<
-        rlsearchk_t             m_lsearchk;                 ///<
-        lsearchk_t::logger_t    m_lsearchk_logger;          ///<
+        sparam1_t       m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};        ///< desired accuracy
+        iparam1_t       m_max_iterations{"solver::maxiters", 1, LE, 1000, LT, 1e+6};///< maximum number of iterations
+        logger_t        m_logger;                   ///<
     };
 }

@@ -14,9 +14,10 @@ make_test(test_tensor_tensor NANO::nano)
 make_test(test_tensor_integral NANO::nano)
 
 make_test(test_tune NANO::nano)
-make_test(test_solver NANO::nano)
 make_test(test_lsearch NANO::nano)
 make_test(test_function NANO::nano)
+make_test(test_solver_lsearch NANO::nano)
+make_test(test_solver_stochastic NANO::nano)
 
 make_test(test_loss NANO::nano)
 make_test(test_linear NANO::nano)

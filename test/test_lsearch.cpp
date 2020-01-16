@@ -147,7 +147,7 @@ UTEST_CASE(backtrack)
     const auto lsearch_id = "backtrack";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::backtrack);
@@ -159,7 +159,7 @@ UTEST_CASE(lemarechal)
     const auto lsearch_id = "lemarechal";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::lemarechal);
@@ -171,7 +171,7 @@ UTEST_CASE(morethuente)
     const auto lsearch_id = "morethuente";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::morethuente);
@@ -183,7 +183,7 @@ UTEST_CASE(fletcher)
     const auto lsearch_id = "fletcher";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::fletcher);
@@ -195,7 +195,7 @@ UTEST_CASE(cgdescent_wolfe)
     const auto lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
@@ -207,7 +207,7 @@ UTEST_CASE(cgdescent_approx_wolfe)
     const auto lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::approx_wolfe);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
@@ -219,7 +219,7 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
     const auto lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe);
 
-    const auto functions = get_functions(1, 16, std::regex(".+"));
+    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
     for (const auto& function : functions)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);

@@ -7,6 +7,8 @@
 #include <nano/tabular.h>
 #include <nano/version.h>
 #include <nano/cmdline.h>
+#include <nano/lsearch0.h>
+#include <nano/lsearchk.h>
 
 using namespace nano;
 

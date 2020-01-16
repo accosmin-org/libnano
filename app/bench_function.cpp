@@ -68,7 +68,7 @@ static int unsafe_main(int argc, const char* argv[])
     table.delim();
 
     tensor_size_t prev_size = min_dims;
-    for (const auto& function : get_functions(min_dims, max_dims, functions))
+    for (const auto& function : get_functions(min_dims, max_dims, convexity::unknown, functions))
     {
         if (function->size() != prev_size)
         {

@@ -154,11 +154,13 @@ namespace nano
         // attributes
         const function_t*   function{nullptr};      ///<
         vector_t            x, g, d;                ///< parameter, gradient, descent direction
-        scalar_t            f{0}, t{0};             ///< function value, step size
+        scalar_t            f{0};                   ///< function value
+        scalar_t            t{0};                   ///< step size (line-search solvers)
+        scalar_t            lrate{1}, decay{0};     ///< learning rate, decay factor (stochastic solvers)
         status              m_status{status::max_iters};    ///< optimization status
-        size_t              m_fcalls{0};            ///< #function value evaluations so far
-        size_t              m_gcalls{0};            ///< #function gradient evaluations so far
-        size_t              m_iterations{0};        ///< #optimization iterations so far
+        tensor_size_t       m_fcalls{0};            ///< #function value evaluations so far
+        tensor_size_t       m_gcalls{0};            ///< #function gradient evaluations so far
+        tensor_size_t       m_iterations{0};        ///< #optimization iterations so far
     };
 
     template <>

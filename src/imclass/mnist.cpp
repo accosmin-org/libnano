@@ -1,5 +1,6 @@
 #include <fstream>
 #include <nano/logger.h>
+#include <nano/mlearn/class.h>
 #include <nano/imclass/mnist.h>
 
 using namespace nano;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/mlearn.h>
 #include <nano/parameter.h>
+#include <nano/mlearn/split.h>
 
 namespace nano
 {

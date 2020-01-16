@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/solver/lsearch.h>
 
 namespace nano
 {
@@ -11,7 +11,7 @@ namespace nano
     ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager & Zhang
     ///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
-    class NANO_PUBLIC solver_cgd_t : public solver_t
+    class NANO_PUBLIC solver_cgd_t : public lsearch_solver_t
     {
     public:
 
@@ -23,9 +23,9 @@ namespace nano
         solver_cgd_t();
 
         ///
-        /// \brief @see solver_t
+        /// \brief @see lsearch_solver_t
         ///
-        solver_state_t minimize(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters

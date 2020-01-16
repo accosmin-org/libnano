@@ -14,7 +14,7 @@ cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || ech
 threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
-export CXXFLAGS="${CXXFLAGS} -Wshadow -Werror"
+export CXXFLAGS="${CXXFLAGS} -Werror"
 
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"

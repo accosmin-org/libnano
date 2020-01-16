@@ -104,6 +104,8 @@ namespace nano
             m_value = checked(value);
         }
 
+        auto min() const { return m_min; }
+        auto max() const { return m_max; }
         auto get() const { return m_value; }
 
     private:
@@ -157,6 +159,8 @@ namespace nano
             std::tie(m_value1, m_value2) = checked(value1, value2);
         }
 
+        auto min() const { return m_min; }
+        auto max() const { return m_max; }
         auto get1() const { return m_value1; }
         auto get2() const { return m_value2; }
 

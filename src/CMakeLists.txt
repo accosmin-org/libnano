@@ -16,7 +16,9 @@ set(solver_sources
     solver/gd.cpp
     solver/cgd.cpp
     solver/lbfgs.cpp
-    solver/quasi.cpp)
+    solver/quasi.cpp
+    solver/lsearch.cpp
+    solver/stochastic.cpp)
 
 set(mlearn_sources
     loss.cpp

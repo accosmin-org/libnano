@@ -56,7 +56,9 @@ namespace nano
         virtual void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t&&) const = 0;
 
         ///
-        /// \brief overloads to simplify usage
+        /// \brief overloads to simplify usage.
+        ///
+        /// NB: the output tensors are allocated accordingly.
         ///
         void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_t& errors) const
         {

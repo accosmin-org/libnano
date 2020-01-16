@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver.h>
+#include <nano/solver/lsearch.h>
 
 namespace nano
 {
@@ -9,7 +9,7 @@ namespace nano
     ///     see "Updating Quasi-Newton Matrices with Limited Storage", by J. Nocedal, 1980
     ///     see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
     ///
-    class NANO_PUBLIC solver_lbfgs_t final : public solver_t
+    class NANO_PUBLIC solver_lbfgs_t final : public lsearch_solver_t
     {
     public:
 
@@ -21,9 +21,9 @@ namespace nano
         solver_lbfgs_t();
 
         ///
-        /// \brief @see solver_t
+        /// \brief @see lsearch_solver_t
         ///
-        solver_state_t minimize(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters
@@ -38,6 +38,6 @@ namespace nano
     private:
 
         // attributes
-        uparam1_t   m_history{"solver::lbfgs::history", 1, LE, 6, LE, 1000};///< previous gradients to use for approximating 1/Hessian
+        uparam1_t   m_history{"solver::lbfgs::history", 1, LE, 6, LE, 1000};///<#previous gradients to approximate Hessian^-1
     };
 }

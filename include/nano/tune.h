@@ -4,11 +4,15 @@
 #include <tuple>
 #include <vector>
 #include <cassert>
+#include <stdexcept>
 #include <algorithm>
 #include <nano/scalar.h>
 
 namespace nano
 {
+    // TODO: either throw an exception if the optimum value is at the boundary or
+    //  automatically extend the search domain!
+
     ///
     /// \brief the search interval used for tuning hyper-parameters.
     ///
@@ -139,7 +143,7 @@ namespace nano
     ///     the tuning is performed in steps by sampling with finer and finer step size around the current optimum.
     ///
     template <typename tspace1, typename tevaluator>
-    std::tuple<scalar_t, scalar_t> tune(tspace1 space1, const tevaluator& evaluator,
+    std::tuple<scalar_t, scalar_t> grid_tune(tspace1 space1, const tevaluator& evaluator,
         const int maximum_trials_per_step, const int steps)
     {
         assert(steps > 0 && maximum_trials_per_step > 3);
@@ -150,7 +154,15 @@ namespace nano
             for (const auto param1 : space1.generate(maximum_trials_per_step))
             {
                 const auto value = static_cast<scalar_t>(evaluator(param1));
-                results.emplace_back(value, param1);
+                if (std::isfinite(value))
+                {
+                    results.emplace_back(value, param1);
+                }
+            }
+
+            if (results.empty())
+            {
+                throw std::runtime_error("invalid tuning domain for the search space");
             }
 
             if (step + 1 < steps)
@@ -170,7 +182,7 @@ namespace nano
     ///     the tuning is performed in steps by sampling with finer and finer step size around the current optimum.
     ///
     template <typename tspace1, typename tspace2, typename tevaluator>
-    std::tuple<scalar_t, scalar_t, scalar_t> tune(tspace1 space1, tspace2 space2, const tevaluator& evaluator,
+    std::tuple<scalar_t, scalar_t, scalar_t> grid_tune(tspace1 space1, tspace2 space2, const tevaluator& evaluator,
         const int maximum_trials_per_step, const int steps)
     {
         assert(steps > 0 && maximum_trials_per_step > 3);
@@ -183,8 +195,16 @@ namespace nano
                 for (const auto param2 : space2.generate(maximum_trials_per_step))
                 {
                     const auto value = static_cast<scalar_t>(evaluator(param1, param2));
-                    results.emplace_back(value, param1, param2);
+                    if (std::isfinite(value))
+                    {
+                        results.emplace_back(value, param1, param2);
+                    }
                 }
+            }
+
+            if (results.empty())
+            {
+                throw std::runtime_error("invalid tuning domain for the search space");
             }
 
             if (step + 1 < steps)
@@ -198,5 +218,50 @@ namespace nano
 
         assert(!results.empty());
         return *std::min_element(results.begin(), results.end());
+    }
+
+    ///
+    /// \brief tune a continuous hyper-parameter by geometrically adjusting
+    ///     the [lo, hi] \in (R+,R+) initial guess interval on the side with the lowest value.
+    ///
+    template <typename tevaluator>
+    std::tuple<scalar_t, scalar_t> geom_tune(const tevaluator& evaluator,
+        scalar_t lo, scalar_t hi, const scalar_t factor = 2.0, const int max_steps = 100)
+    {
+        assert(factor > 1);
+        assert(max_steps > 0);
+        assert(0 < lo && lo < hi);
+
+        auto lo_value = static_cast<scalar_t>(evaluator(lo));
+        auto hi_value = static_cast<scalar_t>(evaluator(hi));
+
+        // FIXME: check overflow!!!
+
+        if (lo_value < hi_value)
+        {
+            for (int step = 0; step < max_steps && std::isfinite(lo_value) && lo_value < hi_value; ++ step)
+            {
+                hi = lo;
+                hi_value = lo_value;
+                lo /= factor;
+                lo_value = static_cast<scalar_t>(evaluator(lo));
+            }
+        }
+
+        else if (lo_value > hi_value)
+        {
+            for (int step = 0; step < max_steps && std::isfinite(hi_value) && lo_value > hi_value; ++ step)
+            {
+                lo = hi;
+                lo_value = hi_value;
+                hi *= factor;
+                hi_value = static_cast<scalar_t>(evaluator(hi));
+            }
+        }
+
+        lo_value = std::isfinite(lo_value) ? lo_value : std::numeric_limits<scalar_t>::max();
+        hi_value = std::isfinite(hi_value) ? hi_value : std::numeric_limits<scalar_t>::max();
+
+        return (lo_value < hi_value) ? std::make_tuple(lo_value, lo) : std::make_tuple(hi_value, hi);
     }
 }

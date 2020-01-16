@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_exponential_t(const tensor_size_t dims) :
-            function_t("Exponential", dims, convexity::yes)
+            function_t("Exponential", dims, 1, convexity::yes)
         {
         }
 

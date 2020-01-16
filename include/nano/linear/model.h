@@ -7,6 +7,8 @@
 
 namespace nano
 {
+    class linear_function_t;
+
     ///
     /// \brief a linear model is an affine transformation of the flatten input features x:
     ///     y(x) = weights * x + bias.
@@ -14,18 +16,6 @@ namespace nano
     class NANO_PUBLIC linear_model_t
     {
     public:
-
-        ///
-        /// \brief regularization methods.
-        ///
-        enum class regularization
-        {
-            none,           ///< no regularization
-            lasso,          ///< like in LASSO
-            ridge,          ///< like in ridge regression, weight decay or Tikhonov regularization
-            elastic,        ///< like in elastic net regularization
-            variance        ///< like in VadaBoost
-        };
 
         ///
         /// \brief summarizes training for a fold:
@@ -54,8 +44,7 @@ namespace nano
         ///
         /// \brief train the linear model on the given samples.
         ///
-        train_result_t train(const loss_t&, const iterator_t&, const solver_t&, regularization,
-            int batch = 32, int max_trials_per_tune_step = 7, int tune_steps = 2);
+        train_result_t train(const loss_t&, const iterator_t&, const solver_t&);
 
         ///
         /// \brief save the trained model to disk
@@ -94,32 +83,37 @@ namespace nano
             tensor1d_map_t&& values, tensor1d_map_t&& errors);
 
         ///
-        /// \brief access parameters
+        /// \brief change parameters
         ///
+        void normalization(const normalization n) { m_normalization = n; }
+        void regularization(const regularization r) { m_regularization = r; }
+        void batch(const tensor_size_t batch) { m_batch = batch; }
+        void tune_steps(const int steps) { m_tune_steps = steps; }
+        void tune_trials(const int trials) { m_tune_trials = trials; }
+
+        ///
+        /// \brief access functions
+        ///
+        auto batch() const { return m_batch.get(); }
+        auto tune_steps() const { return m_tune_steps.get(); }
+        auto normalization() const { return m_normalization; }
+        auto regularization() const { return m_regularization; }
+        auto tune_trials() const { return m_tune_trials.get(); }
+
         const auto& bias() const { return m_bias; }
         const auto& weights() const { return m_weights; }
 
     private:
 
-        scalar_t train(
-            const loss_t&, const iterator_t&, size_t fold, const solver_t&, int batch,
-            scalar_t l1reg, scalar_t l2reg, scalar_t vAreg, scalar_t& best_vd_error);
+        scalar_t train(const linear_function_t&, const solver_t&, scalar_t& best_vd_error);
 
         // attributes
-        tensor2d_t          m_weights;  ///< weight matrix (#inputs, #outputs)
-        tensor1d_t          m_bias;     ///< bias vector (#outputs)
+        tensor2d_t      m_weights;  ///< weight matrix (#inputs, #outputs)
+        tensor1d_t      m_bias;     ///< bias vector (#outputs)
+        iparam1_t       m_batch{"linear::batch", 1, LE, 32, LE, 4096};          ///< #samples to use at once (= minibatch)
+        iparam1_t       m_tune_trials{"linear::tune_trials", 4, LE, 7, LE, 10}; ///<
+        iparam1_t       m_tune_steps{"linear::tune_steps", 1, LE, 2, LE, 10};   ///<
+        ::nano::regularization  m_regularization{::nano::regularization::none}; ///<
+        ::nano::normalization   m_normalization{::nano::normalization::standard};///<
     };
-
-    template <>
-    inline enum_map_t<linear_model_t::regularization> enum_string<linear_model_t::regularization>()
-    {
-        return
-        {
-            { linear_model_t::regularization::none,     "none" },
-            { linear_model_t::regularization::lasso,    "lasso" },
-            { linear_model_t::regularization::ridge,    "ridge" },
-            { linear_model_t::regularization::elastic,  "elastic" },
-            { linear_model_t::regularization::variance, "variance" }
-        };
-    }
 }

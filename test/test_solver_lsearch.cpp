@@ -1,13 +1,12 @@
 #include <iomanip>
 #include <utest/utest.h>
-#include <nano/solver.h>
 #include <nano/numeric.h>
 #include <nano/solver/quasi.h>
 #include <nano/function/sphere.h>
 
 using namespace nano;
 
-static void setup_logger(solver_t& solver, std::stringstream& stream, size_t& iterations)
+static void setup_logger(lsearch_solver_t& solver, std::stringstream& stream, tensor_size_t& iterations)
 {
     // log the optimization steps
     solver.logger([&] (const solver_state_t& state)
@@ -15,7 +14,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, size_t& it
         ++ iterations;
         stream
             << "\tdescent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << state.m_status << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+            << "[" << state.m_status << "],calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
         return true;
     });
 
@@ -37,7 +36,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, size_t& it
     });
 }
 
-static void test(solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+static void test(lsearch_solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
     const auto old_n_failures = utest_n_failures.load();
     const auto state0 = solver_state_t{function, x0};
@@ -48,11 +47,11 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
         << function.name() << " " << solver_id << "[" << solver.lsearch0_id() << "," << solver.lsearchk_id() << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
 
-    size_t iterations = 0;
+    tensor_size_t iterations = 0;
     setup_logger(solver, stream, iterations);
 
     // minimize
-    solver.epsilon(1e-6);
+    solver.epsilon(1e-5);
     solver.max_iterations(5000);
     const auto state = solver.minimize(function, x0);
     UTEST_CHECK(state);
@@ -71,7 +70,7 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     }
 }
 
-UTEST_BEGIN_MODULE(test_solvers)
+UTEST_BEGIN_MODULE(test_solver_lsearch)
 
 UTEST_CASE(state_str)
 {
@@ -150,9 +149,9 @@ UTEST_CASE(state_convergence1)
 
 UTEST_CASE(config_solvers)
 {
-    for (const auto& solver_id : solver_t::all().ids())
+    for (const auto& solver_id : lsearch_solver_t::all().ids())
     {
-        const auto solver = solver_t::all().get(solver_id);
+        const auto solver = lsearch_solver_t::all().get(solver_id);
         UTEST_REQUIRE(solver);
 
         // NB: 0 < c1 < c2 < 1
@@ -186,11 +185,11 @@ UTEST_CASE(config_solvers)
     }
 }
 
-const auto all_functions = get_functions(4, 4);
-const auto convex_functions = get_convex_functions(4, 4);
+const auto all_functions = get_functions(4, 4, convexity::unknown);
+const auto convex_functions = get_functions(4, 4, convexity::yes);
 
-const auto all_solver_ids = solver_t::all().ids();
-const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
+const auto all_solver_ids = lsearch_solver_t::all().ids();
+const auto best_solver_ids = lsearch_solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
 const auto all_lsearch0_ids = lsearch0_t::all().ids();
 const auto all_lsearchk_ids = lsearchk_t::all().ids();
 
@@ -202,7 +201,7 @@ UTEST_CASE(all_default_solvers)
 
         for (const auto& solver_id : all_solver_ids)
         {
-            const auto solver = solver_t::all().get(solver_id);
+            const auto solver = lsearch_solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
             test(*solver, solver_id, *function, vector_t::Random(function->size()));
@@ -218,7 +217,7 @@ UTEST_CASE(best_solvers_with_lsearches)
 
         for (const auto& solver_id : best_solver_ids)
         {
-            const auto solver = solver_t::all().get(solver_id);
+            const auto solver = lsearch_solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
             for (const auto& lsearch0_id : all_lsearch0_ids)
@@ -243,7 +242,7 @@ UTEST_CASE(best_solvers_with_tolerances)
 
         for (const auto& solver_id : best_solver_ids)
         {
-            const auto solver = solver_t::all().get(solver_id);
+            const auto solver = lsearch_solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
             UTEST_REQUIRE_NOTHROW(solver->tolerance(1e-4, 1e-1));

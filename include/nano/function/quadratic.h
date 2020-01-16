@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_quadratic_t(const tensor_size_t dims) :
-            function_t("Quadratic", dims, convexity::yes),
+            function_t("Quadratic", dims, 1, convexity::yes),
             m_a(vector_t::Random(dims))
         {
             // NB: generate random positive semi-definite matrix to keep the function convex

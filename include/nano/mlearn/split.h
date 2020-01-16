@@ -2,108 +2,11 @@
 
 #include <set>
 #include <nano/random.h>
-#include <nano/string.h>
 #include <nano/tensor.h>
+#include <nano/mlearn/fold.h>
 
 namespace nano
 {
-    ///
-    /// \brief target value of the positive class.
-    ///
-    inline scalar_t pos_target() { return +1; }
-
-    ///
-    /// \brief target value of the negative class.
-    ///
-    inline scalar_t neg_target() { return -1; }
-
-    ///
-    /// \brief check if a target value maps to a positive class.
-    ///
-    inline bool is_pos_target(const scalar_t target) { return target > 0; }
-
-    ///
-    /// \brief target tensor for single and multi-label classification problems with [n_labels] classes.
-    ///
-    namespace detail
-    {
-        inline void class_target(tensor3d_t&)
-        {
-        }
-
-        template <typename... tindices>
-        inline void class_target(tensor3d_t& target, const tensor_size_t index, const tindices... indices)
-        {
-            if (index >= 0 && index < target.size())
-            {
-                target(index) = pos_target();
-            }
-            class_target(target, indices...);
-        }
-    }
-
-    template <typename... tindices>
-    inline tensor3d_t class_target(const tensor_size_t n_labels, const tindices... indices)
-    {
-        tensor3d_t target(n_labels, 1, 1);
-        target.constant(neg_target());
-        detail::class_target(target, indices...);
-        return target;
-    }
-
-    ///
-    /// \brief target vector for multi-label classification problems based on the sign of the predictions.
-    ///
-    inline tensor3d_t class_target(const tensor3d_t& outputs)
-    {
-        tensor3d_t target(outputs.dims());
-        for (tensor_size_t i = 0; i < outputs.size(); ++ i)
-        {
-            target(i) = is_pos_target(outputs(i)) ? pos_target() : neg_target();
-        }
-        return target;
-    }
-
-    ///
-    /// \brief dataset splitting protocol.
-    ///
-    enum class protocol
-    {
-        train = 0,      ///< training
-        valid,          ///< validation (for tuning hyper-parameters)
-        test            ///< testing
-    };
-
-    template <>
-    inline enum_map_t<protocol> enum_string<protocol>()
-    {
-        return
-        {
-            { protocol::train,    "train" },
-            { protocol::valid,    "valid" },
-            { protocol::test,     "test" }
-        };
-    }
-
-    ///
-    /// \brief dataset splitting fold.
-    ///
-    struct fold_t
-    {
-        size_t          m_index;        ///< fold index
-        protocol        m_protocol;     ///<
-    };
-
-    inline bool operator==(const fold_t& f1, const fold_t& f2)
-    {
-        return f1.m_index == f2.m_index && f1.m_protocol == f2.m_protocol;
-    }
-
-    inline bool operator<(const fold_t& f1, const fold_t& f2)
-    {
-        return f1.m_index < f2.m_index || (f1.m_index == f2.m_index && f1.m_protocol < f2.m_protocol);
-    }
-
     ///
     /// \brief dataset splitting sample indices into training, validation and test.
     ///

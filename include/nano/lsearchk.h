@@ -13,7 +13,9 @@ namespace nano
     using rlsearchk_t = lsearchk_factory_t::trobject;
 
     ///
-    /// \brief compute the step length of the line search procedure.
+    /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.
+    ///
+    /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
     ///
     class NANO_PUBLIC lsearchk_t
     {
@@ -59,9 +61,9 @@ namespace nano
         virtual rlsearchk_t clone() const = 0;
 
         ///
-        /// \brief compute the step length starting from the given state and the initial estimate of the step length
+        /// \brief compute the step size starting from the given state and the initial estimate of the step size
         ///
-        bool get(solver_state_t& state, scalar_t t0);
+        virtual bool get(solver_state_t& state, scalar_t t0);
 
         ///
         /// \brief change parameters
@@ -96,9 +98,13 @@ namespace nano
     protected:
 
         ///
-        /// \brief compute the step length given the previous state and the current state
+        /// \brief compute the step size given the previous state and the current state
         ///
-        virtual bool get(const solver_state_t& state0, solver_state_t&) = 0;
+        virtual bool get(const solver_state_t& state0, solver_state_t&)
+        {
+            (void)state0;
+            return false;
+        }
 
         ///
         /// \brief log the current line-search trial length (if the logger is provided)
@@ -114,8 +120,8 @@ namespace nano
     private:
 
         // attributes
-        sparam2_t   m_tolerance{"lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};    ///<
-        iparam1_t   m_max_iterations{"lsearchk::max_iterations", 1, LE, 100, LE, 1e+6}; ///<
+        sparam2_t   m_tolerance{"lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};    ///< see Armijo-Wolfe conditions
+        iparam1_t   m_max_iterations{"lsearchk::max_iterations", 1, LE, 40, LE, 100};   ///<
         logger_t    m_logger;                                                           ///<
     };
 }

@@ -13,7 +13,7 @@ namespace nano
     public:
 
         explicit function_rosenbrock_t(const tensor_size_t dims) :
-            function_t("Rosenbrock", dims, convexity::no)
+            function_t("Rosenbrock", dims, 1, convexity::no)
         {
         }
 

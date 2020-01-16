@@ -9,6 +9,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include "qt5mainwindow.h"
+#include <nano/mlearn/class.h>
 
 ImageView::ImageView(QWidget* parent, Qt::WindowFlags flags) :
     QWidget(parent, flags)

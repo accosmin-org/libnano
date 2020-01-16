@@ -3,6 +3,7 @@
 #include <nano/logger.h>
 #include <nano/tabular.h>
 #include <nano/tokenizer.h>
+#include <nano/mlearn/class.h>
 
 using namespace nano;
 

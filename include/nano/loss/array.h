@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <nano/loss.h>
-#include <nano/mlearn.h>
+#include <nano/mlearn/class.h>
 
 namespace nano
 {

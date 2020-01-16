@@ -1,50 +1,25 @@
 #include <mutex>
-#include <nano/numeric.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
+#include <nano/solver/stochastic.h>
 
 using namespace nano;
 
-solver_t::solver_t(const scalar_t c1, const scalar_t c2,
-    const string_t& lsearch0_id, const string_t& lsearchk_id)
+void solver_t::logger(const logger_t& logger)
 {
-    tolerance(c1, c2);
-    lsearch0(lsearch0_id);
-    lsearchk(lsearchk_id);
+    m_logger = logger;
 }
 
-void solver_t::lsearch0(const string_t& id)
+void solver_t::epsilon(const scalar_t epsilon)
 {
-    lsearch0(id, lsearch0_t::all().get(id));
+    m_epsilon = epsilon;
 }
 
-void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
+void solver_t::max_iterations(const int max_iterations)
 {
-    if (!init)
-    {
-        throw std::invalid_argument("invalid line-search initialization (" + id + ")");
-    }
-
-    m_lsearch0_id = id;
-    m_lsearch0 = std::move(init);
-}
-
-void solver_t::lsearchk(const string_t& id)
-{
-    lsearchk(id, lsearchk_t::all().get(id));
-}
-
-void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
-{
-    if (!strategy)
-    {
-        throw std::invalid_argument("invalid line-search strategy (" + id + ")");
-    }
-
-    m_lsearchk_id = id;
-    m_lsearchk = std::move(strategy);
+    m_max_iterations = max_iterations;
 }
 
 bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
@@ -82,35 +57,18 @@ bool solver_t::log(solver_state_t& state) const
     return status;
 }
 
-solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
-{
-    assert(f.size() == x0.size());
-
-    // NB: create new line-search objects:
-    //  - to have the solver thread-safe
-    //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
-    auto lsearch0 = m_lsearch0->clone();
-    lsearch0->epsilon(epsilon());
-    lsearch0->logger(m_lsearch0_logger);
-
-    auto lsearchk = m_lsearchk->clone();
-    lsearchk->tolerance(c1(), c2());
-    lsearchk->logger(m_lsearchk_logger);
-
-    auto function = solver_function_t{f};
-    auto lsearch = lsearch_t{std::move(lsearch0), std::move(lsearchk)};
-
-    return minimize(function, lsearch, x0);
-}
-
 solver_factory_t& solver_t::all()
 {
     static solver_factory_t manager;
+
+    // FIXME: use the solvers registered to lsearch_solver_t and stochastic_solver_t!!!
 
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
+        manager.add<solver_sgd_t>("sgd", "stochastic gradient (descent)");
+        manager.add<solver_asgd_t>("asgd", "stochastic gradient (descent) with averaging");
         manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
         manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");

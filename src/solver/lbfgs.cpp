@@ -4,12 +4,11 @@
 using namespace nano;
 
 solver_lbfgs_t::solver_lbfgs_t() :
-    solver_t(1e-4, 9e-1)
+    lsearch_solver_t(1e-4, 9e-1)
 {
 }
 
-solver_state_t solver_lbfgs_t::minimize(const solver_function_t& function, const lsearch_t& lsearch,
-    const vector_t& x0) const
+solver_state_t solver_lbfgs_t::iterate(const solver_function_t& function, const lsearch_t& lsearch, const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;

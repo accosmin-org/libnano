@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_styblinski_tang_t(const tensor_size_t dims) :
-            function_t("Styblinski-Tang", dims, convexity::no)
+            function_t("Styblinski-Tang", dims, 1, convexity::no)
         {
         }
 

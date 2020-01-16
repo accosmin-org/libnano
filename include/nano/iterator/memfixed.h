@@ -66,17 +66,17 @@ namespace nano
         ///
         /// \brief @see iterator_t
         ///
-        void inputs(const fold_t& fold, tensor_size_t begin, tensor_size_t end, tensor4d_t& inputs) const override
+        tensor4d_t inputs(const fold_t& fold, tensor_size_t begin, tensor_size_t end) const override
         {
-            inputs = m_source.inputs(fold, begin, end);
+            return m_source.inputs(fold, begin, end);
         }
 
         ///
         /// \brief @see iterator_t
         ///
-        void targets(const fold_t& fold, tensor_size_t begin, tensor_size_t end, tensor4d_t& targets) const override
+        tensor4d_t targets(const fold_t& fold, tensor_size_t begin, tensor_size_t end) const override
         {
-            targets = m_source.targets(fold, begin, end);
+            return m_source.targets(fold, begin, end);
         }
 
     private:

@@ -6,6 +6,7 @@
 #include <nano/function/powell.h>
 #include <nano/function/sargan.h>
 #include <nano/function/zakharov.h>
+#include <nano/function/geometric.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/rosenbrock.h>
 #include <nano/function/exponential.h>
@@ -15,21 +16,14 @@
 #include <nano/function/styblinski_tang.h>
 #include <nano/function/rotated_ellipsoid.h>
 #include <nano/function/schumer_steiglitz.h>
-#include <nano/function/geometric_optimization.h>
 
 using namespace nano;
 
-function_t::function_t(const char* name, const tensor_size_t size, const convexity convex) :
-    m_name(name),
-    m_size(size),
-    m_convex(convex)
-{
-}
-
-function_t::function_t(string_t name, const tensor_size_t size, const convexity convex) :
+function_t::function_t(string_t name, const tensor_size_t size, const tensor_size_t summands, const convexity c) :
     m_name(std::move(name)),
     m_size(size),
-    m_convex(convex)
+    m_summands(summands),
+    m_convexity(c)
 {
 }
 
@@ -100,18 +94,20 @@ bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int ste
 
 string_t function_t::name() const
 {
-    return string_t(m_name) + "[" + std::to_string(size()) + "D]";
+    return scat(m_name, "[", size(), "D]");
 }
 
-static void append(rfunction_t&& func, const std::regex& regex, rfunctions_t& funcs)
+static void append(rfunction_t&& func, const convexity convex, const std::regex& regex, rfunctions_t& funcs)
 {
-    if (std::regex_match(func->name(), regex))
+    if (std::regex_match(func->name(), regex) &&
+        (convex == convexity::unknown || convex == func->convex()))
     {
         funcs.push_back(std::move(func));
     }
 }
 
-rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size_t max_size, const std::regex& regex)
+rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size_t max_size,
+    const convexity convex, const std::regex& regex)
 {
     assert(min_size >= 1);
     assert(min_size <= max_size);
@@ -119,29 +115,29 @@ rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size
     rfunctions_t funcs;
     for (tensor_size_t dims = min_size; dims <= max_size; )
     {
-        append(std::make_unique<function_trid_t>(dims), regex, funcs);
-        append(std::make_unique<function_qing_t>(dims), regex, funcs);
-        append(std::make_unique<function_cauchy_t>(dims), regex, funcs);
-        append(std::make_unique<function_sargan_t>(dims), regex, funcs);
+        append(std::make_unique<function_trid_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_qing_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_cauchy_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_sargan_t>(dims), convex, regex, funcs);
         if (dims % 4 == 0)
         {
-            append(std::make_unique<function_powell_t>(dims), regex, funcs);
+            append(std::make_unique<function_powell_t>(dims), convex, regex, funcs);
         }
-        append(std::make_unique<function_sphere_t>(dims), regex, funcs);
-        append(std::make_unique<function_zakharov_t>(dims), regex, funcs);
-        append(std::make_unique<function_quadratic_t>(dims), regex, funcs);
+        append(std::make_unique<function_sphere_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_zakharov_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_quadratic_t>(dims), convex, regex, funcs);
         if (dims > 1)
         {
-            append(std::make_unique<function_rosenbrock_t>(dims), regex, funcs);
+            append(std::make_unique<function_rosenbrock_t>(dims), convex, regex, funcs);
         }
-        append(std::make_unique<function_exponential_t>(dims), regex, funcs);
-        append(std::make_unique<function_dixon_price_t>(dims), regex, funcs);
-        append(std::make_unique<function_chung_reynolds_t>(dims), regex, funcs);
-        append(std::make_unique<function_axis_ellipsoid_t>(dims), regex, funcs);
-        append(std::make_unique<function_styblinski_tang_t>(dims), regex, funcs);
-        append(std::make_unique<function_schumer_steiglitz_t>(dims), regex, funcs);
-        append(std::make_unique<function_rotated_ellipsoid_t>(dims), regex, funcs);
-        append(std::make_unique<function_geometric_optimization_t>(dims), regex, funcs);
+        append(std::make_unique<function_exponential_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_dixon_price_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_chung_reynolds_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_axis_ellipsoid_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_styblinski_tang_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_schumer_steiglitz_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_rotated_ellipsoid_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_geometric_optimization_t>(dims), convex, regex, funcs);
 
         if (dims < 4)
         {
@@ -152,17 +148,6 @@ rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size
             dims *= 2;
         }
     }
-
-    return funcs;
-}
-
-rfunctions_t nano::get_convex_functions(const tensor_size_t min_size, const tensor_size_t max_size, const std::regex& regex)
-{
-    auto funcs = get_functions(min_size, max_size, regex);
-
-    funcs.erase(
-        std::remove_if(funcs.begin(), funcs.end(), [] (const auto& func) { return !func->is_convex(); }),
-        funcs.end());
 
     return funcs;
 }

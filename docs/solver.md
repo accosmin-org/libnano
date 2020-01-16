@@ -27,18 +27,19 @@ class objective_t final : public nano::function_t
 public:
 
     objective_t(const int size) :
-        nano::function_t("objective's name", size, nano::convexity::yes),
+        nano::function_t("objective's name", size, 1, nano::convexity::yes),
         m_b(nano::vector_t::Random(size))
     {
     }
 
-    nano::scalar_t vgrad(const nano::vector_t& x, nano::vector_t* gx) const override
+    nano::scalar_t vgrad(const nano::vector_t& x, nano::vector_t* gx = nullptr) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());
 
         const auto dx = 1 + (x - m_b).dot(x - m_b) / 2;
-        if (gx)
+
+        if (gx != nullptr)
         {
             *gx = (x - m_b) / dx;
         }

@@ -36,7 +36,7 @@ namespace
     template <typename toperator>
     void store(row_t& row, const tensor_size_t flops, const toperator& op)
     {
-        const auto trials = size_t(16);
+        const auto trials = size_t(10);
         const auto duration = nano::measure<picoseconds_t>(op, trials);
         row << nano::gflops(flops, duration);
     }

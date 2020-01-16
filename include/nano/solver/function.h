@@ -10,6 +10,7 @@ namespace nano
     class solver_function_t final : public function_t
     {
     public:
+
         ///
         /// \brief constructor
         ///
@@ -20,30 +21,40 @@ namespace nano
         }
 
         ///
-        /// \brief compute function value (and gradient if provided)
+        /// \brief @see function_t
         ///
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
         {
-            m_fcalls += 1;
-            m_gcalls += (gx != nullptr) ? 1 : 0;
+            m_fcalls += m_function.summands();
+            m_gcalls += (gx != nullptr) ? m_function.summands() : 0;
             return m_function.vgrad(x, gx);
+        }
+
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, const tensor_size_t begin, const tensor_size_t end, vector_t* gx = nullptr) const override
+        {
+            m_fcalls += end - begin;
+            m_gcalls += (gx != nullptr) ? (end - begin) : tensor_size_t{0};
+            return m_function.vgrad(x, begin, end, gx);
         }
 
         ///
         /// \brief number of function evaluation calls
         ///
-        size_t fcalls() const { return m_fcalls; }
+        auto fcalls() const { return m_fcalls / m_function.summands(); }
 
         ///
         /// \brief number of function gradient calls
         ///
-        size_t gcalls() const { return m_gcalls; }
+        auto gcalls() const { return m_gcalls / m_function.summands(); }
 
     private:
 
         // attributes
-        const function_t&   m_function;         ///<
-        mutable size_t      m_fcalls{0};        ///< #function value evaluations
-        mutable size_t      m_gcalls{0};        ///< #function gradient evaluations
+        const function_t&       m_function;             ///<
+        mutable tensor_size_t   m_fcalls{0};            ///< #function value evaluations
+        mutable tensor_size_t   m_gcalls{0};            ///< #function gradient evaluations
     };
 }

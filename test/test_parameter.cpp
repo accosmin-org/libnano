@@ -10,6 +10,8 @@ UTEST_CASE(iparam1_LELE)
     auto param = sparam1_t{"name", 0, LE, 0, LE, 10};
 
     UTEST_CHECK_EQUAL(param.get(), 0);
+    UTEST_CHECK_EQUAL(param.min(), 0);
+    UTEST_CHECK_EQUAL(param.max(), 10);
 
     UTEST_CHECK_NOTHROW(param.set(0));
     UTEST_CHECK_EQUAL(param.get(), 0);
@@ -39,6 +41,8 @@ UTEST_CASE(iparam2_LELTLE)
 
     UTEST_CHECK_EQUAL(param.get1(), 1);
     UTEST_CHECK_EQUAL(param.get2(), 2);
+    UTEST_CHECK_EQUAL(param.min(), 0);
+    UTEST_CHECK_EQUAL(param.max(), 10);
 
     UTEST_CHECK_THROW(param.set(1, 1), std::invalid_argument);
     UTEST_CHECK_EQUAL(param.get1(), 1);

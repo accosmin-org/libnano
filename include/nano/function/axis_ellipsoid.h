@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_axis_ellipsoid_t(const tensor_size_t dims) :
-            function_t("Axis Parallel Hyper-Ellipsoid", dims, convexity::yes),
+            function_t("Axis Parallel Hyper-Ellipsoid", dims, 1, convexity::yes),
             m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
         {
         }

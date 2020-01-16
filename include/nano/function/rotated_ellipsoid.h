@@ -13,7 +13,7 @@ namespace nano
     public:
 
         explicit function_rotated_ellipsoid_t(const tensor_size_t dims) :
-            function_t("Rotated Hyper-Ellipsoid", dims, convexity::yes)
+            function_t("Rotated Hyper-Ellipsoid", dims, 1, convexity::yes)
         {
         }
 

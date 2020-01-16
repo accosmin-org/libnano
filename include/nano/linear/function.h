@@ -80,7 +80,17 @@ namespace nano
         ///
         /// \brief @see function_t
         ///
+        void shuffle() const override;
+
+        ///
+        /// \brief @see function_t
+        ///
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, tensor_size_t begin, tensor_size_t end, vector_t* gx = nullptr) const override;
 
         ///
         /// \brief change parameters
@@ -89,16 +99,22 @@ namespace nano
         void l2reg(const scalar_t l2reg) { m_l2reg.set(l2reg); }
         void vAreg(const scalar_t vAreg) { m_vAreg.set(vAreg); }
         void batch(const tensor_size_t batch) { m_batch.set(batch); }
+        void normalization(const normalization n) { m_normalization = n; }
 
         ///
         /// \brief access functions
         ///
+        auto fold() const { return m_fold; }
         auto isize() const { return m_isize; }
         auto tsize() const { return m_tsize; }
         auto l1reg() const { return m_l1reg.get(); }
         auto l2reg() const { return m_l2reg.get(); }
         auto vAreg() const { return m_vAreg.get(); }
         auto batch() const { return m_batch.get(); }
+        const auto& loss() const { return m_loss; }
+        const auto& istats() const { return m_istats; }
+        const auto& iterator() const { return m_iterator; }
+        auto normalization() const { return m_normalization; }
 
     private:
 
@@ -116,11 +132,7 @@ namespace nano
         sparam1_t           m_l2reg{"linear::L2", 0, LE, 0, LE, 1e+8};  ///< regularization factor - see (2), (3)
         sparam1_t           m_vAreg{"linear::VA", 0, LE, 0, LE, 1e+8};  ///< regularization factor - see (4)
         iparam1_t           m_batch{"linear::batch", 1, LE, 32, LE, 4092};///< batch size in number of samples
-        mutable tensor1d_t  m_values;       ///< buffer
-        mutable tensor4ds_t m_vgrads;       ///< buffer
-        mutable tensor1ds_t m_gb1s;         ///< buffer
-        mutable tensor1ds_t m_gb2s;         ///< buffer
-        mutable tensor2ds_t m_gW1s;         ///< buffer
-        mutable tensor2ds_t m_gW2s;         ///< buffer
+        ::nano::normalization m_normalization{::nano::normalization::none};///<
+        elemwise_stats_t    m_istats;       ///< element-wise statistics to be used for normalization
     };
 }

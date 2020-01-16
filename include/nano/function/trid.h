@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_trid_t(const tensor_size_t dims) :
-            function_t("Trid", dims, convexity::yes)
+            function_t("Trid", dims, 1, convexity::yes)
         {
         }
 

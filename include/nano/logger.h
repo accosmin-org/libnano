@@ -29,7 +29,7 @@ namespace nano
             m_precision(m_stream.precision())
         {
             const std::time_t t = std::time(nullptr);
-            m_stream << "[" << std::put_time(std::localtime(&t), "%F|%T") << "|" << get_header(ltype) << "]: ";
+            m_stream << get_header(ltype) << "[" << std::put_time(std::localtime(&t), "%F|%T") << "]\033[0m: ";
             m_stream << std::fixed << std::setprecision(6);
         }
 
@@ -86,14 +86,14 @@ namespace nano
             }
         }
 
-        static char get_header(const logger_t::type type)
+        static const char* get_header(const logger_t::type type)
         {
             switch (type)
             {
-            case logger_t::type::info:      return 'i';
-            case logger_t::type::warn:      return 'w';
-            case logger_t::type::error:     return 'e';
-            default:                        return '?';
+            case logger_t::type::info:      return "\033[32m";
+            case logger_t::type::warn:      return "\033[33m";
+            case logger_t::type::error:     return "\033[31m";
+            default:                        return "\033[91m";
             }
         }
 
