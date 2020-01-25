@@ -1,7 +1,12 @@
-# Machine learning datasets
+# Machine learning module
 
 
 #### Introduction
+
+Libnano implements several state of the art machine learning models. These models can be trained Both training and evaluation is supporte
+
+
+The machine learning module has support for various supervised
 
 A **dataset** is a collection of samples (e.g. images, measurements, time series) useful for training and testing machine learning models. The samples are organized in folds following the associated protocol of each dataset; each fold contains disjoint training, validation and testing sample subsets.
 
@@ -13,8 +18,13 @@ bash scripts/download_datasets.sh --all
 An example of how to load and access various builtin datasets is provided in ```app/info_dataset.cpp```.
 
 
+TODO: introduce the loss concept
 
-#### Tabular datasets
+
+#### Dataset
+
+
+##### Tabular datasets
 
 A **tabular dataset** consists of fixed-size inputs and targets loaded from a comma-separated values (CSV) file. Each sample (or measurement) corresponds to a line in the CSV file and each column corresponds to either an input or a target feature. Furthermore the features can be of various flavors:
 * optional (e.g. not given),
@@ -47,7 +57,7 @@ Another possibility is to run the command line utility app/info to print the ID 
 ```
 
 
-#### Image classification datasets
+##### Image classification datasets
 
 An **image classification dataset** consists of fixed-size RGB or grayscale images and their associated labels. The interface of interest for this type of datasets is imclass_dataset_t. The builting image classification datasets can be listed in C++ from the associated factory:
 ```
@@ -72,8 +82,49 @@ Another possibility is to run the command line utility app/info to print the ID 
 ```
 
 
-#### Synthetic datasets
+##### Synthetic datasets
 
 A **synthetic dataset** is often used to test and benchmark machine learning algorithms. The difficulty of the task is easily controlled for example by changing the dimensionality of the input or by adding a variable amount of noise.
 
 TODO: explain affine_synthetic_dataset_t.
+
+
+#### Iterator
+
+
+TODO: explain iterators, extend its interface to return feature_t objects for both inputs and targets
+
+TODO: implement basic computer vision features for image classification datasets
+
+TODO: implement basic features (e.g. log-scaling, normalization, histogram) for tabular datasets
+
+
+#### Loss functions
+
+
+TODO: explain error functions
+
+TODO: explain loss functions
+
+TODO: explain 4D tensor inputs
+
+TODO: single-label and multi-label classification
+
+<img src="plot_losses_classification.png" width="50%">
+
+
+TODO: multivariate regression
+
+
+<img src="plot_losses_regression.png" width="50%">
+
+
+TODO: gnuplot scripts to plot the loss vs. errors
+
+
+##### Models
+
+
+TODO: explain linear model: regularization, normalization, benchmark etc.
+
+TODO: explain gradient boosting models: general algorithm, weak learners etc.

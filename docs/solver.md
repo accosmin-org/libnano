@@ -12,7 +12,7 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
+Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [lsearch_solver_t](../include/nano/solver/lsearch.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
 
 
 #### Function

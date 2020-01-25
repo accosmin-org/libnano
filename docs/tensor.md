@@ -3,15 +3,15 @@
 
 #### Introduction
 
-Eigen matrices and vectors and the builtin tensors constitute the core data structures for all numerical optimization and the machine learning utilities provided by libnano. For example, the gradient of a function to minimize is stored as an Eigen vector, while a fixed-size image classification dataset is stored as a 4D tensor with dimensions number of images, number of color channels, image rows and image columns. 
+Eigen matrices and vectors and the builtin tensors constitute the core data structures for all numerical optimization and the machine learning utilities provided by libnano. For example, the gradient of a function to minimize is stored as an Eigen vector, while a fixed-size image classification dataset is stored as a 4D tensor with dimensions number of images, number of color channels, image rows and image columns.
 
 This section describes the tensor module built on top of [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation) data structures. The following lists the main properties of the tensor module:
 * [header-only](../include/nano/tensor/).
-* uses Eigen data structures for storage and numerical operations. 
+* uses Eigen data structures for storage and numerical operations.
 * supports tensors of arbitrary rank using all builtin scalar types (e.g. int, float, double).
 * data is stored contiguously and all operations return lightweight proxies for full compatibility with C-arrays and STL algorithms. As such only row-major Eigen data structures are supported.
 
-A good starting point for understanding how to use the tensor module is to read the related unit tests (see [test_tensor_index](../test/test_tensor_index.cpp), [test_tensor_tensor](../test/test_tensor_tensor.cpp), [test_tensor_stream](../test/test_tensor_stream.cpp) or [test_tensor_integral](../test_tensor_integral.cpp) or the [example](../example/src/tensor.cpp) presented in some detail bellow. 
+A good starting point for understanding how to use the tensor module is to read the related unit tests (see [test_tensor_index](../test/test_tensor_index.cpp), [test_tensor_tensor](../test/test_tensor_tensor.cpp), [test_tensor_stream](../test/test_tensor_stream.cpp) or [test_tensor_integral](../test/test_tensor_integral.cpp) or the [example](../example/src/tensor.cpp) presented in some detail bellow.
 
 #### Examples
 
@@ -33,10 +33,10 @@ std::cout << tensor.size<0>() << std::endl; // prints: 48
 ```
 
 
-All tensors can be represented as Eigen arrays or vectors and as such all supported Eigen [operations](https://eigen.tuxfamily.org/dox/group__DenseMatrixManipulation__chapter.html) can be performed on tensors as well: 
+All tensors can be represented as Eigen arrays or vectors and as such all supported Eigen [operations](https://eigen.tuxfamily.org/dox/group__DenseMatrixManipulation__chapter.html) can be performed on tensors as well:
 ```
-std::cout << tensor.vector().transpose() << std::endl; 
-// prints:  
+std::cout << tensor.vector().transpose() << std::endl;
+// prints:
 //  -7   7  -8  -7   1  -9  -5   7  -8  -1  10  -8  10  -9   4  10  ...
 //  -6  -9   3  -4   3  -4  -8   3   4   3  10   3   9  -7   9   3  ...
 //   5   2  -1   9   5  -6  -9 -10  -7  -5   4   9  10   4  -2  10
@@ -55,7 +55,7 @@ std::cout << tensor.reshape(6, 8).matrix() << std::endl;
 //  5   2  -1   9   5  -6  -9 -10
 // -7  -5   4   9  10   4  -2  10
 ```
-    
+
 Another useful operation is to slice a given tensor. Please note that slicing is only supported along the first dimension to make sure the returned proxy maps contiguous data. As such the returned proxy tensor has the same rank as the original tensor. The following examples combine reshaping and slicing operations on the original tensor:
 ```
 std::cout << tensor.reshape(6, 2, 4).slice(2, 3).dims() << std::endl; // prints: 3x2x4
@@ -99,7 +99,7 @@ std::cout << static_cast<int>(tensor3.data() - carray) << std::endl;
 // prints: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 ```
 
-#### Others
+#### Other utilities
 
 * serialization (see [stream](../include/nano/tensor/stream.h))
 * summed-area tables of tensors of arbitrary rank (see [integral](../include/nano/tensor/integral.h))

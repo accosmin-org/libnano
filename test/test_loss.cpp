@@ -51,6 +51,7 @@ UTEST_CASE(gradient)
     // evaluate the analytical gradient vs. the finite difference approximation
     for (const auto& loss_id : loss_t::all().ids())
     {
+        std::cout << "evaluating loss <" << loss_id << ">...\n";
         for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++ cmd_dims)
         {
             const auto loss = loss_t::all().get(loss_id);
@@ -66,8 +67,9 @@ UTEST_CASE(gradient)
 
 UTEST_CASE(single_class)
 {
-    for (const auto& loss_id : {"s-classnll", "s-logistic", "s-exponential", "s-hinge"})
+    for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
+        std::cout << "evaluating loss <" << loss_id << ">...\n";
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -97,8 +99,9 @@ UTEST_CASE(single_class)
 
 UTEST_CASE(single_label_multi_class)
 {
-    for (const auto& loss_id : {"s-classnll", "s-logistic", "s-exponential", "s-hinge"})
+    for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
+        std::cout << "evaluating loss <" << loss_id << ">...\n";
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -128,8 +131,9 @@ UTEST_CASE(single_label_multi_class)
 
 UTEST_CASE(multi_label_multi_class)
 {
-    for (const auto& loss_id : {"m-logistic", "m-exponential", "m-hinge"})
+    for (const auto& loss_id : loss_t::all().ids(std::regex("m-.+")))
     {
+        std::cout << "evaluating loss <" << loss_id << ">...\n";
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -167,6 +171,7 @@ UTEST_CASE(regression)
 {
     for (const auto& loss_id : {"absolute", "squared", "cauchy"})
     {
+        std::cout << "evaluating loss <" << loss_id << ">...\n";
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export PATH="/usr/local/opt/llvm/bin/:/usr/local/opt/llvm/share/clang:$PATH"
 export CXX=/usr/local/opt/llvm/bin/clang++

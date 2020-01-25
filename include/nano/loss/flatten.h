@@ -10,6 +10,18 @@ namespace nano
     /// \brief un-structured loss function: the 3D structure of a sample is flatten
     ///     and all dimensions are considered the same in computing the loss.
     ///
+    /// NB: the multi-label classification problem is handled by summing or averaging:
+    ///     - the associated binary classification loss value per output
+    ///     - the associated 0-1 loss error per output
+    ///
+    /// see the following resources regarding loss functions for classification:
+    ///
+    /// (1): "On the design of robust classifiers for computer vision",
+    ///      2010, by H. Masnadi-Shirazi, V. Mahadevan, N. Vasconcelos
+    ///
+    /// (2): "On the design of loss functions for classification: theory, robustness to outliers, and SavageBoost",
+    ///      2008, by H. Masnadi-Shirazi, N. Vasconcelos
+    ///
     template <typename top>
     class array_loss_t final : public loss_t
     {
@@ -186,7 +198,45 @@ namespace nano
             template <typename tarray>
             static auto vgrad(const tarray& target, const tarray& output)
             {
-                return -target * (1 - target * output).sign();
+                return -target * ((1 - target * output).sign() + 1) * 0.5;
+            }
+        };
+
+        ///
+        /// \brief multi-class savage loss.
+        ///
+        template <typename terror>
+        struct savage_t : public terror
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return (1 / (1 + (target * output).exp()).square()).sum();
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return -2 * target * (target * output).exp() / (1 + (target * output).exp()).cube();
+            }
+        };
+
+        ///
+        /// \brief multi-class tangent loss.
+        ///
+        template <typename terror>
+        struct tangent_t : public terror
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return (2 * (target * output).atan() - 1).square().sum();
+            }
+
+            template <typename tarray>
+            static auto vgrad(const tarray& target, const tarray& output)
+            {
+                return 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
             }
         };
 
@@ -253,11 +303,15 @@ namespace nano
     using absolute_loss_t = array_loss_t<detail::absolute_t<detail::absdiff_t>>;
 
     using shinge_loss_t = array_loss_t<detail::hinge_t<detail::sclass_t>>;
+    using ssavage_loss_t = array_loss_t<detail::savage_t<detail::sclass_t>>;
+    using stangent_loss_t = array_loss_t<detail::tangent_t<detail::sclass_t>>;
     using sclassnll_loss_t = array_loss_t<detail::classnll_t<detail::sclass_t>>;
     using slogistic_loss_t = array_loss_t<detail::logistic_t<detail::sclass_t>>;
     using sexponential_loss_t = array_loss_t<detail::exponential_t<detail::sclass_t>>;
 
     using mhinge_loss_t = array_loss_t<detail::hinge_t<detail::mclass_t>>;
+    using msavage_loss_t = array_loss_t<detail::savage_t<detail::mclass_t>>;
+    using mtangent_loss_t = array_loss_t<detail::tangent_t<detail::mclass_t>>;
     using mlogistic_loss_t = array_loss_t<detail::logistic_t<detail::mclass_t>>;
     using mexponential_loss_t = array_loss_t<detail::exponential_t<detail::mclass_t>>;
 }

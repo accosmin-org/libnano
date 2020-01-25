@@ -1,5 +1,5 @@
 #include <mutex>
-#include <nano/loss/array.h>
+#include <nano/loss/flatten.h>
 
 using namespace nano;
 
@@ -10,30 +10,26 @@ loss_factory_t& loss_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        manager.add<cauchy_loss_t>("cauchy",
-            "multivariate regression:     l(y, t) = 1/2 * log(1 + (y - t)^2)");
-        manager.add<squared_loss_t>("squared",
-            "multivariate regression:     l(y, t) = 1/2 * (y - t)^2");
-        manager.add<absolute_loss_t>("absolute",
-            "multivariate regression:     l(y, t) = |y - t|");
+        manager.add<cauchy_loss_t>("cauchy", "cauchy loss (multivariate regression)");
+        manager.add<squared_loss_t>("squared", "squared error (multivariate regression)");
+        manager.add<absolute_loss_t>("absolute", "absolute error (multivariate regression)");
 
-        manager.add<shinge_loss_t>("s-hinge",
-            "single-label classification: l(y, t) = max(0, 1 - y*t)");
-        manager.add<mhinge_loss_t>("m-hinge",
-            "multi-label classification:  l(y, t) = max(0, 1 - y*t)");
+        manager.add<mhinge_loss_t>("m-hinge", "hinge loss (multi-label classification)");
+        manager.add<shinge_loss_t>("s-hinge", "hinge loss (single-label classification)");
 
-        manager.add<sclassnll_loss_t>("s-classnll",
-            "single-label classification: l(y, t) = log(y.exp().sum()) - log((1 + t).dot(y.exp()))");
+        manager.add<sclassnll_loss_t>("s-classnll", "class negative log likehoold (single-label classification)");
 
-        manager.add<slogistic_loss_t>("s-logistic",
-            "single-label classification: l(y, t) = log(1 + exp(-y*t))");
-        manager.add<mlogistic_loss_t>("m-logistic",
-            "multi-label classification:  l(y, t) = log(1 + exp(-y*t))");
+        manager.add<msavage_loss_t>("m-savage", "savage loss (multi-label classification)");
+        manager.add<ssavage_loss_t>("s-savage", "savage loss (single-label classification)");
 
-        manager.add<sexponential_loss_t>("s-exponential",
-            "single-label classification: l(y, t) = exp(-y*t)");
-        manager.add<mexponential_loss_t>("m-exponential",
-            "multi-label classification:  l(y, t) = exp(-y*t)");
+        manager.add<mtangent_loss_t>("m-tangent", "tangent loss (multi-label classification)");
+        manager.add<stangent_loss_t>("s-tangent", "tangent loss (single-label classification)");
+
+        manager.add<mlogistic_loss_t>("m-logistic", "logistic loss (multi-label classification)");
+        manager.add<slogistic_loss_t>("s-logistic", "logistic loss (single-label classification)");
+
+        manager.add<sexponential_loss_t>("s-exponential", "exponential loss (single-label classification)");
+        manager.add<mexponential_loss_t>("m-exponential", "exponential loss (multi-label classification)");
     });
 
     return manager;
