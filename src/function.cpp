@@ -19,10 +19,9 @@
 
 using namespace nano;
 
-function_t::function_t(string_t name, const tensor_size_t size, const tensor_size_t summands, const convexity c) :
+function_t::function_t(string_t name, const tensor_size_t size, const convexity c) :
     m_name(std::move(name)),
     m_size(size),
-    m_summands(summands),
     m_convexity(c)
 {
 }
@@ -106,38 +105,38 @@ static void append(rfunction_t&& func, const convexity convex, const std::regex&
     }
 }
 
-rfunctions_t nano::get_functions(const tensor_size_t min_size, const tensor_size_t max_size,
-    const convexity convex, const std::regex& regex)
+rfunctions_t nano::get_functions(const tensor_size_t min_dims, const tensor_size_t max_dims,
+    const convexity convex, const std::regex& name_regex)
 {
-    assert(min_size >= 1);
-    assert(min_size <= max_size);
+    assert(min_dims >= 1);
+    assert(min_dims <= max_dims);
 
     rfunctions_t funcs;
-    for (tensor_size_t dims = min_size; dims <= max_size; )
+    for (tensor_size_t dims = min_dims; dims <= max_dims; )
     {
-        append(std::make_unique<function_trid_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_qing_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_cauchy_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_sargan_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_trid_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_qing_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_cauchy_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_sargan_t>(dims), convex, name_regex, funcs);
         if (dims % 4 == 0)
         {
-            append(std::make_unique<function_powell_t>(dims), convex, regex, funcs);
+            append(std::make_unique<function_powell_t>(dims), convex, name_regex, funcs);
         }
-        append(std::make_unique<function_sphere_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_zakharov_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_quadratic_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_sphere_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_zakharov_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_quadratic_t>(dims), convex, name_regex, funcs);
         if (dims > 1)
         {
-            append(std::make_unique<function_rosenbrock_t>(dims), convex, regex, funcs);
+            append(std::make_unique<function_rosenbrock_t>(dims), convex, name_regex, funcs);
         }
-        append(std::make_unique<function_exponential_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_dixon_price_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_chung_reynolds_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_axis_ellipsoid_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_styblinski_tang_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_schumer_steiglitz_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_rotated_ellipsoid_t>(dims), convex, regex, funcs);
-        append(std::make_unique<function_geometric_optimization_t>(dims), convex, regex, funcs);
+        append(std::make_unique<function_exponential_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_dixon_price_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_chung_reynolds_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_axis_ellipsoid_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_styblinski_tang_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_schumer_steiglitz_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_rotated_ellipsoid_t>(dims), convex, name_regex, funcs);
+        append(std::make_unique<function_geometric_optimization_t>(dims), convex, name_regex, funcs);
 
         if (dims < 4)
         {

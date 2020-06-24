@@ -67,15 +67,19 @@ namespace
 }
 
 solver_quasi_t::solver_quasi_t() :
-    lsearch_solver_t(1e-4, 9e-1)
+    solver_t(1e-4, 9e-1)
 {
 }
 
 solver_state_t solver_quasi_t::iterate(const solver_function_t& function, const lsearch_t& lsearch, const vector_t& x0) const
 {
     auto cstate = solver_state_t{function, x0};
-    auto pstate = cstate;
-    log(cstate);
+    if (solver_t::done(function, cstate, true))
+    {
+        return cstate;
+    }
+
+    solver_state_t pstate;
 
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());

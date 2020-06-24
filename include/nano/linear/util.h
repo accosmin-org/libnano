@@ -1,8 +1,6 @@
 #pragma once
 
-#include <nano/loss.h>
-#include <nano/tpool.h>
-#include <nano/iterator.h>
+#include <nano/tensor.h>
 
 namespace nano { namespace linear
 {

@@ -43,11 +43,11 @@ namespace nano
         template <typename tscalar2>
         tensor_vstorage_t& operator=(const tensor_pstorage_t<tscalar2>& other);
 
-        auto size() const { return m_data.size(); }
+        [[nodiscard]] auto size() const { return m_data.size(); }
         void resize(const tensor_size_t size) { m_data.resize(size); }
 
         auto data() { return m_data.data(); }
-        auto data() const { return m_data.data(); }
+        [[nodiscard]] auto data() const { return m_data.data(); }
 
     private:
 
@@ -76,8 +76,17 @@ namespace nano
         ~tensor_pstorage_t() = default;
         tensor_pstorage_t(tensor_pstorage_t&&) noexcept = default;
         tensor_pstorage_t(const tensor_pstorage_t&) = delete;
-        tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept { copy(other); return *this; }
-        tensor_pstorage_t& operator=(const tensor_pstorage_t& other) { copy(other); return *this; }
+        tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept
+        {
+            copy(other);
+            return *this;
+        }
+        tensor_pstorage_t& operator=(const tensor_pstorage_t& other)// NOLINT(cert-oop54-cpp)
+        {
+            tensor_pstorage_t object = other;
+            *this = std::move(object);
+            return *this;
+        }
 
         tensor_pstorage_t(const tstorage& data, const tensor_size_t size) :
             m_data(data), m_size(size)
@@ -111,8 +120,8 @@ namespace nano
         }
 
         auto data() { return m_data; }
-        auto data() const { return m_data; }
-        auto size() const { return m_size; }
+        [[nodiscard]] auto data() const { return m_data; }
+        [[nodiscard]] auto size() const { return m_size; }
 
     private:
 

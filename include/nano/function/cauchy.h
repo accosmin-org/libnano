@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_cauchy_t(const tensor_size_t dims) :
-            function_t("Cauchy", dims, 1, convexity::no)
+            function_t("Cauchy", dims, convexity::no)
         {
         }
 

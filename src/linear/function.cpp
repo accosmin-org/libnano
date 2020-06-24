@@ -4,32 +4,20 @@
 
 using namespace nano;
 
-linear_function_t::linear_function_t(const loss_t& loss, const iterator_t& iterator, const fold_t fold) :
-    function_t("linear",
-        (::nano::size(iterator.idim()) + 1) * ::nano::size(iterator.tdim()),
-        iterator.samples(fold), convexity::yes),
+linear_function_t::linear_function_t(const loss_t& loss, const dataset_t& dataset, fold_t fold) :
+    function_t("linear", (::nano::size(dataset.idim()) + 1) * ::nano::size(dataset.tdim()), convexity::yes),
     m_loss(loss),
-    m_iterator(iterator),
+    m_dataset(dataset),
     m_fold(fold),
-    m_isize(::nano::size(iterator.idim())),
-    m_tsize(::nano::size(iterator.tdim())),
-    m_istats(m_iterator.istats(m_fold, batch()))
+    m_isize(::nano::size(dataset.idim())),
+    m_tsize(::nano::size(dataset.tdim())),
+    m_istats(m_dataset.istats(m_fold, batch()))
 {
     assert(m_isize > 0);
     assert(m_tsize > 0);
 }
 
-void linear_function_t::shuffle() const
-{
-    m_iterator.shuffle(m_fold);
-}
-
 scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    return vgrad(x, 0, m_iterator.samples(m_fold), gx);
-}
-
-scalar_t linear_function_t::vgrad(const vector_t& x, const tensor_size_t begin, const tensor_size_t end, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());
     assert(x.size() == (m_isize + 1) * m_tsize);
@@ -39,11 +27,13 @@ scalar_t linear_function_t::vgrad(const vector_t& x, const tensor_size_t begin, 
 
     std::vector<linear_cache_t> caches(tpool_t::size(), linear_cache_t{m_isize, m_tsize, gx != nullptr, vAreg() > 0});
 
-    m_iterator.loop(m_fold, begin, end, batch(), [&] (tensor4d_t&& inputs, const tensor4d_t& targets,
-        const tensor_size_t tbegin, const tensor_size_t tend, const size_t tnum)
+    m_dataset.loop(execution::par, m_fold, batch(), [&] (tensor_range_t range, size_t tnum)
     {
         assert(tnum < caches.size());
         auto& cache = caches[tnum];
+
+        auto inputs = m_dataset.inputs(m_fold, range);
+        const auto targets = m_dataset.targets(m_fold, range);
 
         m_istats.scale(normalization(), inputs);
         ::nano::linear::predict(inputs, W, b, cache.m_outputs);
@@ -61,8 +51,8 @@ scalar_t linear_function_t::vgrad(const vector_t& x, const tensor_size_t begin, 
         {
             m_loss.vgrad(targets, cache.m_outputs, cache.m_vgrads);
 
-            const auto imatrix = inputs.reshape(tend - tbegin, W.rows()).matrix();
-            const auto gmatrix = cache.m_vgrads.reshape(tend - tbegin, W.cols()).matrix();
+            const auto imatrix = inputs.reshape(range.size(), W.rows()).matrix();
+            const auto gmatrix = cache.m_vgrads.reshape(range.size(), W.cols()).matrix();
 
             cache.m_gb1.vector() += gmatrix.colwise().sum();
             cache.m_gW1.matrix() += imatrix.transpose() * gmatrix;
@@ -73,9 +63,9 @@ scalar_t linear_function_t::vgrad(const vector_t& x, const tensor_size_t begin, 
                 cache.m_gW2.matrix() += (imatrix.array().colwise() * vvector.array()).matrix().transpose() * gmatrix;
             }
         }
-    }, execution::par);
+    });
 
-    const auto& cache0 = linear_cache_t::reduce(caches, end - begin);
+    const auto& cache0 = linear_cache_t::reduce(caches, m_dataset.samples(m_fold));
 
     // OK, normalize and add the regularization terms
     if (gx != nullptr)

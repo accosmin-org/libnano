@@ -122,12 +122,8 @@ void cmdline_t::process(const string_t& config)
         tokens.push_back(tokenizer.get());
     }
 
-    std::vector<const char*> ptokens;
-    ptokens.push_back(nullptr);
-    for (const auto& token : tokens)
-    {
-        ptokens.push_back(token.c_str());
-    }
+    std::vector<const char*> ptokens(tokens.size() + 1, nullptr);
+    std::transform(tokens.begin(), tokens.end(), ptokens.begin() + 1, [&] (const auto& token) { return token.c_str(); });
 
     process(static_cast<int>(ptokens.size()), ptokens.data());
 }

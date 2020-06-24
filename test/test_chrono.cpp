@@ -18,8 +18,8 @@ UTEST_CASE(gflops)
 
 UTEST_CASE(probe)
 {
-    const auto basename = "base";
-    const auto fullname = "full";
+    const auto *const basename = "base";
+    const auto *const fullname = "full";
     const auto flops = 2048;
 
     nano::probe_t probe(basename, fullname, flops);

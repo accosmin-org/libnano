@@ -76,7 +76,7 @@ namespace
 }
 
 solver_cgd_t::solver_cgd_t() :
-    lsearch_solver_t(1e-4, 1e-1)
+    solver_t(1e-4, 1e-1)
 {
 }
 
@@ -84,7 +84,10 @@ solver_state_t solver_cgd_t::iterate(const solver_function_t& function, const ls
 {
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
-    log(cstate);
+    if (solver_t::done(function, cstate, true))
+    {
+        return cstate;
+    }
 
     for (int64_t i = 0; i < max_iterations(); ++ i)
     {
@@ -102,11 +105,8 @@ solver_state_t solver_cgd_t::iterate(const solver_function_t& function, const ls
             //  - if not a descent direction
             //  - or two consecutive gradients far from being orthogonal
             //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.124-125)
-            if (!cstate.has_descent())
-            {
-                cstate.d = -cstate.g;
-            }
-            else if (std::fabs(cstate.g.dot(pstate.g)) >= orthotest() * cstate.g.dot(cstate.g))
+            if (!cstate.has_descent() ||
+                (std::fabs(cstate.g.dot(pstate.g)) >= orthotest() * cstate.g.dot(cstate.g)))
             {
                 cstate.d = -cstate.g;
             }

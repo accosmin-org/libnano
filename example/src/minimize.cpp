@@ -7,7 +7,7 @@ class objective_t final : public nano::function_t
 public:
 
     objective_t(const int size) :
-        nano::function_t("objective's name", size, 1, nano::convexity::yes),
+        nano::function_t("objective's name", size, nano::convexity::yes),
         m_b(nano::vector_t::Random(size))
     {
     }

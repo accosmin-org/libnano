@@ -75,7 +75,7 @@ namespace nano
         ///
         /// \brief returns the number of values
         ///
-        auto count() const
+        [[nodiscard]] auto count() const
         {
             return m_values.size();
         }
@@ -83,7 +83,7 @@ namespace nano
         ///
         /// \brief returns the minimum
         ///
-        auto min() const
+        [[nodiscard]] auto min() const
         {
             assert(!m_values.empty());
             return *std::min_element(m_values.begin(), m_values.end());
@@ -92,7 +92,7 @@ namespace nano
         ///
         /// \brief returns the maximum
         ///
-        auto max() const
+        [[nodiscard]] auto max() const
         {
             assert(!m_values.empty());
             return *std::max_element(m_values.begin(), m_values.end());
@@ -101,7 +101,7 @@ namespace nano
         ///
         /// \brief returns the sum
         ///
-        auto sum1() const
+        [[nodiscard]] auto sum1() const
         {
             return  std::accumulate(m_values.begin(), m_values.end(), value_t(0),
                     [] (const auto s, const auto v) { return s + v; });
@@ -110,7 +110,7 @@ namespace nano
         ///
         /// \brief returns the sum of squares
         ///
-        auto sum2() const
+        [[nodiscard]] auto sum2() const
         {
             return  std::accumulate(m_values.begin(), m_values.end(), value_t(0),
                     [] (const auto s, const auto v) { return s + v * v; });
@@ -119,7 +119,7 @@ namespace nano
         ///
         /// \brief returns the average
         ///
-        auto avg() const
+        [[nodiscard]] auto avg() const
         {
             assert(count() > 0);
             return sum1() / static_cast<value_t>(count());
@@ -128,7 +128,7 @@ namespace nano
         ///
         /// \brief returns the variance
         ///
-        auto var() const
+        [[nodiscard]] auto var() const
         {
             assert(count() > 0);
             return sum2() / static_cast<value_t>(count()) - avg() * avg();
@@ -137,7 +137,7 @@ namespace nano
         ///
         /// \brief returns the population standard deviation
         ///
-        auto stdev() const
+        [[nodiscard]] auto stdev() const
         {
             return std::sqrt(var());
         }

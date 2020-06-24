@@ -9,7 +9,7 @@ rlsearch0_t lsearch0_cgdescent_t::clone() const
 
 scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
 {
-    scalar_t t0;
+    scalar_t t0 = 0;
 
     if (state.m_iterations <= 1)
     {

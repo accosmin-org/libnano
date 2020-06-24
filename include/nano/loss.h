@@ -28,9 +28,13 @@ namespace nano
         static loss_factory_t& all();
 
         ///
-        /// \brief enable copying
+        /// \brief default constructor
         ///
         loss_t() = default;
+
+        ///
+        /// \brief enable copying
+        ///
         loss_t(const loss_t&) = default;
         loss_t& operator=(const loss_t&) = default;
 

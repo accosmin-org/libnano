@@ -49,37 +49,4 @@ UTEST_CASE(vgrad)
     }
 }
 
-UTEST_CASE(stoch_vgrad)
-{
-    const auto function = function_geometric_optimization_t{4, 300};
-    std::cout << function.name() << std::endl;
-
-    UTEST_CHECK_EQUAL(function.summands(), 300);
-
-    const vector_t x = vector_t::Random(function.size());
-
-    vector_t gx(function.size());
-    const auto fx = function.vgrad(x, &gx);
-
-    for (tensor_size_t batch = 1; batch <= 6; ++ batch)
-    {
-        scalar_t acc_fx = 0;
-        vector_t acc_gx = vector_t::Zero(function.size());
-        vector_t buf_gx = vector_t::Zero(function.size());
-
-        function.shuffle();
-        for (tensor_size_t begin = 0; begin + batch <= function.summands(); begin += batch)
-        {
-            acc_fx += function.vgrad(x, begin, begin + batch, &buf_gx);
-            acc_gx += buf_gx;
-        }
-
-        acc_fx = acc_fx * static_cast<scalar_t>(batch) / static_cast<scalar_t>(function.summands());
-        acc_gx = acc_gx * static_cast<scalar_t>(batch) / static_cast<scalar_t>(function.summands());
-
-        UTEST_CHECK_CLOSE(fx, acc_fx, epsilon1<scalar_t>());
-        UTEST_CHECK_EIGEN_CLOSE(gx, acc_gx, epsilon1<scalar_t>());
-    }
-}
-
 UTEST_END_MODULE()

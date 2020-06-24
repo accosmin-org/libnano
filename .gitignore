@@ -41,3 +41,4 @@ install
 coverage.info
 lcovhtml
 datasets
+doxygen

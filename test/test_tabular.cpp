@@ -1,6 +1,6 @@
 #include <fstream>
 #include <utest/utest.h>
-#include <nano/tabular.h>
+#include <nano/dataset/tabular.h>
 
 using namespace nano;
 
@@ -37,9 +37,9 @@ public:
     }
 
     Fixture(Fixture&&) = default;
-    Fixture(const Fixture&) = default;
+    Fixture(const Fixture&) = delete;
     Fixture& operator=(Fixture&&) = default;
-    Fixture& operator=(const Fixture&) = default;
+    Fixture& operator=(const Fixture&) = delete;
 
     ~Fixture() override
     {
@@ -66,14 +66,14 @@ public:
         m_te_begin = te_begin; m_te_end = te_end;
     }
 
-    split_t make_split() const override
+    [[nodiscard]] split_t make_split() const override
     {
         UTEST_CHECK_EQUAL(samples(), 30);
 
         split_t split;
-        split.indices(protocol::train) = indices_t::LinSpaced(m_tr_end - m_tr_begin, m_tr_begin, m_tr_end);
-        split.indices(protocol::valid) = indices_t::LinSpaced(m_vd_end - m_vd_begin, m_vd_begin, m_vd_end);
-        split.indices(protocol::test) = indices_t::LinSpaced(m_te_end - m_te_begin, m_te_begin, m_te_end);
+        split.indices(protocol::train) = arange(m_tr_begin, m_tr_end);
+        split.indices(protocol::valid) = arange(m_vd_begin, m_vd_end);
+        split.indices(protocol::test) = arange(m_te_begin, m_te_end);
         return split;
     }
 
@@ -144,7 +144,7 @@ private:
 
 static auto feature_cont()
 {
-    const auto feature = feature_t{"cont"};
+    auto feature = feature_t{"cont"};
 
     UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
     UTEST_CHECK(!feature_t::missing(0));
@@ -159,7 +159,7 @@ static auto feature_cont()
 
 static auto feature_cont_opt()
 {
-    const auto feature = feature_t{"cont_opt"}.placeholder("?");
+    auto feature = feature_t{"cont_opt"}.placeholder("?");
 
     UTEST_CHECK(!feature.discrete());
     UTEST_CHECK(feature.optional());
@@ -171,7 +171,7 @@ static auto feature_cont_opt()
 
 static auto feature_cate()
 {
-    const auto feature = feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
+    auto feature = feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
 
     UTEST_CHECK(feature.discrete());
     UTEST_CHECK(!feature.optional());
@@ -187,7 +187,7 @@ static auto feature_cate()
 
 static auto feature_cate_opt()
 {
-    const auto feature = feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
+    auto feature = feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
 
     UTEST_CHECK(feature.discrete());
     UTEST_CHECK(feature.optional());
@@ -429,7 +429,7 @@ UTEST_CASE(load_no_target)
 
         for (auto begin = 0; begin < 20; begin += 10)
         {
-            const auto inputs = dataset.inputs(fold_t{f, protocol::train}, begin, begin + 10);
+            const auto inputs = dataset.inputs(fold_t{f, protocol::train}, make_range(begin, begin + 10));
 
             for (auto index = 0; index < 10; ++ index)
             {

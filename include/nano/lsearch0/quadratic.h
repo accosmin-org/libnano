@@ -21,7 +21,7 @@ namespace nano
         ///
         /// \brief @see lsearch0_t
         ///
-        rlsearch0_t clone() const final;
+        [[nodiscard]] rlsearch0_t clone() const final;
 
         ///
         /// \brief @see lsearch0_t
@@ -37,8 +37,8 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto alpha() const { return m_alpha.get(); }
-        auto beta() const { return m_beta.get(); }
+        [[nodiscard]] auto alpha() const { return m_alpha.get(); }
+        [[nodiscard]] auto beta() const { return m_beta.get(); }
 
     private:
 

@@ -3,7 +3,6 @@
 #include <nano/arch.h>
 #include <nano/factory.h>
 #include <nano/parameter.h>
-#include <nano/solver/state.h>
 #include <nano/solver/lstep.h>
 
 namespace nano
@@ -58,12 +57,12 @@ namespace nano
         ///
         /// \brief clone the object, by keeping the parameters but with an internal "clean state"
         ///
-        virtual rlsearchk_t clone() const = 0;
+        [[nodiscard]] virtual rlsearchk_t clone() const = 0;
 
         ///
         /// \brief compute the step size starting from the given state and the initial estimate of the step size
         ///
-        virtual bool get(solver_state_t& state, scalar_t t0);
+        virtual bool get(solver_state_t& state, scalar_t t);
 
         ///
         /// \brief change parameters
@@ -75,9 +74,9 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto c1() const { return m_tolerance.get1(); }
-        auto c2() const { return m_tolerance.get2(); }
-        auto max_iterations() const { return m_max_iterations.get(); }
+        [[nodiscard]] auto c1() const { return m_tolerance.get1(); }
+        [[nodiscard]] auto c2() const { return m_tolerance.get2(); }
+        [[nodiscard]] auto max_iterations() const { return m_max_iterations.get(); }
 
         ///
         /// \brief minimum allowed line-search step

@@ -1,10 +1,9 @@
-#include <nano/tensor/index.h>
 #include <nano/table.h>
 #include <nano/chrono.h>
 #include <nano/logger.h>
 #include <nano/cmdline.h>
-#include <nano/imclass.h>
-#include <nano/tabular.h>
+#include <nano/dataset/imclass.h>
+#include <nano/dataset/tabular.h>
 
 using namespace nano;
 

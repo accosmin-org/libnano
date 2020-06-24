@@ -1,48 +1,56 @@
 # create library
 
-set(solver_sources
-    lsearch0.cpp
-    lsearch0/linear.cpp
-    lsearch0/constant.cpp
-    lsearch0/cgdescent.cpp
-    lsearch0/quadratic.cpp
-    lsearchk.cpp
-    lsearchk/fletcher.cpp
+if(NOT APPLE)
+    set(CMAKE_INSTALL_RPATH $ORIGIN)
+endif()
+
+add_library(nano)
+
+target_sources(nano PRIVATE
+    table.cpp
+    stream.cpp
+    dataset/tabular_adult.cpp
+    dataset/imclass.cpp
+    dataset/imclass_mnist.cpp
+    dataset/tabular_abalone.cpp
+    dataset/tabular_breast_cancer.cpp
+    dataset/tabular_forest_fires.cpp
+    dataset/tabular_bank_marketing.cpp
+    dataset/tabular.cpp
+    dataset/tabular_iris.cpp
+    dataset/tabular_wine.cpp
+    dataset/imclass_cifar.cpp
     lsearchk/backtrack.cpp
-    lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    solver.cpp
-    solver/gd.cpp
-    solver/cgd.cpp
-    solver/lbfgs.cpp
-    solver/quasi.cpp
-    solver/lsearch.cpp
-    solver/stochastic.cpp)
-
-set(mlearn_sources
-    loss.cpp
-    imclass.cpp
-    imclass/cifar.cpp
-    imclass/mnist.cpp
-    tabular.cpp
-    tabular/iris.cpp
-    tabular/wine.cpp
-    tabular/adult.cpp
-    tabular/abalone.cpp
-    tabular/poker_hand.cpp
-    tabular/forest_fires.cpp
-    tabular/breast_cancer.cpp
-    tabular/bank_marketing.cpp
+    lsearchk/cgdescent.cpp
+    lsearchk/fletcher.cpp
+    linear/function.cpp
     linear/model.cpp
-    linear/function.cpp)
-
-add_library(nano
-    table.cpp
-    cmdline.cpp
+    lsearchk.cpp
+    solver/lbfgs.cpp
+    solver/cgd.cpp
+    solver/quasi.cpp
+    solver/gd.cpp
     function.cpp
-    ${solver_sources}
-    ${mlearn_sources})
+    lsearch0.cpp
+    cmdline.cpp
+    loss.cpp
+    lsearch0/quadratic.cpp
+    lsearch0/linear.cpp
+    lsearch0/cgdescent.cpp
+    lsearch0/constant.cpp
+    solver.cpp
+    mlearn/train.cpp
+    mlearn/cluster.cpp
+    gboost/wlearner.cpp
+    gboost/wlearner_dtree.cpp
+    gboost/wlearner_stump.cpp
+    gboost/wlearner_table.cpp
+    gboost/wlearner_linear.cpp
+    gboost/model.cpp
+    gboost/bias.cpp
+    gboost/scale.cpp)
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

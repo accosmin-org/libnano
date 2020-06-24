@@ -25,30 +25,20 @@ namespace nano
         ///
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
         {
-            m_fcalls += m_function.summands();
-            m_gcalls += (gx != nullptr) ? m_function.summands() : 0;
+            m_fcalls += 1;
+            m_gcalls += (gx != nullptr) ? 1 : 0;
             return m_function.vgrad(x, gx);
-        }
-
-        ///
-        /// \brief @see function_t
-        ///
-        scalar_t vgrad(const vector_t& x, const tensor_size_t begin, const tensor_size_t end, vector_t* gx = nullptr) const override
-        {
-            m_fcalls += end - begin;
-            m_gcalls += (gx != nullptr) ? (end - begin) : tensor_size_t{0};
-            return m_function.vgrad(x, begin, end, gx);
         }
 
         ///
         /// \brief number of function evaluation calls
         ///
-        auto fcalls() const { return m_fcalls / m_function.summands(); }
+        auto fcalls() const { return m_fcalls; }
 
         ///
         /// \brief number of function gradient calls
         ///
-        auto gcalls() const { return m_gcalls / m_function.summands(); }
+        auto gcalls() const { return m_gcalls; }
 
     private:
 

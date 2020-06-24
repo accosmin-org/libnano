@@ -36,7 +36,7 @@ namespace nano
 
             const std::lock_guard<std::mutex> lock(m_mutex);
             m_tasks.emplace_back(std::move(task));
-            m_condition.notify_all();
+            m_condition.notify_one();
 
             return future;
         }
@@ -226,8 +226,6 @@ namespace nano
                 thread.join();
             }
         }
-
-    private:
 
         // attributes
         std::vector<std::thread>        m_threads;      ///<

@@ -25,6 +25,9 @@ namespace nano
         return tensor_dims_t<sizeof...(sizes)>({{sizes...}});
     }
 
+    ///
+    /// \brief stores the dimensions of a tensor, by concatenating a scalar with another set of dimensions.
+    ///
     template <size_t trank>
     auto cat_dims(const tensor_size_t size, const tensor_dims_t<trank>& dims)
     {
@@ -95,7 +98,7 @@ namespace nano
             template <size_t trankx>
             static void set(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
             {
-                static_assert(idim >= trank - trankx && idim < trank, "");
+                static_assert(idim >= trank - trankx && idim < trank );
                 std::get<idim + trankx - trank>(dimsx) = std::get<idim>(dims);
                 dims_t<idim + 1, trank>::set(dims, dimsx);
             }
@@ -176,6 +179,59 @@ namespace nano
     bool operator!=(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
     {
         return std::operator!=(dims1, dims2);
+    }
+
+    ///
+    /// \brief continuous range of dimensions [begin, end).
+    ///
+    class tensor_range_t
+    {
+    public:
+
+        tensor_range_t() = default;
+
+        tensor_range_t(const tensor_size_t begin, const tensor_size_t end) :
+            m_begin(begin),
+            m_end(end)
+        {
+        }
+
+        [[nodiscard]] auto begin() const
+        {
+            return m_begin;
+        }
+
+        [[nodiscard]] auto end() const
+        {
+            return m_end;
+        }
+
+        [[nodiscard]] auto size() const
+        {
+            return end() - begin();
+        }
+
+        ///
+        /// \brief check if a range is valid, so that [begin, end) is included in [0, size).
+        ///
+        [[nodiscard]] auto valid(const tensor_size_t size) const
+        {
+            return 0 <= m_begin && m_begin < m_end && m_end <= size;
+        }
+
+    private:
+
+        // attributes
+        tensor_size_t       m_begin{0};     ///<
+        tensor_size_t       m_end{0};       ///<
+    };
+
+    ///
+    /// \brief creates a range of dimensions.
+    ///
+    inline auto make_range(const tensor_size_t begin, const tensor_size_t end)
+    {
+        return tensor_range_t{begin, end};
     }
 }
 

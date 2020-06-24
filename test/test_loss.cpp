@@ -10,7 +10,7 @@ using namespace nano;
 struct loss_function_t final : public function_t
 {
     loss_function_t(const rloss_t& loss, const tensor_size_t xmaps) :
-        function_t("loss", 3 * xmaps, 1, convexity::no),
+        function_t("loss", 3 * xmaps, convexity::no),
         m_loss(loss), m_target(3, xmaps, 1, 1), m_values(3)
     {
         m_target.tensor(0) = class_target(xmaps, 11 % xmaps);
@@ -46,7 +46,7 @@ UTEST_BEGIN_MODULE(test_loss)
 UTEST_CASE(gradient)
 {
     const tensor_size_t cmd_min_dims = 2;
-    const tensor_size_t cmd_max_dims = 8;
+    const tensor_size_t cmd_max_dims = 5;
 
     // evaluate the analytical gradient vs. the finite difference approximation
     for (const auto& loss_id : loss_t::all().ids())
@@ -57,10 +57,19 @@ UTEST_CASE(gradient)
             const auto loss = loss_t::all().get(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
 
-            vector_t x = vector_t::Random(function.size()) / 10;
+            vector_t x(function.size());
 
-            UTEST_CHECK_GREATER(function.vgrad(x), scalar_t(0));
-            UTEST_CHECK_LESS(function.grad_accuracy(x), 2 * epsilon2<scalar_t>());
+            const auto max_power = (loss_id == "m-exponential" || loss_id == "s-exponential") ? 5 : 20;
+            for (int power = 0; power <= max_power; ++ power)
+            {
+                x.setRandom();
+                x.array() *= std::pow(std::exp(1.0), power);
+
+                const auto f = function.vgrad(x);
+                UTEST_CHECK_EQUAL(std::isfinite(f), true);
+                UTEST_CHECK_GREATER_EQUAL(f, scalar_t(0));
+                UTEST_CHECK_LESS(function.grad_accuracy(x), 2 * epsilon2<scalar_t>());
+            }
         }
     }
 }

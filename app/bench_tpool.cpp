@@ -128,7 +128,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
             targets(i, i % 10) = +1;
         }
 
-        scalar_t value;
+        scalar_t value = 0;
         const auto delta = measure<nanoseconds_t>([&] { value = reduce_st<toperator>(targets, outputs); }, 16);
         row1 << "1.00";
 
@@ -148,7 +148,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
         const auto& targets = single_targets[i];
         const auto& outputs = single_outputs[i];
 
-        scalar_t valueMT;
+        scalar_t valueMT = 0;
         const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_mt<toperator>(targets, outputs); }, 16);
         row2 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
         if (!close(valueST, valueMT, "tpool", epsilon1<scalar_t>())) { return false; }
@@ -165,7 +165,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
         const auto& targets = single_targets[i];
         const auto& outputs = single_outputs[i];
 
-        scalar_t valueMT;
+        scalar_t valueMT = 0;
         const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_op<toperator>(targets, outputs); }, 16);
         row3 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
         if (!close(valueST, valueMT, "openmp", epsilon1<scalar_t>())) { return false; }

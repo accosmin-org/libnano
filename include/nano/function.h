@@ -40,7 +40,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        function_t(string_t name, tensor_size_t size, tensor_size_t summands, convexity);
+        function_t(string_t name, tensor_size_t size, convexity);
 
         ///
         /// \brief enable copying
@@ -62,65 +62,38 @@ namespace nano
         ///
         /// \brief function name to identify it in tests and benchmarks
         ///
-        string_t name() const;
+        [[nodiscard]] string_t name() const;
 
         ///
         /// \brief number of dimensions
         ///
-        tensor_size_t size() const { return m_size; }
-
-        ///
-        /// \brief number of summands (if the function is a sum of various components),
-        ///     used by stochastic optimization methods.
-        ///
-        tensor_size_t summands() const { return m_summands; }
+        [[nodiscard]] tensor_size_t size() const { return m_size; }
 
         ///
         /// \brief compute the gradient accuracy (given vs. central finite difference approximation)
         ///
-        scalar_t grad_accuracy(const vector_t& x) const;
+        [[nodiscard]] scalar_t grad_accuracy(const vector_t& x) const;
 
         ///
         /// \brief check if the function is convex along the [x1, x2] line
         ///
-        bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
+        [[nodiscard]] bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
 
         ///
         /// \brief returns convexity state (if known)
         ///
-        convexity convex() const { return m_convexity; }
+        [[nodiscard]] convexity convex() const { return m_convexity; }
 
         ///
         /// \brief evaluate the function's value at the give point (and its gradient if provided).
         ///
         virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
-        ///
-        /// \brief evaluate the function's value at the given point (and its gradient if provided),
-        ///     using the [begin, end) range of (a-priori shuffled) summands
-        ///     as expected by the stochastic optimization methods.
-        ///
-        virtual scalar_t vgrad(const vector_t& x, tensor_size_t begin, tensor_size_t end, vector_t* gx = nullptr) const
-        {
-            (void)begin;
-            (void)end;
-            return vgrad(x, gx);
-        }
-
-        ///
-        /// \brief shuffle the summands (if possible)
-        ///     as expected by the stochastic optimization methods.
-        ///
-        virtual void shuffle() const
-        {
-        }
-
     private:
 
         // attributes
         string_t        m_name;                             ///<
         tensor_size_t   m_size{0};                          ///< #dimensions
-        tensor_size_t   m_summands{1};                      ///< #components that are summed-up to form the function
         convexity       m_convexity{convexity::unknown};    ///<
     };
 }

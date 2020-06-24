@@ -9,188 +9,185 @@
 
 using namespace nano;
 
-linear_model_t::train_result_t linear_model_t::train(
-    const loss_t& loss, const iterator_t& iterator, const solver_t& solver)
+namespace
+{
+    void evaluate(const dataset_t& dataset, fold_t fold, tensor_size_t batch,
+        const loss_t& loss, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
+        tensor1d_map_t&& errors)
+    {
+        assert(errors.size() == dataset.samples(fold));
+
+        dataset.loop(execution::par, fold, batch, [&] (tensor_range_t range, size_t)
+        {
+            const auto inputs = dataset.inputs(fold, range);
+            const auto targets = dataset.targets(fold, range);
+
+            tensor4d_t outputs;
+            ::nano::linear::predict(inputs, weights, bias, outputs);
+            loss.error(targets, outputs, errors.slice(range));
+        });
+    }
+
+    std::tuple<scalar_t, tensor1d_t, tensor2d_t> train(
+        const linear_function_t& function, const solver_t& solver,
+        tensor1d_t& tr_errors, tensor1d_t& vd_errors, train_curve_t& curve)
+    {
+        auto state = solver.minimize(function, vector_t::Zero(function.size()));
+        auto bias = function.bias(state.x);
+        auto weights = function.weights(state.x);
+
+        // NB: rescale the bias and the weights to match the normalization of the inputs!
+        const auto& istats = function.istats();
+        istats.upscale(function.normalization(), weights, bias);
+
+        const auto& loss = function.loss();
+        const auto& dataset = function.dataset();
+
+        auto fold = function.fold();
+        evaluate(dataset, fold, function.batch(), loss, weights, bias, tr_errors.tensor());
+
+        fold.m_protocol = protocol::valid;
+        evaluate(dataset, fold, function.batch(), loss, weights, bias, vd_errors.tensor());
+
+        const auto tr_value = state.f;
+        const auto tr_error = tr_errors.vector().mean();
+        const auto vd_error = vd_errors.vector().mean();
+
+        curve.add(tr_value, tr_error, vd_error);
+        const auto status = curve.check(1);
+
+        log_info() << std::setprecision(8) << std::fixed
+            << "fold=" << (fold.m_index + 1) << "|" << dataset.folds()
+            << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
+            << ",l1reg=" << function.l1reg()
+            << ",l2reg=" << function.l2reg()
+            << ",vAreg=" << function.vAreg() << "," << state << ".";
+
+        return std::make_tuple(vd_error, std::move(bias), std::move(weights));
+    }
+}
+
+train_result_t linear_model_t::train(const loss_t& loss, const dataset_t& dataset, const solver_t& solver)
 {
     log_info() << "training linear model...";
 
-    tensor1d_t avg_bias(nano::size(iterator.tdim()));
-    tensor2d_t avg_weights(nano::size(iterator.idim()), nano::size(iterator.tdim()));
+    tensor1d_t avg_bias(nano::size(dataset.tdim()));
+    tensor2d_t avg_weights(nano::size(dataset.idim()), nano::size(dataset.tdim()));
 
     avg_bias.zero();
     avg_weights.zero();
 
     // train a model for each fold ...
-    train_result_t results{iterator.folds()};
-    for (size_t fold = 0, folds = iterator.folds(); fold < folds; ++ fold)
+    train_result_t results;
+    for (size_t fold = 0, folds = dataset.folds(); fold < folds; ++ fold)
     {
-        const timer_t start_train;
+        auto& result = results.add();
 
         const auto tr_fold = fold_t{fold, protocol::train};
         const auto vd_fold = fold_t{fold, protocol::valid};
         const auto te_fold = fold_t{fold, protocol::test};
 
-        tensor1d_t tr_values(iterator.samples(tr_fold)), tr_errors(tr_values.size());
-        tensor1d_t vd_values(iterator.samples(vd_fold)), vd_errors(vd_values.size());
-        tensor1d_t te_values(iterator.samples(te_fold)), te_errors(te_values.size());
+        tensor1d_t tr_errors(dataset.samples(tr_fold));
+        tensor1d_t vd_errors(dataset.samples(vd_fold));
+        tensor1d_t te_errors(dataset.samples(te_fold));
 
-        //
-        auto function = linear_function_t{loss, iterator, tr_fold};
+        auto function = linear_function_t{loss, dataset, tr_fold};
         function.batch(batch());
         function.normalization(normalization());
 
         // tune the regularization factors (if any)
-        scalar_t best_l1reg = 0.0;
-        scalar_t best_l2reg = 0.0;
-        scalar_t best_vAreg = 0.0;
-        scalar_t best_vd_error = std::numeric_limits<scalar_t>::max();
+        tensor1d_t bias;
+        tensor2d_t weights;
+        scalar_t l1reg = 0.0, l2reg = 0.0, vAreg = 0.0;
+        scalar_t vd_error = std::numeric_limits<scalar_t>::max();
 
         switch (regularization())
         {
         case ::nano::regularization::lasso:
-            std::tie(best_vd_error, best_l1reg) = nano::grid_tune(
+            std::tie(l1reg, vd_error, bias, weights) = nano::grid_tune(
                 nano::pow10_space_t{-6.0, +6.0},
                 [&] (const scalar_t l1reg)
                 {
                     function.l1reg(l1reg);
-                    return train(function, solver, best_vd_error);
+                    auto& curve = result.add(scat("l1reg=", l1reg));
+                    return ::train(function, solver, tr_errors, vd_errors, curve);
                 },
                 tune_trials(), tune_steps());
             break;
 
         case ::nano::regularization::ridge:
-            std::tie(best_vd_error, best_l2reg) = nano::grid_tune(
+            std::tie(l2reg, vd_error, bias, weights) = nano::grid_tune(
                 nano::pow10_space_t{-6.0, +6.0},
                 [&] (const scalar_t l2reg)
                 {
                     function.l2reg(l2reg);
-                    return train(function, solver, best_vd_error);
+                    auto& curve = result.add(scat("l2reg=", l2reg));
+                    return ::train(function, solver, tr_errors, vd_errors, curve);
                 },
                 tune_trials(), tune_steps());
             break;
 
         case ::nano::regularization::variance:
-            std::tie(best_vd_error, best_vAreg) = nano::grid_tune(
+            std::tie(vAreg, vd_error, bias, weights) = nano::grid_tune(
                 nano::pow10_space_t{-6.0, +6.0},
                 [&] (const scalar_t vAreg)
                 {
                     function.vAreg(vAreg);
-                    return train(function, solver, best_vd_error);
+                    auto& curve = result.add(scat("vAreg=", vAreg));
+                    return ::train(function, solver, tr_errors, vd_errors, curve);
                 },
                 tune_trials(), tune_steps());
             break;
 
         case ::nano::regularization::elastic:
-            std::tie(best_vd_error, best_l1reg, best_l2reg) = nano::grid_tune(
+            std::tie(l1reg, l2reg, vd_error, bias, weights) = nano::grid_tune(
                 nano::pow10_space_t{-8.0, +6.0},
                 nano::pow10_space_t{-8.0, +6.0},
                 [&] (const scalar_t l1reg, const scalar_t l2reg)
                 {
                     function.l1reg(l1reg);
                     function.l2reg(l2reg);
-                    return train(function, solver, best_vd_error);
+                    auto& curve = result.add(scat("l1reg=", l1reg, ",l2reg=", l2reg));
+                    return ::train(function, solver, tr_errors, vd_errors, curve);
                 },
                 tune_trials(), tune_steps());
             break;
 
         case ::nano::regularization::none:
-            train(function, solver, best_vd_error);
+            {
+                auto& curve = result.add(scat("noreg"));
+                std::tie(vd_error, bias, weights) = ::train(function, solver, tr_errors, vd_errors, curve);
+            }
             break;
 
         default:
             critical(true, "unhandled regularization method when training linear models");
         }
 
-        auto& result = results[fold];
-        result.m_l1reg = best_l1reg;
-        result.m_l2reg = best_l2reg;
-        result.m_vAreg = best_vAreg;
-        result.m_train_time = start_train.milliseconds();
-
         // update the average model
-        avg_bias.vector() = (avg_bias.vector() * fold + m_bias.vector()) / (fold + 1);
-        avg_weights.vector() = (avg_weights.vector() * fold + m_weights.vector()) / (fold + 1);
+        avg_bias.vector() = (avg_bias.vector() * fold + bias.vector()) / (fold + 1);
+        avg_weights.vector() = (avg_weights.vector() * fold + weights.vector()) / (fold + 1);
 
         // evaluate the current tuned model
-        const timer_t start_eval;
-        evaluate(iterator, tr_fold, batch(), loss, m_weights, m_bias, tr_values.tensor(), tr_errors.tensor());
-        evaluate(iterator, vd_fold, batch(), loss, m_weights, m_bias, vd_values.tensor(), vd_errors.tensor());
-        evaluate(iterator, te_fold, batch(), loss, m_weights, m_bias, te_values.tensor(), te_errors.tensor());
-
-        result.m_tr_loss = tr_values.vector().mean(), result.m_tr_error = tr_errors.vector().mean();
-        result.m_vd_loss = vd_values.vector().mean(), result.m_vd_error = vd_errors.vector().mean();
-        result.m_te_loss = te_values.vector().mean(), result.m_te_error = te_errors.vector().mean();
-
-        assert(std::fabs(best_vd_error - result.m_vd_error) < 1e-8);
+        evaluate(dataset, te_fold, batch(), loss, weights, bias, te_errors.tensor());
+        result.test(te_errors.vector().mean());
+        assert(std::fabs(vd_error - result.vd_error()) < 1e-8);
 
         // evaluate the averaged model
-        evaluate(iterator, tr_fold, batch(), loss, avg_weights, avg_bias, tr_values.tensor(), tr_errors.tensor());
-        evaluate(iterator, vd_fold, batch(), loss, avg_weights, avg_bias, vd_values.tensor(), vd_errors.tensor());
-        evaluate(iterator, te_fold, batch(), loss, avg_weights, avg_bias, te_values.tensor(), te_errors.tensor());
+        evaluate(dataset, te_fold, batch(), loss, avg_weights, avg_bias, te_errors.tensor());
+        result.avg_test(te_errors.vector().mean());
 
-        result.m_avg_tr_loss = tr_values.vector().mean(), result.m_avg_tr_error = tr_errors.vector().mean();
-        result.m_avg_vd_loss = vd_values.vector().mean(), result.m_avg_vd_error = vd_errors.vector().mean();
-        result.m_avg_te_loss = te_values.vector().mean(), result.m_avg_te_error = te_errors.vector().mean();
-        result.m_eval_time = start_eval.milliseconds();
-
-        //
-        log_info() << std::setprecision(8) << std::fixed << ">>> current"
-            << ":tr=" << result.m_tr_loss << "|" << result.m_tr_error
-            << ",vd=" << result.m_vd_loss << "|" << result.m_vd_error
-            << ",te=" << result.m_te_loss << "|" << result.m_te_error << ".";
-
-        log_info() << std::setprecision(8) << std::fixed << ">>> average"
-            << ":tr=" << result.m_avg_tr_loss << "|" << result.m_avg_tr_error
-            << ",vd=" << result.m_avg_vd_loss << "|" << result.m_avg_vd_error
-            << ",te=" << result.m_avg_te_loss << "|" << result.m_avg_te_error << ".";
-
-        log_info() << std::setprecision(8) << std::fixed << ">>> optimum"
-            << ":l1reg=" << result.m_l1reg << ",l2reg=" << result.m_l2reg << ",vAreg=" << result.m_vAreg << ".";
+        log_info() << std::setprecision(8) << std::fixed << ">>> "
+            << ":tr=" << result.tr_value() << "|" << result.tr_error()
+            << ",vd=" << result.vd_error()
+            << ",te=" << result.te_error() << ",avg_te=" << result.avg_te_error()
+            << ",l1=" << l1reg << ",l2=" << l2reg << ",vA=" << vAreg << ".";
     }
 
-    // the final model is the average across all folds
+    // NB: the final model is the average across all folds!
     m_bias = avg_bias;
     m_weights = avg_weights;
-
-    // OK
     return results;
-}
-
-scalar_t linear_model_t::train(const linear_function_t& function, const solver_t& solver, scalar_t& best_vd_error)
-{
-    auto state = solver.minimize(function, vector_t::Zero(function.size()));
-    auto bias = function.bias(state.x);
-    auto weights = function.weights(state.x);
-
-    // NB: rescale the bias and the weights to match the normalization of the inputs!
-    const auto& istats = function.istats();
-    istats.upscale(normalization(), weights, bias);
-
-    const auto& loss = function.loss();
-    const auto fold = function.fold().m_index;
-    const auto& iterator = function.iterator();
-
-    tensor1d_t vd_errors(iterator.samples(fold_t{fold, protocol::valid}));
-    evaluate(iterator, fold_t{fold, protocol::valid}, batch(), loss, weights, bias, vd_errors.tensor());
-
-    const auto vd_error = vd_errors.vector().mean();
-    const auto better = vd_error < best_vd_error;
-
-    log_info() << std::setprecision(8) << std::fixed
-        << "fold=" << (fold + 1) << "|" << iterator.folds()
-        << ":l1reg=" << function.l1reg() << ",l2reg=" << function.l2reg() << ",vAreg=" << function.vAreg()
-        << ",iters=" << state.m_iterations << ",calls=" << state.m_fcalls << "/" << state.m_gcalls
-        << ",fx=" << state.f << ",gx=" << state.convergence_criterion()
-        << ",status=" << state.m_status << ",vd_error=" << vd_error << (better ? "(+)." : "(-).");
-
-    if (better)
-    {
-        m_bias = bias;
-        m_weights = weights;
-        best_vd_error = vd_error;
-    }
-
-    return vd_error;
 }
 
 void linear_model_t::save(const string_t& filepath) const
@@ -240,44 +237,20 @@ void linear_model_t::load(const string_t& filepath)
         "parameters mismatch");
 }
 
-void linear_model_t::predict(const tensor4d_cmap_t& inputs, tensor4d_t& outputs) const
+void linear_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_t& outputs) const
 {
-    ::nano::linear::predict(inputs, m_weights, m_bias, outputs);
+    outputs.resize(cat_dims(dataset.samples(fold), dataset.tdim()));
+    predict(dataset, fold, outputs.tensor());
 }
 
-void linear_model_t::predict(const tensor4d_cmap_t& inputs, tensor4d_map_t&& outputs) const
+void linear_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_map_t&& outputs) const
 {
-    ::nano::linear::predict(inputs, m_weights, m_bias, std::move(outputs));
-}
+    assert(outputs.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-void linear_model_t::evaluate(const iterator_t& iterator, const fold_t& fold, const tensor_size_t batch,
-    const loss_t& loss, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
-    tensor1d_map_t&& errors)
-{
-    assert(errors.size() == iterator.samples(fold));
-
-    iterator.loop(fold, batch, [&] (const tensor4d_t& inputs, const tensor4d_t& targets,
-        const tensor_size_t begin, const tensor_size_t end, const size_t)
+    dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, const size_t)
     {
-        tensor4d_t outputs;
-        ::nano::linear::predict(inputs, weights, bias, outputs);
-        loss.error(targets, outputs, errors.slice(begin, end - begin));
-    }, execution::par);
-}
+        const auto inputs = dataset.inputs(fold, range);
 
-void linear_model_t::evaluate(const iterator_t& iterator, const fold_t& fold, const tensor_size_t batch,
-    const loss_t& loss, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
-    tensor1d_map_t&& values, tensor1d_map_t&& errors)
-{
-    assert(values.size() == iterator.samples(fold));
-    assert(errors.size() == iterator.samples(fold));
-
-    iterator.loop(fold, batch, [&] (const tensor4d_t& inputs, const tensor4d_t& targets,
-        const tensor_size_t begin, const tensor_size_t end, const size_t)
-    {
-        tensor4d_t outputs;
-        ::nano::linear::predict(inputs, weights, bias, outputs);
-        loss.value(targets, outputs, values.slice(begin, end - begin));
-        loss.error(targets, outputs, errors.slice(begin, end - begin));
-    }, execution::par);
+        ::nano::linear::predict(inputs, m_weights, m_bias, outputs.slice(range));
+    });
 }

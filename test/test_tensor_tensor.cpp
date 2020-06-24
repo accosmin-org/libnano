@@ -7,6 +7,68 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_tensor_tensor)
 
+UTEST_CASE(print)
+{
+    const auto vector = ::nano::arange(0, 24);
+    {
+        const auto* const expected = R"(shape: 24
+[ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23])";
+
+        std::ostringstream stream;
+        stream << vector;
+        UTEST_CHECK_EQUAL(stream.str(), expected);
+    }
+    {
+        const auto* const expected = R"(shape: 4x6
+[[0 1 2 3 4 5]
+ [ 6  7  8  9 10 11]
+ [12 13 14 15 16 17]
+ [18 19 20 21 22 23]])";
+
+        std::ostringstream stream;
+        stream << vector.reshape(4, -1);
+        UTEST_CHECK_EQUAL(stream.str(), expected);
+    }
+    {
+        const auto* const expected = R"(shape: 4x3x2
+[[[0 1]
+  [2 3]
+  [4 5]]
+ [[6 7]
+  [8 9]
+  [10 11]]
+ [[12 13]
+  [14 15]
+  [16 17]]
+ [[18 19]
+  [20 21]
+  [22 23]]])";
+
+        std::ostringstream stream;
+        stream << vector.reshape(4, 3, -1);
+        UTEST_CHECK_EQUAL(stream.str(), expected);
+    }
+    {
+        const auto* const expected = R"(shape: 4x3x1x2
+[[[[0 1]]
+  [[2 3]]
+  [[4 5]]]
+ [[[6 7]]
+  [[8 9]]
+  [[10 11]]]
+ [[[12 13]]
+  [[14 15]]
+  [[16 17]]]
+ [[[18 19]]
+  [[20 21]]
+  [[22 23]]]])";
+
+        std::ostringstream stream;
+        stream << vector.reshape(4, 3, 1, -1);
+        UTEST_CHECK_EQUAL(stream.str(), expected);
+    }
+}
+
 UTEST_CASE(tensor3d)
 {
     using tensor3d_t = nano::tensor_mem_t<int, 3>;
@@ -19,8 +81,8 @@ UTEST_CASE(tensor3d)
     tensor.resize(dims, rows, cols);
 
     tensor.zero();
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 0);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 0);
+    UTEST_CHECK_EQUAL(tensor.min(), 0);
+    UTEST_CHECK_EQUAL(tensor.max(), 0);
 
     UTEST_CHECK_EQUAL(tensor.size<0>(), dims);
     UTEST_CHECK_EQUAL(tensor.size<1>(), rows);
@@ -42,13 +104,13 @@ UTEST_CASE(tensor3d)
     UTEST_CHECK_EQUAL(tensor(2, 2, 0), -7);
 
     tensor.constant(42);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 42);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 42);
+    UTEST_CHECK_EQUAL(tensor.min(), 42);
+    UTEST_CHECK_EQUAL(tensor.max(), 42);
 
     tensor.constant(42);
     tensor.vector(3, 0).setConstant(7);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 7);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 42);
+    UTEST_CHECK_EQUAL(tensor.min(), 7);
+    UTEST_CHECK_EQUAL(tensor.max(), 42);
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dims * rows * cols - (42 - 7) * cols);
 
     tensor.matrix(3).setConstant(13);
@@ -74,7 +136,7 @@ UTEST_CASE(tensor3d_map)
         v.push_back(-35 + i);
     }
 
-    const auto tmap = ::nano::map_tensor(v.data(), dims, rows, cols);
+    auto tmap = ::nano::map_tensor(v.data(), dims, rows, cols);
     UTEST_CHECK_EQUAL(tmap.size<0>(), dims);
     UTEST_CHECK_EQUAL(tmap.size<1>(), rows);
     UTEST_CHECK_EQUAL(tmap.size<2>(), cols);
@@ -120,6 +182,13 @@ UTEST_CASE(tensor3d_map)
     {
         UTEST_CHECK_EQUAL(tensor(i), -35 + i);
     }
+
+    tmap.random();
+
+    for (tensor_size_t i = 0; i < tensor.size(); ++ i)
+    {
+        UTEST_CHECK_EQUAL(tensor(i), -35 + i);
+    }
 }
 
 UTEST_CASE(tensor4d)
@@ -135,8 +204,8 @@ UTEST_CASE(tensor4d)
     tensor.resize(dim1, dim2, rows, cols);
 
     tensor.zero();
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 0);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 0);
+    UTEST_CHECK_EQUAL(tensor.min(), 0);
+    UTEST_CHECK_EQUAL(tensor.max(), 0);
 
     UTEST_CHECK_EQUAL(tensor.size<0>(), dim1);
     UTEST_CHECK_EQUAL(tensor.size<1>(), dim2);
@@ -160,12 +229,12 @@ UTEST_CASE(tensor4d)
     UTEST_CHECK_EQUAL(tensor(1, 2, 2, 0), -7);
 
     tensor.constant(42);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 42);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 42);
+    UTEST_CHECK_EQUAL(tensor.min(), 42);
+    UTEST_CHECK_EQUAL(tensor.max(), 42);
 
     tensor.vector(0, 3).setConstant(7);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 7);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 42);
+    UTEST_CHECK_EQUAL(tensor.min(), 7);
+    UTEST_CHECK_EQUAL(tensor.max(), 42);
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dim1 * dim2 * rows * cols - (42 - 7) * rows * cols);
 
     tensor.matrix(0, 3).setConstant(13);
@@ -260,20 +329,20 @@ UTEST_CASE(tensor3d_fill)
     tensor.resize(dims, rows, cols);
 
     tensor.zero();
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 0);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 0);
+    UTEST_CHECK_EQUAL(tensor.min(), 0);
+    UTEST_CHECK_EQUAL(tensor.max(), 0);
 
     tensor.constant(-4);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), -4);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), -4);
+    UTEST_CHECK_EQUAL(tensor.min(), -4);
+    UTEST_CHECK_EQUAL(tensor.max(), -4);
 
     tensor.random(-3, +5);
-    UTEST_CHECK_GREATER(tensor.vector().minCoeff(), -3);
-    UTEST_CHECK_LESS(tensor.vector().maxCoeff(), +5);
+    UTEST_CHECK_GREATER(tensor.min(), -3);
+    UTEST_CHECK_LESS(tensor.max(), +5);
 
     tensor.random(+5, +11);
-    UTEST_CHECK_GREATER(tensor.vector().minCoeff(), +5);
-    UTEST_CHECK_LESS(tensor.vector().maxCoeff(), +11);
+    UTEST_CHECK_GREATER(tensor.min(), +5);
+    UTEST_CHECK_LESS(tensor.max(), +11);
 }
 
 UTEST_CASE(tensor4d_reshape)
@@ -290,7 +359,7 @@ UTEST_CASE(tensor4d_reshape)
     UTEST_CHECK_EQUAL(reshape4d.size<2>(), 28);
     UTEST_CHECK_EQUAL(reshape4d.size<3>(), 4);
 
-    auto reshape3d = tensor.reshape(30, 14, 4);
+    auto reshape3d = tensor.reshape(30, -1, 4);
     UTEST_CHECK_EQUAL(reshape3d.data(), tensor.data());
     UTEST_CHECK_EQUAL(reshape3d.size(), tensor.size());
     UTEST_CHECK_EQUAL(reshape3d.size<0>(), 30);
@@ -322,11 +391,11 @@ UTEST_CASE(tensor4d_subtensor)
     tensor.resize(dim1, dim2, rows, cols);
 
     tensor.constant(42);
-    UTEST_CHECK_EQUAL(tensor.vector().minCoeff(), 42);
-    UTEST_CHECK_EQUAL(tensor.vector().maxCoeff(), 42);
+    UTEST_CHECK_EQUAL(tensor.min(), 42);
+    UTEST_CHECK_EQUAL(tensor.max(), 42);
 
     tensor.constant(42);
-    tensor.tensor(1, 2).setConstant(7);
+    tensor.tensor(1, 2).constant(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1, 2).dims(), nano::make_dims(rows, cols));
     UTEST_CHECK_EQUAL(tensor.array(1, 2).minCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1, 2).maxCoeff(), 7);
@@ -334,7 +403,7 @@ UTEST_CASE(tensor4d_subtensor)
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dim1 * dim2 * rows * cols - (42 - 7) * rows * cols);
 
     tensor.constant(42);
-    tensor.tensor(1).setConstant(7);
+    tensor.tensor(1).constant(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1).dims(), nano::make_dims(dim2, rows, cols));
     UTEST_CHECK_EQUAL(tensor.array(1).minCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1).maxCoeff(), 7);
@@ -365,8 +434,8 @@ UTEST_CASE(tensor4d_indexing)
     tensor4d_t tensor(5, 7, 3, 4);
     tensor.random();
 
-    const tensor_size_t indices[] = {0, 1, 3, 2, 2, 3};
-    const auto subtensor = tensor.indexed<int32_t>(map_vector(indices, 6));
+    const auto indices = indices_t{std::array<tensor_size_t, 6>{{0, 1, 3, 2, 2, 3}}};
+    const auto subtensor = tensor.indexed<int32_t>(indices);
 
     UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
     UTEST_REQUIRE_EQUAL(subtensor.size<1>(), tensor.size<1>());
@@ -389,7 +458,7 @@ UTEST_CASE(tensor4d_slice)
     tensor.random();
 
     const auto slice1 = tensor.slice(0, 2);
-    const auto slice2 = tensor.tensor(2, 3).slice(1, 1);
+    const auto slice2 = tensor.tensor(2, 3).slice(make_range(1, 2));
 
     const auto dims1 = nano::make_dims(2, 7, 3, 4);
     const auto dims2 = nano::make_dims(1, 4);
@@ -400,6 +469,79 @@ UTEST_CASE(tensor4d_slice)
     UTEST_CHECK_EIGEN_CLOSE(tensor.vector(0), slice1.vector(0), 1);
     UTEST_CHECK_EIGEN_CLOSE(tensor.vector(1), slice1.vector(1), 1);
     UTEST_CHECK_EIGEN_CLOSE(tensor.vector(2, 3, 1), slice2.vector(), 1);
+}
+
+UTEST_CASE(tensor4d_lin_spaced)
+{
+    using tensor4d_t = nano::tensor_mem_t<int16_t, 4>;
+
+    tensor4d_t tensor(1, 2, 3, 4);
+    tensor.lin_spaced(1, 24);
+
+    for (tensor_size_t i = 0; i < tensor.size(); ++ i)
+    {
+        UTEST_CHECK_EQUAL(tensor(i), static_cast<int16_t>(i + 1));
+    }
+
+    const auto indices = ::nano::arange(1, 5);
+    UTEST_REQUIRE_EQUAL(indices.size(), 4);
+    UTEST_CHECK_EQUAL(indices(0), 1);
+    UTEST_CHECK_EQUAL(indices(1), 2);
+    UTEST_CHECK_EQUAL(indices(2), 3);
+    UTEST_CHECK_EQUAL(indices(3), 4);
+}
+
+UTEST_CASE(tensor4d_begin_end)
+{
+    using tensor4d_t = nano::tensor_mem_t<int16_t, 4>;
+
+    tensor4d_t tensor(1, 2, 3, 4);
+
+    int16_t index = 0;
+    for (auto& value : tensor)
+    {
+        value = index ++;
+    }
+
+    for (tensor_size_t i = 0; i < tensor.size(); ++ i)
+    {
+        UTEST_CHECK_EQUAL(tensor(i), static_cast<int16_t>(i));
+    }
+}
+
+UTEST_CASE(tensor3d_from_array)
+{
+    using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
+
+    tensor3d_t tensor(make_dims(3, 2, 1), std::array<int, 6>{{0, 1, 10, 11, 20, 21}});
+
+    UTEST_CHECK_EQUAL(tensor.size<0>(), 3);
+    UTEST_CHECK_EQUAL(tensor.size<1>(), 2);
+    UTEST_CHECK_EQUAL(tensor.size<2>(), 1);
+
+    UTEST_CHECK_EQUAL(tensor(0), 0);
+    UTEST_CHECK_EQUAL(tensor(1), 1);
+    UTEST_CHECK_EQUAL(tensor(2), 10);
+    UTEST_CHECK_EQUAL(tensor(3), 11);
+    UTEST_CHECK_EQUAL(tensor(4), 20);
+    UTEST_CHECK_EQUAL(tensor(5), 21);
+}
+
+UTEST_CASE(tensor3d_minmax)
+{
+    using tensor4d_t = nano::tensor_mem_t<int16_t, 4>;
+
+    tensor4d_t tensor(1, 2, 3, 4);
+    tensor.lin_spaced(1, 24);
+
+    UTEST_CHECK_EQUAL(tensor.min(), 1);
+    UTEST_CHECK_EQUAL(tensor.max(), 24);
+
+    UTEST_CHECK_EQUAL(tensor.tensor(0, 0).min(), 1);
+    UTEST_CHECK_EQUAL(tensor.tensor(0, 0).max(), 12);
+
+    UTEST_CHECK_EQUAL(tensor.tensor(0, 1).min(), 13);
+    UTEST_CHECK_EQUAL(tensor.tensor(0, 1).max(), 24);
 }
 
 UTEST_END_MODULE()

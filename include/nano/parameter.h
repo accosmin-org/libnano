@@ -54,13 +54,13 @@ namespace nano
         explicit LEorLT(LE_t) {}
         explicit LEorLT(LT_t) : m_LE(false) {}
 
-        auto name() const
+        [[nodiscard]] auto name() const
         {
             return m_LE ? LE_t::name() : LT_t::name();
         }
 
         template <typename tscalar>
-        auto check(const tscalar value1, const tscalar value2) const
+        [[nodiscard]] auto check(const tscalar value1, const tscalar value2) const
         {
             return m_LE ? LE_t::check(value1, value2) : LT_t::check(value1, value2);
         }
@@ -104,14 +104,14 @@ namespace nano
             m_value = checked(value);
         }
 
-        auto min() const { return m_min; }
-        auto max() const { return m_max; }
-        auto get() const { return m_value; }
+        [[nodiscard]] auto min() const { return m_min; }
+        [[nodiscard]] auto max() const { return m_max; }
+        [[nodiscard]] auto get() const { return m_value; }
 
     private:
 
         template <typename tvalue>
-        auto checked(const tvalue _value) const
+        [[nodiscard]] auto checked(const tvalue _value) const
         {
             const auto value = static_cast<tscalar>(_value);
             if (    !std::isfinite(_value) || !std::isfinite(value) ||
@@ -159,15 +159,15 @@ namespace nano
             std::tie(m_value1, m_value2) = checked(value1, value2);
         }
 
-        auto min() const { return m_min; }
-        auto max() const { return m_max; }
-        auto get1() const { return m_value1; }
-        auto get2() const { return m_value2; }
+        [[nodiscard]] auto min() const { return m_min; }
+        [[nodiscard]] auto max() const { return m_max; }
+        [[nodiscard]] auto get1() const { return m_value1; }
+        [[nodiscard]] auto get2() const { return m_value2; }
 
     private:
 
         template <typename tvalue1, typename tvalue2>
-        auto checked(const tvalue1 _value1, const tvalue2 _value2) const
+        [[nodiscard]] auto checked(const tvalue1 _value1, const tvalue2 _value2) const
         {
             const auto value1 = static_cast<tscalar>(_value1);
             const auto value2 = static_cast<tscalar>(_value2);

@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_chung_reynolds_t(const tensor_size_t dims) :
-            function_t("Chung-Reynolds", dims, 1, convexity::yes)
+            function_t("Chung-Reynolds", dims, convexity::yes)
         {
         }
 

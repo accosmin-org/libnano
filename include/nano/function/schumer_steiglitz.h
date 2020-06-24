@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_schumer_steiglitz_t(const tensor_size_t dims) :
-            function_t("Schumer-Steiglitz", dims, 1, convexity::yes)
+            function_t("Schumer-Steiglitz", dims, convexity::yes)
         {
         }
 

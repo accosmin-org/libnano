@@ -6,6 +6,7 @@ libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_tidy_suffix=""
 build_type="RelWithDebInfo"
+cmake_options=""
 
 generator=""
 build_shared="ON"
@@ -65,7 +66,7 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake ${generator} -H. -B${libnanodir} \
+    cmake ${generator} -H. -B${libnanodir} ${cmake_options} \
         -DCMAKE_BUILD_TYPE=${build_type} \
         -DBUILD_SHARED_LIBS=${build_shared} \
         -DCMAKE_INSTALL_RPATH=${installdir}/lib \
@@ -74,6 +75,8 @@ function config {
 
 function build {
     cd ${libnanodir}
+    command=$(grep test_mlearn.cpp compile_commands.json | grep command)
+    printf "${command}\n"
     cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
@@ -97,7 +100,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=1.89
+    version=1.90
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
@@ -106,7 +109,7 @@ function cppcheck {
 
         OLD_CXXFLAGS=${CXXFLAGS}
         export CXXFLAGS=""
-        cd cppcheck-${version} && mkdir build && cd build
+        cd cppcheck-${version} && rm -rf build && mkdir build && cd build
         cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
         cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
         cmake --build . --target install > install.log 2>&1 || return 1
@@ -122,9 +125,10 @@ function cppcheck {
     #--suppress=unusedFunction
     /tmp/cppcheck/bin/cppcheck \
         --project=compile_commands.json \
-        --enable=all --quiet --std=c++14 --error-exitcode=0 --inline-suppr --force \
+        --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
+        --suppress=shadowFunction \
         --suppress=unmatchedSuppression || return 1
 }
 
@@ -152,7 +156,7 @@ function coveralls {
 }
 
 function build_valgrind {
-    version=3.15.0
+    version=3.16.0
     installed_version=$(/tmp/valgrind/bin/valgrind --version)
 
     if [ "${installed_version}" != "valgrind-${version}" ]; then
@@ -178,7 +182,9 @@ function memcheck {
 
     build_valgrind || return 1
 
-    # NB: not using ctest directly because I cannot pass options to memcheck!
+    # NB: not using ctest directly:
+    #   - to use custom build if present
+    #   - to pass options to memcheck
     #ctest --output-on-failure -T memcheck
 
     returncode=0
@@ -239,8 +245,17 @@ function clang_tidy {
     log=${log//\*/ALL}
     log=${log//,-/_NOT}
     printf "Logging to ${log} ...\n"
-    run-clang-tidy${clang_tidy_suffix}.py -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
+
+    wrapper=run-clang-tidy${clang_tidy_suffix}
+    wrapper=$(which ${wrapper} || which ${wrapper}.py)
+    printf "Using wrapper ${wrapper} ...\n"
+    ${wrapper} -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
+
+    if [[ $? -ne 0 ]]; then
+        cat ${log}
+        return 1
+    fi
 
     printf "\n"
     started="0"
@@ -256,20 +271,20 @@ function clang_tidy {
     done < ${log}
 
     printf "\n"
-    cat $log | grep warning: | grep -oE "[^ ]+$" | sort | uniq -c
+    cat $log | grep -E "warning:|error:" | grep -oE "[^ ]+$" | sort | uniq -c
     printf "\n"
 
-    # show log only if any warning is detected
-    warnings=$(cat $log | grep warning: | sort -u | grep -v Eigen | wc -l)
+    # show log only if any warning or error is detected
+    warnings=$(cat $log | grep -E "warning:|error:" | sort -u | grep -v Eigen | wc -l)
     if [[ $warnings -gt 0 ]]
     then
-        grep warning: $log | sort -u
+        grep -E "warning:|error:" $log | sort -u
     fi
 
     # decide if should exit with failure
     if [[ $warnings -gt 0 ]]
     then
-        printf "failed with $warnings warnings!\n\n"
+        printf "failed with $warnings warnings and errors!\n\n"
         return 1
     else
         printf "passed.\n"
@@ -286,7 +301,11 @@ function clang_tidy_cert {
 }
 
 function clang_tidy_hicpp {
-    clang_tidy "hicpp*,-hicpp-no-array-decay,-hicpp-avoid-c-arrays"
+    checks="hicpp*"
+    checks="${checks},-hicpp-avoid-c-arrays"
+    checks="${checks},-hicpp-no-array-decay"
+    checks="${checks},-hicpp-signed-bitwise"
+    clang_tidy ${checks}
 }
 
 function clang_tidy_bugprone {
@@ -294,7 +313,10 @@ function clang_tidy_bugprone {
 }
 
 function clang_tidy_modernize {
-    clang_tidy "modernize*,-modernize-avoid-c-arrays"
+    checks="modernize*"
+    checks="${checks},-modernize-avoid-c-arrays"
+    checks="${checks},-modernize-use-trailing-return-type"
+    clang_tidy ${checks}
 }
 
 function clang_tidy_performance {
@@ -445,6 +467,7 @@ while [ "$1" != "" ]; do
         --generator)                    shift; generator="-G$1";;
         --shared)                       build_shared="ON";;
         --static)                       build_shared="OFF";;
+        -D*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac
     shift

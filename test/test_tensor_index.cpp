@@ -122,4 +122,65 @@ UTEST_CASE(index3d)
     UTEST_CHECK_EQUAL(nano::dims0(dims, 2, 4), nano::make_dims(5));
 }
 
+UTEST_CASE(range)
+{
+    const auto range_def = nano::tensor_range_t{};
+    const auto range_ok0 = nano::make_range(0, 1);
+    const auto range_ok1 = nano::make_range(1, 3);
+    const auto range_nok0 = nano::make_range(-1, 1);
+    const auto range_nok1 = nano::make_range(+3, 1);
+
+    UTEST_CHECK_EQUAL(range_def.begin(), 0);
+    UTEST_CHECK_EQUAL(range_ok0.begin(), 0);
+    UTEST_CHECK_EQUAL(range_ok1.begin(), 1);
+    UTEST_CHECK_EQUAL(range_nok0.begin(), -1);
+    UTEST_CHECK_EQUAL(range_nok1.begin(), +3);
+
+    UTEST_CHECK_EQUAL(range_def.end(), 0);
+    UTEST_CHECK_EQUAL(range_ok0.end(), 1);
+    UTEST_CHECK_EQUAL(range_ok1.end(), 3);
+    UTEST_CHECK_EQUAL(range_nok0.end(), 1);
+    UTEST_CHECK_EQUAL(range_nok1.end(), 1);
+
+    UTEST_CHECK_EQUAL(range_def.size(), 0);
+    UTEST_CHECK_EQUAL(range_ok0.size(), 1);
+    UTEST_CHECK_EQUAL(range_ok1.size(), 2);
+    UTEST_CHECK_EQUAL(range_nok0.size(), 2);
+    UTEST_CHECK_EQUAL(range_nok1.size(), -2);
+
+    UTEST_CHECK(!range_def.valid(-1));
+    UTEST_CHECK(!range_def.valid(+0));
+    UTEST_CHECK(!range_def.valid(+1));
+
+    UTEST_CHECK(!range_ok0.valid(-2));
+    UTEST_CHECK(!range_ok0.valid(-1));
+    UTEST_CHECK(!range_ok0.valid(+0));
+    UTEST_CHECK(range_ok0.valid(+1));
+    UTEST_CHECK(range_ok0.valid(+2));
+    UTEST_CHECK(range_ok0.valid(+3));
+
+    UTEST_CHECK(!range_ok1.valid(-2));
+    UTEST_CHECK(!range_ok1.valid(-1));
+    UTEST_CHECK(!range_ok1.valid(+0));
+    UTEST_CHECK(!range_ok1.valid(+1));
+    UTEST_CHECK(!range_ok1.valid(+2));
+    UTEST_CHECK(range_ok1.valid(+3));
+    UTEST_CHECK(range_ok1.valid(+4));
+
+    UTEST_CHECK(!range_nok0.valid(-2));
+    UTEST_CHECK(!range_nok0.valid(-1));
+    UTEST_CHECK(!range_nok0.valid(+0));
+    UTEST_CHECK(!range_nok0.valid(+1));
+    UTEST_CHECK(!range_nok0.valid(+2));
+    UTEST_CHECK(!range_nok0.valid(+3));
+
+    UTEST_CHECK(!range_nok1.valid(-2));
+    UTEST_CHECK(!range_nok1.valid(-1));
+    UTEST_CHECK(!range_nok1.valid(+0));
+    UTEST_CHECK(!range_nok1.valid(+1));
+    UTEST_CHECK(!range_nok1.valid(+2));
+    UTEST_CHECK(!range_nok1.valid(+3));
+    UTEST_CHECK(!range_nok1.valid(+4));
+}
+
 UTEST_END_MODULE()

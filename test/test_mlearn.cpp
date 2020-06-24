@@ -1,5 +1,7 @@
 #include <utest/utest.h>
 #include <nano/mlearn/split.h>
+#include <nano/mlearn/train.h>
+#include <nano/mlearn/cluster.h>
 #include <nano/mlearn/elemwise.h>
 
 using namespace nano;
@@ -29,11 +31,11 @@ UTEST_CASE(split2)
     UTEST_CHECK_EQUAL(set1.size(), percentage1 * count / 100);
     UTEST_CHECK_EQUAL(set2.size(), percentage2 * count / 100);
 
-    UTEST_CHECK_GREATER_EQUAL(set1.minCoeff(), 0);
-    UTEST_CHECK_GREATER_EQUAL(set2.minCoeff(), 0);
+    UTEST_CHECK_GREATER_EQUAL(set1.min(), 0);
+    UTEST_CHECK_GREATER_EQUAL(set2.min(), 0);
 
-    UTEST_CHECK_LESS(set1.maxCoeff(), count);
-    UTEST_CHECK_LESS(set2.maxCoeff(), count);
+    UTEST_CHECK_LESS(set1.max(), count);
+    UTEST_CHECK_LESS(set2.max(), count);
 
     UTEST_CHECK(std::is_sorted(begin(set1), end(set1)));
     UTEST_CHECK(std::is_sorted(begin(set2), end(set2)));
@@ -56,13 +58,13 @@ UTEST_CASE(split3)
     UTEST_CHECK_EQUAL(set2.size(), percentage2 * count / 100);
     UTEST_CHECK_EQUAL(set3.size(), percentage3 * count / 100);
 
-    UTEST_CHECK_GREATER_EQUAL(set1.minCoeff(), 0);
-    UTEST_CHECK_GREATER_EQUAL(set2.minCoeff(), 0);
-    UTEST_CHECK_GREATER_EQUAL(set3.minCoeff(), 0);
+    UTEST_CHECK_GREATER_EQUAL(set1.min(), 0);
+    UTEST_CHECK_GREATER_EQUAL(set2.min(), 0);
+    UTEST_CHECK_GREATER_EQUAL(set3.min(), 0);
 
-    UTEST_CHECK_LESS(set1.maxCoeff(), count);
-    UTEST_CHECK_LESS(set2.maxCoeff(), count);
-    UTEST_CHECK_LESS(set3.maxCoeff(), count);
+    UTEST_CHECK_LESS(set1.max(), count);
+    UTEST_CHECK_LESS(set2.max(), count);
+    UTEST_CHECK_LESS(set3.max(), count);
 
     UTEST_CHECK(std::is_sorted(begin(set1), end(set1)));
     UTEST_CHECK(std::is_sorted(begin(set2), end(set2)));
@@ -80,8 +82,8 @@ UTEST_CASE(sample_with_replacement)
         const auto indices = nano::sample_with_replacement(120, 50);
 
         UTEST_CHECK_EQUAL(indices.size(), 60);
-        UTEST_CHECK_LESS(indices.maxCoeff(), 120);
-        UTEST_CHECK_GREATER_EQUAL(indices.minCoeff(), 0);
+        UTEST_CHECK_LESS(indices.max(), 120);
+        UTEST_CHECK_GREATER_EQUAL(indices.min(), 0);
         UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
     }
 }
@@ -93,8 +95,8 @@ UTEST_CASE(sample_without_replacement)
         const auto indices = nano::sample_without_replacement(140, 50);
 
         UTEST_CHECK_EQUAL(indices.size(), 70);
-        UTEST_CHECK_LESS(indices.maxCoeff(), 140);
-        UTEST_CHECK_GREATER_EQUAL(indices.minCoeff(), 0);
+        UTEST_CHECK_LESS(indices.max(), 140);
+        UTEST_CHECK_GREATER_EQUAL(indices.min(), 0);
         UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
         UTEST_CHECK(std::adjacent_find(begin(indices), end(indices)) == end(indices));
     }
@@ -104,12 +106,12 @@ UTEST_CASE(sample_without_replacement_all)
 {
     const auto indices = nano::sample_without_replacement(100, 100);
 
-    UTEST_CHECK_EQUAL(indices, indices_t::LinSpaced(100, 0, 100));
+    UTEST_CHECK_EQUAL(indices, arange(0, 100));
 }
 
 UTEST_CASE(split_valid2)
 {
-    const auto split = split_t{nano::split2(80, 60), indices_t::LinSpaced(20, 80, 100)};
+    const auto split = split_t{nano::split2(80, 60), arange(80, 100)};
 
     UTEST_CHECK(split.valid(100));
     UTEST_CHECK_EQUAL(split.indices(protocol::train).size(), 48);
@@ -174,7 +176,7 @@ UTEST_CASE(split_invalid_te_out_of_range)
 UTEST_CASE(split_invalid_tr_vd_intersects)
 {
     auto split = split_t{nano::split3(100, 60, 30)};
-    split.indices(protocol::valid) = split.indices(protocol::train).segment(0, split.indices(protocol::valid).size());
+    split.indices(protocol::valid) = split.indices(protocol::train).slice(0, split.indices(protocol::valid).size());
 
     UTEST_CHECK(!split.valid(100));
 }
@@ -182,7 +184,7 @@ UTEST_CASE(split_invalid_tr_vd_intersects)
 UTEST_CASE(split_invalid_tr_te_intersects)
 {
     auto split = split_t{nano::split3(100, 60, 30)};
-    split.indices(protocol::test) = split.indices(protocol::train).segment(0, split.indices(protocol::test).size());
+    split.indices(protocol::test) = split.indices(protocol::train).slice(0, split.indices(protocol::test).size());
 
     UTEST_CHECK(!split.valid(100));
 }
@@ -266,6 +268,335 @@ UTEST_CASE(scale)
         UTEST_CHECK_NOTHROW(stats.scale(normalization::standard, inputs));
         UTEST_CHECK_EIGEN_CLOSE(inputs.vector(), map_vector(normed_standard.data(), 15), epsilon1<scalar_t>());
     }
+}
+
+UTEST_CASE(cluster)
+{
+    {
+        const auto split = cluster_t{};
+        UTEST_CHECK_EQUAL(split.groups(), 0);
+        UTEST_CHECK_EQUAL(split.samples(), 0);
+    }
+    {
+        const auto split = cluster_t{7};
+        UTEST_CHECK_EQUAL(split.groups(), 1);
+        UTEST_CHECK_EQUAL(split.count(0), 0);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+    }
+    {
+        auto split = cluster_t{7, 3};
+        UTEST_CHECK_EQUAL(split.groups(), 3);
+        UTEST_CHECK_EQUAL(split.count(0), 0);
+        UTEST_CHECK_EQUAL(split.count(1), 0);
+        UTEST_CHECK_EQUAL(split.count(2), 0);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+
+        split.assign(0, 0);
+        split.assign(1, 0);
+        split.assign(2, 1);
+        split.assign(3, 1);
+        split.assign(4, 2);
+        split.assign(5, 2);
+        split.assign(6, 1);
+
+        UTEST_CHECK_EQUAL(split.groups(), 3);
+        UTEST_CHECK_EQUAL(split.count(0), 2);
+        UTEST_CHECK_EQUAL(split.count(1), 3);
+        UTEST_CHECK_EQUAL(split.count(2), 2);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+        UTEST_CHECK_EQUAL(split.group(0), 0);
+        UTEST_CHECK_EQUAL(split.group(1), 0);
+        UTEST_CHECK_EQUAL(split.group(2), 1);
+        UTEST_CHECK_EQUAL(split.group(3), 1);
+        UTEST_CHECK_EQUAL(split.group(4), 2);
+        UTEST_CHECK_EQUAL(split.group(5), 2);
+        UTEST_CHECK_EQUAL(split.group(6), 1);
+
+        split.assign(4, 1);
+        split.assign(5, 1);
+        split.assign(6, 2);
+        split.assign(6, 1);
+
+        UTEST_CHECK_EQUAL(split.groups(), 3);
+        UTEST_CHECK_EQUAL(split.count(0), 2);
+        UTEST_CHECK_EQUAL(split.count(1), 5);
+        UTEST_CHECK_EQUAL(split.count(2), 0);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+
+        const auto indices0 = split.indices(0);
+        const auto indices1 = split.indices(1);
+        const auto indices2 = split.indices(2);
+
+        UTEST_REQUIRE_EQUAL(indices0.size(), 2);
+        UTEST_CHECK_EQUAL(indices0(0), 0);
+        UTEST_CHECK_EQUAL(indices0(1), 1);
+
+        UTEST_REQUIRE_EQUAL(indices1.size(), 5);
+        UTEST_CHECK_EQUAL(indices1(0), 2);
+        UTEST_CHECK_EQUAL(indices1(1), 3);
+        UTEST_CHECK_EQUAL(indices1(2), 4);
+        UTEST_CHECK_EQUAL(indices1(3), 5);
+        UTEST_CHECK_EQUAL(indices1(4), 6);
+
+        UTEST_REQUIRE_EQUAL(indices2.size(), 0);
+    }
+    {
+        auto indices = indices_t{3};
+        indices(0) = 0;
+        indices(1) = 4;
+        indices(2) = 5;
+
+        auto split = cluster_t{7, indices};
+        UTEST_CHECK_EQUAL(split.groups(), 1);
+        UTEST_CHECK_EQUAL(split.count(0), 3);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+
+        indices_t all_indices(7);
+        all_indices.constant(-1);
+        split.loop(0, [&] (const tensor_size_t index) { all_indices(index) = +1; });
+        UTEST_CHECK_EQUAL(all_indices(0), +1);
+        UTEST_CHECK_EQUAL(all_indices(1), -1);
+        UTEST_CHECK_EQUAL(all_indices(2), -1);
+        UTEST_CHECK_EQUAL(all_indices(3), -1);
+        UTEST_CHECK_EQUAL(all_indices(4), +1);
+        UTEST_CHECK_EQUAL(all_indices(5), +1);
+        UTEST_CHECK_EQUAL(all_indices(6), -1);
+
+        split.assign(3, 0);
+
+        UTEST_CHECK_EQUAL(split.groups(), 1);
+        UTEST_CHECK_EQUAL(split.count(0), 4);
+        UTEST_CHECK_EQUAL(split.samples(), 7);
+
+        split.loop(0, [&] (const tensor_size_t index) { all_indices(index) = +1; });
+        UTEST_CHECK_EQUAL(all_indices(0), +1);
+        UTEST_CHECK_EQUAL(all_indices(1), -1);
+        UTEST_CHECK_EQUAL(all_indices(2), -1);
+        UTEST_CHECK_EQUAL(all_indices(3), +1);
+        UTEST_CHECK_EQUAL(all_indices(4), +1);
+        UTEST_CHECK_EQUAL(all_indices(5), +1);
+        UTEST_CHECK_EQUAL(all_indices(6), -1);
+    }
+}
+
+UTEST_CASE(train_point)
+{
+    const auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
+    {
+        const auto point = train_point_t{};
+        UTEST_CHECK_EQUAL(point.valid(), false);
+    }
+    {
+        const auto point = train_point_t{1.5, 0.5, 0.6};
+        UTEST_CHECK_EQUAL(point.valid(), true);
+    }
+    {
+        const auto point = train_point_t{nan, 0.5, 0.6};
+        UTEST_CHECK_EQUAL(point.valid(), false);
+    }
+    {
+        const auto point = train_point_t{1.5, nan, 0.6};
+        UTEST_CHECK_EQUAL(point.valid(), false);
+    }
+    {
+        const auto point = train_point_t{1.5, 0.5, nan};
+        UTEST_CHECK_EQUAL(point.valid(), false);
+    }
+    {
+        const auto point1 = train_point_t{1.5, 0.5, 0.60};
+        const auto point2 = train_point_t{1.4, 0.4, 0.61};
+        UTEST_CHECK(point1 < point2);
+    }
+    {
+        const auto point1 = train_point_t{1.5, 0.5, nan};
+        const auto point2 = train_point_t{1.4, 0.4, 0.61};
+        const auto point3 = train_point_t{1.5, 0.5, nan};
+        UTEST_CHECK(point2 < point1);
+        UTEST_CHECK(!(point1 < point2));
+        UTEST_CHECK(!(point3 < point1));
+        UTEST_CHECK(!(point1 < point3));
+    }
+}
+
+UTEST_CASE(train_curve)
+{
+    const auto inf = std::numeric_limits<scalar_t>::infinity();
+    {
+        train_curve_t curve;
+        UTEST_CHECK_EQUAL(curve.optindex(), 0U);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::better);
+    }
+    {
+        train_curve_t curve;
+        curve.add(1.5, 0.5, 0.6);
+        UTEST_CHECK_EQUAL(curve.optindex(), 0U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::better);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::better);
+    }
+    {
+        train_curve_t curve;
+        curve.add(1.5, 0.5, 0.6);
+        curve.add(inf, 0.4, 0.5);
+        UTEST_CHECK_EQUAL(curve.optindex(), 0U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::diverged);
+    }
+    {
+        train_curve_t curve;
+        curve.add(1.5, 0.5, 0.6);
+        UTEST_CHECK_EQUAL(curve.optindex(), 0U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::better);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::better);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::better);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.6, 1e-12);
+
+        curve.add(1.4, 0.4, 0.5);
+        UTEST_CHECK_EQUAL(curve.optindex(), 1U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::better);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::better);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.5, 1e-12);
+
+        curve.add(1.3, 0.3, 0.4);
+        UTEST_CHECK_EQUAL(curve.optindex(), 2U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::better);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::better);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.4, 1e-12);
+
+        curve.add(1.2, 0.2, 0.5);
+        UTEST_CHECK_EQUAL(curve.optindex(), 2U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::worse);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.4, 1e-12);
+
+        curve.add(1.1, 0.1, 0.6);
+        UTEST_CHECK_EQUAL(curve.optindex(), 2U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::overfit);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.4, 1e-12);
+
+        curve.add(1.0, 0.0, 0.7);
+        UTEST_CHECK_EQUAL(curve.optindex(), 2U);
+        UTEST_CHECK_EQUAL(curve.check(0U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(1U), train_status::overfit);
+        UTEST_CHECK_EQUAL(curve.check(2U), train_status::overfit);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.4, 1e-12);
+
+        curve.add(inf, 0.0, 0.7);
+        UTEST_CHECK_EQUAL(curve.optindex(), 2U);
+        UTEST_CHECK_EQUAL(curve.check(7U), train_status::diverged);
+        UTEST_CHECK_CLOSE(curve.optimum().vd_error(), 0.4, 1e-12);
+    }
+    {
+        auto curve = train_curve_t{};
+        curve.add(2.1, 1.1, 1.4);
+        curve.add(2.0, 1.0, 1.3);
+        curve.add(1.9, 0.9, 1.2);
+
+        std::stringstream stream1;
+        UTEST_CHECK(curve.save(stream1, ',', false));
+        UTEST_CHECK_EQUAL(stream1.str(), scat(
+            0, ",", 2.1, ",", 1.1, ",", 1.4, "\n",
+            1, ",", 2.0, ",", 1.0, ",", 1.3, "\n",
+            2, ",", 1.9, ",", 0.9, ",", 1.2, "\n"));
+
+        std::stringstream stream2;
+        UTEST_CHECK(curve.save(stream2, ';', true));
+        UTEST_CHECK_EQUAL(stream2.str(), scat(
+            "step;tr_value;tr_error;vd_error\n",
+            0, ";", 2.1, ";", 1.1, ";", 1.4, "\n",
+            1, ";", 2.0, ";", 1.0, ";", 1.3, "\n",
+            2, ";", 1.9, ";", 0.9, ";", 1.2, "\n"));
+    }
+}
+
+UTEST_CASE(train_fold)
+{
+    auto tuning = train_fold_t{};
+    UTEST_CHECK(!std::isfinite(tuning.tr_value()));
+    UTEST_CHECK(!std::isfinite(tuning.tr_error()));
+    UTEST_CHECK(!std::isfinite(tuning.vd_error()));
+
+    auto& curve0 = tuning.add("hyper0");
+    auto& curve1 = tuning.add("hyper1");
+    auto& curve2 = tuning.add("hyper2");
+
+    curve0.add(2.1, 1.1, 1.4);
+    curve0.add(2.0, 1.0, 1.3);
+    curve0.add(1.9, 0.9, 1.2);
+    curve0.add(1.8, 0.9, 1.3);
+
+    curve1.add(3.1, 2.1, 2.5);
+    curve1.add(2.1, 1.1, 2.0);
+    curve1.add(1.1, 0.1, 1.5);
+    curve1.add(1.1, 0.1, 1.0);
+
+    const auto inf = std::numeric_limits<scalar_t>::infinity();
+    const auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
+    curve2.add(inf, nan, nan);
+
+    const auto& opt = tuning.optimum();
+    UTEST_CHECK_EQUAL(opt.first, "hyper1");
+    UTEST_CHECK_CLOSE(tuning.tr_value(), 1.1, 1e-12);
+    UTEST_CHECK_CLOSE(tuning.tr_error(), 0.1, 1e-12);
+    UTEST_CHECK_CLOSE(tuning.vd_error(), 1.0, 1e-12);
+
+    tuning.test(1.1);
+    UTEST_CHECK_CLOSE(tuning.te_error(), 1.1, 1e-12);
+
+    tuning.avg_test(1.7);
+    UTEST_CHECK_CLOSE(tuning.avg_te_error(), 1.7, 1e-12);
+}
+
+UTEST_CASE(train_result)
+{
+    auto result = train_result_t{};
+
+    auto& fold0 = result.add();
+    auto& hype0 = fold0.add("hyper0");
+    hype0.add(2.1, 1.1, 1.4);
+    hype0.add(2.0, 1.0, 1.3);
+    hype0.add(1.9, 0.9, 1.2);
+    hype0.add(1.8, 0.9, 1.3);
+    fold0.test(1.1);
+    fold0.avg_test(1.1);
+
+    auto& fold1 = result.add();
+    auto& hype1 = fold1.add("hyper1");
+    hype1.add(2.1, 1.1, 1.3);
+    hype1.add(2.0, 1.0, 1.1);
+    hype1.add(1.9, 0.9, 1.0);
+    hype1.add(1.8, 0.7, 0.8);
+    fold1.test(1.2);
+    fold1.avg_test(1.0);
+
+    auto& fold2 = result.add();
+    fold2.test(1.0);
+    fold2.avg_test(0.9);
+
+    const auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
+
+    UTEST_CHECK_EQUAL(result.size(), 3U);
+    UTEST_CHECK_CLOSE(result[0U].te_error(), 1.1, 1e-12);
+    UTEST_CHECK_CLOSE(result[1U].te_error(), 1.2, 1e-12);
+    UTEST_CHECK_CLOSE(result[2U].te_error(), 1.0, 1e-12);
+
+    std::stringstream stream1;
+    UTEST_CHECK(result.save(stream1, ',', false));
+    UTEST_CHECK_EQUAL(stream1.str(), scat(
+        0, ",", 0.9, ",", 1.2, ",", 1.1, ",", 1.1, "\n",
+        1, ",", 0.7, ",", 0.8, ",", 1.2, ",", 1.0, "\n",
+        2, ",", nan, ",", nan, ",", 1.0, ",", 0.9, "\n"));
+
+    std::stringstream stream2;
+    UTEST_CHECK(result.save(stream2, ';', true));
+    UTEST_CHECK_EQUAL(stream2.str(), scat(
+        "fold;tr_error;vd_error;te_error;avg_te_error\n",
+        0, ";", 0.9, ";", 1.2, ";", 1.1, ";", 1.1, "\n",
+        1, ";", 0.7, ";", 0.8, ";", 1.2, ";", 1.0, "\n",
+        2, ";", nan, ";", nan, ";", 1.0, ";", 0.9, "\n"));
 }
 
 UTEST_END_MODULE()

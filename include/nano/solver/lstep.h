@@ -28,6 +28,7 @@ namespace nano
         lsearch_step_t() = default;
         lsearch_step_t(lsearch_step_t&&) noexcept = default;
         lsearch_step_t(const lsearch_step_t&) = default;
+        // cppcheck-suppress noExplicitConstructor
         lsearch_step_t(const solver_state_t& state) : t(state.t), f(state.f), g(state.dg()) {} // NOLINT(hicpp-explicit-conversions)
         lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t gg) : t(tt), f(ff), g(gg) {}
 

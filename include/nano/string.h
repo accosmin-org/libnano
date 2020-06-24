@@ -50,136 +50,73 @@ namespace nano
         return enums;
     }
 
-    namespace detail
-    {
-        template <typename, typename = void>
-        struct from_string_t;
-
-        template <>
-        struct from_string_t<short>
-        {
-            static short cast(const string_t& str)
-            {
-                return static_cast<short>(std::stoi(str));
-            }
-        };
-
-        template <>
-        struct from_string_t<int>
-        {
-            static int cast(const string_t& str)
-            {
-                return std::stoi(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<long>
-        {
-            static long cast(const string_t& str)
-            {
-                return std::stol(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<long long>
-        {
-            static long long cast(const string_t& str)
-            {
-                return std::stoll(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<unsigned long>
-        {
-            static unsigned long cast(const string_t& str)
-            {
-                return std::stoul(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<unsigned long long>
-        {
-            static unsigned long long cast(const string_t& str)
-            {
-                return std::stoull(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<float>
-        {
-            static float cast(const string_t& str)
-            {
-                return std::stof(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<double>
-        {
-            static double cast(const string_t& str)
-            {
-                return std::stod(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<long double>
-        {
-            static long double cast(const string_t& str)
-            {
-                return std::stold(str);
-            }
-        };
-
-        template <>
-        struct from_string_t<string_t>
-        {
-            static string_t cast(const string_t& str)
-            {
-                return str;
-            }
-        };
-
-        template <typename tenum>
-        struct from_string_t<tenum, typename std::enable_if<std::is_enum<tenum>::value>::type>
-        {
-            static tenum cast(const string_t& str)
-            {
-                for (const auto& elem : enum_string<tenum>())
-                {
-                    if (elem.second == str)
-                    {
-                        return elem.first;
-                    }
-                }
-
-                for (const auto& elem : enum_string<tenum>())
-                {
-                    if (str.find(elem.second) == 0)
-                    {
-                        return elem.first;
-                    }
-                }
-
-                const auto msg = string_t("invalid ") + typeid(tenum).name() + " <" + str + ">!";
-                throw std::invalid_argument(msg);
-            }
-        };
-    }
-
     ///
     /// \brief cast string to value.
     ///
     template <typename tvalue>
     tvalue from_string(const string_t& str)
     {
-        /// todo: replace this with "if constexpr" in c++17
-        return detail::from_string_t<tvalue>::cast(str);
+        if constexpr (std::is_same<tvalue, short>::value)
+        {
+            return static_cast<short>(std::stoi(str));
+        }
+        else if constexpr (std::is_same<tvalue, int>::value)
+        {
+            return std::stoi(str);
+        }
+        else if constexpr (std::is_same<tvalue, long>::value)
+        {
+            return std::stol(str);
+        }
+        else if constexpr (std::is_same<tvalue, long long>::value)
+        {
+            return std::stoll(str);
+        }
+        else if constexpr (std::is_same<tvalue, unsigned long>::value)
+        {
+            return std::stoul(str);
+        }
+        else if constexpr (std::is_same<tvalue, unsigned long long>::value)
+        {
+            return std::stoull(str);
+        }
+        else if constexpr (std::is_same<tvalue, float>::value)
+        {
+            return std::stof(str);
+        }
+        else if constexpr (std::is_same<tvalue, double>::value)
+        {
+            return std::stod(str);
+        }
+        else if constexpr (std::is_same<tvalue, long double>::value)
+        {
+            return std::stold(str);
+        }
+        else if constexpr (std::is_same<tvalue, string_t>::value)
+        {
+            return str;
+        }
+        else if constexpr (std::is_enum<typename std::remove_reference<tvalue>::type>::value)
+        {
+            for (const auto& elem : enum_string<tvalue>())
+            {
+                if (elem.second == str)
+                {
+                    return elem.first;
+                }
+            }
+
+            for (const auto& elem : enum_string<tvalue>())
+            {
+                if (str.find(elem.second) == 0)
+                {
+                    return elem.first;
+                }
+            }
+
+            const auto msg = string_t("invalid ") + typeid(tvalue).name() + " <" + str + ">!";
+            throw std::invalid_argument(msg);
+        }
     }
 
     ///
@@ -203,22 +140,10 @@ namespace nano
     ///
     namespace detail
     {
-        template <typename, bool>
-        struct scat_t;
-
         template <typename tvalue>
-        struct scat_t<tvalue, false>
+        void scat(std::ostringstream& stream, const tvalue& value)
         {
-            static void scat(std::ostringstream& stream, const tvalue& value)
-            {
-                stream << value;
-            }
-        };
-
-        template <typename tvalue>
-        struct scat_t<tvalue, true>
-        {
-            static void scat(std::ostringstream& stream, const tvalue& value)
+            if constexpr (std::is_enum<typename std::remove_reference<tvalue>::type>::value)
             {
                 for (const auto& elem : enum_string<tvalue>())
                 {
@@ -233,12 +158,10 @@ namespace nano
                 const auto msg = string_t("missing mapping for enumeration ") + typeid(tvalue).name() + " <" + str + ">!";
                 throw std::invalid_argument(msg);
             }
-        };
-
-        template <typename tvalue>
-        void scat(std::ostringstream& stream, const tvalue& value)
-        {
-            scat_t<tvalue, std::is_enum<tvalue>::value>::scat(stream, value);
+            else
+            {
+                stream << value;
+            }
         }
 
         template <typename tvalue, typename... tvalues>
@@ -258,86 +181,6 @@ namespace nano
     }
 
     ///
-    /// \brief returns the lower case string
-    ///
-    inline string_t lower(string_t str)
-    {
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [] (const unsigned char c) { return std::tolower(c); });
-        return str;
-    }
-
-    ///
-    /// \brief returns the upper case string
-    ///
-    inline string_t upper(string_t str)
-    {
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [] (const unsigned char c) { return std::toupper(c); });
-        return str;
-    }
-
-    ///
-    /// \brief replace all occurencies of a character with another one
-    ///
-    inline string_t replace(string_t str, const char token, const char newtoken)
-    {
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [=] (const char c) { return (c == token) ? newtoken : c; });
-        return str;
-    }
-
-    ///
-    /// \brief replace all occurencies of a string with another one
-    ///
-    inline string_t replace(string_t str, const string_t& token, const string_t& newtoken)
-    {
-        for (size_t index = 0;;)
-        {
-            index = str.find(token, index);
-            if (index == string_t::npos)
-            {
-                break;
-            }
-            str.replace(index, token.size(), newtoken);
-            index += newtoken.size();
-        }
-        return str;
-    }
-
-    ///
-    /// \brief check if two characters are equal case-insensitively
-    ///
-    inline bool iequal(const unsigned char c1, const unsigned char c2)
-    {
-        return std::tolower(c1) == std::tolower(c2);
-    }
-
-    ///
-    /// \brief check if a string contains a given character
-    ///
-    inline bool contains(const string_t& str, const char token)
-    {
-        return std::find(str.begin(), str.end(), token) != str.end();
-    }
-
-    ///
-    /// \brief check if two strings are equal (case sensitive)
-    ///
-    inline bool equals(const string_t& str1, const string_t& str2)
-    {
-        return str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin());
-    }
-
-    ///
-    /// \brief check if two strings are equal (case insensitive)
-    ///
-    inline bool iequals(const string_t& str1, const string_t& str2)
-    {
-        return str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin(), iequal);
-    }
-
-    ///
     /// \brief check if a string starts with a token (case sensitive)
     ///
     inline bool starts_with(const string_t& str, const string_t& token)
@@ -346,27 +189,11 @@ namespace nano
     }
 
     ///
-    /// \brief check if a string starts with a token (case insensitive)
-    ///
-    inline bool istarts_with(const string_t& str, const string_t& token)
-    {
-        return str.size() >= token.size() && std::equal(token.begin(), token.end(), str.begin(), iequal);
-    }
-
-    ///
     /// \brief check if a string ends with a token (case sensitive)
     ///
     inline bool ends_with(const string_t& str, const string_t& token)
     {
         return str.size() >= token.size() && std::equal(token.rbegin(), token.rend(), str.rbegin());
-    }
-
-    ///
-    /// \brief check if a string ends with a token (case insensitive)
-    ///
-    inline bool iends_with(const string_t& str, const string_t& token)
-    {
-        return str.size() >= token.size() && std::equal(token.rbegin(), token.rend(), str.rbegin(), iequal);
     }
 
     ///

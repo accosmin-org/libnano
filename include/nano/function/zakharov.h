@@ -13,7 +13,7 @@ namespace nano
     public:
 
         explicit function_zakharov_t(const tensor_size_t dims) :
-            function_t("Zakharov", dims, 1, convexity::yes),
+            function_t("Zakharov", dims, convexity::yes),
             m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
 
         {

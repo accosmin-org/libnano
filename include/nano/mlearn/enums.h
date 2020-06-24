@@ -37,13 +37,16 @@ namespace nano
     ///
     /// \brief regularization methods.
     ///
+    /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
+    /// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
+    ///
     enum class regularization
     {
         none = 0,       ///< no regularization
         lasso,          ///< like in LASSO
         ridge,          ///< like in ridge regression, weight decay or Tikhonov regularization
         elastic,        ///< like in elastic net regularization
-        variance        ///< like in VadaBoost
+        variance        ///< like in VadaBoost or EBBoost
     };
 
     template <>
@@ -80,5 +83,77 @@ namespace nano
             { normalization::minmax,    "minmax" },
             { normalization::standard,  "standard" }
         };
+    }
+
+    ///
+    /// \brief type of weak learner.
+    ///
+    enum class wlearner : int32_t
+    {
+        real,           ///< output \in R (no restriction)
+        discrete,       ///< output \in {-1, +1} (useful for classification to reduce overfitting)
+    };
+
+    template <>
+    inline enum_map_t<wlearner> enum_string<wlearner>()
+    {
+        return
+        {
+            { wlearner::real,          "real" },
+            { wlearner::discrete,      "discrete" }
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const wlearner type)
+    {
+        return os << scat(type);
+    }
+
+    ///
+    /// \brief method to scale weak learners.
+    ///
+    enum class wscale : int32_t
+    {
+        gboost,         ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
+        tboost,         ///< use a potentially different scaling factor for each split (e.g. see TreeBoost variation)
+    };
+
+    template <>
+    inline enum_map_t<wscale> enum_string<wscale>()
+    {
+        return
+        {
+            { wscale::gboost,       "gboost" },
+            { wscale::tboost,       "tboost" }
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const wscale type)
+    {
+        return os << scat(type);
+    }
+
+    ///
+    /// \brief method to estimate the importance of a feature.
+    ///
+    enum class importance : int32_t
+    {
+        shuffle,        ///< impact on error rate by shuffling the feature values without retraining
+        drop,           ///< impact on error rate by dropping the feature and retraining without it
+    };
+
+    template <>
+    inline enum_map_t<importance> enum_string<importance>()
+    {
+        return
+        {
+            { importance::shuffle,  "shuffle" },
+            { importance::drop,     "drop" },
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const importance type)
+    {
+        return os << scat(type);
     }
 }

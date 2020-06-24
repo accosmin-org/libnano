@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver/lsearch.h>
+#include <nano/solver.h>
 
 namespace nano
 {
@@ -11,7 +11,7 @@ namespace nano
     ///     see (3) "Introductory Lectures on Convex Optimization (Applied Optimization)", Nesterov, 2013
     ///     see (4) "A new approach to variable metric algorithms", Fletcher, 1972
     ///
-    class NANO_PUBLIC solver_quasi_t : public lsearch_solver_t
+    class NANO_PUBLIC solver_quasi_t : public solver_t
     {
     public:
 
@@ -34,7 +34,7 @@ namespace nano
         ///
         /// \brief @see lsearch_solver_t
         ///
-        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        [[nodiscard]] solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters
@@ -44,7 +44,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto init() const { return m_initialization; }
+        [[nodiscard]] auto init() const { return m_initialization; }
 
     private:
 
@@ -79,7 +79,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto r() const { return m_r.get(); }
+        [[nodiscard]] auto r() const { return m_r.get(); }
 
     private:
 

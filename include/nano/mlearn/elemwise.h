@@ -85,13 +85,15 @@ namespace nano
         ///
         /// \brief scale the mean and the stdev once the updates are done.
         ///
-        void done(const tensor_size_t total)
+        auto& done(const tensor_size_t total)
         {
             auto mean = m_mean.array();
             auto stdev = m_stdev.array();
 
             mean /= static_cast<scalar_t>(total);
+            // cppcheck-suppress unreadVariable
             stdev = ((stdev - total * mean.array().square()) / std::max(total - 1, tensor_size_t(1))).sqrt();
+            return *this;
         }
 
         ///
@@ -156,16 +158,19 @@ namespace nano
                 break;
 
             case ::nano::normalization::mean:
+                // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_mean.array() / (m_max.array() - m_min.array()).max(epsilon)).matrix();
                 w.array().colwise() /= (m_max.array() - m_min.array()).max(epsilon);
                 break;
 
             case ::nano::normalization::minmax:
+                // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_min.array() / (m_max.array() - m_min.array()).max(epsilon)).matrix();
                 w.array().colwise() /= (m_max.array() - m_min.array()).max(epsilon);
                 break;
 
             case ::nano::normalization::standard:
+                // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_mean.array() / m_stdev.array().max(epsilon)).matrix();
                 w.array().colwise() /= m_stdev.array().max(epsilon);
                 break;
@@ -179,15 +184,15 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        const auto& min() const { return m_min; }
-        const auto& max() const { return m_max; }
-        const auto& mean() const { return m_mean; }
-        const auto& stdev() const { return m_stdev; }
+        [[nodiscard]] const auto& min() const { return m_min; }
+        [[nodiscard]] const auto& max() const { return m_max; }
+        [[nodiscard]] const auto& mean() const { return m_mean; }
+        [[nodiscard]] const auto& stdev() const { return m_stdev; }
 
     private:
 
         template <typename tstorage>
-        auto samples(const tensor_t<tstorage, 4>& inputs) const
+        [[nodiscard]] auto samples(const tensor_t<tstorage, 4>& inputs) const
         {
             const auto samples = inputs.template size<0>();
             assert(nano::cat_dims(samples, m_min.dims()) == inputs.dims());

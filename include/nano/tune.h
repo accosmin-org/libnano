@@ -13,6 +13,83 @@ namespace nano
     // TODO: either throw an exception if the optimum value is at the boundary or
     //  automatically extend the search domain!
 
+    namespace detail
+    {
+        template <size_t offset, size_t index, typename tsource, typename tdestination>
+        void move_tuple(tsource&& source, tdestination&& destination)
+        {
+            std::get<offset + index>(destination) = std::move(std::get<index>(source));
+            if constexpr (index > 0U)
+            {
+                move_tuple<offset, index - 1U>(source, destination);
+            }
+        }
+
+        template <typename toptimum, typename tparams, typename tevaluated>
+        void update(toptimum& optimum, const tparams& params, tevaluated&& evaluated)
+        {
+            constexpr size_t psize = std::tuple_size<tparams>::value;
+            constexpr size_t esize = std::tuple_size<tevaluated>::value;
+
+            const auto value = std::get<0>(evaluated);
+            const auto best_value = std::get<psize>(optimum);
+            if (std::isfinite(value) && value < best_value)
+            {
+                move_tuple<0U, psize - 1U>(params, optimum);
+                move_tuple<psize, esize - 1U>(evaluated, optimum);
+            }
+        }
+
+        template <size_t index, typename tparams>
+        bool equal(const tparams& params1, const tparams& params2, const scalar_t epsilon)
+        {
+            if (std::fabs(std::get<index>(params1) - std::get<index>(params2)) < epsilon)
+            {
+                if constexpr (index > 0U)
+                {
+                    return equal<index - 1>(params1, params2, epsilon);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        template <typename tparams>
+        bool equal(const tparams& params1, const tparams& params2,
+            const scalar_t epsilon = std::sqrt(std::numeric_limits<scalar_t>::epsilon()))
+        {
+            constexpr size_t psize = std::tuple_size<tparams>::value;
+
+            return equal<psize - 1U>(params1, params2, epsilon);
+        }
+
+        template <typename tparams>
+        bool checked(std::vector<tparams>& history, const tparams& params,
+            const scalar_t epsilon = std::sqrt(std::numeric_limits<scalar_t>::epsilon()))
+        {
+            const auto it = std::find_if(history.begin(), history.end(), [&] (const tparams& old_params)
+            {
+                return equal(old_params, params, epsilon);
+            });
+
+            if (it == history.end())
+            {
+                history.push_back(params);
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+
     ///
     /// \brief the search interval used for tuning hyper-parameters.
     ///
@@ -40,6 +117,10 @@ namespace nano
         ///
         void refine(const scalar_t optimum)
         {
+            if (!std::isfinite(optimum))
+            {
+                throw std::runtime_error("invalid tuning domain for the search space");
+            }
             assert(m_min <= optimum && optimum <= m_max);
             const auto var = (m_max - m_min) / 4;
             m_min = std::max(m_min, optimum - var);
@@ -49,13 +130,13 @@ namespace nano
         ///
         /// \brief return the current search interval
         ///
-        auto min() const { return m_min; }
-        auto max() const { return m_max; }
+        [[nodiscard]] auto min() const { return m_min; }
+        [[nodiscard]] auto max() const { return m_max; }
 
         ///
         /// \brief clamp the given (trial) value to the current search interval
         ///
-        auto clamp(const scalar_t value) const
+        [[nodiscard]] auto clamp(const scalar_t value) const
         {
             return std::max(min(), std::min(value, max()));
         }
@@ -81,14 +162,17 @@ namespace nano
         ///
         void refine(const scalar_t pow10_optimum)
         {
-            assert(pow10_optimum > 0);
+            if (!std::isfinite(pow10_optimum))
+            {
+                throw std::runtime_error("invalid tuning domain for the search space");
+            }
             tuning_space_t::refine(std::log10(pow10_optimum));
         }
 
         ///
         /// \brief generate a list of hyper-parameter values to evaluate
         ///
-        auto generate(const int count) const
+        [[nodiscard]] auto generate(const int count) const
         {
             assert(count > 3);
 
@@ -123,7 +207,7 @@ namespace nano
         ///
         /// \brief generate a list of hyper-parameter values to evaluate
         ///
-        auto generate(const int count) const
+        [[nodiscard]] auto generate(const int count) const
         {
             assert(count > 3);
 
@@ -142,126 +226,134 @@ namespace nano
     /// \brief coarse-to-fine tuning of a continuous hyper-parameter.
     ///     the tuning is performed in steps by sampling with finer and finer step size around the current optimum.
     ///
+    /// NB: the evaluator is called with (param1) and returns a tuple with:
+    ///         <value_for_param1, others_for_param1...>
+    /// NB: the final returned value is a tuple with:
+    ///         <optimum_param1, value_for_optimum_param1, others_for_optimum_param1...>
+    ///
     template <typename tspace1, typename tevaluator>
-    std::tuple<scalar_t, scalar_t> grid_tune(tspace1 space1, const tevaluator& evaluator,
-        const int maximum_trials_per_step, const int steps)
+    auto grid_tune(tspace1 space1,
+        const tevaluator& evaluator, const int maximum_trials_per_step, const int steps)
     {
         assert(steps > 0 && maximum_trials_per_step > 3);
 
-        std::vector<std::tuple<scalar_t, scalar_t>> results;
+        std::vector<std::tuple<scalar_t>> tried;
+
+        decltype(std::tuple_cat(std::make_tuple(scalar_t{}), evaluator(0))) optimum;
+        std::get<0>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<1>(optimum) = std::numeric_limits<scalar_t>::max();
         for (int step = 0; step < steps; ++ step)
         {
             for (const auto param1 : space1.generate(maximum_trials_per_step))
             {
-                const auto value = static_cast<scalar_t>(evaluator(param1));
-                if (std::isfinite(value))
+                const auto params = std::make_tuple(param1);
+                if (!detail::checked(tried, params))
                 {
-                    results.emplace_back(value, param1);
+                    detail::update(optimum, params, evaluator(param1));
                 }
-            }
-
-            if (results.empty())
-            {
-                throw std::runtime_error("invalid tuning domain for the search space");
             }
 
             if (step + 1 < steps)
             {
-                assert(!results.empty());
-                const auto it_min = std::min_element(results.begin(), results.end());
-                space1.refine(std::get<1>(*it_min));
+                space1.refine(std::get<0>(optimum));
             }
         }
 
-        assert(!results.empty());
-        return *std::min_element(results.begin(), results.end());
+        return optimum;
     }
 
     ///
     /// \brief coarse-to-fine tuning of two continuous hyper-parameters.
     ///     the tuning is performed in steps by sampling with finer and finer step size around the current optimum.
     ///
+    /// NB: the evaluator is called with (param1, param2) and returns a tuple with:
+    ///         <value_for_param1_2, others_for_param1_2...>
+    /// NB: the final returned value is a tuple with:
+    ///         <optimum_param1, optimum_param2, value_for_optimum_param1_2, others_for_optimum_param1_2...>
+    ///
     template <typename tspace1, typename tspace2, typename tevaluator>
-    std::tuple<scalar_t, scalar_t, scalar_t> grid_tune(tspace1 space1, tspace2 space2, const tevaluator& evaluator,
-        const int maximum_trials_per_step, const int steps)
+    auto grid_tune(tspace1 space1, tspace2 space2,
+        const tevaluator& evaluator, const int maximum_trials_per_step, const int steps)
     {
         assert(steps > 0 && maximum_trials_per_step > 3);
 
-        std::vector<std::tuple<scalar_t, scalar_t, scalar_t>> results;
+        std::vector<std::tuple<scalar_t, scalar_t>> tried;
+
+        decltype(std::tuple_cat(std::make_tuple(scalar_t{}, scalar_t{}), evaluator(0, 0))) optimum;
+        std::get<0>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<1>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<2>(optimum) = std::numeric_limits<scalar_t>::max();
         for (int step = 0; step < steps; ++ step)
         {
             for (const auto param1 : space1.generate(maximum_trials_per_step))
             {
                 for (const auto param2 : space2.generate(maximum_trials_per_step))
                 {
-                    const auto value = static_cast<scalar_t>(evaluator(param1, param2));
-                    if (std::isfinite(value))
+                    const auto params = std::make_tuple(param1, param2);
+                    if (!detail::checked(tried, params))
                     {
-                        results.emplace_back(value, param1, param2);
+                        detail::update(optimum, params, evaluator(param1, param2));
                     }
                 }
             }
 
-            if (results.empty())
+            if (step + 1 < steps)
             {
-                throw std::runtime_error("invalid tuning domain for the search space");
+                space1.refine(std::get<0>(optimum));
+                space2.refine(std::get<1>(optimum));
+            }
+        }
+
+        return optimum;
+    }
+
+    ///
+    /// \brief coarse-to-fine tuning of three continuous hyper-parameters.
+    ///     the tuning is performed in steps by sampling with finer and finer step size around the current optimum.
+    ///
+    /// NB: the evaluator is called with (param1, param2, param3) and returns a tuple with:
+    ///         <value_for_param1_2_3, others_for_param1_2_3...>
+    /// NB: the final returned value is a tuple with:
+    ///         <optimum_param1, optimum_param2, optimum_param3, value_for_optimum_param1_2_3, others_for_optimum_param1_2_3...>
+    ///
+    template <typename tspace1, typename tspace2, typename tspace3, typename tevaluator>
+    auto grid_tune(tspace1 space1, tspace2 space2, tspace3 space3,
+        const tevaluator& evaluator, const int maximum_trials_per_step, const int steps)
+    {
+        assert(steps > 0 && maximum_trials_per_step > 3);
+
+        std::vector<std::tuple<scalar_t, scalar_t, scalar_t>> tried;
+
+        decltype(std::tuple_cat(std::make_tuple(scalar_t{}, scalar_t{}, scalar_t{}), evaluator(0, 0, 0))) optimum;
+        std::get<0>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<1>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<2>(optimum) = std::numeric_limits<scalar_t>::quiet_NaN();
+        std::get<3>(optimum) = std::numeric_limits<scalar_t>::max();
+        for (int step = 0; step < steps; ++ step)
+        {
+            for (const auto param1 : space1.generate(maximum_trials_per_step))
+            {
+                for (const auto param2 : space2.generate(maximum_trials_per_step))
+                {
+                    for (const auto param3 : space3.generate(maximum_trials_per_step))
+                    {
+                        const auto params = std::make_tuple(param1, param2, param3);
+                        if (!detail::checked(tried, params))
+                        {
+                            detail::update(optimum, params, evaluator(param1, param2, param3));
+                        }
+                    }
+                }
             }
 
             if (step + 1 < steps)
             {
-                assert(!results.empty());
-                const auto it_min = std::min_element(results.begin(), results.end());
-                space1.refine(std::get<1>(*it_min));
-                space2.refine(std::get<2>(*it_min));
+                space1.refine(std::get<0>(optimum));
+                space2.refine(std::get<1>(optimum));
+                space3.refine(std::get<2>(optimum));
             }
         }
 
-        assert(!results.empty());
-        return *std::min_element(results.begin(), results.end());
-    }
-
-    ///
-    /// \brief tune a continuous hyper-parameter by geometrically adjusting
-    ///     the [lo, hi] \in (R+,R+) initial guess interval on the side with the lowest value.
-    ///
-    template <typename tevaluator>
-    std::tuple<scalar_t, scalar_t> geom_tune(const tevaluator& evaluator,
-        scalar_t lo, scalar_t hi, const scalar_t factor = 2.0, const int max_steps = 100)
-    {
-        assert(factor > 1);
-        assert(max_steps > 0);
-        assert(0 < lo && lo < hi);
-
-        auto lo_value = static_cast<scalar_t>(evaluator(lo));
-        auto hi_value = static_cast<scalar_t>(evaluator(hi));
-
-        // FIXME: check overflow!!!
-
-        if (lo_value < hi_value)
-        {
-            for (int step = 0; step < max_steps && std::isfinite(lo_value) && lo_value < hi_value; ++ step)
-            {
-                hi = lo;
-                hi_value = lo_value;
-                lo /= factor;
-                lo_value = static_cast<scalar_t>(evaluator(lo));
-            }
-        }
-
-        else if (lo_value > hi_value)
-        {
-            for (int step = 0; step < max_steps && std::isfinite(hi_value) && lo_value > hi_value; ++ step)
-            {
-                lo = hi;
-                lo_value = hi_value;
-                hi *= factor;
-                hi_value = static_cast<scalar_t>(evaluator(hi));
-            }
-        }
-
-        lo_value = std::isfinite(lo_value) ? lo_value : std::numeric_limits<scalar_t>::max();
-        hi_value = std::isfinite(hi_value) ? hi_value : std::numeric_limits<scalar_t>::max();
-
-        return (lo_value < hi_value) ? std::make_tuple(lo_value, lo) : std::make_tuple(hi_value, hi);
+        return optimum;
     }
 }

@@ -5,9 +5,6 @@
 
 namespace nano
 {
-    using scalar_t = double;
-    using indices_t = tensor_vector_t<tensor_size_t>;
-
     using vector_t = tensor_vector_t<scalar_t>;
     using vector_map_t = Eigen::Map<vector_t>;
     using vector_cmap_t = Eigen::Map<const vector_t>;

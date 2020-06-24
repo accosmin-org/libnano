@@ -12,7 +12,7 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [lsearch_solver_t](../include/nano/solver/lsearch.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
+Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
 
 
 #### Function
@@ -27,7 +27,7 @@ class objective_t final : public nano::function_t
 public:
 
     objective_t(const int size) :
-        nano::function_t("objective's name", size, 1, nano::convexity::yes),
+        nano::function_t("objective's name", size, nano::convexity::yes),
         m_b(nano::vector_t::Random(size))
     {
     }
@@ -155,6 +155,7 @@ The results are typical: the BFGS algorithm is faster in terms of function value
 
 #### Future work
 
+* Implement sub-gradient methods
+* Implement stochastic gradient (descent) methods
 * Implement methods using second-order oracle (e.g. Newton method)
 * Implement non-monotone line-search methods (e.g. Nesterov's accelerated gradient, Barzilai and Borwein method)
-* Implement stochastic gradient (descent) methods

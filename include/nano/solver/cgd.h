@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver/lsearch.h>
+#include <nano/solver.h>
 
 namespace nano
 {
@@ -11,7 +11,7 @@ namespace nano
     ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager & Zhang
     ///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
-    class NANO_PUBLIC solver_cgd_t : public lsearch_solver_t
+    class NANO_PUBLIC solver_cgd_t : public solver_t
     {
     public:
 
@@ -25,7 +25,7 @@ namespace nano
         ///
         /// \brief @see lsearch_solver_t
         ///
-        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        [[nodiscard]] solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters
@@ -35,14 +35,14 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto orthotest() const { return m_orthotest.get(); }
+        [[nodiscard]] auto orthotest() const { return m_orthotest.get(); }
 
     private:
 
         ///
         /// \brief compute the adjustment factor for the descent direction
         ///
-        virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
+        [[nodiscard]] virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
 
         // attributes
         sparam1_t   m_orthotest{"solver::cgd::orthotest", 0, LT, 0.1, LT, 1};   ///< orthogonality test - see (4)
@@ -63,7 +63,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
 
         ///
         /// \brief change parameters
@@ -73,7 +73,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto eta() const { return m_eta.get(); }
+        [[nodiscard]] auto eta() const { return m_eta.get(); }
 
     private:
 
@@ -96,7 +96,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -114,7 +114,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -132,7 +132,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -150,7 +150,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -168,7 +168,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -186,7 +186,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -204,7 +204,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -222,7 +222,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -240,6 +240,6 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 }

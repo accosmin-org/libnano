@@ -29,7 +29,12 @@ namespace nano
     using tensor_cmap_t = tensor_t<tensor_pstorage_t<const tscalar>, trank>;
 
     ///
-    /// \brief map non-constant data to tensors
+    /// \brief tensor indices.
+    ///
+    using indices_t = tensor_mem_t<tensor_size_t, 1>;
+
+    ///
+    /// \brief map non-constant data to tensors.
     ///
     template <typename tscalar_, size_t trank>
     auto map_tensor(tscalar_* data, const tensor_dims_t<trank>& dims)
@@ -39,7 +44,7 @@ namespace nano
     }
 
     ///
-    /// \brief map constant data to tensors
+    /// \brief map constant data to tensors.
     ///
     template <typename tscalar_, size_t trank>
     auto map_tensor(const tscalar_* data, const tensor_dims_t<trank>& dims)
@@ -49,19 +54,19 @@ namespace nano
     }
 
     ///
-    /// \brief map non-constant data to tensors
+    /// \brief map non-constant data to tensors.
     ///
-    template <typename tscalar_, typename... tsizes>
-    auto map_tensor(tscalar_* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
+    template <typename tscalar, typename... tsizes>
+    auto map_tensor(tscalar* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return map_tensor(data, make_dims(dims...));
     }
 
     ///
-    /// \brief map constant data to tensors
+    /// \brief map constant data to tensors.
     ///
-    template <typename tscalar_, typename... tsizes>
-    auto map_tensor(const tscalar_* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
+    template <typename tscalar, typename... tsizes>
+    auto map_tensor(const tscalar* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
     {
         return map_tensor(data, make_dims(dims...));
     }
@@ -96,7 +101,7 @@ namespace nano
         }
 
         ///
-        /// \brief constructors that resize the storage to match the given size
+        /// \brief constructors that resize the storage to match the given size.
         ///
         template <typename... tsizes>
         explicit tensor_t(const tsizes... dims) :
@@ -114,7 +119,7 @@ namespace nano
         }
 
         ///
-        /// \brief constructors that maps const or non-const arrays
+        /// \brief constructors that maps const or non-const arrays.
         ///
         explicit tensor_t(tscalar* ptr, const tdims& dims) :
             m_dims(dims),
@@ -133,6 +138,33 @@ namespace nano
         }
 
         ///
+        /// \brief construct from a std::array (only for 1D tensors).
+        ///
+        template <typename tscalar_, size_t N>
+        // cppcheck-suppress noExplicitConstructor
+        tensor_t(const std::array<tscalar_, N>& array) : // NOLINT(hicpp-explicit-conversions)
+            m_storage(static_cast<tensor_size_t>(N))
+        {
+            static_assert(tstorage::resizable, "tensor resizable");
+            static_assert(trank == 1, "tensor must be of rank 1 to be initialized from std::array");
+            m_dims[0] = static_cast<tensor_size_t>(N);
+            vector() = map_vector(array.data(), this->size()).template cast<tscalar>();
+        }
+
+        ///
+        /// \brief construct from a std::array.
+        ///
+        template <typename tscalar_, size_t N>
+        tensor_t(const tdims& dims, const std::array<tscalar_, N>& array) :
+            m_dims(dims),
+            m_storage(this->size())
+        {
+            static_assert(tstorage::resizable, "tensor resizable");
+            assert(this->size() == static_cast<tensor_size_t>(N));
+            vector() = map_vector(array.data(), this->size()).template cast<tscalar>();
+        }
+
+        ///
         /// \brief default for copying and moving (delegate to the storage objects)
         ///
         tensor_t(const tensor_t&) = default;
@@ -145,6 +177,7 @@ namespace nano
         /// \brief copy constructor from different types (e.g. const from non-const scalars)
         ///
         template <typename tstorage2>
+        // cppcheck-suppress noExplicitConstructor
         tensor_t(const tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
             m_dims(other.dims()),
             m_storage(other.storage())
@@ -175,7 +208,7 @@ namespace nano
         ///
         /// \brief list of dimensions
         ///
-        const auto& dims() const { return m_dims; }
+        [[nodiscard]] const auto& dims() const { return m_dims; }
 
         ///
         /// \brief gather the missing dimensions in a multi-dimensional tensor
@@ -189,29 +222,29 @@ namespace nano
         }
 
         ///
-        /// \brief total number of elements
+        /// \brief total number of elements.
         ///
-        auto size() const { return nano::size(m_dims); }
+        [[nodiscard]] auto size() const { return nano::size(m_dims); }
 
         ///
-        /// \brief number of elements for the given dimension
+        /// \brief number of elements for the given dimension.
         ///
         template <int idim>
-        auto size() const { return std::get<idim>(m_dims); }
+        [[nodiscard]] auto size() const { return std::get<idim>(m_dims); }
 
         ///
-        /// \brief interpret the last two dimensions as rows/columns
+        /// \brief interpret the last two dimensions as rows/columns.
         /// NB: e.g. images represented as 3D tensors (color plane, rows, columns)
         /// NB: e.g. ML minibatches represented as 4D tensors (sample, feature plane, rows, columns)
         ///
-        auto rows() const { static_assert(trank >= 2, ""); return size<trank - 2>(); }
-        auto cols() const { static_assert(trank >= 2, ""); return size<trank - 1>(); }
+        [[nodiscard]] auto rows() const { static_assert(trank >= 2 ); return size<trank - 2>(); }
+        [[nodiscard]] auto cols() const { static_assert(trank >= 2 ); return size<trank - 1>(); }
 
         ///
-        /// \brief compute the linearized index from the list of offsets
+        /// \brief compute the linearized index from the list of offsets.
         ///
         template <typename... tindices>
-        auto offset(const tindices... indices) const
+        [[nodiscard]] auto offset(const tindices... indices) const
         {
             static_assert(sizeof...(indices) == trank, "invalid number of tensor dimensions");
             return nano::index(dims(), indices...);
@@ -219,17 +252,17 @@ namespace nano
 
         ///
         /// \brief compute the linearized index from the list of offsets
-        ///     (assuming the last dimensions that are ignored are zero)
+        ///     (assuming the last dimensions that are ignored are zero).
         ///
         template <typename... tindices>
-        auto offset0(const tindices... indices) const
+        [[nodiscard]] auto offset0(const tindices... indices) const
         {
             static_assert(sizeof...(indices) <= trank, "invalid number of tensor dimensions");
             return nano::index0(dims(), indices...);
         }
 
         ///
-        /// \brief resize to new dimensions
+        /// \brief resize to new dimensions.
         ///
         template <typename... tsizes>
         tensor_size_t resize(const tsizes... dims)
@@ -245,39 +278,69 @@ namespace nano
         }
 
         ///
-        /// \brief set all elements to zero
+        /// \brief set all elements to zero.
         ///
-        void zero() { zero(array()); }
-        void setZero() { zero(); }
+        void zero()
+        {
+            zero(array());
+        }
 
         ///
-        /// \brief set all elements to a constant value
+        /// \brief set all elements to a constant value.
         ///
-        void constant(const tscalar value) { constant(array(), value); }
-        void setConstant(const tscalar value) { constant(value); }
+        void constant(const tscalar value)
+        {
+            constant(array(), value);
+        }
 
         ///
-        /// \brief set all elements to random values in the [min, max] range
+        /// \brief set all elements to random values in the [min, max] range.
         ///
-        void random(const tscalar min = -1, const tscalar max = +1) { random(array(), min, max); }
-        void setRandom(const tscalar min = -1, const tscalar max = +1) { random(min, max); }
+        void random(const tscalar min = -1, const tscalar max = +1)
+        {
+            random(array(), min, max);
+        }
 
         ///
-        /// \brief access the storage container
+        /// \brief set all elements in an arithmetic progression from min to max.
         ///
-        const auto& storage() const { return m_storage; }
+        void lin_spaced(const tscalar min, const tscalar max)
+        {
+            array() = tensor_vector_t<tscalar>::LinSpaced(size(), min, max);
+        }
+
+        ///
+        /// \brief returns the minimum value.
+        ///
+        [[nodiscard]] auto min() const
+        {
+            return vector().minCoeff();
+        }
+
+        ///
+        /// \brief returns the maximum value.
+        ///
+        [[nodiscard]] auto max() const
+        {
+            return vector().maxCoeff();
+        }
+
+        ///
+        /// \brief access the storage container.
+        ///
+        [[nodiscard]] const auto& storage() const { return m_storage; }
 
         ///
         /// \brief access the tensor as a continuous C-array
         ///
         auto data() { return m_storage.data(); }
-        auto data() const { return m_storage.data(); }
+        [[nodiscard]] auto data() const { return m_storage.data(); }
 
         ///
         /// \brief access the whole tensor as an Eigen vector
         ///
         auto vector() { return map_vector(data(), size()); }
-        auto vector() const { return map_vector(data(), size()); }
+        [[nodiscard]] auto vector() const { return map_vector(data(), size()); }
 
         ///
         /// \brief access a continuous part of the tensor as an Eigen vector
@@ -287,13 +350,13 @@ namespace nano
         auto vector(const tindices... indices) { return tvector(data(), indices...); }
 
         template <typename... tindices>
-        auto vector(const tindices... indices) const { return tvector(data(), indices...); }
+        [[nodiscard]] auto vector(const tindices... indices) const { return tvector(data(), indices...); }
 
         ///
         /// \brief access the whole tensor as an Eigen array
         ///
         auto array() { return vector().array(); }
-        auto array() const { return vector().array(); }
+        [[nodiscard]] auto array() const { return vector().array(); }
 
         ///
         /// \brief access a part of the tensor as an Eigen array
@@ -303,7 +366,7 @@ namespace nano
         auto array(const tindices... indices) { return vector(indices...).array(); }
 
         template <typename... tindices>
-        auto array(const tindices... indices) const { return vector(indices...).array(); }
+        [[nodiscard]] auto array(const tindices... indices) const { return vector(indices...).array(); }
 
         ///
         /// \brief access a part of the tensor as an Eigen matrix
@@ -313,7 +376,7 @@ namespace nano
         auto matrix(const tindices... indices) { return tmatrix(data(), indices...); }
 
         template <typename... tindices>
-        auto matrix(const tindices... indices) const { return tmatrix(data(), indices...); }
+        [[nodiscard]] auto matrix(const tindices... indices) const { return tmatrix(data(), indices...); }
 
         ///
         /// \brief access a part of the tensor as a (sub-)tensor
@@ -323,30 +386,40 @@ namespace nano
         auto tensor(const tindices... indices) { return ttensor(data(), indices...); }
 
         template <typename... tindices>
-        auto tensor(const tindices... indices) const { return ttensor(data(), indices...); }
+        [[nodiscard]] auto tensor(const tindices... indices) const { return ttensor(data(), indices...); }
 
         ///
         /// \brief access a part of the tensor as a (sub-)tensor
         ///     (by taking the [begin, begin + delta) range of the first dimension)
         ///
-        auto slice(const tensor_size_t begin, const tensor_size_t delta)
+        [[nodiscard]] auto slice(const tensor_size_t begin, const tensor_size_t delta)
         {
             return tslice(data(), begin, begin + delta);
         }
 
-        auto slice(const tensor_size_t begin, const tensor_size_t delta) const
+        [[nodiscard]] auto slice(const tensor_size_t begin, const tensor_size_t delta) const
         {
             return tslice(data(), begin, begin + delta);
+        }
+
+        [[nodiscard]] auto slice(const tensor_range_t& range)
+        {
+            return slice(range.begin(), range.size());
+        }
+
+        [[nodiscard]] auto slice(const tensor_range_t& range) const
+        {
+            return slice(range.begin(), range.size());
         }
 
         ///
         /// \brief copy some of (sub-)tensors using the given indices.
         /// NB: the indices are relative to the first dimension.
         ///
-        template <typename tscalar_return, typename tindices>
-        void indexed(const tindices& indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
+        template <typename tscalar_return>
+        void indexed(const indices_t& indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
         {
-            assert(indices.minCoeff() >= 0 && indices.maxCoeff() < size<0>());
+            assert(indices.min() >= 0 && indices.max() < size<0>());
 
             auto dims = this->dims();
             dims[0] = indices.size();
@@ -363,7 +436,7 @@ namespace nano
         /// NB: the indices are relative to the first dimension.
         ///
         template <typename tscalar_return, typename tindices>
-        auto indexed(const tindices& indices) const
+        [[nodiscard]] auto indexed(const tindices& indices) const
         {
             auto subtensor = tensor_mem_t<tscalar_return, trank>{};
             indexed(indices, subtensor);
@@ -375,7 +448,7 @@ namespace nano
         ///
         treference operator()(const tensor_size_t index)
         {
-            assert(data() != nullptr);
+            assert(const_cast<const tensor_t*>(this)->data() != nullptr);
             assert(index >= 0 && index < size());
             return data()[index];
         }
@@ -400,22 +473,103 @@ namespace nano
             return operator()(offset(index, indices...));
         }
         ///
-        /// \brief reshape to a new tensor (with the same number of elements)
+        /// \brief reshape to a new tensor (with the same number of elements).
+        /// NB: a single -1 dimension can be inferred from the total size and the remaining positive dimensions!
         ///
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes) { return treshape(data(), sizes...); }
+        auto reshape(const tsizes... sizes)
+        {
+            return treshape(data(), sizes...);
+        }
 
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes) const { return treshape(data(), sizes...); }
+        [[nodiscard]] auto reshape(const tsizes... sizes) const
+        {
+            return treshape(data(), sizes...);
+        }
 
         ///
         /// \brief iterators for Eigen matrices for STL compatibility.
         ///
         auto begin() { return data(); }
-        auto begin() const { return data(); }
+        [[nodiscard]] auto begin() const { return data(); }
 
         auto end() { return data() + size(); }
-        auto end() const { return data() + size(); }
+        [[nodiscard]] auto end() const { return data() + size(); }
+
+        ///
+        /// \brief pretty-print the tensor.
+        ///
+        std::ostream& print(std::ostream& stream,
+            tensor_size_t prefix_space = 0, tensor_size_t prefix_delim = 0, tensor_size_t suffix = 0) const
+        {
+            [[maybe_unused]] const auto sprint = [&] (const char c, const tensor_size_t count) -> std::ostream&
+            {
+                for (tensor_size_t i = 0; i < count; ++ i)
+                {
+                    stream << c;
+                }
+                return stream;
+            };
+
+            if (prefix_space == 0 && prefix_delim == 0 && suffix == 0)
+            {
+                stream << "shape: " << dims() << "\n";
+            }
+
+            if constexpr (trank == 1)
+            {
+                sprint('[', prefix_delim + 1) << vector().transpose();
+                sprint(']', suffix + 1);
+            }
+            else if constexpr (trank == 2)
+            {
+                const auto matrix = this->matrix();
+                for (tensor_size_t row = 0, rows = matrix.rows(); row < rows; ++ row)
+                {
+                    if (row == 0)
+                    {
+                        sprint(' ', prefix_space);
+                        sprint('[', prefix_delim + 2);
+                    }
+                    else
+                    {
+                        sprint(' ', prefix_space + prefix_delim + 1);
+                        sprint('[', 1);
+                    }
+                    stream << matrix.row(row);
+
+                    if (row + 1 < rows)
+                    {
+                        stream << "]\n";
+                    }
+                    else
+                    {
+                        sprint(']', suffix + 2);
+                    }
+                }
+            }
+            else
+            {
+                for (tensor_size_t row = 0, rows = size<0>(); row < rows; ++ row)
+                {
+                    tensor(row).print(stream,
+                        (row == 0) ? prefix_space : (prefix_space + prefix_delim + 1),
+                        (row == 0) ? (prefix_delim + 1) : 0,
+                        suffix);
+
+                    if (row + 1 < rows)
+                    {
+                        stream << "\n";
+                    }
+                    else
+                    {
+                        stream << "]";
+                    }
+                }
+            }
+            return stream;
+        }
 
     private:
 
@@ -462,8 +616,17 @@ namespace nano
         template <typename tdata, typename... tsizes>
         auto treshape(tdata ptr, const tsizes... sizes) const
         {
-            assert(nano::size(nano::make_dims(sizes...)) == size());
-            return map_tensor(ptr, sizes...);
+            auto dims = nano::make_dims(sizes...);
+            for (auto& dim : dims)
+            {
+                assert(dim == -1 || dim >= 0);
+                if (dim == -1)
+                {
+                    dim = -size() / nano::size(dims);
+                }
+            }
+            assert(nano::size(dims) == size());
+            return map_tensor(ptr, dims);
         }
 
         template <typename tdata>
@@ -475,10 +638,66 @@ namespace nano
             return map_tensor(ptr + offset0(begin), dims);
         }
 
-    private:
-
         // attributes
-        tdims           m_dims;
-        tstorage        m_storage;
+        tdims           m_dims{};   ///<
+        tstorage        m_storage;  ///<
     };
+
+    ///
+    /// \brief iterators for STL compatibility.
+    ///
+    template <typename tstorage, size_t trank>
+    auto begin(tensor_t<tstorage, trank>& m)
+    {
+        return m.data();
+    }
+
+    template <typename tstorage, size_t trank>
+    auto begin(const tensor_t<tstorage, trank>& m)
+    {
+        return m.data();
+    }
+
+    template <typename tstorage, size_t trank>
+    auto end(tensor_t<tstorage, trank>& m)
+    {
+        return m.data() + m.size();
+    }
+
+    template <typename tstorage, size_t trank>
+    auto end(const tensor_t<tstorage, trank>& m)
+    {
+        return m.data() + m.size();
+    }
+
+    ///
+    /// \brief construct consecutive tensor indices in the range [min, max).
+    ///
+    inline auto arange(const tensor_size_t min, const tensor_size_t max)
+    {
+        assert(min <= max);
+
+        indices_t indices(max - min);
+        indices.lin_spaced(min, max - 1);
+        return indices;
+    }
+
+    ///
+    /// \brief compare two tensors element-wise.
+    ///
+    template <typename tstorage, size_t trank>
+    bool operator==(const tensor_t<tstorage, trank>& lhs, const tensor_t<tstorage, trank>& rhs)
+    {
+        return  lhs.dims() == rhs.dims() &&
+                lhs.vector() == rhs.vector();
+    }
+
+    ///
+    /// \brief pretty-print the given tensor.
+    ///
+    template <typename tstorage, size_t trank>
+    std::ostream& operator<<(std::ostream& stream, const tensor_t<tstorage, trank>& tensor)
+    {
+        return tensor.print(stream);
+    }
 }

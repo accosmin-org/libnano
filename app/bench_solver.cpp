@@ -3,9 +3,9 @@
 #include <nano/tpool.h>
 #include <nano/chrono.h>
 #include <nano/logger.h>
+#include <nano/solver.h>
 #include <nano/cmdline.h>
 #include <nano/numeric.h>
-#include <nano/solver/lsearch.h>
 
 using namespace nano;
 
@@ -83,7 +83,7 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
     std::cout << table;
 }
 
-static auto log_solver(const function_t& function, const rlsearch_solver_t& solver, const string_t& solver_id,
+static auto log_solver(const function_t& function, const rsolver_t& solver, const string_t& solver_id,
     const vector_t& x0)
 {
     std::cout << std::fixed << std::setprecision(10);
@@ -116,7 +116,7 @@ static auto log_solver(const function_t& function, const rlsearch_solver_t& solv
             << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << "." << std::endl;
     });
 
-    const auto state = solver->minimize(function, x0);
+    auto state = solver->minimize(function, x0);
     std::cout << std::flush;
 
     // NB: need to reset the logger for the next batch of tests!
@@ -127,7 +127,7 @@ static auto log_solver(const function_t& function, const rlsearch_solver_t& solv
     return state;
 }
 
-static void check_solver(const function_t& function, const rlsearch_solver_t& solver,
+static void check_solver(const function_t& function, const rsolver_t& solver,
     const string_t& solver_id, const std::vector<vector_t>& x0s,
     solver_config_stats_t& fstats, solver_config_stats_t& gstats,
     const bool log_failures)
@@ -168,7 +168,7 @@ static void check_solver(const function_t& function, const rlsearch_solver_t& so
 }
 
 static void check_function(const function_t& function,
-    const std::vector<std::pair<string_t, rlsearch_solver_t>>& id_solvers,
+    const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
     const size_t trials, solver_config_stats_t& gstats, const bool log_failures)
 {
     // generate fixed random trials
@@ -240,10 +240,10 @@ static int unsafe_main(int argc, const char* argv[])
         strings_t{""};
 
     // construct the list of solver configurations to evaluate
-    std::vector<std::pair<string_t, rlsearch_solver_t>> solvers;
+    std::vector<std::pair<string_t, rsolver_t>> solvers;
     const auto add_solver = [&] (const string_t& solver_id, const string_t& lsearch0, const string_t& lsearchk)
     {
-        auto solver = lsearch_solver_t::all().get(solver_id);
+        auto solver = solver_t::all().get(solver_id);
 
         solver->epsilon(epsilon);
         solver->max_iterations(max_iterations);

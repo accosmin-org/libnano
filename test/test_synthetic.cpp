@@ -1,6 +1,6 @@
 #include <utest/utest.h>
 #include <nano/numeric.h>
-#include <nano/synthetic/affine.h>
+#include <nano/dataset/synth_affine.h>
 
 using namespace nano;
 

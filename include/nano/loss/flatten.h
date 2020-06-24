@@ -65,7 +65,7 @@ namespace nano
 
             for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++ i)
             {
-                vgrads.array(i) = top::vgrad(targets.array(i), outputs.array(i));
+                top::vgrad(targets.array(i), outputs.array(i), vgrads.array(i));
             }
         }
     };
@@ -109,7 +109,7 @@ namespace nano
             {
                 if (target.size() > 1)
                 {
-                    tensor_size_t idx;
+                    tensor_size_t idx = -1;
                     output.array().maxCoeff(&idx);
 
                     return static_cast<scalar_t>(is_pos_target(target(idx)) ? 0 : 1);
@@ -132,15 +132,40 @@ namespace nano
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
             {
-                return  std::log(output.exp().sum()) -
-                        std::log(((1 + target) * output.exp()).sum() / 2);
+                tensor_size_t imax = 0;
+                const auto omax = output.maxCoeff(&imax);
+
+                scalar_t value = 0, posum = 0;
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                {
+                    value += std::exp(output(i) - omax);
+                    if (is_pos_target(target(i)))
+                    {
+                        posum += output(i);
+                    }
+                }
+                return std::log(value) - posum + omax;
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return  output.exp() / output.exp().sum() -
-                        (1 + target) * output.exp() / ((1 + target) * output.exp()).sum();
+                tensor_size_t imax = 0;
+                const auto omax = output.maxCoeff(&imax);
+
+                scalar_t value = 0;
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                {
+                    value += (vgrad(i) = std::exp(output(i) - omax));
+                }
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                {
+                    vgrad(i) /= value;
+                    if (is_pos_target(target(i)))
+                    {
+                        vgrad(i) -= 1.0;
+                    }
+                }
             }
         };
 
@@ -156,10 +181,10 @@ namespace nano
                 return (-target * output).exp().sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return -target * (-target * output).exp();
+                vgrad = -target * (-target * output).exp();
             }
         };
 
@@ -172,14 +197,24 @@ namespace nano
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
             {
-                return  (1 + (-target * output).exp()).log().sum();
+                scalar_t value = 0.0;
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                {
+                    const auto x = -target(i) * output(i);
+                    value += (x < 1.0) ? std::log1p(std::exp(x)) : (x + std::log1p(std::exp(-x)));
+                }
+                return value;
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return  -target * (-target * output).exp() /
-                        (1 + (-target * output).exp());
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                {
+                    const auto x = -target(i) * output(i);
+                    const auto g = (x < 1.0) ? (std::exp(x) / (1.0 + std::exp(x))) : (1.0 / (1.0 + std::exp(-x)));
+                    vgrad(i) = -target(i) * g;
+                }
             }
         };
 
@@ -195,10 +230,10 @@ namespace nano
                 return (1 - target * output).max(0).sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return -target * ((1 - target * output).sign() + 1) * 0.5;
+                vgrad = -target * ((1 - target * output).sign() + 1) * 0.5;
             }
         };
 
@@ -214,10 +249,10 @@ namespace nano
                 return (1 / (1 + (target * output).exp()).square()).sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return -2 * target * (target * output).exp() / (1 + (target * output).exp()).cube();
+                vgrad = -2 * target / ((1 + (target * output).exp()).square() * (1 + (-target * output).exp()));
             }
         };
 
@@ -233,10 +268,10 @@ namespace nano
                 return (2 * (target * output).atan() - 1).square().sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
+                vgrad = 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
             }
         };
 
@@ -252,10 +287,10 @@ namespace nano
                 return (output - target).abs().sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return (output - target).sign();
+                vgrad = (output - target).sign();
             }
         };
 
@@ -271,10 +306,10 @@ namespace nano
                 return scalar_t(0.5) * (output - target).square().sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return output - target;
+                vgrad = output - target;
             }
         };
 
@@ -290,10 +325,10 @@ namespace nano
                 return scalar_t(0.5) * ((target - output).square() + 1).log().sum();
             }
 
-            template <typename tarray>
-            static auto vgrad(const tarray& target, const tarray& output)
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                return (output - target) / (1 + (output - target).square());
+                vgrad = (output - target) / (1 + (output - target).square());
             }
         };
     }

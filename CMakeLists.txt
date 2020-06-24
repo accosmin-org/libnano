@@ -1,16 +1,23 @@
 cmake_minimum_required(VERSION 3.5)
-project(libnano VERSION 1.0.0 LANGUAGES CXX)
+project(libnano
+    VERSION 1.0.0
+    LANGUAGES CXX
+    DESCRIPTION "Eigen-based numerical optimization and machine learning utilities")
+
+option(NANO_BUILD_TESTS   "Build unit tests" ON)
+option(NANO_BUILD_CMD_APP "Build command line utilities and benchmarks" ON)
+option(NANO_BUILD_QT5_APP "Build Qt5-based interface (if Qt5 libraries are installed)" OFF)
 
 ##################################################################################################
 # setup project
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY YES)
 
 include(GNUInstallDirs)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
@@ -47,16 +54,20 @@ set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
 add_subdirectory(src)
 
 ##################################################################################################
-# setup command line utilities
+# setup command line utilities and benchmark
 
-add_subdirectory(app)
+if(NANO_BUILD_CMD_APP)
+    add_subdirectory(app)
+endif()
 
 ##################################################################################################
 # setup unit tests
 
-include(CTest)
-enable_testing()
-add_subdirectory(test)
+if(NANO_BUILD_TESTS)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
 ##################################################################################################
 # setup installation
@@ -77,7 +88,7 @@ include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion)
+    COMPATIBILITY SameMajorVersion)
 
 configure_package_config_file(
     ${CMAKE_CURRENT_LIST_DIR}/cmake/NANOConfig.cmake.in

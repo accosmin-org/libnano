@@ -17,14 +17,14 @@ The project is organized as follows:
 #### Dependencies
 
 System:
-* compiler supporting [C++14](https://isocpp.org/wiki/faq/cpp14)
+* compiler supporting [C++17](https://isocpp.org/wiki/faq/cpp17)
 * [CMake](https://cmake.org)
 * [Eigen3](https://tuxfamily.org) - high-performance linear-algebra C++ library
 
 Git submodules:
 * [utest](https://github.com/accosmin/utest) - (micro) header-only unit test library
 
-Libnano is tested on Ubuntu using gcc (version 5+) and clang (version 3.8+) and on OSX using AppleClang (version 7+). It may work with minor changes on other platforms as well.
+Libnano is tested on Ubuntu using gcc (version 5+) and clang (version 4+) and on OSX using AppleClang (version 7+). It may work with minor changes on other platforms as well or using other compiler versions.
 
 
 #### How to build

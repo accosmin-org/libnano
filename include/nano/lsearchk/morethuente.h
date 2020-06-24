@@ -24,7 +24,7 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        rlsearchk_t clone() const final;
+        [[nodiscard]] rlsearchk_t clone() const final;
 
         ///
         /// \brief @see lsearchk_t
@@ -39,7 +39,7 @@ namespace nano
         ///
         /// \brief access parameters
         ///
-        auto delta() const { return m_delta.get(); }
+        [[nodiscard]] auto delta() const { return m_delta.get(); }
 
     private:
 
@@ -49,7 +49,7 @@ namespace nano
         void dcstep(
             scalar_t& stx, scalar_t& fx, scalar_t& dx,
             scalar_t& sty, scalar_t& fy, scalar_t& dy,
-            scalar_t& stp, scalar_t& fp, scalar_t& dp,
+            scalar_t& stp, const scalar_t& fp, const scalar_t& dp,
             bool& brackt, scalar_t stpmin, scalar_t stpmax) const;
 
         // attributes

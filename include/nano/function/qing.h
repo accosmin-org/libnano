@@ -12,7 +12,7 @@ namespace nano
     public:
 
         explicit function_qing_t(const tensor_size_t dims) :
-            function_t("Qing", dims, 1, convexity::no),
+            function_t("Qing", dims, convexity::no),
             m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
         {
         }

@@ -77,15 +77,6 @@ function download_forest_fires {
     wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/forest-fires/forestfires.names -P ${dir}
 }
 
-function download_poker_hand {
-    local dir=${dir_data}/poker-hand
-    mkdir -p ${dir}
-
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-testing.data -P ${dir}
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand-training-true.data -P ${dir}
-    wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/poker/poker-hand.names -P ${dir}
-}
-
 function download_breast_cancer {
     local dir=${dir_data}/breast-cancer
     mkdir -p ${dir}
@@ -128,7 +119,6 @@ function download_all {
     download_wine
     download_adult
     download_abalone
-    download_poker_hand
     download_forest_fires
     download_breast_cancer
     download_bank_marketing
@@ -160,8 +150,6 @@ options:
         download CIFAR-10 dataset
     --cifar100
         download CIFAR-100 dataset
-    --poker-hand
-        download Poker Hand dataset
     --forest-fires
         download Forest Fires dataset
     --breast-cancer

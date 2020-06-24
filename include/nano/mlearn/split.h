@@ -32,6 +32,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
+        // cppcheck-suppress noExplicitConstructor
         split_t(std::tuple<indices_t, indices_t, indices_t>&& tr_vd_te_indices) :   // NOLINT(hicpp-explicit-conversions)
             m_tr_indices(std::move(std::get<0>(tr_vd_te_indices))),
             m_vd_indices(std::move(std::get<1>(tr_vd_te_indices))),
@@ -43,7 +44,7 @@ namespace nano
         /// \returns true if the training, validation and test sample indices
         ///     are valid relative to the given expected number of samples
         ///
-        bool valid(const tensor_size_t samples) const
+        [[nodiscard]] bool valid(const tensor_size_t samples) const
         {
             const auto tr = std::set<tensor_size_t>{begin(m_tr_indices), end(m_tr_indices)};
             const auto vd = std::set<tensor_size_t>{begin(m_vd_indices), end(m_vd_indices)};
@@ -52,9 +53,9 @@ namespace nano
             return  m_tr_indices.size() > 0 &&
                     m_vd_indices.size() > 0 &&
                     m_te_indices.size() > 0 &&
-                    (m_tr_indices.minCoeff() >= 0 && m_tr_indices.maxCoeff() < samples) &&
-                    (m_vd_indices.minCoeff() >= 0 && m_vd_indices.maxCoeff() < samples) &&
-                    (m_te_indices.minCoeff() >= 0 && m_te_indices.maxCoeff() < samples) &&
+                    (m_tr_indices.min() >= 0 && m_tr_indices.max() < samples) &&
+                    (m_vd_indices.min() >= 0 && m_vd_indices.max() < samples) &&
+                    (m_te_indices.min() >= 0 && m_te_indices.max() < samples) &&
                     (m_tr_indices.size() + m_vd_indices.size() + m_te_indices.size() == samples) &&
                     (std::find_if(vd.begin(), vd.end(), [&] (const auto i) { return tr.count(i) > 0; }) == vd.end()) &&
                     (std::find_if(te.begin(), te.end(), [&] (const auto i) { return tr.count(i) > 0; }) == te.end());
@@ -80,7 +81,7 @@ namespace nano
         ///
         /// \brief returns the sample indices of the given fold.
         ///
-        const auto& indices(const protocol p) const
+        [[nodiscard]] const auto& indices(const protocol p) const
         {
             switch (p)
             {
@@ -89,7 +90,7 @@ namespace nano
             default:                return m_te_indices;
             }
         }
-        const auto& indices(const fold_t& fold) const
+        [[nodiscard]] const auto& indices(const fold_t& fold) const
         {
             return indices(fold.m_protocol);
         }
@@ -118,14 +119,17 @@ namespace nano
         const auto size1 = percentage1 * count / 100;
         const auto size2 = count - size1;
 
-        indices_t all = indices_t::LinSpaced(count, 0, count);
+        auto all = arange(0, count);
         std::shuffle(begin(all), end(all), make_rng());
 
-        indices_t set1 = all.segment(0, size1);
-        indices_t set2 = all.segment(size1, size2);
+        indices_t set1 = all.slice(0, size1);
+        indices_t set2 = all.slice(size1, size2);
 
         std::sort(begin(set1), end(set1));
         std::sort(begin(set2), end(set2));
+
+        assert(set1.min() >= 0 && set1.max() < count);
+        assert(set2.min() >= 0 && set2.max() < count);
 
         return std::make_tuple(set1, set2);
     }
@@ -148,16 +152,20 @@ namespace nano
         const auto size2 = percentage2 * count / 100;
         const auto size3 = count - size1 - size2;
 
-        indices_t all = indices_t::LinSpaced(count, 0, count);
+        auto all = arange(0, count);
         std::shuffle(begin(all), end(all), make_rng());
 
-        indices_t set1 = all.segment(0, size1);
-        indices_t set2 = all.segment(size1, size2);
-        indices_t set3 = all.segment(size1 + size2, size3);
+        indices_t set1 = all.slice(0, size1);
+        indices_t set2 = all.slice(size1, size2);
+        indices_t set3 = all.slice(size1 + size2, size3);
 
         std::sort(begin(set1), end(set1));
         std::sort(begin(set2), end(set2));
         std::sort(begin(set3), end(set3));
+
+        assert(set1.min() >= 0 && set1.max() < count);
+        assert(set2.min() >= 0 && set2.max() < count);
+        assert(set3.min() >= 0 && set3.max() < count);
 
         return std::make_tuple(set1, set2, set3);
     }
@@ -190,11 +198,13 @@ namespace nano
     {
         assert(0 <= percentage && percentage <= 100);
 
-        indices_t all = indices_t::LinSpaced(count, 0, count);
+        auto all = arange(0, count);
         std::shuffle(begin(all), end(all), make_rng());
 
-        indices_t set = all.segment(0, percentage * count / 100);
+        indices_t set = all.slice(0, percentage * count / 100);
         std::sort(begin(set), end(set));
+
+        assert(set.min() >= 0 && set.max() < count);
 
         return set;
     }

@@ -35,27 +35,27 @@ namespace nano
         ///
         /// \brief retrieve the elapsed time as a string
         ///
-        std::string elapsed() const { return elapsed(static_cast<int>(this->milliseconds().count())); }
+        [[nodiscard]] std::string elapsed() const { return elapsed(static_cast<int>(this->milliseconds().count())); }
 
         ///
         /// \brief retrieve the elapsed time in seconds
         ///
-        seconds_t seconds() const { return duration<seconds_t>(); }
+        [[nodiscard]] seconds_t seconds() const { return duration<seconds_t>(); }
 
         ///
         /// \brief retrieve the elapsed time in milliseconds
         ///
-        milliseconds_t milliseconds() const { return duration<milliseconds_t>(); }
+        [[nodiscard]] milliseconds_t milliseconds() const { return duration<milliseconds_t>(); }
 
         ///
         /// \brief retrieve the elapsed time in microseconds
         ///
-        microseconds_t microseconds() const { return duration<microseconds_t>(); }
+        [[nodiscard]] microseconds_t microseconds() const { return duration<microseconds_t>(); }
 
         ///
         /// \brief retrieve the elapsed time in nanoseconds
         ///
-        nanoseconds_t nanoseconds() const { return duration<nanoseconds_t>(); }
+        [[nodiscard]] nanoseconds_t nanoseconds() const { return duration<nanoseconds_t>(); }
 
     private:
 
@@ -72,7 +72,7 @@ namespace nano
         }
 
         template <typename tduration>
-        tduration duration() const
+        [[nodiscard]] tduration duration() const
         {
             return std::chrono::duration_cast<tduration>(now() - m_start);
         }
@@ -192,14 +192,14 @@ namespace nano
         }
 
         operator bool() const { return m_timings; } // NOLINT(hicpp-explicit-conversions)
-        const auto& timings() const { return m_timings; }
+        [[nodiscard]] const auto& timings() const { return m_timings; }
 
-        const auto& basename() const { return m_basename; }
-        const auto& fullname() const { return m_fullname; }
+        [[nodiscard]] const auto& basename() const { return m_basename; }
+        [[nodiscard]] const auto& fullname() const { return m_fullname; }
 
-        auto flops() const { return m_flops; }
-        auto kflops() const { return m_flops / 1024; }
-        auto gflops() const { return nano::gflops(flops(), nanoseconds_t(static_cast<int64_t>(timings().min()))); }
+        [[nodiscard]] auto flops() const { return m_flops; }
+        [[nodiscard]] auto kflops() const { return m_flops / 1024; }
+        [[nodiscard]] auto gflops() const { return nano::gflops(flops(), nanoseconds_t(static_cast<int64_t>(timings().min()))); }
 
     private:
 

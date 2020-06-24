@@ -1,13 +1,13 @@
 #pragma once
 
-#include <nano/solver/lsearch.h>
+#include <nano/solver.h>
 
 namespace nano
 {
     ///
     /// \brief gradient descent with line-search.
     ///
-    class NANO_PUBLIC solver_gd_t final : public lsearch_solver_t
+    class NANO_PUBLIC solver_gd_t final : public solver_t
     {
     public:
 
@@ -21,6 +21,6 @@ namespace nano
         ///
         /// \brief @see lsearch_solver_t
         ///
-        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        [[nodiscard]] solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
     };
 }

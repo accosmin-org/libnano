@@ -2,10 +2,9 @@
 #include <nano/chrono.h>
 #include <nano/logger.h>
 #include <nano/cmdline.h>
-#include <nano/imclass.h>
 #include <nano/linear/model.h>
 #include <nano/linear/function.h>
-#include <nano/iterator/memfixed.h>
+#include <nano/dataset/imclass.h>
 
 using namespace nano;
 
@@ -38,16 +37,13 @@ static auto get_solver(const string_t& id, const scalar_t epsilon, const int max
     solver->max_iterations(max_iterations);
     solver->logger([&] (const solver_state_t& state)
     {
-        std::cout << std::fixed << std::setprecision(6)
-            << "\tdescent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << state.m_status << "],calls=" << state.m_fcalls << "/" << state.m_gcalls
-            << ",lrate=" << state.lrate << ",decay=" << state.decay << ".\n";
+        std::cout << std::fixed << std::setprecision(6) << "\tdescent: " << state << ".\n";
         return true;
     });
     return solver;
 }
 
-static auto tune_batch(const iterator_t& iterator)
+static auto tune_batch(const dataset_t& dataset)
 {
     const auto min_batch = 8;
     const auto max_batch = 1024;
@@ -74,10 +70,7 @@ static auto tune_batch(const iterator_t& iterator)
 
     const auto loss = get_loss("s-classnll");
     const auto fold = fold_t{0, protocol::train};
-    auto function = linear_function_t{*loss, iterator, fold};
-
-    const auto begin = 0;
-    const auto end = std::min(static_cast<tensor_size_t>(2 * max_batch * tpool_t::size()), function.summands());
+    auto function = linear_function_t{*loss, dataset, fold};
 
     const auto op_bench = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg, const auto& op)
     {
@@ -100,7 +93,7 @@ static auto tune_batch(const iterator_t& iterator)
     {
         volatile scalar_t value = 0;
         const vector_t x = vector_t::Random(function.size());
-        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x, begin, end); });
+        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x); });
     };
 
     const auto op_bench_vgrad = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg)
@@ -108,7 +101,7 @@ static auto tune_batch(const iterator_t& iterator)
         volatile scalar_t value = 0;
         vector_t gx(function.size());
         const vector_t x = vector_t::Random(function.size());
-        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x, begin, end, &gx); });
+        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x, &gx); });
     };
 
     table.delim();
@@ -155,10 +148,9 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "train-percentage", "percentage of training samples excluding the test samples [10, 90]", 80);
     cmdline.add("", "no-training",      "don't train the linear models (e.g. check dataset loading)");
 
-    // todo: configurable decay, tuneit, batch0 and batchr for stochastic solvers
     // todo: option to save trained models
     // todo: option to save training history to csv
-    // todo: wrapper bash script to generate plots with gnuplot?!
+    // todo: wrapper script to generate plots?!
 
     cmdline.process(argc, argv);
 
@@ -181,10 +173,9 @@ static int unsafe_main(int argc, const char* argv[])
     for (const auto& id_imclass : imclass_dataset_t::all().ids(std::regex(cmdline.get<string_t>("imclass"))))
     {
         const auto dataset = get_imclass(id_imclass, folds, train_percentage);
-        const auto iterator = memfixed_iterator_t<uint8_t>{*dataset};
 
         // tune the batch size wrt the processing time
-        const auto batch = tune_batch(iterator);
+        const auto batch = tune_batch(*dataset);
         log_info() << ">>> optimum batch size per thread is " << batch << " (samples).";
 
         if (cmdline.has("no-training"))
@@ -221,14 +212,14 @@ static int unsafe_main(int argc, const char* argv[])
                         model.tune_trials(tune_trials);
                         model.normalization(normalization);
                         model.regularization(regularization);
-                        const auto training = model.train(*loss, iterator, *solver);
+                        const auto training = model.train(*loss, *dataset, *solver);
 
                         stats_t te_errors, eval_times, train_times;
                         for (const auto& tfold : training)
                         {
-                            te_errors(tfold.m_te_error);
-                            eval_times(tfold.m_eval_time.count());
-                            train_times(tfold.m_train_time.count());
+                            te_errors(tfold.te_error());
+                            eval_times(0); // FIXME: tfold.m_eval_time.count());
+                            train_times(0); // FIXME: tfold.m_train_time.count());
                         }
 
                         auto& row = table.append();

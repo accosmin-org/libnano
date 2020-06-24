@@ -79,7 +79,7 @@ namespace nano
         {
             switch (type)
             {
-            case logger_t::type::info:      return (cout != nullptr ? *cout : std::cout);
+            case logger_t::type::info:
             case logger_t::type::warn:      return (cout != nullptr ? *cout : std::cout);
             case logger_t::type::error:     return (cerr != nullptr ? *cerr : std::cerr);
             default:                        return (cout != nullptr ? *cout : std::cout);

@@ -11,11 +11,11 @@ rlsearchk_t lsearchk_morethuente_t::clone() const
 void lsearchk_morethuente_t::dcstep(
     scalar_t& stx, scalar_t& fx, scalar_t& dx,
     scalar_t& sty, scalar_t& fy, scalar_t& dy,
-    scalar_t& stp, scalar_t& fp, scalar_t& dp,
+    scalar_t& stp, const scalar_t& fp, const scalar_t& dp,
     bool& brackt,
     const scalar_t stpmin, const scalar_t stpmax) const
 {
-    scalar_t stpc, stpq, stpf;
+    scalar_t stpc = 0, stpq = 0, stpf = 0;
 
     const auto sgnd = dp * (dx / std::fabs(dx));
 
@@ -213,16 +213,14 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
             }
             width1 = width;
             width = std::fabs(sty - stx);
-        }
 
-        // Set the minimum and maximum steps allowed for stp
-        if (brackt)
-        {
+            // Set the minimum and maximum steps allowed for stp
             stmin = std::min(stx, sty);
             stmax = std::max(stx, sty);
         }
         else
         {
+            // Set the minimum and maximum steps allowed for stp
             stmin = stp + (stp - stx) * scalar_t(1.1);
             stmax = stp + (stp - stx) * scalar_t(4.0);
         }

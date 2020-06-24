@@ -37,7 +37,7 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        rlsearchk_t clone() const final;
+        [[nodiscard]] rlsearchk_t clone() const final;
 
         ///
         /// \brief @see lsearchk_t
@@ -58,13 +58,13 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto epsilon() const { return m_epsilon.get(); }
-        auto theta() const { return m_theta.get(); }
-        auto gamma() const { return m_gamma.get(); }
-        auto delta() const { return m_delta.get(); }
-        auto omega() const { return m_omega.get(); }
-        auto ro() const { return m_ro.get(); }
-        auto crit() const { return m_criterion; }
+        [[nodiscard]] auto epsilon() const { return m_epsilon.get(); }
+        [[nodiscard]] auto theta() const { return m_theta.get(); }
+        [[nodiscard]] auto gamma() const { return m_gamma.get(); }
+        [[nodiscard]] auto delta() const { return m_delta.get(); }
+        [[nodiscard]] auto omega() const { return m_omega.get(); }
+        [[nodiscard]] auto ro() const { return m_ro.get(); }
+        [[nodiscard]] auto crit() const { return m_criterion; }
 
     private:
 
