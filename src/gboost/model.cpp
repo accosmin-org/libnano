@@ -1,4 +1,3 @@
-#include <fstream>
 #include <nano/tune.h>
 #include <nano/logger.h>
 #include <nano/version.h>
@@ -179,7 +178,8 @@ train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& datase
 }
 
 train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAreg,
-    const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state, train_curve_t& curve) const
+    const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state,
+    const indices_t& features, train_curve_t& curve) const
 {
     const auto cwidth = static_cast<int>(std::log10(rounds())) + 1;
 
@@ -196,7 +196,8 @@ train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAre
         << std::setw(cwidth) << std::setfill('0') << rounds()
         << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
         << std::setprecision(8) << std::fixed
-        << ",vAreg=" << vAreg << "," << state << ".";
+        << ",vAreg=" << vAreg << "," << state
+        << ",feat=[" << features.array() << "].";
 
     return status;
 }
@@ -253,7 +254,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
     ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
     ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
 
-    const auto status = done(0, vAreg, tr_errors, vd_errors, state, curve);
+    const auto status = done(0, vAreg, tr_errors, vd_errors, state, indices_t{}, curve);
     critical(status == train_status::diverged, "gboost model: failed to fit bias (check inputs and parameters)!");
 
     model_t model;
@@ -267,11 +268,11 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
         cluster.assign(i, 0);
     }
 
+    const auto indices = make_indices(tr_samples);
+
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < rounds(); ++ round)
     {
-        const auto indices = make_indices(tr_samples);
-
         ::residual(dataset, tr_fold, batch(), loss, tr_outputs, vAreg,
             tr_errors.tensor(), tr_vgrads.tensor(), tr_woutputs.tensor());
 
@@ -298,8 +299,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
             log_warning() << "cannot fit any new weak learner, stopping.";
             break;
         }
-
-        log_info() << " >" << (*best_wlearner) << ".";
+        const auto features = best_wlearner->features();
 
         // scale the chosen weak learner
         switch (scale())
@@ -340,7 +340,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
         ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
         ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
 
-        const auto status = done(round + 1, vAreg, tr_errors, vd_errors, state, curve);
+        const auto status = done(round + 1, vAreg, tr_errors, vd_errors, state, features, curve);
         if (status == train_status::better)
         {
             te_opt_outputs = te_outputs;
@@ -390,35 +390,6 @@ void gboost_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_map
     outputs.array() /= std::max(size_t(1), m_models.size());
 }
 
-gboost_model_t::proto_t::proto_t(string_t&& id, rwlearner_t&& wlearner) :
-    m_id(std::move(id)),
-    m_wlearner(std::move(wlearner))
-{
-}
-
-void gboost_model_t::proto_t::read(std::istream& stream)
-{
-    critical(
-        !::nano::detail::read(stream, m_id),
-        "gboost model: failed to read from stream!");
-
-    m_wlearner = wlearner_t::all().get(m_id);
-    critical(
-        m_wlearner == nullptr,
-        scat("gboost model: invalid weak learner id <", m_id, "> read from stream!"));
-
-    m_wlearner->read(stream);
-}
-
-void gboost_model_t::proto_t::write(std::ostream& stream) const
-{
-    critical(
-        !::nano::detail::write(stream, m_id),
-        "gboost model: failed to write to stream!");
-
-    m_wlearner->write(stream);
-}
-
 void gboost_model_t::read(std::istream& stream)
 {
     serializable_t::read(stream);
@@ -446,17 +417,9 @@ void gboost_model_t::read(std::istream& stream)
     scale(static_cast<::nano::wscale>(iscale));
     regularization(static_cast<::nano::regularization>(iregularization));
 
+    iwlearner_t::read(stream, m_protos);
+
     uint32_t size = 0;
-    critical(
-        !::nano::detail::read(stream, size),
-        "gboost model: failed to read from stream!");
-
-    m_protos.resize(size);
-    for (auto& proto : m_protos)
-    {
-        proto.read(stream);
-    }
-
     critical(
         !::nano::detail::read(stream, size),
         "gboost model: failed to read from stream!");
@@ -465,15 +428,10 @@ void gboost_model_t::read(std::istream& stream)
     for (auto& model : m_models)
     {
         critical(
-            !::nano::read(stream, model.m_bias) ||
-            !::nano::detail::read(stream, size),
+            !::nano::read(stream, model.m_bias),
             "gboost model: failed to read from stream!");
 
-        model.m_protos.resize(size);
-        for (auto& proto : model.m_protos)
-        {
-            proto.read(stream);
-        }
+        iwlearner_t::read(stream, model.m_protos);
     }
 }
 
@@ -492,14 +450,7 @@ void gboost_model_t::write(std::ostream& stream) const
         !::nano::detail::write(stream, static_cast<int32_t>(m_regularization)),
         "gboost model: failed to write to stream!");
 
-    critical(
-        !::nano::detail::write(stream, static_cast<uint32_t>(m_protos.size())),
-        "gboost model: failed to write to stream!");
-
-    for (const auto& proto : m_protos)
-    {
-        proto.write(stream);
-    }
+    iwlearner_t::write(stream, m_protos);
 
     critical(
         !::nano::detail::write(stream, static_cast<uint32_t>(m_models.size())),
@@ -508,14 +459,10 @@ void gboost_model_t::write(std::ostream& stream) const
     for (const auto& model : m_models)
     {
         critical(
-            !::nano::write(stream, model.m_bias) ||
-            !::nano::detail::write(stream, static_cast<uint32_t>(model.m_protos.size())),
+            !::nano::write(stream, model.m_bias),
             "gboost model: failed to write to stream!");
 
-        for (const auto& proto : model.m_protos)
-        {
-            proto.write(stream);
-        }
+        iwlearner_t::write(stream, model.m_protos);
     }
 }
 

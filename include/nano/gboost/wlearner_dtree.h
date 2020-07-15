@@ -77,14 +77,14 @@ namespace nano
     ///     depending on how well the associated weak learner matches the residuals
     ///     (tables for discrete feature and stumps for continuous features).
     ///
-    class NANO_PUBLIC wlearner_dtree_t : public wlearner_t
+    class NANO_PUBLIC wlearner_dtree_t final : public wlearner_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        wlearner_dtree_t() = default;
+        wlearner_dtree_t();
 
         ///
         /// \brief @see wlearner_t
@@ -99,17 +99,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         [[nodiscard]] rwlearner_t clone() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] tensor3d_dim_t odim() const override;
 
         ///
         /// \brief @see wlearner_t
@@ -124,7 +114,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t& gradients, const indices_t&) override;
+        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t&, const indices_t&) override;
 
         ///
         /// \brief @see wlearner_t

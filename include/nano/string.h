@@ -56,41 +56,20 @@ namespace nano
     template <typename tvalue>
     tvalue from_string(const string_t& str)
     {
-        if constexpr (std::is_same<tvalue, short>::value)
+        if constexpr (std::is_integral<tvalue>::value)
         {
-            return static_cast<short>(std::stoi(str));
+            if constexpr (std::is_signed<tvalue>::value)
+            {
+                return static_cast<tvalue>(std::stoll(str));
+            }
+            else
+            {
+                return static_cast<tvalue>(std::stoull(str));
+            }
         }
-        else if constexpr (std::is_same<tvalue, int>::value)
+        else if constexpr (std::is_floating_point<tvalue>::value)
         {
-            return std::stoi(str);
-        }
-        else if constexpr (std::is_same<tvalue, long>::value)
-        {
-            return std::stol(str);
-        }
-        else if constexpr (std::is_same<tvalue, long long>::value)
-        {
-            return std::stoll(str);
-        }
-        else if constexpr (std::is_same<tvalue, unsigned long>::value)
-        {
-            return std::stoul(str);
-        }
-        else if constexpr (std::is_same<tvalue, unsigned long long>::value)
-        {
-            return std::stoull(str);
-        }
-        else if constexpr (std::is_same<tvalue, float>::value)
-        {
-            return std::stof(str);
-        }
-        else if constexpr (std::is_same<tvalue, double>::value)
-        {
-            return std::stod(str);
-        }
-        else if constexpr (std::is_same<tvalue, long double>::value)
-        {
-            return std::stold(str);
+            return static_cast<tvalue>(std::stold(str));
         }
         else if constexpr (std::is_same<tvalue, string_t>::value)
         {

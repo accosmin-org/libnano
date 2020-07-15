@@ -191,6 +191,8 @@ namespace
     }
 }
 
+wlearner_dtree_t::wlearner_dtree_t() = default;
+
 void wlearner_dtree_t::max_depth(const int max_depth)
 {
     m_max_depth = max_depth;
@@ -231,19 +233,9 @@ void wlearner_dtree_t::write(std::ostream& stream) const
         "dtree weak learner: failed to write to stream!");
 }
 
-std::ostream& wlearner_dtree_t::print(std::ostream& stream) const
-{
-    return stream << "dtree: features=[" << m_features.array() << "]";
-}
-
 rwlearner_t wlearner_dtree_t::clone() const
 {
     return std::make_unique<wlearner_dtree_t>(*this);
-}
-
-tensor3d_dim_t wlearner_dtree_t::odim() const
-{
-    return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());
 }
 
 void wlearner_dtree_t::scale(const vector_t& scale)
@@ -251,8 +243,7 @@ void wlearner_dtree_t::scale(const vector_t& scale)
     wlearner_t::scale(m_tables, scale);
 }
 
-scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
-    const indices_t& indices)
+scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
 {
     assert(indices.min() >= 0);
     assert(indices.max() < dataset.samples(fold));
@@ -277,6 +268,7 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         const auto& cache = caches.front();
 
         // split the node using both discrete and continuous features...
+        log_info() << " === depth=" << cache.m_depth << ",samples=" << cache.m_indices.size() << "...";
         const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
         const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
 
@@ -343,6 +335,10 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     // OK, compact the selected features
     ::update(m_nodes, m_features);
+
+    log_info() << std::fixed << std::setprecision(8) << " === tree(features="
+        << m_features.size() << ",nodes=" << m_nodes.size() << "), score=" << score << ".";
+
     return score;
 }
 
@@ -353,7 +349,7 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
         "dtree weak learner: empty weak learner!");
 
     critical(
-        odim() != dataset.tdim() ||
+        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdim() ||
         m_features.min() < 0 || m_features.max() >= dataset.features(),
         "dtree weak learner: mis-matching dataset!");
 
@@ -379,7 +375,6 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
 void wlearner_dtree_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
     compatible(dataset);
-    check(range, outputs);
 
     const auto fvalues = dataset.inputs(fold, range, m_features);
     for (tensor_size_t i = 0; i < range.size(); ++ i)

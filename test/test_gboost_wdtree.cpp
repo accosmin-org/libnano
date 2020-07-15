@@ -1,7 +1,6 @@
 #include <utest/utest.h>
 #include <nano/numeric.h>
-#include "fixture_gboost.h"
-#include <nano/gboost/wlearner_dtree.h>
+#include "fixture/gboost.h"
 
 using namespace nano;
 
@@ -13,11 +12,18 @@ public:
 
     [[nodiscard]] virtual int min_split() const = 0;
     [[nodiscard]] virtual int max_depth() const = 0;
-    [[nodiscard]] virtual bool can_discrete() const = 0;
     [[nodiscard]] virtual indices_t features() const = 0;
     [[nodiscard]] virtual tensor4d_t rtables() const = 0;
     [[nodiscard]] virtual tensor4d_t dtables() const = 0;
     [[nodiscard]] virtual dtree_nodes_t nodes() const = 0;
+
+    void check_wlearner(const wlearner_dtree_t& wlearner) const
+    {
+        const auto tables = (wlearner.type() == ::nano::wlearner::real) ? rtables() : dtables();
+        UTEST_CHECK_EQUAL(wlearner.features(), features());
+        UTEST_CHECK_EQUAL(wlearner.nodes(), nodes());
+        UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);
+    }
 };
 
 class wdtree_stump1_dataset_t : public wdtree_dataset_t
@@ -28,7 +34,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 2; }
     [[nodiscard]] tensor_size_t feature(bool discrete = false) const { return get_feature(discrete); }
 
@@ -70,7 +75,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 3; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
     [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
@@ -114,7 +118,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 2; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 6; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature0(); }
     [[nodiscard]] tensor_size_t feature0(bool discrete = true) const { return get_feature(discrete); }
@@ -188,7 +191,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 3; }
-    [[nodiscard]] bool can_discrete() const override { return false; }
     [[nodiscard]] tensor_size_t groups() const override { return 11; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature22(); }
     [[nodiscard]] tensor_size_t feature0(bool discrete = false) const { return get_feature(discrete); }
@@ -210,13 +212,11 @@ public:
 
         if (!feature_t::missing(input(tf0)))
         {
-            input(tf0) = static_cast<scalar_t>(sample % 7);
-            if ((sample % 7) < 3)
+            if ((input(tf0) = static_cast<scalar_t>(sample % 7)) < 3.0)
             {
                 if (!feature_t::missing(input(tf10)))
                 {
-                    input(tf10) = static_cast<scalar_t>(sample % 9);
-                    if ((sample % 9) < 5)
+                    if ((input(tf10) = static_cast<scalar_t>(sample % 9)) < 5.0)
                     {
                         target.constant(make_table_target(sample, feature20(), 3, 2.0, 0));
                     }
@@ -231,8 +231,7 @@ public:
             {
                 if (!feature_t::missing(input(tf11)))
                 {
-                    input(tf11) = static_cast<scalar_t>(sample % 11);
-                    if ((sample % 11) < 7)
+                    if ((input(tf11) = static_cast<scalar_t>(sample % 11)) < 7.0)
                     {
                         target.constant(make_table_target(sample, feature22(), 3, 3.0, 5));
                     }
@@ -312,67 +311,6 @@ static auto make_wdtree(const wdtree_dataset_t& dataset, const ::nano::wlearner 
     return wlearner;
 }
 
-template <typename tdataset, typename... targs>
-static std::unique_ptr<wdtree_dataset_t> make_datasetw(targs... args)
-{
-    return std::make_unique<tdataset>(make_dataset<tdataset>(args...));
-}
-
-static auto make_datasets()
-{
-    using udataset = std::unique_ptr<wdtree_dataset_t>;
-
-    std::vector<std::pair<udataset, std::vector<udataset>>> datasets;
-    {
-        using tdataset = wdtree_stump1_dataset_t;
-        auto dataset = make_datasetw<tdataset>();
-        auto xdatasets = std::vector<udataset>{};
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->isize(), dataset->tsize() + 1));
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->features().max(), dataset->tsize()));
-        xdatasets.emplace_back(make_datasetw<no_continuous_features_dataset_t<tdataset>>());
-        datasets.emplace_back(std::move(dataset), std::move(xdatasets));
-    }
-    {
-        using tdataset = wdtree_table1_dataset_t;
-        auto dataset = make_datasetw<tdataset>();
-        auto xdatasets = std::vector<udataset>{};
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->isize(), dataset->tsize() + 1));
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->features().max(), dataset->tsize()));
-        xdatasets.emplace_back(make_datasetw<no_discrete_features_dataset_t<tdataset>>());
-        xdatasets.emplace_back(make_datasetw<different_discrete_feature_dataset_t<tdataset>>());
-        datasets.emplace_back(std::move(dataset), std::move(xdatasets));
-    }
-    {
-        using tdataset = wdtree_depth2_dataset_t;
-        auto dataset = make_datasetw<tdataset>(10, 1, 400);
-        auto xdatasets = std::vector<udataset>{};
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->isize(), dataset->tsize() + 1));
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->features().max(), dataset->tsize()));
-        xdatasets.emplace_back(make_datasetw<no_discrete_features_dataset_t<tdataset>>());
-        xdatasets.emplace_back(make_datasetw<no_continuous_features_dataset_t<tdataset>>());
-        xdatasets.emplace_back(make_datasetw<different_discrete_feature_dataset_t<tdataset>>());
-        datasets.emplace_back(std::move(dataset), std::move(xdatasets));
-    }
-    {
-        using tdataset = wdtree_depth3_dataset_t;
-        auto dataset = make_datasetw<tdataset>(10, 1, 1600);
-        auto xdatasets = std::vector<udataset>{};
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->isize(), dataset->tsize() + 1));
-        xdatasets.emplace_back(make_datasetw<tdataset>(dataset->features().max(), dataset->tsize()));
-        xdatasets.emplace_back(make_datasetw<no_discrete_features_dataset_t<tdataset>>());
-        xdatasets.emplace_back(make_datasetw<no_continuous_features_dataset_t<tdataset>>());
-        xdatasets.emplace_back(make_datasetw<different_discrete_feature_dataset_t<tdataset>>());
-        datasets.emplace_back(std::move(dataset), std::move(xdatasets));
-    }
-    return datasets;
-}
-
-static const auto& the_datasets()
-{
-    static const auto datasets = make_datasets();
-    return datasets;
-}
-
 UTEST_BEGIN_MODULE(test_gboost_wdtree)
 
 // TODO: test min_split, max_depth, leaves begin cut if not enough samples
@@ -402,108 +340,88 @@ UTEST_CASE(print)
     }
 }
 
-UTEST_CASE(fitting)
+UTEST_CASE(fitting_stump1)
 {
-    for (const auto& pdataset : the_datasets())
+    const auto dataset = make_dataset<wdtree_stump1_dataset_t>();
+    const auto datasetx1 = make_dataset<wdtree_stump1_dataset_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_stump1_dataset_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<wdtree_stump1_dataset_t>>();
+
+    for (const auto type : {static_cast<::nano::wlearner>(-1)})
     {
-        const auto fold = make_fold();
-        const auto& dataset = *pdataset.first;
+        auto wlearner = make_wdtree(dataset, type);
+        check_fit_throws(wlearner, dataset);
+    }
 
-        for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-        {
-            // check fitting
-            auto wlearner = make_wdtree(dataset, type);
-            check_fit(dataset, fold, wlearner);
-
-            if (type == ::nano::wlearner::discrete && !dataset.can_discrete())
-            {
-                continue;
-            }
-
-            const auto tables = (type == ::nano::wlearner::real) ? dataset.rtables() : dataset.dtables();
-
-            UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
-            UTEST_CHECK_EQUAL(wlearner.features(), dataset.features());
-            UTEST_CHECK_EQUAL(wlearner.nodes(), dataset.nodes());
-            UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);
-
-            // check scaling
-            check_scale(dataset, fold, wlearner);
-
-            // check model loading and saving from and to binary streams
-            const auto iwlearner = stream_wlearner(wlearner);
-            UTEST_CHECK_EQUAL(wlearner.nodes(), iwlearner.nodes());
-            UTEST_CHECK_EQUAL(wlearner.features(), iwlearner.features());
-            UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), iwlearner.tables().array(), 1e-8);
-        }
+    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
+    {
+        auto wlearner = make_wdtree(dataset, type);
+        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3);
     }
 }
 
-UTEST_CASE(no_fitting)
+UTEST_CASE(fitting_table1)
 {
-    for (const auto& pdataset : the_datasets())
-    {
-        const auto fold = make_fold();
-        const auto& dataset = *pdataset.first;
+    const auto dataset = make_dataset<wdtree_table1_dataset_t>();
+    const auto datasetx1 = make_dataset<wdtree_table1_dataset_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_table1_dataset_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_table1_dataset_t>>();
+    const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wdtree_table1_dataset_t>>();
 
-        for (const auto type : {static_cast<::nano::wlearner>(-1)})
-        {
-            auto wlearner = make_wlearner<wlearner_dtree_t>(type);
-            check_fit_throws(dataset, fold, wlearner);
-        }
+    for (const auto type : {static_cast<::nano::wlearner>(-1)})
+    {
+        auto wlearner = make_wdtree(dataset, type);
+        check_fit_throws(wlearner, dataset);
+    }
+
+    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
+    {
+        auto wlearner = make_wdtree(dataset, type);
+        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4);
     }
 }
 
-UTEST_CASE(predict)
+UTEST_CASE(fitting_depth2)
 {
-    for (const auto& pdataset : the_datasets())
+    const auto dataset = make_dataset<wdtree_depth2_dataset_t>(10, 1, 400);
+    const auto datasetx1 = make_dataset<wdtree_depth2_dataset_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_depth2_dataset_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth2_dataset_t>>();
+    const auto datasetx4 = make_dataset<no_continuous_features_dataset_t<wdtree_depth2_dataset_t>>();
+    const auto datasetx5 = make_dataset<different_discrete_feature_dataset_t<wdtree_depth2_dataset_t>>();
+
+    for (const auto type : {static_cast<::nano::wlearner>(-1)})
     {
-        const auto fold = make_fold();
-        const auto& dataset = *pdataset.first;
+        auto wlearner = make_wdtree(dataset, type);
+        check_fit_throws(wlearner, dataset);
+    }
 
-        for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-        {
-            auto wlearner = make_wdtree(dataset, type);
-            check_predict_throws(dataset, fold, wlearner);
-
-            if (type == ::nano::wlearner::discrete && !dataset.can_discrete())
-            {
-                continue;
-            }
-
-            check_fit(dataset, fold, wlearner);
-
-            check_predict(dataset, fold, wlearner);
-            for (const auto& pdatasetx : pdataset.second)
-            {
-                check_predict_throws(*pdatasetx, fold, wlearner);
-            }
-        }
+    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
+    {
+        auto wlearner = make_wdtree(dataset, type);
+        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);
     }
 }
 
-UTEST_CASE(split)
+UTEST_CASE(fitting_depth3)
 {
-    for (const auto& pdataset : the_datasets())
+    const auto dataset = make_dataset<wdtree_depth3_dataset_t>(10, 1, 1600);
+    const auto datasetx1 = make_dataset<wdtree_depth3_dataset_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_depth3_dataset_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth3_dataset_t>>();
+    const auto datasetx4 = make_dataset<no_continuous_features_dataset_t<wdtree_depth3_dataset_t>>();
+    const auto datasetx5 = make_dataset<different_discrete_feature_dataset_t<wdtree_depth3_dataset_t>>();
+
+    for (const auto type : {static_cast<::nano::wlearner>(-1)})
     {
-        const auto fold = make_fold();
-        const auto& dataset = *pdataset.first;
+        auto wlearner = make_wdtree(dataset, type);
+        check_fit_throws(wlearner, dataset);
+    }
 
-        for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-        {
-            auto wlearner = make_wdtree(dataset, type);
-            check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);
-
-            if (type == ::nano::wlearner::discrete && !dataset.can_discrete())
-            {
-                continue;
-            }
-
-            check_fit(dataset, fold, wlearner);
-
-            check_split(dataset, wlearner);
-            check_split_throws(dataset, fold, make_invalid_indices(dataset, fold), wlearner);
-        }
+    for (const auto type : {::nano::wlearner::real})
+    {
+        auto wlearner = make_wdtree(dataset, type);
+        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);
     }
 }
 

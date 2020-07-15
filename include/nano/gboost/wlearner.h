@@ -13,6 +13,31 @@ namespace nano
     using wlearners_t = std::vector<rwlearner_t>;
 
     ///
+    /// \brief weak learner prototype with its ID in the associated factory.
+    ///
+    struct NANO_PUBLIC iwlearner_t
+    {
+        iwlearner_t();
+        iwlearner_t(const iwlearner_t&);
+        iwlearner_t& operator=(const iwlearner_t&);
+        iwlearner_t(iwlearner_t&&) noexcept;
+        iwlearner_t& operator=(iwlearner_t&&) noexcept;
+        iwlearner_t(string_t&& id, rwlearner_t&& wlearner);
+
+        ~iwlearner_t();
+
+        void read(std::istream&);
+        void write(std::ostream&) const;
+
+        static void read(std::istream&, std::vector<iwlearner_t>&);
+        static void write(std::ostream&, const std::vector<iwlearner_t>&);
+
+        string_t        m_id;
+        rwlearner_t     m_wlearner;
+    };
+    using iwlearners_t = std::vector<iwlearner_t>;
+
+    ///
     /// \brief a weak learner is a machine learning model:
     ///     - parametrized by either a single feature or a small subset of features,
     ///     - easy to fit to the given residuals (aka the solution can be found analytically),
@@ -44,19 +69,9 @@ namespace nano
         void write(std::ostream&) const override;
 
         ///
-        /// \brief print a short description of the weak learner.
-        ///
-        [[nodiscard]] virtual std::ostream& print(std::ostream&) const = 0;
-
-        ///
         /// \brief clone the object.
         ///
         [[nodiscard]] virtual rwlearner_t clone() const = 0;
-
-        ///
-        /// \brief returns the dimensions of the outputs/predictions.
-        ///
-        [[nodiscard]] virtual tensor3d_dim_t odim() const = 0;
 
         ///
         /// \brief compute the predictions for the given range of samples in the given fold.
@@ -71,7 +86,11 @@ namespace nano
         ///
         /// \brief select the feature or the features and estimate their associated parameters
         ///     that matches the best the given residuals/gradients in terms of the L2-norm
-        ///     using the given sample indices.
+        ///     using the given sample indices:
+        ///
+        ///     argmin_h mean(L2-norm(-gradients(i), h(i)), i in indices)
+        ///
+        ///     where h is the weak learner.
         ///
         [[nodiscard]] virtual scalar_t fit(const dataset_t&, fold_t, const tensor4d_t& gradients, const indices_t&) = 0;
 
@@ -110,7 +129,7 @@ namespace nano
     protected:
 
         static void check(const indices_t&);
-        void check(tensor_range_t, const tensor4d_map_t& outputs) const;
+        void check(const std::vector<wlearner>&) const;
 
         template <typename toperator>
         static void for_each(tensor_range_t range, const indices_t& indices, const toperator& op)
@@ -134,9 +153,4 @@ namespace nano
         wlearner        m_type{wlearner::real}; ///<
         iparam1_t       m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};///< batch size
     };
-
-    inline std::ostream& operator<<(std::ostream& os, const wlearner_t& wlearner)
-    {
-        return wlearner.print(os);
-    }
 }

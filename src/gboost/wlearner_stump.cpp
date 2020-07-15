@@ -13,33 +13,49 @@ namespace
 
         cache_t() = default;
 
-        void clear(const tensor3d_dim_t& tdim, const tensor4d_t& gradients, const tensor1d_t& values,
-            const indices_t& indices)
+        explicit cache_t(const tensor3d_dim_t& tdim) :
+            m_r1_sum(tdim),
+            m_r2_sum(tdim),
+            m_r1_neg(tdim),
+            m_r2_neg(tdim),
+            m_tables(cat_dims(2, tdim))
         {
-            m_res_neg1.resize(tdim);
-            m_res_neg2.resize(tdim);
-            m_res_sum1.resize(tdim);
-            m_res_sum2.resize(tdim);
+        }
 
-            m_cnt = 0;
-            m_cnt_neg = 0;
-            m_res_neg1.zero();
-            m_res_neg2.zero();
-            m_res_sum1.zero();
-            m_res_sum2.zero();
-            m_tables.resize(cat_dims(2, tdim));
+        auto& r0_neg() { return m_r0_neg; }
+        auto& r0_sum() { return m_r0_sum; }
+        auto r1_neg() { return m_r1_neg.array(); }
+        auto r2_neg() { return m_r2_neg.array(); }
+        auto r1_sum() { return m_r1_sum.array(); }
+        auto r2_sum() { return m_r2_sum.array(); }
 
-            m_cnt = 0;
+        [[nodiscard]] auto r0_neg() const { return m_r0_neg; }
+        [[nodiscard]] auto r0_sum() const { return m_r0_sum; }
+        [[nodiscard]] auto r1_neg() const { return m_r1_neg.array(); }
+        [[nodiscard]] auto r2_neg() const { return m_r2_neg.array(); }
+        [[nodiscard]] auto r1_sum() const { return m_r1_sum.array(); }
+        [[nodiscard]] auto r2_sum() const { return m_r2_sum.array(); }
+
+        [[nodiscard]] auto r0_pos() const { return r0_sum() - r0_neg(); }
+        [[nodiscard]] auto r1_pos() const { return r1_sum() - r1_neg(); }
+        [[nodiscard]] auto r2_pos() const { return r2_sum() - r2_neg(); }
+
+        void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& indices)
+        {
+            m_r1_sum.zero();
+            m_r2_sum.zero();
+            m_r1_neg.zero();
+            m_r2_neg.zero();
+            m_r0_neg = m_r0_sum = 0.0;
+
             m_ivalues.clear();
             m_ivalues.reserve(indices.size());
             for (const auto i : indices)
             {
                 if (!feature_t::missing(values(i)))
                 {
-                    ++ m_cnt;
                     m_ivalues.emplace_back(values(i), i);
-                    m_res_sum1.array() -= gradients.array(i);
-                    m_res_sum2.array() += gradients.array(i) * gradients.array(i);
+                    update_sum(gradients.array(i));
                 }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
@@ -47,50 +63,45 @@ namespace
 
         [[nodiscard]] auto outputs_real_neg() const
         {
-            return m_res_neg1.array() / std::max(m_cnt_neg, scalar_t(1));
+            return r1_neg() / r0_neg();
         }
 
         [[nodiscard]] auto outputs_real_pos() const
         {
-            return (m_res_sum1.array() - m_res_neg1.array()) / std::max(m_cnt - m_cnt_neg, scalar_t(1));
+            return r1_pos() / r0_pos();
         }
 
         [[nodiscard]] auto outputs_discrete_neg() const
         {
-            return m_res_neg1.array().sign();
+            return r1_neg().sign();
         }
 
         [[nodiscard]] auto outputs_discrete_pos() const
         {
-            return (m_res_sum1.array() - m_res_neg1.array()).sign();
+            return r1_pos().sign();
         }
 
-        template <typename tresiduals, typename toutputs>
-        static auto score(
-            const tresiduals& res1, const tresiduals& res2, const toutputs& outputs, const tensor_size_t cnt)
+        template <typename tarray, typename toutputs>
+        static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
         {
-            return (cnt * outputs.square() - 2 * outputs * res1 + res2).sum();
+            return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
         }
 
         [[nodiscard]] auto score(const wlearner type) const
         {
-            const auto cnt_pos = m_cnt - m_cnt_neg;
-            const auto res_pos1 = m_res_sum1.array() - m_res_neg1.array();
-            const auto res_pos2 = m_res_sum2.array() - m_res_neg2.array();
-
             scalar_t score = 0;
             switch (type)
             {
             case wlearner::real:
                 score +=
-                    cache_t::score(res_pos1, res_pos2, outputs_real_pos(), cnt_pos) +
-                    cache_t::score(m_res_neg1.array(), m_res_neg2.array(), outputs_real_neg(), m_cnt_neg);
+                    cache_t::score(r0_neg(), r1_neg(), r2_neg(), outputs_real_neg()) +
+                    cache_t::score(r0_pos(), r1_pos(), r2_pos(), outputs_real_pos());
                 break;
 
             case wlearner::discrete:
                 score +=
-                    cache_t::score(res_pos1, res_pos2, outputs_discrete_pos(), cnt_pos) +
-                    cache_t::score(m_res_neg1.array(), m_res_neg2.array(), outputs_discrete_neg(), m_cnt_neg);
+                    cache_t::score(r0_neg(), r1_neg(), r2_neg(), outputs_discrete_neg()) +
+                    cache_t::score(r0_pos(), r1_pos(), r2_pos(), outputs_discrete_pos());
                 break;
 
             default:
@@ -100,60 +111,58 @@ namespace
             return score;
         }
 
+        template <typename tarray>
+        void update_sum(tarray&& vgrad)
+        {
+            r0_sum() += 1;
+            r1_sum() -= vgrad;
+            r2_sum() += vgrad * vgrad;
+        }
+
+        template <typename tarray>
+        void update_neg(tarray&& vgrad)
+        {
+            r0_neg() += 1;
+            r1_neg() -= vgrad;
+            r2_neg() += vgrad * vgrad;
+        }
+
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
 
         // attributes
+        ivalues_t       m_ivalues;                                      ///<
+        scalar_t        m_r0_sum{0}, m_r0_neg{0};                       ///<
+        tensor3d_t      m_r1_sum, m_r2_sum, m_r1_neg, m_r2_neg;         ///<
+        tensor4d_t      m_tables;                                       ///<
         tensor_size_t   m_feature{-1};                                  ///<
         scalar_t        m_threshold{0};                                 ///<
-        tensor4d_t      m_tables;                                       ///<
-        ivalues_t       m_ivalues;                                      ///<
-        scalar_t        m_cnt{0}, m_cnt_neg{0};                         ///<
-        tensor3d_t      m_res_neg1, m_res_neg2;                         ///<
-        tensor3d_t      m_res_sum1, m_res_sum2;                         ///<
         scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
     };
 }
 
+wlearner_stump_t::wlearner_stump_t() = default;
+
 void wlearner_stump_t::read(std::istream& stream)
 {
-    wlearner_t::read(stream);
+    wlearner_feature1_t::read(stream);
 
     critical(
-        !::nano::detail::read(stream, m_feature) ||
-        !::nano::detail::read(stream, m_threshold) ||
-        !::nano::read(stream, m_tables),
+        !::nano::detail::read(stream, m_threshold),
         "stump weak learner: failed to read from stream!");
 }
 
 void wlearner_stump_t::write(std::ostream& stream) const
 {
-    wlearner_t::write(stream);
+    wlearner_feature1_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, m_feature) ||
-        !::nano::detail::write(stream, m_threshold) ||
-        !::nano::write(stream, m_tables),
+        !::nano::detail::write(stream, m_threshold),
         "stump weak learner: failed to write to stream!");
-}
-
-std::ostream& wlearner_stump_t::print(std::ostream& stream) const
-{
-    return stream << "stump: feature=" << m_feature << ",threshold=" << std::fixed << std::setprecision(6) << m_threshold;
 }
 
 rwlearner_t wlearner_stump_t::clone() const
 {
     return std::make_unique<wlearner_stump_t>(*this);
-}
-
-tensor3d_dim_t wlearner_stump_t::odim() const
-{
-    return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());
-}
-
-void wlearner_stump_t::scale(const vector_t& scale)
-{
-    wlearner_t::scale(m_tables, scale);
 }
 
 scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
@@ -162,18 +171,9 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(indices.max() < dataset.samples(fold));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-    switch (type())
-    {
-    case wlearner::real:
-    case wlearner::discrete:
-        break;
+    check({{wlearner::real, wlearner::discrete}});
 
-    default:
-        critical(true, "stump weak learner: unhandled wlearner");
-        break;
-    }
-
-    std::vector<cache_t> caches(tpool_t::size());
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (const tensor_size_t feature, const size_t tnum)
     {
         const auto& ifeature = dataset.ifeature(feature);
@@ -187,21 +187,19 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
         // update accumulators
         auto& cache = caches[tnum];
-        cache.clear(dataset.tdim(), gradients, fvalues, indices);
+        cache.clear(gradients, fvalues, indices);
         for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++ iv)
         {
             const auto& ivalue1 = cache.m_ivalues[iv + 0];
             const auto& ivalue2 = cache.m_ivalues[iv + 1];
 
-            ++ cache.m_cnt_neg;
-            cache.m_res_neg1.array() -= gradients.array(ivalue1.second);
-            cache.m_res_neg2.array() += gradients.array(ivalue1.second) * gradients.array(ivalue1.second);
+            cache.update_neg(gradients.array(ivalue1.second));
 
             if (ivalue1.first < ivalue2.first)
             {
                 // update the parameters if a better feature
                 const auto score = cache.score(type());
-                if (score < cache.m_score)
+                if (std::isfinite(score) && score < cache.m_score)
                 {
                     cache.m_score = score;
                     cache.m_feature = feature;
@@ -229,68 +227,31 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     // OK, return and store the optimum feature across threads
     const auto& best = ::nano::gboost::min_reduce(caches);
-    m_tables = best.m_tables;
-    m_feature = best.m_feature;
+
+    log_info() << std::fixed << std::setprecision(8) << " === stump(feature=" << best.m_feature << "|"
+        << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
+        << ",threshold=" << best.m_threshold << "), score=" << best.m_score << ".";
+
+    set(best.m_feature, best.m_tables);
     m_threshold = best.m_threshold;
     return best.m_score;
 }
 
-void wlearner_stump_t::compatible(const dataset_t& dataset) const
-{
-    critical(
-        m_tables.size<0>() == 0,
-        "stump weak learner: empty weak learner!");
-
-    critical(
-        odim() != dataset.tdim() ||
-        m_feature < 0 || m_feature >= dataset.features() ||
-        dataset.ifeature(m_feature).discrete(),
-        "stump weak learner: mis-matching dataset!");
-}
-
 void wlearner_stump_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
-    compatible(dataset);
-    check(range, outputs);
-
-    const auto fvalues = dataset.inputs(fold, range, m_feature);
-    for (tensor_size_t i = 0; i < range.size(); ++ i)
+    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        const auto x = fvalues(i);
-        if (feature_t::missing(x))
-        {
-            outputs.vector(i).setZero();
-        }
-        else
-        {
-            outputs.vector(i) = m_tables.vector(x < m_threshold ? 0 : 1);
-        }
-    }
+        outputs.vector(i) = vector(x < m_threshold ? 0 : 1);
+    });
 }
 
 cluster_t wlearner_stump_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    compatible(dataset);
-    wlearner_t::check(indices);
-
     cluster_t cluster(dataset.samples(fold), 2);
-    dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
     {
-        const auto fvalues = dataset.inputs(fold, range, m_feature);
-        wlearner_t::for_each(range, indices, [&] (const tensor_size_t i)
-        {
-            const auto x = fvalues(i - range.begin());
-            if (!feature_t::missing(x))
-            {
-                cluster.assign(i, x < m_threshold ? 0 : 1);
-            }
-        });
+        cluster.assign(i, x < m_threshold ? 0 : 1);
     });
 
     return cluster;
-}
-
-indices_t wlearner_stump_t::features() const
-{
-    return std::array<tensor_size_t, 1>{{m_feature}};
 }
