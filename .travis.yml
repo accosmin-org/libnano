@@ -15,9 +15,7 @@ before_script:
   - bash scripts/download_datasets.sh --iris --wine --adult --abalone --forest-fires --breast-cancer --bank-marketing
   - bash scripts/download_datasets.sh --mnist --fashion-mnist --cifar10 --cifar100
 
-# TODO: support for MSAN
 # TODO: support for building on Windows
-# TODO: support for building with gcc10 w/o -fnalyzer
 # TODO: support for code coverage reports for branches
 
 matrix:
@@ -50,7 +48,7 @@ matrix:
       compiler: gcc
       env: TEST="USAN (gcc)"
       script:
-        - CXX=g++ bash scripts/build.sh --build-type Debug --gold --usan --config --build --test
+        - CXX=g++ bash scripts/build.sh --build-type Debug --usan --config --build --test
 
     - os: linux
       compiler: gcc
