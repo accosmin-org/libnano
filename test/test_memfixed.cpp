@@ -223,7 +223,7 @@ UTEST_CASE(shuffle)
 
     UTEST_CHECK_EQUAL(shuffled.ifeature(0), feature_t{"feature_0_0_0"});
     UTEST_CHECK_EQUAL(shuffled.ifeature(31), feature_t{"feature_0_3_7"});
-    UTEST_CHECK_EQUAL(dataset.tfeature(), feature_t{"fixture"});
+    UTEST_CHECK_EQUAL(shuffled.tfeature(), dataset.tfeature());
 
     const auto check_targets = [&] (const tensor4d_t& targets, tensor_range_t range)
     {
