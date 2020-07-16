@@ -2,6 +2,7 @@
 #include <nano/mlearn/split.h>
 #include <nano/mlearn/train.h>
 #include <nano/mlearn/cluster.h>
+#include <nano/mlearn/feature.h>
 #include <nano/mlearn/elemwise.h>
 
 using namespace nano;
@@ -597,6 +598,84 @@ UTEST_CASE(train_result)
         0, ";", 0.9, ";", 1.2, ";", 1.1, ";", 1.1, "\n",
         1, ";", 0.7, ";", 0.8, ";", 1.2, ";", 1.0, "\n",
         2, ";", nan, ";", nan, ";", 1.0, ";", 0.9, "\n"));
+}
+
+UTEST_CASE(feature_default)
+{
+    feature_t feature;
+    UTEST_CHECK_EQUAL(static_cast<bool>(feature), false);
+
+    feature = feature_t{"feature"};
+    UTEST_CHECK_EQUAL(static_cast<bool>(feature), true);
+
+    UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
+    UTEST_CHECK(!feature_t::missing(0));
+}
+
+UTEST_CASE(feature_compare)
+{
+    const auto make_feature_cont = [] (const string_t& name)
+    {
+        auto feature = feature_t{name};
+        UTEST_CHECK(!feature.discrete());
+        UTEST_CHECK(!feature.optional());
+        UTEST_CHECK_THROW(feature.label(0), std::invalid_argument);
+        UTEST_CHECK_THROW(feature.label(feature_t::placeholder_value()), std::invalid_argument);
+        return feature;
+    };
+
+    const auto make_feature_cont_opt = [] (const string_t& name)
+    {
+        auto feature = feature_t{name}.placeholder("?");
+        UTEST_CHECK(!feature.discrete());
+        UTEST_CHECK(feature.optional());
+        UTEST_CHECK_THROW(feature.label(0), std::invalid_argument);
+        UTEST_CHECK_THROW(feature.label(feature_t::placeholder_value()), std::invalid_argument);
+        return feature;
+    };
+
+    const auto make_feature_cate = [] (const string_t& name)
+    {
+        auto feature = feature_t{name}.labels({"cate0", "cate1", "cate2"});
+        UTEST_CHECK(feature.discrete());
+        UTEST_CHECK(!feature.optional());
+        UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+        UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+        UTEST_CHECK_EQUAL(feature.label(2), "cate2");
+        UTEST_CHECK_THROW(feature.label(-1), std::out_of_range);
+        UTEST_CHECK_THROW(feature.label(+3), std::out_of_range);
+        UTEST_CHECK_EQUAL(feature.label(feature_t::placeholder_value()), string_t());
+        return feature;
+    };
+
+    const auto make_feature_cate_opt = [] (const string_t& name)
+    {
+        auto feature = feature_t{name}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
+        UTEST_CHECK(feature.discrete());
+        UTEST_CHECK(feature.optional());
+        UTEST_CHECK_EQUAL(feature.label(0), "cate_opt0");
+        UTEST_CHECK_EQUAL(feature.label(1), "cate_opt1");
+        UTEST_CHECK_THROW(feature.label(-1), std::out_of_range);
+        UTEST_CHECK_THROW(feature.label(+2), std::out_of_range);
+        UTEST_CHECK_EQUAL(feature.label(feature_t::placeholder_value()), string_t());
+        return feature;
+    };
+
+    UTEST_CHECK_EQUAL(make_feature_cont("f"), make_feature_cont("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("gf"));
+
+    UTEST_CHECK_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("ff"));
+
+    UTEST_CHECK_EQUAL(make_feature_cate("f"), make_feature_cate("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cate("f"), make_feature_cate("x"));
+
+    UTEST_CHECK_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("x"));
+
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cate("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont_opt("f"));
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cate_opt("f"));
 }
 
 UTEST_END_MODULE()

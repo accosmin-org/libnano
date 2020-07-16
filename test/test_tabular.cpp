@@ -4,20 +4,6 @@
 
 using namespace nano;
 
-static std::ostream& operator<<(std::ostream& os, const feature_t& f)
-{
-    os << "name=" << f.name() << ",labels[";
-    for (const auto& label : f.labels())
-    {
-        os << label;
-        if (&label != &(*(f.labels().rbegin())))
-        {
-            os << ",";
-        }
-    }
-    return os << "],placeholder=" << f.placeholder();
-}
-
 class Fixture final : public tabular_dataset_t
 {
 public:
@@ -144,60 +130,22 @@ private:
 
 static auto feature_cont()
 {
-    auto feature = feature_t{"cont"};
-
-    UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
-    UTEST_CHECK(!feature_t::missing(0));
-
-    UTEST_CHECK(!feature.discrete());
-    UTEST_CHECK(!feature.optional());
-    UTEST_CHECK_THROW(feature.label(0), std::invalid_argument);
-    UTEST_CHECK_THROW(feature.label(feature_t::placeholder_value()), std::invalid_argument);
-
-    return feature;
+    return feature_t{"cont"};
 }
 
 static auto feature_cont_opt()
 {
-    auto feature = feature_t{"cont_opt"}.placeholder("?");
-
-    UTEST_CHECK(!feature.discrete());
-    UTEST_CHECK(feature.optional());
-    UTEST_CHECK_THROW(feature.label(0), std::invalid_argument);
-    UTEST_CHECK_THROW(feature.label(feature_t::placeholder_value()), std::invalid_argument);
-
-    return feature;
+    return feature_t{"cont_opt"}.placeholder("?");
 }
 
 static auto feature_cate()
 {
-    auto feature = feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
-
-    UTEST_CHECK(feature.discrete());
-    UTEST_CHECK(!feature.optional());
-    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
-    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
-    UTEST_CHECK_EQUAL(feature.label(2), "cate2");
-    UTEST_CHECK_THROW(feature.label(-1), std::out_of_range);
-    UTEST_CHECK_THROW(feature.label(+3), std::out_of_range);
-    UTEST_CHECK_EQUAL(feature.label(feature_t::placeholder_value()), string_t());
-
-    return feature;
+    return feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
 }
 
 static auto feature_cate_opt()
 {
-    auto feature = feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
-
-    UTEST_CHECK(feature.discrete());
-    UTEST_CHECK(feature.optional());
-    UTEST_CHECK_EQUAL(feature.label(0), "cate_opt0");
-    UTEST_CHECK_EQUAL(feature.label(1), "cate_opt1");
-    UTEST_CHECK_THROW(feature.label(-1), std::out_of_range);
-    UTEST_CHECK_THROW(feature.label(+2), std::out_of_range);
-    UTEST_CHECK_EQUAL(feature.label(feature_t::placeholder_value()), string_t());
-
-    return feature;
+    return feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
 }
 
 UTEST_BEGIN_MODULE(test_tabular)

@@ -117,13 +117,37 @@ namespace nano
     };
 
     ///
-    /// \brief returns true if the two given feature are equivalent.
+    /// \brief compare two features.
     ///
     inline bool operator==(const feature_t& f1, const feature_t& f2)
     {
         return  f1.name() == f2.name() &&
                 f1.labels() == f2.labels() &&
                 f1.placeholder() == f2.placeholder();
+    }
+
+    inline bool operator!=(const feature_t& f1, const feature_t& f2)
+    {
+        return  f1.name() != f2.name() ||
+                f1.labels() != f2.labels() ||
+                f1.placeholder() != f2.placeholder();
+    }
+
+    ///
+    /// \brief stream the given feature.
+    ///
+    inline std::ostream& operator<<(std::ostream& stream, const feature_t& feature)
+    {
+        stream << "name=" << feature.name() << ",labels[";
+        for (const auto& label : feature.labels())
+        {
+            stream << label;
+            if (&label != &(*(feature.labels().rbegin())))
+            {
+                stream << ",";
+            }
+        }
+        return stream << "],placeholder=" << feature.placeholder();
     }
 
     ///
