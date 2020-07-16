@@ -661,17 +661,28 @@ UTEST_CASE(feature_compare)
         return feature;
     };
 
+    const auto to_string = [] (const feature_t& feature)
+    {
+        std::stringstream stream;
+        stream << feature;
+        return stream.str();
+    };
+
     UTEST_CHECK_EQUAL(make_feature_cont("f"), make_feature_cont("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("gf"));
+    UTEST_CHECK_EQUAL(to_string(make_feature_cont("f")), "name=f,labels[],placeholder=");
 
     UTEST_CHECK_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("ff"));
+    UTEST_CHECK_EQUAL(to_string(make_feature_cont_opt("f")), "name=f,labels[],placeholder=?");
 
     UTEST_CHECK_EQUAL(make_feature_cate("f"), make_feature_cate("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate("f"), make_feature_cate("x"));
+    UTEST_CHECK_EQUAL(to_string(make_feature_cate("f")), "name=f,labels[cate0,cate1,cate2],placeholder=");
 
     UTEST_CHECK_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("x"));
+    UTEST_CHECK_EQUAL(to_string(make_feature_cate_opt("f")), "name=f,labels[cate_opt0,cate_opt1],placeholder=?");
 
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cate("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont_opt("f"));
