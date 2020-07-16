@@ -67,6 +67,7 @@ UTEST_CASE(load)
     UTEST_CHECK_EQUAL(dataset.ifeature(0), feature_t{"feature_0_0_0"});
     UTEST_CHECK_EQUAL(dataset.ifeature(31), feature_t{"feature_0_3_1"});
     UTEST_CHECK_EQUAL(dataset.ifeature(257), feature_t{"feature_2_5_7"});
+    UTEST_CHECK_EQUAL(dataset.tfeature(), feature_t{"fixture"});
 
     for (size_t f = 0; f < dataset.folds(); ++ f)
     {
@@ -222,6 +223,7 @@ UTEST_CASE(shuffle)
 
     UTEST_CHECK_EQUAL(shuffled.ifeature(0), feature_t{"feature_0_0_0"});
     UTEST_CHECK_EQUAL(shuffled.ifeature(31), feature_t{"feature_0_3_7"});
+    UTEST_CHECK_EQUAL(dataset.tfeature(), feature_t{"fixture"});
 
     const auto check_targets = [&] (const tensor4d_t& targets, tensor_range_t range)
     {
