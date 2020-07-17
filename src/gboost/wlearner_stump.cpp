@@ -104,9 +104,9 @@ namespace
                     cache_t::score(r0_pos(), r1_pos(), r2_pos(), outputs_discrete_pos());
                 break;
 
-            default:
-                assert(false);
-                break;
+            default:            // LCOV_EXCL_LINE
+                assert(false);  // LCOV_EXCL_LINE
+                break;          // LCOV_EXCL_LINE
             }
             return score;
         }
@@ -216,9 +216,9 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
                         cache.m_tables.array(1) = cache.outputs_discrete_pos();
                         break;
 
-                    default:
-                        assert(false);
-                        break;
+                    default:            // LCOV_EXCL_LINE
+                        assert(false);  // LCOV_EXCL_LINE
+                        break;          // LCOV_EXCL_LINE
                     }
                 }
             }

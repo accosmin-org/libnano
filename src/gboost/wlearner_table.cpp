@@ -67,9 +67,9 @@ namespace
                 }
                 break;
 
-            default:
-                assert(false);
-                break;
+            default:            // LCOV_EXCL_LINE
+                assert(false);  // LCOV_EXCL_LINE
+                break;          // LCOV_EXCL_LINE
             }
             return score;
         }
@@ -161,9 +161,9 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
                 }
                 break;
 
-            default:
-                assert(false);
-                break;
+            default:            // LCOV_EXCL_LINE
+                assert(false);  // LCOV_EXCL_LINE
+                break;          // LCOV_EXCL_LINE
             }
         }
     });
