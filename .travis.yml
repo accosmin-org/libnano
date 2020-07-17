@@ -122,11 +122,11 @@ matrix:
       script:
         - CXX=g++ bash scripts/build.sh --config --cppcheck
 
-    #- os: linux
-    #  compiler: gcc
-    #  env: TEST="memcheck (gcc)"
-    #  script:
-    #    - CXX=g++ travis_wait 60 bash scripts/build.sh --build-type Debug --config --build --memcheck
+    - os: linux
+      compiler: gcc
+      env: TEST="memcheck (gcc)"
+      script:
+        - CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
 
     #- os: linux
     #  compiler: gcc

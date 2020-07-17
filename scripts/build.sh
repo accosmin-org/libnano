@@ -179,33 +179,7 @@ function build_valgrind {
 
 function memcheck {
     cd ${libnanodir}
-
-    build_valgrind || return 1
-
-    # NB: not using ctest directly:
-    #   - to use custom build if present
-    #   - to pass options to memcheck
-    #ctest --output-on-failure -T memcheck
-
-    returncode=0
-    utests=$(ls test/test_* | grep -v .log)
-    for utest in ${utests}
-    do
-        printf "Running memcheck@%s ...\n" ${utest}
-        log=memcheck_${utest/test\//}.log
-        /tmp/valgrind/bin/valgrind --tool=memcheck \
-            --leak-check=yes --show-reachable=yes --num-callers=50 --error-exitcode=1 \
-            --log-file=${log} ${utest}
-
-        if [[ $? -gt 0 ]]
-        then
-            cat ${log}
-            returncode=1
-        fi
-        printf "\n"
-    done
-
-    return ${returncode}
+    ctest -T memcheck --output-on-failure -j ${threads} || return 1
 }
 
 function helgrind {
