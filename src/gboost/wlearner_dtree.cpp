@@ -272,6 +272,13 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
         const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
 
+        if (score_stump == std::numeric_limits<scalar_t>::max() &&
+            score_table == std::numeric_limits<scalar_t>::max())
+        {
+            log_info() << " === failed to fit either a stump or a table!";
+            return std::numeric_limits<scalar_t>::max();
+        }
+
         cluster_t cluster;
         tensor4d_t tables;
         dtree_node_t node;
