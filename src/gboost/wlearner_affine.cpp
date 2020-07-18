@@ -130,7 +130,7 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
 
     log_info() << std::fixed << std::setprecision(8) << " === affine(feature=" << best.m_feature << "|"
         << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << "), score=" << best.m_score << ".";
+        << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
 
     set(best.m_feature, best.m_tables);
     return best.m_score;

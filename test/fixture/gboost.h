@@ -343,7 +343,7 @@ inline auto make_residuals(const dataset_t& dataset, fold_t fold, const loss_t& 
     return residuals;
 }
 
-inline void check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
+inline auto check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
     const auto fold = make_fold();
     const auto loss = make_loss();
@@ -354,6 +354,7 @@ inline void check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
     UTEST_REQUIRE(!std::isfinite(fit_score));
     UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices));
     UTEST_REQUIRE(std::isfinite(fit_score));
+    return fit_score;
 }
 
 inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
@@ -556,7 +557,11 @@ void check_wlearner(twlearner& wlearner, const tdataset& dataset, const tinvalid
     check_split_throws(wlearner, make_indices(dataset, make_fold()), idatasets...);
 
     // check fitting
-    check_fit(wlearner, dataset);
+    const auto score = check_fit(wlearner, dataset);
+    if (wlearner.type() == wlearner::real)
+    {
+        UTEST_CHECK_CLOSE(score, 0.0, 1e-8);
+    }
     dataset.check_wlearner(wlearner);
 
     // check prediction

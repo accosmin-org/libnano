@@ -173,7 +173,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << best.m_feature << "|"
         << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << ",fvalues=" << best.m_tables.size<0>() << "), score=" << best.m_score << ".";
+        << ",fvalues=" << best.m_tables.size<0>() << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
 
     set(best.m_feature, best.m_tables, static_cast<size_t>(best.m_tables.size<0>()));
     return best.m_score;

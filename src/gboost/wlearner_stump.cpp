@@ -230,7 +230,7 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     log_info() << std::fixed << std::setprecision(8) << " === stump(feature=" << best.m_feature << "|"
         << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << ",threshold=" << best.m_threshold << "), score=" << best.m_score << ".";
+        << ",threshold=" << best.m_threshold << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
 
     set(best.m_feature, best.m_tables);
     m_threshold = best.m_threshold;

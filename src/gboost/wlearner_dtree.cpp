@@ -24,7 +24,6 @@ namespace
         // attributes
         indices_t       m_indices;      ///<
         tensor_size_t   m_depth{0};     ///<
-        scalar_t        m_score{0};     ///<
         tensor3d_t      m_table;        ///<
         size_t          m_parent{0};    ///<
     };
@@ -265,10 +264,11 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
     caches.emplace_back(indices);
     while (!caches.empty())
     {
-        const auto& cache = caches.front();
+        const auto cache = caches.front();
 
         // split the node using both discrete and continuous features...
-        log_info() << " === depth=" << cache.m_depth << ",samples=" << cache.m_indices.size() << "...";
+        log_info() << std::fixed << std::setprecision(8)
+            << " +++ depth=" << cache.m_depth << ",samples=" << cache.m_indices.size() << ",score=" << score << "...";
         const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
         const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
 
@@ -291,7 +291,6 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
             tables = stump.tables();
             cluster = stump.split(dataset, fold, cache.m_indices);
 
-            ncache.m_score = score_table;
             node.m_feature = stump.feature();
             node.m_threshold = stump.threshold();
         }
@@ -300,10 +299,10 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
             tables = table.tables();
             cluster = table.split(dataset, fold, cache.m_indices);
 
-            ncache.m_score = score_table;
             node.m_feature = table.feature();
             node.m_classes = tables.size<0>();
         }
+        assert(cluster.groups() == tables.size<0>());
 
         // have the parent node point to the current terminal node (to be added)
         if (cache.m_parent < m_nodes.size())
@@ -311,26 +310,31 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
             m_nodes[cache.m_parent].m_next = m_nodes.size();
         }
 
-        assert(cluster.groups() == tables.size<0>());
-        for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++ i)
+        // terminal nodes...
+        if (cache.m_indices.size() < min_indices_size || (cache.m_depth + 1) >= max_depth())
         {
-            ncache.m_parent = m_nodes.size();
-            ncache.m_indices = cluster.indices(i);
-
-            // terminal node...
-            if (ncache.m_indices.size() < min_indices_size || (cache.m_depth + 1) >= max_depth())
+            for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++ i)
             {
+                ncache.m_parent = m_nodes.size();
+                ncache.m_indices = cluster.indices(i);
+
                 node.m_table = m_tables.size<0>();
                 m_nodes.emplace_back(node);
                 append(m_tables, tables.tensor(i));
-
-                // also, update the total score
-                score += cache.m_score;
             }
 
-            // can still split the samples
-            else
+            // also, update the total score
+            score += std::min(score_table, score_stump);
+        }
+
+        // can still split the samples
+        else
+        {
+            for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++ i)
             {
+                ncache.m_parent = m_nodes.size();
+                ncache.m_indices = cluster.indices(i);
+
                 node.m_table = -1;
                 m_nodes.push_back(node);
                 caches.push_back(ncache);
