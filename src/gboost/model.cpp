@@ -278,7 +278,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
 
         // choose the weak learner that aligns the best with the current residuals
         auto best_id = std::string{};
-        auto best_score = std::numeric_limits<scalar_t>::max();
+        auto best_score = wlearner_t::no_fit_score();
         auto best_wlearner = rwlearner_t{};
         for (const auto& prototype : m_protos)
         {

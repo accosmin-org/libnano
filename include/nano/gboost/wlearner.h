@@ -123,6 +123,11 @@ namespace nano
         void min_split(int min_split);
 
         ///
+        /// \brief score that indicates fitting failed (e.g. unsupported feature types).
+        ///
+        static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }
+
+        ///
         /// \brief access functions
         ///
         [[nodiscard]] auto batch() const { return m_batch.get(); }

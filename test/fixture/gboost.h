@@ -369,7 +369,7 @@ inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
     UTEST_CHECK_EQUAL(std::isfinite(fit_score), false);
     UTEST_CHECK_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices));
     UTEST_CHECK_EQUAL(std::isfinite(fit_score), true);
-    UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
+    UTEST_CHECK_EQUAL(fit_score, wlearner_t::no_fit_score());
 }
 
 inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& gcluster, const wlearner_t& wlearner)

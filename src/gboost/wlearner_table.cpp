@@ -62,11 +62,11 @@ namespace
         }
 
         // attributes
-        tensor1d_t      m_r0;                                           ///< (#feature_values)
-        tensor4d_t      m_r1, m_r2;                                     ///< (#feature_values, tdim)
-        tensor4d_t      m_tables;                                       ///<
-        tensor_size_t   m_feature{-1};                                  ///<
-        scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
+        tensor1d_t      m_r0;                                   ///< (#feature_values)
+        tensor4d_t      m_r1, m_r2;                             ///< (#feature_values, tdim)
+        tensor4d_t      m_tables;                               ///<
+        tensor_size_t   m_feature{-1};                          ///<
+        scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
     };
 }
 

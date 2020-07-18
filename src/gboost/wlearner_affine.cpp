@@ -64,11 +64,11 @@ namespace
         }
 
         // attributes
-        tensor3d_t      m_r1, m_rx, m_r2;                               ///<
-        scalar_t        m_x0{0}, m_x1{0}, m_x2{0};                      ///<
-        tensor4d_t      m_tables;                                       ///<
-        tensor_size_t   m_feature{0};                                   ///<
-        scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
+        tensor3d_t      m_r1, m_rx, m_r2;                       ///<
+        scalar_t        m_x0{0}, m_x1{0}, m_x2{0};              ///<
+        tensor4d_t      m_tables;                               ///<
+        tensor_size_t   m_feature{0};                           ///<
+        scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
     };
 }
 

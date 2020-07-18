@@ -103,13 +103,13 @@ namespace
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
 
         // attributes
-        ivalues_t       m_ivalues;                                      ///<
-        scalar_t        m_r0_sum{0}, m_r0_neg{0};                       ///<
-        tensor3d_t      m_r1_sum, m_r2_sum, m_r1_neg, m_r2_neg;         ///<
-        tensor4d_t      m_tables;                                       ///<
-        tensor_size_t   m_feature{-1};                                  ///<
-        scalar_t        m_threshold{0};                                 ///<
-        scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
+        ivalues_t       m_ivalues;                              ///<
+        scalar_t        m_r0_sum{0}, m_r0_neg{0};               ///<
+        tensor3d_t      m_r1_sum, m_r2_sum, m_r1_neg, m_r2_neg; ///<
+        tensor4d_t      m_tables;                               ///<
+        tensor_size_t   m_feature{-1};                          ///<
+        scalar_t        m_threshold{0};                         ///<
+        scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
     };
 }
 

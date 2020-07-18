@@ -261,11 +261,11 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
         const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
 
-        if (score_stump == std::numeric_limits<scalar_t>::max() &&
-            score_table == std::numeric_limits<scalar_t>::max())
+        if (score_stump == wlearner_t::no_fit_score() &&
+            score_table == wlearner_t::no_fit_score())
         {
             log_info() << " === failed to fit either a stump or a table!";
-            return std::numeric_limits<scalar_t>::max();
+            return wlearner_t::no_fit_score();
         }
 
         cluster_t cluster;
