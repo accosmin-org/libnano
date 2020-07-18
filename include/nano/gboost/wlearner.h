@@ -116,20 +116,21 @@ namespace nano
         void batch(int batch);
 
         ///
-        /// \brief change the weak learner type.
+        /// \brief change the minimum percentage of samples to consider for splitting.
         ///
-        void type(wlearner);
+        /// NB: this is useful to eliminate branches rarely hit.
+        ///
+        void min_split(int min_split);
 
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto type() const { return m_type; }
         [[nodiscard]] auto batch() const { return m_batch.get(); }
+        [[nodiscard]] auto min_split() const { return m_min_split.get(); }
 
     protected:
 
         static void check(const indices_t&);
-        void check(const std::vector<wlearner>&) const;
 
         template <typename toperator>
         static void for_each(tensor_range_t range, const indices_t& indices, const toperator& op)
@@ -150,7 +151,7 @@ namespace nano
     private:
 
         // attributes
-        wlearner        m_type{wlearner::real}; ///<
-        iparam1_t       m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};///< batch size
+        iparam1_t   m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};        ///< batch size
+        iparam1_t   m_min_split{"wlearner::min_split", 1, LE, 5, LE, 10};   ///< minimum ratio of samples to split
     };
 }

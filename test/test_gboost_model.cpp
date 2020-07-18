@@ -158,12 +158,6 @@ UTEST_BEGIN_MODULE(test_gboost_model)
 
 UTEST_CASE(print)
 {
-    for (const auto type : {wlearner::real, wlearner::discrete})
-    {
-        std::stringstream stream;
-        stream << type;
-        UTEST_CHECK(!stream.str().empty());
-    }
     for (const auto type : {wscale::gboost, wscale::tboost})
     {
         std::stringstream stream;

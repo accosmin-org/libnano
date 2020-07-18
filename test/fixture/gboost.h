@@ -312,10 +312,11 @@ auto make_dataset(const tensor_size_t isize = 10, const tensor_size_t tsize = 1,
 }
 
 template <typename twlearner>
-auto make_wlearner(const ::nano::wlearner type)
+auto make_wlearner(int min_split = 10, int batch = 32)
 {
     auto wlearner = twlearner{};
-    wlearner.type(type);
+    wlearner.batch(batch);
+    wlearner.min_split(min_split);
     return wlearner;
 }
 
@@ -369,18 +370,6 @@ inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
     UTEST_CHECK_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices));
     UTEST_CHECK_EQUAL(std::isfinite(fit_score), true);
     UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
-}
-
-inline void check_fit_throws(wlearner_t& wlearner, const fixture_dataset_t& dataset)
-{
-    const auto fold = make_fold();
-    const auto loss = make_loss();
-    const auto indices = make_indices(dataset, fold);
-    const auto residuals = make_residuals(dataset, fold, *loss);
-
-    auto fit_score = feature_t::placeholder_value();
-    UTEST_CHECK_EQUAL(std::isfinite(fit_score), false);
-    UTEST_CHECK_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices), std::runtime_error);
 }
 
 inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& gcluster, const wlearner_t& wlearner)
@@ -451,13 +440,9 @@ inline void check_predict(const wlearner_t& wlearner, const fixture_dataset_t& d
         {
             UTEST_CHECK_EIGEN_CLOSE(outputs.vector(s), vector_t::Zero(tsize), 1e-8);
         }
-        else if (wlearner.type() == ::nano::wlearner::real)
-        {
-            UTEST_CHECK_EIGEN_CLOSE(outputs.array(s), targets.array(s), 1e-8);
-        }
         else
         {
-            UTEST_CHECK_EIGEN_CLOSE(outputs.array(s), targets.array(s).sign(), 1e-8);
+            UTEST_CHECK_EIGEN_CLOSE(outputs.array(s), targets.array(s), 1e-8);
         }
     }
 }
@@ -540,8 +525,8 @@ auto stream_wlearner(const twlearner& wlearner)
         std::istringstream istream(blob);
         auto iwlearner = twlearner{};
         UTEST_REQUIRE_NOTHROW(iwlearner.read(istream));
-        UTEST_CHECK_EQUAL(iwlearner.type(), wlearner.type());
         UTEST_CHECK_EQUAL(iwlearner.batch(), wlearner.batch());
+        UTEST_CHECK_EQUAL(iwlearner.min_split(), wlearner.min_split());
         return iwlearner;
     }
 }
@@ -558,10 +543,7 @@ void check_wlearner(twlearner& wlearner, const tdataset& dataset, const tinvalid
 
     // check fitting
     const auto score = check_fit(wlearner, dataset);
-    if (wlearner.type() == wlearner::real)
-    {
-        UTEST_CHECK_CLOSE(score, 0.0, 1e-8);
-    }
+    UTEST_CHECK_CLOSE(score, 0.0, 1e-8);
     dataset.check_wlearner(wlearner);
 
     // check prediction

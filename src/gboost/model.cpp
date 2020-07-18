@@ -93,7 +93,7 @@ train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& datase
         << " === scale=" << scale() << ", regularization=" << scat(regularization());
     for (const auto& proto : m_protos)
     {
-        log_info() << " === proto: id=" << proto.m_id << ", type=" << proto.m_wlearner->type();
+        log_info() << " === proto: id=" << proto.m_id;
     }
 
     tensor4d_t te_avg_outputs;

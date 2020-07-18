@@ -88,8 +88,6 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
     assert(indices.max() < dataset.samples(fold));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-    check({{wlearner::real}});
-
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
     {

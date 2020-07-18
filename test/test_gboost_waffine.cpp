@@ -43,18 +43,9 @@ static void check_fitting()
     const auto datasetx2 = make_dataset<waffine_dataset_t<tfun1>>(dataset.feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<waffine_dataset_t<tfun1>>>();
 
-    for (const auto type : {::nano::wlearner::discrete, static_cast<::nano::wlearner>(-1)})
-    {
-        auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>(type);
-        check_fit_throws(wlearner, dataset);
-    }
-
-    for (const auto type : {::nano::wlearner::real})
-    {
-        auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>(type);
-        check_no_fit(wlearner, datasetx3);
-        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3);
-    }
+    auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>();
+    check_no_fit(wlearner, datasetx3);
+    check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3);
 }
 
 UTEST_BEGIN_MODULE(test_gboost_waffine)

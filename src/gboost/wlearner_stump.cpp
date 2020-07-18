@@ -61,24 +61,14 @@ namespace
             std::sort(m_ivalues.begin(), m_ivalues.end());
         }
 
-        [[nodiscard]] auto outputs_real_neg() const
+        [[nodiscard]] auto output_neg() const
         {
             return r1_neg() / r0_neg();
         }
 
-        [[nodiscard]] auto outputs_real_pos() const
+        [[nodiscard]] auto output_pos() const
         {
             return r1_pos() / r0_pos();
-        }
-
-        [[nodiscard]] auto outputs_discrete_neg() const
-        {
-            return r1_neg().sign();
-        }
-
-        [[nodiscard]] auto outputs_discrete_pos() const
-        {
-            return r1_pos().sign();
         }
 
         template <typename tarray, typename toutputs>
@@ -87,28 +77,11 @@ namespace
             return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
         }
 
-        [[nodiscard]] auto score(const wlearner type) const
+        [[nodiscard]] auto score() const
         {
-            scalar_t score = 0;
-            switch (type)
-            {
-            case wlearner::real:
-                score +=
-                    cache_t::score(r0_neg(), r1_neg(), r2_neg(), outputs_real_neg()) +
-                    cache_t::score(r0_pos(), r1_pos(), r2_pos(), outputs_real_pos());
-                break;
-
-            case wlearner::discrete:
-                score +=
-                    cache_t::score(r0_neg(), r1_neg(), r2_neg(), outputs_discrete_neg()) +
-                    cache_t::score(r0_pos(), r1_pos(), r2_pos(), outputs_discrete_pos());
-                break;
-
-            default:            // LCOV_EXCL_LINE
-                assert(false);  // LCOV_EXCL_LINE
-                break;          // LCOV_EXCL_LINE
-            }
-            return score;
+            return
+                cache_t::score(r0_neg(), r1_neg(), r2_neg(), output_neg()) +
+                cache_t::score(r0_pos(), r1_pos(), r2_pos(), output_pos());
         }
 
         template <typename tarray>
@@ -171,8 +144,6 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(indices.max() < dataset.samples(fold));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-    check({{wlearner::real, wlearner::discrete}});
-
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (const tensor_size_t feature, const size_t tnum)
     {
@@ -198,28 +169,14 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
             if (ivalue1.first < ivalue2.first)
             {
                 // update the parameters if a better feature
-                const auto score = cache.score(type());
+                const auto score = cache.score();
                 if (std::isfinite(score) && score < cache.m_score)
                 {
                     cache.m_score = score;
                     cache.m_feature = feature;
                     cache.m_threshold = 0.5 * (ivalue1.first + ivalue2.first);
-                    switch (type())
-                    {
-                    case wlearner::real:
-                        cache.m_tables.array(0) = cache.outputs_real_neg();
-                        cache.m_tables.array(1) = cache.outputs_real_pos();
-                        break;
-
-                    case wlearner::discrete:
-                        cache.m_tables.array(0) = cache.outputs_discrete_neg();
-                        cache.m_tables.array(1) = cache.outputs_discrete_pos();
-                        break;
-
-                    default:            // LCOV_EXCL_LINE
-                        assert(false);  // LCOV_EXCL_LINE
-                        break;          // LCOV_EXCL_LINE
-                    }
+                    cache.m_tables.array(0) = cache.output_neg();
+                    cache.m_tables.array(1) = cache.output_pos();
                 }
             }
         }

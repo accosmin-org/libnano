@@ -197,27 +197,19 @@ void wlearner_dtree_t::max_depth(const int max_depth)
     m_max_depth = max_depth;
 }
 
-void wlearner_dtree_t::min_split(const int min_split)
-{
-    m_min_split = min_split;
-}
-
 void wlearner_dtree_t::read(std::istream& stream)
 {
     int32_t maximum_depth = 0;
-    int32_t minimum_split = 0;
 
     wlearner_t::read(stream);
     critical(
         !::nano::detail::read(stream, maximum_depth) ||
-        !::nano::detail::read(stream, minimum_split) ||
         !::read(stream, m_nodes) ||
         !::read(stream, m_features) ||
         !::nano::read(stream, m_tables),
         "dtree weak learner: failed to read from stream!");
 
     max_depth(maximum_depth);
-    min_split(minimum_split);
 }
 
 void wlearner_dtree_t::write(std::ostream& stream) const
@@ -225,7 +217,6 @@ void wlearner_dtree_t::write(std::ostream& stream) const
     wlearner_t::write(stream);
     critical(
         !::nano::detail::write(stream, static_cast<int32_t>(max_depth())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(min_split())) ||
         !::write(stream, m_nodes) ||
         !::write(stream, m_features) ||
         !::nano::write(stream, m_tables),
@@ -255,8 +246,6 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     auto stump = wlearner_stump_t{};
     auto table = wlearner_table_t{};
-    stump.type(type());
-    table.type(type());
 
     const auto min_indices_size = std::min<tensor_size_t>(10, dataset.samples(fold) * min_split() / 100);
 

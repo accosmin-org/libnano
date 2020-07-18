@@ -32,14 +32,9 @@ namespace
             m_r2.zero();
         }
 
-        [[nodiscard]] auto outputs_real(const tensor_size_t fv) const
+        [[nodiscard]] auto output(const tensor_size_t fv) const
         {
             return r1(fv) / r0(fv);
-        }
-
-        [[nodiscard]] auto outputs_discrete(const tensor_size_t fv) const
-        {
-            return outputs_real(fv).sign();
         }
 
         template <typename toutputs>
@@ -48,28 +43,12 @@ namespace
             return (r2(fv) + outputs.square() * r0(fv) - 2 * outputs * r1(fv)).sum();
         }
 
-        [[nodiscard]] auto score(const wlearner type) const
+        [[nodiscard]] auto score() const
         {
             scalar_t score = 0;
-            switch (type)
+            for (tensor_size_t fv = 0, n_fvalues = m_r0.size<0>(); fv < n_fvalues; ++ fv)
             {
-            case wlearner::real:
-                for (tensor_size_t fv = 0, n_fvalues = m_r0.size<0>(); fv < n_fvalues; ++ fv)
-                {
-                    score += this->score(fv, outputs_real(fv));
-                }
-                break;
-
-            case wlearner::discrete:
-                for (tensor_size_t fv = 0, n_fvalues = m_r0.size<0>(); fv < n_fvalues; ++ fv)
-                {
-                    score += this->score(fv, outputs_discrete(fv));
-                }
-                break;
-
-            default:            // LCOV_EXCL_LINE
-                assert(false);  // LCOV_EXCL_LINE
-                break;          // LCOV_EXCL_LINE
+                score += this->score(fv, output(fv));
             }
             return score;
         }
@@ -104,8 +83,6 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(indices.max() < dataset.samples(fold));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-    check({{wlearner::real, wlearner::discrete}});
-
     std::vector<cache_t> caches(tpool_t::size());
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
     {
@@ -139,31 +116,15 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
         }
 
         // update the parameters if a better feature
-        const auto score = cache.score(type());
+        const auto score = cache.score();
         if (std::isfinite(score) && score < cache.m_score)
         {
             cache.m_score = score;
             cache.m_feature = feature;
             cache.m_tables.resize(cat_dims(n_fvalues, dataset.tdim()));
-            switch (type())
+            for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
             {
-            case wlearner::real:
-                for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
-                {
-                    cache.m_tables.array(fv) = cache.outputs_real(fv);
-                }
-                break;
-
-            case wlearner::discrete:
-                for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
-                {
-                    cache.m_tables.array(fv) = cache.outputs_discrete(fv);
-                }
-                break;
-
-            default:            // LCOV_EXCL_LINE
-                assert(false);  // LCOV_EXCL_LINE
-                break;          // LCOV_EXCL_LINE
+                cache.m_tables.array(fv) = cache.output(fv);
             }
         }
     });

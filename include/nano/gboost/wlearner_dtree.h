@@ -134,19 +134,11 @@ namespace nano
         void max_depth(int max_depth);
 
         ///
-        /// \brief change the minimum percentage of samples to consider for splitting.
-        ///
-        /// NB: this is useful to eliminate branches rarely hit.
-        ///
-        void min_split(int min_split);
-
-        ///
         /// \brief access functions
         ///
         [[nodiscard]] const auto& nodes() const { return m_nodes; }
         [[nodiscard]] const auto& tables() const { return m_tables; }
         [[nodiscard]] auto max_depth() const { return m_max_depth.get(); }
-        [[nodiscard]] auto min_split() const { return m_min_split.get(); }
 
     private:
 
@@ -154,7 +146,6 @@ namespace nano
 
         // attributes
         iparam1_t       m_max_depth{"dtree::max_depth", 1, LE, 3, LE, 10};  ///< maximum depth
-        iparam1_t       m_min_split{"dtree::min_split", 1, LE, 5, LE, 10};  ///< minimum ratio of samples to split
         dtree_nodes_t   m_nodes;                ///< nodes in the decision tree
         tensor4d_t      m_tables;               ///< (#feature values, #outputs) - predictions at the leaves
         indices_t       m_features;             ///< unique set of the selected features

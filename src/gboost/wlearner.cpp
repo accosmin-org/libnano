@@ -13,25 +13,25 @@ void wlearner_t::batch(int batch)
     m_batch = batch;
 }
 
-void wlearner_t::type(wlearner type)
+void wlearner_t::min_split(const int min_split)
 {
-    m_type = type;
+    m_min_split = min_split;
 }
 
 void wlearner_t::read(std::istream& stream)
 {
     serializable_t::read(stream);
 
-    int32_t itype = 0;
     int32_t ibatch = 0;
+    int32_t isplit = 0;
 
     critical(
-        !::nano::detail::read(stream, itype) ||
-        !::nano::detail::read(stream, ibatch),
+        !::nano::detail::read(stream, ibatch) ||
+        !::nano::detail::read(stream, isplit),
         "weak learner: failed to read from stream!");
 
-    type(static_cast<wlearner>(itype));
     batch(ibatch);
+    min_split(isplit);
 }
 
 void wlearner_t::write(std::ostream& stream) const
@@ -39,8 +39,8 @@ void wlearner_t::write(std::ostream& stream) const
     serializable_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(type())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(batch())),
+        !::nano::detail::write(stream, static_cast<int32_t>(batch())) ||
+        !::nano::detail::write(stream, static_cast<int32_t>(min_split())),
         "weak learner: failed to write to stream!");
 }
 
@@ -49,27 +49,6 @@ void wlearner_t::check(const indices_t& indices)
     critical(
         !std::is_sorted(::nano::begin(indices), ::nano::end(indices)),
         "weak learner: indices must be sorted!");
-}
-
-void wlearner_t::check(const std::vector<wlearner>& types) const
-{
-    const auto types2string = [&] ()
-    {
-        string_t str;
-        for (size_t i = 0; i < types.size(); ++ i)
-        {
-            str += scat(types[i]);
-            if (i + 1 < types.size())
-            {
-                str += ',';
-            }
-        }
-        return str;
-    };
-
-    critical(
-        std::find(types.begin(), types.end(), type()) == types.end(),
-        scat("weak learner: unhandled wlearner, expecting one in (", types2string(), ")!"));
 }
 
 void wlearner_t::scale(tensor4d_t& tables, const vector_t& scale)

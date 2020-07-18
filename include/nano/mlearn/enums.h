@@ -86,30 +86,6 @@ namespace nano
     }
 
     ///
-    /// \brief type of weak learner.
-    ///
-    enum class wlearner : int32_t
-    {
-        real,           ///< output \in R (no restriction)
-        discrete,       ///< output \in {-1, +1} (useful for classification to reduce overfitting)
-    };
-
-    template <>
-    inline enum_map_t<wlearner> enum_string<wlearner>()
-    {
-        return
-        {
-            { wlearner::real,          "real" },
-            { wlearner::discrete,      "discrete" }
-        };
-    }
-
-    inline std::ostream& operator<<(std::ostream& os, const wlearner type)
-    {
-        return os << scat(type);
-    }
-
-    ///
     /// \brief method to scale weak learners.
     ///
     enum class wscale : int32_t
