@@ -119,7 +119,7 @@ namespace nano
         }
 
         ///
-        /// \brief constructors that maps const or non-const arrays.
+        /// \brief construct from non-ownning non-const C-array.
         ///
         explicit tensor_t(tscalar* ptr, const tdims& dims) :
             m_dims(dims),
@@ -129,26 +129,15 @@ namespace nano
             assert(ptr != nullptr || !size());
         }
 
+        ///
+        /// \brief construct from non-ownning const C-array.
+        ///
         explicit tensor_t(const tscalar* ptr, const tdims& dims) :
             m_dims(dims),
             m_storage(ptr, size())
         {
             static_assert(!tstorage::resizable, "tensor resizable");
             assert(ptr != nullptr || !size());
-        }
-
-        ///
-        /// \brief construct from a std::array (only for 1D tensors).
-        ///
-        template <typename tscalar_, size_t N>
-        // cppcheck-suppress noExplicitConstructor
-        tensor_t(const std::array<tscalar_, N>& array) : // NOLINT(hicpp-explicit-conversions)
-            m_storage(static_cast<tensor_size_t>(N))
-        {
-            static_assert(tstorage::resizable, "tensor resizable");
-            static_assert(trank == 1, "tensor must be of rank 1 to be initialized from std::array");
-            m_dims[0] = static_cast<tensor_size_t>(N);
-            vector() = map_vector(array.data(), this->size()).template cast<tscalar>();
         }
 
         ///
@@ -165,11 +154,24 @@ namespace nano
         }
 
         ///
-        /// \brief default for copying and moving (delegate to the storage objects)
+        /// \brief construct from a std::array (only for 1D tensors).
+        ///
+        template <typename tscalar_, size_t N, typename = typename std::integral_constant<bool, trank == 1>::type>
+        // cppcheck-suppress noExplicitConstructor
+        tensor_t(const std::array<tscalar_, N>& array) : // NOLINT(hicpp-explicit-conversions)
+            tensor_t(make_dims(static_cast<tensor_size_t>(N)), array)
+        {
+        }
+
+        ///
+        /// \brief enable copying (delegate to the storage object).
         ///
         tensor_t(const tensor_t&) = default;
         tensor_t& operator=(const tensor_t&) = default;
 
+        ///
+        /// \brief enable moving (delegate to the storage object).
+        ///
         tensor_t(tensor_t&&) noexcept = default;
         tensor_t& operator=(tensor_t&&) noexcept = default;
 

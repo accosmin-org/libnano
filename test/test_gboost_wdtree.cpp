@@ -291,8 +291,6 @@ static auto make_wdtree(const wdtree_dataset_t& dataset)
 
 UTEST_BEGIN_MODULE(test_gboost_wdtree)
 
-// TODO: test min_split, max_depth, leaves begin cut if not enough samples
-
 UTEST_CASE(print)
 {
     const auto nodes = dtree_nodes_t
@@ -343,7 +341,7 @@ UTEST_CASE(fitting_table1)
 
 UTEST_CASE(fitting_depth2)
 {
-    const auto dataset = make_dataset<wdtree_depth2_dataset_t>(10, 1, 400);
+    const auto dataset = make_dataset<wdtree_depth2_dataset_t>(10, 1, 300);
     const auto datasetx1 = make_dataset<wdtree_depth2_dataset_t>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wdtree_depth2_dataset_t>(dataset.features().max(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth2_dataset_t>>();
