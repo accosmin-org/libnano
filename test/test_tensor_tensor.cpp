@@ -544,4 +544,22 @@ UTEST_CASE(tensor3d_minmax)
     UTEST_CHECK_EQUAL(tensor.tensor(0, 1).max(), 24);
 }
 
+UTEST_CASE(tensor3d_from_initializer_list)
+{
+    using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
+
+    tensor3d_t tensor(make_dims(3, 2, 1), std::initializer_list<int>{0, 1, 10, 11, 20, 21});
+
+    UTEST_CHECK_EQUAL(tensor.size<0>(), 3);
+    UTEST_CHECK_EQUAL(tensor.size<1>(), 2);
+    UTEST_CHECK_EQUAL(tensor.size<2>(), 1);
+
+    UTEST_CHECK_EQUAL(tensor(0), 0);
+    UTEST_CHECK_EQUAL(tensor(1), 1);
+    UTEST_CHECK_EQUAL(tensor(2), 10);
+    UTEST_CHECK_EQUAL(tensor(3), 11);
+    UTEST_CHECK_EQUAL(tensor(4), 20);
+    UTEST_CHECK_EQUAL(tensor(5), 21);
+}
+
 UTEST_END_MODULE()

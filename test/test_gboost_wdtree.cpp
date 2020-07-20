@@ -43,12 +43,12 @@ public:
 
     [[nodiscard]] indices_t features() const override
     {
-        return std::array<tensor_size_t, 1>{{feature()}};
+        return {make_dims(1), {feature()}};
     }
 
     [[nodiscard]] tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), std::array<scalar_t, 2>{{-4.0, +3.7}}};
+        return {make_dims(2, 1, 1, 1), {-4.0, +3.7}};
     }
 
     [[nodiscard]] dtree_nodes_t nodes() const override
@@ -80,12 +80,12 @@ public:
 
     [[nodiscard]] indices_t features() const override
     {
-        return std::array<tensor_size_t, 1>{{feature()}};
+        return {make_dims(1), {feature()}};
     }
 
     [[nodiscard]] tensor4d_t tables() const override
     {
-        return {make_dims(3, 1, 1, 1), std::array<scalar_t, 3>{{-5.0, +0.0, +5.0}}};
+        return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}};
     }
 
     [[nodiscard]] dtree_nodes_t nodes() const override
@@ -141,12 +141,12 @@ public:
 
     [[nodiscard]] indices_t features() const override
     {
-        return std::array<tensor_size_t, 4>{{feature12(), feature11(), feature0(), feature10()}};
+        return {make_dims(4), {feature12(), feature11(), feature0(), feature10()}};
     }
 
     [[nodiscard]] tensor4d_t tables() const override
     {
-        return {make_dims(6, 1, 1, 1), std::array<scalar_t, 6>{{-1.2, +3.4, -1.3, +3.5, -1.4, +3.6}}};
+        return {make_dims(6, 1, 1, 1), {-1.2, +3.4, -1.3, +3.5, -1.4, +3.6}};
     }
 
     [[nodiscard]] dtree_nodes_t nodes() const override
@@ -232,14 +232,12 @@ public:
     [[nodiscard]] indices_t features() const override
     {
         // NB: features = {3, 4, 5, 6, 7, 8, 9} aka {stump21, table23, stump11, table22, stump10, table20, stump0}
-        return std::array<tensor_size_t, 7>{{
-            feature21(), feature23(), feature11(), feature22(), feature10(), feature20(), feature0()}};
+        return {make_dims(7), {feature21(), feature23(), feature11(), feature22(), feature10(), feature20(), feature0()}};
     }
 
     [[nodiscard]] tensor4d_t tables() const override
     {
-        return {make_dims(11, 1, 1, 1), std::array<scalar_t, 11>{{
-            8.0, +10.0, +12.0, +11.9, +9.3, -23.0, -20.0, -17.0, -23.0, -20.0, -17.0}}};
+        return {make_dims(11, 1, 1, 1), {+8.0, +10.0, +12.0, +11.9, +9.3, -23.0, -20.0, -17.0, -23.0, -20.0, -17.0}};
     }
 
     [[nodiscard]] dtree_nodes_t nodes() const override

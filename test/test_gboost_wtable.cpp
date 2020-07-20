@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
     [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
-    [[nodiscard]] tensor4d_t tables() const { return {make_dims(3, 1, 1, 1), std::array<scalar_t, 3>{{-5.0, +0.0, +5.0}}}; }
+    [[nodiscard]] tensor4d_t tables() const { return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}}; }
 };
 
 UTEST_BEGIN_MODULE(test_gboost_wtable)

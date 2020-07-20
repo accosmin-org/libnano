@@ -31,7 +31,7 @@ public:
 
     [[nodiscard]] scalar_t threshold() const { return 2.5; }
     [[nodiscard]] tensor_size_t feature(bool discrete = false) const { return get_feature(discrete); }
-    [[nodiscard]] tensor4d_t tables() const { return {make_dims(2, 1, 1, 1), std::array<scalar_t, 2>{{+3.0, -2.1}}}; }
+    [[nodiscard]] tensor4d_t tables() const { return {make_dims(2, 1, 1, 1), {+3.0, -2.1}}; }
 };
 
 UTEST_BEGIN_MODULE(test_gboost_wstump)

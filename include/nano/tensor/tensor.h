@@ -164,6 +164,19 @@ namespace nano
         }
 
         ///
+        /// \brief construct from a std::initializer_list.
+        ///
+        template <typename tscalar_>
+        tensor_t(const tdims& dims, const std::initializer_list<tscalar_>& list) :
+            m_dims(dims),
+            m_storage(this->size())
+        {
+            static_assert(tstorage::resizable, "tensor resizable");
+            assert(this->size() == static_cast<tensor_size_t>(list.size()));
+            std::transform(list.begin(), list.end(), data(), [] (auto value) { return static_cast<tscalar>(value); });
+        }
+
+        ///
         /// \brief enable copying (delegate to the storage object).
         ///
         tensor_t(const tensor_t&) = default;
