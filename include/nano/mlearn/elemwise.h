@@ -134,7 +134,7 @@ namespace nano
                 break;
 
             default:
-                assert(false);
+                throw std::runtime_error("unhandled normalization method when scaling inputs");
                 break;
             }
         }

@@ -269,6 +269,10 @@ UTEST_CASE(scale)
         UTEST_CHECK_NOTHROW(stats.scale(normalization::standard, inputs));
         UTEST_CHECK_EIGEN_CLOSE(inputs.vector(), map_vector(normed_standard.data(), 15), epsilon1<scalar_t>());
     }
+    {
+        auto inputs = tensor4d_t{map_tensor(original.data(), 5, 3, 1, 1)};
+        UTEST_CHECK_THROW(stats.scale(static_cast<normalization>(-1), inputs), std::runtime_error);
+    }
 }
 
 UTEST_CASE(cluster)
