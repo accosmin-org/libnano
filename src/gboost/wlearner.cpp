@@ -2,6 +2,7 @@
 #include <nano/logger.h>
 #include <nano/tensor/stream.h>
 #include <nano/gboost/wlearner_dtree.h>
+#include <nano/gboost/wlearner_hinge.h>
 #include <nano/gboost/wlearner_stump.h>
 #include <nano/gboost/wlearner_table.h>
 #include <nano/gboost/wlearner_affine.h>
@@ -69,9 +70,10 @@ wlearner_factory_t& wlearner_t::all()
         manager.add_by_type<wlearner_log1_t>();
         manager.add_by_type<wlearner_cos1_t>();
         manager.add_by_type<wlearner_sin1_t>();
+        manager.add_by_type<wlearner_dtree_t>();
+        manager.add_by_type<wlearner_hinge_t>();
         manager.add_by_type<wlearner_stump_t>();
         manager.add_by_type<wlearner_table_t>();
-        manager.add_by_type<wlearner_dtree_t>();
     });
 
     return manager;

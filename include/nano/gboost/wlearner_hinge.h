@@ -4,38 +4,39 @@
 
 namespace nano
 {
-    class wlearner_stump_t;
+    class wlearner_hinge_t;
 
     template <>
-    struct factory_traits_t<wlearner_stump_t>
+    struct factory_traits_t<wlearner_hinge_t>
     {
-        static string_t id() { return "stump"; }
-        static string_t description() { return "decision stump weak learner"; }
+        static string_t id() { return "hinge"; }
+        static string_t description() { return "hinge weak learner"; }
     };
 
     ///
     ///
-    /// \brief a decision stump is a weak learner that compares the value of a selected feature with a threshold:
-    ///     stump(x) =
+    /// \brief a hinge is a weak learner that performs the following operation element-wise:
+    ///     hinge(x) =
     ///     {
-    ///         tables[0], if x(feature) is given and x(feature) < threshold
-    ///         tables[1], if x(feature) is given and x(feature) >= threshold
+    ///         max(0, direction * (x(feature) - threshold)), if x(feature) is given and direction in {-1, +1}
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
     ///     where feature is the selected continuous feature.
     ///
     /// NB: the discrete features and the missing feature values are skipped during fiting.
-    /// NB: the threshold is shared across outputs, but the predictions can be different.
+    /// NB: the threshold is shared across outputs, but the predictions and the hinge directions can be different.
     ///
-    class NANO_PUBLIC wlearner_stump_t final : public wlearner_feature1_t
+    /// see "Multivariate adaptive regression splines", by Jerome Friedman
+    ///
+    class NANO_PUBLIC wlearner_hinge_t final : public wlearner_feature1_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        wlearner_stump_t();
+        wlearner_hinge_t();
 
         ///
         /// \brief @see wlearner_t
@@ -70,11 +71,13 @@ namespace nano
         ///
         /// \brief access functions
         ///
+        [[nodiscard]] auto direction() const { return m_direction; }
         [[nodiscard]] auto threshold() const { return m_threshold; }
 
     private:
 
         // attributes
+        scalar_t        m_direction{1};         ///< hinge direction
         scalar_t        m_threshold{0};         ///< threshold
     };
 }

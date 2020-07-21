@@ -20,7 +20,6 @@ namespace nano
     /// some important features:
     ///     - weak learners are selected from a configurable pool of prototypes and thus the final model
     ///         can mix different types of weak learners (e.g. like discrete stumps with real-valued tables).
-    ///     - support for both discrete and real-valued weak learners.
     ///     - support for variance-based regularization (like EBBoost or VadaBoost)
     ///         with automatic tuning on the validation dataset if enabled.
     ///     - builtin early stopping if the validation error doesn't decrease in a configurable number of boosting rounds.
@@ -30,6 +29,7 @@ namespace nano
     ///         the final predictions are the average of the predictions of all these models (like in model averaging).
     ///     - the bias computation and the scaling of the weak learners can be solved
     ///         using any of the available builtin line-search-based solvers (e.g. lBFGS, CGD, CG_DESCENT).
+    ///     - support for estimating the importance of the selected features.
     ///
     /// missing features:
     ///     - shrinkage (useful for improving generalization):

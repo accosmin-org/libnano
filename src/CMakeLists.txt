@@ -45,6 +45,7 @@ target_sources(nano PRIVATE
     mlearn/cluster.cpp
     gboost/wlearner.cpp
     gboost/wlearner_dtree.cpp
+    gboost/wlearner_hinge.cpp
     gboost/wlearner_stump.cpp
     gboost/wlearner_table.cpp
     gboost/wlearner_affine.cpp
