@@ -197,19 +197,27 @@ void wlearner_dtree_t::max_depth(const int max_depth)
     m_max_depth = max_depth;
 }
 
+void wlearner_dtree_t::min_split(const int min_split)
+{
+    m_min_split = min_split;
+}
+
 void wlearner_dtree_t::read(std::istream& stream)
 {
-    int32_t maximum_depth = 0;
+    int32_t idepth = 0;
+    int32_t isplit = 0;
 
     wlearner_t::read(stream);
     critical(
-        !::nano::detail::read(stream, maximum_depth) ||
+        !::nano::detail::read(stream, idepth) ||
+        !::nano::detail::read(stream, isplit) ||
         !::read(stream, m_nodes) ||
         !::read(stream, m_features) ||
         !::nano::read(stream, m_tables),
         "dtree weak learner: failed to read from stream!");
 
-    max_depth(maximum_depth);
+    max_depth(idepth);
+    min_split(isplit);
 }
 
 void wlearner_dtree_t::write(std::ostream& stream) const
@@ -217,6 +225,7 @@ void wlearner_dtree_t::write(std::ostream& stream) const
     wlearner_t::write(stream);
     critical(
         !::nano::detail::write(stream, static_cast<int32_t>(max_depth())) ||
+        !::nano::detail::write(stream, static_cast<int32_t>(min_split())) ||
         !::write(stream, m_nodes) ||
         !::write(stream, m_features) ||
         !::nano::write(stream, m_tables),
@@ -260,13 +269,6 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
             << " +++ depth=" << cache.m_depth << ",samples=" << cache.m_indices.size() << ",score=" << score << "...";
         const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
         const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
-
-        if (score_stump == wlearner_t::no_fit_score() &&
-            score_table == wlearner_t::no_fit_score())
-        {
-            log_info() << " === failed to fit either a stump or a table!";
-            return wlearner_t::no_fit_score();
-        }
 
         cluster_t cluster;
         tensor4d_t tables;

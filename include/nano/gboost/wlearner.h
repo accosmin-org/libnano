@@ -116,13 +116,6 @@ namespace nano
         void batch(int batch);
 
         ///
-        /// \brief change the minimum percentage of samples to consider for splitting.
-        ///
-        /// NB: this is useful to eliminate branches rarely hit.
-        ///
-        void min_split(int min_split);
-
-        ///
         /// \brief score that indicates fitting failed (e.g. unsupported feature types).
         ///
         static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }
@@ -131,7 +124,6 @@ namespace nano
         /// \brief access functions
         ///
         [[nodiscard]] auto batch() const { return m_batch.get(); }
-        [[nodiscard]] auto min_split() const { return m_min_split.get(); }
 
     protected:
 
@@ -157,6 +149,5 @@ namespace nano
 
         // attributes
         iparam1_t   m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};        ///< batch size
-        iparam1_t   m_min_split{"wlearner::min_split", 1, LE, 5, LE, 10};   ///< minimum ratio of samples to split
     };
 }

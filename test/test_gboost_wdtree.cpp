@@ -18,8 +18,10 @@ public:
 
     void check_wlearner(const wlearner_dtree_t& wlearner) const
     {
-        UTEST_CHECK_EQUAL(wlearner.features(), features());
         UTEST_CHECK_EQUAL(wlearner.nodes(), nodes());
+        UTEST_CHECK_EQUAL(wlearner.features(), features());
+        UTEST_CHECK_EQUAL(wlearner.min_split(), min_split());
+        UTEST_CHECK_EQUAL(wlearner.max_depth(), max_depth());
         UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables().dims());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables().array(), 1e-8);
     }
@@ -339,7 +341,7 @@ UTEST_CASE(fitting_table1)
 
 UTEST_CASE(fitting_depth2)
 {
-    const auto dataset = make_dataset<wdtree_depth2_dataset_t>(10, 1, 300);
+    const auto dataset = make_dataset<wdtree_depth2_dataset_t>(10, 1, 400);
     const auto datasetx1 = make_dataset<wdtree_depth2_dataset_t>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wdtree_depth2_dataset_t>(dataset.features().max(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth2_dataset_t>>();

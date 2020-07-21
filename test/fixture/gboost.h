@@ -312,11 +312,10 @@ auto make_dataset(const tensor_size_t isize = 10, const tensor_size_t tsize = 1,
 }
 
 template <typename twlearner>
-auto make_wlearner(int min_split = 10, int batch = 32)
+auto make_wlearner(int batch = 32)
 {
     auto wlearner = twlearner{};
     wlearner.batch(batch);
-    wlearner.min_split(min_split);
     return wlearner;
 }
 
@@ -526,7 +525,6 @@ auto stream_wlearner(const twlearner& wlearner)
         auto iwlearner = twlearner{};
         UTEST_REQUIRE_NOTHROW(iwlearner.read(istream));
         UTEST_CHECK_EQUAL(iwlearner.batch(), wlearner.batch());
-        UTEST_CHECK_EQUAL(iwlearner.min_split(), wlearner.min_split());
         return iwlearner;
     }
 }

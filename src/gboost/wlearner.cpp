@@ -13,25 +13,17 @@ void wlearner_t::batch(int batch)
     m_batch = batch;
 }
 
-void wlearner_t::min_split(const int min_split)
-{
-    m_min_split = min_split;
-}
-
 void wlearner_t::read(std::istream& stream)
 {
     serializable_t::read(stream);
 
     int32_t ibatch = 0;
-    int32_t isplit = 0;
 
     critical(
-        !::nano::detail::read(stream, ibatch) ||
-        !::nano::detail::read(stream, isplit),
+        !::nano::detail::read(stream, ibatch),
         "weak learner: failed to read from stream!");
 
     batch(ibatch);
-    min_split(isplit);
 }
 
 void wlearner_t::write(std::ostream& stream) const
@@ -39,8 +31,7 @@ void wlearner_t::write(std::ostream& stream) const
     serializable_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(batch())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(min_split())),
+        !::nano::detail::write(stream, static_cast<int32_t>(batch())),
         "weak learner: failed to write to stream!");
 }
 
