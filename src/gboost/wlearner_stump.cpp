@@ -4,6 +4,7 @@
 #include <nano/gboost/wlearner_stump.h>
 
 using namespace nano;
+using namespace nano::gboost;
 
 namespace
 {
@@ -14,39 +15,24 @@ namespace
         cache_t() = default;
 
         explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_r1_sum(tdim),
-            m_r2_sum(tdim),
-            m_r1_neg(tdim),
-            m_r2_neg(tdim),
+            m_acc_sum(tdim),
+            m_acc_neg(tdim),
             m_tables(cat_dims(2, tdim))
         {
         }
 
-        auto& r0_neg() { return m_r0_neg; }
-        auto& r0_sum() { return m_r0_sum; }
-        auto r1_neg() { return m_r1_neg.array(); }
-        auto r2_neg() { return m_r2_neg.array(); }
-        auto r1_sum() { return m_r1_sum.array(); }
-        auto r2_sum() { return m_r2_sum.array(); }
+        [[nodiscard]] auto x0_neg() const { return m_acc_neg.x0(); }
+        [[nodiscard]] auto r1_neg() const { return m_acc_neg.r1(); }
+        [[nodiscard]] auto r2_neg() const { return m_acc_neg.r2(); }
 
-        [[nodiscard]] auto r0_neg() const { return m_r0_neg; }
-        [[nodiscard]] auto r0_sum() const { return m_r0_sum; }
-        [[nodiscard]] auto r1_neg() const { return m_r1_neg.array(); }
-        [[nodiscard]] auto r2_neg() const { return m_r2_neg.array(); }
-        [[nodiscard]] auto r1_sum() const { return m_r1_sum.array(); }
-        [[nodiscard]] auto r2_sum() const { return m_r2_sum.array(); }
-
-        [[nodiscard]] auto r0_pos() const { return r0_sum() - r0_neg(); }
-        [[nodiscard]] auto r1_pos() const { return r1_sum() - r1_neg(); }
-        [[nodiscard]] auto r2_pos() const { return r2_sum() - r2_neg(); }
+        [[nodiscard]] auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
+        [[nodiscard]] auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
+        [[nodiscard]] auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
 
         void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& indices)
         {
-            m_r1_sum.zero();
-            m_r2_sum.zero();
-            m_r1_neg.zero();
-            m_r2_neg.zero();
-            m_r0_neg = m_r0_sum = 0.0;
+            m_acc_sum.clear();
+            m_acc_neg.clear();
 
             m_ivalues.clear();
             m_ivalues.reserve(indices.size());
@@ -55,7 +41,7 @@ namespace
                 if (!feature_t::missing(values(i)))
                 {
                     m_ivalues.emplace_back(values(i), i);
-                    update_sum(gradients.array(i));
+                    m_acc_sum.update(gradients.array(i));
                 }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
@@ -63,12 +49,12 @@ namespace
 
         [[nodiscard]] auto output_neg() const
         {
-            return r1_neg() / r0_neg();
+            return r1_neg() / x0_neg();
         }
 
         [[nodiscard]] auto output_pos() const
         {
-            return r1_pos() / r0_pos();
+            return r1_pos() / x0_pos();
         }
 
         template <typename tarray, typename toutputs>
@@ -80,32 +66,15 @@ namespace
         [[nodiscard]] auto score() const
         {
             return
-                cache_t::score(r0_neg(), r1_neg(), r2_neg(), output_neg()) +
-                cache_t::score(r0_pos(), r1_pos(), r2_pos(), output_pos());
-        }
-
-        template <typename tarray>
-        void update_sum(tarray&& vgrad)
-        {
-            r0_sum() += 1;
-            r1_sum() -= vgrad;
-            r2_sum() += vgrad * vgrad;
-        }
-
-        template <typename tarray>
-        void update_neg(tarray&& vgrad)
-        {
-            r0_neg() += 1;
-            r1_neg() -= vgrad;
-            r2_neg() += vgrad * vgrad;
+                cache_t::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
+                cache_t::score(x0_pos(), r1_pos(), r2_pos(), output_pos());
         }
 
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
 
         // attributes
         ivalues_t       m_ivalues;                              ///<
-        scalar_t        m_r0_sum{0}, m_r0_neg{0};               ///<
-        tensor3d_t      m_r1_sum, m_r2_sum, m_r1_neg, m_r2_neg; ///<
+        accumulator_t   m_acc_sum, m_acc_neg;                   ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{-1};                          ///<
         scalar_t        m_threshold{0};                         ///<
@@ -164,7 +133,7 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
             const auto& ivalue1 = cache.m_ivalues[iv + 0];
             const auto& ivalue2 = cache.m_ivalues[iv + 1];
 
-            cache.update_neg(gradients.array(ivalue1.second));
+            cache.m_acc_neg.update(gradients.array(ivalue1.second));
 
             if (ivalue1.first < ivalue2.first)
             {

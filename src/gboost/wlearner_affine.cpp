@@ -3,6 +3,7 @@
 #include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
+using namespace nano::gboost;
 
 namespace
 {
@@ -13,59 +14,41 @@ namespace
         cache_t() = default;
 
         explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_r1(tdim),
-            m_rx(tdim),
-            m_r2(tdim),
+            m_acc(tdim),
             m_tables(cat_dims(2, tdim))
         {
         }
 
-        auto r1() { return m_r1.array(); }
-        auto rx() { return m_rx.array(); }
-        auto r2() { return m_r2.array(); }
-
-        [[nodiscard]] auto r1() const { return m_r1.array(); }
-        [[nodiscard]] auto rx() const { return m_rx.array(); }
-        [[nodiscard]] auto r2() const { return m_r2.array(); }
+        [[nodiscard]] auto x0() const { return m_acc.x0(); }
+        [[nodiscard]] auto x1() const { return m_acc.x1(); }
+        [[nodiscard]] auto x2() const { return m_acc.x2(); }
+        [[nodiscard]] auto r1() const { return m_acc.r1(); }
+        [[nodiscard]] auto rx() const { return m_acc.rx(); }
+        [[nodiscard]] auto r2() const { return m_acc.r2(); }
 
         void clear()
         {
-            m_r1.zero();
-            m_rx.zero();
-            m_r2.zero();
-            m_x0 = m_x1 = m_x2 = 0.0;
-        }
-
-        template <typename tarray>
-        void update(scalar_t value, tarray&& vgrad)
-        {
-            m_x0 += 1;
-            m_x1 += value;
-            m_x2 += value * value;
-            r1() -= vgrad;
-            rx() -= vgrad * value;
-            r2() += vgrad * vgrad;
+            m_acc.clear();
         }
 
         [[nodiscard]] auto a() const
         {
-            return (rx() * m_x0 - r1() * m_x1) / (m_x2 * m_x0 - m_x1 * m_x1);
+            return (rx() * x0() - r1() * x1()) / (x2() * x0() - x1() * x1());
         }
 
         [[nodiscard]] auto b() const
         {
-            return (r1() * m_x2 - rx() * m_x1) / (m_x2 * m_x0 - m_x1 * m_x1);
+            return (r1() * x2() - rx() * x1()) / (x2() * x0() - x1() * x1());
         }
 
         [[nodiscard]] auto score() const
         {
-            return (r2() + a().square() * m_x2 + b().square() * m_x0 -
-                    2 * a() * rx() - 2 * b() * r1() + 2 * a() * b() * m_x1).sum();
+            return (r2() + a().square() * x2() + b().square() * x0() -
+                    2 * a() * rx() - 2 * b() * r1() + 2 * a() * b() * x1()).sum();
         }
 
         // attributes
-        tensor3d_t      m_r1, m_rx, m_r2;                       ///<
-        scalar_t        m_x0{0}, m_x1{0}, m_x2{0};              ///<
+        accumulator_t   m_acc;                                  ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{0};                           ///<
         scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
@@ -108,7 +91,7 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
             const auto value = fvalues(i);
             if (!feature_t::missing(value))
             {
-                cache.update(tfun1::get(value), gradients.array(i));
+                cache.m_acc.update(tfun1::get(value), gradients.array(i));
             }
         }
 
