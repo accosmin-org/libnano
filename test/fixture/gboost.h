@@ -2,6 +2,7 @@
 #include <utest/utest.h>
 #include <nano/dataset/memfixed.h>
 #include <nano/gboost/wlearner_dtree.h>
+#include <nano/gboost/wlearner_hinge.h>
 #include <nano/gboost/wlearner_table.h>
 #include <nano/gboost/wlearner_stump.h>
 #include <nano/gboost/wlearner_affine.h>
@@ -38,7 +39,7 @@ public:
 
     scalar_t make_stump_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster)
+        scalar_t threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster = 0)
     {
         return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
@@ -47,9 +48,20 @@ public:
         });
     }
 
+    scalar_t make_hinge_target(
+        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
+        scalar_t threshold, scalar_t beta0, scalar_t beta1, tensor_size_t cluster = 0)
+    {
+        return make_target(sample, feature, modulo, [&] (const scalar_t x)
+        {
+            assign(sample, cluster + (x < threshold ? 0 : 1));
+            return (x < threshold) ? (beta0 * (x - threshold)) : (beta1 * (x - threshold));
+        });
+    }
+
     scalar_t make_table_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t scale, tensor_size_t cluster)
+        scalar_t scale, tensor_size_t cluster = 0)
     {
         return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {

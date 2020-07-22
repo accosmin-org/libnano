@@ -47,7 +47,7 @@ namespace
                 if (!feature_t::missing(values(i)))
                 {
                     m_ivalues.emplace_back(values(i), i);
-                    m_acc_sum.update(gradients.array(i));
+                    m_acc_sum.update(values(i), gradients.array(i));
                 }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
@@ -161,7 +161,7 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
                     cache.m_feature = feature;
                     cache.m_threshold = threshold;
                     cache.m_tables.array(0) = cache.beta_neg(threshold);
-                    cache.m_tables.array(1) = -threshold * cache.m_tables.array(1);
+                    cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
                     cache.m_tables.array(2) = cache.beta_pos(threshold);
                     cache.m_tables.array(3) = -threshold * cache.m_tables.array(2);
                 }
