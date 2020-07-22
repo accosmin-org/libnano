@@ -4,6 +4,7 @@
 #include <nano/gboost/wlearner_hinge.h>
 
 using namespace nano;
+using namespace nano::gboost;
 
 namespace
 {
@@ -14,39 +15,30 @@ namespace
         cache_t() = default;
 
         explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_r1_sum(tdim),
-            m_r2_sum(tdim),
-            m_r1_neg(tdim),
-            m_r2_neg(tdim),
-            m_tables(cat_dims(2, tdim))
+            m_acc_sum(tdim),
+            m_acc_neg(tdim),
+            m_tables(cat_dims(4, tdim))
         {
         }
 
-        auto& r0_neg() { return m_r0_neg; }
-        auto& r0_sum() { return m_r0_sum; }
-        auto r1_neg() { return m_r1_neg.array(); }
-        auto r2_neg() { return m_r2_neg.array(); }
-        auto r1_sum() { return m_r1_sum.array(); }
-        auto r2_sum() { return m_r2_sum.array(); }
+        [[nodiscard]] auto x0_neg() const { return m_acc_neg.x0(); }
+        [[nodiscard]] auto x1_neg() const { return m_acc_neg.x1(); }
+        [[nodiscard]] auto x2_neg() const { return m_acc_neg.x2(); }
+        [[nodiscard]] auto r1_neg() const { return m_acc_neg.r1(); }
+        [[nodiscard]] auto rx_neg() const { return m_acc_neg.rx(); }
+        [[nodiscard]] auto r2_neg() const { return m_acc_neg.r2(); }
 
-        [[nodiscard]] auto r0_neg() const { return m_r0_neg; }
-        [[nodiscard]] auto r0_sum() const { return m_r0_sum; }
-        [[nodiscard]] auto r1_neg() const { return m_r1_neg.array(); }
-        [[nodiscard]] auto r2_neg() const { return m_r2_neg.array(); }
-        [[nodiscard]] auto r1_sum() const { return m_r1_sum.array(); }
-        [[nodiscard]] auto r2_sum() const { return m_r2_sum.array(); }
-
-        [[nodiscard]] auto r0_pos() const { return r0_sum() - r0_neg(); }
-        [[nodiscard]] auto r1_pos() const { return r1_sum() - r1_neg(); }
-        [[nodiscard]] auto r2_pos() const { return r2_sum() - r2_neg(); }
+        [[nodiscard]] auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
+        [[nodiscard]] auto x1_pos() const { return m_acc_sum.x1() - m_acc_neg.x1(); }
+        [[nodiscard]] auto x2_pos() const { return m_acc_sum.x2() - m_acc_neg.x2(); }
+        [[nodiscard]] auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
+        [[nodiscard]] auto rx_pos() const { return m_acc_sum.rx() - m_acc_neg.rx(); }
+        [[nodiscard]] auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
 
         void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& indices)
         {
-            m_r1_sum.zero();
-            m_r2_sum.zero();
-            m_r1_neg.zero();
-            m_r2_neg.zero();
-            m_r0_neg = m_r0_sum = 0.0;
+            m_acc_sum.clear();
+            m_acc_neg.clear();
 
             m_ivalues.clear();
             m_ivalues.reserve(indices.size());
@@ -55,57 +47,49 @@ namespace
                 if (!feature_t::missing(values(i)))
                 {
                     m_ivalues.emplace_back(values(i), i);
-                    update_sum(gradients.array(i));
+                    m_acc_sum.update(gradients.array(i));
                 }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
         }
 
-        [[nodiscard]] auto output_neg() const
+        template <typename tarray>
+        static auto beta(scalar_t x0, scalar_t x1, scalar_t x2,
+            const tarray& r1, const tarray& rx, scalar_t threshold)
         {
-            return r1_neg() / r0_neg();
+            return (rx - r1 * threshold) / (x2 + x0 * threshold * threshold - 2 * x1 * threshold);
         }
 
-        [[nodiscard]] auto output_pos() const
+        template <typename tarray, typename tbarray>
+        static auto score(scalar_t x0, scalar_t x1, scalar_t x2,
+            const tarray& r1, const tarray& rx, const tarray& r2, scalar_t threshold, const tbarray& beta)
         {
-            return r1_pos() / r0_pos();
+            return (r2 + beta.square() * (x2 + x0 * threshold * threshold - 2 * x1 * threshold)
+                - 2 * beta * (rx - r1 * threshold)).sum();
         }
 
-        template <typename tarray, typename toutputs>
-        static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
+        [[nodiscard]] auto beta_neg(scalar_t threshold) const
         {
-            return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
+            return cache_t::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
         }
 
-        [[nodiscard]] auto score() const
+        [[nodiscard]] auto beta_pos(scalar_t threshold) const
+        {
+            return cache_t::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
+        }
+
+        [[nodiscard]] auto score(scalar_t threshold) const
         {
             return
-                cache_t::score(r0_neg(), r1_neg(), r2_neg(), output_neg()) +
-                cache_t::score(r0_pos(), r1_pos(), r2_pos(), output_pos());
-        }
-
-        template <typename tarray>
-        void update_sum(tarray&& vgrad)
-        {
-            r0_sum() += 1;
-            r1_sum() -= vgrad;
-            r2_sum() += vgrad * vgrad;
-        }
-
-        template <typename tarray>
-        void update_neg(tarray&& vgrad)
-        {
-            r0_neg() += 1;
-            r1_neg() -= vgrad;
-            r2_neg() += vgrad * vgrad;
+                cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)),
+                cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
         }
 
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
 
         // attributes
         ivalues_t       m_ivalues;                              ///<
-        scalar_t        m_r0_sum{0}, m_r0_neg{0};               ///<
-        tensor3d_t      m_r1_sum, m_r2_sum, m_r1_neg, m_r2_neg; ///<
+        accumulator_t   m_acc_sum, m_acc_neg;                   ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{-1};                          ///<
         scalar_t        m_threshold{0};                         ///<
@@ -164,19 +148,22 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
             const auto& ivalue1 = cache.m_ivalues[iv + 0];
             const auto& ivalue2 = cache.m_ivalues[iv + 1];
 
-            cache.update_neg(gradients.array(ivalue1.second));
+            cache.m_acc_neg.update(ivalue1.first, gradients.array(ivalue1.second));
 
             if (ivalue1.first < ivalue2.first)
             {
                 // update the parameters if a better feature
-                const auto score = cache.score();
+                const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
+                const auto score = cache.score(threshold);
                 if (std::isfinite(score) && score < cache.m_score)
                 {
                     cache.m_score = score;
                     cache.m_feature = feature;
-                    cache.m_threshold = 0.5 * (ivalue1.first + ivalue2.first);
-                    cache.m_tables.array(0) = cache.output_neg();
-                    cache.m_tables.array(1) = cache.output_pos();
+                    cache.m_threshold = threshold;
+                    cache.m_tables.array(0) = cache.beta_neg(threshold);
+                    cache.m_tables.array(1) = -threshold * cache.m_tables.array(1);
+                    cache.m_tables.array(2) = cache.beta_pos(threshold);
+                    cache.m_tables.array(3) = -threshold * cache.m_tables.array(2);
                 }
             }
         }
@@ -198,16 +185,16 @@ void wlearner_hinge_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        outputs.vector(i) = vector(x < m_threshold ? 0 : 1);
+        outputs.vector(i) = vector(x < m_threshold ? 0 : 2) * x + vector(x < m_threshold ? 1 : 3);
     });
 }
 
 cluster_t wlearner_hinge_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    cluster_t cluster(dataset.samples(fold), 1);
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
+    cluster_t cluster(dataset.samples(fold), 2);
+    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
     {
-        cluster.assign(i, 0);
+        cluster.assign(i, x < m_threshold ? 0 : 1);
     });
 
     return cluster;

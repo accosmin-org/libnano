@@ -18,7 +18,8 @@ namespace nano
     /// \brief a hinge is a weak learner that performs the following operation element-wise:
     ///     hinge(x) =
     ///     {
-    ///         max(0, direction * (x(feature) - threshold)), if x(feature) is given and direction in {-1, +1}
+    ///         a * (x(feature) - threshold), if x(feature) < threshold,
+    ///         b * (x(feature) - threshold), if x(feature) >= threshold,
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
@@ -71,13 +72,11 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto direction() const { return m_direction; }
         [[nodiscard]] auto threshold() const { return m_threshold; }
 
     private:
 
         // attributes
-        scalar_t        m_direction{1};         ///< hinge direction
         scalar_t        m_threshold{0};         ///< threshold
     };
 }
