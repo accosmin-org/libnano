@@ -67,6 +67,11 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
+        void scale(const vector_t&) override;
+
+        ///
+        /// \brief @see wlearner_t
+        ///
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
 
         ///

@@ -44,6 +44,7 @@ namespace nano
         ///
         [[nodiscard]] auto feature() const { return m_feature; }
         [[nodiscard]] const auto& tables() const { return m_tables; }
+        [[nodiscard]] auto vector(tensor_size_t i) { return m_tables.array(i); }
         [[nodiscard]] auto vector(tensor_size_t i) const { return m_tables.vector(i); }
 
     protected:

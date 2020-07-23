@@ -81,7 +81,7 @@ namespace
         [[nodiscard]] auto score(scalar_t threshold) const
         {
             return
-                cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)),
+                cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)) +
                 cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
         }
 
@@ -179,6 +179,22 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
     set(best.m_feature, best.m_tables);
     m_threshold = best.m_threshold;
     return best.m_score;
+}
+
+void wlearner_hinge_t::scale(const vector_t& scale)
+{
+    critical(
+        scale.size() != 1 && scale.size() != 2,
+        "hinge weak learner: mis-matching scale!");
+
+    critical(
+        scale.minCoeff() < 0,
+        "hinge weak learner: invalid scale factors!");
+
+    vector(0) *= scale(0);
+    vector(1) *= scale(0);
+    vector(2) *= scale(std::min(tensor_size_t(1), scale.size() - 1));
+    vector(3) *= scale(std::min(tensor_size_t(1), scale.size() - 1));
 }
 
 void wlearner_hinge_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
