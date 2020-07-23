@@ -54,7 +54,7 @@ public:
     {
         return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
-            assign(sample, cluster + (x < threshold ? 0 : 1));
+            assign(sample, cluster);
             return (x < threshold) ? (beta0 * (x - threshold)) : (beta1 * (x - threshold));
         });
     }

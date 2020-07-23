@@ -18,8 +18,7 @@ namespace nano
     /// \brief a hinge is a weak learner that performs the following operation element-wise:
     ///     hinge(x) =
     ///     {
-    ///         a * (x(feature) - threshold), if x(feature) < threshold,
-    ///         b * (x(feature) - threshold), if x(feature) >= threshold,
+    ///         a * (threshold - x(feature))+ or b * (x(feature) - threshold)+ if the feature value is given,
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
@@ -67,21 +66,18 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        void scale(const vector_t&) override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
 
         ///
         /// \brief access functions
         ///
+        [[nodiscard]] auto negative() const { return m_negative; }
         [[nodiscard]] auto threshold() const { return m_threshold; }
 
     private:
 
         // attributes
+        bool            m_negative{true};       ///< (threshold - x(feature))+ or (x(feature) - threshold)+
         scalar_t        m_threshold{0};         ///< threshold
     };
 }

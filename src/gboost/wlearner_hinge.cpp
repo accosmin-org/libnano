@@ -15,10 +15,12 @@ namespace
         cache_t() = default;
 
         explicit cache_t(const tensor3d_dim_t& tdim) :
+            m_beta0(tdim),
             m_acc_sum(tdim),
             m_acc_neg(tdim),
-            m_tables(cat_dims(4, tdim))
+            m_tables(cat_dims(2, tdim))
         {
+            m_beta0.zero();
         }
 
         [[nodiscard]] auto x0_neg() const { return m_acc_neg.x0(); }
@@ -68,6 +70,11 @@ namespace
                 - 2 * beta * (rx - r1 * threshold)).sum();
         }
 
+        [[nodiscard]] auto beta0() const
+        {
+            return m_beta0.array();
+        }
+
         [[nodiscard]] auto beta_neg(scalar_t threshold) const
         {
             return cache_t::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
@@ -78,10 +85,17 @@ namespace
             return cache_t::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
         }
 
-        [[nodiscard]] auto score(scalar_t threshold) const
+        [[nodiscard]] auto score_neg(scalar_t threshold) const
         {
             return
                 cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)) +
+                cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta0());
+        }
+
+        [[nodiscard]] auto score_pos(scalar_t threshold) const
+        {
+            return
+                cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta0()) +
                 cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
         }
 
@@ -89,9 +103,11 @@ namespace
 
         // attributes
         ivalues_t       m_ivalues;                              ///<
+        tensor3d_t      m_beta0;                                ///<
         accumulator_t   m_acc_sum, m_acc_neg;                   ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{-1};                          ///<
+        bool            m_negative{false};                      ///<
         scalar_t        m_threshold{0};                         ///<
         scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
     };
@@ -103,9 +119,14 @@ void wlearner_hinge_t::read(std::istream& stream)
 {
     wlearner_feature1_t::read(stream);
 
+    uint32_t negative = 0x00;
+
     critical(
-        !::nano::detail::read(stream, m_threshold),
+        !::nano::detail::read(stream, m_threshold) ||
+        !::nano::detail::read(stream, negative),
         "hinge weak learner: failed to read from stream!");
+
+    m_negative = negative != 0x00;
 }
 
 void wlearner_hinge_t::write(std::ostream& stream) const
@@ -113,7 +134,8 @@ void wlearner_hinge_t::write(std::ostream& stream) const
     wlearner_feature1_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, m_threshold),
+        !::nano::detail::write(stream, m_threshold) ||
+        !::nano::detail::write(stream, static_cast<uint32_t>(m_negative)),
         "hinge weak learner: failed to write to stream!");
 }
 
@@ -154,16 +176,25 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
             {
                 // update the parameters if a better feature
                 const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
-                const auto score = cache.score(threshold);
-                if (std::isfinite(score) && score < cache.m_score)
+                const auto score_neg = cache.score_neg(threshold);
+                const auto score_pos = cache.score_pos(threshold);
+                if (std::isfinite(score_neg) && score_neg < cache.m_score)
                 {
-                    cache.m_score = score;
+                    cache.m_score = score_neg;
                     cache.m_feature = feature;
+                    cache.m_negative = true;
                     cache.m_threshold = threshold;
                     cache.m_tables.array(0) = cache.beta_neg(threshold);
                     cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
-                    cache.m_tables.array(2) = cache.beta_pos(threshold);
-                    cache.m_tables.array(3) = -threshold * cache.m_tables.array(2);
+                }
+                if (std::isfinite(score_pos) && score_pos < cache.m_score)
+                {
+                    cache.m_score = score_pos;
+                    cache.m_feature = feature;
+                    cache.m_negative = false;
+                    cache.m_threshold = threshold;
+                    cache.m_tables.array(0) = cache.beta_pos(threshold);
+                    cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
                 }
             }
         }
@@ -177,40 +208,32 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
         << ",threshold=" << best.m_threshold << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
 
     set(best.m_feature, best.m_tables);
+    m_negative = best.m_negative;
     m_threshold = best.m_threshold;
     return best.m_score;
-}
-
-void wlearner_hinge_t::scale(const vector_t& scale)
-{
-    critical(
-        scale.size() != 1 && scale.size() != 2,
-        "hinge weak learner: mis-matching scale!");
-
-    critical(
-        scale.minCoeff() < 0,
-        "hinge weak learner: invalid scale factors!");
-
-    vector(0) *= scale(0);
-    vector(1) *= scale(0);
-    vector(2) *= scale(std::min(tensor_size_t(1), scale.size() - 1));
-    vector(3) *= scale(std::min(tensor_size_t(1), scale.size() - 1));
 }
 
 void wlearner_hinge_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        outputs.vector(i) = vector(x < m_threshold ? 0 : 2) * x + vector(x < m_threshold ? 1 : 3);
+        if ((x < m_threshold && negative()) || (x >= m_threshold && !negative()))
+        {
+            outputs.vector(i) = vector(0) * x + vector(1);
+        }
+        else
+        {
+            outputs.vector(i).setZero();
+        }
     });
 }
 
 cluster_t wlearner_hinge_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    cluster_t cluster(dataset.samples(fold), 2);
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
+    cluster_t cluster(dataset.samples(fold), 1);
+    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
     {
-        cluster.assign(i, x < m_threshold ? 0 : 1);
+        cluster.assign(i, 0);
     });
 
     return cluster;
