@@ -14,8 +14,7 @@ namespace nano
     };
 
     ///
-    ///
-    /// \brief a (look-up) table is a weak learner that returns the output indexed by the selected feature:
+    /// \brief a (look-up) table is a weak learner that returns a constant for each discrete feature value:
     ///     table(x) =
     ///     {
     ///         tables[int(x(feature))], if x(feature) is given

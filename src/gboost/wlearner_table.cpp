@@ -14,7 +14,7 @@ namespace
 
         cache_t() = default;
 
-        cache_t(const tensor3d_dim_t& tdim) :
+        explicit cache_t(const tensor3d_dim_t& tdim) :
             m_acc(tdim)
         {
         }

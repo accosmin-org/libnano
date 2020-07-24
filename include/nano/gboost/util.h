@@ -39,7 +39,7 @@ namespace nano { namespace gboost
 
         accumulator_t() = default;
 
-        accumulator_t(const tensor3d_dim_t& tdim) :
+        explicit accumulator_t(const tensor3d_dim_t& tdim) :
             m_x0(1),
             m_x1(1),
             m_x2(1),

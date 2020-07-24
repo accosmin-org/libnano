@@ -107,8 +107,8 @@ namespace
         accumulator_t   m_acc_sum, m_acc_neg;                   ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{-1};                          ///<
-        bool            m_negative{false};                      ///<
         scalar_t        m_threshold{0};                         ///<
+        ::nano::hinge   m_hinge{::nano::hinge::left};           ///<
         scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
     };
 }
@@ -119,14 +119,14 @@ void wlearner_hinge_t::read(std::istream& stream)
 {
     wlearner_feature1_t::read(stream);
 
-    uint32_t negative = 0x00;
+    uint32_t htype = 0x00;
 
     critical(
         !::nano::detail::read(stream, m_threshold) ||
-        !::nano::detail::read(stream, negative),
+        !::nano::detail::read(stream, htype),
         "hinge weak learner: failed to read from stream!");
 
-    m_negative = negative != 0x00;
+    m_hinge = static_cast<::nano::hinge>(htype);
 }
 
 void wlearner_hinge_t::write(std::ostream& stream) const
@@ -135,7 +135,7 @@ void wlearner_hinge_t::write(std::ostream& stream) const
 
     critical(
         !::nano::detail::write(stream, m_threshold) ||
-        !::nano::detail::write(stream, static_cast<uint32_t>(m_negative)),
+        !::nano::detail::write(stream, static_cast<uint32_t>(m_hinge)),
         "hinge weak learner: failed to write to stream!");
 }
 
@@ -182,7 +182,7 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
                 {
                     cache.m_score = score_neg;
                     cache.m_feature = feature;
-                    cache.m_negative = true;
+                    cache.m_hinge = hinge::left;
                     cache.m_threshold = threshold;
                     cache.m_tables.array(0) = cache.beta_neg(threshold);
                     cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
@@ -191,7 +191,7 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
                 {
                     cache.m_score = score_pos;
                     cache.m_feature = feature;
-                    cache.m_negative = false;
+                    cache.m_hinge = hinge::right;
                     cache.m_threshold = threshold;
                     cache.m_tables.array(0) = cache.beta_pos(threshold);
                     cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
@@ -208,8 +208,8 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
         << ",threshold=" << best.m_threshold << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
 
     set(best.m_feature, best.m_tables);
-    m_negative = best.m_negative;
     m_threshold = best.m_threshold;
+    m_hinge = best.m_hinge;
     return best.m_score;
 }
 
@@ -217,7 +217,8 @@ void wlearner_hinge_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        if ((x < m_threshold && negative()) || (x >= m_threshold && !negative()))
+        if ((x < m_threshold && m_hinge == hinge::left) ||
+            (x >= m_threshold && m_hinge == hinge::right))
         {
             outputs.vector(i) = vector(0) * x + vector(1);
         }

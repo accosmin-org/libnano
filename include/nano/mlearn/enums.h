@@ -132,4 +132,30 @@ namespace nano
     {
         return os << scat(type);
     }
+
+    ///
+    /// \brief hinge type (see MARS).
+    ///
+    /// see "Multivariate adaptive regression splines", by Jerome Friedman
+    ///
+    enum class hinge
+    {
+        left,       ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
+        right,      ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
+    };
+
+    template <>
+    inline enum_map_t<hinge> enum_string<hinge>()
+    {
+        return
+        {
+            { hinge::left,          "left" },
+            { hinge::right,         "right" },
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const hinge type)
+    {
+        return os << scat(type);
+    }
 }

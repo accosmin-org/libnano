@@ -14,11 +14,11 @@ namespace nano
     };
 
     ///
-    ///
     /// \brief a hinge is a weak learner that performs the following operation element-wise:
     ///     hinge(x) =
     ///     {
-    ///         a * (threshold - x(feature))+ or b * (x(feature) - threshold)+ if the feature value is given,
+    ///         beta * (threshold - x(feature))+ or
+    ///         beta * (x(feature) - threshold)+, if the feature value is given,
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
@@ -26,8 +26,8 @@ namespace nano
     ///
     /// NB: the discrete features and the missing feature values are skipped during fiting.
     /// NB: the threshold is shared across outputs, but the predictions and the hinge directions can be different.
-    ///
-    /// see "Multivariate adaptive regression splines", by Jerome Friedman
+    /// NB: this weak learner is inspired by the MARS algorithm:
+    ///     see "Multivariate adaptive regression splines", by Jerome Friedman
     ///
     class NANO_PUBLIC wlearner_hinge_t final : public wlearner_feature1_t
     {
@@ -71,13 +71,13 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto negative() const { return m_negative; }
+        [[nodiscard]] auto hinge() const { return m_hinge; }
         [[nodiscard]] auto threshold() const { return m_threshold; }
 
     private:
 
         // attributes
-        bool            m_negative{true};       ///< (threshold - x(feature))+ or (x(feature) - threshold)+
-        scalar_t        m_threshold{0};         ///< threshold
+        scalar_t        m_threshold{0};                 ///< threshold
+        ::nano::hinge   m_hinge{::nano::hinge::left};   ///<
     };
 }

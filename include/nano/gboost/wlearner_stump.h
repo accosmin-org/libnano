@@ -14,7 +14,6 @@ namespace nano
     };
 
     ///
-    ///
     /// \brief a decision stump is a weak learner that compares the value of a selected feature with a threshold:
     ///     stump(x) =
     ///     {
