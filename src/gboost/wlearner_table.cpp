@@ -4,6 +4,7 @@
 #include <nano/gboost/wlearner_table.h>
 
 using namespace nano;
+using namespace nano::gboost;
 
 namespace
 {
@@ -13,57 +14,47 @@ namespace
 
         cache_t() = default;
 
-        auto& r0(tensor_size_t fv) { return m_r0(fv); }
-        auto r1(tensor_size_t fv) { return m_r1.array(fv); }
-        auto r2(tensor_size_t fv) { return m_r2.array(fv); }
-
-        [[nodiscard]] auto r0(tensor_size_t fv) const { return m_r0(fv); }
-        [[nodiscard]] auto r1(tensor_size_t fv) const { return m_r1.array(fv); }
-        [[nodiscard]] auto r2(tensor_size_t fv) const { return m_r2.array(fv); }
-
-        void clear(const tensor_size_t n_fvalues, const tensor3d_dim_t tdim)
+        cache_t(const tensor3d_dim_t& tdim) :
+            m_acc(tdim)
         {
-            m_r0.resize(n_fvalues);
-            m_r1.resize(cat_dims(n_fvalues, tdim));
-            m_r2.resize(cat_dims(n_fvalues, tdim));
+        }
 
-            m_r0.zero();
-            m_r1.zero();
-            m_r2.zero();
+        auto& x0(tensor_size_t fv) { return m_acc.x0(fv); }
+        auto r1(tensor_size_t fv) { return m_acc.r1(fv); }
+        auto r2(tensor_size_t fv) { return m_acc.r2(fv); }
+
+        [[nodiscard]] auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
+        [[nodiscard]] auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
+        [[nodiscard]] auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
+
+        void clear(tensor_size_t n_fvalues)
+        {
+            m_acc.clear(n_fvalues);
         }
 
         [[nodiscard]] auto output(const tensor_size_t fv) const
         {
-            return r1(fv) / r0(fv);
+            return r1(fv) / x0(fv);
         }
 
         template <typename toutputs>
         [[nodiscard]] scalar_t score(const tensor_size_t fv, const toutputs& outputs) const
         {
-            return (r2(fv) + outputs.square() * r0(fv) - 2 * outputs * r1(fv)).sum();
+            return (r2(fv) + outputs.square() * x0(fv) - 2 * outputs * r1(fv)).sum();
         }
 
         [[nodiscard]] auto score() const
         {
             scalar_t score = 0;
-            for (tensor_size_t fv = 0, n_fvalues = m_r0.size<0>(); fv < n_fvalues; ++ fv)
+            for (tensor_size_t fv = 0, n_fvalues = m_acc.fvalues(); fv < n_fvalues; ++ fv)
             {
                 score += this->score(fv, output(fv));
             }
             return score;
         }
 
-        template <typename tarray>
-        void update(tensor_size_t fv, tarray&& vgrad)
-        {
-            r0(fv) += 1.0;
-            r1(fv) -= vgrad;
-            r2(fv) += vgrad * vgrad;
-        }
-
         // attributes
-        tensor1d_t      m_r0;                                   ///< (#feature_values)
-        tensor4d_t      m_r1, m_r2;                             ///< (#feature_values, tdim)
+        accumulator_t   m_acc;                                  ///<
         tensor4d_t      m_tables;                               ///<
         tensor_size_t   m_feature{-1};                          ///<
         scalar_t        m_score{wlearner_t::no_fit_score()};    ///<
@@ -83,7 +74,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(indices.max() < dataset.samples(fold));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
-    std::vector<cache_t> caches(tpool_t::size());
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
     {
         const auto& ifeature = dataset.ifeature(feature);
@@ -99,7 +90,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
         // update accumulators
         auto& cache = caches[tnum];
-        cache.clear(n_fvalues, dataset.tdim());
+        cache.clear(n_fvalues);
         for (const auto i : indices)
         {
             const auto value = fvalues(i);
@@ -112,7 +103,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
             critical(fv < 0 || fv >= n_fvalues,
                 scat("table weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")"));
 
-            cache.update(fv, gradients.array(i));
+            cache.m_acc.update(gradients.array(i), fv);
         }
 
         // update the parameters if a better feature
