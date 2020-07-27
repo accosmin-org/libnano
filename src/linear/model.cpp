@@ -58,7 +58,7 @@ namespace
 
         log_info() << std::setprecision(8) << std::fixed
             << "fold=" << (fold.m_index + 1) << "|" << dataset.folds()
-            << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
+            << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << scat(status) << ")"
             << ",l1reg=" << function.l1reg()
             << ",l2reg=" << function.l2reg()
             << ",vAreg=" << function.vAreg() << "," << state << ".";

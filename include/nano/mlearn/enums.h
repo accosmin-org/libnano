@@ -104,11 +104,6 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& os, const wscale type)
-    {
-        return os << scat(type);
-    }
-
     ///
     /// \brief method to estimate the importance of a feature.
     ///
@@ -126,11 +121,6 @@ namespace nano
             { importance::shuffle,  "shuffle" },
             { importance::drop,     "drop" },
         };
-    }
-
-    inline std::ostream& operator<<(std::ostream& os, const importance type)
-    {
-        return os << scat(type);
     }
 
     ///
@@ -152,10 +142,5 @@ namespace nano
             { hinge::left,          "left" },
             { hinge::right,         "right" },
         };
-    }
-
-    inline std::ostream& operator<<(std::ostream& os, const hinge type)
-    {
-        return os << scat(type);
     }
 }

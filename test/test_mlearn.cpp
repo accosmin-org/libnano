@@ -7,15 +7,25 @@
 
 using namespace nano;
 
-template <typename tscalar>
-std::ostream& operator<<(std::ostream& os, const std::vector<tscalar>& values)
+inline std::ostream& operator<<(std::ostream& stream, importance type)
 {
-    os << "{";
+    return stream << scat(type);
+}
+
+inline std::ostream& operator<<(std::ostream& stream, train_status status)
+{
+    return stream << scat(status);
+}
+
+template <typename tscalar>
+std::ostream& operator<<(std::ostream& stream, const std::vector<tscalar>& values)
+{
+    stream << "{";
     for (const auto& value : values)
     {
-        os << "{" << value << "}";
+        stream << "{" << value << "}";
     }
-    return os << "}";
+    return stream << "}";
 }
 
 UTEST_BEGIN_MODULE(test_mlearn)

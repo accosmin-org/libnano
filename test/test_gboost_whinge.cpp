@@ -4,6 +4,11 @@
 
 using namespace nano;
 
+inline std::ostream& operator<<(std::ostream& stream, hinge type)
+{
+    return stream << scat(type);
+}
+
 class whinge_dataset_t : public fixture_dataset_t
 {
 public:

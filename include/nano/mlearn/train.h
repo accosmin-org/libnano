@@ -78,11 +78,6 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, train_status status)
-    {
-        return stream << scat(status);
-    }
-
     ///
     /// \brief measurements at different training points (e.g. epoch, iteration, boosting round)
     ///     for both the training and the validation datasets.

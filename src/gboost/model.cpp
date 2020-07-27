@@ -90,7 +90,7 @@ train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& datase
         << " === batch=" << batch() << ", rounds=" << rounds() << ", patience=" << patience()
         << ", subsample=" << subsample() << ", tune=" << tune_steps() << "x" << tune_trials();
     log_info()
-        << " === scale=" << scale() << ", regularization=" << scat(regularization());
+        << " === scale=" << scat(scale()) << ", regularization=" << scat(regularization());
     for (const auto& proto : m_protos)
     {
         log_info() << " === proto: id=" << proto.m_id;
@@ -194,7 +194,7 @@ train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAre
         << std::setprecision(4) << std::fixed
         << std::setw(cwidth) << std::setfill('0') << round << "/"
         << std::setw(cwidth) << std::setfill('0') << rounds()
-        << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
+        << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << scat(status) << ")"
         << std::setprecision(8) << std::fixed
         << ",vAreg=" << vAreg << "," << state
         << ",feat=[" << features.array() << "].";
