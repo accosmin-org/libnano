@@ -39,7 +39,7 @@ public:
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
-            make_hinge_target(sample, feature(), 5, 2.5, +3.0, 0.0, 0));
+            make_hinge_target(sample, feature(), 5, 2.5, +3.0, ::nano::hinge::left, 0));
     }
 
     [[nodiscard]] ::nano::hinge hinge() const override
@@ -62,7 +62,7 @@ public:
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
-            make_hinge_target(sample, feature(), 5, 2.5, 0.0, -2.1, 0));
+            make_hinge_target(sample, feature(), 5, 2.5, -2.1, ::nano::hinge::right, 0));
     }
 
     [[nodiscard]] ::nano::hinge hinge() const override

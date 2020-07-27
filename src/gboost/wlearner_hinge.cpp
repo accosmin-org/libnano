@@ -119,14 +119,10 @@ void wlearner_hinge_t::read(std::istream& stream)
 {
     wlearner_feature1_t::read(stream);
 
-    uint32_t htype = 0x00;
-
     critical(
         !::nano::detail::read(stream, m_threshold) ||
-        !::nano::detail::read(stream, htype),
+        !::nano::detail::read_cast<uint32_t>(stream, m_hinge),
         "hinge weak learner: failed to read from stream!");
-
-    m_hinge = static_cast<::nano::hinge>(htype);
 }
 
 void wlearner_hinge_t::write(std::ostream& stream) const
@@ -151,17 +147,9 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    loopi(dataset.features(), [&] (const tensor_size_t feature, const size_t tnum)
+    wlearner_feature1_t::loopc(dataset, fold,
+        [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
     {
-        const auto& ifeature = dataset.ifeature(feature);
-
-        // NB: This weak learner works only with continuous features!
-        if (ifeature.discrete())
-        {
-            return;
-        }
-        const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
-
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear(gradients, fvalues, indices);
@@ -176,8 +164,9 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
             {
                 // update the parameters if a better feature
                 const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
+
+                // ... try the left hinge
                 const auto score_neg = cache.score_neg(threshold);
-                const auto score_pos = cache.score_pos(threshold);
                 if (std::isfinite(score_neg) && score_neg < cache.m_score)
                 {
                     cache.m_score = score_neg;
@@ -187,6 +176,9 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, fold_t fold, const tens
                     cache.m_tables.array(0) = cache.beta_neg(threshold);
                     cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
                 }
+
+                // ... try the right hinge
+                const auto score_pos = cache.score_pos(threshold);
                 if (std::isfinite(score_pos) && score_pos < cache.m_score)
                 {
                     cache.m_score = score_pos;
@@ -227,15 +219,4 @@ void wlearner_hinge_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
             outputs.vector(i).setZero();
         }
     });
-}
-
-cluster_t wlearner_hinge_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
-{
-    cluster_t cluster(dataset.samples(fold), 1);
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
-    {
-        cluster.assign(i, 0);
-    });
-
-    return cluster;
 }

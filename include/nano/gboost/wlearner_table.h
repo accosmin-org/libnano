@@ -54,8 +54,9 @@ namespace nano
         ///
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
 
-    private:
-
-        [[nodiscard]] auto n_fvalues() const { return tables().size<0>(); }
+        ///
+        /// \brief access functions
+        ///
+        [[nodiscard]] auto fvalues() const { return tables().size<0>(); }
     };
 }

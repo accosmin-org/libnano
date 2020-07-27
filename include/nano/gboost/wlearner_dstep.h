@@ -4,39 +4,38 @@
 
 namespace nano
 {
-    class wlearner_hinge_t;
+    class wlearner_dstep_t;
 
     template <>
-    struct factory_traits_t<wlearner_hinge_t>
+    struct factory_traits_t<wlearner_dstep_t>
     {
-        static string_t id() { return "hinge"; }
-        static string_t description() { return "hinge weak learner"; }
+        static string_t id() { return "dstep"; }
+        static string_t description() { return "discrete step weak learner"; }
     };
 
     ///
-    /// \brief a hinge is a weak learner that performs the following operation element-wise:
-    ///     hinge(x) =
+    /// \brief a discrete step weak learner that returns a constant for a chosen discrete feature value:
+    ///     dstep(x) =
     ///     {
-    ///         beta * (threshold - x(feature))+ or
-    ///         beta * (x(feature) - threshold)+, if the feature value is given,
+    ///         beta, if x(feature) is given and x(feature) == fvalue,
+    ///         beta, if x(feature) is given and x(feature) != fvalue,
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
-    ///     where feature is the selected continuous feature.
+    ///     where feature is the selected discrete feature.
     ///
-    /// NB: the discrete features and the missing feature values are skipped during fiting.
-    /// NB: the threshold is shared across outputs, but the predictions and the hinge directions can be different.
-    /// NB: this weak learner is inspired by the MARS algorithm:
+    /// NB: the continuous features and the missing feature values are skipped during fiting.
+    /// NB: this weak learner is inspired by the MARS algorithm extend to handle discrete/categorical features:
     ///     see "Multivariate adaptive regression splines", by Jerome Friedman
     ///
-    class NANO_PUBLIC wlearner_hinge_t final : public wlearner_feature1_t
+    class NANO_PUBLIC wlearner_dstep_t final : public wlearner_feature1_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        wlearner_hinge_t();
+        wlearner_dstep_t();
 
         ///
         /// \brief @see wlearner_t
@@ -66,13 +65,12 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto hinge() const { return m_hinge; }
-        [[nodiscard]] auto threshold() const { return m_threshold; }
+        [[nodiscard]] auto fvalue() const { return m_fvalue; }
+        [[nodiscard]] auto fvalues() const { return tables().size<0>(); }
 
     private:
 
         // attributes
-        scalar_t        m_threshold{0};                 ///< threshold
-        ::nano::hinge   m_hinge{::nano::hinge::left};   ///<
+        tensor_size_t   m_fvalue{-1};    ///< the chosen feature value
     };
 }

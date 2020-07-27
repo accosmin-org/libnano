@@ -72,17 +72,9 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
+    wlearner_feature1_t::loopc(dataset, fold,
+        [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
     {
-        const auto& ifeature = dataset.ifeature(feature);
-
-        // NB: This weak learner works only with continuous features!
-        if (ifeature.discrete())
-        {
-            return;
-        }
-        const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
-
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear();
@@ -125,19 +117,6 @@ void wlearner_affine_t<tfun1>::predict(
     {
         outputs.vector(i) = vector(0) * tfun1::get(x) + vector(1);
     });
-}
-
-template <typename tfun1>
-cluster_t wlearner_affine_t<tfun1>::split(
-    const dataset_t& dataset, fold_t fold, const indices_t& indices) const
-{
-    cluster_t cluster(dataset.samples(fold), 1);
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
-    {
-        cluster.assign(i, 0);
-    });
-
-    return cluster;
 }
 
 template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::fun1_cos_t>;

@@ -23,6 +23,7 @@ public:
 
     void check_wlearner(const wlearner_table_t& wlearner) const
     {
+        UTEST_CHECK_EQUAL(wlearner.fvalues(), 3);
         UTEST_CHECK_EQUAL(wlearner.feature(), feature());
         UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables().dims());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables().array(), 1e-8);

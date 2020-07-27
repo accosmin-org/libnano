@@ -76,11 +76,6 @@ namespace nano
         /// \brief @see wlearner_t
         ///
         [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t&, const indices_t&) override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
     };
 
     using wlearner_cos1_t = wlearner_affine_t<fun1_cos_t>;

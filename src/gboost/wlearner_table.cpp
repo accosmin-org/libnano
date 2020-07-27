@@ -75,19 +75,9 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
+    wlearner_feature1_t::loopd(dataset, fold,
+        [&] (tensor_size_t feature, const tensor1d_t& fvalues, tensor_size_t n_fvalues, size_t tnum)
     {
-        const auto& ifeature = dataset.ifeature(feature);
-
-        // NB: This weak learner works only with discrete features!
-        if (!ifeature.discrete())
-        {
-            return;
-        }
-
-        const auto n_fvalues = static_cast<tensor_size_t>(ifeature.labels().size());
-        const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
-
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear(n_fvalues);
@@ -137,21 +127,21 @@ void wlearner_table_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
     {
         const auto index = static_cast<tensor_size_t>(x);
         critical(
-            index < 0 || index >= n_fvalues(),
-            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
+            index < 0 || index >= fvalues(),
+            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
         outputs.vector(i) = vector(index);
     });
 }
 
 cluster_t wlearner_table_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    cluster_t cluster(dataset.samples(fold), n_fvalues());
+    cluster_t cluster(dataset.samples(fold), fvalues());
     wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
     {
         const auto index = static_cast<tensor_size_t>(x);
         critical(
-            index < 0 || index >= n_fvalues(),
-            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
+            index < 0 || index >= fvalues(),
+            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
         cluster.assign(i, index);
     });
 

@@ -1,6 +1,8 @@
 #include <nano/table.h>
 #include <utest/utest.h>
 
+using namespace nano;
+
 template <typename tscalar>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::pair<size_t, tscalar>>& values)
 {
@@ -153,31 +155,55 @@ UTEST_CASE(table_mark)
 UTEST_CASE(table_sort)
 {
     nano::table_t table;
-    table.header() << "name " << "col1" << "col2" << "col3";
-    table.append() << "name1" << "1000" << "9000" << "4000";
-    table.append() << "name2" << "3200" << "2000" << "6000";
-    table.append() << "name3" << "1500" << "2000" << "5000";
+    table.header() << "name" << "col1" << "col2" << "col3";
+    table.append() << "name" << "1000" << "9000" << "4000";
+    table.append() << "name" << "3200" << "2000" << "6000";
+    table.append() << "name" << "1500" << "2000" << "5000";
 
     {
         auto tablex = table;
-        tablex.sort(nano::make_less_from_string<int>(), {2, 3});
+        tablex.sort([] (const string_t& lhs, const string_t& rhs) { return lhs < rhs; }, {0});
 
-        UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name ");
+        UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(0).data(1), "col1");
         UTEST_CHECK_EQUAL(tablex.row(0).data(2), "col2");
         UTEST_CHECK_EQUAL(tablex.row(0).data(3), "col3");
 
-        UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name3");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(1).data(1), "1500");
         UTEST_CHECK_EQUAL(tablex.row(1).data(2), "2000");
         UTEST_CHECK_EQUAL(tablex.row(1).data(3), "5000");
 
-        UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name2");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(2).data(1), "3200");
         UTEST_CHECK_EQUAL(tablex.row(2).data(2), "2000");
         UTEST_CHECK_EQUAL(tablex.row(2).data(3), "6000");
 
-        UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name1");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(1), "1000");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(2), "9000");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(3), "4000");
+    }
+    {
+        auto tablex = table;
+        tablex.sort(nano::make_less_from_string<int>(), {2, 3});
+
+        UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name");
+        UTEST_CHECK_EQUAL(tablex.row(0).data(1), "col1");
+        UTEST_CHECK_EQUAL(tablex.row(0).data(2), "col2");
+        UTEST_CHECK_EQUAL(tablex.row(0).data(3), "col3");
+
+        UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(1), "1500");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(2), "2000");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(3), "5000");
+
+        UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(1), "3200");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(2), "2000");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(3), "6000");
+
+        UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(3).data(1), "1000");
         UTEST_CHECK_EQUAL(tablex.row(3).data(2), "9000");
         UTEST_CHECK_EQUAL(tablex.row(3).data(3), "4000");
@@ -186,22 +212,22 @@ UTEST_CASE(table_sort)
         auto tablex = table;
         tablex.sort(nano::make_greater_from_string<int>(), {1});
 
-        UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name ");
+        UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(0).data(1), "col1");
         UTEST_CHECK_EQUAL(tablex.row(0).data(2), "col2");
         UTEST_CHECK_EQUAL(tablex.row(0).data(3), "col3");
 
-        UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name2");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(1).data(1), "3200");
         UTEST_CHECK_EQUAL(tablex.row(1).data(2), "2000");
         UTEST_CHECK_EQUAL(tablex.row(1).data(3), "6000");
 
-        UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name3");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(2).data(1), "1500");
         UTEST_CHECK_EQUAL(tablex.row(2).data(2), "2000");
         UTEST_CHECK_EQUAL(tablex.row(2).data(3), "5000");
 
-        UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name1");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(3).data(1), "1000");
         UTEST_CHECK_EQUAL(tablex.row(3).data(2), "9000");
         UTEST_CHECK_EQUAL(tablex.row(3).data(3), "4000");

@@ -1,6 +1,7 @@
 #include <nano/loss.h>
 #include <utest/utest.h>
 #include <nano/dataset/memfixed.h>
+#include <nano/gboost/wlearner_dstep.h>
 #include <nano/gboost/wlearner_dtree.h>
 #include <nano/gboost/wlearner_hinge.h>
 #include <nano/gboost/wlearner_table.h>
@@ -50,12 +51,14 @@ public:
 
     scalar_t make_hinge_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t threshold, scalar_t beta0, scalar_t beta1, tensor_size_t cluster = 0)
+        scalar_t threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
     {
         return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
             assign(sample, cluster);
-            return (x < threshold) ? (beta0 * (x - threshold)) : (beta1 * (x - threshold));
+            return (type == ::nano::hinge::left) ?
+                ((x < threshold) ? (beta * (x - threshold)) : 0.0) :
+                ((x < threshold) ? 0.0 : (beta * (x - threshold)));
         });
     }
 
@@ -67,6 +70,17 @@ public:
         {
             assign(sample, cluster + (sample % modulo));
             return scale * (x - 1.0);
+        });
+    }
+
+    scalar_t make_dstep_target(
+        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
+        scalar_t beta, tensor_size_t fvalue, tensor_size_t cluster = 0)
+    {
+        return make_target(sample, feature, modulo, [&] (const scalar_t x)
+        {
+            assign(sample, cluster);
+            return (static_cast<tensor_size_t>(x) == fvalue) ? beta : 0.0;
         });
     }
 

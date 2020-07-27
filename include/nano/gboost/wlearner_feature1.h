@@ -40,6 +40,11 @@ namespace nano
         [[nodiscard]] indices_t features() const override;
 
         ///
+        /// \brief @see wlearner_t
+        ///
+        [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
+
+        ///
         /// \brief access functions
         ///
         [[nodiscard]] auto feature() const { return m_feature; }
@@ -50,6 +55,35 @@ namespace nano
     protected:
 
         void compatible(const dataset_t&) const;
+
+        template <typename toperator>
+        static void loopc(const dataset_t& dataset, fold_t fold, const toperator& op)
+        {
+            loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
+            {
+                const auto& ifeature = dataset.ifeature(feature);
+                if (!ifeature.discrete())
+                {
+                    const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
+                    op(feature, fvalues, tnum);
+                }
+            });
+        }
+
+        template <typename toperator>
+        static void loopd(const dataset_t& dataset, fold_t fold, const toperator& op)
+        {
+            loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
+            {
+                const auto& ifeature = dataset.ifeature(feature);
+                if (ifeature.discrete())
+                {
+                    const auto n_fvalues = static_cast<tensor_size_t>(ifeature.labels().size());
+                    const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
+                    op(feature, fvalues, n_fvalues, tnum);
+                }
+            });
+        }
 
         template <typename toperator>
         void predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t& outputs,
@@ -99,6 +133,6 @@ namespace nano
         // attributes
         size_t          m_labels{0};        ///< expected number of labels if discrete
         tensor_size_t   m_feature{-1};      ///< index of the selected feature
-        tensor4d_t      m_tables;           ///< (:, #outputs)
+        tensor4d_t      m_tables;           ///< coefficients (:, #outputs)
     };
 }

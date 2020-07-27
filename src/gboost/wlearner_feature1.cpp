@@ -18,7 +18,7 @@ void wlearner_feature1_t::read(std::istream& stream)
     wlearner_t::read(stream);
 
     critical(
-        !::nano::detail::read(stream, m_feature) ||
+        !::nano::detail::read_cast<int64_t>(stream, m_feature) ||
         !::nano::read(stream, m_tables),
         "feature1 weak learner: failed to read from stream!");
 }
@@ -28,7 +28,7 @@ void wlearner_feature1_t::write(std::ostream& stream) const
     wlearner_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, m_feature) ||
+        !::nano::detail::write(stream, static_cast<int64_t>(m_feature)) ||
         !::nano::write(stream, m_tables),
         "feature1 weak learner: failed to write to stream!");
 }
@@ -54,4 +54,15 @@ void wlearner_feature1_t::compatible(const dataset_t& dataset) const
 indices_t wlearner_feature1_t::features() const
 {
     return std::array<tensor_size_t, 1>{{m_feature}};
+}
+
+cluster_t wlearner_feature1_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
+{
+    cluster_t cluster(dataset.samples(fold), 1);
+    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
+    {
+        cluster.assign(i, 0);
+    });
+
+    return cluster;
 }

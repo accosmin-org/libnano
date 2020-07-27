@@ -31,15 +31,14 @@ namespace nano { namespace gboost
     }
 
     ///
-    /// \brief accumulates residuals of different orders useful for fitting simple weak learners.
+    /// \brief accumulates residuals & feature values of different moment orders
+    ///     useful for fitting simple weak learners.
     ///
     class accumulator_t
     {
     public:
 
-        accumulator_t() = default;
-
-        explicit accumulator_t(const tensor3d_dim_t& tdim) :
+        explicit accumulator_t(const tensor3d_dim_t& tdim = make_dims(0, 0, 0)) :
             m_x0(1),
             m_x1(1),
             m_x2(1),
@@ -47,6 +46,7 @@ namespace nano { namespace gboost
             m_rx(cat_dims(1, tdim)),
             m_r2(cat_dims(1, tdim))
         {
+            clear();
         }
 
         [[nodiscard]] auto fvalues() const { return m_r1.size<0>(); }
@@ -99,13 +99,13 @@ namespace nano { namespace gboost
         template <typename tarray>
         void update(scalar_t value, tarray&& vgrad, tensor_size_t fv = 0)
         {
-            x0(fv) += 1;
+            update(vgrad, fv);
             x1(fv) += value;
             x2(fv) += value * value;
-            r1(fv) -= vgrad;
             rx(fv) -= vgrad * value;
-            r2(fv) += vgrad * vgrad;
         }
+
+    private:
 
         // attributes
         tensor1d_t  m_x0, m_x1, m_x2;       ///<

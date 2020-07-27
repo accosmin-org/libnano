@@ -99,11 +99,7 @@ namespace nano
         ///
         /// \brief compute the step size given the previous state and the current state
         ///
-        virtual bool get(const solver_state_t& state0, solver_state_t&)
-        {
-            (void)state0;
-            return false;
-        }
+        virtual bool get(const solver_state_t& state0, solver_state_t&) = 0;
 
         ///
         /// \brief log the current line-search trial length (if the logger is provided)
