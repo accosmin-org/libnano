@@ -120,10 +120,10 @@ static void check_result(const dataset_t& dataset, const train_result_t& result,
     UTEST_CHECK_EQUAL(result.size(), dataset.folds());
     for (const auto& rfold : result)
     {
-        UTEST_CHECK_LESS(rfold.tr_error(), 1e-3);
-        UTEST_CHECK_LESS(rfold.vd_error(), 1e-3);
-        UTEST_CHECK_LESS(rfold.te_error(), 1e-3);
-        UTEST_CHECK_LESS(rfold.avg_te_error(), 1e-3);
+        UTEST_CHECK_LESS(rfold.tr_error(), 2e-3);
+        UTEST_CHECK_LESS(rfold.vd_error(), 2e-3);
+        UTEST_CHECK_LESS(rfold.te_error(), 2e-3);
+        UTEST_CHECK_LESS(rfold.avg_te_error(), 2e-3);
     }
 
     UTEST_REQUIRE_EQUAL(result.size(), model.models().size());
@@ -152,14 +152,6 @@ static void check_features(const loss_t& loss, const dataset_t& dataset, const g
 }
 
 UTEST_BEGIN_MODULE(test_gboost_model)
-
-// TODO: check that the selected features are the expected ones!
-// TODO: check per-fold results!
-// TODO: check tuning e.g. of the variance factor!
-
-// TODO: check valid and invalid configurations
-// TODO: check model loading and saving
-// TODO: check predictions
 
 UTEST_CASE(print)
 {
@@ -213,7 +205,7 @@ UTEST_CASE(train_linear)
 {
     auto loss = make_loss();
     auto solver = make_solver();
-    auto dataset = make_dataset<gboost_linear_dataset_t>(10, 1, 120);
+    auto dataset = make_dataset<gboost_linear_dataset_t>();
 
     auto wlinear = wlearner_lin1_t{};
 
@@ -222,7 +214,7 @@ UTEST_CASE(train_linear)
     UTEST_REQUIRE_NOTHROW(model.patience(5));
     UTEST_REQUIRE_NOTHROW(model.subsample(90));
     UTEST_REQUIRE_NOTHROW(model.tune_steps(2));
-    UTEST_REQUIRE_NOTHROW(model.tune_trials(5));
+    UTEST_REQUIRE_NOTHROW(model.tune_trials(7));
     UTEST_REQUIRE_NOTHROW(model.regularization(::nano::regularization::variance));
     UTEST_REQUIRE_NOTHROW(model.add(wlinear));
 
@@ -232,14 +224,14 @@ UTEST_CASE(train_linear)
     ::check_features(*loss, dataset, model);
 
     const auto avg_te_error = ::check_predict(dataset, *loss,  model);
-    UTEST_CHECK_CLOSE(result[0].avg_te_error(), avg_te_error, 1e-8);
+    UTEST_CHECK_CLOSE(result[0].avg_te_error(), avg_te_error, 1e-6);
 }
 
 UTEST_CASE(train_mixed)
 {
     auto loss = make_loss();
     auto solver = make_solver();
-    auto dataset = make_dataset<gboost_mixed_dataset_t>(10, 1, 130);
+    auto dataset = make_dataset<gboost_mixed_dataset_t>();
 
     auto wstump = wlearner_stump_t{};
     auto wlinear = wlearner_lin1_t{};
@@ -248,8 +240,8 @@ UTEST_CASE(train_mixed)
     UTEST_REQUIRE_NOTHROW(model.rounds(10));
     UTEST_REQUIRE_NOTHROW(model.patience(5));
     UTEST_REQUIRE_NOTHROW(model.subsample(100));
-    UTEST_REQUIRE_NOTHROW(model.tune_steps(3));
-    UTEST_REQUIRE_NOTHROW(model.tune_trials(5));
+    UTEST_REQUIRE_NOTHROW(model.tune_steps(2));
+    UTEST_REQUIRE_NOTHROW(model.tune_trials(7));
     UTEST_REQUIRE_NOTHROW(model.regularization(::nano::regularization::none));
     UTEST_REQUIRE_NOTHROW(model.add(wstump));
     UTEST_REQUIRE_NOTHROW(model.add(wlinear));

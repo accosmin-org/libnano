@@ -43,6 +43,8 @@ target_sources(nano PRIVATE
     solver.cpp
     mlearn/train.cpp
     mlearn/cluster.cpp
+    gboost/model.cpp
+    gboost/function.cpp
     gboost/wlearner.cpp
     gboost/wlearner_dstep.cpp
     gboost/wlearner_dtree.cpp
@@ -50,10 +52,7 @@ target_sources(nano PRIVATE
     gboost/wlearner_stump.cpp
     gboost/wlearner_table.cpp
     gboost/wlearner_affine.cpp
-    gboost/wlearner_feature1.cpp
-    gboost/model.cpp
-    gboost/bias.cpp
-    gboost/scale.cpp)
+    gboost/wlearner_feature1.cpp)
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

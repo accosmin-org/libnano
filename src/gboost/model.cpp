@@ -1,12 +1,11 @@
 #include <nano/tune.h>
 #include <nano/logger.h>
 #include <nano/version.h>
-#include <nano/gboost/bias.h>
 #include <nano/gboost/util.h>
 #include <nano/gboost/model.h>
-#include <nano/gboost/scale.h>
 #include <nano/tensor/stream.h>
 #include <nano/dataset/shuffle.h>
+#include <nano/gboost/function.h>
 
 using namespace nano;
 
@@ -23,37 +22,6 @@ namespace
             const auto targets = dataset.targets(fold, range);
             loss.error(targets, outputs.slice(range), errors.slice(range));
         });
-    }
-
-    void residual(const dataset_t& dataset, fold_t fold, const tensor_size_t batch,
-        const loss_t& loss, const tensor4d_t& outputs, const scalar_t vAreg,
-        tensor1d_map_t&& values, tensor4d_map_t&& vgrads, tensor4d_map_t&& vgrads2)
-    {
-        assert(vgrads.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
-        assert(outputs.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
-
-        dataset.loop(execution::par, fold, batch, [&] (tensor_range_t range, const size_t)
-        {
-            const auto targets = dataset.targets(fold, range);
-            loss.vgrad(targets, outputs.slice(range), vgrads.slice(range));
-            if (vAreg > 0.0)
-            {
-                loss.value(targets, outputs.slice(range), values.slice(range));
-                for (tensor_size_t i = range.begin(); i < range.end(); ++ i)
-                {
-                    vgrads2.vector(i) = values(i) * vgrads.vector(i);
-                }
-            }
-        });
-
-        if (vAreg > 0.0)
-        {
-            const auto mean_value = values.vector().mean();
-            for (tensor_size_t i = 0, size = values.size(); i < size; ++ i)
-            {
-                vgrads.vector(i) = vgrads.vector(i) + 2.0 * vAreg * (vgrads2.vector(i) - mean_value * vgrads.vector(i));
-            }
-        }
     }
 
     template <size_t trank>
@@ -229,9 +197,9 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
     const auto te_samples = dataset.samples(te_fold);
 
     tensor1d_t tr_errors, vd_errors;
-    tensor4d_t tr_outputs, tr_woutputs, tr_vgrads, vd_outputs, vd_woutputs, te_outputs, te_woutputs, te_opt_outputs;
+    tensor4d_t tr_outputs, tr_woutputs, vd_outputs, vd_woutputs, te_outputs, te_woutputs, te_opt_outputs;
 
-    ::resize_all(cat_dims(tr_samples, tdim), tr_outputs, tr_woutputs, tr_vgrads);
+    ::resize_all(cat_dims(tr_samples, tdim), tr_outputs, tr_woutputs);
     ::resize_all(cat_dims(vd_samples, tdim), vd_outputs, vd_woutputs);
     ::resize_all(cat_dims(te_samples, tdim), te_outputs, te_woutputs, te_opt_outputs);
 
@@ -239,11 +207,11 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
     ::resize_all(make_dims(vd_samples), vd_errors);
 
     // estimate bias on the current fold
-    auto function = gboost_bias_function_t{loss, dataset, tr_fold};
-    function.vAreg(vAreg);
-    function.batch(batch());
+    auto bias_function = gboost_bias_function_t{loss, dataset, tr_fold};
+    bias_function.vAreg(vAreg);
+    bias_function.batch(batch());
 
-    const auto state = solver.minimize(function, vector_t::Zero(function.size()));
+    const auto state = solver.minimize(bias_function, vector_t::Zero(bias_function.size()));
 
     // update predictions
     tr_outputs.reshape(tr_samples, -1).matrix().rowwise() = state.x.transpose();
@@ -270,11 +238,14 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
 
     const auto indices = make_indices(tr_samples);
 
+    auto grads_function = gboost_grads_function_t{loss, dataset, tr_fold};
+    grads_function.vAreg(vAreg);
+    grads_function.batch(batch());
+
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < rounds(); ++ round)
     {
-        ::residual(dataset, tr_fold, batch(), loss, tr_outputs, vAreg,
-            tr_errors.tensor(), tr_vgrads.tensor(), tr_woutputs.tensor());
+        const auto& tr_vgrads = grads_function.gradients(tr_outputs);
 
         // choose the weak learner that aligns the best with the current residuals
         auto best_id = std::string{};
