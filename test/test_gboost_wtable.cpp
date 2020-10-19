@@ -10,7 +10,7 @@ public:
 
     wtable_dataset_t() = default;
 
-    [[nodiscard]] tensor_size_t groups() const override
+    tensor_size_t groups() const override
     {
         return 3;
     }
@@ -18,20 +18,20 @@ public:
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
-            make_table_target(sample, feature(), 3, 5.0, 0));
+            make_table_target(sample, gt_feature(), 3, 5.0, 0));
     }
 
     void check_wlearner(const wlearner_table_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.fvalues(), 3);
-        UTEST_CHECK_EQUAL(wlearner.feature(), feature());
+        UTEST_CHECK_EQUAL(wlearner.feature(), gt_feature());
         UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables().dims());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables().array(), 1e-8);
     }
 
-    [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
-    [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
-    [[nodiscard]] tensor4d_t tables() const { return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}}; }
+    tensor_size_t the_discrete_feature() const { return gt_feature(); }
+    tensor_size_t gt_feature(bool discrete = true) const { return get_feature(discrete); }
+    tensor4d_t tables() const { return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}}; }
 };
 
 UTEST_BEGIN_MODULE(test_gboost_wtable)
@@ -40,7 +40,7 @@ UTEST_CASE(fitting)
 {
     const auto dataset = make_dataset<wtable_dataset_t>();
     const auto datasetx1 = make_dataset<wtable_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.feature(), dataset.tsize());
+    const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wtable_dataset_t>>();
     const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wtable_dataset_t>>();
 

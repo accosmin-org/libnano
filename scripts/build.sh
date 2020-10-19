@@ -92,7 +92,7 @@ function install {
 
 function build_example {
     cd ${basedir}
-    cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=Debug || return 1
+    cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=${build_type} || return 1
     cd ${exampledir}
     cmake --build ${exampledir} -- -j ${threads} || return 1
 }
@@ -290,6 +290,7 @@ function clang_tidy_modernize {
     checks="modernize*"
     checks="${checks},-modernize-avoid-c-arrays"
     checks="${checks},-modernize-use-trailing-return-type"
+    checks="${checks},-modernize-use-nodiscard"
     clang_tidy ${checks}
 }
 

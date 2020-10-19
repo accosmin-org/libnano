@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cmath>
+#include <variant>
+#include <nano/logger.h>
 #include <nano/scalar.h>
 #include <nano/string.h>
 
@@ -17,7 +19,7 @@ namespace nano
         }
 
         template <typename tscalar>
-        static auto check(const tscalar value1, const tscalar value2)
+        static auto check(tscalar value1, tscalar value2)
         {
             return value1 <= value2;
         }
@@ -34,7 +36,7 @@ namespace nano
         }
 
         template <typename tscalar>
-        static auto check(const tscalar value1, const tscalar value2)
+        static auto check(tscalar value1, tscalar value2)
         {
             return value1 < value2;
         }
@@ -43,46 +45,36 @@ namespace nano
     static const auto LE = LE_t{};
     static const auto LT = LT_t{};
 
-    ///
-    /// \brief TODO: replace this with std::variant<LE, LT> when moving to C++17!
-    ///
-    class LEorLT
+    using LEorLT = std::variant<LE_t, LT_t>;
+
+    namespace detail
     {
-    public:
-
-        LEorLT() = default;
-        explicit LEorLT(LE_t) {}
-        explicit LEorLT(LT_t) : m_LE(false) {}
-
-        [[nodiscard]] auto name() const
+        inline auto name(const LEorLT& lelt)
         {
-            return m_LE ? LE_t::name() : LT_t::name();
+            return std::holds_alternative<LE_t>(lelt) ? LE_t::name() : LT_t::name();
         }
 
         template <typename tscalar>
-        [[nodiscard]] auto check(const tscalar value1, const tscalar value2) const
+        inline auto check(const LEorLT& lelt, tscalar value1, tscalar value2)
         {
-            return m_LE ? LE_t::check(value1, value2) : LT_t::check(value1, value2);
+            return std::holds_alternative<LE_t>(lelt) ? LE_t::check(value1, value2) : LT_t::check(value1, value2);
         }
-
-    private:
-
-        // attributes
-        bool    m_LE{true};     ///<
-    };
+    }
 
     ///
     /// \brief stores a scalar parameter and enforces its value to be within the given range:
     ///     min LE/LT value LE/LT max.
     ///
-    template <typename tscalar>
+    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type>
     class param1_t
     {
     public:
 
+        param1_t() = default;
+
         template <typename tmin, typename tmincomp, typename tvalue, typename tmaxcomp, typename tmax>
-        param1_t(const char* name, tmin min, tmincomp mincomp, tvalue value, tmaxcomp maxcomp, tmax max) :
-            m_name(name),
+        param1_t(string_t name, tmin min, tmincomp mincomp, tvalue value, tmaxcomp maxcomp, tmax max) :
+            m_name(std::move(name)),
             m_min(static_cast<tscalar>(min)),
             m_max(static_cast<tscalar>(max)),
             m_mincomp(mincomp),
@@ -92,43 +84,47 @@ namespace nano
         }
 
         template <typename tvalue>
-        param1_t& operator=(const tvalue value)
+        param1_t& operator=(tvalue value)
         {
             set(value);
             return *this;
         }
 
         template <typename tvalue>
-        void set(const tvalue value)
+        void set(tvalue value)
         {
             m_value = checked(value);
         }
 
-        [[nodiscard]] auto min() const { return m_min; }
-        [[nodiscard]] auto max() const { return m_max; }
-        [[nodiscard]] auto get() const { return m_value; }
+        auto min() const { return m_min; }
+        auto max() const { return m_max; }
+        auto get() const { return m_value; }
+        const auto& name() const { return m_name; }
+        auto minLE() const { return std::holds_alternative<LE_t>(m_mincomp); }
+        auto maxLE() const { return std::holds_alternative<LE_t>(m_maxcomp); }
 
     private:
 
         template <typename tvalue>
-        [[nodiscard]] auto checked(const tvalue _value) const
+        auto checked(tvalue _value) const
         {
             const auto value = static_cast<tscalar>(_value);
-            if (    !std::isfinite(_value) || !std::isfinite(value) ||
-                    !m_mincomp.check(m_min, value) ||
-                    !m_maxcomp.check(value, m_max))
-            {
-                throw std::invalid_argument(scat("invalid parameter '", m_name, "': !(",
-                    m_min, m_mincomp.name(), value, m_maxcomp.name(), m_max, ")"));
-            }
+
+            critical(
+                !std::isfinite(_value) || !std::isfinite(value) ||
+                !detail::check(m_mincomp, m_min, value) ||
+                !detail::check(m_maxcomp, value, m_max),
+                scat("invalid parameter '", m_name, "': !(",
+                    m_min, detail::name(m_mincomp),
+                    value, detail::name(m_maxcomp), m_max, ")"));
 
             return value;
         }
 
         // attributes
-        const char*     m_name{nullptr};                ///< parameter name
-        tscalar         m_value;                        ///< the stored value
-        tscalar         m_min, m_max;                   ///< the allowed [min, max] range
+        string_t        m_name;                         ///< parameter name
+        tscalar         m_value{0};                     ///< the stored value
+        tscalar         m_min{0}, m_max{0};             ///< the allowed [min, max] range
         LEorLT          m_mincomp, m_maxcomp;           ///<
     };
 
@@ -136,14 +132,14 @@ namespace nano
     /// \brief stores two ordered scalar parameters and enforces their values to be within the given range:
     ///     min LE/LT value1 LE/LT value2 LE/LT max
     ///
-    template <typename tscalar>
+    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type>
     class param2_t
     {
     public:
 
         template <typename tmin, typename tmincomp, typename tvalue1, typename tvalcomp, typename tvalue2, typename tmaxcomp, typename tmax>
-        param2_t(const char* name, tmin min, tmincomp mincomp, tvalue1 value1, tvalcomp valcomp, tvalue2 value2, tmaxcomp maxcomp, tmax max) :
-            m_name(name),
+        param2_t(string_t name, tmin min, tmincomp mincomp, tvalue1 value1, tvalcomp valcomp, tvalue2 value2, tmaxcomp maxcomp, tmax max) :
+            m_name(std::move(name)),
             m_min(static_cast<tscalar>(min)),
             m_max(static_cast<tscalar>(max)),
             m_mincomp(mincomp),
@@ -154,38 +150,41 @@ namespace nano
         }
 
         template <typename tvalue1, typename tvalue2>
-        void set(const tvalue1 value1, const tvalue2 value2)
+        void set(tvalue1 value1, tvalue2 value2)
         {
             std::tie(m_value1, m_value2) = checked(value1, value2);
         }
 
-        [[nodiscard]] auto min() const { return m_min; }
-        [[nodiscard]] auto max() const { return m_max; }
-        [[nodiscard]] auto get1() const { return m_value1; }
-        [[nodiscard]] auto get2() const { return m_value2; }
+        auto min() const { return m_min; }
+        auto max() const { return m_max; }
+        auto get1() const { return m_value1; }
+        auto get2() const { return m_value2; }
+        const auto& name() const { return m_name; }
 
     private:
 
         template <typename tvalue1, typename tvalue2>
-        [[nodiscard]] auto checked(const tvalue1 _value1, const tvalue2 _value2) const
+        auto checked(tvalue1 _value1, tvalue2 _value2) const
         {
             const auto value1 = static_cast<tscalar>(_value1);
             const auto value2 = static_cast<tscalar>(_value2);
-            if (    !std::isfinite(_value1) || !std::isfinite(value1) ||
-                    !std::isfinite(_value2) || !std::isfinite(value2) ||
-                    !m_mincomp.check(m_min, value1) ||
-                    !m_valcomp.check(value1, value2) ||
-                    !m_maxcomp.check(value2, m_max))
-            {
-                throw std::invalid_argument(scat("invalid parameter '", m_name, "': !(",
-                    m_min, m_mincomp.name(), value1, m_valcomp.name(), value2, m_maxcomp.name(), m_max, ")"));
-            }
+
+            critical(
+                !std::isfinite(_value1) || !std::isfinite(value1) ||
+                !std::isfinite(_value2) || !std::isfinite(value2) ||
+                !detail::check(m_mincomp, m_min, value1) ||
+                !detail::check(m_valcomp, value1, value2) ||
+                !detail::check(m_maxcomp, value2, m_max),
+                scat("invalid parameter '", m_name, "': !(",
+                    m_min, detail::name(m_mincomp),
+                    value1, detail::name(m_valcomp),
+                    value2, detail::name(m_maxcomp), m_max, ")"));
 
             return std::make_pair(value1, value2);
         }
 
         // attributes
-        const char*     m_name{nullptr};                    ///< parameter name
+        string_t        m_name;                             ///< parameter name
         tscalar         m_value1, m_value2;                 ///< the stored values
         tscalar         m_min, m_max;                       ///< the allowed [min, max] range
         LEorLT          m_mincomp, m_valcomp, m_maxcomp;    ///<
@@ -198,4 +197,68 @@ namespace nano
     using iparam2_t = param2_t<int64_t>;
     using uparam2_t = param2_t<uint64_t>;
     using sparam2_t = param2_t<scalar_t>;
+
+    ///
+    /// \brief stores an enumeration parameter and enforces its value to be valid.
+    ///
+    class eparam1_t
+    {
+    public:
+
+        eparam1_t() = default;
+
+        eparam1_t(string_t name, int64_t value) :
+            m_name(std::move(name)),
+            m_value(value)
+        {
+        }
+
+        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        eparam1_t(string_t name, tenum value) :
+            m_name(std::move(name))
+        {
+            set(value);
+        }
+
+        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        eparam1_t& operator=(tenum value)
+        {
+            set(value);
+            return *this;
+        }
+
+        void set(int64_t value)
+        {
+            m_value = value;
+        }
+
+        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        void set(tenum value)
+        {
+            m_value = checked(value);
+        }
+
+        const auto& name() const { return m_name; }
+        auto get() const { return m_value; }
+
+        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        auto as() const { return static_cast<tenum>(m_value); }
+
+    private:
+
+        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        auto checked(tenum value) const
+        {
+            const auto values = enum_values<tenum>();
+            critical(
+                std::find(values.begin(), values.end(), value) == values.end(),
+                scat("invalid parameter '", m_name, "': (", static_cast<int64_t>(value), ")"));
+
+            return static_cast<int64_t>(value);
+        }
+
+        // attributes
+        string_t        m_name;                         ///< parameter name
+        int64_t         m_value{0};                     ///< the stored value
+    };
 }

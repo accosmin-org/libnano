@@ -49,17 +49,17 @@ namespace nano
         ///
         /// \brief returns the samples associated to the given group.
         ///
-        [[nodiscard]] indices_t indices(tensor_size_t group) const;
+        indices_t indices(tensor_size_t group) const;
 
         ///
         /// \brief returns the number of samples associated to the given group.
         ///
-        [[nodiscard]] tensor_size_t count(tensor_size_t group) const;
+        tensor_size_t count(tensor_size_t group) const;
 
         ///
         /// \brief return the group index associated to the given sample.
         ///
-        [[nodiscard]] tensor_size_t group(const tensor_size_t sample) const
+        tensor_size_t group(const tensor_size_t sample) const
         {
             assert(sample >= 0 && sample < samples());
             return m_indices(sample);
@@ -68,7 +68,7 @@ namespace nano
         ///
         /// \brief returns the number of groups.
         ///
-        [[nodiscard]] tensor_size_t groups() const
+        tensor_size_t groups() const
         {
             return m_groups;
         }
@@ -76,7 +76,7 @@ namespace nano
         ///
         /// \brief returns the number of samples.
         ///
-        [[nodiscard]] tensor_size_t samples() const
+        tensor_size_t samples() const
         {
             return m_indices.size();
         }

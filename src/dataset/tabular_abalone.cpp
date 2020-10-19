@@ -24,17 +24,6 @@ abalone_dataset_t::abalone_dataset_t()
     const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/abalone");
     csvs(
     {
-        csv_t{dir + "/abalone.data"}.delim(",").header(false).expected(4177)
+        csv_t{dir + "/abalone.data"}.delim(",").header(false).expected(4177).testing(make_range(3133, 4177))
     });
-}
-
-split_t abalone_dataset_t::make_split() const
-{
-    const auto tr_vd_size = 3133, te_size = 1044;
-    assert(samples() == tr_vd_size + te_size);
-
-    return {
-        nano::split2(tr_vd_size, train_percentage()),
-        arange(tr_vd_size, tr_vd_size + te_size)
-    };
 }

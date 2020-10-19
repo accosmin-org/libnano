@@ -79,10 +79,12 @@ UTEST_CASE(tensor3d)
 
     tensor3d_t tensor;
     tensor.resize(dims, rows, cols);
-
     tensor.zero();
+
     UTEST_CHECK_EQUAL(tensor.min(), 0);
     UTEST_CHECK_EQUAL(tensor.max(), 0);
+    UTEST_CHECK_EQUAL(tensor.sum(), 0);
+    UTEST_CHECK_EQUAL(tensor.mean(), 0);
 
     UTEST_CHECK_EQUAL(tensor.size<0>(), dims);
     UTEST_CHECK_EQUAL(tensor.size<1>(), rows);
@@ -106,11 +108,15 @@ UTEST_CASE(tensor3d)
     tensor.constant(42);
     UTEST_CHECK_EQUAL(tensor.min(), 42);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
+    UTEST_CHECK_EQUAL(tensor.sum(), 42 * tensor.size());
+    UTEST_CHECK_EQUAL(tensor.mean(), 42);
 
     tensor.constant(42);
     tensor.vector(3, 0).setConstant(7);
     UTEST_CHECK_EQUAL(tensor.min(), 7);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
+    UTEST_CHECK_EQUAL(tensor.sum(), cols * 7 + (tensor.size() - cols) * 42);
+    UTEST_CHECK_EQUAL(tensor.mean(), (cols * 7 + (tensor.size() - cols) * 42) / tensor.size());
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dims * rows * cols - (42 - 7) * cols);
 
     tensor.matrix(3).setConstant(13);
@@ -425,6 +431,26 @@ UTEST_CASE(tensor4d_subtensor_copying)
     tensor1.tensor(1) = tensor2.tensor(1);
 
     UTEST_CHECK_EIGEN_CLOSE(tensor1.vector(), tensor2.vector(), 1);
+}
+
+UTEST_CASE(tensor1d_indexing)
+{
+    using tensor1d_t = nano::tensor_mem_t<int16_t, 1>;
+
+    tensor1d_t tensor(13);
+    tensor.random();
+
+    const auto indices = indices_t{std::array<tensor_size_t, 6>{{0, 1, 3, 2, 2, 7}}};
+    const auto subtensor = tensor.indexed<int32_t>(indices);
+
+    UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
+
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(0)), tensor(0));
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(1)), tensor(1));
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(2)), tensor(3));
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(3)), tensor(2));
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(4)), tensor(2));
+    UTEST_CHECK_EQUAL(static_cast<int16_t>(subtensor(5)), tensor(7));
 }
 
 UTEST_CASE(tensor4d_indexing)

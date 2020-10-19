@@ -40,12 +40,12 @@ namespace nano
     {
         using tscalar = typename tensor_t<tstorage, trank>::tscalar;
 
-        if (!detail::write(stream, detail::tensor_version()) ||                     // version
-            !detail::write(stream, static_cast<uint32_t>(trank)) ||                 // rank
-            !detail::write_cast<int32_t>(stream, tensor.dims().data(), trank) ||    // dimensions
-            !detail::write(stream, static_cast<uint32_t>(sizeof(tscalar))) ||       // sizeof(scalar)
-            !detail::write(stream, detail::hash(tensor.data(), tensor.size())) ||   // hash(content)
-            !detail::write(stream, tensor.data(), tensor.size()))                   // content
+        if (!::nano::write(stream, detail::tensor_version()) ||                     // version
+            !::nano::write(stream, static_cast<uint32_t>(trank)) ||                 // rank
+            !::nano::write_cast<int32_t>(stream, tensor.dims().data(), trank) ||    // dimensions
+            !::nano::write(stream, static_cast<uint32_t>(sizeof(tscalar))) ||       // sizeof(scalar)
+            !::nano::write(stream, detail::hash(tensor.data(), tensor.size())) ||   // hash(content)
+            !::nano::write(stream, tensor.data(), tensor.size()))                   // content
         {
             stream.setstate(std::ios_base::failbit);
         }
@@ -63,11 +63,11 @@ namespace nano
         uint32_t iversion = 0xFFFFFFFF, irank = 0, iscalar = 0;
         uint64_t ihash = 0;
 
-        if (!detail::read(stream, iversion) ||                                      // version
-            !detail::read(stream, irank) ||                                         // rank
-            !detail::read_cast<int32_t>(stream, dims.data(), trank) ||              // dimensions
-            !detail::read(stream, iscalar) ||                                       // sizeof(scalar)
-            !detail::read(stream, ihash) ||                                         // hash(content)
+        if (!::nano::read(stream, iversion) ||                                      // version
+            !::nano::read(stream, irank) ||                                         // rank
+            !::nano::read_cast<int32_t>(stream, dims.data(), trank) ||              // dimensions
+            !::nano::read(stream, iscalar) ||                                       // sizeof(scalar)
+            !::nano::read(stream, ihash) ||                                         // hash(content)
             iversion != detail::tensor_version() ||
             static_cast<size_t>(irank) != trank ||
             static_cast<size_t>(iscalar) != sizeof(tscalar))
@@ -77,7 +77,7 @@ namespace nano
         }
 
         tensor.resize(dims);
-        if (!detail::read(stream, tensor.data(), tensor.size()) ||                  // content
+        if (!::nano::read(stream, tensor.data(), tensor.size()) ||                  // content
             ihash != detail::hash(tensor.data(), tensor.size()))
         {
             stream.setstate(std::ios_base::failbit);

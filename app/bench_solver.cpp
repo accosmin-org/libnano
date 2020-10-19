@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/stats.h>
 #include <nano/table.h>
 #include <nano/tpool.h>

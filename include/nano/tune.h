@@ -130,13 +130,13 @@ namespace nano
         ///
         /// \brief return the current search interval
         ///
-        [[nodiscard]] auto min() const { return m_min; }
-        [[nodiscard]] auto max() const { return m_max; }
+        auto min() const { return m_min; }
+        auto max() const { return m_max; }
 
         ///
         /// \brief clamp the given (trial) value to the current search interval
         ///
-        [[nodiscard]] auto clamp(const scalar_t value) const
+        auto clamp(const scalar_t value) const
         {
             return std::max(min(), std::min(value, max()));
         }
@@ -172,7 +172,7 @@ namespace nano
         ///
         /// \brief generate a list of hyper-parameter values to evaluate
         ///
-        [[nodiscard]] auto generate(const int count) const
+        auto generate(const int count) const
         {
             assert(count > 3);
 
@@ -207,7 +207,7 @@ namespace nano
         ///
         /// \brief generate a list of hyper-parameter values to evaluate
         ///
-        [[nodiscard]] auto generate(const int count) const
+        auto generate(const int count) const
         {
             assert(count > 3);
 

@@ -27,31 +27,30 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] size_t folds() const override
+        void load() override
         {
-            return m_source.folds();
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t ifeature(const tensor_size_t index) const override
+        feature_t feature(const tensor_size_t index) const override
         {
-            return m_source.ifeature(index);
+            return m_source.feature(index);
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override
+        feature_t target() const override
         {
-            return m_source.tfeature();
+            return m_source.target();
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor_size_t samples() const override
+        tensor_size_t samples() const override
         {
             return m_source.samples();
         }
@@ -59,17 +58,9 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor_size_t samples(fold_t fold) const override
+        tensor4d_t inputs(const indices_cmap_t& samples) const override
         {
-            return m_source.samples(fold);
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor4d_t inputs(fold_t fold) const override
-        {
-            auto inputs = m_source.inputs(fold);
+            auto inputs = m_source.inputs(samples);
             shuffle(inputs, m_feature2shuffle);
             return inputs;
         }
@@ -77,19 +68,9 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t inputs(fold_t fold, tensor_range_t range) const override
+        tensor1d_t inputs(const indices_cmap_t& samples, tensor_size_t feature) const override
         {
-            auto inputs = m_source.inputs(fold, range);
-            shuffle(inputs, m_feature2shuffle);
-            return inputs;
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor1d_t inputs(fold_t fold, tensor_range_t range, tensor_size_t feature) const override
-        {
-            auto inputs = m_source.inputs(fold, range, feature);
+            auto inputs = m_source.inputs(samples, feature);
             if (m_feature2shuffle == feature)
             {
                 shuffle(inputs, 0);
@@ -100,9 +81,9 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor2d_t inputs(fold_t fold, tensor_range_t range, const indices_t& features) const override
+        tensor2d_t inputs(const indices_cmap_t& samples, const indices_t& features) const override
         {
-            auto inputs =  m_source.inputs(fold, range, features);
+            auto inputs = m_source.inputs(samples, features);
             const auto* const it = std::find(features.begin(), features.end(), m_feature2shuffle);
             if (it != features.end())
             {
@@ -114,23 +95,17 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t targets(fold_t fold) const override
+        tensor4d_t targets(const indices_cmap_t& samples) const override
         {
-            return m_source.targets(fold);
+            return m_source.targets(samples);
         }
+
+        ///
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t targets(fold_t fold, tensor_range_t range) const override
-        {
-            return m_source.targets(fold, range);
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor3d_dim_t idim() const override
+        tensor3d_dim_t idim() const override
         {
             return m_source.idim();
         }
@@ -138,7 +113,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor3d_dim_t tdim() const override
+        tensor3d_dim_t tdim() const override
         {
             return m_source.tdim();
         }

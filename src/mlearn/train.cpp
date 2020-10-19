@@ -19,6 +19,11 @@ bool train_point_t::valid() const
             std::isfinite(m_vd_error);
 }
 
+train_curve_t::train_curve_t(std::unordered_map<string_t, scalar_t> params) :
+    m_params(std::move(params))
+{
+}
+
 void train_curve_t::add(scalar_t tr_value, scalar_t tr_error, scalar_t vd_error)
 {
     m_points.emplace_back(tr_value, tr_error, vd_error);
@@ -78,9 +83,16 @@ std::ostream& train_curve_t::save(std::ostream& stream, const char delim, const 
     return stream;
 }
 
-train_curve_t& train_fold_t::add(const string_t& hyper)
+train_curve_t& train_fold_t::add(const std::unordered_map<string_t, scalar_t>& params)
 {
-    return m_curves[hyper];
+    string_t name;
+    for (const auto& param : params)
+    {
+        name += scat(param.first, "=", param.second, ";");
+    }
+
+    const auto it = m_curves.emplace(name, params);
+    return it.first->second;
 }
 
 std::pair<string_t, const train_curve_t> train_fold_t::optimum() const
@@ -112,14 +124,13 @@ std::ostream& train_result_t::save(std::ostream& stream, const char delim, const
 {
     if (header)
     {
-        stream << "fold" << delim  << "tr_error" << delim << "vd_error" << delim << "te_error" << delim << "avg_te_error" << "\n";
+        stream << "fold" << delim  << "tr_error" << delim << "vd_error" << delim << "te_error" << "\n";
     }
 
     for (size_t i = 0U, size = m_folds.size(); static_cast<bool>(stream) && (i < size); ++ i)
     {
         const auto& fold = m_folds[i];
-        stream << i << delim << fold.tr_error() << delim << fold.vd_error() << delim
-            << fold.te_error() << delim << fold.avg_te_error() << "\n";
+        stream << i << delim << fold.tr_error() << delim << fold.vd_error() << delim << fold.te_error() << "\n";
     }
 
     if (!stream)

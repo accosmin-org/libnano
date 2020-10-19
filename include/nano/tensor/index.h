@@ -196,17 +196,17 @@ namespace nano
         {
         }
 
-        [[nodiscard]] auto begin() const
+        auto begin() const
         {
             return m_begin;
         }
 
-        [[nodiscard]] auto end() const
+        auto end() const
         {
             return m_end;
         }
 
-        [[nodiscard]] auto size() const
+        auto size() const
         {
             return end() - begin();
         }
@@ -214,7 +214,7 @@ namespace nano
         ///
         /// \brief check if a range is valid, so that [begin, end) is included in [0, size).
         ///
-        [[nodiscard]] auto valid(const tensor_size_t size) const
+        auto valid(const tensor_size_t size) const
         {
             return 0 <= m_begin && m_begin < m_end && m_end <= size;
         }

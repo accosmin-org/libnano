@@ -11,14 +11,19 @@ inline std::ostream& operator<<(std::ostream& stream, wscale type)
     return stream << scat(type);
 }
 
+inline std::ostream& operator<<(std::ostream& stream, importance type)
+{
+    return stream << scat(type);
+}
+
 class gboost_dataset_t : public fixture_dataset_t
 {
 public:
 
     gboost_dataset_t() = default;
 
-    [[nodiscard]] tensor_size_t groups() const override { return 3; }
-    [[nodiscard]] bool is_optional(tensor_size_t, tensor_size_t) const override { return false; }
+    tensor_size_t groups() const override { return 3; }
+    bool is_optional(tensor_size_t, tensor_size_t) const override { return false; }
 };
 
 class gboost_linear_dataset_t : public gboost_dataset_t
@@ -35,9 +40,9 @@ public:
             make_affine_target<fun1_lin_t>(sample, gt_feature3(), 8, -1.0, +2.5));
     }
 
-    [[nodiscard]] tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
-    [[nodiscard]] tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
+    tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
+    tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
+    tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
 };
 
 class gboost_mixed_dataset_t : public gboost_dataset_t
@@ -54,19 +59,10 @@ public:
             make_stump_target(sample, gt_feature3(), 8, +2.5, -1.0, +2.5, 0));
     }
 
-    [[nodiscard]] tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
-    [[nodiscard]] tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
+    tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
+    tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
+    tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
 };
-
-static auto make_solver(const char* name = "lbfgs", const scalar_t epsilon = epsilon3<scalar_t>())
-{
-    auto solver = solver_t::all().get(name);
-    UTEST_REQUIRE(solver);
-    solver->epsilon(epsilon);
-    solver->max_iterations(100);
-    return solver;
-}
 
 static auto check_stream(const gboost_model_t& orig_model)
 {
@@ -85,83 +81,73 @@ static auto check_stream(const gboost_model_t& orig_model)
         gboost_model_t model;
         std::istringstream stream(str);
         UTEST_REQUIRE_NOTHROW(model.read(stream));
+        UTEST_CHECK_EQUAL(model.batch(), orig_model.batch());
+        UTEST_CHECK_EQUAL(model.vAreg(), orig_model.vAreg());
+        UTEST_CHECK_EQUAL(model.wscale(), orig_model.wscale());
+        UTEST_CHECK_EQUAL(model.rounds(), orig_model.rounds());
+        UTEST_CHECK_EQUAL(model.epsilon(), orig_model.epsilon());
+        UTEST_CHECK_EQUAL(model.shrinkage(), orig_model.shrinkage());
+        UTEST_CHECK_EQUAL(model.subsample(), orig_model.subsample());
         return model;
     }
 }
 
-static auto check_predict(const dataset_t& dataset, const loss_t& loss, const gboost_model_t& model)
+static void check_predict(const dataset_t& dataset, const gboost_model_t& model)
 {
-    const auto fold = fold_t{0, protocol::test};
-    const auto targets = dataset.targets(fold);
+    const auto samples = make_samples(dataset);
+    const auto targets = dataset.targets(samples);
 
     tensor4d_t outputs;
-    UTEST_REQUIRE_NOTHROW(model.predict(dataset, fold, outputs));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(dataset.samples(fold), dataset.tdim()));
+    UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
+    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(samples.size(), dataset.tdim()));
     UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e-3);
 
+    // check that the predictions shouldn't change at all when reloading the model
     const auto imodel = ::check_stream(model);
 
-    UTEST_REQUIRE_NOTHROW(imodel.predict(dataset, fold, outputs));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(dataset.samples(fold), dataset.tdim()));
-    UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e-3);
-
-    tensor1d_t errors(dataset.samples(fold));
-    dataset.loop(execution::par, fold, model.batch(), [&] (tensor_range_t range, size_t)
-    {
-        const auto targets = dataset.targets(fold, range);
-        loss.error(targets, outputs.slice(range), errors.slice(range));
-    });
-
-    return errors.vector().mean();
+    tensor4d_t soutputs;
+    UTEST_REQUIRE_NOTHROW(soutputs = imodel.predict(dataset, samples));
+    UTEST_CHECK_EQUAL(outputs.dims(), soutputs.dims());
+    UTEST_CHECK_EIGEN_CLOSE(outputs.vector(), soutputs.vector(), 1e-8);
 }
 
-static void check_result(const dataset_t& dataset, const train_result_t& result, const gboost_model_t& model)
+static void check_features(const dataset_t& dataset, const loss_t& loss, const gboost_model_t& model)
 {
-    UTEST_CHECK_EQUAL(result.size(), dataset.folds());
-    for (const auto& rfold : result)
-    {
-        UTEST_CHECK_LESS(rfold.tr_error(), 2e-3);
-        UTEST_CHECK_LESS(rfold.vd_error(), 2e-3);
-        UTEST_CHECK_LESS(rfold.te_error(), 2e-3);
-        UTEST_CHECK_LESS(rfold.avg_te_error(), 2e-3);
-    }
+    const auto trials = 3;
+    const auto solver = make_solver();
+    const auto samples = make_samples(dataset);
 
-    UTEST_REQUIRE_EQUAL(result.size(), model.models().size());
-
-    for (size_t i = 0, size = result.size(); i < size; ++ i)
-    {
-        const auto curve = result[i].optimum().second;
-        UTEST_CHECK_EQUAL(curve.optindex(), model.models()[i].m_protos.size());
-    }
-}
-
-static void check_features(const loss_t& loss, const dataset_t& dataset, const gboost_model_t& model)
-{
-    auto features = model.features(loss, dataset);
+    auto features = model.features();
     feature_info_t::sort_by_index(features);
     UTEST_REQUIRE_EQUAL(features.size(), 3U);
     UTEST_CHECK_EQUAL(features[0].feature(), 5);
     UTEST_CHECK_EQUAL(features[1].feature(), 7);
     UTEST_CHECK_EQUAL(features[2].feature(), 9);
-    UTEST_CHECK_GREATER_EQUAL(features[0].folds(), 1);
-    UTEST_CHECK_GREATER_EQUAL(features[1].folds(), 1);
-    UTEST_CHECK_GREATER_EQUAL(features[2].folds(), 1);
-    UTEST_CHECK_GREATER_EQUAL(features[0].importance(), 0.5);
-    UTEST_CHECK_GREATER_EQUAL(features[1].importance(), 0.5);
-    UTEST_CHECK_GREATER_EQUAL(features[2].importance(), 0.5);
+    UTEST_CHECK_GREATER_EQUAL(features[0].count(), 1);
+    UTEST_CHECK_GREATER_EQUAL(features[1].count(), 1);
+    UTEST_CHECK_GREATER_EQUAL(features[2].count(), 1);
+    UTEST_CHECK_CLOSE(features[0].importance(), 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(features[1].importance(), 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(features[2].importance(), 0.0, 1e-12);
+
+    for (const auto type : enum_values<importance>())
+    {
+        auto features = model.features(loss, dataset, samples, *solver, type, trials);
+        feature_info_t::sort_by_index(features);
+        UTEST_REQUIRE_EQUAL(features.size(), 3U);
+        UTEST_CHECK_EQUAL(features[0].feature(), 5);
+        UTEST_CHECK_EQUAL(features[1].feature(), 7);
+        UTEST_CHECK_EQUAL(features[2].feature(), 9);
+        UTEST_CHECK_GREATER_EQUAL(features[0].count(), 1);
+        UTEST_CHECK_GREATER_EQUAL(features[1].count(), 1);
+        UTEST_CHECK_GREATER_EQUAL(features[2].count(), 1);
+        UTEST_CHECK_GREATER_EQUAL(features[0].importance(), 0.5);
+        UTEST_CHECK_GREATER_EQUAL(features[1].importance(), 0.5);
+        UTEST_CHECK_GREATER_EQUAL(features[2].importance(), 0.5);
+    }
 }
 
 UTEST_BEGIN_MODULE(test_gboost_model)
-
-UTEST_CASE(print)
-{
-    for (const auto type : {wscale::gboost, wscale::tboost})
-    {
-        std::stringstream stream;
-        stream << type;
-        UTEST_CHECK(!stream.str().empty());
-    }
-}
 
 UTEST_CASE(add_protos)
 {
@@ -184,75 +170,58 @@ UTEST_CASE(add_protos)
 
 UTEST_CASE(default_predict)
 {
-    const auto fold = fold_t{0, protocol::test};
-    const auto dataset = make_dataset<gboost_linear_dataset_t>(10, 1, 400);
-    const auto model = gboost_model_t{};
+    const auto dataset = make_dataset<gboost_linear_dataset_t>();
+    const auto samples = make_samples(dataset);
 
     tensor4d_t outputs;
-    UTEST_REQUIRE_NOTHROW(model.predict(dataset, fold, outputs));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(dataset.samples(fold), dataset.tdim()));
-    UTEST_CHECK_CLOSE(outputs.min(), 0.0, 1e-12);
-    UTEST_CHECK_CLOSE(outputs.max(), 0.0, 1e-12);
-
-    const auto imodel = ::check_stream(model);
-
-    UTEST_REQUIRE_NOTHROW(imodel.predict(dataset, fold, outputs));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(dataset.samples(fold), dataset.tdim()));
-    UTEST_CHECK_CLOSE(outputs.min(), 0.0, 1e-12);
+    const auto model = gboost_model_t{};
+    UTEST_REQUIRE_THROW(outputs = model.predict(dataset, samples), std::runtime_error);
 }
 
 UTEST_CASE(train_linear)
 {
-    auto loss = make_loss();
-    auto solver = make_solver();
-    auto dataset = make_dataset<gboost_linear_dataset_t>();
+    const auto loss = make_loss();
+    const auto solver = make_solver();
+    const auto dataset = make_dataset<gboost_linear_dataset_t>();
+    const auto samples = make_samples(dataset);
 
     auto wlinear = wlearner_lin1_t{};
 
     auto model = gboost_model_t{};
-    UTEST_REQUIRE_NOTHROW(model.rounds(10));
-    UTEST_REQUIRE_NOTHROW(model.patience(5));
-    UTEST_REQUIRE_NOTHROW(model.subsample(90));
-    UTEST_REQUIRE_NOTHROW(model.tune_steps(2));
-    UTEST_REQUIRE_NOTHROW(model.tune_trials(7));
-    UTEST_REQUIRE_NOTHROW(model.regularization(::nano::regularization::variance));
+    UTEST_REQUIRE_NOTHROW(model.rounds(20));
+    UTEST_REQUIRE_NOTHROW(model.epsilon(1e-8));
+    UTEST_REQUIRE_NOTHROW(model.shrinkage(1.0));
+    UTEST_REQUIRE_NOTHROW(model.subsample(0.9));
+    UTEST_REQUIRE_NOTHROW(model.wscale(::nano::wscale::gboost));
     UTEST_REQUIRE_NOTHROW(model.add(wlinear));
 
-    auto result = train_result_t{};
-    UTEST_REQUIRE_NOTHROW(result = model.train(*loss, dataset, *solver));
-    ::check_result(dataset, result, model);
-    ::check_features(*loss, dataset, model);
-
-    const auto avg_te_error = ::check_predict(dataset, *loss,  model);
-    UTEST_CHECK_CLOSE(result[0].avg_te_error(), avg_te_error, 1e-6);
+    UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));
+    ::check_predict(dataset, model);
+    ::check_features(dataset, *loss, model);
 }
 
 UTEST_CASE(train_mixed)
 {
-    auto loss = make_loss();
-    auto solver = make_solver();
-    auto dataset = make_dataset<gboost_mixed_dataset_t>();
+    const auto loss = make_loss();
+    const auto solver = make_solver();
+    const auto dataset = make_dataset<gboost_mixed_dataset_t>(10, 1, 100);
+    const auto samples = make_samples(dataset);
 
     auto wstump = wlearner_stump_t{};
     auto wlinear = wlearner_lin1_t{};
 
     auto model = gboost_model_t{};
     UTEST_REQUIRE_NOTHROW(model.rounds(10));
-    UTEST_REQUIRE_NOTHROW(model.patience(5));
-    UTEST_REQUIRE_NOTHROW(model.subsample(100));
-    UTEST_REQUIRE_NOTHROW(model.tune_steps(2));
-    UTEST_REQUIRE_NOTHROW(model.tune_trials(7));
-    UTEST_REQUIRE_NOTHROW(model.regularization(::nano::regularization::none));
+    UTEST_REQUIRE_NOTHROW(model.epsilon(1e-8));
+    UTEST_REQUIRE_NOTHROW(model.shrinkage(1.0));
+    UTEST_REQUIRE_NOTHROW(model.subsample(1.0));
+    UTEST_REQUIRE_NOTHROW(model.wscale(::nano::wscale::tboost));
     UTEST_REQUIRE_NOTHROW(model.add(wstump));
     UTEST_REQUIRE_NOTHROW(model.add(wlinear));
 
-    auto result = train_result_t{};
-    UTEST_REQUIRE_NOTHROW(result = model.train(*loss, dataset, *solver));
-    ::check_result(dataset, result, model);
-    ::check_features(*loss, dataset, model);
-
-    const auto avg_te_error = ::check_predict(dataset, *loss,  model);
-    UTEST_CHECK_CLOSE(result[0].avg_te_error(), avg_te_error, 1e-8);
+    UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));
+    ::check_predict(dataset, model);
+    ::check_features(dataset, *loss, model);
 }
 
 UTEST_END_MODULE()

@@ -151,7 +151,7 @@ namespace nano
             auto w = weights.matrix();
             auto b = bias.vector();
 
-            // FIXME: rewrite these operations to be more intelligable
+            // FIXME: rewrite these operations to be more intelligible!
             switch (norm)
             {
             case ::nano::normalization::none:
@@ -184,15 +184,15 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] const auto& min() const { return m_min; }
-        [[nodiscard]] const auto& max() const { return m_max; }
-        [[nodiscard]] const auto& mean() const { return m_mean; }
-        [[nodiscard]] const auto& stdev() const { return m_stdev; }
+        const auto& min() const { return m_min; }
+        const auto& max() const { return m_max; }
+        const auto& mean() const { return m_mean; }
+        const auto& stdev() const { return m_stdev; }
 
     private:
 
         template <typename tstorage>
-        [[nodiscard]] auto samples(const tensor_t<tstorage, 4>& inputs) const
+        auto samples(const tensor_t<tstorage, 4>& inputs) const
         {
             const auto samples = inputs.template size<0>();
             assert(nano::cat_dims(samples, m_min.dims()) == inputs.dims());

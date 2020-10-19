@@ -11,7 +11,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::is_arithmetic<typename std::remove_reference<tscalar>::type>::type
+        typename = typename std::enable_if<std::is_arithmetic<typename std::remove_reference<tscalar>::type>::value>::type
     >
     using udist_t = typename std::conditional<
         std::is_integral<tscalar>::value,
@@ -33,7 +33,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::is_arithmetic<typename std::remove_reference<tscalar>::type>::type
+        typename = typename std::enable_if<std::is_arithmetic<typename std::remove_reference<tscalar>::type>::value>::type
     >
     inline auto make_udist(const tscalar min, const tscalar max)
     {
@@ -47,7 +47,7 @@ namespace nano
     template
     <
         typename tscalar, typename trng,
-        typename = typename std::is_arithmetic<typename std::remove_reference<tscalar>::type>::type
+        typename = typename std::enable_if<std::is_arithmetic<typename std::remove_reference<tscalar>::type>::value>::type
     >
     tscalar urand(const tscalar min, const tscalar max, trng&& rng)
     {
@@ -61,7 +61,7 @@ namespace nano
     template
     <
         typename tscalar, typename titerator, typename trng,
-        typename = typename std::is_arithmetic<typename std::remove_reference<tscalar>::type>::type
+        typename = typename std::enable_if<std::is_arithmetic<typename std::remove_reference<tscalar>::type>::value>::type
     >
     void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
     {
@@ -78,7 +78,7 @@ namespace nano
     template
     <
         typename tscalar, typename titerator, typename trng,
-        typename = typename std::is_arithmetic<typename std::remove_reference<tscalar>::type>::type
+        typename = typename std::enable_if<std::is_arithmetic<typename std::remove_reference<tscalar>::type>::value>::type
     >
     void add_urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
     {

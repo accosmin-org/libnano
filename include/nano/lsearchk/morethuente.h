@@ -24,7 +24,7 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        [[nodiscard]] rlsearchk_t clone() const final;
+        rlsearchk_t clone() const final;
 
         ///
         /// \brief @see lsearchk_t
@@ -39,7 +39,7 @@ namespace nano
         ///
         /// \brief access parameters
         ///
-        [[nodiscard]] auto delta() const { return m_delta.get(); }
+        auto delta() const { return m_delta.get(); }
 
     private:
 

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <nano/scalar.h>
 #include <nano/string.h>
+#include <nano/tensor/index.h>
 
 namespace nano
 {
@@ -52,7 +53,7 @@ namespace nano
         ///
         /// \brief returns true if the feature is discrete.
         ///
-        [[nodiscard]] bool discrete() const
+        bool discrete() const
         {
             return !m_labels.empty();
         }
@@ -60,7 +61,7 @@ namespace nano
         ///
         /// \brief returns true if the feature is optional.
         ///
-        [[nodiscard]] bool optional() const
+        bool optional() const
         {
             return !m_placeholder.empty();
         }
@@ -84,7 +85,7 @@ namespace nano
         ///
         /// \brief returns the label associated to the given feature value (if possible).
         ///
-        [[nodiscard]] auto label(const scalar_t value) const
+        auto label(const scalar_t value) const
         {
             if (!discrete())
             {
@@ -104,9 +105,9 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] const auto& name() const { return m_name; }
-        [[nodiscard]] const auto& labels() const { return m_labels; }
-        [[nodiscard]] const auto& placeholder() const { return m_placeholder; }
+        const auto& name() const { return m_name; }
+        const auto& labels() const { return m_labels; }
+        const auto& placeholder() const { return m_placeholder; }
 
     private:
 
@@ -169,9 +170,9 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        feature_info_t(tensor_size_t feature, tensor_size_t folds, scalar_t importance) :
+        feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance) :
             m_feature(feature),
-            m_folds(folds),
+            m_count(count),
             m_importance(importance)
         {
         }
@@ -199,17 +200,25 @@ namespace nano
         }
 
         ///
+        /// \brief change the feature's importance.
+        ///
+        void importance(scalar_t importance)
+        {
+            m_importance = importance;
+        }
+
+        ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto folds() const { return m_folds; }
-        [[nodiscard]] auto feature() const { return m_feature; }
-        [[nodiscard]] auto importance() const { return m_importance; }
+        auto count() const { return m_count; }
+        auto feature() const { return m_feature; }
+        auto importance() const { return m_importance; }
 
     private:
 
         // attributes
         tensor_size_t   m_feature{-1};      ///< feature index
-        tensor_size_t   m_folds{0};         ///< in how many folds the feature was selected
+        tensor_size_t   m_count{0};         ///< how many times it was selected (e.g. folds)
         scalar_t        m_importance{0.0};  ///< feature importance (e.g. impact on performance)
     };
 }

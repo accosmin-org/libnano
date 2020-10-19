@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
 #include <nano/tensor/stream.h>
@@ -25,9 +26,9 @@ namespace
         auto r1(tensor_size_t fv) { return m_acc.r1(fv); }
         auto r2(tensor_size_t fv) { return m_acc.r2(fv); }
 
-        [[nodiscard]] auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
-        [[nodiscard]] auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
-        [[nodiscard]] auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
+        auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
+        auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
+        auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
 
         void clear(tensor_size_t n_fvalues)
         {
@@ -35,18 +36,18 @@ namespace
             m_scores.resize(2, n_fvalues);
         }
 
-        [[nodiscard]] auto beta0() const
+        auto beta0() const
         {
             return m_beta0.array();
         }
 
-        [[nodiscard]] auto beta(tensor_size_t fv) const
+        auto beta(tensor_size_t fv) const
         {
             return r1(fv) / x0(fv);
         }
 
         template <typename tbarray>
-        [[nodiscard]] scalar_t score(const tensor_size_t fv, const tbarray& beta) const
+        scalar_t score(const tensor_size_t fv, const tbarray& beta) const
         {
             return (r2(fv) + beta.square() * x0(fv) - 2 * beta * r1(fv)).sum();
         }
@@ -74,7 +75,7 @@ void wlearner_dstep_t::read(std::istream& stream)
     wlearner_feature1_t::read(stream);
 
     critical(
-        !::nano::detail::read_cast<int64_t>(stream, m_fvalue),
+        !::nano::read_cast<int64_t>(stream, m_fvalue),
         "dstep weak learner: failed to read from stream!");
 }
 
@@ -83,24 +84,24 @@ void wlearner_dstep_t::write(std::ostream& stream) const
     wlearner_feature1_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, static_cast<int64_t>(m_fvalue)),
+        !::nano::write(stream, static_cast<int64_t>(m_fvalue)),
         "dstep weak learner: failed to write to stream!");
 }
 
-scalar_t wlearner_dstep_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_dstep_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(indices.min() >= 0);
-    assert(indices.max() < dataset.samples(fold));
-    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    wlearner_feature1_t::loopd(dataset, fold,
+    wlearner_feature1_t::loopd(dataset, samples,
         [&] (tensor_size_t feature, const tensor1d_t& fvalues, tensor_size_t n_fvalues, size_t tnum)
     {
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear(n_fvalues);
-        for (const auto i : indices)
+        for (tensor_size_t i = 0; i < fvalues.size(); ++ i)
         {
             const auto value = fvalues(i);
             if (feature_t::missing(value))
@@ -112,7 +113,7 @@ scalar_t wlearner_dstep_t::fit(const dataset_t& dataset, fold_t fold, const tens
             critical(fv < 0 || fv >= n_fvalues,
                 scat("dstep weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")"));
 
-            cache.m_acc.update(gradients.array(i), fv);
+            cache.m_acc.update(gradients.array(samples(i)), fv);
         }
 
         // update the parameters if a better feature
@@ -140,23 +141,31 @@ scalar_t wlearner_dstep_t::fit(const dataset_t& dataset, fold_t fold, const tens
     const auto& best = ::nano::gboost::min_reduce(caches);
 
     log_info() << std::fixed << std::setprecision(8) << " === dstep(feature=" << best.m_feature << "|"
-        << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << ",fvalues=" << best.m_tables.size<0>() << ",fvalue=" << best.m_fvalue
-        << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
+        << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
+        << ",fvalues=" << best.m_tables.size<0>() << ",fvalue=" << best.m_fvalue << "),samples=" << samples.size()
+        << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
     set(best.m_feature, best.m_tables, static_cast<size_t>(best.m_tables.size<0>()));
     m_fvalue = best.m_fvalue;
     return best.m_score;
 }
 
-void wlearner_dstep_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+void wlearner_dstep_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
+    wlearner_feature1_t::predict(dataset, samples, outputs, [&] (scalar_t x, tensor3d_map_t&& outputs)
     {
         const auto index = static_cast<tensor_size_t>(x);
         critical(
             index < 0 || index >= fvalues(),
             scat("dstep weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
-        outputs.vector(i) = vector(index);
+        outputs.vector() += vector(index);
+    });
+}
+
+cluster_t wlearner_dstep_t::split(const dataset_t& dataset, const indices_t& samples) const
+{
+    return wlearner_feature1_t::split(dataset, samples, 1, [&] (scalar_t)
+    {
+        return 0;
     });
 }

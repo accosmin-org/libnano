@@ -59,17 +59,6 @@ adult_dataset_t::adult_dataset_t()
     csvs(
     {
         csv_t{dir + "/adult.data"}.skip('|').delim(", .").header(false).expected(32561),
-        csv_t{dir + "/adult.test"}.skip('|').delim(", .").header(false).expected(16281)
+        csv_t{dir + "/adult.test"}.skip('|').delim(", .").header(false).expected(16281).testing(make_range(0, 16281))
     });
-}
-
-split_t adult_dataset_t::make_split() const
-{
-    const auto tr_vd_size = 32561, te_size = 16281;
-    assert(samples() == tr_vd_size + te_size);
-
-    return {
-        nano::split2(tr_vd_size, train_percentage()),
-        arange(tr_vd_size, tr_vd_size + te_size)
-    };
 }

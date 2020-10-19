@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/stats.h>
 #include <nano/table.h>
 #include <nano/chrono.h>
@@ -9,9 +10,6 @@ using namespace nano;
 
 static void eval_func(const function_t& function, table_t& table)
 {
-    stats_t fval_times;
-    stats_t grad_times;
-
     const auto dims = function.size();
     const vector_t x = vector_t::Zero(dims);
     vector_t g = vector_t::Zero(dims);

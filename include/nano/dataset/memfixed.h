@@ -5,21 +5,21 @@
 namespace nano
 {
     ///
-    /// \brief in-memory dataset consisting of fixed-size inputs with optional targets
-    ///     split into training, validation and testing parts.
+    /// \brief in-memory dataset consisting of fixed-size inputs with optional targets.
     ///
     /// NB: the internal storage type can be different than scalar_t,
     ///     for example the most efficient way of storing RGB or grayscale image datasets
     ///     is to use one byte per color channel and pixel.
     ///
     /// NB: the customization point (in the derived classes) consists
-    ///     of generating/loading the inputs and the targets and
-    ///     of generating the training, validation and test dataset splits.
+    ///     of generating/loading the inputs and the targets.
     ///
     template <typename tscalar>
     class memfixed_dataset_t : public dataset_t
     {
     public:
+
+        using dataset_t::target;
 
         ///
         /// \brief default constructor
@@ -27,14 +27,9 @@ namespace nano
         memfixed_dataset_t() = default;
 
         ///
-        /// \brief load dataset in memory.
-        ///
-        virtual bool load() = 0;
-
-        ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t ifeature(const tensor_size_t index) const override
+        feature_t feature(const tensor_size_t index) const override
         {
             const auto idim = this->idim();
             assert(index >= 0 && ::nano::size(idim));
@@ -52,7 +47,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor_size_t samples() const override
+        tensor_size_t samples() const override
         {
             return m_inputs.template size<0>();
         }
@@ -60,42 +55,24 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor_size_t samples(fold_t fold) const override
+        tensor4d_t inputs(const indices_cmap_t& samples) const override
         {
-            return indices(fold).size();
+            return m_inputs.template indexed<scalar_t>(samples);
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t inputs(fold_t fold) const override
-        {
-            return m_inputs.template indexed<scalar_t>(indices(fold));
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor4d_t inputs(fold_t fold, tensor_range_t range) const override
-        {
-            const auto segment = indices(fold).slice(range);
-            return m_inputs.template indexed<scalar_t>(segment);
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor1d_t inputs(fold_t fold, tensor_range_t range, tensor_size_t feature) const override
+        tensor1d_t inputs(const indices_cmap_t& samples, tensor_size_t feature) const override
         {
             assert(feature >= 0 && feature < features());
 
-            const auto imatrix = m_inputs.reshape(samples(), features()).matrix();
-            const auto segment = indices(fold).slice(range);
+            const auto imatrix = m_inputs.reshape(this->samples(), features()).matrix();
 
-            tensor1d_t fvalues(segment.size());
-            for (tensor_size_t i = 0, size = segment.size(); i < size; ++ i)
+            tensor1d_t fvalues(samples.size());
+            for (tensor_size_t i = 0, size = samples.size(); i < size; ++ i)
             {
-                fvalues(i) = imatrix(segment(i), feature);
+                fvalues(i) = imatrix(samples(i), feature);
             }
 
             return fvalues;
@@ -104,19 +81,18 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor2d_t inputs(fold_t fold, tensor_range_t range, const indices_t& features) const override
+        tensor2d_t inputs(const indices_cmap_t& samples, const indices_t& features) const override
         {
             assert(features.min() >= 0 && features.max() < this->features());
 
-            const auto imatrix = m_inputs.reshape(samples(), this->features()).matrix();
-            const auto segment = indices(fold).slice(range);
+            const auto imatrix = m_inputs.reshape(this->samples(), this->features()).matrix();
 
-            tensor2d_t fvalues(segment.size(), features.size());
-            for (tensor_size_t i = 0, size = segment.size(); i < size; ++ i)
+            tensor2d_t fvalues(samples.size(), features.size());
+            for (tensor_size_t i = 0, size = samples.size(); i < size; ++ i)
             {
                 for (tensor_size_t f = 0; f < features.size(); ++ f)
                 {
-                    fvalues(i, f) = imatrix(segment(i), features(f));
+                    fvalues(i, f) = imatrix(samples(i), features(f));
                 }
             }
 
@@ -126,24 +102,15 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t targets(fold_t fold) const override
+        tensor4d_t targets(const indices_cmap_t& samples) const override
         {
-            return m_targets.indexed<scalar_t>(indices(fold));
+            return m_targets.indexed<scalar_t>(samples);
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor4d_t targets(fold_t fold, tensor_range_t range) const override
-        {
-            const auto segment = indices(fold).slice(range);
-            return m_targets.indexed<scalar_t>(segment);
-        }
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        [[nodiscard]] tensor3d_dim_t idim() const override
+        tensor3d_dim_t idim() const override
         {
             return make_dims(m_inputs.template size<1>(), m_inputs.template size<2>(), m_inputs.template size<3>());
         }
@@ -151,7 +118,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] tensor3d_dim_t tdim() const override
+        tensor3d_dim_t tdim() const override
         {
             return make_dims(m_targets.size<1>(), m_targets.size<2>(), m_targets.size<3>());
         }
@@ -159,8 +126,8 @@ namespace nano
         ///
         /// \brief returns the inputs and targets as they are stored.
         ///
-        [[nodiscard]] const auto& all_inputs() const { return m_inputs; }
-        [[nodiscard]] const auto& all_targets() const { return m_targets; }
+        const auto& all_inputs() const { return m_inputs; }
+        const auto& all_targets() const { return m_targets; }
 
         ///
         /// \brief returns the mutable input and target sample.
@@ -171,8 +138,8 @@ namespace nano
         ///
         /// \brief returns the constant input and target sample.
         ///
-        [[nodiscard]] auto input(tensor_size_t sample) const { return m_inputs.tensor(sample); }
-        [[nodiscard]] auto target(tensor_size_t sample) const { return m_targets.tensor(sample); }
+        auto input(tensor_size_t sample) const { return m_inputs.tensor(sample); }
+        auto target(tensor_size_t sample) const { return m_targets.tensor(sample); }
 
     protected:
 

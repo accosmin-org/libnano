@@ -19,12 +19,3 @@ iris_dataset_t::iris_dataset_t()
         csv_t{dir + "/iris.data"}.delim(",").header(false).expected(150)
     });
 }
-
-split_t iris_dataset_t::make_split() const
-{
-    assert(samples() == 150);
-
-    return {
-        nano::split3(samples(), train_percentage(), (100 - train_percentage()) / 2)
-    };
-}

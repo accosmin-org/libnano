@@ -1,16 +1,14 @@
 #pragma once
 
-#include <ctime>
-#include <string>
-#include <iomanip>
 #include <iostream>
+#include <nano/arch.h>
 
 namespace nano
 {
     ///
     /// \brief logging object.
     ///
-    class logger_t
+    class NANO_PUBLIC logger_t
     {
     public:
 
@@ -24,14 +22,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit logger_t(const type ltype, std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr) :
-            m_stream(get_stream(ltype, cout, cerr)),
-            m_precision(m_stream.precision())
-        {
-            const std::time_t t = std::time(nullptr);
-            m_stream << get_header(ltype) << "[" << std::put_time(std::localtime(&t), "%F|%T") << "]\033[0m: ";
-            m_stream << std::fixed << std::setprecision(6);
-        }
+        explicit logger_t(type, std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr);
 
         ///
         /// \brief disable copying
@@ -48,14 +39,10 @@ namespace nano
         ///
         /// \brief destructor
         ///
-        ~logger_t()
-        {
-            m_stream << std::endl;
-            m_stream.precision(m_precision);
-        }
+        ~logger_t();
 
         ///
-        /// \brief log tokens
+        /// \brief log tokens.
         ///
         template <typename T>
         const logger_t& operator<<(const T& data) const
@@ -65,7 +52,7 @@ namespace nano
         }
 
         ///
-        /// \brief log manipulators
+        /// \brief log manipulators.
         ///
         const logger_t& operator<<(std::ostream& (*pf)(std::ostream&)) const
         {
@@ -74,28 +61,6 @@ namespace nano
         }
 
     private:
-
-        static std::ostream& get_stream(const logger_t::type type, std::ostream* cout, std::ostream* cerr)
-        {
-            switch (type)
-            {
-            case logger_t::type::info:
-            case logger_t::type::warn:      return (cout != nullptr ? *cout : std::cout);
-            case logger_t::type::error:     return (cerr != nullptr ? *cerr : std::cerr);
-            default:                        return (cout != nullptr ? *cout : std::cout);
-            }
-        }
-
-        static const char* get_header(const logger_t::type type)
-        {
-            switch (type)
-            {
-            case logger_t::type::info:      return "\033[32m";
-            case logger_t::type::warn:      return "\033[33m";
-            case logger_t::type::error:     return "\033[31m";
-            default:                        return "\033[91m";
-            }
-        }
 
         // attributes
         std::ostream&   m_stream;       ///< stream to write into
@@ -123,13 +88,13 @@ namespace nano
     ///
     /// \brief checks and throws an exception if the given condition is satisfied.
     ///
-    template <typename tresult, typename tstring>
-    void critical(const tresult& result, const tstring& message)
+    template <typename tresult, typename tmessage>
+    void critical(const tresult& result, const tmessage& message)
     {
         if (static_cast<bool>(result))
         {
             log_error() << message;
-            throw std::runtime_error("critical check failed");
+            throw std::runtime_error("critical check failed!");
         }
     }
 

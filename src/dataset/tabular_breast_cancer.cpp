@@ -49,12 +49,3 @@ breast_cancer_dataset_t::breast_cancer_dataset_t()
         csv_t{dir + "/wdbc.data"}.delim(",").header(false).expected(569)
     });
 }
-
-split_t breast_cancer_dataset_t::make_split() const
-{
-    assert(samples() == 569);
-
-    return {
-        nano::split3(samples(), train_percentage(), (100 - train_percentage()) / 2)
-    };
-}

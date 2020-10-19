@@ -22,13 +22,9 @@ namespace nano
         };
     }
 
-    std::ostream& operator<<(std::ostream& os, const std::vector<nano::enum_type>& enums)
+    std::ostream& operator<<(std::ostream& stream, const std::vector<nano::enum_type>& enums)
     {
-        for (const auto& e : enums)
-        {
-            os << scat(e) << " ";
-        }
-        return os;
+        return stream << scat(enums);
     }
 }
 
@@ -43,6 +39,9 @@ UTEST_CASE(scat)
     UTEST_CHECK_EQUAL(nano::scat(nano::enum_type::type1, "str", nano::enum_type::type3, 42), "type1strtype342");
     UTEST_CHECK_EQUAL(nano::scat("str", std::setprecision(0), std::fixed, 1.42, nano::string_t("F")), "str1F");
     UTEST_CHECK_EQUAL(nano::scat("str", std::setprecision(1), std::fixed, 1.42, nano::string_t("F")), "str1.4F");
+
+    const auto values = std::vector<int>{1, 2, 3};
+    UTEST_CHECK_EQUAL(nano::scat("[", values, "]"), "[1,2,3]");
 }
 
 UTEST_CASE(from_string)

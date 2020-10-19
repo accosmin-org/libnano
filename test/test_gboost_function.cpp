@@ -1,5 +1,4 @@
-#include <utest/utest.h>
-#include <nano/solver.h>
+#include "fixture/utils.h"
 #include <nano/numeric.h>
 #include <nano/gboost/function.h>
 #include <nano/dataset/memfixed.h>
@@ -12,11 +11,12 @@ public:
 
     using memfixed_dataset_t::idim;
     using memfixed_dataset_t::tdim;
+    using memfixed_dataset_t::target;
     using memfixed_dataset_t::samples;
 
     gboost_dataset_t() = default;
 
-    bool load() override
+    void load() override
     {
         resize(cat_dims(m_samples, m_idim), cat_dims(m_samples, m_tdim));
 
@@ -35,30 +35,21 @@ public:
             input(s).random();
             target(s).vector() = m_outputs.vector(s) + m_scale(group) * m_woutputs.vector(s);
         }
-
-        for (size_t f = 0; f < folds(); ++ f)
-        {
-            this->split(f) = split_t{nano::split3(m_samples, train_percentage(), (100 - train_percentage()) / 2)};
-        }
-        return true;
     }
 
-    [[nodiscard]] feature_t tfeature() const override
+    feature_t target() const override
     {
         return feature_t{"const"};
     }
 
-    [[nodiscard]] cluster_t cluster(fold_t fold) const
+    cluster_t cluster(const indices_t& samples) const
     {
-        const auto& indices = this->indices(fold);
-
-        cluster_t cluster(indices.size(), m_groups);
-        for (tensor_size_t i = 0; i < indices.size(); ++ i)
+        cluster_t cluster(this->samples(), m_groups);
+        for (const auto sample : samples)
         {
-            const auto group = indices(i) % m_groups;
-            if (i % 7 > 0)
+            if (sample % 7 > 0)
             {
-                cluster.assign(i, group);
+                cluster.assign(sample, sample % m_groups);
             }
         }
         return cluster;
@@ -69,17 +60,17 @@ public:
     void groups(const tensor_size_t groups) { m_groups = groups; }
     void samples(const tensor_size_t samples) { m_samples = samples; }
 
-    [[nodiscard]] vector_t bias(fold_t fold) const
+    vector_t bias(const indices_t& samples) const
     {
-        const auto targets = this->targets(fold);
+        const auto targets = this->targets(samples);
         const auto tmatrix = targets.reshape(targets.size<0>(), -1).matrix();
         return tmatrix.colwise().mean();
     }
 
-    [[nodiscard]] auto groups() const { return m_groups; }
-    [[nodiscard]] const auto& scale() const { return m_scale; }
-    [[nodiscard]] auto outputs(fold_t fold) const { return m_outputs.indexed<scalar_t>(this->indices(fold)); }
-    [[nodiscard]] auto woutputs(fold_t fold) const { return m_woutputs.indexed<scalar_t>(this->indices(fold)); }
+    auto groups() const { return m_groups; }
+    const auto& scale() const { return m_scale; }
+    auto outputs(const indices_t& samples) const { return m_outputs.indexed<scalar_t>(samples); }
+    auto woutputs(const indices_t& samples) const { return m_woutputs.indexed<scalar_t>(samples); }
 
 private:
 
@@ -93,41 +84,18 @@ private:
     tensor3d_dim_t      m_tdim{{3, 1, 1}};  ///< dimension of a target/output sample
 };
 
-static auto make_fold()
+static auto make_samples()
 {
-    return fold_t{0, protocol::train};
-}
-
-static auto make_loss()
-{
-    auto loss = loss_t::all().get("squared");
-    UTEST_REQUIRE(loss);
-    return loss;
-}
-
-static auto make_solver(const char* name = "cgd", const scalar_t epsilon = epsilon2<scalar_t>())
-{
-    auto solver = solver_t::all().get(name);
-    UTEST_REQUIRE(solver);
-    solver->epsilon(epsilon);
-    solver->max_iterations(100);
-    solver->logger([] (const solver_state_t& state)
-    {
-        std::cout << state << ".\n";
-        return true;
-    });
-    return solver;
+    return ::nano::arange(0, 60);
 }
 
 static auto make_dataset(const tensor_size_t isize = 3, const tensor_size_t tsize = 2, const tensor_size_t groups = 3)
 {
     auto dataset = gboost_dataset_t{};
-    dataset.folds(1);
     dataset.idim(make_dims(isize, 1, 1));
     dataset.tdim(make_dims(tsize, 1, 1));
     dataset.samples(100);
     dataset.groups(groups);
-    dataset.train_percentage(90);
     UTEST_CHECK_NOTHROW(dataset.load());
     return dataset;
 }
@@ -135,8 +103,8 @@ static auto make_dataset(const tensor_size_t isize = 3, const tensor_size_t tsiz
 static void check_function(gboost_function_t& function, tensor_size_t expected_size)
 {
     UTEST_CHECK_EQUAL(function.size(), expected_size);
-    UTEST_CHECK_THROW(function.vAreg(-1e+0), std::invalid_argument);
-    UTEST_CHECK_THROW(function.vAreg(+1e+9), std::invalid_argument);
+    UTEST_CHECK_THROW(function.vAreg(-1e+0), std::runtime_error);
+    UTEST_CHECK_THROW(function.vAreg(+1e+9), std::runtime_error);
     UTEST_CHECK_NOTHROW(function.vAreg(1e-1));
 
     UTEST_CHECK_NOTHROW(function.vAreg(0e-1));
@@ -165,7 +133,7 @@ static void check_optimum(gboost_function_t& function, const vector_t& expected_
 {
     UTEST_CHECK_NOTHROW(function.vAreg(1e-6));
 
-    auto solver = make_solver();
+    const auto solver = make_solver();
     const auto state = solver->minimize(function, vector_t::Zero(function.size()));
     UTEST_CHECK(state);
     UTEST_CHECK(state.converged(solver->epsilon()));
@@ -191,16 +159,16 @@ UTEST_BEGIN_MODULE(test_gboost_function)
 
 UTEST_CASE(bias)
 {
-    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto dataset = make_dataset();
+    const auto samples = make_samples();
 
-    auto function = gboost_bias_function_t{*loss, dataset, fold};
+    auto function = gboost_bias_function_t{*loss, dataset, samples};
     check_function(function, 2);
     check_gradient(function, 4);
-    check_optimum(function, dataset.bias(fold));
+    check_optimum(function, dataset.bias(samples));
 
-    const auto targets = dataset.targets(fold);
+    const auto targets = dataset.targets(samples);
     const auto tmatrix = targets.reshape(targets.size<0>(), -1).matrix();
     const auto omatrix = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
     check_value(function, tmatrix, omatrix);
@@ -208,20 +176,20 @@ UTEST_CASE(bias)
 
 UTEST_CASE(scale)
 {
-    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto solver = make_solver();
     const auto dataset = make_dataset();
-    const auto cluster = dataset.cluster(fold);
-    const auto outputs = dataset.outputs(fold);
-    const auto woutputs = dataset.woutputs(fold);
+    const auto samples = make_samples();
+    const auto cluster = dataset.cluster(samples);
+    const auto outputs = dataset.outputs(samples);
+    const auto woutputs = dataset.woutputs(samples);
 
-    auto function = gboost_scale_function_t{*loss, dataset, fold, cluster, outputs, woutputs};
+    auto function = gboost_scale_function_t{*loss, dataset, samples, cluster, outputs, woutputs};
     check_function(function, dataset.groups());
     check_gradient(function, 4);
     check_optimum(function, dataset.scale());
 
-    const auto targets = dataset.targets(fold);
+    const auto targets = dataset.targets(samples);
     const auto tmatrix = targets.reshape(targets.size<0>(), -1).matrix();
     const auto omatrix = outputs.reshape(tmatrix.rows(), tmatrix.cols()).matrix();
     check_value(function, tmatrix, omatrix);
@@ -229,14 +197,14 @@ UTEST_CASE(scale)
 
 UTEST_CASE(grads)
 {
-    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto solver = make_solver();
     const auto dataset = make_dataset();
-    const auto targets = dataset.targets(fold);
+    const auto samples = make_samples();
+    const auto targets = dataset.targets(samples);
 
-    auto function = gboost_grads_function_t{*loss, dataset, fold};
-    check_function(function, dataset.samples(fold) * 2);
+    auto function = gboost_grads_function_t{*loss, dataset, samples};
+    check_function(function, samples.size() * 2);
     check_gradient(function, 4);
     check_optimum(function, targets.vector());
 

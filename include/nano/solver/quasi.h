@@ -34,7 +34,7 @@ namespace nano
         ///
         /// \brief @see lsearch_solver_t
         ///
-        [[nodiscard]] solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters
@@ -44,7 +44,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto init() const { return m_initialization; }
+        auto init() const { return m_initialization; }
 
     private:
 
@@ -79,7 +79,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto r() const { return m_r.get(); }
+        auto r() const { return m_r.get(); }
 
     private:
 

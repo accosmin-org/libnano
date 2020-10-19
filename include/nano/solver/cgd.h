@@ -25,7 +25,7 @@ namespace nano
         ///
         /// \brief @see lsearch_solver_t
         ///
-        [[nodiscard]] solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 
         ///
         /// \brief change parameters
@@ -35,14 +35,14 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto orthotest() const { return m_orthotest.get(); }
+        auto orthotest() const { return m_orthotest.get(); }
 
     private:
 
         ///
         /// \brief compute the adjustment factor for the descent direction
         ///
-        [[nodiscard]] virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
+        virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
 
         // attributes
         sparam1_t   m_orthotest{"solver::cgd::orthotest", 0, LT, 0.1, LT, 1};   ///< orthogonality test - see (4)
@@ -63,7 +63,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
 
         ///
         /// \brief change parameters
@@ -73,7 +73,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto eta() const { return m_eta.get(); }
+        auto eta() const { return m_eta.get(); }
 
     private:
 
@@ -96,7 +96,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -114,7 +114,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -132,7 +132,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -150,7 +150,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -168,7 +168,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -186,7 +186,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -204,7 +204,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -222,7 +222,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 
     ///
@@ -240,6 +240,6 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        [[nodiscard]] scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
+        scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
 }

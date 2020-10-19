@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
 #include <nano/tensor/stream.h>
@@ -23,27 +24,27 @@ namespace
         auto r1(tensor_size_t fv) { return m_acc.r1(fv); }
         auto r2(tensor_size_t fv) { return m_acc.r2(fv); }
 
-        [[nodiscard]] auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
-        [[nodiscard]] auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
-        [[nodiscard]] auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
+        auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
+        auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
+        auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
 
         void clear(tensor_size_t n_fvalues)
         {
             m_acc.clear(n_fvalues);
         }
 
-        [[nodiscard]] auto output(const tensor_size_t fv) const
+        auto output(const tensor_size_t fv) const
         {
             return r1(fv) / x0(fv);
         }
 
         template <typename toutputs>
-        [[nodiscard]] scalar_t score(const tensor_size_t fv, const toutputs& outputs) const
+        scalar_t score(const tensor_size_t fv, const toutputs& outputs) const
         {
             return (r2(fv) + outputs.square() * x0(fv) - 2 * outputs * r1(fv)).sum();
         }
 
-        [[nodiscard]] auto score() const
+        auto score() const
         {
             scalar_t score = 0;
             for (tensor_size_t fv = 0, n_fvalues = m_acc.fvalues(); fv < n_fvalues; ++ fv)
@@ -68,20 +69,20 @@ rwlearner_t wlearner_table_t::clone() const
     return std::make_unique<wlearner_table_t>(*this);
 }
 
-scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_table_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(indices.min() >= 0);
-    assert(indices.max() < dataset.samples(fold));
-    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    wlearner_feature1_t::loopd(dataset, fold,
+    wlearner_feature1_t::loopd(dataset, samples,
         [&] (tensor_size_t feature, const tensor1d_t& fvalues, tensor_size_t n_fvalues, size_t tnum)
     {
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear(n_fvalues);
-        for (const auto i : indices)
+        for (tensor_size_t i = 0; i < fvalues.size(); ++ i)
         {
             const auto value = fvalues(i);
             if (feature_t::missing(value))
@@ -93,7 +94,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
             critical(fv < 0 || fv >= n_fvalues,
                 scat("table weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")"));
 
-            cache.m_acc.update(gradients.array(i), fv);
+            cache.m_acc.update(gradients.array(samples(i)), fv);
         }
 
         // update the parameters if a better feature
@@ -114,36 +115,34 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
     const auto& best = ::nano::gboost::min_reduce(caches);
 
     log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << best.m_feature << "|"
-        << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << ",fvalues=" << best.m_tables.size<0>() << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
+        << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
+        << ",fvalues=" << best.m_tables.size<0>() << "),samples=" << samples.size()
+        << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
     set(best.m_feature, best.m_tables, static_cast<size_t>(best.m_tables.size<0>()));
     return best.m_score;
 }
 
-void wlearner_table_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+void wlearner_table_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
+    wlearner_feature1_t::predict(dataset, samples, outputs, [&] (scalar_t x, tensor3d_map_t&& outputs)
     {
         const auto index = static_cast<tensor_size_t>(x);
         critical(
             index < 0 || index >= fvalues(),
             scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
-        outputs.vector(i) = vector(index);
+        outputs.vector() += vector(index);
     });
 }
 
-cluster_t wlearner_table_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
+cluster_t wlearner_table_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
-    cluster_t cluster(dataset.samples(fold), fvalues());
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
+    return wlearner_feature1_t::split(dataset, samples, fvalues(), [&] (scalar_t x)
     {
         const auto index = static_cast<tensor_size_t>(x);
         critical(
             index < 0 || index >= fvalues(),
             scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
-        cluster.assign(i, index);
+        return index;
     });
-
-    return cluster;
 }

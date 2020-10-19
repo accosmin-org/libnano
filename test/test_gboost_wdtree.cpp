@@ -10,11 +10,11 @@ public:
 
     wdtree_dataset_t() = default;
 
-    [[nodiscard]] virtual int min_split() const = 0;
-    [[nodiscard]] virtual int max_depth() const = 0;
-    [[nodiscard]] virtual tensor4d_t tables() const = 0;
-    [[nodiscard]] virtual indices_t features() const = 0;
-    [[nodiscard]] virtual dtree_nodes_t nodes() const = 0;
+    virtual int min_split() const = 0;
+    virtual int max_depth() const = 0;
+    virtual tensor4d_t tables() const = 0;
+    virtual indices_t features() const = 0;
+    virtual dtree_nodes_t nodes() const = 0;
 
     void check_wlearner(const wlearner_dtree_t& wlearner) const
     {
@@ -33,27 +33,27 @@ public:
 
     wdtree_stump1_dataset_t() = default;
 
-    [[nodiscard]] int min_split() const override { return 1; }
-    [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] tensor_size_t groups() const override { return 2; }
-    [[nodiscard]] tensor_size_t feature(bool discrete = false) const { return get_feature(discrete); }
+    int min_split() const override { return 1; }
+    int max_depth() const override { return 1; }
+    tensor_size_t groups() const override { return 2; }
+    tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_stump_target(sample, feature(), 5, 1.5, -4.0, +3.7, 0));
+        target(sample).constant(make_stump_target(sample, gt_feature(), 5, 1.5, -4.0, +3.7, 0));
     }
 
-    [[nodiscard]] indices_t features() const override
+    indices_t features() const override
     {
-        return {make_dims(1), {feature()}};
+        return {make_dims(1), {gt_feature()}};
     }
 
-    [[nodiscard]] tensor4d_t tables() const override
+    tensor4d_t tables() const override
     {
         return {make_dims(2, 1, 1, 1), {-4.0, +3.7}};
     }
 
-    [[nodiscard]] dtree_nodes_t nodes() const override
+    dtree_nodes_t nodes() const override
     {
         return
         {
@@ -69,28 +69,28 @@ public:
 
     wdtree_table1_dataset_t() = default;
 
-    [[nodiscard]] int min_split() const override { return 1; }
-    [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] tensor_size_t groups() const override { return 3; }
-    [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
-    [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
+    int min_split() const override { return 1; }
+    int max_depth() const override { return 1; }
+    tensor_size_t groups() const override { return 3; }
+    tensor_size_t the_discrete_feature() const { return gt_feature(); }
+    tensor_size_t gt_feature(bool discrete = true) const { return get_feature(discrete); }
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_table_target(sample, feature(), 3, 5.0, 0));
+        target(sample).constant(make_table_target(sample, gt_feature(), 3, 5.0, 0));
     }
 
-    [[nodiscard]] indices_t features() const override
+    indices_t features() const override
     {
-        return {make_dims(1), {feature()}};
+        return {make_dims(1), {gt_feature()}};
     }
 
-    [[nodiscard]] tensor4d_t tables() const override
+    tensor4d_t tables() const override
     {
         return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}};
     }
 
-    [[nodiscard]] dtree_nodes_t nodes() const override
+    dtree_nodes_t nodes() const override
     {
         return
         {
@@ -107,51 +107,51 @@ public:
 
     wdtree_depth2_dataset_t() = default;
 
-    [[nodiscard]] int min_split() const override { return 1; }
-    [[nodiscard]] int max_depth() const override { return 2; }
-    [[nodiscard]] tensor_size_t groups() const override { return 6; }
-    [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature0(); }
-    [[nodiscard]] tensor_size_t feature0(bool discrete = true) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t feature10(bool discrete = false) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t feature11(bool discrete = false) const { return get_feature(feature10(), discrete); }
-    [[nodiscard]] tensor_size_t feature12(bool discrete = false) const { return get_feature(feature11(), discrete); }
+    int min_split() const override { return 1; }
+    int max_depth() const override { return 2; }
+    tensor_size_t groups() const override { return 6; }
+    tensor_size_t the_discrete_feature() const { return gt_feature0(); }
+    tensor_size_t gt_feature0(bool discrete = true) const { return get_feature(discrete); }
+    tensor_size_t gt_feature10(bool discrete = false) const { return get_feature(discrete); }
+    tensor_size_t gt_feature11(bool discrete = false) const { return get_feature(gt_feature10(), discrete); }
+    tensor_size_t gt_feature12(bool discrete = false) const { return get_feature(gt_feature11(), discrete); }
 
     void make_target(const tensor_size_t sample) override
     {
         auto input = this->input(sample);
 
-        const auto tf0 = feature0();
+        const auto tf0 = gt_feature0();
         if (!feature_t::missing(input(tf0)))
         {
             input(tf0) = static_cast<scalar_t>(sample % 3);
             switch (sample % 3)
             {
             case 0:
-                target(sample).constant(make_stump_target(sample, feature10(), 5, 3.5, -1.2, +3.4, 0));
+                target(sample).constant(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0));
                 break;
 
             case 1:
-                target(sample).constant(make_stump_target(sample, feature11(), 7, 4.5, -1.3, +3.5, 2));
+                target(sample).constant(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2));
                 break;
 
             default:
-                target(sample).constant(make_stump_target(sample, feature12(), 11, 5.5, -1.4, +3.6, 4));
+                target(sample).constant(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4));
                 break;
             }
         }
     }
 
-    [[nodiscard]] indices_t features() const override
+    indices_t features() const override
     {
-        return {make_dims(4), {feature12(), feature11(), feature0(), feature10()}};
+        return {make_dims(4), {gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10()}};
     }
 
-    [[nodiscard]] tensor4d_t tables() const override
+    tensor4d_t tables() const override
     {
         return {make_dims(6, 1, 1, 1), {-1.2, +3.4, -1.3, +3.5, -1.4, +3.6}};
     }
 
-    [[nodiscard]] dtree_nodes_t nodes() const override
+    dtree_nodes_t nodes() const override
     {
         // NB: features = {5, 7, 8, 9} aka {stump12, stump11, table0, stump10}
         return
@@ -175,26 +175,26 @@ public:
 
     wdtree_depth3_dataset_t() = default;
 
-    [[nodiscard]] int min_split() const override { return 1; }
-    [[nodiscard]] int max_depth() const override { return 3; }
-    [[nodiscard]] tensor_size_t groups() const override { return 11; }
-    [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature22(); }
-    [[nodiscard]] tensor_size_t feature0(bool discrete = false) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t feature10(bool discrete = false) const { return get_feature(feature0(), discrete); }
-    [[nodiscard]] tensor_size_t feature11(bool discrete = false) const { return get_feature(feature10(), discrete); }
-    [[nodiscard]] tensor_size_t feature20(bool discrete = true) const { return get_feature(discrete); }
-    [[nodiscard]] tensor_size_t feature21(bool discrete = false) const { return get_feature(feature11(), discrete); }
-    [[nodiscard]] tensor_size_t feature22(bool discrete = true) const { return get_feature(feature20(), discrete); }
-    [[nodiscard]] tensor_size_t feature23(bool discrete = true) const { return get_feature(feature22(), discrete); }
+    int min_split() const override { return 1; }
+    int max_depth() const override { return 3; }
+    tensor_size_t groups() const override { return 11; }
+    tensor_size_t the_discrete_feature() const { return gt_feature22(); }
+    tensor_size_t gt_feature0(bool discrete = false) const { return get_feature(discrete); }
+    tensor_size_t gt_feature10(bool discrete = false) const { return get_feature(gt_feature0(), discrete); }
+    tensor_size_t gt_feature11(bool discrete = false) const { return get_feature(gt_feature10(), discrete); }
+    tensor_size_t gt_feature20(bool discrete = true) const { return get_feature(discrete); }
+    tensor_size_t gt_feature21(bool discrete = false) const { return get_feature(gt_feature11(), discrete); }
+    tensor_size_t gt_feature22(bool discrete = true) const { return get_feature(gt_feature20(), discrete); }
+    tensor_size_t gt_feature23(bool discrete = true) const { return get_feature(gt_feature22(), discrete); }
 
     void make_target(const tensor_size_t sample) override
     {
         auto input = this->input(sample);
         auto target = this->target(sample);
 
-        const auto tf0 = feature0();
-        const auto tf10 = feature10();
-        const auto tf11 = feature11();
+        const auto tf0 = gt_feature0();
+        const auto tf10 = gt_feature10();
+        const auto tf11 = gt_feature11();
 
         if (!feature_t::missing(input(tf0)))
         {
@@ -204,13 +204,12 @@ public:
                 {
                     if ((input(tf10) = static_cast<scalar_t>(sample % 9)) < 5.0)
                     {
-                        target.constant(make_table_target(sample, feature20(), 3, 2.0, 0));
+                        target.constant(make_table_target(sample, gt_feature20(), 3, 2.0, 0));
                     }
                     else
                     {
-                        target.constant(make_stump_target(sample, feature21(), 5, 3.5, +1.9, -0.7, 3));
+                        target.constant(make_stump_target(sample, gt_feature21(), 5, 3.5, +1.9, -0.7, 3));
                     }
-                    target.array() += 10.0;
                 }
             }
             else
@@ -219,30 +218,31 @@ public:
                 {
                     if ((input(tf11) = static_cast<scalar_t>(sample % 11)) < 7.0)
                     {
-                        target.constant(make_table_target(sample, feature22(), 3, 3.0, 5));
+                        target.constant(make_table_target(sample, gt_feature22(), 3, 3.0, 5));
+                        target.array() -= 20.0;
                     }
                     else
                     {
-                        target.constant(make_table_target(sample, feature23(), 3, 3.0, 8));
+                        target.constant(make_table_target(sample, gt_feature23(), 3, 3.0, 8));
+                        target.array() -= 30.0;
                     }
-                    target.array() -= 20.0;
                 }
             }
         }
     }
 
-    [[nodiscard]] indices_t features() const override
+    indices_t features() const override
     {
         // NB: features = {3, 4, 5, 6, 7, 8, 9} aka {stump21, table23, stump11, table22, stump10, table20, stump0}
-        return {make_dims(7), {feature21(), feature23(), feature11(), feature22(), feature10(), feature20(), feature0()}};
+        return {make_dims(7), {gt_feature21(), gt_feature23(), gt_feature11(), gt_feature22(), gt_feature10(), gt_feature20(), gt_feature0()}};
     }
 
-    [[nodiscard]] tensor4d_t tables() const override
+    tensor4d_t tables() const override
     {
-        return {make_dims(11, 1, 1, 1), {+8.0, +10.0, +12.0, +11.9, +9.3, -23.0, -20.0, -17.0, -23.0, -20.0, -17.0}};
+        return {make_dims(11, 1, 1, 1), {-2.0, +0.0, +2.0, +1.9, -0.7, -23.0, -20.0, -17.0, -33.0, -30.0, -27.0}};
     }
 
-    [[nodiscard]] dtree_nodes_t nodes() const override
+    dtree_nodes_t nodes() const override
     {
         // NB: features = {3, 4, 5, 6, 7, 8, 9} aka {stump21, table23, stump11, table22, stump10, table20, stump0}
         return

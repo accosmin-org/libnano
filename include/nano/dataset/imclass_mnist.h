@@ -19,7 +19,7 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        bool load() override;
+        void load() override;
 
     private:
 
@@ -51,7 +51,7 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
     };
 
     ///
@@ -74,6 +74,6 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
     };
 }

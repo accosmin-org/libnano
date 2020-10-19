@@ -1,4 +1,6 @@
+#include <set>
 #include <deque>
+#include <iomanip>
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
 #include <nano/tensor/stream.h>
@@ -16,13 +18,13 @@ namespace
 
         cache_t() = default;
 
-        explicit cache_t(indices_t indices) :
-            m_indices(std::move(indices))
+        explicit cache_t(indices_t samples) :
+            m_samples(std::move(samples))
         {
         }
 
         // attributes
-        indices_t       m_indices;      ///<
+        indices_t       m_samples;      ///<
         tensor_size_t   m_depth{0};     ///<
         tensor3d_t      m_table;        ///<
         size_t          m_parent{0};    ///<
@@ -31,7 +33,7 @@ namespace
     std::istream& read(std::istream& stream, std::vector<dtree_node_t>& nodes)
     {
         uint32_t count = 0;
-        if (!::nano::detail::read(stream, count))
+        if (!::nano::read(stream, count))
         {
             stream.setstate(std::ios_base::failbit);
             return stream;
@@ -40,11 +42,11 @@ namespace
         nodes.resize(count);
         for (auto& node : nodes)
         {
-            if (!::nano::detail::read_cast<int32_t>(stream, node.m_feature) ||
-                !::nano::detail::read_cast<int32_t>(stream, node.m_classes) ||
-                !::nano::detail::read(stream, node.m_threshold) ||
-                !::nano::detail::read_cast<uint32_t>(stream, node.m_next) ||
-                !::nano::detail::read_cast<int32_t>(stream, node.m_table))
+            if (!::nano::read_cast<int32_t>(stream, node.m_feature) ||
+                !::nano::read_cast<int32_t>(stream, node.m_classes) ||
+                !::nano::read(stream, node.m_threshold) ||
+                !::nano::read_cast<uint32_t>(stream, node.m_next) ||
+                !::nano::read_cast<int32_t>(stream, node.m_table))
             {
                 stream.setstate(std::ios_base::failbit);
                 return stream;
@@ -55,7 +57,7 @@ namespace
 
     std::ostream& write(std::ostream& stream, const std::vector<dtree_node_t>& nodes)
     {
-        if (!detail::write(stream, static_cast<uint32_t>(nodes.size())))
+        if (!::nano::write(stream, static_cast<uint32_t>(nodes.size())))
         {
             stream.setstate(std::ios_base::failbit);
             return stream;
@@ -63,11 +65,11 @@ namespace
 
         for (const auto& node : nodes)
         {
-            if (!::nano::detail::write(stream, static_cast<int32_t>(node.m_feature)) ||
-                !::nano::detail::write(stream, static_cast<int32_t>(node.m_classes)) ||
-                !::nano::detail::write(stream, node.m_threshold) ||
-                !::nano::detail::write(stream, static_cast<uint32_t>(node.m_next)) ||
-                !::nano::detail::write(stream, static_cast<int32_t>(node.m_table)))
+            if (!::nano::write(stream, static_cast<int32_t>(node.m_feature)) ||
+                !::nano::write(stream, static_cast<int32_t>(node.m_classes)) ||
+                !::nano::write(stream, node.m_threshold) ||
+                !::nano::write(stream, static_cast<uint32_t>(node.m_next)) ||
+                !::nano::write(stream, static_cast<int32_t>(node.m_table)))
             {
                 stream.setstate(std::ios_base::failbit);
                 return stream;
@@ -209,8 +211,8 @@ void wlearner_dtree_t::read(std::istream& stream)
 
     wlearner_t::read(stream);
     critical(
-        !::nano::detail::read(stream, idepth) ||
-        !::nano::detail::read(stream, isplit) ||
+        !::nano::read(stream, idepth) ||
+        !::nano::read(stream, isplit) ||
         !::read(stream, m_nodes) ||
         !::read(stream, m_features) ||
         !::nano::read(stream, m_tables),
@@ -224,8 +226,8 @@ void wlearner_dtree_t::write(std::ostream& stream) const
 {
     wlearner_t::write(stream);
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(max_depth())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(min_split())) ||
+        !::nano::write(stream, static_cast<int32_t>(max_depth())) ||
+        !::nano::write(stream, static_cast<int32_t>(min_split())) ||
         !::write(stream, m_nodes) ||
         !::write(stream, m_features) ||
         !::nano::write(stream, m_tables),
@@ -242,11 +244,11 @@ void wlearner_dtree_t::scale(const vector_t& scale)
     wlearner_t::scale(m_tables, scale);
 }
 
-scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(indices.min() >= 0);
-    assert(indices.max() < dataset.samples(fold));
-    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
 
     scalar_t score = 0;
 
@@ -256,19 +258,20 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
     auto stump = wlearner_stump_t{};
     auto table = wlearner_table_t{};
 
-    const auto min_indices_size = std::min<tensor_size_t>(10, dataset.samples(fold) * min_split() / 100);
+    const auto min_samples_size = std::min<tensor_size_t>(10, dataset.samples() * min_split() / 100);
 
     std::deque<cache_t> caches;
-    caches.emplace_back(indices);
+    caches.emplace_back(samples);
     while (!caches.empty())
     {
         const auto cache = caches.front();
 
         // split the node using both discrete and continuous features...
         log_info() << std::fixed << std::setprecision(8)
-            << " +++ depth=" << cache.m_depth << ",samples=" << cache.m_indices.size() << ",score=" << score << "...";
-        const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
-        const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
+            << " +++ depth=" << cache.m_depth << ",samples=" << cache.m_samples.size()
+            << ",score=" << (score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score)) << "...";
+        const auto score_stump = stump.fit(dataset, cache.m_samples, gradients);
+        const auto score_table = table.fit(dataset, cache.m_samples, gradients);
 
         cluster_t cluster;
         tensor4d_t tables;
@@ -280,7 +283,7 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         if (score_stump < score_table)
         {
             tables = stump.tables();
-            cluster = stump.split(dataset, fold, cache.m_indices);
+            cluster = stump.split(dataset, cache.m_samples);
 
             node.m_feature = stump.feature();
             node.m_threshold = stump.threshold();
@@ -288,7 +291,7 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         else
         {
             tables = table.tables();
-            cluster = table.split(dataset, fold, cache.m_indices);
+            cluster = table.split(dataset, cache.m_samples);
 
             node.m_feature = table.feature();
             node.m_classes = tables.size<0>();
@@ -302,12 +305,12 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         }
 
         // terminal nodes...
-        if (cache.m_indices.size() < min_indices_size || (cache.m_depth + 1) >= max_depth())
+        if (cache.m_samples.size() < min_samples_size || (cache.m_depth + 1) >= max_depth())
         {
             for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++ i)
             {
                 ncache.m_parent = m_nodes.size();
-                ncache.m_indices = cluster.indices(i);
+                ncache.m_samples = cluster.indices(i);
 
                 node.m_table = m_tables.size<0>();
                 m_nodes.emplace_back(node);
@@ -324,7 +327,7 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
             for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++ i)
             {
                 ncache.m_parent = m_nodes.size();
-                ncache.m_indices = cluster.indices(i);
+                ncache.m_samples = cluster.indices(i);
 
                 node.m_table = -1;
                 m_nodes.push_back(node);
@@ -368,52 +371,54 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
         critical(
             feature >= m_features.size() ||
             m_features(feature) >= dataset.features() ||
-            dataset.ifeature(m_features(feature)).discrete() != (classes > 0) ||
-            dataset.ifeature(m_features(feature)).labels().size() != static_cast<size_t>(std::max(tensor_size_t(0), classes)),
+            dataset.feature(m_features(feature)).discrete() != (classes > 0) ||
+            dataset.feature(m_features(feature)).labels().size() != static_cast<size_t>(std::max(tensor_size_t(0), classes)),
             "dtree weak learner: mis-matching dataset!");
     }
 }
 
-void wlearner_dtree_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+void wlearner_dtree_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
     compatible(dataset);
 
-    const auto fvalues = dataset.inputs(fold, range, m_features);
-    for (tensor_size_t i = 0; i < range.size(); ++ i)
+    for (tensor_size_t begin = 0; begin < samples.size(); begin += batch())
     {
-        ::evaluate(m_nodes, m_tables, fvalues.tensor(i), [&] (const tensor_size_t table)
+        const auto end = std::min(samples.size(), begin + static_cast<tensor_size_t>(batch()));
+        const auto range = make_range(begin, end);
+        const auto fvalues = dataset.inputs(samples.slice(range), m_features);
+        for (tensor_size_t i = begin; i < end; ++ i)
         {
-            if (table < 0)
+            ::evaluate(m_nodes, m_tables, fvalues.tensor(i - begin), [&] (const tensor_size_t table)
             {
-                outputs.vector(i).setZero();
-            }
-            else
-            {
-                outputs.vector(i) = m_tables.vector(table);
-            }
-        });
+                if (table >= 0)
+                {
+                    outputs.vector(i) += m_tables.vector(table);
+                }
+            });
+        }
     }
 }
 
-cluster_t wlearner_dtree_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
+cluster_t wlearner_dtree_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
     compatible(dataset);
-    wlearner_t::check(indices);
+    wlearner_t::check(samples);
 
-    cluster_t cluster(dataset.samples(fold), m_tables.size());
-    dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+    cluster_t cluster(dataset.samples(), m_tables.size());
+    loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
     {
-        const auto fvalues = dataset.inputs(fold, range, m_features);
-        wlearner_t::for_each(range, indices, [&] (const tensor_size_t i)
+        const auto range = make_range(begin, end);
+        const auto fvalues = dataset.inputs(samples.slice(range), m_features);
+        for (tensor_size_t i = begin; i < end; ++ i)
         {
-            ::evaluate(m_nodes, m_tables, fvalues.tensor(i - range.begin()), [&] (const tensor_size_t table)
+            ::evaluate(m_nodes, m_tables, fvalues.tensor(i - begin), [&] (const tensor_size_t table)
             {
                 if (table >= 0)
                 {
                     cluster.assign(i, table);
                 }
             });
-        });
+        }
     });
 
     return cluster;

@@ -103,7 +103,7 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        [[nodiscard]] solver_state_t minimize(const function_t&, const vector_t& x0) const;
+        solver_state_t minimize(const function_t&, const vector_t& x0) const;
 
         ///
         /// \brief set the logging callback
@@ -146,12 +146,12 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto c1() const { return m_lsearchk->c1(); }
-        [[nodiscard]] auto c2() const { return m_lsearchk->c2(); }
-        [[nodiscard]] auto epsilon() const { return m_epsilon.get(); }
-        [[nodiscard]] auto max_iterations() const { return m_max_iterations.get(); }
-        [[nodiscard]] const auto& lsearch0_id() const { return m_lsearch0_id; }
-        [[nodiscard]] const auto& lsearchk_id() const { return m_lsearchk_id; }
+        auto c1() const { return m_lsearchk->c1(); }
+        auto c2() const { return m_lsearchk->c2(); }
+        auto epsilon() const { return m_epsilon.get(); }
+        auto max_iterations() const { return m_max_iterations.get(); }
+        const auto& lsearch0_id() const { return m_lsearch0_id; }
+        const auto& lsearchk_id() const { return m_lsearchk_id; }
 
     protected:
 
@@ -159,7 +159,7 @@ namespace nano
         /// \brief minimize the given function starting from the initial point x0
         ///     and using the given line-search strategy
         ///
-        [[nodiscard]] virtual solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const = 0;
+        virtual solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const = 0;
 
         ///
         /// \brief log the current optimization state (if the logger is provided)

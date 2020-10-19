@@ -1,83 +1,90 @@
 #pragma once
 
-#include <nano/loss.h>
-#include <nano/solver.h>
-#include <nano/dataset.h>
-#include <nano/mlearn/train.h>
+#include <nano/model.h>
 
 namespace nano
 {
+    class linear_model_t;
+
+    template <>
+    struct factory_traits_t<linear_model_t>
+    {
+        static string_t id() { return "linear"; }
+        static string_t description() { return "linear regression model (and variants: Ridge, Lasso, ElasticNet)"; }
+    };
+
     ///
     /// \brief a linear model is an affine transformation of the flatten input features x:
     ///     y(x) = weights * x + bias.
     ///
+    /// NB: the model can be regularized using the following methods:
+    ///     - lasso (the L1-norm of the weights) by tuning ::l1reg() accordingly,
+    ///     - ridge (the L2-norm of the weights) by tuning ::l2reg() accordingly,
+    ///     - elastic net (the L1-norm and the L2-norm of the weights) by tuning ::l1reg() and ::l2reg() accordingly,
+    ///     - variance (of the loss values across samples) by tuning ::vAreg() accordingly.
     ///
     /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::normalization).
-    /// NB: the regularization factors are tuned during training on the validation dataset (@see nano::regularization).
     ///
-    class NANO_PUBLIC linear_model_t
+    /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
+    /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
+    /// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
+    ///
+    class NANO_PUBLIC linear_model_t final : public model_t
     {
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        linear_model_t() = default;
+        linear_model_t();
 
         ///
-        /// \brief save the trained model to disk.
+        /// \brief @see serializable_t
         ///
-        void save(const string_t& filepath) const;
+        void read(std::istream&) override;
 
         ///
-        /// \brief load the trained model from disk.
+        /// \brief @see serializable_t
         ///
-        void load(const string_t& filepath);
+        void write(std::ostream&) const override;
 
         ///
-        /// \brief train the linear model on the given samples.
+        /// \brief @see model_t
         ///
-        train_result_t train(const loss_t&, const dataset_t&, const solver_t&);
+        rmodel_t clone() const override;
 
         ///
-        /// \brief compute the predictions for all samples in the given fold.
+        /// \brief @see model_t
         ///
-        void predict(const dataset_t&, fold_t, tensor4d_t& outputs) const;
-        void predict(const dataset_t&, fold_t, tensor4d_map_t&& outputs) const;
+        scalar_t fit(const loss_t&, const dataset_t&, const indices_t&, const solver_t&) override;
 
         ///
-        /// \brief change parameters
+        /// \brief @see model_t
         ///
-        void normalization(const normalization n) { m_normalization = n; }
-        void regularization(const regularization r) { m_regularization = r; }
-        void batch(const tensor_size_t batch) { m_batch = batch; }
-        void tune_steps(const int steps) { m_tune_steps = steps; }
-        void tune_trials(const int trials) { m_tune_trials = trials; }
+        tensor4d_t predict(const dataset_t&, const indices_t&) const override;
 
         ///
-        /// \brief access functions
+        /// \brief configure the model.
         ///
-        [[nodiscard]] auto batch() const { return m_batch.get(); }
-        [[nodiscard]] auto tune_steps() const { return m_tune_steps.get(); }
-        [[nodiscard]] auto normalization() const { return m_normalization; }
-        [[nodiscard]] auto regularization() const { return m_regularization; }
-        [[nodiscard]] auto tune_trials() const { return m_tune_trials.get(); }
+        void batch(int64_t batch) { set("linear::batch", batch); }
+        void l1reg(scalar_t l1reg) { set("linear::l1reg", l1reg); }
+        void l2reg(scalar_t l2reg) { set("linear::l2reg", l2reg); }
+        void vAreg(scalar_t vAreg) { set("linear::vAreg", vAreg); }
+        void normalization(::nano::normalization normalization) { set("linear::normalization", normalization); }
 
-        [[nodiscard]] const auto& bias() const { return m_bias; }
-        [[nodiscard]] const auto& weights() const { return m_weights; }
+        auto batch() const { return ivalue("linear::batch"); }
+        auto l1reg() const { return svalue("linear::l1reg"); }
+        auto l2reg() const { return svalue("linear::l2reg"); }
+        auto vAreg() const { return svalue("linear::vAreg"); }
+        auto normalization() const { return evalue<::nano::normalization>("linear::normalization"); }
+
+        const auto& bias() const { return m_bias; }
+        const auto& weights() const { return m_weights; }
 
     private:
 
-        using nnormalization = ::nano::normalization;
-        using nregularization = ::nano::regularization;
-
         // attributes
-        tensor2d_t      m_weights;                                              ///< weight matrix (#inputs, #outputs)
-        tensor1d_t      m_bias;                                                 ///< bias vector (#outputs)
-        iparam1_t       m_batch{"linear::batch", 1, LE, 32, LE, 4096};          ///< #samples to use at once (= minibatch)
-        iparam1_t       m_tune_trials{"linear::tune_trials", 4, LE, 7, LE, 10}; ///<
-        iparam1_t       m_tune_steps{"linear::tune_steps", 1, LE, 2, LE, 10};   ///<
-        nregularization m_regularization{nregularization::none};                ///<
-        nnormalization  m_normalization{nnormalization::standard};              ///<
+        tensor1d_t      m_bias;             ///< bias vector (#outputs)
+        tensor2d_t      m_weights;          ///< weight matrix (#inputs, #outputs)
     };
 }

@@ -11,7 +11,7 @@ struct object_t
     object_t(const object_t&) = default;
     object_t& operator=(object_t&&) = default;
     object_t& operator=(const object_t&) = default;
-    [[nodiscard]] virtual int get() const = 0;
+    virtual int get() const = 0;
 };
 
 template <int tv>
@@ -19,7 +19,7 @@ struct objectx_t final : public object_t
 {
     objectx_t() = default;
     explicit objectx_t(const int v) : m_v(v) {}
-    [[nodiscard]] int get() const override { return m_v; }
+    int get() const override { return m_v; }
     int m_v{tv};
 };
 

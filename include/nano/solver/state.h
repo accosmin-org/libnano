@@ -68,7 +68,7 @@ namespace nano
         ///
         /// \brief check convergence: the gradient is relatively small
         ///
-        [[nodiscard]] bool converged(const scalar_t epsilon) const
+        bool converged(const scalar_t epsilon) const
         {
             return convergence_criterion() < epsilon;
         }
@@ -76,7 +76,7 @@ namespace nano
         ///
         /// \brief convergence criterion: relative gradient
         ///
-        [[nodiscard]] scalar_t convergence_criterion() const
+        scalar_t convergence_criterion() const
         {
             return g.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(f));
         }
@@ -92,7 +92,7 @@ namespace nano
         ///
         /// \brief compute the dot product between the gradient and the descent direction
         ///
-        [[nodiscard]] auto dg() const
+        auto dg() const
         {
             return g.dot(d);
         }
@@ -100,7 +100,7 @@ namespace nano
         ///
         /// \brief check if the chosen direction is a descent direction
         ///
-        [[nodiscard]] auto has_descent() const
+        auto has_descent() const
         {
             return dg() < 0;
         }
@@ -108,7 +108,7 @@ namespace nano
         ///
         /// \brief check if the current step satisfies the Armijo condition (sufficient decrease)
         ///
-        [[nodiscard]] bool has_armijo(const solver_state_t& state0, const scalar_t c1) const
+        bool has_armijo(const solver_state_t& state0, const scalar_t c1) const
         {
             assert(c1 > 0 && c1 < 1);
             return f <= state0.f + t * c1 * state0.dg();
@@ -118,7 +118,7 @@ namespace nano
         /// \brief check if the current step satisfies the approximate Armijo condition (sufficient decrease)
         ///     see CG_DESCENT
         ///
-        [[nodiscard]] bool has_approx_armijo(const solver_state_t& state0, const scalar_t epsilon) const
+        bool has_approx_armijo(const solver_state_t& state0, const scalar_t epsilon) const
         {
             return f <= state0.f + epsilon;
         }
@@ -126,7 +126,7 @@ namespace nano
         ///
         /// \brief check if the current step satisfies the Wolfe condition (sufficient curvature)
         ///
-        [[nodiscard]] bool has_wolfe(const solver_state_t& state0, const scalar_t c2) const
+        bool has_wolfe(const solver_state_t& state0, const scalar_t c2) const
         {
             assert(c2 > 0 && c2 < 1);
             return dg() >= c2 * state0.dg();
@@ -135,7 +135,7 @@ namespace nano
         ///
         /// \brief check if the current step satisfies the strong Wolfe condition (sufficient curvature)
         ///
-        [[nodiscard]] bool has_strong_wolfe(const solver_state_t& state0, const scalar_t c2) const
+        bool has_strong_wolfe(const solver_state_t& state0, const scalar_t c2) const
         {
             assert(c2 > 0 && c2 < 1);
             return std::fabs(dg()) <= c2 * std::fabs(state0.dg());
@@ -145,7 +145,7 @@ namespace nano
         /// \brief check if the current step satisfies the approximate Wolfe condition (sufficient curvature)
         ///     see CG_DESCENT
         ///
-        [[nodiscard]] bool has_approx_wolfe(const solver_state_t& state0, const scalar_t c1, const scalar_t c2) const
+        bool has_approx_wolfe(const solver_state_t& state0, const scalar_t c1, const scalar_t c2) const
         {
             assert(0 < c1 && c1 < scalar_t(0.5) && c1 < c2 && c2 < 1);
             return (2 * c1 - 1) * state0.dg() >= dg() && dg() >= c2 * state0.dg();

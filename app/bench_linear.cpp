@@ -8,14 +8,13 @@
 
 using namespace nano;
 
-static auto get_imclass(const string_t& id, const size_t folds, const int train_percentage)
+/*
+static auto get_imclass(const string_t& id)
 {
     const auto start = nano::timer_t{};
 
     auto dataset = imclass_dataset_t::all().get(id);
     critical(!dataset, scat("invalid dataset '", id, "'"));
-    dataset->folds(folds);
-    dataset->train_percentage(train_percentage);
     critical(!dataset->load(), scat("failed to load dataset '", id, "'"));
 
     log_info() << ">>> loading done in " << start.elapsed() << ".";
@@ -69,8 +68,8 @@ static auto tune_batch(const dataset_t& dataset)
     }
 
     const auto loss = get_loss("s-classnll");
-    const auto fold = fold_t{0, protocol::train};
-    auto function = linear_function_t{*loss, dataset, fold};
+    const auto samples = dataset.train_samples();
+    auto function = linear_function_t{*loss, dataset, samples};
 
     const auto op_bench = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg, const auto& op)
     {
@@ -130,6 +129,7 @@ static auto tune_batch(const dataset_t& dataset)
     const auto minimum = std::min_element(batch_millis.begin(), batch_millis.end());
     return min_batch * static_cast<tensor_size_t>(1U << static_cast<uint32_t>(std::distance(batch_millis.begin(), minimum)));
 }
+*/
 
 static int unsafe_main(int argc, const char* argv[])
 {
@@ -144,8 +144,6 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "max-iterations",   "maximum number of iterations (solver)", 1000);
     cmdline.add("", "tune-trials",      "maximum number of trials per tuning step of the regularization factor", 7);
     cmdline.add("", "tune-steps",       "number of tuning steps of the regularization factor", 2);
-    cmdline.add("", "folds",            "number of folds [1, 100]", 1);
-    cmdline.add("", "train-percentage", "percentage of training samples excluding the test samples [10, 90]", 80);
     cmdline.add("", "no-training",      "don't train the linear models (e.g. check dataset loading)");
 
     // todo: option to save trained models
@@ -160,6 +158,7 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
+    /*
     const auto folds = cmdline.get<size_t>("folds");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto tune_steps = cmdline.get<int>("tune-steps");
@@ -233,7 +232,7 @@ static int unsafe_main(int argc, const char* argv[])
         }
 
         std::cout << table;
-    }
+    }*/
 
     // OK
     return EXIT_SUCCESS;

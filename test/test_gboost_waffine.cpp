@@ -11,7 +11,7 @@ public:
 
     waffine_dataset_t() = default;
 
-    [[nodiscard]] tensor_size_t groups() const override
+    tensor_size_t groups() const override
     {
         return 1;
     }
@@ -19,20 +19,20 @@ public:
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
-            make_affine_target<tfun1>(sample, feature(), 6, weight(), bias(), 0));
+            make_affine_target<tfun1>(sample, gt_feature(), 6, weight(), bias(), 0));
     }
 
     void check_wlearner(const wlearner_affine_t<tfun1>& wlearner) const
     {
-        UTEST_CHECK_EQUAL(wlearner.feature(), feature());
+        UTEST_CHECK_EQUAL(wlearner.feature(), gt_feature());
         UTEST_REQUIRE_EQUAL(wlearner.tables().dims(), make_dims(2, 1, 1, 1));
         UTEST_CHECK_CLOSE(wlearner.tables()(0), weight(), 1e-8);
         UTEST_CHECK_CLOSE(wlearner.tables()(1), bias(), 1e-8);
     }
 
-    [[nodiscard]] scalar_t bias() const { return -7.1; }
-    [[nodiscard]] scalar_t weight() const { return +3.5; }
-    [[nodiscard]] tensor_size_t feature(bool discrete = false) const { return get_feature(discrete); }
+    scalar_t bias() const { return -7.1; }
+    scalar_t weight() const { return +3.5; }
+    tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
 };
 
 template <typename tfun1>
@@ -40,7 +40,7 @@ static void check_fitting()
 {
     const auto dataset = make_dataset<waffine_dataset_t<tfun1>>();
     const auto datasetx1 = make_dataset<waffine_dataset_t<tfun1>>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<waffine_dataset_t<tfun1>>(dataset.feature(), dataset.tsize());
+    const auto datasetx2 = make_dataset<waffine_dataset_t<tfun1>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<waffine_dataset_t<tfun1>>>();
 
     auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>();

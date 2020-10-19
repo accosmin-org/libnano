@@ -55,9 +55,9 @@ namespace nano
         /// NB: the targets and the outputs are given as 4D tensors,
         ///     where the first index is the sample index
         ///
-        virtual void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&&) const = 0;
-        virtual void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&&) const = 0;
-        virtual void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t&&) const = 0;
+        virtual void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t) const = 0;
+        virtual void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t) const = 0;
+        virtual void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t) const = 0;
 
         ///
         /// \brief overloads to simplify usage.

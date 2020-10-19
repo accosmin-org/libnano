@@ -62,27 +62,27 @@ namespace nano
         ///
         /// \brief function name to identify it in tests and benchmarks
         ///
-        [[nodiscard]] string_t name() const;
+        string_t name() const;
 
         ///
         /// \brief number of dimensions
         ///
-        [[nodiscard]] tensor_size_t size() const { return m_size; }
+        tensor_size_t size() const { return m_size; }
 
         ///
         /// \brief compute the gradient accuracy (given vs. central finite difference approximation)
         ///
-        [[nodiscard]] scalar_t grad_accuracy(const vector_t& x) const;
+        scalar_t grad_accuracy(const vector_t& x) const;
 
         ///
         /// \brief check if the function is convex along the [x1, x2] line
         ///
-        [[nodiscard]] bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
+        bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
 
         ///
         /// \brief returns convexity state (if known)
         ///
-        [[nodiscard]] convexity convex() const { return m_convexity; }
+        convexity convex() const { return m_convexity; }
 
         ///
         /// \brief evaluate the function's value at the give point (and its gradient if provided).

@@ -30,7 +30,7 @@ namespace nano
         ///
         /// \brief @see loss_t
         ///
-        void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&& errors) const override
+        void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t errors) const override
         {
             assert(targets.dims() == outputs.dims());
             assert(errors.size() == targets.size<0>());
@@ -44,7 +44,7 @@ namespace nano
         ///
         /// \brief @see loss_t
         ///
-        void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t&& values) const override
+        void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t values) const override
         {
             assert(targets.dims() == outputs.dims());
             assert(values.size() == targets.size<0>());
@@ -58,7 +58,7 @@ namespace nano
         ///
         /// \brief @see loss_t
         ///
-        void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t&& vgrads) const override
+        void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t vgrads) const override
         {
             assert(targets.dims() == vgrads.dims());
             assert(targets.dims() == outputs.dims());

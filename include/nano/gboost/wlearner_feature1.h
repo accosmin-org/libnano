@@ -37,93 +37,95 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] indices_t features() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
+        indices_t features() const override;
 
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto feature() const { return m_feature; }
-        [[nodiscard]] const auto& tables() const { return m_tables; }
-        [[nodiscard]] auto vector(tensor_size_t i) { return m_tables.array(i); }
-        [[nodiscard]] auto vector(tensor_size_t i) const { return m_tables.vector(i); }
+        auto feature() const { return m_feature; }
+        const auto& tables() const { return m_tables; }
+        auto vector(tensor_size_t i) { return m_tables.array(i); }
+        auto vector(tensor_size_t i) const { return m_tables.vector(i); }
 
     protected:
 
         void compatible(const dataset_t&) const;
 
         template <typename toperator>
-        static void loopc(const dataset_t& dataset, fold_t fold, const toperator& op)
+        static void loopc(const dataset_t& dataset, const indices_t& samples, const toperator& op)
         {
             loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
             {
-                const auto& ifeature = dataset.ifeature(feature);
+                const auto& ifeature = dataset.feature(feature);
                 if (!ifeature.discrete())
                 {
-                    const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
+                    const auto fvalues = dataset.inputs(samples, feature);
                     op(feature, fvalues, tnum);
                 }
             });
         }
 
         template <typename toperator>
-        static void loopd(const dataset_t& dataset, fold_t fold, const toperator& op)
+        static void loopd(const dataset_t& dataset, const indices_t& samples, const toperator& op)
         {
             loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
             {
-                const auto& ifeature = dataset.ifeature(feature);
+                const auto& ifeature = dataset.feature(feature);
                 if (ifeature.discrete())
                 {
                     const auto n_fvalues = static_cast<tensor_size_t>(ifeature.labels().size());
-                    const auto fvalues = dataset.inputs(fold, make_range(0, dataset.samples(fold)), feature);
+                    const auto fvalues = dataset.inputs(samples, feature);
                     op(feature, fvalues, n_fvalues, tnum);
                 }
             });
         }
 
         template <typename toperator>
-        void predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t& outputs,
+        void predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs,
             const toperator& op) const
         {
             compatible(dataset);
 
-            const auto fvalues = dataset.inputs(fold, range, m_feature);
-            for (tensor_size_t i = 0; i < range.size(); ++ i)
+            assert(outputs.dims() == cat_dims(samples.size(), dataset.tdim()));
+            for (tensor_size_t begin = 0; begin < samples.size(); begin += batch())
             {
-                const auto x = fvalues(i);
-                if (feature_t::missing(x))
+                const auto end = std::min(samples.size(), begin + static_cast<tensor_size_t>(batch()));
+                const auto range = make_range(begin, end);
+                const auto fvalues = dataset.inputs(samples.slice(range), m_feature);
+                for (tensor_size_t i = begin; i < end; ++ i)
                 {
-                    outputs.vector(i).setZero();
-                }
-                else
-                {
-                    op(x, i);
+                    const auto x = fvalues(i - begin);
+                    if (!feature_t::missing(x))
+                    {
+                        op(x, outputs.tensor(i));
+                    }
                 }
             }
         }
 
         template <typename toperator>
-        void split(const dataset_t& dataset, fold_t fold, const indices_t& indices, const toperator& op) const
+        cluster_t split(
+            const dataset_t& dataset, const indices_t& samples, tensor_size_t groups, const toperator& op) const
         {
             compatible(dataset);
-            wlearner_t::check(indices);
+            wlearner_t::check(samples);
 
-            dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+            cluster_t cluster(dataset.samples(), groups);
+            loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
             {
-                const auto fvalues = dataset.inputs(fold, range, m_feature);
-                wlearner_t::for_each(range, indices, [&] (const tensor_size_t i)
+                const auto range = make_range(begin, end);
+                const auto fvalues = dataset.inputs(samples.slice(range), m_feature);
+                for (tensor_size_t i = begin; i < end; ++ i)
                 {
-                    const auto x = fvalues(i - range.begin());
+                    const auto x = fvalues(i - begin);
                     if (!feature_t::missing(x))
                     {
-                        op(x, i);
+                        cluster.assign(samples(i), op(x));
                     }
-                });
+                }
             });
+
+            return cluster;
         }
 
         void set(tensor_size_t feature, const tensor4d_t& tables, size_t labels = 0);

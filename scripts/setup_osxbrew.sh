@@ -2,5 +2,5 @@
 
 brew update
 #brew upgrade
-brew install -f cmake
-brew install -f eigen
+brew ls --versions cmake || brew install -f cmake
+brew ls --versions eigen || brew install -f eigen

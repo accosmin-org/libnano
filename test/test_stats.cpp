@@ -1,10 +1,38 @@
 #include <nano/stats.h>
 #include <nano/random.h>
 #include <utest/utest.h>
+#include <nano/tensor/tensor.h>
 
 using namespace nano;
 
 UTEST_BEGIN_MODULE(test_stats)
+
+UTEST_CASE(empty)
+{
+    using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
+
+    tensor3d_t tensor;
+
+    UTEST_CHECK_CLOSE(tensor.stdev(), 0.0, 1e-16);
+    UTEST_CHECK_CLOSE(tensor.variance(), 0.0, 1e-16);
+}
+
+UTEST_CASE(tensor)
+{
+    using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
+
+    tensor3d_t tensor(make_dims(4, 2, 1), std::initializer_list<int>{2, 4, 4, 4, 5, 5, 7, 9});
+
+    UTEST_CHECK_EQUAL(tensor.min(), 2.0);
+    UTEST_CHECK_EQUAL(tensor.max(), 9.0);
+    UTEST_CHECK_CLOSE(tensor.sum(), 40.0, 1e-16);
+    UTEST_CHECK_CLOSE(tensor.mean(), 5.0, 1e-16);
+    UTEST_CHECK_CLOSE(tensor.variance(), 4.0, 1e-16);
+    UTEST_CHECK_CLOSE(tensor.stdev(), std::sqrt(4.0/7.0), 1e-16);
+    UTEST_CHECK_CLOSE(median(begin(tensor), end(tensor)), 5.0, 1e-16);
+    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 10), 2.0, 1e-16);
+    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 90), 9.0, 1e-16);
+}
 
 UTEST_CASE(fixed)
 {

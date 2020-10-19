@@ -1,15 +1,8 @@
-#include <mutex>
 #include <fstream>
 #include <nano/logger.h>
 #include <nano/tokenizer.h>
 #include <nano/mlearn/class.h>
-#include <nano/dataset/tabular_iris.h>
-#include <nano/dataset/tabular_wine.h>
-#include <nano/dataset/tabular_adult.h>
-#include <nano/dataset/tabular_abalone.h>
-#include <nano/dataset/tabular_forest_fires.h>
-#include <nano/dataset/tabular_breast_cancer.h>
-#include <nano/dataset/tabular_bank_marketing.h>
+#include <nano/dataset/tabular.h>
 
 using namespace nano;
 
@@ -47,28 +40,22 @@ void tabular_dataset_t::features(std::vector<feature_t> features, const size_t t
     m_features = std::move(features);
 }
 
-bool tabular_dataset_t::load()
+void tabular_dataset_t::load()
 {
     // check features
-    if (m_features.empty())
-    {
-        log_error() << "tabular dataset: need to set at least one feature!";
-        return false;
-    }
+    critical(
+        m_features.empty(),
+        "tabular dataset: need to set at least one feature!");
 
-    if (m_target != string_t::npos && m_target >= m_features.size())
-    {
-        log_error() << "tabular dataset: the target feature (" << m_target
-            << ") is not valid, expecting in the [0, " << m_features.size() << ") range!";
-        return false;
-    }
+    critical(
+        m_target != string_t::npos &&
+        m_target >= m_features.size(),
+        scat("tabular dataset: the target feature (", m_target,
+             ") is not valid, expecting in the [0, ", m_features.size(), ") range!"));
 
-    if (m_target != string_t::npos && m_features[m_target].optional())
-    {
-        log_error() << "tabular dataset: the target feature (" << m_features[m_target].name()
-            << ") cannot be optional!";
-        return false;
-    }
+    critical(
+        m_target < m_features.size() && m_features[m_target].optional(),
+        scat("tabular dataset: the target feature (", m_target, ") cannot be optional!"));
 
     // allocate storage
     tensor_size_t data_size = 0;
@@ -97,11 +84,9 @@ bool tabular_dataset_t::load()
         }
     }
 
-    if (data_size == 0)
-    {
-        log_error() << "tabular dataset: no data to read, check paths!";
-        return false;
-    }
+    critical(
+        data_size == 0,
+        "tabular dataset: no data to read, check paths!");
 
     resize(make_dims(data_size, n_inputs, 1, 1), make_dims(data_size, n_targets, 1, 1));
 
@@ -112,42 +97,28 @@ bool tabular_dataset_t::load()
         log_info() << "tabular dataset: reading " << csv.m_path << "...";
 
         const auto old_row = row;
-        if (!::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t& line, const tensor_size_t line_index)
+        critical(
+            !::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t& line, const tensor_size_t line_index)
             {
                 return this->parse(csv.m_path, line, csv.m_delim, line_index, row ++);
-            }))
-        {
-            return false;
-        }
+            }),
+            "failed to read file!");
 
         const auto samples_read = row - old_row;
-        if (csv.m_expected > 0 && samples_read != csv.m_expected)
-        {
-            log_error() << "tabular dataset: read " << samples_read << ", expecting " << csv.m_expected << " samples!";
-            return false;
-        }
+        critical(
+            csv.m_expected > 0 && samples_read != csv.m_expected,
+            scat("tabular dataset: read ", samples_read, ", expecting ", csv.m_expected, " samples!"));
+
+        dataset_t::testing(make_range(
+            old_row + csv.m_testing.begin(),
+            old_row + csv.m_testing.end()));
 
         log_info() << "tabular dataset: read " << row << " samples!";
     }
 
-    if (row != data_size)
-    {
-        log_error() << "tabular dataset: read " << row << " samples, expecting " << data_size << "!";
-        return false;
-    }
-
-    // generate and check splits
-    for (size_t f = 0; f < folds(); ++ f)
-    {
-        auto& split = (this->split(f) = make_split());
-        if (!split.valid(samples()))
-        {
-            log_error() << "tabular dataset: invalid split!";
-            return false;
-        }
-    }
-
-    return true;
+    critical(
+        row != data_size,
+        scat("tabular dataset: read ", row, " samples, expecting ", data_size, "!"));
 }
 
 void tabular_dataset_t::store(const tensor_size_t row, const size_t col, const scalar_t value)
@@ -244,13 +215,7 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
     return true;
 }
 
-size_t tabular_dataset_t::ifeatures() const
-{
-    const auto size = m_features.size();
-    return (m_target == string_t::npos) ? size : (size > 0 ? (size - 1) : 0);
-}
-
-feature_t tabular_dataset_t::ifeature(tensor_size_t index) const
+feature_t tabular_dataset_t::feature(tensor_size_t index) const
 {
     auto findex = static_cast<size_t>(index);
     if (findex >= m_target)
@@ -260,33 +225,7 @@ feature_t tabular_dataset_t::ifeature(tensor_size_t index) const
     return m_features.at(findex);
 }
 
-feature_t tabular_dataset_t::tfeature() const
+feature_t tabular_dataset_t::target() const
 {
-    return m_features.at(m_target);
-}
-
-tabular_dataset_factory_t& tabular_dataset_t::all()
-{
-    static tabular_dataset_factory_t manager;
-
-    static std::once_flag flag;
-    std::call_once(flag, [] ()
-    {
-        manager.add<iris_dataset_t>("iris",
-            "classify flowers from physical measurements of the sepal and petal (Fisher, 1936)");
-        manager.add<wine_dataset_t>("wine",
-            "predict the wine type from its constituents (Aeberhard, Coomans & de Vel, 1992)");
-        manager.add<adult_dataset_t>("adult",
-            "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)");
-        manager.add<abalone_dataset_t>("abalone",
-            "predict the age of abalone from physical measurements (Waugh, 1995)");
-        manager.add<forest_fires_dataset_t>("forest-fires",
-            "predict the burned area of the forest (Cortez & Morais, 2007)");
-        manager.add<breast_cancer_dataset_t>("breast-cancer",
-            "diagnostic breast cancer using measurements of cell nucleai (Street, Wolberg & Mangasarian, 1992)");
-        manager.add<bank_marketing_dataset_t>("bank-marketing",
-            "predict if a client has subscribed a term deposit (Moro, Laureano & Cortez, 2011)");
-    });
-
-    return manager;
+    return (m_target < m_features.size()) ? m_features[m_target] : feature_t{};
 }

@@ -17,6 +17,7 @@ before_script:
 
 # TODO: support for building on Windows
 # TODO: support for code coverage reports for branches
+# TODO: support for building documentation (e.g. doxygen)
 
 matrix:
   include:
@@ -158,20 +159,6 @@ matrix:
 
     - os: osx
       compiler: clang
-      osx_image: xcode8.3
-      env: TEST="build (xcode8.3)"
-      script:
-        - bash scripts/build.sh --config --build --test --install --build-example
-
-    - os: osx
-      compiler: clang
-      osx_image: xcode9.4
-      env: TEST="build (xcode9.4)"
-      script:
-        - bash scripts/build.sh --config --build --test --install --build-example
-
-    - os: osx
-      compiler: clang
       osx_image: xcode10.3
       env: TEST="build (xcode10.3)"
       script:
@@ -186,7 +173,7 @@ matrix:
 
     - os: osx
       compiler: clang
-      osx_image: xcode12.0
-      env: TEST="build (xcode12.0)"
+      osx_image: xcode12.2
+      env: TEST="build (xcode12.2)"
       script:
         - bash scripts/build.sh --config --build --test --install --build-example

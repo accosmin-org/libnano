@@ -19,7 +19,7 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        bool load() override;
+        void load() override;
 
     protected:
 
@@ -84,7 +84,7 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
     };
 
     ///
@@ -107,7 +107,7 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
     };
 
     ///
@@ -130,6 +130,6 @@ namespace nano
         ///
         /// \brief @see imclass_dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
     };
 }

@@ -49,8 +49,8 @@ namespace nano { namespace gboost
             clear();
         }
 
-        [[nodiscard]] auto fvalues() const { return m_r1.size<0>(); }
-        [[nodiscard]] auto tdim() const { return make_dims(m_r1.size<1>(), m_r1.size<2>(), m_r1.size<3>()); }
+        auto fvalues() const { return m_r1.size<0>(); }
+        auto tdim() const { return make_dims(m_r1.size<1>(), m_r1.size<2>(), m_r1.size<3>()); }
 
         auto& x0(tensor_size_t fv = 0) { return m_x0(fv); }
         auto& x1(tensor_size_t fv = 0) { return m_x1(fv); }
@@ -59,12 +59,12 @@ namespace nano { namespace gboost
         auto rx(tensor_size_t fv = 0) { return m_rx.array(fv); }
         auto r2(tensor_size_t fv = 0) { return m_r2.array(fv); }
 
-        [[nodiscard]] auto x0(tensor_size_t fv = 0) const { return m_x0(fv); }
-        [[nodiscard]] auto x1(tensor_size_t fv = 0) const { return m_x1(fv); }
-        [[nodiscard]] auto x2(tensor_size_t fv = 0) const { return m_x2(fv); }
-        [[nodiscard]] auto r1(tensor_size_t fv = 0) const { return m_r1.array(fv); }
-        [[nodiscard]] auto rx(tensor_size_t fv = 0) const { return m_rx.array(fv); }
-        [[nodiscard]] auto r2(tensor_size_t fv = 0) const { return m_r2.array(fv); }
+        auto x0(tensor_size_t fv = 0) const { return m_x0(fv); }
+        auto x1(tensor_size_t fv = 0) const { return m_x1(fv); }
+        auto x2(tensor_size_t fv = 0) const { return m_x2(fv); }
+        auto r1(tensor_size_t fv = 0) const { return m_r1.array(fv); }
+        auto rx(tensor_size_t fv = 0) const { return m_rx.array(fv); }
+        auto r2(tensor_size_t fv = 0) const { return m_r2.array(fv); }
 
         void clear()
         {

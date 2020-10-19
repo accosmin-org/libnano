@@ -22,14 +22,12 @@ void cifar_dataset_t::file(string_t filename,
     m_files.emplace_back(std::move(filename), offset, expected, label_size, label_index);
 }
 
-bool cifar_dataset_t::load()
+void cifar_dataset_t::load()
 {
-    const auto tfeature = this->tfeature();
-    if (!tfeature.discrete() || tfeature.labels().size() != static_cast<size_t>(m_labels))
-    {
-        log_error() << m_name << ": invalid target features!";
-        return false;
-    }
+    const auto tfeature = this->target();
+    critical(
+        !tfeature.discrete() || tfeature.labels().size() != static_cast<size_t>(m_labels),
+        scat(m_name, ": invalid target features!"));
 
     resize(make_dims(60000, 32, 32, 3), make_dims(60000, m_labels, 1, 1));
 
@@ -37,27 +35,15 @@ bool cifar_dataset_t::load()
     for (const auto& file : m_files)
     {
         log_info() << m_name << ": loading file <" << (m_dir + file.m_filename) << "> ...";
-        if (!iread(file))
-        {
-            log_error() << m_name << ": failed to load file <" << (m_dir + file.m_filename) << ">!";
-            return false;
-        }
+        critical(
+            !iread(file),
+            scat(m_name, ": failed to load file <", m_dir, file.m_filename,  ">!"));
 
         sample += file.m_expected;
         log_info() << m_name << ": loaded " << sample << " samples.";
     }
 
-    for (size_t f = 0; f < folds(); ++ f)
-    {
-        split(f) = {
-            nano::split2(50000, train_percentage()),
-            arange(50000, 60000)
-        };
-        assert(split(f).valid(60000));
-    }
-
-    // OK
-    return true;
+    dataset_t::testing({make_range(50000, 60000)});
 }
 
 bool cifar_dataset_t::iread(const file_t& file)
@@ -116,7 +102,7 @@ cifar10_dataset_t::cifar10_dataset_t() :
     file("cifar-10-batches-bin/test_batch.bin", 50000, 10000, 1, 0);
 }
 
-feature_t cifar10_dataset_t::tfeature() const
+feature_t cifar10_dataset_t::target() const
 {
     return  feature_t("class").labels(
            {"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"});
@@ -130,7 +116,7 @@ cifar100c_dataset_t::cifar100c_dataset_t() :
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 0);
 }
 
-feature_t cifar100c_dataset_t::tfeature() const
+feature_t cifar100c_dataset_t::target() const
 {
     return  feature_t("class").labels(
             {"aquatic mammals", "fish", "flowers", "food containers", "fruit and vegetables",
@@ -148,7 +134,7 @@ cifar100f_dataset_t::cifar100f_dataset_t() :
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 1);
 }
 
-feature_t cifar100f_dataset_t::tfeature() const
+feature_t cifar100f_dataset_t::target() const
 {
     return  feature_t("class").labels(
             {"apple", "aquarium_fish", "baby", "bear", "beaver", "bed", "bee", "beetle", "bicycle", "bottle",

@@ -20,7 +20,7 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        [[nodiscard]] rlsearchk_t clone() const final;
+        rlsearchk_t clone() const final;
 
         ///
         /// \brief @see lsearchk_t
@@ -36,8 +36,8 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto tau1() const { return m_tau1.get(); }
-        [[nodiscard]] auto interp() const { return m_interpolation; }
+        auto tau1() const { return m_tau1.get(); }
+        auto interp() const { return m_interpolation; }
 
     private:
 

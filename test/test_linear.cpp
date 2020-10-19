@@ -1,4 +1,4 @@
-#include <utest/utest.h>
+#include "fixture/utils.h"
 #include <nano/numeric.h>
 #include <nano/linear/util.h>
 #include <nano/linear/model.h>
@@ -7,37 +7,19 @@
 
 using namespace nano;
 
-static auto make_fold()
+static auto make_samples()
 {
-    return fold_t{0, protocol::train};
-}
-
-static auto make_loss()
-{
-    auto loss = loss_t::all().get("squared");
-    UTEST_REQUIRE(loss);
-    return loss;
-}
-
-static auto make_solver(const char* name = "lbfgs", const scalar_t epsilon = epsilon3<scalar_t>())
-{
-    auto solver = solver_t::all().get(name);
-    UTEST_REQUIRE(solver);
-    solver->epsilon(epsilon);
-    solver->max_iterations(100);
-    return solver;
+    return arange(0, 100);
 }
 
 static auto make_dataset(const tensor_size_t isize = 5, const tensor_size_t tsize = 3)
 {
     auto dataset = synthetic_affine_dataset_t{};
-    dataset.folds(1);
     dataset.noise(epsilon1<scalar_t>());
     dataset.idim(make_dims(isize, 1, 1));
     dataset.tdim(make_dims(tsize, 1, 1));
     dataset.modulo(1);
     dataset.samples(100);
-    dataset.train_percentage(80);
     UTEST_CHECK_NOTHROW(dataset.load());
     return dataset;
 }
@@ -64,10 +46,11 @@ UTEST_CASE(predict)
 
 UTEST_CASE(evaluate)
 {
-    auto loss = make_loss();
-    auto dataset = make_dataset();
+    const auto loss = make_loss();
+    const auto dataset = make_dataset();
+    const auto samples = make_samples();
 
-    auto function = linear_function_t{*loss, dataset, make_fold()};
+    auto function = linear_function_t{*loss, dataset, samples};
     UTEST_REQUIRE_EQUAL(function.size(), 5 * 3 + 3);
     UTEST_REQUIRE_EQUAL(function.isize(), 5);
     UTEST_REQUIRE_EQUAL(function.tsize(), 3);
@@ -75,8 +58,8 @@ UTEST_CASE(evaluate)
     UTEST_REQUIRE_NOTHROW(function.l2reg(0));
     UTEST_REQUIRE_NOTHROW(function.vAreg(0));
 
-    const auto inputs = dataset.inputs(make_fold());
-    const auto targets = dataset.targets(make_fold());
+    const auto inputs = dataset.inputs(make_samples());
+    const auto targets = dataset.targets(make_samples());
 
     tensor4d_t outputs;
     const vector_t x = vector_t::Random(function.size());
@@ -94,19 +77,20 @@ UTEST_CASE(evaluate)
 
 UTEST_CASE(gradient)
 {
-    auto loss = make_loss();
-    auto dataset = make_dataset();
+    const auto loss = make_loss();
+    const auto dataset = make_dataset();
+    const auto samples = make_samples();
 
-    auto function = linear_function_t{*loss, dataset, make_fold()};
+    auto function = linear_function_t{*loss, dataset, samples};
     UTEST_REQUIRE_EQUAL(function.size(), 5 * 3 + 3);
     UTEST_REQUIRE_EQUAL(function.isize(), 5);
     UTEST_REQUIRE_EQUAL(function.tsize(), 3);
-    UTEST_REQUIRE_THROW(function.l1reg(-1e+0), std::invalid_argument);
-    UTEST_REQUIRE_THROW(function.l1reg(+1e+9), std::invalid_argument);
-    UTEST_REQUIRE_THROW(function.l2reg(-1e+0), std::invalid_argument);
-    UTEST_REQUIRE_THROW(function.l2reg(+1e+9), std::invalid_argument);
-    UTEST_REQUIRE_THROW(function.vAreg(-1e+0), std::invalid_argument);
-    UTEST_REQUIRE_THROW(function.vAreg(+1e+9), std::invalid_argument);
+    UTEST_REQUIRE_THROW(function.l1reg(-1e+0), std::runtime_error);
+    UTEST_REQUIRE_THROW(function.l1reg(+1e+9), std::runtime_error);
+    UTEST_REQUIRE_THROW(function.l2reg(-1e+0), std::runtime_error);
+    UTEST_REQUIRE_THROW(function.l2reg(+1e+9), std::runtime_error);
+    UTEST_REQUIRE_THROW(function.vAreg(-1e+0), std::runtime_error);
+    UTEST_REQUIRE_THROW(function.vAreg(+1e+9), std::runtime_error);
     UTEST_REQUIRE_NOTHROW(function.l1reg(1e-1));
     UTEST_REQUIRE_NOTHROW(function.l2reg(1e+1));
     UTEST_REQUIRE_NOTHROW(function.vAreg(5e-1));
@@ -122,21 +106,16 @@ UTEST_CASE(gradient)
 
 UTEST_CASE(minimize)
 {
-    auto loss = make_loss();
-    auto solver = make_solver("cgd");
-    auto dataset = make_dataset(3, 2);
+    const auto loss = make_loss();
+    const auto solver = make_solver("cgd", epsilon3<scalar_t>());
+    const auto dataset = make_dataset(3, 2);
+    const auto samples = make_samples();
 
-    auto function = linear_function_t{*loss, dataset, make_fold()};
+    auto function = linear_function_t{*loss, dataset, samples};
     UTEST_REQUIRE_EQUAL(function.size(), 3 * 2 + 2);
     UTEST_REQUIRE_NOTHROW(function.l1reg(0.0));
     UTEST_REQUIRE_NOTHROW(function.l2reg(0.0));
     UTEST_REQUIRE_NOTHROW(function.vAreg(0.0));
-
-    solver->logger([] (const solver_state_t& state)
-    {
-        std::cout << state << ".\n";
-        return true;
-    });
 
     const auto state = solver->minimize(function, vector_t::Zero(function.size()));
     UTEST_CHECK(state);
@@ -148,62 +127,62 @@ UTEST_CASE(minimize)
 
 UTEST_CASE(train)
 {
-    auto loss = make_loss();
-    auto solver = make_solver();
-    auto dataset = make_dataset(3, 2);
+    const auto loss = make_loss();
+    const auto solver = make_solver("cgd", epsilon3<scalar_t>());
+    const auto dataset = make_dataset(3, 2);
+    const auto samples = make_samples();
 
-    auto model = linear_model_t{};
     for (const auto normalization : enum_values<::nano::normalization>())
     {
-        for (const auto regularization : enum_values<::nano::regularization>())
+        auto model = linear_model_t{};
+        UTEST_REQUIRE_NOTHROW(model.batch(16));
+        if (normalization == ::nano::normalization::mean)
         {
-            train_result_t training;
-            UTEST_REQUIRE_NOTHROW(model.batch(16));
-            UTEST_REQUIRE_NOTHROW(model.tune_steps(1));
-            UTEST_REQUIRE_NOTHROW(model.tune_trials(4));
-            UTEST_REQUIRE_NOTHROW(model.normalization(normalization));
-            UTEST_REQUIRE_NOTHROW(model.regularization(regularization));
-            UTEST_REQUIRE_NOTHROW(training = model.train(*loss, dataset, *solver));
+            UTEST_REQUIRE_NOTHROW(model.l1reg(1e-6));
+        }
+        if (normalization == ::nano::normalization::minmax)
+        {
+            UTEST_REQUIRE_NOTHROW(model.l2reg(1e-6));
+        }
+        if (normalization == ::nano::normalization::standard)
+        {
+            UTEST_REQUIRE_NOTHROW(model.vAreg(1e-6));
+        }
+        UTEST_REQUIRE_NOTHROW(model.normalization(normalization));
 
-            UTEST_CHECK_EIGEN_CLOSE(model.bias().vector(), dataset.bias(), 1e+2 * solver->epsilon());
-            UTEST_CHECK_EIGEN_CLOSE(model.weights().matrix(), dataset.weights(), 1e+2 * solver->epsilon());
+        tensor4d_t outputs;
+        UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));
+        UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
 
-            UTEST_CHECK_EQUAL(training.size(), dataset.folds());
-            for (const auto& train_fold : training)
-            {
-                UTEST_CHECK_GREATER_EQUAL(train_fold.tr_error(), scalar_t(0));
-                UTEST_CHECK_GREATER_EQUAL(train_fold.vd_error(), scalar_t(0));
-                UTEST_CHECK_GREATER_EQUAL(train_fold.te_error(), scalar_t(0));
+        UTEST_CHECK_EIGEN_CLOSE(model.bias().vector(), dataset.bias(), 1e+2 * solver->epsilon());
+        UTEST_CHECK_EIGEN_CLOSE(model.weights().matrix(), dataset.weights(), 1e+2 * solver->epsilon());
 
-                UTEST_CHECK_LESS_EQUAL(train_fold.tr_error(), 1e+2 * solver->epsilon());
-                UTEST_CHECK_LESS_EQUAL(train_fold.vd_error(), 1e+2 * solver->epsilon());
-                UTEST_CHECK_LESS_EQUAL(train_fold.te_error(), 1e+2 * solver->epsilon());
-            }
+        const auto targets = dataset.targets(samples);
+        UTEST_CHECK_EQUAL(outputs.dims(), targets.dims());
+        UTEST_CHECK_EIGEN_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
 
-            const auto targets = dataset.targets(make_fold());
+        UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
+        UTEST_CHECK_EQUAL(outputs.dims(), targets.dims());
+        UTEST_CHECK_EIGEN_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
 
-            tensor4d_t outputs;
-            model.predict(dataset, make_fold(), outputs);
-            UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e+1 * solver->epsilon());
+        outputs.random(-1, +2);
+        UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
+        UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e+1 * solver->epsilon());
 
-            outputs.random(-1, +2);
-            model.predict(dataset, make_fold(), outputs.tensor());
-            UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e+1 * solver->epsilon());
-
-            const auto filepath = string_t("test_linear.model");
-
-            UTEST_REQUIRE_NOTHROW(model.save(filepath));
-            {
-                auto new_model = linear_model_t{};
-                UTEST_REQUIRE_NOTHROW(new_model.load(filepath));
-                UTEST_CHECK_EIGEN_CLOSE(new_model.bias().vector(), model.bias().vector(), epsilon0<scalar_t>());
-                UTEST_CHECK_EIGEN_CLOSE(new_model.weights().matrix(), model.weights().matrix(), epsilon0<scalar_t>());
-            }
+        string_t str;
+        {
+            std::ostringstream stream;
+            UTEST_REQUIRE_NOTHROW(model.write(stream));
+            str = stream.str();
+        }
+        {
+            auto new_model = linear_model_t{};
+            std::istringstream stream(str);
+            UTEST_REQUIRE_NOTHROW(new_model.read(stream));
+            UTEST_CHECK_EIGEN_CLOSE(new_model.bias().vector(), model.bias().vector(), epsilon0<scalar_t>());
+            UTEST_CHECK_EIGEN_CLOSE(new_model.weights().matrix(), model.weights().matrix(), epsilon0<scalar_t>());
         }
     }
-
-    UTEST_CHECK_NOTHROW(model.regularization(static_cast<regularization>(-1)));
-    UTEST_CHECK_THROW(model.train(*loss, dataset, *solver), std::runtime_error);
 }
 
 UTEST_END_MODULE()

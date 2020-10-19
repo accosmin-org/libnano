@@ -41,12 +41,3 @@ bank_marketing_dataset_t::bank_marketing_dataset_t()
         csv_t{dir + "/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)
     });
 }
-
-split_t bank_marketing_dataset_t::make_split() const
-{
-    assert(samples() == 41188);
-
-    return {
-        nano::split3(samples(), train_percentage(), (100 - train_percentage()) / 2)
-    };
-}

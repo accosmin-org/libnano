@@ -55,7 +55,7 @@ namespace nano
         ///
         /// \brief clone the object, by keeping the parameters but with an internal "clean state"
         ///
-        [[nodiscard]] virtual rlsearch0_t clone() const = 0;
+        virtual rlsearch0_t clone() const = 0;
 
         ///
         /// \brief returns the initial step length given the current state
@@ -72,7 +72,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto epsilon() const { return m_epsilon.get(); }
+        auto epsilon() const { return m_epsilon.get(); }
 
     protected:
 

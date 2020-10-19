@@ -22,7 +22,7 @@ void wlearner_t::read(std::istream& stream)
     int32_t ibatch = 0;
 
     critical(
-        !::nano::detail::read(stream, ibatch),
+        !::nano::read(stream, ibatch),
         "weak learner: failed to read from stream!");
 
     batch(ibatch);
@@ -33,15 +33,15 @@ void wlearner_t::write(std::ostream& stream) const
     serializable_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(batch())),
+        !::nano::write(stream, static_cast<int32_t>(batch())),
         "weak learner: failed to write to stream!");
 }
 
-void wlearner_t::check(const indices_t& indices)
+void wlearner_t::check(const indices_t& samples)
 {
     critical(
-        !std::is_sorted(::nano::begin(indices), ::nano::end(indices)),
-        "weak learner: indices must be sorted!");
+        !std::is_sorted(::nano::begin(samples), ::nano::end(samples)),
+        "weak learner: samples must be sorted by index!");
 }
 
 void wlearner_t::scale(tensor4d_t& tables, const vector_t& scale)
@@ -58,6 +58,15 @@ void wlearner_t::scale(tensor4d_t& tables, const vector_t& scale)
     {
         tables.array(i) *= scale(std::min(i, scale.size() - 1));
     }
+}
+
+tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples) const
+{
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    outputs.zero();
+    predict(dataset, samples, outputs.tensor());
+
+    return outputs;
 }
 
 wlearner_factory_t& wlearner_t::all()
@@ -79,90 +88,4 @@ wlearner_factory_t& wlearner_t::all()
     });
 
     return manager;
-}
-
-iwlearner_t::iwlearner_t() = default;
-
-iwlearner_t::~iwlearner_t() = default;
-
-iwlearner_t::iwlearner_t(iwlearner_t&&) noexcept = default;
-
-iwlearner_t::iwlearner_t(const iwlearner_t& other) :
-    m_id(other.m_id)
-{
-    if (static_cast<bool>(other.m_wlearner))
-    {
-        m_wlearner = other.m_wlearner->clone();
-    }
-}
-
-iwlearner_t& iwlearner_t::operator=(iwlearner_t&&) noexcept = default;
-
-iwlearner_t& iwlearner_t::operator=(const iwlearner_t& other)
-{
-    if (this != &other)
-    {
-        m_id = other.m_id;
-        if (static_cast<bool>(other.m_wlearner))
-        {
-            m_wlearner = other.m_wlearner->clone();
-        }
-    }
-
-    return *this;
-}
-
-iwlearner_t::iwlearner_t(string_t&& id, rwlearner_t&& wlearner) :
-    m_id(std::move(id)),
-    m_wlearner(std::move(wlearner))
-{
-}
-
-void iwlearner_t::read(std::istream& stream)
-{
-    critical(
-        !::nano::detail::read(stream, m_id),
-        "wlearner wid: failed to read from stream!");
-
-    m_wlearner = wlearner_t::all().get(m_id);
-    critical(
-        m_wlearner == nullptr,
-        scat("wlearner wid: invalid weak learner id <", m_id, "> read from stream!"));
-
-    m_wlearner->read(stream);
-}
-
-void iwlearner_t::write(std::ostream& stream) const
-{
-    critical(
-        !::nano::detail::write(stream, m_id),
-        "wlearner wid: failed to write to stream!");
-
-    m_wlearner->write(stream);
-}
-
-void iwlearner_t::read(std::istream& stream, std::vector<iwlearner_t>& protos)
-{
-    uint32_t size = 0;
-    critical(
-        !::nano::detail::read(stream, size),
-        "weak learner: failed to read from stream!");
-
-    protos.resize(size);
-    for (auto& proto : protos)
-    {
-        proto.read(stream);
-    }
-}
-
-void iwlearner_t::write(std::ostream& stream, const std::vector<iwlearner_t>& protos)
-{
-    critical(
-        !::nano::detail::write(stream, static_cast<uint32_t>(protos.size())),
-        "weak learner: failed to write to stream!");
-
-    for (const auto& proto : protos)
-    {
-        proto.write(stream);
-    }
 }

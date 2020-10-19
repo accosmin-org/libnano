@@ -43,11 +43,11 @@ namespace nano
         template <typename tscalar2>
         tensor_vstorage_t& operator=(const tensor_pstorage_t<tscalar2>& other);
 
-        [[nodiscard]] auto size() const { return m_data.size(); }
+        auto size() const { return m_data.size(); }
         void resize(const tensor_size_t size) { m_data.resize(size); }
 
         auto data() { return m_data.data(); }
-        [[nodiscard]] auto data() const { return m_data.data(); }
+        auto data() const { return m_data.data(); }
 
     private:
 
@@ -74,8 +74,8 @@ namespace nano
 
         tensor_pstorage_t() = default;
         ~tensor_pstorage_t() = default;
+        tensor_pstorage_t(const tensor_pstorage_t&) = default;
         tensor_pstorage_t(tensor_pstorage_t&&) noexcept = default;
-        tensor_pstorage_t(const tensor_pstorage_t&) = delete;
         tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept
         {
             copy(other);
@@ -120,8 +120,8 @@ namespace nano
         }
 
         auto data() { return m_data; }
-        [[nodiscard]] auto data() const { return m_data; }
-        [[nodiscard]] auto size() const { return m_size; }
+        auto data() const { return m_data; }
+        auto size() const { return m_size; }
 
     private:
 

@@ -68,7 +68,7 @@ namespace nano
         ///
         /// \brief returns the current token
         ///
-        [[nodiscard]] auto get() const
+        auto get() const
         {
             // todo: return a std::string_view when moving to C++17
             return m_str.substr(m_pos, m_end - m_pos);
@@ -77,12 +77,12 @@ namespace nano
         ///
         /// \brief returns the begining of the current token
         ///
-        [[nodiscard]] auto pos() const { return m_pos; }
+        auto pos() const { return m_pos; }
 
         ///
         /// \brief returns the number of tokens found so far
         ///
-        [[nodiscard]] auto count() const { return m_count; }
+        auto count() const { return m_count; }
 
     private:
 

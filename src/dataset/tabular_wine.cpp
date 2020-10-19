@@ -28,12 +28,3 @@ wine_dataset_t::wine_dataset_t()
         csv_t{dir + "/wine.data"}.delim(",").header(false).expected(178)
     });
 }
-
-split_t wine_dataset_t::make_split() const
-{
-    assert(samples() == 178);
-
-    return {
-        nano::split3(samples(), train_percentage(), (100 - train_percentage()) / 2)
-    };
-}

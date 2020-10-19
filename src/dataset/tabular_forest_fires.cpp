@@ -27,12 +27,3 @@ forest_fires_dataset_t::forest_fires_dataset_t()
         csv_t{dir + "/forestfires.csv"}.delim(",").header(true).expected(517)
     });
 }
-
-split_t forest_fires_dataset_t::make_split() const
-{
-    assert(samples() == 517);
-
-    return {
-        nano::split3(samples(), train_percentage(), (100 - train_percentage()) / 2)
-    };
-}

@@ -144,7 +144,7 @@ namespace nano
             return (it == m_cells.end()) ? nullptr : &*it;
         }
 
-        [[nodiscard]] const cell_t* find(const size_t col) const
+        const cell_t* find(const size_t col) const
         {
             size_t icol = 0;
             const auto it = std::find_if(m_cells.begin(), m_cells.end(), [&] (const auto& cell)
@@ -164,7 +164,7 @@ namespace nano
         /// \brief collect the columns as scalar values using nano::from_string<tscalar>
         ///
         template <typename tscalar>
-        [[nodiscard]] auto collect() const
+        auto collect() const
         {
             std::vector<std::pair<size_t, tscalar>> values;
             if (m_type == row_t::mode::data)
@@ -193,7 +193,7 @@ namespace nano
         /// \brief select the columns that satisfy the given operator
         ///
         template <typename tscalar, typename toperator>
-        [[nodiscard]] auto select(const toperator& op) const
+        auto select(const toperator& op) const
         {
             std::vector<size_t> indices;
             // fixme: this is not very efficient because we iterate twice through the cells!
@@ -210,11 +210,11 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto cols() const { return m_cols; }
-        [[nodiscard]] auto type() const { return m_type; }
-        [[nodiscard]] const auto& cells() const { return m_cells; }
-        [[nodiscard]] auto data(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_data; }
-        [[nodiscard]] auto mark(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_mark; }
+        auto cols() const { return m_cols; }
+        auto type() const { return m_type; }
+        const auto& cells() const { return m_cells; }
+        auto data(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_data; }
+        auto mark(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_mark; }
 
     private:
 
@@ -310,11 +310,11 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] size_t cols() const;
-        [[nodiscard]] auto rows() const { return m_rows.size(); }
-        [[nodiscard]] const auto& content() const { return m_rows; }
+        size_t cols() const;
+        auto rows() const { return m_rows.size(); }
+        const auto& content() const { return m_rows; }
         auto& row(const size_t r) { assert(r < rows()); return m_rows[r]; }
-        [[nodiscard]] const auto& row(const size_t r) const { assert(r < rows()); return m_rows[r]; }
+        const auto& row(const size_t r) const { assert(r < rows()); return m_rows[r]; }
 
     private:
 

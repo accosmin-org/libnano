@@ -24,7 +24,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        linear_function_t(const loss_t&, const dataset_t&, fold_t);
+        linear_function_t(const loss_t&, const dataset_t&, const indices_t&);
 
         ///
         /// \brief enable coying
@@ -47,14 +47,14 @@ namespace nano
         /// \brief extract the weight matrix from the given tensor
         ///
         template <typename ttensor>
-        [[nodiscard]] auto weights(ttensor& x) const
+        auto weights(ttensor& x) const
         {
             assert(x.size() == m_isize * m_tsize + m_tsize);
             return map_tensor(x.data(), m_isize, m_tsize);
         }
 
         template <typename ttensor>
-        [[nodiscard]] auto weights(const ttensor& x) const
+        auto weights(const ttensor& x) const
         {
             assert(x.size() == m_isize * m_tsize + m_tsize);
             return map_tensor(x.data(), m_isize, m_tsize);
@@ -64,14 +64,14 @@ namespace nano
         /// \brief extract the bias vector from the given tensor
         ///
         template <typename ttensor>
-        [[nodiscard]] auto bias(ttensor& x) const
+        auto bias(ttensor& x) const
         {
             assert(x.size() == m_isize * m_tsize + m_tsize);
             return map_tensor(x.data() + m_isize * m_tsize, m_tsize);
         }
 
         template <typename ttensor>
-        [[nodiscard]] auto bias(const ttensor& x) const
+        auto bias(const ttensor& x) const
         {
             assert(x.size() == m_isize * m_tsize + m_tsize);
             return map_tensor(x.data() + m_isize * m_tsize, m_tsize);
@@ -94,24 +94,24 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto fold() const { return m_fold; }
-        [[nodiscard]] auto isize() const { return m_isize; }
-        [[nodiscard]] auto tsize() const { return m_tsize; }
-        [[nodiscard]] auto l1reg() const { return m_l1reg.get(); }
-        [[nodiscard]] auto l2reg() const { return m_l2reg.get(); }
-        [[nodiscard]] auto vAreg() const { return m_vAreg.get(); }
-        [[nodiscard]] auto batch() const { return m_batch.get(); }
-        [[nodiscard]] const auto& loss() const { return m_loss; }
-        [[nodiscard]] const auto& istats() const { return m_istats; }
-        [[nodiscard]] const auto& dataset() const { return m_dataset; }
-        [[nodiscard]] auto normalization() const { return m_normalization; }
+        auto isize() const { return m_isize; }
+        auto tsize() const { return m_tsize; }
+        auto l1reg() const { return m_l1reg.get(); }
+        auto l2reg() const { return m_l2reg.get(); }
+        auto vAreg() const { return m_vAreg.get(); }
+        auto batch() const { return m_batch.get(); }
+        const auto& loss() const { return m_loss; }
+        const auto& istats() const { return m_istats; }
+        const auto& dataset() const { return m_dataset; }
+        const auto& samples() const { return m_samples; }
+        auto normalization() const { return m_normalization; }
 
     private:
 
         // attributes
         const loss_t&       m_loss;         ///<
         const dataset_t&    m_dataset;      ///<
-        fold_t              m_fold;         ///<
+        const indices_t&    m_samples;      ///<
         tensor_size_t       m_isize{0};     ///< #inputs (e.g. size of the flatten input feature tensor)
         tensor_size_t       m_tsize{0};     ///< #targets (e.g. size of the flatten target tensor, number of classes)
         sparam1_t           m_l1reg{"linear::L1", 0, LE, 0, LE, 1e+8};  ///< regularization factor - see (1), (3)

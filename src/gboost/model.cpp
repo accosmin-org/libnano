@@ -1,40 +1,28 @@
-#include <nano/tune.h>
-#include <nano/logger.h>
-#include <nano/version.h>
+#include <iomanip>
+#include <nano/mlearn/util.h>
 #include <nano/gboost/util.h>
 #include <nano/gboost/model.h>
 #include <nano/tensor/stream.h>
+#include <nano/dataset/dropcol.h>
 #include <nano/dataset/shuffle.h>
 #include <nano/gboost/function.h>
 
 using namespace nano;
 
-namespace
+gboost_model_t::gboost_model_t()
 {
-    void evaluate(const dataset_t& dataset, fold_t fold, const tensor_size_t batch,
-        const loss_t& loss, const tensor4d_t& outputs, tensor1d_map_t&& errors)
-    {
-        assert(errors.size() == dataset.samples(fold));
-        assert(outputs.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    model_t::register_param(sparam1_t{"gboost::vAreg", 0, LE, 0, LE, 1e+10});
+    model_t::register_param(iparam1_t{"gboost::batch", 1, LE, 32, LE, 4096});
+    model_t::register_param(iparam1_t{"gboost::rounds", 1, LE, 1000, LE, 10000});
+    model_t::register_param(sparam1_t{"gboost::epsilon", 0.0, LT, 1e-4, LT, 1e-1});
+    model_t::register_param(sparam1_t{"gboost::shrinkage", 0.0, LE, 1.0, LE, 1.0});
+    model_t::register_param(sparam1_t{"gboost::subsample", 0.0, LE, 1.0, LE, 1.0});
+    model_t::register_param(eparam1_t{"gboost::wscale", ::nano::wscale::tboost});
+}
 
-        dataset.loop(execution::par, fold, batch, [&] (tensor_range_t range, size_t)
-        {
-            const auto targets = dataset.targets(fold, range);
-            loss.error(targets, outputs.slice(range), errors.slice(range));
-        });
-    }
-
-    template <size_t trank>
-    void resize_all(const tensor_dims_t<trank>&)
-    {
-    }
-
-    template <size_t trank, typename ttensor, typename... ttensors>
-    void resize_all(const tensor_dims_t<trank>& dims, ttensor& tensor, ttensors&... tensors)
-    {
-        tensor.resize(dims);
-        resize_all(dims, tensors...);
-    }
+rmodel_t gboost_model_t::clone() const
+{
+    return std::make_unique<gboost_model_t>(*this);
 }
 
 void gboost_model_t::add(const string_t& id)
@@ -49,203 +37,64 @@ void gboost_model_t::add(string_t id, rwlearner_t&& prototype)
     m_protos.emplace_back(std::move(id), std::move(prototype));
 }
 
-train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& dataset, const solver_t& solver)
+scalar_t gboost_model_t::fit(
+    const loss_t& loss, const dataset_t& dataset, const indices_t& samples, const solver_t& solver)
 {
-    critical(m_protos.empty(), "gboost model: no prototype weak learners to use!");
-
-    log_info() << "training gboost model:";
-    log_info()
-        << " === batch=" << batch() << ", rounds=" << rounds() << ", patience=" << patience()
-        << ", subsample=" << subsample() << ", tune=" << tune_steps() << "x" << tune_trials();
-    log_info()
-        << " === scale=" << scat(scale()) << ", regularization=" << scat(regularization());
+    log_info() << string_t(8, '-') << ::nano::align(" gboost model ", 112U, alignment::left, '-') << string_t(8, '-');
+    for (const auto& param : params())
+    {
+        log_info() << "gboost model: fit using " << std::fixed << std::setprecision(8) << param;
+    }
     for (const auto& proto : m_protos)
     {
-        log_info() << " === proto: id=" << proto.m_id;
+        log_info() << "gboost model: fit using weak learner (" << proto.id() << ")";
     }
+    log_info() << string_t(128, '-');
 
-    tensor4d_t te_avg_outputs;
+    critical(m_protos.empty(), "gboost model: no prototype weak learners to use!");
+
+    m_iwlearners.clear();
 
     const auto tdim = dataset.tdim();
 
-    m_models.clear();
+    tensor4d_t outputs(cat_dims(samples.size(), tdim));
+    tensor4d_t woutputs(cat_dims(samples.size(), tdim));
+    tensor4d_t fit_vgrads(cat_dims(dataset.samples(), tdim));   // NB: gradients for ALL samples, to index with samples!
+    fit_vgrads.constant(std::numeric_limits<scalar_t>::quiet_NaN());
 
-    // train a model for each fold ...
-    train_result_t results;
-    for (size_t fold = 0, folds = dataset.folds(); fold < folds; ++ fold)
-    {
-        auto& result = results.add();
-
-        const auto te_fold = fold_t{fold, protocol::test};
-        const auto te_samples = dataset.samples(te_fold);
-
-        tensor1d_t te_errors(te_samples);
-
-        if (fold == 0)
-        {
-            te_avg_outputs.resize(cat_dims(te_samples, tdim));
-            te_avg_outputs.zero();
-        }
-
-        // tune the regularization factors (if any)
-        model_t model;
-        tensor4d_t te_outputs;
-        scalar_t vAreg = 0.0;
-        scalar_t vd_error = std::numeric_limits<scalar_t>::max();
-
-        switch (regularization())
-        {
-        case ::nano::regularization::variance:
-            std::tie(vAreg, vd_error, model, te_outputs) = nano::grid_tune(
-                nano::pow10_space_t{-6.0, +6.0},
-                [&] (const scalar_t vAreg)
-                {
-                    auto& curve = result.add(scat("vAreg=", vAreg));
-                    assert(curve.size() == 0);
-                    return train(loss, dataset, fold, solver, vAreg, curve);
-                },
-                tune_trials(), tune_steps());
-            break;
-
-        case ::nano::regularization::none:
-            {
-                auto& curve = result.add(scat("noreg"));
-                std::tie(vd_error, model, te_outputs) = train(loss, dataset, fold, solver, 0.0, curve);
-            }
-            break;
-
-        case ::nano::regularization::lasso:
-        case ::nano::regularization::ridge:
-        case ::nano::regularization::elastic:
-        default:
-            critical(true, "unhandled regularization method when training gboost models");
-        }
-
-        m_models.emplace_back(std::move(model));
-
-        // update predictions (of the averaged model)
-        te_avg_outputs.vector() = (te_avg_outputs.vector() * fold + te_outputs.vector()) / (fold + 1);
-
-        // update measurements
-        ::evaluate(dataset, te_fold, batch(), loss, te_outputs, te_errors.tensor());
-        result.test(te_errors.vector().mean());
-        assert(std::fabs(vd_error - result.vd_error()) < 1e-8);
-
-        ::evaluate(dataset, te_fold, batch(), loss, te_avg_outputs, te_errors.tensor());
-        result.avg_test(te_errors.vector().mean());
-
-        log_info() << std::setprecision(8) << std::fixed << ">>> "
-            << "tr=" << result.tr_value() << "|" << result.tr_error()
-            << ",vd=" << result.vd_error()
-            << ",te=" << result.te_error() << ",avg_te=" << result.avg_te_error()
-            << ",vA=" << vAreg << ".";
-    }
-
-    // OK
-    return results;
-}
-
-train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAreg,
-    const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state,
-    const indices_t& features, train_curve_t& curve) const
-{
-    const auto cwidth = static_cast<int>(std::log10(rounds())) + 1;
-
-    const auto tr_value = state.f;
-    const auto tr_error = tr_errors.vector().mean();
-    const auto vd_error = vd_errors.vector().mean();
-
-    curve.add(tr_value, tr_error, vd_error);
-    const auto status = curve.check(patience());
-
-    log_info()
-        << std::setprecision(4) << std::fixed
-        << std::setw(cwidth) << std::setfill('0') << round << "/"
-        << std::setw(cwidth) << std::setfill('0') << rounds()
-        << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << scat(status) << ")"
-        << std::setprecision(8) << std::fixed
-        << ",vAreg=" << vAreg << "," << state
-        << ",feat=[" << features.array() << "].";
-
-    return status;
-}
-
-indices_t gboost_model_t::make_indices(tensor_size_t samples) const
-{
-    if (subsample() >= 100)
-    {
-        return ::nano::arange(0, samples);
-    }
-    else
-    {
-        return ::nano::sample_without_replacement(samples, subsample());
-    }
-}
-
-std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
-    const loss_t& loss, const dataset_t& dataset, size_t fold, const solver_t& solver, scalar_t vAreg,
-    train_curve_t& curve) const
-{
-    const auto tdim = dataset.tdim();
-
-    const auto tr_fold = fold_t{fold, protocol::train};
-    const auto vd_fold = fold_t{fold, protocol::valid};
-    const auto te_fold = fold_t{fold, protocol::test};
-
-    const auto tr_samples = dataset.samples(tr_fold);
-    const auto vd_samples = dataset.samples(vd_fold);
-    const auto te_samples = dataset.samples(te_fold);
-
-    tensor1d_t tr_errors, vd_errors;
-    tensor4d_t tr_outputs, tr_woutputs, vd_outputs, vd_woutputs, te_outputs, te_woutputs, te_opt_outputs;
-
-    ::resize_all(cat_dims(tr_samples, tdim), tr_outputs, tr_woutputs);
-    ::resize_all(cat_dims(vd_samples, tdim), vd_outputs, vd_woutputs);
-    ::resize_all(cat_dims(te_samples, tdim), te_outputs, te_woutputs, te_opt_outputs);
-
-    ::resize_all(make_dims(tr_samples), tr_errors);
-    ::resize_all(make_dims(vd_samples), vd_errors);
-
-    // estimate bias on the current fold
-    auto bias_function = gboost_bias_function_t{loss, dataset, tr_fold};
-    bias_function.vAreg(vAreg);
+    // estimate bias
+    auto bias_function = gboost_bias_function_t{loss, dataset, samples};
+    bias_function.vAreg(vAreg());
     bias_function.batch(batch());
 
     const auto state = solver.minimize(bias_function, vector_t::Zero(bias_function.size()));
+    m_bias.resize(state.x.size());
+    m_bias.vector() = state.x;
 
     // update predictions
-    tr_outputs.reshape(tr_samples, -1).matrix().rowwise() = state.x.transpose();
-    vd_outputs.reshape(vd_samples, -1).matrix().rowwise() = state.x.transpose();
-    te_outputs.reshape(te_samples, -1).matrix().rowwise() = state.x.transpose();
-
-    // update measurements
-    ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
-    ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
-
-    const auto status = done(0, vAreg, tr_errors, vd_errors, state, indices_t{}, curve);
-    critical(status == train_status::diverged, "gboost model: failed to fit bias (check inputs and parameters)!");
-
-    model_t model;
-    model.m_bias.resize(state.x.size());
-    model.m_bias.vector() = state.x;
-    te_opt_outputs = te_outputs;
-
-    cluster_t cluster(tr_samples, 1);
-    for (tensor_size_t i = 0; i < tr_samples; ++ i)
+    outputs.reshape(samples.size(), -1).matrix().rowwise() = state.x.transpose();
+    auto errors = evaluate(dataset, samples, loss, outputs);
+    if (done(0, errors, state, indices_t{}))
     {
-        cluster.assign(i, 0);
+        return errors.mean();
     }
 
-    const auto indices = make_indices(tr_samples);
-
-    auto grads_function = gboost_grads_function_t{loss, dataset, tr_fold};
-    grads_function.vAreg(vAreg);
+    auto grads_function = gboost_grads_function_t{loss, dataset, samples};
+    grads_function.vAreg(vAreg());
     grads_function.batch(batch());
 
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < rounds(); ++ round)
     {
-        const auto& tr_vgrads = grads_function.gradients(tr_outputs);
+        const auto& vgrads = grads_function.gradients(outputs);
+
+        const auto fit_indices_in_samples = make_indices(samples);
+        const auto fit_indices = samples.indexed<tensor_size_t>(fit_indices_in_samples);
+
+        for (tensor_size_t i = 0; i < fit_indices.size(); ++ i)
+        {
+            fit_vgrads.vector(fit_indices(i)) = vgrads.vector(fit_indices_in_samples(i));
+        }
 
         // choose the weak learner that aligns the best with the current residuals
         auto best_id = std::string{};
@@ -253,13 +102,13 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
         auto best_wlearner = rwlearner_t{};
         for (const auto& prototype : m_protos)
         {
-            auto wlearner = prototype.m_wlearner->clone();
+            auto wlearner = prototype.get().clone();
             assert(wlearner);
 
-            const auto score = wlearner->fit(dataset, tr_fold, tr_vgrads, indices);
+            const auto score = wlearner->fit(dataset, fit_indices, fit_vgrads);
             if (score < best_score)
             {
-                best_id = prototype.m_id;
+                best_id = prototype.id();
                 best_score = score;
                 best_wlearner = std::move(wlearner);
             }
@@ -267,250 +116,413 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
 
         if (!best_wlearner)
         {
-            log_warning() << "cannot fit any new weak learner, stopping.";
+            log_warning() << "gboost model: cannot fit any new weak learner, stopping.";
             break;
         }
-        const auto features = best_wlearner->features();
 
         // scale the chosen weak learner
-        switch (scale())
-        {
-        case wscale::tboost:
-            cluster = best_wlearner->split(dataset, tr_fold, ::nano::arange(0, tr_samples));
-            break;
+        const auto cluster = make_cluster(dataset, samples, *best_wlearner);
 
-        default:
-            break;
-        }
+        woutputs.zero();
+        best_wlearner->predict(dataset, samples, woutputs.tensor());
 
-        best_wlearner->predict(dataset, tr_fold, make_range(0, tr_samples), tr_woutputs.tensor());
-
-        auto function = gboost_scale_function_t(loss, dataset, tr_fold, cluster, tr_outputs, tr_woutputs);
-        function.vAreg(vAreg);
+        auto function = gboost_scale_function_t(loss, dataset, samples, cluster, outputs, woutputs);
+        function.vAreg(vAreg());
         function.batch(batch());
 
-        const auto state = solver.minimize(function, vector_t::Zero(function.size()));
+        auto state = solver.minimize(function, vector_t::Zero(function.size()));
         if (state.x.minCoeff() < 0.0)
         {
-            log_warning() << "invalid scale factor(s): [" << state.x.transpose() << "], stopping.";
+            log_warning() << "gboost model: invalid scale factor(s): [" << state.x.transpose() << "], stopping.";
             break;
         }
 
+        state.x *= shrinkage();
         best_wlearner->scale(state.x);
-        best_wlearner->predict(dataset, tr_fold, make_range(0, tr_samples), tr_woutputs.tensor());
-        best_wlearner->predict(dataset, vd_fold, make_range(0, vd_samples), vd_woutputs.tensor());
-        best_wlearner->predict(dataset, te_fold, make_range(0, te_samples), te_woutputs.tensor());
+        scale(cluster, samples, state.x, woutputs);
 
-        tr_outputs.vector() += tr_woutputs.vector();
-        vd_outputs.vector() += vd_woutputs.vector();
-        te_outputs.vector() += te_woutputs.vector();
-
-        model.m_protos.emplace_back(std::move(best_id), std::move(best_wlearner));
-
-        // update measurements
-        ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
-        ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
-
-        const auto status = done(round + 1, vAreg, tr_errors, vd_errors, state, features, curve);
-        if (status == train_status::better)
-        {
-            te_opt_outputs = te_outputs;
-        }
-        else if (status == train_status::overfit || status == train_status::diverged)
+        // update predictions
+        outputs.vector() += woutputs.vector();
+        errors = evaluate(dataset, samples, loss, outputs);
+        if (done(round + 1, errors, state, best_wlearner->features()))
         {
             break;
         }
+
+        // update model
+        m_iwlearners.emplace_back(std::move(best_id), std::move(best_wlearner));
     }
 
-    model.m_protos.erase(model.m_protos.begin() + curve.optindex(), model.m_protos.end());
-
-    return std::make_tuple(curve.optimum().vd_error(), std::move(model), std::move(te_opt_outputs));
+    return errors.mean();
 }
 
-void gboost_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_t& outputs) const
+bool gboost_model_t::done(
+    tensor_size_t round, const tensor1d_t& errors, const solver_state_t& state, const indices_t& features) const
 {
-    outputs.resize(cat_dims(dataset.samples(fold), dataset.tdim()));
-    predict(dataset, fold, outputs.tensor());
-}
+    const auto cwidth = static_cast<int>(std::log10(rounds())) + 1;
 
-void gboost_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_map_t&& outputs) const
-{
-    assert(outputs.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    const auto value = state.f;
+    const auto error = errors.mean();
 
-    dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+    log_info()
+        << std::setprecision(8) << std::fixed
+        << std::setw(cwidth) << std::setfill('0') << round << "/"
+        << std::setw(cwidth) << std::setfill('0') << rounds()
+        << ":tr=" << value << "|" << error
+        << std::setprecision(8) << std::fixed
+        << ",vAreg=" << vAreg() << "," << state
+        << ",feat=[" << features.array() << "].";
+
+    if (!std::isfinite(value) || !std::isfinite(error) ||
+        state.m_status != solver_state_t::status::converged)
     {
-        tensor4d_t toutputs(cat_dims(range.size(), dataset.tdim()));
-        tensor4d_t woutputs(cat_dims(range.size(), dataset.tdim()));
+        log_warning() << "gboost model: training failed (check inputs and parameters), stopping.";
+        return true;
+    }
 
-        toutputs.zero();
-        for (const auto& model : m_models)
+    if (error < epsilon())
+    {
+        log_warning() << "gboost model: training converged, stopping.";
+        return true;
+    }
+
+    return false;
+}
+
+indices_t gboost_model_t::make_indices(const indices_t& samples) const
+{
+    const auto count = static_cast<tensor_size_t>(llround(subsample() * samples.size()));
+    if (count >= samples.size())
+    {
+        return arange(0, samples.size());
+    }
+    else
+    {
+        return ::nano::sample_without_replacement(samples.size(), count);
+    }
+}
+
+cluster_t gboost_model_t::make_cluster(const dataset_t& dataset, const indices_t& samples, const wlearner_t& wlearner) const
+{
+    switch (wscale())
+    {
+    case wscale::tboost:
+        return wlearner.split(dataset, samples);
+
+    default:
         {
-            toutputs.reshape(range.size(), -1).matrix().rowwise() += model.m_bias.vector().transpose();
-
-            for (const auto& proto : model.m_protos)
+            cluster_t cluster{dataset.samples(), 1};
+            for (tensor_size_t i = 0; i < samples.size(); ++ i)
             {
-                const auto& wlearner = proto.m_wlearner;
-                wlearner->predict(dataset, fold, range, woutputs.tensor());
-                toutputs.vector() += woutputs.vector();
+                cluster.assign(samples(i), 0);
             }
+            return cluster;
         }
+    }
+}
 
-        outputs.slice(range).vector() = toutputs.vector();
+void gboost_model_t::scale(const cluster_t& cluster, const indices_t& samples, const vector_t& scales,
+    tensor4d_t& woutputs) const
+{
+    assert(samples.size() == woutputs.size<0>());
+
+    loopi(samples.size(), [&] (tensor_size_t i, size_t)
+    {
+        const auto group = cluster.group(samples(i));
+        if (group >= 0)
+        {
+            assert(group < scales.size());
+            woutputs.array(i) *= scales(group);
+        }
+    });
+}
+
+tensor1d_t gboost_model_t::evaluate(
+    const dataset_t& dataset, const indices_t& samples, const loss_t& loss, const tensor4d_t& outputs) const
+{
+    assert(outputs.dims() == cat_dims(samples.size(), dataset.tdim()));
+
+    tensor1d_t errors(samples.size());
+    loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
+    {
+        const auto range = make_range(begin, end);
+        const auto targets = dataset.targets(samples.slice(range));
+        loss.error(targets, outputs.slice(range), errors.slice(range));
     });
 
-    outputs.array() /= std::max(size_t(1), m_models.size());
+    return errors;
+}
+
+tensor4d_t gboost_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
+{
+    critical(
+        m_bias.size() != ::nano::size(dataset.tdim()) &&
+        m_iwlearners.empty(),
+        "gboost model: cannot predict without a trained model!");
+
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    outputs.reshape(samples.size(), -1).matrix().rowwise() = m_bias.vector().transpose();
+
+    loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
+    {
+        const auto range = make_range(begin, end);
+        const auto wsamples = samples.slice(range);
+        const auto woutputs = outputs.slice(range);
+        for (const auto& iwlearner : m_iwlearners)
+        {
+            iwlearner.get().predict(dataset, wsamples, woutputs);
+        }
+    });
+
+    return outputs;
 }
 
 void gboost_model_t::read(std::istream& stream)
 {
-    serializable_t::read(stream);
+    model_t::read(stream);
 
-    int32_t ibatch = 0, irounds = 0, ipatience = 0, isubsample = 0, itune_trials = 0, itune_steps = 0;
-    int32_t iscale = 0, iregularization = 0;
+    ::nano::read(stream, m_protos);
+    ::nano::read(stream, m_iwlearners);
 
     critical(
-        !::nano::detail::read(stream, ibatch) ||
-        !::nano::detail::read(stream, irounds) ||
-        !::nano::detail::read(stream, ipatience) ||
-        !::nano::detail::read(stream, isubsample) ||
-        !::nano::detail::read(stream, itune_trials) ||
-        !::nano::detail::read(stream, itune_steps) ||
-        !::nano::detail::read(stream, iscale) ||
-        !::nano::detail::read(stream, iregularization),
+        !::nano::read(stream, m_bias),
         "gboost model: failed to read from stream!");
-
-    batch(ibatch);
-    rounds(irounds);
-    patience(ipatience);
-    subsample(isubsample);
-    tune_steps(itune_steps);
-    tune_trials(itune_trials);
-    scale(static_cast<::nano::wscale>(iscale));
-    regularization(static_cast<::nano::regularization>(iregularization));
-
-    iwlearner_t::read(stream, m_protos);
-
-    uint32_t size = 0;
-    critical(
-        !::nano::detail::read(stream, size),
-        "gboost model: failed to read from stream!");
-
-    m_models.resize(size);
-    for (auto& model : m_models)
-    {
-        critical(
-            !::nano::read(stream, model.m_bias),
-            "gboost model: failed to read from stream!");
-
-        iwlearner_t::read(stream, model.m_protos);
-    }
 }
 
 void gboost_model_t::write(std::ostream& stream) const
 {
-    serializable_t::write(stream);
+    model_t::write(stream);
+
+    ::nano::write(stream, m_protos);
+    ::nano::write(stream, m_iwlearners);
 
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(batch())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(rounds())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(patience())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(subsample())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(tune_trials())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(tune_steps())) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(m_scale)) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(m_regularization)),
+        !::nano::write(stream, m_bias),
         "gboost model: failed to write to stream!");
-
-    iwlearner_t::write(stream, m_protos);
-
-    critical(
-        !::nano::detail::write(stream, static_cast<uint32_t>(m_models.size())),
-        "gboost model: failed to write to stream!");
-
-    for (const auto& model : m_models)
-    {
-        critical(
-            !::nano::write(stream, model.m_bias),
-            "gboost model: failed to write to stream!");
-
-        iwlearner_t::write(stream, model.m_protos);
-    }
 }
 
-feature_infos_t gboost_model_t::features(const loss_t& loss, const dataset_t& dataset, const tensor_size_t trials) const
+feature_infos_t gboost_model_t::features() const
 {
-    // construct the list of ALL selected features (across folds)
-    std::vector<tensor_size_t> features;
-    std::map<tensor_size_t, std::set<size_t>> ffcounts;
-    for (size_t imodel = 0; imodel < m_models.size(); ++ imodel)
+    std::map<tensor_size_t, tensor_size_t> fcounts;
+    for (const auto& iwlearner : m_iwlearners)
     {
-        const auto& model = m_models[imodel];
-
-        for (const auto& proto : model.m_protos)
+        for (const auto feature : iwlearner.get().features())
         {
-            for (const auto feature : proto.m_wlearner->features())
-            {
-                features.push_back(feature);
-                ffcounts[feature].insert(imodel);
-            }
+            fcounts[feature] ++;
         }
     }
 
-    std::sort(features.begin(), features.end());
-    features.erase(std::unique(features.begin(), features.end()), features.end());
-
-    // estimate the importance of EACH of the selected features
-    std::vector<scalar_t> importances(features.size(), 0.0);
-    for (size_t ifold = 0, folds = dataset.folds(); ifold < folds; ++ ifold)
-    {
-        const auto fold = fold_t{ifold, protocol::valid};
-        const auto targets = dataset.targets(fold);
-
-        tensor1d_t errors;
-        tensor4d_t outputs;
-
-        const auto evaluate = [&] (const auto& xdataset)
-        {
-            predict(xdataset, fold, outputs);
-            loss.error(targets, outputs, errors);
-            return errors.vector().mean();
-        };
-
-        // baseline error rate
-        const auto baseline_error = evaluate(dataset);
-        log_info() << std::fixed << std::setprecision(6)
-            << "gboost model: baseline error[" << (ifold + 1) << "|" << folds << "]=" << baseline_error << ".";
-
-        // estimate the impact of shuffling each feature at a time on the error rate
-        for (size_t ifeature = 0; ifeature < features.size(); ++ ifeature)
-        {
-            const auto feature = features[ifeature];
-            const auto fdataset = shuffle_dataset_t{dataset, feature};
-
-            scalar_t feature_error = 0.0;
-            for (tensor_size_t trial = 0; trial < trials; ++ trial)
-            {
-                feature_error += evaluate(fdataset) / trials;
-            }
-
-            const auto importance = feature_error - baseline_error;
-            log_info() << std::fixed << std::setprecision(6)
-                << "gboost model: feature[" << feature << "] error[" << (ifold + 1) << "|" << folds
-                << "]=" << feature_error << " vs. " << baseline_error << " => importance=" << importance << ".";
-
-            importances[ifeature] += importance;
-        }
-    }
-
-    // assembly stats per feature
     feature_infos_t infos;
-    for (size_t ifeature = 0; ifeature < features.size(); ++ ifeature)
+    infos.reserve(fcounts.size());
+    for (const auto& [feature, count] : fcounts)
     {
-        const auto feature = features[ifeature];
-        const auto importance = importances[ifeature];
-        const auto folds = static_cast<tensor_size_t>(ffcounts[feature].size());
-        infos.emplace_back(feature, folds, importance);
+        infos.emplace_back(feature, count, 0.0);
     }
     feature_info_t::sort_by_importance(infos);
     return infos;
 }
+
+feature_infos_t gboost_model_t::features(
+    const loss_t& loss, const dataset_t& dataset, const indices_t& samples, const solver_t& solver,
+    importance type, tensor_size_t trials) const
+{
+    auto infos = features();
+
+    auto errors = tensor1d_t{samples.size()};
+    const auto targets = dataset.targets(samples);
+
+    const auto evaluate = [&] (const model_t& model, const auto& xdataset)
+    {
+        const auto outputs = model.predict(xdataset, samples);
+        loss.error(targets, outputs, errors);
+        return errors.mean();
+    };
+
+    // baseline error rate
+    const auto baseline_error = evaluate(*this, dataset);
+    log_info() << std::fixed << std::setprecision(6)
+        << "gboost model: baseline error=" << baseline_error << ".";
+
+    // estimate the importance of EACH of the selected features
+    for (auto& info : infos)
+    {
+        scalar_t feature_error = 0.0;
+
+        switch (type)
+        {
+        case importance::shuffle:   // estimate the impact of shuffling each feature at a time on the error rate
+            for (tensor_size_t trial = 0; trial < trials; ++ trial)
+            {
+                const auto fdataset = shuffle_dataset_t{dataset, info.feature()};
+                feature_error += evaluate(*this, fdataset) / trials;
+            }
+            break;
+
+        case importance::dropcol:   // estimate the impact of removing each feature at a time on the error rate
+            for (tensor_size_t trial = 0; trial < trials; ++ trial)
+            {
+                const auto fdataset = dropcol_dataset_t{dataset, info.feature()};
+                auto model = *this;
+                model.fit(loss, fdataset, samples, solver);
+                feature_error += evaluate(model, fdataset) / trials;
+            }
+            break;
+
+        default:
+            critical(true, "gboost model: unhandled feature importance method!");
+        }
+
+        info.importance(feature_error - baseline_error);
+        log_info() << std::fixed << std::setprecision(6)
+            << "gboost model: feature[" << info.feature()
+            << "] error="<< feature_error << " vs. " << baseline_error
+            << " => importance=" << info.importance() << ".";
+    }
+
+    feature_info_t::sort_by_importance(infos);
+    return infos;
+}
+
+/*
+// setup the stacking ensemble
+// NB: evaluate the models on the whole training dataset (train + valid)!
+const auto tr_fold = fold_t{0U, protocol::train};
+const auto vd_fold = fold_t{0U, protocol::valid};
+const auto tr_samples = dataset.samples(tr_fold);
+const auto vd_samples = dataset.samples(vd_fold);
+
+tensor4d_t targets(cat_dims(tr_samples + vd_samples, dataset.tdim()));
+tensor5d_t moutputs(cat_dims(static_cast<tensor_size_t>(dataset.folds()), targets.dims()));
+
+for (size_t fold = 0, folds = dataset.folds(); fold < folds; ++ fold)
+{
+    const auto& model = m_iwlearnerss[fold];
+    const auto outputs = moutputs.tensor(static_cast<tensor_size_t>(fold));
+
+    dataset.loop(execution::par, tr_fold, batch(), [&] (tensor_range_t range, size_t)
+    {
+        targets.slice(range) = dataset.targets(tr_fold, range);
+        model.predict(dataset, tr_fold, range, outputs.slice(range));
+    });
+
+    dataset.loop(execution::par, vd_fold, batch(), [&] (tensor_range_t range, size_t)
+    {
+        const auto vd_range = make_range(tr_samples + range.begin(), tr_samples + range.end());
+        targets.slice(vd_range) = dataset.targets(vd_fold, range);
+        model.predict(dataset, vd_fold, range, outputs.slice(vd_range));
+    });
+}
+
+auto function = stacking_function_t(loss, targets, moutputs);
+function.batch(batch());
+
+const auto state = solver.minimize(function, vector_t::Zero(function.size()));
+const auto weights = stacking_function_t::as_weights(state.x);
+
+assert(weights.size() == static_cast<tensor_size_t>(m_iwlearnerss.size()));
+for (size_t fold = 0; fold < m_iwlearnerss.size(); ++ fold)
+{
+    m_iwlearnerss[fold].m_weight = weights(static_cast<tensor_size_t>(fold));
+}
+
+log_info() << std::setprecision(4) << std::fixed
+    << "stacking done: weights=[" << weights.transpose() << "]," << state << ".";
+*/
+
+/*
+    switch (type)
+    {
+    case ensemble::bumping:
+        {
+            const auto op = [] (const auto& model, const auto& smallest) { return model.m_error < smallest.m_error; };
+            const auto& model = *std::min_element(m_iwlearnerss.begin(), m_iwlearnerss.end(), op);
+            dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+            {
+                model.predict(dataset, fold, range, outputs.slice(range));
+            });
+        }
+        break;
+
+    case ensemble::stacking:
+        dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+        {
+            tensor4d_t moutputs;
+            outputs.slice(range).zero();
+            for (const auto& model : m_iwlearnerss)
+            {
+                model.predict(dataset, fold, range, moutputs);
+                outputs.slice(range).vector() += model.m_weight * moutputs.vector();
+            }
+        });
+        break;
+
+    case ensemble::bagging:
+        dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+        {
+            tensor4d_t moutputs;
+            outputs.slice(range).zero();
+            for (const auto& model : m_iwlearnerss)
+            {
+                model.predict(dataset, fold, range, moutputs);
+                outputs.slice(range).vector() += moutputs.vector();
+            }
+            outputs.slice(range).vector() /= static_cast<scalar_t>(m_iwlearnerss.size());
+        });
+        break;
+
+    case ensemble::median:
+        dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+        {
+            const auto folds = static_cast<tensor_size_t>(dataset.folds());
+
+            tensor1d_t values(folds);
+            tensor5d_t moutputs(cat_dims(folds, cat_dims(range.size(), dataset.tdim())));
+
+            tensor_size_t imodel = 0;
+            for (const auto& model : m_iwlearnerss)
+            {
+                model.predict(dataset, fold, range, moutputs.tensor(imodel ++));
+            }
+
+            auto ovector = outputs.slice(range).vector();
+            const auto mmatrix = moutputs.reshape(folds, -1).matrix();
+            for (tensor_size_t output = 0; output < ovector.size(); ++ output)
+            {
+                for (tensor_size_t fold = 0; fold < folds; ++ fold)
+                {
+                    values(fold) = mmatrix(fold, output);
+                }
+                ovector(output) = median(values);
+            }
+        });
+        break;
+
+    default:
+        critical(true, "gboost model: unhandled ensemble method when predicting");
+    }
+*/
+
+    /*
+    scalar_t median(tensor1d_t& values)
+    {
+        assert(values.size() > 0);
+
+        auto* const begin = ::nano::begin(values);
+        auto* const end = ::nano::end(values);
+
+        if (values.size() % 2 == 0)
+        {
+            auto* const it1 = begin + (values.size() / 2 - 1);
+            auto* const it2 = begin + (values.size() / 2);
+            std::nth_element(begin, it1, end);
+            std::nth_element(begin, it2, end);
+            return (*it1 + *it2) / 2;
+        }
+        else
+        {
+            auto* const it = begin + (values.size() / 2);
+            std::nth_element(begin, it, end);
+            return *it;
+        }
+    }
+    */

@@ -157,11 +157,11 @@ UTEST_CASE(config_solvers)
         UTEST_CHECK_EQUAL(solver->c1(), 1e-4);
         UTEST_CHECK_EQUAL(solver->c2(), 1e-1);
 
-        UTEST_CHECK_THROW(solver->tolerance(2e-1, 1e-1), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, 1e-4), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, +1.1), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, -0.1), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->tolerance(-0.1, +1.1), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->tolerance(2e-1, 1e-1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->tolerance(1e-1, 1e-4), std::runtime_error);
+        UTEST_CHECK_THROW(solver->tolerance(1e-1, +1.1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->tolerance(1e-1, -0.1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->tolerance(-0.1, +1.1), std::runtime_error);
         UTEST_CHECK_EQUAL(solver->c1(), 1e-4);
         UTEST_CHECK_EQUAL(solver->c2(), 1e-1);
 
@@ -169,14 +169,14 @@ UTEST_CASE(config_solvers)
         UTEST_CHECK_EQUAL(solver->c1(), 1e-1);
         UTEST_CHECK_EQUAL(solver->c2(), 9e-1);
 
-        UTEST_CHECK_THROW(solver->lsearch0("invalid-lsearch0-id"), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->lsearch0("constant", rlsearch0_t()), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->lsearch0("invalid-lsearch0-id"), std::runtime_error);
+        UTEST_CHECK_THROW(solver->lsearch0("constant", rlsearch0_t()), std::runtime_error);
 
         UTEST_CHECK_NOTHROW(solver->lsearch0("constant"));
         UTEST_CHECK_NOTHROW(solver->lsearch0("constant", lsearch0_t::all().get("constant")));
 
-        UTEST_CHECK_THROW(solver->lsearchk("invalid-lsearchk-id"), std::invalid_argument);
-        UTEST_CHECK_THROW(solver->lsearchk("backtrack", rlsearchk_t()), std::invalid_argument);
+        UTEST_CHECK_THROW(solver->lsearchk("invalid-lsearchk-id"), std::runtime_error);
+        UTEST_CHECK_THROW(solver->lsearchk("backtrack", rlsearchk_t()), std::runtime_error);
 
         UTEST_CHECK_NOTHROW(solver->lsearchk("backtrack"));
         UTEST_CHECK_NOTHROW(solver->lsearchk("backtrack", lsearchk_t::all().get("backtrack")));

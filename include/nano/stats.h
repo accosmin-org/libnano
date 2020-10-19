@@ -11,6 +11,28 @@
 namespace nano
 {
     ///
+    /// \brief returns the percentile value.
+    ///
+    template <typename titerator>
+    auto percentile(titerator begin, titerator end, int percentage)
+    {
+        assert(percentage > 0 && percentage < 100);
+        auto middle = begin;
+        std::advance(middle, std::distance(begin, end) * percentage / 100);
+        std::nth_element(begin, middle, end);
+        return *middle;
+    }
+
+    ///
+    /// \brief returns the median value.
+    ///
+    template <typename titerator>
+    auto median(titerator begin, titerator end)
+    {
+        return percentile(begin, end, 50);
+    }
+
+    ///
     /// \brief collects numerical values and computes statistics like:
     ///     - average, standard deviation
     ///     - minimum and maximum values
@@ -27,6 +49,18 @@ namespace nano
         /// \brief constructor
         ///
         stats_t() = default;
+
+        ///
+        /// \brief update statistics with the given [begin, end) range
+        ///
+        template <typename titerator, typename = typename std::iterator_traits<titerator>::value_type>
+        stats_t(titerator begin, const titerator end)
+        {
+            for ( ; begin != end; ++ begin)
+            {
+                operator()(*begin);
+            }
+        }
 
         ///
         /// \brief update statistics with new values
@@ -75,7 +109,7 @@ namespace nano
         ///
         /// \brief returns the number of values
         ///
-        [[nodiscard]] auto count() const
+        auto count() const
         {
             return m_values.size();
         }
@@ -83,7 +117,7 @@ namespace nano
         ///
         /// \brief returns the minimum
         ///
-        [[nodiscard]] auto min() const
+        auto min() const
         {
             assert(!m_values.empty());
             return *std::min_element(m_values.begin(), m_values.end());
@@ -92,7 +126,7 @@ namespace nano
         ///
         /// \brief returns the maximum
         ///
-        [[nodiscard]] auto max() const
+        auto max() const
         {
             assert(!m_values.empty());
             return *std::max_element(m_values.begin(), m_values.end());
@@ -101,7 +135,7 @@ namespace nano
         ///
         /// \brief returns the sum
         ///
-        [[nodiscard]] auto sum1() const
+        auto sum1() const
         {
             return  std::accumulate(m_values.begin(), m_values.end(), value_t(0),
                     [] (const auto s, const auto v) { return s + v; });
@@ -110,7 +144,7 @@ namespace nano
         ///
         /// \brief returns the sum of squares
         ///
-        [[nodiscard]] auto sum2() const
+        auto sum2() const
         {
             return  std::accumulate(m_values.begin(), m_values.end(), value_t(0),
                     [] (const auto s, const auto v) { return s + v * v; });
@@ -119,43 +153,39 @@ namespace nano
         ///
         /// \brief returns the average
         ///
-        [[nodiscard]] auto avg() const
+        auto avg() const
         {
             assert(count() > 0);
             return sum1() / static_cast<value_t>(count());
         }
 
         ///
-        /// \brief returns the variance
+        /// \brief returns the variance.
         ///
-        [[nodiscard]] auto var() const
+        auto var() const
         {
             assert(count() > 0);
             return sum2() / static_cast<value_t>(count()) - avg() * avg();
         }
 
         ///
-        /// \brief returns the population standard deviation
+        /// \brief returns the population standard deviation.
         ///
-        [[nodiscard]] auto stdev() const
+        auto stdev() const
         {
             return std::sqrt(var());
         }
 
         ///
-        /// \brief returns the percentile
+        /// \brief returns the percentile.
         ///
-        auto percentile(const size_t percentage)
+        auto percentile(int percentage)
         {
-            assert(count() > 0);
-            assert(percentage > 0 && percentage < 100);
-            const auto pos = m_values.size() * percentage / 100;
-            std::nth_element(m_values.begin(), m_values.begin() + pos, m_values.end());
-            return m_values[pos];
+            return ::nano::percentile(m_values.begin(), m_values.end(), percentage);
         }
 
         ///
-        /// \brief returns the median
+        /// \brief returns the median.
         ///
         auto median()
         {

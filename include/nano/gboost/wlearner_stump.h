@@ -49,27 +49,27 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] rwlearner_t clone() const override;
+        rwlearner_t clone() const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        void predict(const dataset_t&, fold_t, tensor_range_t, tensor4d_map_t&& outputs) const override;
+        cluster_t split(const dataset_t&, const indices_t&) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t&, const indices_t&) override;
+        void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
+        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto threshold() const { return m_threshold; }
+        auto threshold() const { return m_threshold; }
 
     private:
 

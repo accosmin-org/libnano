@@ -55,7 +55,7 @@ namespace nano
         ///
         /// \brief check if an object was registered with the given ID.
         ///
-        [[nodiscard]] bool has(const string_t& id) const
+        bool has(const string_t& id) const
         {
             return m_protos.find(id) != m_protos.end();
         }
@@ -63,7 +63,7 @@ namespace nano
         ///
         /// \brief retrieve the object with the given ID.
         ///
-        [[nodiscard]] trobject get(const string_t& id) const
+        trobject get(const string_t& id) const
         {
             const auto it = m_protos.find(id);
             return (it == m_protos.end()) ? nullptr : it->second.m_maker();
@@ -72,7 +72,7 @@ namespace nano
         ///
         /// \brief get the IDs of the registered objects matching the ID regex.
         ///
-        [[nodiscard]] strings_t ids(const std::regex& id_regex = std::regex(".+")) const
+        strings_t ids(const std::regex& id_regex = std::regex(".+")) const
         {
             strings_t ret;
             for (const auto& proto : m_protos)
@@ -88,12 +88,12 @@ namespace nano
         ///
         /// \brief returns the number of registered objects.
         ///
-        [[nodiscard]] size_t size() const { return m_protos.size(); }
+        size_t size() const { return m_protos.size(); }
 
         ///
         /// \brief get the description of the object with the given ID.
         ///
-        [[nodiscard]] string_t description(const string_t& id) const
+        string_t description(const string_t& id) const
         {
             const auto it = m_protos.find(id);
             return (it == m_protos.end()) ? string_t() : m_protos.at(id).m_description;

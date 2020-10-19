@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
 #include <nano/tensor/stream.h>
@@ -21,38 +22,38 @@ namespace
         {
         }
 
-        [[nodiscard]] auto x0_neg() const { return m_acc_neg.x0(); }
-        [[nodiscard]] auto r1_neg() const { return m_acc_neg.r1(); }
-        [[nodiscard]] auto r2_neg() const { return m_acc_neg.r2(); }
+        auto x0_neg() const { return m_acc_neg.x0(); }
+        auto r1_neg() const { return m_acc_neg.r1(); }
+        auto r2_neg() const { return m_acc_neg.r2(); }
 
-        [[nodiscard]] auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
-        [[nodiscard]] auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
-        [[nodiscard]] auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
+        auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
+        auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
+        auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
 
-        void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& indices)
+        void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& samples)
         {
             m_acc_sum.clear();
             m_acc_neg.clear();
 
             m_ivalues.clear();
-            m_ivalues.reserve(indices.size());
-            for (const auto i : indices)
+            m_ivalues.reserve(values.size());
+            for (tensor_size_t i = 0; i < values.size(); ++ i)
             {
                 if (!feature_t::missing(values(i)))
                 {
-                    m_ivalues.emplace_back(values(i), i);
-                    m_acc_sum.update(gradients.array(i));
+                    m_ivalues.emplace_back(values(i), samples(i));
+                    m_acc_sum.update(gradients.array(samples(i)));
                 }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
         }
 
-        [[nodiscard]] auto output_neg() const
+        auto output_neg() const
         {
             return r1_neg() / x0_neg();
         }
 
-        [[nodiscard]] auto output_pos() const
+        auto output_pos() const
         {
             return r1_pos() / x0_pos();
         }
@@ -63,7 +64,7 @@ namespace
             return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
         }
 
-        [[nodiscard]] auto score() const
+        auto score() const
         {
             return
                 cache_t::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
@@ -89,7 +90,7 @@ void wlearner_stump_t::read(std::istream& stream)
     wlearner_feature1_t::read(stream);
 
     critical(
-        !::nano::detail::read(stream, m_threshold),
+        !::nano::read(stream, m_threshold),
         "stump weak learner: failed to read from stream!");
 }
 
@@ -98,7 +99,7 @@ void wlearner_stump_t::write(std::ostream& stream) const
     wlearner_feature1_t::write(stream);
 
     critical(
-        !::nano::detail::write(stream, m_threshold),
+        !::nano::write(stream, m_threshold),
         "stump weak learner: failed to write to stream!");
 }
 
@@ -107,19 +108,18 @@ rwlearner_t wlearner_stump_t::clone() const
     return std::make_unique<wlearner_stump_t>(*this);
 }
 
-scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_stump_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(indices.min() >= 0);
-    assert(indices.max() < dataset.samples(fold));
-    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    wlearner_feature1_t::loopc(dataset, fold,
-        [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
+    wlearner_feature1_t::loopc(dataset, samples, [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
     {
         // update accumulators
         auto& cache = caches[tnum];
-        cache.clear(gradients, fvalues, indices);
+        cache.clear(gradients, fvalues, samples);
         for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++ iv)
         {
             const auto& ivalue1 = cache.m_ivalues[iv + 0];
@@ -147,29 +147,27 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
     const auto& best = ::nano::gboost::min_reduce(caches);
 
     log_info() << std::fixed << std::setprecision(8) << " === stump(feature=" << best.m_feature << "|"
-        << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << ",threshold=" << best.m_threshold << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
+        << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
+        << ",threshold=" << best.m_threshold << "),samples=" << samples.size()
+        << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
     set(best.m_feature, best.m_tables);
     m_threshold = best.m_threshold;
     return best.m_score;
 }
 
-void wlearner_stump_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+void wlearner_stump_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
+    wlearner_feature1_t::predict(dataset, samples, outputs, [&] (scalar_t x, tensor3d_map_t&& outputs)
     {
-        outputs.vector(i) = vector(x < m_threshold ? 0 : 1);
+        outputs.vector() += vector(x < m_threshold ? 0 : 1);
     });
 }
 
-cluster_t wlearner_stump_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
+cluster_t wlearner_stump_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
-    cluster_t cluster(dataset.samples(fold), 2);
-    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
+    return wlearner_feature1_t::split(dataset, samples, 2, [&] (scalar_t x)
     {
-        cluster.assign(i, x < m_threshold ? 0 : 1);
+        return (x < m_threshold) ? 0 : 1;
     });
-
-    return cluster;
 }

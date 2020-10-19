@@ -37,9 +37,9 @@ namespace nano
             {
             }
 
-            [[nodiscard]] string_t describe() const;
-            [[nodiscard]] auto has() const { return m_given; }
-            [[nodiscard]] const auto& get() const { return m_value; }
+            string_t describe() const;
+            auto has() const { return m_given; }
+            const auto& get() const { return m_value; }
 
             // attributes
             string_t    m_short_name;       ///<
@@ -93,18 +93,18 @@ namespace nano
         ///
         /// \brief check if an option was set
         ///
-        [[nodiscard]] bool has(const string_t& name_or_short_name) const;
+        bool has(const string_t& name_or_short_name) const;
 
         ///
         /// \brief get the value of an option
         ///
-        [[nodiscard]] string_t get(const string_t& name_or_short_name) const;
+        string_t get(const string_t& name_or_short_name) const;
 
         ///
         /// \brief get the value of an option as a given type
         ///
         template <typename tvalue>
-        [[nodiscard]] tvalue get(const string_t& name_or_short_name) const
+        tvalue get(const string_t& name_or_short_name) const
         {
             return nano::from_string<tvalue>(get(name_or_short_name));
         }
@@ -121,7 +121,7 @@ namespace nano
             return std::find(m_options.begin(), m_options.end(), name_or_short_name);
         }
 
-        [[nodiscard]] auto find(const string_t& name_or_short_name) const
+        auto find(const string_t& name_or_short_name) const
         {
             return std::find(m_options.begin(), m_options.end(), name_or_short_name);
         }

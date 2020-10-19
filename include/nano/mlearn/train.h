@@ -31,14 +31,14 @@ namespace nano
         ///
         /// \brief check if divergence occured.
         ///
-        [[nodiscard]] bool valid() const;
+        bool valid() const;
 
         ///
         /// \brief access functions.
         ///
-        [[nodiscard]] auto tr_value() const { return m_tr_value; }
-        [[nodiscard]] auto tr_error() const { return m_tr_error; }
-        [[nodiscard]] auto vd_error() const { return m_vd_error; }
+        auto tr_value() const { return m_tr_value; }
+        auto tr_error() const { return m_tr_error; }
+        auto vd_error() const { return m_vd_error; }
 
     private:
 
@@ -92,6 +92,11 @@ namespace nano
         train_curve_t() = default;
 
         ///
+        /// \brief constructor
+        ///
+        explicit train_curve_t(std::unordered_map<string_t, scalar_t> params);
+
+        ///
         /// \brief add a new measurement for the training and the validation datasets.
         ///
         void add(scalar_t tr_value, scalar_t tr_error, scalar_t vd_error);
@@ -101,17 +106,17 @@ namespace nano
         ///     - either divergence is detected
         ///     - or the validation error hasn't improved in the past 'patience' steps.
         ///
-        [[nodiscard]] train_status check(size_t patience) const;
+        train_status check(size_t patience) const;
 
         ///
         /// \brief returns the index of the optimum training point.
         ///
-        [[nodiscard]] size_t optindex() const;
+        size_t optindex() const;
 
         ///
         /// \brief returns the optimum training point.
         ///
-        [[nodiscard]] train_point_t optimum() const;
+        train_point_t optimum() const;
 
         ///
         /// \brief export to CSV with the following structure:
@@ -128,17 +133,20 @@ namespace nano
         ///
         /// \brief access functions.
         ///
-        [[nodiscard]] auto end() const { return m_points.end(); }
-        [[nodiscard]] auto size() const { return m_points.size(); }
-        [[nodiscard]] auto begin() const { return m_points.begin(); }
-        [[nodiscard]] const auto& operator[](size_t index) const { return m_points.at(index); }
+        auto end() const { return m_points.end(); }
+        auto size() const { return m_points.size(); }
+        auto begin() const { return m_points.begin(); }
+        const auto& operator[](size_t index) const { return m_points.at(index); }
+        const auto& params() const { return m_params; }
 
     private:
 
         using tpoints_t = std::vector<train_point_t>;
+        using tparams_t = std::unordered_map<string_t, scalar_t>;
 
         // attributes
         tpoints_t   m_points;                       ///<
+        tparams_t   m_params;                       ///<
     };
 
     inline bool operator<(const train_curve_t& lhs, const train_curve_t& rhs)
@@ -162,12 +170,12 @@ namespace nano
         /// \brief register a new set of hyper-parameters (e.g. regularization factors)
         ///     and return its associated training curve to edit.
         ///
-        train_curve_t& add(const string_t& hyper);
+        train_curve_t& add(const std::unordered_map<string_t, scalar_t>& params);
 
         ///
         /// \brief returns the optimum hyper-parameters and its associated training curve.
         ///
-        [[nodiscard]] std::pair<string_t, const train_curve_t> optimum() const;
+        std::pair<string_t, const train_curve_t> optimum() const;
 
         ///
         /// \brief set the measurement for testing dataset
@@ -179,22 +187,12 @@ namespace nano
         }
 
         ///
-        /// \brief set the measurement of the averaged model for testing dataset
-        ///     (at the optimum point on the validation dataset).
-        ///
-        void avg_test(scalar_t ate_error)
-        {
-            m_ate_error = ate_error;
-        }
-
-        ///
         /// \brief access functions.
         ///
-        [[nodiscard]] scalar_t tr_value() const;
-        [[nodiscard]] scalar_t tr_error() const;
-        [[nodiscard]] scalar_t vd_error() const;
-        [[nodiscard]] scalar_t te_error() const { return m_te_error; }
-        [[nodiscard]] scalar_t avg_te_error() const { return m_ate_error; }
+        scalar_t tr_value() const;
+        scalar_t tr_error() const;
+        scalar_t vd_error() const;
+        scalar_t te_error() const { return m_te_error; }
 
     private:
 
@@ -204,8 +202,7 @@ namespace nano
 
         // attributes
         tcurves_t   m_curves;                       ///<
-        scalar_t    m_te_error{i};                  ///< average error (testing)
-        scalar_t    m_ate_error{i};                 ///< average error of the averaged model (testing)
+        scalar_t    m_te_error{i};                  ///< average error for the best parameters (testing)
     };
 
     ///
@@ -231,10 +228,10 @@ namespace nano
 
         ///
         /// \brief export to CSV with the following structure:
-        ///     fold,tr_error,vd_error,te_error,avg_te_error
-        ///     0,tr_error0,vd_error0,te_error0,avg_te_error0
-        ///     1,tr_error1,vd_error2,te_error1,avg_te_error1
-        ///     2,tr_error2,vd_error2,te_error2,avg_te_error2
+        ///     fold,tr_error,vd_error,te_error
+        ///     0,tr_error0,vd_error0,te_error0
+        ///     1,tr_error1,vd_error2,te_error1
+        ///     2,tr_error2,vd_error2,te_error2
         ///     .........................................
         ///
         /// NB: the header is optional and the delimeter character is configurable.
@@ -244,10 +241,10 @@ namespace nano
         ///
         /// \brief access functions.
         ///
-        [[nodiscard]] auto end() const { return m_folds.end(); }
-        [[nodiscard]] auto size() const { return m_folds.size(); }
-        [[nodiscard]] auto begin() const { return m_folds.begin(); }
-        [[nodiscard]] const auto& operator[](size_t index) const { return m_folds.at(index); }
+        auto end() const { return m_folds.end(); }
+        auto size() const { return m_folds.size(); }
+        auto begin() const { return m_folds.begin(); }
+        const auto& operator[](size_t index) const { return m_folds.at(index); }
 
     private:
 

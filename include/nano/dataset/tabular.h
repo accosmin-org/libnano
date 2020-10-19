@@ -1,16 +1,10 @@
 #pragma once
 
-#include <nano/arch.h>
-#include <nano/factory.h>
 #include <nano/dataset/csv.h>
 #include <nano/dataset/memfixed.h>
 
 namespace nano
 {
-    class tabular_dataset_t;
-    using tabular_dataset_factory_t = factory_t<tabular_dataset_t>;
-    using rtabular_dataset_t = tabular_dataset_factory_t::trobject;
-
     ///
     /// \brief machine learning dataset consisting of samples loaded from CSV files (aka tabular data).
     ///
@@ -23,10 +17,8 @@ namespace nano
     {
     public:
 
-        ///
-        /// \brief returns the available implementations
-        ///
-        static tabular_dataset_factory_t& all();
+        using memfixed_dataset_t::target;
+        using memfixed_dataset_t::features;
 
         ///
         /// \brief default constructor
@@ -34,24 +26,19 @@ namespace nano
         tabular_dataset_t() = default;
 
         ///
-        /// \brief populate the dataset with samples
+        /// \brief @see dataset_t
         ///
-        bool load() override;
-
-        ///
-        /// \brief returns the total number of input features
-        ///
-        [[nodiscard]] size_t ifeatures() const;
+        void load() override;
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t ifeature(tensor_size_t index) const override;
+        feature_t feature(tensor_size_t index) const override;
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override;
+        feature_t target() const override;
 
         ///
         /// \brief set the CSV files to load
@@ -62,11 +49,6 @@ namespace nano
         /// \brief set the input and the target features
         ///
         void features(std::vector<feature_t>, size_t target = string_t::npos);
-
-        ///
-        /// \brief generate a split into training, validation and test.
-        ///
-        [[nodiscard]] virtual split_t make_split() const = 0;
 
     protected:
 

@@ -12,6 +12,5 @@ namespace nano
     public:
 
         adult_dataset_t();
-        [[nodiscard]] split_t make_split() const override;
     };
 }

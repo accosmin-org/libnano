@@ -7,66 +7,53 @@ UTEST_BEGIN_MODULE(test_dataset_breast_cancer)
 
 UTEST_CASE(load)
 {
-    auto dataset = tabular_dataset_t::all().get("breast-cancer");
+    const auto dataset = tabular_dataset_t::all().get("breast-cancer");
 
     UTEST_REQUIRE(dataset);
-    UTEST_CHECK_NOTHROW(dataset->folds(3));
-    UTEST_CHECK_NOTHROW(dataset->train_percentage(60));
+    UTEST_REQUIRE_NOTHROW(dataset->load());
 
-    UTEST_REQUIRE(dataset->load());
-    UTEST_CHECK_EQUAL(dataset->folds(), 3);
-    UTEST_CHECK_EQUAL(dataset->ifeatures(), 31);
-    UTEST_CHECK(dataset->tfeature().discrete() && !dataset->tfeature().optional());
-    UTEST_CHECK(!dataset->ifeature(0).discrete() && !dataset->ifeature(0).optional());
-    UTEST_CHECK(!dataset->ifeature(1).discrete() && !dataset->ifeature(1).optional());
-    UTEST_CHECK(!dataset->ifeature(2).discrete() && !dataset->ifeature(2).optional());
-    UTEST_CHECK(!dataset->ifeature(3).discrete() && !dataset->ifeature(3).optional());
-    UTEST_CHECK(!dataset->ifeature(4).discrete() && !dataset->ifeature(4).optional());
-    UTEST_CHECK(!dataset->ifeature(5).discrete() && !dataset->ifeature(5).optional());
-    UTEST_CHECK(!dataset->ifeature(6).discrete() && !dataset->ifeature(6).optional());
-    UTEST_CHECK(!dataset->ifeature(7).discrete() && !dataset->ifeature(7).optional());
-    UTEST_CHECK(!dataset->ifeature(8).discrete() && !dataset->ifeature(8).optional());
-    UTEST_CHECK(!dataset->ifeature(9).discrete() && !dataset->ifeature(9).optional());
-    UTEST_CHECK(!dataset->ifeature(10).discrete() && !dataset->ifeature(10).optional());
-    UTEST_CHECK(!dataset->ifeature(11).discrete() && !dataset->ifeature(11).optional());
-    UTEST_CHECK(!dataset->ifeature(12).discrete() && !dataset->ifeature(12).optional());
-    UTEST_CHECK(!dataset->ifeature(13).discrete() && !dataset->ifeature(13).optional());
-    UTEST_CHECK(!dataset->ifeature(14).discrete() && !dataset->ifeature(14).optional());
-    UTEST_CHECK(!dataset->ifeature(15).discrete() && !dataset->ifeature(15).optional());
-    UTEST_CHECK(!dataset->ifeature(16).discrete() && !dataset->ifeature(16).optional());
-    UTEST_CHECK(!dataset->ifeature(17).discrete() && !dataset->ifeature(17).optional());
-    UTEST_CHECK(!dataset->ifeature(18).discrete() && !dataset->ifeature(18).optional());
-    UTEST_CHECK(!dataset->ifeature(19).discrete() && !dataset->ifeature(19).optional());
-    UTEST_CHECK(!dataset->ifeature(20).discrete() && !dataset->ifeature(20).optional());
-    UTEST_CHECK(!dataset->ifeature(21).discrete() && !dataset->ifeature(21).optional());
-    UTEST_CHECK(!dataset->ifeature(22).discrete() && !dataset->ifeature(22).optional());
-    UTEST_CHECK(!dataset->ifeature(23).discrete() && !dataset->ifeature(23).optional());
-    UTEST_CHECK(!dataset->ifeature(24).discrete() && !dataset->ifeature(24).optional());
-    UTEST_CHECK(!dataset->ifeature(25).discrete() && !dataset->ifeature(25).optional());
-    UTEST_CHECK(!dataset->ifeature(26).discrete() && !dataset->ifeature(26).optional());
-    UTEST_CHECK(!dataset->ifeature(27).discrete() && !dataset->ifeature(27).optional());
-    UTEST_CHECK(!dataset->ifeature(28).discrete() && !dataset->ifeature(28).optional());
-    UTEST_CHECK(!dataset->ifeature(29).discrete() && !dataset->ifeature(29).optional());
-    UTEST_CHECK(!dataset->ifeature(30).discrete() && !dataset->ifeature(30).optional());
+    UTEST_CHECK_EQUAL(dataset->features(), 31);
+    UTEST_CHECK(dataset->target().discrete() && !dataset->target().optional());
+    UTEST_CHECK(!dataset->feature(0).discrete() && !dataset->feature(0).optional());
+    UTEST_CHECK(!dataset->feature(1).discrete() && !dataset->feature(1).optional());
+    UTEST_CHECK(!dataset->feature(2).discrete() && !dataset->feature(2).optional());
+    UTEST_CHECK(!dataset->feature(3).discrete() && !dataset->feature(3).optional());
+    UTEST_CHECK(!dataset->feature(4).discrete() && !dataset->feature(4).optional());
+    UTEST_CHECK(!dataset->feature(5).discrete() && !dataset->feature(5).optional());
+    UTEST_CHECK(!dataset->feature(6).discrete() && !dataset->feature(6).optional());
+    UTEST_CHECK(!dataset->feature(7).discrete() && !dataset->feature(7).optional());
+    UTEST_CHECK(!dataset->feature(8).discrete() && !dataset->feature(8).optional());
+    UTEST_CHECK(!dataset->feature(9).discrete() && !dataset->feature(9).optional());
+    UTEST_CHECK(!dataset->feature(10).discrete() && !dataset->feature(10).optional());
+    UTEST_CHECK(!dataset->feature(11).discrete() && !dataset->feature(11).optional());
+    UTEST_CHECK(!dataset->feature(12).discrete() && !dataset->feature(12).optional());
+    UTEST_CHECK(!dataset->feature(13).discrete() && !dataset->feature(13).optional());
+    UTEST_CHECK(!dataset->feature(14).discrete() && !dataset->feature(14).optional());
+    UTEST_CHECK(!dataset->feature(15).discrete() && !dataset->feature(15).optional());
+    UTEST_CHECK(!dataset->feature(16).discrete() && !dataset->feature(16).optional());
+    UTEST_CHECK(!dataset->feature(17).discrete() && !dataset->feature(17).optional());
+    UTEST_CHECK(!dataset->feature(18).discrete() && !dataset->feature(18).optional());
+    UTEST_CHECK(!dataset->feature(19).discrete() && !dataset->feature(19).optional());
+    UTEST_CHECK(!dataset->feature(20).discrete() && !dataset->feature(20).optional());
+    UTEST_CHECK(!dataset->feature(21).discrete() && !dataset->feature(21).optional());
+    UTEST_CHECK(!dataset->feature(22).discrete() && !dataset->feature(22).optional());
+    UTEST_CHECK(!dataset->feature(23).discrete() && !dataset->feature(23).optional());
+    UTEST_CHECK(!dataset->feature(24).discrete() && !dataset->feature(24).optional());
+    UTEST_CHECK(!dataset->feature(25).discrete() && !dataset->feature(25).optional());
+    UTEST_CHECK(!dataset->feature(26).discrete() && !dataset->feature(26).optional());
+    UTEST_CHECK(!dataset->feature(27).discrete() && !dataset->feature(27).optional());
+    UTEST_CHECK(!dataset->feature(28).discrete() && !dataset->feature(28).optional());
+    UTEST_CHECK(!dataset->feature(29).discrete() && !dataset->feature(29).optional());
+    UTEST_CHECK(!dataset->feature(30).discrete() && !dataset->feature(30).optional());
 
-    for (size_t f = 0, folds = dataset->folds(); f < folds; ++ f)
-    {
-        const auto tr_inputs = dataset->inputs(fold_t{f, protocol::train});
-        const auto vd_inputs = dataset->inputs(fold_t{f, protocol::valid});
-        const auto te_inputs = dataset->inputs(fold_t{f, protocol::test});
+    UTEST_CHECK_EQUAL(dataset->idim(), make_dims(31, 1, 1));
+    UTEST_CHECK_EQUAL(dataset->tdim(), make_dims(2, 1, 1));
 
-        const auto tr_targets = dataset->targets(fold_t{f, protocol::train});
-        const auto vd_targets = dataset->targets(fold_t{f, protocol::valid});
-        const auto te_targets = dataset->targets(fold_t{f, protocol::test});
+    UTEST_CHECK_EQUAL(dataset->samples(), 569);
+    UTEST_CHECK_EQUAL(dataset->test_samples(), arange(0, 0));
+    UTEST_CHECK_EQUAL(dataset->train_samples(), arange(0, 569));
 
-        UTEST_CHECK_EQUAL(tr_inputs.dims(), make_dims(341, 31, 1, 1));
-        UTEST_CHECK_EQUAL(vd_inputs.dims(), make_dims(113, 31, 1, 1));
-        UTEST_CHECK_EQUAL(te_inputs.dims(), make_dims(115, 31, 1, 1));
-
-        UTEST_CHECK_EQUAL(tr_targets.dims(), make_dims(341, 2, 1, 1));
-        UTEST_CHECK_EQUAL(vd_targets.dims(), make_dims(113, 2, 1, 1));
-        UTEST_CHECK_EQUAL(te_targets.dims(), make_dims(115, 2, 1, 1));
-    }
+    UTEST_CHECK_EQUAL(dataset->type(), task_type::sclassification);
 }
 
 UTEST_END_MODULE()

@@ -99,7 +99,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] rwlearner_t clone() const override;
+        rwlearner_t clone() const override;
 
         ///
         /// \brief @see wlearner_t
@@ -109,22 +109,22 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        void predict(const dataset_t&, fold_t, tensor_range_t, tensor4d_map_t&& outputs) const override;
+        cluster_t split(const dataset_t&, const indices_t&) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t&, const indices_t&) override;
+        void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
+        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] indices_t features() const override;
+        indices_t features() const override;
 
         ///
         /// \brief change the maximum depth of the tree.
@@ -143,10 +143,10 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] const auto& nodes() const { return m_nodes; }
-        [[nodiscard]] const auto& tables() const { return m_tables; }
-        [[nodiscard]] auto max_depth() const { return m_max_depth.get(); }
-        [[nodiscard]] auto min_split() const { return m_min_split.get(); }
+        const auto& nodes() const { return m_nodes; }
+        const auto& tables() const { return m_tables; }
+        auto max_depth() const { return m_max_depth.get(); }
+        auto min_split() const { return m_min_split.get(); }
 
     private:
 

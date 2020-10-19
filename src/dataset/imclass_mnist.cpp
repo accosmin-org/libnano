@@ -11,7 +11,7 @@ base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name) :
 {
 }
 
-bool base_mnist_dataset_t::load()
+void base_mnist_dataset_t::load()
 {
     const auto parts =
     {
@@ -36,34 +36,20 @@ bool base_mnist_dataset_t::load()
         const auto expected = std::get<3>(part);
 
         log_info() << m_name << ": loading file <" << ifile << ">...";
-        if (!iread(ifile, offset, expected))
-        {
-            log_error() << m_name << ": failed to load file <" << ifile << ">!";
-            return false;
-        }
+        critical(
+            !iread(ifile, offset, expected),
+            scat(m_name, ": failed to load file <", ifile, ">!"));
 
         log_info() << m_name << ": loading file <" << tfile << ">...";
-        if (!tread(tfile, offset, expected))
-        {
-            log_error() << m_name << ": failed to load file <" << tfile << ">!";
-            return false;
-        }
+        critical(
+            !tread(tfile, offset, expected),
+            scat(m_name, ": failed to load file <", tfile, ">!"));
 
         sample += expected;
         log_info() << m_name << ": loaded " << sample << " samples.";
     }
 
-    for (size_t f = 0; f < folds(); ++ f)
-    {
-        split(f) = {
-            nano::split2(60000, train_percentage()),
-            arange(60000, 70000)
-        };
-        assert(split(f).valid(70000));
-    }
-
-    // OK
-    return true;
+    dataset_t::testing({make_range(60000, 70000)});
 }
 
 bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t offset, tensor_size_t expected)
@@ -126,7 +112,7 @@ mnist_dataset_t::mnist_dataset_t() :
 {
 }
 
-feature_t mnist_dataset_t::tfeature() const
+feature_t mnist_dataset_t::target() const
 {
     return  feature_t("digit").labels(
             {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"});
@@ -137,7 +123,7 @@ fashion_mnist_dataset_t::fashion_mnist_dataset_t() :
 {
 }
 
-feature_t fashion_mnist_dataset_t::tfeature() const
+feature_t fashion_mnist_dataset_t::target() const
 {
     return  feature_t("article").labels(
             {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"});

@@ -8,6 +8,7 @@ add_library(nano)
 
 target_sources(nano PRIVATE
     table.cpp
+    logger.cpp
     stream.cpp
     dataset/tabular_adult.cpp
     dataset/imclass.cpp
@@ -20,6 +21,12 @@ target_sources(nano PRIVATE
     dataset/tabular_iris.cpp
     dataset/tabular_wine.cpp
     dataset/imclass_cifar.cpp
+    lsearch0.cpp
+    lsearch0/quadratic.cpp
+    lsearch0/linear.cpp
+    lsearch0/cgdescent.cpp
+    lsearch0/constant.cpp
+    lsearchk.cpp
     lsearchk/backtrack.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
@@ -27,22 +34,21 @@ target_sources(nano PRIVATE
     lsearchk/fletcher.cpp
     linear/function.cpp
     linear/model.cpp
-    lsearchk.cpp
+    solver.cpp
     solver/lbfgs.cpp
     solver/cgd.cpp
     solver/quasi.cpp
     solver/gd.cpp
     function.cpp
-    lsearch0.cpp
     cmdline.cpp
     loss.cpp
-    lsearch0/quadratic.cpp
-    lsearch0/linear.cpp
-    lsearch0/cgdescent.cpp
-    lsearch0/constant.cpp
-    solver.cpp
+    model.cpp
+    model/grid_search.cpp
+    dataset.cpp
+    mlearn/kfold.cpp
     mlearn/train.cpp
     mlearn/cluster.cpp
+    mlearn/stacking.cpp
     gboost/model.cpp
     gboost/function.cpp
     gboost/wlearner.cpp

@@ -19,6 +19,7 @@ namespace nano
 
         using memfixed_dataset_t::idim;
         using memfixed_dataset_t::tdim;
+        using memfixed_dataset_t::target;
         using memfixed_dataset_t::samples;
 
         ///
@@ -29,7 +30,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        bool load() override
+        void load() override
         {
             // create fixed random bias and weights
             m_bias = vector_t::Random(size(m_tdim));
@@ -47,22 +48,12 @@ namespace nano
                 target(s).vector() = m_weights.transpose() * input(s).vector() + m_bias;
                 target(s).vector() += m_noise * vector_t::Random(m_bias.size());
             }
-
-            // create folds
-            for (size_t f = 0; f < folds(); ++ f)
-            {
-                this->split(f) = split_t{
-                    nano::split3(m_samples, train_percentage(), (100 - train_percentage()) / 2)
-                };
-            }
-
-            return true;
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        [[nodiscard]] feature_t tfeature() const override
+        feature_t target() const override
         {
             return feature_t{"Wx+b"};
         }
@@ -79,10 +70,10 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto noise() const { return m_noise; }
-        [[nodiscard]] auto modulo() const { return m_modulo; }
-        [[nodiscard]] const auto& bias() const { return m_bias; }
-        [[nodiscard]] const auto& weights() const { return m_weights; }
+        auto noise() const { return m_noise; }
+        auto modulo() const { return m_modulo; }
+        const auto& bias() const { return m_bias; }
+        const auto& weights() const { return m_weights; }
 
     private:
 

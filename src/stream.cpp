@@ -7,9 +7,9 @@ using namespace nano;
 void serializable_t::read(std::istream& stream)
 {
     critical(
-        !::nano::detail::read(stream, m_major_version) ||
-        !::nano::detail::read(stream, m_minor_version) ||
-        !::nano::detail::read(stream, m_patch_version),
+        !::nano::read(stream, m_major_version) ||
+        !::nano::read(stream, m_minor_version) ||
+        !::nano::read(stream, m_patch_version),
         "serializable: failed to read from stream!");
 
     critical(
@@ -25,8 +25,8 @@ void serializable_t::read(std::istream& stream)
 void serializable_t::write(std::ostream& stream) const
 {
     critical(
-        !::nano::detail::write(stream, static_cast<int32_t>(nano::major_version)) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(nano::minor_version)) ||
-        !::nano::detail::write(stream, static_cast<int32_t>(nano::patch_version)),
+        !::nano::write(stream, static_cast<int32_t>(nano::major_version)) ||
+        !::nano::write(stream, static_cast<int32_t>(nano::minor_version)) ||
+        !::nano::write(stream, static_cast<int32_t>(nano::patch_version)),
         "serializable: failed to write to stream");
 }

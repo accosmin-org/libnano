@@ -33,8 +33,8 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto vAreg() const { return m_vAreg.get(); }
-        [[nodiscard]] auto batch() const { return m_batch.get(); }
+        auto vAreg() const { return m_vAreg.get(); }
+        auto batch() const { return m_batch.get(); }
 
     private:
 
@@ -59,7 +59,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        gboost_grads_function_t(const loss_t&, const dataset_t&, fold_t);
+        gboost_grads_function_t(const loss_t&, const dataset_t&, const indices_t&);
 
         ///
         /// \brief @see function_t
@@ -76,7 +76,7 @@ namespace nano
         // attributes
         const loss_t&       m_loss;         ///<
         const dataset_t&    m_dataset;      ///<
-        fold_t              m_fold;         ///<
+        const indices_t&    m_samples;      ///<
         mutable tensor1d_t  m_values;       ///<
         mutable tensor4d_t  m_vgrads;       ///<
     };
@@ -94,7 +94,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        gboost_bias_function_t(const loss_t&, const dataset_t&, fold_t);
+        gboost_bias_function_t(const loss_t&, const dataset_t&, const indices_t&);
 
         ///
         /// \brief @see function_t
@@ -106,7 +106,7 @@ namespace nano
         // attributes
         const loss_t&       m_loss;         ///<
         const dataset_t&    m_dataset;      ///<
-        fold_t              m_fold;         ///<
+        const indices_t&    m_samples;      ///<
     };
 
     ///
@@ -123,7 +123,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        gboost_scale_function_t(const loss_t&, const dataset_t&, fold_t, const cluster_t&,
+        gboost_scale_function_t(const loss_t&, const dataset_t&, const indices_t&, const cluster_t&,
             const tensor4d_t& outputs, const tensor4d_t& woutputs);
 
         ///
@@ -136,7 +136,7 @@ namespace nano
         // attributes
         const loss_t&       m_loss;         ///<
         const dataset_t&    m_dataset;      ///<
-        fold_t              m_fold;         ///<
+        const indices_t&    m_samples;      ///<
         const cluster_t&    m_cluster;      ///<
         const tensor4d_t&   m_outputs;      ///< predictions of the strong learner so far
         const tensor4d_t&   m_woutputs;     ///< predictions of the current weak learner

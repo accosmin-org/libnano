@@ -24,7 +24,7 @@ namespace nano
         right
     };
 
-    template <typename tenum>
+    template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
     using enum_map_t = std::vector<std::pair<tenum, const char*>>;
 
     ///
@@ -36,7 +36,7 @@ namespace nano
     ///
     /// \brief collect all the values of an enum type, optionally filtered by the given regular expression.
     ///
-    template <typename tenum>
+    template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
     auto enum_values(const std::regex& enum_regex = std::regex(".+"))
     {
         std::vector<tenum> enums;
@@ -140,6 +140,19 @@ namespace nano
             else
             {
                 stream << value;
+            }
+        }
+
+        template <typename tvalue>
+        void scat(std::ostringstream& stream, const std::vector<tvalue>& values)
+        {
+            for (auto begin = values.begin(), end = values.end(); begin != end; )
+            {
+                scat(stream, *begin);
+                if (++ begin != end)
+                {
+                    stream << ",";
+                }
             }
         }
 

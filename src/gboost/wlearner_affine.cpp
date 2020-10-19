@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
 #include <nano/gboost/wlearner_affine.h>
@@ -19,29 +20,29 @@ namespace
         {
         }
 
-        [[nodiscard]] auto x0() const { return m_acc.x0(); }
-        [[nodiscard]] auto x1() const { return m_acc.x1(); }
-        [[nodiscard]] auto x2() const { return m_acc.x2(); }
-        [[nodiscard]] auto r1() const { return m_acc.r1(); }
-        [[nodiscard]] auto rx() const { return m_acc.rx(); }
-        [[nodiscard]] auto r2() const { return m_acc.r2(); }
+        auto x0() const { return m_acc.x0(); }
+        auto x1() const { return m_acc.x1(); }
+        auto x2() const { return m_acc.x2(); }
+        auto r1() const { return m_acc.r1(); }
+        auto rx() const { return m_acc.rx(); }
+        auto r2() const { return m_acc.r2(); }
 
         void clear()
         {
             m_acc.clear();
         }
 
-        [[nodiscard]] auto a() const
+        auto a() const
         {
             return (rx() * x0() - r1() * x1()) / (x2() * x0() - x1() * x1());
         }
 
-        [[nodiscard]] auto b() const
+        auto b() const
         {
             return (r1() * x2() - rx() * x1()) / (x2() * x0() - x1() * x1());
         }
 
-        [[nodiscard]] auto score() const
+        auto score() const
         {
             return (r2() + a().square() * x2() + b().square() * x0() -
                     2 * a() * rx() - 2 * b() * r1() + 2 * a() * b() * x1()).sum();
@@ -65,25 +66,25 @@ rwlearner_t wlearner_affine_t<tfun1>::clone() const
 }
 
 template <typename tfun1>
-scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(indices.min() >= 0);
-    assert(indices.max() < dataset.samples(fold));
-    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
-    wlearner_feature1_t::loopc(dataset, fold,
+    wlearner_feature1_t::loopc(dataset, samples,
         [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
     {
         // update accumulators
         auto& cache = caches[tnum];
         cache.clear();
-        for (const auto i : indices)
+        for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
             const auto value = fvalues(i);
             if (!feature_t::missing(value))
             {
-                cache.m_acc.update(tfun1::get(value), gradients.array(i));
+                cache.m_acc.update(tfun1::get(value), gradients.array(samples(i)));
             }
         }
 
@@ -102,20 +103,29 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
     const auto& best = ::nano::gboost::min_reduce(caches);
 
     log_info() << std::fixed << std::setprecision(8) << " === affine(feature=" << best.m_feature << "|"
-        << (best.m_feature >= 0 ? dataset.ifeature(best.m_feature).name() : string_t("N/A"))
-        << "), samples=" << indices.size() << ",score=" << best.m_score << ".";
+        << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
+        << "),samples=" << samples.size()
+        << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
     set(best.m_feature, best.m_tables);
     return best.m_score;
 }
 
 template <typename tfun1>
-void wlearner_affine_t<tfun1>::predict(
-    const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+void wlearner_affine_t<tfun1>::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
+    wlearner_feature1_t::predict(dataset, samples, outputs, [&] (scalar_t x, tensor3d_map_t&& outputs)
     {
-        outputs.vector(i) = vector(0) * tfun1::get(x) + vector(1);
+        outputs.vector() += vector(0) * tfun1::get(x) + vector(1);
+    });
+}
+
+template <typename tfun1>
+cluster_t wlearner_affine_t<tfun1>::split(const dataset_t& dataset, const indices_t& samples) const
+{
+    return wlearner_feature1_t::split(dataset, samples, 1, [&] (scalar_t)
+    {
+        return 0;
     });
 }
 

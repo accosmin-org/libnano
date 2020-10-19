@@ -11,7 +11,7 @@ public:
 
     wdstep_dataset_t() = default;
 
-    [[nodiscard]] tensor_size_t groups() const override
+    tensor_size_t groups() const override
     {
         return 1;
     }
@@ -19,21 +19,21 @@ public:
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
-            make_dstep_target(sample, feature(), 3, 5.0, fvalue, 0));
+            make_dstep_target(sample, gt_feature(), 3, 5.0, fvalue, 0));
     }
 
     void check_wlearner(const wlearner_dstep_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.fvalues(), 3);
         UTEST_CHECK_EQUAL(wlearner.fvalue(), fvalue);
-        UTEST_CHECK_EQUAL(wlearner.feature(), feature());
+        UTEST_CHECK_EQUAL(wlearner.feature(), gt_feature());
         UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables().dims());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables().array(), 1e-8);
     }
 
-    [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
-    [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
-    [[nodiscard]] tensor4d_t tables() const
+    tensor_size_t the_discrete_feature() const { return gt_feature(); }
+    tensor_size_t gt_feature(bool discrete = true) const { return get_feature(discrete); }
+    tensor4d_t tables() const
     {
         const auto table0 = fvalue == 0 ? 5.0 : 0.0;
         const auto table1 = fvalue == 1 ? 5.0 : 0.0;
@@ -48,7 +48,7 @@ UTEST_CASE(fitting0)
 {
     const auto dataset = make_dataset<wdstep_dataset_t<0>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<0>>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdstep_dataset_t<0>>(dataset.feature(), dataset.tsize());
+    const auto datasetx2 = make_dataset<wdstep_dataset_t<0>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<0>>>();
     const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wdstep_dataset_t<0>>>();
 
@@ -61,7 +61,7 @@ UTEST_CASE(fitting1)
 {
     const auto dataset = make_dataset<wdstep_dataset_t<1>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<1>>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdstep_dataset_t<1>>(dataset.feature(), dataset.tsize());
+    const auto datasetx2 = make_dataset<wdstep_dataset_t<1>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<1>>>();
     const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wdstep_dataset_t<1>>>();
 
@@ -74,7 +74,7 @@ UTEST_CASE(fitting2)
 {
     const auto dataset = make_dataset<wdstep_dataset_t<2>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<2>>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdstep_dataset_t<2>>(dataset.feature(), dataset.tsize());
+    const auto datasetx2 = make_dataset<wdstep_dataset_t<2>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<2>>>();
     const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wdstep_dataset_t<2>>>();
 

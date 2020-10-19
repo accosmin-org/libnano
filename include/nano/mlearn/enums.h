@@ -5,27 +5,6 @@
 namespace nano
 {
     ///
-    /// \brief dataset splitting protocol.
-    ///
-    enum class protocol
-    {
-        train = 0,      ///< training
-        valid,          ///< validation (for tuning hyper-parameters)
-        test            ///< testing
-    };
-
-    template <>
-    inline enum_map_t<protocol> enum_string<protocol>()
-    {
-        return
-        {
-            { protocol::train,    "train" },
-            { protocol::valid,    "valid" },
-            { protocol::test,     "test" }
-        };
-    }
-
-    ///
     /// \brief execution policy.
     ///
     enum class execution
@@ -35,31 +14,31 @@ namespace nano
     };
 
     ///
-    /// \brief regularization methods.
+    /// \brief machine learning task type.
     ///
-    /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
-    /// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
-    ///
-    enum class regularization
+    enum class task_type
     {
-        none = 0,       ///< no regularization
-        lasso,          ///< like in LASSO
-        ridge,          ///< like in ridge regression, weight decay or Tikhonov regularization
-        elastic,        ///< like in elastic net regularization
-        variance        ///< like in VadaBoost or EBBoost
+        regression = 0,     ///< regression
+        sclassification,    ///< single-label classification
+        mclassification,    ///< multi-label classification
+        unsupervised,       ///< unsupervised
     };
 
     template <>
-    inline enum_map_t<regularization> enum_string<regularization>()
+    inline enum_map_t<task_type> enum_string<task_type>()
     {
         return
         {
-            { regularization::none,     "none" },
-            { regularization::lasso,    "lasso" },
-            { regularization::ridge,    "ridge" },
-            { regularization::elastic,  "elastic" },
-            { regularization::variance, "variance" }
+            { task_type::regression,        "regression" },
+            { task_type::sclassification,   "s-classification" },
+            { task_type::mclassification,   "m-classification" },
+            { task_type::unsupervised,      "unsupervised" },
         };
+    }
+
+    inline std::ostream& operator<<(std::ostream& stream, task_type value)
+    {
+        return stream << scat(value);
     }
 
     ///
@@ -88,9 +67,9 @@ namespace nano
     ///
     /// \brief method to scale weak learners.
     ///
-    enum class wscale : int32_t
+    enum class wscale
     {
-        gboost,         ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
+        gboost = 0,     ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
         tboost,         ///< use a potentially different scaling factor for each split (e.g. see TreeBoost variation)
     };
 
@@ -107,10 +86,10 @@ namespace nano
     ///
     /// \brief method to estimate the importance of a feature.
     ///
-    enum class importance : int32_t
+    enum class importance
     {
-        shuffle,        ///< impact on error rate by shuffling the feature values without retraining
-        drop,           ///< impact on error rate by dropping the feature and retraining without it
+        shuffle = 0,    ///< impact on the error rate by shuffling the feature values across samples without retraining
+        dropcol,        ///< impact on the error rate by dropping the feature (aka column) and retraining without it
     };
 
     template <>
@@ -119,7 +98,7 @@ namespace nano
         return
         {
             { importance::shuffle,  "shuffle" },
-            { importance::drop,     "drop" },
+            { importance::dropcol,  "dropcol" },
         };
     }
 
@@ -130,7 +109,7 @@ namespace nano
     ///
     enum class hinge
     {
-        left,       ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
+        left = 0,   ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
         right,      ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
     };
 
@@ -141,6 +120,34 @@ namespace nano
         {
             { hinge::left,          "left" },
             { hinge::right,         "right" },
+        };
+    }
+
+    ///
+    /// \brief methods to combine the predictions of different models trained on different folds.
+    ///
+    /// see "Bagging Predictors", by Leo Breiman
+    /// see "Stacked Regressions", by Leo Breiman
+    /// see "Model search and inference by bootstrap bumping", by R. Tibshirani and K. Knight
+    /// see "Combining estimates in regression and classification", by M. LeBlanc and R. Tibshirani
+    ///
+    enum class ensemble
+    {
+        bumping = 0,///< see bumping
+        stacking,   ///< see stacking
+        bagging,    ///< see bagging
+        median,     ///< see bagging, but output the median per sample of the models' predictions
+    };
+
+    template <>
+    inline enum_map_t<ensemble> enum_string<ensemble>()
+    {
+        return
+        {
+            { ensemble::bumping,    "bumping" },
+            { ensemble::stacking,   "stacking" },
+            { ensemble::bagging,    "average" },
+            { ensemble::median,     "median" },
         };
     }
 }
