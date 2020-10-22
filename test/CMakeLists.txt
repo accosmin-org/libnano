@@ -12,6 +12,7 @@ make_test(test_parameter NANO::nano)
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)
 make_test(test_tensor_tensor NANO::nano)
+make_test(test_tensor_storage NANO::nano)
 make_test(test_tensor_integral NANO::nano)
 
 make_test(test_tune NANO::nano)
