@@ -20,7 +20,6 @@ namespace nano
     template
     <
         typename tscalar,
-        bool tresizable,
         typename tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar>::type>::type,
         typename = typename std::enable_if<std::is_same<tscalar, tscalar_remove_cvref>::value>::type
     >
@@ -30,9 +29,6 @@ namespace nano
 
         using treference = tscalar&;
         using tconst_reference = const tscalar&;
-
-        static constexpr bool resizable = tresizable;
-        static constexpr bool owns_memory = tresizable;
     };
 
     ///
@@ -40,7 +36,7 @@ namespace nano
     /// NB: the tensor owns the allocated memory and as such the tensor is resizable.
     ///
     template <typename tscalar>
-    class tensor_vector_storage_t : public tensor_storage_t<tscalar, true>
+    class tensor_vector_storage_t : public tensor_storage_t<tscalar>
     {
     public:
 
@@ -89,11 +85,10 @@ namespace nano
             return *this;
         }
 
-        auto size() const { return m_data.size(); }
-        void resize(tensor_size_t size) { m_data.resize(size); }
-
         auto data() { return m_data.data(); }
         auto data() const { return m_data.data(); }
+        auto size() const { return m_data.size(); }
+        void resize(tensor_size_t size) { m_data.resize(size); }
 
     private:
 
@@ -106,7 +101,7 @@ namespace nano
     /// NB: the tensor doesn't own the allocated memory and as such is not resizable.
     ///
     template <typename tscalar>
-    class tensor_carray_storage_t : public tensor_storage_t<tscalar, false>
+    class tensor_carray_storage_t : public tensor_storage_t<tscalar>
     {
     public:
 
@@ -137,6 +132,7 @@ namespace nano
 
         auto data() const { return m_data; }
         auto size() const { return m_size; }
+        void resize(tensor_size_t) = delete;
 
     private:
 
@@ -150,7 +146,7 @@ namespace nano
     /// NB: the tensor doesn't own the allocated memory and as such is not resizable.
     ///
     template <typename tscalar>
-    class tensor_marray_storage_t : public tensor_storage_t<tscalar, false>
+    class tensor_marray_storage_t : public tensor_storage_t<tscalar>
     {
     public:
 
@@ -187,6 +183,7 @@ namespace nano
 
         auto data() const { return m_data; }
         auto size() const { return m_size; }
+        void resize(tensor_size_t) = delete;
 
     private:
 
