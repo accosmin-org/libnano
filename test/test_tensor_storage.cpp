@@ -19,22 +19,14 @@ static void storage_must_match(const tlhs& lhs, const trhs& rhs)
     UTEST_CHECK_EIGEN_CLOSE(map_lhs, map_rhs, 1e-12);
 }
 
-// TODO: vector(vector) => copy
-// TODO: vector = vector => copy
-// TODO: vector = pointer => copy
-
-// TODO: pointer(pointer) or pointer(vector) => map
-// TODO: pointer = vector => copy (if pointer wise is different)
-// TODO: pointer = pointer => copy (if pointer wise is different)
+static vector_t data0 = vector_t::Constant(7, 0);
+static const vector_t data1 = vector_t::Constant(7, 1);
+static const vector_t data2 = vector_t::Constant(7, 2);
 
 UTEST_BEGIN_MODULE(test_tensor_storage)
 
 UTEST_CASE(vector_init)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
-    const vector_t data1 = vector_t::Constant(7, 1);
-    const vector_t data2 = vector_t::Constant(7, 2);
-
     // vector(size)
     {
         const auto vector = vector_storage_t{5};
@@ -84,10 +76,6 @@ UTEST_CASE(vector_init)
 
 UTEST_CASE(carray_init)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
-    const vector_t data1 = vector_t::Constant(7, 1);
-    const vector_t data2 = vector_t::Constant(7, 2);
-
     // carray(carray)
     {
         const auto carray1 = carray_storage_t{data0.data(), data0.size()};
@@ -119,10 +107,6 @@ UTEST_CASE(carray_init)
 
 UTEST_CASE(marray_init)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
-    const vector_t data1 = vector_t::Constant(7, 1);
-    const vector_t data2 = vector_t::Constant(7, 2);
-
     // marray(marray)
     {
         const auto marray1 = marray_storage_t{data0.data(), data0.size()};
@@ -141,6 +125,64 @@ UTEST_CASE(marray_init)
         UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
         UTEST_CHECK_EQUAL(marray.data(), vector.data());
     }
+}
+
+UTEST_CASE(vector_copy)
+{
+    auto vector = vector_storage_t{data2};
+    storage_must_match(vector, data2);
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
+
+    const auto vother = vector_storage_t{data1};
+    vector = vother;
+    storage_must_match(vector, data1);
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data1.data());
+    UTEST_CHECK_NOT_EQUAL(vector.data(), vother.data());
+
+    const auto carray = carray_storage_t{data2.data(), data2.size()};
+    vector = carray;
+    storage_must_match(vector, data2);
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
+    UTEST_CHECK_NOT_EQUAL(vector.data(), carray.data());
+
+    const auto marray = marray_storage_t{data0.data(), data0.size()};
+    vector = marray;
+    storage_must_match(vector, data0);
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
+    UTEST_CHECK_NOT_EQUAL(vector.data(), marray.data());
+}
+
+UTEST_CASE(marray_copy)
+{
+    const auto vector = vector_storage_t{data2};
+    const auto marray = marray_storage_t{data0.data(), data0.size()};
+    const auto carray = carray_storage_t{data1.data(), data1.size()};
+
+    storage_must_match(marray, data0);
+    storage_must_match(carray, data1);
+    storage_must_match(vector, data2);
+
+    UTEST_CHECK_EQUAL(marray.data(), data0.data());
+    UTEST_CHECK_EQUAL(carray.data(), data1.data());
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
+
+    vector_t data = vector_t::Constant(7, -1);
+
+    auto array = marray_storage_t{data.data(), data.size()};
+    storage_must_match(array, data);
+    UTEST_CHECK_EQUAL(array.data(), data.data());
+
+    array = vector;
+    storage_must_match(array, data2);
+    UTEST_CHECK_EQUAL(array.data(), data.data());
+
+    array = marray;
+    storage_must_match(array, data0);
+    UTEST_CHECK_EQUAL(array.data(), data.data());
+
+    array = carray;
+    storage_must_match(array, data1);
+    UTEST_CHECK_EQUAL(array.data(), data.data());
 }
 
 UTEST_END_MODULE()

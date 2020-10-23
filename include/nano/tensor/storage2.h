@@ -131,9 +131,9 @@ namespace nano
         {
         }
 
-        tensor_carray_storage_t& operator=(const tensor_vector_storage_t<tscalar>& other);
+        tensor_carray_storage_t& operator=(const tensor_vector_storage_t<tscalar>& other) = delete;
         tensor_carray_storage_t& operator=(const tensor_carray_storage_t<tscalar>& other) = delete;
-        tensor_carray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other);
+        tensor_carray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) = delete;
 
         auto data() const { return m_data; }
         auto size() const { return m_size; }
