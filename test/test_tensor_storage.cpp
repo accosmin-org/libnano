@@ -29,39 +29,101 @@ static void storage_must_match(const tlhs& lhs, const trhs& rhs)
 
 UTEST_BEGIN_MODULE(test_tensor_storage)
 
-UTEST_CASE(vector)
+UTEST_CASE(initialize)
 {
     vector_t data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
     const vector_t data2 = vector_t::Constant(7, 2);
 
+    // vector(size)
     {
         const auto vector = vector_storage_t{5};
         UTEST_CHECK_EQUAL(vector.size(), 5);
     }
-    {
-        const auto vector = vector_storage_t{data1};
-        storage_must_match(vector, data1);
-    }
+    // vector(eigen)
     {
         const auto vector1 = vector_storage_t{data1};
         const auto vector2 = vector_storage_t{data1};
         storage_must_match(vector1, data1);
         storage_must_match(vector2, data1);
         storage_must_match(vector1, vector2);
+        UTEST_CHECK_NOT_EQUAL(vector1.data(), data1.data());
+        UTEST_CHECK_NOT_EQUAL(vector2.data(), data1.data());
         UTEST_CHECK_NOT_EQUAL(vector1.data(), vector2.data());
     }
+    // vector(vector)
+    {
+        const auto vector1 = vector_storage_t{data1};
+        const auto vector2 = vector_storage_t{vector1};
+        storage_must_match(vector1, data1);
+        storage_must_match(vector2, data1);
+        storage_must_match(vector1, vector2);
+        UTEST_CHECK_NOT_EQUAL(vector1.data(), data1.data());
+        UTEST_CHECK_NOT_EQUAL(vector2.data(), data1.data());
+        UTEST_CHECK_NOT_EQUAL(vector1.data(), vector2.data());
+    }
+    // vector(carray)
     {
         const auto carray = carray_storage_t{data1.data() + 2, 5};
         const auto vector = vector_storage_t{carray};
         storage_must_match(vector, carray);
         storage_must_match(vector, data1.segment(2, 5));
+        UTEST_CHECK_EQUAL(carray.data(), data1.data() + 2);
+        UTEST_CHECK_NOT_EQUAL(vector.data(), carray.data());
     }
+    // vector(marray)
     {
-        const auto marray = marray_storage_t{data0.data() + 2, 5};
+        const auto marray = marray_storage_t{data0.data() + 1, 4};
         const auto vector = vector_storage_t{marray};
         storage_must_match(vector, marray);
-        storage_must_match(vector, data0.segment(2, 5));
+        storage_must_match(vector, data0.segment(1, 4));
+        UTEST_CHECK_EQUAL(marray.data(), data0.data() + 1);
+        UTEST_CHECK_NOT_EQUAL(vector.data(), marray.data());
+    }
+    // carray(carray)
+    {
+        const auto carray1 = carray_storage_t{data0.data(), data0.size()};
+        const auto carray2 = carray_storage_t{carray1};
+        storage_must_match(carray1, data0);
+        storage_must_match(carray2, carray2);
+        UTEST_CHECK_EQUAL(carray1.data(), data0.data());
+        UTEST_CHECK_EQUAL(carray2.data(), data0.data());
+    }
+    // carray(vector)
+    {
+        const auto vector = vector_storage_t{data0};
+        const auto carray = carray_storage_t{vector};
+        storage_must_match(carray, vector);
+        storage_must_match(carray, data0);
+        UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
+        UTEST_CHECK_EQUAL(carray.data(), vector.data());
+    }
+    // carray(marray)
+    {
+        const auto marray = marray_storage_t{data0.data() + 3, 4};
+        const auto carray = carray_storage_t{marray};
+        storage_must_match(carray, marray);
+        storage_must_match(carray, data0.segment(3, 4));
+        UTEST_CHECK_EQUAL(marray.data(), data0.data() + 3);
+        UTEST_CHECK_EQUAL(carray.data(), marray.data());
+    }
+    // marray(marray)
+    {
+        const auto marray1 = marray_storage_t{data0.data(), data0.size()};
+        const auto marray2 = marray_storage_t{marray1};
+        storage_must_match(marray1, data0);
+        storage_must_match(marray2, marray2);
+        UTEST_CHECK_EQUAL(marray1.data(), data0.data());
+        UTEST_CHECK_EQUAL(marray2.data(), data0.data());
+    }
+    // marray(vector)
+    {
+        auto vector = vector_storage_t{data0};
+        const auto marray = marray_storage_t{vector};
+        storage_must_match(marray, vector);
+        storage_must_match(marray, data0);
+        UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
+        UTEST_CHECK_EQUAL(marray.data(), vector.data());
     }
 }
 
