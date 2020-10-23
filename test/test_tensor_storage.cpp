@@ -29,7 +29,7 @@ static void storage_must_match(const tlhs& lhs, const trhs& rhs)
 
 UTEST_BEGIN_MODULE(test_tensor_storage)
 
-UTEST_CASE(initialize)
+UTEST_CASE(vector_init)
 {
     vector_t data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
@@ -80,6 +80,14 @@ UTEST_CASE(initialize)
         UTEST_CHECK_EQUAL(marray.data(), data0.data() + 1);
         UTEST_CHECK_NOT_EQUAL(vector.data(), marray.data());
     }
+}
+
+UTEST_CASE(carray_init)
+{
+    vector_t data0 = vector_t::Constant(7, 0);
+    const vector_t data1 = vector_t::Constant(7, 1);
+    const vector_t data2 = vector_t::Constant(7, 2);
+
     // carray(carray)
     {
         const auto carray1 = carray_storage_t{data0.data(), data0.size()};
@@ -107,6 +115,14 @@ UTEST_CASE(initialize)
         UTEST_CHECK_EQUAL(marray.data(), data0.data() + 3);
         UTEST_CHECK_EQUAL(carray.data(), marray.data());
     }
+}
+
+UTEST_CASE(marray_init)
+{
+    vector_t data0 = vector_t::Constant(7, 0);
+    const vector_t data1 = vector_t::Constant(7, 1);
+    const vector_t data2 = vector_t::Constant(7, 2);
+
     // marray(marray)
     {
         const auto marray1 = marray_storage_t{data0.data(), data0.size()};
