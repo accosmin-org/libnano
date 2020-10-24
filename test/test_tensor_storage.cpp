@@ -4,7 +4,6 @@
 using namespace nano;
 
 using vector_t = tensor_vector_t<double>;
-
 using vector_storage_t = tensor_vector_storage_t<double>;
 using carray_storage_t = tensor_carray_storage_t<double>;
 using marray_storage_t = tensor_marray_storage_t<double>;
@@ -183,6 +182,24 @@ UTEST_CASE(marray_copy)
     array = carray;
     storage_must_match(array, data1);
     UTEST_CHECK_EQUAL(array.data(), data.data());
+}
+
+UTEST_CASE(resize)
+{
+    auto vector = vector_storage_t{data2};
+    auto marray = marray_storage_t{data0.data(), data0.size()};
+    auto carray = carray_storage_t{data1.data(), data1.size()};
+
+    UTEST_CHECK_EQUAL(vector.size(), data2.size());
+    UTEST_CHECK_EQUAL(marray.size(), data0.size());
+    UTEST_CHECK_EQUAL(carray.size(), data1.size());
+
+    vector.resize(31);
+    UTEST_CHECK_EQUAL(vector.size(), 31)
+
+    //marray.resize(31);
+    //carray.resize(31);
+    // TODO: to check that this doesn't compile within the same process?! (std::is_invocable doesn't work for =delete)!
 }
 
 UTEST_END_MODULE()
