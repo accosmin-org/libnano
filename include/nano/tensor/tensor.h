@@ -14,19 +14,19 @@ namespace nano
     /// \brief tensor that owns the allocated memory.
     ///
     template <typename tscalar, size_t trank>
-    using tensor_mem_t = tensor_t<tensor_vstorage_t<tscalar>, trank>;
+    using tensor_mem_t = tensor_t<tensor_vector_storage_t<tscalar>, trank>;
 
     ///
     /// \brief tensor mapping a non-constant array.
     ///
     template <typename tscalar, size_t trank>
-    using tensor_map_t = tensor_t<tensor_pstorage_t<tscalar>, trank>;
+    using tensor_map_t = tensor_t<tensor_marray_storage_t<tscalar>, trank>;
 
     ///
     /// \brief tensor mapping a constant array.
     ///
     template <typename tscalar, size_t trank>
-    using tensor_cmap_t = tensor_t<tensor_pstorage_t<const tscalar>, trank>;
+    using tensor_cmap_t = tensor_t<tensor_carray_storage_t<tscalar>, trank>;
 
     ///
     /// \brief tensor indices.
@@ -38,21 +38,19 @@ namespace nano
     ///
     /// \brief map non-constant data to tensors.
     ///
-    template <typename tscalar_, size_t trank>
-    auto map_tensor(tscalar_* data, const tensor_dims_t<trank>& dims)
+    template <typename tscalar, size_t trank>
+    auto map_tensor(tscalar* data, const tensor_dims_t<trank>& dims)
     {
-        using tscalar = typename std::remove_const<tscalar_>::type;
         return tensor_map_t<tscalar, trank>(data, dims);
     }
 
     ///
     /// \brief map constant data to tensors.
     ///
-    template <typename tscalar_, size_t trank>
-    auto map_tensor(const tscalar_* data, const tensor_dims_t<trank>& dims)
+    template <typename tscalar, size_t trank>
+    auto map_tensor(const tscalar* data, const tensor_dims_t<trank>& dims)
     {
-        using tscalar = typename std::remove_const<tscalar_>::type;
-        return tensor_cmap_t<const tscalar, trank>(data, dims);
+        return tensor_cmap_t<tscalar, trank>(data, dims);
     }
 
     ///
@@ -86,8 +84,6 @@ namespace nano
 
         using tdims = tensor_dims_t<trank>;
         using tscalar = typename tstorage::tscalar;
-        using treference = typename tstorage::treference;
-        using tconst_reference = typename tstorage::tconst_reference;
 
         using Index = tensor_size_t;    ///< for compatibility with Eigen
         using Scalar = tscalar;         ///< for compatibility with Eigen
@@ -110,14 +106,12 @@ namespace nano
             m_dims({{dims...}}),
             m_storage(this->size())
         {
-            static_assert(tstorage::resizable, "tensor not resizable");
         }
 
         explicit tensor_t(const tdims& dims) :
             m_dims(dims),
             m_storage(this->size())
         {
-            static_assert(tstorage::resizable, "tensor not resizable");
         }
 
         ///
@@ -127,7 +121,6 @@ namespace nano
             m_dims(dims),
             m_storage(ptr, size())
         {
-            static_assert(!tstorage::resizable, "tensor resizable");
             assert(ptr != nullptr || !size());
         }
 
@@ -138,7 +131,6 @@ namespace nano
             m_dims(dims),
             m_storage(ptr, size())
         {
-            static_assert(!tstorage::resizable, "tensor resizable");
             assert(ptr != nullptr || !size());
         }
 
@@ -150,7 +142,6 @@ namespace nano
             m_dims(dims),
             m_storage(this->size())
         {
-            static_assert(tstorage::resizable, "tensor resizable");
             assert(this->size() == static_cast<tensor_size_t>(N));
             vector() = map_vector(array.data(), this->size()).template cast<tscalar>();
         }
@@ -173,7 +164,6 @@ namespace nano
             m_dims(dims),
             m_storage(this->size())
         {
-            static_assert(tstorage::resizable, "tensor resizable");
             assert(this->size() == static_cast<tensor_size_t>(list.size()));
             std::transform(list.begin(), list.end(), data(), [] (auto value) { return static_cast<tscalar>(value); });
         }
@@ -191,7 +181,18 @@ namespace nano
         tensor_t& operator=(tensor_t&&) noexcept = default;
 
         ///
-        /// \brief copy constructor from different types (e.g. const from non-const scalars)
+        /// \brief copy constructor from different types (e.g. mutable array from mutable vector)
+        ///
+        template <typename tstorage2>
+        // cppcheck-suppress noExplicitConstructor
+        tensor_t(tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
+            m_dims(other.dims()),
+            m_storage(other.storage())
+        {
+        }
+
+        ///
+        /// \brief copy constructor from different types (e.g. const array from mutable array)
         ///
         template <typename tstorage2>
         // cppcheck-suppress noExplicitConstructor
@@ -391,6 +392,7 @@ namespace nano
         ///
         /// \brief access the storage container.
         ///
+        auto& storage() { return m_storage; }
         const auto& storage() const { return m_storage; }
 
         ///
@@ -519,14 +521,14 @@ namespace nano
         ///
         /// \brief access an element of the tensor
         ///
-        treference operator()(const tensor_size_t index)
+        tscalar& operator()(const tensor_size_t index)
         {
             assert(const_cast<const tensor_t*>(this)->data() != nullptr);
             assert(index >= 0 && index < size());
             return data()[index];
         }
 
-        tconst_reference operator()(const tensor_size_t index) const
+        tscalar operator()(const tensor_size_t index) const
         {
             assert(data() != nullptr);
             assert(index >= 0 && index < size());
@@ -534,14 +536,13 @@ namespace nano
         }
 
         template <typename... tindices>
-        treference operator()(const tensor_size_t index, const tindices... indices)
+        tscalar& operator()(const tensor_size_t index, const tindices... indices)
         {
             return operator()(offset(index, indices...));
         }
 
-
         template <typename... tindices>
-        tconst_reference operator()(const tensor_size_t index, const tindices... indices) const
+        tscalar operator()(const tensor_size_t index, const tindices... indices) const
         {
             return operator()(offset(index, indices...));
         }
