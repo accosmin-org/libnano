@@ -71,8 +71,7 @@ namespace nano
         }
 
         template <size_t idim, size_t trank, typename... tindices>
-        tensor_size_t get_index(const tensor_dims_t<trank>& dims,
-            const tensor_size_t index, const tindices... indices) // NOLINT(readability-avoid-const-params-in-decls)
+        tensor_size_t get_index(const tensor_dims_t<trank>& dims, tensor_size_t index, tindices... indices)
         {
             assert(index >= 0 && index < std::get<idim>(dims));
             return index * product<idim + 1>(dims) + get_index<idim + 1>(dims, indices...);

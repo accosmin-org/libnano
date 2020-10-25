@@ -57,7 +57,7 @@ namespace nano
     /// \brief map non-constant data to tensors.
     ///
     template <typename tscalar, typename... tsizes>
-    auto map_tensor(tscalar* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
+    auto map_tensor(tscalar* data, tsizes... dims)
     {
         return map_tensor(data, make_dims(dims...));
     }
@@ -66,7 +66,7 @@ namespace nano
     /// \brief map constant data to tensors.
     ///
     template <typename tscalar, typename... tsizes>
-    auto map_tensor(const tscalar* data, const tsizes... dims) // NOLINT(readability-avoid-const-params-in-decls)
+    auto map_tensor(const tscalar* data, tsizes... dims)
     {
         return map_tensor(data, make_dims(dims...));
     }
