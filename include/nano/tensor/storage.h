@@ -182,7 +182,7 @@ namespace nano
             return *this;
         }
 
-        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) // NOLINT(bugprone-unhandled-self-assignment)
+        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) // NOLINT(cert-oop54-cpp,bugprone-unhandled-self-assignment)
         {
             if (this != &other)
             {
