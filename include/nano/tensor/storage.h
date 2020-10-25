@@ -51,8 +51,8 @@ namespace nano
         {
         }
 
-        explicit tensor_vector_storage_t(const tensor_vector_t<tscalar>& data) :
-            m_data(data)
+        explicit tensor_vector_storage_t(tensor_vector_t<tscalar> data) :
+            m_data(std::move(data))
         {
         }
 
@@ -167,17 +167,20 @@ namespace nano
 
         tensor_marray_storage_t& operator=(const tensor_vector_storage_t<tscalar>& other)
         {
-            return copy(other);
+            copy(other);
+            return *this;
         }
 
         tensor_marray_storage_t& operator=(const tensor_carray_storage_t<tscalar>& other)
         {
-            return copy(other);
+            copy(other);
+            return *this;
         }
 
-        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other)
+        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) // NOLINT(cert-oop54-cpp)
         {
-            return copy(other);
+            copy(other);
+            return *this;
         }
 
         auto data() const { return m_data; }
@@ -187,14 +190,13 @@ namespace nano
     private:
 
         template <typename tstorage>
-        tensor_marray_storage_t& copy(const tstorage& other)
+        void copy(const tstorage& other)
         {
             assert(size() == other.size());
             if (data() != other.data())
             {
                 map_vector(data(), size()) = map_vector(other.data(), other.size());
             }
-            return *this;
         }
 
         // attributes
