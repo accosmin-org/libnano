@@ -56,6 +56,11 @@ namespace nano
         {
         }
 
+        tensor_vector_storage_t(const tscalar* data, tensor_size_t size) :
+            m_data(map_vector(data, size))
+        {
+        }
+
         explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar>& other) :
             m_data(map_vector(other.data(), other.size()))
         {
@@ -179,7 +184,10 @@ namespace nano
 
         tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) // NOLINT(cert-oop54-cpp)
         {
-            copy(other);
+            if (this != &other)
+            {
+                copy(other);
+            }
             return *this;
         }
 

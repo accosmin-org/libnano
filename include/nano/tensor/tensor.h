@@ -181,24 +181,24 @@ namespace nano
         tensor_t& operator=(tensor_t&&) noexcept = default;
 
         ///
-        /// \brief copy constructor from different types (e.g. mutable array from mutable vector)
-        ///
-        template <typename tstorage2>
-        // cppcheck-suppress noExplicitConstructor
-        tensor_t(tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
-            m_dims(other.dims()),
-            m_storage(other.storage())
-        {
-        }
-
-        ///
         /// \brief copy constructor from different types (e.g. const array from mutable array)
         ///
         template <typename tstorage2>
         // cppcheck-suppress noExplicitConstructor
         tensor_t(const tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
             m_dims(other.dims()),
-            m_storage(other.storage())
+            m_storage(other.data(), other.size())
+        {
+        }
+
+        ///
+        /// \brief copy constructor from different types (e.g. mutable array from mutable vector)
+        ///
+        template <typename tstorage2>
+        // cppcheck-suppress noExplicitConstructor
+        tensor_t(tensor_t<tstorage2, trank>& other) : // NOLINT(hicpp-explicit-conversions)
+            m_dims(other.dims()),
+            m_storage(other.data(), other.size())
         {
         }
 
@@ -392,7 +392,6 @@ namespace nano
         ///
         /// \brief access the storage container.
         ///
-        auto& storage() { return m_storage; }
         const auto& storage() const { return m_storage; }
 
         ///
