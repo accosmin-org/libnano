@@ -27,7 +27,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>
     >
-    tresult map_vector(tscalar_* data, const tsize rows) // NOLINT(readability-avoid-const-params-in-decls)
+    tresult map_vector(tscalar_* data, tsize rows)
     {
         return tresult(data, rows);
     }
@@ -43,7 +43,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>
     >
-    tresult map_vector(const tscalar_* data, const tsize rows) // NOLINT(readability-avoid-const-params-in-decls)
+    tresult map_vector(const tscalar_* data, tsize rows)
     {
         return tresult(data, rows);
     }

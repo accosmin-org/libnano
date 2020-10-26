@@ -64,7 +64,7 @@ tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 {
     tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
     outputs.zero();
-    predict(dataset, samples, outputs.tensor());
+    predict(dataset, samples, outputs);
 
     return outputs;
 }

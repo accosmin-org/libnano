@@ -1,148 +1,214 @@
 #pragma once
 
 #include <nano/tensor/index.h>
+#include <nano/tensor/vector.h>
 
 namespace nano
 {
-    template <typename tscalar_>
-    class tensor_pstorage_t;
+    template <typename tscalar>
+    class tensor_vector_storage_t;
+
+    template <typename tscalar>
+    class tensor_carray_storage_t;
+
+    template <typename tscalar>
+    class tensor_marray_storage_t;
+
+    ///
+    /// \brief tensor storage base class.
+    ///
+    template
+    <
+        typename tscalar_,
+        typename tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar_>::type>::type,
+        typename = typename std::enable_if<std::is_same<tscalar_, tscalar_remove_cvref>::value>::type
+    >
+    class tensor_storage_t
+    {
+    public:
+
+        using tscalar = tscalar_;
+    };
 
     ///
     /// \brief tensor storage using an Eigen vector.
     /// NB: the tensor owns the allocated memory and as such the tensor is resizable.
     ///
-    template <typename tscalar_>
-    class tensor_vstorage_t
+    template <typename tscalar>
+    class tensor_vector_storage_t : public tensor_storage_t<tscalar>
     {
     public:
 
-        using tscalar = typename std::remove_const<tscalar_>::type;
-        using tstorage = tensor_vector_t<tscalar>;
-        using treference = tscalar&;
-        using tconst_reference = const tscalar&;
+        tensor_vector_storage_t() = default;
+        ~tensor_vector_storage_t() = default;
+        tensor_vector_storage_t(const tensor_vector_storage_t&) = default;
+        tensor_vector_storage_t(tensor_vector_storage_t&&) noexcept = default;
+        tensor_vector_storage_t& operator=(const tensor_vector_storage_t&) = default;
+        tensor_vector_storage_t& operator=(tensor_vector_storage_t&&) noexcept = default;
 
-        static constexpr bool resizable = true;
-        static constexpr bool owns_memory = true;
+        explicit tensor_vector_storage_t(tensor_size_t size) :
+            m_data(size)
+        {
+        }
 
-        tensor_vstorage_t() = default;
-        ~tensor_vstorage_t() = default;
-        tensor_vstorage_t(tensor_vstorage_t&&) noexcept = default;
-        tensor_vstorage_t(const tensor_vstorage_t&) = default;
-        tensor_vstorage_t& operator=(tensor_vstorage_t&&) noexcept = default;
-        tensor_vstorage_t& operator=(const tensor_vstorage_t&) = default;
+        explicit tensor_vector_storage_t(tensor_vector_t<tscalar> data) :
+            m_data(std::move(data))
+        {
+        }
 
-        explicit tensor_vstorage_t(const tstorage& data) : m_data(data) {}
-        explicit tensor_vstorage_t(const tensor_size_t size) : m_data(size) {}
+        tensor_vector_storage_t(const tscalar* data, tensor_size_t size) :
+            m_data(map_vector(data, size))
+        {
+        }
 
-        template <typename tscalar2>
-        explicit tensor_vstorage_t(const tensor_pstorage_t<tscalar2>& other) :
+        explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar>& other) :
             m_data(map_vector(other.data(), other.size()))
         {
         }
 
-        template <typename tscalar2>
-        tensor_vstorage_t& operator=(const tensor_pstorage_t<tscalar2>& other);
+        explicit tensor_vector_storage_t(const tensor_marray_storage_t<tscalar>& other) :
+            m_data(map_vector(other.data(), other.size()))
+        {
+        }
 
-        auto size() const { return m_data.size(); }
-        void resize(const tensor_size_t size) { m_data.resize(size); }
+        tensor_vector_storage_t& operator=(const tensor_carray_storage_t<tscalar>& other)
+        {
+            if (m_data.data() != other.data())
+            {
+                m_data = map_vector(other.data(), other.size());
+            }
+            return *this;
+        }
+
+        tensor_vector_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other)
+        {
+            if (m_data.data() != other.data())
+            {
+                m_data = map_vector(other.data(), other.size());
+            }
+            return *this;
+        }
 
         auto data() { return m_data.data(); }
         auto data() const { return m_data.data(); }
+        auto size() const { return m_data.size(); }
+        void resize(tensor_size_t size) { m_data.resize(size); }
 
     private:
 
         // attributes
-        tstorage        m_data;         ///< store tensor as a 1D vector.
+        tensor_vector_t<tscalar>    m_data;         ///< store tensor as a 1D vector.
     };
 
     ///
-    /// \brief tensor storage using a C-array.
-    /// NB: the tensors doesn't own the allocated memory and as such is not resizable.
+    /// \brief tensor storage using a constant C-array.
+    /// NB: the tensor doesn't own the allocated memory and as such is not resizable.
     ///
-    template <typename tscalar_>
-    class tensor_pstorage_t
+    template <typename tscalar>
+    class tensor_carray_storage_t : public tensor_storage_t<tscalar>
     {
     public:
 
-        using tscalar = typename std::remove_const<tscalar_>::type;
-        using tstorage = tscalar_*;
-        using treference = typename std::conditional<std::is_const<tscalar_>::value, const tscalar&, tscalar&>::type;
-        using tconst_reference = treference;
+        tensor_carray_storage_t() = default;
+        ~tensor_carray_storage_t() = default;
+        tensor_carray_storage_t(const tensor_carray_storage_t&) = default;
+        tensor_carray_storage_t(tensor_carray_storage_t&&) noexcept = default;
+        tensor_carray_storage_t& operator=(tensor_carray_storage_t&& other) noexcept = default;
 
-        static constexpr bool resizable = false;
-        static constexpr bool owns_memory = false;
-
-        tensor_pstorage_t() = default;
-        ~tensor_pstorage_t() = default;
-        tensor_pstorage_t(const tensor_pstorage_t&) = default;
-        tensor_pstorage_t(tensor_pstorage_t&&) noexcept = default;
-        tensor_pstorage_t& operator=(tensor_pstorage_t&& other) noexcept
-        {
-            copy(other);
-            return *this;
-        }
-        tensor_pstorage_t& operator=(const tensor_pstorage_t& other)// NOLINT(cert-oop54-cpp)
-        {
-            tensor_pstorage_t object = other;
-            *this = std::move(object);
-            return *this;
-        }
-
-        tensor_pstorage_t(const tstorage& data, const tensor_size_t size) :
+        tensor_carray_storage_t(const tscalar* data, tensor_size_t size) :
             m_data(data), m_size(size)
         {
         }
 
-        template <typename tscalar2>
-        explicit tensor_pstorage_t(const tensor_vstorage_t<tscalar2>& other) :
+        explicit tensor_carray_storage_t(const tensor_vector_storage_t<tscalar>& other) :
             m_data(other.data()), m_size(other.size())
         {
         }
 
-        template <typename tscalar2>
-        explicit tensor_pstorage_t(const tensor_pstorage_t<tscalar2>& other) :
+        explicit tensor_carray_storage_t(const tensor_marray_storage_t<tscalar>& other) :
             m_data(other.data()), m_size(other.size())
         {
         }
 
-        template <typename tscalar2>
-        tensor_pstorage_t& operator=(const tensor_vstorage_t<tscalar2>& other)
-        {
-            copy(other);
-            return *this;
-        }
+        tensor_carray_storage_t& operator=(const tensor_vector_storage_t<tscalar>& other) = delete;
+        tensor_carray_storage_t& operator=(const tensor_carray_storage_t<tscalar>& other) = delete;
+        tensor_carray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) = delete;
 
-        template <typename tscalar2>
-        tensor_pstorage_t& operator=(const tensor_pstorage_t<tscalar2>& other)
-        {
-            copy(other);
-            return *this;
-        }
-
-        auto data() { return m_data; }
         auto data() const { return m_data; }
         auto size() const { return m_size; }
+        void resize(tensor_size_t) = delete;
 
     private:
 
-        template <typename tstorage2>
-        tensor_pstorage_t& copy(const tstorage2& other)
+        // attributes
+        const tscalar*      m_data{nullptr};    ///< wrap tensor over a contiguous array.
+        tensor_size_t       m_size{0};          ///<
+    };
+
+    ///
+    /// \brief tensor storage using a mutable C-array.
+    /// NB: the tensor doesn't own the allocated memory and as such is not resizable.
+    ///
+    template <typename tscalar>
+    class tensor_marray_storage_t : public tensor_storage_t<tscalar>
+    {
+    public:
+
+        tensor_marray_storage_t() = default;
+        ~tensor_marray_storage_t() = default;
+        tensor_marray_storage_t(const tensor_marray_storage_t&) = default;
+        tensor_marray_storage_t(tensor_marray_storage_t&&) noexcept = default;
+        tensor_marray_storage_t& operator=(tensor_marray_storage_t&& other) noexcept = default;
+
+        tensor_marray_storage_t(tscalar* data, tensor_size_t size) :
+            m_data(data), m_size(size)
         {
-            assert(size() == other.size());
-            map_vector(data(), size()) = map_vector(other.data(), other.size());
+        }
+
+        explicit tensor_marray_storage_t(tensor_vector_storage_t<tscalar>& other) :
+            m_data(other.data()), m_size(other.size())
+        {
+        }
+
+        tensor_marray_storage_t& operator=(const tensor_vector_storage_t<tscalar>& other)
+        {
+            copy(other);
             return *this;
         }
 
-        // attributes
-        tstorage        m_data{nullptr};///< wrap tensor over a contiguous array.
-        tensor_size_t   m_size{0};      ///<
-    };
+        tensor_marray_storage_t& operator=(const tensor_carray_storage_t<tscalar>& other)
+        {
+            copy(other);
+            return *this;
+        }
 
-    template <typename tscalar>
-    template <typename tscalar2>
-    tensor_vstorage_t<tscalar>& tensor_vstorage_t<tscalar>::operator=(const tensor_pstorage_t<tscalar2>& other)
-    {
-        m_data = map_vector(other.data(), other.size());
-        return *this;
-    }
+        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar>& other) // NOLINT(cert-oop54-cpp,bugprone-unhandled-self-assignment)
+        {
+            if (this != &other)
+            {
+                copy(other);
+            }
+            return *this;
+        }
+
+        auto data() const { return m_data; }
+        auto size() const { return m_size; }
+        void resize(tensor_size_t) = delete;
+
+    private:
+
+        template <typename tstorage>
+        void copy(const tstorage& other)
+        {
+            assert(size() == other.size());
+            if (data() != other.data())
+            {
+                map_vector(data(), size()) = map_vector(other.data(), other.size());
+            }
+        }
+
+        // attributes
+        tscalar*            m_data{nullptr};    ///< wrap tensor over a contiguous array.
+        tensor_size_t       m_size{0};          ///<
+    };
 }

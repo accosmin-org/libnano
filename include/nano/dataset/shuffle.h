@@ -123,7 +123,7 @@ namespace nano
         template <typename ttensor>
         void shuffle(ttensor& inputs, tensor_size_t col) const
         {
-            const auto matrix = inputs.reshape(inputs.template size<0>(), -1);
+            auto matrix = inputs.reshape(inputs.template size<0>(), -1);
             assert(col >= 0 && col < matrix.cols());
 
             auto&& rng = ::nano::make_rng();

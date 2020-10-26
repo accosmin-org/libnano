@@ -28,7 +28,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>
     >
-    tresult map_matrix(tscalar_* data, const tsize rows, const tsize cols) // NOLINT(readability-avoid-const-params-in-decls)
+    tresult map_matrix(tscalar_* data, tsize rows, tsize cols)
     {
         return tresult(data, rows, cols);
     }
@@ -44,7 +44,7 @@ namespace nano
         typename tscalar = typename std::remove_const<tscalar_>::type,
         typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>
     >
-    tresult map_matrix(const tscalar_* data, const tsize rows, const tsize cols) // NOLINT(readability-avoid-const-params-in-decls)
+    tresult map_matrix(const tscalar_* data, tsize rows, tsize cols)
     {
         return tresult(data, rows, cols);
     }
