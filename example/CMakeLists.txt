@@ -14,3 +14,9 @@ find_package(NANO 1.0 REQUIRED)
 target_link_libraries(info NANO::NANO)
 target_link_libraries(tensor NANO::NANO)
 target_link_libraries(minimize NANO::NANO)
+
+include(CTest)
+enable_testing()
+
+add_test(tensor tensor)
+add_test(minimize minimize)
