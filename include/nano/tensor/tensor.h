@@ -304,7 +304,7 @@ namespace nano
         }
 
         ///
-        /// \brief set all elements to a constant value.
+        /// \brief set all elements to the given constant value.
         ///
         void constant(const tscalar value)
         {
