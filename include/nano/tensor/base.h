@@ -152,7 +152,7 @@ namespace nano
         /// \brief change dimensions.
         ///
         template <typename... tsizes>
-        void resize(const tsizes... dims)
+        void resize(tsizes... dims)
         {
             m_dims = make_dims(dims...);
         }
