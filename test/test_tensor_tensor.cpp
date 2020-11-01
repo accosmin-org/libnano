@@ -440,7 +440,7 @@ UTEST_CASE(tensor1d_indexing)
     tensor1d_t tensor(13);
     tensor.random();
 
-    const auto indices = indices_t{std::array<tensor_size_t, 6>{{0, 1, 3, 2, 2, 7}}};
+    const auto indices = indices_t{make_dims(6), {0, 1, 3, 2, 2, 7}};
     const auto subtensor = tensor.indexed<int32_t>(indices);
 
     UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
@@ -460,7 +460,7 @@ UTEST_CASE(tensor4d_indexing)
     tensor4d_t tensor(5, 7, 3, 4);
     tensor.random();
 
-    const auto indices = indices_t{std::array<tensor_size_t, 6>{{0, 1, 3, 2, 2, 3}}};
+    const auto indices = indices_t{make_dims(6), {0, 1, 3, 2, 2, 3}};
     const auto subtensor = tensor.indexed<int32_t>(indices);
 
     UTEST_REQUIRE_EQUAL(subtensor.size<0>(), 6);
@@ -539,7 +539,7 @@ UTEST_CASE(tensor3d_from_array)
 {
     using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
 
-    tensor3d_t tensor(make_dims(3, 2, 1), std::array<int, 6>{{0, 1, 10, 11, 20, 21}});
+    tensor3d_t tensor(make_dims(3, 2, 1), {0, 1, 10, 11, 20, 21});
 
     UTEST_CHECK_EQUAL(tensor.size<0>(), 3);
     UTEST_CHECK_EQUAL(tensor.size<1>(), 2);

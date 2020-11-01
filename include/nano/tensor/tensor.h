@@ -102,7 +102,7 @@ namespace nano
         /// \brief constructors that resize the storage to match the given size.
         ///
         template <typename... tsizes>
-        explicit tensor_t(const tsizes... dims) :
+        explicit tensor_t(tsizes... dims) :
             m_dims({{dims...}}),
             m_storage(this->size())
         {
@@ -132,28 +132,6 @@ namespace nano
             m_storage(ptr, size())
         {
             assert(ptr != nullptr || !size());
-        }
-
-        ///
-        /// \brief construct from a std::array.
-        ///
-        template <typename tscalar_, size_t N>
-        tensor_t(const tdims& dims, const std::array<tscalar_, N>& array) :
-            m_dims(dims),
-            m_storage(this->size())
-        {
-            assert(this->size() == static_cast<tensor_size_t>(N));
-            vector() = map_vector(array.data(), this->size()).template cast<tscalar>();
-        }
-
-        ///
-        /// \brief construct from a std::array (only for 1D tensors).
-        ///
-        template <typename tscalar_, size_t N, typename = typename std::integral_constant<bool, trank == 1>::type>
-        // cppcheck-suppress noExplicitConstructor
-        tensor_t(const std::array<tscalar_, N>& array) : // NOLINT(hicpp-explicit-conversions)
-            tensor_t(make_dims(static_cast<tensor_size_t>(N)), array)
-        {
         }
 
         ///
@@ -283,7 +261,7 @@ namespace nano
         /// \brief resize to new dimensions.
         ///
         template <typename... tsizes>
-        tensor_size_t resize(const tsizes... dims)
+        tensor_size_t resize(tsizes... dims)
         {
             return resize({{dims...}});
         }
@@ -550,13 +528,13 @@ namespace nano
         /// NB: a single -1 dimension can be inferred from the total size and the remaining positive dimensions!
         ///
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes)
+        auto reshape(tsizes... sizes)
         {
             return treshape(data(), sizes...);
         }
 
         template <typename... tsizes>
-        auto reshape(const tsizes... sizes) const
+        auto reshape(tsizes... sizes) const
         {
             return treshape(data(), sizes...);
         }
@@ -687,7 +665,7 @@ namespace nano
         }
 
         template <typename tdata, typename... tsizes>
-        auto treshape(tdata ptr, const tsizes... sizes) const
+        auto treshape(tdata ptr, tsizes... sizes) const
         {
             auto dims = nano::make_dims(sizes...);
             for (auto& dim : dims)
