@@ -9,7 +9,7 @@ namespace nano
     ///     - stores dimensions
     ///     - handles the indexing
     ///
-    template <typename tscalar_, size_t trank>
+    template <typename tscalar, size_t trank>
     class tensor_base_t
     {
     public:
@@ -18,12 +18,11 @@ namespace nano
             trank >= 1,
             "cannot create tensors with fewer than one dimension");
 
-        using tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar_>::type>::type;
+        using tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar>::type>::type;
         static_assert(
-            std::is_same<tscalar_, tscalar_remove_cvref>::value,
+            std::is_same<tscalar, tscalar_remove_cvref>::value,
             "cannot create tensors with cvref scalars");
 
-        using tscalar = tscalar_;
         using tdims = tensor_dims_t<trank>;
 
         ///
@@ -38,7 +37,7 @@ namespace nano
         /// \brief constructor.
         ///
         template <typename... tsizes>
-        explicit tensor_base_t(const tsizes... dims) :
+        explicit tensor_base_t(tsizes... dims) :
             m_dims({{dims...}})
         {
         }

@@ -5,13 +5,13 @@
 
 namespace nano
 {
-    template <typename tscalar>
+    template <typename, size_t>
     class tensor_vector_storage_t;
 
-    template <typename tscalar>
+    template <typename, size_t>
     class tensor_carray_storage_t;
 
-    template <typename tscalar>
+    template <typename, size_t>
     class tensor_marray_storage_t;
 
     ///
@@ -23,6 +23,11 @@ namespace nano
     {
     public:
 
+        using tbase = tensor_base_t<tscalar, trank>;
+
+        using tbase::size;
+        using tdims = typename tbase::tdims;
+
         tensor_vector_storage_t() = default;
         ~tensor_vector_storage_t() = default;
         tensor_vector_storage_t(const tensor_vector_storage_t&) = default;
@@ -32,25 +37,25 @@ namespace nano
 
         template <typename... tsizes>
         explicit tensor_vector_storage_t(tsizes... dims) :
-            tensor_base_t(dims...),
+            tbase(dims...),
             m_data(size())
         {
         }
 
         explicit tensor_vector_storage_t(tdims dims) :
-            tensor_base_t(std::move(dims)),
+            tbase(std::move(dims)),
             m_data(size())
         {
         }
 
         explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar, trank>& other) :
-            tensor_base_t(other.dims()),
+            tbase(other.dims()),
             m_data(map_vector(other.data(), other.size()))
         {
         }
 
         explicit tensor_vector_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
-            tensor_base_t(other.dims()),
+            tbase(other.dims()),
             m_data(map_vector(other.data(), other.size()))
         {
         }
@@ -78,13 +83,13 @@ namespace nano
         template <typename... tsizes>
         void resize(tsizes... dims)
         {
-            tensor_base_t::resize(dims...);
+            tbase::resize(dims...);
             m_data.resize(size());
         }
 
         void resize(const tdims& dims)
         {
-            tensor_base_t::resize(dims);
+            tbase::resize(dims);
             m_data.resize(size());
         }
 
@@ -107,10 +112,15 @@ namespace nano
     /// \brief tensor storage using a constant C-array.
     /// NB: the tensor doesn't own the allocated memory and as such it is not resizable.
     ///
-    template <typename tscalar>
-    class tensor_carray_storage_t : public tensor_base_t<tscalar>
+    template <typename tscalar, size_t trank>
+    class tensor_carray_storage_t : public tensor_base_t<tscalar, trank>
     {
     public:
+
+        using tbase = tensor_base_t<tscalar, trank>;
+
+        using tbase::size;
+        using tdims = typename tbase::tdims;
 
         tensor_carray_storage_t() = default;
         ~tensor_carray_storage_t() = default;
@@ -120,25 +130,25 @@ namespace nano
 
         template <typename... tsizes>
         explicit tensor_carray_storage_t(const tscalar* data, tsizes... dims) :
-            tensor_base_t(dims...),
+            tbase(dims...),
             m_data(data)
         {
         }
 
         explicit tensor_carray_storage_t(const tscalar* data, tdims dims) :
-            tensor_base_t(std::move(dims)),
+            tbase(std::move(dims)),
             m_data(data)
         {
         }
 
         explicit tensor_carray_storage_t(const tensor_vector_storage_t<tscalar, trank>& other) :
-            tensor_base_t(other.dims()),
+            tbase(other.dims()),
             m_data(other.data())
         {
         }
 
         explicit tensor_carray_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
-            tensor_base_t(other.dims()),
+            tbase(other.dims()),
             m_data(other.data())
         {
         }
@@ -166,10 +176,15 @@ namespace nano
     /// \brief tensor storage using a mutable C-array.
     /// NB: the tensor doesn't own the allocated memory and as such it is not resizable.
     ///
-    template <typename tscalar>
-    class tensor_marray_storage_t : public tensor_base_t<tscalar>
+    template <typename tscalar, size_t trank>
+    class tensor_marray_storage_t : public tensor_base_t<tscalar, trank>
     {
     public:
+
+        using tbase = tensor_base_t<tscalar, trank>;
+
+        using tbase::size;
+        using tdims = typename tbase::tdims;
 
         tensor_marray_storage_t() = default;
         ~tensor_marray_storage_t() = default;
@@ -179,19 +194,19 @@ namespace nano
 
         template <typename... tsizes>
         explicit tensor_marray_storage_t(tscalar* data, tsizes... dims) :
-            tensor_base_t(dims...),
+            tbase(dims...),
             m_data(data)
         {
         }
 
         explicit tensor_marray_storage_t(tscalar* data, tdims dims) :
-            tensor_base_t(std::move(dims)),
+            tbase(std::move(dims)),
             m_data(data)
         {
         }
 
         explicit tensor_marray_storage_t(tensor_vector_storage_t<tscalar, trank>& other) :
-            tensor_base_t(other.dims()),
+            tbase(other.dims()),
             m_data(other.data())
         {
         }
