@@ -36,15 +36,6 @@ namespace nano
         ///
         /// \brief constructor.
         ///
-        template <typename... tsizes>
-        explicit tensor_base_t(tsizes... dims) :
-            m_dims({{dims...}})
-        {
-        }
-
-        ///
-        /// \brief constructor.
-        ///
         explicit tensor_base_t(tdims dims) :
             m_dims(std::move(dims))
         {
@@ -149,16 +140,7 @@ namespace nano
         }
 
         ///
-        /// \brief change dimensions.
-        ///
-        template <typename... tsizes>
-        void resize(tsizes... dims)
-        {
-            m_dims = make_dims(dims...);
-        }
-
-        ///
-        /// \brief change dimensions.
+        /// \brief change size.
         ///
         void resize(const tdims& dims)
         {

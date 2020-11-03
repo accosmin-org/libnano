@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/tensor/storage2.h>
+#include <nano/tensor/storage.h>
 
 using namespace nano;
 
@@ -135,8 +135,8 @@ UTEST_CASE(marray_init)
 UTEST_CASE(vector_copy)
 {
     vector_t data0 = vector_t::Constant(7, 0);
-    const vector_t data1 = vector_t::Constant(7, 1);
-    const vector_t data2 = vector_t::Constant(7, 2);
+    const vector_t data1 = vector_t::Constant(5, 1);
+    const vector_t data2 = vector_t::Constant(6, 2);
 
     auto vector = make_vector_storage(data2);
     storage_must_match(vector, data2);

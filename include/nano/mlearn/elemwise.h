@@ -36,10 +36,10 @@ namespace nano
         ///
         /// \brief set the statistics from an external source.
         ///
-        template <typename tstorage>
+        template <template <typename, size_t> class tstorage>
         void set(
-            const tensor_t<tstorage, 3>& min, const tensor_t<tstorage, 3>& max,
-            const tensor_t<tstorage, 3>& mean, const tensor_t<tstorage, 3>& stdev)
+            const tensor_t<tstorage, scalar_t, 3>& min, const tensor_t<tstorage, scalar_t, 3>& max,
+            const tensor_t<tstorage, scalar_t, 3>& mean, const tensor_t<tstorage, scalar_t, 3>& stdev)
         {
             assert(max.dims() == min.dims());
             assert(mean.dims() == min.dims());
@@ -54,8 +54,8 @@ namespace nano
         ///
         /// \brief update statistics with the given samples.
         ///
-        template <typename tstorage>
-        void update(const tensor_t<tstorage, 4>& inputs)
+        template <template <typename, size_t> class tstorage>
+        void update(const tensor_t<tstorage, scalar_t, 4>& inputs)
         {
             const auto samples = this->samples(inputs);
             for (tensor_size_t s = 0; s < samples; ++ s)
@@ -85,7 +85,7 @@ namespace nano
         ///
         /// \brief scale the mean and the stdev once the updates are done.
         ///
-        auto& done(const tensor_size_t total)
+        auto& done(tensor_size_t total)
         {
             auto mean = m_mean.array();
             auto stdev = m_stdev.array();
@@ -100,11 +100,11 @@ namespace nano
         /// \brief scale element-wise the given 4D tensor,
         ///     where the first dimension is the sample index and the rest being the elements/features to normalize.
         ///
-        template <typename tstorage>
-        void scale(const normalization norm, tensor_t<tstorage, 4>& inputs) const
+        template <template <typename, size_t> class tstorage>
+        void scale(normalization norm, tensor_t<tstorage, scalar_t, 4>& inputs) const
         {
             const auto samples = this->samples(inputs);
-            const auto epsilon = epsilon2<typename tstorage::tscalar>();
+            const auto epsilon = epsilon2<scalar_t>();
 
             // FIXME: write these operations as single Eigen calls!
             switch (norm)
@@ -143,8 +143,9 @@ namespace nano
         /// \brief adjust the weights and the bias of a linear transformation to work with the
         ///     the un-scaled/un-normalized inputs.
         ///
-        template <typename tstorage>
-        void upscale(const normalization norm, tensor_t<tstorage, 2>& weights, tensor_t<tstorage, 1>& bias) const
+        template <template <typename, size_t> class tstorage>
+        void upscale(
+            normalization norm, tensor_t<tstorage, scalar_t, 2>& weights, tensor_t<tstorage, scalar_t, 1>& bias) const
         {
             const auto epsilon = epsilon2<scalar_t>();
 
@@ -191,8 +192,8 @@ namespace nano
 
     private:
 
-        template <typename tstorage>
-        auto samples(const tensor_t<tstorage, 4>& inputs) const
+        template <template <typename, size_t> class tstorage>
+        auto samples(const tensor_t<tstorage, scalar_t, 4>& inputs) const
         {
             const auto samples = inputs.template size<0>();
             assert(nano::cat_dims(samples, m_min.dims()) == inputs.dims());
