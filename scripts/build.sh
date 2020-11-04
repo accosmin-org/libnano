@@ -95,6 +95,7 @@ function build_example {
     cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=${build_type} || return 1
     cd ${exampledir}
     cmake --build ${exampledir} -- -j ${threads} || return 1
+    ctest --output-on-failure -j ${threads} || return 1
 }
 
 function cppcheck {

@@ -26,6 +26,13 @@ int main(const int, char* argv[])
     std::cout << "tensor.vector().minCoeff():\n" << tensor.vector().minCoeff() << "\n\n";
     std::cout << "tensor.array().maxCoeff():\n" << tensor.array().maxCoeff() << "\n\n";
 
+    // basic statistics and reductions can be computed as well using the tensor interface directly
+    std::cout << "tensor.min():\n" << tensor.min() << "\n\n";
+    std::cout << "tensor.max():\n" << tensor.max() << "\n\n";
+    std::cout << "tensor.sum():\n" << tensor.sum() << "\n\n";
+    std::cout << "tensor.mean():\n" << tensor.mean() << "\n\n";
+    std::cout << "tensor.stdev():\n" << tensor.stdev() << "\n\n";
+
     // tensors can change shape (if the total number of elements is the same)
     // and 2D tensors can be mapped to row-major contiguous Eigen matrices
     // NB: no copying is performed!
@@ -48,11 +55,11 @@ int main(const int, char* argv[])
 
     // tensors can be sliced only along the first dimension to obtain contiguous tensors with the same rank
     // NB: no copying is performed!
-    std::cout << "tensor.reshape(6, 2, 4).slice(2, 3).dims():\n"
-        << tensor.reshape(6, 2, 4).slice(2, 3).dims() << "\n\n";
+    std::cout << "tensor.reshape(6, 2, 4).slice(2, 5).dims():\n"
+        << tensor.reshape(6, 2, 4).slice(2, 5).dims() << "\n\n";
 
-    std::cout << "tensor.reshape(6, 2, 4).slice(2, 3).reshape(3, 8).matrix():\n"
-        << tensor.reshape(6, 2, 4).slice(2, 3).reshape(3, 8).matrix() << "\n\n";
+    std::cout << "tensor.reshape(6, 2, 4).slice(2, 5).reshape(3, 8).matrix():\n"
+        << tensor.reshape(6, 2, 4).slice(2, 5).reshape(3, 8).matrix() << "\n\n";
 
     // tensor values can be read and written using the appropriate indices
     std::cout << "tensor(7):\n" << tensor(7) << "\n\n";
@@ -90,7 +97,8 @@ int main(const int, char* argv[])
         std::istringstream istream(buffer);
         nano::read(istream, read_tensor);
     }
-    std::cout << "(tensor.vector() - read_tensor.vector()).transpose():\n" << (tensor.vector() - read_tensor.vector()).transpose() << "\n";
+    std::cout << "(tensor.vector() - read_tensor.vector()).transpose():\n"
+        << (tensor.vector() - read_tensor.vector()).transpose() << "\n";
 
     return EXIT_SUCCESS;
 }

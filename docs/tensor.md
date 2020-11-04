@@ -58,8 +58,8 @@ std::cout << tensor.reshape(6, 8).matrix() << std::endl;
 
 Another useful operation is to slice a given tensor. Please note that slicing is only supported along the first dimension to make sure the returned proxy maps contiguous data. As such the returned proxy tensor has the same rank as the original tensor. The following examples combine reshaping and slicing operations on the original tensor:
 ```
-std::cout << tensor.reshape(6, 2, 4).slice(2, 3).dims() << std::endl; // prints: 3x2x4
-std::cout << tensor.reshape(6, 2, 4).slice(2, 3).reshape(3, 8).matrix() << std::endl;
+std::cout << tensor.reshape(6, 2, 4).slice(2, 5).dims() << std::endl; // prints: 3x2x4
+std::cout << tensor.reshape(6, 2, 4).slice(2, 5).reshape(3, 8).matrix() << std::endl;
 // prints:
 // -6  -9   3  -4   3  -4  -8   3
 //  4   3  10   3   9  -7   9   3
