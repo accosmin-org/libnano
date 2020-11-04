@@ -3,11 +3,11 @@
 
 using namespace nano;
 
-template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 1>& tensor,
-    const tensor_size_t index0)
+template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+static auto check(const tensor_t<tstorage, tscalar, 1>& tensor,
+    tensor_size_t index0)
 {
-    tscalar sum = 0;
+    tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
         sum += tensor(i0);
@@ -16,11 +16,11 @@ static auto check(const tensor_t<tstorage, 1>& tensor,
     return sum;
 }
 
-template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 2>& tensor,
-    const tensor_size_t index0, const tensor_size_t index1)
+template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+static auto check(const tensor_t<tstorage, tscalar, 2>& tensor,
+    tensor_size_t index0, tensor_size_t index1)
 {
-    tscalar sum = 0;
+    tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
         for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)
@@ -32,11 +32,11 @@ static auto check(const tensor_t<tstorage, 2>& tensor,
     return sum;
 }
 
-template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 3>& tensor,
-    const tensor_size_t index0, const tensor_size_t index1, const tensor_size_t index2)
+template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+static auto check(const tensor_t<tstorage, tscalar, 3>& tensor,
+    tensor_size_t index0, tensor_size_t index1, tensor_size_t index2)
 {
-    tscalar sum = 0;
+    tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
         for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)
@@ -51,11 +51,11 @@ static auto check(const tensor_t<tstorage, 3>& tensor,
     return sum;
 }
 
-template <typename tscalar, typename tstorage>
-static auto check(const tensor_t<tstorage, 4>& tensor,
-    const tensor_size_t index0, const tensor_size_t index1, const tensor_size_t index2, const tensor_size_t index3)
+template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+static auto check(const tensor_t<tstorage, tscalar, 4>& tensor,
+    tensor_size_t index0, tensor_size_t index1, tensor_size_t index2, tensor_size_t index3)
 {
-    tscalar sum = 0;
+    tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++ i0)
     {
         for (tensor_size_t i1 = 0; i1 <= index1; ++ i1)

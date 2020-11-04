@@ -5,8 +5,8 @@
 
 using namespace nano;
 
-template <typename tstorage, size_t trank>
-auto tensor2str(const tensor_t<tstorage, trank>& tensor)
+template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
 {
     std::ostringstream stream;
     UTEST_REQUIRE_NOTHROW(nano::write(stream, tensor));

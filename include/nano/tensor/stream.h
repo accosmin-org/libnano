@@ -35,11 +35,9 @@ namespace nano
     ///
     /// \brief write unformatted the given tensor.
     ///
-    template <typename tstorage, size_t trank>
-    std::ostream& write(std::ostream& stream, const tensor_t<tstorage, trank>& tensor)
+    template <template <typename tscalar, size_t> class tstorage, typename tscalar, size_t trank>
+    std::ostream& write(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor)
     {
-        using tscalar = typename tensor_t<tstorage, trank>::tscalar;
-
         if (!::nano::write(stream, detail::tensor_version()) ||                     // version
             !::nano::write(stream, static_cast<uint32_t>(trank)) ||                 // rank
             !::nano::write_cast<int32_t>(stream, tensor.dims().data(), trank) ||    // dimensions
@@ -55,11 +53,10 @@ namespace nano
     ///
     /// \brief read unformatted the given tensor.
     ///
-    template <typename tstorage, size_t trank>
-    std::istream& read(std::istream& stream, tensor_t<tstorage, trank>& tensor)
+    template <template <typename tscalar, size_t> class tstorage, typename tscalar, size_t trank>
+    std::istream& read(std::istream& stream, tensor_t<tstorage, tscalar, trank>& tensor)
     {
-        using tscalar = typename tensor_t<tstorage, trank>::tscalar;
-        typename tensor_t<tstorage, trank>::tdims dims;
+        typename tensor_t<tstorage, tscalar, trank>::tdims dims;
         uint32_t iversion = 0xFFFFFFFF, irank = 0, iscalar = 0;
         uint64_t ihash = 0;
 
