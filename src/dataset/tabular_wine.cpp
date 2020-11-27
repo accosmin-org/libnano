@@ -6,7 +6,7 @@ wine_dataset_t::wine_dataset_t()
 {
     features(
     {
-        feature_t{"class"}.labels({"1", "2", "3"}),
+        feature_t{"class"}.labels(3),
         feature_t{"Alcohol"},
         feature_t{"Malic acid"},
         feature_t{"Ash"},

@@ -7,7 +7,7 @@ breast_cancer_dataset_t::breast_cancer_dataset_t()
     features(
     {
         feature_t{"ID"},
-        feature_t{"Diagnosis"}.labels({"M", "B"}),
+        feature_t{"Diagnosis"}.labels(2),
 
         feature_t{"radius1"},
         feature_t{"texture1"},

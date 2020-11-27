@@ -6,10 +6,10 @@ forest_fires_dataset_t::forest_fires_dataset_t()
 {
     features(
     {
-        feature_t{"X"}.labels({"1", "2", "3", "4", "5", "6", "7", "8", "9"}),
-        feature_t{"Y"}.labels({"2", "3", "4", "5", "6", "7", "8", "9"}),
-        feature_t{"month"}.labels({"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}),
-        feature_t{"day"}.labels({"mon", "tue", "wed", "thu", "fri", "sat", "sun"}),
+        feature_t{"X"}.labels(9),
+        feature_t{"Y"}.labels(8),
+        feature_t{"month"}.labels(12),
+        feature_t{"day"}.labels(7),
         feature_t{"FFMC"},
         feature_t{"DMC"},
         feature_t{"DC"},

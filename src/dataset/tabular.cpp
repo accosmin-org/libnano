@@ -152,7 +152,7 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
 
         const auto f = tokenizer.count() - 1;
         const auto token = tokenizer.get();
-        const auto& feature = m_features[f];
+        auto& feature = m_features[f];
 
         if (token == feature.placeholder())
         {
@@ -174,17 +174,15 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
         }
         else
         {
-            const auto& labels = feature.labels();
-
-            const auto it = std::find(labels.begin(), labels.end(), token);
-            if (it == labels.end())
+            const auto ilabel = feature.set_label(token);
+            if (ilabel == string_t::npos)
             {
                 log_error() << "tabular dataset: invalid line " << path << ":" << line_index
                     << ", invalid label [" << token << "] for feature [" << feature.name() << "]!";
                 return false;
             }
 
-            store(row, f, std::distance(labels.begin(), it));
+            store(row, f, static_cast<tensor_size_t>(ilabel));
         }
     }
 

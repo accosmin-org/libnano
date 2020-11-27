@@ -10,7 +10,7 @@ iris_dataset_t::iris_dataset_t()
         feature_t{"sepal_width_cm"},
         feature_t{"petal_length_cm"},
         feature_t{"petal_width_cm"},
-        feature_t{"class"}.labels({"Iris-setosa", "Iris-versicolor", "Iris-virginica"})
+        feature_t{"class"}.labels(3),
     }, 4);
 
     const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/iris");
