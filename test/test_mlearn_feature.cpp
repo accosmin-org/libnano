@@ -29,43 +29,43 @@ UTEST_CASE(discrete)
     UTEST_CHECK_EQUAL(feature.label(2), "");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(!feature.set_label(""));
+    UTEST_CHECK_EQUAL(feature.set_label(""), string_t::npos);
     UTEST_CHECK_EQUAL(feature.label(0), "");
     UTEST_CHECK_EQUAL(feature.label(1), "");
     UTEST_CHECK_EQUAL(feature.label(2), "");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(feature.set_label("cate0"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate0"), 0U);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "");
     UTEST_CHECK_EQUAL(feature.label(2), "");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(feature.set_label("cate1"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate1"), 1U);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "cate1");
     UTEST_CHECK_EQUAL(feature.label(2), "");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(feature.set_label("cate1"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate1"), 1U);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "cate1");
     UTEST_CHECK_EQUAL(feature.label(2), "");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(feature.set_label("cate2"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate2"), 2U);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "cate1");
     UTEST_CHECK_EQUAL(feature.label(2), "cate2");
     UTEST_CHECK_EQUAL(feature.label(3), "");
 
-    UTEST_CHECK(feature.set_label("cate3"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate3"), 3U);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "cate1");
     UTEST_CHECK_EQUAL(feature.label(2), "cate2");
     UTEST_CHECK_EQUAL(feature.label(3), "cate3");
 
-    UTEST_CHECK(!feature.set_label("cate4"));
+    UTEST_CHECK_EQUAL(feature.set_label("cate4"), string_t::npos);
     UTEST_CHECK_EQUAL(feature.label(0), "cate0");
     UTEST_CHECK_EQUAL(feature.label(1), "cate1");
     UTEST_CHECK_EQUAL(feature.label(2), "cate2");

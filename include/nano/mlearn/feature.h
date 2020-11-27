@@ -64,33 +64,33 @@ namespace nano
         /// \brief try to add the given label if possible.
         /// NB: this is useful when the labels are known before loading some dataset.
         ///
-        bool set_label(const string_t& label)
+        size_t set_label(const string_t& label)
         {
             if (label.empty())
             {
-                return false;
+                return string_t::npos;
             }
 
             const auto it = std::find(m_labels.begin(), m_labels.end(), label);
             if (it == m_labels.end())
             {
                 // new label, replace the first empty label with it
-                for (auto& known_label : m_labels)
+                for (size_t i = 0; i < m_labels.size(); ++ i)
                 {
-                    if (known_label.empty())
+                    if (m_labels[i].empty())
                     {
-                        known_label = label;
-                        return true;
+                        m_labels[i] = label;
+                        return i;
                     }
                 }
 
                 // new label, but no new place for it
-                return false;
+                return string_t::npos;
             }
             else
             {
                 // known label, ignore
-                return true;
+                return static_cast<size_t>(std::distance(m_labels.begin(), it));
             }
         }
 
