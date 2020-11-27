@@ -1,33 +1,9 @@
-#include <fstream>
 #include <nano/logger.h>
 #include <nano/tokenizer.h>
 #include <nano/mlearn/class.h>
 #include <nano/dataset/tabular.h>
 
 using namespace nano;
-
-template <typename toperator>
-static auto parse(const string_t& path, const char skip, bool header, const toperator& op)
-{
-    string_t line;
-    tensor_size_t line_index = 0;
-    for (std::ifstream stream(path); std::getline(stream, line); ++ line_index)
-    {
-        if (header && line_index == 0)
-        {
-            header = false;
-        }
-        else if (!line.empty() && line[0] != skip)
-        {
-            if (!op(line, line_index))
-            {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
 
 void tabular_dataset_t::csvs(std::vector<csv_t> csvs)
 {
@@ -61,7 +37,7 @@ void tabular_dataset_t::load()
     tensor_size_t data_size = 0;
     for (const auto& csv : m_csvs)
     {
-        ::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t&, const tensor_size_t)
+        csv.parse([&] (const string_t&, const tensor_size_t)
         {
             ++ data_size;
             return true;
@@ -98,7 +74,7 @@ void tabular_dataset_t::load()
 
         const auto old_row = row;
         critical(
-            !::parse(csv.m_path, csv.m_skip, csv.m_header, [&] (const string_t& line, const tensor_size_t line_index)
+            !csv.parse([&] (const string_t& line, const tensor_size_t line_index)
             {
                 return this->parse(csv.m_path, line, csv.m_delim, line_index, row ++);
             }),

@@ -17,6 +17,61 @@ UTEST_CASE(_default)
     UTEST_CHECK(!feature_t::missing(0));
 }
 
+UTEST_CASE(discrete)
+{
+    auto feature = feature_t{"cate"};
+    UTEST_CHECK(!feature.discrete());
+
+    feature.labels(4);
+    UTEST_CHECK(feature.discrete());
+    UTEST_CHECK_EQUAL(feature.label(0), "");
+    UTEST_CHECK_EQUAL(feature.label(1), "");
+    UTEST_CHECK_EQUAL(feature.label(2), "");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(!feature.set_label(""));
+    UTEST_CHECK_EQUAL(feature.label(0), "");
+    UTEST_CHECK_EQUAL(feature.label(1), "");
+    UTEST_CHECK_EQUAL(feature.label(2), "");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(feature.set_label("cate0"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "");
+    UTEST_CHECK_EQUAL(feature.label(2), "");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(feature.set_label("cate1"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+    UTEST_CHECK_EQUAL(feature.label(2), "");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(feature.set_label("cate1"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+    UTEST_CHECK_EQUAL(feature.label(2), "");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(feature.set_label("cate2"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+    UTEST_CHECK_EQUAL(feature.label(2), "cate2");
+    UTEST_CHECK_EQUAL(feature.label(3), "");
+
+    UTEST_CHECK(feature.set_label("cate3"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+    UTEST_CHECK_EQUAL(feature.label(2), "cate2");
+    UTEST_CHECK_EQUAL(feature.label(3), "cate3");
+
+    UTEST_CHECK(!feature.set_label("cate4"));
+    UTEST_CHECK_EQUAL(feature.label(0), "cate0");
+    UTEST_CHECK_EQUAL(feature.label(1), "cate1");
+    UTEST_CHECK_EQUAL(feature.label(2), "cate2");
+    UTEST_CHECK_EQUAL(feature.label(3), "cate3");
+}
+
 UTEST_CASE(compare)
 {
     const auto make_feature_cont = [] (const string_t& name)

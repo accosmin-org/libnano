@@ -41,12 +41,12 @@ namespace nano
         feature_t target() const override;
 
         ///
-        /// \brief set the CSV files to load
+        /// \brief set the CSV files to load.
         ///
         void csvs(std::vector<csv_t>);
 
         ///
-        /// \brief set the input and the target features
+        /// \brief set the input and the target features.
         ///
         void features(std::vector<feature_t>, size_t target = string_t::npos);
 

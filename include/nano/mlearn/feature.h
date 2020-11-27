@@ -33,7 +33,7 @@ namespace nano
         }
 
         ///
-        /// \brief set the placeholder (the feature becomes optional).
+        /// \brief set the placeholder (the feature becomes optional if the placeholder is not empty).
         ///
         auto& placeholder(string_t placeholder)
         {
@@ -42,12 +42,56 @@ namespace nano
         }
 
         ///
-        /// \brief set the labels (the feature become discrete).
+        /// \brief set the labels (the feature becomes discrete).
         ///
         auto& labels(strings_t labels)
         {
             m_labels = std::move(labels);
             return *this;
+        }
+
+        ///
+        /// \brief set the number of unknown labels (the feature becomes discrete).
+        /// NB: this is useful when the labels are known before loading some dataset.
+        ///
+        auto& labels(size_t count)
+        {
+            auto labels = strings_t(count);
+            return this->labels(std::move(labels));
+        }
+
+        ///
+        /// \brief try to add the given label if possible.
+        /// NB: this is useful when the labels are known before loading some dataset.
+        ///
+        bool set_label(const string_t& label)
+        {
+            if (label.empty())
+            {
+                return false;
+            }
+
+            const auto it = std::find(m_labels.begin(), m_labels.end(), label);
+            if (it == m_labels.end())
+            {
+                // new label, replace the first empty label with it
+                for (auto& known_label : m_labels)
+                {
+                    if (known_label.empty())
+                    {
+                        known_label = label;
+                        return true;
+                    }
+                }
+
+                // new label, but no new place for it
+                return false;
+            }
+            else
+            {
+                // known label, ignore
+                return true;
+            }
         }
 
         ///
