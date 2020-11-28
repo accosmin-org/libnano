@@ -10,16 +10,9 @@ target_sources(nano PRIVATE
     table.cpp
     logger.cpp
     stream.cpp
-    dataset/tabular_adult.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
-    dataset/tabular_abalone.cpp
-    dataset/tabular_breast_cancer.cpp
-    dataset/tabular_forest_fires.cpp
-    dataset/tabular_bank_marketing.cpp
     dataset/tabular.cpp
-    dataset/tabular_iris.cpp
-    dataset/tabular_wine.cpp
     dataset/imclass_cifar.cpp
     lsearch0.cpp
     lsearch0/quadratic.cpp

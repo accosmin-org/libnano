@@ -4,6 +4,26 @@
 
 using namespace nano;
 
+static auto feature_cont()
+{
+    return feature_t{"cont"};
+}
+
+static auto feature_cont_opt()
+{
+    return feature_t{"cont_opt"}.placeholder("?");
+}
+
+static auto feature_cate()
+{
+    return feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
+}
+
+static auto feature_cate_opt()
+{
+    return feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
+}
+
 class fixture_dataset_t final : public tabular_dataset_t
 {
 public:
@@ -11,15 +31,33 @@ public:
     static auto data_path() { return "test_dataset_tabular_data.csv"; }
     static auto test_path() { return "test_dataset_tabular_test.csv"; }
 
-    fixture_dataset_t()
+    static auto csvs(tensor_size_t data_expected = 20, tensor_size_t test_expected = 10)
+    {
+        return csvs_t(
+        {
+            csv_t{data_path()}.delim(",").header(false).expected(data_expected).skip('@'),
+            csv_t{test_path()}.delim(",").header(true).expected(test_expected).skip('@').testing(0, test_expected)
+        });
+    }
+
+    fixture_dataset_t() :
+        fixture_dataset_t(fixture_dataset_t::csvs(), features_t{})
+    {
+    }
+
+    fixture_dataset_t(features_t features, size_t target = string_t::npos) :
+        fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
+    {
+    }
+
+    fixture_dataset_t(csvs_t csvs, features_t features, size_t target = string_t::npos) :
+        tabular_dataset_t(std::move(csvs), std::move(features), target)
     {
         std::remove(data_path());
         std::remove(test_path());
 
         write_data(data_path());
         write_test(test_path());
-
-        paths();
     }
 
     fixture_dataset_t(fixture_dataset_t&&) = default;
@@ -31,15 +69,6 @@ public:
     {
         std::remove(data_path());
         std::remove(test_path());
-    }
-
-    void paths(const tensor_size_t data_expected = 20, const tensor_size_t test_expected = 10)
-    {
-        csvs(
-        {
-            csv_t{data_path()}.delim(",").header(false).expected(data_expected).skip('@'),
-            csv_t{test_path()}.delim(",").header(true).expected(test_expected).skip('@').testing(0, test_expected)
-        });
     }
 
     static void write_data(const char* path)
@@ -100,26 +129,6 @@ public:
     }
 };
 
-static auto feature_cont()
-{
-    return feature_t{"cont"};
-}
-
-static auto feature_cont_opt()
-{
-    return feature_t{"cont_opt"}.placeholder("?");
-}
-
-static auto feature_cate()
-{
-    return feature_t{"cate"}.labels({"cate0", "cate1", "cate2"});
-}
-
-static auto feature_cate_opt()
-{
-    return feature_t{"cate_opt"}.labels({"cate_opt0", "cate_opt1"}).placeholder("?");
-}
-
 UTEST_BEGIN_MODULE(test_dataset_tabular)
 
 UTEST_CASE(empty)
@@ -133,9 +142,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(config_no_target)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()});
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}};
 
     UTEST_CHECK(!dataset.target());
     UTEST_CHECK_EQUAL(dataset.features(), 0);
@@ -147,9 +154,7 @@ UTEST_CASE(config_no_target)
 
 UTEST_CASE(config_with_target)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
 
     UTEST_CHECK_EQUAL(dataset.features(), 0);
     UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont_opt());
@@ -160,70 +165,70 @@ UTEST_CASE(config_with_target)
 
 UTEST_CASE(noload_no_data)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.csvs({});
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0);
+    const auto csvs = csvs_t{};
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(noload_no_features)
 {
     auto dataset = fixture_dataset_t{};
-
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(noload_few_features)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate()}, 0);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate()}, 0};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_features)
+UTEST_CASE(noload_wrong_features0)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont_opt(), feature_cont(), feature_cate(), feature_cate_opt()}, 1);
-    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate_opt(), feature_cate()}, 0);
+    auto dataset = fixture_dataset_t{{feature_cont_opt(), feature_cont(), feature_cate(), feature_cate_opt()}, 1};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_expected)
+UTEST_CASE(noload_wrong_features1)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.paths(21, 10);
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0);
-    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
-
-    dataset.paths(20, 9);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate_opt(), feature_cate()}, 0};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_invalid_target)
+UTEST_CASE(noload_wrong_expected0)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 4);
+    const auto csvs = fixture_dataset_t::csvs(21, 10);
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
+}
 
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 1);
+UTEST_CASE(noload_wrong_expected0)
+{
+    const auto csvs = fixture_dataset_t::csvs(20, 9);
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
+}
 
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 3);
+UTEST_CASE(noload_invalid_target0)
+{
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 4};
+    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
+}
+
+UTEST_CASE(noload_invalid_target1)
+{
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 1};
+    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
+}
+
+UTEST_CASE(noload_invalid_target2)
+{
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 3};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(load_no_target)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()});
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}};
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.features(), 4);
@@ -258,9 +263,7 @@ UTEST_CASE(load_no_target)
 
 UTEST_CASE(load_with_cont_target)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.features(), 3);
@@ -294,9 +297,7 @@ UTEST_CASE(load_with_cont_target)
 
 UTEST_CASE(load_with_cate_target)
 {
-    auto dataset = fixture_dataset_t{};
-
-    dataset.features({feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 2);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 2};
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.features(), 3);

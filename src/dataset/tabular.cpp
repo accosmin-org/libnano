@@ -5,15 +5,11 @@
 
 using namespace nano;
 
-void tabular_dataset_t::csvs(std::vector<csv_t> csvs)
+tabular_dataset_t::tabular_dataset_t(csvs_t csvs, features_t features, size_t target) :
+    m_csvs(std::move(csvs)),
+    m_features(std::move(features)),
+    m_target(target)
 {
-    m_csvs = std::move(csvs);
-}
-
-void tabular_dataset_t::features(std::vector<feature_t> features, const size_t target)
-{
-    m_target = target;
-    m_features = std::move(features);
 }
 
 void tabular_dataset_t::load()
