@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,8 +12,8 @@ namespace nano
     {
     public:
 
-        explicit function_sargan_t(const tensor_size_t dims) :
-            function_t("Sargan", dims, convexity::yes)
+        explicit function_sargan_t(tensor_size_t dims) :
+            function_t("Sargan", dims, convexity::yes) // LCOV_EXCL_LINE
         {
         }
 

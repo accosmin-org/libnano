@@ -16,7 +16,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearch0_linear_t() = default;
+        lsearch0_linear_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearch0_t
@@ -31,8 +31,8 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void alpha(const scalar_t alpha) { m_alpha = alpha; }
-        void beta(const scalar_t beta) { m_beta = beta; }
+        void alpha(scalar_t alpha) { m_alpha = alpha; }
+        void beta(scalar_t beta) { m_beta = beta; }
 
         ///
         /// \brief access functions

@@ -12,7 +12,7 @@ linear_model_t::linear_model_t()
     model_t::register_param(sparam1_t{"linear::l1reg", 0, LE, 0, LE, 1e+10});
     model_t::register_param(sparam1_t{"linear::l2reg", 0, LE, 0, LE, 1e+10});
     model_t::register_param(sparam1_t{"linear::vAreg", 0, LE, 0, LE, 1e+10});
-    model_t::register_param(eparam1_t{"linear::normalization", ::nano::normalization::standard});
+    model_t::register_param(eparam1_t{"linear::scaling", feature_scaling::standard});
 }
 
 rmodel_t linear_model_t::clone() const
@@ -30,7 +30,7 @@ scalar_t linear_model_t::fit(
     }
     log_info() << string_t(128, '-');
 
-    for (size_t ifeature = 0U, features = dataset.features(); ifeature < features; ++ ifeature)
+    for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
     {
         const auto feature = dataset.feature(ifeature);
         critical(
@@ -43,18 +43,18 @@ scalar_t linear_model_t::fit(
     function.l1reg(l1reg());
     function.l2reg(l2reg());
     function.vAreg(vAreg());
-    function.normalization(normalization());
+    function.scaling(scaling());
 
     const auto state = solver.minimize(function, vector_t::Zero(function.size()));
     m_bias = function.bias(state.x);
     m_weights = function.weights(state.x);
 
-    // NB: rescale the bias and the weights to match the normalization of the inputs!
+    // NB: rescale the bias and the weights to match the scaling of the inputs!
     const auto& istats = function.istats();
-    istats.upscale(function.normalization(), m_weights, m_bias);
+    istats.upscale(function.scaling(), m_weights, m_bias);
 
     tensor1d_t errors(samples.size());
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
 
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
     {
@@ -103,7 +103,7 @@ void linear_model_t::write(std::ostream& stream) const
 
 tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
 {
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
 
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
     {

@@ -32,7 +32,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearchk_cgdescent_t() = default;
+        lsearchk_cgdescent_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearchk_t
@@ -47,13 +47,13 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void epsilon(const scalar_t epsilon) { m_epsilon = epsilon; }
-        void theta(const scalar_t theta) { m_theta = theta; }
-        void gamma(const scalar_t gamma) { m_gamma = gamma; }
-        void delta(const scalar_t delta) { m_delta = delta; }
-        void omega(const scalar_t omega) { m_omega = omega; }
-        void ro(const scalar_t ro) { m_ro = ro; }
-        void crit(const criterion crit) { m_criterion = crit; }
+        void epsilon(scalar_t epsilon) { m_epsilon = epsilon; }
+        void theta(scalar_t theta) { m_theta = theta; }
+        void gamma(scalar_t gamma) { m_gamma = gamma; }
+        void delta(scalar_t delta) { m_delta = delta; }
+        void omega(scalar_t omega) { m_omega = omega; }
+        void ro(scalar_t ro) { m_ro = ro; }
+        void crit(criterion crit) { m_criterion = crit; }
 
         ///
         /// \brief access functions

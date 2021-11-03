@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/tensor/index.h>
+#include <nano/tensor/dims.h>
 
 namespace nano
 {
@@ -9,7 +9,11 @@ namespace nano
     ///     - stores dimensions
     ///     - handles the indexing
     ///
-    template <typename tscalar, size_t trank>
+    template
+    <
+        typename tscalar, size_t trank,
+        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
+    >
     class tensor_base_t
     {
     public:
@@ -18,9 +22,9 @@ namespace nano
             trank >= 1,
             "cannot create tensors with fewer than one dimension");
 
-        using tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar>::type>::type;
+        using tscalar_remove_cvref = std::remove_cv_t<std::remove_reference_t<tscalar>>;
         static_assert(
-            std::is_same<tscalar, tscalar_remove_cvref>::value,
+            std::is_same_v<tscalar, tscalar_remove_cvref>,
             "cannot create tensors with cvref scalars");
 
         using tdims = tensor_dims_t<trank>;

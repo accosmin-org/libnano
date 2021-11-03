@@ -2,7 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/tensor.h>
-#include <nano/factory.h>
+#include <nano/core/factory.h>
 
 namespace nano
 {

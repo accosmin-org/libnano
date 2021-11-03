@@ -1,7 +1,7 @@
 #include <fstream>
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include "fixture/gboost.h"
+#include <nano/core/numeric.h>
 #include <nano/gboost/model.h>
 
 using namespace nano;
@@ -34,7 +34,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
             make_affine_target<fun1_lin_t>(sample, gt_feature2(), 7, +2.0, -1.5) +
             make_affine_target<fun1_lin_t>(sample, gt_feature3(), 8, -1.0, +2.5));
@@ -53,7 +53,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
             make_stump_target(sample, gt_feature2(), 7, +3.5, +2.0, -1.5, 0) +
             make_stump_target(sample, gt_feature3(), 8, +2.5, -1.0, +2.5, 0));
@@ -99,7 +99,7 @@ static void check_predict(const dataset_t& dataset, const gboost_model_t& model)
 
     tensor4d_t outputs;
     UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(samples.size(), dataset.tdim()));
+    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(samples.size(), dataset.tdims()));
     UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e-3);
 
     // check that the predictions shouldn't change at all when reloading the model

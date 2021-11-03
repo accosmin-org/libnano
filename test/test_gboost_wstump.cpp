@@ -1,6 +1,6 @@
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include "fixture/gboost.h"
+#include <nano/core/numeric.h>
 
 using namespace nano;
 
@@ -17,7 +17,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_stump_target(sample, gt_feature(), 5, 2.5, +3.0, -2.1, 0));
     }
 
@@ -31,7 +31,7 @@ public:
 
     scalar_t threshold() const { return 2.5; }
     tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
-    tensor4d_t tables() const { return {make_dims(2, 1, 1, 1), {+3.0, -2.1}}; }
+    tensor4d_t tables() const { return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +3.0, -2.1); }
 };
 
 UTEST_BEGIN_MODULE(test_gboost_wstump)

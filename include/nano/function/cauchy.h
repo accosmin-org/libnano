@@ -11,8 +11,8 @@ namespace nano
     {
     public:
 
-        explicit function_cauchy_t(const tensor_size_t dims) :
-            function_t("Cauchy", dims, convexity::no)
+        explicit function_cauchy_t(tensor_size_t dims) :
+            function_t("Cauchy", dims, convexity::no) // LCOV_EXCL_LINE
         {
         }
 

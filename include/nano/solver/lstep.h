@@ -30,7 +30,7 @@ namespace nano
         lsearch_step_t(const lsearch_step_t&) = default;
         // cppcheck-suppress noExplicitConstructor
         lsearch_step_t(const solver_state_t& state) : t(state.t), f(state.f), g(state.dg()) {} // NOLINT(hicpp-explicit-conversions)
-        lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t gg) : t(tt), f(ff), g(gg) {}
+        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg) : t(tt), f(ff), g(gg) {}
 
         ///
         /// \brief assignment
@@ -106,7 +106,7 @@ namespace nano
         ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
         ///         until the interpolated point is valid.
         ///
-        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, const interpolation method)
+        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation method)
         {
             const auto tc = cubic(u, v);
             const auto tq = quadratic(u, v);

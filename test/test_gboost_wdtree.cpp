@@ -1,6 +1,6 @@
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include "fixture/gboost.h"
+#include <nano/core/numeric.h>
 
 using namespace nano;
 
@@ -40,17 +40,17 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_stump_target(sample, gt_feature(), 5, 1.5, -4.0, +3.7, 0));
+        target(sample).full(make_stump_target(sample, gt_feature(), 5, 1.5, -4.0, +3.7, 0));
     }
 
     indices_t features() const override
     {
-        return {make_dims(1), {gt_feature()}};
+        return make_tensor<tensor_size_t>(make_dims(1), gt_feature());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {-4.0, +3.7}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -4.0, +3.7);
     }
 
     dtree_nodes_t nodes() const override
@@ -77,17 +77,17 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_table_target(sample, gt_feature(), 3, 5.0, 0));
+        target(sample).full(make_table_target(sample, gt_feature(), 3, 5.0, 0));
     }
 
     indices_t features() const override
     {
-        return {make_dims(1), {gt_feature()}};
+        return make_tensor<tensor_size_t>(make_dims(1), gt_feature());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}};
+        return make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -5.0, +0.0, +5.0);
     }
 
     dtree_nodes_t nodes() const override
@@ -127,15 +127,15 @@ public:
             switch (sample % 3)
             {
             case 0:
-                target(sample).constant(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0));
+                target(sample).full(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0));
                 break;
 
             case 1:
-                target(sample).constant(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2));
+                target(sample).full(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2));
                 break;
 
             default:
-                target(sample).constant(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4));
+                target(sample).full(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4));
                 break;
             }
         }
@@ -143,12 +143,12 @@ public:
 
     indices_t features() const override
     {
-        return {make_dims(4), {gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10()}};
+        return make_tensor<tensor_size_t>(make_dims(4), gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(6, 1, 1, 1), {-1.2, +3.4, -1.3, +3.5, -1.4, +3.6}};
+        return make_tensor<scalar_t>(make_dims(6, 1, 1, 1), -1.2, +3.4, -1.3, +3.5, -1.4, +3.6);
     }
 
     dtree_nodes_t nodes() const override
@@ -204,11 +204,11 @@ public:
                 {
                     if ((input(tf10) = static_cast<scalar_t>(sample % 9)) < 5.0)
                     {
-                        target.constant(make_table_target(sample, gt_feature20(), 3, 2.0, 0));
+                        target.full(make_table_target(sample, gt_feature20(), 3, 2.0, 0));
                     }
                     else
                     {
-                        target.constant(make_stump_target(sample, gt_feature21(), 5, 3.5, +1.9, -0.7, 3));
+                        target.full(make_stump_target(sample, gt_feature21(), 5, 3.5, +1.9, -0.7, 3));
                     }
                 }
             }
@@ -218,12 +218,12 @@ public:
                 {
                     if ((input(tf11) = static_cast<scalar_t>(sample % 11)) < 7.0)
                     {
-                        target.constant(make_table_target(sample, gt_feature22(), 3, 3.0, 5));
+                        target.full(make_table_target(sample, gt_feature22(), 3, 3.0, 5));
                         target.array() -= 20.0;
                     }
                     else
                     {
-                        target.constant(make_table_target(sample, gt_feature23(), 3, 3.0, 8));
+                        target.full(make_table_target(sample, gt_feature23(), 3, 3.0, 8));
                         target.array() -= 30.0;
                     }
                 }
@@ -234,12 +234,16 @@ public:
     indices_t features() const override
     {
         // NB: features = {3, 4, 5, 6, 7, 8, 9} aka {stump21, table23, stump11, table22, stump10, table20, stump0}
-        return {make_dims(7), {gt_feature21(), gt_feature23(), gt_feature11(), gt_feature22(), gt_feature10(), gt_feature20(), gt_feature0()}};
+        return  make_tensor<tensor_size_t>(
+                make_dims(7),
+                gt_feature21(), gt_feature23(), gt_feature11(), gt_feature22(), gt_feature10(), gt_feature20(), gt_feature0());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(11, 1, 1, 1), {-2.0, +0.0, +2.0, +1.9, -0.7, -23.0, -20.0, -17.0, -33.0, -30.0, -27.0}};
+        return  make_tensor<scalar_t>(
+                make_dims(11, 1, 1, 1),
+                -2.0, +0.0, +2.0, +1.9, -0.7, -23.0, -20.0, -17.0, -33.0, -30.0, -27.0);
     }
 
     dtree_nodes_t nodes() const override

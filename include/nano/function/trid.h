@@ -11,8 +11,8 @@ namespace nano
     {
     public:
 
-        explicit function_trid_t(const tensor_size_t dims) :
-            function_t("Trid", dims, convexity::yes)
+        explicit function_trid_t(tensor_size_t dims) :
+            function_t("Trid", dims, convexity::yes) // LCOV_EXCL_LINE
         {
         }
 

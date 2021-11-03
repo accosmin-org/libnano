@@ -18,7 +18,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearchk_fletcher_t() = default;
+        lsearchk_fletcher_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearchk_t
@@ -33,9 +33,9 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void tau1(const scalar_t tau1) { m_tau1 = tau1; }
-        void tau23(const scalar_t tau2, const scalar_t tau3) { m_tau23.set(tau2, tau3); }
-        void interp(const interpolation interp) { m_interpolation = interp; }
+        void tau1(scalar_t tau1) { m_tau1 = tau1; }
+        void tau23(scalar_t tau2, scalar_t tau3) { m_tau23.set(tau2, tau3); }
+        void interp(interpolation interp) { m_interpolation = interp; }
 
         ///
         /// \brief access functions

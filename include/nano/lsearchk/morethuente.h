@@ -19,7 +19,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearchk_morethuente_t() = default;
+        lsearchk_morethuente_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearchk_t
@@ -34,7 +34,7 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void delta(const scalar_t delta) { m_delta = delta; }
+        void delta(scalar_t delta) { m_delta = delta; }
 
         ///
         /// \brief access parameters

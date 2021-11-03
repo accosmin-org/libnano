@@ -17,6 +17,10 @@ threads=$((cores+1))
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror"
 
+function lto {
+    export CXXFLAGS="${CXXFLAGS} -flto"
+}
+
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
 }
@@ -101,7 +105,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=2.1
+    version=2.6
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
@@ -130,11 +134,7 @@ function cppcheck {
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
         --suppress=shadowFunction \
-        --suppress=unmatchedSuppression || return 1
-}
-
-function install_json {
-    bash ${basedir}/scripts/install_json.sh || return 1
+        --suppress=unmatchedSuppression
 }
 
 function codecov {
@@ -142,11 +142,27 @@ function codecov {
 
     local output=${basedir}/coverage.info
 
-    lcov --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
-    lcov --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
-    lcov --list ${output} || return 1
-    genhtml --output lcovhtml ${output} || return 1
-    bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
+    options=""
+    options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
+    options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
+
+    lcov ${options} --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
+    lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
+    lcov ${options} --list ${output} || return 1
+    genhtml ${options} --output lcovhtml ${output} || return 1
+    if [ -n "$CODECOV_TOKEN" ]; then
+        printf "Uploading code coverage report to codecov.io ...\n"
+        curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+
+        gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+        shasum -a 256 -c codecov.SHA256SUM
+
+        chmod +x codecov
+        ./codecov -t ${CODECOV_TOKEN} -f ${output} || return 1
+    fi
     #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
@@ -157,7 +173,7 @@ function coveralls {
 }
 
 function build_valgrind {
-    version=3.16.0
+    version=3.17.0
     installed_version=$(/tmp/valgrind/bin/valgrind --version)
 
     if [ "${installed_version}" != "valgrind-${version}" ]; then
@@ -222,7 +238,7 @@ function clang_tidy {
     printf "Logging to ${log} ...\n"
 
     wrapper=run-clang-tidy${clang_tidy_suffix}
-    wrapper=$(which ${wrapper} || which ${wrapper}.py)
+    wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     printf "Using wrapper ${wrapper} ...\n"
     ${wrapper} -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
@@ -267,8 +283,14 @@ function clang_tidy {
     fi
 }
 
+function clang_tidy_concurrency {
+    clang_tidy "concurrency*"
+}
+
 function clang_tidy_misc {
-    clang_tidy "misc*,-misc-non-private-member-variables-in-classes"
+    checks="misc*"
+    checks="${checks},-misc-non-private-member-variables-in-classes"
+    clang_tidy ${checks}
 }
 
 function clang_tidy_cert {
@@ -280,6 +302,7 @@ function clang_tidy_hicpp {
     checks="${checks},-hicpp-avoid-c-arrays"
     checks="${checks},-hicpp-no-array-decay"
     checks="${checks},-hicpp-signed-bitwise"
+    checks="${checks},-hicpp-named-parameter"
     clang_tidy ${checks}
 }
 
@@ -310,6 +333,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-isolate-declaration"
     checks="${checks},-readability-else-after-return"
     checks="${checks},-readability-convert-member-functions-to-static"
+    checks="${checks},-readability-function-cognitive-complexity"
     clang_tidy ${checks}
 }
 
@@ -327,6 +351,20 @@ function clang_tidy_cppcoreguidelines {
     clang_tidy ${checks}
 }
 
+function clang_tidy_all {
+    clang_tidy_misc || return 1
+    clang_tidy_cert || return 1
+    clang_tidy_hicpp || return 1
+    clang_tidy_bugprone || return 1
+    clang_tidy_modernize || return 1
+    #clang_tidy_concurrency || return 1
+    clang_tidy_performance || return 1
+    clang_tidy_portability || return 1
+    clang_tidy_readability || return 1
+    clang_tidy_clang_analyzer || return 1
+    clang_tidy_cppcoreguidelines || return 1
+}
+
 function usage {
     cat <<EOF
 usage: $0 [OPTIONS]
@@ -334,18 +372,20 @@ usage: $0 [OPTIONS]
 options:
     -h,--help
         print usage
+    --lto
+        setup compiler and linker flags to enable link-time optimization
     --asan
-        setup compiler and linker flags to use the address sanitizer
+        setup compiler and linker flags to enable the address sanitizer
     --lsan
-        setup compiler and linker flags to use the leak sanitizer
+        setup compiler and linker flags to enable the leak sanitizer
     --usan
-        setup compiler and linker flags to use the undefined behaviour sanitizer
+        setup compiler and linker flags to enable the undefined behaviour sanitizer
     --tsan
-        setup compiler and linker flags to use the thread sanitizer
+        setup compiler and linker flags to enable the thread sanitizer
     --msan
-        setup compiler and linker flags to use the memory sanitizer
+        setup compiler and linker flags to enable the memory sanitizer
     --gold
-        setup compiler and linker flags to use the gold linker
+        setup compiler and linker flags to enable the gold linker
     --native
         setup compiler flags to optimize for the native platform
     --libcpp
@@ -378,11 +418,13 @@ options:
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
         suffix for the clang-tidy binaries (e.g. -6.0)
+    --clang-tidy-all
     --clang-tidy-misc
     --clang-tidy-cert
     --clang-tidy-hicpp
     --clang-tidy-bugprone
     --clang-tidy-modernize
+    --clang-tidy-concurrency
     --clang-tidy-performance
     --clang-tidy-portability
     --clang-tidy-readability
@@ -407,6 +449,7 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
+        --lto)                          lto;;
         --asan)                         asan;;
         --lsan)                         lsan;;
         --usan)                         usan;;
@@ -429,11 +472,13 @@ while [ "$1" != "" ]; do
         --helgrind)                     helgrind || exit 1;;
         --clang-tidy-check)             shift; clang_tidy $1 || exit 1;;
         --clang-tidy-suffix)            shift; clang_tidy_suffix=$1;;
+        --clang-tidy-all)               clang_tidy_all || exit 1;;
         --clang-tidy-misc)              clang_tidy_misc || exit 1;;
         --clang-tidy-cert)              clang_tidy_cert || exit 1;;
         --clang-tidy-hicpp)             clang_tidy_hicpp || exit 1;;
         --clang-tidy-bugprone)          clang_tidy_bugprone || exit 1;;
         --clang-tidy-modernize)         clang_tidy_modernize || exit 1;;
+        --clang-tidy-concurrency)       clang_tidy_concurrency || exit 1;;
         --clang-tidy-performance)       clang_tidy_performance || exit 1;;
         --clang-tidy-portability)       clang_tidy_portability || exit 1;;
         --clang-tidy-readability)       clang_tidy_readability || exit 1;;

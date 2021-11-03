@@ -11,8 +11,8 @@ namespace nano
     {
     public:
 
-        explicit function_styblinski_tang_t(const tensor_size_t dims) :
-            function_t("Styblinski-Tang", dims, convexity::no)
+        explicit function_styblinski_tang_t(tensor_size_t dims) :
+            function_t("Styblinski-Tang", dims, convexity::no) // LCOV_EXCL_LINE
         {
         }
 

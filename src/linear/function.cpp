@@ -4,20 +4,20 @@
 
 using namespace nano;
 
-linear_function_t::linear_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples) :
-    function_t("linear", (::nano::size(dataset.idim()) + 1) * ::nano::size(dataset.tdim()), convexity::yes),
-    m_loss(loss),
+linear::function_t::linear::function_t(const dataset_generator_t& dataset, const loss_t& loss, flatten_cache_t& cache) :
+    ::nano::function_t("linear", (dataset.columns() + 1) * ::nano::size(dataset.target_dims()), convexity::yes),
     m_dataset(dataset),
-    m_samples(samples),
-    m_isize(::nano::size(dataset.idim())),
-    m_tsize(::nano::size(dataset.tdim())),
-    m_istats(m_dataset.istats(m_samples, batch()))
+    m_loss(loss),
+    m_flatten_cache(cache),
+    m_flatten_stats(dataset.flatten_stats(cache)),
+    m_isize(::nano::size(dataset.idims())),
+    m_tsize(::nano::size(dataset.tdims()))
 {
     assert(m_isize > 0);
     assert(m_tsize > 0);
 }
 
-scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t linear::function_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());
     assert(x.size() == (m_isize + 1) * m_tsize);
@@ -25,18 +25,17 @@ scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
     const auto b = bias(x);
     const auto W = weights(x);
 
-    std::vector<linear_cache_t> caches(tpool_t::size(), linear_cache_t{m_isize, m_tsize, gx != nullptr, vAreg() > 0});
+    // TODO: don't allocate caches for each call!!!
+    // TODO: implies setting all the parameters in the constructor
 
-    loopr(m_samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{m_isize, m_tsize, gx != nullptr, vAreg() > 0});
+
+    m_dataset.loop(m_flatten_cache, [&] (tensor_range_t, size_t tnum, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
     {
         assert(tnum < caches.size());
         auto& cache = caches[tnum];
 
-        const auto range = make_range(begin, end);
-        auto inputs = m_dataset.inputs(m_samples.slice(range));
-        const auto targets = m_dataset.targets(m_samples.slice(range));
-
-        m_istats.scale(normalization(), inputs);
+        m_istats.scale(scaling(), inputs);
         ::nano::linear::predict(inputs, W, b, cache.m_outputs);
         m_loss.value(targets, cache.m_outputs, cache.m_values);
 

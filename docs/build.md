@@ -24,7 +24,7 @@ System:
 Git submodules:
 * [utest](https://github.com/accosmin/utest) - (micro) header-only unit test library
 
-Libnano is tested on Ubuntu using gcc (version 5+) and clang (version 4+) and on OSX using AppleClang (version 7+). It may work with minor changes on other platforms as well or using other compiler versions.
+Libnano is tested on Linux (Ubuntu, ArchLinux) using both gcc and clang and on OSX using AppleClang. It may work with minor changes on other platforms as well or using other compiler versions.
 
 
 #### How to build

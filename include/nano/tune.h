@@ -13,6 +13,8 @@ namespace nano
     // TODO: either throw an exception if the optimum value is at the boundary or
     //  automatically extend the search domain!
 
+    // TODO: new method to tune in two steps: first random/grid-search, second fit iteratively (convex) quadratic
+
     namespace detail
     {
         template <size_t offset, size_t index, typename tsource, typename tdestination>

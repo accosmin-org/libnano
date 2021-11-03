@@ -1,10 +1,10 @@
 #include <iomanip>
-#include <nano/tpool.h>
-#include <nano/table.h>
-#include <nano/chrono.h>
-#include <nano/logger.h>
 #include <nano/tensor.h>
-#include <nano/cmdline.h>
+#include <nano/core/tpool.h>
+#include <nano/core/table.h>
+#include <nano/core/chrono.h>
+#include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -69,10 +69,10 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(tpool_t::size());
-    nano::loopi(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
+    vector_t values = vector_t::Zero(static_cast<tensor_size_t>(tpool_t::size()));
+    nano::loopi(targets.rows(), [&] (tensor_size_t i, size_t t)
     {
-        values(t) += sti<toperator>(i, targets, outputs);
+        values(static_cast<tensor_size_t>(t)) += sti<toperator>(i, targets, outputs);
     });
 
     return values.sum() / static_cast<scalar_t>(targets.rows());
@@ -194,8 +194,8 @@ static int unsafe_main(int argc, const char *argv[])
 
     // check arguments and options
     const auto kilo = tensor_size_t(1024), mega = kilo * kilo, giga = mega * kilo;
-    const auto cmd_min_size = clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, mega);
-    const auto cmd_max_size = clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, giga);
+    const auto cmd_min_size = std::clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, mega);
+    const auto cmd_max_size = std::clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, giga);
 
     table_t table;
     auto& header = table.header();

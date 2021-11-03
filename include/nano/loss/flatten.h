@@ -238,6 +238,25 @@ namespace nano
         };
 
         ///
+        /// \brief multi-class squared hinge loss (smooth version of the hinge loss).
+        ///
+        template <typename terror>
+        struct squared_hinge_t : public terror
+        {
+            template <typename tarray>
+            static auto value(const tarray& target, const tarray& output)
+            {
+                return (1 - target * output).max(0).square().sum();
+            }
+
+            template <typename tarray, typename tgarray>
+            static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+            {
+                vgrad = -target * ((1 - target * output).max(0)) * 2.0;
+            }
+        };
+
+        ///
         /// \brief multi-class savage loss.
         ///
         template <typename terror>
@@ -343,10 +362,12 @@ namespace nano
     using sclassnll_loss_t = array_loss_t<detail::classnll_t<detail::sclass_t>>;
     using slogistic_loss_t = array_loss_t<detail::logistic_t<detail::sclass_t>>;
     using sexponential_loss_t = array_loss_t<detail::exponential_t<detail::sclass_t>>;
+    using ssquared_hinge_loss_t = array_loss_t<detail::squared_hinge_t<detail::sclass_t>>;
 
     using mhinge_loss_t = array_loss_t<detail::hinge_t<detail::mclass_t>>;
     using msavage_loss_t = array_loss_t<detail::savage_t<detail::mclass_t>>;
     using mtangent_loss_t = array_loss_t<detail::tangent_t<detail::mclass_t>>;
     using mlogistic_loss_t = array_loss_t<detail::logistic_t<detail::mclass_t>>;
     using mexponential_loss_t = array_loss_t<detail::exponential_t<detail::mclass_t>>;
+    using msquared_hinge_loss_t = array_loss_t<detail::squared_hinge_t<detail::mclass_t>>;
 }

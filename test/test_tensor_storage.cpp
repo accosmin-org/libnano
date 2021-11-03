@@ -15,7 +15,7 @@ static void storage_must_match(const tlhs& lhs, const trhs& rhs)
 
     const auto map_lhs = map_vector(lhs.data(), lhs.size());
     const auto map_rhs = map_vector(rhs.data(), rhs.size());
-    UTEST_CHECK_EIGEN_CLOSE(map_lhs, map_rhs, 1e-12);
+    UTEST_CHECK_CLOSE(map_lhs, map_rhs, 1e-12);
 }
 
 static auto make_vector_storage(const vector_t& data)

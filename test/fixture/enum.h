@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/string.h>
+#include <nano/core/strutil.h>
 
 namespace nano
 {

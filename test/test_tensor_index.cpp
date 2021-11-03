@@ -1,6 +1,7 @@
-#include <nano/string.h>
 #include <utest/utest.h>
-#include <nano/tensor/index.h>
+#include <nano/tensor/dims.h>
+#include <nano/tensor/range.h>
+#include <nano/core/strutil.h>
 
 using namespace nano;
 

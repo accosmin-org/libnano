@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/random.h>
+#include <nano/core/random.h>
 #include <nano/function.h>
 
 namespace nano
@@ -18,10 +18,10 @@ namespace nano
     {
     public:
 
-        explicit function_geometric_optimization_t(const tensor_size_t dims, const tensor_size_t summands = 16) :
-            function_t("Geometric Optimization", dims, convexity::yes),
-            m_a(vector_t::Random(summands)),
-            m_A(matrix_t::Random(summands, dims) / dims)
+        explicit function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands = 16) :
+            function_t("Geometric Optimization", dims, convexity::yes), // LCOV_EXCL_LINE
+            m_a(vector_t::Random(summands)), // LCOV_EXCL_LINE
+            m_A(matrix_t::Random(summands, dims) / dims) // LCOV_EXCL_LINE
         {
             assert(summands > 0);
         }

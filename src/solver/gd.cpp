@@ -29,4 +29,4 @@ solver_state_t solver_gd_t::iterate(const solver_function_t& function, const lse
     }
 
     return cstate;
-}
+} // LCOV_EXCL_LINE

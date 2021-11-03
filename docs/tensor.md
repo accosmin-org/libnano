@@ -99,7 +99,7 @@ std::cout << static_cast<int>(tensor3.data() - carray) << std::endl;
 // prints: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 ```
 
-#### Other utilities
+#### Other related utilities
 
 * serialization (see [stream](../include/nano/tensor/stream.h))
 * summed-area tables of tensors of arbitrary rank (see [integral](../include/nano/tensor/integral.h))

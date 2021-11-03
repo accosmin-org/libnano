@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <utest/utest.h>
 #include <nano/solver.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/lsearchk/fletcher.h>
 #include <nano/lsearchk/backtrack.h>
 #include <nano/lsearchk/cgdescent.h>
@@ -10,13 +10,13 @@
 
 using namespace nano;
 
-static void config_lsearch(lsearchk_t& lsearch, const scalar_t c1 = 1e-4, const scalar_t c2 = 9e-1)
+static void config_lsearch(lsearchk_t& lsearch, scalar_t c1 = 1e-4, scalar_t c2 = 9e-1)
 {
     UTEST_REQUIRE_NOTHROW(lsearch.tolerance(c1, c2));
     UTEST_REQUIRE_NOTHROW(lsearch.max_iterations(100));
 }
 
-static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scalar_t c2 = 9e-1)
+static auto get_lsearch(const string_t& id, scalar_t c1 = 1e-4, scalar_t c2 = 9e-1)
 {
     auto lsearch = lsearchk_t::all().get(id);
     UTEST_REQUIRE(lsearch);
@@ -24,7 +24,7 @@ static auto get_lsearch(const string_t& id, const scalar_t c1 = 1e-4, const scal
     return lsearch;
 }
 
-static auto get_lsearch_cgdescent(const lsearchk_cgdescent_t::criterion criterion)
+static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
 {
     auto lsearch = lsearchk_cgdescent_t{};
     config_lsearch(lsearch);
@@ -142,25 +142,87 @@ static void test(
 
 UTEST_BEGIN_MODULE(test_lsearch)
 
-UTEST_CASE(backtrack)
+UTEST_CASE(interpolate)
+{
+    const auto u = lsearch_step_t{4.2, 1.0, 0.5};
+    const auto v = u;
+
+    const auto tc = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::cubic);
+    const auto tq = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::quadratic);
+    const auto tb = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::bisection);
+
+    UTEST_CHECK_CLOSE(tc, 4.2, 1e-16);
+    UTEST_CHECK_CLOSE(tq, 4.2, 1e-16);
+    UTEST_CHECK_CLOSE(tb, 4.2, 1e-16);
+}
+
+UTEST_CASE(backtrack_cubic)
 {
     const auto *const lsearch_id = "backtrack";
     const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_backtrack_t*>(lsearch.get())->interp(lsearchk_t::interpolation::cubic);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::backtrack);
     }
 }
 
-UTEST_CASE(lemarechal)
+UTEST_CASE(backtrack_quadratic)
+{
+    const auto *const lsearch_id = "backtrack";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_backtrack_t*>(lsearch.get())->interp(lsearchk_t::interpolation::quadratic);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::backtrack);
+    }
+}
+
+UTEST_CASE(backtrack_bisection)
+{
+    const auto *const lsearch_id = "backtrack";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_backtrack_t*>(lsearch.get())->interp(lsearchk_t::interpolation::bisection);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::backtrack);
+    }
+}
+
+UTEST_CASE(lemarechal_cubic)
 {
     const auto *const lsearch_id = "lemarechal";
     const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_lemarechal_t*>(lsearch.get())->interp(lsearchk_t::interpolation::cubic);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::lemarechal);
+    }
+}
+
+/*UTEST_CASE(lemarechal_quadratic)
+{
+    const auto *const lsearch_id = "lemarechal";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_lemarechal_t*>(lsearch.get())->interp(lsearchk_t::interpolation::quadratic);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::lemarechal);
+    }
+}*/
+
+UTEST_CASE(lemarechal_bisection)
+{
+    const auto *const lsearch_id = "lemarechal";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_lemarechal_t*>(lsearch.get())->interp(lsearchk_t::interpolation::bisection);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::lemarechal);
     }
@@ -171,20 +233,43 @@ UTEST_CASE(morethuente)
     const auto *const lsearch_id = "morethuente";
     const auto lsearch = get_lsearch(lsearch_id);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::morethuente);
     }
 }
 
-UTEST_CASE(fletcher)
+UTEST_CASE(fletcher_cubic)
 {
     const auto *const lsearch_id = "fletcher";
     const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_fletcher_t*>(lsearch.get())->interp(lsearchk_t::interpolation::cubic);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::fletcher);
+    }
+}
+
+UTEST_CASE(fletcher_quadratic)
+{
+    const auto *const lsearch_id = "fletcher";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_fletcher_t*>(lsearch.get())->interp(lsearchk_t::interpolation::quadratic);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
+    {
+        test(*lsearch, lsearch_id, *function, lsearch_type::fletcher);
+    }
+}
+
+UTEST_CASE(fletcher_bisection)
+{
+    const auto *const lsearch_id = "fletcher";
+    const auto lsearch = get_lsearch(lsearch_id);
+    dynamic_cast<lsearchk_fletcher_t*>(lsearch.get())->interp(lsearchk_t::interpolation::bisection);
+
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::fletcher);
     }
@@ -195,8 +280,7 @@ UTEST_CASE(cgdescent_wolfe)
     const auto *const lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
     }
@@ -207,8 +291,7 @@ UTEST_CASE(cgdescent_approx_wolfe)
     const auto *const lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::approx_wolfe);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
     }
@@ -219,8 +302,7 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
     const auto *const lsearch_id = "cgdscent";
     auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe);
 
-    const auto functions = get_functions(1, 16, convexity::unknown, std::regex(".+"));
-    for (const auto& function : functions)
+    for (const auto& function : get_functions(1, 16, convexity::unknown, std::regex(".+")))
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
     }

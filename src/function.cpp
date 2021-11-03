@@ -1,4 +1,5 @@
 #include <nano/function.h>
+#include <nano/core/strutil.h>
 #include <nano/function/trid.h>
 #include <nano/function/qing.h>
 #include <nano/function/cauchy.h>

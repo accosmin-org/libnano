@@ -6,284 +6,6 @@
 
 using namespace nano;
 
-namespace nano
-{
-    template <typename tscalar>
-    std::ostream& write(std::ostream& stream, const param1_t<tscalar>& param)
-    {
-        if (::nano::write(stream, param.name()) &&
-            ::nano::write(stream, param.get()) &&
-            ::nano::write(stream, param.min()) &&
-            ::nano::write(stream, param.max()) &&
-            ::nano::write(stream, static_cast<uint32_t>(param.minLE())) &&
-            ::nano::write(stream, static_cast<uint32_t>(param.maxLE())))
-        {
-        }
-        return stream;
-    }
-
-    std::ostream& write(std::ostream& stream, const eparam1_t& param)
-    {
-        if (::nano::write(stream, param.name()) &&
-            ::nano::write(stream, param.get()))
-        {
-        }
-        return stream;
-    }
-
-    template <typename tscalar>
-    std::istream& read(std::istream& stream, param1_t<tscalar>& param)
-    {
-        string_t name;
-        tscalar value, min, max;
-        uint32_t minLE = 0U, maxLE = 0U;
-
-        if (::nano::read(stream, name) &&
-            ::nano::read(stream, value) &&
-            ::nano::read(stream, min) &&
-            ::nano::read(stream, max) &&
-            ::nano::read(stream, minLE) &&
-            ::nano::read(stream, maxLE))
-        {
-            param = param1_t<tscalar>{
-                name, min, (minLE != 0U) ? LEorLT{LE} : LEorLT{LT},
-                value, (maxLE != 0U) ? LEorLT{LE} : LEorLT{LT}, max};
-        }
-        return stream;
-    }
-
-    std::istream& read(std::istream& stream, eparam1_t& param)
-    {
-        string_t name;
-        int64_t value = 0;
-
-        if (::nano::read(stream, name) &&
-            ::nano::read(stream, value))
-        {
-            param = eparam1_t{name, value};
-        }
-        return stream;
-    }
-}
-
-model_param_t::model_param_t(eparam1_t param) :
-    m_storage(std::move(param))
-{
-}
-
-model_param_t::model_param_t(iparam1_t param) :
-    m_storage(std::move(param))
-{
-}
-
-model_param_t::model_param_t(sparam1_t param) :
-    m_storage(std::move(param))
-{
-}
-
-void model_param_t::set(int32_t value)
-{
-    set(static_cast<int64_t>(value));
-}
-
-void model_param_t::set(int64_t value)
-{
-    if (is_ivalue())
-    {
-        iparam().set(value);
-    }
-    else if (is_svalue())
-    {
-        sparam().set(static_cast<scalar_t>(value));
-    }
-    else
-    {
-        critical(true, scat("model parameter (", name(), "): cannot set enumeration with integer (", value, ")!"));
-    }
-}
-
-void model_param_t::set(scalar_t value)
-{
-    if (is_svalue())
-    {
-        sparam().set(value);
-    }
-    else
-    {
-        critical(true, scat("model parameter (", name(), "): cannot set not-scalar with scalar (", value, ")!"));
-    }
-}
-
-int64_t model_param_t::ivalue() const
-{
-    return iparam().get();
-}
-
-scalar_t model_param_t::svalue() const
-{
-    return sparam().get();
-}
-
-bool model_param_t::is_evalue() const
-{
-    return std::holds_alternative<eparam1_t>(m_storage);
-}
-
-bool model_param_t::is_ivalue() const
-{
-    return std::holds_alternative<iparam1_t>(m_storage);
-}
-
-bool model_param_t::is_svalue() const
-{
-    return std::holds_alternative<sparam1_t>(m_storage);
-}
-
-const string_t& model_param_t::name() const
-{
-    if (is_evalue())
-    {
-        return eparam().name();
-    }
-    else if (is_ivalue())
-    {
-        return iparam().name();
-    }
-    else
-    {
-        return sparam().name();
-    }
-}
-
-void model_param_t::read(std::istream& stream)
-{
-    int32_t type = -1;
-    critical(
-        !::nano::read(stream, type),
-        "model parameter: failed to read from stream!");
-
-    switch (type)
-    {
-    case 0:
-        {
-            eparam1_t param;
-            critical(
-                !::nano::read(stream, param),
-                "model parameter: failed to read from stream!");
-            m_storage = param;
-        }
-        break;
-
-    case 1:
-        {
-            iparam1_t param;
-            critical(
-                !::nano::read(stream, param),
-                "model parameter: failed to read from stream!");
-            m_storage = param;
-        }
-        break;
-
-    case 2:
-        {
-            sparam1_t param;
-            critical(
-                !::nano::read(stream, param),
-                "model parameter: failed to read from stream!");
-            m_storage = param;
-        }
-        break;
-
-    default:
-        critical(
-            false,
-            scat("model parameter: failed to read from stream (type=", type, ")!"));
-        break;
-    }
-}
-
-void model_param_t::write(std::ostream& stream) const
-{
-    int32_t type = 0;
-    if (is_evalue())
-    {
-        type = 0;
-        critical(
-            !::nano::write(stream, type) ||
-            !::nano::write(stream, eparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
-    }
-    else if (is_ivalue())
-    {
-        type = 1;
-        critical(
-            !::nano::write(stream, type) ||
-            !::nano::write(stream, iparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
-    }
-    else
-    {
-        type = 2;
-        critical(
-            !::nano::write(stream, type) ||
-            !::nano::write(stream, sparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
-    }
-}
-
-eparam1_t& model_param_t::eparam()
-{
-    critical(!is_evalue(), "model parameter: expecting enumeration!");
-    return std::get<eparam1_t>(m_storage);
-}
-
-const eparam1_t& model_param_t::eparam() const
-{
-    critical(!is_evalue(), "model parameter: expecting enumeration!");
-    return std::get<eparam1_t>(m_storage);
-}
-
-iparam1_t& model_param_t::iparam()
-{
-    critical(!is_ivalue(), "model parameter: expecting integer!");
-    return std::get<iparam1_t>(m_storage);
-}
-
-const iparam1_t& model_param_t::iparam() const
-{
-    critical(!is_ivalue(), "model parameter: expecting integer!");
-    return std::get<iparam1_t>(m_storage);
-}
-
-sparam1_t& model_param_t::sparam()
-{
-    critical(!is_svalue(), "model parameter: expecting scalar!");
-    return std::get<sparam1_t>(m_storage);
-}
-
-const sparam1_t& model_param_t::sparam() const
-{
-    critical(!is_svalue(), "model parameter: expecting scalar!");
-    return std::get<sparam1_t>(m_storage);
-}
-
-std::ostream& ::nano::operator<<(std::ostream& stream, const model_param_t& param)
-{
-    stream << param.name() << "=";
-    if (param.is_svalue())
-    {
-        return stream << param.sparam().get();
-    }
-    else if (param.is_ivalue())
-    {
-        return stream << param.iparam().get();
-    }
-    else
-    {
-        return stream << param.eparam().get();
-    }
-}
-
 void model_config_t::add(string_t name, int32_t value)
 {
     add(std::move(name), static_cast<int64_t>(value));
@@ -343,22 +65,43 @@ model_factory_t& model_t::all()
     return manager;
 }
 
+model_t::model_t() = default;
+
+void model_t::compatible(const dataset_generator_t& dataset) const
+{
+    const auto n_features = dataset.features();
+
+    critical(
+        n_features != static_cast<tensor_size_t>(m_inputs.size()),
+        "model: mis-matching number of inputs (", n_features, "), expecting (", m_inputs.size(), ")!");
+
+    for (tensor_size_t i = 0; i < n_features; ++ i)
+    {
+        const auto feature = dataset.feature(i);
+        const auto& expected_feature = m_inputs[static_cast<size_t>(i)];
+
+        critical(
+            feature != expected_feature,
+            "model: mis-matching input [", i, "/", n_features, "] (", feature, "), expecting (", expected_feature, ")!");
+    }
+
+    critical(
+        dataset.target() != m_target,
+        "model: mis-matching target (", dataset.target(), "), expecting (", m_target, ")!");
+}
+
 void model_t::read(std::istream& stream)
 {
     serializable_t::read(stream);
 
-    critical(
-        !::nano::read(stream, m_params),
-        "model: failed to read from stream!");
+    // TODO: also serialize the stored inputs & target to check compatibility
 }
 
 void model_t::write(std::ostream& stream) const
 {
     serializable_t::write(stream);
 
-    critical(
-        !::nano::write(stream, m_params),
-        "model: failed to write to stream!");
+    // TODO: also serialize the stored inputs & target to check compatibility
 }
 
 void model_t::set(const model_config_t& config)
@@ -398,29 +141,21 @@ model_config_t model_t::config() const
     return config;
 }
 
-model_param_t& model_t::find(const string_t& name)
+void model_t::fit(const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_& solver)
 {
-    const auto it = std::find_if(m_params.begin(), m_params.end(), [&] (const model_param_t& param)
-    {
-        return param.name() == name;
-    });
+    const auto n_features = dataset.features();
 
-    critical(it == m_params.end(), scat("model: cannot find parameter by name (", name, ")!"));
-    return *it;
+    m_target = dataset.target();
+    m_features.reserve(static_cast<size_t>(n_features));
+    for (tensor_size_t i = 0; i < n_features; ++ i)
+    {
+        m_features.push_back(dataset.feature(i));
+    }
+
+    m_selected = do_fit(dataset, samples, loss, solver);
 }
 
-const model_param_t& model_t::find(const string_t& name) const
-{
-    const auto it = std::find_if(m_params.begin(), m_params.end(), [&] (const model_param_t& param)
-    {
-        return param.name() == name;
-    });
-
-    critical(it == m_params.end(), scat("model: cannot find parameter by name (", name, ")!"));
-    return *it;
-}
-
-tensor1d_t model_t::evaluate(const loss_t& loss, const dataset_t& dataset, const indices_t& samples) const
+tensor1d_t model_t::evaluate(const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss) const
 {
     const auto outputs = predict(dataset, samples);
 
@@ -435,6 +170,13 @@ tensor1d_t model_t::evaluate(const loss_t& loss, const dataset_t& dataset, const
     return errors;
 }
 
+tensor4d_t model_t::predict(const dataset_generator_t& dataset, const indices_t& samples) const
+{
+    compatible(dataset);
+
+    return do_predict(dataset, samples);
+}
+
 kfold_result_t::kfold_result_t(tensor_size_t folds) :
     m_train_errors(folds),
     m_valid_errors(folds),
@@ -443,7 +185,7 @@ kfold_result_t::kfold_result_t(tensor_size_t folds) :
 }
 
 kfold_result_t nano::kfold(const model_t& model_,
-    const loss_t& loss, const dataset_t& dataset, const indices_t& samples, const solver_t& solver,
+    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver,
     tensor_size_t folds, tensor_size_t repetitions)
 {
     const auto min_folds = 3;
@@ -451,11 +193,11 @@ kfold_result_t nano::kfold(const model_t& model_,
 
     critical(
         folds < min_folds,
-        scat("kfold: the number of folds (", folds, ") should be greater than ", min_folds, "!"));
+        "kfold: the number of folds (", folds, ") should be greater than ", min_folds, "!");
 
     critical(
         repetitions < min_repetitions,
-        scat("kfold: the number of repetitions (", repetitions, ") should be greater than ", min_repetitions, "!"));
+        "kfold: the number of repetitions (", repetitions, ") should be greater than ", min_repetitions, "!");
 
     kfold_result_t result{folds * repetitions};
     for (tensor_size_t repetition = 0, index = 0; repetition < repetitions; ++ repetition)

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/factory.h>
-#include <nano/parameter.h>
 #include <nano/solver/lstep.h>
+#include <nano/core/factory.h>
+#include <nano/core/parameter.h>
 
 namespace nano
 {
@@ -28,12 +28,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearch0_t() = default;
+        lsearch0_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief enable copying
         ///
-        lsearch0_t(const lsearch0_t&) = default;
+        lsearch0_t(const lsearch0_t&) = default; // LCOV_EXCL_LINE
         lsearch0_t& operator=(const lsearch0_t&) = default;
 
         ///
@@ -67,7 +67,7 @@ namespace nano
         /// \brief change parameters
         ///
         void logger(const logger_t& logger) { m_logger = logger; }
-        void epsilon(const scalar_t epsilon) { m_epsilon.set(epsilon); }
+        void epsilon(scalar_t epsilon) { m_epsilon.set(epsilon); }
 
         ///
         /// \brief access functions

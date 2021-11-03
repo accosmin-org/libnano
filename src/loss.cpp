@@ -17,6 +17,9 @@ loss_factory_t& loss_t::all()
         manager.add<mhinge_loss_t>("m-hinge", "hinge loss (multi-label classification)");
         manager.add<shinge_loss_t>("s-hinge", "hinge loss (single-label classification)");
 
+        manager.add<msquared_hinge_loss_t>("m-squared-hinge", "squared hinge loss (multi-label classification)");
+        manager.add<ssquared_hinge_loss_t>("s-squared-hinge", "squared hinge loss (single-label classification)");
+
         manager.add<sclassnll_loss_t>("s-classnll", "class negative log likehoold (single-label classification)");
 
         manager.add<msavage_loss_t>("m-savage", "savage loss (multi-label classification)");

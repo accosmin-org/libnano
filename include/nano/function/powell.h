@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,8 +12,8 @@ namespace nano
     {
     public:
 
-        explicit function_powell_t(const tensor_size_t dims) :
-            function_t("Powell", std::max(tensor_size_t(4), dims - dims % 4), convexity::no)
+        explicit function_powell_t(tensor_size_t dims) :
+            function_t("Powell", std::max(tensor_size_t(4), dims - dims % 4), convexity::no) // LCOV_EXCL_LINE
         {
         }
 

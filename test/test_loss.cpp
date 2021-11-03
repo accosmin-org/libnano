@@ -1,8 +1,8 @@
 #include <nano/loss.h>
-#include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/core/random.h>
+#include <nano/core/numeric.h>
 #include <nano/mlearn/class.h>
 
 using namespace nano;
@@ -68,7 +68,7 @@ UTEST_CASE(gradient)
                 const auto f = function.vgrad(x);
                 UTEST_CHECK_EQUAL(std::isfinite(f), true);
                 UTEST_CHECK_GREATER_EQUAL(f, scalar_t(0));
-                UTEST_CHECK_LESS(function.grad_accuracy(x), 2 * epsilon2<scalar_t>());
+                UTEST_CHECK_LESS(function.grad_accuracy(x), 5 * epsilon2<scalar_t>());
             }
         }
     }
@@ -184,8 +184,7 @@ UTEST_CASE(regression)
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
-        tensor4d_t target(3, 4, 1, 1);
-        target.random();
+        const auto target = make_random_tensor<scalar_t>(make_dims(3, 4, 1, 1));
 
         tensor4d_t output = target;
 

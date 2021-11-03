@@ -3,7 +3,7 @@
 #include <regex>
 #include <memory>
 #include <nano/arch.h>
-#include <nano/tensor.h>
+#include <nano/eigen.h>
 #include <nano/string.h>
 
 namespace nano

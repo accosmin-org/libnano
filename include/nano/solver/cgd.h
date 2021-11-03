@@ -58,7 +58,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_n_t() = default;
+        solver_cgd_n_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see solver_cgd_t

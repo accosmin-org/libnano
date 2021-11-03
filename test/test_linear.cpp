@@ -1,13 +1,14 @@
 #include "fixture/utils.h"
-#include <nano/numeric.h>
+#include "fixture/linear.h"
+#include <nano/core/numeric.h>
 #include <nano/linear/util.h>
-#include <nano/linear/model.h>
-#include <nano/linear/function.h>
-#include <nano/dataset/synth_affine.h>
+#include <nano/linear/cache.h>
+//#include <nano/linear/model.h>
+//#include <nano/linear/function.h>
 
 using namespace nano;
 
-static auto make_samples()
+/*static auto make_samples()
 {
     return arange(0, 100);
 }
@@ -16,15 +17,82 @@ static auto make_dataset(const tensor_size_t isize = 5, const tensor_size_t tsiz
 {
     auto dataset = synthetic_affine_dataset_t{};
     dataset.noise(epsilon1<scalar_t>());
-    dataset.idim(make_dims(isize, 1, 1));
-    dataset.tdim(make_dims(tsize, 1, 1));
+    dataset.idims(make_dims(isize, 1, 1));
+    dataset.tdims(make_dims(tsize, 1, 1));
     dataset.modulo(1);
     dataset.samples(100);
     UTEST_CHECK_NOTHROW(dataset.load());
     return dataset;
-}
+}*/
 
 UTEST_BEGIN_MODULE(test_linear)
+
+UTEST_CASE(cache)
+{
+    const auto fill_cache = [] (linear::cache_t& cache, scalar_t value)
+    {
+        cache.m_vm1 = value;
+        cache.m_vm2 = value * value;
+        cache.m_gb1.full(value);
+        cache.m_gb2.full(value * value);
+        cache.m_gW1.full(value);
+        cache.m_gW2.full(value * value);
+    };
+
+    const auto make_caches = [&] (bool g1, bool g2)
+    {
+        auto caches = std::vector<linear::cache_t>(3U, linear::cache_t{3, 2, g1, g2});
+        fill_cache(caches[0], 1);
+        fill_cache(caches[1], 2);
+        fill_cache(caches[2], 3);
+        return caches;
+    };
+
+    {
+        auto caches = make_caches(false, false);
+
+        const auto& cache0 = linear::cache_t::reduce(caches, 6);
+        UTEST_CHECK_CLOSE(cache0.m_vm1, 6.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_vm2, 14.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb1, make_full_tensor<scalar_t>(make_dims(0), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW1, make_full_tensor<scalar_t>(make_dims(0, 0), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0/6.0), 1e-12);
+    }
+    {
+        auto caches = make_caches(false, true);
+
+        const auto& cache0 = linear::cache_t::reduce(caches, 6);
+        UTEST_CHECK_CLOSE(cache0.m_vm1, 6.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_vm2, 14.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb1, make_full_tensor<scalar_t>(make_dims(0), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW1, make_full_tensor<scalar_t>(make_dims(0, 0), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0/6.0), 1e-12);
+    }
+    {
+        auto caches = make_caches(true, false);
+
+        const auto& cache0 = linear::cache_t::reduce(caches, 6);
+        UTEST_CHECK_CLOSE(cache0.m_vm1, 6.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_vm2, 14.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb1, make_full_tensor<scalar_t>(make_dims(2), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW1, make_full_tensor<scalar_t>(make_dims(3, 2), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0/6.0), 1e-12);
+    }
+    {
+        auto caches = make_caches(true, true);
+
+        const auto& cache0 = linear::cache_t::reduce(caches, 6);
+        UTEST_CHECK_CLOSE(cache0.m_vm1, 6.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_vm2, 14.0/6.0, 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb1, make_full_tensor<scalar_t>(make_dims(2), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gb2, make_full_tensor<scalar_t>(make_dims(2), 14.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW1, make_full_tensor<scalar_t>(make_dims(3, 2), 6.0/6.0), 1e-12);
+        UTEST_CHECK_CLOSE(cache0.m_gW2, make_full_tensor<scalar_t>(make_dims(3, 2), 14.0/6.0), 1e-12);
+    }
+}
 
 UTEST_CASE(predict)
 {
@@ -37,13 +105,66 @@ UTEST_CASE(predict)
 
     for (tensor_size_t sample = 0; sample < inputs.size<0>(); ++ sample)
     {
-        UTEST_CHECK_EIGEN_CLOSE(
+        UTEST_CHECK_CLOSE(
             outputs.vector(sample),
             weights.matrix().transpose() * inputs.vector(sample) + bias.vector(),
             epsilon1<scalar_t>());
     }
 }
 
+UTEST_CASE(dataset)
+{
+    const auto targets = tensor_size_t{3};
+    const auto samples = tensor_size_t{100};
+    const auto features = tensor_size_t{4};
+    const auto epsilon = epsilon1<scalar_t>();
+
+    auto dataset = fixture_dataset_t{};
+
+    dataset.noise(0);
+    dataset.modulo(31);
+    dataset.samples(samples);
+    dataset.targets(targets);
+    dataset.features(features);
+
+    UTEST_REQUIRE_NOTHROW(dataset.load());
+
+    auto generator = dataset_generator_t{dataset};
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
+
+    UTEST_CHECK_EQUAL(generator.target(), feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));
+
+    const auto bias = dataset.bias().vector();
+    UTEST_REQUIRE_EQUAL(bias.size(), targets);
+
+    const auto weights = dataset.weights().matrix();
+    UTEST_REQUIRE_EQUAL(weights.rows(), targets);
+    UTEST_REQUIRE_EQUAL(weights.cols(), 14 * features / 4);
+
+    UTEST_CHECK_EQUAL(dataset.features(), features);
+    UTEST_CHECK_EQUAL(dataset.samples(), samples);
+    UTEST_CHECK_EQUAL(dataset.test_samples(), arange(0, 0));
+    UTEST_CHECK_EQUAL(dataset.train_samples(), arange(0, samples));
+
+    auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
+
+    const auto iterator = flatten_iterator_t{generator, arange(0, samples), execution::seq, 128};
+    iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
+    {
+        for (tensor_size_t i = 0, size = range.size(); i < size; ++ i)
+        {
+            UTEST_CHECK_CLOSE(targets.vector(i), weights * inputs.vector(i) + bias, epsilon);
+            called(range.begin() + i) = 1;
+        }
+    });
+
+    UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
+}
+
+/*
 UTEST_CASE(evaluate)
 {
     const auto loss = make_loss();
@@ -97,9 +218,9 @@ UTEST_CASE(gradient)
 
     const vector_t x = vector_t::Random(function.size());
 
-    for (const auto normalization : enum_values<::nano::normalization>())
+    for (const auto scaling : enum_values<feature_scaling>())
     {
-        UTEST_REQUIRE_NOTHROW(function.normalization(normalization));
+        UTEST_REQUIRE_NOTHROW(function.scaling(scaling));
         UTEST_CHECK_LESS(function.grad_accuracy(x), 10 * epsilon2<scalar_t>());
     }
 }
@@ -121,8 +242,8 @@ UTEST_CASE(minimize)
     UTEST_CHECK(state);
     UTEST_CHECK(state.converged(solver->epsilon()));
 
-    UTEST_CHECK_EIGEN_CLOSE(function.bias(state.x).vector(), dataset.bias(), 1e+1 * solver->epsilon());
-    UTEST_CHECK_EIGEN_CLOSE(function.weights(state.x).matrix(), dataset.weights(), 1e+1 * solver->epsilon());
+    UTEST_CHECK_CLOSE(function.bias(state.x).vector(), dataset.bias(), 1e+1 * solver->epsilon());
+    UTEST_CHECK_CLOSE(function.weights(state.x).matrix(), dataset.weights(), 1e+1 * solver->epsilon());
 }
 
 UTEST_CASE(train)
@@ -132,42 +253,37 @@ UTEST_CASE(train)
     const auto dataset = make_dataset(3, 2);
     const auto samples = make_samples();
 
-    for (const auto normalization : enum_values<::nano::normalization>())
+    for (const auto scaling : enum_values<feature_scaling>())
     {
         auto model = linear_model_t{};
         UTEST_REQUIRE_NOTHROW(model.batch(16));
-        if (normalization == ::nano::normalization::mean)
+        switch (scaling)
         {
-            UTEST_REQUIRE_NOTHROW(model.l1reg(1e-6));
+        case feature_scaling::mean:     UTEST_REQUIRE_NOTHROW(model.l1reg(1e-6)); break;
+        case feature_scaling::minmax:   UTEST_REQUIRE_NOTHROW(model.l2reg(1e-6)); break;
+        case feature_scaling::standard: UTEST_REQUIRE_NOTHROW(model.vAreg(1e-6)); break;
+        default:                        break;
         }
-        if (normalization == ::nano::normalization::minmax)
-        {
-            UTEST_REQUIRE_NOTHROW(model.l2reg(1e-6));
-        }
-        if (normalization == ::nano::normalization::standard)
-        {
-            UTEST_REQUIRE_NOTHROW(model.vAreg(1e-6));
-        }
-        UTEST_REQUIRE_NOTHROW(model.normalization(normalization));
+        UTEST_REQUIRE_NOTHROW(model.scaling(scaling));
 
         tensor4d_t outputs;
         UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));
         UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
 
-        UTEST_CHECK_EIGEN_CLOSE(model.bias().vector(), dataset.bias(), 1e+2 * solver->epsilon());
-        UTEST_CHECK_EIGEN_CLOSE(model.weights().matrix(), dataset.weights(), 1e+2 * solver->epsilon());
+        UTEST_CHECK_CLOSE(model.bias().vector(), dataset.bias(), 1e+2 * solver->epsilon());
+        UTEST_CHECK_CLOSE(model.weights().matrix(), dataset.weights(), 1e+2 * solver->epsilon());
 
         const auto targets = dataset.targets(samples);
         UTEST_CHECK_EQUAL(outputs.dims(), targets.dims());
-        UTEST_CHECK_EIGEN_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
+        UTEST_CHECK_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
 
         UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
         UTEST_CHECK_EQUAL(outputs.dims(), targets.dims());
-        UTEST_CHECK_EIGEN_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
+        UTEST_CHECK_CLOSE(outputs.vector(), targets.vector(), 1e+1 * solver->epsilon());
 
         outputs.random(-1, +2);
         UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
-        UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e+1 * solver->epsilon());
+        UTEST_CHECK_CLOSE(targets.vector(), outputs.vector(), 1e+1 * solver->epsilon());
 
         string_t str;
         {
@@ -179,10 +295,10 @@ UTEST_CASE(train)
             auto new_model = linear_model_t{};
             std::istringstream stream(str);
             UTEST_REQUIRE_NOTHROW(new_model.read(stream));
-            UTEST_CHECK_EIGEN_CLOSE(new_model.bias().vector(), model.bias().vector(), epsilon0<scalar_t>());
-            UTEST_CHECK_EIGEN_CLOSE(new_model.weights().matrix(), model.weights().matrix(), epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(new_model.bias().vector(), model.bias().vector(), epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(new_model.weights().matrix(), model.weights().matrix(), epsilon0<scalar_t>());
         }
     }
-}
+}*/
 
 UTEST_END_MODULE()

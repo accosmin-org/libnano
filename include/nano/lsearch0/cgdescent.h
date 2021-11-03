@@ -14,7 +14,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearch0_cgdescent_t() = default;
+        lsearch0_cgdescent_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearch0_t
@@ -29,9 +29,9 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void phi0(const scalar_t phi0) { m_phi0.set(phi0); }
-        void phi1(const scalar_t phi1) { m_phi1.set(phi1); }
-        void phi2(const scalar_t phi2) { m_phi2.set(phi2); }
+        void phi0(scalar_t phi0) { m_phi0.set(phi0); }
+        void phi1(scalar_t phi1) { m_phi1.set(phi1); }
+        void phi2(scalar_t phi2) { m_phi2.set(phi2); }
 
         ///
         /// \brief access functions

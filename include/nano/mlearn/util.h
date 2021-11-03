@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/random.h>
+#include <nano/arch.h>
 #include <nano/tensor.h>
 
 namespace nano
@@ -11,17 +11,7 @@ namespace nano
     /// NB: there may be duplicates in the returned indices.
     /// NB: the returned indices in the range [0, samples) are sorted to potentially improve speed.
     ///
-    inline auto sample_with_replacement(tensor_size_t samples, tensor_size_t count)
-    {
-        auto rng = make_rng();
-        auto udist = make_udist<tensor_size_t>(0, samples - 1);
-
-        indices_t set(count);
-        std::generate(begin(set), end(set), [&] () { return udist(rng); });
-        std::sort(begin(set), end(set));
-
-        return set;
-    }
+    NANO_PUBLIC indices_t sample_with_replacement(tensor_size_t samples, tensor_size_t count);
 
     ///
     /// \brief randomly sample without replacement `count` elements from the given total number of samples.
@@ -29,23 +19,13 @@ namespace nano
     /// NB: there won't be any duplicates in the returned indices.
     /// NB: the returned indices in the range [0, samples) are sorted to potentially improve speed.
     ///
-    inline auto sample_without_replacement(tensor_size_t samples, tensor_size_t count)
-    {
-        assert(0 <= samples && count <= samples);
-
-        auto all = arange(0, samples);
-        std::shuffle(begin(all), end(all), make_rng());
-
-        indices_t set = all.slice(0, count);
-        std::sort(begin(set), end(set));
-        return set;
-    }
+    NANO_PUBLIC indices_t sample_without_replacement(tensor_size_t samples, tensor_size_t count);
 
     ///
     /// \brief generate all combinations of the given number of elements per dimension
     ///     (e.g. number of distinct values per parameter).
     ///
-    template <typename tindex, typename = typename std::enable_if<std::is_integral<tindex>::value>::type>
+    template <typename tindex, std::enable_if_t<std::is_integral_v<tindex>, bool> = true>
     class combinatorial_iterator_t
     {
     public:

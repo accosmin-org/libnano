@@ -1,9 +1,9 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/factory.h>
-#include <nano/parameter.h>
 #include <nano/solver/lstep.h>
+#include <nano/core/factory.h>
+#include <nano/core/parameter.h>
 
 namespace nano
 {
@@ -30,12 +30,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearchk_t() = default;
+        lsearchk_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief enable copying
         ///
-        lsearchk_t(const lsearchk_t&) = default;
+        lsearchk_t(const lsearchk_t&) = default; // LCOV_EXCL_LINE
         lsearchk_t& operator=(const lsearchk_t&) = default;
 
         ///
@@ -68,8 +68,8 @@ namespace nano
         /// \brief change parameters
         ///
         void logger(const logger_t& logger) { m_logger = logger; }
-        void tolerance(const scalar_t c1, const scalar_t c2) { m_tolerance.set(c1, c2); }
-        void max_iterations(const int max_iterations) { m_max_iterations.set(max_iterations); }
+        void tolerance(scalar_t c1, scalar_t c2) { m_tolerance.set(c1, c2); }
+        void max_iterations(int max_iterations) { m_max_iterations.set(max_iterations); }
 
         ///
         /// \brief access functions

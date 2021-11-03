@@ -1,17 +1,17 @@
 #include <fstream>
-#include <nano/logger.h>
-#include <nano/mlearn/class.h>
+#include <nano/core/logger.h>
 #include <nano/dataset/imclass_mnist.h>
 
 using namespace nano;
 
-base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name) :
+base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name, feature_t target) :
     m_dir(std::move(dir)),
-    m_name(std::move(name))
+    m_name(std::move(name)),
+    m_target(std::move(target))
 {
 }
 
-void base_mnist_dataset_t::load()
+void base_mnist_dataset_t::do_load()
 {
     const auto parts =
     {
@@ -25,7 +25,12 @@ void base_mnist_dataset_t::load()
             tensor_size_t(60000), tensor_size_t(10000))
     };
 
-    resize(make_dims(70000, 28, 28, 1), make_dims(70000, 10, 1, 1));
+    const auto features = std::vector<feature_t>
+    {
+        feature_t("image").scalar(feature_type::uint8, make_dims(1, 28, 28)),
+        m_target
+    };
+    resize(70000, features, 1U);
 
     tensor_size_t sample = 0;
     for (const auto& part : parts)
@@ -38,12 +43,12 @@ void base_mnist_dataset_t::load()
         log_info() << m_name << ": loading file <" << ifile << ">...";
         critical(
             !iread(ifile, offset, expected),
-            scat(m_name, ": failed to load file <", ifile, ">!"));
+            m_name, ": failed to load file <", ifile, ">!");
 
         log_info() << m_name << ": loading file <" << tfile << ">...";
         critical(
             !tread(tfile, offset, expected),
-            scat(m_name, ": failed to load file <", tfile, ">!"));
+            m_name, ": failed to load file <", tfile, ">!");
 
         sample += expected;
         log_info() << m_name << ": loaded " << sample << " samples.";
@@ -52,29 +57,31 @@ void base_mnist_dataset_t::load()
     dataset_t::testing({make_range(60000, 70000)});
 }
 
-bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t offset, tensor_size_t expected)
+bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
-    std::ifstream stream(path);
-
     char buffer[16];
+    tensor_mem_t<uint8_t, 3> image(1, 28, 28);
+
+    std::ifstream stream(path);
     if (!stream.read(buffer, 16))
     {
         return false;
     }
 
-    for ( ; expected > 0; -- expected)
+    for ( ; expected > 0; -- expected, ++ sample)
     {
-        auto input = this->input(offset ++);
-        if (!stream.read(reinterpret_cast<char*>(input.data()), input.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (!stream.read(reinterpret_cast<char*>(image.data()), image.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         {
             return false;
         }
+        set(sample, 0, image);
     }
 
     return expected == 0;
 }
 
-bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, tensor_size_t expected)
+bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
     std::ifstream stream(path);
 
@@ -90,41 +97,24 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
         return false;
     }
 
-    for (const auto label : labels)
+    for (auto i = 0; expected > 0; -- expected, ++ sample, ++ i)
     {
-        const auto ilabel = static_cast<tensor_size_t>(static_cast<unsigned char>(label));
-        if (ilabel < 0 || ilabel >= 10)
-        {
-            log_error() << m_name << ": invalid label!";
-            return false;
-        }
-
-        auto target = this->target(offset ++);
-        target.constant(neg_target());
-        target(ilabel) = pos_target();
+        set(sample, 1, static_cast<tensor_size_t>(static_cast<unsigned char>(labels(i))));
     }
 
     return true;
 }
 
-mnist_dataset_t::mnist_dataset_t() :
-    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST")
+mnist_dataset_t::mnist_dataset_t() : base_mnist_dataset_t(
+    scat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
+    feature_t("digit").sclass(strings_t
+    {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"}))
 {
 }
 
-feature_t mnist_dataset_t::target() const
+fashion_mnist_dataset_t::fashion_mnist_dataset_t() : base_mnist_dataset_t(
+    scat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST",
+    feature_t("article").sclass(strings_t
+    {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"}))
 {
-    return  feature_t("digit").labels(
-            {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"});
-}
-
-fashion_mnist_dataset_t::fashion_mnist_dataset_t() :
-    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST")
-{
-}
-
-feature_t fashion_mnist_dataset_t::target() const
-{
-    return  feature_t("article").labels(
-            {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"});
 }

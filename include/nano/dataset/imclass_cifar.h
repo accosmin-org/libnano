@@ -1,29 +1,23 @@
 #pragma once
 
-#include <nano/dataset/imclass.h>
+#include <nano/dataset.h>
 
 namespace nano
 {
     ///
-    /// \brief base class for CIFAR-10 and CIFAR-100 datasets.
+    /// \brief base class for the CIFAR-10 and CIFAR-100 datasets.
     ///
-    class NANO_PUBLIC cifar_dataset_t : public imclass_dataset_t
+    class NANO_PUBLIC cifar_dataset_t : public dataset_t
     {
     public:
 
         ///
         /// \brief constructor
         ///
-        cifar_dataset_t(string_t dir, string_t name);
-
-        ///
-        /// \brief @see imclass_dataset_t
-        ///
-        void load() override;
+        cifar_dataset_t(string_t dir, string_t name, feature_t target);
 
     protected:
 
-        void labels(tensor_size_t);
         void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
 
     private:
@@ -54,13 +48,14 @@ namespace nano
         };
         using files_t = std::vector<file_t>;
 
+        void do_load() override;
         bool iread(const file_t& file);
 
         // attributes
         string_t        m_dir;              ///< directory where to load the data from
         string_t        m_path;             ///< path to the archive where to load the data from
-        string_t        m_name;             ///<
-        tensor_size_t   m_labels{10};       ///< number of labels/classes
+        string_t        m_name;             ///< dataset name
+        feature_t       m_target;           ///< target feature
         files_t         m_files;            ///<
     };
 
@@ -80,11 +75,6 @@ namespace nano
         /// \brief default constructor
         ///
         cifar10_dataset_t();
-
-        ///
-        /// \brief @see imclass_dataset_t
-        ///
-        feature_t target() const override;
     };
 
     ///
@@ -103,11 +93,6 @@ namespace nano
         /// \brief default constructor
         ///
         cifar100c_dataset_t();
-
-        ///
-        /// \brief @see imclass_dataset_t
-        ///
-        feature_t target() const override;
     };
 
     ///
@@ -126,10 +111,5 @@ namespace nano
         /// \brief default constructor
         ///
         cifar100f_dataset_t();
-
-        ///
-        /// \brief @see imclass_dataset_t
-        ///
-        feature_t target() const override;
     };
 }

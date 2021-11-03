@@ -21,7 +21,7 @@ struct cache_t
 
     cache_t& operator/=(tensor_size_t samples)
     {
-        m_score /= samples;
+        m_score /= static_cast<scalar_t>(samples);
         return *this;
     }
 
@@ -50,20 +50,20 @@ UTEST_CASE(reduce)
 
 UTEST_CASE(accumulator)
 {
-    const auto tdim = make_dims(3, 1, 1);
+    const auto tdims = make_dims(3, 1, 1);
 
-    auto acc = gboost::accumulator_t(tdim);
+    auto acc = gboost::accumulator_t(tdims);
     acc.clear(2);
 
     UTEST_CHECK_EQUAL(acc.fvalues(), 2);
-    UTEST_CHECK_EQUAL(acc.tdim(), tdim);
+    UTEST_CHECK_EQUAL(acc.tdims(), tdims);
 
-    tensor4d_t vgrads(cat_dims(5, tdim));
-    vgrads.tensor(0).constant(+0.0);
-    vgrads.tensor(1).constant(+1.0);
-    vgrads.tensor(2).constant(+2.0);
-    vgrads.tensor(3).constant(+3.0);
-    vgrads.tensor(4).constant(+4.0);
+    tensor4d_t vgrads(cat_dims(5, tdims));
+    vgrads.tensor(0).full(+0.0);
+    vgrads.tensor(1).full(+1.0);
+    vgrads.tensor(2).full(+2.0);
+    vgrads.tensor(3).full(+3.0);
+    vgrads.tensor(4).full(+4.0);
 
     acc.update(-2.0, vgrads.array(0), 0);
     acc.update(+2.0, vgrads.array(0), 1);

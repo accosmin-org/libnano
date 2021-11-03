@@ -1,6 +1,6 @@
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include "fixture/gboost.h"
+#include <nano/core/numeric.h>
 
 using namespace nano;
 
@@ -43,7 +43,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_hinge_target(sample, gt_feature(), 5, 2.5, +3.0, ::nano::hinge::left, 0));
     }
 
@@ -54,7 +54,7 @@ public:
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {+3.0, -3.0 * threshold()}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +3.0, -3.0 * threshold());
     }
 };
 
@@ -66,7 +66,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_hinge_target(sample, gt_feature(), 5, 2.5, -2.1, ::nano::hinge::right, 0));
     }
 
@@ -77,7 +77,7 @@ public:
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {-2.1, +2.1 * threshold()}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -2.1, +2.1 * threshold());
     }
 };
 

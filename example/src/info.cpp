@@ -1,31 +1,15 @@
 #include <nano/loss.h>
-#include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
 #include <nano/version.h>
-#include <nano/cmdline.h>
+#include <nano/dataset.h>
 #include <nano/lsearch0.h>
 #include <nano/lsearchk.h>
-#include <nano/dataset/imclass.h>
-#include <nano/dataset/tabular.h>
+#include <nano/generator.h>
+#include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/factory_util.h>
 
 using namespace nano;
-
-namespace
-{
-    template <typename tobject>
-    void print(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
-    {
-        table_t table;
-        table.header() << name << "description";
-        table.delim();
-        for (const auto& id : factory.ids(std::regex(regex)))
-        {
-            table.append() << id << factory.description(id);
-        }
-        std::cout << table;
-    }
-}
 
 static int unsafe_main(int argc, const char* argv[])
 {
@@ -35,8 +19,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearchk",         "regex to select line-search strategies", ".+");
     cmdline.add("", "solver",           "regex to select numerical optimization methods", ".+");
     cmdline.add("", "loss",             "regex to select loss functions", ".+");
-    cmdline.add("", "imclass",          "regex to select image classification datasets", ".+");
-    cmdline.add("", "tabular",          "regex to select tabular datasets", ".+");
+    cmdline.add("", "dataset",          "regex to select machine learning datasets", ".+");
+    cmdline.add("", "generator",        "regex to select feature generation methods", ".+");
     cmdline.add("", "version",          "library version");
     cmdline.add("", "git-hash",         "git commit hash");
 
@@ -44,10 +28,10 @@ static int unsafe_main(int argc, const char* argv[])
 
     const auto has_lsearch0 = cmdline.has("lsearch0");
     const auto has_lsearchk = cmdline.has("lsearchk");
-    const auto has_solver = cmdline.has("solver");
     const auto has_loss = cmdline.has("loss");
-    const auto has_imclass = cmdline.has("imclass");
-    const auto has_tabular = cmdline.has("tabular");
+    const auto has_solver = cmdline.has("solver");
+    const auto has_dataset = cmdline.has("dataset");
+    const auto has_generator = cmdline.has("generator");
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
@@ -61,8 +45,8 @@ static int unsafe_main(int argc, const char* argv[])
         !has_lsearchk &&
         !has_solver &&
         !has_loss &&
-        !has_imclass &&
-        !has_tabular &&
+        !has_dataset &&
+        !has_generator &&
         !has_version &&
         !has_git_hash)
     {
@@ -73,27 +57,27 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch0)
     {
-        print("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
+        std::cout << make_table("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
     }
     if (has_lsearchk)
     {
-        print("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
+        std::cout << make_table("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
     }
     if (has_solver)
     {
-        print("solver", solver_t::all(), cmdline.get<string_t>("solver"));
+        std::cout << make_table("solver", solver_t::all(), cmdline.get<string_t>("solver"));
     }
     if (has_loss)
     {
-        print("loss", loss_t::all(), cmdline.get<string_t>("loss"));
+        std::cout << make_table("loss", loss_t::all(), cmdline.get<string_t>("loss"));
     }
-    if (has_imclass)
+    if (has_dataset)
     {
-        print("image classification dataset", imclass_dataset_t::all(), cmdline.get<string_t>("imclass"));
+        std::cout << make_table("dataset", dataset_t::all(), cmdline.get<string_t>("dataset"));
     }
-    if (has_tabular)
+    if (has_generator)
     {
-        print("tabular dataset", tabular_dataset_t::all(), cmdline.get<string_t>("tabular"));
+        std::cout << make_table("generator", generator_t::all(), cmdline.get<string_t>("generator"));
     }
     if (has_version)
     {

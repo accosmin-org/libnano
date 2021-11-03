@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/function.h>
+#include <nano/core/strutil.h>
 
 namespace nano
 {
@@ -43,7 +44,7 @@ namespace nano
         }
 
         ///
-        /// \brief move to another point
+        /// \brief move to another point.
         ///
         template <typename tvector>
         bool update(const tvector& xx)
@@ -57,7 +58,8 @@ namespace nano
         }
 
         ///
-        /// \brief line-search step along the descent direction of state0
+        /// \brief line-search step along the descent direction of state0,
+        /// returns true if the update was successfully.
         ///
         bool update(const solver_state_t& state0, const scalar_t tt)
         {

@@ -11,8 +11,8 @@ namespace nano
     {
     public:
 
-        explicit function_sphere_t(const tensor_size_t dims) :
-            function_t("Sphere", dims, convexity::yes)
+        explicit function_sphere_t(tensor_size_t dims) :
+            function_t("Sphere", dims, convexity::yes) // LCOV_EXCL_LINE
         {
         }
 

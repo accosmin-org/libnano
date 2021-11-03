@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,9 +12,9 @@ namespace nano
     {
     public:
 
-        explicit function_zakharov_t(const tensor_size_t dims) :
-            function_t("Zakharov", dims, convexity::yes),
-            m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
+        explicit function_zakharov_t(tensor_size_t dims) :
+            function_t("Zakharov", dims, convexity::yes), // LCOV_EXCL_LINE
+            m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2))) // LCOV_EXCL_LINE
 
         {
         }

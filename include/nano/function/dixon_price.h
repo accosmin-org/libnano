@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,9 +12,9 @@ namespace nano
     {
     public:
 
-        explicit function_dixon_price_t(const tensor_size_t dims) :
-            function_t("Dixon-Price", dims, convexity::no),
-            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+        explicit function_dixon_price_t(tensor_size_t dims) :
+            function_t("Dixon-Price", dims, convexity::no), // LCOV_EXCL_LINE
+            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims))) // LCOV_EXCL_LINE
         {
         }
 

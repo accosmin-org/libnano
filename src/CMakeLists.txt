@@ -7,13 +7,29 @@ endif()
 add_library(nano)
 
 target_sources(nano PRIVATE
-    table.cpp
-    logger.cpp
-    stream.cpp
-    dataset/imclass.cpp
-    dataset/imclass_mnist.cpp
+    core/table.cpp
+    core/chrono.cpp
+    core/logger.cpp
+    core/cmdline.cpp
+    core/histogram.cpp
+    core/parameter.cpp
+    core/serializable.cpp
+    generator.cpp
+    generator/iterator.cpp
+    generator/generator.cpp
+    generator/elemwise_base.cpp
+    generator/elemwise_input.cpp
+    generator/elemwise_gradient.cpp
+    generator/elemwise_identity.cpp
+    generator/pairwise_base.cpp
+    generator/pairwise_input.cpp
+    dataset.cpp
+    dataset/mask.cpp
+    dataset/stats.cpp
+    dataset/feature.cpp
     dataset/tabular.cpp
     dataset/imclass_cifar.cpp
+    dataset/imclass_mnist.cpp
     lsearch0.cpp
     lsearch0/quadratic.cpp
     lsearch0/linear.cpp
@@ -25,33 +41,35 @@ target_sources(nano PRIVATE
     lsearchk/morethuente.cpp
     lsearchk/cgdescent.cpp
     lsearchk/fletcher.cpp
-    linear/function.cpp
-    linear/model.cpp
+    linear/cache.cpp
+    linear/util.cpp
+    #linear/function.cpp
+    #linear/model.cpp
     solver.cpp
     solver/lbfgs.cpp
     solver/cgd.cpp
     solver/quasi.cpp
     solver/gd.cpp
     function.cpp
-    cmdline.cpp
     loss.cpp
-    model.cpp
-    model/grid_search.cpp
-    dataset.cpp
+    #model.cpp
+    #model/grid_search.cpp
+    mlearn/util.cpp
     mlearn/kfold.cpp
-    mlearn/train.cpp
+    #mlearn/train.cpp
     mlearn/cluster.cpp
-    mlearn/stacking.cpp
-    gboost/model.cpp
-    gboost/function.cpp
-    gboost/wlearner.cpp
-    gboost/wlearner_dstep.cpp
-    gboost/wlearner_dtree.cpp
-    gboost/wlearner_hinge.cpp
-    gboost/wlearner_stump.cpp
-    gboost/wlearner_table.cpp
-    gboost/wlearner_affine.cpp
-    gboost/wlearner_feature1.cpp)
+    #mlearn/stacking.cpp
+    #gboost/model.cpp
+    #gboost/function.cpp
+    #gboost/wlearner.cpp
+    #gboost/wlearner_dstep.cpp
+    #gboost/wlearner_dtree.cpp
+    #gboost/wlearner_hinge.cpp
+    #gboost/wlearner_stump.cpp
+    #gboost/wlearner_table.cpp
+    #gboost/wlearner_affine.cpp
+    #gboost/wlearner_feature1.cpp
+)
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

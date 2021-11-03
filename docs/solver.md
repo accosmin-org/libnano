@@ -3,7 +3,7 @@
 
 #### Introduction
 
-Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum **x*** of a differential function **f(x)** of dimension *n*. The returned point **x*** is guaranteed to be the global minimum when the function is convex, and a critical point (not necessarily a local minimum) otherwise. **x*** is found by iteratively decreasing the current function value from a given point **x0** using a descent direction and a line-search along this direction. More details can be found in the following sources:
+Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum **x** of a differential function **f(x)** of dimension *n*. The returned point **x** is guaranteed to be the global minimum when the function is convex, and a critical point (not necessarily a local minimum) otherwise. **x** is found by iteratively decreasing the current function value from a given point **x0** using a descent direction and a line-search along this direction. More details can be found in the following sources:
 
 
 * "Practical Methods of Optimization 2e", R. Fletcher, 2000
@@ -12,12 +12,12 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory or by running the command line utility [app/info](../app/info.cpp) like described below.
+Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory.
 
 
 #### Function
 
-The function to minimize must be an instance of *function_t*. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from the [example](../example/src/minimize.cpp) defines a quadratic function of arbitrary dimensions:
+The function to minimize must be an instance of `function_t`. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from the [example](../example/src/minimize.cpp) defines a quadratic function of arbitrary dimensions:
 
 ```
 #include <nano/function.h>
@@ -58,7 +58,7 @@ Additionally the library implements various widely used functions for benchmarki
 
 #### Solver
 
-Once the objective function is defined, the user needs to create a *solver_t* object to use for minimization. The associated factory can be used to list the builtin solvers in C++ like this:
+Once the objective function is defined, the user needs to create a `solver_t` object to use for minimization. The associated factory can be used to list the builtin solvers in C++ like this:
 
 ```
 for (const auto& solver_id : nano::solver_t::all().ids())
@@ -67,9 +67,10 @@ for (const auto& solver_id : nano::solver_t::all().ids())
 }
 ```
 
-Another possibility is to run the command line utility [app/info](../app/info.cpp) to print the ID and a short description of all builtin solvers:
+Another possibility is to print a tabular representation with the ID and a short description of all builtin solvers:
 ```
-./build/libnano/debug/app/info --solver .+
+std::cout << make_table("solver", solver_t::all());
+// prints something like...
 |----------|-----------------------------------------|
 | solver   | description                             |
 |----------|-----------------------------------------|
@@ -125,6 +126,23 @@ std::cout << std::fixed << std::setprecision(12)
 
 
 Choosing the right optimization algorithm is usually done in terms of processing time and memory usage. The non-linear conjugate gradient descent familly of algorithms (CGD) and the limited-memory BFGS (L-BFGS) are recommended for large problems because they perform *O(n)* FLOPs per iteration and use *O(n)* memory while having super-linear convergence. The quasi-Newton algorithms, and BFGS in particular, converge faster both in terms of iterations and gradient evaluations, but are only recommended for small problems because of their *O(n^2)* FLOPs and memory usage. The gradient descent is provided here as a baseline to compare with as it generally takes 1-2 orders of magnitude more iterations to reach similar accuracy as CGD or L-BFGS.
+
+
+The solvers can be configured with different line-search steps initialization and search methods that implement the `lsearch0_t` and the `lsearchk_t` interfaces respectively. The builtin implementations can be accessed from the associated factories with `lsearch_t::all()` and `lsearchk_t::all()` respectively. Note that the state-of-the-art line-search method *CG_DESCENT* is recommended to use when high precision solutions of machine precision are needed.
+
+```
+std::cout << make_table("lsearchk", lsearchk_t::all());
+// prints something like...
+|-------------|---------------------------------------------------------|
+| lsearchk    | description                                             |
+|-------------|---------------------------------------------------------|
+| backtrack   | backtrack using cubic interpolation (Armijo conditions) |
+| cgdescent   | CG-DESCENT (regular and approximate Wolfe conditions)   |
+| fletcher    | Fletcher (strong Wolfe conditions)                      |
+| lemarechal  | LeMarechal (regular Wolfe conditions)                   |
+| morethuente | More&Thuente (strong Wolfe conditions)                  |
+|-------------|---------------------------------------------------------|
+```
 
 
 #### Example

@@ -1,12 +1,12 @@
 #include <iomanip>
-#include <nano/stats.h>
-#include <nano/table.h>
-#include <nano/tpool.h>
-#include <nano/chrono.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
-#include <nano/cmdline.h>
-#include <nano/numeric.h>
+#include <nano/core/tpool.h>
+#include <nano/core/stats.h>
+#include <nano/core/chrono.h>
+#include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/numeric.h>
+#include <nano/core/factory_util.h>
 
 using namespace nano;
 
@@ -211,6 +211,9 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
+    cmdline.add("", "list-solver",      "list the available solvers");
+    cmdline.add("", "list-lsearch0",    "list the available line-search initialization methods");
+    cmdline.add("", "list-lsearchk",    "list the available line-search strategies");
 
     cmdline.process(argc, argv);
 
@@ -220,11 +223,29 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
+    if (cmdline.has("list-solver"))
+    {
+        std::cout << make_table("solver", solver_t::all());
+        return EXIT_SUCCESS;
+    }
+
+    if (cmdline.has("list-lsearch0"))
+    {
+        std::cout << make_table("lsearch0", lsearch0_t::all());
+        return EXIT_SUCCESS;
+    }
+
+    if (cmdline.has("list-lsearchk"))
+    {
+        std::cout << make_table("lsearchk", lsearchk_t::all());
+        return EXIT_SUCCESS;
+    }
+
     // check arguments and options
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
     const auto trials = cmdline.get<size_t>("trials");
-    const auto max_iterations = cmdline.get<size_t>("max-iterations");
+    const auto max_iterations = cmdline.get<int>("max-iterations");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto convex = cmdline.has("convex") ? convexity::yes : convexity::unknown;
     const auto log_failures = cmdline.has("log-failures");

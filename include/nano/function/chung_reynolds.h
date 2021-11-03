@@ -11,8 +11,8 @@ namespace nano
     {
     public:
 
-        explicit function_chung_reynolds_t(const tensor_size_t dims) :
-            function_t("Chung-Reynolds", dims, convexity::yes)
+        explicit function_chung_reynolds_t(tensor_size_t dims) :
+            function_t("Chung-Reynolds", dims, convexity::yes) // LCOV_EXCL_LINE
         {
         }
 

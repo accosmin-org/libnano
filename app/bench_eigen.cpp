@@ -1,10 +1,8 @@
-#include <nano/table.h>
-#include <nano/chrono.h>
-#include <nano/logger.h>
 #include <nano/tensor.h>
-#include <nano/random.h>
-#include <nano/cmdline.h>
-#include <nano/tensor/numeric.h>
+#include <nano/core/table.h>
+#include <nano/core/chrono.h>
+#include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
 
 namespace
 {
@@ -48,7 +46,7 @@ namespace
             auto x = make_vector<tscalar>(dims);
             auto z = make_vector<tscalar>(dims);
 
-            store(row, 2 * dims, [&] () { std::memcpy(z.data(), x.data(), sizeof(tscalar) * dims); });
+            store(row, 2 * dims, [&] () { std::memcpy(z.data(), x.data(), sizeof(tscalar) * static_cast<size_t>(dims)); });
         }
     };
 
@@ -264,7 +262,7 @@ namespace
     {
         auto& row = table.header();
         row << " "
-            << nano::colspan(static_cast<int>(std::log2(max/min)) + 1)
+            << nano::colspan(static_cast<size_t>(std::log2(static_cast<double>(max) / static_cast<double>(min))) + 1U)
             << nano::alignment::center << section_name;
         table.delim();
     }
@@ -337,8 +335,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.process(argc, argv);
 
     // check arguments and options
-    const auto min_dims = clamp(cmdline.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
-    const auto max_dims = clamp(cmdline.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
+    const auto min_dims = std::clamp(cmdline.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
+    const auto max_dims = std::clamp(cmdline.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
     const auto copy = cmdline.has("copy");
     const auto blas1 = cmdline.has("blas1");
     const auto blas2 = cmdline.has("blas2");

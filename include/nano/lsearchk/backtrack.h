@@ -15,7 +15,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearchk_backtrack_t() = default;
+        lsearchk_backtrack_t() = default; // LCOV_EXCL_LINE
 
         ///
         /// \brief @see lsearchk_t
@@ -30,7 +30,7 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void interp(const interpolation interp) { m_interpolation = interp; }
+        void interp(interpolation interp) { m_interpolation = interp; }
 
         ///
         /// \brief access functions

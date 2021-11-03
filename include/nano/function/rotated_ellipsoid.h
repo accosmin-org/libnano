@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,8 +12,8 @@ namespace nano
     {
     public:
 
-        explicit function_rotated_ellipsoid_t(const tensor_size_t dims) :
-            function_t("Rotated Hyper-Ellipsoid", dims, convexity::yes)
+        explicit function_rotated_ellipsoid_t(tensor_size_t dims) :
+            function_t("Rotated Hyper-Ellipsoid", dims, convexity::yes) // LCOV_EXCL_LINE
         {
         }
 

@@ -1,52 +1,150 @@
 #include <mutex>
-#include <nano/logger.h>
-#include <nano/mlearn/class.h>
 #include <nano/dataset/tabular.h>
 #include <nano/dataset/imclass_cifar.h>
 #include <nano/dataset/imclass_mnist.h>
 
 using namespace nano;
 
-static bool is_multi_class(const tensor3d_cmap_t& targets)
+indices_t dataset_t::train_samples() const
 {
-    return std::count_if(begin(targets), end(targets), [] (scalar_t value) { return is_pos_target(value); }) != 1;
+    return filter(samples() - m_testing.vector().sum(), 0);
+}
+
+indices_t dataset_t::test_samples() const
+{
+    return filter(m_testing.vector().sum(), 1);
+}
+
+void dataset_t::no_testing()
+{
+    m_testing.zero();
+}
+
+void dataset_t::testing(tensor_range_t sample_range)
+{
+    assert(sample_range.begin() >= 0 && sample_range.end() <= m_testing.size());
+    m_testing.vector().segment(sample_range.begin(), sample_range.size()).setConstant(1);
+}
+
+indices_t dataset_t::filter(tensor_size_t count, tensor_size_t condition) const
+{
+    indices_t indices(count);
+    for (tensor_size_t sample = 0, samples = this->samples(), index = 0; sample < samples; ++ sample)
+    {
+        if (m_testing(sample) == condition)
+        {
+            assert(index < indices.size());
+            indices(index ++) = sample;
+        }
+    }
+    return indices;
+}
+
+void dataset_t::resize(tensor_size_t samples, const features_t& features)
+{
+    this->resize(samples, features, string_t::npos);
+}
+
+void dataset_t::resize(tensor_size_t samples, const features_t& features, size_t target)
+{
+    std::map<feature_type, tensor_size_t> size_storage;
+    const auto update_size_storage = [&] (feature_type type, auto size)
+    {
+        const auto begin = size_storage[type];
+        const auto end = begin + static_cast<tensor_size_t>(size);
+        size_storage[type] = end;
+        return std::make_pair(begin, end);
+    };
+
+    m_storage_type.resize(features.size());
+    m_storage_range.resize(static_cast<tensor_size_t>(features.size()), 2);
+
+    for (size_t i = 0, size = features.size(); i < size; ++ i)
+    {
+        const auto& feature = features[i];
+
+        feature_type type;
+        std::pair<tensor_size_t, tensor_size_t> range;
+        switch (feature.type())
+        {
+        case feature_type::mclass:
+            type = feature_type::uint8;
+            range = update_size_storage(type, feature.classes());
+            break;
+
+        case feature_type::sclass:
+            type =
+                (feature.classes() <= (tensor_size_t(1) << 8)) ? feature_type::uint8 :
+                (feature.classes() <= (tensor_size_t(1) << 16)) ? feature_type::uint16 :
+                (feature.classes() <= (tensor_size_t(1) << 32)) ? feature_type::uint32 : feature_type::uint64;
+            range = update_size_storage(type, 1);
+            break;
+
+        default:
+            type = feature.type();
+            range = update_size_storage(type, ::nano::size(feature.dims()));
+            break;
+        }
+
+        m_storage_type[i] = type;
+
+        const auto [begin, end] = range;
+        m_storage_range(static_cast<tensor_size_t>(i), 0) = begin;
+        m_storage_range(static_cast<tensor_size_t>(i), 1) = end;
+    }
+
+    m_testing.resize(samples);
+    m_testing.zero();
+
+    m_features = features;
+    m_target = (target < features.size()) ? static_cast<tensor_size_t>(target) : m_storage_range.size();
+
+    m_storage_f32.resize(size_storage[feature_type::float32], samples);
+    m_storage_f64.resize(size_storage[feature_type::float64], samples);
+    m_storage_i08.resize(size_storage[feature_type::int8], samples);
+    m_storage_i16.resize(size_storage[feature_type::int16], samples);
+    m_storage_i32.resize(size_storage[feature_type::int32], samples);
+    m_storage_i64.resize(size_storage[feature_type::int64], samples);
+    m_storage_u08.resize(size_storage[feature_type::uint8], samples);
+    m_storage_u16.resize(size_storage[feature_type::uint16], samples);
+    m_storage_u32.resize(size_storage[feature_type::uint32], samples);
+    m_storage_u64.resize(size_storage[feature_type::uint64], samples);
+
+    m_storage_f32.zero();
+    m_storage_f64.zero();
+    m_storage_i08.zero();
+    m_storage_i16.zero();
+    m_storage_i32.zero();
+    m_storage_i64.zero();
+    m_storage_u08.zero();
+    m_storage_u16.zero();
+    m_storage_u32.zero();
+    m_storage_u64.zero();
+
+    m_storage_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
+    m_storage_mask.zero();
 }
 
 task_type dataset_t::type() const
 {
-    const auto target = this->target();
+    return  has_target() ?
+            static_cast<task_type>(m_features[static_cast<size_t>(m_target)]) :
+            task_type::unsupervised;
+}
 
-    if (!target)
+void dataset_t::load()
+{
+    do_load();
+
+    // NB: targets must be non-optional if a supervised task
+    if (has_target())
     {
-        return task_type::unsupervised;
-    }
-    else
-    {
-        critical(
-            target.optional(),
-            scat("dataset: the target feature (", target.name(), ") cannot be optional!"));
-
-        if (!target.discrete())
+        visit_target([&] (const feature_t&, const auto&, const auto& mask)
         {
-            return task_type::regression;
-        }
-        else
-        {
-            // decide if single-label or multi-label
-            bool multi_class = false;
-            const auto batch = tensor_size_t{1024};
-            for (tensor_size_t begin = 0, samples = this->samples(); begin < samples && !multi_class; begin += batch)
-            {
-                const auto end = std::min(begin + batch, samples);
-                const auto targets = this->targets(arange(begin, end));
-                for (tensor_size_t i = 0; i < targets.size<0>() && !multi_class; ++ i)
-                {
-                    multi_class = is_multi_class(targets.tensor(i));
-                }
-            }
-
-            return multi_class ? task_type::mclassification : task_type::sclassification;
-        }
+            critical(
+                ::nano::optional(mask, samples()),
+                "dataset_t: the target cannot be optional!");
+        });
     }
 }
 
@@ -72,7 +170,7 @@ dataset_factory_t& dataset_t::all()
                 feature_t{"sepal_width_cm"},
                 feature_t{"petal_length_cm"},
                 feature_t{"petal_width_cm"},
-                feature_t{"class"}.labels(3),
+                feature_t{"class"}.sclass(3),
             }, 4);
 
         manager.add<tabular_dataset_t>(
@@ -84,7 +182,7 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"class"}.labels(3),
+                feature_t{"class"}.sclass(3),
                 feature_t{"Alcohol"},
                 feature_t{"Malic acid"},
                 feature_t{"Ash"},
@@ -105,26 +203,28 @@ dataset_factory_t& dataset_t::all()
             "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)",
             csvs_t
             {
-                csv_t{dir + "/adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561),
-                csv_t{dir + "/adult/adult.test"}.skip('|').delim(", .").header(false).expected(16281).testing(make_range(0, 16281))
+                csv_t{dir + "/adult/adult.data"}.
+                    skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
+                csv_t{dir + "/adult/adult.test"}.
+                    skip('|').delim(", .").header(false).expected(16281).testing(make_range(0, 16281)).placeholder("?")
             },
             features_t
             {
                 feature_t{"age"},
-                feature_t{"workclass"}.placeholder("?").labels(8),
+                feature_t{"workclass"}.sclass(8),
                 feature_t{"fnlwgt"},
-                feature_t{"education"}.labels(16),
+                feature_t{"education"}.sclass(16),
                 feature_t{"education-num"},
-                feature_t{"marital-status"}.labels(7),
-                feature_t{"occupation"}.placeholder("?").labels(14),
-                feature_t{"relationship"}.labels(6),
-                feature_t{"race"}.labels(5),
-                feature_t{"sex"}.labels({"Female", "Male"}),
+                feature_t{"marital-status"}.sclass(7),
+                feature_t{"occupation"}.sclass(14),
+                feature_t{"relationship"}.sclass(6),
+                feature_t{"race"}.sclass(5),
+                feature_t{"sex"}.sclass({"Female", "Male"}),
                 feature_t{"capital-gain"},
                 feature_t{"capital-loss"},
                 feature_t{"hours-per-week"},
-                feature_t{"native-country"}.placeholder("?").labels(41),
-                feature_t{"income"}.labels(2),
+                feature_t{"native-country"}.sclass(41),
+                feature_t{"income"}.sclass(2),
             }, 14);
 
         manager.add<tabular_dataset_t>(
@@ -136,7 +236,7 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"sex"}.labels(3),
+                feature_t{"sex"}.sclass(3),
                 feature_t{"length"},
                 feature_t{"diameter"},
                 feature_t{"height"},
@@ -144,7 +244,7 @@ dataset_factory_t& dataset_t::all()
                 feature_t{"shucked_weight"},
                 feature_t{"viscera_weight"},
                 feature_t{"shell_weight"},
-                feature_t{"rings"}.labels(29),
+                feature_t{"rings"}.sclass(29),
             }, 8);
 
         manager.add<tabular_dataset_t>(
@@ -156,10 +256,10 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"X"}.labels(9),
-                feature_t{"Y"}.labels(8),
-                feature_t{"month"}.labels(12),
-                feature_t{"day"}.labels(7),
+                feature_t{"X"}.sclass(9),
+                feature_t{"Y"}.sclass(8),
+                feature_t{"month"}.sclass(12),
+                feature_t{"day"}.sclass(7),
                 feature_t{"FFMC"},
                 feature_t{"DMC"},
                 feature_t{"DC"},
@@ -181,7 +281,7 @@ dataset_factory_t& dataset_t::all()
             features_t
             {
                 feature_t{"ID"},
-                feature_t{"Diagnosis"}.labels(2),
+                feature_t{"Diagnosis"}.sclass(2),
 
                 feature_t{"radius1"},
                 feature_t{"texture1"},
@@ -227,26 +327,26 @@ dataset_factory_t& dataset_t::all()
             features_t
             {
                 feature_t{"age"},
-                feature_t{"job"}.labels(12),
-                feature_t{"marital"}.labels(4),
-                feature_t{"education"}.labels(8),
-                feature_t{"default"}.labels(3),
-                feature_t{"housing"}.labels(3),
-                feature_t{"loan"}.labels(3),
-                feature_t{"contact"}.labels(2),
-                feature_t{"month"}.labels(12),
-                feature_t{"day_of_week"}.labels(5),
+                feature_t{"job"}.sclass(12),
+                feature_t{"marital"}.sclass(4),
+                feature_t{"education"}.sclass(8),
+                feature_t{"default"}.sclass(3),
+                feature_t{"housing"}.sclass(3),
+                feature_t{"loan"}.sclass(3),
+                feature_t{"contact"}.sclass(2),
+                feature_t{"month"}.sclass(12),
+                feature_t{"day_of_week"}.sclass(5),
                 feature_t{"duration"},
                 feature_t{"campaign"},
                 feature_t{"pdays"},
                 feature_t{"previous"},
-                feature_t{"poutcome"}.labels(3),
+                feature_t{"poutcome"}.sclass(3),
                 feature_t{"emp.var.rate"},
                 feature_t{"cons.price.idx"},
                 feature_t{"cons.conf.idx"},
                 feature_t{"euribor3m"},
                 feature_t{"nr.employed"},
-                feature_t{"y"}.labels(2),
+                feature_t{"y"}.sclass(2),
             }, 20);
 
         manager.add<mnist_dataset_t>("mnist",

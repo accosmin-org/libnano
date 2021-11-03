@@ -11,9 +11,9 @@ namespace nano
     {
     public:
 
-        explicit function_qing_t(const tensor_size_t dims) :
-            function_t("Qing", dims, convexity::no),
-            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+        explicit function_qing_t(tensor_size_t dims) :
+            function_t("Qing", dims, convexity::no), // LCOV_EXCL_LINE
+            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims))) // LCOV_EXCL_LINE
         {
         }
 

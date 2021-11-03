@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/function.h>
 
 namespace nano
@@ -12,8 +12,8 @@ namespace nano
     {
     public:
 
-        explicit function_rosenbrock_t(const tensor_size_t dims) :
-            function_t("Rosenbrock", dims, convexity::no)
+        explicit function_rosenbrock_t(tensor_size_t dims) :
+            function_t("Rosenbrock", dims, convexity::no) // LCOV_EXCL_LINE
         {
         }
 
