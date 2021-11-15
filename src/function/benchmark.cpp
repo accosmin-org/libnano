@@ -39,18 +39,12 @@ rfunctions_t nano::make_benchmark_functions(benchmark_function_config_t config, 
     {
         for (const auto& id : ids)
         {
-            try
-            {
-                auto function = factory.get(id);
+            auto function = factory.get(id);
 
-                if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
-                    (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
-                {
-                    functions.push_back(function->make(dims));
-                }
-            }
-            catch (...)
+            if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
+                (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
             {
+                functions.push_back(function->make(dims));
             }
         }
 

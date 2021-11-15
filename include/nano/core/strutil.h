@@ -44,7 +44,7 @@ namespace nano
             }
         }
         return enums;
-    }
+    } // LCOV_EXCL_LINE
 
     ///
     /// \brief concatenate a list of potentially heterogeneous values into a formatted string.
@@ -213,5 +213,5 @@ namespace nano
         }
 
         return ret;
-    }
+    } // LCOV_EXCL_LINE
 }

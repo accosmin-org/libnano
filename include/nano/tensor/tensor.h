@@ -400,7 +400,7 @@ namespace nano
             auto subtensor = tensor_mem_t<tscalar_return, trank>{};
             indexed(indices, subtensor);
             return subtensor;
-        }
+        } // LCOV_EXCL_LINE
 
         ///
         /// \brief access an element of the tensor
@@ -751,7 +751,7 @@ namespace nano
         tensor_mem_t<tscalar, trank> tensor(dims);
         tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value));
         return tensor;
-    }
+    } // LCOV_EXCL_LINE
 
     ///
     /// \brief returns true if the two tensors are close, ignoring not-finite values if present.

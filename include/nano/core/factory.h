@@ -83,7 +83,7 @@ namespace nano
                 }
             }
             return ret;
-        }
+        } // LCOV_EXCL_LINE
 
         ///
         /// \brief returns the number of registered objects.

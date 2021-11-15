@@ -10,13 +10,29 @@ UTEST_BEGIN_MODULE(test_tensor_tensor)
 UTEST_CASE(print)
 {
     const auto vector = ::nano::arange(0, 24);
+    const auto u8vector = ::nano::make_tensor<uint8_t>(
+        make_dims(24), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
+    const auto i8vector = ::nano::make_tensor<int8_t>(
+        make_dims(24), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
     {
         const auto* const expected = R"(shape: 24
 [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23])";
 
-        std::ostringstream stream;
-        stream << vector;
-        UTEST_CHECK_EQUAL(stream.str(), expected);
+        {
+            std::ostringstream stream;
+            stream << vector;
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
+        {
+            std::ostringstream stream;
+            stream << u8vector;
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
+        {
+            std::ostringstream stream;
+            stream << i8vector;
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
     }
     {
         const auto* const expected = R"(shape: 4x6
@@ -25,9 +41,21 @@ UTEST_CASE(print)
  [12 13 14 15 16 17]
  [18 19 20 21 22 23]])";
 
-        std::ostringstream stream;
-        stream << vector.reshape(4, -1);
-        UTEST_CHECK_EQUAL(stream.str(), expected);
+        {
+            std::ostringstream stream;
+            stream << vector.reshape(4, -1);
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
+        {
+            std::ostringstream stream;
+            stream << u8vector.reshape(4, -1);
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
+        {
+            std::ostringstream stream;
+            stream << i8vector.reshape(4, -1);
+            UTEST_CHECK_EQUAL(stream.str(), expected);
+        }
     }
     {
         const auto* const expected = R"(shape: 4x3x2

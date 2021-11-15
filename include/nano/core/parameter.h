@@ -111,7 +111,7 @@ namespace nano
             const auto value = static_cast<tscalar>(_value);
 
             critical(
-                !std::isfinite(_value) || !std::isfinite(value) ||
+                !std::isfinite(_value) ||
                 !detail::check(m_mincomp, m_min, value) ||
                 !detail::check(m_maxcomp, value, m_max),
                 "invalid parameter '", m_name, "': !(", m_min, detail::name(m_mincomp),
@@ -176,8 +176,8 @@ namespace nano
             const auto value2 = static_cast<tscalar>(_value2);
 
             critical(
-                !std::isfinite(_value1) || !std::isfinite(value1) ||
-                !std::isfinite(_value2) || !std::isfinite(value2) ||
+                !std::isfinite(_value1) ||
+                !std::isfinite(_value2) ||
                 !detail::check(m_mincomp, m_min, value1) ||
                 !detail::check(m_valcomp, value1, value2) ||
                 !detail::check(m_maxcomp, value2, m_max),

@@ -187,7 +187,7 @@ namespace nano
                 }
             }
             return values;
-        }
+        } // LCOV_EXCL_LINE
 
         ///
         /// \brief select the columns that satisfy the given operator
@@ -205,7 +205,7 @@ namespace nano
                 }
             }
             return indices;
-        }
+        } // LCOV_EXCL_LINE
 
         ///
         /// \brief access functions
