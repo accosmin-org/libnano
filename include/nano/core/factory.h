@@ -36,8 +36,8 @@ namespace nano
         bool add(const string_t& id, const string_t& description, targs&&... args)
         {
             static_assert(std::is_base_of_v<tobject, tobject_impl>);
-            const auto maker = [=] () { return std::make_unique<tobject_impl>(args...); };
-            return m_protos.emplace(id, proto_t{maker, description}).second;
+            auto maker = [=] () { return std::make_unique<tobject_impl>(args...); };
+            return m_protos.emplace(id, proto_t{std::move(maker), description}).second;
         }
 
         ///

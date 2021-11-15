@@ -1,29 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief sphere function: f(x) = x.dot(x).
     ///
-    class function_sphere_t final : public function_t
+    class NANO_PUBLIC function_sphere_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_sphere_t(tensor_size_t dims) :
-            function_t("Sphere", dims, convexity::yes) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_sphere_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                gx->noalias() = 2 * x;
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return x.dot(x);
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

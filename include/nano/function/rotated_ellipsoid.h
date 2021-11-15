@@ -1,44 +1,29 @@
 #pragma once
 
-#include <nano/core/numeric.h>
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief rotated hyper-ellipsoid function: see https://www.sfu.ca/~ssurjano/rothyp.html.
     ///
-    class function_rotated_ellipsoid_t final : public function_t
+    class NANO_PUBLIC function_rotated_ellipsoid_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_rotated_ellipsoid_t(tensor_size_t dims) :
-            function_t("Rotated Hyper-Ellipsoid", dims, convexity::yes) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_rotated_ellipsoid_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            scalar_t fx = 0, fi = 0;
-            for (tensor_size_t i = 0; i < size(); i ++)
-            {
-                fi += x(i);
-                fx += nano::square(fi);
-                if (gx != nullptr)
-                {
-                    (*gx)(i) = 2 * fi;
-                }
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            if (gx != nullptr)
-            {
-                for (auto i = size() - 2; i >= 0; i --)
-                {
-                    (*gx)(i) += (*gx)(i + 1);
-                }
-            }
-
-            return fx;
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

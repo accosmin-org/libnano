@@ -1,7 +1,7 @@
 #include <utest/utest.h>
 #include <nano/function.h>
 #include <nano/core/numeric.h>
-#include <nano/function/geometric.h>
+#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -9,7 +9,7 @@ UTEST_BEGIN_MODULE(test_function)
 
 UTEST_CASE(convex)
 {
-    for (const auto& rfunction : get_functions(1, 4, convexity::unknown, std::regex(".+")))
+    for (const auto& rfunction : make_benchmark_functions({1, 4, convexity::ignore, smoothness::ignore}))
     {
         const auto& function = *rfunction;
         std::cout << function.name() << std::endl;
@@ -26,13 +26,13 @@ UTEST_CASE(convex)
 
             is_convex = is_convex && function.is_convex(x0, x1, 20);
         }
-        UTEST_CHECK((function.convex() != convexity::yes) || is_convex);
+        UTEST_CHECK(!function.convex() || is_convex);
     }
 }
 
 UTEST_CASE(vgrad)
 {
-    for (const auto& rfunction : get_functions(1, 4, convexity::unknown, std::regex(".+")))
+    for (const auto& rfunction : make_benchmark_functions({1, 4, convexity::ignore, smoothness::ignore}))
     {
         const auto& function = *rfunction;
         std::cout << function.name() << std::endl;

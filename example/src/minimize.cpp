@@ -7,9 +7,11 @@ class objective_t final : public nano::function_t
 public:
 
     objective_t(const int size) :
-        nano::function_t("objective's name", size, nano::convexity::yes),
+        nano::function_t("objective's name", size),
         m_b(nano::vector_t::Random(size))
     {
+        convex(true);
+        smooth(true);
     }
 
     nano::scalar_t vgrad(const nano::vector_t& x, nano::vector_t* gx = nullptr) const override

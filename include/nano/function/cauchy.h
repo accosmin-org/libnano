@@ -1,29 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Cauchy function: f(x) = log(1 + x.dot(x)).
     ///
-    class function_cauchy_t final : public function_t
+    class NANO_PUBLIC function_cauchy_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_cauchy_t(tensor_size_t dims) :
-            function_t("Cauchy", dims, convexity::no) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_cauchy_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 2 * x / (1 + x.dot(x));
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return std::log1p(x.dot(x));
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

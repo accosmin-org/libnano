@@ -1,10 +1,11 @@
 #include <iomanip>
-#include <nano/function.h>
 #include <nano/core/table.h>
 #include <nano/core/stats.h>
 #include <nano/core/chrono.h>
 #include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
+#include <nano/core/factory_util.h>
+#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -44,9 +45,10 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark optimization test functions");
-    cmdline.add("", "min-dims",     "minimum number of dimensions for each test function (if feasible)", "1024");
-    cmdline.add("", "max-dims",     "maximum number of dimensions for each test function (if feasible)", "1024");
-    cmdline.add("", "functions",    "use this regex to select the functions to benchmark", ".+");
+    cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "1024");
+    cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1024");
+    cmdline.add("", "function",         "use this regex to select the functions to benchmark", ".+");
+    cmdline.add("", "list-function",    "list the available test functions");
 
     cmdline.process(argc, argv);
 
@@ -56,17 +58,24 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
+    if (cmdline.has("list-function"))
+    {
+        std::cout << make_table("function", benchmark_function_t::all());
+        return EXIT_SUCCESS;
+    }
+
     // check arguments and options
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
-    const auto functions = std::regex(cmdline.get<string_t>("functions"));
+    const auto fregex = std::regex(cmdline.get<string_t>("function"));
+    const auto fconfig = benchmark_function_config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
 
     table_t table;
     table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
-    for (const auto& function : get_functions(min_dims, max_dims, convexity::unknown, functions))
+    for (const auto& function : make_benchmark_functions(fconfig, fregex))
     {
         if (function->size() != prev_size)
         {

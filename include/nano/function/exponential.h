@@ -1,31 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief exponential function: f(x) = exp(1 + x.dot(x) / D).
     ///
-    class function_exponential_t final : public function_t
+    class NANO_PUBLIC function_exponential_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_exponential_t(tensor_size_t dims) :
-            function_t("Exponential", dims, convexity::yes) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_exponential_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            const auto fx = std::exp(1 + x.dot(x) / scalar_t(size()));
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            if (gx != nullptr)
-            {
-                gx->noalias() = (2 * fx / scalar_t(size())) * x;
-            };
-
-            return fx;
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

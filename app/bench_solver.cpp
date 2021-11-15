@@ -7,6 +7,7 @@
 #include <nano/core/cmdline.h>
 #include <nano/core/numeric.h>
 #include <nano/core/factory_util.h>
+#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -200,18 +201,20 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline_t cmdline("benchmark solvers");
     cmdline.add("", "solver",           "regex to select the line-search solvers to benchmark", ".+");
     cmdline.add("", "function",         "regex to select the functions to benchmark", ".+");
-    cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "100");
-    cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1000");
+    cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "4");
+    cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
     cmdline.add("", "max-iterations",   "maximum number of iterations", "1000");
     cmdline.add("", "epsilon",          "convergence criterion", 1e-6);
     cmdline.add("", "convex",           "use only convex test functions");
+    cmdline.add("", "smooth",           "use only smooth test functions");
     cmdline.add("", "c1",               "use this c1 value (see Armijo-Goldstein line-search step condition)");
     cmdline.add("", "c2",               "use this c2 value (see Wolfe line-search step condition)");
     cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
     cmdline.add("", "list-solver",      "list the available solvers");
+    cmdline.add("", "list-function",    "list the available test functions");
     cmdline.add("", "list-lsearch0",    "list the available line-search initialization methods");
     cmdline.add("", "list-lsearchk",    "list the available line-search strategies");
 
@@ -226,6 +229,12 @@ static int unsafe_main(int argc, const char* argv[])
     if (cmdline.has("list-solver"))
     {
         std::cout << make_table("solver", solver_t::all());
+        return EXIT_SUCCESS;
+    }
+
+    if (cmdline.has("list-function"))
+    {
+        std::cout << make_table("function", benchmark_function_t::all());
         return EXIT_SUCCESS;
     }
 
@@ -247,7 +256,8 @@ static int unsafe_main(int argc, const char* argv[])
     const auto trials = cmdline.get<size_t>("trials");
     const auto max_iterations = cmdline.get<int>("max-iterations");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
-    const auto convex = cmdline.has("convex") ? convexity::yes : convexity::unknown;
+    const auto convex = cmdline.has("convex") ? convexity::yes : convexity::ignore;
+    const auto smooth = cmdline.has("smooth") ? smoothness::yes : smoothness::ignore;
     const auto log_failures = cmdline.has("log-failures");
 
     const auto fregex = std::regex(cmdline.get<string_t>("function"));
@@ -291,7 +301,7 @@ static int unsafe_main(int argc, const char* argv[])
 
     // benchmark
     solver_config_stats_t gstats;
-    for (const auto& function : get_functions(min_dims, max_dims, convex, fregex))
+    for (const auto& function : make_benchmark_functions({min_dims, max_dims, convex, smooth}, fregex))
     {
         check_function(*function, solvers, trials, gstats, log_failures);
     }

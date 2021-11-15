@@ -3,6 +3,7 @@
 #include <nano/core/numeric.h>
 #include <nano/solver/quasi.h>
 #include <nano/function/sphere.h>
+#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -183,8 +184,8 @@ UTEST_CASE(config_solvers)
     }
 }
 
-const auto all_functions = get_functions(4, 4, convexity::unknown);
-const auto convex_functions = get_functions(4, 4, convexity::yes);
+const auto all_functions = make_benchmark_functions({4, 4, convexity::no, smoothness::yes});
+const auto convex_functions = make_benchmark_functions({4, 4, convexity::yes, smoothness::yes});
 
 const auto all_solver_ids = solver_t::all().ids();
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));

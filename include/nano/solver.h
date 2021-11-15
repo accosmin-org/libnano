@@ -65,6 +65,11 @@ namespace nano
         using logger_t = std::function<bool(const solver_state_t&)>;
 
         ///
+        /// \brief returns the available implementations
+        ///
+        static solver_factory_t& all();
+
+        ///
         /// \brief constructor
         ///
         explicit solver_t(
@@ -90,11 +95,6 @@ namespace nano
         /// \brief destructor
         ///
         virtual ~solver_t() = default;
-
-        ///
-        /// \brief returns the available implementations
-        ///
-        static solver_factory_t& all();
 
         ///
         /// \brief minimize the given function starting from the initial point x0 until:

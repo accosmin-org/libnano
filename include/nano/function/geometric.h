@@ -1,7 +1,6 @@
 #pragma once
 
-#include <nano/core/random.h>
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
@@ -14,27 +13,24 @@ namespace nano
     ///     seee "Convex Optimization",
     ///     by S. Boyd and L. Vanderberghe, p.458 (logarithmic version)
     ///
-    class function_geometric_optimization_t final : public function_t
+    class NANO_PUBLIC function_geometric_optimization_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands = 16) :
-            function_t("Geometric Optimization", dims, convexity::yes), // LCOV_EXCL_LINE
-            m_a(vector_t::Random(summands)), // LCOV_EXCL_LINE
-            m_A(matrix_t::Random(summands, dims) / dims) // LCOV_EXCL_LINE
-        {
-            assert(summands > 0);
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_geometric_optimization_t(tensor_size_t dims = 10, tensor_size_t summands = 16);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
-        {
-            if (gx != nullptr)
-            {
-                gx->noalias() = m_A.transpose() * (m_a + m_A * x).array().exp().matrix();
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
-            return (m_a + m_A * x).array().exp().sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
 
     private:
 

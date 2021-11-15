@@ -1,44 +1,29 @@
 #pragma once
 
-#include <nano/core/numeric.h>
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Rosenbrock function: see https://en.wikipedia.org/wiki/Test_functions_for_optimization.
     ///
-    class function_rosenbrock_t final : public function_t
+    class NANO_PUBLIC function_rosenbrock_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_rosenbrock_t(tensor_size_t dims) :
-            function_t("Rosenbrock", dims, convexity::no) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_rosenbrock_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            const auto ct = scalar_t(100);
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            scalar_t fx = 0;
-            for (tensor_size_t i = 0; i + 1 < size(); ++ i)
-            {
-                fx += ct * nano::square(x(i + 1) - x(i) * x(i)) + nano::square(x(i) - 1);
-            }
-
-            if (gx != nullptr)
-            {
-                (*gx).setZero();
-                for (tensor_size_t i = 0; i + 1 < size(); ++ i)
-                {
-                    (*gx)(i) += 2 * (x(i) - 1);
-                    (*gx)(i) += ct * 2 * (x(i + 1) - x(i) * x(i)) * (- 2 * x(i));
-                    (*gx)(i + 1) += ct * 2 * (x(i + 1) - x(i) * x(i));
-                }
-            }
-
-            return fx;
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

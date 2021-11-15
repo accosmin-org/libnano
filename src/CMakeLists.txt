@@ -51,6 +51,26 @@ target_sources(nano PRIVATE
     solver/quasi.cpp
     solver/gd.cpp
     function.cpp
+    function/axis_ellipsoid.cpp
+    function/benchmark.cpp
+    function/cauchy.cpp
+    function/chung_reynolds.cpp
+    function/dixon_price.cpp
+    function/elastic_net.cpp
+    function/exponential.cpp
+    function/geometric.cpp
+    function/linear.cpp
+    function/powell.cpp
+    function/qing.cpp
+    function/quadratic.cpp
+    function/rosenbrock.cpp
+    function/rotated_ellipsoid.cpp
+    function/sargan.cpp
+    function/schumer_steiglitz.cpp
+    function/sphere.cpp
+    function/styblinski_tang.cpp
+    function/trid.cpp
+    function/zakharov.cpp
     loss.cpp
     #model.cpp
     #model/grid_search.cpp

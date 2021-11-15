@@ -1,29 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Styblinski-Tang function: see https://www.sfu.ca/~ssurjano/stybtang.html.
     ///
-    class function_styblinski_tang_t final : public function_t
+    class NANO_PUBLIC function_styblinski_tang_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_styblinski_tang_t(tensor_size_t dims) :
-            function_t("Styblinski-Tang", dims, convexity::no) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_styblinski_tang_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 4 * x.array().cube() - 32 * x.array() + 5;
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return (x.array().square().square() - 16 * x.array().square() + 5 * x.array()).sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

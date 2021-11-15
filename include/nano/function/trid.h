@@ -1,32 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Trid function: see https://www.sfu.ca/~ssurjano/trid.html.
     ///
-    class function_trid_t final : public function_t
+    class NANO_PUBLIC function_trid_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_trid_t(tensor_size_t dims) :
-            function_t("Trid", dims, convexity::yes) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_trid_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 2 * (x.array() - 1);
-                gx->segment(1, size() - 1) -= x.segment(0, size() - 1);
-                gx->segment(0, size() - 1) -= x.segment(1, size() - 1);
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return (x.array() - 1).square().sum() -
-                   (x.segment(0, size() - 1).array() * x.segment(1, size() - 1).array()).sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }

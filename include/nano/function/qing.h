@@ -1,31 +1,30 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Qing function: see http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html.
     ///
-    class function_qing_t final : public function_t
+    class NANO_PUBLIC function_qing_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_qing_t(tensor_size_t dims) :
-            function_t("Qing", dims, convexity::no), // LCOV_EXCL_LINE
-            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims))) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_qing_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 4 * (x.array().square() - m_bias.array()) * x.array();
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return (x.array().square() - m_bias.array()).square().sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
 
     private:
 

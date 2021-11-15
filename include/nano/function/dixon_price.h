@@ -1,43 +1,30 @@
 #pragma once
 
-#include <nano/core/numeric.h>
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief Dixon-Price function: see https://www.sfu.ca/~ssurjano/dixonpr.html.
     ///
-    class function_dixon_price_t final : public function_t
+    class NANO_PUBLIC function_dixon_price_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_dixon_price_t(tensor_size_t dims) :
-            function_t("Dixon-Price", dims, convexity::no), // LCOV_EXCL_LINE
-            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims))) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_dixon_price_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            const auto xsegm0 = x.segment(0, size() - 1);
-            const auto xsegm1 = x.segment(1, size() - 1);
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            if (gx != nullptr)
-            {
-                const auto weight = m_bias.segment(1, size() - 1).array() *
-                    2 * (2 * xsegm1.array().square() - xsegm0.array());
-
-                (*gx).setZero();
-                (*gx)(0) = 2 * (x(0) - 1);
-                (*gx).segment(1, size() - 1).array() += weight * 4 * xsegm1.array();
-                (*gx).segment(0, size() - 1).array() -= weight;
-            }
-
-            return  nano::square(x(0) - 1) +
-                (m_bias.segment(1, size() - 1).array() *
-                (2 * xsegm1.array().square() - xsegm0.array()).square()).sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
 
     private:
 

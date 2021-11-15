@@ -1,31 +1,30 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
     /// \brief axis-parallel hyper-ellipsoid function: f(x) = sum(i*x+i^2, i=1,D).
     ///
-    class function_axis_ellipsoid_t final : public function_t
+    class NANO_PUBLIC function_axis_ellipsoid_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_axis_ellipsoid_t(tensor_size_t dims) :
-            function_t("Axis Parallel Hyper-Ellipsoid", dims, convexity::yes), // LCOV_EXCL_LINE
-            m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims))) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_axis_ellipsoid_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 2 * x.array() * m_bias.array();
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return (x.array().square() * m_bias.array()).sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
 
     private:
 

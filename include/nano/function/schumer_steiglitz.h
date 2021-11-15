@@ -1,29 +1,29 @@
 #pragma once
 
-#include <nano/function.h>
+#include <nano/function/benchmark.h>
 
 namespace nano
 {
     ///
-    /// \brief Schumer-Steiglitz No. 02 function: f(x) = sum(x_i^4, i=1,D)
+    /// \brief Schumer-Steiglitz No. 02 function: f(x) = sum(x_i^4, i=1,D).
     ///
-    class function_schumer_steiglitz_t final : public function_t
+    class NANO_PUBLIC function_schumer_steiglitz_t final : public benchmark_function_t
     {
     public:
 
-        explicit function_schumer_steiglitz_t(tensor_size_t dims) :
-            function_t("Schumer-Steiglitz", dims, convexity::yes) // LCOV_EXCL_LINE
-        {
-        }
+        ///
+        /// \brief constructor
+        ///
+        explicit function_schumer_steiglitz_t(tensor_size_t dims = 10);
 
-        scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-        {
-            if (gx != nullptr)
-            {
-                *gx = 4 * x.array().cube();
-            }
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
-            return x.array().square().square().sum();
-        }
+        ///
+        /// \brief @see benchmark_function_t
+        ///
+        rfunction_t make(tensor_size_t dims) const override;
     };
 }
