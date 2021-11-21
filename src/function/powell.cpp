@@ -10,7 +10,7 @@ function_powell_t::function_powell_t(tensor_size_t dims) :
     smooth(true);
 }
 
-scalar_t function_powell_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_powell_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
 {
     scalar_t fx = 0;
     for (tensor_size_t i = 0, i4 = 0; i < size() / 4; ++ i, i4 += 4)

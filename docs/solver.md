@@ -22,18 +22,21 @@ The function to minimize must be an instance of `function_t`. The user needs to 
 ```
 #include <nano/function.h>
 
-class objective_t final : public nano::function_t
+using namespace nano;
+
+class objective_t final : public function_t
 {
 public:
 
-    objective_t(const int size) :
-        nano::function_t("objective's name", size),
-        m_b(nano::vector_t::Random(size))
+    objective_t(int size) :
+        function_t("objective's name", size),
+        m_b(vector_t::Random(size))
     {
         convex(true);
+        smooth(true);
     }
 
-    nano::scalar_t vgrad(const nano::vector_t& x, nano::vector_t* gx = nullptr) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t config = vgrad_config_t{}) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());
@@ -50,7 +53,7 @@ public:
 
 private:
 
-    nano::vector_t  m_b;
+    vector_t    m_b;
 };
 ```
 

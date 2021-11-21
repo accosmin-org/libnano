@@ -1,5 +1,4 @@
 #include <nano/function.h>
-#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/strutil.h>
 
@@ -42,25 +41,26 @@ scalar_t function_t::grad_accuracy(const vector_t& x) const
 
     // finite-difference approximated gradient
     //      see "Numerical optimization", Nocedal & Wright, 2nd edition, p.197
-    const auto finite_difference = [&] (const scalar_t dx)
+    const auto dx = epsilon2<scalar_t>();
+    for (auto i = 0; i < n; i ++)
     {
-        for (auto i = 0; i < n; i ++)
+        if (i > 0)
         {
-            xp = x; xp(i) += dx * (1 + std::fabs(x(i)));
-            xn = x; xn(i) -= dx * (1 + std::fabs(x(i)));
-
-            const auto dfi = vgrad(xp, nullptr) - vgrad(xn, nullptr);
-            const auto dxi = xp(i) - xn(i);
-            gx_approx(i) = dfi / dxi;
-
-            assert(std::isfinite(gx(i)));
-            assert(std::isfinite(gx_approx(i)));
+            xp(i - 1) = x(i - 1);
+            xn(i - 1) = x(i - 1);
         }
+        xp(i) += dx * (1 + std::fabs(x(i)));
+        xn(i) -= dx * (1 + std::fabs(x(i)));
 
-        return (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1 + std::fabs(fx));
-    };
+        const auto dfi = vgrad(xp, nullptr) - vgrad(xn, nullptr);
+        const auto dxi = xp(i) - xn(i);
+        gx_approx(i) = dfi / dxi;
 
-    return finite_difference(epsilon2<scalar_t>());
+        assert(std::isfinite(gx(i)));
+        assert(std::isfinite(gx_approx(i)));
+    }
+
+    return (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1 + std::fabs(fx));
 }
 
 bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int steps) const
@@ -94,14 +94,4 @@ bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int ste
 string_t function_t::name() const
 {
     return scat(m_name, "[", size(), "D]");
-}
-
-scalar_t function_t::vgrad(const vector_t& x, tensor_size_t, vector_t* gx) const
-{
-    if (summands() <= 1)
-    {
-        return vgrad(x, gx);
-    }
-
-    critical0("function: missing implementation to compute a summand!");
 }

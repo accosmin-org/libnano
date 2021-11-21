@@ -37,7 +37,7 @@ tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b) con
     outputs.matrix() = inputs() * w.matrix().transpose();
     outputs.matrix().rowwise() += b.vector().transpose();
     return outputs;
-}
+} // LCOV_EXCL_LINE
 
 tensor2d_t synthetic_linear_t::outputs(const vector_t& x, tensor_size_t summand) const
 {
@@ -50,7 +50,7 @@ tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b, ten
     outputs.matrix() = inputs(summand) * w.matrix().transpose();
     outputs.matrix().rowwise() += b.vector().transpose();
     return outputs;
-}
+} // LCOV_EXCL_LINE
 
 synthetic_sclass_t::synthetic_sclass_t(
     tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs, tensor_size_t modulo_correlated_inputs) :

@@ -107,7 +107,7 @@ UTEST_CASE(grad_accuracy)
 
 UTEST_CASE(summands)
 {
-    for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 7}))
     {
         const auto& function = *rfunction;
         std::cout << function.name() << std::endl;
@@ -117,7 +117,10 @@ UTEST_CASE(summands)
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
         const auto summands = function.summands();
-        UTEST_CHECK_GREATER_EQUAL(summands, 1);
+        if (summands != 1)
+        {
+            UTEST_CHECK_EQUAL(summands, 7);
+        }
 
         for (auto trial = 0; trial < 100; ++ trial)
         {
@@ -131,11 +134,13 @@ UTEST_CASE(summands)
             for (tensor_size_t summand = 0; summand < summands; ++ summand)
             {
                 vector_t gxs = vector_t::Random(dims);
-                fxsum += function.vgrad(x, summand, &gxs);
+                const auto fxs = function.vgrad(x, &gxs, vgrad_config_t{summand});
+
+                fxsum += fxs;
                 gxsum += gxs;
             }
-            UTEST_CHECK_CLOSE(fx, fxsum / static_cast<scalar_t>(summands), 1e-12);
-            UTEST_CHECK_CLOSE(gx, gxsum / static_cast<scalar_t>(summands), 1e-12);
+            UTEST_CHECK_CLOSE(fx, fxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(gx, gxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());
         }
     }
 }

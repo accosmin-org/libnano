@@ -9,7 +9,7 @@ function_chung_reynolds_t::function_chung_reynolds_t(tensor_size_t dims) :
     smooth(true);
 }
 
-scalar_t function_chung_reynolds_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_chung_reynolds_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
 {
     const auto u = x.dot(x);
 

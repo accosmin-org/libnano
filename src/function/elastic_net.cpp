@@ -43,24 +43,27 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
 }
 
 template <typename tloss>
-scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t config) const
 {
-    const auto inputs = this->inputs();
-    const auto targets = this->targets();
-    const auto outputs = this->outputs(x);
+    scalar_t fx = 0.0;
 
-    const auto fx = tloss::vgrad(inputs, outputs, targets, gx);
-    return fx + regularize(x, gx);
-}
+    if (config.m_summand < 0)
+    {
+        const auto inputs = this->inputs();
+        const auto targets = this->targets();
+        const auto outputs = this->outputs(x);
 
-template <typename tloss>
-scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, tensor_size_t summand, vector_t* gx) const
-{
-    const auto inputs = this->inputs(summand);
-    const auto targets = this->targets(summand);
-    const auto outputs = this->outputs(x, summand);
+        fx = tloss::vgrad(inputs, outputs, targets, gx);
+    }
+    else
+    {
+        const auto inputs = this->inputs(config.m_summand);
+        const auto targets = this->targets(config.m_summand);
+        const auto outputs = this->outputs(x, config.m_summand);
 
-    const auto fx = tloss::vgrad(inputs, outputs, targets, gx);
+        fx = tloss::vgrad(inputs, outputs, targets, gx);
+    }
+
     return fx + regularize(x, gx);
 }
 

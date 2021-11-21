@@ -7,6 +7,14 @@
 namespace nano
 {
     ///
+    /// \brief configure the computation of a function's value and gradient.
+    ///
+    struct vgrad_config_t
+    {
+        tensor_size_t   m_summand{-1};  ///< all summands if negative, otherwise use a particular summand (stochastic)
+    };
+
+    ///
     /// \brief generic multi-dimensional optimization problem.
     ///
     class NANO_PUBLIC function_t
@@ -79,13 +87,7 @@ namespace nano
         /// \brief evaluate the function's value at the given point
         ///     (and its gradient or sub-gradient if not smooth).
         ///
-        virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
-
-        ///
-        /// \brief evaluate the function's given summand's value at the given point
-        ///     (and its gradient or sub-gradient if not smooth).
-        ///
-        virtual scalar_t vgrad(const vector_t& x, tensor_size_t summand, vector_t* gx = nullptr) const;
+        virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const = 0;
 
     protected:
 

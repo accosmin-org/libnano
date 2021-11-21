@@ -13,7 +13,7 @@ function_geometric_optimization_t::function_geometric_optimization_t(tensor_size
     smooth(true);
 }
 
-scalar_t function_geometric_optimization_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_geometric_optimization_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
 {
     if (gx != nullptr)
     {

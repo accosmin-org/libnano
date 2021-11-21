@@ -10,7 +10,7 @@ function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims) :
     smooth(true);
 }
 
-scalar_t function_axis_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_axis_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
 {
     if (gx != nullptr)
     {

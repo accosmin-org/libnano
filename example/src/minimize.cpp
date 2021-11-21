@@ -2,19 +2,21 @@
 #include <iostream>
 #include <nano/solver/lbfgs.h>
 
-class objective_t final : public nano::function_t
+using namespace nano;
+
+class objective_t final : public function_t
 {
 public:
 
     objective_t(const int size) :
-        nano::function_t("objective's name", size),
-        m_b(nano::vector_t::Random(size))
+        function_t("objective's name", size),
+        m_b(vector_t::Random(size))
     {
         convex(true);
         smooth(true);
     }
 
-    nano::scalar_t vgrad(const nano::vector_t& x, nano::vector_t* gx = nullptr) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());
@@ -34,7 +36,7 @@ public:
 private:
 
     // attributes
-    nano::vector_t  m_b;
+    vector_t    m_b;
 };
 
 int main(const int, char* argv[])
