@@ -50,7 +50,7 @@ targets_iterator_t::targets_iterator_t(
     m_execution(exec),
     m_targets_buffers(tpool_t::size())
 {
-    m_batch = batch;
+    m_batch = batch; // NOLINT(cppcoreguidelines-prefer-member-initializer)
     m_targets_stats = make_targets_stats();
 }
 

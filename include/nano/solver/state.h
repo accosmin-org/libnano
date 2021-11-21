@@ -38,9 +38,9 @@ namespace nano
             function(&ffunction),
             x(std::move(x0)),
             g(vector_t::Zero(x.size())),
-            d(vector_t::Zero(x.size()))
+            d(vector_t::Zero(x.size())),
+            f(function->vgrad(x, &g))
         {
-            f = function->vgrad(x, &g);
         }
 
         ///

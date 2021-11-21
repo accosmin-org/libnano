@@ -164,7 +164,7 @@ UTEST_CASE(tensor3d_map)
     tensor.resize(dims + 1, rows - 3, cols + 2);
 
     std::vector<int> v;
-    v.reserve(dims * rows * cols);
+    v.reserve(static_cast<size_t>(dims) * static_cast<size_t>(rows) * static_cast<size_t>(cols));
     for (int i = 0; i < dims * rows * cols; ++ i)
     {
         v.push_back(-35 + i);
@@ -289,7 +289,7 @@ UTEST_CASE(tensor4d_map)
     tensor.resize(dim1 + 2, dim2 + 1, rows - 3, cols + 2);
 
     std::vector<int> v;
-    v.reserve(dim1 * dim2 * rows * cols);
+    v.reserve(static_cast<size_t>(dim1) * static_cast<size_t>(dim2) * static_cast<size_t>(rows) * static_cast<size_t>(cols));
     for (int i = 0; i < dim1 * dim2 * rows * cols; ++ i)
     {
         v.push_back(-35 + i);

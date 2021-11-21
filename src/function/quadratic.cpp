@@ -24,7 +24,7 @@ scalar_t function_quadratic_t::vgrad(const vector_t& x, vector_t* gx) const
     return x.dot(m_a + (m_A * x) / scalar_t(2));
 }
 
-rfunction_t function_quadratic_t::make(tensor_size_t dims) const
+rfunction_t function_quadratic_t::make(tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_quadratic_t>(dims);
 }

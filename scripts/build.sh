@@ -232,9 +232,7 @@ function clang_tidy {
     check=$1
 
     printf "Running $check ...\n"
-    log=clang_tidy_${check}.log
-    log=${log//\*/ALL}
-    log=${log//,-/_NOT}
+    log=clang_tidy_${check//\**/}.log
     printf "Logging to ${log} ...\n"
 
     wrapper=run-clang-tidy${clang_tidy_suffix}
@@ -307,7 +305,9 @@ function clang_tidy_hicpp {
 }
 
 function clang_tidy_bugprone {
-    clang_tidy "bugprone*"
+    checks="bugprone*"
+    checks="${checks},-bugprone-easily-swappable-parameters"
+    clang_tidy ${checks}
 }
 
 function clang_tidy_modernize {
@@ -334,6 +334,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-else-after-return"
     checks="${checks},-readability-convert-member-functions-to-static"
     checks="${checks},-readability-function-cognitive-complexity"
+    checks="${checks},-readability-suspicious-call-argument"
     clang_tidy ${checks}
 }
 

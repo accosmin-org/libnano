@@ -68,14 +68,30 @@ namespace nano
         bool smooth() const { return m_smooth; }
 
         ///
-        /// \brief evaluate the function's value at the give point (and its gradient or sub-gradient if provided).
+        /// \brief returns the number of summands the function can be decomposed into.
+        ///
+        /// NB: if not applicable, then the number of summands is one.
+        /// NB: if many summands, then stochastic optimization methods may be appropriate (e.g. ML problems).
+        ///
+        tensor_size_t summands() const { return m_summands; }
+
+        ///
+        /// \brief evaluate the function's value at the given point
+        ///     (and its gradient or sub-gradient if not smooth).
         ///
         virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
+
+        ///
+        /// \brief evaluate the function's given summand's value at the given point
+        ///     (and its gradient or sub-gradient if not smooth).
+        ///
+        virtual scalar_t vgrad(const vector_t& x, tensor_size_t summand, vector_t* gx = nullptr) const;
 
     protected:
 
         void convex(bool);
         void smooth(bool);
+        void summands(tensor_size_t);
 
     private:
 
@@ -84,5 +100,6 @@ namespace nano
         tensor_size_t   m_size{0};          ///< #free dimensions to optimize for
         bool            m_convex{false};    ///< whether the function is convex
         bool            m_smooth{false};    ///< whether the function is smooth (otherwise subgradients should be used)
+        tensor_size_t   m_summands{1};      ///< number of summands (if stochastic optimization methods are appropriate)
     };
 }

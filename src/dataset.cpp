@@ -63,7 +63,7 @@ void dataset_t::resize(tensor_size_t samples, const features_t& features, size_t
     {
         const auto& feature = features[i];
 
-        feature_type type;
+        feature_type type{};
         std::pair<tensor_size_t, tensor_size_t> range;
         switch (feature.type())
         {

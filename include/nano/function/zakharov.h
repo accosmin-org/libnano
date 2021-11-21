@@ -24,7 +24,7 @@ namespace nano
         ///
         /// \brief @see benchmark_function_t
         ///
-        rfunction_t make(tensor_size_t dims) const override;
+        rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
     private:
 

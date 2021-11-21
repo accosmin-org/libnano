@@ -13,7 +13,7 @@ using namespace nano;
 
 static auto make_functions()
 {
-    return make_benchmark_functions({1, 16, convexity::yes, smoothness::yes}, std::regex(".+"));
+    return benchmark_function_t::make({1, 16, convexity::no, smoothness::yes, 10}, std::regex(".+"));
 }
 
 static void config_lsearch(lsearchk_t& lsearch, scalar_t c1 = 1e-4, scalar_t c2 = 9e-1)

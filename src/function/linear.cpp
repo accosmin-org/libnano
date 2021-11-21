@@ -33,10 +33,22 @@ tensor2d_t synthetic_linear_t::outputs(const vector_t& x) const
 
 tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b) const
 {
-    tensor2d_t outputs(samples(), m_bopt.size());
-    outputs.matrix() = m_inputs.matrix() * w.matrix().transpose();
+    tensor2d_t outputs(m_inputs.size<0>(), m_bopt.size());
+    outputs.matrix() = inputs() * w.matrix().transpose();
     outputs.matrix().rowwise() += b.vector().transpose();
+    return outputs;
+}
 
+tensor2d_t synthetic_linear_t::outputs(const vector_t& x, tensor_size_t summand) const
+{
+    return outputs(make_w(x), make_b(x), summand);
+}
+
+tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b, tensor_size_t summand) const
+{
+    tensor2d_t outputs(1, m_bopt.size());
+    outputs.matrix() = inputs(summand) * w.matrix().transpose();
+    outputs.matrix().rowwise() += b.vector().transpose();
     return outputs;
 }
 

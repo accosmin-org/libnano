@@ -301,7 +301,7 @@ static int unsafe_main(int argc, const char* argv[])
 
     // benchmark
     solver_config_stats_t gstats;
-    for (const auto& function : make_benchmark_functions({min_dims, max_dims, convex, smooth}, fregex))
+    for (const auto& function : benchmark_function_t::make({min_dims, max_dims, convex, smooth}, fregex))
     {
         check_function(*function, solvers, trials, gstats, log_failures);
     }

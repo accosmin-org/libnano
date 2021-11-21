@@ -30,26 +30,43 @@ static auto make_outputs(tensor_size_t)
     return tensor_size_t{1};
 }
 
-static auto make_samples(tensor_size_t dims)
-{
-    return 10 * std::max(dims, tensor_size_t{2});
-}
-
 template <typename tloss>
-function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2) :
+function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands) :
     benchmark_function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims)),
-    tloss(dims),
+    tloss(summands, make_outputs(dims), make_inputs(dims)),
     m_alpha1(alpha1),
     m_alpha2(alpha2)
 {
-    convex(true);
+    convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
+    this->summands(summands);
 }
 
 template <typename tloss>
 scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx) const
 {
-    const auto fx = tloss::vgrad(x, gx);
+    const auto inputs = this->inputs();
+    const auto targets = this->targets();
+    const auto outputs = this->outputs(x);
+
+    const auto fx = tloss::vgrad(inputs, outputs, targets, gx);
+    return fx + regularize(x, gx);
+}
+
+template <typename tloss>
+scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, tensor_size_t summand, vector_t* gx) const
+{
+    const auto inputs = this->inputs(summand);
+    const auto targets = this->targets(summand);
+    const auto outputs = this->outputs(x, summand);
+
+    const auto fx = tloss::vgrad(inputs, outputs, targets, gx);
+    return fx + regularize(x, gx);
+}
+
+template <typename tloss>
+scalar_t function_enet_t<tloss>::regularize(const vector_t& x, vector_t* gx) const
+{
     const auto w = tloss::make_w(x).matrix();
 
     if (gx != nullptr)
@@ -61,100 +78,17 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx) const
         gw += m_alpha2 * w;
     }
 
-    return fx + m_alpha1 * w.template lpNorm<1>() + 0.5 * m_alpha2 * w.squaredNorm();
+    return m_alpha1 * w.template lpNorm<1>() + 0.5 * m_alpha2 * w.squaredNorm();
 }
 
 template <typename tloss>
-rfunction_t function_enet_t<tloss>::make(tensor_size_t dims) const
+rfunction_t function_enet_t<tloss>::make(tensor_size_t dims, tensor_size_t summands) const
 {
-    return std::make_unique<function_enet_t<tloss>>(dims, m_alpha1, m_alpha2);
-}
-
-loss_mse_t::loss_mse_t(tensor_size_t dims) :
-    synthetic_scalar_t(make_samples(dims), make_outputs(dims), make_inputs(dims))
-{
-}
-
-scalar_t loss_mse_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    const auto outputs = this->outputs(x);
-    const auto& targets = this->targets();
-
-    const auto delta = outputs.matrix() - targets.matrix();
-    const auto samples = static_cast<scalar_t>(this->samples());
-
-    if (gx != nullptr)
-    {
-        synthetic_linear_t::vgrad(gx, delta);
-    }
-
-    return 0.5 * delta.squaredNorm() / samples;
-}
-
-loss_mae_t::loss_mae_t(tensor_size_t dims) :
-    synthetic_scalar_t(make_samples(dims), make_outputs(dims), make_inputs(dims))
-{
-}
-
-scalar_t loss_mae_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    const auto outputs = this->outputs(x);
-    const auto& targets = this->targets();
-
-    const auto delta = outputs.matrix() - targets.matrix();
-    const auto samples = static_cast<scalar_t>(this->samples());
-
-    if (gx != nullptr)
-    {
-        synthetic_linear_t::vgrad(gx, delta.array().sign().matrix());
-    }
-
-    return delta.array().abs().sum() / samples;
-}
-
-loss_hinge_t::loss_hinge_t(tensor_size_t dims) :
-    synthetic_sclass_t(make_samples(dims), make_outputs(dims), make_inputs(dims))
-{
-}
-
-scalar_t loss_hinge_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    const auto outputs = this->outputs(x);
-    const auto& targets = this->targets();
-
-    const auto edges = - outputs.array() * targets.array();
-    const auto samples = static_cast<scalar_t>(this->samples());
-
-    if (gx != nullptr)
-    {
-        synthetic_linear_t::vgrad(gx, (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix());
-    }
-
-    return (1.0 + edges).max(0.0).sum() / samples;
-}
-
-loss_logistic_t::loss_logistic_t(tensor_size_t dims) :
-    synthetic_sclass_t(make_samples(dims), make_outputs(dims), make_inputs(dims))
-{
-}
-
-scalar_t loss_logistic_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    const auto outputs = this->outputs(x);
-    const auto& targets = this->targets();
-
-    const auto edges = (-outputs.array() * targets.array()).exp();
-    const auto samples = static_cast<scalar_t>(this->samples());
-
-    if (gx != nullptr)
-    {
-        synthetic_linear_t::vgrad(gx, ((-targets.array() * edges) / (1.0 + edges)).matrix());
-    }
-
-    return (1.0 + edges).log().sum() / samples;
+    return std::make_unique<function_enet_t<tloss>>(dims, m_alpha1, m_alpha2, summands);
 }
 
 template class nano::function_enet_t<nano::loss_mse_t>;
 template class nano::function_enet_t<nano::loss_mae_t>;
 template class nano::function_enet_t<nano::loss_hinge_t>;
+template class nano::function_enet_t<nano::loss_cauchy_t>;
 template class nano::function_enet_t<nano::loss_logistic_t>;

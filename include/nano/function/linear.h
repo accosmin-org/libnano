@@ -19,11 +19,14 @@ namespace nano
 
         const auto& wopt() const { return m_wopt; }
         const auto& bopt() const { return m_bopt; }
-        const auto& inputs() const { return m_inputs; }
-        auto samples() const { return m_inputs.size<0>(); }
+        auto inputs() const { return m_inputs.matrix(); }
+        auto inputs(tensor_size_t summand) const { return m_inputs.slice(summand, summand + 1).matrix(); }
 
         tensor2d_t outputs(const vector_t& x) const;
         tensor2d_t outputs(tensor2d_cmap_t w, tensor1d_cmap_t b) const;
+
+        tensor2d_t outputs(const vector_t& x, tensor_size_t summand) const;
+        tensor2d_t outputs(tensor2d_cmap_t w, tensor1d_cmap_t b, tensor_size_t summand) const;
 
         auto make_w(vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
         auto make_w(const vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
@@ -31,17 +34,17 @@ namespace nano
         auto make_b(vector_t& x) const { return map_tensor(x.data() + m_wopt.size(), m_bopt.dims()); }
         auto make_b(const vector_t& x) const { return map_tensor(x.data() + m_wopt.size(), m_bopt.dims()); }
 
-        template <typename tgrad>
-        void vgrad(vector_t* gx, const tgrad& gg) const
+        template <typename tgrad, typename tinputs>
+        void vgrad(vector_t* gx, const tgrad& gg, const tinputs& inputs) const
         {
-            const auto samples = static_cast<scalar_t>(this->samples());
+            const auto samples = static_cast<scalar_t>(gg.rows());
 
             auto gw = make_w(*gx).matrix();
             auto gb = make_b(*gx).vector();
 
             // cppcheck-suppress redundantInitialization
             // cppcheck-suppress unreadVariable
-            gw = gg.transpose() * m_inputs.matrix() / samples;
+            gw = gg.transpose() * inputs.matrix() / samples;
 
             // cppcheck-suppress redundantInitialization
             // cppcheck-suppress unreadVariable
@@ -67,7 +70,8 @@ namespace nano
             tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
             tensor_size_t modulo_correlated_inputs = 1);
 
-        const auto& targets() const { return m_targets; }
+        auto targets() const { return m_targets.matrix(); }
+        auto targets(tensor_size_t summand) const { return m_targets.slice(summand, summand + 1).matrix(); }
 
     private:
 
@@ -85,7 +89,8 @@ namespace nano
             tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
             tensor_size_t modulo_correlated_inputs = 1);
 
-        const auto& targets() const { return m_targets; }
+        auto targets() const { return m_targets.matrix(); }
+        auto targets(tensor_size_t summand) const { return m_targets.slice(summand, summand + 1).matrix(); }
 
     private:
 

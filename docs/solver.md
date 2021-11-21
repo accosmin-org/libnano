@@ -159,7 +159,7 @@ A working example for constructing and minimizing an objective function can be f
 
 The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex builtin functions of dimensions from 16 to 32:
 ```
-./build/libnano/release/app/bench_solver --min-dims 16 --max-dims 32 --convex --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-iterations 1000 | tail -n 8
+./build/libnano/release/app/bench_solver --min-dims 16 --max-dims 32 --convex --smooth --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-iterations 1000 | tail -n 8
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|
 | Solver | lsearch0  | lsearchk    | gnorm                 | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | cost | [ms] |
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|

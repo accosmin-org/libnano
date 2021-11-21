@@ -22,7 +22,7 @@ scalar_t function_trid_t::vgrad(const vector_t& x, vector_t* gx) const
            (x.segment(0, size() - 1).array() * x.segment(1, size() - 1).array()).sum();
 }
 
-rfunction_t function_trid_t::make(tensor_size_t dims) const
+rfunction_t function_trid_t::make(tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_trid_t>(dims);
 }

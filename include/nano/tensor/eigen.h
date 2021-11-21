@@ -111,6 +111,11 @@ namespace nano
     {
     };
 
+    template <typename tscalar, int trows, int tcols, int toptions>
+    struct is_eigen<Eigen::Matrix<tscalar, trows, tcols, toptions>> : std::true_type
+    {
+    };
+
     template <typename BinaryOp, typename LhsType, typename RhsType>
     struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_type
     {

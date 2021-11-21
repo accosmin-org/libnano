@@ -19,7 +19,7 @@ scalar_t function_schumer_steiglitz_t::vgrad(const vector_t& x, vector_t* gx) co
     return x.array().square().square().sum();
 }
 
-rfunction_t function_schumer_steiglitz_t::make(tensor_size_t dims) const
+rfunction_t function_schumer_steiglitz_t::make(tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_schumer_steiglitz_t>(dims);
 }

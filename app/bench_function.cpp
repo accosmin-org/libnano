@@ -68,14 +68,14 @@ static int unsafe_main(int argc, const char* argv[])
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
     const auto fregex = std::regex(cmdline.get<string_t>("function"));
-    const auto fconfig = benchmark_function_config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
+    const auto fconfig = benchmark_function_t::config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
 
     table_t table;
     table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
-    for (const auto& function : make_benchmark_functions(fconfig, fregex))
+    for (const auto& function : benchmark_function_t::make(fconfig, fregex))
     {
         if (function->size() != prev_size)
         {

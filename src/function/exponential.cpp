@@ -21,7 +21,7 @@ scalar_t function_exponential_t::vgrad(const vector_t& x, vector_t* gx) const
     return fx;
 }
 
-rfunction_t function_exponential_t::make(tensor_size_t dims) const
+rfunction_t function_exponential_t::make(tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_exponential_t>(dims);
 }

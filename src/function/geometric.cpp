@@ -23,7 +23,7 @@ scalar_t function_geometric_optimization_t::vgrad(const vector_t& x, vector_t* g
     return (m_a + m_A * x).array().exp().sum();
 }
 
-rfunction_t function_geometric_optimization_t::make(tensor_size_t dims) const
+rfunction_t function_geometric_optimization_t::make(tensor_size_t dims, tensor_size_t summands) const
 {
-    return std::make_unique<function_geometric_optimization_t>(dims);
+    return std::make_unique<function_geometric_optimization_t>(dims, summands);
 }

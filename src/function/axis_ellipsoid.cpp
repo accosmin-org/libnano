@@ -20,7 +20,7 @@ scalar_t function_axis_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx) const
     return (x.array().square() * m_bias.array()).sum();
 }
 
-rfunction_t function_axis_ellipsoid_t::make(tensor_size_t dims) const
+rfunction_t function_axis_ellipsoid_t::make(tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_axis_ellipsoid_t>(dims);
 }

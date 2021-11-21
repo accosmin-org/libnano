@@ -1,4 +1,5 @@
 #include <nano/function.h>
+#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/strutil.h>
 
@@ -18,6 +19,11 @@ void function_t::convex(bool convex)
 void function_t::smooth(bool smooth)
 {
     m_smooth = smooth;
+}
+
+void function_t::summands(tensor_size_t summands)
+{
+    m_summands = summands;
 }
 
 scalar_t function_t::grad_accuracy(const vector_t& x) const
@@ -76,7 +82,7 @@ bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int ste
         const auto ftc = t1 * f1 + t2 * f2;
 
         const auto ft = vgrad(t1 * x1 + t2 * x2, nullptr);
-        if (std::isfinite(ft) && ft > ftc + epsilon0<scalar_t>())
+        if (std::isfinite(ft) && ft > ftc + epsilon1<scalar_t>())
         {
             return false;
         }
@@ -88,4 +94,14 @@ bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int ste
 string_t function_t::name() const
 {
     return scat(m_name, "[", size(), "D]");
+}
+
+scalar_t function_t::vgrad(const vector_t& x, tensor_size_t, vector_t* gx) const
+{
+    if (summands() <= 1)
+    {
+        return vgrad(x, gx);
+    }
+
+    critical0("function: missing implementation to compute a summand!");
 }

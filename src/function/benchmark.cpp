@@ -22,45 +22,6 @@
 
 using namespace nano;
 
-rfunctions_t nano::make_benchmark_functions(benchmark_function_config_t config, const std::regex& id_regex)
-{
-    const auto convexity = config.m_convexity;
-    const auto smoothness = config.m_smoothness;
-
-    const auto min_dims = std::min(config.m_min_dims, config.m_max_dims);
-    const auto max_dims = std::max(config.m_min_dims, config.m_max_dims);
-    assert(min_dims >= 1);
-
-    const auto& factory = benchmark_function_t::all();
-    const auto ids = factory.ids(id_regex);
-
-    rfunctions_t functions;
-    for (tensor_size_t dims = min_dims; dims <= max_dims; )
-    {
-        for (const auto& id : ids)
-        {
-            auto function = factory.get(id);
-
-            if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
-                (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
-            {
-                functions.push_back(function->make(dims));
-            }
-        }
-
-        if (dims < 4)
-        {
-            ++ dims;
-        }
-        else
-        {
-            dims *= 2;
-        }
-    }
-
-    return functions;
-} // LCOV_EXCL_LINE
-
 function_factory_t& benchmark_function_t::all()
 {
     static function_factory_t manager;
@@ -94,6 +55,9 @@ function_factory_t& benchmark_function_t::all()
         manager.add<function_enet_hinge_t>("hinge+ridge", "hinge loss (linear SVM) with ridge-like regularization", 10, 1.0, 0.0);
         manager.add<function_enet_hinge_t>("hinge+lasso", "hinge loss (linear SVM) with lasso-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_hinge_t>("hinge+elasticnet", "hinge loss (linear SVM) with elastic net-like regularization", 10, 1.0, 1.0);
+        manager.add<function_enet_cauchy_t>("cauchy+ridge", "cauchy loss (robust regression) with ridge-like regularization", 10, 1.0, 0.0);
+        manager.add<function_enet_cauchy_t>("cauchy+lasso", "cauchy loss (robust regression) with lasso-like regularization", 10, 0.0, 1.0);
+        manager.add<function_enet_cauchy_t>("cauchy+elasticnet", "cauchy loss (robust regression) with elastic net-like regularization", 10, 1.0, 1.0);
         manager.add<function_enet_logistic_t>("logistic+ridge", "logistic regression with ridge-like regularization", 10, 1.0, 0.0);
         manager.add<function_enet_logistic_t>("logistic+lasso", "logistic regression with lasso-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_logistic_t>("logistic+elasticnet", "logistic regression with elastic net-like regularization", 10, 1.0, 1.0);
@@ -101,3 +65,42 @@ function_factory_t& benchmark_function_t::all()
 
     return manager;
 }
+
+rfunctions_t benchmark_function_t::make(benchmark_function_t::config_t config, const std::regex& id_regex)
+{
+    const auto convexity = config.m_convexity;
+    const auto smoothness = config.m_smoothness;
+
+    const auto min_dims = std::min(config.m_min_dims, config.m_max_dims);
+    const auto max_dims = std::max(config.m_min_dims, config.m_max_dims);
+    assert(min_dims >= 1);
+
+    const auto& factory = benchmark_function_t::all();
+    const auto ids = factory.ids(id_regex);
+
+    rfunctions_t functions;
+    for (tensor_size_t dims = min_dims; dims <= max_dims; )
+    {
+        for (const auto& id : ids)
+        {
+            auto function = factory.get(id);
+
+            if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
+                (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
+            {
+                functions.push_back(function->make(dims, config.m_summands));
+            }
+        }
+
+        if (dims < 4)
+        {
+            ++ dims;
+        }
+        else
+        {
+            dims *= 2;
+        }
+    }
+
+    return functions;
+} // LCOV_EXCL_LINE
