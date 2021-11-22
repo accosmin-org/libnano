@@ -38,9 +38,9 @@ options:
     --default
         install builtin gcc & clang versions
     --gcc [version]
-        install additional supported gcc versions (5.0, 6.0, 7, 8, 9, 10)
+        install additional supported gcc versions (5.0, 6.0, 7, 8, 9, 10, 11)
     --llvm [version]
-        install additional supported llvm versions (5.0, 6.0, 7, 8, 9, 10)
+        install additional supported llvm versions (5.0, 6.0, 7, 8, 9, 10, 11)
 EOF
     exit 1
 }

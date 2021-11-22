@@ -49,8 +49,8 @@ scalar_t function_t::grad_accuracy(const vector_t& x) const
             xp(i - 1) = x(i - 1);
             xn(i - 1) = x(i - 1);
         }
-        xp(i) += dx * (1 + std::fabs(x(i)));
-        xn(i) -= dx * (1 + std::fabs(x(i)));
+        xp(i) = x(i) + dx * std::max(scalar_t{1}, std::fabs(x(i)));
+        xn(i) = x(i) - dx * std::max(scalar_t{1}, std::fabs(x(i)));
 
         const auto dfi = vgrad(xp, nullptr) - vgrad(xn, nullptr);
         const auto dxi = xp(i) - xn(i);
