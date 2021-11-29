@@ -23,7 +23,7 @@ namespace nano
         solver_cgd_t();
 
         ///
-        /// \brief @see lsearch_solver_t
+        /// \brief @see solver_t
         ///
         solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
 

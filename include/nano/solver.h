@@ -103,7 +103,7 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const;
+        virtual solver_state_t minimize(const function_t&, const vector_t& x0) const;
 
         ///
         /// \brief set the logging callback
@@ -126,7 +126,7 @@ namespace nano
         /// \brief change the desired function value and gradient tolerance,
         ///     aka the c1 and c2 parameters in the (strong) Wolfe conditions
         ///
-        /// NB: the recommended values depend very much of the optimization algorithm and
+        /// NB: the recommended values depend very much on the optimization algorithm and
         ///     provide a good balance between gradient updates and accuracy of the line-search step length.
         ///
         void tolerance(scalar_t c1, scalar_t c2);
@@ -157,7 +157,7 @@ namespace nano
 
         ///
         /// \brief minimize the given function starting from the initial point x0
-        ///     and using the given line-search strategy
+        ///     and using the given line-search strategy.
         ///
         virtual solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const = 0;
 

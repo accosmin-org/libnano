@@ -17,12 +17,12 @@ target_sources(nano PRIVATE
     generator.cpp
     generator/iterator.cpp
     generator/generator.cpp
+    generator/pairwise_base.cpp
+    generator/pairwise_input.cpp
     generator/elemwise_base.cpp
     generator/elemwise_input.cpp
     generator/elemwise_gradient.cpp
     generator/elemwise_identity.cpp
-    generator/pairwise_base.cpp
-    generator/pairwise_input.cpp
     dataset.cpp
     dataset/mask.cpp
     dataset/stats.cpp
@@ -31,25 +31,26 @@ target_sources(nano PRIVATE
     dataset/imclass_cifar.cpp
     dataset/imclass_mnist.cpp
     lsearch0.cpp
-    lsearch0/quadratic.cpp
     lsearch0/linear.cpp
-    lsearch0/cgdescent.cpp
     lsearch0/constant.cpp
+    lsearch0/cgdescent.cpp
+    lsearch0/quadratic.cpp
     lsearchk.cpp
+    lsearchk/fletcher.cpp
     lsearchk/backtrack.cpp
+    lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    lsearchk/cgdescent.cpp
-    lsearchk/fletcher.cpp
     linear/cache.cpp
     linear/util.cpp
     #linear/function.cpp
     #linear/model.cpp
     solver.cpp
-    solver/lbfgs.cpp
-    solver/cgd.cpp
-    solver/quasi.cpp
     solver/gd.cpp
+    solver/cgd.cpp
+    solver/osga.cpp
+    solver/lbfgs.cpp
+    solver/quasi.cpp
     function.cpp
     function/axis_ellipsoid.cpp
     function/benchmark.cpp
