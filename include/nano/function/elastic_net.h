@@ -50,6 +50,7 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = true;
         static constexpr auto basename = "MSE";
+        static auto strong_convexity() { return 1.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -77,6 +78,7 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = false;
         static constexpr auto basename = "MAE";
+        static auto strong_convexity() { return 0.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -104,6 +106,7 @@ namespace nano
         static constexpr auto convex = false;
         static constexpr auto smooth = false;
         static constexpr auto basename = "CAUCHY";
+        static auto strong_convexity() { return 0.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -131,6 +134,7 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = false;
         static constexpr auto basename = "Hinge";
+        static auto strong_convexity() { return 0.0; }
 
         using synthetic_sclass_t::synthetic_sclass_t;
 
@@ -158,6 +162,7 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = true;
         static constexpr auto basename = "Logistic";
+        static auto strong_convexity() { return 0.0; }
 
         using synthetic_sclass_t::synthetic_sclass_t;
 

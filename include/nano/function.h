@@ -84,6 +84,14 @@ namespace nano
         tensor_size_t summands() const { return m_summands; }
 
         ///
+        /// \brief returns the strong convexity coefficient.
+        ///
+        /// NB: if not convex, then the coefficient is zero.
+        /// NB: can be used to speed-up some numerical optimization algorithms.
+        ///
+        scalar_t strong_convexity() const { return m_sconvexity; }
+
+        ///
         /// \brief evaluate the function's value at the given point
         ///     (and its gradient or sub-gradient if not smooth).
         ///
@@ -94,6 +102,7 @@ namespace nano
         void convex(bool);
         void smooth(bool);
         void summands(tensor_size_t);
+        void strong_convexity(scalar_t);
 
     private:
 
@@ -103,5 +112,6 @@ namespace nano
         bool            m_convex{false};    ///< whether the function is convex
         bool            m_smooth{false};    ///< whether the function is smooth (otherwise subgradients should be used)
         tensor_size_t   m_summands{1};      ///< number of summands (if stochastic optimization methods are appropriate)
+        scalar_t        m_sconvexity{0};    ///< strong-convexity coefficient
     };
 }

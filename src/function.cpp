@@ -25,6 +25,11 @@ void function_t::summands(tensor_size_t summands)
     m_summands = summands;
 }
 
+void function_t::strong_convexity(scalar_t sconvexity)
+{
+    m_sconvexity = sconvexity;
+}
+
 scalar_t function_t::grad_accuracy(const vector_t& x) const
 {
     assert(x.size() == size());
