@@ -40,7 +40,7 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
     convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
     this->summands(summands);
-    strong_convexity(tloss::strong_convexity());
+    strong_convexity(tloss::strong_convexity() + m_alpha2);
 }
 
 template <typename tloss>
