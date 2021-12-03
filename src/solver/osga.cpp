@@ -6,7 +6,7 @@ class proxy_t
 {
 public:
 
-    proxy_t(const vector_t& z0) :
+    explicit proxy_t(const vector_t& z0) :
         m_z0(z0),
         m_Q0(0.5 * z0.lpNorm<2>() + std::numeric_limits<scalar_t>::epsilon())
     {
@@ -53,9 +53,7 @@ private:
     scalar_t        m_Q0{0.0};  ///<
 };
 
-solver_osga_t::solver_osga_t()
-{
-}
+solver_osga_t::solver_osga_t() = default;
 
 solver_state_t solver_osga_t::iterate(const solver_function_t& function, const lsearch_t&, const vector_t& x0) const
 {

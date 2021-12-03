@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
+#include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
 
@@ -146,6 +147,7 @@ solver_factory_t& solver_t::all()
         manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
         manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");
         manager.add<solver_cgd_frpr_t>("cgd-prfr", "conjugate gradient descent (FRPR)");
+        manager.add<solver_osga_t>("osga", "optimal sub-gradient algorithm (OSGA)");
         manager.add<solver_lbfgs_t>("lbfgs", "limited-memory BFGS");
         manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");
         manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");

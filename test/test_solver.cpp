@@ -187,7 +187,7 @@ UTEST_CASE(config_solvers)
 const auto all_functions = benchmark_function_t::make({4, 4, convexity::no, smoothness::yes, 10});
 const auto convex_functions = benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 10});
 
-const auto all_solver_ids = solver_t::all().ids();
+const auto all_solver_ids = solver_t::all().ids(std::regex("!(osga)"));
 const auto best_solver_ids = solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
 const auto all_lsearch0_ids = lsearch0_t::all().ids();
 const auto all_lsearchk_ids = lsearchk_t::all().ids();
