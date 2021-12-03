@@ -15,6 +15,7 @@ struct solver_stat_t
 {
     void update(const solver_state_t& state)
     {
+        m_values(state.f);
         m_crits(state.convergence_criterion());
         m_fails(state.m_status != solver_state_t::status::converged ? 1 : 0);
         m_iters(static_cast<scalar_t>(state.m_iterations));
@@ -25,6 +26,7 @@ struct solver_stat_t
         m_costs(static_cast<scalar_t>(state.m_fcalls + 2 * state.m_gcalls));
     }
 
+    stats_t     m_values;           ///< function values
     stats_t     m_crits;            ///< convergence criterion
     stats_t     m_fails;            ///< #convergence failures
     stats_t     m_iters;            ///< #optimization iterations
@@ -50,6 +52,7 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         << table_name
         << "lsearch0"
         << "lsearchk"
+        << "value"
         << "gnorm"
         << "#fails"
         << "#iters"
@@ -69,6 +72,7 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         {
             table.append()
             << std::get<0>(it.first) << std::get<1>(it.first) << std::get<2>(it.first)
+            << stat.m_values.avg()
             << stat.m_crits.avg()
             << static_cast<size_t>(stat.m_fails.sum1())
             << static_cast<size_t>(stat.m_iters.avg())
@@ -81,7 +85,7 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         }
     }
 
-    table.sort(nano::make_less_from_string<scalar_t>(), {4, 10});
+    table.sort(nano::make_less_from_string<scalar_t>(), {5, 11});
     std::cout << table;
 }
 
@@ -190,7 +194,7 @@ static void check_function(const function_t& function,
     }
 
     // show per-problem statistics
-    show_table(align(function.name(), 36), fstats);
+    show_table(align(function.name(), 28), fstats);
 }
 
 static int unsafe_main(int argc, const char* argv[])
@@ -306,7 +310,7 @@ static int unsafe_main(int argc, const char* argv[])
         check_function(*function, solvers, trials, gstats, log_failures);
     }
 
-    show_table(align("solver", 36), gstats);
+    show_table(align("solver", 28), gstats);
 
     // OK
     return EXIT_SUCCESS;

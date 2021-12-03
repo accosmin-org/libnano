@@ -4,7 +4,7 @@
 using namespace nano;
 
 function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims) :
-    benchmark_function_t("Rotated Hyper-Ellipsoid", dims)
+    benchmark_function_t("Rotated Ellipsoid", dims)
 {
     convex(true);
     smooth(true);

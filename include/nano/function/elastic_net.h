@@ -105,7 +105,7 @@ namespace nano
 
         static constexpr auto convex = false;
         static constexpr auto smooth = false;
-        static constexpr auto basename = "CAUCHY";
+        static constexpr auto basename = "Cauchy";
         static auto strong_convexity() { return 0.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;

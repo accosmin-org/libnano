@@ -251,7 +251,7 @@ namespace nano
         ///
         /// \brief check if valid (enough values collected)
         ///
-        operator bool() const { return count() > 1; } // NOLINT(hicpp-explicit-conversions)
+        operator bool() const { return count() >= 1; } // NOLINT(hicpp-explicit-conversions)
 
     private:
 
