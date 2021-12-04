@@ -33,8 +33,6 @@ namespace nano
 
     private:
 
-        scalar_t regularize(const vector_t& x, vector_t* gx) const;
-
         // attributes
         scalar_t    m_alpha1{1.0};  ///< regularization term: L1-norm of the weights
         scalar_t    m_alpha2{1.0};  ///< regularization term: squared L2-norm of the weights
@@ -50,7 +48,6 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = true;
         static constexpr auto basename = "MSE";
-        static auto strong_convexity() { return 1.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -78,7 +75,6 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = false;
         static constexpr auto basename = "MAE";
-        static auto strong_convexity() { return 0.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -106,7 +102,6 @@ namespace nano
         static constexpr auto convex = false;
         static constexpr auto smooth = false;
         static constexpr auto basename = "Cauchy";
-        static auto strong_convexity() { return 0.0; }
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -134,7 +129,6 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = false;
         static constexpr auto basename = "Hinge";
-        static auto strong_convexity() { return 0.0; }
 
         using synthetic_sclass_t::synthetic_sclass_t;
 
@@ -162,7 +156,6 @@ namespace nano
         static constexpr auto convex = true;
         static constexpr auto smooth = true;
         static constexpr auto basename = "Logistic";
-        static auto strong_convexity() { return 0.0; }
 
         using synthetic_sclass_t::synthetic_sclass_t;
 

@@ -40,7 +40,7 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
     convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
     this->summands(summands);
-    strong_convexity(tloss::strong_convexity() + m_alpha2);
+    strong_convexity(m_alpha2);
 }
 
 template <typename tloss>
@@ -65,24 +65,12 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_co
         fx = tloss::vgrad(inputs, outputs, targets, gx);
     }
 
-    return fx + regularize(x, gx);
-}
-
-template <typename tloss>
-scalar_t function_enet_t<tloss>::regularize(const vector_t& x, vector_t* gx) const
-{
-    const auto w = tloss::make_w(x).matrix();
-
     if (gx != nullptr)
     {
-        auto gw = tloss::make_w(*gx).matrix();
-
-        gw.array() += m_alpha1 * w.array().sign();
-        // cppcheck-suppress unreadVariable
-        gw += m_alpha2 * w;
+        gx->array() += m_alpha1 * x.array().sign() + m_alpha2 * x.array();
     }
 
-    return m_alpha1 * w.template lpNorm<1>() + 0.5 * m_alpha2 * w.squaredNorm();
+    return fx + m_alpha1 * x.template lpNorm<1>() + 0.5 * m_alpha2 * x.squaredNorm();
 }
 
 template <typename tloss>

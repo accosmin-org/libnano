@@ -7,6 +7,7 @@ function_sphere_t::function_sphere_t(tensor_size_t dims) :
 {
     convex(true);
     smooth(true);
+    strong_convexity(2.0);
 }
 
 scalar_t function_sphere_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const

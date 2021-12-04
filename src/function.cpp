@@ -80,14 +80,15 @@ bool function_t::is_convex(const vector_t& x1, const vector_t& x2, const int ste
     const auto f2 = vgrad(x2, nullptr);
     assert(std::isfinite(f2));
 
+    const auto eps = epsilon1<scalar_t>();
+    const auto dx = (x1 - x2).dot(x1 - x2);
+
     for (int step = 1; step < steps; step ++)
     {
         const auto t1 = scalar_t(step) / scalar_t(steps);
-        const auto t2 = scalar_t(1) - t1;
-        const auto ftc = t1 * f1 + t2 * f2;
+        const auto t2 = 1.0 - t1;
 
-        const auto ft = vgrad(t1 * x1 + t2 * x2, nullptr);
-        if (std::isfinite(ft) && ft > ftc + epsilon1<scalar_t>())
+        if (vgrad(t1 * x1 + t2 * x2) > t1 * f1 + t2 * f2 - t1 * t2 * m_sconvexity * 0.5 * dx + eps)
         {
             return false;
         }

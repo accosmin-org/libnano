@@ -74,15 +74,12 @@ UTEST_CASE(convexity)
         UTEST_CHECK_LESS_EQUAL(dims, 4);
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
-        auto is_convex = true;
-        for (auto trial = 0; trial < 100; ++ trial)
+        for (auto trial = 0; trial < 100 && function.convex(); ++ trial)
         {
             const vector_t x0 = vector_t::Random(dims);
             const vector_t x1 = vector_t::Random(dims);
-
-            is_convex = is_convex && function.is_convex(x0, x1, 20);
+            UTEST_CHECK(function.is_convex(x0, x1, 20));
         }
-        UTEST_CHECK(!function.convex() || is_convex);
 
         UTEST_CHECK_GREATER_EQUAL(function.strong_convexity(), 0.0);
     }
@@ -102,7 +99,7 @@ UTEST_CASE(grad_accuracy)
         for (auto trial = 0; trial < 100; ++ trial)
         {
             const vector_t x = vector_t::Random(dims);
-            UTEST_CHECK_LESS(function.grad_accuracy(x), 10 * epsilon2<scalar_t>());
+            UTEST_REQUIRE_LESS(function.grad_accuracy(x), 10 * epsilon2<scalar_t>());
         }
     }
 }
