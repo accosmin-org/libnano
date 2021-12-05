@@ -1,5 +1,8 @@
 #include <nano/solver/osga.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 class proxy_t
@@ -80,7 +83,7 @@ solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x
     scalar_t& fb = state.f;
     vector_t& gb = state.g;
 
-    vector_t x, x_prime, g, h, h_hat, u, u_hat, u_prime;
+    vector_t x, x_prime, g(x0.size()), h, h_hat, u, u_hat, u_prime;
     scalar_t alpha = alpha_max, gamma, gamma_hat, eta, eta_hat, f, f_prime;
 
     h = gb - miu * proxy.gQ(xb);
@@ -92,6 +95,9 @@ solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x
         x = xb + alpha * (u - xb);
         f = function.vgrad(x, &g);
         g = g - miu * proxy.gQ(x);
+
+        std::cout << std::fixed << std::setprecision(16)
+            << "fb=" << fb << ", f=" << f << ", g=" << g.lpNorm<Eigen::Infinity>() << std::endl;
 
         h_hat = h + alpha * (g - h);
         gamma_hat = gamma + alpha * (f - miu * proxy.Q(x) - g.dot(x) - gamma);
@@ -108,10 +114,12 @@ solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x
 
         std::tie(u_hat, eta_hat) = proxy.UE(gamma_hat, h_hat, fb_hat, miu);
         xb = xb_hat;
+        fb = fb_hat;
 
         // TODO: how to check convergence?!, implement various stopping criteria
-        state.x = xb;
-        state.f = fb;
+        state.x = xb_hat;
+        state.f = fb_hat;
+        state.g = g;
         if (solver_t::done(function, state, true))
         {
             return state;
