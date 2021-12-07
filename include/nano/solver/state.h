@@ -10,8 +10,8 @@ namespace nano
     ///     current point (x),
     ///     function value (f),
     ///     gradient (g),
-    ///     descent direction (d),
-    ///     line-search step (t).
+    ///     descent direction (d) - if applicable,
+    ///     line-search step (t) - if applicable.
     ///
     class solver_state_t
     {
@@ -61,22 +61,22 @@ namespace nano
         /// \brief line-search step along the descent direction of state0,
         /// returns true if the update was successfully.
         ///
-        bool update(const solver_state_t& state0, const scalar_t tt)
+        bool update(const solver_state_t& state0, scalar_t tt)
         {
             t = tt;
             return update(state0.x + t * state0.d);
         }
 
         ///
-        /// \brief check convergence: the gradient is relatively small
+        /// \brief check convergence: the gradient is relatively small.
         ///
-        bool converged(const scalar_t epsilon) const
+        bool converged(scalar_t epsilon) const
         {
             return convergence_criterion() < epsilon;
         }
 
         ///
-        /// \brief convergence criterion: relative gradient
+        /// \brief convergence criterion: relative gradient.
         ///
         scalar_t convergence_criterion() const
         {
@@ -84,7 +84,7 @@ namespace nano
         }
 
         ///
-        /// \brief check divergence
+        /// \brief check divergence.
         ///
         operator bool() const // NOLINT(hicpp-explicit-conversions)
         {
@@ -92,7 +92,7 @@ namespace nano
         }
 
         ///
-        /// \brief compute the dot product between the gradient and the descent direction
+        /// \brief compute the dot product between the gradient and the descent direction.
         ///
         auto dg() const
         {
@@ -100,7 +100,7 @@ namespace nano
         }
 
         ///
-        /// \brief check if the chosen direction is a descent direction
+        /// \brief check if the chosen direction is a descent direction.
         ///
         auto has_descent() const
         {
@@ -108,60 +108,60 @@ namespace nano
         }
 
         ///
-        /// \brief check if the current step satisfies the Armijo condition (sufficient decrease)
+        /// \brief check if the current step satisfies the Armijo condition (sufficient decrease).
         ///
-        bool has_armijo(const solver_state_t& state0, const scalar_t c1) const
+        bool has_armijo(const solver_state_t& state0, scalar_t c1) const
         {
             assert(c1 > 0 && c1 < 1);
             return f <= state0.f + t * c1 * state0.dg();
         }
 
         ///
-        /// \brief check if the current step satisfies the approximate Armijo condition (sufficient decrease)
+        /// \brief check if the current step satisfies the approximate Armijo condition (sufficient decrease).
         ///     see CG_DESCENT
         ///
-        bool has_approx_armijo(const solver_state_t& state0, const scalar_t epsilon) const
+        bool has_approx_armijo(const solver_state_t& state0, scalar_t epsilon) const
         {
             return f <= state0.f + epsilon;
         }
 
         ///
-        /// \brief check if the current step satisfies the Wolfe condition (sufficient curvature)
+        /// \brief check if the current step satisfies the Wolfe condition (sufficient curvature).
         ///
-        bool has_wolfe(const solver_state_t& state0, const scalar_t c2) const
+        bool has_wolfe(const solver_state_t& state0, scalar_t c2) const
         {
             assert(c2 > 0 && c2 < 1);
             return dg() >= c2 * state0.dg();
         }
 
         ///
-        /// \brief check if the current step satisfies the strong Wolfe condition (sufficient curvature)
+        /// \brief check if the current step satisfies the strong Wolfe condition (sufficient curvature).
         ///
-        bool has_strong_wolfe(const solver_state_t& state0, const scalar_t c2) const
+        bool has_strong_wolfe(const solver_state_t& state0, scalar_t c2) const
         {
             assert(c2 > 0 && c2 < 1);
             return std::fabs(dg()) <= c2 * std::fabs(state0.dg());
         }
 
         ///
-        /// \brief check if the current step satisfies the approximate Wolfe condition (sufficient curvature)
+        /// \brief check if the current step satisfies the approximate Wolfe condition (sufficient curvature).
         ///     see CG_DESCENT
         ///
-        bool has_approx_wolfe(const solver_state_t& state0, const scalar_t c1, const scalar_t c2) const
+        bool has_approx_wolfe(const solver_state_t& state0, scalar_t c1, scalar_t c2) const
         {
             assert(0 < c1 && c1 < scalar_t(0.5) && c1 < c2 && c2 < 1);
             return (2 * c1 - 1) * state0.dg() >= dg() && dg() >= c2 * state0.dg();
         }
 
         // attributes
-        const function_t*   function{nullptr};      ///<
-        vector_t            x, g, d;                ///< parameter, gradient, descent direction
-        scalar_t            f{0};                   ///< function value
-        scalar_t            t{0};                   ///< step size (line-search solvers)
-        status              m_status{status::max_iters};    ///< optimization status
-        tensor_size_t       m_fcalls{0};            ///< #function value evaluations so far
-        tensor_size_t       m_gcalls{0};            ///< #function gradient evaluations so far
-        tensor_size_t       m_iterations{0};        ///< #optimization iterations so far
+        const function_t*   function{nullptr};          ///<
+        vector_t            x, g, d;                    ///< parameter, gradient, descent direction
+        scalar_t            f{0};                       ///< function value
+        scalar_t            t{0};                       ///< step size (line-search solvers)
+        status              m_status{status::max_iters};///< optimization status
+        tensor_size_t       m_fcalls{0};                ///< #function value evaluations so far
+        tensor_size_t       m_gcalls{0};                ///< #function gradient evaluations so far
+        tensor_size_t       m_iterations{0};            ///< #optimization iterations so far
     };
 
     template <>

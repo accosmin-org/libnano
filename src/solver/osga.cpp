@@ -58,46 +58,40 @@ private:
 
 solver_osga_t::solver_osga_t() = default;
 
-solver_state_t solver_osga_t::iterate(const solver_function_t& function, const lsearch_t&, const vector_t& x0) const
+solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    return solver_state_t{function, x0};
-}
-
-solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x0) const
-{
-    assert(func.size() == x0.size());
-
-    auto function = solver_function_t{func};
+    auto function = make_function(function_, x0);
 
     const auto delta = m_delta.get();
     const auto alpha_max = m_alpha_max.get();
     const auto kappa_prime = m_kappas.get1();
     const auto kappa = m_kappas.get2();
 
-    const auto miu = func.strong_convexity() / 2.0;
+    const auto miu = function.strong_convexity() / 2.0;
 
     const auto proxy = proxy_t{x0};
+
+    //TODO: keep track of bstate, cstate
+    //TODO: extend convergence criterion to use (bstate, cstate) if non-smooth otherwise cstate.g!!!
 
     auto state = solver_state_t{function, x0};
     vector_t& xb = state.x;
     scalar_t& fb = state.f;
     vector_t& gb = state.g;
+    vector_t& g  = state.d;
 
-    vector_t x, x_prime, g(x0.size()), h, h_hat, u, u_hat, u_prime;
+    vector_t x, x_prime, h, h_hat, u, u_hat, u_prime;
     scalar_t alpha = alpha_max, gamma, gamma_hat, eta, eta_hat, f, f_prime;
 
     h = gb - miu * proxy.gQ(xb);
     gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
     std::tie(u, eta) = proxy.UE(gamma, h, fb, miu);
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; i < max_iterations() && eta >= epsilon(); ++ i)
     {
         x = xb + alpha * (u - xb);
         f = function.vgrad(x, &g);
         g = g - miu * proxy.gQ(x);
-
-        std::cout << std::fixed << std::setprecision(16)
-            << "fb=" << fb << ", f=" << f << ", g=" << g.lpNorm<Eigen::Infinity>() << std::endl;
 
         h_hat = h + alpha * (g - h);
         gamma_hat = gamma + alpha * (f - miu * proxy.Q(x) - g.dot(x) - gamma);
@@ -112,6 +106,15 @@ solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
+        std::cout << std::fixed << std::setprecision(16) << "fb_hat=" << fb_hat << ", fb=" << fb
+            << ", x-xb=" << (x - xb).lpNorm<Eigen::Infinity>()
+            << ", xb_hat-xb=" << (xb_hat - xb).lpNorm<Eigen::Infinity>()
+            << ", alpha=" << alpha
+            << ", eta=" << eta
+            << std::endl;
+
+        const auto converged = false;//(xb_hat - xb).lpNorm<Eigen::Infinity>() <= epsilon() * std::max(1.0, xb_hat.lpNorm<Eigen::Infinity>());
+
         std::tie(u_hat, eta_hat) = proxy.UE(gamma_hat, h_hat, fb_hat, miu);
         xb = xb_hat;
         fb = fb_hat;
@@ -119,8 +122,7 @@ solver_state_t solver_osga_t::minimize(const function_t& func, const vector_t& x
         // TODO: how to check convergence?!, implement various stopping criteria
         state.x = xb_hat;
         state.f = fb_hat;
-        state.g = g;
-        if (solver_t::done(function, state, true))
+        if (solver_t::done(function, state, true, converged))
         {
             return state;
         }

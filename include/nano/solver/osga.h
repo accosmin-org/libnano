@@ -25,11 +25,9 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const override;
+        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
 
     private:
-
-        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const override;
 
         // attributes
         sparam1_t   m_delta{"osga::delta", 0, LT, 0.9, LT, 1};              ///<

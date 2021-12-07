@@ -21,6 +21,6 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const final;
+        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
     };
 }

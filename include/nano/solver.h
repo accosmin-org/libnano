@@ -65,7 +65,7 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        virtual solver_state_t minimize(const function_t&, const vector_t& x0) const;
+        virtual solver_state_t minimize(const function_t&, const vector_t& x0) const = 0;
 
         ///
         /// \brief set the logging callback
@@ -118,20 +118,24 @@ namespace nano
     protected:
 
         ///
-        /// \brief minimize the given function starting from the initial point x0
-        ///     and using the given line-search strategy.
+        /// \brief create a copy of the line-search utility.
         ///
-        virtual solver_state_t iterate(const solver_function_t&, const lsearch_t&, const vector_t& x0) const = 0;
+        lsearch_t make_lsearch() const;
 
         ///
-        /// \brief log the current optimization state (if the logger is provided)
+        /// \brief create a solver function to keep track of various statistics.
+        ///
+        solver_function_t make_function(const function_t&, const vector_t& x0) const;
+
+        ///
+        /// \brief log the current optimization state (if the logger is provided).
         ///
         bool log(solver_state_t& state) const;
 
         ///
-        /// \brief check if the optimization is done (convergence or error) after an iteration
+        /// \brief check if the optimization is done (convergence or error) after an iteration.
         ///
-        bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok) const;
+        bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged = false) const;
 
     private:
 

@@ -44,7 +44,9 @@ using solver_config_stats_t = std::map<
 
 static void show_table(const string_t& table_name, const solver_config_stats_t& stats)
 {
-    assert(!stats.empty());
+    critical(
+        stats.empty(),
+        "no statistics gathered, check the selection of test functions, solvers or line-search methods!");
 
     // show global statistics
     table_t table;

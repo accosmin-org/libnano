@@ -7,7 +7,7 @@
 
 using namespace nano;
 
-solver_t::solver_t(const scalar_t c1, const scalar_t c2,
+solver_t::solver_t(scalar_t c1, scalar_t c2,
     const string_t& lsearch0_id, const string_t& lsearchk_id)
 {
     lsearch0(lsearch0_id);
@@ -55,27 +55,9 @@ void solver_t::lsearchk_logger(const lsearchk_t::logger_t& logger)
     m_lsearchk->logger(logger);
 }
 
-void solver_t::tolerance(const scalar_t c1, const scalar_t c2)
+void solver_t::tolerance(scalar_t c1, scalar_t c2)
 {
     m_lsearchk->tolerance(c1, c2);
-}
-
-solver_state_t solver_t::minimize(const function_t& f, const vector_t& x0) const
-{
-    assert(f.size() == x0.size());
-
-    // NB: create new line-search objects:
-    //  - to have the solver thread-safe
-    //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
-    auto lsearch0 = m_lsearch0->clone();
-    auto lsearchk = m_lsearchk->clone();
-
-    lsearch0->epsilon(epsilon());
-
-    auto function = solver_function_t{f};
-    auto lsearch = lsearch_t{std::move(lsearch0), std::move(lsearchk)};
-
-    return iterate(function, lsearch, x0);
 }
 
 void solver_t::logger(const logger_t& logger)
@@ -83,23 +65,44 @@ void solver_t::logger(const logger_t& logger)
     m_logger = logger;
 }
 
-void solver_t::epsilon(const scalar_t epsilon)
+void solver_t::epsilon(scalar_t epsilon)
 {
     m_epsilon = epsilon;
 }
 
-void solver_t::max_iterations(const int max_iterations)
+void solver_t::max_iterations(int max_iterations)
 {
     m_max_iterations = max_iterations;
 }
 
-bool solver_t::done(const solver_function_t& function, solver_state_t& state, const bool iter_ok) const
+lsearch_t solver_t::make_lsearch() const
+{
+    // NB: create new line-search objects:
+    //  - to have the solver thread-safe
+    //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
+    auto lsearch0 = m_lsearch0->clone();
+    auto lsearchk = m_lsearchk->clone();
+
+    lsearch0->epsilon(epsilon());
+    return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
+}
+
+solver_function_t solver_t::make_function(const function_t& function_, const vector_t& x0) const
+{
+    critical(
+        function_.size() != x0.size(),
+        "solver: incompatible initial point (", x0.size(), " dimensions), expecting ", function_.size(), " dimensions!");
+
+    return solver_function_t{function_};
+}
+
+bool solver_t::done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged) const
 {
     state.m_fcalls = function.fcalls();
     state.m_gcalls = function.gcalls();
 
     const auto step_ok = iter_ok && state;
-    const auto converged = state.converged(epsilon());
+    converged = converged || (function.smooth() && state.converged(epsilon()));
 
     if (converged || !step_ok)
     {

@@ -71,8 +71,11 @@ solver_quasi_t::solver_quasi_t() :
 {
 }
 
-solver_state_t solver_quasi_t::iterate(const solver_function_t& function, const lsearch_t& lsearch, const vector_t& x0) const
+solver_state_t solver_quasi_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    auto lsearch = make_lsearch();
+    auto function = make_function(function_, x0);
+
     auto cstate = solver_state_t{function, x0};
     if (solver_t::done(function, cstate, true))
     {
