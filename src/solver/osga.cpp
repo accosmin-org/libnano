@@ -1,8 +1,5 @@
 #include <nano/solver/osga.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 class proxy_t
@@ -71,23 +68,21 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
 
     const auto proxy = proxy_t{x0};
 
-    //TODO: keep track of bstate, cstate
-    //TODO: extend convergence criterion to use (bstate, cstate) if non-smooth otherwise cstate.g!!!
-
     auto state = solver_state_t{function, x0};
-    vector_t& xb = state.x;
-    scalar_t& fb = state.f;
-    vector_t& gb = state.g;
-    vector_t& g  = state.d;
+    vector_t& xb = state.x;     // store the best function point
+    scalar_t& fb = state.f;     // store the best function value
+    vector_t& h = state.g;      // buffer to reuse
+    vector_t& g = state.d;      // buffer to reuse
 
-    vector_t x, x_prime, h, h_hat, u, u_hat, u_prime;
+    // see the reference papers for the notation
+    vector_t x, x_prime, h_hat, u, u_hat, u_prime;
     scalar_t alpha = alpha_max, gamma, gamma_hat, eta, eta_hat, f, f_prime;
 
-    h = gb - miu * proxy.gQ(xb);
+    h = state.g - miu * proxy.gQ(xb);
     gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
     std::tie(u, eta) = proxy.UE(gamma, h, fb, miu);
 
-    for (int64_t i = 0; i < max_iterations() && eta >= epsilon(); ++ i)
+    for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         x = xb + alpha * (u - xb);
         f = function.vgrad(x, &g);
@@ -106,28 +101,23 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
-        std::cout << std::fixed << std::setprecision(16) << "fb_hat=" << fb_hat << ", fb=" << fb
-            << ", x-xb=" << (x - xb).lpNorm<Eigen::Infinity>()
-            << ", xb_hat-xb=" << (xb_hat - xb).lpNorm<Eigen::Infinity>()
-            << ", alpha=" << alpha
-            << ", eta=" << eta
-            << std::endl;
-
-        const auto converged = false;//(xb_hat - xb).lpNorm<Eigen::Infinity>() <= epsilon() * std::max(1.0, xb_hat.lpNorm<Eigen::Infinity>());
-
         std::tie(u_hat, eta_hat) = proxy.UE(gamma_hat, h_hat, fb_hat, miu);
-        xb = xb_hat;
-        fb = fb_hat;
 
-        // TODO: how to check convergence?!, implement various stopping criteria
-        state.x = xb_hat;
-        state.f = fb_hat;
+        // check convergence
+        const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
+        const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
+        const auto converged = dxb >= eps0 && dxb <= epsilon() * std::max(1.0, xb_hat.lpNorm<Eigen::Infinity>());
+
+        state.x = xb = xb_hat;
+        state.f = fb = fb_hat;
         if (solver_t::done(function, state, true, converged))
         {
+            // NB: make sure the gradient is updated
+            function.vgrad(state.x, &state.g);
             return state;
         }
 
-        // algorithm 2.1, update (alpha, h, gamma, eta, u)
+        // the algorithm to update the parameters (alpha, h, gamma, eta, u)
         const auto R = (eta - eta_hat) / (delta * alpha * eta);
 
         alpha = (R < 1.0) ?

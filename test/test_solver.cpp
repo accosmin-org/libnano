@@ -58,8 +58,9 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     // check function value decrease
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
 
-    // check convergence
-    UTEST_CHECK_LESS(state.convergence_criterion(), solver.epsilon());
+    // check convergence, less strict for non-smooth solvers
+    const auto epsilon = ((solver_id == "osga") ? 10.0 : 1.0) * solver.epsilon();
+    UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
     UTEST_CHECK_EQUAL(iterations, state.m_iterations);
 
