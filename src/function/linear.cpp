@@ -28,27 +28,27 @@ synthetic_linear_t::synthetic_linear_t(
 
 tensor2d_t synthetic_linear_t::outputs(const vector_t& x) const
 {
-    return outputs(make_w(x), make_b(x));
+    return outputs(make_w(x));
 }
 
-tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b) const
+tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w) const
 {
     tensor2d_t outputs(m_inputs.size<0>(), m_bopt.size());
     outputs.matrix() = inputs() * w.matrix().transpose();
-    outputs.matrix().rowwise() += b.vector().transpose();
+    outputs.matrix().rowwise() += m_bopt.vector().transpose();
     return outputs;
 } // LCOV_EXCL_LINE
 
 tensor2d_t synthetic_linear_t::outputs(const vector_t& x, tensor_size_t summand) const
 {
-    return outputs(make_w(x), make_b(x), summand);
+    return outputs(make_w(x), summand);
 }
 
-tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor1d_cmap_t b, tensor_size_t summand) const
+tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w, tensor_size_t summand) const
 {
     tensor2d_t outputs(1, m_bopt.size());
     outputs.matrix() = inputs(summand) * w.matrix().transpose();
-    outputs.matrix().rowwise() += b.vector().transpose();
+    outputs.matrix().rowwise() += m_bopt.vector().transpose();
     return outputs;
 } // LCOV_EXCL_LINE
 
@@ -57,7 +57,7 @@ synthetic_sclass_t::synthetic_sclass_t(
     synthetic_linear_t(samples, outputs, inputs, modulo_correlated_inputs),
     m_targets(samples, outputs)
 {
-    const auto xoutputs = this->outputs(wopt(), bopt());
+    const auto xoutputs = this->outputs(wopt());
     for (tensor_size_t s = 0; s < samples; ++ s)
     {
         const auto woutput = xoutputs.matrix().array().row(s) - bopt().array();
@@ -77,6 +77,6 @@ synthetic_sclass_t::synthetic_sclass_t(
 synthetic_scalar_t::synthetic_scalar_t(
     tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs, tensor_size_t modulo_correlated_inputs) :
     synthetic_linear_t(samples, outputs, inputs, modulo_correlated_inputs),
-    m_targets(this->outputs(wopt(), bopt()))
+    m_targets(this->outputs(wopt()))
 {
 }

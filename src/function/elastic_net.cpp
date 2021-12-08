@@ -22,7 +22,7 @@ static auto make_size(tensor_size_t dims)
 
 static auto make_inputs(tensor_size_t dims)
 {
-    return std::max(dims, tensor_size_t{2}) - 1;
+    return std::max(dims, tensor_size_t{2});
 }
 
 static auto make_outputs(tensor_size_t)

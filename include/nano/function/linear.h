@@ -23,16 +23,13 @@ namespace nano
         auto inputs(tensor_size_t summand) const { return m_inputs.slice(summand, summand + 1).matrix(); }
 
         tensor2d_t outputs(const vector_t& x) const;
-        tensor2d_t outputs(tensor2d_cmap_t w, tensor1d_cmap_t b) const;
+        tensor2d_t outputs(tensor2d_cmap_t w) const;
 
         tensor2d_t outputs(const vector_t& x, tensor_size_t summand) const;
-        tensor2d_t outputs(tensor2d_cmap_t w, tensor1d_cmap_t b, tensor_size_t summand) const;
+        tensor2d_t outputs(tensor2d_cmap_t w, tensor_size_t summand) const;
 
         auto make_w(vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
         auto make_w(const vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
-
-        auto make_b(vector_t& x) const { return map_tensor(x.data() + m_wopt.size(), m_bopt.dims()); }
-        auto make_b(const vector_t& x) const { return map_tensor(x.data() + m_wopt.size(), m_bopt.dims()); }
 
         template <typename tgrad, typename tinputs>
         void vgrad(vector_t* gx, const tgrad& gg, const tinputs& inputs) const
@@ -40,15 +37,10 @@ namespace nano
             const auto samples = static_cast<scalar_t>(gg.rows());
 
             auto gw = make_w(*gx).matrix();
-            auto gb = make_b(*gx).vector();
 
             // cppcheck-suppress redundantInitialization
             // cppcheck-suppress unreadVariable
             gw = gg.transpose() * inputs.matrix() / samples;
-
-            // cppcheck-suppress redundantInitialization
-            // cppcheck-suppress unreadVariable
-            gb = gg.colwise().sum() / samples;
         }
 
     private:
