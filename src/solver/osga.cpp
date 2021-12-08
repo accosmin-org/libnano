@@ -36,15 +36,18 @@ public:
             return h.dot(h) / (beta + sqrt);
         }
     }
+    auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const
+    {
+        return E(gamma - fx, h);
+    }
 
     auto U(scalar_t gamma, const vector_t& h) const
     {
         return m_z0 - h / E(gamma, h);
     }
-
-    auto UE(scalar_t gamma, const vector_t& h, scalar_t fx, scalar_t miu) const
+    auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const
     {
-        return std::make_pair(U(gamma - fx, h), E(gamma - fx, h) - miu);
+        return U(gamma - fx, h);
     }
 
 private:
@@ -75,33 +78,37 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     vector_t& g = state.d;      // buffer to reuse
 
     // see the reference papers for the notation
-    vector_t x, x_prime, h_hat, u, u_hat, u_prime;
-    scalar_t alpha = alpha_max, gamma, gamma_hat, eta, eta_hat, f, f_prime;
+    vector_t x, x_prime, h_hat, u_hat, u_prime;
 
     h = state.g - miu * proxy.gQ(xb);
-    gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
-    std::tie(u, eta) = proxy.UE(gamma, h, fb, miu);
+
+    scalar_t alpha = alpha_max;
+    scalar_t gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
+
+    vector_t u = proxy.U(gamma, h, fb);
+    scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
     for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         x = xb + alpha * (u - xb);
-        f = function.vgrad(x, &g);
+        const auto f = function.vgrad(x, &g);
         g = g - miu * proxy.gQ(x);
 
         h_hat = h + alpha * (g - h);
-        gamma_hat = gamma + alpha * (f - miu * proxy.Q(x) - g.dot(x) - gamma);
+        const auto gamma_hat = gamma + alpha * (f - miu * proxy.Q(x) - g.dot(x) - gamma);
 
         const auto& xb_prime = (f < fb) ? x : xb;
         const auto& fb_prime = (f < fb) ? f : fb;
 
         u_prime = proxy.U(gamma_hat - fb_prime, h_hat);
         x_prime = xb + alpha * (u_prime - xb);
-        f_prime = function.vgrad(x_prime);
+        const auto f_prime = function.vgrad(x_prime);
 
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
-        std::tie(u_hat, eta_hat) = proxy.UE(gamma_hat, h_hat, fb_hat, miu);
+        u_hat = proxy.U(gamma_hat, h_hat, fb_hat);
+        const auto eta_hat = proxy.E(gamma_hat, h_hat, fb_hat) - miu;
 
         // check convergence
         const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
