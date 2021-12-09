@@ -50,7 +50,7 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     setup_logger(solver, stream, iterations);
 
     const auto epsilon = 1e-5;
-    const auto gepsilon = (solver_id == "osga") ? 10.0 : 1.0;
+    const auto gepsilon = (solver_id == "osga") ? 15.0 : 1.0;
 
     // minimize
     solver.epsilon(epsilon);
