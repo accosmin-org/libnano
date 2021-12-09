@@ -74,8 +74,8 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     auto state = solver_state_t{function, x0};
     vector_t& xb = state.x;     // store the best function point
     scalar_t& fb = state.f;     // store the best function value
-    vector_t& h = state.g;      // buffer to reuse
-    vector_t& g = state.d;      // buffer to reuse
+    vector_t& g = state.g;      // buffer to reuse
+    vector_t& h = state.d;      // buffer to reuse
 
     // see the reference papers for the notation
     vector_t x, x_prime, h_hat, u_hat, u_prime;
@@ -113,13 +113,15 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         // check convergence
         const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
         const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
-        const auto converged = dxb >= eps0 && dxb <= epsilon() * std::max(1.0, xb_hat.lpNorm<Eigen::Infinity>());
+        const auto converged = dxb >= eps0 && (
+            eta_hat <= eps0 ||
+            dxb <= epsilon() * std::max(1.0, xb_hat.lpNorm<Eigen::Infinity>()));
 
         state.x = xb = xb_hat;
         state.f = fb = fb_hat;
         if (solver_t::done(function, state, true, converged))
         {
-            // NB: make sure the gradient is updated
+            // NB: make sure the gradient is updated at the returned point.
             function.vgrad(state.x, &state.g);
             return state;
         }
@@ -140,5 +142,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         }
     }
 
+    // NB: make sure the gradient is updated at the returned point.
+    function.vgrad(state.x, &state.g);
     return state;
 }

@@ -102,7 +102,6 @@ bool solver_t::done(const solver_function_t& function, solver_state_t& state, bo
     state.m_gcalls = function.gcalls();
 
     const auto step_ok = iter_ok && state;
-    converged = converged || (function.smooth() && state.converged(epsilon()));
 
     if (converged || !step_ok)
     {

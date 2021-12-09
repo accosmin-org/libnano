@@ -135,7 +135,7 @@ namespace nano
         ///
         /// \brief check if the optimization is done (convergence or error) after an iteration.
         ///
-        bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged = false) const;
+        bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged) const;
 
     private:
 
