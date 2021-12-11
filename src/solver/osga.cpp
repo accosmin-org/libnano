@@ -121,9 +121,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         state.f = fb = fb_hat;
         if (solver_t::done(function, state, true, converged))
         {
-            // NB: make sure the gradient is updated at the returned point.
-            function.vgrad(state.x, &state.g);
-            return state;
+            break;
         }
 
         // the algorithm to update the parameters (alpha, h, gamma, eta, u)
