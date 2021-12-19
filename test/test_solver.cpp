@@ -50,7 +50,7 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     setup_logger(solver, stream, iterations);
 
     const auto epsilon = 1e-5;
-    const auto gepsilon = (solver_id == "osga") ? 15.0 : 1.0;
+    const auto gepsilon = (solver_id == "osga" || solver_id == "fgm") ? 20.0 : 1.0;
 
     // minimize
     solver.epsilon(epsilon);
@@ -80,7 +80,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|fgm")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)

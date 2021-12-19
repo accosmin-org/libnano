@@ -63,15 +63,6 @@ synthetic_sclass_t::synthetic_sclass_t(
         const auto woutput = xoutputs.matrix().array().row(s) - bopt().array();
         m_targets.matrix().row(s) = (woutput - 0.5).sign();
     }
-
-    tensor_size_t positives = 0;
-    for (const auto target : m_targets)
-    {
-        if (target > 0.0)
-        {
-            positives ++;
-        }
-    }
 }
 
 synthetic_scalar_t::synthetic_scalar_t(

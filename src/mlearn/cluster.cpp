@@ -2,14 +2,14 @@
 
 using namespace nano;
 
-cluster_t::cluster_t(const tensor_size_t samples, const tensor_size_t groups) :
+cluster_t::cluster_t(tensor_size_t samples, tensor_size_t groups) :
     m_indices(samples),
     m_groups(groups)
 {
     m_indices.full(-1);
 }
 
-cluster_t::cluster_t(const tensor_size_t samples, const indices_t& indices) :
+cluster_t::cluster_t(tensor_size_t samples, const indices_t& indices) :
     cluster_t(samples, 1)
 {
     for (const auto index : indices)
@@ -19,7 +19,7 @@ cluster_t::cluster_t(const tensor_size_t samples, const indices_t& indices) :
     }
 }
 
-indices_t cluster_t::indices(const tensor_size_t group) const
+indices_t cluster_t::indices(tensor_size_t group) const
 {
     assert(group >= 0 && group < groups());
 
@@ -34,17 +34,9 @@ indices_t cluster_t::indices(const tensor_size_t group) const
     return indices;
 }
 
-tensor_size_t cluster_t::count(const tensor_size_t group) const
+tensor_size_t cluster_t::count(tensor_size_t group) const
 {
     assert(group >= 0 && group < groups());
 
-    tensor_size_t count = 0;
-    for (const auto g : m_indices)
-    {
-        if (g == group)
-        {
-            ++ count;
-        }
-    }
-    return count;
+    return std::count_if(begin(m_indices), end(m_indices), [=] (tensor_size_t g) { return g == group; });
 }

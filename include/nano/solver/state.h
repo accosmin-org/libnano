@@ -33,6 +33,17 @@ namespace nano
         ///
         /// \brief constructor
         ///
+        explicit solver_state_t(const function_t& ffunction) :
+            function(&ffunction),
+            x(ffunction.size()),
+            g(ffunction.size()),
+            d(ffunction.size())
+        {
+        }
+
+        ///
+        /// \brief constructor
+        ///
         template <typename tvector>
         solver_state_t(const function_t& ffunction, tvector x0) :
             function(&ffunction),
