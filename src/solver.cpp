@@ -77,6 +77,16 @@ void solver_t::max_iterations(int max_iterations)
     m_max_iterations = max_iterations;
 }
 
+void solver_t::monotonic(bool monotonic)
+{
+    m_monotonic = monotonic;
+}
+
+bool solver_t::monotonic() const
+{
+    return m_monotonic;
+}
+
 lsearch_t solver_t::make_lsearch() const
 {
     // NB: create new line-search objects:

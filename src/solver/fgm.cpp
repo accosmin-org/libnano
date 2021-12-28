@@ -7,7 +7,10 @@ static auto compute_a(scalar_t M, scalar_t A)
     return 0.5 * (1.0 / M + std::sqrt(1.0 / (M * M) + 4.0 * A / M));
 }
 
-solver_fgm_t::solver_fgm_t() = default;
+solver_fgm_t::solver_fgm_t()
+{
+    monotonic(false);
+}
 
 solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {

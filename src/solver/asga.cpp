@@ -29,7 +29,10 @@ auto update_state(scalar_t Lk, scalar_t Sk,
     return converged;
 }
 
-solver_asga2_t::solver_asga2_t() = default;
+solver_asga2_t::solver_asga2_t()
+{
+    monotonic(false);
+}
 
 solver_state_t solver_asga2_t::minimize(const function_t& function_, const vector_t& x0) const
 {
@@ -97,7 +100,10 @@ solver_state_t solver_asga2_t::minimize(const function_t& function_, const vecto
     return state;
 }
 
-solver_asga4_t::solver_asga4_t() = default;
+solver_asga4_t::solver_asga4_t()
+{
+    monotonic(false);
+}
 
 solver_state_t solver_asga4_t::minimize(const function_t& function_, const vector_t& x0) const
 {

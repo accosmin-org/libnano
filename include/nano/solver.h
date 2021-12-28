@@ -106,6 +106,15 @@ namespace nano
         void lsearchk(const string_t& id, rlsearchk_t&&);
 
         ///
+        /// \brief return true if the solver is monotonic, which guarantees that at each iteration:
+        ///     - either the function value decreases
+        ///     - or the optimization stops (e.g. convergence reached, line-search failed, user requested termination).
+        ///
+        /// NB: the solver ignores the line-search attributes if not monotonic.
+        ///
+        bool monotonic() const;
+
+        ///
         /// \brief access functions
         ///
         auto c1() const { return m_lsearchk->c1(); }
@@ -137,6 +146,11 @@ namespace nano
         ///
         bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged) const;
 
+        ///
+        /// \brief sets the monotonicity.
+        ///
+        void monotonic(bool);
+
     private:
 
         // attributes
@@ -147,5 +161,6 @@ namespace nano
         rlsearch0_t     m_lsearch0;                 ///<
         string_t        m_lsearchk_id;              ///<
         rlsearchk_t     m_lsearchk;                 ///<
+        bool            m_monotonic{true};          ///<
     };
 }

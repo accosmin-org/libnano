@@ -162,6 +162,48 @@ UTEST_CASE(state_convergence1)
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
 }
 
+UTEST_CASE(factory)
+{
+    const auto description = std::map<string_t, std::tuple<bool>>
+    {
+        {"gd", std::make_tuple(true)},
+        {"cgd", std::make_tuple(true)},
+        {"cgd-n", std::make_tuple(true)},
+        {"cgd-hs", std::make_tuple(true)},
+        {"cgd-fr", std::make_tuple(true)},
+        {"cgd-pr", std::make_tuple(true)},
+        {"cgd-cd", std::make_tuple(true)},
+        {"cgd-ls", std::make_tuple(true)},
+        {"cgd-dy", std::make_tuple(true)},
+        {"cgd-dycd", std::make_tuple(true)},
+        {"cgd-dyhs", std::make_tuple(true)},
+        {"cgd-prfr", std::make_tuple(true)},
+        {"lbfgs", std::make_tuple(true)},
+        {"dfp", std::make_tuple(true)},
+        {"sr1", std::make_tuple(true)},
+        {"bfgs", std::make_tuple(true)},
+        {"hoshino", std::make_tuple(true)},
+        {"fletcher", std::make_tuple(true)},
+        {"osga", std::make_tuple(false)},
+        {"asga2", std::make_tuple(false)},
+        {"asga4", std::make_tuple(false)}
+    };
+
+    const auto ids = solver_t::all().ids();
+
+    UTEST_REQUIRE_EQUAL(ids.size(), description.size());
+    for (const auto& id : ids)
+    {
+        const auto it = description.find(id);
+        UTEST_REQUIRE(it != description.end());
+
+        const auto solver = solver_t::all().get(id);
+        UTEST_REQUIRE(solver);
+
+        UTEST_CHECK_EQUAL(solver->monotonic(), std::get<0>(it->second));
+    }
+}
+
 UTEST_CASE(config_solvers)
 {
     for (const auto& solver_id : make_solver_ids())

@@ -56,7 +56,10 @@ private:
     scalar_t        m_Q0{0.0};  ///<
 };
 
-solver_osga_t::solver_osga_t() = default;
+solver_osga_t::solver_osga_t()
+{
+    monotonic(false);
+}
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
 {
