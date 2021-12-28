@@ -147,6 +147,11 @@ namespace nano
         ///
         void monotonic(bool);
 
+        ///
+        /// \brief check convergence for non-monotonic solvers and update the solution if a better point was reached.
+        ///
+        bool converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, solver_state_t&) const;
+
     private:
 
         // attributes

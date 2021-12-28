@@ -8,27 +8,6 @@ auto solve_sk1(scalar_t miu, scalar_t Sk, scalar_t Lk1)
     return (r + std::sqrt(r * r + 4.0 * Lk1 * Sk * r)) / (2.0 * Lk1);
 }
 
-auto update_state(scalar_t Lk, scalar_t Sk,
-    const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, scalar_t epsilon, solver_state_t& state)
-{
-    const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
-    const auto df = std::fabs(fxk1 - fxk);
-    const auto converged =
-        !std::isfinite(Lk) || !std::isfinite(Sk) ||
-        (
-            dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
-            df <= epsilon * std::max(1.0, std::fabs(fxk1))
-        );
-
-    if (std::isfinite(fxk1) && fxk1 < state.f)
-    {
-        state.x = xk1;
-        state.f = fxk1;
-    }
-
-    return converged;
-}
-
 solver_asga2_t::solver_asga2_t()
 {
     monotonic(false);
@@ -80,7 +59,7 @@ solver_state_t solver_asga2_t::minimize(const function_t& function_, const vecto
             iter_ok = fxk1 <= fyk + gyk.dot(xk1 - yk) + 0.5 * Lk1 * (xk1 - yk).squaredNorm() + 0.5 * alphak * eps;
         }
 
-        const auto converged = update_state(Lk1, Sk1, xk, fxk, xk1, fxk1, epsilon(), state);
+        const auto converged = this->converged(xk, fxk, xk1, fxk1, state);
 
         xk = xk1;
         zk = zk1;
@@ -152,7 +131,7 @@ solver_state_t solver_asga4_t::minimize(const function_t& function_, const vecto
             iter_ok = fyk1 <= fxk1 + gxk1.dot(yk1 - xk1) + 0.5 * Lk1 * (yk1 - xk1).squaredNorm() + 0.5 * alphak * eps;
         }
 
-        const auto converged = update_state(Lk1, Sk1, yk, fyk, yk1, fyk1, epsilon(), state);
+        const auto converged = this->converged(yk, fyk, yk1, fyk1, state);
 
         yk = yk1;
         Sk = Sk1;
