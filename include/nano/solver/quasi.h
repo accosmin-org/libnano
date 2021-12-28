@@ -15,8 +15,6 @@ namespace nano
     {
     public:
 
-        using solver_t::minimize;
-
         ///
         /// \brief methods to initialize the first approximation of the Hessian's inverse.
         ///

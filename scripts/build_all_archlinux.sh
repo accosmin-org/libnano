@@ -16,7 +16,8 @@ CXX=g++ bash scripts/build.sh --suffix gcc-debug --build-type Debug \
 CXX=g++ bash scripts/build.sh --suffix gcc-release --build-type Release --native \
     --generator Ninja --config --build --test --install --build-example
 
-CXX=g++ bash scripts/build.sh --suffix memcheck --build-type RelWithDebInfo --config --build --memcheck
+CXX=g++ bash scripts/build.sh --suffix memcheck --build-type RelWithDebInfo \
+    --generator Ninja --config --build --memcheck
 
 CXX=g++ bash scripts/build.sh --suffix gcc-asan --build-type Debug --asan \
     --generator Ninja --config --build --test

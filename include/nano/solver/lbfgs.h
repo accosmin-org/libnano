@@ -13,8 +13,6 @@ namespace nano
     {
     public:
 
-        using solver_t::minimize;
-
         ///
         /// \brief default constructor
         ///

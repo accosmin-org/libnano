@@ -35,9 +35,9 @@ namespace nano
         ///
         explicit solver_state_t(const function_t& ffunction) :
             function(&ffunction),
-            x(ffunction.size()),
-            g(ffunction.size()),
-            d(ffunction.size())
+            x(vector_t::Zero(ffunction.size())),
+            g(vector_t::Zero(x.size())),
+            d(vector_t::Zero(x.size()))
         {
         }
 

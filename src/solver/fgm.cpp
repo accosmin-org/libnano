@@ -27,6 +27,7 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
 
     scalar_t L = L0;
     scalar_t A = 0.0;
+    scalar_t yf = std::numeric_limits<scalar_t>::max();
 
     for (int64_t i = 0; i < max_iterations(); ++ i)
     {
@@ -53,7 +54,9 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
             {
                 // TODO: implement proper stopping criterion, see paper
                 iter_ok = true;
-                converged = (newy - y).lpNorm<Eigen::Infinity>() <= epsilon() * std::max(1.0, newy.lpNorm<Eigen::Infinity>());
+                converged =
+                    (newy - y).lpNorm<Eigen::Infinity>() <= epsilon() * std::max(1.0, newy.lpNorm<Eigen::Infinity>()) &&
+                    std::fabs(newyf - yf) <= epsilon() * std::max(1.0, std::fabs(newyf));
 
                 if (newyf < state.f)
                 {
@@ -63,6 +66,7 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
 
                 // 3. update state
                 y = newy;
+                yf = newyf;
                 A = A + a;
                 L = 0.5 * M;
                 sumg += a * newxg;

@@ -120,6 +120,7 @@ UTEST_CASE(retrieval)
     UTEST_CHECK_EQUAL(manager.ids(std::regex("id[0-9]")), ids123);
     UTEST_CHECK_EQUAL(manager.ids(std::regex("id[1|2]")), ids12);
     UTEST_CHECK_EQUAL(manager.ids(std::regex("id7")), ids0);
+    UTEST_CHECK_EQUAL(manager.ids(std::regex("id1|id2|id4")), ids12);
 }
 
 UTEST_CASE(retrieval_default)

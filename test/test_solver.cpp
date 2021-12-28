@@ -50,7 +50,9 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     setup_logger(solver, stream, iterations);
 
     const auto epsilon = 1e-5;
-    const auto gepsilon = (solver_id == "osga" || solver_id == "fgm") ? 100.0 : 1.0;
+    const auto gepsilon =
+        (solver_id == "osga" || solver_id == "fgm" || solver_id == "asga2" || solver_id == "asga4") ?
+        (function.name()[0] == 'Z' ? 300.0 : 30.0) : 1.0;
 
     // minimize
     solver.epsilon(epsilon);
@@ -80,7 +82,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|fgm")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|fgm|asga2|asga4")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -261,7 +263,7 @@ UTEST_CASE(default_nonsmooth_solvers)
 
 UTEST_CASE(best_solvers_with_lsearches)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 10}))
+    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -286,7 +288,7 @@ UTEST_CASE(best_solvers_with_lsearches)
 
 UTEST_CASE(best_solvers_with_tolerances)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 10}))
+    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 

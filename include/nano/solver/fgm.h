@@ -8,11 +8,12 @@ namespace nano
     /// \brief universal fast gradient method (FGM).
     ///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
     ///
+    /// NB: the algorithm was designed to minimize a structured problem,
+    ///     but here it is applied to a sub-differentiable function directly.
+    ///
     class NANO_PUBLIC solver_fgm_t final : public solver_t
     {
     public:
-
-        using solver_t::minimize;
 
         ///
         /// \brief default constructor
