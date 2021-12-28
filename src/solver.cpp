@@ -9,12 +9,10 @@
 
 using namespace nano;
 
-solver_t::solver_t(scalar_t c1, scalar_t c2,
-    const string_t& lsearch0_id, const string_t& lsearchk_id)
+solver_t::solver_t()
 {
-    lsearch0(lsearch0_id);
-    lsearchk(lsearchk_id);
-    tolerance(c1, c2);
+    lsearch0("quadratic");
+    lsearchk("morethuente");
 }
 
 void solver_t::lsearch0(const string_t& id)

@@ -2,10 +2,10 @@
 
 using namespace nano;
 
-solver_gd_t::solver_gd_t() :
-    solver_t(1e-1, 9e-1)
+solver_gd_t::solver_gd_t()
 {
     monotonic(true);
+    tolerance(1e-1, 9e-1);
 }
 
 solver_state_t solver_gd_t::minimize(const function_t& function_, const vector_t& x0) const

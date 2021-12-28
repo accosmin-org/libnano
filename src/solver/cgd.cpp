@@ -75,10 +75,10 @@ namespace
     }
 }
 
-solver_cgd_t::solver_cgd_t() :
-    solver_t(1e-4, 1e-1)
+solver_cgd_t::solver_cgd_t()
 {
     monotonic(true);
+    tolerance(1e-4, 1e-1);
 }
 
 solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_t& x0) const

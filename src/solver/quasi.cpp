@@ -66,10 +66,10 @@ namespace
     }
 }
 
-solver_quasi_t::solver_quasi_t() :
-    solver_t(1e-4, 9e-1)
+solver_quasi_t::solver_quasi_t()
 {
     monotonic(true);
+    tolerance(1e-4, 9e-1);
 }
 
 solver_state_t solver_quasi_t::minimize(const function_t& function_, const vector_t& x0) const

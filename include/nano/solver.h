@@ -34,11 +34,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit solver_t(
-            scalar_t c1 = 1e-1,
-            scalar_t c2 = 9e-1,
-            const string_t& lsearch0_id = "quadratic",
-            const string_t& lsearchk_id = "morethuente");
+        solver_t();
 
 
         ///
