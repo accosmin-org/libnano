@@ -97,8 +97,9 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     std::cout << std::fixed << std::setprecision(10);
     std::cout << function.name()
         << " solver[" << solver_id
-        << "],lsearch0[" << solver->lsearch0_id()
-        << "],lsearchk[" << solver->lsearchk_id() << "]" << std::endl;
+        << "],lsearch0[" << (solver->monotonic() ? solver->lsearch0_id() : string_t("N/A"))
+        << "],lsearchk[" << (solver->monotonic() ? solver->lsearchk_id() : string_t("N/A"))
+        << "]" << std::endl;
 
     solver->logger([&] (const solver_state_t& state)
     {
@@ -162,7 +163,10 @@ static void check_solver(const function_t& function, const rsolver_t& solver,
         }
     }
 
-    const auto key = std::make_tuple(solver_id, solver->lsearch0_id(), solver->lsearchk_id());
+    const auto lsearch0_id = solver->monotonic() ? solver->lsearch0_id() : string_t("N/A");
+    const auto lsearchk_id = solver->monotonic() ? solver->lsearchk_id() : string_t("N/A");
+
+    const auto key = std::make_tuple(solver_id, lsearch0_id, lsearchk_id);
     auto& fstat = fstats[key];
     auto& gstat = gstats[key];
 
@@ -279,14 +283,10 @@ static int unsafe_main(int argc, const char* argv[])
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
-    const auto add_solver = [&] (const string_t& solver_id, const string_t& lsearch0, const string_t& lsearchk)
+    const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
     {
-        auto solver = solver_t::all().get(solver_id);
-
         solver->epsilon(epsilon);
         solver->max_iterations(max_iterations);
-        if (!lsearch0.empty()) { solver->lsearch0(lsearch0); }
-        if (!lsearchk.empty()) { solver->lsearchk(lsearchk); }
         solver->tolerance(
             cmdline.has("c1") ? cmdline.get<scalar_t>("c1") : solver->c1(),
             cmdline.has("c2") ? cmdline.get<scalar_t>("c2") : solver->c2());
@@ -294,14 +294,25 @@ static int unsafe_main(int argc, const char* argv[])
         solvers.emplace_back(solver_id, std::move(solver));
     };
 
-    for (const auto& id : solver_t::all().ids(sregex))
+    for (const auto& solver_id : solver_t::all().ids(sregex))
     {
-        for (const auto& lsearch0 : lsearch0s)
+        auto solver = solver_t::all().get(solver_id);
+        if (solver->monotonic())
         {
-            for (const auto& lsearchk : lsearchks)
+            for (const auto& lsearch0 : lsearch0s)
             {
-                add_solver(id, lsearch0, lsearchk);
+                for (const auto& lsearchk : lsearchks)
+                {
+                    solver = solver_t::all().get(solver_id);
+                    if (!lsearch0.empty()) { solver->lsearch0(lsearch0); }
+                    if (!lsearchk.empty()) { solver->lsearchk(lsearchk); }
+                    add_solver(solver_id, std::move(solver));
+                }
             }
+        }
+        else
+        {
+            add_solver(solver_id, std::move(solver));
         }
     }
 
