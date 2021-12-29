@@ -28,7 +28,7 @@ namespace nano
     private:
 
         // attributes
-        sparam1_t   m_delta{"osga::delta", 0, LT, 0.9, LT, 1};              ///<
+        sparam1_t   m_lambda{"osga::lambda", 0, LT, 0.9, LT, 1};            ///<
         sparam1_t   m_alpha_max{"osga::alpha_max", 0, LT, 0.7, LT, 1};      ///<
         sparam2_t   m_kappas{"osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 1};   ///<
     };

@@ -65,7 +65,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
 {
     auto function = make_function(function_, x0);
 
-    const auto delta = m_delta.get();
+    const auto lambda = m_lambda.get();
     const auto alpha_max = m_alpha_max.get();
     const auto kappa_prime = m_kappas.get1();
     const auto kappa = m_kappas.get2();
@@ -124,7 +124,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         }
 
         // the algorithm to update the parameters (alpha, h, gamma, eta, u)
-        const auto R = (eta - eta_hat) / (delta * alpha * eta);
+        const auto R = (eta - eta_hat) / (lambda * alpha * eta);
 
         alpha = (R < 1.0) ?
             (alpha * std::exp(-kappa)) :
