@@ -35,24 +35,24 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     });
 }
 
-static void test(solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
+static auto test(solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
 {
     const auto old_n_failures = utest_n_failures.load();
     const auto state0 = solver_state_t{function, x0};
 
+    const auto lsearch0_id = solver.monotonic() ? solver.lsearch0_id() : "N/A";
+    const auto lsearchk_id = solver.monotonic() ? solver.lsearchk_id() : "N/A";
+
     std::stringstream stream;
     stream
         << std::fixed << std::setprecision(16)
-        << function.name() << " " << solver_id << "[" << solver.lsearch0_id() << "," << solver.lsearchk_id() << "]\n"
+        << function.name() << " " << solver_id << "[" << lsearch0_id << "," << lsearchk_id << "]\n"
         << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
 
     tensor_size_t iterations = 0;
     setup_logger(solver, stream, iterations);
 
-    const auto epsilon = 1e-5;
-    const auto gepsilon =
-        (solver_id == "osga" || solver_id == "fgm" || solver_id == "asga2" || solver_id == "asga4") ?
-        (function.name()[0] == 'Z' ? 300.0 : 30.0) : 1.0;
+    const auto epsilon = 1e-6;
 
     // minimize
     solver.epsilon(epsilon);
@@ -63,10 +63,10 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     // check function value decrease
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
 
-    // check convergence, less strict for non-smooth solvers
-    if (function.smooth())
+    // check convergence
+    if (function.smooth() && solver.monotonic())
     {
-        UTEST_CHECK_LESS(state.convergence_criterion(), gepsilon * epsilon);
+        UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
     }
     UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
     UTEST_CHECK_EQUAL(iterations, state.m_iterations);
@@ -75,6 +75,18 @@ static void test(solver_t& solver, const string_t& solver_id, const function_t& 
     {
         std::cout << stream.str();
     }
+
+    return state;
+}
+
+static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues, scalar_t epsilon = 1e-6)
+{
+    if (function.convex())
+    {
+        const auto min = *std::min_element(fvalues.begin(), fvalues.end());
+        const auto max = *std::max_element(fvalues.begin(), fvalues.end());
+        UTEST_CHECK_CLOSE(min, max, epsilon);
+    }
 }
 
 static auto make_lsearch0_ids() { return lsearch0_t::all().ids(); }
@@ -82,7 +94,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|fgm|asga2|asga4")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|asga2|asga4")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -271,35 +283,48 @@ UTEST_CASE(solver_function)
     }
 }
 
-UTEST_CASE(default_smooth_solvers)
+UTEST_CASE(default_monotonic_solvers)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
+        const vector_t x0 = vector_t::Random(function->size());
+
+        std::vector<scalar_t> fvalues;
         for (const auto& solver_id : make_smooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            test(*solver, solver_id, *function, vector_t::Random(function->size()));
+            const auto state = test(*solver, solver_id, *function, x0);
+            fvalues.push_back(state.f);
         }
+
+        check_consistency(*function, fvalues);
     }
 }
 
-UTEST_CASE(default_nonsmooth_solvers)
+UTEST_CASE(default_nonmonotonic_solvers)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 10}))
     {
         UTEST_REQUIRE(function);
 
+        const vector_t x0 = vector_t::Random(function->size());
+
+        std::vector<scalar_t> fvalues;
         for (const auto& solver_id : make_nonsmooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            test(*solver, solver_id, *function, vector_t::Random(function->size()));
+            const auto state = test(*solver, solver_id, *function, x0);
+            fvalues.push_back(state.f);
         }
+
+        // TODO: make it work - ASGA4 is totally off, while ASGA2 is sometimes slightly worse than OSGA!!!
+        //check_consistency(*function, fvalues, 1e-3);
     }
 }
 
@@ -309,6 +334,9 @@ UTEST_CASE(best_solvers_with_lsearches)
     {
         UTEST_REQUIRE(function);
 
+        const vector_t x0 = vector_t::Random(function->size());
+
+        std::vector<scalar_t> fvalues;
         for (const auto& solver_id : make_best_smooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
@@ -321,10 +349,13 @@ UTEST_CASE(best_solvers_with_lsearches)
                     UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
                     UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
-                    test(*solver, solver_id, *function, vector_t::Random(function->size()));
+                    const auto state = test(*solver, solver_id, *function, x0);
+                    fvalues.push_back(state.f);
                 }
             }
         }
+
+        check_consistency(*function, fvalues);
     }
 }
 

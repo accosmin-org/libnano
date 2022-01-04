@@ -59,6 +59,6 @@ namespace nano
         // attributes
         sparam1_t   m_gamma1{"asga4::gamma1", 1.0, LT, 1.1, LT, 10.0};          ///<
         sparam1_t   m_gamma2{"asga4::gamma2", 0.0, LT, 0.6, LT, 1.0};           ///<
-        iparam1_t   m_lsearch_max_iterations{"asga4::lsearch_max_iterations", 10, LE, 100, LE, 200};    ///<
+        iparam1_t   m_lsearch_max_iterations{"asga4::lsearch_max_iterations", 10, LE, 200, LE, 200};    ///<
     };
 }

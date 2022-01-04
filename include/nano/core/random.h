@@ -28,6 +28,16 @@ namespace nano
     }
 
     ///
+    /// \brief create & initialize a random number generator.
+    ///
+    inline auto make_rng(uint64_t seed)
+    {
+        auto rng = rng_t{};
+        rng.seed(seed);
+        return rng;
+    }
+
+    ///
     /// \brief create an uniform distribution for the [min, max] range.
     ///
     template
