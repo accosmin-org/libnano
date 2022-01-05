@@ -171,7 +171,7 @@ solver_factory_t& solver_t::all()
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
-        //manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
+        manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
         manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
         manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");

@@ -94,7 +94,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|asga2|asga4")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|asga2|asga4|fgm")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -198,7 +198,8 @@ UTEST_CASE(factory)
         {"fletcher", std::make_tuple(true)},
         {"osga", std::make_tuple(false)},
         {"asga2", std::make_tuple(false)},
-        {"asga4", std::make_tuple(false)}
+        {"asga4", std::make_tuple(false)},
+        {"fgm", std::make_tuple(false)},
     };
 
     const auto ids = solver_t::all().ids();
@@ -307,24 +308,22 @@ UTEST_CASE(default_monotonic_solvers)
 
 UTEST_CASE(default_nonmonotonic_solvers)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 10}))
+    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 100}))
     {
         UTEST_REQUIRE(function);
 
         const vector_t x0 = vector_t::Random(function->size());
 
-        std::vector<scalar_t> fvalues;
         for (const auto& solver_id : make_nonsmooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            const auto state = test(*solver, solver_id, *function, x0);
-            fvalues.push_back(state.f);
+            test(*solver, solver_id, *function, x0);
         }
 
-        // TODO: make it work - ASGA4 is totally off, while ASGA2 is sometimes slightly worse than OSGA!!!
-        //check_consistency(*function, fvalues, 1e-3);
+        // TODO: the results are not consistent across solvers even if the function is convex!
+        // check_consistency(*function, fvalues, 1e-3);
     }
 }
 

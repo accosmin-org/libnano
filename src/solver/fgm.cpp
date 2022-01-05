@@ -19,18 +19,19 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
     auto state = solver_state_t{function};
     state.f = std::numeric_limits<scalar_t>::max();
 
-    vector_t y = x0, newy;
+    vector_t yk = x0, yk1;
     vector_t sumg = vector_t::Zero(x0.size());
 
-    auto& newx = state.d;
-    auto& newxg = state.g;
+    auto& xk1 = state.d;
+    auto& gxk1 = state.g;
 
     const auto L0 = 1.0;
+    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
     const auto lsearch_max_iterations = m_lsearch_max_iterations.get();
 
     scalar_t L = L0;
     scalar_t A = 0.0;
-    scalar_t yf = std::numeric_limits<scalar_t>::max();
+    scalar_t fyk = std::numeric_limits<scalar_t>::max();
 
     for (int64_t i = 0; i < max_iterations(); ++ i)
     {
@@ -47,32 +48,23 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
 
             const auto tau = a / (A + a);
 
-            newx = tau * v + (1.0 - tau) * y;
-            const auto newxf = function.vgrad(newx, &newxg);
-            newy = tau * (v - a * newxg) + (1.0 - tau) * y;
+            xk1 = tau * v + (1.0 - tau) * yk;
+            const auto fxk1 = function.vgrad(xk1, &gxk1);
 
-            const auto newyf = function.vgrad(newy);
+            yk1 = tau * (v - a * gxk1) + (1.0 - tau) * yk;
+            const auto fyk1 = function.vgrad(yk1);
 
-            if (newyf <= newxf + newxg.dot(newy - newx) + 0.5 * M * (newy - newx).squaredNorm() + 0.5 * epsilon() * tau)
+            if (fyk1 <= fxk1 + gxk1.dot(yk1 - xk1) + 0.5 * M * (yk1 - xk1).squaredNorm() + 0.5 * epsilon * tau)
             {
-                // TODO: implement proper stopping criterion, see paper
                 iter_ok = true;
-                converged =
-                    (newy - y).lpNorm<Eigen::Infinity>() <= epsilon() * std::max(1.0, newy.lpNorm<Eigen::Infinity>()) &&
-                    std::fabs(newyf - yf) <= epsilon() * std::max(1.0, std::fabs(newyf));
-
-                if (newyf < state.f)
-                {
-                    state.x = newy;
-                    state.f = newyf;
-                }
+                converged = solver_t::converged(yk, fyk, yk1, fyk1, state);
 
                 // 3. update state
-                y = newy;
-                yf = newyf;
+                yk = yk1;
+                fyk = fyk1;
                 A = A + a;
                 L = 0.5 * M;
-                sumg += a * newxg;
+                sumg += a * gxk1;
                 break;
             }
         }
