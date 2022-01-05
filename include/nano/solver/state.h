@@ -69,13 +69,31 @@ namespace nano
         }
 
         ///
-        /// \brief line-search step along the descent direction of state0,
+        /// \brief line-search step along the descent direction of state0.
         /// returns true if the update was successfully.
         ///
         bool update(const solver_state_t& state0, scalar_t tt)
         {
             t = tt;
             return update(state0.x + t * state0.d);
+        }
+
+        ///
+        /// \brief update the current state, if the given function value is smaller than the current one.
+        /// returns true if the update was performed.
+        ///
+        bool update_if_better(const vector_t& x, scalar_t fx)
+        {
+            if (std::isfinite(fx) && fx < f)
+            {
+                this->x = x;
+                this->f = fx;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         ///
@@ -193,7 +211,7 @@ namespace nano
                 (std::isfinite(two.f) ? two.f : std::numeric_limits<scalar_t>::max());
     }
 
-    inline std::ostream& operator<<(std::ostream& os, const solver_state_t::status status)
+    inline std::ostream& operator<<(std::ostream& os, solver_state_t::status status)
     {
         return os << scat(status);
     }

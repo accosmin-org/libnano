@@ -116,7 +116,8 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         // check convergence
         const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
         const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
-        const auto converged = dxb >= eps0 && (eta_hat <= eps0 || this->converged(xb, fb, xb_hat, fb_hat, state));
+        const auto converged = dxb >= eps0 && (eta_hat <= eps0 || this->converged(xb, fb, xb_hat, fb_hat));
+        state.update_if_better(xb_hat, fb_hat);
 
         if (solver_t::done(function, state, true, converged))
         {

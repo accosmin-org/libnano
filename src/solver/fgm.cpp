@@ -50,14 +50,16 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
 
             xk1 = tau * v + (1.0 - tau) * yk;
             const auto fxk1 = function.vgrad(xk1, &gxk1);
+            state.update_if_better(xk1, fxk1);
 
             yk1 = tau * (v - a * gxk1) + (1.0 - tau) * yk;
             const auto fyk1 = function.vgrad(yk1);
+            state.update_if_better(yk1, fyk1);
 
             if (fyk1 <= fxk1 + gxk1.dot(yk1 - xk1) + 0.5 * M * (yk1 - xk1).squaredNorm() + 0.5 * epsilon * tau)
             {
                 iter_ok = true;
-                converged = solver_t::converged(yk, fyk, yk1, fyk1, state);
+                converged = solver_t::converged(yk, fyk, yk1, fyk1);
 
                 // 3. update state
                 yk = yk1;

@@ -156,6 +156,27 @@ UTEST_CASE(state_has_no_descent1)
     UTEST_CHECK(!state.has_descent());
 }
 
+UTEST_CASE(state_update_if_better)
+{
+    const function_sphere_t function(2);
+    const auto x0 = vector_t::Constant(function.size(), 0.0);
+    const auto x1 = vector_t::Constant(function.size(), 1.0);
+    const auto x2 = vector_t::Constant(function.size(), 2.0);
+
+    solver_state_t state(function, x1);
+    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK(!state.update_if_better(x2, 8.0));
+    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK(!state.update_if_better(x2, std::numeric_limits<scalar_t>::quiet_NaN()));
+    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK(!state.update_if_better(x1, 2.0));
+    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK(state.update_if_better(x0, 0.0));
+    UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+    UTEST_CHECK(!state.update_if_better(x2, 8.0));
+    UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+}
+
 UTEST_CASE(state_convergence0)
 {
     const function_sphere_t function(7);

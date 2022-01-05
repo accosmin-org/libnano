@@ -59,10 +59,12 @@ solver_state_t solver_asga2_t::minimize(const function_t& function_, const vecto
 
             yk = alphak * zk + (1.0 - alphak) * xk;
             const auto fyk = function.vgrad(yk, &gyk);
+            state.update_if_better(yk, fyk);
 
             zk1 = (x0 + sum_skgyk + sk1 * (miu * yk - gyk)) / (1.0 + miu * Sk1);
             xk1 = alphak * zk1 + (1.0 - alphak) * xk;
             fxk1 = function.vgrad(xk1);
+            state.update_if_better(xk1, fxk1);
 
             if (!std::isfinite(Lk1) || !std::isfinite(fxk1) || !std::isfinite(fyk) ||
                 (iter_ok = iter_done(xk1, fxk1, yk, fyk, gyk, Lk1, alphak, epsilon)))
@@ -71,7 +73,7 @@ solver_state_t solver_asga2_t::minimize(const function_t& function_, const vecto
             }
         }
 
-        const auto converged = this->converged(xk, fxk, xk1, fxk1, state);
+        const auto converged = this->converged(xk, fxk, xk1, fxk1);
 
         xk = xk1;
         zk = zk1;
@@ -133,10 +135,12 @@ solver_state_t solver_asga4_t::minimize(const function_t& function_, const vecto
 
             xk1 = alphak * vk + (1.0 - alphak) * yk;
             const auto fxk1 = function.vgrad(xk1, &gxk1);
+            state.update_if_better(xk1, fxk1);
 
             uk1 = (vk + sk1 * (miu * xk1 - gxk1)) / (1.0 + miu * sk1);
             yk1 = alphak * uk1 + (1.0 - alphak) * yk;
             fyk1 = function.vgrad(yk1);
+            state.update_if_better(yk1, fyk1);
 
             if (!std::isfinite(Lk1) || !std::isfinite(fxk1) || !std::isfinite(fyk1) ||
                 (iter_ok = iter_done(yk1, fyk1, xk1, fxk1, gxk1, Lk1, alphak, epsilon)))
@@ -145,7 +149,7 @@ solver_state_t solver_asga4_t::minimize(const function_t& function_, const vecto
             }
         }
 
-        const auto converged = this->converged(yk, fyk, yk1, fyk1, state);
+        const auto converged = this->converged(yk, fyk, yk1, fyk1);
 
         yk = yk1;
         Sk = Sk1;

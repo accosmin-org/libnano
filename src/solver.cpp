@@ -85,8 +85,7 @@ bool solver_t::monotonic() const
     return m_monotonic;
 }
 
-bool solver_t::converged(
-    const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, solver_state_t& state) const
+bool solver_t::converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1) const
 {
     const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
     const auto df = std::fabs(fxk1 - fxk);
@@ -98,12 +97,6 @@ bool solver_t::converged(
             dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
             df <= epsilon * std::max(1.0, std::fabs(fxk1))
         );
-
-    if (std::isfinite(fxk1) && fxk1 < state.f)
-    {
-        state.x = xk1;
-        state.f = fxk1;
-    }
 
     return converged;
 }
