@@ -32,7 +32,7 @@ namespace nano
     ///
     inline auto make_rng(uint64_t seed)
     {
-        auto rng = rng_t{};
+        auto rng = rng_t{}; // NOLINT(cert-msc32-c,cert-msc51-cpp)
         rng.seed(seed);
         return rng;
     }

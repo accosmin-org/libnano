@@ -57,7 +57,7 @@ static auto test(solver_t& solver, const string_t& solver_id, const function_t& 
     // minimize
     solver.epsilon(epsilon);
     solver.max_iterations(5000);
-    const auto state = solver.minimize(function, x0);
+    auto state = solver.minimize(function, x0);
     UTEST_CHECK(state);
 
     // check function value decrease
