@@ -24,6 +24,7 @@ solver_asga2_t::solver_asga2_t()
 solver_state_t solver_asga2_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     auto function = make_function(function_, x0);
+    auto state = solver_state_t{function, x0};
 
     const auto L0 = 1.0;
     const auto miu = function.strong_convexity();
@@ -32,9 +33,6 @@ solver_state_t solver_asga2_t::minimize(const function_t& function_, const vecto
     const auto gamma2 = m_gamma2.get();
     const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
     const auto lsearch_max_iterations = m_lsearch_max_iterations.get();
-
-    auto state = solver_state_t{function};
-    state.f = std::numeric_limits<scalar_t>::max();
 
     scalar_t Lk = L0;
     scalar_t Sk = 0.0;
@@ -101,6 +99,7 @@ solver_asga4_t::solver_asga4_t()
 solver_state_t solver_asga4_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     auto function = make_function(function_, x0);
+    auto state = solver_state_t{function, x0};
 
     const auto L0 = 1.0;
     const auto miu = function.strong_convexity();
@@ -109,9 +108,6 @@ solver_state_t solver_asga4_t::minimize(const function_t& function_, const vecto
     const auto gamma2 = m_gamma2.get();
     const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
     const auto lsearch_max_iterations = m_lsearch_max_iterations.get();
-
-    auto state = solver_state_t{function};
-    state.f = std::numeric_limits<scalar_t>::max();
 
     scalar_t Lk = L0;
     scalar_t Sk = 0.0;

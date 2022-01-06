@@ -15,19 +15,17 @@ solver_fgm_t::solver_fgm_t()
 solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     auto function = make_function(function_, x0);
+    auto state = solver_state_t{function, x0};
 
-    auto state = solver_state_t{function};
-    state.f = std::numeric_limits<scalar_t>::max();
+    const auto L0 = 1.0;
+    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
+    const auto lsearch_max_iterations = m_lsearch_max_iterations.get();
 
     vector_t yk = x0, yk1;
     vector_t sumg = vector_t::Zero(x0.size());
 
     auto& xk1 = state.d;
     auto& gxk1 = state.g;
-
-    const auto L0 = 1.0;
-    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
-    const auto lsearch_max_iterations = m_lsearch_max_iterations.get();
 
     scalar_t L = L0;
     scalar_t A = 0.0;
