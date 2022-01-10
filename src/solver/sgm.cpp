@@ -22,7 +22,7 @@ solver_state_t solver_sgm_t::minimize(const function_t& function_, const vector_
     auto h = 1.0;                               // current step length ratio
     auto L = cstate.g.lpNorm<2>();              // estimation of the Lipschitz constant
 
-    for (int64_t i = 0, last_ibest = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0, last_ibest = 0; function.fcalls() < max_evals(); ++ i)
     {
         cstate.d = -cstate.g / cstate.g.lpNorm<2>();
         cstate.update(cstate.x + h / L * cstate.d);
@@ -30,10 +30,16 @@ solver_state_t solver_sgm_t::minimize(const function_t& function_, const vector_
         const auto df = std::fabs(cstate.f - bstate.f);
 
         const auto iter_ok = static_cast<bool>(cstate);
-        const auto updated = bstate.update_if_better(cstate.x, cstate.f) && df >= epsilon;
+        const auto updated = bstate.update_if_better(cstate.x, cstate.f);
         const auto converged = h <= L * epsilon;
 
         if (updated)
+        {
+            // to keep the gradient up to date as well
+            bstate.g = cstate.g;
+        }
+
+        if (updated && df >= epsilon)
         {
             last_ibest = i;
         }

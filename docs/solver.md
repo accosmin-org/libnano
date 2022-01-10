@@ -106,7 +106,7 @@ The default configurations are close to optimal for most situations. Still the u
 auto solver = nano::solver_lbfgs_t{};
 solver.history(6);
 solver.epsilon(1e-6);
-solver.max_iterations(100);
+solver.max_evals(100);
 solver.tolerance(1e-4, 9e-1);
 solver.lsearch0("constant");
 solver.lsearchk("morethuente");

@@ -17,7 +17,7 @@ inline auto make_solver(const char* name = "cgd", const scalar_t epsilon = epsil
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);
     solver->epsilon(epsilon);
-    solver->max_iterations(100);
+    solver->max_evals(100);
     solver->logger([] (const solver_state_t& state)
     {
         std::cout << state << ".\n";

@@ -23,7 +23,6 @@ struct solver_stat_t
         m_maxits(state.m_status == solver_state_t::status::max_iters ? 1 : 0);
         m_fcalls(static_cast<scalar_t>(state.m_fcalls));
         m_gcalls(static_cast<scalar_t>(state.m_gcalls));
-        m_costs(static_cast<scalar_t>(state.m_fcalls + 2 * state.m_gcalls));
     }
 
     stats_t     m_values;           ///< function values
@@ -34,7 +33,6 @@ struct solver_stat_t
     stats_t     m_maxits;           ///< #maximum iterations reached
     stats_t     m_fcalls;           ///< #function value calls
     stats_t     m_gcalls;           ///< #gradient calls
-    stats_t     m_costs;            ///< computation cost as a function of function value and gradient calls
     int64_t     m_milliseconds{0};  ///< total number of milliseconds
 };
 
@@ -62,7 +60,6 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
         << "#maxits"
         << "#fcalls"
         << "#gcalls"
-        << "cost"
         << "[ms]";
     table.delim();
 
@@ -82,12 +79,11 @@ static void show_table(const string_t& table_name, const solver_config_stats_t& 
             << static_cast<size_t>(stat.m_maxits.sum1())
             << static_cast<size_t>(stat.m_fcalls.avg())
             << static_cast<size_t>(stat.m_gcalls.avg())
-            << static_cast<size_t>(stat.m_costs.avg())
             << stat.m_milliseconds;
         }
     }
 
-    table.sort(nano::make_less_from_string<scalar_t>(), {5, 11});
+    table.sort(nano::make_less_from_string<scalar_t>(), {5, 9});
     std::cout << table;
 }
 
@@ -214,7 +210,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
-    cmdline.add("", "max-iterations",   "maximum number of iterations", "1000");
+    cmdline.add("", "max-evals",        "maximum number of function evaluations", "1000");
     cmdline.add("", "epsilon",          "convergence criterion", 1e-6);
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "smooth",           "use only smooth test functions");
@@ -264,7 +260,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
     const auto trials = cmdline.get<size_t>("trials");
-    const auto max_iterations = cmdline.get<int>("max-iterations");
+    const auto max_evals = cmdline.get<int>("max-evals");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto convex = cmdline.has("convex") ? convexity::yes : convexity::ignore;
     const auto smooth = cmdline.has("smooth") ? smoothness::yes : smoothness::ignore;
@@ -286,7 +282,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
     {
         solver->epsilon(epsilon);
-        solver->max_iterations(max_iterations);
+        solver->max_evals(max_evals);
         solver->tolerance(
             cmdline.has("c1") ? cmdline.get<scalar_t>("c1") : solver->c1(),
             cmdline.has("c2") ? cmdline.get<scalar_t>("c2") : solver->c2());

@@ -71,14 +71,16 @@ namespace nano
         void lsearchk_logger(const lsearchk_t::logger_t& logger);
 
         ///
-        /// \brief change the desired accuracy (~ gradient magnitude, see state_t::converged)
+        /// \brief change the desired accuracy:
+        ///     - ~gradient magnitude for smooth functions, see state_t::converged, or
+        ///     - ~function and point decrease for non-smooth functions
         ///
         void epsilon(scalar_t epsilon);
 
         ///
-        /// \brief change the maximum number of iterations
+        /// \brief change the maximum number of function evaluations.
         ///
-        void max_iterations(int max_iterations);
+        void max_evals(int max_evals);
 
         ///
         /// \brief change the desired function value and gradient tolerance,
@@ -116,7 +118,7 @@ namespace nano
         auto c1() const { return m_lsearchk->c1(); }
         auto c2() const { return m_lsearchk->c2(); }
         auto epsilon() const { return m_epsilon.get(); }
-        auto max_iterations() const { return m_max_iterations.get(); }
+        auto max_evals() const { return m_max_evals.get(); }
         const auto& lsearch0_id() const { return m_lsearch0_id; }
         const auto& lsearchk_id() const { return m_lsearchk_id; }
 
@@ -155,8 +157,8 @@ namespace nano
     private:
 
         // attributes
-        sparam1_t       m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};        ///< desired accuracy
-        iparam1_t       m_max_iterations{"solver::maxiters", 1, LE, 1000, LT, 1e+6};///< maximum number of iterations
+        sparam1_t       m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};    ///< desired accuracy
+        iparam1_t       m_max_evals{"solver::maxevals", 10, LE, 1000, LT, 1e+6};///< maximum number of function evaluations
         logger_t        m_logger;                   ///<
         string_t        m_lsearch0_id;              ///<
         rlsearch0_t     m_lsearch0;                 ///<

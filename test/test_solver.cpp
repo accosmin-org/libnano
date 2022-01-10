@@ -56,7 +56,7 @@ static auto test(solver_t& solver, const string_t& solver_id, const function_t& 
 
     // minimize
     solver.epsilon(epsilon);
-    solver.max_iterations(5000);
+    solver.max_evals(10000);
     auto state = solver.minimize(function, x0);
     UTEST_CHECK(state);
 
@@ -319,6 +319,7 @@ UTEST_CASE(default_monotonic_solvers)
 
             const auto state = test(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << std::endl;
         }
 
         check_consistency(*function, fvalues);
@@ -333,16 +334,18 @@ UTEST_CASE(default_nonmonotonic_solvers)
 
         const vector_t x0 = vector_t::Random(function->size());
 
+        std::vector<scalar_t> fvalues;
         for (const auto& solver_id : make_nonsmooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            test(*solver, solver_id, *function, x0);
+            const auto state = test(*solver, solver_id, *function, x0);
+            fvalues.push_back(state.f);
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << std::endl;
         }
 
-        // TODO: the results are not consistent across solvers even if the function is convex!
-        // check_consistency(*function, fvalues, 1e-3);
+        check_consistency(*function, fvalues, 1e-3);
     }
 }
 

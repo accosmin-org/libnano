@@ -25,7 +25,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
     solver_state_t pstate;
     std::deque<vector_t> ss, ys;
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)

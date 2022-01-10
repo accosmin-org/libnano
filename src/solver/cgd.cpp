@@ -93,7 +93,7 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
         return cstate;
     }
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
     {
         // descent direction
         if (i == 0)

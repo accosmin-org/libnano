@@ -69,9 +69,9 @@ void solver_t::epsilon(scalar_t epsilon)
     m_epsilon = epsilon;
 }
 
-void solver_t::max_iterations(int max_iterations)
+void solver_t::max_evals(int max_evals)
 {
-    m_max_iterations = max_iterations;
+    m_max_evals = max_evals;
 }
 
 void solver_t::monotonic(bool monotonic)

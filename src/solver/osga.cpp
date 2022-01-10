@@ -91,7 +91,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     vector_t u = proxy.U(gamma, h, fb);
     scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
     {
         x = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);

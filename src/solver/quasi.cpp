@@ -88,7 +88,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
     {
         // descent direction
         cstate.d = -H * cstate.g;
