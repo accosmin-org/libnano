@@ -1,9 +1,7 @@
 #include <mutex>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
-#include <nano/solver/fgm.h>
 #include <nano/solver/sgm.h>
-#include <nano/solver/asga.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
@@ -165,7 +163,6 @@ solver_factory_t& solver_t::all()
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
         manager.add<solver_sgm_t>("sgm", "sub-gradient method");
         manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
@@ -178,8 +175,6 @@ solver_factory_t& solver_t::all()
         manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
         manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");
         manager.add<solver_cgd_frpr_t>("cgd-prfr", "conjugate gradient descent (FRPR)");
-        manager.add<solver_asga2_t>("asga2", "accelerated sub-gradient algorithm (ASGA-2)");
-        manager.add<solver_asga4_t>("asga4", "accelerated sub-gradient algorithm (ASGA-4)");
         manager.add<solver_osga_t>("osga", "optimal sub-gradient algorithm (OSGA)");
         manager.add<solver_lbfgs_t>("lbfgs", "limited-memory BFGS");
         manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");

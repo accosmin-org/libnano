@@ -94,7 +94,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|asga2|asga4|fgm|sgm")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|sgm")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -218,9 +218,6 @@ UTEST_CASE(factory)
         {"hoshino", std::make_tuple(true)},
         {"fletcher", std::make_tuple(true)},
         {"osga", std::make_tuple(false)},
-        {"asga2", std::make_tuple(false)},
-        {"asga4", std::make_tuple(false)},
-        {"fgm", std::make_tuple(false)},
         {"sgm", std::make_tuple(false)},
     };
 
