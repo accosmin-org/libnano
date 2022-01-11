@@ -28,10 +28,8 @@ solver_state_t solver_sgm_t::minimize(const function_t& function_, const vector_
         cstate.update(cstate.x + h / L * cstate.d);
 
         const auto df = std::fabs(cstate.f - bstate.f);
-
         const auto iter_ok = static_cast<bool>(cstate);
         const auto updated = bstate.update_if_better(cstate.x, cstate.f);
-        const auto converged = h <= L * epsilon;
 
         if (updated)
         {
@@ -48,8 +46,10 @@ solver_state_t solver_sgm_t::minimize(const function_t& function_, const vector_
             // decrease step length ratio if not significant decrease recently
             h /= gamma;
             last_ibest = i;
+            cstate = bstate;
         }
 
+        const auto converged = (h <= L * epsilon) && (df < epsilon);
         if (solver_t::done(function, bstate, iter_ok, converged))
         {
             break;

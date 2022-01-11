@@ -319,7 +319,7 @@ UTEST_CASE(default_monotonic_solvers)
 
             const auto state = test(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << std::endl;
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
         check_consistency(*function, fvalues);
@@ -342,7 +342,7 @@ UTEST_CASE(default_nonmonotonic_solvers)
 
             const auto state = test(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << std::endl;
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
         check_consistency(*function, fvalues, 1e-3);

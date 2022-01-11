@@ -27,6 +27,6 @@ namespace nano
 
         // attributes
         iparam1_t   m_patience{"sgm::patience", 3, LE, 3, LE, 100};     ///<
-        sparam1_t   m_gamma{"sgam::gamma", 1.0, LT, 3.0, LE, 10.0};     ///<
+        sparam1_t   m_gamma{"sgam::gamma", 1.0, LT, 2.0, LE, 10.0};     ///<
     };
 }
