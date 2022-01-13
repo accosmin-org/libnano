@@ -35,7 +35,7 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
         state.d = -state.g;
 
         // NB: update the estimation of the Lipschitz constant
-        L.array() = L.array().max(state.g.array().abs());
+        L.array() = L.array().max(2.0 * state.g.array().abs());
 
         theta += state.d;
         G.array() += state.d.array().abs();
