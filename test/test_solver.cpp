@@ -301,6 +301,22 @@ UTEST_CASE(solver_function)
 
         UTEST_CHECK_EQUAL(sfunction.fcalls(), 2);
         UTEST_CHECK_EQUAL(sfunction.gcalls(), 1);
+
+        if (sfunction.summands() > 1)
+        {
+            for (tensor_size_t summand = 0; summand < sfunction.summands(); ++ summand)
+            {
+                sfunction.vgrad(x, &gx, {1});
+            }
+
+            UTEST_CHECK_EQUAL(sfunction.fcalls(), 3);
+            UTEST_CHECK_EQUAL(sfunction.gcalls(), 2);
+
+            sfunction.vgrad(x);
+
+            UTEST_CHECK_EQUAL(sfunction.fcalls(), 4);
+            UTEST_CHECK_EQUAL(sfunction.gcalls(), 2);
+        }
     }
 }
 

@@ -15,12 +15,12 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
     auto state = solver_state_t{function, x0};
     auto bstate = state;
 
-    vector_t xk = state.x, xk1 = xk, sumx = vector_t::Zero(x0.size());
-    scalar_t fxk = state.f, fxk1 = fxk;
+    vector_t xk = state.x, xk1, sumx(x0.size());
+    scalar_t fxk = state.f, fxk1;
 
     vector_t L = vector_t::Constant(x0.size(), 1.0);
     const auto summands = function.summands();
-    const auto max_evals = this->max_evals() * (summands + 1);
+    const auto max_epochs = std::max((this->max_evals() + summands - 1) / summands, int64_t{1});
 
     auto rng = make_rng(42);
     auto udist = make_udist<tensor_size_t>(0, summands);
@@ -29,42 +29,42 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
     vector_t theta = vector_t::Zero(x0.size());
     vector_t reward = vector_t::Zero(x0.size());
 
-    for (int64_t t = 0; function.fcalls() < max_evals; ++ t)
+    for (int64_t epoch = 0; epoch < max_epochs; ++ epoch)
     {
-        function.vgrad(state.x, &state.g, {udist(rng)});
-        state.d = -state.g;
+        sumx.setZero();
+        for (int64_t t = 0; t < summands; ++ t)
+        {
+            function.vgrad(state.x, &state.g, {udist(rng)});
+            state.d = -state.g;
 
-        // NB: update the estimation of the Lipschitz constant
-        L.array() = L.array().max(2.0 * state.g.array().abs());
+            // NB: update the estimation of the Lipschitz constant
+            L.array() = L.array().max(2.0 * state.g.array().abs());
 
-        theta += state.d;
-        G.array() += state.d.array().abs();
-        reward.array() += (state.x.array() - x0.array()) * state.d.array();
+            theta += state.d;
+            G.array() += state.d.array().abs();
+            reward.array() += (state.x.array() - x0.array()) * state.d.array();
 
-        const auto beta = (theta.array() / (G.array() + L.array())).tanh() / L.array();
+            const auto beta = (theta.array() / (G.array() + L.array())).tanh() / L.array();
 
-        state.x = x0.array() + beta * (L.array() + reward.array());
-        sumx += state.x;
+            state.x = x0.array() + beta * (L.array() + reward.array());
+            sumx += state.x;
+        }
 
         // check best state and convergence after each epoch
-        if (t % summands == summands - 1)
+        xk1 = sumx / static_cast<scalar_t>(summands);
+        fxk1 = function.vgrad(xk1);
+
+        bstate.update_if_better(xk1, fxk1);
+
+        const auto iter_ok = true;
+        const auto converged = this->converged(xk, fxk, xk1, fxk1);
+        if (solver_t::done(function, bstate, iter_ok, converged))
         {
-            xk1 = sumx / static_cast<scalar_t>(summands);
-            fxk1 = function.vgrad(xk1);
-
-            bstate.update_if_better(xk1, fxk1);
-
-            const auto iter_ok = true;
-            const auto converged = this->converged(xk, fxk, xk1, fxk1);
-            if (solver_t::done(function, bstate, iter_ok, converged))
-            {
-                break;
-            }
-
-            xk = xk1;
-            fxk = fxk1;
-            sumx.setZero();
+            break;
         }
+
+        xk = xk1;
+        fxk = fxk1;
     }
 
     // NB: make sure the gradient is updated at the returned point.
