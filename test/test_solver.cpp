@@ -323,7 +323,7 @@ UTEST_CASE(default_monotonic_solvers)
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
-        check_consistency(*function, fvalues, 1e-5);
+        check_consistency(*function, fvalues, 1e-6);
     }
 }
 

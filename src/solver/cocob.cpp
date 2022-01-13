@@ -15,7 +15,7 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
     auto state = solver_state_t{function, x0};
     auto bstate = state;
 
-    vector_t xk = state.x, xk1 = xk, sumx = x0;
+    vector_t xk = state.x, xk1 = xk, sumx = vector_t::Zero(x0.size());
     scalar_t fxk = state.f, fxk1 = fxk;
 
     vector_t L = vector_t::Constant(x0.size(), 1.0);
@@ -49,7 +49,7 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
         // check best state and convergence after each epoch
         if (t % summands == summands - 1)
         {
-            xk1 = sumx / static_cast<scalar_t>(t + 2);
+            xk1 = sumx / static_cast<scalar_t>(summands);
             fxk1 = function.vgrad(xk1);
 
             bstate.update_if_better(xk1, fxk1);
@@ -63,6 +63,7 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
 
             xk = xk1;
             fxk = fxk1;
+            sumx.setZero();
         }
     }
 
