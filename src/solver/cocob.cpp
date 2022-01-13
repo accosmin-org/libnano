@@ -16,10 +16,10 @@ solver_state_t solver_cocob_t::minimize(const function_t& function_, const vecto
     auto bstate = state;
 
     vector_t xk = state.x, xk1, sumx(x0.size());
-    scalar_t fxk = state.f, fxk1;
+    scalar_t fxk = state.f, fxk1 = fxk;
 
     vector_t L = vector_t::Constant(x0.size(), 1.0);
-    const auto summands = function.summands();
+    const auto summands = std::max(function.summands(), tensor_size_t{1});
     const auto max_epochs = std::max((this->max_evals() + summands - 1) / summands, int64_t{1});
 
     auto rng = make_rng(42);
