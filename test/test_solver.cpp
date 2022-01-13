@@ -219,6 +219,7 @@ UTEST_CASE(factory)
         {"fletcher", std::make_tuple(true)},
         {"osga", std::make_tuple(false)},
         {"sgm", std::make_tuple(false)},
+        {"cocob", std::make_tuple(false)},
     };
 
     const auto ids = solver_t::all().ids();
@@ -322,7 +323,7 @@ UTEST_CASE(default_monotonic_solvers)
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
-        check_consistency(*function, fvalues);
+        check_consistency(*function, fvalues, 1e-5);
     }
 }
 

@@ -50,6 +50,7 @@ target_sources(nano PRIVATE
     solver/cgd.cpp
     solver/sgm.cpp
     solver/osga.cpp
+    solver/cocob.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
     function.cpp
