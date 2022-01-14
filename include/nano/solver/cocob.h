@@ -21,5 +21,10 @@ namespace nano
         /// \brief @see solver_t
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
+
+    private:
+
+        // attributes
+        iparam1_t   m_minibatch{"cocob_t::minibatch", 1, LE, 100, LE, 1000}; ///<
     };
 }

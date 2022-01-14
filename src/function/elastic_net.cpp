@@ -48,7 +48,7 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_co
 {
     scalar_t fx = 0.0;
 
-    if (config.m_summand < 0)
+    if (!config.m_summands.valid(this->summands()))
     {
         const auto inputs = this->inputs();
         const auto targets = this->targets();
@@ -58,9 +58,9 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_co
     }
     else
     {
-        const auto inputs = this->inputs(config.m_summand);
-        const auto targets = this->targets(config.m_summand);
-        const auto outputs = this->outputs(x, config.m_summand);
+        const auto inputs = this->inputs(config.m_summands);
+        const auto targets = this->targets(config.m_summands);
+        const auto outputs = this->outputs(x, config.m_summands);
 
         fx = tloss::vgrad(inputs, outputs, targets, gx);
     }

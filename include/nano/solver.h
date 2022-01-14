@@ -157,8 +157,8 @@ namespace nano
     private:
 
         // attributes
-        sparam1_t       m_epsilon{"solver::epsilon", 0, LT, 1e-6, LE, 1e-3};    ///< desired accuracy
-        iparam1_t       m_max_evals{"solver::maxevals", 10, LE, 1000, LT, 1e+6};///< maximum number of function evaluations
+        sparam1_t       m_epsilon{"solver_t::epsilon", 0, LT, 1e-6, LE, 1e-3};      ///< desired accuracy
+        iparam1_t       m_max_evals{"solver_t::maxevals", 10, LE, 1000, LE, 1e+9};  ///< maximum number of function evaluations
         logger_t        m_logger;                   ///<
         string_t        m_lsearch0_id;              ///<
         rlsearch0_t     m_lsearch0;                 ///<

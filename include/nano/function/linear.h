@@ -20,13 +20,13 @@ namespace nano
         const auto& wopt() const { return m_wopt; }
         const auto& bopt() const { return m_bopt; }
         auto inputs() const { return m_inputs.matrix(); }
-        auto inputs(tensor_size_t summand) const { return m_inputs.slice(summand, summand + 1).matrix(); }
+        auto inputs(tensor_range_t summands) const { return m_inputs.slice(summands).matrix(); }
 
         tensor2d_t outputs(const vector_t& x) const;
         tensor2d_t outputs(tensor2d_cmap_t w) const;
 
-        tensor2d_t outputs(const vector_t& x, tensor_size_t summand) const;
-        tensor2d_t outputs(tensor2d_cmap_t w, tensor_size_t summand) const;
+        tensor2d_t outputs(const vector_t& x, tensor_range_t summands) const;
+        tensor2d_t outputs(tensor2d_cmap_t w, tensor_range_t summands) const;
 
         auto make_w(vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
         auto make_w(const vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
@@ -63,7 +63,7 @@ namespace nano
             tensor_size_t modulo_correlated_inputs = 1);
 
         auto targets() const { return m_targets.matrix(); }
-        auto targets(tensor_size_t summand) const { return m_targets.slice(summand, summand + 1).matrix(); }
+        auto targets(tensor_range_t summands) const { return m_targets.slice(summands).matrix(); }
 
     private:
 
@@ -82,7 +82,7 @@ namespace nano
             tensor_size_t modulo_correlated_inputs = 1);
 
         auto targets() const { return m_targets.matrix(); }
-        auto targets(tensor_size_t summand) const { return m_targets.slice(summand, summand + 1).matrix(); }
+        auto targets(tensor_range_t summands) const { return m_targets.slice(summands).matrix(); }
 
     private:
 

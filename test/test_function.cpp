@@ -130,13 +130,15 @@ UTEST_CASE(summands)
 
             scalar_t fxsum = 0.0;
             vector_t gxsum = vector_t::Constant(dims, 0.0);
-            for (tensor_size_t summand = 0; summand < summands; ++ summand)
+            for (tensor_size_t begin = 0; begin < summands; begin += 3)
             {
                 vector_t gxs = vector_t::Random(dims);
-                const auto fxs = function.vgrad(x, &gxs, vgrad_config_t{summand});
 
-                fxsum += fxs;
-                gxsum += gxs;
+                const auto end = std::min(begin + 3, summands);
+                const auto fxs = function.vgrad(x, &gxs, vgrad_config_t{make_range(begin, end)});
+
+                fxsum += fxs * static_cast<scalar_t>(end - begin);
+                gxsum += gxs * static_cast<scalar_t>(end - begin);
             }
             UTEST_CHECK_CLOSE(fx, fxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());
             UTEST_CHECK_CLOSE(gx, gxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());

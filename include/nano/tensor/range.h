@@ -13,7 +13,7 @@ namespace nano
 
         tensor_range_t() = default;
 
-        tensor_range_t(const tensor_size_t begin, const tensor_size_t end) :
+        tensor_range_t(tensor_size_t begin, tensor_size_t end) :
             m_begin(begin),
             m_end(end)
         {
@@ -37,7 +37,7 @@ namespace nano
         ///
         /// \brief check if a range is valid, so that [begin, end) is included in [0, size).
         ///
-        auto valid(const tensor_size_t size) const
+        auto valid(tensor_size_t size) const
         {
             return 0 <= m_begin && m_begin < m_end && m_end <= size;
         }
@@ -52,7 +52,7 @@ namespace nano
     ///
     /// \brief creates a range of dimensions.
     ///
-    inline auto make_range(const tensor_size_t begin, const tensor_size_t end)
+    inline auto make_range(tensor_size_t begin, tensor_size_t end)
     {
         return tensor_range_t{begin, end};
     }

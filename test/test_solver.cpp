@@ -304,9 +304,10 @@ UTEST_CASE(solver_function)
 
         if (sfunction.summands() > 1)
         {
-            for (tensor_size_t summand = 0; summand < sfunction.summands(); ++ summand)
+            for (tensor_size_t begin = 0; begin < sfunction.summands(); begin += 5)
             {
-                sfunction.vgrad(x, &gx, {1});
+                const auto end = std::min(begin + 5, sfunction.summands());
+                sfunction.vgrad(x, &gx, vgrad_config_t{make_range(begin, end)});
             }
 
             UTEST_CHECK_EQUAL(sfunction.fcalls(), 3);

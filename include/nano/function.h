@@ -3,6 +3,7 @@
 #include <nano/arch.h>
 #include <nano/eigen.h>
 #include <nano/string.h>
+#include <nano/tensor/range.h>
 
 namespace nano
 {
@@ -11,7 +12,11 @@ namespace nano
     ///
     struct vgrad_config_t
     {
-        tensor_size_t   m_summand{-1};  ///< all summands if negative, otherwise use a particular summand (stochastic)
+        vgrad_config_t() = default;
+        explicit vgrad_config_t(tensor_range_t summands) : m_summands(summands) {}
+
+        // attributes
+        tensor_range_t  m_summands;     ///< summands range useful for stochastic solvers, ignored if not valid
     };
 
     ///
