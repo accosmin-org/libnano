@@ -1,13 +1,13 @@
-#include <nano/solver/sgm.h>
+#include <nano/solver/asgm.h>
 
 using namespace nano;
 
-solver_sgm_t::solver_sgm_t()
+solver_asgm_t::solver_asgm_t()
 {
     monotonic(false);
 }
 
-solver_state_t solver_sgm_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_asgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     auto function = make_function(function_, x0);
 
