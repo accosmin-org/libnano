@@ -219,7 +219,6 @@ UTEST_CASE(factory)
         {"fletcher", std::make_tuple(true)},
         {"osga", std::make_tuple(false)},
         {"sgm", std::make_tuple(false)},
-        {"cocob", std::make_tuple(false)},
     };
 
     const auto ids = solver_t::all().ids();
