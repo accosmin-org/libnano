@@ -3,7 +3,7 @@
 
 #### Introduction
 
-Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum **x** of a differential function **f(x)** of dimension *n*. The returned point **x** is guaranteed to be the global minimum when the function is convex, and a critical point (not necessarily a local minimum) otherwise. **x** is found by iteratively decreasing the current function value from a given point **x0** using a descent direction and a line-search along this direction. More details can be found in the following sources:
+Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum **x** of a (sub-)differential function **f(x)** of dimension *n* starting from an initial point **x0**. The returned point **x** is guaranteed to be the global minimum when the function is convex, and a stationary point (not necessarily a local minimum) otherwise. More details can be found in the following sources:
 
 
 * "Practical Methods of Optimization 2e", R. Fletcher, 2000
@@ -12,7 +12,14 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using the associated factory.
+The builtin solvers are **non-parametric** in the sense that their convergence properties don't dependent on particular values of hyper-parameters. As such they can be used efficiently as black-box solvers without needing tuning. However it is important to use an appropriate type of solver adapted to the problem at hand:
+
+* **monotonic** solvers which decrease the current function value at each iteration using a *descent direction* and a *line-search* along this direction. These solvers are appropriate only for smooth functions, not necessarily convex, which can be solved with very high precision. Examples: conjugate gradient descent (CGD), LBFGS, quasi-Newton methods.
+
+* **non-monotonic** solvers which are not guaranteed to decrease the current function value at each iteration. These solvers should be used only for non-smooth convex problems, which can be solved with high precision. They can work well for smooth convex problems as well, but they are not as efficient (iteration-wise) as the monotonic solvers. Examples: optimal sub-gradient algorithm (OSGA), adaptive sub-gradient method (ASGM).
+
+
+Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using their associated factory.
 
 
 #### Function
@@ -75,28 +82,21 @@ Another possibility is to print a tabular representation with the ID and a short
 ```
 std::cout << make_table("solver", solver_t::all());
 // prints something like...
-|----------|-----------------------------------------|
-| solver   | description                             |
-|----------|-----------------------------------------|
-| bfgs     | quasi-newton method (BFGS)              |
-| cgd      | conjugate gradient descent (default)    |
-| cgd-cd   | conjugate gradient descent (CD)         |
-| cgd-dy   | conjugate gradient descent (DY)         |
-| cgd-dycd | conjugate gradient descent (DYCD)       |
-| cgd-dyhs | conjugate gradient descent (DYHS)       |
-| cgd-fr   | conjugate gradient descent (FR)         |
-| cgd-hs   | conjugate gradient descent (HS+)        |
-| cgd-ls   | conjugate gradient descent (LS+)        |
-| cgd-n    | conjugate gradient descent (N+)         |
-| cgd-pr   | conjugate gradient descent (PR+)        |
-| cgd-prfr | conjugate gradient descent (FRPR)       |
-| dfp      | quasi-newton method (DFP)               |
-| fletcher | quasi-newton method (Fletcher's switch) |
-| gd       | gradient descent                        |
-| hoshino  | quasi-newton method (Hoshino formula)   |
-| lbfgs    | limited-memory BFGS                     |
-| sr1      | quasi-newton method (SR1)               |
-|----------|-----------------------------------------|
+|----------|--------------------------------------------------|
+| solver   | description                                      |
+|----------|--------------------------------------------------|
+| asgm     | sub-gradient method with an adaptive step length |
+| bfgs     | quasi-newton method (BFGS)                       |
+| cgd      | conjugate gradient descent (default)             |
+| ........ | ................................................ |
+| dfp      | quasi-newton method (DFP)                        |
+| fletcher | quasi-newton method (Fletcher's switch)          |
+| gd       | gradient descent                                 |
+| hoshino  | quasi-newton method (Hoshino formula)            |
+| lbfgs    | limited-memory BFGS                              |
+| osga     | optimal sub-gradient algorithm (OSGA)            |
+| sr1      | quasi-newton method (SR1)                        |
+|----------|--------------------------------------------------|
 ```
 
 The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/minimize.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
@@ -160,9 +160,9 @@ A working example for constructing and minimizing an objective function can be f
 * retrieve the optimization result.
 
 
-The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex builtin functions of dimensions from 16 to 32:
+The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex smooth builtin functions of dimensions from 16 to 32:
 ```
-./build/libnano/release/app/bench_solver --min-dims 16 --max-dims 32 --convex --smooth --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-iterations 1000 | tail -n 8
+./build/libnano/gcc-release/app/bench_solver --min-dims 16 --max-dims 32 --convex --smooth --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-evals 1000 | tail -n 8
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|
 | Solver | lsearch0  | lsearchk    | gnorm                 | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | cost | [ms] |
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|
@@ -175,9 +175,20 @@ The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful f
 The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are close while being much faster. The steepest gradient descent method needs as expected many more iterations to converge.
 
 
+However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like ASGM provide a more precise solution in fewer iterations:
+```
+./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|asgm" --min-dims 100 --max-dims 100 --trials 1000 --max-evals 1000 --epsilon 1e-6 --convex | tail -n 7
+|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
+| solver                       | lsearch0  | lsearchk    | value    | gnorm    | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | [ms]  |
+|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
+| asgm                         | N/A       | N/A         | 0.429912 | 0.644132 | 0      | 157    | 0       | 0       | 158     | 158     | 3504  |
+| osga                         | N/A       | N/A         | 0.431203 | 0.643963 | 5108   | 299    | 0       | 5108    | 600     | 300     | 10114 |
+| lbfgs                        | quadratic | morethuente | 0.435947 | 0.644576 | 8000   | 140    | 7995    | 5       | 189     | 189     | 4468  |
+|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
+```
+
+
 #### Future work
 
-* Implement sub-gradient methods
 * Implement stochastic gradient (descent) methods
 * Implement methods using second-order oracle (e.g. Newton method)
-* Implement non-monotone line-search methods (e.g. Nesterov's accelerated gradient, Barzilai and Borwein method)
