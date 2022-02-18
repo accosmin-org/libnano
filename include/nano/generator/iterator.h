@@ -44,13 +44,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        targets_iterator_t(const dataset_generator_t&, indices_cmap_t samples,
-            execution = execution::par, tensor_size_t batch = 128);
-
-        ///
-        /// \brief set the scaling mode of the feature and target values.
-        ///
-        void scaling(scaling_type);
+        targets_iterator_t(const dataset_generator_t&, indices_cmap_t samples);
 
         ///
         /// \brief returns true if the target values can be cached in memory in the given number of bytes.
@@ -64,10 +58,17 @@ namespace nano
         void loop(const targets_callback_t&) const;
 
         ///
+        /// \brief change parameters.
+        ///
+        void exec(execution);
+        void batch(tensor_size_t);
+        void scaling(scaling_type);
+
+        ///
         /// \brief access functions.
         ///
         auto exec() const { return m_execution; }
-        auto batch() const { return m_batch.get(); }
+        auto batch() const { return m_batch.value<tensor_size_t>(); }
         auto scaling() const { return m_scaling; }
         const auto& samples() const { return m_samples; }
         const auto& generator() const { return m_generator; }
@@ -78,22 +79,19 @@ namespace nano
         tensor4d_cmap_t targets(tensor4d_map_t) const;
         tensor4d_cmap_t targets(size_t tnum, const tensor_range_t& range) const;
 
-        using dgenerator_t = dataset_generator_t;
-
-        // attributes
-        const dgenerator_t& m_generator;                    ///< NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
-        indices_t           m_samples;                      ///< NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
-        execution           m_execution{execution::par};    ///< NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
-        iparam1_t           m_batch{"batch", 1, LE, 128, LE, 4096}; ///< NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
-        scaling_type        m_scaling{scaling_type::none};  ///< scaling method for flatten feature values & targets NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
-
     private:
 
         targets_stats_t make_targets_stats() const;
 
         using buffers_t = std::vector<tensor4d_t>;
+        using dgenerator_t = dataset_generator_t;
 
         // attributes
+        const dgenerator_t& m_generator;                    ///<
+        indices_t           m_samples;                      ///<
+        parameter_t         m_batch;                        ///<
+        execution           m_execution{execution::par};    ///<
+        scaling_type        m_scaling{scaling_type::none};  ///< scaling method for flatten feature values & targets
         tensor4d_t          m_targets;                      ///< cached targets values
         targets_stats_t     m_targets_stats;                ///< statistics for targets
         mutable buffers_t   m_targets_buffers;              ///< per-thread buffer
@@ -112,8 +110,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        flatten_iterator_t(const dataset_generator_t&, indices_cmap_t samples,
-            execution = execution::par, tensor_size_t batch = 128);
+        flatten_iterator_t(const dataset_generator_t&, indices_cmap_t samples);
 
         ///
         /// \brief returns true if the flatten feature values can be cached in memory in the given number of bytes.

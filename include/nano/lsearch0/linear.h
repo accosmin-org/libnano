@@ -16,7 +16,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        lsearch0_linear_t() = default; // LCOV_EXCL_LINE
+        lsearch0_linear_t();
 
         ///
         /// \brief @see lsearch0_t
@@ -28,23 +28,9 @@ namespace nano
         ///
         scalar_t get(const solver_state_t&) final;
 
-        ///
-        /// \brief change parameters
-        ///
-        void alpha(scalar_t alpha) { m_alpha = alpha; }
-        void beta(scalar_t beta) { m_beta = beta; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto alpha() const { return m_alpha.get(); }
-        auto beta() const { return m_beta.get(); }
-
     private:
 
         // attributes
-        sparam1_t   m_alpha{"lsearch0::linear::alpha", 1, LT, 1.01, LT, 1e+6};  ///< see (2)
-        sparam1_t   m_beta{"lsearch0::linear::beta", 1, LT, 10.0, LT, 1e+6};    ///< see (2)
-        scalar_t    m_prevdg{1};                                                ///< previous direction dot product: dg_{k-1}
+        scalar_t    m_prevdg{1};            ///< previous direction dot product: dg_{k-1}
     };
 }

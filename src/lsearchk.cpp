@@ -8,6 +8,12 @@
 
 using namespace nano;
 
+lsearchk_t::lsearchk_t()
+{
+    register_parameter(parameter_t::make_float_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
+    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 40, LE, 100));
+}
+
 lsearchk_factory_t& lsearchk_t::all()
 {
     static lsearchk_factory_t manager;
@@ -34,6 +40,8 @@ static auto make_state0(const solver_state_t& state)
 
 bool lsearchk_t::get(solver_state_t& state, scalar_t t)
 {
+    const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
+
     // check descent direction
     if (!state.has_descent())
     {
@@ -45,7 +53,7 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t)
     assert(state0.t < epsilon0<scalar_t>());
 
     t = std::isfinite(t) ? std::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int i = 0; i < max_iterations; ++ i)
     {
         const auto ok = state.update(state0, t);
         log(state0, state);

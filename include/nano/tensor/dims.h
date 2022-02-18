@@ -145,7 +145,7 @@ namespace nano
     template <size_t trank>
     bool operator!=(const tensor_dims_t<trank>& dims1, const tensor_dims_t<trank>& dims2)
     {
-        return std::operator!=(dims1, dims2);
+        return !(dims1 == dims2);
     }
 }
 

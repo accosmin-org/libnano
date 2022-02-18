@@ -24,18 +24,18 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "version",          "library version");
     cmdline.add("", "git-hash",         "git commit hash");
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
-    const auto has_lsearch0 = cmdline.has("lsearch0");
-    const auto has_lsearchk = cmdline.has("lsearchk");
-    const auto has_loss = cmdline.has("loss");
-    const auto has_solver = cmdline.has("solver");
-    const auto has_dataset = cmdline.has("dataset");
-    const auto has_generator = cmdline.has("generator");
-    const auto has_version = cmdline.has("version");
-    const auto has_git_hash = cmdline.has("git-hash");
+    const auto has_lsearch0 = options.has("lsearch0");
+    const auto has_lsearchk = options.has("lsearchk");
+    const auto has_loss = options.has("loss");
+    const auto has_solver = options.has("solver");
+    const auto has_dataset = options.has("dataset");
+    const auto has_generator = options.has("generator");
+    const auto has_version = options.has("version");
+    const auto has_git_hash = options.has("git-hash");
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;
@@ -57,27 +57,27 @@ static int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     if (has_lsearch0)
     {
-        std::cout << make_table("lsearch0", lsearch0_t::all(), cmdline.get<string_t>("lsearch0"));
+        std::cout << make_table("lsearch0", lsearch0_t::all(), options.get<string_t>("lsearch0"));
     }
     if (has_lsearchk)
     {
-        std::cout << make_table("lsearchk", lsearchk_t::all(), cmdline.get<string_t>("lsearchk"));
+        std::cout << make_table("lsearchk", lsearchk_t::all(), options.get<string_t>("lsearchk"));
     }
     if (has_solver)
     {
-        std::cout << make_table("solver", solver_t::all(), cmdline.get<string_t>("solver"));
+        std::cout << make_table("solver", solver_t::all(), options.get<string_t>("solver"));
     }
     if (has_loss)
     {
-        std::cout << make_table("loss", loss_t::all(), cmdline.get<string_t>("loss"));
+        std::cout << make_table("loss", loss_t::all(), options.get<string_t>("loss"));
     }
     if (has_dataset)
     {
-        std::cout << make_table("dataset", dataset_t::all(), cmdline.get<string_t>("dataset"));
+        std::cout << make_table("dataset", dataset_t::all(), options.get<string_t>("dataset"));
     }
     if (has_generator)
     {
-        std::cout << make_table("generator", generator_t::all(), cmdline.get<string_t>("generator"));
+        std::cout << make_table("generator", generator_t::all(), options.get<string_t>("generator"));
     }
     if (has_version)
     {

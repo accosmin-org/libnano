@@ -50,24 +50,24 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "function",         "use this regex to select the functions to benchmark", ".+");
     cmdline.add("", "list-function",    "list the available test functions");
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-function"))
+    if (options.has("list-function"))
     {
         std::cout << make_table("function", benchmark_function_t::all());
         return EXIT_SUCCESS;
     }
 
     // check arguments and options
-    const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
-    const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
-    const auto fregex = std::regex(cmdline.get<string_t>("function"));
+    const auto min_dims = options.get<tensor_size_t>("min-dims");
+    const auto max_dims = options.get<tensor_size_t>("max-dims");
+    const auto fregex = std::regex(options.get<string_t>("function"));
     const auto fconfig = benchmark_function_t::config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
 
     table_t table;

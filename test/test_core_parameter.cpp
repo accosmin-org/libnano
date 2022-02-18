@@ -5,42 +5,6 @@
 
 using namespace nano;
 
-static auto to_string(const parameter_t& object)
-{
-    std::ostringstream stream;
-    UTEST_REQUIRE_NOTHROW(stream << object);
-    UTEST_REQUIRE(stream);
-    return stream.str();
-}
-
-static void check_equal(const parameter_t& param, const parameter_t& xparam)
-{
-    UTEST_CHECK_EQUAL(xparam.name(), param.name());
-    UTEST_CHECK_EQUAL(xparam.is_evalue(), param.is_evalue());
-    UTEST_CHECK_EQUAL(xparam.is_ivalue(), param.is_ivalue());
-    UTEST_CHECK_EQUAL(xparam.is_svalue(), param.is_svalue());
-    if (xparam.is_svalue())
-    {
-        UTEST_CHECK_CLOSE(xparam.svalue(), param.svalue(), 1e-16);
-        UTEST_CHECK_CLOSE(xparam.sparam().min(), param.sparam().min(), 1e-16);
-        UTEST_CHECK_CLOSE(xparam.sparam().max(), param.sparam().max(), 1e-16);
-        UTEST_CHECK_EQUAL(xparam.sparam().minLE(), param.sparam().minLE());
-        UTEST_CHECK_EQUAL(xparam.sparam().maxLE(), param.sparam().maxLE());
-    }
-    else if (xparam.is_ivalue())
-    {
-        UTEST_CHECK_EQUAL(xparam.ivalue(), param.ivalue());
-        UTEST_CHECK_EQUAL(xparam.iparam().min(), param.iparam().min());
-        UTEST_CHECK_EQUAL(xparam.iparam().max(), param.iparam().max());
-        UTEST_CHECK_EQUAL(xparam.iparam().minLE(), param.iparam().minLE());
-        UTEST_CHECK_EQUAL(xparam.iparam().maxLE(), param.iparam().maxLE());
-    }
-    else
-    {
-        UTEST_CHECK_EQUAL(xparam.evalue<enum_type>(), param.evalue<enum_type>());
-    }
-}
-
 static void check_stream(const parameter_t& param)
 {
     {
@@ -57,7 +21,7 @@ static void check_stream(const parameter_t& param)
         parameter_t xparam;
         std::istringstream stream(str);
         UTEST_CHECK_NOTHROW(xparam.read(stream));
-        check_equal(param, xparam);
+        UTEST_CHECK_EQUAL(param, xparam);
     }
     {
         parameter_t xparam;
@@ -77,269 +41,294 @@ static void check_stream(const parameter_t& param)
         parameter_t xparam;
         std::istringstream istream(ostream.str());
         UTEST_CHECK_NOTHROW(::nano::read(istream, xparam));
-        check_equal(param, xparam);
+        UTEST_CHECK_EQUAL(param, xparam);
+    }
+}
+
+template <bool valid, typename tvalue>
+static void check_value(parameter_t param, tvalue value)
+{
+    UTEST_CHECK_THROW(param = "", std::invalid_argument);
+    UTEST_CHECK_THROW(param = "what", std::invalid_argument);
+    UTEST_CHECK_THROW(param = enum_type::type1, std::runtime_error);
+    UTEST_CHECK_THROW(param = std::make_tuple(value, value), std::runtime_error);
+
+    if (valid)
+    {
+        UTEST_CHECK_NOTHROW(param = value);
+        UTEST_CHECK_EQUAL(param.value<tvalue>(), value);
+
+        UTEST_CHECK_NOTHROW(param = scat(value));
+        UTEST_CHECK_EQUAL(param.value<tvalue>(), value);
+    }
+    else
+    {
+        const auto old_value = param.value<tvalue>();
+
+        UTEST_CHECK_THROW(param = value, std::runtime_error);
+        UTEST_CHECK_EQUAL(param.value<tvalue>(), old_value);
+
+        UTEST_CHECK_THROW(param = scat(value), std::runtime_error);
+        UTEST_CHECK_EQUAL(param.value<tvalue>(), old_value);
+    }
+}
+
+template <bool valid, typename tvalue>
+static void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
+{
+    const auto i32pair = std::make_tuple(static_cast<int32_t>(value1), static_cast<int32_t>(value2));
+    const auto i64pair = std::make_tuple(static_cast<int64_t>(value1), static_cast<int64_t>(value2));
+    const auto f64pair = std::make_tuple(static_cast<scalar_t>(value1), static_cast<scalar_t>(value2));
+
+    UTEST_CHECK_THROW(param = value1, std::runtime_error);
+    UTEST_CHECK_THROW(param = value2, std::runtime_error);
+    UTEST_CHECK_THROW(param = "what", std::invalid_argument);
+    UTEST_CHECK_THROW(param = scat(value1), std::invalid_argument);
+    UTEST_CHECK_THROW(param = scat(value2), std::invalid_argument);
+    UTEST_CHECK_THROW(param = enum_type::type1, std::runtime_error);
+    UTEST_CHECK_THROW(param = scat("|", value1), std::invalid_argument);
+    UTEST_CHECK_THROW(param = scat(value2, "|"), std::invalid_argument);
+
+    if (valid)
+    {
+        UTEST_CHECK_NOTHROW(param = i32pair);
+        UTEST_CHECK_NOTHROW(param = i64pair);
+        UTEST_CHECK_NOTHROW(param = f64pair);
+        UTEST_CHECK_NOTHROW(param = scat(value1, ",", value2));
+
+        std::tuple<tvalue, tvalue> values;
+        UTEST_CHECK_NOTHROW(values = param.value_pair<tvalue>());
+        UTEST_CHECK_EQUAL(value1, std::get<0>(values));
+        UTEST_CHECK_EQUAL(value2, std::get<1>(values));
+    }
+    else
+    {
+        UTEST_CHECK_THROW(param = i32pair, std::runtime_error);
+        UTEST_CHECK_THROW(param = i64pair, std::runtime_error);
+        UTEST_CHECK_THROW(param = f64pair, std::runtime_error);
+        UTEST_CHECK_THROW(param = scat(value1, ",", value2), std::runtime_error);
     }
 }
 
 UTEST_BEGIN_MODULE(test_core_parameter)
 
-UTEST_CASE(eparam1)
-{
-    auto param = eparam1_t{"name", enum_type::type1};
-
-    UTEST_CHECK_EQUAL(param.name(), "name");
-    UTEST_CHECK_EQUAL(param.as<enum_type>(), enum_type::type1);
-    UTEST_CHECK_EQUAL(param.get(), scat(enum_type::type1));
-
-    UTEST_CHECK_NOTHROW(param.set(enum_type::type2));
-    UTEST_CHECK_EQUAL(param.as<enum_type>(), enum_type::type2);
-    UTEST_CHECK_EQUAL(param.get(), scat(enum_type::type2));
-
-    UTEST_CHECK_THROW(param.set(static_cast<enum_type>(-1)), std::invalid_argument);
-    UTEST_CHECK_EQUAL(param.as<enum_type>(), enum_type::type2);
-    UTEST_CHECK_EQUAL(param.get(), scat(enum_type::type2));
-
-    UTEST_CHECK_NOTHROW(param.set(scat(enum_type::type1)));
-    UTEST_CHECK_EQUAL(param.as<enum_type>(), enum_type::type1);
-    UTEST_CHECK_EQUAL(param.get(), scat(enum_type::type1));
-
-    UTEST_CHECK_NOTHROW(param = enum_type::type3);
-    UTEST_CHECK_EQUAL(param.as<enum_type>(), enum_type::type3);
-    UTEST_CHECK_EQUAL(param.get(), scat(enum_type::type3));
-}
-
-UTEST_CASE(iparam1_LELE)
-{
-    auto param = iparam1_t{"name", 0, LE, 0, LE, 10};
-
-    UTEST_CHECK_EQUAL(param.name(), "name");
-    UTEST_CHECK_EQUAL(param.get(), 0);
-    UTEST_CHECK_EQUAL(param.min(), 0);
-    UTEST_CHECK_EQUAL(param.max(), 10);
-
-    UTEST_CHECK_NOTHROW(param.set(0));
-    UTEST_CHECK_EQUAL(param.get(), 0);
-
-    UTEST_CHECK_NOTHROW(param.set(10));
-    UTEST_CHECK_EQUAL(param.get(), 10);
-
-    UTEST_CHECK_NOTHROW(param.set(7));
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(-1), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(11), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-}
-
-UTEST_CASE(sparam1_LELE)
-{
-    auto param = sparam1_t{"name", 0, LE, 0, LE, 10};
-
-    UTEST_CHECK_EQUAL(param.name(), "name");
-    UTEST_CHECK_EQUAL(param.get(), 0);
-    UTEST_CHECK_EQUAL(param.min(), 0);
-    UTEST_CHECK_EQUAL(param.max(), 10);
-
-    UTEST_CHECK_NOTHROW(param.set(0));
-    UTEST_CHECK_EQUAL(param.get(), 0);
-
-    UTEST_CHECK_NOTHROW(param.set(10));
-    UTEST_CHECK_EQUAL(param.get(), 10);
-
-    UTEST_CHECK_NOTHROW(param.set(7));
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(-1), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(11), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(std::numeric_limits<scalar_t>::quiet_NaN()), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-
-    UTEST_CHECK_THROW(param.set(std::numeric_limits<scalar_t>::infinity()), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get(), 7);
-}
-
-UTEST_CASE(sparam2_LELTLE)
-{
-    auto param = sparam2_t{"name", 0, LE, 1, LT, 2, LE, 10};
-
-    UTEST_CHECK_EQUAL(param.name(), "name");
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-    UTEST_CHECK_EQUAL(param.min(), 0);
-    UTEST_CHECK_EQUAL(param.max(), 10);
-
-    UTEST_CHECK_THROW(param.set(1, 1), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(0, 0), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(10, 10), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(-1, 0), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(10, 11), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(3, std::numeric_limits<scalar_t>::quiet_NaN()), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(3, std::numeric_limits<scalar_t>::infinity()), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(std::numeric_limits<scalar_t>::quiet_NaN(), 3), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-
-    UTEST_CHECK_THROW(param.set(std::numeric_limits<scalar_t>::infinity(), 3), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.get1(), 1);
-    UTEST_CHECK_EQUAL(param.get2(), 2);
-}
-
-UTEST_CASE(invalid_at_construction)
-{
-    const auto make1 = [] { return eparam1_t{"name", "type1", strings_t{"typeA", "typeB"}}; };
-    const auto make2 = [] { return iparam1_t{"name", 0, LE, -1, LE, 10}; };
-    const auto make3 = [] { return iparam1_t{"name", 0, LE, 11, LE, 10}; };
-    const auto make4 = [] { return iparam2_t{"name", 0, LE, 3, LT, 1, LE, 10}; };
-    const auto make5 = [] { return iparam2_t{"name", 1, LE, 0, LT, 3, LE, 10}; };
-    const auto make6 = [] { return iparam2_t{"name", 1, LE, 11, LT, 3, LE, 10}; };
-    const auto make7 = [] { return iparam2_t{"name", 1, LE, 11, LT, 12, LE, 10}; };
-    const auto make8 = [] { return iparam2_t{"name", 7, LE, 8, LT, 9, LE, 6}; };
-
-    UTEST_CHECK_THROW(make1(), std::runtime_error);
-    UTEST_CHECK_THROW(make2(), std::runtime_error);
-    UTEST_CHECK_THROW(make3(), std::runtime_error);
-    UTEST_CHECK_THROW(make4(), std::runtime_error);
-    UTEST_CHECK_THROW(make5(), std::runtime_error);
-    UTEST_CHECK_THROW(make6(), std::runtime_error);
-    UTEST_CHECK_THROW(make7(), std::runtime_error);
-    UTEST_CHECK_THROW(make8(), std::runtime_error);
-}
-
-UTEST_CASE(parameter_empty)
+UTEST_CASE(monostate)
 {
     auto param = parameter_t{};
 
     UTEST_CHECK_EQUAL(param.name(), "");
-    UTEST_CHECK_EQUAL(param.is_evalue(), true);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
-}
+    UTEST_CHECK_EQUAL(scat(param), "=N/A|domain=[N/A]");
 
-UTEST_CASE(parameter_eparam)
-{
-    auto param = parameter_t{eparam1_t{"eparam", enum_type::type1}};
+    UTEST_CHECK_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("", 0.0, LE, 0.5, LE, 1.0));
 
-    UTEST_CHECK_EQUAL(param.name(), "eparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), true);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
+    UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value<enum_type>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value_pair<scalar_t>(), std::runtime_error);
 
-    UTEST_CHECK_THROW(param.svalue(), std::runtime_error);
-    UTEST_CHECK_THROW(param.ivalue(), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type1);
+    UTEST_CHECK_THROW(param = 1, std::runtime_error);
+    UTEST_CHECK_THROW(param = "1", std::runtime_error);
+    UTEST_CHECK_THROW(param = enum_type::type1, std::runtime_error);
+    const auto ituple = std::make_tuple(1, 2);
+    UTEST_CHECK_THROW(param = ituple, std::runtime_error);
 
-    UTEST_CHECK_THROW(param.set(int32_t{1}), std::runtime_error);
-    UTEST_CHECK_THROW(param.set(int64_t{1}), std::runtime_error);
-
-    UTEST_CHECK_NOTHROW(param.set(enum_type::type2));
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type2);
-    UTEST_CHECK_THROW(param.set(static_cast<enum_type>(-1)), std::invalid_argument);
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type2);
+    UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value<enum_type>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value_pair<scalar_t>(), std::runtime_error);
 
     check_stream(param);
-
-    UTEST_CHECK_EQUAL(to_string(param), "eparam=type2");
 }
 
-UTEST_CASE(parameter_iparam)
+UTEST_CASE(enumeration)
 {
-    auto param = parameter_t{iparam1_t{"iparam", 0, LE, 1, LE, 5}};
+    auto param = parameter_t::make_enum("enum", enum_type::type1);
+
+    UTEST_CHECK_EQUAL(param.name(), "enum");
+    UTEST_CHECK_EQUAL(scat(param), "enum=type1|domain=[type1,type2,type3]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("what", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type2));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("", 0.0, LE, 0.5, LE, 1.0));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("enum", 0, LE, 1, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("enum", 0, LE, 1, LE, 2, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("enum", 0, LE, 1, LE, 2, LE, 10));
+
+    UTEST_CHECK_THROW(param = 1, std::runtime_error);
+    UTEST_CHECK_THROW(param = "1", std::runtime_error);
+    UTEST_CHECK_THROW(param = "typeX", std::runtime_error);
+    const auto ituple = std::make_tuple(1, 2);
+    UTEST_CHECK_THROW(param = ituple, std::runtime_error);
+
+    UTEST_CHECK_NOTHROW(param = enum_type::type2);
+    UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
+    UTEST_CHECK_EQUAL(param.value<enum_type>(), enum_type::type2);
+    UTEST_CHECK_THROW(param.value_pair<scalar_t>(), std::runtime_error);
+
+    check_stream(param);
+}
+
+UTEST_CASE(iparam)
+{
+    auto param = parameter_t::make_integer("iparam", 1, LE, 7, LT, 10);
 
     UTEST_CHECK_EQUAL(param.name(), "iparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), false);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), true);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
+    UTEST_CHECK_EQUAL(scat(param), "iparam=7|domain=[1 <= 7 < 10]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("iparam", 1, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LT, 7, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 6, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LT, 11));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 2, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("xparam", 1, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("iparam", 1, LE, 7, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 7, LE, 7, LT, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LT, 10));
 
-    UTEST_CHECK_THROW(param.svalue(), std::runtime_error);
-    UTEST_CHECK_THROW(param.evalue<enum_type>(), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 1);
+    check_value<true>(param, int32_t(1));
+    check_value<true>(param, int64_t(3));
+    check_value<true>(param, scalar_t(6));
 
-    UTEST_CHECK_NOTHROW(param.set(int32_t{0}));
-    UTEST_CHECK_EQUAL(param.ivalue(), 0);
-
-    UTEST_CHECK_NOTHROW(param.set(int64_t{5}));
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(int64_t{7}), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(int32_t{-1}), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(scalar_t{0}), std::runtime_error);
-    UTEST_CHECK_THROW(param.set(enum_type::type1), std::runtime_error);
+    check_value<false>(param, 0);
+    check_value<false>(param, 10);
+    check_value<false>(param, 11);
 
     check_stream(param);
-    check_stream(parameter_t{iparam1_t{"iparam", 0, LE, 1, LT, 5}});
-    check_stream(parameter_t{iparam1_t{"iparam", 0, LT, 1, LE, 5}});
-    check_stream(parameter_t{iparam1_t{"iparam", 0, LT, 1, LT, 5}});
-
-    UTEST_CHECK_EQUAL(to_string(param), "iparam=5");
 }
 
-UTEST_CASE(parameter_sparam)
+UTEST_CASE(fparam)
 {
-    auto param = parameter_t{sparam1_t{"sparam", 0, LE, 1, LE, 5}};
+    auto param = parameter_t::make_float("fparam", 1.0, LT, 4, LE, 10);
 
-    UTEST_CHECK_EQUAL(param.name(), "sparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), false);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), true);
+    UTEST_CHECK_EQUAL(param.name(), "fparam");
+    UTEST_CHECK_EQUAL(scat(param), "fparam=4|domain=[1 < 4 <= 10]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("fparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LE, 4, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LE, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 11));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 2, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("xparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 4, LE, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("fparam", 1, LT, 4, LE, 4, LE, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 10));
 
-    UTEST_CHECK_CLOSE(param.svalue(), 1.0, 1e-12);
-    UTEST_CHECK_THROW(param.evalue<enum_type>(), std::runtime_error);
-    UTEST_CHECK_THROW(param.ivalue(), std::runtime_error);
+    check_value<true>(param, 1.1);
+    check_value<true>(param, 2);
+    check_value<true>(param, 10.0);
 
-    UTEST_CHECK_NOTHROW(param.set(0.1));
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(-1.1), std::runtime_error);
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(5.1), std::runtime_error);
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_NOTHROW(param.set(int32_t{0}));
-    UTEST_CHECK_CLOSE(param.svalue(), 0.0, 1e-12);
-
-    UTEST_CHECK_NOTHROW(param.set(int64_t{1}));
-    UTEST_CHECK_CLOSE(param.svalue(), 1.0, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(enum_type::type1), std::runtime_error);
+    check_value<false>(param, 1.0);
+    check_value<false>(param, 11);
 
     check_stream(param);
-    check_stream(parameter_t{sparam1_t{"sparam", 0, LE, 1, LT, 5}});
-    check_stream(parameter_t{sparam1_t{"sparam", 0, LT, 1, LE, 5}});
-    check_stream(parameter_t{sparam1_t{"sparam", 0, LT, 1, LT, 5}});
+}
 
-    UTEST_CHECK_EQUAL(to_string(param), "sparam=1");
+UTEST_CASE(iparam2)
+{
+    auto param = parameter_t::make_integer_pair("iparam", 1, LE, 2, LE, 2, LT, 10);
+
+    UTEST_CHECK_EQUAL(param.name(), "iparam");
+    UTEST_CHECK_EQUAL(scat(param), "iparam=(2,2)|domain=[1 <= 2 <= 2 < 10]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("iparam", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("iparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("iparam", 1, LE, 2, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("xparam", 1, LE, 2, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 2, LE, 2, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LT, 2, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 1, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 2, LT, 3, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 2, LE, 2, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 2, LE, 2, LT, 11));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 2, LE, 2, LT, 10));
+
+    check_stream(param);
+
+    check_value_pair<true>(param, 1, 2);
+    check_value_pair<true>(param, 2, 2);
+    check_value_pair<true>(param, 2, 3);
+    check_value_pair<true>(param, 3, 7);
+    check_value_pair<true>(param, 2, 9);
+
+    check_value_pair<false>(param, 3, 2);
+    check_value_pair<false>(param, 0, 2);
+    check_value_pair<false>(param, 3, 2);
+    check_value_pair<false>(param, 0, 10);
+    check_value_pair<false>(param, 2, 10);
+}
+
+UTEST_CASE(fparam2)
+{
+    auto param = parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 10);
+
+    UTEST_CHECK_EQUAL(param.name(), "fparam");
+    UTEST_CHECK_EQUAL(scat(param), "fparam=(2,3)|domain=[1 < 2 < 3 <= 10]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("fparam", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("fparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("xparam", 1, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 0, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LE, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 1.5, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LE, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 11));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
+
+    check_stream(param);
+
+    check_value_pair<true>(param, 2, 3);
+    check_value_pair<true>(param, 2, 9);
+    check_value_pair<true>(param, 3, 10);
+
+    check_value_pair<false>(param, 1, 3);
+    check_value_pair<false>(param, 2, 2);
+    check_value_pair<false>(param, 0, 2);
+    check_value_pair<false>(param, 2, 11);
+    check_value_pair<false>(param, 12, 13);
+}
+
+UTEST_CASE(invalid_float)
+{
+    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LE, 1, LT, 1), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LE, 1, LE, 0), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LT, 1, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LT, 1, LT, 10), std::runtime_error);
+}
+
+UTEST_CASE(invalid_integer)
+{
+    UTEST_CHECK_THROW(parameter_t::make_integer("iparam", 1, LE, 1, LT, 1), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer("iparam", 1, LE, 1, LE, 0), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer("iparam", 1, LT, 1, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer("iparam", 1, LT, 1, LT, 10), std::runtime_error);
+}
+
+UTEST_CASE(invalid_float_pair)
+{
+    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 2, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 2, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 2), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 1), std::runtime_error);
+}
+
+UTEST_CASE(invalid_integer_pair)
+{
+    UTEST_CHECK_THROW(parameter_t::make_integer_pair("iparam", 1, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer_pair("iparam", 2, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer_pair("iparam", 1, LT, 2, LT, 2, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer_pair("iparam", 1, LT, 2, LT, 3, LE, 2), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_integer_pair("iparam", 1, LT, 2, LT, 3, LE, 1), std::runtime_error);
 }
 
 UTEST_END_MODULE()

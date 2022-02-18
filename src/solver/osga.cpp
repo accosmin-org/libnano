@@ -59,16 +59,20 @@ private:
 solver_osga_t::solver_osga_t()
 {
     monotonic(false);
+
+    register_parameter(parameter_t::make_float("solver::osga::lambda", 0, LT, 0.9, LT, 1));
+    register_parameter(parameter_t::make_float("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_float_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 1));
 }
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    auto function = make_function(function_, x0);
+    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto lambda = parameter("solver::osga::lambda").value<scalar_t>();
+    const auto alpha_max = parameter("solver::osga::alpha_max").value<scalar_t>();
+    const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
 
-    const auto lambda = m_lambda.get();
-    const auto alpha_max = m_alpha_max.get();
-    const auto kappa_prime = m_kappas.get1();
-    const auto kappa = m_kappas.get2();
+    auto function = make_function(function_, x0);
 
     const auto miu = function.strong_convexity() / 2.0;
 
@@ -91,7 +95,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     vector_t u = proxy.U(gamma, h, fb);
     scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
-    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         x = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);

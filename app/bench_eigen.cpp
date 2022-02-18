@@ -332,17 +332,17 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "blas2",        "benchmark level2 BLAS operations (matrix-vector)");
     cmdline.add("", "blas3",        "benchmark level3 BLAS operations (matrix-matrix)");
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
     // check arguments and options
-    const auto min_dims = std::clamp(cmdline.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
-    const auto max_dims = std::clamp(cmdline.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
-    const auto copy = cmdline.has("copy");
-    const auto blas1 = cmdline.has("blas1");
-    const auto blas2 = cmdline.has("blas2");
-    const auto blas3 = cmdline.has("blas3");
+    const auto min_dims = std::clamp(options.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
+    const auto max_dims = std::clamp(options.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
+    const auto copy = options.has("copy");
+    const auto blas1 = options.has("blas1");
+    const auto blas2 = options.has("blas2");
+    const auto blas3 = options.has("blas3");
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;

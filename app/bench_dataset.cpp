@@ -39,7 +39,9 @@ static auto benchmark_flatten(const string_t& generator_id, const dataset_genera
     const auto samples = arange(0, generator.dataset().samples());
 
     auto timer = ::nano::timer_t{};
-    auto iterator = flatten_iterator_t{generator, samples, execution::seq, 128};
+    auto iterator = flatten_iterator_t{generator, samples};
+    iterator.exec(execution::seq);
+    iterator.batch(128);
     log_info() << "generator [" << generator_id << "] built in <" << timer.elapsed() << ">.";
 
     iterator.loop([] (tensor_range_t range, size_t tnum, tensor2d_cmap_t flatten)
@@ -103,29 +105,29 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-dataset",     "list the available datasets");
     cmdline.add("", "list-generator",   "list the available feature generators");
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-dataset"))
+    if (options.has("list-dataset"))
     {
         std::cout << make_table("dataset", dataset_t::all());
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-generator"))
+    if (options.has("list-generator"))
     {
         std::cout << make_table("generator", generator_t::all());
         return EXIT_SUCCESS;
     }
 
     // check arguments and options
-    const auto dregex = std::regex(cmdline.get<string_t>("dataset"));
-    const auto gregex = std::regex(cmdline.get<string_t>("generator"));
+    const auto dregex = std::regex(options.get<string_t>("dataset"));
+    const auto gregex = std::regex(options.get<string_t>("generator"));
 
     // benchmark
     for (const auto& id : dataset_t::all().ids(dregex))

@@ -78,22 +78,28 @@ namespace
 solver_cgd_t::solver_cgd_t()
 {
     monotonic(true);
-    tolerance(1e-4, 1e-1);
+    parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1);
+
+    register_parameter(parameter_t::make_float("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
 }
 
 solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+    const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
+
     auto lsearch = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
-    if (solver_t::done(function, cstate, true, cstate.converged(epsilon())))
+    if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))
     {
         return cstate;
     }
 
-    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // descent direction
         if (i == 0)
@@ -110,7 +116,7 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
             //  - or two consecutive gradients far from being orthogonal
             //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.124-125)
             if (!cstate.has_descent() ||
-                (std::fabs(cstate.g.dot(pstate.g)) >= orthotest() * cstate.g.dot(cstate.g)))
+                (std::fabs(cstate.g.dot(pstate.g)) >= orthotest * cstate.g.dot(cstate.g)))
             {
                 cstate.d = -cstate.g;
             }
@@ -119,13 +125,18 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
         // line-search
         pstate = cstate;
         const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon())))
+        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {
             break;
         }
     }
 
     return cstate;
+}
+
+solver_cgd_n_t::solver_cgd_n_t()
+{
+    register_parameter(parameter_t::make_float("solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6));
 }
 
 scalar_t solver_cgd_hs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
@@ -163,7 +174,9 @@ scalar_t solver_cgd_dy_t::beta(const solver_state_t& prev, const solver_state_t&
 
 scalar_t solver_cgd_n_t::beta(const solver_state_t& prev, const solver_state_t& curr) const
 {
-    return ::N(prev, curr, eta());
+    const auto eta = parameter("solver::cgdN::eta").value<scalar_t>();
+
+    return ::N(prev, curr, eta);
 }
 
 scalar_t solver_cgd_dycd_t::beta(const solver_state_t& prev, const solver_state_t& curr) const

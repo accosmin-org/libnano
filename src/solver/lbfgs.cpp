@@ -6,17 +6,23 @@ using namespace nano;
 solver_lbfgs_t::solver_lbfgs_t()
 {
     monotonic(true);
-    tolerance(1e-4, 9e-1);
+    parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
+
+    register_parameter(parameter_t::make_integer("solver::lbfgs::history", 1, LE, 6, LE, 1000));
 }
 
 solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+    const auto history = parameter("solver::lbfgs::history").value<size_t>();
+
     auto lsearch = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
 
-    if (solver_t::done(function, cstate, true, cstate.converged(epsilon())))
+    if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))
     {
         return cstate;
     }
@@ -25,7 +31,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
     solver_state_t pstate;
     std::deque<vector_t> ss, ys;
 
-    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)
@@ -78,7 +84,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
         // line-search
         pstate = cstate;
         const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon())))
+        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {
             break;
         }
@@ -89,7 +95,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
         {
             ss.emplace_back(cstate.x - pstate.x);
             ys.emplace_back(cstate.g - pstate.g);
-            if (ss.size() > history())
+            if (ss.size() > history)
             {
                 ss.pop_front();
                 ys.pop_front();

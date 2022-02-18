@@ -3,6 +3,11 @@
 
 using namespace nano;
 
+lsearchk_morethuente_t::lsearchk_morethuente_t()
+{
+    register_parameter(parameter_t::make_float("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));
+}
+
 rlsearchk_t lsearchk_morethuente_t::clone() const
 {
     return std::make_unique<lsearchk_morethuente_t>(*this);
@@ -15,6 +20,8 @@ void lsearchk_morethuente_t::dcstep(
     bool& brackt,
     const scalar_t stpmin, const scalar_t stpmax) const
 {
+    const auto delta = parameter("lsearchk::morethuente::delta").value<scalar_t>();
+
     scalar_t stpc = 0, stpq = 0, stpf = 0;
 
     const auto sgnd = dp * (dx / std::fabs(dx));
@@ -80,11 +87,11 @@ void lsearchk_morethuente_t::dcstep(
             }
             if (stp > stx)
             {
-                stpf = std::min(stpf, stp + (sty - stp) * delta());
+                stpf = std::min(stpf, stp + (sty - stp) * delta);
             }
             else
             {
-                stpf = std::max(stpf, stp + (sty - stp) * delta());
+                stpf = std::max(stpf, stp + (sty - stp) * delta);
             }
         }
         else
@@ -145,8 +152,11 @@ void lsearchk_morethuente_t::dcstep(
 
 bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)
 {
-    const auto ftol = c1();
-    const auto gtol = c2();
+    const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
+    const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
+
+    const auto ftol = c1;
+    const auto gtol = c2;
     const auto xtol = epsilon0<scalar_t>();
 
     int stage = 1;
@@ -162,7 +172,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
     scalar_t stx = 0, fx = finit, gx = ginit;
     scalar_t sty = 0, fy = finit, gy = ginit;
 
-    for (int64_t i = 0; i < max_iterations(); ++ i)
+    for (int i = 0; i < max_iterations; ++ i)
     {
         const auto ftest = finit + stp * gtest;
         if (stage == 1 && f <= ftest && g >= scalar_t(0))

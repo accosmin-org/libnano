@@ -21,6 +21,10 @@ function lto {
     export CXXFLAGS="${CXXFLAGS} -flto"
 }
 
+function thinlto {
+    export CXXFLAGS="${CXXFLAGS} -flto=thin"
+}
+
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
 }
@@ -105,7 +109,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=2.6
+    version=2.7
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
@@ -375,6 +379,8 @@ options:
         print usage
     --lto
         setup compiler and linker flags to enable link-time optimization
+    --thinlto
+        setup compiler and linker flags to enable link-time optimization with parallelization
     --asan
         setup compiler and linker flags to enable the address sanitizer
     --lsan
@@ -451,6 +457,7 @@ while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
         --lto)                          lto;;
+        --thinlto)                      thinlto;;
         --asan)                         asan;;
         --lsan)                         lsan;;
         --usan)                         usan;;

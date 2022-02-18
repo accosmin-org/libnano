@@ -69,16 +69,22 @@ namespace
 solver_quasi_t::solver_quasi_t()
 {
     monotonic(true);
-    tolerance(1e-4, 9e-1);
+    parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
+
+    register_parameter(parameter_t::make_enum("solver::quasi::initialization", initialization::identity));
 }
 
 solver_state_t solver_quasi_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+    const auto init = parameter("solver::quasi::initialization").value<initialization>();
+
     auto lsearch = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
-    if (solver_t::done(function, cstate, true, cstate.converged(epsilon())))
+    if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))
     {
         return cstate;
     }
@@ -88,7 +94,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int64_t i = 0; function.fcalls() < max_evals(); ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // descent direction
         cstate.d = -H * cstate.g;
@@ -104,27 +110,17 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
         // line-search
         pstate = cstate;
         const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon())))
+        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {
             break;
         }
 
         // initialize the Hessian's inverse
-        if (i == 0)
+        if (i == 0 && init == initialization::scaled)
         {
-            switch (m_initialization)
-            {
-            case initialization::scaled:
-                {
-                    const auto dx = cstate.x - pstate.x;
-                    const auto dg = cstate.g - pstate.g;
-                    H = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
-                }
-                break;
-
-            default:
-                break;
-            }
+            const auto dx = cstate.x - pstate.x;
+            const auto dg = cstate.g - pstate.g;
+            H = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
         }
 
         // update approximation of the Hessian
@@ -134,9 +130,16 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
     return cstate;
 }
 
+solver_quasi_sr1_t::solver_quasi_sr1_t()
+{
+    register_parameter(parameter_t::make_float("solver::quasiSR1::r", 0, LT, 1e-8, LT, 1));
+}
+
 void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    ::SR1(H, curr.x - prev.x, curr.g - prev.g, r());
+    const auto r = parameter("solver::quasiSR1::r").value<scalar_t>();
+
+    ::SR1(H, curr.x - prev.x, curr.g - prev.g, r);
 }
 
 void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const

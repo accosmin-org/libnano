@@ -5,24 +5,27 @@ using namespace nano;
 solver_asgm_t::solver_asgm_t()
 {
     monotonic(false);
+
+    register_parameter(parameter_t::make_integer("solver::asgm::patience", 3, LE, 3, LE, 100));
+    register_parameter(parameter_t::make_float("solver::asgm::gamma", 1.0, LT, 5.0, LE, 10.0));
 }
 
 solver_state_t solver_asgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+    const auto gamma = parameter("solver::asgm::gamma").value<scalar_t>();
+    const auto patience = parameter("solver::asgm::patience").value<int64_t>();
+
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0}; // current state
     auto bstate = cstate;                       // best state
 
-    const auto epsilon = this->epsilon();
-
-    const auto gamma = m_gamma.get();
-    const auto patience = m_patience.get();
-
     auto h = 1.0;                               // current step length ratio
     auto L = cstate.g.lpNorm<2>();              // estimation of the Lipschitz constant
 
-    for (int64_t i = 0, last_ibest = 0; function.fcalls() < max_evals(); ++ i)
+    for (int64_t i = 0, last_ibest = 0; function.fcalls() < max_evals; ++ i)
     {
         cstate.d = -cstate.g / cstate.g.lpNorm<2>();
         cstate.update(cstate.x + h / L * cstate.d);

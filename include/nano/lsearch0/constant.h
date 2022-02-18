@@ -13,9 +13,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearch0_constant_t() = default; // LCOV_EXCL_LINE
+        lsearch0_constant_t();
 
         ///
         /// \brief @see lsearch0_t
@@ -26,20 +26,5 @@ namespace nano
         /// \brief @see lsearch0_t
         ///
         scalar_t get(const solver_state_t&) final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void t0(scalar_t t0) { m_t0 = t0; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto t0() const { return m_t0.get(); }
-
-    private:
-
-        // attributes
-        sparam1_t   m_t0{"lsearch0::constant::t0", 0, LT, 1, LT, 1e+6};  ///< see (1)
     };
 }

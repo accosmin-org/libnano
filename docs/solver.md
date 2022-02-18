@@ -104,10 +104,10 @@ The default configurations are close to optimal for most situations. Still the u
 #include <nano/solver/lbfgs.h>
 
 auto solver = nano::solver_lbfgs_t{};
-solver.history(6);
-solver.epsilon(1e-6);
-solver.max_evals(100);
-solver.tolerance(1e-4, 9e-1);
+solver.parameter("solver::lbfgs::history") = 6;
+solver.parameter("solver::epsilon") = 1e-6;
+solver.parameter("solver::max_evals") = 100;
+solver.parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 solver.lsearch0("constant");
 solver.lsearchk("morethuente");
 ```
@@ -162,7 +162,7 @@ A working example for constructing and minimizing an objective function can be f
 
 The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions. The following run compares 4 solvers on all convex smooth builtin functions of dimensions from 16 to 32:
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 16 --max-dims 32 --convex --smooth --solver "gd|cgd|lbfgs|bfgs" --epsilon 1e-7 --trials 1000 --max-evals 1000 | tail -n 8
+./build/libnano/gcc-release/app/bench_solver --min-dims 16 --max-dims 32 --convex --smooth --solver "gd|cgd|lbfgs|bfgs" --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 1000 | tail -n 8
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|
 | Solver | lsearch0  | lsearchk    | gnorm                 | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | cost | [ms] |
 |--------|-----------|-------------|-----------------------|--------|--------|---------|---------|---------|---------|------|------|
@@ -177,7 +177,7 @@ The results are typical: the BFGS algorithm is faster in terms of function value
 
 However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like ASGM provide a more precise solution in fewer iterations:
 ```
-./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|asgm" --min-dims 100 --max-dims 100 --trials 1000 --max-evals 1000 --epsilon 1e-6 --convex | tail -n 7
+./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|asgm" --min-dims 100 --max-dims 100 --trials 1000 --solver::max_evals 1000 --solver::epsilon 1e-6 --convex | tail -n 7
 |------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
 | solver                       | lsearch0  | lsearchk    | value    | gnorm    | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | [ms]  |
 |------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|

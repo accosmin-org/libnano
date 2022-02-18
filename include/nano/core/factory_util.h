@@ -19,5 +19,5 @@ namespace nano
             table.append() << id << factory.description(id);
         }
         return table;
-    }
+    } // LCOV_EXCL_LINE
 }

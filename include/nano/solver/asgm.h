@@ -14,7 +14,7 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_asgm_t();
 
@@ -22,11 +22,5 @@ namespace nano
         /// \brief @see solver_t
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
-
-    private:
-
-        // attributes
-        iparam1_t   m_patience{"asgm::patience", 3, LE, 3, LE, 100};    ///<
-        sparam1_t   m_gamma{"asgm::gamma", 1.0, LT, 5.0, LE, 10.0};     ///<
     };
 }

@@ -269,7 +269,9 @@ UTEST_CASE(unsupervised)
     const auto samples = arange(0, generator.dataset().samples());
     for (const auto exec : {execution::par, execution::seq})
     {
-        const auto iterator = flatten_iterator_t{generator, samples, exec, 128};
+        auto iterator = flatten_iterator_t{generator, samples};
+        iterator.exec(exec);
+        iterator.batch(128);
 
         UTEST_CHECK_THROW(iterator.loop([&] (tensor_range_t, size_t, tensor4d_cmap_t) {}), std::runtime_error);
 

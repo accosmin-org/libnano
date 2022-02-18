@@ -102,7 +102,7 @@ namespace nano
             return (it == m_protos.end()) ? string_t() : m_protos.at(id).m_description;
         }
 
-	private:
+    private:
 
         struct proto_t
         {

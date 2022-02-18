@@ -12,9 +12,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearch0_cgdescent_t() = default; // LCOV_EXCL_LINE
+        lsearch0_cgdescent_t();
 
         ///
         /// \brief @see lsearch0_t
@@ -25,26 +25,5 @@ namespace nano
         /// \brief @see lsearch0_t
         ///
         scalar_t get(const solver_state_t&) final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void phi0(scalar_t phi0) { m_phi0.set(phi0); }
-        void phi1(scalar_t phi1) { m_phi1.set(phi1); }
-        void phi2(scalar_t phi2) { m_phi2.set(phi2); }
-
-        ///
-        /// \brief access functions
-        ///
-        auto phi0() const { return m_phi0.get(); }
-        auto phi1() const { return m_phi1.get(); }
-        auto phi2() const { return m_phi2.get(); }
-
-    private:
-
-        // attributes
-        sparam1_t   m_phi0{"lsearch0::cgdescent::phi0", 0, LT, 0.01, LT, 1};    ///<
-        sparam1_t   m_phi1{"lsearch0::cgdescent::phi1", 0, LT, 0.10, LT, 1};    ///<
-        sparam1_t   m_phi2{"lsearch0::cgdescent::phi2", 1, LT, 2.00, LT, 1e+6}; ///<
     };
 }

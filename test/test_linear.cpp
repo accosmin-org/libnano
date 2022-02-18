@@ -151,7 +151,9 @@ UTEST_CASE(dataset)
 
     auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
 
-    const auto iterator = flatten_iterator_t{generator, arange(0, samples), execution::seq, 128};
+    auto iterator = flatten_iterator_t{generator, arange(0, samples)};
+    iterator.exec(execution::seq);
+    iterator.batch(100);
     iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
     {
         for (tensor_size_t i = 0, size = range.size(); i < size; ++ i)

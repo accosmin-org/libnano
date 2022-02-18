@@ -3,12 +3,12 @@
 #include <cassert>
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
-#include <nano/core/serializable.h>
+#include <nano/core/estimator.h>
 
 namespace nano
 {
     ///
-    /// \brief wraps serializable objects with an associated factory ID
+    /// \brief wraps estimator objects with an associated factory ID
     ///     to support type-safe binary serialization.
     ///
     /// NB: the wrapped object must implement:
@@ -19,7 +19,7 @@ namespace nano
     <
         typename tobject,
         typename trobject = std::unique_ptr<tobject>,
-        std::enable_if_t<std::is_base_of_v<serializable_t, tobject>, bool> = true
+        std::enable_if_t<std::is_base_of_v<estimator_t, tobject>, bool> = true
     >
     class NANO_PUBLIC identifiable_t
     {

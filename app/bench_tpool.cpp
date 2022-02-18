@@ -184,9 +184,9 @@ static int unsafe_main(int argc, const char *argv[])
     cmdline.add("", "min-size",     "minimum problem size (in kilo)", 1);
     cmdline.add("", "max-size",     "maximum problem size (in kilo)", 1024);
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;
@@ -194,8 +194,8 @@ static int unsafe_main(int argc, const char *argv[])
 
     // check arguments and options
     const auto kilo = tensor_size_t(1024), mega = kilo * kilo, giga = mega * kilo;
-    const auto cmd_min_size = std::clamp(kilo * cmdline.get<tensor_size_t>("min-size"), kilo, mega);
-    const auto cmd_max_size = std::clamp(kilo * cmdline.get<tensor_size_t>("max-size"), cmd_min_size, giga);
+    const auto cmd_min_size = std::clamp(kilo * options.get<tensor_size_t>("min-size"), kilo, mega);
+    const auto cmd_max_size = std::clamp(kilo * options.get<tensor_size_t>("max-size"), cmd_min_size, giga);
 
     table_t table;
     auto& header = table.header();

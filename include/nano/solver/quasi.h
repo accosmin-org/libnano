@@ -25,7 +25,7 @@ namespace nano
         };
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_quasi_t();
 
@@ -34,22 +34,9 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
 
-        ///
-        /// \brief change parameters
-        ///
-        void init(const initialization init) { m_initialization = init; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto init() const { return m_initialization; }
-
     private:
 
         virtual void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const = 0;
-
-        // attributes
-        initialization  m_initialization{initialization::identity}; ///<
     };
 
     ///
@@ -60,29 +47,14 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        solver_quasi_sr1_t() = default;
+        solver_quasi_sr1_t();
 
         ///
         /// \brief @see solver_quasi_t
         ///
         void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void r(const scalar_t r) { m_r = r; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto r() const { return m_r.get(); }
-
-    private:
-
-        // attributes
-        sparam1_t   m_r{"solver::quasiSR1::r", 0, LT, 1e-8, LT, 1}; ///< threshold to skip updates when the denominator is too small - see (2)
     };
 
     ///

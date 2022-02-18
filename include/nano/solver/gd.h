@@ -12,7 +12,7 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_gd_t();
 

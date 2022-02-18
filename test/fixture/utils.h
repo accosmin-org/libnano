@@ -12,12 +12,12 @@ inline auto make_loss(const char* name = "squared")
     return loss;
 }
 
-inline auto make_solver(const char* name = "cgd", const scalar_t epsilon = epsilon2<scalar_t>())
+inline auto make_solver(const char* name = "cgd", scalar_t epsilon = epsilon2<scalar_t>())
 {
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);
-    solver->epsilon(epsilon);
-    solver->max_evals(100);
+    solver->parameter("solver::epsilon") = epsilon;
+    solver->parameter("solver::max_evals") = 100;
     solver->logger([] (const solver_state_t& state)
     {
         std::cout << state << ".\n";

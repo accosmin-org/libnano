@@ -17,7 +17,7 @@ namespace nano
     ///     - the global minimum if the function is convex or
     ///     - a critical point (not necessarily a local minimum) otherwise.
     ///
-    class NANO_PUBLIC solver_t
+    class NANO_PUBLIC solver_t : public estimator_t
     {
     public:
 
@@ -27,32 +27,14 @@ namespace nano
         using logger_t = std::function<bool(const solver_state_t&)>;
 
         ///
-        /// \brief returns the available implementations
-        ///
-        static solver_factory_t& all();
-
-        ///
         /// \brief constructor
         ///
         solver_t();
 
-
         ///
-        /// \brief enable moving
+        /// \brief returns the available implementations
         ///
-        solver_t(solver_t&&) noexcept = default;
-        solver_t& operator=(solver_t&&) noexcept = default;
-
-        ///
-        /// \brief disable copying
-        ///
-        solver_t(const solver_t&) = delete;
-        solver_t& operator=(const solver_t&) = delete;
-
-        ///
-        /// \brief destructor
-        ///
-        virtual ~solver_t() = default;
+        static solver_factory_t& all();
 
         ///
         /// \brief minimize the given function starting from the initial point x0 until:
@@ -69,27 +51,6 @@ namespace nano
         void logger(const logger_t& logger);
         void lsearch0_logger(const lsearch0_t::logger_t& logger);
         void lsearchk_logger(const lsearchk_t::logger_t& logger);
-
-        ///
-        /// \brief change the desired accuracy:
-        ///     - ~gradient magnitude for smooth functions, see state_t::converged, or
-        ///     - ~function and point decrease for non-smooth functions
-        ///
-        void epsilon(scalar_t epsilon);
-
-        ///
-        /// \brief change the maximum number of function evaluations.
-        ///
-        void max_evals(int max_evals);
-
-        ///
-        /// \brief change the desired function value and gradient tolerance,
-        ///     aka the c1 and c2 parameters in the (strong) Wolfe conditions
-        ///
-        /// NB: the recommended values depend very much on the optimization algorithm and
-        ///     provide a good balance between gradient updates and accuracy of the line-search step length.
-        ///
-        void tolerance(scalar_t c1, scalar_t c2);
 
         ///
         /// \brief set the line-search initialization
@@ -115,10 +76,6 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto c1() const { return m_lsearchk->c1(); }
-        auto c2() const { return m_lsearchk->c2(); }
-        auto epsilon() const { return m_epsilon.get(); }
-        auto max_evals() const { return m_max_evals.get(); }
         const auto& lsearch0_id() const { return m_lsearch0_id; }
         const auto& lsearchk_id() const { return m_lsearchk_id; }
 
@@ -157,8 +114,6 @@ namespace nano
     private:
 
         // attributes
-        sparam1_t       m_epsilon{"solver_t::epsilon", 0, LT, 1e-6, LE, 1e-3};      ///< desired accuracy
-        iparam1_t       m_max_evals{"solver_t::maxevals", 10, LE, 1000, LE, 1e+9};  ///< maximum number of function evaluations
         logger_t        m_logger;                   ///<
         string_t        m_lsearch0_id;              ///<
         rlsearch0_t     m_lsearch0;                 ///<

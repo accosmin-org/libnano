@@ -43,14 +43,12 @@ static void loop(execution ex, indices_cmap_t ifeatures, const toperator& op)
     }
 }
 
-targets_iterator_t::targets_iterator_t(
-    const dataset_generator_t& generator, indices_cmap_t samples, execution exec, tensor_size_t batch) :
+targets_iterator_t::targets_iterator_t(const dataset_generator_t& generator, indices_cmap_t samples) :
     m_generator(generator),
     m_samples(samples),
-    m_execution(exec),
+    m_batch(parameter_t::make_integer("batch", 1, LE, 100, LE, 10000)),
     m_targets_buffers(tpool_t::size())
 {
-    m_batch = batch; // NOLINT(cppcoreguidelines-prefer-member-initializer)
     m_targets_stats = make_targets_stats();
 }
 
@@ -104,7 +102,7 @@ bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
         try
         {
             m_targets.resize(cat_dims(m_samples.size(), tdims));
-            ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+            ::loop(m_execution, m_samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
             {
                 const auto range = make_range(begin, end);
                 const auto samples = m_samples.slice(range);
@@ -118,14 +116,23 @@ bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
     return cached;
 }
 
+void targets_iterator_t::batch(tensor_size_t batch)
+{
+    m_batch = batch;
+}
+
+void targets_iterator_t::exec(execution ex)
+{
+    m_execution = ex;
+}
+
 void targets_iterator_t::scaling(scaling_type scaling)
 {
     m_scaling = scaling;
 }
 
-flatten_iterator_t::flatten_iterator_t(
-    const dataset_generator_t& generator, indices_cmap_t samples, execution exec, tensor_size_t batch) :
-    targets_iterator_t(generator, samples, exec, batch),
+flatten_iterator_t::flatten_iterator_t(const dataset_generator_t& generator, indices_cmap_t samples) :
+    targets_iterator_t(generator, samples),
     m_flatten_buffers(tpool_t::size())
 {
     m_flatten_stats = make_flatten_stats();
@@ -133,22 +140,25 @@ flatten_iterator_t::flatten_iterator_t(
 
 flatten_stats_t flatten_iterator_t::make_flatten_stats() const
 {
-    std::vector<flatten_stats_t> stats(tpool_t::size(), flatten_stats_t{m_generator.columns()});
-    ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    const auto& samples = this->samples();
+    const auto& generator = this->generator();
+
+    std::vector<flatten_stats_t> stats(tpool_t::size(), flatten_stats_t{generator.columns()});
+    ::loop(exec(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
-        const auto data = m_generator.flatten(m_samples.slice(range), m_flatten_buffers[tnum]);
+        const auto data = generator.flatten(samples.slice(range), m_flatten_buffers[tnum]);
         for (tensor_size_t i = 0, size = range.size(); i < size; ++ i)
         {
             stats[tnum] += data.array(i);
         }
     });
 
-    auto enable_scaling = tensor_mem_t<uint8_t, 1>(m_generator.columns());
+    auto enable_scaling = tensor_mem_t<uint8_t, 1>(generator.columns());
     for (tensor_size_t column = 0; column < enable_scaling.size(); ++ column)
     {
-        const auto ifeature = m_generator.column2feature(column);
-        const auto feature = m_generator.feature(ifeature);
+        const auto ifeature = generator.column2feature(column);
+        const auto feature = generator.feature(ifeature);
         const auto isclass = feature.type() == feature_type::sclass || feature.type() == feature_type::mclass;
         enable_scaling(column) = isclass ? 0x00 : 0x01;
     }
@@ -162,37 +172,42 @@ flatten_stats_t flatten_iterator_t::make_flatten_stats() const
 
 tensor2d_cmap_t flatten_iterator_t::flatten(tensor2d_map_t data) const
 {
-    m_flatten_stats.scale(m_scaling, data);
+    m_flatten_stats.scale(scaling(), data);
     return data;
 }
 
 tensor2d_cmap_t flatten_iterator_t::flatten(size_t tnum, const tensor_range_t& range) const
 {
-    if (m_flatten.size<0>() == m_samples.size())
+    const auto& samples = this->samples();
+    const auto& generator = this->generator();
+
+    if (m_flatten.size<0>() == samples.size())
     {
         return m_flatten.slice(range);
     }
     else
     {
-        return flatten(m_generator.flatten(m_samples.slice(range), m_flatten_buffers[tnum]));
+        return flatten(generator.flatten(samples.slice(range), m_flatten_buffers[tnum]));
     }
 }
 
 bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
 {
-    auto cached = false;
-    const auto isize = m_generator.columns();
+    const auto& samples = this->samples();
+    const auto& generator = this->generator();
 
-    if (static_cast<tensor_size_t>(sizeof(scalar_t)) * m_samples.size() * isize <= max_bytes)
+    auto cached = false;
+    const auto isize = generator.columns();
+
+    if (static_cast<tensor_size_t>(sizeof(scalar_t)) * samples.size() * isize <= max_bytes)
     {
         try
         {
-            m_flatten.resize(m_samples.size(), isize);
-            ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+            m_flatten.resize(samples.size(), isize);
+            ::loop(exec(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
             {
                 const auto range = make_range(begin, end);
-                const auto samples = m_samples.slice(range);
-                m_flatten.slice(range) = flatten(m_generator.flatten(samples, m_flatten_buffers[tnum]));
+                m_flatten.slice(range) = flatten(generator.flatten(samples.slice(range), m_flatten_buffers[tnum]));
             });
             cached = true;
         }
@@ -204,7 +219,7 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
 
 void flatten_iterator_t::loop(const flatten_targets_callback_t& callback) const
 {
-    ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 
@@ -214,7 +229,7 @@ void flatten_iterator_t::loop(const flatten_targets_callback_t& callback) const
 
 void flatten_iterator_t::loop(const flatten_callback_t& callback) const
 {
-    ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 
@@ -224,7 +239,7 @@ void flatten_iterator_t::loop(const flatten_callback_t& callback) const
 
 void targets_iterator_t::loop(const targets_callback_t& callback) const
 {
-    ::loop(m_execution, m_samples, m_batch.get(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 

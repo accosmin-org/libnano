@@ -1,6 +1,6 @@
 #include <utest/utest.h>
-#include <nano/core/factory.h>
 #include <nano/core/strutil.h>
+#include <nano/core/factory_util.h>
 
 using namespace nano;
 
@@ -95,13 +95,17 @@ UTEST_CASE(retrieval)
     UTEST_CHECK(!manager.has(id2 + id3));
     UTEST_CHECK(!manager.has(id3 + id1));
 
-    UTEST_REQUIRE(manager.get(id1) != nullptr);
-    UTEST_REQUIRE(manager.get(id2) != nullptr);
-    UTEST_REQUIRE(manager.get(id3) != nullptr);
+    const auto object1 = manager.get(id1);
+    const auto object2 = manager.get(id2);
+    const auto object3 = manager.get(id3);
 
-    UTEST_CHECK_EQUAL(manager.get(id1)->get(), 1);
-    UTEST_CHECK_EQUAL(manager.get(id2)->get(), 2);
-    UTEST_CHECK_EQUAL(manager.get(id3)->get(), 3);
+    UTEST_REQUIRE(object1 != nullptr);
+    UTEST_REQUIRE(object2 != nullptr);
+    UTEST_REQUIRE(object3 != nullptr);
+
+    UTEST_CHECK_EQUAL(object1->get(), 1);
+    UTEST_CHECK_EQUAL(object2->get(), 2);
+    UTEST_CHECK_EQUAL(object3->get(), 3);
 
     UTEST_CHECK(manager.get("") == nullptr);
     UTEST_CHECK(manager.get(id1 + id2 + "ddd") == nullptr);
@@ -142,18 +146,41 @@ UTEST_CASE(retrieval_default)
     UTEST_REQUIRE(manager.has(id2));
     UTEST_REQUIRE(manager.has(id3));
 
-    UTEST_REQUIRE(manager.get(id1) != nullptr);
-    UTEST_REQUIRE(manager.get(id2) != nullptr);
-    UTEST_REQUIRE(manager.get(id3) != nullptr);
+    const auto object1 = manager.get(id1);
+    const auto object2 = manager.get(id2);
+    const auto object3 = manager.get(id3);
 
-    UTEST_CHECK_EQUAL(manager.get(id1)->get(), 7);
-    UTEST_CHECK_EQUAL(manager.get(id2)->get(), 2);
-    UTEST_CHECK_EQUAL(manager.get(id3)->get(), 5);
+    UTEST_REQUIRE(object1 != nullptr);
+    UTEST_REQUIRE(object2 != nullptr);
+    UTEST_REQUIRE(object3 != nullptr);
+
+    UTEST_CHECK_EQUAL(object1->get(), 7);
+    UTEST_CHECK_EQUAL(object2->get(), 2);
+    UTEST_CHECK_EQUAL(object3->get(), 5);
 
     UTEST_CHECK_EQUAL(manager.description(id1), factory_traits_t<object1_t>::description());
     UTEST_CHECK_EQUAL(manager.description(id2), factory_traits_t<object2_t>::description());
     UTEST_CHECK_EQUAL(manager.description(id3), factory_traits_t<object3_t>::description());
     UTEST_CHECK_EQUAL(manager.description("none"), "");
+}
+
+UTEST_CASE(make_object_table)
+{
+    factory_t<object_t> manager;
+
+    UTEST_CHECK(manager.add<object1_t>("id1", "desc1"));
+    UTEST_CHECK(manager.add<object2_t>("id2", "desc2"));
+    UTEST_CHECK(manager.add<object3_t>("id3", "desc3"));
+
+    const auto table = make_table("object", manager);
+    UTEST_CHECK_EQUAL(scat(table),
+        "|--------|-------------|\n"\
+        "| object | description |\n"\
+        "|--------|-------------|\n"\
+        "| id1    | desc1       |\n"\
+        "| id2    | desc2       |\n"\
+        "| id3    | desc3       |\n"\
+        "|--------|-------------|\n");
 }
 
 UTEST_END_MODULE()

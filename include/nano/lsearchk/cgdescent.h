@@ -30,9 +30,9 @@ namespace nano
         };
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearchk_cgdescent_t() = default; // LCOV_EXCL_LINE
+        lsearchk_cgdescent_t();
 
         ///
         /// \brief @see lsearchk_t
@@ -43,28 +43,6 @@ namespace nano
         /// \brief @see lsearchk_t
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void epsilon(scalar_t epsilon) { m_epsilon = epsilon; }
-        void theta(scalar_t theta) { m_theta = theta; }
-        void gamma(scalar_t gamma) { m_gamma = gamma; }
-        void delta(scalar_t delta) { m_delta = delta; }
-        void omega(scalar_t omega) { m_omega = omega; }
-        void ro(scalar_t ro) { m_ro = ro; }
-        void crit(criterion crit) { m_criterion = crit; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto epsilon() const { return m_epsilon.get(); }
-        auto theta() const { return m_theta.get(); }
-        auto gamma() const { return m_gamma.get(); }
-        auto delta() const { return m_delta.get(); }
-        auto omega() const { return m_omega.get(); }
-        auto ro() const { return m_ro.get(); }
-        auto crit() const { return m_criterion; }
 
     private:
 
@@ -84,16 +62,9 @@ namespace nano
         status bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
 
         // attributes
-        sparam1_t   m_epsilon{"lsearchk::cgdescent::epsilon", 0, LT, 1e-6, LT, 1e+6};   ///< see (2)
-        sparam1_t   m_theta{"lsearchk::cgdescent::theta", 0, LT, 0.5, LT, 1};           ///< see (2)
-        sparam1_t   m_gamma{"lsearchk::cgdescent::gamma", 0, LT, 0.66, LT, 1};          ///< see (2)
-        sparam1_t   m_delta{"lsearchk::cgdescent::delta", 0, LT, 0.7, LT, 1};           ///< see (2)
-        sparam1_t   m_omega{"lsearchk::cgdescent::omega", 0, LT, 1e-3, LT, 1};          ///< see (2)
-        sparam1_t   m_ro{"lsearchk::cgdescent::ro", 1, LT, 5.0, LT, 1e+6};              ///< see (2)
         scalar_t    m_sumQ{0};                                                          ///< see (2)
         scalar_t    m_sumC{0};                                                          ///< see (2)
         bool        m_approx{false};                                                    ///< see (2)
-        criterion   m_criterion{criterion::wolfe_approx_wolfe};                         ///<
     };
 
     template <>

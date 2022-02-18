@@ -11,7 +11,7 @@ struct object_t;
 using object_factory_t = factory_t<object_t>;
 using robject_t = object_factory_t::trobject;
 
-struct object_t : public serializable_t
+struct object_t : public estimator_t
 {
     object_t() = default;
     ~object_t() override = default;
@@ -61,6 +61,14 @@ UTEST_CASE(identifiable_default)
     UTEST_CHECK_EQUAL(object.id(), "");
     UTEST_CHECK_EQUAL(static_cast<bool>(object), false);
     UTEST_CHECK_THROW(object.write(stream), std::runtime_error);
+
+    auto copy_object = identifiable_t<object_t>{object};
+    UTEST_CHECK_EQUAL(copy_object.id(), "");
+    UTEST_CHECK_EQUAL(static_cast<bool>(copy_object), false);
+
+    auto moved_constructed_object = identifiable_t<object_t>{std::move(object)};
+    UTEST_CHECK_EQUAL(moved_constructed_object.id(), "");
+    UTEST_CHECK_EQUAL(static_cast<bool>(moved_constructed_object), false);
 }
 
 UTEST_CASE(identifiable_read_write)

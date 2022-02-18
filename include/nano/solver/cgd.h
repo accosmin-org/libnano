@@ -16,7 +16,7 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_cgd_t();
 
@@ -25,25 +25,12 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
 
-        ///
-        /// \brief change parameters
-        ///
-        void orthotest(const scalar_t orthotest) { m_orthotest = orthotest; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto orthotest() const { return m_orthotest.get(); }
-
     private:
 
         ///
         /// \brief compute the adjustment factor for the descent direction
         ///
         virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
-
-        // attributes
-        sparam1_t   m_orthotest{"solver::cgd::orthotest", 0, LT, 0.1, LT, 1};   ///< orthogonality test - see (4)
     };
 
     ///
@@ -54,29 +41,14 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        solver_cgd_n_t() = default; // LCOV_EXCL_LINE
+        solver_cgd_n_t();
 
         ///
         /// \brief @see solver_cgd_t
         ///
         scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void eta(const scalar_t eta) { m_eta = eta; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto eta() const { return m_eta.get(); }
-
-    private:
-
-        // attributes
-        sparam1_t   m_eta{"solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6};  ///< see CG_DESCENT - see (3)
     };
 
     ///

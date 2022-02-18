@@ -13,9 +13,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearchk_lemarechal_t() = default; // LCOV_EXCL_LINE
+        lsearchk_lemarechal_t();
 
         ///
         /// \brief @see lsearchk_t
@@ -26,23 +26,5 @@ namespace nano
         /// \brief @see lsearchk_t
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void tau1(scalar_t tau1) { m_tau1 = tau1; }
-        void interp(interpolation interp) { m_interpolation = interp; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto tau1() const { return m_tau1.get(); }
-        auto interp() const { return m_interpolation; }
-
-    private:
-
-        // attributes
-        interpolation   m_interpolation{interpolation::cubic};                      ///<
-        sparam1_t       m_tau1{"lsearchk::lemarechal::tau1", 2, LT, 9, LT, 1e+6};   ///< see (1)
     };
 }

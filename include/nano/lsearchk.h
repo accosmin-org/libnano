@@ -1,9 +1,8 @@
 #pragma once
 
-#include <nano/arch.h>
 #include <nano/solver/lstep.h>
 #include <nano/core/factory.h>
-#include <nano/core/parameter.h>
+#include <nano/core/estimator.h>
 
 namespace nano
 {
@@ -16,7 +15,7 @@ namespace nano
     ///
     /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
     ///
-    class NANO_PUBLIC lsearchk_t
+    class NANO_PUBLIC lsearchk_t : public estimator_t
     {
     public:
 
@@ -30,24 +29,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearchk_t() = default; // LCOV_EXCL_LINE
-
-        ///
-        /// \brief enable copying
-        ///
-        lsearchk_t(const lsearchk_t&) = default; // LCOV_EXCL_LINE
-        lsearchk_t& operator=(const lsearchk_t&) = default;
-
-        ///
-        /// \brief enable moving
-        ///
-        lsearchk_t(lsearchk_t&&) noexcept = default;
-        lsearchk_t& operator=(lsearchk_t&&) noexcept = default;
-
-        ///
-        /// \brief destructor
-        ///
-        virtual ~lsearchk_t() = default;
+        lsearchk_t();
 
         ///
         /// \brief returns the available implementations
@@ -65,21 +47,12 @@ namespace nano
         virtual bool get(solver_state_t& state, scalar_t t);
 
         ///
-        /// \brief change parameters
+        /// \brief set the logging operator.
         ///
         void logger(const logger_t& logger) { m_logger = logger; }
-        void tolerance(scalar_t c1, scalar_t c2) { m_tolerance.set(c1, c2); }
-        void max_iterations(int max_iterations) { m_max_iterations.set(max_iterations); }
 
         ///
-        /// \brief access functions
-        ///
-        auto c1() const { return m_tolerance.get1(); }
-        auto c2() const { return m_tolerance.get2(); }
-        auto max_iterations() const { return m_max_iterations.get(); }
-
-        ///
-        /// \brief minimum allowed line-search step
+        /// \brief minimum allowed line-search step.
         ///
         static scalar_t stpmin()
         {
@@ -87,7 +60,7 @@ namespace nano
         }
 
         ///
-        /// \brief maximum allowed line-search step
+        /// \brief maximum allowed line-search step.
         ///
         static scalar_t stpmax()
         {
@@ -115,8 +88,6 @@ namespace nano
     private:
 
         // attributes
-        sparam2_t   m_tolerance{"lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1};    ///< see Armijo-Wolfe conditions
-        iparam1_t   m_max_iterations{"lsearchk::max_iterations", 1, LE, 40, LE, 100};   ///<
         logger_t    m_logger;                                                           ///<
     };
 }

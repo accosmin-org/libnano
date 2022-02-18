@@ -112,13 +112,15 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
             << ",t=" << t << "." << std::endl;
     });
 
-    solver->lsearchk_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+    const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
+
+    solver->lsearchk_logger([&, c1=c1, c2=c2] (const solver_state_t& state0, const solver_state_t& state)
     {
         std::cout
             << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << ",armijo=" << state.has_armijo(state0, solver->c1())
-            << ",wolfe=" << state.has_wolfe(state0, solver->c2())
-            << ",swolfe=" << state.has_strong_wolfe(state0, solver->c2()) << "." << std::endl;
+            << ",armijo=" << state.has_armijo(state0, c1)
+            << ",wolfe=" << state.has_wolfe(state0, c2)
+            << ",swolfe=" << state.has_strong_wolfe(state0, c2) << "." << std::endl;
     });
 
     auto state = solver->minimize(function, x0);
@@ -210,12 +212,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
-    cmdline.add("", "max-evals",        "maximum number of function evaluations", "1000");
-    cmdline.add("", "epsilon",          "convergence criterion", 1e-6);
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "smooth",           "use only smooth test functions");
-    cmdline.add("", "c1",               "use this c1 value (see Armijo-Goldstein line-search step condition)");
-    cmdline.add("", "c2",               "use this c2 value (see Wolfe line-search step condition)");
     cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
@@ -223,69 +221,96 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-function",    "list the available test functions");
     cmdline.add("", "list-lsearch0",    "list the available line-search initialization methods");
     cmdline.add("", "list-lsearchk",    "list the available line-search strategies");
+    cmdline.add("", "list-solver-params","list the available parameters for each of the selected solvers");
 
-    cmdline.process(argc, argv);
+    const auto options = cmdline.process(argc, argv);
 
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-solver"))
+    if (options.has("list-solver"))
     {
         std::cout << make_table("solver", solver_t::all());
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-function"))
+    if (options.has("list-function"))
     {
         std::cout << make_table("function", benchmark_function_t::all());
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-lsearch0"))
+    if (options.has("list-lsearch0"))
     {
         std::cout << make_table("lsearch0", lsearch0_t::all());
         return EXIT_SUCCESS;
     }
 
-    if (cmdline.has("list-lsearchk"))
+    if (options.has("list-lsearchk"))
     {
         std::cout << make_table("lsearchk", lsearchk_t::all());
         return EXIT_SUCCESS;
     }
 
+    if (options.has("list-solver-params"))
+    {
+        const auto sregex = std::regex(options.get<string_t>("solver"));
+        const auto solver_ids = solver_t::all().ids(sregex);
+
+        table_t table;
+        table.header() << "solver" << "parameter" << "value" << "domain";
+        table.delim();
+        for (const auto& solver_id : solver_ids)
+        {
+            const auto solver = solver_t::all().get(solver_id);
+            for (const auto& param : solver->parameters())
+            {
+                table.append() << solver_id << param.name() << param.value() << param.domain();
+            }
+            if (&solver_id != &*solver_ids.rbegin())
+            {
+                table.delim();
+            }
+        }
+
+        std::cout << table;
+        return EXIT_SUCCESS;
+    }
+
     // check arguments and options
-    const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
-    const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
-    const auto trials = cmdline.get<size_t>("trials");
-    const auto max_evals = cmdline.get<int>("max-evals");
-    const auto epsilon = cmdline.get<scalar_t>("epsilon");
-    const auto convex = cmdline.has("convex") ? convexity::yes : convexity::ignore;
-    const auto smooth = cmdline.has("smooth") ? smoothness::yes : smoothness::ignore;
-    const auto log_failures = cmdline.has("log-failures");
+    const auto min_dims = options.get<tensor_size_t>("min-dims");
+    const auto max_dims = options.get<tensor_size_t>("max-dims");
+    const auto trials = options.get<size_t>("trials");
+    const auto convex = options.has("convex") ? convexity::yes : convexity::ignore;
+    const auto smooth = options.has("smooth") ? smoothness::yes : smoothness::ignore;
+    const auto log_failures = options.has("log-failures");
 
-    const auto fregex = std::regex(cmdline.get<string_t>("function"));
-    const auto sregex = std::regex(cmdline.get<string_t>("solver"));
+    const auto fregex = std::regex(options.get<string_t>("function"));
+    const auto sregex = std::regex(options.get<string_t>("solver"));
 
-    const auto lsearch0s = cmdline.has("lsearch0") ?
-        lsearch0_t::all().ids(std::regex(cmdline.get<string_t>("lsearch0"))) :
+    const auto lsearch0s = options.has("lsearch0") ?
+        lsearch0_t::all().ids(std::regex(options.get<string_t>("lsearch0"))) :
         strings_t{""};
 
-    const auto lsearchks = cmdline.has("lsearchk") ?
-        lsearchk_t::all().ids(std::regex(cmdline.get<string_t>("lsearchk"))) :
+    const auto lsearchks = options.has("lsearchk") ?
+        lsearchk_t::all().ids(std::regex(options.get<string_t>("lsearchk"))) :
         strings_t{""};
 
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
     const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
     {
-        solver->epsilon(epsilon);
-        solver->max_evals(max_evals);
-        solver->tolerance(
-            cmdline.has("c1") ? cmdline.get<scalar_t>("c1") : solver->c1(),
-            cmdline.has("c2") ? cmdline.get<scalar_t>("c2") : solver->c2());
+        // setup solver with additional parameters
+        for (const auto& [param_name, param_value] : options.m_xvalues)
+        {
+            if (solver->parameter_if(param_name) != nullptr)
+            {
+                solver->parameter(param_name) = param_value;
+            }
+        }
 
         solvers.emplace_back(solver_id, std::move(solver));
     };

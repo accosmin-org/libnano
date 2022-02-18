@@ -11,7 +11,7 @@ namespace nano
     template
     <
         typename tscalar,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::ostream& write(std::ostream& stream, tscalar scalar)
     {
@@ -24,7 +24,7 @@ namespace nano
     template
     <
         typename tscalar, typename tcount,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
     {
@@ -37,7 +37,7 @@ namespace nano
     template
     <
         typename twscalar, typename tscalar, typename tcount,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
     {
@@ -66,7 +66,7 @@ namespace nano
         {
             if (!write(stream, value))
             {
-                return stream;
+                return stream; // LCOV_EXCL_LINE
             }
         }
         return stream;
@@ -75,7 +75,7 @@ namespace nano
     template
     <
         typename tscalar,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::istream& read(std::istream& stream, tscalar& scalar)
     {
@@ -88,7 +88,7 @@ namespace nano
     template
     <
         typename tscalar, typename tcount,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::istream& read(std::istream& stream, tscalar* data, tcount count)
     {
@@ -101,7 +101,7 @@ namespace nano
     template
     <
         typename trscalar, typename tscalar,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::istream& read_cast(std::istream& stream, tscalar& scalar)
     {
@@ -114,7 +114,7 @@ namespace nano
     template
     <
         typename trscalar, typename tscalar, typename tcount,
-        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
+        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
     >
     std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
     {
@@ -155,7 +155,7 @@ namespace nano
         {
             if (!read(stream, value))
             {
-                return stream;
+                return stream; // LCOV_EXCL_LINE
             }
         }
         return stream;

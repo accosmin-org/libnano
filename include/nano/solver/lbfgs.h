@@ -14,7 +14,7 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_lbfgs_t();
 
@@ -22,20 +22,5 @@ namespace nano
         /// \brief @see solver_t
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void history(const size_t history) { m_history = history; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto history() const { return m_history.get(); }
-
-    private:
-
-        // attributes
-        uparam1_t   m_history{"solver::lbfgs::history", 1, LE, 6, LE, 1000};///<#previous gradients to approximate Hessian^-1
     };
 }

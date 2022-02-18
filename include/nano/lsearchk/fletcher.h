@@ -16,9 +16,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearchk_fletcher_t() = default; // LCOV_EXCL_LINE
+        lsearchk_fletcher_t();
 
         ///
         /// \brief @see lsearchk_t
@@ -30,28 +30,8 @@ namespace nano
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
 
-        ///
-        /// \brief change parameters
-        ///
-        void tau1(scalar_t tau1) { m_tau1 = tau1; }
-        void tau23(scalar_t tau2, scalar_t tau3) { m_tau23.set(tau2, tau3); }
-        void interp(interpolation interp) { m_interpolation = interp; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto tau1() const { return m_tau1.get(); }
-        auto tau2() const { return m_tau23.get1(); }
-        auto tau3() const { return m_tau23.get2(); }
-        auto interp() const { return m_interpolation; }
-
     private:
 
         bool zoom(const solver_state_t&, lsearch_step_t lo, lsearch_step_t hi, solver_state_t&) const;
-
-        // attributes
-        interpolation   m_interpolation{interpolation::cubic};                              ///<
-        sparam1_t       m_tau1{"lsearchk::fletcher::tau1", 2, LT, 9.0, LT, 1e+6};           ///< see (1)
-        sparam2_t       m_tau23{"lsearchk::fletcher::tau23", 0, LT, 0.1, LT, 0.5, LE, 0.5}; ///< see (1)
     };
 }

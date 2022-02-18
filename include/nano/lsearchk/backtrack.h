@@ -13,9 +13,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearchk_backtrack_t() = default; // LCOV_EXCL_LINE
+        lsearchk_backtrack_t();
 
         ///
         /// \brief @see lsearchk_t
@@ -26,20 +26,5 @@ namespace nano
         /// \brief @see lsearchk_t
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
-
-        ///
-        /// \brief change parameters
-        ///
-        void interp(interpolation interp) { m_interpolation = interp; }
-
-        ///
-        /// \brief access functions
-        ///
-        auto interp() const { return m_interpolation; }
-
-    private:
-
-        // attributes
-        interpolation   m_interpolation{interpolation::cubic};  ///<
     };
 }

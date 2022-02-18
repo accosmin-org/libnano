@@ -6,7 +6,7 @@ UTEST_BEGIN_MODULE(test_core_tokenizer)
 UTEST_CASE(split_str)
 {
     const auto str = std::string{"= -token1 token2 something "};
-    for (auto tokenizer = nano::tokenizer_t{str, " =-"}; tokenizer; tokenizer ++)
+    for (auto tokenizer = nano::tokenizer_t{str, " =-"}; tokenizer; tokenizer ++) // cppcheck-suppress postfixOperator
     {
         switch (tokenizer.count())
         {

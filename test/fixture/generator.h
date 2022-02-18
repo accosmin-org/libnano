@@ -155,7 +155,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
         {
             for (const auto batch : {1, 3, 8})
             {
-                auto iterator = flatten_iterator_t{generator, samples, exec, batch};
+                auto iterator = flatten_iterator_t{generator, samples};
+                iterator.exec(exec);
+                iterator.batch(batch);
+
                 for (const auto scaling : enum_values<scaling_type>())
                 {
                     iterator.scaling(scaling);
@@ -241,7 +244,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     const auto samples = arange(0, generator.dataset().samples());
     for (const auto exec : {execution::par, execution::seq})
     {
-        auto iterator = flatten_iterator_t{generator, samples, exec, 3};
+        auto iterator = flatten_iterator_t{generator, samples};
+        iterator.exec(exec);
+        iterator.batch(3);
+
         for (const auto scaling : enum_values<scaling_type>())
         {
             iterator.scaling(scaling);
@@ -286,7 +292,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         for (const auto batch : {1, 3, 8})
         {
-            auto iterator = targets_iterator_t{generator, samples, exec, batch};
+            auto iterator = targets_iterator_t{generator, samples};
+            iterator.exec(exec);
+            iterator.batch(batch);
+
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);
@@ -334,7 +343,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         for (const auto batch : {1, 3, 8})
         {
-            auto iterator = targets_iterator_t{generator, samples, exec, batch};
+            auto iterator = targets_iterator_t{generator, samples};
+            iterator.exec(exec);
+            iterator.batch(batch);
+
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);
@@ -364,7 +376,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         for (const auto batch : {1, 3, 8})
         {
-            auto iterator = targets_iterator_t{generator, samples, exec, batch};
+            auto iterator = targets_iterator_t{generator, samples};
+            iterator.exec(exec);
+            iterator.batch(batch);
+
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);
@@ -398,7 +413,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         for (const auto batch : {1, 3, 8})
         {
-            auto iterator = targets_iterator_t{generator, samples, exec, batch};
+            auto iterator = targets_iterator_t{generator, samples};
+            iterator.exec(exec);
+            iterator.batch(batch);
+
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);

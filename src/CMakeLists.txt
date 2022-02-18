@@ -12,8 +12,8 @@ target_sources(nano PRIVATE
     core/logger.cpp
     core/cmdline.cpp
     core/histogram.cpp
+    core/estimator.cpp
     core/parameter.cpp
-    core/serializable.cpp
     generator.cpp
     generator/iterator.cpp
     generator/generator.cpp

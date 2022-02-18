@@ -17,9 +17,9 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        lsearchk_morethuente_t() = default; // LCOV_EXCL_LINE
+        lsearchk_morethuente_t();
 
         ///
         /// \brief @see lsearchk_t
@@ -31,16 +31,6 @@ namespace nano
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
 
-        ///
-        /// \brief change parameters
-        ///
-        void delta(scalar_t delta) { m_delta = delta; }
-
-        ///
-        /// \brief access parameters
-        ///
-        auto delta() const { return m_delta.get(); }
-
     private:
 
         ///
@@ -51,8 +41,5 @@ namespace nano
             scalar_t& sty, scalar_t& fy, scalar_t& dy,
             scalar_t& stp, const scalar_t& fp, const scalar_t& dp,
             bool& brackt, scalar_t stpmin, scalar_t stpmax) const;
-
-        // attributes
-        sparam1_t   m_delta{"lsearchk::morethuente", 0, LT, 0.66, LT, 1};   ///< see (1)
     };
 }

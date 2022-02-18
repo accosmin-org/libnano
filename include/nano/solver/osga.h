@@ -16,7 +16,7 @@ namespace nano
     public:
 
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
         solver_osga_t();
 
@@ -24,12 +24,5 @@ namespace nano
         /// \brief @see solver_t
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
-
-    private:
-
-        // attributes
-        sparam1_t   m_lambda{"osga::lambda", 0, LT, 0.9, LT, 1};            ///<
-        sparam1_t   m_alpha_max{"osga::alpha_max", 0, LT, 0.7, LT, 1};      ///<
-        sparam2_t   m_kappas{"osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 1};   ///<
     };
 }

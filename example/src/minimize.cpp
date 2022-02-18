@@ -60,10 +60,10 @@ int main(const int, char* argv[])
     // NB: this may be not needed as the default configuration will minimize the objective as well!
     // NB: can also use the factory to get a default solver!
     auto solver = nano::solver_lbfgs_t{};
-    solver.history(6);
-    solver.epsilon(1e-6);
-    solver.max_evals(100);
-    solver.tolerance(1e-4, 9e-1);
+    solver.parameter("solver::lbfgs::history") = 6;
+    solver.parameter("solver::epsilon") = 1e-6;
+    solver.parameter("solver::max_evals") = 100;
+    solver.parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
     solver.lsearch0("constant");
     solver.lsearchk("morethuente");
 
@@ -96,13 +96,15 @@ int main(const int, char* argv[])
                 << ",t0=" << t0 <<".\n";
         });
 
-        solver.lsearchk_logger([&] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
+        const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
+
+        solver.lsearchk_logger([&, c1=c1, c2=c2] (const nano::solver_state_t& state0, const nano::solver_state_t& state)
         {
             std::cout
                 << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-                << ",armijo=" << state.has_armijo(state0, solver.c1())
-                << ",wolfe=" << state.has_wolfe(state0, solver.c2())
-                << ",swolfe=" << state.has_strong_wolfe(state0, solver.c2()) << ".\n";
+                << ",armijo=" << state.has_armijo(state0, c1)
+                << ",wolfe=" << state.has_wolfe(state0, c2)
+                << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
         });
 
         const auto state = solver.minimize(objective, x0);

@@ -1,11 +1,18 @@
 #include <iomanip>
 #include <utest/utest.h>
+#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/solver/quasi.h>
 #include <nano/function/sphere.h>
 #include <nano/function/benchmark.h>
 
 using namespace nano;
+
+template <typename tscalar>
+static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>& values)
+{
+    return stream << std::get<0>(values) << "," << std::get<1>(values);
+}
 
 static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_size_t& iterations)
 {
@@ -25,13 +32,15 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
             << ",t=" << t << ".\n";
     });
 
-    solver.lsearchk_logger([&] (const solver_state_t& state0, const solver_state_t& state)
+    const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
+
+    solver.lsearchk_logger([&, c1=c1, c2=c2] (const solver_state_t& state0, const solver_state_t& state)
     {
         stream
             << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << ",armijo=" << state.has_armijo(state0, solver.c1())
-            << ",wolfe=" << state.has_wolfe(state0, solver.c2())
-            << ",swolfe=" << state.has_strong_wolfe(state0, solver.c2()) << ".\n";
+            << ",armijo=" << state.has_armijo(state0, c1)
+            << ",wolfe=" << state.has_wolfe(state0, c2)
+            << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
     });
 }
 
@@ -55,8 +64,8 @@ static auto test(solver_t& solver, const string_t& solver_id, const function_t& 
     const auto epsilon = 1e-6;
 
     // minimize
-    solver.epsilon(epsilon);
-    solver.max_evals(10000);
+    solver.parameter("solver::epsilon") = epsilon;
+    solver.parameter("solver::max_evals") = 10000;
     auto state = solver.minimize(function, x0);
     UTEST_CHECK(state);
 
@@ -244,21 +253,18 @@ UTEST_CASE(config_solvers)
         UTEST_REQUIRE(solver);
 
         // NB: 0 < c1 < c2 < 1
-        UTEST_CHECK_NOTHROW(solver->tolerance(1e-4, 1e-1));
-        UTEST_CHECK_EQUAL(solver->c1(), 1e-4);
-        UTEST_CHECK_EQUAL(solver->c2(), 1e-1);
+        UTEST_CHECK_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
+        UTEST_CHECK_EQUAL(solver->parameter("solver::tolerance").value_pair<scalar_t>(), std::make_tuple(1e-4, 1e-1));
 
-        UTEST_CHECK_THROW(solver->tolerance(2e-1, 1e-1), std::runtime_error);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, 1e-4), std::runtime_error);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, +1.1), std::runtime_error);
-        UTEST_CHECK_THROW(solver->tolerance(1e-1, -0.1), std::runtime_error);
-        UTEST_CHECK_THROW(solver->tolerance(-0.1, +1.1), std::runtime_error);
-        UTEST_CHECK_EQUAL(solver->c1(), 1e-4);
-        UTEST_CHECK_EQUAL(solver->c2(), 1e-1);
+        UTEST_CHECK_THROW(solver->parameter("solver::tolerance") = std::make_tuple(2e-1, 1e-1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 1e-4), std::runtime_error);
+        UTEST_CHECK_THROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, +1.1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, -0.1), std::runtime_error);
+        UTEST_CHECK_THROW(solver->parameter("solver::tolerance") = std::make_tuple(-0.1, +1.1), std::runtime_error);
+        UTEST_CHECK_EQUAL(solver->parameter("solver::tolerance").value_pair<scalar_t>(), std::make_tuple(1e-4, 1e-1));
 
-        UTEST_CHECK_NOTHROW(solver->tolerance(1e-1, 9e-1));
-        UTEST_CHECK_EQUAL(solver->c1(), 1e-1);
-        UTEST_CHECK_EQUAL(solver->c2(), 9e-1);
+        UTEST_CHECK_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
+        UTEST_CHECK_EQUAL(solver->parameter("solver::tolerance").value_pair<scalar_t>(), std::make_tuple(1e-1, 9e-1));
 
         UTEST_CHECK_THROW(solver->lsearch0("invalid-lsearch0-id"), std::runtime_error);
         UTEST_CHECK_THROW(solver->lsearch0("constant", rlsearch0_t()), std::runtime_error);
@@ -408,13 +414,13 @@ UTEST_CASE(best_solvers_with_tolerances)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            UTEST_REQUIRE_NOTHROW(solver->tolerance(1e-4, 1e-1));
+            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
             test(*solver, solver_id, *function, vector_t::Random(function->size()));
 
-            UTEST_REQUIRE_NOTHROW(solver->tolerance(1e-4, 9e-1));
+            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
             test(*solver, solver_id, *function, vector_t::Random(function->size()));
 
-            UTEST_REQUIRE_NOTHROW(solver->tolerance(1e-1, 9e-1));
+            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
             test(*solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }
@@ -427,22 +433,24 @@ UTEST_CASE(quasi_with_initializations)
         UTEST_REQUIRE(function);
         {
             const auto *const solver_id = "bfgs";
+            const auto *const pname = "solver::quasi::initialization";
             auto solver = solver_quasi_bfgs_t{};
 
-            UTEST_REQUIRE_NOTHROW(solver.init(solver_quasi_t::initialization::identity));
+            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
             test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-            UTEST_REQUIRE_NOTHROW(solver.init(solver_quasi_t::initialization::scaled));
+            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
             test(solver, solver_id, *function, vector_t::Random(function->size()));
         }
         {
             const auto *const solver_id = "fletcher";
+            const auto *const pname = "solver::quasi::initialization";
             auto solver = solver_quasi_fletcher_t{};
 
-            UTEST_REQUIRE_NOTHROW(solver.init(solver_quasi_t::initialization::identity));
+            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
             test(solver, solver_id, *function, vector_t::Random(function->size()));
 
-            UTEST_REQUIRE_NOTHROW(solver.init(solver_quasi_t::initialization::scaled));
+            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
             test(solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }

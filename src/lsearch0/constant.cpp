@@ -2,6 +2,11 @@
 
 using namespace nano;
 
+lsearch0_constant_t::lsearch0_constant_t()
+{
+    register_parameter(parameter_t::make_float("lsearch0::constant::t0", 0, LT, 1, LT, 1e+6));
+}
+
 rlsearch0_t lsearch0_constant_t::clone() const
 {
     return std::make_unique<lsearch0_constant_t>(*this);
@@ -9,6 +14,8 @@ rlsearch0_t lsearch0_constant_t::clone() const
 
 scalar_t lsearch0_constant_t::get(const solver_state_t& state)
 {
-    log(state, t0());
-    return t0();
+    const auto t0 = parameter("lsearch0::constant::t0").value<scalar_t>();
+
+    log(state, t0);
+    return t0;
 }

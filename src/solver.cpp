@@ -5,6 +5,7 @@
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
+#include <nano/core/logger.h>
 
 using namespace nano;
 
@@ -12,6 +13,10 @@ solver_t::solver_t()
 {
     lsearch0("quadratic");
     lsearchk("morethuente");
+
+    register_parameter(parameter_t::make_float("solver::epsilon", 0, LT, 1e-6, LE, 1e-3));
+    register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
+    register_parameter(parameter_t::make_float_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
 
 void solver_t::lsearch0(const string_t& id)
@@ -54,24 +59,9 @@ void solver_t::lsearchk_logger(const lsearchk_t::logger_t& logger)
     m_lsearchk->logger(logger);
 }
 
-void solver_t::tolerance(scalar_t c1, scalar_t c2)
-{
-    m_lsearchk->tolerance(c1, c2);
-}
-
 void solver_t::logger(const logger_t& logger)
 {
     m_logger = logger;
-}
-
-void solver_t::epsilon(scalar_t epsilon)
-{
-    m_epsilon = epsilon;
-}
-
-void solver_t::max_evals(int max_evals)
-{
-    m_max_evals = max_evals;
 }
 
 void solver_t::monotonic(bool monotonic)
@@ -89,7 +79,7 @@ bool solver_t::converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, 
     const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
     const auto df = std::fabs(fxk1 - fxk);
 
-    const auto epsilon = this->epsilon();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
     const auto converged =
         !std::isfinite(fxk) || !std::isfinite(fxk1) ||
         (
@@ -108,7 +98,8 @@ lsearch_t solver_t::make_lsearch() const
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
 
-    lsearch0->epsilon(epsilon());
+    lsearch0->parameter("lsearch0::epsilon") = parameter("solver::epsilon").value<scalar_t>();
+    lsearchk->parameter("lsearchk::tolerance") = parameter("solver::tolerance").value_pair<scalar_t>();
     return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 }
 
