@@ -1,4 +1,5 @@
 #include <nano/solver/asgm.h>
+#include <nano/core/numeric.h>
 
 using namespace nano;
 
@@ -7,7 +8,7 @@ solver_asgm_t::solver_asgm_t()
     monotonic(false);
 
     register_parameter(parameter_t::make_integer("solver::asgm::patience", 3, LE, 3, LE, 100));
-    register_parameter(parameter_t::make_float("solver::asgm::gamma", 1.0, LT, 5.0, LE, 10.0));
+    register_parameter(parameter_t::make_float("solver::asgm::gamma", 1.0, LT, 2.0, LE, 10.0));
 }
 
 solver_state_t solver_asgm_t::minimize(const function_t& function_, const vector_t& x0) const
@@ -52,7 +53,7 @@ solver_state_t solver_asgm_t::minimize(const function_t& function_, const vector
             cstate = bstate;
         }
 
-        const auto converged = (h <= L * epsilon) && (df < epsilon);
+        const auto converged = (cstate.g.lpNorm<2>() < epsilon0<scalar_t>()) || ((h <= L * epsilon) && (df < epsilon));
         if (solver_t::done(function, bstate, iter_ok, converged))
         {
             break;

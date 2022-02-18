@@ -61,6 +61,7 @@ target_sources(nano PRIVATE
     function/elastic_net.cpp
     function/exponential.cpp
     function/geometric.cpp
+    function/kinks.cpp
     function/linear.cpp
     function/powell.cpp
     function/qing.cpp

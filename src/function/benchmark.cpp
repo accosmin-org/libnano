@@ -3,6 +3,7 @@
 
 #include <nano/function/trid.h>
 #include <nano/function/qing.h>
+#include <nano/function/kinks.h>
 #include <nano/function/cauchy.h>
 #include <nano/function/sphere.h>
 #include <nano/function/powell.h>
@@ -31,6 +32,7 @@ function_factory_t& benchmark_function_t::all()
     {
         manager.add<function_trid_t>("trid", "Trid function: https://www.sfu.ca/~ssurjano/trid.html");
         manager.add<function_qing_t>("qing", "Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html");
+        manager.add<function_kinks_t>("kinks", "random kinks: f(x_ = sum(|x - K_i|, i)");
         manager.add<function_cauchy_t>("cauchy", "Cauchy function: f(x) = log(1 + x.dot(x))");
         manager.add<function_sargan_t>("sargan", "Sargan function: http://infinity77.net/global_optimization/test_functions_nd_S.html");
         manager.add<function_powell_t>("powell", "Powell function: https://www.sfu.ca/~ssurjano/powell.html");

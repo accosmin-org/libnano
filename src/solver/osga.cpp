@@ -75,6 +75,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     auto function = make_function(function_, x0);
 
     const auto miu = function.strong_convexity() / 2.0;
+    const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
     const auto proxy = proxy_t{x0};
 
@@ -99,6 +100,14 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     {
         x = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);
+        if (g.lpNorm<2>() < eps0)
+        {
+            state.update_if_better(x, f);
+            if (solver_t::done(function, state, true, true))
+            {
+                break;
+            }
+        }
         g = g - miu * proxy.gQ(x);
 
         h_hat = h + alpha * (g - h);
@@ -119,10 +128,8 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
 
         // check convergence
         const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
-        const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
         const auto converged = dxb >= eps0 && (eta_hat <= eps0 || this->converged(xb, fb, xb_hat, fb_hat));
         state.update_if_better(xb_hat, fb_hat);
-
         if (solver_t::done(function, state, true, converged))
         {
             break;
