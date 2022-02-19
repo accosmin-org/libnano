@@ -1,3 +1,4 @@
+#include <nano/core/stats.h>
 #include <nano/function/kinks.h>
 
 using namespace nano;
@@ -8,6 +9,15 @@ function_kinks_t::function_kinks_t(tensor_size_t dims) :
 {
     convex(true);
     smooth(false);
+
+    vector_t kinks(m_kinks.rows());
+    for (tensor_size_t i = 0; i < m_kinks.cols(); ++ i)
+    {
+        kinks = m_kinks.col(i);
+
+        const auto opt = median(begin(kinks), end(kinks));
+            m_offset += (kinks.array() - opt).abs().sum();
+    }
 }
 
 scalar_t function_kinks_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
@@ -26,7 +36,7 @@ scalar_t function_kinks_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t
     {
         fx += (x.transpose().array() - m_kinks.row(i).array()).abs().sum();
     }
-    return fx;
+    return fx - m_offset;
 }
 
 rfunction_t function_kinks_t::make(tensor_size_t dims, tensor_size_t) const

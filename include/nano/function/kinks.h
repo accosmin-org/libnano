@@ -29,6 +29,7 @@ namespace nano
     private:
 
         // attributes
-        matrix_t    m_kinks;
+        matrix_t    m_kinks;        ///<
+        scalar_t    m_offset{0};    ///< offset so that the global minimum is exactly zero
     };
 }
