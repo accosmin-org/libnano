@@ -214,6 +214,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "trials",           "number of random trials for each test function", "100");
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "smooth",           "use only smooth test functions");
+    cmdline.add("", "non-smooth",       "use only non-smooth test functions");
     cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
@@ -285,7 +286,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto max_dims = options.get<tensor_size_t>("max-dims");
     const auto trials = options.get<size_t>("trials");
     const auto convex = options.has("convex") ? convexity::yes : convexity::ignore;
-    const auto smooth = options.has("smooth") ? smoothness::yes : smoothness::ignore;
+    const auto smooth = options.has("smooth") ? smoothness::yes : (options.has("non-smooth") ? smoothness::no : smoothness::ignore);
     const auto log_failures = options.has("log-failures");
 
     const auto fregex = std::regex(options.get<string_t>("function"));
