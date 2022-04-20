@@ -39,7 +39,7 @@ private:
     vector_t    m_b;
 };
 
-int main(const int, char* argv[])
+int main(const int, char* [])
 {
     // construct an objective function
     const auto objective = objective_t{13};
@@ -48,7 +48,7 @@ int main(const int, char* argv[])
     const auto trials = 10;
     for (auto trial = 0; trial < 10; ++ trial)
     {
-        const auto x0 = nano::vector_t::Random(objective.size());
+        const vector_t x0 = nano::vector_t::Random(objective.size());
 
         std::cout << std::fixed << std::setprecision(12)
             << "check_grad[" << (trial + 1) << "/" << trials
@@ -70,7 +70,7 @@ int main(const int, char* argv[])
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++ trial)
     {
-        const auto x0 = nano::vector_t::Random(objective.size());
+        const vector_t x0 = nano::vector_t::Random(objective.size());
 
         std::cout << std::fixed << std::setprecision(12)
             << "minimize[" << (trial + 1) << "/" << trials

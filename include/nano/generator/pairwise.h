@@ -207,7 +207,11 @@ namespace nano
                                     if constexpr (tcomputer::generated_type == generator_type::sclass)
                                     {
                                         segment.setConstant(-1.0);
-                                        segment(op(values1, values2)) = +1.0;
+                                        const auto class_index = op(values1, values2);
+                                        if (class_index < segment.size())
+                                        {
+                                            segment(class_index) = +1.0;
+                                        }
                                     }
                                     else if constexpr (tcomputer::generated_type == generator_type::mclass)
                                     {

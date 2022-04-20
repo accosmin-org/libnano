@@ -10,7 +10,7 @@ namespace nano
     struct factory_traits_t<linear_model_t>
     {
         static string_t id() { return "linear"; }
-        static string_t description() { return "linear regression model (and variants: Ridge, Lasso, ElasticNet)"; }
+        static string_t description() { return "linear model (and variants: Ridge, Lasso, ElasticNet, VadaBoost-like)"; }
     };
 
     ///
@@ -18,10 +18,10 @@ namespace nano
     ///     y(x) = weights * x + bias.
     ///
     /// NB: the model can be regularized using the following methods:
-    ///     - lasso (the L1-norm of the weights) by tuning ::l1reg() accordingly,
-    ///     - ridge (the L2-norm of the weights) by tuning ::l2reg() accordingly,
-    ///     - elastic net (the L1-norm and the L2-norm of the weights) by tuning ::l1reg() and ::l2reg() accordingly,
-    ///     - variance (of the loss values across samples) by tuning ::vAreg() accordingly.
+    ///     - lasso (the L1-norm of the weights),
+    ///     - ridge (the L2-norm of the weights),
+    ///     - elastic net (the L1-norm and the L2-norm of the weights) or
+    ///     - variance (of the loss values across samples).
     ///
     /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::feature_scaling).
     ///
@@ -39,14 +39,14 @@ namespace nano
         linear_model_t();
 
         ///
-        /// \brief @see serializable_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see serializable_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
         /// \brief @see model_t
@@ -56,28 +56,16 @@ namespace nano
         ///
         /// \brief @see model_t
         ///
-        scalar_t fit(const loss_t&, const dataset_t&, const indices_t&, const solver_t&) override;
+        fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) override;
 
         ///
         /// \brief @see model_t
         ///
-        tensor4d_t predict(const dataset_t&, const indices_t&) const override;
+        tensor4d_t do_predict(const dataset_generator_t&, const indices_t&) const override;
 
         ///
-        /// \brief configure the model.
+        /// \brief access functions
         ///
-        void batch(int64_t batch) { set("linear::batch", batch); }
-        void l1reg(scalar_t l1reg) { set("linear::l1reg", l1reg); }
-        void l2reg(scalar_t l2reg) { set("linear::l2reg", l2reg); }
-        void vAreg(scalar_t vAreg) { set("linear::vAreg", vAreg); }
-        void scaling(feature_scaling scaling) { set("linear::scaling", scaling); }
-
-        auto batch() const { return ivalue("linear::batch"); }
-        auto l1reg() const { return svalue("linear::l1reg"); }
-        auto l2reg() const { return svalue("linear::l2reg"); }
-        auto vAreg() const { return svalue("linear::vAreg"); }
-        auto scaling() const { return evalue<feature_scaling>("linear::scaling"); }
-
         const auto& bias() const { return m_bias; }
         const auto& weights() const { return m_weights; }
 

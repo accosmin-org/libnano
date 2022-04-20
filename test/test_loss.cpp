@@ -1,9 +1,10 @@
 #include <nano/loss.h>
 #include <utest/utest.h>
 #include <nano/function.h>
+#include "fixture/function.h"
+#include <nano/model/class.h>
 #include <nano/core/random.h>
 #include <nano/core/numeric.h>
-#include <nano/mlearn/class.h>
 
 using namespace nano;
 
@@ -16,6 +17,9 @@ struct loss_function_t final : public function_t
         m_target.tensor(0) = class_target(xmaps, 11 % xmaps);
         m_target.tensor(1) = class_target(xmaps, 12 % xmaps);
         m_target.tensor(2) = class_target(xmaps, 13 % xmaps);
+
+        convex(m_loss->convex());
+        smooth(m_loss->smooth());
     }
 
     scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const override
@@ -51,11 +55,15 @@ UTEST_CASE(gradient)
     // evaluate the analytical gradient vs. the finite difference approximation
     for (const auto& loss_id : loss_t::all().ids())
     {
-        std::cout << "evaluating loss <" << loss_id << ">...\n";
+        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+
         for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++ cmd_dims)
         {
             const auto loss = loss_t::all().get(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
+
+            UTEST_CHECK_EQUAL(loss->convex(), function.convex());
+            UTEST_CHECK_EQUAL(loss->smooth(), function.smooth());
 
             vector_t x(function.size());
 
@@ -70,6 +78,8 @@ UTEST_CASE(gradient)
                 UTEST_CHECK_GREATER_EQUAL(f, scalar_t(0));
                 UTEST_CHECK_LESS(function.grad_accuracy(x), 5 * epsilon2<scalar_t>());
             }
+
+            check_convexity(function);
         }
     }
 }
@@ -78,7 +88,8 @@ UTEST_CASE(single_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
-        std::cout << "evaluating loss <" << loss_id << ">...\n";
+        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -110,7 +121,8 @@ UTEST_CASE(single_label_multi_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
-        std::cout << "evaluating loss <" << loss_id << ">...\n";
+        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -142,7 +154,8 @@ UTEST_CASE(multi_label_multi_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("m-.+")))
     {
-        std::cout << "evaluating loss <" << loss_id << ">...\n";
+        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 
@@ -180,7 +193,8 @@ UTEST_CASE(regression)
 {
     for (const auto& loss_id : {"absolute", "squared", "cauchy"})
     {
-        std::cout << "evaluating loss <" << loss_id << ">...\n";
+        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
 

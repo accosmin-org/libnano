@@ -66,7 +66,7 @@ public:
 
     auto process(tensor_size_t) const
     {
-        const auto colsize = tensor_size_t{2};
+        const auto colsize = tensor_size_t{1};
         const auto process = [=] (const auto& values1, const auto& values2)
         {
             const auto value1 = static_cast<scalar_t>(values1(0));
@@ -173,32 +173,32 @@ UTEST_CASE(scalar_scalar)
         +0, +0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, +0, +0, -1, -1, -1, -1, -1, -1));
 
     generator.drop(0);
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 25),
-        Na, -3, -4, -4, -5, -6, +4, +4, +4, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +1, Na, +0, Na, Na, +0, +0, +0, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, +1, Na, Na,
-        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na,
-        Na, +5, Na, +4, Na, Na, +4, +4, +4, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, -1, Na, Na,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +9, +8, +8, +7, +6, 16, 16, 16, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, 13, Na, 12, Na, Na, 36, 36, 36, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, +1, Na, Na,
-        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na),
-        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14));
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 19),
+        Na, -3, -4, -4, -5, -6, +4, +4, +4, +1, +1, +1, +1, +1, +1, +1, -1, -1, -1,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, +1, Na, +0, Na, Na, +0, +0, +0, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
+        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na,
+        Na, +5, Na, +4, Na, Na, +4, +4, +4, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, +9, +8, +8, +7, +6, 16, 16, 16, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, 13, Na, 12, Na, Na, 36, 36, 36, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
+        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
+        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
 
     generator.drop(6);
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 25),
-        Na, -3, -4, -4, -5, -6, Na, Na, Na, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +1, Na, +0, Na, Na, Na, Na, Na, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, +1, Na, Na,
-        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na,
-        Na, +5, Na, +4, Na, Na, Na, Na, Na, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, -1, Na, Na,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +9, +8, +8, +7, +6, Na, Na, Na, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, 13, Na, 12, Na, Na, Na, Na, Na, -1, +1, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, +1, +1, Na, Na,
-        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, +1, Na, Na, -1, +1, Na, Na, Na, Na, -1, +1, Na, Na, Na, Na),
-        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14));
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 19),
+        Na, -3, -4, -4, -5, -6, Na, Na, Na, +1, +1, +1, +1, +1, +1, +1, -1, -1, -1,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, +1, Na, +0, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
+        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na,
+        Na, +5, Na, +4, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, +9, +8, +8, +7, +6, Na, Na, Na, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1,
+        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+        Na, 13, Na, 12, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
+        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
+        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
 }
 
 UTEST_CASE(sclass_sclass)

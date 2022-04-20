@@ -83,13 +83,13 @@ const parameter_t* estimator_t::parameter_if(const string_t& name) const
     return find_param(m_parameters, name, false);
 }
 
-void estimator_t::read(std::istream& stream)
+std::istream& estimator_t::read(std::istream& stream)
 {
     critical(
         !::nano::read(stream, m_major_version) ||
         !::nano::read(stream, m_minor_version) ||
         !::nano::read(stream, m_patch_version),
-        "serializable: failed to read from stream!");
+        "estimator: failed to read from stream!");
 
     critical(
         m_major_version > nano::major_version ||
@@ -98,34 +98,36 @@ void estimator_t::read(std::istream& stream)
         (m_major_version == nano::major_version &&
          m_minor_version == nano::minor_version &&
          m_patch_version > nano::patch_version),
-        "serializable: version mismatch!");
+        "estimator: version mismatch!");
 
     critical(
         !::nano::read(stream, m_parameters),
-        "serializable: failed to read from stream!");
+        "estimator: failed to read from stream!");
+
+    return stream;
 }
 
-void estimator_t::write(std::ostream& stream) const
+std::ostream& estimator_t::write(std::ostream& stream) const
 {
     critical(
         !::nano::write(stream, static_cast<int32_t>(nano::major_version)) ||
         !::nano::write(stream, static_cast<int32_t>(nano::minor_version)) ||
         !::nano::write(stream, static_cast<int32_t>(nano::patch_version)),
-        "serializable: failed to write to stream");
+        "estimator: failed to write to stream");
 
     critical(
         !::nano::write(stream, m_parameters),
-        "serializable: failed to write to stream!");
-}
+        "estimator: failed to write to stream!");
 
-std::istream& nano::read(std::istream& stream, estimator_t& object)
-{
-    object.read(stream);
     return stream;
 }
 
-std::ostream& nano::write(std::ostream& stream, const estimator_t& object)
+std::istream& nano::read(std::istream& stream, estimator_t& estimator)
 {
-    object.write(stream);
-    return stream;
+    return estimator.read(stream);
+}
+
+std::ostream& nano::write(std::ostream& stream, const estimator_t& estimator)
+{
+    return estimator.write(stream);
 }

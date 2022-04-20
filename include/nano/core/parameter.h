@@ -228,14 +228,14 @@ namespace nano
         ///
         /// NB: any error is considered critical and expected to result in an exception.
         ///
-        void read(std::istream&);
+        std::istream& read(std::istream&);
 
         ///
         /// \brief serialize to the given binary stream.
         ///
         /// NB: any error is considered critical and expected to result in an exception.
         ///
-        void write(std::ostream&) const;
+        std::ostream& write(std::ostream&) const;
 
         ///
         /// \brief access functions.

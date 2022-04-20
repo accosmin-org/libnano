@@ -1,7 +1,31 @@
+#include <fstream>
 #include <utest/utest.h>
 #include <nano/dataset/feature.h>
 
 using namespace nano;
+
+static void check_stream(const feature_t& feature)
+{
+    {
+        std::ofstream stream;
+        UTEST_CHECK_THROW(feature.write(stream), std::runtime_error);
+    }
+    {
+        feature_t xfeature;
+        std::ifstream stream;
+        UTEST_CHECK_THROW(xfeature.read(stream), std::runtime_error);
+    }
+    {
+        std::ostringstream ostream;
+        UTEST_CHECK_NOTHROW(::nano::write(ostream, feature));
+
+        feature_t xfeature;
+        UTEST_CHECK_NOT_EQUAL(feature, xfeature);
+        std::istringstream istream(ostream.str());
+        UTEST_CHECK_NOTHROW(::nano::read(istream, xfeature));
+        UTEST_CHECK_EQUAL(feature, xfeature);
+    }
+}
 
 UTEST_BEGIN_MODULE(test_dataset_feature)
 
@@ -142,6 +166,14 @@ UTEST_CASE(feature_info)
         UTEST_CHECK_EQUAL(infos[1].feature(), 4);
         UTEST_CHECK_EQUAL(infos[2].feature(), 6);
     }
+}
+
+UTEST_CASE(stream_feature)
+{
+    check_stream(feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
+    check_stream(feature_t{"t64"}.scalar(feature_type::float64, make_dims(3, 2, 4)));
+    check_stream(feature_t{"sclass"}.sclass(strings_t{"cate0", "cate1", "cate2"}));
+    check_stream(feature_t{"mclass"}.sclass(strings_t{"cate0", "cate1", "cate2", "cate3"}));
 }
 
 UTEST_END_MODULE()

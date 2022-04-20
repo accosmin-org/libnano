@@ -1,18 +1,97 @@
 #include <iomanip>
+#include <nano/core/tpool.h>
+#include <nano/model/kfold.h>
+#include <nano/model/tuner.h>
 #include <nano/linear/util.h>
 #include <nano/linear/model.h>
 #include <nano/tensor/stream.h>
 #include <nano/linear/function.h>
+#include <nano/linear/regularization.h>
 
 using namespace nano;
+using namespace nano::linear;
+
+static auto make_param_space()
+{
+    return param_space_t
+    {
+        param_space_t::type::log10,
+        make_tensor<scalar_t>(make_dims(31),
+            1e-9, 1e-8, 1e-7,
+            1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1,
+            1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4, 3e+4, 1e+5, 3e+5, 1e+6,
+            1e+7, 1e+8, 1e+9
+        )
+    };
+}
+
+static auto decode_params(const tensor1d_t& params, regularization_type regularization)
+{
+    scalar_t l1reg = 0.0, l2reg = 0.0, vAreg = 0.0;
+    switch (regularization)
+    {
+    case regularization_type::lasso:        l1reg = params(0); break;
+    case regularization_type::ridge:        l2reg = params(0); break;
+    case regularization_type::variance:     vAreg = params(0); break;
+    case regularization_type::elasticnet:   l1reg = params(0), l2reg = params(1); break;
+    default:                                break;
+    }
+
+    return std::make_tuple(l1reg, l2reg, vAreg);
+}
+
+static auto evaluate(
+    const estimator_t& estimator,
+    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss,
+    const tensor2d_t& weights, const tensor1d_t& bias)
+{
+    auto iterator = flatten_iterator_t{dataset, samples};
+    iterator.execution(execution_type::par);
+    iterator.scaling(scaling_type::none);
+    iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
+
+    tensor1d_t errors(samples.size());
+    tensor1d_t values(samples.size());
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
+    iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
+    {
+        ::nano::linear::predict(inputs, weights, bias, outputs.slice(range));
+        loss.error(targets, outputs.slice(range), errors.slice(range));
+        loss.value(targets, outputs.slice(range), values.slice(range));
+    });
+
+    return std::make_tuple(errors.mean(), values.mean());
+}
+
+static auto fit(const estimator_t& estimator,
+    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver,
+    scalar_t l1reg, scalar_t l2reg, scalar_t vAreg)
+{
+    auto iterator = flatten_iterator_t{dataset, samples};
+    iterator.execution(execution_type::par);
+    iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
+    iterator.scaling(estimator.parameter("model::linear::scaling").value<scaling_type>());
+    iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
+    iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
+
+    const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg, vAreg};
+    const auto state = solver.minimize(function, vector_t::Zero(function.size()));
+
+    tensor1d_t bias = function.bias(state.x);
+    tensor2d_t weights = function.weights(state.x);
+    ::upscale(
+        iterator.flatten_stats(), iterator.scaling(),
+        iterator.targets_stats(), iterator.scaling(),
+        weights, bias);
+
+    return std::make_tuple(std::move(weights), std::move(bias));
+}
 
 linear_model_t::linear_model_t()
 {
-    model_t::register_param(iparam1_t{"linear::batch", 1, LE, 32, LE, 4096});
-    model_t::register_param(sparam1_t{"linear::l1reg", 0, LE, 0, LE, 1e+10});
-    model_t::register_param(sparam1_t{"linear::l2reg", 0, LE, 0, LE, 1e+10});
-    model_t::register_param(sparam1_t{"linear::vAreg", 0, LE, 0, LE, 1e+10});
-    model_t::register_param(eparam1_t{"linear::scaling", feature_scaling::standard});
+    register_parameter(parameter_t::make_integer("model::linear::batch", 10, LE, 100, LE, 10000));
+    register_parameter(parameter_t::make_enum("model::linear::scaling", scaling_type::standard));
+    register_parameter(parameter_t::make_enum("model::linear::regularization", regularization_type::lasso));
 }
 
 rmodel_t linear_model_t::clone() const
@@ -20,65 +99,7 @@ rmodel_t linear_model_t::clone() const
     return std::make_unique<linear_model_t>(*this);
 }
 
-scalar_t linear_model_t::fit(
-    const loss_t& loss, const dataset_t& dataset, const indices_t& samples, const solver_t& solver)
-{
-    log_info() << string_t(8, '-') << ::nano::align(" gboost model ", 112U, alignment::left, '-') << string_t(8, '-');
-    for (const auto& param : params())
-    {
-        log_info() << "gboost model: fit using " << std::fixed << std::setprecision(8) << param;
-    }
-    log_info() << string_t(128, '-');
-
-    for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
-    {
-        const auto feature = dataset.feature(ifeature);
-        critical(
-            feature.discrete() || feature.optional(),
-            "linear model: cannot fit datasets containing discrete features or with missing feature values!");
-    }
-
-    auto function = linear_function_t{loss, dataset, samples};
-    function.batch(batch());
-    function.l1reg(l1reg());
-    function.l2reg(l2reg());
-    function.vAreg(vAreg());
-    function.scaling(scaling());
-
-    const auto state = solver.minimize(function, vector_t::Zero(function.size()));
-    m_bias = function.bias(state.x);
-    m_weights = function.weights(state.x);
-
-    // NB: rescale the bias and the weights to match the scaling of the inputs!
-    const auto& istats = function.istats();
-    istats.upscale(function.scaling(), m_weights, m_bias);
-
-    tensor1d_t errors(samples.size());
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
-
-    loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
-    {
-        const auto range = make_range(begin, end);
-        const auto inputs = dataset.inputs(samples.slice(range));
-        const auto targets = dataset.targets(samples.slice(range));
-
-        ::nano::linear::predict(inputs, m_weights, m_bias, outputs.slice(range));
-        loss.error(targets.tensor(), outputs.slice(range), errors.slice(range));
-    });
-
-    const auto tr_value = state.f;
-    const auto tr_error = errors.vector().mean();
-
-    log_info() << std::setprecision(8) << std::fixed
-        << "linear: tr=" << tr_value << "|" << tr_error
-        << ",l1reg=" << function.l1reg()
-        << ",l2reg=" << function.l2reg()
-        << ",vAreg=" << function.vAreg() << "," << state << ".";
-
-    return tr_error;
-}
-
-void linear_model_t::read(std::istream& stream)
+std::istream& linear_model_t::read(std::istream& stream)
 {
     model_t::read(stream);
 
@@ -87,11 +108,13 @@ void linear_model_t::read(std::istream& stream)
         !::nano::read(stream, m_weights),
         "linear model: failed to read from stream!");
 
-    critical(m_bias.size() != m_weights.cols(),
+    critical(m_bias.size() != m_weights.rows(),
         "linear model: parameter mismatch!");
+
+    return stream;
 }
 
-void linear_model_t::write(std::ostream& stream) const
+std::ostream& linear_model_t::write(std::ostream& stream) const
 {
     model_t::write(stream);
 
@@ -99,17 +122,140 @@ void linear_model_t::write(std::ostream& stream) const
         !::nano::write(stream, m_bias) ||
         !::nano::write(stream, m_weights),
         "linear model: failed to write to stream!");
+
+    return stream;
 }
 
-tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
+fit_result_t linear_model_t::do_fit(
+    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver)
 {
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
+    const auto folds = parameter("model::folds").value<tensor_size_t>();
+    const auto random_seed = parameter("model::random_seed").value<uint64_t>();
+    const auto regularization = parameter("model::linear::regularization").value<regularization_type>();
 
-    loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
+    const auto cv = kfold_t{samples, folds, random_seed};
+
+    fit_result_t result;
+
+    const auto callback = [&] (const tensor1d_t& params)
     {
-        const auto range = make_range(begin, end);
-        const auto inputs = dataset.inputs(samples.slice(range));
+        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
 
+        fit_result_t::cv_result_t cv_result{params, folds};
+        ::nano::loopi(folds, [&, l1reg=l1reg, l2reg=l2reg, vAreg=vAreg] (tensor_size_t fold, size_t)
+        {
+            const auto [train_samples, valid_samples] = cv.split(fold);
+
+            const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg);
+            const auto [train_error, train_value] = ::evaluate(*this, dataset, train_samples, loss, weights, bias);
+            const auto [valid_error, valid_value] = ::evaluate(*this, dataset, valid_samples, loss, weights, bias);
+
+            cv_result.m_train_errors(fold) = train_error;
+            cv_result.m_train_values(fold) = train_value;
+            cv_result.m_valid_errors(fold) = valid_error;
+            cv_result.m_valid_values(fold) = valid_value;
+        });
+
+        const auto goodness = std::log(
+            cv_result.m_train_errors.mean() +
+            std::numeric_limits<scalar_t>::epsilon());
+
+        log_info() << std::fixed << std::setprecision(9) << std::fixed
+            << "linear: l1reg=" << l1reg << ",l2reg=" << l2reg << ",vAreg=" << vAreg
+            << ",train=" << cv_result.m_train_values.mean() << "/" << cv_result.m_train_errors.mean()
+            << ",valid=" << cv_result.m_valid_values.mean() << "/" << cv_result.m_valid_errors.mean() << ".";
+
+        result.m_cv_results.emplace_back(std::move(cv_result));
+
+        return goodness;
+    };
+
+    const auto refit = [&] (const tensor1d_t& params)
+    {
+        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
+
+        const auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
+        const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias);
+
+        result.m_refit_error = refit_error;
+        result.m_refit_value = refit_value;
+
+        log_info() << std::fixed << std::setprecision(9) << std::fixed
+            << "linear: l1reg=" << l1reg << ",l2reg=" << l2reg << ",vAreg=" << vAreg
+            << ",refit=" << refit_value << "/" << refit_error << ".";
+
+        m_weights = weights;
+        m_bias = bias;
+    };
+
+    switch (parameter("model::linear::regularization").value<regularization_type>())
+    {
+    case regularization_type::none:
+        refit(tensor1d_t{});
+        break;
+
+    case regularization_type::lasso:
+        {
+            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
+            const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
+                1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
+
+            result.m_param_names = {"l1reg"};
+            refit(steps.rbegin()->m_opt_param);
+        }
+        break;
+
+    case regularization_type::ridge:
+        {
+            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
+            const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
+                1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
+
+            result.m_param_names = {"l2reg"};
+            refit(steps.rbegin()->m_opt_param);
+        }
+        break;
+
+    case regularization_type::variance:
+        {
+            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
+            const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
+                1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
+
+            result.m_param_names = {"vAreg"};
+            refit(steps.rbegin()->m_opt_param);
+        }
+        break;
+
+    case regularization_type::elasticnet:
+        {
+            const auto tuner = tuner_t{param_spaces_t{make_param_space(), make_param_space()}, callback};
+            const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(15, 2),
+                1e-2, 1e-2, 1e-2, 1e+0, 1e-2, 1e+2, 1e-2, 1e+4, 1e-2, 1e+6,
+                1e+1, 1e-2, 1e+1, 1e+0, 1e+1, 1e+2, 1e+1, 1e+4, 1e+1, 1e+6,
+                1e+4, 1e-2, 1e+4, 1e+0, 1e+4, 1e+2, 1e+4, 1e+4, 1e+4, 1e+6));
+
+            result.m_param_names = {"l1reg", "l2reg"};
+            refit(steps.rbegin()->m_opt_param);
+        }
+        break;
+    }
+
+    return result;
+}
+
+tensor4d_t linear_model_t::do_predict(const dataset_generator_t& dataset, const indices_t& samples) const
+{
+    // TODO: no need to allocate the sample indices one more time
+    // TODO: determine at runtime if worth parallelizing
+    auto iterator = flatten_iterator_t(dataset, samples);
+    iterator.scaling(scaling_type::none);
+    iterator.execution(execution_type::seq);
+    iterator.batch(parameter("model::linear::batch").value<tensor_size_t>());
+
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
+    iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs)
+    {
         ::nano::linear::predict(inputs, m_weights, m_bias, outputs.slice(range));
     });
 

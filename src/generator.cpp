@@ -47,11 +47,11 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
 }
 
 template <typename toperator>
-static void loop(execution ex, indices_cmap_t samples, tensor_size_t batch, const toperator& op)
+static void loop(execution_type execution, indices_cmap_t samples, tensor_size_t batch, const toperator& op)
 {
-    switch (ex)
+    switch (execution)
     {
-    case execution::par:
+    case execution_type::par:
         ::nano::loopr(samples.size(), batch, op);
         break;
 
@@ -65,11 +65,11 @@ static void loop(execution ex, indices_cmap_t samples, tensor_size_t batch, cons
 }
 
 template <typename toperator>
-static void loop(execution ex, indices_cmap_t ifeatures, const toperator& op)
+static void loop(execution_type execution, indices_cmap_t ifeatures, const toperator& op)
 {
-    switch (ex)
+    switch (execution)
     {
-    case execution::par:
+    case execution_type::par:
         ::nano::loopi(ifeatures.size(), [&] (tensor_size_t index, size_t tnum)
         {
             op(ifeatures(index), tnum);
@@ -99,7 +99,7 @@ void dataset_generator_t::update()
         {
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
-            case feature_type::sclass:  total_columns += feature.classes(); break; // NOLINT(bugprone-branch-clone)
+            case feature_type::sclass:  total_columns += feature.classes() - 1; break;
             case feature_type::mclass:  total_columns += feature.classes(); break;
             default:                    total_columns += size(feature.dims()); break;
             }
@@ -125,7 +125,7 @@ void dataset_generator_t::update()
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
             case feature_type::sclass:
-                columns = feature.classes();
+                columns = feature.classes() - 1;
                 break;
             case feature_type::mclass:
                 dim1 = feature.classes();

@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/mlearn/util.h>
+#include <nano/model/util.h>
 
 using namespace nano;
 
@@ -20,7 +20,7 @@ static tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
     return product;
 }
 
-UTEST_BEGIN_MODULE(test_mlearn_util)
+UTEST_BEGIN_MODULE(test_model_util)
 
 UTEST_CASE(sample_with_replacement)
 {

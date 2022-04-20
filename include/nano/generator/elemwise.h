@@ -201,7 +201,11 @@ namespace nano
                                     if constexpr (tcomputer::generated_type == generator_type::sclass)
                                     {   // NOLINT(bugprone-branch-clone)
                                         segment.setConstant(-1.0);
-                                        segment(op(values)) = +1.0;
+                                        const auto class_index = op(values);
+                                        if (class_index < segment.size())
+                                        {
+                                            segment(class_index) = +1.0;
+                                        }
                                     }
                                     else if constexpr (tcomputer::generated_type == generator_type::mclass)
                                     {

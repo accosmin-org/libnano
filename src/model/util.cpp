@@ -1,5 +1,5 @@
 #include <nano/core/random.h>
-#include <nano/mlearn/util.h>
+#include <nano/model/util.h>
 
 using namespace nano;
 

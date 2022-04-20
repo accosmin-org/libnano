@@ -9,14 +9,21 @@ cache_t::cache_t(tensor_size_t isize, tensor_size_t tsize, bool g1, bool g2)
     if (g1)
     {
         m_gb1.resize(tsize);
-        m_gW1.resize(isize, tsize);
+        m_gW1.resize(tsize, isize);
         if (g2)
         {
             m_gb2.resize(tsize);
-            m_gW2.resize(isize, tsize);
+            m_gW2.resize(tsize, isize);
         }
     }
 
+    clear();
+}
+
+void cache_t::clear()
+{
+    m_vm1 = 0.0;
+    m_vm2 = 0.0;
     m_gb1.zero();
     m_gb2.zero();
     m_gW1.zero();

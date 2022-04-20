@@ -2,7 +2,7 @@
 #include <iostream>
 #include <nano/tensor/stream.h>
 
-int main(const int, char* argv[])
+int main(const int, char* [])
 {
     // initialize a random 1D tensor of size 48
     auto tensor = nano::tensor_mem_t<int, 1>{48};

@@ -30,8 +30,8 @@ CXX=g++ bash scripts/build.sh --suffix gcc-lsan --build-type Debug --lsan \
 CXX=g++ bash scripts/build.sh --suffix gcc-usan --build-type Debug --usan \
     --generator Ninja --config --build --test
 
-CXX=g++ bash scripts/build.sh --suffix gcc-tsan --build-type Debug --tsan \
-    --generator Ninja --config --build --test
+#CXX=g++ bash scripts/build.sh --suffix gcc-tsan --build-type Debug --tsan \
+#    --generator Ninja --config --build --test
 
 CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
     --generator Ninja --config --build --clang-tidy-all

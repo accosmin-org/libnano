@@ -15,7 +15,7 @@ cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || ech
 threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
-export CXXFLAGS="${CXXFLAGS} -Werror"
+export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -pedantic -Wsign-conversion"
 
 function lto {
     export CXXFLAGS="${CXXFLAGS} -flto"
@@ -132,12 +132,13 @@ function cppcheck {
     #--suppress=shadowFunction
     #--suppress=shadowVar
     #--suppress=unusedFunction
-    /tmp/cppcheck/bin/cppcheck \
+    /tmp/cppcheck/bin/cppcheck -j ${threads} \
         --project=compile_commands.json \
         --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
         --suppress=shadowFunction \
+        --suppress=unusedFunction \
         --suppress=unmatchedSuppression
 }
 

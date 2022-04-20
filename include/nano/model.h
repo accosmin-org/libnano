@@ -3,7 +3,6 @@
 #include <nano/loss.h>
 #include <nano/solver.h>
 #include <nano/generator.h>
-#include <nano/core/serializable.h>
 
 namespace nano
 {
@@ -13,49 +12,29 @@ namespace nano
     using rmodels_t = std::vector<rmodel_t>;
 
     ///
-    /// \brief stores values for a set of parameters given by name, optionally with:
-    ///     - the validation error (e.g. from k-fold cross-validation).
+    /// \brief cross-validation statistics obtained while fitting a ML model.
     ///
-    class NANO_PUBLIC model_config_t
+    struct fit_result_t
     {
-    public:
+        struct cv_result_t
+        {
+            cv_result_t();
+            cv_result_t(tensor1d_t params, tensor_size_t folds);
 
-        using xvalue_t = std::pair<string_t, std::variant<int64_t, scalar_t>>;
-        using xvalues_t = std::vector<xvalue_t>;
+            tensor1d_t  m_params;                       ///< hyper-parameter values
+            tensor1d_t  m_train_errors, m_train_values; ///< error and loss values for training samples
+            tensor1d_t  m_valid_errors, m_valid_values; ///< error and loss values for validation samples
+        };
+        using cv_results_t = std::vector<cv_result_t>;
 
-        ///
-        /// \brief default constructor
-        ///
-        model_config_t() = default;
-
-        ///
-        /// \brief store parameter's value.
-        ///
-        void add(string_t name, int32_t value);
-        void add(string_t name, int64_t value);
-        void add(string_t name, scalar_t value);
-
-        ///
-        /// \brief store validation error.
-        ///
-        void evaluate(scalar_t error);
-
-        ///
-        /// \brief access functions.
-        ///
-        auto error() const { return m_error; }
-        const auto& values() const { return m_values; }
-
-    private:
+        static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
         // attributes
-        xvalues_t       m_values;           ///<
-        scalar_t        m_error{std::numeric_limits<scalar_t>::quiet_NaN()};    ///<
+        strings_t       m_param_names;                  ///<
+        cv_results_t    m_cv_results;                   ///<
+        scalar_t        m_refit_error{NaN};             ///<
+        scalar_t        m_refit_value{NaN};             ///<
     };
-
-    using model_configs_t = std::vector<model_config_t>;
-
-    NANO_PUBLIC std::ostream& operator<<(std::ostream&, const model_config_t&);
 
     ///
     /// \brief interface for machine learning models.
@@ -65,7 +44,7 @@ namespace nano
     ///     - prediction (constant) which evaluates the trained model on the given dataset,
     ///     - saving/reading to/from binary streams.
     ///
-    class NANO_PUBLIC model_t : public serializable_t
+    class NANO_PUBLIC model_t : public estimator_t
     {
     public:
 
@@ -80,14 +59,14 @@ namespace nano
         model_t();
 
         ///
-        /// \brief @see serializable_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see serializable_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
         /// \brief clone the object.
@@ -98,58 +77,27 @@ namespace nano
         /// \brief fit the model using the given samples and the current set of (hyper-)parameters
         ///     and returns the average error of the given samples.
         ///
-        scalar_t fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
-
-        ///
-        /// \brief evaluate the trained model and returns the error for each of the given samples.
-        ///
-        tensor1d_t evaluate(const dataset_generator_t&, const indices_t&, const loss_t&) const;
+        fit_result_t fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&);
 
         ///
         /// \brief evaluate the trained model and returns the predictions for each of the given samples.
         ///
         tensor4d_t predict(const dataset_generator_t&, const indices_t&) const;
 
-        ///
-        /// \brief returns all stored parameters.
-        ///
-        const auto& params() const { return m_params; }
-        model_config_t config() const;
-
     private:
 
         void compatible(const dataset_generator_t&) const;
 
-        indices_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
-        tensor4d_t do_predict(const dataset_generator_t&, const indices_t&) const = 0;
+        virtual fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
+        virtual tensor4d_t do_predict(const dataset_generator_t&, const indices_t&) const = 0;
 
         // attributes
         features_t      m_inputs;       ///< input features
         feature_t       m_target;       ///< optional target feature
-        indices_t       m_selected;     ///< indices of the selected input features
     };
 
+    /*
     using imodel_t = identifiable_t<model_t>;
     using imodels_t = std::vector<imodel_t>;
-
-    ///
-    /// \brief gather the results of k-fold cross-validation.
-    ///
-    struct kfold_result_t
-    {
-        kfold_result_t() = default;
-        explicit kfold_result_t(tensor_size_t folds);
-
-        tensor1d_t      m_train_errors; ///<
-        tensor1d_t      m_valid_errors; ///<
-        rmodels_t       m_models;       ///<
-    };
-
-    ///
-    /// \brief (repeated) k-fold cross-validation
-    ///     using the given model as currently setup in terms of (hyper-)parameters.
-    ///
-    NANO_PUBLIC kfold_result_t kfold(
-        const model_t&, const dataset_generator_t&, const indices_t&, const loss_t& loss, const solver_t&,
-        tensor_size_t folds = 5, tensor_size_t repetitions = 1);
+    */
 }

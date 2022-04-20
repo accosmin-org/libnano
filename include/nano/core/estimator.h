@@ -42,14 +42,14 @@ namespace nano
         ///
         /// NB: any error is considered critical and expected to result in an exception.
         ///
-        virtual void read(std::istream&);
+        virtual std::istream& read(std::istream&);
 
         ///
         /// \brief serialize to the given binary stream.
         ///
         /// NB: any error is considered critical and expected to result in an exception.
         ///
-        virtual void write(std::ostream&) const;
+        virtual std::ostream& write(std::ostream&) const;
 
         ///
         /// \brief register a new parameter if possible, otherwise throw an exception.

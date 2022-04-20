@@ -1,3 +1,4 @@
+#include <utest/utest.h>
 #include <nano/dataset.h>
 #include <nano/generator/elemwise_identity.h>
 
@@ -124,9 +125,9 @@ private:
 
         m_bias.random();
         m_weights.random();
-        for (tensor_size_t column = m_modulo, columns = m_weights.size<1>(); column < columns; column += m_modulo)
+        for (tensor_size_t column = m_modulo, columns = generator.columns(); column < columns; column += m_modulo)
         {
-            m_weights.matrix().col(column).setConstant(0.0);
+            m_weights.matrix().row(column).setConstant(0.0);
         }
 
         auto iterator = flatten_iterator_t{generator, arange(0, m_samples)};
@@ -153,3 +154,74 @@ private:
     tensor2d_t          m_weights;          ///< 2D weight matrix that maps the input to the output
     tensor1d_t          m_bias;             ///< 1D bias vector that offsets the output
 };
+
+[[maybe_unused]] static auto make_dataset(tensor_size_t samples, tensor_size_t targets, tensor_size_t features,
+    tensor_size_t modulo = 31, scalar_t noise = 0.0)
+{
+    auto dataset = fixture_dataset_t{};
+    dataset.noise(noise);
+    dataset.modulo(modulo);
+    dataset.samples(samples);
+    dataset.targets(targets);
+    dataset.features(features);
+    UTEST_REQUIRE_NOTHROW(dataset.load());
+    return dataset;
+}
+
+[[maybe_unused]] static auto make_generator(const dataset_t& dataset)
+{
+    auto generator = dataset_generator_t{dataset};
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
+    return generator;
+}
+
+[[maybe_unused]] static auto make_iterator(const dataset_generator_t& generator,
+    execution_type execution, tensor_size_t batch, scaling_type scaling)
+{
+    const auto samples = generator.dataset().samples();
+    auto iterator = flatten_iterator_t{generator, arange(0, samples)};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+    iterator.execution(execution);
+    return iterator;
+}
+
+template <typename tweights, typename tbias>
+[[maybe_unused]] static void check_linear(const dataset_generator_t& generator,
+    tweights weights, tbias bias, scalar_t epsilon)
+{
+    const auto samples = generator.dataset().samples();
+
+    auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
+
+    auto iterator = flatten_iterator_t{generator, arange(0, samples)};
+    iterator.batch(11);
+    iterator.scaling(scaling_type::none);
+    iterator.execution(execution_type::seq);
+    iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
+    {
+        for (tensor_size_t i = 0, size = range.size(); i < size; ++ i)
+        {
+            UTEST_CHECK_CLOSE(targets.vector(i), weights * inputs.vector(i) + bias, epsilon);
+            called(range.begin() + i) = 1;
+        }
+    });
+
+    UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
+}
+
+[[maybe_unused]] static void check_outputs(const dataset_generator_t& generator,
+    const indices_t& samples, const tensor4d_t& outputs, scalar_t epsilon)
+{
+    auto iterator = flatten_iterator_t{generator, samples};
+    iterator.batch(7);
+    iterator.scaling(scaling_type::none);
+    iterator.execution(execution_type::seq);
+    iterator.loop([&] (tensor_range_t range, size_t, tensor4d_cmap_t targets)
+    {
+        UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon);
+    });
+}

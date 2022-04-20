@@ -1,3 +1,5 @@
+#include <nano/core/logger.h>
+#include <nano/core/stream.h>
 #include <nano/dataset/feature.h>
 
 using namespace nano;
@@ -96,6 +98,33 @@ feature_t::operator task_type() const
     }
 }
 
+std::istream& feature_t::read(std::istream& stream)
+{
+    string_t type;
+    critical(
+        !::nano::read(stream, type) ||
+        !::nano::read(stream, m_dims) ||
+        !::nano::read(stream, m_name) ||
+        !::nano::read(stream, m_labels),
+        "feature (", m_name, "): failed to read from stream!");
+
+    m_type = from_string<feature_type>(type);
+
+    return stream;
+}
+
+std::ostream& feature_t::write(std::ostream& stream) const
+{
+    critical(
+        !::nano::write(stream, scat(m_type)) ||
+        !::nano::write(stream, m_dims) ||
+        !::nano::write(stream, m_name) ||
+        !::nano::write(stream, m_labels),
+        "feature (", m_name, "): failed to write to stream!");
+
+    return stream;
+}
+
 bool ::nano::operator==(const feature_t& f1, const feature_t& f2)
 {
     return  f1.type() == f2.type() &&
@@ -124,6 +153,16 @@ std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
         }
     }
     return stream << "]";
+}
+
+std::istream& ::nano::read(std::istream& stream, feature_t& feature)
+{
+    return feature.read(stream);
+}
+
+std::ostream& ::nano::write(std::ostream& stream, const feature_t& feature)
+{
+    return feature.write(stream);
 }
 
 feature_info_t::feature_info_t() = default;

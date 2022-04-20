@@ -1,14 +1,14 @@
 #include <nano/core/random.h>
-#include <nano/mlearn/kfold.h>
+#include <nano/model/kfold.h>
 
 using namespace nano;
 
-kfold_t::kfold_t(indices_t samples, tensor_size_t folds) :
+kfold_t::kfold_t(indices_t samples, tensor_size_t folds, seed_t seed) :
     m_samples(std::move(samples)),
     m_folds(folds)
 {
     assert(folds > 1);
-    std::shuffle(begin(m_samples), end(m_samples), make_rng());
+    std::shuffle(begin(m_samples), end(m_samples), make_rng(seed));
 }
 
 std::pair<indices_t, indices_t> kfold_t::split(tensor_size_t fold) const

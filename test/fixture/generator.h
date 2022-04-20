@@ -130,10 +130,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         auto iterator = select_iterator_t{generator};
 
-        iterator.exec(execution::seq);
+        iterator.execution(execution_type::seq);
         check_select(iterator, samples, features, expected);
 
-        iterator.exec(execution::par);
+        iterator.execution(execution_type::par);
         check_select(iterator, samples, features, expected);
     }
 }
@@ -149,15 +149,15 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
         UTEST_CHECK_EQUAL(generator.column2feature(column), expected_column2features(column));
     }
 
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         for (const auto& samples : make_samples(generator))
         {
             for (const auto batch : {1, 3, 8})
             {
                 auto iterator = flatten_iterator_t{generator, samples};
-                iterator.exec(exec);
                 iterator.batch(batch);
+                iterator.execution(execution);
 
                 for (const auto scaling : enum_values<scaling_type>())
                 {
@@ -210,7 +210,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
     auto features = std::vector<tensor_size_t>{};
     auto iterator = select_iterator_t{generator};
-    iterator.exec(execution::seq);
+    iterator.execution(execution_type::seq);
 
     const auto op_sclass = [&] (tensor_size_t feature, size_t, sclass_cmap_t) { features.push_back(feature); };
     const auto op_mclass = [&] (tensor_size_t feature, size_t, mclass_cmap_t) { features.push_back(feature); };
@@ -242,11 +242,11 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
 {
     const auto samples = arange(0, generator.dataset().samples());
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         auto iterator = flatten_iterator_t{generator, samples};
-        iterator.exec(exec);
         iterator.batch(3);
+        iterator.execution(execution);
 
         for (const auto scaling : enum_values<scaling_type>())
         {
@@ -288,13 +288,13 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     UTEST_CHECK_EQUAL(generator.target_dims(), expected_target_dims);
 
     const auto samples = arange(0, expected_targets.size<0>());
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         for (const auto batch : {1, 3, 8})
         {
             auto iterator = targets_iterator_t{generator, samples};
-            iterator.exec(exec);
             iterator.batch(batch);
+            iterator.execution(execution);
 
             for (const auto scaling : enum_values<scaling_type>())
             {
@@ -339,13 +339,13 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
     const auto samples = arange(0, generator.dataset().samples());
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         for (const auto batch : {1, 3, 8})
         {
             auto iterator = targets_iterator_t{generator, samples};
-            iterator.exec(exec);
             iterator.batch(batch);
+            iterator.execution(execution);
 
             for (const auto scaling : enum_values<scaling_type>())
             {
@@ -372,13 +372,13 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
     const auto samples = arange(0, generator.dataset().samples());
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         for (const auto batch : {1, 3, 8})
         {
             auto iterator = targets_iterator_t{generator, samples};
-            iterator.exec(exec);
             iterator.batch(batch);
+            iterator.execution(execution);
 
             for (const auto scaling : enum_values<scaling_type>())
             {
@@ -409,13 +409,13 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     expected_sample_weights.full(1.0);
 
     const auto samples = arange(0, generator.dataset().samples());
-    for (const auto exec : {execution::par, execution::seq})
+    for (const auto execution : {execution_type::par, execution_type::seq})
     {
         for (const auto batch : {1, 3, 8})
         {
             auto iterator = targets_iterator_t{generator, samples};
-            iterator.exec(exec);
             iterator.batch(batch);
+            iterator.execution(execution);
 
             for (const auto scaling : enum_values<scaling_type>())
             {

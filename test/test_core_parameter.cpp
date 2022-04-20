@@ -11,6 +11,11 @@ static void check_stream(const parameter_t& param)
         std::ofstream stream;
         UTEST_CHECK_THROW(param.write(stream), std::runtime_error);
     }
+    {
+        parameter_t xparam;
+        std::ifstream stream;
+        UTEST_CHECK_THROW(xparam.read(stream), std::runtime_error);
+    }
     string_t str;
     {
         std::ostringstream stream;
@@ -27,11 +32,6 @@ static void check_stream(const parameter_t& param)
         parameter_t xparam;
         reinterpret_cast<int32_t*>(const_cast<char*>(str.data()))[0] = 42; // NOLINT
         std::istringstream stream(str);
-        UTEST_CHECK_THROW(xparam.read(stream), std::runtime_error);
-    }
-    {
-        parameter_t xparam;
-        std::ifstream stream;
         UTEST_CHECK_THROW(xparam.read(stream), std::runtime_error);
     }
     {

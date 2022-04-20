@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <nano/dataset/feature.h>
+#include <nano/dataset/scaling.h>
 #include <nano/dataset/iterator.h>
 
 namespace nano
@@ -293,6 +294,11 @@ namespace nano
     /// \brief scale an affine transformation so that it undos precisely
     ///     the given scaling of the flatten inputs and of the targets.
     ///
+    NANO_PUBLIC void upscale(
+        const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
+        const targets_stats_t& targets_stats, scaling_type targets_scaling,
+        tensor2d_map_t weights, tensor1d_map_t bias);
+
     NANO_PUBLIC void upscale(
         const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
         const scalar_stats_t& targets_stats, scaling_type targets_scaling,

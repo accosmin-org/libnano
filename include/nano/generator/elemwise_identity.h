@@ -15,7 +15,7 @@ namespace nano
 
         auto process(tensor_size_t ifeature) const
         {
-            const auto colsize = mapped_classes(ifeature);
+            const auto colsize = mapped_classes(ifeature) - 1;
             const auto process = [=] (const auto& label)
             {
                 return static_cast<int32_t>(label);

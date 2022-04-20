@@ -189,6 +189,35 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor4d_map_t values) const
     upscale(scaling, values.reshape(values.size<0>(), -1));
 }
 
+static auto make_scaling(const scalar_stats_t& stats, scaling_type scaling)
+{
+    auto w = make_full_tensor<scalar_t>(make_dims(stats.size()), 1.0);
+    auto b = make_full_tensor<scalar_t>(make_dims(stats.size()), 0.0);
+
+    switch (scaling)
+    {
+    case scaling_type::mean:
+        w = stats.div_range();
+        b.array() = -stats.mean().array() * stats.div_range().array();
+        break;
+
+    case scaling_type::minmax:
+        w = stats.div_range();
+        b.array() = -stats.min().array() * stats.div_range().array();
+        break;
+
+    case scaling_type::standard:
+        w = stats.div_stdev();
+        b.array() = -stats.mean().array() * stats.div_stdev().array();
+        break;
+
+    default:
+        break;
+    }
+
+    return std::make_pair(w, b);
+}
+
 void nano::upscale(
     const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
     const scalar_stats_t& targets_stats, scaling_type targets_scaling,
@@ -198,45 +227,41 @@ void nano::upscale(
     assert(weights.size<0>() == targets_stats.size());
     assert(weights.size<1>() == flatten_stats.size());
 
-    const auto make_scaling = [] (const scalar_stats_t& stats, scaling_type scaling)
-    {
-        auto w = make_full_tensor<scalar_t>(make_dims(stats.size()), 1.0);
-        auto b = make_full_tensor<scalar_t>(make_dims(stats.size()), 0.0);
-
-        switch (scaling)
-        {
-        case scaling_type::mean:
-            w = stats.div_range();
-            b.array() = -stats.mean().array() * stats.div_range().array();
-            break;
-
-        case scaling_type::minmax:
-            w = stats.div_range();
-            b.array() = -stats.min().array() * stats.div_range().array();
-            break;
-
-        case scaling_type::standard:
-            w = stats.div_stdev();
-            b.array() = -stats.mean().array() * stats.div_stdev().array();
-            break;
-
-        default:
-            break;
-        }
-
-        return std::make_pair(w, b);
-    };
-
     const auto [flatten_w, flatten_b] = make_scaling(flatten_stats, flatten_scaling);
     const auto [targets_w, targets_b] = make_scaling(targets_stats, targets_scaling);
 
     // cppcheck-suppress unreadVariable
     bias.array() = (weights.matrix() * flatten_b.vector()).array() + bias.array() - targets_b.array();
+    // cppcheck-suppress unreadVariable
     bias.array() /= targets_w.array();
 
     // cppcheck-suppress unreadVariable
     weights.matrix().array().colwise() /= targets_w.array();
+    // cppcheck-suppress unreadVariable
     weights.matrix().array().rowwise() *= flatten_w.array().transpose();
+}
+
+void nano::upscale(
+    const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
+    const targets_stats_t& targets_stats, scaling_type targets_scaling,
+    tensor2d_map_t weights, tensor1d_map_t bias)
+{
+    if (const auto* ptargets_stats = std::get_if<scalar_stats_t>(&targets_stats))
+    {
+        ::nano::upscale(flatten_stats, flatten_scaling, *ptargets_stats, targets_scaling, weights, bias);
+    }
+    else
+    {
+        assert(weights.size<1>() == flatten_stats.size());
+
+        const auto [flatten_w, flatten_b] = make_scaling(flatten_stats, flatten_scaling);
+
+        // cppcheck-suppress unreadVariable
+        bias.array() = (weights.matrix() * flatten_b.vector()).array() + bias.array();
+
+        // cppcheck-suppress unreadVariable
+        weights.matrix().array().rowwise() *= flatten_w.array().transpose();
+    }
 }
 
 sclass_stats_t::sclass_stats_t() = default;

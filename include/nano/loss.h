@@ -30,7 +30,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        loss_t() = default;
+        loss_t();
 
         ///
         /// \brief enable copying
@@ -81,5 +81,28 @@ namespace nano
             vgrads.resize(targets.dims());
             vgrad(targets, outputs, vgrads.tensor());
         }
+
+        ///
+        /// \brief returns whether the loss function is convex.
+        ///
+        bool convex() const { return m_convex; }
+
+        ///
+        /// \brief returns whether the loss function is smooth.
+        ///
+        /// NB: if not, then only sub-gradients are available.
+        ///
+        bool smooth() const { return m_smooth; }
+
+    protected:
+
+        void convex(bool);
+        void smooth(bool);
+
+    private:
+
+        // attributes
+        bool        m_convex{false};    ///< whether the loss function is convex
+        bool        m_smooth{false};    ///< whether the loss function is smooth (otherwise subgradients should be used)
     };
 }

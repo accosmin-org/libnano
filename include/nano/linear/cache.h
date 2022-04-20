@@ -23,7 +23,12 @@ namespace nano::linear
         cache_t(tensor_size_t isize, tensor_size_t tsize, bool g1, bool g2);
 
         ///
-        /// \brief cumulate partial results
+        /// \brief reset accumulators.
+        ///
+        void clear();
+
+        ///
+        /// \brief cumulate partial results.
         ///
         cache_t& operator+=(const cache_t& other);
 

@@ -143,8 +143,19 @@ namespace nano
     >
     bool close(const teigen1& lhs, const teigen2& rhs, tscalar epsilon)
     {
-        return  (lhs - rhs).array().abs().maxCoeff() <
-                epsilon * (1 + lhs.array().abs().maxCoeff() + rhs.array().abs().maxCoeff());
+        if (lhs.size() != rhs.size())
+        {
+            return false;
+        }
+        else if (lhs.size() == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return  (lhs - rhs).array().abs().maxCoeff() <
+                    epsilon * (1 + lhs.array().abs().maxCoeff() + rhs.array().abs().maxCoeff());
+        }
     }
 }
 

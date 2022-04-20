@@ -13,12 +13,43 @@
 #define UTEST_STRINGIFY_(x) #x
 #define UTEST_STRINGIFY(x) UTEST_STRINGIFY_(x)
 
+#define ERROR_COLOR "\033[35m"
+#define RESET_COLOR "\033[0m"
+
+static std::string utest_test_name;
 static std::string utest_case_name;
 static std::string utest_module_name;
 
 static std::size_t utest_n_cases = 0;
 static std::atomic<std::size_t> utest_n_checks = {0};
 static std::atomic<std::size_t> utest_n_failures = {0};
+
+struct utest_location_t
+{
+};
+
+inline std::ostream& operator<<(std::ostream& stream, const utest_location_t&)
+{
+    stream << "[" << utest_module_name << "/" << utest_case_name;
+    if (!utest_test_name.empty())
+    {
+        stream << "/" << utest_test_name;
+    }
+    return stream << "]";
+}
+
+struct utest_test_name_t
+{
+    explicit utest_test_name_t(std::string test_name)
+    {
+        utest_test_name = std::move(test_name);
+    }
+
+    ~utest_test_name_t()
+    {
+        utest_test_name.clear();
+    }
+};
 
 enum class exception_status
 {
@@ -90,7 +121,7 @@ try \
 #define UTEST_CASE(name) \
     ++ utest_n_cases; \
     utest_case_name = #name; \
-    std::cout << "running test case [" << utest_module_name << "/" << utest_case_name << "] ..." << std::endl;
+    std::cout << "running test case " << utest_location_t{} << " ..." << std::endl;
 
 #define UTEST_END_MODULE() \
     if (utest_n_failures > 0) \
@@ -129,14 +160,15 @@ catch (...) \
     }
 #define UTEST_HANDLE_FAILURE() \
     ++ utest_n_failures; \
-    std::cout << "\033[35m" << __FILE__ << ":" << __LINE__ << std::fixed << std::setprecision(12) << ": [" << utest_module_name << "/" << utest_case_name
+    std::cout << ERROR_COLOR << __FILE__ << ":" << __LINE__ \
+        << std::fixed << std::setprecision(12) << ": " << utest_location_t{} << ": "
 
 #define UTEST_EVALUATE(check, critical) \
     ++ utest_n_checks; \
     if (!(check)) \
     { \
         UTEST_HANDLE_FAILURE() \
-            << "]: check {" << UTEST_STRINGIFY(check) << "} failed!\033[0m" << std::endl; \
+            << "check {" << UTEST_STRINGIFY(check) << "} failed!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical) \
     }
 #define UTEST_CHECK(check) \
@@ -150,14 +182,14 @@ catch (...) \
     { \
     case exception_status::none: \
         UTEST_HANDLE_FAILURE() \
-            << "]: call {" << UTEST_STRINGIFY(call) << "} does not throw!\033]0m" << std::endl; \
+            << "call {" << UTEST_STRINGIFY(call) << "} does not throw!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical) \
     case exception_status::expected: \
         break; \
     case exception_status::unexpected: \
         UTEST_HANDLE_FAILURE() \
-            << "]: call {" << UTEST_STRINGIFY(call) << "} does not throw {" \
-            << UTEST_STRINGIFY(exception) << "}!\033[0m" << std::endl; \
+            << "call {" << UTEST_STRINGIFY(call) << "} does not throw {" \
+            << UTEST_STRINGIFY(exception) << "}!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical) \
     }
 #define UTEST_CHECK_THROW(call, exception) \
@@ -174,7 +206,7 @@ catch (...) \
     case exception_status::expected: \
     case exception_status::unexpected: \
         UTEST_HANDLE_FAILURE() \
-            << "]: call {" << UTEST_STRINGIFY(call) << "} throws!\033[0m" << std::endl; \
+            << "call {" << UTEST_STRINGIFY(call) << "} throws!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical) \
     }
 #define UTEST_CHECK_NOTHROW(call) \
@@ -190,8 +222,9 @@ catch (...) \
     if (!(res_left op res_right)) \
     { \
         UTEST_HANDLE_FAILURE() \
-            << "]: check {" << UTEST_STRINGIFY(left op right) \
-            << "} failed {" << res_left << " " << UTEST_STRINGIFY(op) << " " << res_right << "}!" << std::endl; \
+            << "check {" << UTEST_STRINGIFY(left op right) \
+            << "} failed {" << res_left << " " << UTEST_STRINGIFY(op) \
+            << " " << res_right << "}!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical) \
     } \
 }
@@ -244,8 +277,8 @@ catch (...) \
     if (!::nano::close((left), (right), epsilon)) \
     { \
         UTEST_HANDLE_FAILURE() \
-            << "]: check {" << UTEST_STRINGIFY(left <> right) \
-            << "} failed {" << (left) << " <> " << (right) << "}!" << std::endl; \
+            << "check {" << UTEST_STRINGIFY(left <> right) \
+            << "} failed {" << (left) << " <> " << (right) << "}!" << RESET_COLOR << std::endl; \
         UTEST_HANDLE_CRITICAL(critical); \
     }
 

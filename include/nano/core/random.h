@@ -3,6 +3,7 @@
 #include <random>
 #include <cassert>
 #include <type_traits>
+#include <nano/core/seed.h>
 
 namespace nano
 {
@@ -21,20 +22,19 @@ namespace nano
     ///
     /// \brief create & initialize a random number generator.
     ///
-    inline auto make_rng()
+    inline auto make_rng(seed_t seed = seed_t{})
     {
-        // todo: use seed_seq to initialize the RNG (see C++17)
-        return rng_t{std::random_device{}()};
-    }
-
-    ///
-    /// \brief create & initialize a random number generator.
-    ///
-    inline auto make_rng(uint64_t seed)
-    {
-        auto rng = rng_t{}; // NOLINT(cert-msc32-c,cert-msc51-cpp)
-        rng.seed(seed);
-        return rng;
+        if (seed)
+        {
+            auto rng = rng_t{}; // NOLINT(cert-msc32-c,cert-msc51-cpp)
+            rng.seed(*seed);
+            return rng;
+        }
+        else
+        {
+            // todo: use seed_seq to initialize the RNG (see C++17)
+            return rng_t{std::random_device{}()};
+        }
     }
 
     ///

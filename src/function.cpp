@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-function_t::function_t(string_t name, const tensor_size_t size) :
+function_t::function_t(string_t name, tensor_size_t size) :
     m_name(std::move(name)),
     m_size(size)
 {

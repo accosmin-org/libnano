@@ -11,13 +11,14 @@ blocks:
         commands:
           - checkout
           - bash scripts/setup_ubuntu2004.sh --default --llvm 13
-      secrets:
-        - name: codecov
       jobs:
-        - name: build (gcc)
+        - name: debug (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example
-        - name: build (clang)
+        - name: release (gcc)
+          commands:
+            - CXX=g++ bash scripts/build.sh --build-type Release --config --build --test --install --build-example
+        - name: debug (clang)
           commands:
             - CXX=clang++ bash scripts/build.sh --build-type Debug --libcpp --config --build --test --install --build-example
         - name: ASAN (gcc)

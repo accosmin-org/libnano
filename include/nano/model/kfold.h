@@ -2,6 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/tensor.h>
+#include <nano/core/seed.h>
 
 namespace nano
 {
@@ -15,7 +16,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        kfold_t(indices_t samples, tensor_size_t folds);
+        kfold_t(indices_t samples, tensor_size_t folds, seed_t = seed_t{});
 
         ///
         /// \brief generate the (training, validation) split of the given fold index.

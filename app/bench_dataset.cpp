@@ -12,7 +12,7 @@ static auto benchmark_select(const string_t& generator_id, const dataset_generat
     const auto samples = arange(0, generator.dataset().samples());
 
     auto iterator = select_iterator_t{generator};
-    iterator.exec(execution::seq);
+    iterator.execution(execution_type::seq);
 
     auto timer = ::nano::timer_t{};
     iterator.loop(samples, [] (tensor_size_t feature, size_t tnum, sclass_cmap_t values)
@@ -40,8 +40,8 @@ static auto benchmark_flatten(const string_t& generator_id, const dataset_genera
 
     auto timer = ::nano::timer_t{};
     auto iterator = flatten_iterator_t{generator, samples};
-    iterator.exec(execution::seq);
     iterator.batch(128);
+    iterator.execution(execution_type::seq);
     log_info() << "generator [" << generator_id << "] built in <" << timer.elapsed() << ">.";
 
     iterator.loop([] (tensor_range_t range, size_t tnum, tensor2d_cmap_t flatten)

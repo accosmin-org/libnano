@@ -335,7 +335,7 @@ parameter_t& parameter_t::operator=(std::tuple<scalar_t, scalar_t> value)
     return *this;
 }
 
-void parameter_t::read(std::istream& stream)
+std::istream& parameter_t::read(std::istream& stream)
 {
     int32_t type = -1;
     critical(
@@ -370,9 +370,11 @@ void parameter_t::read(std::istream& stream)
         critical0("parameter (", m_name, "): failed to read from stream (type=", type, ")!");
         break;
     }
+
+    return stream;
 }
 
-void parameter_t::write(std::ostream& stream) const
+std::ostream& parameter_t::write(std::ostream& stream) const
 {
     std::visit(overloaded{
         [&] (const std::monostate&)
@@ -398,6 +400,8 @@ void parameter_t::write(std::ostream& stream) const
         [&] (const iprange_t& param) { ::write(m_name, stream, 3, param); },
         [&] (const fprange_t& param) { ::write(m_name, stream, 4, param); }
     }, m_storage);
+
+    return stream;
 }
 
 void parameter_t::logical_error() const
@@ -454,14 +458,12 @@ std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::domain_t
     return stream;
 }
 
-std::istream& nano::read(std::istream& stream, parameter_t& object)
+std::istream& nano::read(std::istream& stream, parameter_t& parameter)
 {
-    object.read(stream);
-    return stream;
+    return parameter.read(stream);
 }
 
-std::ostream& nano::write(std::ostream& stream, const parameter_t& object)
+std::ostream& nano::write(std::ostream& stream, const parameter_t& parameter)
 {
-    object.write(stream);
-    return stream;
+    return parameter.write(stream);
 }

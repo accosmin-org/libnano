@@ -2,7 +2,6 @@
 
 #include <nano/dataset/stats.h>
 #include <nano/core/execution.h>
-#include <nano/core/parameter.h>
 #include <nano/generator/generator.h>
 
 namespace nano
@@ -60,16 +59,17 @@ namespace nano
         ///
         /// \brief change parameters.
         ///
-        void exec(execution);
         void batch(tensor_size_t);
         void scaling(scaling_type);
+        void execution(execution_type);
 
         ///
         /// \brief access functions.
         ///
-        auto exec() const { return m_execution; }
-        auto batch() const { return m_batch.value<tensor_size_t>(); }
+        auto batch() const { return m_batch; }
         auto scaling() const { return m_scaling; }
+        auto execution() const { return m_execution; }
+        auto concurrency() const { return m_targets_buffers.size(); }
         const auto& samples() const { return m_samples; }
         const auto& generator() const { return m_generator; }
         const auto& targets_stats() const { return m_targets_stats; }
@@ -89,8 +89,8 @@ namespace nano
         // attributes
         const dgenerator_t& m_generator;                    ///<
         indices_t           m_samples;                      ///<
-        parameter_t         m_batch;                        ///<
-        execution           m_execution{execution::par};    ///<
+        tensor_size_t       m_batch{100};                   ///<
+        execution_type      m_execution{execution_type::par};///<
         scaling_type        m_scaling{scaling_type::none};  ///< scaling method for flatten feature values & targets
         tensor4d_t          m_targets;                      ///< cached targets values
         targets_stats_t     m_targets_stats;                ///< statistics for targets
@@ -182,11 +182,12 @@ namespace nano
         ///
         /// \brief change parameters.
         ///
-        void exec(execution);
+        void execution(execution_type);
 
         ///
         /// \brief access functions.
         ///
+        auto concurrency() const { return m_buffers.size(); }
         const auto& generator() const { return m_generator; }
 
     private:
@@ -203,8 +204,8 @@ namespace nano
         using dgenerator_t = dataset_generator_t;
 
         // attributes
-        const dgenerator_t& m_generator;                    ///<
-        execution           m_execution{execution::par};    ///<
-        mutable buffers_t   m_buffers;                      ///< per-thread buffer
+        const dgenerator_t& m_generator;                        ///<
+        execution_type      m_execution{execution_type::par};   ///<
+        mutable buffers_t   m_buffers;                          ///< per-thread buffer
     };
 }

@@ -148,6 +148,7 @@ namespace nano
                 }
             }
             throw std::invalid_argument(scat("invalid ", typeid(tvalue).name(), " <", ">!"));
+            // cppcheck-suppress missingReturn
         }
     }
 

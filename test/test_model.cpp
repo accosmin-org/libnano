@@ -1,259 +1,143 @@
+#include <sstream>
 #include <nano/model.h>
 #include <utest/utest.h>
-#include "fixture/enum.h"
+#include "fixture/generator.h"
+#include "fixture/generator_dataset.h"
+#include <nano/generator/elemwise_identity.h>
 
 using namespace nano;
+
+static auto make_predictions(const dataset_generator_t& dataset, const indices_t& samples)
+{
+    return make_full_tensor<scalar_t>(cat_dims(samples.size(), dataset.target_dims()), 0.0);
+}
+
+static auto make_generator(const dataset_t& dataset)
+{
+    auto generator = dataset_generator_t{dataset};
+    add_generator<elemwise_generator_t<sclass_identity_t>>(generator);
+    add_generator<elemwise_generator_t<mclass_identity_t>>(generator);
+    add_generator<elemwise_generator_t<scalar_identity_t>>(generator);
+    add_generator<elemwise_generator_t<struct_identity_t>>(generator);
+    return generator;
+}
 
 class fixture_model_t final : public model_t
 {
 public:
-
-    fixture_model_t() = default;
 
     rmodel_t clone() const override
     {
         return std::make_unique<fixture_model_t>(*this);
     }
 
-    scalar_t fit(const loss_t&, const dataset_t&, const indices_t&, const solver_t&) override
+    fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) override
     {
-        assert(false);
-        return 0.0;
+        return fit_result_t{};
     }
 
-    tensor4d_t predict(const dataset_t&, const indices_t&) const override
+    tensor4d_t do_predict(const dataset_generator_t& dataset, const indices_t& samples) const override
     {
-        assert(false);
-        return tensor4d_t{};
+        return make_predictions(dataset, samples);
     }
 };
-
-static void check_equal(const model_param_t& param, const model_param_t& xparam)
-{
-    UTEST_CHECK_EQUAL(xparam.name(), param.name());
-    UTEST_CHECK_EQUAL(xparam.is_evalue(), param.is_evalue());
-    UTEST_CHECK_EQUAL(xparam.is_ivalue(), param.is_ivalue());
-    UTEST_CHECK_EQUAL(xparam.is_svalue(), param.is_svalue());
-    if (xparam.is_svalue())
-    {
-        UTEST_CHECK_CLOSE(xparam.svalue(), param.svalue(), 1e-12);
-    }
-    else if (xparam.is_ivalue())
-    {
-        UTEST_CHECK_EQUAL(xparam.ivalue(), param.ivalue());
-    }
-    else
-    {
-        UTEST_CHECK_EQUAL(xparam.evalue<enum_type>(), param.evalue<enum_type>());
-    }
-}
-
-static void check_stream(const model_param_t& param)
-{
-    string_t str;
-    {
-        std::ostringstream stream;
-        UTEST_CHECK_NOTHROW(param.write(stream));
-        str = stream.str();
-    }
-    {
-        model_param_t xparam;
-        std::istringstream stream(str);
-        UTEST_CHECK_NOTHROW(xparam.read(stream));
-        check_equal(param, xparam);
-    }
-}
 
 static auto check_stream(const fixture_model_t& model)
 {
     string_t str;
     {
-        const auto clone = model.clone();
-        UTEST_CHECK_EQUAL(clone->params().size(), model.params().size());
         std::ostringstream stream;
-        UTEST_CHECK_NOTHROW(clone->write(stream));
+        UTEST_CHECK_NOTHROW(write(stream, model));
         str = stream.str();
     }
     {
         fixture_model_t xmodel;
         std::istringstream stream(str);
-        UTEST_CHECK_NOTHROW(xmodel.read(stream));
+        UTEST_CHECK_NOTHROW(read(stream, xmodel));
+        UTEST_CHECK_EQUAL(xmodel.parameters(), model.parameters());
         return xmodel;
     }
 }
 
-UTEST_BEGIN_MODULE(test_model)
-
-UTEST_CASE(model_param_empty)
+static auto check_fit(
+    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver)
 {
-    auto param = model_param_t{};
-
-    UTEST_CHECK_EQUAL(param.name(), "");
-    UTEST_CHECK_EQUAL(param.is_evalue(), true);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
-}
-
-UTEST_CASE(model_param_eparam)
-{
-    auto param = model_param_t{eparam1_t{"eparam", enum_type::type1}};
-
-    UTEST_CHECK_EQUAL(param.name(), "eparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), true);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
-
-    UTEST_CHECK_THROW(param.svalue(), std::runtime_error);
-    UTEST_CHECK_THROW(param.ivalue(), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type1);
-
-    UTEST_CHECK_THROW(param.set(int32_t{1}), std::runtime_error);
-    UTEST_CHECK_THROW(param.set(int64_t{1}), std::runtime_error);
-
-    UTEST_CHECK_NOTHROW(param.set(enum_type::type2));
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type2);
-    UTEST_CHECK_THROW(param.set(static_cast<enum_type>(-1)), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.evalue<enum_type>(), enum_type::type2);
-
-    check_stream(param);
-}
-
-UTEST_CASE(model_param_iparam)
-{
-    auto param = model_param_t{iparam1_t{"iparam", 0, LE, 1, LE, 5}};
-
-    UTEST_CHECK_EQUAL(param.name(), "iparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), false);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), true);
-    UTEST_CHECK_EQUAL(param.is_svalue(), false);
-
-    UTEST_CHECK_THROW(param.svalue(), std::runtime_error);
-    UTEST_CHECK_THROW(param.evalue<enum_type>(), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 1);
-
-    UTEST_CHECK_NOTHROW(param.set(int32_t{0}));
-    UTEST_CHECK_EQUAL(param.ivalue(), 0);
-
-    UTEST_CHECK_NOTHROW(param.set(int64_t{5}));
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(int64_t{7}), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(int32_t{-1}), std::runtime_error);
-    UTEST_CHECK_EQUAL(param.ivalue(), 5);
-
-    UTEST_CHECK_THROW(param.set(scalar_t{0}), std::runtime_error);
-    UTEST_CHECK_THROW(param.set(enum_type::type1), std::runtime_error);
-
-    check_stream(param);
-}
-
-UTEST_CASE(model_param_sparam)
-{
-    auto param = model_param_t{sparam1_t{"sparam", 0, LE, 1, LE, 5}};
-
-    UTEST_CHECK_EQUAL(param.name(), "sparam");
-    UTEST_CHECK_EQUAL(param.is_evalue(), false);
-    UTEST_CHECK_EQUAL(param.is_ivalue(), false);
-    UTEST_CHECK_EQUAL(param.is_svalue(), true);
-
-    UTEST_CHECK_CLOSE(param.svalue(), 1.0, 1e-12);
-    UTEST_CHECK_THROW(param.evalue<enum_type>(), std::runtime_error);
-    UTEST_CHECK_THROW(param.ivalue(), std::runtime_error);
-
-    UTEST_CHECK_NOTHROW(param.set(0.1));
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(-1.1), std::runtime_error);
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(5.1), std::runtime_error);
-    UTEST_CHECK_CLOSE(param.svalue(), 0.1, 1e-12);
-
-    UTEST_CHECK_NOTHROW(param.set(int32_t{0}));
-    UTEST_CHECK_CLOSE(param.svalue(), 0.0, 1e-12);
-
-    UTEST_CHECK_NOTHROW(param.set(int64_t{1}));
-    UTEST_CHECK_CLOSE(param.svalue(), 1.0, 1e-12);
-
-    UTEST_CHECK_THROW(param.set(enum_type::type1), std::runtime_error);
-
-    check_stream(param);
-}
-
-UTEST_CASE(empty)
-{
-    const auto check_params = [] (const model_t& model)
-    {
-        UTEST_CHECK(model.params().empty());
-    };
-
     auto model = fixture_model_t{};
-    check_params(model);
-
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", enum_type::type1), std::runtime_error);
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", 10), std::runtime_error);
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", 4.2), std::runtime_error);
-
-    check_params(check_stream(model));
+    UTEST_CHECK_NOTHROW(model.fit(dataset, samples, loss, solver));
+    return model;
 }
+
+static void check_predict(const model_t& model, const dataset_generator_t& dataset, const indices_t& samples)
+{
+    const auto expected_predictions = make_predictions(dataset, samples);
+    UTEST_CHECK_EQUAL(model.predict(dataset, samples), expected_predictions);
+}
+
+static void check_predict_fails(const model_t& model, const dataset_generator_t& dataset, const indices_t& samples)
+{
+    UTEST_CHECK_THROW(model.predict(dataset, samples), std::runtime_error);
+}
+
+UTEST_BEGIN_MODULE(test_model)
 
 UTEST_CASE(parameters)
 {
-    const auto check_params = [] (const model_t& model)
+    const auto model = fixture_model_t{};
+
+    UTEST_CHECK_EQUAL(model.parameter("model::folds").value<int>(), 5);
+    UTEST_CHECK_EQUAL(model.parameter("model::random_seed").value<int>(), 42);
+}
+
+UTEST_CASE(fit_predict)
+{
+    const auto rloss = loss_t::all().get("squared");
+    const auto rsolver = solver_t::all().get("lbfgs");
+
+    const auto train_samples = arange(0, 80);
+    const auto valid_samples = arange(80, 100);
+
+    const auto dataset1 = make_dataset(100, 0U);
+    const auto dataset2 = make_dataset(100, 3U);
+    const auto dataset3 = make_dataset(100, 8U);
+
+    const auto gdataset1 = make_generator(dataset1);
+    const auto gdataset2 = make_generator(dataset2);
+    const auto gdataset3 = make_generator(dataset3);
+
     {
-        UTEST_CHECK_EQUAL(model.params().size(), 6U);
+        const auto model = check_stream(fixture_model_t{});
 
-        UTEST_CHECK_EQUAL(model.evalue<enum_type>("eparam1"), enum_type::type3);
-        UTEST_CHECK_EQUAL(model.ivalue("iparam1"), 1);
-        UTEST_CHECK_EQUAL(model.ivalue("iparam2"), 2);
-        UTEST_CHECK_CLOSE(model.svalue("sparam1"), 1.5, 1e-12);
-        UTEST_CHECK_CLOSE(model.svalue("sparam2"), 2.5, 1e-12);
-        UTEST_CHECK_CLOSE(model.svalue("sparam3"), 3.5, 1e-12);
-    };
+        check_predict_fails(model, gdataset1, train_samples);
+        check_predict_fails(model, gdataset2, train_samples);
+        check_predict_fails(model, gdataset3, train_samples);
+    }
+    {
+        const auto model = check_stream(check_fit(gdataset1, train_samples, *rloss, *rsolver));
 
-    auto model = fixture_model_t{};
-    model.register_param(eparam1_t{"eparam1", enum_type::type3});
-    model.register_param(iparam1_t{"iparam1", 0, LE, 1, LE, 10});
-    model.register_param(iparam1_t{"iparam2", 1, LE, 2, LE, 10});
-    model.register_param(sparam1_t{"sparam1", 1.0, LT, 1.5, LT, 2.0});
-    model.register_param(sparam1_t{"sparam2", 2.0, LT, 2.5, LT, 3.0});
-    model.register_param(sparam1_t{"sparam3", 3.0, LT, 3.5, LT, 4.0});
+        check_predict(model, gdataset1, train_samples);
+        check_predict(model, gdataset1, valid_samples);
 
-    check_params(model);
-    check_params(check_stream(model));
+        check_predict_fails(model, gdataset2, train_samples);
+        check_predict_fails(model, gdataset3, train_samples);
+    }
+    {
+        const auto model = check_stream(check_fit(gdataset2, train_samples, *rloss, *rsolver));
 
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", enum_type::type1), std::runtime_error);
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", 10), std::runtime_error);
-    UTEST_CHECK_THROW(model.set("nonexistent_param_name", 4.2), std::runtime_error);
+        check_predict(model, gdataset2, train_samples);
+        check_predict(model, gdataset2, valid_samples);
 
-    UTEST_CHECK_THROW(model.set("eparam1", static_cast<enum_type>(-1)), std::runtime_error);
-    UTEST_CHECK_EQUAL(model.evalue<enum_type>("eparam1"), enum_type::type3);
+        check_predict_fails(model, gdataset1, train_samples);
+        check_predict_fails(model, gdataset3, train_samples);
+    }
+    {
+        const auto model = check_stream(check_fit(gdataset3, train_samples, *rloss, *rsolver));
 
-    UTEST_CHECK_NOTHROW(model.set("eparam1", enum_type::type2));
-    UTEST_CHECK_EQUAL(model.evalue<enum_type>("eparam1"), enum_type::type2);
+        check_predict(model, gdataset3, train_samples);
+        check_predict(model, gdataset3, valid_samples);
 
-    UTEST_CHECK_THROW(model.set("iparam2", 100), std::runtime_error);
-    UTEST_CHECK_EQUAL(model.ivalue("iparam2"), 2);
-
-    UTEST_CHECK_NOTHROW(model.set("iparam2", 3));
-    UTEST_CHECK_EQUAL(model.ivalue("iparam2"), 3);
-
-    UTEST_CHECK_THROW(model.set("sparam3", 4.1), std::runtime_error);
-    UTEST_CHECK_CLOSE(model.svalue("sparam3"), 3.5, 1e-12);
-
-    UTEST_CHECK_NOTHROW(model.set("sparam3", 3.9));
-    UTEST_CHECK_CLOSE(model.svalue("sparam3"), 3.9, 1e-12);
-
-    auto config = model_config_t{};
-    config.add("iparam1", int32_t{3});
-    config.add("iparam2", int64_t{6});
-    config.add("sparam3", scalar_t{3.1});
-    UTEST_CHECK_NOTHROW(model.set(config));
-    UTEST_CHECK_EQUAL(model.ivalue("iparam1"), 3);
-    UTEST_CHECK_EQUAL(model.ivalue("iparam2"), 6);
-    UTEST_CHECK_CLOSE(model.svalue("sparam3"), 3.1, 1e-12);
+        check_predict_fails(model, gdataset1, train_samples);
+        check_predict_fails(model, gdataset2, train_samples);
+    }
 }
 
 UTEST_END_MODULE()

@@ -4,6 +4,7 @@
 #include <vector>
 #include <istream>
 #include <ostream>
+#include <algorithm>
 #include <type_traits>
 
 namespace nano
@@ -62,13 +63,10 @@ namespace nano
             return stream;
         }
 
-        for (const auto& value : values)
+        [[maybe_unused]] const auto ret = std::any_of(values.begin(), values.end(), [&] (const auto& value)
         {
-            if (!write(stream, value))
-            {
-                return stream; // LCOV_EXCL_LINE
-            }
-        }
+            return !write(stream, value);   // LCOV_EXCL_LINE
+        });
         return stream;
     }
 

@@ -3,6 +3,18 @@
 
 using namespace nano;
 
+loss_t::loss_t() = default;
+
+void loss_t::convex(bool convex)
+{
+    m_convex = convex;
+}
+
+void loss_t::smooth(bool smooth)
+{
+    m_smooth = smooth;
+}
+
 loss_factory_t& loss_t::all()
 {
     static loss_factory_t manager;

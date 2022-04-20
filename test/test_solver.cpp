@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <utest/utest.h>
+#include "fixture/solver.h"
 #include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/solver/quasi.h>
@@ -12,80 +13,6 @@ template <typename tscalar>
 static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>& values)
 {
     return stream << std::get<0>(values) << "," << std::get<1>(values);
-}
-
-static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_size_t& iterations)
-{
-    // log the optimization steps
-    solver.logger([&] (const solver_state_t& state)
-    {
-        ++ iterations;
-        stream << "\tdescent: " << state << ".\n";
-        return true;
-    });
-
-    // log the line-search steps
-    solver.lsearch0_logger([&] (const solver_state_t& state0, const scalar_t t)
-    {
-        stream
-            << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
-            << ",t=" << t << ".\n";
-    });
-
-    const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
-
-    solver.lsearchk_logger([&, c1=c1, c2=c2] (const solver_state_t& state0, const solver_state_t& state)
-    {
-        stream
-            << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << ",armijo=" << state.has_armijo(state0, c1)
-            << ",wolfe=" << state.has_wolfe(state0, c2)
-            << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
-    });
-}
-
-static auto test(solver_t& solver, const string_t& solver_id, const function_t& function, const vector_t& x0)
-{
-    const auto old_n_failures = utest_n_failures.load();
-    const auto state0 = solver_state_t{function, x0};
-
-    const auto lsearch0_id = solver.monotonic() ? solver.lsearch0_id() : "N/A";
-    const auto lsearchk_id = solver.monotonic() ? solver.lsearchk_id() : "N/A";
-
-    std::stringstream stream;
-    stream
-        << std::fixed << std::setprecision(16)
-        << function.name() << " " << solver_id << "[" << lsearch0_id << "," << lsearchk_id << "]\n"
-        << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f<< ",g0=" << state0.convergence_criterion() << "\n";
-
-    tensor_size_t iterations = 0;
-    setup_logger(solver, stream, iterations);
-
-    const auto epsilon = 1e-6;
-
-    // minimize
-    solver.parameter("solver::epsilon") = epsilon;
-    solver.parameter("solver::max_evals") = 10000;
-    auto state = solver.minimize(function, x0);
-    UTEST_CHECK(state);
-
-    // check function value decrease
-    UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
-
-    // check convergence
-    if (function.smooth() && solver.monotonic())
-    {
-        UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
-    }
-    UTEST_CHECK_EQUAL(state.m_status, solver_state_t::status::converged);
-    UTEST_CHECK_EQUAL(iterations, state.m_iterations);
-
-    if (old_n_failures != utest_n_failures.load())
-    {
-        std::cout << stream.str();
-    }
-
-    return state;
 }
 
 static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues, scalar_t epsilon = 1e-6)
@@ -340,7 +267,7 @@ UTEST_CASE(default_monotonic_solvers)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            const auto state = test(*solver, solver_id, *function, x0);
+            const auto state = check_minimize(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
@@ -363,7 +290,7 @@ UTEST_CASE(default_nonmonotonic_solvers)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            const auto state = test(*solver, solver_id, *function, x0);
+            const auto state = check_minimize(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
@@ -393,7 +320,7 @@ UTEST_CASE(best_solvers_with_lsearches)
                     UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
                     UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
-                    const auto state = test(*solver, solver_id, *function, x0);
+                    const auto state = check_minimize(*solver, solver_id, *function, x0);
                     fvalues.push_back(state.f);
                 }
             }
@@ -415,13 +342,13 @@ UTEST_CASE(best_solvers_with_tolerances)
             UTEST_REQUIRE(solver);
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
-            test(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
-            test(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
-            test(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }
 }
@@ -437,10 +364,10 @@ UTEST_CASE(quasi_with_initializations)
             auto solver = solver_quasi_bfgs_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            test(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            test(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
         }
         {
             const auto *const solver_id = "fletcher";
@@ -448,10 +375,10 @@ UTEST_CASE(quasi_with_initializations)
             auto solver = solver_quasi_fletcher_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            test(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            test(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
         }
     }
 }

@@ -3,12 +3,59 @@
 #include <cmath>
 #include <nano/arch.h>
 #include <nano/tensor.h>
-#include <nano/dataset/enums.h>
+#include <nano/dataset/task.h>
 
 namespace nano
 {
     class feature_t;
     using features_t = std::vector<feature_t>;
+
+    ///
+    /// \brief input or target feature type.
+    ///
+    enum class feature_type : int32_t
+    {
+        // continuous features
+        int8 = 0,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
+
+        // discrete features
+        sclass,         ///< categorical feature (single-label - one value possible out of a fixed set)
+        mclass,         ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
+    };
+
+    template <>
+    inline enum_map_t<feature_type> enum_string<feature_type>()
+    {
+        return
+        {
+            { feature_type::int8,       "int8" },
+            { feature_type::int16,      "int16" },
+            { feature_type::int32,      "int32" },
+            { feature_type::int64,      "int64" },
+            { feature_type::uint8,      "uint8" },
+            { feature_type::uint16,     "uint16" },
+            { feature_type::uint32,     "uint32" },
+            { feature_type::uint64,     "uint64" },
+            { feature_type::float32,    "float32" },
+            { feature_type::float64,    "float64" },
+            { feature_type::sclass,     "sclass" },
+            { feature_type::mclass,     "mclass" },
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& stream, feature_type value)
+    {
+        return stream << scat(value);
+    }
 
     ///
     /// \brief input feature (e.g. describes a column in a csv file)
@@ -68,6 +115,20 @@ namespace nano
         explicit operator task_type() const;
 
         ///
+        /// \brief serialize from the given binary stream.
+        ///
+        /// NB: any error is considered critical and expected to result in an exception.
+        ///
+        std::istream& read(std::istream&);
+
+        ///
+        /// \brief serialize to the given binary stream.
+        ///
+        /// NB: any error is considered critical and expected to result in an exception.
+        ///
+        std::ostream& write(std::ostream&) const;
+
+        ///
         /// \brief access functions
         ///
         auto type() const { return m_type; }
@@ -85,16 +146,12 @@ namespace nano
         mutable strings_t   m_labels;               ///< possible labels (if the feature is discrete/categorical)
     };
 
-    ///
-    /// \brief compare two features.
-    ///
     NANO_PUBLIC bool operator==(const feature_t& f1, const feature_t& f2);
     NANO_PUBLIC bool operator!=(const feature_t& f1, const feature_t& f2);
-
-    ///
-    /// \brief stream the given feature.
-    ///
     NANO_PUBLIC std::ostream& operator<<(std::ostream& stream, const feature_t& feature);
+
+    NANO_PUBLIC std::istream& read(std::istream& stream, feature_t&);
+    NANO_PUBLIC std::ostream& write(std::ostream& stream, const feature_t&);
 
     ///
     /// \brief describe a feature (e.g. as selected by a weak learner) in terms of

@@ -41,10 +41,6 @@ target_sources(nano PRIVATE
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    linear/cache.cpp
-    linear/util.cpp
-    #linear/function.cpp
-    #linear/model.cpp
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
@@ -75,13 +71,13 @@ target_sources(nano PRIVATE
     function/trid.cpp
     function/zakharov.cpp
     loss.cpp
-    #model.cpp
-    #model/grid_search.cpp
-    mlearn/util.cpp
-    mlearn/kfold.cpp
-    #mlearn/train.cpp
-    mlearn/cluster.cpp
-    #mlearn/stacking.cpp
+    model.cpp
+    model/util.cpp
+    model/kfold.cpp
+    model/tuner.cpp
+    model/cluster.cpp
+    model/surrogate.cpp
+    model/param_space.cpp
     #gboost/model.cpp
     #gboost/function.cpp
     #gboost/wlearner.cpp
@@ -92,6 +88,10 @@ target_sources(nano PRIVATE
     #gboost/wlearner_table.cpp
     #gboost/wlearner_affine.cpp
     #gboost/wlearner_feature1.cpp
+    linear/util.cpp
+    linear/cache.cpp
+    linear/model.cpp
+    linear/function.cpp
 )
 
 add_library(NANO::nano ALIAS nano)

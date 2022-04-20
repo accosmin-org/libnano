@@ -5,11 +5,11 @@
 using namespace nano;
 
 template <typename toperator>
-static void loop(execution ex, indices_cmap_t samples, tensor_size_t batch, const toperator& op)
+static void loop(execution_type execution, indices_cmap_t samples, tensor_size_t batch, const toperator& op)
 {
-    switch (ex)
+    switch (execution)
     {
-    case execution::par:
+    case execution_type::par:
         ::nano::loopr(samples.size(), batch, op);
         break;
 
@@ -23,11 +23,11 @@ static void loop(execution ex, indices_cmap_t samples, tensor_size_t batch, cons
 }
 
 template <typename toperator>
-static void loop(execution ex, indices_cmap_t ifeatures, const toperator& op)
+static void loop(execution_type ex, indices_cmap_t ifeatures, const toperator& op)
 {
     switch (ex)
     {
-    case execution::par:
+    case execution_type::par:
         ::nano::loopi(ifeatures.size(), [&] (tensor_size_t index, size_t tnum)
         {
             op(ifeatures(index), tnum);
@@ -46,7 +46,6 @@ static void loop(execution ex, indices_cmap_t ifeatures, const toperator& op)
 targets_iterator_t::targets_iterator_t(const dataset_generator_t& generator, indices_cmap_t samples) :
     m_generator(generator),
     m_samples(samples),
-    m_batch(parameter_t::make_integer("batch", 1, LE, 100, LE, 10000)),
     m_targets_buffers(tpool_t::size())
 {
     m_targets_stats = make_targets_stats();
@@ -121,9 +120,9 @@ void targets_iterator_t::batch(tensor_size_t batch)
     m_batch = batch;
 }
 
-void targets_iterator_t::exec(execution ex)
+void targets_iterator_t::execution(execution_type execution)
 {
-    m_execution = ex;
+    m_execution = execution;
 }
 
 void targets_iterator_t::scaling(scaling_type scaling)
@@ -144,7 +143,7 @@ flatten_stats_t flatten_iterator_t::make_flatten_stats() const
     const auto& generator = this->generator();
 
     std::vector<flatten_stats_t> stats(tpool_t::size(), flatten_stats_t{generator.columns()});
-    ::loop(exec(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(execution(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
         const auto data = generator.flatten(samples.slice(range), m_flatten_buffers[tnum]);
@@ -204,7 +203,7 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
         try
         {
             m_flatten.resize(samples.size(), isize);
-            ::loop(exec(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+            ::loop(execution(), samples, batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
             {
                 const auto range = make_range(begin, end);
                 m_flatten.slice(range) = flatten(generator.flatten(samples.slice(range), m_flatten_buffers[tnum]));
@@ -219,7 +218,7 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
 
 void flatten_iterator_t::loop(const flatten_targets_callback_t& callback) const
 {
-    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(execution(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 
@@ -229,7 +228,7 @@ void flatten_iterator_t::loop(const flatten_targets_callback_t& callback) const
 
 void flatten_iterator_t::loop(const flatten_callback_t& callback) const
 {
-    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(execution(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 
@@ -239,7 +238,7 @@ void flatten_iterator_t::loop(const flatten_callback_t& callback) const
 
 void targets_iterator_t::loop(const targets_callback_t& callback) const
 {
-    ::loop(exec(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+    ::loop(execution(), samples(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
     {
         const auto range = make_range(begin, end);
 
@@ -305,7 +304,7 @@ void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, co
     });
 }
 
-void select_iterator_t::exec(execution ex)
+void select_iterator_t::execution(execution_type execution)
 {
-    m_execution = ex;
+    m_execution = execution;
 }
