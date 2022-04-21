@@ -160,12 +160,9 @@ fit_result_t linear_model_t::do_fit(
             cv_result.m_train_errors.mean() +
             std::numeric_limits<scalar_t>::epsilon());
 
-        log_info() << std::fixed << std::setprecision(9) << std::fixed
-            << "linear: l1reg=" << l1reg << ",l2reg=" << l2reg << ",vAreg=" << vAreg
-            << ",train=" << cv_result.m_train_values.mean() << "/" << cv_result.m_train_errors.mean()
-            << ",valid=" << cv_result.m_valid_values.mean() << "/" << cv_result.m_valid_errors.mean() << ".";
-
         result.m_cv_results.emplace_back(std::move(cv_result));
+
+        this->log(result, "linear");
 
         return goodness;
     };
@@ -177,12 +174,11 @@ fit_result_t linear_model_t::do_fit(
         const auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
         const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias);
 
+        result.m_refit_params = params;
         result.m_refit_error = refit_error;
         result.m_refit_value = refit_value;
 
-        log_info() << std::fixed << std::setprecision(9) << std::fixed
-            << "linear: l1reg=" << l1reg << ",l2reg=" << l2reg << ",vAreg=" << vAreg
-            << ",refit=" << refit_value << "/" << refit_error << ".";
+        this->log(result, "linear");
 
         m_weights = weights;
         m_bias = bias;
@@ -195,39 +191,40 @@ fit_result_t linear_model_t::do_fit(
         break;
 
     case regularization_type::lasso:
+        result.m_param_names = {"l1reg"};
         {
             const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
             const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
                 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
 
-            result.m_param_names = {"l1reg"};
             refit(steps.rbegin()->m_opt_param);
         }
         break;
 
     case regularization_type::ridge:
+        result.m_param_names = {"l2reg"};
         {
             const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
             const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
                 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
 
-            result.m_param_names = {"l2reg"};
             refit(steps.rbegin()->m_opt_param);
         }
         break;
 
     case regularization_type::variance:
+        result.m_param_names = {"vAreg"};
         {
             const auto tuner = tuner_t{param_spaces_t{make_param_space()}, callback};
             const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1),
                 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
 
-            result.m_param_names = {"vAreg"};
             refit(steps.rbegin()->m_opt_param);
         }
         break;
 
     case regularization_type::elasticnet:
+        result.m_param_names = {"l1reg", "l2reg"};
         {
             const auto tuner = tuner_t{param_spaces_t{make_param_space(), make_param_space()}, callback};
             const auto steps = tuner.optimize(make_tensor<scalar_t>(make_dims(15, 2),
@@ -235,7 +232,6 @@ fit_result_t linear_model_t::do_fit(
                 1e+1, 1e-2, 1e+1, 1e+0, 1e+1, 1e+2, 1e+1, 1e+4, 1e+1, 1e+6,
                 1e+4, 1e-2, 1e+4, 1e+0, 1e+4, 1e+2, 1e+4, 1e+4, 1e+4, 1e+6));
 
-            result.m_param_names = {"l1reg", "l2reg"};
             refit(steps.rbegin()->m_opt_param);
         }
         break;

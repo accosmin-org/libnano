@@ -32,6 +32,7 @@ namespace nano
         // attributes
         strings_t       m_param_names;                  ///<
         cv_results_t    m_cv_results;                   ///<
+        tensor1d_t      m_refit_params;                 ///<
         scalar_t        m_refit_error{NaN};             ///<
         scalar_t        m_refit_value{NaN};             ///<
     };
@@ -47,6 +48,11 @@ namespace nano
     class NANO_PUBLIC model_t : public estimator_t
     {
     public:
+
+        ///
+        /// \brief logging operator: op(fit_result, prefix)
+        ///
+        using logger_t = std::function<void(const fit_result_t&, const string_t&)>;
 
         ///
         /// \brief returns the available implementations.
@@ -84,6 +90,15 @@ namespace nano
         ///
         tensor4d_t predict(const dataset_generator_t&, const indices_t&) const;
 
+        ///
+        /// \brief set the logging callback
+        ///
+        void logger(const logger_t& logger);
+
+    protected:
+
+        void log(const fit_result_t&, const string_t& prefix) const;
+
     private:
 
         void compatible(const dataset_generator_t&) const;
@@ -94,6 +109,7 @@ namespace nano
         // attributes
         features_t      m_inputs;       ///< input features
         feature_t       m_target;       ///< optional target feature
+        logger_t        m_logger;       ///<
     };
 
     /*

@@ -29,6 +29,41 @@ static auto make_solver(const string_t& loss_id)
     return loss_id == "squared" ? make_smooth_solver() : make_nonsmooth_solver();
 }
 
+static auto make_model()
+{
+    auto model = linear_model_t{};
+
+    model.logger([] (const fit_result_t& result, const string_t& prefix)
+    {
+        auto&& logger = log_info();
+        logger << std::fixed << std::setprecision(9) << std::fixed << prefix << ": ";
+
+        const auto print_params = [&] (const tensor1d_t& param_values)
+        {
+            assert(result.m_param_names.size() == static_cast<size_t>(param_values.size()));
+            for (size_t i = 0U, size = result.m_param_names.size(); i < size; ++ i)
+            {
+                logger << result.m_param_names[i] << "=" << param_values(static_cast<tensor_size_t>(i)) << ",";
+            }
+        };
+
+        if (std::isfinite(result.m_refit_error))
+        {
+            print_params(result.m_refit_params);
+            logger << "refit=" << result.m_refit_value << "/" << result.m_refit_error << ".";
+        }
+        else if (!result.m_cv_results.empty())
+        {
+            const auto& cv_result = *result.m_cv_results.rbegin();
+            print_params(cv_result.m_params);
+            logger << "train=" << cv_result.m_train_values.mean() << "/" << cv_result.m_train_errors.mean() << ",";
+            logger << "valid=" << cv_result.m_valid_values.mean() << "/" << cv_result.m_valid_errors.mean() << ".";
+        }
+    });
+
+    return model;
+}
+
 static void check_result(const fit_result_t& result,
     const strings_t& expected_param_names, size_t min_cv_results_size, scalar_t epsilon)
 {
@@ -44,6 +79,7 @@ static void check_result(const fit_result_t& result,
     tensor_size_t hits = 0;
     for (const auto& cv_result : result.m_cv_results)
     {
+        UTEST_CHECK_GREATER(cv_result.m_params.min(), 0.0);
         UTEST_CHECK_EQUAL(cv_result.m_params.size(), static_cast<tensor_size_t>(expected_param_names.size()));
         if (close(cv_result.m_train_errors, opt_errors, epsilon))
         {
@@ -93,7 +129,7 @@ UTEST_CASE(regularization_none)
     const auto generator = make_generator(dataset);
     const auto samples = arange(0, dataset.samples());
 
-    auto model = linear_model_t{};
+    auto model = make_model();
     model.parameter("model::folds") = 3;
     model.parameter("model::linear::batch") = 10;
     model.parameter("model::linear::scaling") = scaling_type::none;
@@ -120,7 +156,7 @@ UTEST_CASE(regularization_lasso)
     const auto generator = make_generator(dataset);
     const auto samples = arange(0, dataset.samples());
 
-    auto model = linear_model_t{};
+    auto model = make_model();
     model.parameter("model::folds") = 2;
     model.parameter("model::linear::batch") = 10;
     model.parameter("model::linear::scaling") = scaling_type::standard;
@@ -147,7 +183,7 @@ UTEST_CASE(regularization_ridge)
     const auto generator = make_generator(dataset);
     const auto samples = arange(0, dataset.samples());
 
-    auto model = linear_model_t{};
+    auto model = make_model();
     model.parameter("model::folds") = 2;
     model.parameter("model::linear::batch") = 10;
     model.parameter("model::linear::scaling") = scaling_type::mean;
@@ -174,7 +210,7 @@ UTEST_CASE(regularization_variance)
     const auto generator = make_generator(dataset);
     const auto samples = arange(0, dataset.samples());
 
-    auto model = linear_model_t{};
+    auto model = make_model();
     model.parameter("model::folds") = 2;
     model.parameter("model::linear::batch") = 10;
     model.parameter("model::linear::scaling") = scaling_type::minmax;
@@ -201,7 +237,7 @@ UTEST_CASE(regularization_elasticnet)
     const auto generator = make_generator(dataset);
     const auto samples = arange(0, dataset.samples());
 
-    auto model = linear_model_t{};
+    auto model = make_model();
     model.parameter("model::folds") = 2;
     model.parameter("model::linear::batch") = 10;
     model.parameter("model::linear::scaling") = scaling_type::minmax;

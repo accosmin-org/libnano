@@ -23,6 +23,19 @@ model_t::model_t()
     register_parameter(parameter_t::make_integer("model::random_seed", 0, LE, 42, LE, std::numeric_limits<int64_t>::max()));
 }
 
+void model_t::logger(const logger_t& logger)
+{
+    m_logger = logger;
+}
+
+void model_t::log(const fit_result_t& result, const string_t& prefix) const
+{
+    if (m_logger)
+    {
+        m_logger(result, prefix);
+    }
+}
+
 void model_t::compatible(const dataset_generator_t& dataset) const
 {
     const auto n_features = dataset.features();
