@@ -16,7 +16,7 @@ static auto make_loss(scaling_type scaling)
 
 static auto make_batch(scaling_type scaling)
 {
-    return (scaling == scaling_type::standard) ? 5 : 3;
+    return (scaling == scaling_type::standard) ? 20 : 15;
 }
 
 static auto make_execution(scaling_type scaling)
@@ -59,12 +59,15 @@ static void check_vgrad(const linear::function_t& function, int trials = 100)
 
 static auto check_minimize(const function_t& function)
 {
-    const auto* const solver_id = function.smooth() ? "lbfgs" : "asgm";
+    const auto* const solver_id = function.smooth() ? "lbfgs" : "osga";
+    const auto epsilon_linear = function.smooth() ? 1e-8 : (function.strong_convexity() > 0.0 ? 1e-5 : 1e-2);
+    const auto epsilon_solver = function.smooth() ? 1e-10 : (function.strong_convexity() > 0.0 ? 1e-6 : 1e-4);
     const auto solver = make_solver(solver_id);
     solver->lsearchk("cgdescent");
 
-    const vector_t x0 = vector_t::Random(function.size());
-    return check_minimize(*solver, solver_id, function, x0, 10000, 1e-9);
+    const auto x0 = vector_t{vector_t::Zero(function.size())};
+    const auto state = check_minimize(*solver, solver_id, function, x0, 5000, epsilon_solver);
+    return std::make_pair(state, epsilon_linear);
 }
 
 UTEST_BEGIN_MODULE(test_linear_function)
@@ -81,12 +84,12 @@ UTEST_CASE(function)
 
     for (const auto scaling : enum_values<scaling_type>())
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling)};
-
         const auto loss = make_loss(scaling);
         const auto iterator = make_iterator(generator, scaling);
         const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/noreg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
             UTEST_CHECK(function.convex() || !loss->convex());
@@ -98,6 +101,8 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l1reg")};
+
             const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
             UTEST_CHECK(function.convex() || !loss->convex());
@@ -108,6 +113,8 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l2reg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
             UTEST_CHECK(function.convex() || !loss->convex());
@@ -118,6 +125,8 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/vAreg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
             UTEST_CHECK(!function.convex());
@@ -141,15 +150,16 @@ UTEST_CASE(minimize)
 
     for (const auto scaling : enum_values<scaling_type>())
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling)};
-
         const auto loss = make_loss(scaling);
         const auto iterator = make_iterator(generator, scaling);
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/noreg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
 
-            auto state = check_minimize(function);
-            UTEST_CHECK_CLOSE(state.f, 0.0, epsilon3<scalar_t>());
+            auto [state, epsilon] = check_minimize(function);
+            UTEST_CHECK_CLOSE(state.f, 0.0, epsilon);
+            UTEST_CHECK_GREATER(state.m_iterations, 10);
 
             ::nano::upscale(
                 iterator.flatten_stats(), scaling,
@@ -157,31 +167,40 @@ UTEST_CASE(minimize)
                 function.weights(state.x),
                 function.bias(state.x));
 
-            UTEST_CHECK_CLOSE(dataset.bias(), function.bias(state.x), epsilon3<scalar_t>());
-            UTEST_CHECK_CLOSE(dataset.weights(), function.weights(state.x), epsilon3<scalar_t>());
+            UTEST_CHECK_CLOSE(dataset.bias(), function.bias(state.x), epsilon);
+            UTEST_CHECK_CLOSE(dataset.weights(), function.weights(state.x), epsilon);
 
             const auto dataset_bias = dataset.bias().vector();
             const auto dataset_weights = dataset.weights().matrix();
-            check_linear(generator, dataset_weights, dataset_bias, epsilon1<scalar_t>());
+            check_linear(generator, dataset_weights, dataset_bias, 1e-15);
 
             const auto function_bias = function.bias(state.x).vector();
             const auto function_weights = function.weights(state.x).matrix();
-            check_linear(generator, function_weights, function_bias, epsilon3<scalar_t>());
+            check_linear(generator, function_weights, function_bias, epsilon);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l1reg")};
+
             const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
 
-            check_minimize(function);
+            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+            UTEST_CHECK_GREATER(state.m_iterations, 10);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l2reg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
 
-            check_minimize(function);
+            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+            UTEST_CHECK_GREATER(state.m_iterations, 10);
         }
         {
+            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/vAreg")};
+
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
 
-            check_minimize(function);
+            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+            UTEST_CHECK_GREATER(state.m_iterations, 10);
         }
     }
 }

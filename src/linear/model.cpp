@@ -74,6 +74,8 @@ static auto fit(const estimator_t& estimator,
     iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
     iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
 
+    // TODO: fit from the optimum found at the closest parameter values!!!
+
     const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg, vAreg};
     const auto state = solver.minimize(function, vector_t::Zero(function.size()));
 

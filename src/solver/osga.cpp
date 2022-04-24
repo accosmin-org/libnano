@@ -6,9 +6,9 @@ class proxy_t
 {
 public:
 
-    explicit proxy_t(const vector_t& z0) :
+    explicit proxy_t(const vector_t& z0, scalar_t epsilon) :
         m_z0(z0),
-        m_Q0(0.5 * z0.lpNorm<2>() + std::numeric_limits<scalar_t>::epsilon())
+        m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
     {
     }
 
@@ -60,13 +60,14 @@ solver_osga_t::solver_osga_t()
 {
     monotonic(false);
 
-    register_parameter(parameter_t::make_float("solver::osga::lambda", 0, LT, 0.99, LT, 1));
+    register_parameter(parameter_t::make_float("solver::osga::lambda", 0, LT, 0.9, LT, 1));
     register_parameter(parameter_t::make_float("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_float_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 1));
+    register_parameter(parameter_t::make_float_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
 }
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
 {
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
     const auto lambda = parameter("solver::osga::lambda").value<scalar_t>();
     const auto alpha_max = parameter("solver::osga::alpha_max").value<scalar_t>();
@@ -77,7 +78,7 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     const auto miu = function.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
-    const auto proxy = proxy_t{x0};
+    const auto proxy = proxy_t{x0, epsilon};
 
     auto state = solver_state_t{function, x0};
     vector_t& xb = state.x;     // store the best function point
