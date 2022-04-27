@@ -9,9 +9,7 @@ using namespace nano;
 
 static auto make_loss(scaling_type scaling)
 {
-    return make_loss(
-        (scaling == scaling_type::none) ? "squared" :
-        (scaling == scaling_type::mean) ? "absolute" : "cauchy");
+    return make_loss(scaling == scaling_type::mean ? "absolute" : "squared");
 }
 
 static auto make_batch(scaling_type scaling)
@@ -60,7 +58,7 @@ static void check_vgrad(const linear::function_t& function, int trials = 100)
 static auto check_minimize(const function_t& function)
 {
     const auto* const solver_id = function.smooth() ? "lbfgs" : "osga";
-    const auto epsilon_linear = function.smooth() ? 1e-8 : (function.strong_convexity() > 0.0 ? 1e-5 : 1e-2);
+    const auto epsilon_linear = function.smooth() ? 1e-7 : (function.strong_convexity() > 0.0 ? 1e-4 : 1e-2);
     const auto epsilon_solver = function.smooth() ? 1e-10 : (function.strong_convexity() > 0.0 ? 1e-6 : 1e-4);
     const auto solver = make_solver(solver_id);
     solver->lsearchk("cgdescent");

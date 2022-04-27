@@ -31,7 +31,7 @@ static auto make_nonsmooth_solver()
 {
     auto solver = solver_t::all().get("osga");
     UTEST_REQUIRE(solver);
-    solver->parameter("solver::max_evals") = 1500;
+    solver->parameter("solver::max_evals") = 2000;
     solver->parameter("solver::epsilon") = 1e-5;
     return solver;
 }
