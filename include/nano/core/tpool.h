@@ -6,12 +6,14 @@
 #include <thread>
 #include <vector>
 #include <cassert>
+#include <iterator>
+#include <algorithm>
 #include <condition_variable>
 
 namespace nano
 {
     using future_t = std::future<void>;
-    using tpool_task_t = std::packaged_task<void()>;
+    using tpool_task_t = std::packaged_task<void(size_t)>;
 
     ///
     /// \brief enqueue tasks to be run in a thread pool.
@@ -58,7 +60,11 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit tpool_worker_t(tpool_queue_t& queue) : m_queue(queue) {}
+        tpool_worker_t(tpool_queue_t& queue, size_t tnum) :
+            m_queue(queue),
+            m_tnum(tnum)
+        {
+        }
 
         ///
         /// \brief execute tasks when available
@@ -90,7 +96,7 @@ namespace nano
                 }
 
                 // execute the task
-                task();
+                task(m_tnum);
             }
         }
 
@@ -98,6 +104,7 @@ namespace nano
 
         // attributes
         tpool_queue_t&          m_queue;        ///< task queue to process
+        size_t                  m_tnum{0U};     ///< thread number
     };
 
     ///
@@ -220,15 +227,14 @@ namespace nano
             const auto n_workers = size();
 
             m_workers.reserve(n_workers);
-            for (size_t i = 0; i < n_workers; ++ i)
+            for (size_t tnum = 0; tnum < n_workers; ++ tnum)
             {
-                m_workers.emplace_back(m_queue);
+                m_workers.emplace_back(m_queue, tnum);
             }
 
-            for (size_t i = 0; i < n_workers; ++ i)
-            {
-                m_threads.emplace_back(std::ref(m_workers[i]));
-            }
+            std::transform(
+                m_workers.begin(), m_workers.end(), std::back_inserter(m_threads),
+                [] (const auto& worker) { return std::thread(std::cref(worker)); });
         }
 
         void stop()
@@ -275,13 +281,13 @@ namespace nano
         const auto tchunk = std::max((size + workers - 1) / workers, chunk);
 
         tpool_section_t<future_t> section;
-        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
+        for (tsize tbegin = 0; tbegin < size; tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op, size=size, chunk=chunk, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, chunk=chunk, tchunk=tchunk, tbegin=tbegin] (size_t tnum)
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; begin += chunk)
                 {
-                    op(begin, std::min(begin + chunk, tend), static_cast<size_t>(tnum));
+                    op(begin, std::min(begin + chunk, tend), tnum);
                 }
             }));
         }
@@ -308,13 +314,13 @@ namespace nano
         const auto tchunk = (size + workers - 1) / workers;
 
         tpool_section_t<future_t> section;
-        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
+        for (tsize tbegin = 0; tbegin < size; tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op, size=size, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, tchunk=tchunk, tbegin=tbegin] (size_t tnum)
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; ++ begin)
                 {
-                    op(begin, static_cast<size_t>(tnum));
+                    op(begin, tnum);
                 }
             }));
         }
