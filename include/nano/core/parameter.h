@@ -271,12 +271,12 @@ namespace nano
         }
 
         template <typename tscalar, typename tmin, typename tvalue, typename tmax>
-        static parameter_t make_scalar(string_t name,
+        static parameter_t make_scalar(const string_t& name,
             tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
             return parameter_t
             {
-                std::move(name),
+                name,
                 range_t<tscalar>
                 {
                     static_cast<tscalar>(value),
@@ -287,12 +287,12 @@ namespace nano
         }
 
         template <typename tscalar, typename tmin, typename tvalue1, typename tvalue2, typename tmax>
-        static parameter_t make_scalar(string_t name,
+        static parameter_t make_scalar(const string_t& name,
             tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
         {
             return parameter_t
             {
-                std::move(name),
+                name,
                 pair_range_t<tscalar>
                 {
                     static_cast<tscalar>(value1), static_cast<tscalar>(value2),
