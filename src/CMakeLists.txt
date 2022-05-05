@@ -8,6 +8,7 @@ add_library(nano)
 
 target_sources(nano PRIVATE
     core/table.cpp
+    core/tpool.cpp
     core/chrono.cpp
     core/logger.cpp
     core/cmdline.cpp

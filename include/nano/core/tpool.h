@@ -6,8 +6,7 @@
 #include <thread>
 #include <vector>
 #include <cassert>
-#include <iterator>
-#include <algorithm>
+#include <nano/arch.h>
 #include <condition_variable>
 
 namespace nano
@@ -18,14 +17,14 @@ namespace nano
     ///
     /// \brief enqueue tasks to be run in a thread pool.
     ///
-    class tpool_queue_t
+    class NANO_PUBLIC tpool_queue_t
     {
     public:
 
         ///
         /// \brief constructor
         ///
-        tpool_queue_t() = default;
+        tpool_queue_t();
 
         ///
         /// \brief enqueue a new task to execute
@@ -53,52 +52,19 @@ namespace nano
     ///
     /// \brief worker to process tasks enqueued in a thread pool.
     ///
-    class tpool_worker_t
+    class NANO_PUBLIC tpool_worker_t
     {
     public:
 
         ///
         /// \brief constructor
         ///
-        tpool_worker_t(tpool_queue_t& queue, size_t tnum) :
-            m_queue(queue),
-            m_tnum(tnum)
-        {
-        }
+        tpool_worker_t(tpool_queue_t& queue, size_t tnum);
 
         ///
         /// \brief execute tasks when available
         ///
-        void operator()() const
-        {
-            while (true)
-            {
-                tpool_task_t task;
-
-                // wait for a new task to be available in the queue
-                {
-                    std::unique_lock<std::mutex> lock(m_queue.m_mutex);
-
-                    m_queue.m_condition.wait(lock, [&]
-                    {
-                        return m_queue.m_stop || !m_queue.m_tasks.empty();
-                    });
-
-                    if (m_queue.m_stop)
-                    {
-                        m_queue.m_tasks.clear();
-                        m_queue.m_condition.notify_all();
-                        break;
-                    }
-
-                    task = std::move(m_queue.m_tasks.front());
-                    m_queue.m_tasks.pop_front();
-                }
-
-                // execute the task
-                task(m_tnum);
-            }
-        }
+        void operator()() const;
 
     private:
 
@@ -162,7 +128,7 @@ namespace nano
     ///
     /// NB: this is heavily copied/inspired by http://progsch.net/wordpress/?p=81
     ///
-    class tpool_t
+    class NANO_PUBLIC tpool_t
     {
     public:
 
@@ -190,10 +156,7 @@ namespace nano
         ///
         /// \brief destructor
         ///
-        ~tpool_t()
-        {
-            stop();
-        }
+        ~tpool_t();
 
         ///
         /// \brief enqueue a new task to execute
@@ -222,35 +185,7 @@ namespace nano
 
     private:
 
-        tpool_t()
-        {
-            const auto n_workers = size();
-
-            m_workers.reserve(n_workers);
-            for (size_t tnum = 0; tnum < n_workers; ++ tnum)
-            {
-                m_workers.emplace_back(m_queue, tnum);
-            }
-
-            std::transform(
-                m_workers.begin(), m_workers.end(), std::back_inserter(m_threads),
-                [] (const auto& worker) { return std::thread(std::cref(worker)); });
-        }
-
-        void stop()
-        {
-            // stop & join
-            {
-                const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
-                m_queue.m_stop = true;
-                m_queue.m_condition.notify_all();
-            }
-
-            for (auto& thread : m_threads)
-            {
-                thread.join();
-            }
-        }
+        tpool_t();
 
         // attributes
         std::vector<std::thread>        m_threads;      ///<
