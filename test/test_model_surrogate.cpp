@@ -9,7 +9,7 @@ using namespace nano;
 static void check_minimizer(const function_t& function, const vector_t& optimum)
 {
     const auto* const solver_id = function.smooth() ? "lbfgs" : "osga";
-    const auto epsilon = function.smooth() ? 1e-9 : 1e-8;
+    const auto epsilon = 1e-9;
 
     const auto solver = make_solver(solver_id, epsilon);
     const auto state = check_minimize(*solver, solver_id, function, vector_t::Random(function.size()), 10000, epsilon);
