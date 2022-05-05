@@ -106,11 +106,6 @@ namespace nano
         ///
         void monotonic(bool);
 
-        ///
-        /// \brief check convergence for non-monotonic solvers.
-        ///
-        bool converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1) const;
-
     private:
 
         // attributes

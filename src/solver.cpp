@@ -1,7 +1,6 @@
 #include <mutex>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
-#include <nano/solver/asgm.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
@@ -74,22 +73,6 @@ bool solver_t::monotonic() const
     return m_monotonic;
 }
 
-bool solver_t::converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1) const
-{
-    const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
-    const auto df = std::fabs(fxk1 - fxk);
-
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
-    const auto converged =
-        !std::isfinite(fxk) || !std::isfinite(fxk1) ||
-        (
-            dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
-            df <= epsilon * std::max(1.0, std::fabs(fxk1))
-        );
-
-    return converged;
-}
-
 lsearch_t solver_t::make_lsearch() const
 {
     // NB: create new line-search objects:
@@ -154,7 +137,6 @@ solver_factory_t& solver_t::all()
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_asgm_t>("asgm", "sub-gradient method with an adaptive step length");
         manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
         manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
