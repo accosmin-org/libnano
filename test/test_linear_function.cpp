@@ -64,7 +64,7 @@ static auto check_minimize(const function_t& function)
     solver->lsearchk("cgdescent");
 
     const auto x0 = vector_t{vector_t::Zero(function.size())};
-    const auto state = check_minimize(*solver, solver_id, function, x0, 5000, epsilon_solver);
+    const auto state = check_minimize(*solver, solver_id, function, x0, 20000, epsilon_solver);
     return std::make_pair(state, epsilon_linear);
 }
 
