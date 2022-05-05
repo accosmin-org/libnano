@@ -57,16 +57,16 @@ public:
     fixture_dataset_t(csvs_t csvs, features_t features) :
         tabular_dataset_t(std::move(csvs), std::move(features))
     {
-        std::remove(data_path());
-        std::remove(test_path());
+        std::remove(data_path());   // NOLINT(cert-err33-c)
+        std::remove(test_path());   // NOLINT(cert-err33-c)
     }
 
     fixture_dataset_t(csvs_t csvs, features_t features, size_t target) :
         tabular_dataset_t(std::move(csvs), std::move(features), target),
         m_target(target)
     {
-        std::remove(data_path());
-        std::remove(test_path());
+        std::remove(data_path());   // NOLINT(cert-err33-c)
+        std::remove(test_path());   // NOLINT(cert-err33-c)
     }
 
     fixture_dataset_t(fixture_dataset_t&&) = default;
@@ -76,8 +76,8 @@ public:
 
     ~fixture_dataset_t() override
     {
-        std::remove(data_path());
-        std::remove(test_path());
+        std::remove(data_path());   // NOLINT(cert-err33-c)
+        std::remove(test_path());   // NOLINT(cert-err33-c)
     }
 
     void too_many_labels()

@@ -1,5 +1,6 @@
 #include <fstream>
 #include <nano/core/logger.h>
+#include <nano/dataset/utils.h>
 #include <nano/dataset/imclass_cifar.h>
 
 using namespace nano;
@@ -70,7 +71,7 @@ bool cifar_dataset_t::iread(const file_t& file)
 }
 
 cifar10_dataset_t::cifar10_dataset_t() : cifar_dataset_t(
-    scat(std::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
+    scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
     feature_t("class").sclass(strings_t
     {"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"}))
 {
@@ -83,7 +84,7 @@ cifar10_dataset_t::cifar10_dataset_t() : cifar_dataset_t(
 }
 
 cifar100c_dataset_t::cifar100c_dataset_t() : cifar_dataset_t(
-    scat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+    scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
     feature_t("class").sclass(strings_t
     {"aquatic mammals", "fish", "flowers", "food containers", "fruit and vegetables",
     "household electrical devices", "household furniture", "insects", "large carnivores",
@@ -96,7 +97,7 @@ cifar100c_dataset_t::cifar100c_dataset_t() : cifar_dataset_t(
 }
 
 cifar100f_dataset_t::cifar100f_dataset_t() : cifar_dataset_t(
-    scat(std::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+    scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
     feature_t("class").sclass(strings_t
     {"apple", "aquarium_fish", "baby", "bear", "beaver", "bed", "bee", "beetle", "bicycle", "bottle",
     "bowl", "boy", "bridge", "bus", "butterfly", "camel", "can", "castle", "caterpillar", "cattle",

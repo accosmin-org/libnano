@@ -340,6 +340,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-convert-member-functions-to-static"
     checks="${checks},-readability-function-cognitive-complexity"
     checks="${checks},-readability-suspicious-call-argument"
+    checks="${checks},-readability-identifier-length"
     clang_tidy ${checks}
 }
 
