@@ -144,7 +144,7 @@ void dataset_t::load()
         {
             critical(
                 ::nano::optional(mask, samples()),
-                "dataset_t: the target cannot be optional!");
+                "dataset: the target cannot be optional!");
         });
     }
 }

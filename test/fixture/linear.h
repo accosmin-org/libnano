@@ -132,6 +132,7 @@ private:
         }
 
         auto iterator = flatten_iterator_t{generator, arange(0, m_samples)};
+        iterator.execution(execution_type::seq);
         iterator.loop([&] (tensor_range_t range, size_t, tensor2d_cmap_t inputs)
         {
             auto target = tensor1d_t{m_targets};
