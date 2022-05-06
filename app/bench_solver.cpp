@@ -300,6 +300,13 @@ static int unsafe_main(int argc, const char* argv[])
         lsearchk_t::all().ids(std::regex(options.get<string_t>("lsearchk"))) :
         strings_t{""};
 
+    // keep track of the used parameters
+    std::map<string_t, int> params_usage;
+    for (const auto& [param_name, param_value] : options.m_xvalues)
+    {
+        params_usage[param_name] = 0;
+    }
+
     // construct the list of solver configurations to evaluate
     std::vector<std::pair<string_t, rsolver_t>> solvers;
     const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
@@ -310,6 +317,7 @@ static int unsafe_main(int argc, const char* argv[])
             if (solver->parameter_if(param_name) != nullptr)
             {
                 solver->parameter(param_name) = param_value;
+                params_usage[param_name] ++;
             }
         }
 
@@ -346,6 +354,15 @@ static int unsafe_main(int argc, const char* argv[])
     }
 
     show_table(align("solver", 28), gstats);
+
+    // log all unused parameters (e.g. typos, not matching to any solver)
+    for (const auto& [param_name, count] : params_usage)
+    {
+        if (count == 0)
+        {
+            log_warning() << "parameter \"" << param_name << "\" was not used.";
+        }
+    }
 
     // OK
     return EXIT_SUCCESS;
