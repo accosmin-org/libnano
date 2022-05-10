@@ -25,4 +25,26 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
     };
+
+    ///
+    /// \brief universal dual gradient method (DGM).
+    ///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
+    ///
+    /// NB: the algorithm was designed to minimize a structured convex problem,
+    ///     but here it is applied to a (sub-)differentiable convex function directly.
+    ///
+    class NANO_PUBLIC solver_dgm_t final : public solver_t
+    {
+    public:
+
+        ///
+        /// \brief default constructor
+        ///
+        solver_dgm_t();
+
+        ///
+        /// \brief @see solver_t
+        ///
+        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
+    };
 }
