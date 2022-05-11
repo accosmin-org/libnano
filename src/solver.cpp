@@ -157,7 +157,7 @@ solver_factory_t& solver_t::all()
         manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
         manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
         manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
-        manager.add<solver_pgm_t>("dgm", "universal dual gradient method (DGM)");
+        manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
     });
 
     return manager;
