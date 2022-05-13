@@ -14,7 +14,7 @@ solver_t::solver_t()
     lsearch0("quadratic");
     lsearchk("morethuente");
 
-    register_parameter(parameter_t::make_float("solver::epsilon", 0, LT, 1e-6, LE, 1e-3));
+    register_parameter(parameter_t::make_float("solver::epsilon", 0, LT, 1e-6, LE, 1e-2));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
     register_parameter(parameter_t::make_float_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
@@ -158,6 +158,7 @@ solver_factory_t& solver_t::all()
         manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
         manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
         manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
+        manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
     });
 
     return manager;

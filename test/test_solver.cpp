@@ -30,7 +30,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -156,6 +156,7 @@ UTEST_CASE(factory)
         {"osga", std::make_tuple(false)},
         {"pgm", std::make_tuple(false)},
         {"dgm", std::make_tuple(false)},
+        {"fgm", std::make_tuple(false)},
     };
 
     const auto ids = solver_t::all().ids();
