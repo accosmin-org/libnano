@@ -22,7 +22,7 @@ solver_universal_t::solver_universal_t()
     static constexpr auto imax = std::numeric_limits<int64_t>::max();
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
-    register_parameter(parameter_t::make_float("solver::universal::L0", 0.0, LT, 1.0, LT, fmax));
+    register_parameter(parameter_t::make_scalar("solver::universal::L0", 0.0, LT, 1.0, LT, fmax));
     register_parameter(parameter_t::make_integer("solver::universal::patience", 1, LE, 10, LE, imax));
     register_parameter(parameter_t::make_integer("solver::universal::lsearch_max_iters", 10, LE, 50, LE, 100));
 }

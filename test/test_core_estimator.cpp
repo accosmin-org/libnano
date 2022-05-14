@@ -259,7 +259,7 @@ UTEST_CASE(parameters)
 {
     const auto eparam = parameter_t::make_enum("eparam", enum_type::type3);
     const auto iparam = parameter_t::make_integer("iparam", 1, LE, 5, LE, 9);
-    const auto fparam = parameter_t::make_float_pair("fparam", 1.0, LT, 2.0, LE, 2.0, LT, 5.0);
+    const auto fparam = parameter_t::make_scalar_pair("fparam", 1.0, LT, 2.0, LE, 2.0, LT, 5.0);
 
     const auto check_params = [&] (const estimator_t& estimator)
     {

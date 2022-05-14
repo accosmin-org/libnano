@@ -10,7 +10,7 @@ using namespace nano;
 
 lsearchk_t::lsearchk_t()
 {
-    register_parameter(parameter_t::make_float_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
+    register_parameter(parameter_t::make_scalar_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
     register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 50, LE, 100));
 }
 

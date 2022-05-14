@@ -120,7 +120,7 @@ UTEST_CASE(monostate)
     UTEST_CHECK_EQUAL(scat(param), "=N/A|domain=[N/A]");
 
     UTEST_CHECK_EQUAL(param, parameter_t{});
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("", 0.0, LE, 0.5, LE, 1.0));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("", 0.0, LE, 0.5, LE, 1.0));
 
     UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
     UTEST_CHECK_THROW(param.value<enum_type>(), std::runtime_error);
@@ -149,9 +149,9 @@ UTEST_CASE(enumeration)
     UTEST_CHECK_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("what", enum_type::type1));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type2));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("", 0.0, LE, 0.5, LE, 1.0));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("", 0.0, LE, 0.5, LE, 1.0));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("enum", 0, LE, 1, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("enum", 0, LE, 1, LE, 2, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("enum", 0, LE, 1, LE, 2, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("enum", 0, LE, 1, LE, 2, LE, 10));
 
     UTEST_CHECK_THROW(param = 1, std::runtime_error);
@@ -176,14 +176,14 @@ UTEST_CASE(iparam)
     UTEST_CHECK_EQUAL(scat(param), "iparam=7|domain=[1 <= 7 < 10]");
     UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("iparam", 1, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("iparam", 1, LE, 7, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LT, 7, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 6, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LT, 11));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 2, LE, 7, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("xparam", 1, LE, 7, LT, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("iparam", 1, LE, 7, LE, 7, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("iparam", 1, LE, 7, LE, 7, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LE, 7, LE, 7, LT, 10));
     UTEST_CHECK_EQUAL(param, parameter_t::make_integer("iparam", 1, LE, 7, LT, 10));
 
@@ -200,23 +200,23 @@ UTEST_CASE(iparam)
 
 UTEST_CASE(fparam)
 {
-    auto param = parameter_t::make_float("fparam", 1.0, LT, 4, LE, 10);
+    auto param = parameter_t::make_scalar("fparam", 1.0, LT, 4, LE, 10);
 
     UTEST_CHECK_EQUAL(param.name(), "fparam");
     UTEST_CHECK_EQUAL(scat(param), "fparam=4|domain=[1 < 4 <= 10]");
     UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("enum", enum_type::type1));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("fparam", 1, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LE, 4, LT, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LE, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LT, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 11));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 2, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("xparam", 1, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 4, LE, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LE, 4, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LE, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LT, 4, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LT, 4, LE, 11));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 2, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("xparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 4, LE, 4, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("fparam", 1, LT, 4, LE, 4, LE, 10));
-    UTEST_CHECK_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_scalar("fparam", 1, LT, 4, LE, 10));
 
     check_value<true>(param, 1.1);
     check_value<true>(param, 2);
@@ -236,9 +236,9 @@ UTEST_CASE(iparam2)
     UTEST_CHECK_EQUAL(scat(param), "iparam=(2,2)|domain=[1 <= 2 <= 2 < 10]");
     UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("iparam", enum_type::type1));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("iparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("iparam", 1, LT, 4, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("iparam", 1, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("iparam", 1, LE, 2, LE, 2, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("iparam", 1, LE, 2, LE, 2, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("xparam", 1, LE, 2, LE, 2, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 2, LE, 2, LE, 2, LT, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("iparam", 1, LT, 2, LE, 2, LT, 10));
@@ -265,24 +265,24 @@ UTEST_CASE(iparam2)
 
 UTEST_CASE(fparam2)
 {
-    auto param = parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 10);
+    auto param = parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LE, 10);
 
     UTEST_CHECK_EQUAL(param.name(), "fparam");
     UTEST_CHECK_EQUAL(scat(param), "fparam=(2,3)|domain=[1 < 2 < 3 <= 10]");
     UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("fparam", enum_type::type1));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float("fparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("fparam", 1, LT, 4, LE, 10));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("fparam", 1, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("xparam", 1, LT, 2, LT, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 0, LT, 2, LT, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LE, 2, LT, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 1.5, LT, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LE, 3, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 4, LE, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LT, 10));
-    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 11));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("xparam", 1, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 0, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LE, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 1.5, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 2, LE, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LT, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LE, 11));
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
-    UTEST_CHECK_EQUAL(param, parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
 
     check_stream(param);
 
@@ -299,10 +299,10 @@ UTEST_CASE(fparam2)
 
 UTEST_CASE(invalid_float)
 {
-    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LE, 1, LT, 1), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LE, 1, LE, 0), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LT, 1, LE, 10), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float("fparam", 1, LT, 1, LT, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar("fparam", 1, LE, 1, LT, 1), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar("fparam", 1, LE, 1, LE, 0), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar("fparam", 1, LT, 1, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar("fparam", 1, LT, 1, LT, 10), std::runtime_error);
 }
 
 UTEST_CASE(invalid_integer)
@@ -315,11 +315,11 @@ UTEST_CASE(invalid_integer)
 
 UTEST_CASE(invalid_float_pair)
 {
-    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 1, LT, 3, LE, 10), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 2, LT, 1, LT, 3, LE, 10), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 2, LE, 10), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 2), std::runtime_error);
-    UTEST_CHECK_THROW(parameter_t::make_float_pair("fparam", 1, LT, 2, LT, 3, LE, 1), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar_pair("fparam", 1, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar_pair("fparam", 2, LT, 1, LT, 3, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 2, LE, 10), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LE, 2), std::runtime_error);
+    UTEST_CHECK_THROW(parameter_t::make_scalar_pair("fparam", 1, LT, 2, LT, 3, LE, 1), std::runtime_error);
 }
 
 UTEST_CASE(invalid_integer_pair)

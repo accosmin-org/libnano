@@ -64,8 +64,8 @@ tuner_t::tuner_t(param_spaces_t param_spaces, tuner_t::callback_t callback) :
         "tuner: at least a parameter space is needed!");
 
     register_parameter(parameter_t::make_integer("tuner::max_iterations", 0, LE, 5, LE, 100));
-    register_parameter(parameter_t::make_float("tuner::solver::max_evals", 100, LE, 1000, LE, 100'000));
-    register_parameter(parameter_t::make_float("tuner::solver::epsilon", 1e-16, LE, 1e-8, LE, 1e-6));
+    register_parameter(parameter_t::make_scalar("tuner::solver::max_evals", 100, LE, 1000, LE, 100'000));
+    register_parameter(parameter_t::make_scalar("tuner::solver::epsilon", 1e-16, LE, 1e-8, LE, 1e-6));
 }
 
 tuner_t::steps_t tuner_t::optimize(const tensor2d_t& initial_params) const

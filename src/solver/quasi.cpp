@@ -132,7 +132,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
 
 solver_quasi_sr1_t::solver_quasi_sr1_t()
 {
-    register_parameter(parameter_t::make_float("solver::quasiSR1::r", 0, LT, 1e-8, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::quasiSR1::r", 0, LT, 1e-8, LT, 1));
 }
 
 void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const

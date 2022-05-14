@@ -4,9 +4,9 @@ using namespace nano;
 
 lsearch0_cgdescent_t::lsearch0_cgdescent_t()
 {
-    register_parameter(parameter_t::make_float("lsearch0::cgdescent::phi0", 0, LT, 0.01, LT, 1));
-    register_parameter(parameter_t::make_float("lsearch0::cgdescent::phi1", 0, LT, 0.10, LT, 1));
-    register_parameter(parameter_t::make_float("lsearch0::cgdescent::phi2", 1, LT, 2.00, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearch0::cgdescent::phi0", 0, LT, 0.01, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearch0::cgdescent::phi1", 0, LT, 0.10, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearch0::cgdescent::phi2", 1, LT, 2.00, LT, 1e+6));
 }
 
 rlsearch0_t lsearch0_cgdescent_t::clone() const

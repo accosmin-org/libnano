@@ -74,9 +74,9 @@ solver_osga_t::solver_osga_t()
 {
     monotonic(false);
 
-    register_parameter(parameter_t::make_float("solver::osga::lambda", 0, LT, 0.99, LT, 1));
-    register_parameter(parameter_t::make_float("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_float_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
+    register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.99, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
 }
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
