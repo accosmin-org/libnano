@@ -71,18 +71,23 @@ namespace nano
         /// \brief update the current state, if the given function value is smaller than the current one.
         /// returns true if the update was performed.
         ///
-        bool update_if_better(const vector_t& x, scalar_t fx)
+        bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx)
         {
             if (std::isfinite(fx) && fx < f)
             {
                 this->x = x;
                 this->f = fx;
+                this->g = gx;
                 return true;
             }
             else
             {
                 return false;
             }
+        }
+        bool update_if_better(const vector_t& x, scalar_t fx)
+        {
+            return update_if_better(x, g, fx);
         }
 
         ///
