@@ -15,15 +15,45 @@ static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>
     return stream << std::get<0>(values) << "," << std::get<1>(values);
 }
 
-static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues, scalar_t epsilon = 1e-6)
+static void check_consistency(
+    const function_t& function, const std::vector<scalar_t>& fvalues, const std::vector<scalar_t>& epsilons,
+    size_t reference = 0U)
 {
     if (function.convex())
     {
-        const auto min = *std::min_element(fvalues.begin(), fvalues.end());
-        const auto max = *std::max_element(fvalues.begin(), fvalues.end());
-        UTEST_CHECK_CLOSE(min, max, epsilon);
+        for (size_t i = 0U; i < fvalues.size(); ++ i)
+        {
+            UTEST_CHECK_CLOSE(fvalues[reference], fvalues[i], epsilons[i]);
+        }
     }
 }
+
+// {solver_id: {monotonic, max_evals, achievable epsilon, convergence_expected_for_nonsmooth_problems}}
+static const auto description = std::map<string_t, std::tuple<bool, tensor_size_t, scalar_t, scalar_t>>
+{
+    {"gd", std::make_tuple(true, 10000, 1e-6, false)},
+    {"cgd", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-n", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-hs", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-fr", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-pr", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-cd", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-ls", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-dy", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-dycd", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-dyhs", std::make_tuple(true, 1000, 1e-6, false)},
+    {"cgd-prfr", std::make_tuple(true, 1000, 1e-6, false)},
+    {"lbfgs", std::make_tuple(true, 1000, 1e-6, false)},
+    {"dfp", std::make_tuple(true, 1000, 1e-6, false)},
+    {"sr1", std::make_tuple(true, 1000, 1e-6, false)},
+    {"bfgs", std::make_tuple(true, 1000, 1e-6, false)},
+    {"hoshino", std::make_tuple(true, 1000, 1e-6, false)},
+    {"fletcher", std::make_tuple(true, 1000, 1e-6, false)},
+    {"osga", std::make_tuple(false, 10000, 1e-6, true)},
+    {"pgm", std::make_tuple(false, 10000, 1e-3, false)},
+    {"dgm", std::make_tuple(false, 20000, 1e-3, false)},
+    {"fgm", std::make_tuple(false, 10000, 1e-3, false)},
+};
 
 static auto make_lsearch0_ids() { return lsearch0_t::all().ids(); }
 static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
@@ -133,32 +163,6 @@ UTEST_CASE(state_convergence1)
 
 UTEST_CASE(factory)
 {
-    const auto description = std::map<string_t, std::tuple<bool>>
-    {
-        {"gd", std::make_tuple(true)},
-        {"cgd", std::make_tuple(true)},
-        {"cgd-n", std::make_tuple(true)},
-        {"cgd-hs", std::make_tuple(true)},
-        {"cgd-fr", std::make_tuple(true)},
-        {"cgd-pr", std::make_tuple(true)},
-        {"cgd-cd", std::make_tuple(true)},
-        {"cgd-ls", std::make_tuple(true)},
-        {"cgd-dy", std::make_tuple(true)},
-        {"cgd-dycd", std::make_tuple(true)},
-        {"cgd-dyhs", std::make_tuple(true)},
-        {"cgd-prfr", std::make_tuple(true)},
-        {"lbfgs", std::make_tuple(true)},
-        {"dfp", std::make_tuple(true)},
-        {"sr1", std::make_tuple(true)},
-        {"bfgs", std::make_tuple(true)},
-        {"hoshino", std::make_tuple(true)},
-        {"fletcher", std::make_tuple(true)},
-        {"osga", std::make_tuple(false)},
-        {"pgm", std::make_tuple(false)},
-        {"dgm", std::make_tuple(false)},
-        {"fgm", std::make_tuple(false)},
-    };
-
     const auto ids = solver_t::all().ids();
 
     UTEST_REQUIRE_EQUAL(ids.size(), description.size());
@@ -263,7 +267,7 @@ UTEST_CASE(default_monotonic_solvers)
 
         const vector_t x0 = vector_t::Random(function->size());
 
-        std::vector<scalar_t> fvalues;
+        std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_smooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
@@ -271,10 +275,11 @@ UTEST_CASE(default_monotonic_solvers)
 
             const auto state = check_minimize(*solver, solver_id, *function, x0);
             fvalues.push_back(state.f);
+            epsilons.push_back(1e-6);
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
-        check_consistency(*function, fvalues, 1e-6);
+        check_consistency(*function, fvalues, epsilons);
     }
 }
 
@@ -286,22 +291,35 @@ UTEST_CASE(default_nonmonotonic_solvers)
 
         const vector_t x0 = vector_t::Random(function->size());
 
-        std::vector<scalar_t> fvalues;
+        size_t reference = 0U;
+        std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_nonsmooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            const auto state = check_minimize(*solver, solver_id, *function, x0);
+            const auto it = description.find(solver_id);
+            UTEST_REQUIRE(it != description.end());
+
+            const auto max_evals = std::get<1>(it->second);
+            const auto epsilon = std::get<2>(it->second);
+            const auto convergence = std::get<3>(it->second);
+            if (solver_id == string_t{"osga"})
+            {
+                reference = fvalues.size();
+            }
+
+            const auto state = check_minimize(*solver, solver_id, *function, x0, max_evals, epsilon, convergence);
             fvalues.push_back(state.f);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+            epsilons.push_back(epsilon);
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ", eps=" << epsilon << ".";
         }
 
-        check_consistency(*function, fvalues, 1e-3);
+        check_consistency(*function, fvalues, epsilons, reference);
     }
 }
 
-UTEST_CASE(best_solvers_with_lsearches)
+UTEST_CASE(best_smooth_solvers_with_lsearches)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
@@ -309,7 +327,7 @@ UTEST_CASE(best_solvers_with_lsearches)
 
         const vector_t x0 = vector_t::Random(function->size());
 
-        std::vector<scalar_t> fvalues;
+        std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_best_smooth_solver_ids())
         {
             const auto solver = solver_t::all().get(solver_id);
@@ -324,15 +342,16 @@ UTEST_CASE(best_solvers_with_lsearches)
 
                     const auto state = check_minimize(*solver, solver_id, *function, x0);
                     fvalues.push_back(state.f);
+                    epsilons.push_back(1e-6);
                 }
             }
         }
 
-        check_consistency(*function, fvalues);
+        check_consistency(*function, fvalues, epsilons);
     }
 }
 
-UTEST_CASE(best_solvers_with_tolerances)
+UTEST_CASE(best_smooth_solvers_with_tolerances)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
@@ -355,9 +374,9 @@ UTEST_CASE(best_solvers_with_tolerances)
     }
 }
 
-UTEST_CASE(quasi_with_initializations)
+UTEST_CASE(quasi_bfgs_with_initializations)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 10}))
+    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
         {

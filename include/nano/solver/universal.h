@@ -11,10 +11,16 @@ namespace nano
     /// NB: the algorithm was designed to minimize a structured convex problem,
     ///     but here it is applied to a (sub-)differentiable convex function directly.
     ///
-    /// NB: the convergence criterion is too loose in practice and it depends on a typically unknown
-    ///     distance from the starting point to the optimum - D. As such the solver is stopping when
-    ///     no significant improvement in function value was performed in a fixed number of recent
-    ///     iterations (patience).
+    /// NB: the original stopping criterion is too loose in practice and it depends on a typically
+    ///     unknown distance from the starting point to the optimum - D. instead, these methods
+    ///     stop early only for smooth problems with the usual criterion on the magnitude of the gradient.
+    ///
+    /// NB: the proxy function is the squared euclidean distance: d(x) = 1/2 ||x - x0||^2.
+    ///
+    /// NB: generally these methods are slow and they depends significantly on the choice of the proxy
+    ///     function and sometimes on the initial estimation of the Lipschitz constant - L.
+    ///
+    /// NB: best results are obtained for smooth functions or when the desired accuracy is low (e.g. 1e-2 to 1e-3).
     ///
     class solver_universal_t : public solver_t
     {

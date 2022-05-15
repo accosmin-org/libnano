@@ -2,16 +2,12 @@
 
 using namespace nano;
 
-#include <iomanip>
-#include <iostream>
-
 static auto parameter_values(const estimator_t& estimator)
 {
     return std::make_tuple(
         estimator.parameter("solver::epsilon").value<scalar_t>(),
         estimator.parameter("solver::max_evals").value<int64_t>(),
         estimator.parameter("solver::universal::L0").value<scalar_t>(),
-        estimator.parameter("solver::universal::patience").value<int64_t>(),
         estimator.parameter("solver::universal::lsearch_max_iters").value<int64_t>());
 }
 
@@ -19,11 +15,9 @@ solver_universal_t::solver_universal_t()
 {
     monotonic(false);
 
-    static constexpr auto imax = std::numeric_limits<int64_t>::max();
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
     register_parameter(parameter_t::make_scalar("solver::universal::L0", 0.0, LT, 1.0, LT, fmax));
-    register_parameter(parameter_t::make_integer("solver::universal::patience", 1, LE, 10, LE, imax));
     register_parameter(parameter_t::make_integer("solver::universal::lsearch_max_iters", 10, LE, 50, LE, 100));
 }
 
@@ -31,7 +25,7 @@ solver_pgm_t::solver_pgm_t() = default;
 
 solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    const auto [epsilon, max_evals, L0, patience, lsearch_max_iterations] = parameter_values(*this);
+    const auto [epsilon, max_evals, L0, lsearch_max_iterations] = parameter_values(*this);
 
     auto function = make_function(function_, x0);
     auto state = solver_state_t{function, x0};
@@ -41,7 +35,7 @@ solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_
     auto gxk = state.g, gxk1 = state.g;
     auto fxk = state.f, fxk1 = state.f;
 
-    for (int64_t i = 0, last_improvement = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
         auto M = L;
@@ -64,19 +58,9 @@ solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_
             gxk = gxk1;
             fxk = fxk1;
 
-            if (state.update_if_better(xk, gxk, fxk))
-            {
-                last_improvement = i;
-            }
+            state.update_if_better(xk, gxk, fxk);
 
-            converged = function.smooth() ? state.convergence_criterion() < epsilon : (i - last_improvement) > patience;
-
-            std::cout << std::fixed << std::setprecision(12) << "i=" << i
-                << ", f=" << fxk
-                << ", g=" << gxk.lpNorm<Eigen::Infinity>()
-                << ", L=" << L
-                << ", calls=" << function.fcalls() << "|" << function.gcalls()
-                << std::endl;
+            converged = function.smooth() ? (state.convergence_criterion() < epsilon) : false;
         }
 
         if (solver_t::done(function, state, iter_ok, converged))
@@ -92,7 +76,7 @@ solver_dgm_t::solver_dgm_t() = default;
 
 solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    const auto [epsilon, max_evals, L0, patience, lsearch_max_iterations] = parameter_values(*this);
+    const auto [epsilon, max_evals, L0, lsearch_max_iterations] = parameter_values(*this);
 
     auto function = make_function(function_, x0);
     auto state = solver_state_t{function, x0};
@@ -102,7 +86,7 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
     auto gxk = state.g, gxk1 = state.g, gphi = x0;
     auto fxk = state.f, fxk1 = state.f;
 
-    for (int64_t i = 0, last_improvement = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
         auto M = L;
@@ -127,19 +111,9 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
             gxk = gxk1;
             fxk = fxk1;
 
-            if (state.update_if_better(xk, gxk, fxk))
-            {
-                last_improvement = i;
-            }
+            state.update_if_better(xk, gxk, fxk);
 
-            converged = function.smooth() ? state.convergence_criterion() < epsilon :  (i - last_improvement) > patience;
-
-            std::cout << std::fixed << std::setprecision(12) << "i=" << i
-                << ", f=" << state.f
-                << ", g=" << state.g.lpNorm<Eigen::Infinity>()
-                << ", L=" << L
-                << ", calls=" << function.fcalls() << "|" << function.gcalls()
-                << std::endl;
+            converged = function.smooth() ? (state.convergence_criterion() < epsilon) : false;
         }
 
         if (solver_t::done(function, state, iter_ok, converged))
@@ -155,17 +129,17 @@ solver_fgm_t::solver_fgm_t() = default;
 
 solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    const auto [epsilon, max_evals, L0, patience, lsearch_max_iterations] = parameter_values(*this);
+    const auto [epsilon, max_evals, L0, lsearch_max_iterations] = parameter_values(*this);
 
     auto function = make_function(function_, x0);
     auto state = solver_state_t{function, x0};
 
     auto L = L0, Ak = 0.0, ak1 = 0.0;
     auto vk = x0, yk = x0, yk1 = x0, xk1 = x0;
-    auto gxk1 = state.g;
-    auto fxk1 = state.f, fyk = state.f, fyk1 = state.f;
+    auto gxk1 = state.g, gyk1 = state.g;
+    auto fxk1 = state.f, fyk1 = state.f;
 
-    for (int64_t i = 0, last_improvement = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 2. line-search
         auto M = L, tau = 0.0;
@@ -182,7 +156,7 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
             fxk1 = function.vgrad(xk1, &gxk1);
 
             yk1 = tau * (vk - ak1 * gxk1) + (1.0 - tau) * yk;
-            fyk1 = function.vgrad(yk1);
+            fyk1 = function.vgrad(yk1, &gyk1);
 
             iter_ok =
                 std::isfinite(fxk1) &&
@@ -192,33 +166,15 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
 
         if (iter_ok)
         {
-            //converged = 1.0 < (L * epsilon);
-            //converged =
-            //    (yk1 - yk).lpNorm<Eigen::Infinity>() < epsilon &&
-            //    std::fabs(fyk1 - fyk) < epsilon;
-            //converged = ak1 < epsilon;
-
             // 3. update current and best state (if the line-search step doesn't fail)
             yk = yk1;
             Ak += ak1;
-            fyk = fyk1;
             L = 0.5 * M;
             vk -= ak1 * gxk1;
 
-            if (state.update_if_better(yk1, fyk1))
-            {
-                last_improvement = i;
-            }
+            state.update_if_better(yk1, gyk1, fyk1);
 
-            converged = function.smooth() ? state.convergence_criterion() < epsilon : (i - last_improvement) > patience;
-
-            std::cout << std::fixed << std::setprecision(12) << "FGM: i=" << i
-                << ", f=" << fyk1 << "|" << state.f
-                << ", L=" << L
-                << ", A=" << Ak
-                << ", fyk=" << fyk
-                << ", calls=" << function.fcalls() << "|" << function.gcalls()
-                << std::endl;
+            converged = function.smooth() ? (state.convergence_criterion() < epsilon) : false;
         }
 
         if (solver_t::done(function, state, iter_ok, converged))
@@ -227,7 +183,5 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
         }
     }
 
-    // NB: make sure the gradient is updated at the returned point.
-    state.f = function.vgrad(state.x, &state.g);
     return state;
 }
