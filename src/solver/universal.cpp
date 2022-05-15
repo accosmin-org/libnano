@@ -38,17 +38,17 @@ solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
-        auto M = 0.5 * L;
+        auto M = L;
         auto iter_ok = false;
         auto converged = false;
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k)
         {
-            M *= 2.0;
             xk1 = xk - gxk / M;
             fxk1 = function.vgrad(xk1, &gxk1);
             iter_ok =
                 std::isfinite(fxk1) &&
                 fxk1 <= fxk + gxk.dot(xk1 - xk) + 0.5 * M * (xk1 - xk).dot(xk1 - xk) + 0.5 * epsilon;
+            M *= 2.0;
         }
 
         if (iter_ok)
@@ -89,17 +89,17 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
-        auto M = 0.5 * L;
+        auto M = L;
         auto iter_ok = false;
         auto converged = false;
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k)
         {
-            M *= 2.0;
             xk1 = gphi - gxk / M;
             fxk1 = function.vgrad(xk1, &gxk1);
             iter_ok =
                 std::isfinite(fxk1) &&
                 function.vgrad(yk = xk1 - gxk1 / M) <= fxk1 - 0.5 * gxk1.dot(gxk1) / M + 0.5 * epsilon;
+            M *= 2.0;
         }
 
         if (iter_ok)
@@ -141,14 +141,13 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 2. line-search
-        auto M = 0.5 * L;
+        auto M = L;
         auto iter_ok = false;
         auto converged = false;
         for (int64_t k = 0;
             k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1) && std::isfinite(fyk1);
             ++ k)
         {
-            M *= 2.0;
             ak1 = (1.0 + std::sqrt(1.0 + 4.0 * M * Ak)) / (2.0 * M);
             const auto tau = ak1 / (Ak + ak1);
 
@@ -162,6 +161,7 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
                 std::isfinite(fxk1) &&
                 std::isfinite(fyk1) &&
                 fyk1 <= fxk1 + gxk1.dot(yk1 - xk1) + 0.5 * M * (yk1 - xk1).dot(yk1 - xk1) + 0.5 * epsilon * tau;
+            M *= 2.0;
         }
 
         if (iter_ok)

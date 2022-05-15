@@ -57,9 +57,9 @@ static solver_description_t make_description(const string_t& solver_id)
     else if (solver_id == "hoshino") { return {true, true, 1015, 1e-6}; }
     else if (solver_id == "fletcher") { return {true, true, 1016, 1e-6}; }
     else if (solver_id == "osga") { return {false, true, 10000, 1e-6}; }
-    else if (solver_id == "pgm") { return {false, false, 401, 3e-2}; }
-    else if (solver_id == "dgm") { return {false, false, 402, 3e-2}; }
-    else if (solver_id == "fgm") { return {false, false, 403, 3e-2}; }
+    else if (solver_id == "pgm") { return {false, false, 301, 3e-2}; }
+    else if (solver_id == "dgm") { return {false, false, 302, 3e-2}; }
+    else if (solver_id == "fgm") { return {false, false, 303, 3e-2}; }
     else { assert(false); return {}; }
 };
 
@@ -262,7 +262,7 @@ UTEST_CASE(solver_function)
     }
 }
 
-UTEST_CASE(default_monotonic_solvers)
+UTEST_CASE(default_solvers_on_smooth_convex)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
@@ -286,7 +286,7 @@ UTEST_CASE(default_monotonic_solvers)
     }
 }
 
-UTEST_CASE(default_nonmonotonic_solvers)
+UTEST_CASE(default_solvers_on_nonsmooth_conex)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 100}))
     {
@@ -317,7 +317,7 @@ UTEST_CASE(default_nonmonotonic_solvers)
     }
 }
 
-UTEST_CASE(best_smooth_solvers_with_lsearches)
+UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
@@ -349,7 +349,7 @@ UTEST_CASE(best_smooth_solvers_with_lsearches)
     }
 }
 
-UTEST_CASE(best_smooth_solvers_with_tolerances)
+UTEST_CASE(best_solvers_with_tolerances_on_smooth)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
