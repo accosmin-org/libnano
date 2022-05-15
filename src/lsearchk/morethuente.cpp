@@ -5,7 +5,7 @@ using namespace nano;
 
 lsearchk_morethuente_t::lsearchk_morethuente_t()
 {
-    register_parameter(parameter_t::make_float("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));
 }
 
 rlsearchk_t lsearchk_morethuente_t::clone() const

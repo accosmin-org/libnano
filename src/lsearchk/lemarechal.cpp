@@ -6,7 +6,7 @@ using namespace nano;
 lsearchk_lemarechal_t::lsearchk_lemarechal_t()
 {
     register_parameter(parameter_t::make_enum("lsearchk::lemarechal::interpolation", interpolation::cubic));
-    register_parameter(parameter_t::make_float("lsearchk::lemarechal::tau1", 2, LT, 9, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::tau1", 2, LT, 9, LT, 1e+6));
 }
 
 rlsearchk_t lsearchk_lemarechal_t::clone() const

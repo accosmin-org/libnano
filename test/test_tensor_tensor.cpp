@@ -101,9 +101,9 @@ UTEST_CASE(tensor3d)
 {
     using tensor3d_t = nano::tensor_mem_t<int, 3>;
 
-    const auto dims = 7;
-    const auto rows = 3;
-    const auto cols = 4;
+    const auto dims = tensor_size_t{7};
+    const auto rows = tensor_size_t{3};
+    const auto cols = tensor_size_t{4};
 
     tensor3d_t tensor;
     tensor.resize(dims, rows, cols);

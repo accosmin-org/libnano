@@ -117,7 +117,7 @@ UTEST_CASE(enqueue)
         tpool_section_t<future_t> futures;
         for (size_t j = 0; j < tasks; ++ j)
         {
-            futures.push_back(pool.enqueue([=, &mutex, &tasks_done]()
+            futures.push_back(pool.enqueue([=, &mutex, &tasks_done](size_t)
             {
                 const auto sleep1 = urand<size_t>(1, 5, make_rng());
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleep1));

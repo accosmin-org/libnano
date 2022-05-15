@@ -5,12 +5,12 @@ using namespace nano;
 
 lsearchk_cgdescent_t::lsearchk_cgdescent_t()
 {
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::epsilon", 0, LT, 1e-6, LT, 1e+6));
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::theta", 0, LT, 0.5, LT, 1));
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::gamma", 0, LT, 0.66, LT, 1));
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::delta", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::omega", 0, LT, 1e-3, LT, 1));
-    register_parameter(parameter_t::make_float("lsearchk::cgdescent::ro", 1, LT, 5.0, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::epsilon", 0, LT, 1e-6, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::theta", 0, LT, 0.5, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::gamma", 0, LT, 0.66, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::delta", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::omega", 0, LT, 1e-3, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::ro", 1, LT, 5.0, LT, 1e+6));
     register_parameter(parameter_t::make_enum("lsearchk::cgdescent::criterion", criterion::wolfe_approx_wolfe));
 }
 

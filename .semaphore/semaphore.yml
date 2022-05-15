@@ -10,7 +10,7 @@ blocks:
       prologue:
         commands:
           - checkout
-          - bash scripts/setup_ubuntu2004.sh --default --llvm 13
+          - bash scripts/setup_ubuntu2004.sh --default
       jobs:
         - name: debug (gcc)
           commands:
@@ -35,34 +35,34 @@ blocks:
             - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
         - name: clang-tidy-cert (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-cert
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cert
         - name: clang-tidy-hicpp (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-hicpp
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-hicpp
         - name: clang-tidy-misc (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-misc
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-misc
         - name: clang-tidy-bugprone (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-bugprone
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-bugprone
         - name: clang-tidy-modernize (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-modernize
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-modernize
         - name: clang-tidy-performance (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-performance
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-performance
         - name: clang-tidy-portability (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-portability
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-portability
         - name: clang-tidy-readability (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-readability
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-readability
         - name: clang-tidy-clang-analyzer (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-clang-analyzer
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-clang-analyzer
         - name: clang-tidy-cppcoreguidelines (clang)
           commands:
-            - CXX=clang++-13 bash scripts/build.sh --config --build --clang-tidy-suffix -13 --clang-tidy-cppcoreguidelines
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
         - name: cppcheck
           commands:
             - CXX=g++ bash scripts/build.sh --config --cppcheck

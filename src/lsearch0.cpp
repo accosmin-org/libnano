@@ -8,7 +8,7 @@ using namespace nano;
 
 lsearch0_t::lsearch0_t()
 {
-    register_parameter(parameter_t::make_float("lsearch0::epsilon", 0, LT, 1e-6, LT, 1));
+    register_parameter(parameter_t::make_scalar("lsearch0::epsilon", 0, LT, 1e-6, LT, 1));
 }
 
 lsearch0_factory_t& lsearch0_t::all()

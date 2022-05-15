@@ -4,8 +4,8 @@ using namespace nano;
 
 lsearch0_linear_t::lsearch0_linear_t()
 {
-    register_parameter(parameter_t::make_float("lsearch0::linear::beta", 1, LT, 10.0, LT, 1e+6));
-    register_parameter(parameter_t::make_float("lsearch0::linear::alpha", 1, LT, 1.01, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearch0::linear::beta", 1, LT, 10.0, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearch0::linear::alpha", 1, LT, 1.01, LT, 1e+6));
 }
 
 rlsearch0_t lsearch0_linear_t::clone() const

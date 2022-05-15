@@ -1,4 +1,5 @@
 #include <mutex>
+#include <nano/dataset/utils.h>
 #include <nano/dataset/tabular.h>
 #include <nano/dataset/imclass_cifar.h>
 #include <nano/dataset/imclass_mnist.h>
@@ -143,7 +144,7 @@ void dataset_t::load()
         {
             critical(
                 ::nano::optional(mask, samples()),
-                "dataset_t: the target cannot be optional!");
+                "dataset: the target cannot be optional!");
         });
     }
 }
@@ -155,7 +156,7 @@ dataset_factory_t& dataset_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        const auto dir = scat(std::getenv("HOME"), "/libnano/datasets/");
+        const auto dir = scat(nano::getenv("HOME"), "/libnano/datasets/");
 
         manager.add<tabular_dataset_t>(
             "iris",

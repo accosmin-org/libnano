@@ -4,8 +4,8 @@ using namespace nano;
 
 static void append(std::string& str, const char* format, const int value)
 {
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer), format, value); // NOLINT(hicpp-vararg,cppcoreguidelines-pro-type-vararg)
+    char buffer[32] = {};
+    snprintf(buffer, sizeof(buffer), format, value); // NOLINT(hicpp-vararg,cppcoreguidelines-pro-type-vararg, cert-err33-c)
     str.append(buffer);
 }
 

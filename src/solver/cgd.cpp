@@ -80,7 +80,7 @@ solver_cgd_t::solver_cgd_t()
     monotonic(true);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1);
 
-    register_parameter(parameter_t::make_float("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
 }
 
 solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_t& x0) const
@@ -136,7 +136,7 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
 
 solver_cgd_n_t::solver_cgd_n_t()
 {
-    register_parameter(parameter_t::make_float("solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6));
 }
 
 scalar_t solver_cgd_hs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const

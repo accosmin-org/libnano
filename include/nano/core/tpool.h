@@ -6,24 +6,25 @@
 #include <thread>
 #include <vector>
 #include <cassert>
+#include <nano/arch.h>
 #include <condition_variable>
 
 namespace nano
 {
     using future_t = std::future<void>;
-    using tpool_task_t = std::packaged_task<void()>;
+    using tpool_task_t = std::packaged_task<void(size_t)>;
 
     ///
     /// \brief enqueue tasks to be run in a thread pool.
     ///
-    class tpool_queue_t
+    class NANO_PUBLIC tpool_queue_t
     {
     public:
 
         ///
         /// \brief constructor
         ///
-        tpool_queue_t() = default;
+        tpool_queue_t();
 
         ///
         /// \brief enqueue a new task to execute
@@ -51,53 +52,25 @@ namespace nano
     ///
     /// \brief worker to process tasks enqueued in a thread pool.
     ///
-    class tpool_worker_t
+    class NANO_PUBLIC tpool_worker_t
     {
     public:
 
         ///
         /// \brief constructor
         ///
-        explicit tpool_worker_t(tpool_queue_t& queue) : m_queue(queue) {}
+        tpool_worker_t(tpool_queue_t& queue, size_t tnum);
 
         ///
         /// \brief execute tasks when available
         ///
-        void operator()() const
-        {
-            while (true)
-            {
-                tpool_task_t task;
-
-                // wait for a new task to be available in the queue
-                {
-                    std::unique_lock<std::mutex> lock(m_queue.m_mutex);
-
-                    m_queue.m_condition.wait(lock, [&]
-                    {
-                        return m_queue.m_stop || !m_queue.m_tasks.empty();
-                    });
-
-                    if (m_queue.m_stop)
-                    {
-                        m_queue.m_tasks.clear();
-                        m_queue.m_condition.notify_all();
-                        break;
-                    }
-
-                    task = std::move(m_queue.m_tasks.front());
-                    m_queue.m_tasks.pop_front();
-                }
-
-                // execute the task
-                task();
-            }
-        }
+        void operator()() const;
 
     private:
 
         // attributes
         tpool_queue_t&          m_queue;        ///< task queue to process
+        size_t                  m_tnum{0U};     ///< thread number
     };
 
     ///
@@ -155,7 +128,7 @@ namespace nano
     ///
     /// NB: this is heavily copied/inspired by http://progsch.net/wordpress/?p=81
     ///
-    class tpool_t
+    class NANO_PUBLIC tpool_t
     {
     public:
 
@@ -183,10 +156,7 @@ namespace nano
         ///
         /// \brief destructor
         ///
-        ~tpool_t()
-        {
-            stop();
-        }
+        ~tpool_t();
 
         ///
         /// \brief enqueue a new task to execute
@@ -215,36 +185,7 @@ namespace nano
 
     private:
 
-        tpool_t()
-        {
-            const auto n_workers = size();
-
-            m_workers.reserve(n_workers);
-            for (size_t i = 0; i < n_workers; ++ i)
-            {
-                m_workers.emplace_back(m_queue);
-            }
-
-            for (size_t i = 0; i < n_workers; ++ i)
-            {
-                m_threads.emplace_back(std::ref(m_workers[i]));
-            }
-        }
-
-        void stop()
-        {
-            // stop & join
-            {
-                const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
-                m_queue.m_stop = true;
-                m_queue.m_condition.notify_all();
-            }
-
-            for (auto& thread : m_threads)
-            {
-                thread.join();
-            }
-        }
+        tpool_t();
 
         // attributes
         std::vector<std::thread>        m_threads;      ///<
@@ -275,13 +216,13 @@ namespace nano
         const auto tchunk = std::max((size + workers - 1) / workers, chunk);
 
         tpool_section_t<future_t> section;
-        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
+        for (tsize tbegin = 0; tbegin < size; tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op, size=size, chunk=chunk, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, chunk=chunk, tchunk=tchunk, tbegin=tbegin] (size_t tnum)
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; begin += chunk)
                 {
-                    op(begin, std::min(begin + chunk, tend), static_cast<size_t>(tnum));
+                    op(begin, std::min(begin + chunk, tend), tnum);
                 }
             }));
         }
@@ -308,13 +249,13 @@ namespace nano
         const auto tchunk = (size + workers - 1) / workers;
 
         tpool_section_t<future_t> section;
-        for (tsize tnum = 0, tbegin = 0; tnum < workers && tbegin < size; ++ tnum, tbegin += tchunk)
+        for (tsize tbegin = 0; tbegin < size; tbegin += tchunk)
         {
-            section.push_back(pool.enqueue([&op, size=size, tchunk=tchunk, tnum=tnum, tbegin=tbegin] ()
+            section.push_back(pool.enqueue([&op, size=size, tchunk=tchunk, tbegin=tbegin] (size_t tnum)
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; ++ begin)
                 {
-                    op(begin, static_cast<size_t>(tnum));
+                    op(begin, tnum);
                 }
             }));
         }

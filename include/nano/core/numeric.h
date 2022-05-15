@@ -84,8 +84,8 @@ namespace nano
     >
     bool close(tscalar1 lhs, tscalar2 rhs, double epsilon)
     {
-        return  std::abs(static_cast<double>(lhs) - static_cast<double>(rhs)) <
-                epsilon * (1.0 + (std::abs(static_cast<double>(lhs)) + std::abs(static_cast<double>(rhs)) / 2));
+        return  std::fabs(static_cast<double>(lhs) - static_cast<double>(rhs)) <
+                epsilon * (1.0 + (std::fabs(static_cast<double>(lhs)) + std::fabs(static_cast<double>(rhs)) / 2));
     }
 
     ///

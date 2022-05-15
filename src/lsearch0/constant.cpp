@@ -4,7 +4,7 @@ using namespace nano;
 
 lsearch0_constant_t::lsearch0_constant_t()
 {
-    register_parameter(parameter_t::make_float("lsearch0::constant::t0", 0, LT, 1, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("lsearch0::constant::t0", 0, LT, 1, LT, 1e+6));
 }
 
 rlsearch0_t lsearch0_constant_t::clone() const

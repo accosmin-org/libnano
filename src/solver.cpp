@@ -1,10 +1,10 @@
 #include <mutex>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
-#include <nano/solver/asgm.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
+#include <nano/solver/universal.h>
 #include <nano/core/logger.h>
 
 using namespace nano;
@@ -14,9 +14,9 @@ solver_t::solver_t()
     lsearch0("quadratic");
     lsearchk("morethuente");
 
-    register_parameter(parameter_t::make_float("solver::epsilon", 0, LT, 1e-6, LE, 1e-3));
+    register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-6, LE, 1e-1));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
-    register_parameter(parameter_t::make_float_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
+    register_parameter(parameter_t::make_scalar_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
 
 void solver_t::lsearch0(const string_t& id)
@@ -72,22 +72,6 @@ void solver_t::monotonic(bool monotonic)
 bool solver_t::monotonic() const
 {
     return m_monotonic;
-}
-
-bool solver_t::converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1) const
-{
-    const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
-    const auto df = std::fabs(fxk1 - fxk);
-
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
-    const auto converged =
-        !std::isfinite(fxk) || !std::isfinite(fxk1) ||
-        (
-            dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
-            df <= epsilon * std::max(1.0, std::fabs(fxk1))
-        );
-
-    return converged;
 }
 
 lsearch_t solver_t::make_lsearch() const
@@ -154,7 +138,6 @@ solver_factory_t& solver_t::all()
     std::call_once(flag, [] ()
     {
         manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_asgm_t>("asgm", "sub-gradient method with an adaptive step length");
         manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
         manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
@@ -173,6 +156,9 @@ solver_factory_t& solver_t::all()
         manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
         manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
         manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
+        manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
+        manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
+        manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
     });
 
     return manager;

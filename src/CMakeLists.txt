@@ -8,6 +8,7 @@ add_library(nano)
 
 target_sources(nano PRIVATE
     core/table.cpp
+    core/tpool.cpp
     core/chrono.cpp
     core/logger.cpp
     core/cmdline.cpp
@@ -44,10 +45,10 @@ target_sources(nano PRIVATE
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
-    solver/asgm.cpp
     solver/osga.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
+    solver/universal.cpp
     function.cpp
     function/axis_ellipsoid.cpp
     function/benchmark.cpp

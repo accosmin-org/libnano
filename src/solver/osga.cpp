@@ -56,13 +56,27 @@ private:
     scalar_t        m_Q0{0.0};  ///<
 };
 
+static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, scalar_t epsilon)
+{
+    const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
+    const auto df = std::fabs(fxk1 - fxk);
+
+    return
+        !std::isfinite(fxk) || !std::isfinite(fxk1) ||
+        (
+            dx > std::numeric_limits<scalar_t>::epsilon() &&
+            dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
+            df <= epsilon * std::max(1.0, std::fabs(fxk1))
+        );
+}
+
 solver_osga_t::solver_osga_t()
 {
     monotonic(false);
 
-    register_parameter(parameter_t::make_float("solver::osga::lambda", 0, LT, 0.9, LT, 1));
-    register_parameter(parameter_t::make_float("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_float_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
+    register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.99, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
 }
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
@@ -73,13 +87,12 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     const auto alpha_max = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
 
-    auto function = make_function(function_, x0);
-
-    const auto miu = function.strong_convexity() / 2.0;
+    const auto miu = function_.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
     const auto proxy = proxy_t{x0, epsilon};
 
+    auto function = make_function(function_, x0);
     auto state = solver_state_t{function, x0};
     vector_t& xb = state.x;     // store the best function point
     scalar_t& fb = state.f;     // store the best function value
@@ -101,14 +114,6 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     {
         x = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);
-        if (g.lpNorm<2>() < eps0)
-        {
-            state.update_if_better(x, f);
-            if (solver_t::done(function, state, true, true))
-            {
-                break;
-            }
-        }
         g = g - miu * proxy.gQ(x);
 
         h_hat = h + alpha * (g - h);
@@ -128,10 +133,10 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         const auto eta_hat = proxy.E(gamma_hat, h_hat, fb_hat) - miu;
 
         // check convergence
-        const auto dxb = (xb_hat - xb).lpNorm<Eigen::Infinity>();
-        const auto converged = dxb >= eps0 && (eta_hat <= eps0 || this->converged(xb, fb, xb_hat, fb_hat));
+        const auto converged = eta_hat <= eps0 || ::converged(xb, fb, xb_hat, fb_hat, epsilon);
         state.update_if_better(xb_hat, fb_hat);
-        if (solver_t::done(function, state, true, converged))
+        const auto iter_ok = static_cast<bool>(state);
+        if (solver_t::done(function, state, iter_ok, converged))
         {
             break;
         }

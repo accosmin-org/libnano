@@ -98,10 +98,10 @@ namespace nano
             std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true,
             std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
         >
-        static parameter_t make_float(string_t name,
+        static parameter_t make_scalar(string_t name,
             tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
-            return make_scalar<scalar_t>(std::move(name), min, mincomp, value, maxcomp, max);
+            return make_scalar_<scalar_t>(std::move(name), min, mincomp, value, maxcomp, max);
         }
 
         ///
@@ -118,7 +118,7 @@ namespace nano
         static parameter_t make_integer(string_t name,
             tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
-            return make_scalar<int64_t>(std::move(name), min, mincomp, value, maxcomp, max);
+            return make_scalar_<int64_t>(std::move(name), min, mincomp, value, maxcomp, max);
         }
 
         ///
@@ -133,10 +133,10 @@ namespace nano
             std::enable_if_t<std::is_arithmetic_v<tvalue2>, bool> = true,
             std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
         >
-        static parameter_t make_float_pair(string_t name,
+        static parameter_t make_scalar_pair(string_t name,
             tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
         {
-            return make_scalar<scalar_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
+            return make_scalar_<scalar_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
         }
 
         ///
@@ -154,7 +154,7 @@ namespace nano
         static parameter_t make_integer_pair(string_t name,
             tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
         {
-            return make_scalar<int64_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
+            return make_scalar_<int64_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
         }
 
         ///
@@ -271,12 +271,12 @@ namespace nano
         }
 
         template <typename tscalar, typename tmin, typename tvalue, typename tmax>
-        static parameter_t make_scalar(string_t name,
+        static parameter_t make_scalar_(const string_t& name,
             tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
             return parameter_t
             {
-                std::move(name),
+                name,
                 range_t<tscalar>
                 {
                     static_cast<tscalar>(value),
@@ -287,12 +287,12 @@ namespace nano
         }
 
         template <typename tscalar, typename tmin, typename tvalue1, typename tvalue2, typename tmax>
-        static parameter_t make_scalar(string_t name,
+        static parameter_t make_scalar_(const string_t& name,
             tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
         {
             return parameter_t
             {
-                std::move(name),
+                name,
                 pair_range_t<tscalar>
                 {
                     static_cast<tscalar>(value1), static_cast<tscalar>(value2),
