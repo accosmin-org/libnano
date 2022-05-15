@@ -28,31 +28,39 @@ static void check_consistency(
     }
 }
 
-// {solver_id: {monotonic, max_evals, achievable epsilon, convergence_expected_for_nonsmooth_problems}}
-static const auto description = std::map<string_t, std::tuple<bool, tensor_size_t, scalar_t, scalar_t>>
+struct solver_description_t
 {
-    {"gd", std::make_tuple(true, 10000, 1e-6, false)},
-    {"cgd", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-n", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-hs", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-fr", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-pr", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-cd", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-ls", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-dy", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-dycd", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-dyhs", std::make_tuple(true, 1000, 1e-6, false)},
-    {"cgd-prfr", std::make_tuple(true, 1000, 1e-6, false)},
-    {"lbfgs", std::make_tuple(true, 1000, 1e-6, false)},
-    {"dfp", std::make_tuple(true, 1000, 1e-6, false)},
-    {"sr1", std::make_tuple(true, 1000, 1e-6, false)},
-    {"bfgs", std::make_tuple(true, 1000, 1e-6, false)},
-    {"hoshino", std::make_tuple(true, 1000, 1e-6, false)},
-    {"fletcher", std::make_tuple(true, 1000, 1e-6, false)},
-    {"osga", std::make_tuple(false, 10000, 1e-6, true)},
-    {"pgm", std::make_tuple(false, 10000, 1e-3, false)},
-    {"dgm", std::make_tuple(false, 20000, 1e-3, false)},
-    {"fgm", std::make_tuple(false, 10000, 1e-3, false)},
+    bool            m_monotonic{true};
+    bool            m_converges{true};
+    tensor_size_t   m_max_evals{1000};
+    scalar_t        m_epsilon{1e-6};
+};
+
+static solver_description_t make_description(const string_t& solver_id)
+{
+    if (solver_id == "gd") { return {true, true, 10000, 1e-6}; }
+    else if (solver_id == "cgd") { return {true, true, 1000, 1e-6}; }
+    else if (solver_id == "cgd-n") { return {true, true, 1001, 1e-6}; }
+    else if (solver_id == "cgd-hs") { return {true, true, 1002, 1e-6}; }
+    else if (solver_id == "cgd-fr") { return {true, true, 1003, 1e-6}; }
+    else if (solver_id == "cgd-pr") { return {true, true, 1004, 1e-6}; }
+    else if (solver_id == "cgd-cd") { return {true, true, 1005, 1e-6}; }
+    else if (solver_id == "cgd-ls") { return {true, true, 1006, 1e-6}; }
+    else if (solver_id == "cgd-dy") { return {true, true, 1007, 1e-6}; }
+    else if (solver_id == "cgd-dycd") { return {true, true, 1008, 1e-6}; }
+    else if (solver_id == "cgd-dyhs") { return {true, true, 1009, 1e-6}; }
+    else if (solver_id == "cgd-prfr") { return {true, true, 1010, 1e-6}; }
+    else if (solver_id == "lbfgs") { return {true, true, 1011, 1e-6}; }
+    else if (solver_id == "dfp") { return {true, true, 1012, 1e-6}; }
+    else if (solver_id == "sr1") { return {true, true, 1013, 1e-6}; }
+    else if (solver_id == "bfgs") { return {true, true, 1014, 1e-6}; }
+    else if (solver_id == "hoshino") { return {true, true, 1015, 1e-6}; }
+    else if (solver_id == "fletcher") { return {true, true, 1016, 1e-6}; }
+    else if (solver_id == "osga") { return {false, true, 10000, 1e-6}; }
+    else if (solver_id == "pgm") { return {false, false, 401, 3e-2}; }
+    else if (solver_id == "dgm") { return {false, false, 402, 3e-2}; }
+    else if (solver_id == "fgm") { return {false, false, 403, 3e-2}; }
+    else { assert(false); return {}; }
 };
 
 static auto make_lsearch0_ids() { return lsearch0_t::all().ids(); }
@@ -163,18 +171,13 @@ UTEST_CASE(state_convergence1)
 
 UTEST_CASE(factory)
 {
-    const auto ids = solver_t::all().ids();
-
-    UTEST_REQUIRE_EQUAL(ids.size(), description.size());
-    for (const auto& id : ids)
+    for (const auto& solver_id : solver_t::all().ids())
     {
-        const auto it = description.find(id);
-        UTEST_REQUIRE(it != description.end());
-
-        const auto solver = solver_t::all().get(id);
+        const auto solver = solver_t::all().get(solver_id);
         UTEST_REQUIRE(solver);
 
-        UTEST_CHECK_EQUAL(solver->monotonic(), std::get<0>(it->second));
+        const auto desc = make_description(solver_id);
+        UTEST_CHECK_EQUAL(solver->monotonic(), desc.m_monotonic);
     }
 }
 
@@ -289,7 +292,7 @@ UTEST_CASE(default_nonmonotonic_solvers)
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Random(function->size());
+        const vector_t x0 = vector_t::Ones(function->size());
 
         size_t reference = 0U;
         std::vector<scalar_t> fvalues, epsilons;
@@ -298,21 +301,16 @@ UTEST_CASE(default_nonmonotonic_solvers)
             const auto solver = solver_t::all().get(solver_id);
             UTEST_REQUIRE(solver);
 
-            const auto it = description.find(solver_id);
-            UTEST_REQUIRE(it != description.end());
-
-            const auto max_evals = std::get<1>(it->second);
-            const auto epsilon = std::get<2>(it->second);
-            const auto convergence = std::get<3>(it->second);
+            const auto dd = make_description(solver_id);
             if (solver_id == string_t{"osga"})
             {
                 reference = fvalues.size();
             }
 
-            const auto state = check_minimize(*solver, solver_id, *function, x0, max_evals, epsilon, convergence);
+            const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals, dd.m_epsilon, dd.m_converges);
             fvalues.push_back(state.f);
-            epsilons.push_back(epsilon);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ", eps=" << epsilon << ".";
+            epsilons.push_back(dd.m_epsilon);
+            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
         }
 
         check_consistency(*function, fvalues, epsilons, reference);

@@ -38,11 +38,12 @@ solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
-        auto M = L;
+        auto M = 0.5 * L;
         auto iter_ok = false;
         auto converged = false;
-        for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k, M *= 2.0)
+        for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k)
         {
+            M *= 2.0;
             xk1 = xk - gxk / M;
             fxk1 = function.vgrad(xk1, &gxk1);
             iter_ok =
@@ -57,8 +58,7 @@ solver_state_t solver_pgm_t::minimize(const function_t& function_, const vector_
             xk = xk1;
             gxk = gxk1;
             fxk = fxk1;
-
-            state.update_if_better(xk, gxk, fxk);
+            state.update_if_better(xk1, gxk1, fxk1);
 
             converged = function.smooth() ? (state.convergence_criterion() < epsilon) : false;
         }
@@ -84,16 +84,17 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
     auto L = L0;
     auto xk = state.x, xk1 = state.x, yk = state.x;
     auto gxk = state.g, gxk1 = state.g, gphi = x0;
-    auto fxk = state.f, fxk1 = state.f;
+    auto fxk1 = state.f;
 
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 1. line-search
-        auto M = L;
+        auto M = 0.5 * L;
         auto iter_ok = false;
         auto converged = false;
-        for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k, M *= 2.0)
+        for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++ k)
         {
+            M *= 2.0;
             xk1 = gphi - gxk / M;
             fxk1 = function.vgrad(xk1, &gxk1);
             iter_ok =
@@ -109,9 +110,7 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
             L = 0.5 * M;
             xk = xk1;
             gxk = gxk1;
-            fxk = fxk1;
-
-            state.update_if_better(xk, gxk, fxk);
+            state.update_if_better(xk1, gxk1, fxk1);
 
             converged = function.smooth() ? (state.convergence_criterion() < epsilon) : false;
         }
@@ -142,15 +141,16 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
         // 2. line-search
-        auto M = L, tau = 0.0;
+        auto M = 0.5 * L;
         auto iter_ok = false;
         auto converged = false;
         for (int64_t k = 0;
             k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1) && std::isfinite(fyk1);
-            ++ k, M *= 2.0)
+            ++ k)
         {
+            M *= 2.0;
             ak1 = (1.0 + std::sqrt(1.0 + 4.0 * M * Ak)) / (2.0 * M);
-            tau = ak1 / (Ak + ak1);
+            const auto tau = ak1 / (Ak + ak1);
 
             xk1 = tau * vk + (1.0 - tau) * yk;
             fxk1 = function.vgrad(xk1, &gxk1);
