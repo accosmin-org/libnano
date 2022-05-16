@@ -48,6 +48,7 @@ target_sources(nano PRIVATE
     solver/osga.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
+    solver/ellipsoid.cpp
     solver/universal.cpp
     function.cpp
     function/axis_ellipsoid.cpp

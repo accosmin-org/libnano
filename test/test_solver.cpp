@@ -60,6 +60,7 @@ static solver_description_t make_description(const string_t& solver_id)
     else if (solver_id == "pgm") { return {false, false, 301, 3e-2}; }
     else if (solver_id == "dgm") { return {false, false, 302, 3e-2}; }
     else if (solver_id == "fgm") { return {false, false, 303, 3e-2}; }
+    else if (solver_id == "ellipsoid") { return {false, true, 1000, 1e-4}; }
     else { assert(false); return {}; }
 }
 
@@ -68,7 +69,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)

@@ -4,6 +4,7 @@
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
+#include <nano/solver/ellipsoid.h>
 #include <nano/solver/universal.h>
 #include <nano/core/logger.h>
 
@@ -159,6 +160,7 @@ solver_factory_t& solver_t::all()
         manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
         manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
+        manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
     });
 
     return manager;

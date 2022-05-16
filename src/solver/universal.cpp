@@ -82,7 +82,7 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
     auto state = solver_state_t{function, x0};
 
     auto L = L0;
-    auto xk = state.x, xk1 = state.x, yk = state.x;
+    auto yk = state.x, xk1 = state.x; // cppcheck-suppress unreadVariable
     auto gxk = state.g, gxk1 = state.g, gphi = x0;
     auto fxk1 = state.f;
 
@@ -108,7 +108,6 @@ solver_state_t solver_dgm_t::minimize(const function_t& function_, const vector_
 
             // 2. update current and best state (if the line-search step doesn't fail)
             L = 0.5 * M;
-            xk = xk1;
             gxk = gxk1;
             state.update_if_better(xk1, gxk1, fxk1);
 
@@ -134,7 +133,7 @@ solver_state_t solver_fgm_t::minimize(const function_t& function_, const vector_
     auto state = solver_state_t{function, x0};
 
     auto L = L0, Ak = 0.0, ak1 = 0.0;
-    auto vk = x0, yk = x0, yk1 = x0, xk1 = x0;
+    auto vk = x0, yk = x0, yk1 = x0, xk1 = x0; // cppcheck-suppress unreadVariable
     auto gxk1 = state.g, gyk1 = state.g;
     auto fxk1 = state.f, fyk1 = state.f;
 
