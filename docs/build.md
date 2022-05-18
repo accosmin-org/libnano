@@ -19,17 +19,14 @@ The project is organized as follows:
 System:
 * compiler supporting [C++17](https://isocpp.org/wiki/faq/cpp17)
 * [CMake](https://cmake.org)
-* [Eigen3](https://tuxfamily.org) - high-performance linear-algebra C++ library
-
-Git submodules:
-* [utest](https://github.com/accosmin/utest) - (micro) header-only unit test library
+* [Eigen3](https://eigen.tuxfamily.org) - high-performance linear-algebra C++ library
 
 Libnano is tested on Linux (Ubuntu, ArchLinux) using both gcc and clang and on OSX using AppleClang. It may work with minor changes on other platforms as well or using other compiler versions.
 
 
 #### How to build
 
-The easiest way to build, test and install the library on Linux and OSX is to call [scripts/build.sh](../scripts/build.sh) with the appropriate command line arguments. This script is invoked to run various tests on continuous integrations plaforms like [Travis CI](https://travis-ci.org/accosmin/libnano/builds) and [Codecov](https://codecov.io/gh/accosmin/libnano). See [.travis.yml](../.travis.yml) for examples.
+The easiest way to build, test and install the library on Linux and OSX is to call [scripts/build.sh](../scripts/build.sh) with the appropriate command line arguments. This script is invoked to run various tests on continuous integrations plaforms like [Semaphore](https://accosmin.semaphoreci.com/projects/libnano). See [semaphore.yml](../.semaphore/semaphore.yml) for examples.
 
 
 Otherwise, users can also invoke the main CMake script directly for other platforms or for custom builds.
