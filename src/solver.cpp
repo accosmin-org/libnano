@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/solver/gd.h>
 #include <nano/solver/cgd.h>
+#include <nano/solver/asga.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/quasi.h>
@@ -161,6 +162,8 @@ solver_factory_t& solver_t::all()
         manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
         manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
+        manager.add<solver_asga2_t>("asga2", "accelerated sub-gradient algorithm 2 (ASGA)");
+        manager.add<solver_asga4_t>("asga4", "accelerated sub-gradient algorithm 4 (ASGA)");
     });
 
     return manager;

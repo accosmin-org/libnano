@@ -6,7 +6,9 @@ solver_ellipsoid_t::solver_ellipsoid_t()
 {
     monotonic(false);
 
-    register_parameter(parameter_t::make_scalar("solver::ellipsoid::R", 0.0, LT, 1e+1, LT, 1e+12));
+    static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
+
+    register_parameter(parameter_t::make_scalar("solver::ellipsoid::R", 0.0, LT, 1e+1, LT, fmax));
 }
 
 solver_state_t solver_ellipsoid_t::minimize(const function_t& function_, const vector_t& x0) const
@@ -18,7 +20,7 @@ solver_state_t solver_ellipsoid_t::minimize(const function_t& function_, const v
     auto function = make_function(function_, x0);
     auto state = solver_state_t{function, x0};
 
-    auto y = state.x, gy = state.g;
+    auto x = state.x, g = state.g;
 
     const auto n = static_cast<scalar_t>(function.size());
 
@@ -27,16 +29,16 @@ solver_state_t solver_ellipsoid_t::minimize(const function_t& function_, const v
 
     for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
     {
-        const auto gHg = gy.dot(H * gy);
+        const auto gHg = g.dot(H * g);
 
-        y = y - (H * gy) / static_cast<scalar_t>(n + 1) / std::sqrt(gHg);
-        H = (n * n) / (n * n - 1) * (H - 2.0 / (n + 1.0) * (H * gy * gy.transpose() * H) / gHg);
+        x.noalias() = x - (H * g) / static_cast<scalar_t>(n + 1) / std::sqrt(gHg);
+        H = (n * n) / (n * n - 1) * (H - 2.0 / (n + 1.0) * (H * g * g.transpose() * H) / gHg);
 
-        const auto fy = function.vgrad(y, &gy);
-        state.update_if_better(y, gy, fy);
+        const auto f = function.vgrad(x, &g);
+        state.update_if_better(x, g, f);
 
-        const auto iter_ok = std::isfinite(fy);
-        const auto converged = std::sqrt(gHg) < epsilon;
+        const auto iter_ok = std::isfinite(f);
+        const auto converged = std::sqrt(gHg / n) < epsilon;
         if (solver_t::done(function, state, iter_ok, converged))
         {
             break;

@@ -56,11 +56,13 @@ static solver_description_t make_description(const string_t& solver_id)
     else if (solver_id == "bfgs") { return {true, true, 1014, 1e-6}; }
     else if (solver_id == "hoshino") { return {true, true, 1015, 1e-6}; }
     else if (solver_id == "fletcher") { return {true, true, 1016, 1e-6}; }
-    else if (solver_id == "osga") { return {false, true, 10000, 1e-6}; }
+    else if (solver_id == "osga") { return {false, true, 5000, 1e-6}; }
     else if (solver_id == "pgm") { return {false, false, 301, 3e-2}; }
     else if (solver_id == "dgm") { return {false, false, 302, 3e-2}; }
     else if (solver_id == "fgm") { return {false, false, 303, 3e-2}; }
     else if (solver_id == "ellipsoid") { return {false, true, 1000, 1e-4}; }
+    else if (solver_id == "asga2") { return {false, true, 3001, 3e-2}; }
+    else if (solver_id == "asga4") { return {false, true, 3002, 3e-2}; }
     else { assert(false); return {}; }
 }
 
@@ -69,7 +71,7 @@ static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
 
 static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
 static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid")); }
+static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid|asga2|asga4")); }
 static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
