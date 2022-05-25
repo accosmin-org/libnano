@@ -218,8 +218,8 @@ static auto benchmark(const function_t& function, const solvers_t& solvers,
 
     for (size_t trial = 0U; trial < trials; ++ trial)
     {
-        const auto begin = &results[trial * solvers.size()];
-        const auto end = &results[trial * solvers.size() + solvers.size()];
+        const auto* const begin = &results[trial * solvers.size()];
+        const auto* const end = &results[trial * solvers.size() + solvers.size()];
 
         const auto& best_result = *std::min_element(
             begin, end, [] (const auto& lhs, const auto& rhs) { return lhs.m_value < rhs.m_value; });
