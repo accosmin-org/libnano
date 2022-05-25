@@ -141,7 +141,7 @@ namespace nano
     protected:
 
         ///
-        /// \brief allocate the dataset to storage the given number of samples and samples.
+        /// \brief allocate the dataset to store the given number of samples and samples.
         ///
         /// NB: no target feature is given
         ///     and as such the dataset represents an unsupervised ML task.
@@ -149,7 +149,7 @@ namespace nano
         void resize(tensor_size_t samples, const features_t& features);
 
         ///
-        /// \brief allocate the dataset to storage the given number of samples and samples.
+        /// \brief allocate the dataset to store the given number of samples and samples.
         ///
         /// NB: the target feature is given as an index in the list of features
         ///     and as such the dataset represents a supervised ML task.

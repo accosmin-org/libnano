@@ -131,7 +131,7 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
         }
     }
 
-    return cstate;
+    return static_cast<bool>(cstate) ? cstate : pstate;
 }
 
 solver_cgd_n_t::solver_cgd_n_t()

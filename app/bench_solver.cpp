@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <nano/solver.h>
+#include <nano/tensor.h>
 #include <nano/core/tpool.h>
-#include <nano/core/stats.h>
 #include <nano/core/chrono.h>
 #include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
@@ -11,81 +11,112 @@
 
 using namespace nano;
 
-struct solver_stat_t
+struct result_t
 {
-    void update(const solver_state_t& state)
+    result_t() = default;
+    result_t(const solver_state_t& state, int64_t milliseconds) :
+        m_value(state.f),
+        m_gnorm(state.convergence_criterion()),
+        m_status(state.m_status),
+        m_fcalls(state.m_fcalls),
+        m_gcalls(state.m_gcalls),
+        m_milliseconds(milliseconds)
     {
-        m_values(state.f);
-        m_crits(state.convergence_criterion());
-        m_fails(state.m_status != solver_state_t::status::converged ? 1 : 0);
-        m_iters(static_cast<scalar_t>(state.m_iterations));
-        m_errors(state.m_status == solver_state_t::status::failed ? 1 : 0);
-        m_maxits(state.m_status == solver_state_t::status::max_iters ? 1 : 0);
-        m_fcalls(static_cast<scalar_t>(state.m_fcalls));
-        m_gcalls(static_cast<scalar_t>(state.m_gcalls));
     }
 
-    stats_t     m_values;           ///< function values
-    stats_t     m_crits;            ///< convergence criterion
-    stats_t     m_fails;            ///< #convergence failures
-    stats_t     m_iters;            ///< #optimization iterations
-    stats_t     m_errors;           ///< #internal errors (e.g. line-search failed)
-    stats_t     m_maxits;           ///< #maximum iterations reached
-    stats_t     m_fcalls;           ///< #function value calls
-    stats_t     m_gcalls;           ///< #gradient calls
-    int64_t     m_milliseconds{0};  ///< total number of milliseconds
+    scalar_t                m_value{0.0};
+    scalar_t                m_gnorm{0.0};
+    solver_state_t::status  m_status{solver_state_t::status::converged};
+    tensor_size_t           m_fcalls{0};
+    tensor_size_t           m_gcalls{0};
+    int64_t                 m_milliseconds{0};
 };
 
-using solver_config_stats_t = std::map<
-    std::tuple<string_t, string_t, string_t>,
-    solver_stat_t>;
-
-static void show_table(const string_t& table_name, const solver_config_stats_t& stats)
+struct solver_function_stats_t
 {
-    critical(
-        stats.empty(),
-        "no statistics gathered, check the selection of test functions, solvers or line-search methods!");
-
-    // show global statistics
-    table_t table;
-    table.header()
-        << table_name
-        << "lsearch0"
-        << "lsearchk"
-        << "value"
-        << "gnorm"
-        << "#fails"
-        << "#iters"
-        << "#errors"
-        << "#maxits"
-        << "#fcalls"
-        << "#gcalls"
-        << "[ms]";
-    table.delim();
-
-    for (const auto& it : stats)
+    explicit solver_function_stats_t(size_t trials) :
+        m_values(static_cast<tensor_size_t>(trials)),
+        m_gnorms(static_cast<tensor_size_t>(trials)),
+        m_errors(static_cast<tensor_size_t>(trials)),
+        m_maxits(static_cast<tensor_size_t>(trials)),
+        m_fcalls(static_cast<tensor_size_t>(trials)),
+        m_gcalls(static_cast<tensor_size_t>(trials)),
+        m_millis(static_cast<tensor_size_t>(trials)),
+        m_ranks(static_cast<tensor_size_t>(trials)),
+        m_precisions(static_cast<tensor_size_t>(trials))
     {
-        const auto& stat = it.second;
-
-        if (stat.m_fcalls)
-        {
-            table.append()
-            << std::get<0>(it.first) << std::get<1>(it.first) << std::get<2>(it.first)
-            << stat.m_values.avg()
-            << stat.m_crits.avg()
-            << static_cast<size_t>(stat.m_fails.sum1())
-            << static_cast<size_t>(stat.m_iters.avg())
-            << static_cast<size_t>(stat.m_errors.sum1())
-            << static_cast<size_t>(stat.m_maxits.sum1())
-            << static_cast<size_t>(stat.m_fcalls.avg())
-            << static_cast<size_t>(stat.m_gcalls.avg())
-            << stat.m_milliseconds;
-        }
     }
 
-    table.sort(nano::make_less_from_string<scalar_t>(), {5, 9});
-    std::cout << table;
+    void update(size_t trial, const result_t& result, scalar_t precision, ptrdiff_t rank)
+    {
+        const auto itrial = static_cast<tensor_size_t>(trial);
+        m_values(itrial) = result.m_value;
+        m_gnorms(itrial) = result.m_gnorm;
+        m_errors(itrial) = result.m_status == solver_state_t::status::failed ? 1.0 : 0.0;
+        m_maxits(itrial) = result.m_status == solver_state_t::status::max_iters ? 1.0 : 0.0;
+        m_fcalls(itrial) = static_cast<scalar_t>(result.m_fcalls);
+        m_gcalls(itrial) = static_cast<scalar_t>(result.m_gcalls);
+        m_millis(itrial) = static_cast<scalar_t>(result.m_milliseconds);
+        m_ranks(itrial) = static_cast<scalar_t>(rank);
+        m_precisions(itrial) = precision;
+    }
+
+    // attributes
+    tensor1d_t              m_values;       ///< function values
+    tensor1d_t              m_gnorms;       ///< gradient norms
+    tensor1d_t              m_errors;       ///< #internal errors (e.g. line-search failed)
+    tensor1d_t              m_maxits;       ///< #maximum iterations reached (without convergence)
+    tensor1d_t              m_fcalls;       ///< #function value calls
+    tensor1d_t              m_gcalls;       ///< #gradient calls
+    tensor1d_t              m_millis;       ///< number of milliseconds
+    tensor1d_t              m_ranks;        ///< rank as ordered by the function value
+    tensor1d_t              m_precisions;   ///< relative precision to the best solver
+};
+
+struct solver_stats_t
+{
+    explicit solver_stats_t(size_t functions) :
+        m_ranks(static_cast<tensor_size_t>(functions)),
+        m_precisions(static_cast<tensor_size_t>(functions))
+    {
+    }
+
+    void update(size_t function, scalar_t precision, scalar_t rank)
+    {
+        const auto ifunction = static_cast<tensor_size_t>(function);
+        m_ranks(ifunction) = static_cast<scalar_t>(rank);
+        m_precisions(ifunction) = precision;
+    }
+
+    // attributes
+    tensor1d_t              m_ranks;        ///< rank as ordered by the function value
+    tensor1d_t              m_precisions;   ///< relative precision to the best solver
+};
+
+static auto relative_precision(scalar_t value, scalar_t best_value)
+{
+    assert(value >= best_value);
+    return std::log10(std::max(value - best_value, std::numeric_limits<scalar_t>::epsilon()));
 }
+
+static auto relative_precision(const result_t& result, const result_t& best_result)
+{
+    return relative_precision(result.m_value, best_result.m_value);
+}
+
+static auto make_solver_name(const std::pair<string_t, rsolver_t>& solver_info)
+{
+    const auto& solver = solver_info.second;
+    const auto& solver_id = solver_info.first;
+
+    return solver->monotonic() ?
+        scat(solver_id, " [", solver->lsearch0_id(), ",", solver->lsearchk_id(), "]") :
+        solver_id;
+}
+
+using points_t = std::vector<vector_t>;
+using results_t = std::vector<result_t>;
+using solvers_t = std::vector<std::pair<string_t, rsolver_t>>;
 
 static auto log_solver(const function_t& function, const rsolver_t& solver, const string_t& solver_id,
     const vector_t& x0)
@@ -134,71 +165,119 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     return state;
 }
 
-static void check_solver(const function_t& function, const rsolver_t& solver,
-    const string_t& solver_id, const std::vector<vector_t>& x0s,
-    solver_config_stats_t& fstats, solver_config_stats_t& gstats,
-    const bool log_failures)
+static auto minimize_all(const function_t& function, const solvers_t& solvers,
+    const points_t& x0s, bool log_failures, bool log_maxits)
 {
-    const auto timer = nano::timer_t{};
-
-    std::vector<solver_state_t> states(x0s.size());
-    loopi(x0s.size(), [&] (const size_t i, const size_t)
+    results_t results{x0s.size() * solvers.size()};
+    loopi(results.size(), [&] (size_t i, size_t)
     {
-        states[i] = solver->minimize(function, x0s[i]);
+        const auto timer = nano::timer_t{};
+
+        const auto& x0 = x0s[i / solvers.size()];
+        const auto& solver = solvers[i % solvers.size()].second;
+        const auto state = solver->minimize(function, x0);
+
+        const auto milliseconds = timer.milliseconds().count();
+
+        results[i] = result_t{state, milliseconds};
     });
 
-    const auto milliseconds = timer.milliseconds().count();
-
-    for (size_t i = 0; i < x0s.size(); ++ i)
+    for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++ i)
     {
         // log in full detail the optimization trajectory if it fails
-        if (log_failures &&
-            states[i].m_status != solver_state_t::status::max_iters &&
-            states[i].m_status != solver_state_t::status::converged)
+        if ((results[i].m_status == solver_state_t::status::max_iters && log_maxits) ||
+            (results[i].m_status == solver_state_t::status::failed && log_failures))
         {
-            const auto state = log_solver(function, solver, solver_id, x0s[i]);
-            assert(state.m_status == states[i].m_status);
+            const auto& x0 = x0s[i / solvers.size()];
+            const auto& solver = solvers[i % solvers.size()].second;
+            const auto& solver_id = solvers[i % solvers.size()].first;
+            const auto state = log_solver(function, solver, solver_id, x0);
+            assert(state.m_status == results[i].m_status);
         }
     }
 
-    const auto lsearch0_id = solver->monotonic() ? solver->lsearch0_id() : string_t("N/A");
-    const auto lsearchk_id = solver->monotonic() ? solver->lsearchk_id() : string_t("N/A");
-
-    const auto key = std::make_tuple(solver_id, lsearch0_id, lsearchk_id);
-    auto& fstat = fstats[key];
-    auto& gstat = gstats[key];
-
-    for (const auto& state : states)
-    {
-        fstat.update(state);
-        gstat.update(state);
-    }
-    fstat.m_milliseconds += milliseconds;
-    gstat.m_milliseconds += milliseconds;
+    return results;
 }
 
-static void check_function(const function_t& function,
-    const std::vector<std::pair<string_t, rsolver_t>>& id_solvers,
-    const size_t trials, solver_config_stats_t& gstats, const bool log_failures)
+static auto benchmark(const function_t& function, const solvers_t& solvers,
+    size_t trials, bool log_failures, bool log_maxits)
 {
-    // generate fixed random trials
-    std::vector<vector_t> x0s(trials);
+    // generate a fixed set of random initial points
+    points_t x0s(trials);
     std::generate(x0s.begin(), x0s.end(), [&] () { return vector_t::Random(function.size()); });
 
-    // per-problem statistics
-    solver_config_stats_t fstats;
+    // and minimize in parallel all (solver, random initial point) combinations
+    const auto results = minimize_all(function, solvers, x0s, log_failures, log_maxits);
 
-    // evaluate all possible combinations (solver & line-search)
-    for (const auto& id_solver : id_solvers)
+    // gather statistics per solver
+    const auto max_evals = solvers[0U].second->parameter("solver::max_evals").value<int>();
+    const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
+
+    auto stats = std::vector<solver_function_stats_t>{solvers.size(), solver_function_stats_t{trials}};
+    auto ranks = std::vector<std::pair<scalar_t, size_t>>{solvers.size()};
+
+    for (size_t trial = 0U; trial < trials; ++ trial)
     {
-        const auto& solver_id = id_solver.first;
-        const auto& solver = id_solver.second;
+        const auto begin = &results[trial * solvers.size()];
+        const auto end = &results[trial * solvers.size() + solvers.size()];
 
-        check_solver(function, solver, solver_id, x0s, fstats, gstats, log_failures);
+        const auto& best_result = *std::min_element(
+            begin, end, [] (const auto& lhs, const auto& rhs) { return lhs.m_value < rhs.m_value; });
+
+        for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
+        {
+            const auto& result = results[trial * solvers.size() + isolver];
+            ranks[isolver] = std::make_pair(result.m_value, isolver);
+        }
+        std::sort(ranks.begin(), ranks.end());
+
+        for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
+        {
+            const auto& result = results[trial * solvers.size() + isolver];
+            assert(std::isfinite(result.m_value));
+            assert(std::isfinite(result.m_gnorm));
+
+            const auto precision = relative_precision(result, best_result);
+
+            const auto find = [&] (const auto& v) { return v.second == isolver; };
+            const auto rank = (std::find_if(ranks.begin(), ranks.end(), find) - ranks.begin()) + 1;
+
+            stats[isolver].update(trial, result, precision, rank);
+        }
     }
 
-    // show per-problem statistics
-    show_table(align(function.name(), 28), fstats);
+    // display per-function statistics
+    table_t table;
+    table.header()
+        << align(function.name(), 32)
+        << align("precision", 9) << align("rank", 4) << align("value", 12) << align("gnorm", 12)
+        << "errors" << "maxits"
+        << align("fcalls", max_digits_calls)
+        << align("gcalls", max_digits_calls) << align("[ms]", 5);
+    table.delim();
+
+    for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
+    {
+        const auto& stat = stats[isolver];
+        const auto solver_name = make_solver_name(solvers[isolver]);
+
+        table.append()
+            << solver_name
+            << scat(std::fixed, std::setprecision(4), stat.m_precisions.mean())
+            << scat(std::fixed, std::setprecision(2), stat.m_ranks.mean())
+            << stat.m_values.mean()
+            << stat.m_gnorms.mean()
+            << static_cast<size_t>(stat.m_errors.sum())
+            << static_cast<size_t>(stat.m_maxits.sum())
+            << static_cast<size_t>(stat.m_fcalls.mean())
+            << static_cast<size_t>(stat.m_gcalls.mean())
+            << static_cast<size_t>(stat.m_millis.mean());
+    }
+
+    table.sort(nano::make_less_from_string<scalar_t>(), {2}); // NB: sort solvers by precision!
+    std::cout << table;
+
+    return stats;
 }
 
 static int unsafe_main(int argc, const char* argv[])
@@ -218,6 +297,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
     cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
+    cmdline.add("", "log-maxits",       "log the optimization trajectory that failed to converge");
     cmdline.add("", "list-solver",      "list the available solvers");
     cmdline.add("", "list-function",    "list the available test functions");
     cmdline.add("", "list-lsearch0",    "list the available line-search initialization methods");
@@ -288,6 +368,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto convex = options.has("convex") ? convexity::yes : convexity::ignore;
     const auto smooth = options.has("smooth") ? smoothness::yes : (options.has("non-smooth") ? smoothness::no : smoothness::ignore);
     const auto log_failures = options.has("log-failures");
+    const auto log_maxits = options.has("log-maxits");
 
     const auto fregex = std::regex(options.get<string_t>("function"));
     const auto sregex = std::regex(options.get<string_t>("solver"));
@@ -300,6 +381,16 @@ static int unsafe_main(int argc, const char* argv[])
         lsearchk_t::all().ids(std::regex(options.get<string_t>("lsearchk"))) :
         strings_t{""};
 
+    const auto solver_ids = solver_t::all().ids(sregex);
+    critical(
+        solver_ids.empty(),
+        "at least a solver needs to be selected!");
+
+    const auto functions = benchmark_function_t::make({min_dims, max_dims, convex, smooth}, fregex);
+    critical(
+        functions.empty(),
+        "at least a function needs to be selected!");
+
     // keep track of the used parameters
     std::map<string_t, int> params_usage;
     for (const auto& [param_name, param_value] : options.m_xvalues)
@@ -308,7 +399,7 @@ static int unsafe_main(int argc, const char* argv[])
     }
 
     // construct the list of solver configurations to evaluate
-    std::vector<std::pair<string_t, rsolver_t>> solvers;
+    solvers_t solvers;
     const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
     {
         // setup solver with additional parameters
@@ -324,7 +415,7 @@ static int unsafe_main(int argc, const char* argv[])
         solvers.emplace_back(solver_id, std::move(solver));
     };
 
-    for (const auto& solver_id : solver_t::all().ids(sregex))
+    for (const auto& solver_id : solver_ids)
     {
         auto solver = solver_t::all().get(solver_id);
         if (solver->monotonic())
@@ -346,14 +437,37 @@ static int unsafe_main(int argc, const char* argv[])
         }
     }
 
-    // benchmark
-    solver_config_stats_t gstats;
-    for (const auto& function : benchmark_function_t::make({min_dims, max_dims, convex, smooth}, fregex))
+    // benchmark solvers independently per function
+    auto solver_stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{functions.size()}};
+    for (size_t ifunction = 0U; ifunction < functions.size(); ++ ifunction)
     {
-        check_function(*function, solvers, trials, gstats, log_failures);
+        const auto& function = functions[ifunction];
+        const auto solver_function_stats = benchmark(*function, solvers, trials, log_failures, log_maxits);
+        for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
+        {
+            const auto& stats = solver_function_stats[isolver];
+            solver_stats[isolver].update(ifunction, stats.m_precisions.mean(), stats.m_ranks.mean());
+        }
     }
 
-    show_table(align("solver", 28), gstats);
+    // display global statistics
+    table_t table;
+    table.header() << align("solver", 32) << align("precision", 9) << align("rank", 4);
+    table.delim();
+
+    for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
+    {
+        const auto& stat = solver_stats[isolver];
+        const auto solver_name = make_solver_name(solvers[isolver]);
+
+        table.append()
+            << solver_name
+            << scat(std::fixed, std::setprecision(4), stat.m_precisions.mean())
+            << scat(std::fixed, std::setprecision(2), stat.m_ranks.mean());
+    }
+
+    table.sort(nano::make_less_from_string<scalar_t>(), {2}); // NB: sort solvers by precision!
+    std::cout << table;
 
     // log all unused parameters (e.g. typos, not matching to any solver)
     for (const auto& [param_name, count] : params_usage)

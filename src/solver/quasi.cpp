@@ -127,7 +127,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
         update(pstate, cstate, H);
     }
 
-    return cstate;
+    return static_cast<bool>(cstate) ? cstate : pstate;
 }
 
 solver_quasi_sr1_t::solver_quasi_sr1_t()
