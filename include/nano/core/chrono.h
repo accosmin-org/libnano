@@ -4,7 +4,6 @@
 #include <string>
 #include <cstdio>
 #include <nano/arch.h>
-#include <nano/core/stats.h>
 #include <nano/core/numeric.h>
 
 namespace nano
@@ -150,50 +149,4 @@ namespace nano
         const auto div = static_cast<int64_t>(std::chrono::duration_cast<picoseconds_t>(duration).count());
         return nano::idiv(static_cast<int64_t>(flops) * 1000, std::max(div, int64_t(1)));
     }
-
-    ///
-    /// \brief accumulate time measurements for a given operation of given complexity (aka flops).
-    ///
-    class probe_t
-    {
-    public:
-
-        explicit probe_t(std::string basename = std::string(),
-                std::string fullname = std::string(),
-                const int64_t flops = 1) :
-                m_basename(std::move(basename)),
-                m_fullname(std::move(fullname)),
-                m_flops(flops)
-        {
-        }
-
-        template <typename toperator>
-        void measure(const toperator& op, const int64_t count = 1)
-        {
-            assert(count > 0);
-            const timer_t timer;
-            op();
-            m_timings(timer.nanoseconds().count() / count);
-        }
-
-        operator bool() const { return m_timings; } // NOLINT(hicpp-explicit-conversions)
-        const auto& timings() const { return m_timings; }
-
-        const auto& basename() const { return m_basename; }
-        const auto& fullname() const { return m_fullname; }
-
-        auto flops() const { return m_flops; }
-        auto kflops() const { return m_flops / 1024; }
-        auto gflops() const { return nano::gflops(flops(), nanoseconds_t(static_cast<int64_t>(timings().min()))); }
-
-    private:
-
-        // attributes
-        std::string     m_basename;             ///<
-        std::string     m_fullname;             ///<
-        int64_t         m_flops;                ///< number of floating point operations per call
-        stats_t         m_timings;              ///< time measurements
-    };
-
-    using probes_t = std::vector<probe_t>;
 }
