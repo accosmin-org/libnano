@@ -294,15 +294,17 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "convex",           "use only convex test functions");
     cmdline.add("", "smooth",           "use only smooth test functions");
     cmdline.add("", "non-smooth",       "use only non-smooth test functions");
-    cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods");
-    cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies");
+    cmdline.add("", "lsearch0",         "use this regex to select the line-search initialization methods", "quadratic");
+    cmdline.add("", "lsearchk",         "use this regex to select the line-search strategies", "morethuente");
     cmdline.add("", "log-failures",     "log the optimization trajectory for the runs that fail");
     cmdline.add("", "log-maxits",       "log the optimization trajectory that failed to converge");
     cmdline.add("", "list-solver",      "list the available solvers");
     cmdline.add("", "list-function",    "list the available test functions");
     cmdline.add("", "list-lsearch0",    "list the available line-search initialization methods");
     cmdline.add("", "list-lsearchk",    "list the available line-search strategies");
-    cmdline.add("", "list-solver-params","list the available parameters for each of the selected solvers");
+    cmdline.add("", "list-solver-params",   "list the available parameters of the selected solvers");
+    cmdline.add("", "list-lsearch0-params", "list the available parameters of the selected line-search initialization methods");
+    cmdline.add("", "list-lsearchk-params", "list the available parameters of the selected line-search strategies");
 
     const auto options = cmdline.process(argc, argv);
 
@@ -312,51 +314,96 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
-    if (options.has("list-solver"))
-    {
-        std::cout << make_table("solver", solver_t::all());
-        return EXIT_SUCCESS;
-    }
+    const auto list_solver = options.has("list-solver");
+    const auto list_function = options.has("list-function");
+    const auto list_lsearch0 = options.has("list-lsearch0");
+    const auto list_lsearchk = options.has("list-lsearchk");
 
-    if (options.has("list-function"))
+    if (list_solver || list_function || list_lsearch0 || list_lsearchk)
     {
-        std::cout << make_table("function", benchmark_function_t::all());
-        return EXIT_SUCCESS;
-    }
-
-    if (options.has("list-lsearch0"))
-    {
-        std::cout << make_table("lsearch0", lsearch0_t::all());
-        return EXIT_SUCCESS;
-    }
-
-    if (options.has("list-lsearchk"))
-    {
-        std::cout << make_table("lsearchk", lsearchk_t::all());
-        return EXIT_SUCCESS;
-    }
-
-    if (options.has("list-solver-params"))
-    {
-        const auto sregex = std::regex(options.get<string_t>("solver"));
-        const auto solver_ids = solver_t::all().ids(sregex);
-
         table_t table;
-        table.header() << "solver" << "parameter" << "value" << "domain";
-        table.delim();
-        for (const auto& solver_id : solver_ids)
+        if (list_solver)
         {
-            const auto solver = solver_t::all().get(solver_id);
-            for (const auto& param : solver->parameters())
-            {
-                table.append() << solver_id << param.name() << param.value() << param.domain();
-            }
-            if (&solver_id != &*solver_ids.rbegin())
+            append_table(table, "solver", solver_t::all());
+        }
+        if (list_lsearch0)
+        {
+            if (list_solver)
             {
                 table.delim();
             }
+            append_table(table, "lsearch0", lsearch0_t::all());
         }
+        if (list_lsearchk)
+        {
+            if (list_solver || list_lsearch0)
+            {
+                table.delim();
+            }
+            append_table(table, "lsearchk", lsearchk_t::all());
+        }
+        if (list_function)
+        {
+            if (list_solver || list_lsearch0 || list_lsearchk)
+            {
+                table.delim();
+            }
+            append_table(table, "function", benchmark_function_t::all());
+        }
+        std::cout << table;
+        return EXIT_SUCCESS;
+    }
 
+    const auto list_solver_params = options.has("list-solver-params");
+    const auto list_lsearch0_params = options.has("list-lsearch0-params");
+    const auto list_lsearchk_params = options.has("list-lsearchk-params");
+
+    if (list_solver_params || list_lsearch0_params || list_lsearchk_params)
+    {
+        const auto append = [] (table_t& table, const char* name, const auto& factory, const std::regex& regex)
+        {
+            table.header() << name << "parameter" << "value" << "domain";
+            table.delim();
+
+            const auto ids = factory.ids(regex);
+            for (const auto& id : ids)
+            {
+                const auto estimator = factory.get(id);
+                for (const auto& param : estimator->parameters())
+                {
+                    table.append() << id << param.name() << param.value() << param.domain();
+                }
+                if (&id != &*ids.rbegin())
+                {
+                    table.delim();
+                }
+            }
+        };
+
+        table_t table;
+        if (list_solver_params)
+        {
+            const auto regex = std::regex(options.get<string_t>("solver"));
+            append(table, "solver", solver_t::all(), regex);
+        }
+        if (list_lsearch0_params)
+        {
+            const auto regex = std::regex(options.get<string_t>("lsearch0"));
+            if (list_solver_params)
+            {
+                table.delim();
+            }
+            append(table, "lsearch0", lsearch0_t::all(), regex);
+        }
+        if (list_lsearchk_params)
+        {
+            const auto regex = std::regex(options.get<string_t>("lsearchk"));
+            if (list_solver_params || list_lsearch0_params)
+            {
+                table.delim();
+            }
+            append(table, "lsearchk", lsearchk_t::all(), regex);
+        }
         std::cout << table;
         return EXIT_SUCCESS;
     }
@@ -372,14 +419,11 @@ static int unsafe_main(int argc, const char* argv[])
 
     const auto fregex = std::regex(options.get<string_t>("function"));
     const auto sregex = std::regex(options.get<string_t>("solver"));
+    const auto l0regex = std::regex(options.get<string_t>("lsearch0"));
+    const auto lkregex = std::regex(options.get<string_t>("lsearchk"));
 
-    const auto lsearch0s = options.has("lsearch0") ?
-        lsearch0_t::all().ids(std::regex(options.get<string_t>("lsearch0"))) :
-        strings_t{""};
-
-    const auto lsearchks = options.has("lsearchk") ?
-        lsearchk_t::all().ids(std::regex(options.get<string_t>("lsearchk"))) :
-        strings_t{""};
+    const auto lsearch0_ids = options.has("lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
+    const auto lsearchk_ids = options.has("lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
 
     const auto solver_ids = solver_t::all().ids(sregex);
     critical(
@@ -398,42 +442,48 @@ static int unsafe_main(int argc, const char* argv[])
         params_usage[param_name] = 0;
     }
 
-    // construct the list of solver configurations to evaluate
-    solvers_t solvers;
-    const auto add_solver = [&] (const string_t& solver_id, rsolver_t&& solver)
+    const auto setup_xvalues = [&] (auto& estimator)
     {
-        // setup solver with additional parameters
         for (const auto& [param_name, param_value] : options.m_xvalues)
         {
-            if (solver->parameter_if(param_name) != nullptr)
+            if (estimator.parameter_if(param_name) != nullptr)
             {
-                solver->parameter(param_name) = param_value;
+                estimator.parameter(param_name) = param_value;
                 params_usage[param_name] ++;
             }
         }
-
-        solvers.emplace_back(solver_id, std::move(solver));
     };
 
+    // construct the list of solver configurations to evaluate
+    solvers_t solvers;
     for (const auto& solver_id : solver_ids)
     {
         auto solver = solver_t::all().get(solver_id);
         if (solver->monotonic())
         {
-            for (const auto& lsearch0 : lsearch0s)
+            for (const auto& lsearch0_id : lsearch0_ids)
             {
-                for (const auto& lsearchk : lsearchks)
+                for (const auto& lsearchk_id : lsearchk_ids)
                 {
                     solver = solver_t::all().get(solver_id);
-                    if (!lsearch0.empty()) { solver->lsearch0(lsearch0); }
-                    if (!lsearchk.empty()) { solver->lsearchk(lsearchk); }
-                    add_solver(solver_id, std::move(solver));
+                    auto lsearch0 = lsearch0_t::all().get(lsearch0_id);
+                    auto lsearchk = lsearchk_t::all().get(lsearchk_id);
+
+                    setup_xvalues(*solver);
+                    setup_xvalues(*lsearch0);
+                    setup_xvalues(*lsearchk);
+
+                    solver->lsearch0(lsearch0_id, std::move(lsearch0));
+                    solver->lsearchk(lsearchk_id, std::move(lsearchk));
+
+                    solvers.emplace_back(solver_id, std::move(solver));
                 }
             }
         }
         else
         {
-            add_solver(solver_id, std::move(solver));
+            setup_xvalues(*solver);
+            solvers.emplace_back(solver_id, std::move(solver));
         }
     }
 
