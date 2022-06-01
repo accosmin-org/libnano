@@ -30,13 +30,6 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/nano/version.h")
 
-set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY")
-set(CMAKE_CXX_FLAGS                     "${CMAKE_CXX_FLAGS} -DEIGEN_DONT_PARALLELIZE -DEIGEN_DEFAULT_TO_ROW_MAJOR")
-
-set(CMAKE_CXX_FLAGS_RELEASE             "${CMAKE_CXX_FLAGS_RELEASE} -DEIGEN_NO_DEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO      "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DEIGEN_NO_DEBUG")
-set(CMAKE_CXX_FLAGS_MINSIZEREL          "${CMAKE_CXX_FLAGS_MINSIZEREL} -DEIGEN_NO_DEBUG")
-
 ##################################################################################################
 # setup dependencies
 

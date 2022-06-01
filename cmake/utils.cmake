@@ -3,7 +3,8 @@ function(target_compile_configure target)
     target_compile_options(${target}
         PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic -Wsign-conversion>
         PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic -Wsign-conversion>
-        PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -pedantic -Wsign-conversion>)
+        PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -pedantic -Wsign-conversion>
+        PRIVATE -DEIGEN_MPL2_ONLY -DEIGEN_DONT_PARALLELIZE)
     target_compile_features(${target}
         PUBLIC cxx_std_17
         PRIVATE cxx_std_17)
@@ -13,8 +14,6 @@ endfunction()
 function(make_test test libs)
     add_executable(${test} ${test}.cpp)
     target_compile_configure(${test})
-    target_compile_definitions(${test}
-        PRIVATE UTEST_WITH_EIGEN UTEST_WITH_TENSOR)
     target_include_directories(${test}
         SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>)
     target_link_libraries(${test}

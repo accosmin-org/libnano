@@ -117,7 +117,6 @@ if(NOT WIN32)
         PRIVATE Threads::Threads)
 endif()
 
-# install library
 install(TARGETS nano
     EXPORT nano-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
