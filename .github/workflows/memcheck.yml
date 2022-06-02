@@ -12,4 +12,5 @@ jobs:
 
     - name: memcheck (gcc)
       run: |
+        bash scripts/setup_ubuntu2204.sh --default
         CXX=g++ bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --config --build --memcheck
