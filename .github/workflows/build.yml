@@ -83,10 +83,6 @@ jobs:
       run: |
         CXX=g++ bash scripts/build.sh --generator Ninja --config --cppcheck
 
-    - name: memcheck (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --config --build --memcheck
-
     - name: codecov (gcc)
       run: |
         sudo -H pip install --upgrade pip
