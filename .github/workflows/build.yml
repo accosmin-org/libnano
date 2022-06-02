@@ -83,32 +83,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: cppcheck
-      run: |
-        bash scripts/setup_ubuntu2204.sh --default
-        CXX=g++ bash scripts/build.sh --generator Ninja --config --cppcheck
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --config --cppcheck
 
   memcheck:
     runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: memcheck (gcc)
-      run: |
-        bash scripts/setup_ubuntu2204.sh --default
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --config --build --memcheck
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: memcheck
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --config --build --memcheck
 
   coverage:
     runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: codecov (gcc)
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: codecov
       run: |
-        bash scripts/setup_ubuntu2204.sh --default
         sudo -H pip install --upgrade pip
         sudo -H pip install coverage
         CXX=g++ GCOV=gcov bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --coverage --config --build --test --codecov
