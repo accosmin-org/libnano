@@ -1,86 +1,163 @@
-name: C/C++ CI
+name: CI
 
 on: [push]
 
 jobs:
-  build:
+  debug-gcc:
     runs-on: ubuntu-22.04
-
     steps:
     - uses: actions/checkout@v3
-
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: debug (gcc)
-      run: |
-        bash scripts/setup_ubuntu2204.sh --default
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --config --build --test --install --build-example
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --config --build --test --install --build-example
 
+  release-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: release (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Release --config --build --test --install --build-example
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Release --config --build --test --install --build-example
 
+  debug-clang:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: debug (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --build-type Debug --libcpp --config --build --test --install --build-example
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --build-type Debug --libcpp --config --build --test --install --build-example
 
+  asan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: ASAN (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --asan --config --build --test
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --asan --config --build --test
 
+  lsan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: LSAN (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --lsan --config --build --test
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --lsan --config --build --test
 
+  usan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: USAN (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --usan --config --build --test
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --usan --config --build --test
 
+  tsan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
     - name: TSAN (gcc)
-      run: |
-        CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --tsan --config --build --test
+      run: CXX=g++ bash scripts/build.sh --generator Ninja --build-type Debug --tsan --config --build --test
 
-    - name: clang-tidy-cert (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-cert
+  clang-tidy-cert:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-cert
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-cert
 
-    - name: clang-tidy-hicpp (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-hicpp
+  clang-tidy-hicpp:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-hicpp
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-hicpp
 
-    - name: clang-tidy-misc (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-misc
+  clang-tidy-misc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-misc
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-misc
 
-    - name: clang-tidy-bugprone (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-bugprone
+  clang-tidy-bugprone:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-bugprone
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-bugprone
 
-    - name: clang-tidy-modernize (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-modernize
+  clang-tidy-modernize:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-modernize
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-modernize
 
-    - name: clang-tidy-performance (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-performance
+  clang-tidy-performance:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-performance
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-performance
 
-    - name: clang-tidy-portability (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-portability
+  clang-tidy-portability:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-portability
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-portability
 
-    - name: clang-tidy-readability (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-readability
+  clang-tidy-readability:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-readability
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-readability
 
-    - name: clang-tidy-clang-analyzer (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-clang-analyzer
+  clang-tidy-clang-analyzer:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-clang-analyzer
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-clang-analyzer
 
-    - name: clang-tidy-cppcoreguidelines (clang)
-      run: |
-        CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-cppcoreguidelines
+  clang-tidy-cppcoreguidelines:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-cppcoreguidelines
+      run: CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-cppcoreguidelines
 
   cppcheck:
     runs-on: ubuntu-22.04
-
     steps:
     - uses: actions/checkout@v3
     - name: setup
@@ -90,7 +167,6 @@ jobs:
 
   memcheck:
     runs-on: ubuntu-22.04
-
     steps:
     - uses: actions/checkout@v3
     - name: setup
@@ -100,7 +176,6 @@ jobs:
 
   coverage:
     runs-on: ubuntu-22.04
-
     steps:
     - uses: actions/checkout@v3
     - name: setup
