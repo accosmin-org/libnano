@@ -12,83 +12,83 @@ jobs:
     
     - name: debug (gcc)
       run: |
-        - bash scripts/setup_ubuntu2204.sh --default
-        - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example
+        bash scripts/setup_ubuntu2204.sh --default
+        CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example
         
     - name: release (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type Release --config --build --test --install --build-example
+        CXX=g++ bash scripts/build.sh --build-type Release --config --build --test --install --build-example
         
     - name: debug (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --build-type Debug --libcpp --config --build --test --install --build-example
+        CXX=clang++ bash scripts/build.sh --build-type Debug --libcpp --config --build --test --install --build-example
         
     - name: ASAN (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type Debug --asan --config --build --test
+        CXX=g++ bash scripts/build.sh --build-type Debug --asan --config --build --test
         
     - name: LSAN (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type Debug --lsan --config --build --test
+        CXX=g++ bash scripts/build.sh --build-type Debug --lsan --config --build --test
     
     - name: USAN (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type Debug --usan --config --build --test
+        CXX=g++ bash scripts/build.sh --build-type Debug --usan --config --build --test
     
     - name: TSAN (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
+        CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
     
     - name: clang-tidy-cert (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cert
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cert
     
     - name: clang-tidy-hicpp (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-hicpp
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-hicpp
     
     - name: clang-tidy-misc (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-misc
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-misc
     
     - name: clang-tidy-bugprone (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-bugprone
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-bugprone
     
     - name: clang-tidy-modernize (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-modernize
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-modernize
     
     - name: clang-tidy-performance (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-performance
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-performance
     
     - name: clang-tidy-portability (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-portability
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-portability
     
     - name: clang-tidy-readability (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-readability
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-readability
     
     - name: clang-tidy-clang-analyzer (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-clang-analyzer
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-clang-analyzer
     
     - name: clang-tidy-cppcoreguidelines (clang)
       run: |
-        - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
+        CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
     
     - name: cppcheck
       run: |
-        - CXX=g++ bash scripts/build.sh --config --cppcheck
+        CXX=g++ bash scripts/build.sh --config --cppcheck
     
     - name: memcheck (gcc)
       run: |
-        - CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
+        CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
     
     - name: codecov (gcc)
       run: |
-        - sudo -H pip install --upgrade pip
-        - sudo -H pip install coverage
-        - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type RelWithDebInfo --coverage --config --build --test --codecov
+        sudo -H pip install --upgrade pip
+        sudo -H pip install coverage
+        CXX=g++ GCOV=gcov bash scripts/build.sh --build-type RelWithDebInfo --coverage --config --build --test --codecov
