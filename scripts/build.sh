@@ -83,8 +83,6 @@ function config {
 
 function build {
     cd ${libnanodir}
-    command=$(grep test_mlearn.cpp compile_commands.json | grep command)
-    printf "${command}\n"
     cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
