@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
 
     steps:
@@ -79,12 +78,37 @@ jobs:
       run: |
         CXX=clang++ bash scripts/build.sh --generator Ninja --config --build --clang-tidy-cppcoreguidelines
 
+  cppcheck:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
     - name: cppcheck
       run: |
+        bash scripts/setup_ubuntu2204.sh --default
         CXX=g++ bash scripts/build.sh --generator Ninja --config --cppcheck
+
+  memcheck:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: memcheck (gcc)
+      run: |
+        bash scripts/setup_ubuntu2204.sh --default
+        CXX=g++ bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --config --build --memcheck
+
+  coverage:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
 
     - name: codecov (gcc)
       run: |
+        bash scripts/setup_ubuntu2204.sh --default
         sudo -H pip install --upgrade pip
         sudo -H pip install coverage
         CXX=g++ GCOV=gcov bash scripts/build.sh --generator Ninja --build-type RelWithDebInfo --coverage --config --build --test --codecov
