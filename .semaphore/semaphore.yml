@@ -33,36 +33,9 @@ blocks:
         - name: TSAN (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
-        - name: clang-tidy-cert (clang)
+        - name: clang-tidy (clang)
           commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cert
-        - name: clang-tidy-hicpp (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-hicpp
-        - name: clang-tidy-misc (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-misc
-        - name: clang-tidy-bugprone (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-bugprone
-        - name: clang-tidy-modernize (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-modernize
-        - name: clang-tidy-performance (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-performance
-        - name: clang-tidy-portability (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-portability
-        - name: clang-tidy-readability (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-readability
-        - name: clang-tidy-clang-analyzer (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-clang-analyzer
-        - name: clang-tidy-cppcoreguidelines (clang)
-          commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
+            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-all
         - name: cppcheck
           commands:
             - CXX=g++ bash scripts/build.sh --config --cppcheck
