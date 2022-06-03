@@ -364,7 +364,7 @@ function clang_tidy_all {
     clang_tidy_hicpp || return 1
     clang_tidy_bugprone || return 1
     clang_tidy_modernize || return 1
-    clang_tidy_concurrency || return 1
+    #clang_tidy_concurrency || return 1
     clang_tidy_performance || return 1
     clang_tidy_portability || return 1
     clang_tidy_readability || return 1
