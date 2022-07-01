@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
-basedir=$(pwd)
+basepath=`readlink -f "$0"`
+basedir=`dirname "${basepath}"`
+basedir=`dirname "${basedir}"`
+
 installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
-clang_tidy_suffix=""
+clang_suffix=""
 build_type="RelWithDebInfo"
 cmake_options=""
 
@@ -15,7 +18,7 @@ cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || ech
 threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
-export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -pedantic -Wsign-conversion"
+export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic"
 
 function lto {
     export CXXFLAGS="${CXXFLAGS} -flto"
@@ -26,23 +29,23 @@ function thinlto {
 }
 
 function asan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function lsan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=leak -fno-omit-frame-pointer"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=leak -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function usan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined -fno-omit-frame-pointer"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function msan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function tsan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function gold {
@@ -109,7 +112,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=2.7
+    version=2.8
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then
@@ -240,10 +243,10 @@ function clang_tidy {
     log=clang_tidy_${check//\**/}.log
     printf "Logging to ${log} ...\n"
 
-    wrapper=run-clang-tidy${clang_tidy_suffix}
+    wrapper=run-clang-tidy${clang_suffix}
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     printf "Using wrapper ${wrapper} ...\n"
-    ${wrapper} -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
+    ${wrapper} -clang-tidy-binary clang-tidy${clang_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
 
     if [[ $? -ne 0 ]]; then
@@ -337,9 +340,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-named-parameter"
     checks="${checks},-readability-isolate-declaration"
     checks="${checks},-readability-else-after-return"
-    checks="${checks},-readability-convert-member-functions-to-static"
     checks="${checks},-readability-function-cognitive-complexity"
-    checks="${checks},-readability-suspicious-call-argument"
     checks="${checks},-readability-identifier-length"
     clang_tidy ${checks}
 }
@@ -370,6 +371,40 @@ function clang_tidy_all {
     clang_tidy_readability || return 1
     clang_tidy_clang_analyzer || return 1
     clang_tidy_cppcoreguidelines || return 1
+}
+
+function clang_format {
+    files=$(find \
+        ${basedir}/src \
+        ${basedir}/test \
+        ${basedir}/example \
+        ${basedir}/include \
+        -type f \( -name "*.h" -o -name "*.cpp" \))
+
+    cmd=clang-format${clang_suffix}
+    echo "Using ${cmd}..."
+
+    log=${basedir}/clang_format.log
+    rm -f ${log}
+
+    for file in ${files}; do
+        ${cmd} --dry-run ${file} >> ${log} 2>&1
+    done
+
+    cat ${log}
+
+    changes=$(cat ${log} | wc -l)
+    rm -f ${log}
+
+    for file in ${files}; do
+        ${cmd} -i ${file}
+    done
+
+    if [[ ${changes} -gt 0 ]]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 function usage {
@@ -423,10 +458,10 @@ options:
         run the unit tests through memcheck (e.g. detects unitialized variales, memory leaks, invalid memory accesses)
     --helgrind
         run the unit tests through helgrind (e.g. detects data races)
+    --clang-suffix <string>
+        suffix for the llvm tools like clang-tidy or clang-format (e.g. -6.0)
     --clang-tidy-check <check name>
         run a particular clang-tidy check (e.g. misc, cert)
-    --clang-tidy-suffix <string>
-        suffix for the clang-tidy binaries (e.g. -6.0)
     --clang-tidy-all
     --clang-tidy-misc
     --clang-tidy-cert
@@ -480,8 +515,8 @@ while [ "$1" != "" ]; do
         --coveralls)                    coveralls || exit 1;;
         --memcheck)                     memcheck || exit 1;;
         --helgrind)                     helgrind || exit 1;;
+        --clang-suffix)                 shift; clang_suffix=$1;;
         --clang-tidy-check)             shift; clang_tidy $1 || exit 1;;
-        --clang-tidy-suffix)            shift; clang_tidy_suffix=$1;;
         --clang-tidy-all)               clang_tidy_all || exit 1;;
         --clang-tidy-misc)              clang_tidy_misc || exit 1;;
         --clang-tidy-cert)              clang_tidy_cert || exit 1;;
@@ -498,6 +533,7 @@ while [ "$1" != "" ]; do
         --generator)                    shift; generator="-G$1";;
         --shared)                       build_shared="ON";;
         --static)                       build_shared="OFF";;
+        --clang-format)                 clang_format || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac

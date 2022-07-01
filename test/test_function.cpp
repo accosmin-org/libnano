@@ -1,8 +1,8 @@
-#include <utest/utest.h>
-#include <nano/function.h>
 #include "fixture/function.h"
 #include <nano/core/numeric.h>
+#include <nano/function.h>
 #include <nano/function/benchmark.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -14,14 +14,14 @@ UTEST_CASE(select)
     {
         for (const auto smooth : {smoothness::ignore, smoothness::yes, smoothness::no})
         {
-            int total = 0;
-            std::map<bool, int> counts_per_convexity;
-            std::map<bool, int> counts_per_smoothness;
+            int                          total = 0;
+            std::map<bool, int>          counts_per_convexity;
+            std::map<bool, int>          counts_per_smoothness;
             std::map<tensor_size_t, int> counts_per_size;
 
             for (const auto& function : benchmark_function_t::make({4, 16, convex, smooth, 5}))
             {
-                ++ total;
+                ++total;
 
                 UTEST_CHECK(function != nullptr);
                 UTEST_CHECK_EQUAL((function->summands() - 1) * (function->summands() - 5), 0);
@@ -30,9 +30,9 @@ UTEST_CASE(select)
                 UTEST_CHECK(convex == convexity::ignore || function->convex() == (convex == convexity::yes));
                 UTEST_CHECK(smooth == smoothness::ignore || function->smooth() == (smooth == smoothness::yes));
 
-                counts_per_size[function->size()] ++;
-                counts_per_convexity[function->convex()] ++;
-                counts_per_smoothness[function->smooth()] ++;
+                counts_per_size[function->size()]++;
+                counts_per_convexity[function->convex()]++;
+                counts_per_smoothness[function->smooth()]++;
             }
 
             UTEST_CHECK_EQUAL(counts_per_size[4], total / 3);
@@ -68,8 +68,8 @@ UTEST_CASE(convexity)
 {
     for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
-        const auto& function = *rfunction;
-        [[maybe_unused]] const auto _ = utest_test_name_t{function.name()};
+        const auto&                 function = *rfunction;
+        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
 
         const auto dims = function.size();
         UTEST_CHECK_LESS_EQUAL(dims, 4);
@@ -85,8 +85,8 @@ UTEST_CASE(grad_accuracy)
 {
     for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
-        const auto& function = *rfunction;
-        [[maybe_unused]] const auto _ = utest_test_name_t{function.name()};
+        const auto&                 function = *rfunction;
+        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
 
         const auto dims = function.size();
         UTEST_CHECK_LESS_EQUAL(dims, 4);
@@ -100,8 +100,8 @@ UTEST_CASE(summands)
 {
     for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 7}))
     {
-        const auto& function = *rfunction;
-        [[maybe_unused]] const auto _ = utest_test_name_t{function.name()};
+        const auto&                 function = *rfunction;
+        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
 
         const auto dims = function.size();
         UTEST_CHECK_LESS_EQUAL(dims, 4);
@@ -113,11 +113,11 @@ UTEST_CASE(summands)
             UTEST_CHECK_EQUAL(summands, 7);
         }
 
-        for (auto trial = 0; trial < 100; ++ trial)
+        for (auto trial = 0; trial < 100; ++trial)
         {
             const vector_t x = vector_t::Random(dims);
 
-            vector_t gx = vector_t::Random(dims);
+            vector_t   gx = vector_t::Random(dims);
             const auto fx = function.vgrad(x, &gx);
 
             scalar_t fxsum = 0.0;

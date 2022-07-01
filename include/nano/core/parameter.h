@@ -1,21 +1,25 @@
 #pragma once
 
-#include <variant>
 #include <nano/arch.h>
-#include <nano/scalar.h>
 #include <nano/core/strutil.h>
+#include <nano/scalar.h>
+#include <variant>
 
 namespace nano
 {
     ///
     /// \brief less or equal operator.
     ///
-    struct LE_t{};
+    struct LE_t
+    {
+    };
 
     ///
     /// \brief less than operator.
     ///
-    struct LT_t{};
+    struct LT_t
+    {
+    };
 
     static const auto LE = LE_t{};
     static const auto LT = LT_t{};
@@ -30,40 +34,40 @@ namespace nano
     class NANO_PUBLIC parameter_t
     {
     public:
-
         struct value_t
         {
-            const parameter_t&  m_parameter;
+            const parameter_t& m_parameter;
         };
+
         struct domain_t
         {
-            const parameter_t&  m_parameter;
+            const parameter_t& m_parameter;
         };
 
         struct enum_t
         {
-            string_t        m_value;                        ///< the stored value as string
-            strings_t       m_domain;                       ///< domain of available values as strings
+            string_t  m_value;  ///< the stored value as string
+            strings_t m_domain; ///< domain of available values as strings
         };
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         struct range_t
         {
-            tscalar         m_value{0};                     ///< the stored value
-            tscalar         m_min{0}, m_max{0};             ///< the allowed [min, max] range
-            LEorLT          m_mincomp, m_maxcomp;           ///<
+            tscalar m_value{0};           ///< the stored value
+            tscalar m_min{0}, m_max{0};   ///< the allowed [min, max] range
+            LEorLT  m_mincomp, m_maxcomp; ///<
         };
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         struct pair_range_t
         {
-            tscalar         m_value1{0}, m_value2{0};       ///< the stored values
-            tscalar         m_min{0}, m_max{0};             ///< the allowed [min, max] range
-            LEorLT          m_mincomp, m_valcomp, m_maxcomp;///<
+            tscalar m_value1{0}, m_value2{0};        ///< the stored values
+            tscalar m_min{0}, m_max{0};              ///< the allowed [min, max] range
+            LEorLT  m_mincomp, m_valcomp, m_maxcomp; ///<
         };
 
-        using irange_t = range_t<int64_t>;
-        using frange_t = range_t<scalar_t>;
+        using irange_t  = range_t<int64_t>;
+        using frange_t  = range_t<scalar_t>;
         using iprange_t = pair_range_t<int64_t>;
         using fprange_t = pair_range_t<scalar_t>;
 
@@ -77,11 +81,7 @@ namespace nano
         ///
         /// \brief return a constrained enumeration parameter.
         ///
-        template
-        <
-            typename tenum,
-            std::enable_if_t<std::is_enum_v<tenum>, bool> = true
-        >
+        template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
         static parameter_t make_enum(string_t name, tenum value)
         {
             return make_enum_(std::move(name), value);
@@ -91,15 +91,11 @@ namespace nano
         /// \brief return a floating point parameter constrained to the given range:
         ///     min LE/LT value LE/LT max.
         ///
-        template
-        <
-            typename tmin, typename tvalue, typename tmax,
-            std::enable_if_t<std::is_arithmetic_v<tmin>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
-        >
-        static parameter_t make_scalar(string_t name,
-            tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
+        template <typename tmin, typename tvalue, typename tmax,
+                  std::enable_if_t<std::is_arithmetic_v<tmin>, bool>   = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tmax>, bool>   = true>
+        static parameter_t make_scalar(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
             return make_scalar_<scalar_t>(std::move(name), min, mincomp, value, maxcomp, max);
         }
@@ -108,15 +104,11 @@ namespace nano
         /// \brief return an integer parameter constrained to the given range:
         ///     min LE/LT value LE/LT max.
         ///
-        template
-        <
-            typename tmin, typename tvalue, typename tmax,
-            std::enable_if_t<std::is_arithmetic_v<tmin>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
-        >
-        static parameter_t make_integer(string_t name,
-            tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
+        template <typename tmin, typename tvalue, typename tmax,
+                  std::enable_if_t<std::is_arithmetic_v<tmin>, bool>   = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tmax>, bool>   = true>
+        static parameter_t make_integer(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
         {
             return make_scalar_<int64_t>(std::move(name), min, mincomp, value, maxcomp, max);
         }
@@ -125,16 +117,13 @@ namespace nano
         /// \brief return an ordered floating point pair parameter constrained to the given range:
         ///     min LE/LT value1 LE/LT value2 LE/LT max.
         ///
-        template
-        <
-            typename tmin, typename tvalue1, typename tvalue2, typename tmax,
-            std::enable_if_t<std::is_arithmetic_v<tmin>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue2>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
-        >
-        static parameter_t make_scalar_pair(string_t name,
-            tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
+        template <typename tmin, typename tvalue1, typename tvalue2, typename tmax,
+                  std::enable_if_t<std::is_arithmetic_v<tmin>, bool>    = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue1>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue2>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tmax>, bool>    = true>
+        static parameter_t make_scalar_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp,
+                                            tvalue2 value2, LEorLT maxcomp, tmax max)
         {
             return make_scalar_<scalar_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
         }
@@ -143,16 +132,13 @@ namespace nano
         /// \brief return an integer pair parameter constrained to the given range:
         ///     min LE/LT value1 LE/LT value2 LE/LT max.
         ///
-        template
-        <
-            typename tmin, typename tvalue1, typename tvalue2, typename tmax,
-            std::enable_if_t<std::is_arithmetic_v<tmin>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tvalue2>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tmax>, bool> = true
-        >
-        static parameter_t make_integer_pair(string_t name,
-            tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
+        template <typename tmin, typename tvalue1, typename tvalue2, typename tmax,
+                  std::enable_if_t<std::is_arithmetic_v<tmin>, bool>    = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue1>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tvalue2>, bool> = true,
+                  std::enable_if_t<std::is_arithmetic_v<tmax>, bool>    = true>
+        static parameter_t make_integer_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp,
+                                             tvalue2 value2, LEorLT maxcomp, tmax max)
         {
             return make_scalar_<int64_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
         }
@@ -241,12 +227,14 @@ namespace nano
         /// \brief access functions.
         ///
         const auto& name() const { return m_name; }
+
         const auto& storage() const { return m_storage; }
+
         auto value() const { return value_t{*this}; }
+
         auto domain() const { return domain_t{*this}; }
 
     private:
-
         parameter_t(string_t name, enum_t);
         parameter_t(string_t name, irange_t);
         parameter_t(string_t name, frange_t);
@@ -261,50 +249,37 @@ namespace nano
             static const auto options = enum_string<tenum>();
 
             strings_t domain{options.size()};
-            std::transform(options.begin(), options.end(), domain.begin(), [] (const auto& v) { return v.second; });
+            std::transform(options.begin(), options.end(), domain.begin(), [](const auto& v) { return v.second; });
 
-            return parameter_t
-            {
-                std::move(name),
-                enum_t{scat(value), std::move(domain)}
+            return parameter_t{
+                std::move(name), enum_t{scat(value), std::move(domain)}
             };
         }
 
         template <typename tscalar, typename tmin, typename tvalue, typename tmax>
-        static parameter_t make_scalar_(const string_t& name,
-            tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
+        static parameter_t make_scalar_(const string_t& name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp,
+                                        tmax max)
         {
-            return parameter_t
-            {
-                name,
-                range_t<tscalar>
-                {
-                    static_cast<tscalar>(value),
-                    static_cast<tscalar>(min), static_cast<tscalar>(max),
-                    mincomp, maxcomp
-                }
+            return parameter_t{
+                name, range_t<tscalar>{static_cast<tscalar>(value), static_cast<tscalar>(min),
+                                       static_cast<tscalar>(max), mincomp, maxcomp}
             };
         }
 
         template <typename tscalar, typename tmin, typename tvalue1, typename tvalue2, typename tmax>
-        static parameter_t make_scalar_(const string_t& name,
-            tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2, LEorLT maxcomp, tmax max)
+        static parameter_t make_scalar_(const string_t& name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp,
+                                        tvalue2 value2, LEorLT maxcomp, tmax max)
         {
-            return parameter_t
-            {
+            return parameter_t{
                 name,
-                pair_range_t<tscalar>
-                {
-                    static_cast<tscalar>(value1), static_cast<tscalar>(value2),
-                    static_cast<tscalar>(min), static_cast<tscalar>(max),
-                    mincomp, valcomp, maxcomp
-                }
+                pair_range_t<tscalar>{static_cast<tscalar>(value1), static_cast<tscalar>(value2),
+                                      static_cast<tscalar>(min), static_cast<tscalar>(max), mincomp, valcomp, maxcomp}
             };
         }
 
         // attributes
-        string_t        m_name;         ///<
-        storage_t       m_storage;      ///<
+        string_t  m_name;    ///<
+        storage_t m_storage; ///<
     };
 
     using parameters_t = std::vector<parameter_t>;
@@ -317,4 +292,4 @@ namespace nano
 
     NANO_PUBLIC std::istream& read(std::istream& stream, parameter_t&);
     NANO_PUBLIC std::ostream& write(std::ostream& stream, const parameter_t&);
-}
+} // namespace nano

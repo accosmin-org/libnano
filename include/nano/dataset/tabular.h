@@ -16,7 +16,6 @@ namespace nano
     class NANO_PUBLIC tabular_dataset_t : public dataset_t
     {
     public:
-
         ///
         /// \brief constructor, set the CSV files to load and the input features.
         ///
@@ -28,13 +27,12 @@ namespace nano
         tabular_dataset_t(csvs_t, features_t, size_t target);
 
     private:
-
         void do_load() override;
         void parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
 
         // attributes
-        csvs_t      m_csvs;                     ///< describes the CSV files
-        features_t  m_features;                 ///< describes the columns in the CSV files (aka the features)
-        size_t      m_target{string_t::npos};   ///< index of the target column (if negative, then not provided)
+        csvs_t     m_csvs;                   ///< describes the CSV files
+        features_t m_features;               ///< describes the columns in the CSV files (aka the features)
+        size_t     m_target{string_t::npos}; ///< index of the target column (if negative, then not provided)
     };
-}
+} // namespace nano

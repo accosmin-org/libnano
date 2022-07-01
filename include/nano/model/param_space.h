@@ -16,11 +16,10 @@ namespace nano
     class NANO_PUBLIC param_space_t
     {
     public:
-
         enum class type
         {
-            log10,          ///<
-            linear,         ///<
+            log10,  ///<
+            linear, ///<
         };
 
         ///
@@ -44,12 +43,11 @@ namespace nano
         scalar_t closest_grid_value_from_surrogate(scalar_t value) const;
 
     private:
-
         static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
         // attributes
-        type            m_type{type::linear};   ///<
-        tensor1d_t      m_grid_values;          ///<
-        scalar_t        m_min{NaN}, m_max{NaN}; ///<
+        type       m_type{type::linear};   ///<
+        tensor1d_t m_grid_values;          ///<
+        scalar_t   m_min{NaN}, m_max{NaN}; ///<
     };
-}
+} // namespace nano

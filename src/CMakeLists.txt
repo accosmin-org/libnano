@@ -62,6 +62,7 @@ target_sources(nano PRIVATE
     function/geometric.cpp
     function/kinks.cpp
     function/linear.cpp
+    function/penalty.cpp
     function/powell.cpp
     function/qing.cpp
     function/quadratic.cpp

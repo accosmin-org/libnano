@@ -1,14 +1,14 @@
 #pragma once
 
-#include <limits>
-#include <cassert>
-#include <numeric>
-#include <utility>
 #include <algorithm>
+#include <cassert>
+#include <limits>
 #include <nano/arch.h>
-#include <nano/scalar.h>
 #include <nano/core/numeric.h>
 #include <nano/core/strutil.h>
+#include <nano/scalar.h>
+#include <numeric>
+#include <utility>
 
 namespace nano
 {
@@ -25,20 +25,20 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        cell_t(string_t data, const size_t span, const alignment align, const char fill) :
-            m_data(std::move(data)),
-            m_span(span),
-            m_fill(fill),
-            m_alignment(align)
+        cell_t(string_t data, const size_t span, const alignment align, const char fill)
+            : m_data(std::move(data))
+            , m_span(span)
+            , m_fill(fill)
+            , m_alignment(align)
         {
         }
 
         // attributes
-        string_t    m_data;                     ///<
-        string_t    m_mark;                     ///<
-        size_t      m_span{1};                  ///< column spanning
-        char        m_fill{' '};                ///< filling character for aligning cells
-        alignment   m_alignment{alignment::left};///< text alignment within the cell
+        string_t  m_data;                       ///<
+        string_t  m_mark;                       ///<
+        size_t    m_span{1};                    ///< column spanning
+        char      m_fill{' '};                  ///< filling character for aligning cells
+        alignment m_alignment{alignment::left}; ///< text alignment within the cell
     };
 
     inline bool operator==(const cell_t& c1, const cell_t& c2)
@@ -51,7 +51,7 @@ namespace nano
     ///
     struct colspan_t
     {
-        size_t      m_span{1};
+        size_t m_span{1};
     };
 
     ///
@@ -59,10 +59,11 @@ namespace nano
     ///
     struct colfill_t
     {
-        char        m_fill{' '};
+        char m_fill{' '};
     };
 
     inline colspan_t colspan(const size_t span) { return {span}; }
+
     inline colfill_t colfill(const char fill) { return {fill}; }
 
     ///
@@ -71,12 +72,11 @@ namespace nano
     class row_t
     {
     public:
-
         enum class mode
         {
-            data,       ///<
-            delim,      ///< delimiting row
-            header,     ///< header (not considered for operations like sorting or marking)
+            data,   ///<
+            delim,  ///< delimiting row
+            header, ///< header (not considered for operations like sorting or marking)
         };
 
         ///
@@ -87,17 +87,31 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit row_t(const mode t) :
-            m_type(t)
+        explicit row_t(const mode t)
+            : m_type(t)
         {
         }
 
         ///
         /// \brief change the current formatting to be used by the next cells
         ///
-        row_t& operator<<(const alignment align) { m_alignment = align; return *this; }
-        row_t& operator<<(const colfill_t colfill) { m_colfill = colfill.m_fill; return *this; }
-        row_t& operator<<(const colspan_t colspan) { m_colspan = colspan.m_span; return *this; }
+        row_t& operator<<(const alignment align)
+        {
+            m_alignment = align;
+            return *this;
+        }
+
+        row_t& operator<<(const colfill_t colfill)
+        {
+            m_colfill = colfill.m_fill;
+            return *this;
+        }
+
+        row_t& operator<<(const colspan_t colspan)
+        {
+            m_colspan = colspan.m_span;
+            return *this;
+        }
 
         ///
         /// \brief insert new cells using the current formatting settings
@@ -108,12 +122,14 @@ namespace nano
             m_cols += m_colspan;
             return (*this) << colspan(1) << alignment::left << colfill(' ');
         }
+
         row_t& operator<<(const string_t& string)
         {
             m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
             m_cols += m_colspan;
             return (*this) << colspan(1) << alignment::left << colfill(' ');
         }
+
         template <typename tscalar>
         row_t& operator<<(const tscalar& value)
         {
@@ -121,6 +137,7 @@ namespace nano
             m_cols += m_colspan;
             return (*this) << colspan(1) << alignment::left << colfill(' ');
         }
+
         template <typename tscalar>
         row_t& operator<<(const std::vector<tscalar>& values)
         {
@@ -136,29 +153,44 @@ namespace nano
         ///
         cell_t* find(const size_t col)
         {
-            size_t icol = 0;
-            const auto it = std::find_if(m_cells.begin(), m_cells.end(), [&] (const auto& cell)
-            {
-                icol += cell.m_span; return icol > col;
-            });
+            size_t     icol = 0;
+            const auto it   = std::find_if(m_cells.begin(), m_cells.end(),
+                                           [&](const auto& cell)
+                                           {
+                                             icol += cell.m_span;
+                                             return icol > col;
+                                           });
             return (it == m_cells.end()) ? nullptr : &*it;
         }
 
         const cell_t* find(const size_t col) const
         {
-            size_t icol = 0;
-            const auto it = std::find_if(m_cells.begin(), m_cells.end(), [&] (const auto& cell)
-            {
-                icol += cell.m_span; return icol > col;
-            });
+            size_t     icol = 0;
+            const auto it   = std::find_if(m_cells.begin(), m_cells.end(),
+                                           [&](const auto& cell)
+                                           {
+                                             icol += cell.m_span;
+                                             return icol > col;
+                                           });
             return (it == m_cells.end()) ? nullptr : &*it;
         }
 
         ///
         /// \brief change a column's mark or data (finds the right cell taking into account column spanning)
         ///
-        void data(const size_t col, const string_t& str) { auto* cell = find(col); assert(cell); cell->m_data = str; }
-        void mark(const size_t col, const string_t& str) { auto* cell = find(col); assert(cell); cell->m_mark = str; }
+        void data(const size_t col, const string_t& str)
+        {
+            auto* cell = find(col);
+            assert(cell);
+            cell->m_data = str;
+        }
+
+        void mark(const size_t col, const string_t& str)
+        {
+            auto* cell = find(col);
+            assert(cell);
+            cell->m_mark = str;
+        }
 
         ///
         /// \brief collect the columns as scalar values using nano::from_string<tscalar>
@@ -175,7 +207,7 @@ namespace nano
                     try
                     {
                         const auto value = ::nano::from_string<tscalar>(cell.m_data);
-                        for (size_t span = 0; span < cell.m_span; ++ span)
+                        for (size_t span = 0; span < cell.m_span; ++span)
                         {
                             values.emplace_back(col + span, value);
                         }
@@ -211,20 +243,33 @@ namespace nano
         /// \brief access functions
         ///
         auto cols() const { return m_cols; }
+
         auto type() const { return m_type; }
+
         const auto& cells() const { return m_cells; }
-        auto data(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_data; }
-        auto mark(const size_t col) const { const auto* cell = find(col); assert(cell); return cell->m_mark; }
+
+        auto data(const size_t col) const
+        {
+            const auto* cell = find(col);
+            assert(cell);
+            return cell->m_data;
+        }
+
+        auto mark(const size_t col) const
+        {
+            const auto* cell = find(col);
+            assert(cell);
+            return cell->m_mark;
+        }
 
     private:
-
         // attributes
-        mode                m_type{mode::data};     ///< row type
-        size_t              m_cols{0};              ///< current number of columns taking into account column spanning
-        char                m_colfill{' '};         ///< current cell fill character
-        size_t              m_colspan{1};           ///< current cell column span
-        alignment           m_alignment{alignment::left};///< current cell alignment
-        std::vector<cell_t> m_cells;                ///<
+        mode                m_type{mode::data}; ///< row type
+        size_t              m_cols{0};          ///< current number of columns taking into account column spanning
+        char                m_colfill{' '};     ///< current cell fill character
+        size_t              m_colspan{1};       ///< current cell column span
+        alignment           m_alignment{alignment::left}; ///< current cell alignment
+        std::vector<cell_t> m_cells;                      ///<
     };
 
     inline bool operator==(const row_t& r1, const row_t& r2)
@@ -238,7 +283,6 @@ namespace nano
     class table_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -252,9 +296,23 @@ namespace nano
         ///
         /// \brief append a row as a header, as a data or as a delimeter row
         ///
-        row_t& delim() { m_rows.emplace_back(row_t::mode::delim); return *m_rows.rbegin(); }
-        row_t& header() { m_rows.emplace_back(row_t::mode::header); return *m_rows.rbegin(); }
-        row_t& append() { m_rows.emplace_back(row_t::mode::data); return *m_rows.rbegin(); }
+        row_t& delim()
+        {
+            m_rows.emplace_back(row_t::mode::delim);
+            return *m_rows.rbegin();
+        }
+
+        row_t& header()
+        {
+            m_rows.emplace_back(row_t::mode::header);
+            return *m_rows.rbegin();
+        }
+
+        row_t& append()
+        {
+            m_rows.emplace_back(row_t::mode::data);
+            return *m_rows.rbegin();
+        }
 
         ///
         /// \brief (stable) sort the table using the given operator and columns
@@ -263,33 +321,34 @@ namespace nano
         template <typename toperator>
         void sort(const toperator& comp, const std::vector<size_t>& columns)
         {
-            std::stable_sort(m_rows.begin(), m_rows.end(), [&] (const row_t& row1, const row_t& row2)
-            {
-                if (row1.type() == row_t::mode::data && row2.type() == row_t::mode::data)
-                {
-                    assert(row1.cols() == row2.cols());
-                    for (const auto col : columns)
-                    {
-                        const auto* cell1 = row1.find(col);
-                        const auto* cell2 = row2.find(col);
-                        assert(cell1 && cell2);
+            std::stable_sort(m_rows.begin(), m_rows.end(),
+                             [&](const row_t& row1, const row_t& row2)
+                             {
+                                 if (row1.type() == row_t::mode::data && row2.type() == row_t::mode::data)
+                                 {
+                                     assert(row1.cols() == row2.cols());
+                                     for (const auto col : columns)
+                                     {
+                                         const auto* cell1 = row1.find(col);
+                                         const auto* cell2 = row2.find(col);
+                                         assert(cell1 && cell2);
 
-                        if (comp(cell1->m_data, cell2->m_data))
-                        {
-                            return true;
-                        }
-                        else if (comp(cell2->m_data, cell1->m_data))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            });
+                                         if (comp(cell1->m_data, cell2->m_data))
+                                         {
+                                             return true;
+                                         }
+                                         else if (comp(cell2->m_data, cell1->m_data))
+                                         {
+                                             return false;
+                                         }
+                                     }
+                                     return true;
+                                 }
+                                 else
+                                 {
+                                     return false;
+                                 }
+                             });
         }
 
         ///
@@ -311,28 +370,36 @@ namespace nano
         /// \brief access functions
         ///
         size_t cols() const;
+
         auto rows() const { return m_rows.size(); }
+
         const auto& content() const { return m_rows; }
-        auto& row(const size_t r) { assert(r < rows()); return m_rows[r]; }
-        const auto& row(const size_t r) const { assert(r < rows()); return m_rows[r]; }
+
+        auto& row(const size_t r)
+        {
+            assert(r < rows());
+            return m_rows[r];
+        }
+
+        const auto& row(const size_t r) const
+        {
+            assert(r < rows());
+            return m_rows[r];
+        }
 
     private:
-
         // attributes
-        std::vector<row_t>      m_rows;
+        std::vector<row_t> m_rows;
     };
 
     inline size_t table_t::cols() const
     {
-        const auto op = [] (const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
+        const auto op = [](const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
         const auto it = std::max_element(m_rows.begin(), m_rows.end(), op);
         return (it == m_rows.end()) ? size_t(0) : it->cols();
     }
 
-    inline bool operator==(const table_t& t1, const table_t& t2)
-    {
-        return std::operator==(t1.content(), t2.content());
-    }
+    inline bool operator==(const table_t& t1, const table_t& t2) { return std::operator==(t1.content(), t2.content()); }
 
     ///
     /// \brief pretty-print the table.
@@ -345,10 +412,10 @@ namespace nano
     template <typename tscalar>
     auto make_less_from_string()
     {
-        return [] (const string_t& v1, const string_t& v2)
+        return [](const string_t& v1, const string_t& v2)
         {
-            return  from_string<tscalar>(v1, std::numeric_limits<tscalar>::lowest()) <
-                    from_string<tscalar>(v2, std::numeric_limits<tscalar>::max());
+            return from_string<tscalar>(v1, std::numeric_limits<tscalar>::lowest()) <
+                   from_string<tscalar>(v2, std::numeric_limits<tscalar>::max());
         };
     }
 
@@ -358,10 +425,10 @@ namespace nano
     template <typename tscalar>
     auto make_greater_from_string()
     {
-        return [] (const string_t& v1, const string_t& v2)
+        return [](const string_t& v1, const string_t& v2)
         {
-            return  from_string<tscalar>(v1, std::numeric_limits<tscalar>::max()) >
-                    from_string<tscalar>(v2, std::numeric_limits<tscalar>::lowest());
+            return from_string<tscalar>(v1, std::numeric_limits<tscalar>::max()) >
+                   from_string<tscalar>(v2, std::numeric_limits<tscalar>::lowest());
         };
     }
 
@@ -370,14 +437,14 @@ namespace nano
         template <typename tscalar>
         auto min_element(const std::vector<std::pair<size_t, tscalar>>& values)
         {
-            const auto comp = [] (const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
+            const auto comp = [](const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
             return std::min_element(values.begin(), values.end(), comp);
         }
 
         template <typename tscalar>
         auto max_element(const std::vector<std::pair<size_t, tscalar>>& values)
         {
-            const auto comp = [] (const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
+            const auto comp = [](const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
             return std::max_element(values.begin(), values.end(), comp);
         }
 
@@ -385,28 +452,30 @@ namespace nano
         std::vector<size_t> filter(const std::vector<std::pair<size_t, tscalar>>& values, const toperator& op)
         {
             std::vector<size_t> indices;
-            std::for_each(values.begin(), values.end(), [&] (const auto& cv)
-            {
-                if (op(cv.second))
-                {
-                    indices.emplace_back(cv.first);
-                }
-            });
+            std::for_each(values.begin(), values.end(),
+                          [&](const auto& cv)
+                          {
+                              if (op(cv.second))
+                              {
+                                  indices.emplace_back(cv.first);
+                              }
+                          });
             return indices;
         }
 
         template <typename tscalar>
         std::vector<size_t> filter_less(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
         {
-            return filter(values, [threshold = threshold] (const auto& cvlt) { return cvlt < threshold; });
+            return filter(values, [threshold = threshold](const auto& cvlt) { return cvlt < threshold; });
         }
 
         template <typename tscalar>
-        std::vector<size_t> filter_greater(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
+        std::vector<size_t> filter_greater(const std::vector<std::pair<size_t, tscalar>>& values,
+                                           const tscalar                                  threshold)
         {
-            return filter(values, [threshold = threshold] (const auto& cvgt) { return cvgt > threshold; });
+            return filter(values, [threshold = threshold](const auto& cvgt) { return cvgt > threshold; });
         }
-    }
+    } // namespace detail
 
     ///
     /// \brief select the column with the minimum value
@@ -414,10 +483,10 @@ namespace nano
     template <typename tscalar>
     auto make_marker_minimum_col()
     {
-        return [=] (const row_t& row)
+        return [=](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
-            const auto it = detail::min_element(values);
+            const auto it     = detail::min_element(values);
             return (it == values.end()) ? std::vector<size_t>{} : std::vector<size_t>{it->first};
         };
     }
@@ -428,10 +497,10 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_col()
     {
-        return [=] (const row_t& row) -> std::vector<size_t>
+        return [=](const row_t& row) -> std::vector<size_t>
         {
             const auto values = row.collect<tscalar>();
-            const auto it = detail::max_element(values);
+            const auto it     = detail::max_element(values);
             return (it == values.end()) ? std::vector<size_t>{} : std::vector<size_t>{it->first};
         };
     }
@@ -442,10 +511,10 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_epsilon_cols(const tscalar epsilon)
     {
-        return [=] (const row_t& row)
+        return [=](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
-            const auto it = detail::max_element(values);
+            const auto it     = detail::max_element(values);
             return (it == values.end()) ? std::vector<size_t>{} : detail::filter_greater(values, it->second - epsilon);
         };
     }
@@ -456,10 +525,10 @@ namespace nano
     template <typename tscalar>
     auto make_marker_minimum_epsilon_cols(const tscalar epsilon)
     {
-        return [=] (const row_t& row)
+        return [=](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
-            const auto it = detail::min_element(values);
+            const auto it     = detail::min_element(values);
             return (it == values.end()) ? std::vector<size_t>{} : detail::filter_less(values, it->second + epsilon);
         };
     }
@@ -470,14 +539,17 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_percentage_cols(const tscalar percentage)
     {
-        return [=] (const row_t& row)
+        return [=](const row_t& row)
         {
             assert(percentage >= tscalar(1));
             assert(percentage <= tscalar(99));
             const auto values = row.collect<tscalar>();
-            const auto it = detail::max_element(values);
-            return  (it == values.end()) ? std::vector<size_t>{} : detail::filter_greater(values,
-                    it->second - percentage * (it->second < 0 ? -it->second : +it->second) / tscalar(100));
+            const auto it     = detail::max_element(values);
+            return (it == values.end())
+                     ? std::vector<size_t>{}
+                     : detail::filter_greater(values, it->second - percentage *
+                                                                       (it->second < 0 ? -it->second : +it->second) /
+                                                                       tscalar(100));
         };
     }
 
@@ -487,14 +559,17 @@ namespace nano
     template <typename tscalar>
     auto make_marker_minimum_percentage_cols(const tscalar percentage)
     {
-        return [=] (const row_t& row)
+        return [=](const row_t& row)
         {
             assert(percentage >= tscalar(1));
             assert(percentage <= tscalar(99));
             const auto values = row.collect<tscalar>();
-            const auto it = detail::min_element(values);
-            return  (it == values.end()) ? std::vector<size_t>{} : detail::filter_less(values,
-                    it->second + percentage * (it->second < 0 ? -it->second : +it->second) / tscalar(100));
+            const auto it     = detail::min_element(values);
+            return (it == values.end())
+                     ? std::vector<size_t>{}
+                     : detail::filter_less(values, it->second + percentage *
+                                                                    (it->second < 0 ? -it->second : +it->second) /
+                                                                    tscalar(100));
         };
     }
-}
+} // namespace nano

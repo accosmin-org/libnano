@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_exponential_t::function_exponential_t(tensor_size_t dims) :
-    benchmark_function_t("Exponential", dims)
+function_exponential_t::function_exponential_t(tensor_size_t dims)
+    : benchmark_function_t("Exponential", dims)
 {
     convex(true);
     smooth(true);

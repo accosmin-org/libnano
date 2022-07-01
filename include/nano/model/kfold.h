@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/tensor.h>
 #include <nano/core/seed.h>
+#include <nano/tensor.h>
 
 namespace nano
 {
@@ -12,7 +12,6 @@ namespace nano
     class NANO_PUBLIC kfold_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -24,9 +23,8 @@ namespace nano
         std::pair<indices_t, indices_t> split(tensor_size_t fold) const;
 
     private:
-
         // attributes
-        indices_t       m_samples;      ///<
-        tensor_size_t   m_folds{10};    ///<
+        indices_t     m_samples;   ///<
+        tensor_size_t m_folds{10}; ///<
     };
-}
+} // namespace nano

@@ -1,8 +1,8 @@
-#include <fstream>
-#include <utest/utest.h>
 #include "fixture/gboost.h"
+#include <fstream>
 #include <nano/core/numeric.h>
 #include <nano/gboost/model.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -19,48 +19,48 @@ inline std::ostream& operator<<(std::ostream& stream, importance type)
 class gboost_dataset_t : public fixture_dataset_t
 {
 public:
-
     gboost_dataset_t() = default;
 
     tensor_size_t groups() const override { return 3; }
+
     bool is_optional(tensor_size_t, tensor_size_t) const override { return false; }
 };
 
 class gboost_linear_dataset_t : public gboost_dataset_t
 {
 public:
-
     gboost_linear_dataset_t() = default;
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).full(
-            make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
-            make_affine_target<fun1_lin_t>(sample, gt_feature2(), 7, +2.0, -1.5) +
-            make_affine_target<fun1_lin_t>(sample, gt_feature3(), 8, -1.0, +2.5));
+        target(sample).full(make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
+                            make_affine_target<fun1_lin_t>(sample, gt_feature2(), 7, +2.0, -1.5) +
+                            make_affine_target<fun1_lin_t>(sample, gt_feature3(), 8, -1.0, +2.5));
     }
 
     tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
+
     tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
+
     tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
 };
 
 class gboost_mixed_dataset_t : public gboost_dataset_t
 {
 public:
-
     gboost_mixed_dataset_t() = default;
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).full(
-            make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
-            make_stump_target(sample, gt_feature2(), 7, +3.5, +2.0, -1.5, 0) +
-            make_stump_target(sample, gt_feature3(), 8, +2.5, -1.0, +2.5, 0));
+        target(sample).full(make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
+                            make_stump_target(sample, gt_feature2(), 7, +3.5, +2.0, -1.5, 0) +
+                            make_stump_target(sample, gt_feature3(), 8, +2.5, -1.0, +2.5, 0));
     }
 
     tensor_size_t gt_feature1(bool discrete = false) const { return get_feature(discrete); }
+
     tensor_size_t gt_feature2(bool discrete = false) const { return get_feature(gt_feature1(), discrete); }
+
     tensor_size_t gt_feature3(bool discrete = false) const { return get_feature(gt_feature2(), discrete); }
 };
 
@@ -74,11 +74,11 @@ static auto check_stream(const gboost_model_t& orig_model)
     }
     {
         gboost_model_t model;
-        std::ifstream stream;
+        std::ifstream  stream;
         UTEST_REQUIRE_THROW(model.read(stream), std::runtime_error);
     }
     {
-        gboost_model_t model;
+        gboost_model_t     model;
         std::istringstream stream(str);
         UTEST_REQUIRE_NOTHROW(model.read(stream));
         UTEST_CHECK_EQUAL(model.batch(), orig_model.batch());
@@ -113,8 +113,8 @@ static void check_predict(const dataset_t& dataset, const gboost_model_t& model)
 
 static void check_features(const dataset_t& dataset, const loss_t& loss, const gboost_model_t& model)
 {
-    const auto trials = 3;
-    const auto solver = make_solver();
+    const auto trials  = 3;
+    const auto solver  = make_solver();
     const auto samples = make_samples(dataset);
 
     auto features = model.features();
@@ -180,8 +180,8 @@ UTEST_CASE(default_predict)
 
 UTEST_CASE(train_linear)
 {
-    const auto loss = make_loss();
-    const auto solver = make_solver();
+    const auto loss    = make_loss();
+    const auto solver  = make_solver();
     const auto dataset = make_dataset<gboost_linear_dataset_t>();
     const auto samples = make_samples(dataset);
 
@@ -202,12 +202,12 @@ UTEST_CASE(train_linear)
 
 UTEST_CASE(train_mixed)
 {
-    const auto loss = make_loss();
-    const auto solver = make_solver();
+    const auto loss    = make_loss();
+    const auto solver  = make_solver();
     const auto dataset = make_dataset<gboost_mixed_dataset_t>(10, 1, 100);
     const auto samples = make_samples(dataset);
 
-    auto wstump = wlearner_stump_t{};
+    auto wstump  = wlearner_stump_t{};
     auto wlinear = wlearner_lin1_t{};
 
     auto model = gboost_model_t{};

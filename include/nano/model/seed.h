@@ -2,5 +2,3 @@
 
 #include <cstdint>
 #include <optional>
-
-

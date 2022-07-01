@@ -3,10 +3,10 @@
 
 using namespace nano;
 
-function_geometric_optimization_t::function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands) :
-    benchmark_function_t("Geometric Optimization", dims),
-    m_a(vector_t::Random(summands)),
-    m_A(matrix_t::Random(summands, dims) / dims)
+function_geometric_optimization_t::function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands)
+    : benchmark_function_t("Geometric Optimization", dims)
+    , m_a(vector_t::Random(summands))
+    , m_A(matrix_t::Random(summands, dims) / dims)
 {
     assert(summands > 0);
     convex(true);

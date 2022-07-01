@@ -10,6 +10,7 @@ namespace nano
     struct factory_traits_t<wlearner_dstep_t>
     {
         static string_t id() { return "dstep"; }
+
         static string_t description() { return "discrete step weak learner"; }
     };
 
@@ -31,7 +32,6 @@ namespace nano
     class NANO_PUBLIC wlearner_dstep_t final : public wlearner_feature1_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -71,11 +71,11 @@ namespace nano
         /// \brief access functions
         ///
         auto fvalue() const { return m_fvalue; }
+
         auto fvalues() const { return tables().size<0>(); }
 
     private:
-
         // attributes
-        tensor_size_t   m_fvalue{-1};    ///< the chosen feature value
+        tensor_size_t m_fvalue{-1}; ///< the chosen feature value
     };
-}
+} // namespace nano

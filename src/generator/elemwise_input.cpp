@@ -1,5 +1,5 @@
-#include <nano/generator/select.h>
 #include <nano/generator/elemwise_input.h>
+#include <nano/generator/select.h>
 
 using namespace nano;
 

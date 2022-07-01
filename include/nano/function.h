@@ -1,41 +1,85 @@
 #pragma once
 
+#include <memory>
 #include <nano/arch.h>
 #include <nano/eigen.h>
 #include <nano/string.h>
 #include <nano/tensor/range.h>
+#include <variant>
 
 namespace nano
 {
+    class function_t;
+    using rfunction_t  = std::unique_ptr<function_t>;
+    using rfunctions_t = std::vector<rfunction_t>;
+
+    struct minimum_t
+    {
+        scalar_t      m_value{0.0};
+        tensor_size_t m_dimension{0};
+    };
+
+    struct maximum_t
+    {
+        scalar_t      m_value{0.0};
+        tensor_size_t m_dimension{0};
+    };
+
+    struct equality_t
+    {
+        rfunction_t m_function;
+    };
+
+    struct inequality_t
+    {
+        rfunction_t m_function;
+    };
+
+    using constraint_t  = std::variant<minimum_t, maximum_t, equality_t, inequality_t>;
+    using constraints_t = std::vector<constraint_t>;
+
     ///
     /// \brief configure the computation of a function's value and gradient.
     ///
     struct vgrad_config_t
     {
         vgrad_config_t() = default;
-        explicit vgrad_config_t(tensor_range_t summands) : m_summands(summands) {}
+
+        explicit vgrad_config_t(tensor_range_t summands)
+            : m_summands(summands)
+        {
+        }
 
         // attributes
-        tensor_range_t  m_summands;     ///< summands range useful for stochastic solvers, ignored if not valid
+        tensor_range_t m_summands; ///< summands range useful for stochastic solvers, ignored if not valid
     };
 
     ///
-    /// \brief generic multi-dimensional optimization problem.
+    /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
+    ///
+    /// optionally a set of equality and inequality constraints can be added
+    /// following the generic constrained optimization problems:
+    ///
+    ///     argmin      f(x),           - the objective function
+    ///     such that   h_j(x) = 0,     - the equality constraints
+    ///                 g_i(x) <= 0.    - the inequality constraints
+    ///
+    /// NB: the (sub-)gradient of the function must be implemented.
+    /// NB: the functions can be convex or non-convex and smooth or non-smooth.
     ///
     class NANO_PUBLIC function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
         function_t(string_t name, tensor_size_t size);
 
         ///
-        /// \brief enable copying
+        /// \brief disable copying
         ///
-        function_t(const function_t&) = default;
-        function_t& operator=(const function_t&) = default;
+        function_t(const function_t&) = delete;
+        function_t& operator=(const function_t&) = delete;
 
         ///
         /// \brief enable moving
@@ -49,9 +93,9 @@ namespace nano
         virtual ~function_t() = default;
 
         ///
-        /// \brief function name to identify it in tests and benchmarks
+        /// \brief function name to identify it in tests and benchmarks.
         ///
-        string_t name() const;
+        string_t name(bool with_size = true) const;
 
         ///
         /// \brief returns the number of dimensions.
@@ -76,7 +120,11 @@ namespace nano
         ///
         /// \brief returns whether the function is smooth.
         ///
-        /// NB: if not, then only sub-gradients are available.
+        /// NB: mathematically a smooth function is of C^inf class (gradients exist and are ontinuous for any order),
+        /// but here it implies that the function is of C^1 class (differentiable and with continuous gradients)
+        /// as required by the line-search methods. If this is not the case, either only sub-gradients are available
+        /// of the gradients are not continuous.
+        ///
         ///
         bool smooth() const { return m_smooth; }
 
@@ -92,9 +140,68 @@ namespace nano
         /// \brief returns the strong convexity coefficient.
         ///
         /// NB: if not convex, then the coefficient is zero.
-        /// NB: can be used to speed-up some numerical optimization algorithms.
+        /// NB: it can be used to speed-up some numerical optimization algorithms if greater than zero.
         ///
         scalar_t strong_convexity() const { return m_sconvexity; }
+
+        ///
+        /// \brief returns true if the given point satisfies all the stored constraints.
+        ///
+        bool valid(const vector_t& x) const;
+
+        ///
+        /// \brief register a new equality constraint: h(x) = 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_equality(rfunction_t&& constraint);
+
+        ///
+        /// \brief register a new inequality constraint: g(x) <= 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_inequality(rfunction_t&& constraint);
+
+        ///
+        /// \brief registers a new linear equality constraint: h(x) = weights.dot(x) + bias = 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_equality(vector_t weights, scalar_t bias);
+
+        ///
+        /// \brief registers a new linear inequality constraint: g(x) = weights.dot(x) + bias <= 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_inequality(vector_t weights, scalar_t bias);
+
+        ///
+        /// \brief registers a new box constraint per dimension: min_i <= x_i <= max_i.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_box(vector_t min, vector_t max);
+
+        ///
+        /// \brief registers a new box constraint for all dimensions: min <= x_i <= max.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_box(scalar_t min, scalar_t max);
+
+        ///
+        /// \brief registers a new constraint: g(x) = ||x - origin||^2 <= radius^2.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_ball(vector_t origin, scalar_t radius);
+
+        ///
+        /// \brief returns the set of registered constraints.
+        ///
+        const constraints_t& constraints() const;
 
         ///
         /// \brief evaluate the function's value at the given point
@@ -103,20 +210,45 @@ namespace nano
         virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const = 0;
 
     protected:
-
         void convex(bool);
         void smooth(bool);
         void summands(tensor_size_t);
         void strong_convexity(scalar_t);
 
     private:
-
         // attributes
-        string_t        m_name;             ///<
-        tensor_size_t   m_size{0};          ///< #free dimensions to optimize for
-        bool            m_convex{false};    ///< whether the function is convex
-        bool            m_smooth{false};    ///< whether the function is smooth (otherwise subgradients should be used)
-        tensor_size_t   m_summands{1};      ///< number of summands (if stochastic optimization methods are appropriate)
-        scalar_t        m_sconvexity{0};    ///< strong-convexity coefficient
+        string_t      m_name;          ///<
+        tensor_size_t m_size{0};       ///< #free dimensions to optimize for
+        bool          m_convex{false}; ///< whether the function is convex
+        bool          m_smooth{false}; ///< whether the function is smooth (otherwise subgradients should be used)
+        tensor_size_t m_summands{1};   ///< number of summands (if stochastic optimization methods are appropriate)
+        scalar_t      m_sconvexity{0}; ///< strong-convexity coefficient
+        constraints_t m_constraints;   ///< optional equality and inequality constraints
     };
-}
+
+    ///
+    /// \brief returns whether the given constraint is convex.
+    ///
+    NANO_PUBLIC bool convex(const constraint_t&);
+
+    ///
+    /// \brief returns whether the given constraint is smooth.
+    ///
+    NANO_PUBLIC bool smooth(const constraint_t&);
+
+    ///
+    /// \brief returns whether the strong convexity coefficient of the given constraint.
+    ///
+    NANO_PUBLIC scalar_t strong_convexity(const constraint_t&);
+
+    ///
+    /// \brief returns how much a point violates the given constraint (the larger, the worse).
+    ///
+    NANO_PUBLIC scalar_t valid(const vector_t&, const constraint_t&);
+
+    ///
+    /// \brief evaluate the given constraint's function value at the given point
+    ///     (and its gradient or sub-gradient if not smooth).
+    ///
+    NANO_PUBLIC scalar_t vgrad(const constraint_t&, const vector_t& x, vector_t* gx = nullptr);
+} // namespace nano

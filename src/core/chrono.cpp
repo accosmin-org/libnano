@@ -5,7 +5,8 @@ using namespace nano;
 static void append(std::string& str, const char* format, const int value)
 {
     char buffer[32] = {};
-    snprintf(buffer, sizeof(buffer), format, value); // NOLINT(hicpp-vararg,cppcoreguidelines-pro-type-vararg, cert-err33-c)
+    // NOLINTNEXTLINE(hicpp-vararg,cppcoreguidelines-pro-type-vararg, cert-err33-c)
+    snprintf(buffer, sizeof(buffer), format, value);
     str.append(buffer);
 }
 
@@ -13,13 +14,17 @@ std::string nano::elapsed(int milliseconds)
 {
     static constexpr int size_second = 1000;
     static constexpr int size_minute = 60 * size_second;
-    static constexpr int size_hour = 60 * size_minute;
-    static constexpr int size_day = 24 * size_hour;
+    static constexpr int size_hour   = 60 * size_minute;
+    static constexpr int size_day    = 24 * size_hour;
 
-    const auto days = milliseconds / size_day; milliseconds -= days * size_day;
-    const auto hours = milliseconds / size_hour; milliseconds -= hours * size_hour;
-    const auto minutes = milliseconds / size_minute; milliseconds -= minutes * size_minute;
-    const auto seconds = milliseconds / size_second; milliseconds -= seconds * size_second;
+    const auto days = milliseconds / size_day;
+    milliseconds -= days * size_day;
+    const auto hours = milliseconds / size_hour;
+    milliseconds -= hours * size_hour;
+    const auto minutes = milliseconds / size_minute;
+    milliseconds -= minutes * size_minute;
+    const auto seconds = milliseconds / size_second;
+    milliseconds -= seconds * size_second;
 
     std::string str;
     if (days > 0)

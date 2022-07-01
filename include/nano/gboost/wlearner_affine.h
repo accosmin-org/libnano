@@ -9,26 +9,17 @@ namespace nano
     ///
     struct fun1_lin_t
     {
-        static auto get(scalar_t x)
-        {
-            return x;
-        }
+        static auto get(scalar_t x) { return x; }
     };
 
     struct fun1_sin_t
     {
-        static auto get(scalar_t x)
-        {
-            return std::sin(x);
-        }
+        static auto get(scalar_t x) { return std::sin(x); }
     };
 
     struct fun1_cos_t
     {
-        static auto get(scalar_t x)
-        {
-            return std::cos(x);
-        }
+        static auto get(scalar_t x) { return std::cos(x); }
     };
 
     struct fun1_log_t
@@ -56,7 +47,6 @@ namespace nano
     class wlearner_affine_t final : public wlearner_feature1_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -88,27 +78,38 @@ namespace nano
     using wlearner_log1_t = wlearner_affine_t<fun1_log_t>;
     using wlearner_sin1_t = wlearner_affine_t<fun1_sin_t>;
 
-    template <> struct factory_traits_t<wlearner_cos1_t>
+    template <>
+    struct factory_traits_t<wlearner_cos1_t>
     {
         static string_t id() { return "cos1"; }
+
         static string_t description() { return "affine feature-wise weak learner: h(x) = a * cos(x[feature]) + b"; }
     };
 
-    template <> struct factory_traits_t<wlearner_lin1_t>
+    template <>
+    struct factory_traits_t<wlearner_lin1_t>
     {
         static string_t id() { return "lin1"; }
+
         static string_t description() { return "affine feature-wise weak learner: h(x) = a * x[feature] + b"; }
     };
 
-    template <> struct factory_traits_t<wlearner_log1_t>
+    template <>
+    struct factory_traits_t<wlearner_log1_t>
     {
         static string_t id() { return "log1"; }
-        static string_t description() { return "affine feature-wise weak learner: h(x) = a * log(eps + x[feature]^2) + b"; }
+
+        static string_t description()
+        {
+            return "affine feature-wise weak learner: h(x) = a * log(eps + x[feature]^2) + b";
+        }
     };
 
-    template <> struct factory_traits_t<wlearner_sin1_t>
+    template <>
+    struct factory_traits_t<wlearner_sin1_t>
     {
         static string_t id() { return "sin1"; }
+
         static string_t description() { return "affine feature-wise weak learner: h(x) = a * sin(x[feature]) + b"; }
     };
-}
+} // namespace nano

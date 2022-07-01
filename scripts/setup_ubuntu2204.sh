@@ -4,7 +4,7 @@ function setup {
     sudo apt update -qq
     sudo apt install -y git vim cmake lcov cppcheck valgrind
     sudo apt install -y libomp-dev libeigen3-dev
-    sudo apt install -y gcc g++ clang clang-tidy clang-tools python3-pretty-yaml libc++-dev libc++abi-dev
+    sudo apt install -y gcc g++ clang clang-format clang-tidy clang-tools python3-pretty-yaml libc++-dev libc++abi-dev
 }
 
 function setup_gcc {
@@ -18,7 +18,7 @@ function setup_llvm {
     local llvm=$1
 
     sudo apt update -qq
-    sudo apt install -y clang-${llvm} clang-tidy-${llvm} clang-tools-${llvm}
+    sudo apt install -y clang-${llvm} clang-tidy-${llvm} clang-tools-${llvm} clang-format-${llvm}
 }
 
 function usage {

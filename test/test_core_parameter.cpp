@@ -1,7 +1,7 @@
-#include <fstream>
-#include <utest/utest.h>
 #include "fixture/enum.h"
+#include <fstream>
 #include <nano/core/parameter.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -12,7 +12,7 @@ static void check_stream(const parameter_t& param)
         UTEST_CHECK_THROW(param.write(stream), std::runtime_error);
     }
     {
-        parameter_t xparam;
+        parameter_t   xparam;
         std::ifstream stream;
         UTEST_CHECK_THROW(xparam.read(stream), std::runtime_error);
     }
@@ -23,7 +23,7 @@ static void check_stream(const parameter_t& param)
         str = stream.str();
     }
     {
-        parameter_t xparam;
+        parameter_t        xparam;
         std::istringstream stream(str);
         UTEST_CHECK_NOTHROW(xparam.read(stream));
         UTEST_CHECK_EQUAL(param, xparam);
@@ -38,7 +38,7 @@ static void check_stream(const parameter_t& param)
         std::ostringstream ostream;
         UTEST_CHECK_NOTHROW(::nano::write(ostream, param));
 
-        parameter_t xparam;
+        parameter_t        xparam;
         std::istringstream istream(ostream.str());
         UTEST_CHECK_NOTHROW(::nano::read(istream, xparam));
         UTEST_CHECK_EQUAL(param, xparam);

@@ -10,6 +10,7 @@ namespace nano
     struct factory_traits_t<wlearner_hinge_t>
     {
         static string_t id() { return "hinge"; }
+
         static string_t description() { return "hinge weak learner"; }
     };
 
@@ -32,7 +33,6 @@ namespace nano
     class NANO_PUBLIC wlearner_hinge_t final : public wlearner_feature1_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -72,12 +72,12 @@ namespace nano
         /// \brief access functions
         ///
         auto hinge() const { return m_hinge; }
+
         auto threshold() const { return m_threshold; }
 
     private:
-
         // attributes
-        scalar_t        m_threshold{0};                 ///< threshold
-        ::nano::hinge   m_hinge{::nano::hinge::left};   ///<
+        scalar_t      m_threshold{0};               ///< threshold
+        ::nano::hinge m_hinge{::nano::hinge::left}; ///<
     };
-}
+} // namespace nano

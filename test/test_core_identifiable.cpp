@@ -1,34 +1,36 @@
 #include <mutex>
-#include <sstream>
-#include <utest/utest.h>
-#include <nano/core/stream.h>
 #include <nano/core/factory.h>
 #include <nano/core/identifiable.h>
+#include <nano/core/stream.h>
+#include <sstream>
+#include <utest/utest.h>
 
 using namespace nano;
 
 struct object_t;
 using object_factory_t = factory_t<object_t>;
-using robject_t = object_factory_t::trobject;
+using robject_t        = object_factory_t::trobject;
 
 struct object_t : public estimator_t
 {
-    object_t() = default;
+    object_t()           = default;
     ~object_t() override = default;
     static object_factory_t& all();
-    object_t(object_t&&) = default;
+    object_t(object_t&&)      = default;
     object_t(const object_t&) = default;
-    object_t& operator=(object_t&&) = default;
-    object_t& operator=(const object_t&) = default;
-    virtual int get() const = 0;
-    virtual robject_t clone() const = 0;
+    object_t&         operator=(object_t&&) = default;
+    object_t&         operator=(const object_t&) = default;
+    virtual int       get() const                = 0;
+    virtual robject_t clone() const              = 0;
 };
 
 template <int tv>
 struct objectx_t final : public object_t
 {
     objectx_t() = default;
+
     int get() const override { return tv; }
+
     robject_t clone() const override { return std::make_unique<objectx_t<tv>>(*this); }
 };
 
@@ -41,12 +43,13 @@ object_factory_t& object_t::all()
     static object_factory_t manager;
 
     static std::once_flag flag;
-    std::call_once(flag, [] ()
-    {
-        manager.add<object1_t>("id1", "desc1");
-        manager.add<object2_t>("id2", "desc2");
-        manager.add<object3_t>("id3", "desc3");
-    });
+    std::call_once(flag,
+                   []()
+                   {
+                       manager.add<object1_t>("id1", "desc1");
+                       manager.add<object2_t>("id2", "desc2");
+                       manager.add<object3_t>("id3", "desc3");
+                   });
 
     return manager;
 }
@@ -122,8 +125,7 @@ UTEST_CASE(identifiable_invalid_id)
 
 UTEST_CASE(identifiable_read_write_many)
 {
-    auto objects = std::vector<identifiable_t<object_t>>
-    {
+    auto objects = std::vector<identifiable_t<object_t>>{
         {"id2", std::make_unique<object2_t>()},
         {"id1", std::make_unique<object1_t>()},
         {"id3", std::make_unique<object3_t>()},

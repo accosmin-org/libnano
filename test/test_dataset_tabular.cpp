@@ -1,5 +1,5 @@
-#include <fstream>
 #include "fixture/dataset.h"
+#include <fstream>
 #include <nano/dataset/tabular.h>
 
 using namespace nano;
@@ -26,122 +26,111 @@ static auto feature_cate(bool with_labels = false)
 class fixture_dataset_t final : public tabular_dataset_t
 {
 public:
-
     static auto data_path() { return "test_dataset_tabular_data.csv"; }
+
     static auto test_path() { return "test_dataset_tabular_test.csv"; }
 
     static auto csvs(int data_size = 20, int test_size = 10)
     {
-        return csvs_t(
-        {
-            csv_t{data_path()}.delim(",").header(false).expected(data_size).skip('@').placeholder("?"),
-            csv_t{test_path()}.delim(",").header(true).expected(test_size).skip('@').testing(0, test_size).placeholder("?")
-        });
+        return csvs_t({csv_t{data_path()}.delim(",").header(false).expected(data_size).skip('@').placeholder("?"),
+                       csv_t{test_path()}
+                           .delim(",")
+                           .header(true)
+                           .expected(test_size)
+                           .skip('@')
+                           .testing(0, test_size)
+                           .placeholder("?")});
     }
 
-    fixture_dataset_t() :
-        fixture_dataset_t(fixture_dataset_t::csvs(), features_t{})
+    fixture_dataset_t()
+        : fixture_dataset_t(fixture_dataset_t::csvs(), features_t{})
     {
     }
 
-    explicit fixture_dataset_t(features_t features) :
-        fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features))
+    explicit fixture_dataset_t(features_t features)
+        : fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features))
     {
     }
 
-    fixture_dataset_t(features_t features, size_t target) :
-        fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
+    fixture_dataset_t(features_t features, size_t target)
+        : fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
     {
     }
 
-    fixture_dataset_t(csvs_t csvs, features_t features) :
-        tabular_dataset_t(std::move(csvs), std::move(features))
+    fixture_dataset_t(csvs_t csvs, features_t features)
+        : tabular_dataset_t(std::move(csvs), std::move(features))
     {
-        std::remove(data_path());   // NOLINT(cert-err33-c)
-        std::remove(test_path());   // NOLINT(cert-err33-c)
+        std::remove(data_path()); // NOLINT(cert-err33-c)
+        std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    fixture_dataset_t(csvs_t csvs, features_t features, size_t target) :
-        tabular_dataset_t(std::move(csvs), std::move(features), target),
-        m_target(target)
+    fixture_dataset_t(csvs_t csvs, features_t features, size_t target)
+        : tabular_dataset_t(std::move(csvs), std::move(features), target)
+        , m_target(target)
     {
-        std::remove(data_path());   // NOLINT(cert-err33-c)
-        std::remove(test_path());   // NOLINT(cert-err33-c)
+        std::remove(data_path()); // NOLINT(cert-err33-c)
+        std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    fixture_dataset_t(fixture_dataset_t&&) = default;
+    fixture_dataset_t(fixture_dataset_t&&)      = default;
     fixture_dataset_t(const fixture_dataset_t&) = delete;
     fixture_dataset_t& operator=(fixture_dataset_t&&) = default;
     fixture_dataset_t& operator=(const fixture_dataset_t&) = delete;
 
     ~fixture_dataset_t() override
     {
-        std::remove(data_path());   // NOLINT(cert-err33-c)
-        std::remove(test_path());   // NOLINT(cert-err33-c)
+        std::remove(data_path()); // NOLINT(cert-err33-c)
+        std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    void too_many_labels()
-    {
-        m_too_many_labels = true;
-    }
+    void too_many_labels() { m_too_many_labels = true; }
 
-    void optional_target()
-    {
-        m_optional_target = true;
-    }
+    void optional_target() { m_optional_target = true; }
 
-    void mandatory_target()
-    {
-        m_optional_target = false;
-    }
+    void mandatory_target() { m_optional_target = false; }
 
     void prepare()
     {
         std::cout << "target=" << m_target << ", optional_target=" << m_optional_target
-            << ", optional_cont=" << optional_cont() << ", optional_cate=" << optional_cate() << std::endl;
+                  << ", optional_cont=" << optional_cont() << ", optional_cate=" << optional_cate() << std::endl;
         write_data(data_path());
         write_test(test_path());
     }
 
     auto mask_cate() const
     {
-        return optional_cate() ?
-            make_tensor<uint8_t>(make_dims(4), 0xEF, 0x7B, 0xDE, 0xF4) :
-            make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0xFC);
+        return optional_cate() ? make_tensor<uint8_t>(make_dims(4), 0xEF, 0x7B, 0xDE, 0xF4)
+                               : make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0xFC);
     }
 
     auto mask_cont() const
     {
-        return optional_cont() ?
-            make_tensor<uint8_t>(make_dims(4), 0xAA, 0xAA, 0xAA, 0xA8) :
-            make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0xFC);
+        return optional_cont() ? make_tensor<uint8_t>(make_dims(4), 0xAA, 0xAA, 0xAA, 0xA8)
+                               : make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0xFC);
     }
 
     auto values_cate() const
     {
-        return optional_cate() ?
-            make_tensor<uint8_t>(make_dims(30),
-                0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2,
-                0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2) :
-            make_tensor<uint8_t>(make_dims(30),
-                0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-                0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2);
+        return optional_cate() ? make_tensor<uint8_t>(make_dims(30), 0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2, 0, 1,
+                                                      2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2)
+                               : make_tensor<uint8_t>(make_dims(30), 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1,
+                                                      2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2);
     }
 
     auto values_cont() const
     {
-        return optional_cont() ?
-            make_tensor<scalar_t>(make_dims(30, 1, 1, 1),
-                +2.8, +0.0, +2.4, +0.0, +2.0, +0.0, +1.6, +0.0, +1.2, +0.0, +0.8, +0.0, +0.4, +0.0, +0.0,
-                +0.0, -0.4, +0.0, -0.8, +0.0, -1.2, +0.0, -1.6, +0.0, -2.0, +0.0, -2.4, +0.0, -2.8, +0.0) :
-            make_tensor<scalar_t>(make_dims(30, 1, 1, 1),
-                +2.8, +2.6, +2.4, +2.2, +2.0, +1.8, +1.6, +1.4, +1.2, +1.0, +0.8, +0.6, +0.4, +0.2, +0.0,
-                -0.2, -0.4, -0.6, -0.8, -1.0, -1.2, -1.4, -1.6, -1.8, -2.0, -2.2, -2.4, -2.6, -2.8, -3.0);
+        return optional_cont()
+                 ? make_tensor<scalar_t>(make_dims(30, 1, 1, 1), +2.8, +0.0, +2.4, +0.0, +2.0, +0.0, +1.6, +0.0, +1.2,
+                                         +0.0, +0.8, +0.0, +0.4, +0.0, +0.0, +0.0, -0.4, +0.0, -0.8, +0.0, -1.2, +0.0,
+                                         -1.6, +0.0, -2.0, +0.0, -2.4, +0.0, -2.8, +0.0)
+                 : make_tensor<scalar_t>(make_dims(30, 1, 1, 1), +2.8, +2.6, +2.4, +2.2, +2.0, +1.8, +1.6, +1.4, +1.2,
+                                         +1.0, +0.8, +0.6, +0.4, +0.2, +0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.2, -1.4,
+                                         -1.6, -1.8, -2.0, -2.2, -2.4, -2.6, -2.8, -3.0);
     }
 
 private:
-
     bool optional_cont() const { return m_optional_target || m_target == 1U; }
+
     bool optional_cate() const { return m_optional_target || m_target == 0U; }
 
     void write_data(const char* path) const
@@ -165,21 +154,28 @@ private:
             os << "cont,cate\n";
         }
 
-        for (auto index = begin; index < begin + size; ++ index)
+        for (auto index = begin; index < begin + size; ++index)
         {
             (index % 2 == 0 && optional_cont()) ? (os << "?,") : (os << (3.0 - 0.2 * index) << ",");
-            (index % 5 == 4 && optional_cate()) ? (os << "?,") : (os << "cate" << ((index - 1) % (m_too_many_labels ? 4 : 3)) << ",");
+            (index % 5 == 4 && optional_cate()) ? (os << "?,")
+                                                : (os << "cate" << ((index - 1) % (m_too_many_labels ? 4 : 3)) << ",");
             os << "\n";
 
-            if (index % 7 == 0) { os << "\n"; }
-            if (index % 9 == 0) { os << "@ this line should be skipped\n"; }
+            if (index % 7 == 0)
+            {
+                os << "\n";
+            }
+            if (index % 9 == 0)
+            {
+                os << "@ this line should be skipped\n";
+            }
         }
     }
 
     // attributes
-    size_t  m_target{string_t::npos};   ///<
-    bool    m_too_many_labels{false};   ///< toggle whether to write an invalid number of labels for categorical features
-    bool    m_optional_target{true};    ///< optional
+    size_t m_target{string_t::npos}; ///<
+    bool   m_too_many_labels{false}; ///< toggle whether to write an invalid number of labels for categorical features
+    bool   m_optional_target{true};  ///< optional
 };
 
 UTEST_BEGIN_MODULE(test_dataset_tabular)
@@ -198,7 +194,9 @@ UTEST_CASE(empty)
 
 UTEST_CASE(no_target_no_load)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()}
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
 
     UTEST_CHECK_EQUAL(dataset.samples(), 0);
@@ -210,7 +208,10 @@ UTEST_CASE(no_target_no_load)
 
 UTEST_CASE(with_target_no_load)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 0U};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()},
+        0U
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
 
     UTEST_CHECK_EQUAL(dataset.samples(), 0);
@@ -222,8 +223,11 @@ UTEST_CASE(with_target_no_load)
 
 UTEST_CASE(cannot_load_no_data)
 {
-    const auto csvs = csvs_t{};
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}, 0U};
+    const auto csvs    = csvs_t{};
+    auto       dataset = fixture_dataset_t{
+        csvs, {feature_cont(), feature_cate()},
+         0U
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
@@ -237,7 +241,10 @@ UTEST_CASE(cannot_load_no_features)
 
 UTEST_CASE(cannot_load_invalid_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 2U};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()},
+        2U
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
@@ -245,7 +252,9 @@ UTEST_CASE(cannot_load_invalid_target)
 UTEST_CASE(cannot_load_unsupported_mclass)
 {
     const auto feature_mclass = feature_t{"feature"}.mclass(3);
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate(), feature_mclass}};
+    auto       dataset        = fixture_dataset_t{
+        {feature_cont(), feature_cate(), feature_mclass}
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
@@ -253,30 +262,39 @@ UTEST_CASE(cannot_load_unsupported_mclass)
 UTEST_CASE(cannot_load_unsupported_struct)
 {
     const auto feature_struct = feature_t{"feature"}.scalar(feature_type::uint8, make_dims(3, 32, 32));
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate(), feature_struct}};
+    auto       dataset        = fixture_dataset_t{
+        {feature_cont(), feature_cate(), feature_struct}
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(cannot_load_wrong_expected_csv_length0)
 {
-    const auto csvs = fixture_dataset_t::csvs(21, 10);
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}};
+    const auto csvs    = fixture_dataset_t::csvs(21, 10);
+    auto       dataset = fixture_dataset_t{
+        csvs, {feature_cont(), feature_cate()}
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(cannot_load_wrong_expected_csv_length1)
 {
-    const auto csvs = fixture_dataset_t::csvs(20, 9);
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}};
+    const auto csvs    = fixture_dataset_t::csvs(20, 9);
+    auto       dataset = fixture_dataset_t{
+        csvs, {feature_cont(), feature_cate()}
+    };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(cannot_load_too_many_labels)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, string_t::npos};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()},
+        string_t::npos
+    };
     dataset.too_many_labels();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
@@ -284,7 +302,9 @@ UTEST_CASE(cannot_load_too_many_labels)
 
 UTEST_CASE(load_no_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()}
+    };
     dataset.optional_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());
@@ -302,7 +322,10 @@ UTEST_CASE(load_no_target)
 
 UTEST_CASE(load_cate_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 1U};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()},
+        1U
+    };
     dataset.mandatory_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());
@@ -323,7 +346,10 @@ UTEST_CASE(load_cate_target)
 
 UTEST_CASE(load_cont_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 0U};
+    auto dataset = fixture_dataset_t{
+        {feature_cont(), feature_cate()},
+        0U
+    };
     dataset.mandatory_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());

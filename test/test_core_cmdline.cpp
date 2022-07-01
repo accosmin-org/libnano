@@ -1,11 +1,9 @@
 #include <fstream>
-#include <utest/utest.h>
 #include <nano/core/cmdline.h>
+#include <utest/utest.h>
 
-static void check(
-    const nano::cmdline_t::result_t& result,
-    const nano::cmdline_t::result_t::storage_t& expected_ovalues,
-    const nano::cmdline_t::result_t::storage_t& expected_xvalues)
+static void check(const nano::cmdline_t::result_t& result, const nano::cmdline_t::result_t::storage_t& expected_ovalues,
+                  const nano::cmdline_t::result_t::storage_t& expected_xvalues)
 {
     UTEST_CHECK_EQUAL(result.m_ovalues.size(), expected_ovalues.size());
     UTEST_CHECK_EQUAL(result.m_xvalues.size(), expected_xvalues.size());
@@ -87,17 +85,14 @@ UTEST_CASE(parse_chars)
     UTEST_CHECK_NOTHROW(cmdline.add("", "trials", "number of trials"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations"));
 
-    const int argc = 3;
-    const char* argv[] = { "", "-v", "0.3.1" };
+    const int   argc   = 3;
+    const char* argv[] = {"", "-v", "0.3.1"};
 
-    check(
-        cmdline.process(argc, argv),
-        {
-            {"version", "0.3.1"},
-        },
-        {
-        }
-    );
+    check(cmdline.process(argc, argv),
+          {
+              {"version", "0.3.1"},
+    },
+          {});
 }
 
 UTEST_CASE(parse_string)
@@ -107,29 +102,24 @@ UTEST_CASE(parse_string)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version", "0.3"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", 127));
 
-    check(
-        cmdline.process("--help --iterations 7"),
-        {
-            {"help", ""},
-            {"version", "0.3"},
-            {"iterations", "7"},
-        },
-        {
-        }
-    );
+    check(cmdline.process("--help --iterations 7"),
+          {
+              {      "help",    ""},
+              {   "version", "0.3"},
+              {"iterations",   "7"},
+    },
+          {});
 
-    check(
-        cmdline.process("-v 1.0 --extra1 value1 --extra2 value2 -x value3"),
-        {
-            {"version", "1.0"},
-            {"iterations", "127"},
-        },
-        {
-            {"extra1", "value1"},
-            {"extra2", "value2"},
-            {"x", "value3"},
-        }
-    );
+    check(cmdline.process("-v 1.0 --extra1 value1 --extra2 value2 -x value3"),
+          {
+              {   "version", "1.0"},
+              {"iterations", "127"},
+    },
+          {
+              {"extra1", "value1"},
+              {"extra2", "value2"},
+              {"x", "value3"},
+          });
 }
 
 UTEST_CASE(error_invalid_options)
@@ -160,8 +150,8 @@ UTEST_CASE(error_invalid_arg1)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 4;
-    const char* argv[] = { "", "v", "--version", "7" };
+    const int   argc   = 4;
+    const char* argv[] = {"", "v", "--version", "7"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -172,8 +162,8 @@ UTEST_CASE(error_invalid_arg2)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 4;
-    const char* argv[] = { "", "--version", "7", "-", "--version", "13" };
+    const int   argc   = 4;
+    const char* argv[] = {"", "--version", "7", "-", "--version", "13"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -184,8 +174,8 @@ UTEST_CASE(error_invalid_arg3)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 4;
-    const char* argv[] = { "", "--version", "11", "--" };
+    const int   argc   = 4;
+    const char* argv[] = {"", "--version", "11", "--"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -196,8 +186,8 @@ UTEST_CASE(error_value_without_option)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 5;
-    const char* argv[] = { "", "-v", "--extra", "7", "17" };
+    const int   argc   = 5;
+    const char* argv[] = {"", "-v", "--extra", "7", "17"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -208,8 +198,8 @@ UTEST_CASE(error_last_value_without_option)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 5;
-    const char* argv[] = { "", "-v", "--extra", "7", "--another-extra" };
+    const int   argc   = 5;
+    const char* argv[] = {"", "-v", "--extra", "7", "--another-extra"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -220,8 +210,8 @@ UTEST_CASE(error_option_with_default_and_no_value)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const int argc = 5;
-    const char* argv[] = { "", "-v", "--iterations", "--extra", "7" };
+    const int   argc   = 5;
+    const char* argv[] = {"", "-v", "--iterations", "--extra", "7"};
 
     UTEST_CHECK_THROW(cmdline.process(argc, argv), std::runtime_error);
 }
@@ -240,16 +230,12 @@ UTEST_CASE(parse_config_file)
         out << "--extra 42\n";
     }
 
-    check(
-        cmdline.process_config_file(path),
-        {
-            {"version", ""},
-            {"iterations", "xy"}
-        },
-        {
-            {"extra", "42"}
-        }
-    );
+    check(cmdline.process_config_file(path),
+          {
+              {   "version",   ""},
+              {"iterations", "xy"}
+    },
+          {{"extra", "42"}});
 }
 
 UTEST_END_MODULE()

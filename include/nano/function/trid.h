@@ -10,7 +10,6 @@ namespace nano
     class NANO_PUBLIC function_trid_t final : public benchmark_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -26,4 +25,4 @@ namespace nano
         ///
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
     };
-}
+} // namespace nano

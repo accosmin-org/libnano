@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_styblinski_tang_t::function_styblinski_tang_t(tensor_size_t dims) :
-    benchmark_function_t("Styblinski-Tang", dims)
+function_styblinski_tang_t::function_styblinski_tang_t(tensor_size_t dims)
+    : benchmark_function_t("Styblinski-Tang", dims)
 {
     convex(false);
     smooth(true);

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cassert>
+#include <nano/core/estimator.h>
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
-#include <nano/core/estimator.h>
 
 namespace nano
 {
@@ -15,16 +15,11 @@ namespace nano
     ///     - ::all() to return its associated factory and
     ///     - .clone() to create a copy as stored in its associated factory.
     ///
-    template
-    <
-        typename tobject,
-        typename trobject = std::unique_ptr<tobject>,
-        std::enable_if_t<std::is_base_of_v<estimator_t, tobject>, bool> = true
-    >
+    template <typename tobject, typename trobject = std::unique_ptr<tobject>,
+              std::enable_if_t<std::is_base_of_v<estimator_t, tobject>, bool> = true>
     class NANO_PUBLIC identifiable_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -33,9 +28,9 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        identifiable_t(std::string&& id, trobject&& object) :
-            m_id(std::move(id)),
-            m_object(std::move(object))
+        identifiable_t(std::string&& id, trobject&& object)
+            : m_id(std::move(id))
+            , m_object(std::move(object))
         {
         }
 
@@ -48,15 +43,16 @@ namespace nano
         ///
         /// \brief enable copying by cloning
         ///
-        identifiable_t(const identifiable_t& other) :
-            m_id(other.m_id)
+        identifiable_t(const identifiable_t& other)
+            : m_id(other.m_id)
         {
             if (other.m_object != nullptr)
             {
                 m_object = other.m_object->clone();
             }
         }
-        identifiable_t& operator=(const identifiable_t& other)// NOLINT(cert-oop54-cpp)
+
+        identifiable_t& operator=(const identifiable_t& other) // NOLINT(cert-oop54-cpp)
         {
             auto copy = identifiable_t{other};
             using std::swap;
@@ -75,14 +71,10 @@ namespace nano
         ///
         void read(std::istream& stream)
         {
-            critical(
-                !::nano::read(stream, m_id),
-                "identifiable: failed to read from stream!");
+            critical(!::nano::read(stream, m_id), "identifiable: failed to read from stream!");
 
             m_object = tobject::all().get(m_id);
-            critical(
-                m_object == nullptr,
-                "identifiable: invalid id <", m_id, "> read from stream!");
+            critical(m_object == nullptr, "identifiable: invalid id <", m_id, "> read from stream!");
 
             m_object->read(stream);
         }
@@ -92,36 +84,38 @@ namespace nano
         ///
         void write(std::ostream& stream) const
         {
-            critical(
-                !::nano::write(stream, m_id),
-                "identifiable: failed to write to stream!");
+            critical(!::nano::write(stream, m_id), "identifiable: failed to write to stream!");
 
-            critical(
-                m_object == nullptr,
-                "identifiable: cannot serialize unitialized object!");
+            critical(m_object == nullptr, "identifiable: cannot serialize unitialized object!");
             m_object->write(stream);
         }
 
         ///
         /// \brief returns true if the wrapped object is initialized.
         ///
-        explicit operator bool() const
-        {
-            return m_object != nullptr;
-        }
+        explicit operator bool() const { return m_object != nullptr; }
 
         ///
         /// \brief access functions
         ///
         const auto& id() const { return m_id; }
-        auto& get() { assert(m_object != nullptr); return *m_object; }
-        const auto& get() const { assert(m_object != nullptr); return *m_object; }
+
+        auto& get()
+        {
+            assert(m_object != nullptr);
+            return *m_object;
+        }
+
+        const auto& get() const
+        {
+            assert(m_object != nullptr);
+            return *m_object;
+        }
 
     private:
-
         // attributes
-        std::string     m_id;           ///<
-        trobject        m_object;       ///<
+        std::string m_id;     ///<
+        trobject    m_object; ///<
     };
 
     template <typename tobject>
@@ -137,4 +131,4 @@ namespace nano
         object.write(stream);
         return stream;
     }
-}
+} // namespace nano

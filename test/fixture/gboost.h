@@ -1,22 +1,21 @@
 #include "utils.h"
 #include <nano/dataset/memfixed.h>
+#include <nano/gboost/wlearner_affine.h>
 #include <nano/gboost/wlearner_dstep.h>
 #include <nano/gboost/wlearner_dtree.h>
 #include <nano/gboost/wlearner_hinge.h>
-#include <nano/gboost/wlearner_table.h>
 #include <nano/gboost/wlearner_stump.h>
-#include <nano/gboost/wlearner_affine.h>
+#include <nano/gboost/wlearner_table.h>
 
 using namespace nano;
 
 class fixture_dataset_t : public memfixed_dataset_t<scalar_t>
 {
 public:
-
     using memfixed_dataset_t::idims;
-    using memfixed_dataset_t::tdims;
-    using memfixed_dataset_t::target;
     using memfixed_dataset_t::samples;
+    using memfixed_dataset_t::target;
+    using memfixed_dataset_t::tdims;
 
     fixture_dataset_t() = default;
 
@@ -38,79 +37,78 @@ public:
         }
     }
 
-    scalar_t make_stump_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster = 0)
+    scalar_t make_stump_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t threshold,
+                               scalar_t pred0, scalar_t pred1, tensor_size_t cluster = 0)
     {
-        return make_target(sample, feature, modulo, [&] (const scalar_t x)
-        {
-            assign(sample, cluster + (x < threshold ? 0 : 1));
-            return (x < threshold) ? pred0 : pred1;
-        });
+        return make_target(sample, feature, modulo,
+                           [&](const scalar_t x)
+                           {
+                               assign(sample, cluster + (x < threshold ? 0 : 1));
+                               return (x < threshold) ? pred0 : pred1;
+                           });
     }
 
-    scalar_t make_hinge_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
+    scalar_t make_hinge_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t threshold,
+                               scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
     {
-        return make_target(sample, feature, modulo, [&] (const scalar_t x)
-        {
-            assign(sample, cluster);
-            return (type == ::nano::hinge::left) ?
-                ((x < threshold) ? (beta * (x - threshold)) : 0.0) :
-                ((x < threshold) ? 0.0 : (beta * (x - threshold)));
-        });
+        return make_target(sample, feature, modulo,
+                           [&](const scalar_t x)
+                           {
+                               assign(sample, cluster);
+                               return (type == ::nano::hinge::left)
+                                        ? ((x < threshold) ? (beta * (x - threshold)) : 0.0)
+                                        : ((x < threshold) ? 0.0 : (beta * (x - threshold)));
+                           });
     }
 
-    scalar_t make_table_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t scale, tensor_size_t cluster = 0)
+    scalar_t make_table_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t scale,
+                               tensor_size_t cluster = 0)
     {
-        return make_target(sample, feature, modulo, [&] (const scalar_t x)
-        {
-            assign(sample, cluster + (sample % modulo));
-            return scale * (x - 1.0);
-        });
+        return make_target(sample, feature, modulo,
+                           [&](const scalar_t x)
+                           {
+                               assign(sample, cluster + (sample % modulo));
+                               return scale * (x - 1.0);
+                           });
     }
 
-    scalar_t make_dstep_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t beta, tensor_size_t fvalue, tensor_size_t cluster = 0)
+    scalar_t make_dstep_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t beta,
+                               tensor_size_t fvalue, tensor_size_t cluster = 0)
     {
-        return make_target(sample, feature, modulo, [&] (const scalar_t x)
-        {
-            assign(sample, cluster);
-            return (static_cast<tensor_size_t>(x) == fvalue) ? beta : 0.0;
-        });
+        return make_target(sample, feature, modulo,
+                           [&](const scalar_t x)
+                           {
+                               assign(sample, cluster);
+                               return (static_cast<tensor_size_t>(x) == fvalue) ? beta : 0.0;
+                           });
     }
 
     template <typename tfun1>
-    scalar_t make_affine_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t weight, scalar_t bias, tensor_size_t cluster = 0)
+    scalar_t make_affine_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t weight,
+                                scalar_t bias, tensor_size_t cluster = 0)
     {
-        return make_target(sample, feature, modulo, [&] (const scalar_t x)
-        {
-            assign(sample, cluster);
-            return weight * tfun1::get(x) + bias;
-        });
+        return make_target(sample, feature, modulo,
+                           [&](const scalar_t x)
+                           {
+                               assign(sample, cluster);
+                               return weight * tfun1::get(x) + bias;
+                           });
     }
 
     void load() override
     {
-        resize(make_dims(m_samples, m_isize, 1, 1),
-               make_dims(m_samples, m_tsize, 1, 1));
+        resize(make_dims(m_samples, m_isize, 1, 1), make_dims(m_samples, m_tsize, 1, 1));
 
-        auto rng = make_rng();
+        auto rng    = make_rng();
         auto udistd = make_udist<tensor_size_t>(0, 2);
         auto udistc = make_udist<scalar_t>(-1.0, +1.0);
 
         m_cluster = cluster_t{m_samples, this->groups()};
 
-        for (tensor_size_t s = 0; s < m_samples; ++ s)
+        for (tensor_size_t s = 0; s < m_samples; ++s)
         {
             auto input = this->input(s);
-            for (tensor_size_t f = 0; f < features(); ++ f)
+            for (tensor_size_t f = 0; f < features(); ++f)
             {
                 if (is_discrete(f))
                 {
@@ -129,10 +127,7 @@ public:
         }
     }
 
-    feature_t target() const override
-    {
-        return feature_t{"wlearner"};
-    }
+    feature_t target() const override { return feature_t{"wlearner"}; }
 
     feature_t feature(const tensor_size_t index) const override
     {
@@ -159,20 +154,11 @@ public:
         return feature;
     }
 
-    void isize(const tensor_size_t isize)
-    {
-        m_isize = isize;
-    }
+    void isize(const tensor_size_t isize) { m_isize = isize; }
 
-    void tsize(const tensor_size_t tsize)
-    {
-        m_tsize = tsize;
-    }
+    void tsize(const tensor_size_t tsize) { m_tsize = tsize; }
 
-    void samples(const tensor_size_t samples)
-    {
-        m_samples = samples;
-    }
+    void samples(const tensor_size_t samples) { m_samples = samples; }
 
     void assign(tensor_size_t sample, tensor_size_t group)
     {
@@ -182,25 +168,16 @@ public:
         m_cluster.assign(sample, group);
     }
 
-    virtual bool is_discrete(tensor_size_t feature) const
-    {
-        return (feature % 2) == 0;
-    }
+    virtual bool is_discrete(tensor_size_t feature) const { return (feature % 2) == 0; }
 
-    virtual bool is_optional(tensor_size_t sample, tensor_size_t feature) const
-    {
-        return (sample + feature) % 23 == 0;
-    }
+    virtual bool is_optional(tensor_size_t sample, tensor_size_t feature) const { return (sample + feature) % 23 == 0; }
 
-    tensor_size_t get_feature(bool discrete) const
-    {
-        return get_feature(isize(), discrete);
-    }
+    tensor_size_t get_feature(bool discrete) const { return get_feature(isize(), discrete); }
 
     tensor_size_t get_feature(tensor_size_t feature, bool discrete) const
     {
-        -- feature;
-        for (; feature >= 0; -- feature)
+        --feature;
+        for (; feature >= 0; --feature)
         {
             if (is_discrete(feature) == discrete)
             {
@@ -212,49 +189,41 @@ public:
     }
 
     tensor_size_t isize() const { return m_isize; }
+
     tensor_size_t tsize() const { return m_tsize; }
+
     const auto& cluster() const { return m_cluster; }
 
 private:
-
     // attributes
-    tensor_size_t       m_isize{10};        ///<
-    tensor_size_t       m_tsize{1};         ///<
-    tensor_size_t       m_samples{100};     ///< total number of samples to generate
-    cluster_t           m_cluster;          ///< split of the training samples using the ground truth feature
+    tensor_size_t m_isize{10};    ///<
+    tensor_size_t m_tsize{1};     ///<
+    tensor_size_t m_samples{100}; ///< total number of samples to generate
+    cluster_t     m_cluster;      ///< split of the training samples using the ground truth feature
 };
 
 template <typename tdataset>
 class no_discrete_features_dataset_t final : public tdataset
 {
 public:
-
     no_discrete_features_dataset_t() = default;
 
-    bool is_discrete(const tensor_size_t) const override
-    {
-        return false;
-    }
+    bool is_discrete(const tensor_size_t) const override { return false; }
 };
 
 template <typename tdataset>
 class no_continuous_features_dataset_t final : public tdataset
 {
 public:
-
     no_continuous_features_dataset_t() = default;
 
-    bool is_discrete(const tensor_size_t) const override
-    {
-        return true;
-    }
+    bool is_discrete(const tensor_size_t) const override { return true; }
 };
 
 template <typename tdataset>
 class different_discrete_feature_dataset_t final : public tdataset
 {
 public:
-
     different_discrete_feature_dataset_t() = default;
 
     feature_t feature(const tensor_size_t index) const override
@@ -317,8 +286,8 @@ inline auto make_residuals(const dataset_t& dataset, const loss_t& loss)
 
 inline auto check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
-    const auto loss = make_loss();
-    const auto samples = make_samples(dataset);
+    const auto loss      = make_loss();
+    const auto samples   = make_samples(dataset);
     const auto residuals = make_residuals(dataset, *loss);
 
     auto fit_score = feature_t::placeholder_value();
@@ -330,8 +299,8 @@ inline auto check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 
 inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
-    const auto loss = make_loss();
-    const auto samples = make_samples(dataset);
+    const auto loss      = make_loss();
+    const auto samples   = make_samples(dataset);
     const auto residuals = make_residuals(dataset, *loss);
 
     auto fit_score = feature_t::placeholder_value();
@@ -343,7 +312,7 @@ inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 
 inline void check_split(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
-    const auto samples = make_all_samples(dataset);
+    const auto  samples  = make_all_samples(dataset);
     const auto& gcluster = dataset.cluster();
 
     cluster_t wcluster;
@@ -353,7 +322,7 @@ inline void check_split(const wlearner_t& wlearner, const fixture_dataset_t& dat
     UTEST_REQUIRE_EQUAL(wcluster.samples(), gcluster.samples());
 
     UTEST_REQUIRE_EQUAL(wcluster.groups(), gcluster.groups());
-    for (tensor_size_t g = 0; g < gcluster.groups(); ++ g)
+    for (tensor_size_t g = 0; g < gcluster.groups(); ++g)
     {
         UTEST_REQUIRE_EQUAL(wcluster.count(g), gcluster.count(g));
         UTEST_CHECK_EQUAL(wcluster.indices(g), gcluster.indices(g));
@@ -367,7 +336,8 @@ inline void check_split_throws(const wlearner_t& wlearner, const indices_t& samp
 }
 
 template <typename... tdatasets>
-inline void check_split_throws(const wlearner_t& wlearner, const indices_t& samples, const dataset_t& dataset, const tdatasets&... datasets)
+inline void check_split_throws(const wlearner_t& wlearner, const indices_t& samples, const dataset_t& dataset,
+                               const tdatasets&... datasets)
 {
     check_split_throws(wlearner, samples, dataset);
     check_split_throws(wlearner, samples, datasets...);
@@ -376,17 +346,17 @@ inline void check_split_throws(const wlearner_t& wlearner, const indices_t& samp
 inline void check_predict(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
     const auto samples = make_samples(dataset);
-    const auto inputs = dataset.inputs(samples);
+    const auto inputs  = dataset.inputs(samples);
     const auto targets = dataset.targets(samples);
     const auto imatrix = inputs.reshape(samples.size(), -1);
 
     const auto& cluster = dataset.cluster();
-    const auto tsize = ::nano::size(dataset.tdims());
+    const auto  tsize   = ::nano::size(dataset.tdims());
 
     tensor4d_t outputs;
     UTEST_REQUIRE_NOTHROW(outputs = wlearner.predict(dataset, samples));
 
-    for (tensor_size_t s = 0; s < imatrix.rows(); ++ s)
+    for (tensor_size_t s = 0; s < imatrix.rows(); ++s)
     {
         if (cluster.group(samples(s)) < 0)
         {
@@ -436,9 +406,9 @@ inline void check_scale(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 
         UTEST_CHECK_NOTHROW(wlearner.scale(scale));
         UTEST_CHECK_NOTHROW(outputs_scaled = wlearner.predict(dataset, samples));
-        for (tensor_size_t s = 0; s < samples.size(); ++ s)
+        for (tensor_size_t s = 0; s < samples.size(); ++s)
         {
-            const auto group = cluster.group(samples(s));
+            const auto group  = cluster.group(samples(s));
             const auto factor = (group < 0) ? 1.0 : scale(group);
             UTEST_CHECK_EIGEN_CLOSE(outputs.array(s) * factor, outputs_scaled.array(s), 1e-8);
         }
@@ -463,7 +433,7 @@ auto stream_wlearner(const twlearner& wlearner)
         blob = ostream.str();
     }
     {
-        twlearner default_wlearner;
+        twlearner          default_wlearner;
         std::ostringstream ostream;
         UTEST_REQUIRE_NOTHROW(default_wlearner.write(ostream));
     }
@@ -474,7 +444,7 @@ auto stream_wlearner(const twlearner& wlearner)
     }
     {
         std::istringstream istream(blob);
-        auto iwlearner = twlearner{};
+        auto               iwlearner = twlearner{};
         UTEST_REQUIRE_NOTHROW(iwlearner.read(istream));
         UTEST_CHECK_EQUAL(iwlearner.batch(), wlearner.batch());
         return iwlearner;

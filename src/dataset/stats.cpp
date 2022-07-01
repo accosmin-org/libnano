@@ -7,7 +7,7 @@ static void nan2zero(tvalues& values)
 {
     // replace missing scalar values (represented as NaN) with zeros,
     // to train and evaluate dense ML models (e.g. linear models).
-    for (tensor_size_t i = 0, size = values.size(); i < size; ++ i)
+    for (tensor_size_t i = 0, size = values.size(); i < size; ++i)
     {
         auto& value = values(i);
         if (!std::isfinite(value))
@@ -19,16 +19,16 @@ static void nan2zero(tvalues& values)
 
 scalar_stats_t::scalar_stats_t() = default;
 
-scalar_stats_t::scalar_stats_t(tensor_size_t dims) :
-    m_samples(make_full_tensor<tensor_size_t>(make_dims(dims), 0)),
-    m_min(make_full_tensor<scalar_t>(make_dims(dims), std::numeric_limits<scalar_t>::max())),
-    m_max(make_full_tensor<scalar_t>(make_dims(dims), std::numeric_limits<scalar_t>::lowest())),
-    m_mean(make_full_tensor<scalar_t>(make_dims(dims), 0.0)),
-    m_stdev(make_full_tensor<scalar_t>(make_dims(dims), 0.0)),
-    m_div_range(make_full_tensor<scalar_t>(make_dims(dims), 1.0)),
-    m_mul_range(make_full_tensor<scalar_t>(make_dims(dims), 1.0)),
-    m_div_stdev(make_full_tensor<scalar_t>(make_dims(dims), 1.0)),
-    m_mul_stdev(make_full_tensor<scalar_t>(make_dims(dims), 1.0))
+scalar_stats_t::scalar_stats_t(tensor_size_t dims)
+    : m_samples(make_full_tensor<tensor_size_t>(make_dims(dims), 0))
+    , m_min(make_full_tensor<scalar_t>(make_dims(dims), std::numeric_limits<scalar_t>::max()))
+    , m_max(make_full_tensor<scalar_t>(make_dims(dims), std::numeric_limits<scalar_t>::lowest()))
+    , m_mean(make_full_tensor<scalar_t>(make_dims(dims), 0.0))
+    , m_stdev(make_full_tensor<scalar_t>(make_dims(dims), 0.0))
+    , m_div_range(make_full_tensor<scalar_t>(make_dims(dims), 1.0))
+    , m_mul_range(make_full_tensor<scalar_t>(make_dims(dims), 1.0))
+    , m_div_stdev(make_full_tensor<scalar_t>(make_dims(dims), 1.0))
+    , m_mul_stdev(make_full_tensor<scalar_t>(make_dims(dims), 1.0))
 {
 }
 
@@ -46,12 +46,13 @@ scalar_stats_t& scalar_stats_t::done(const tensor_mem_t<uint8_t, 1>& enable_scal
 {
     const auto epsilon = epsilon2<scalar_t>();
 
-    for (tensor_size_t i = 0, size = m_samples.size(); i < size; ++ i)
+    for (tensor_size_t i = 0, size = m_samples.size(); i < size; ++i)
     {
         const auto N = m_samples(i);
         if (N > 1)
         {
-            m_stdev(i) = std::sqrt((m_stdev(i) - m_mean(i) * m_mean(i) / static_cast<scalar_t>(N)) / static_cast<scalar_t>(N - 1));
+            m_stdev(i) = std::sqrt((m_stdev(i) - m_mean(i) * m_mean(i) / static_cast<scalar_t>(N)) /
+                                   static_cast<scalar_t>(N - 1));
             m_mean(i) /= static_cast<scalar_t>(N);
             m_div_range(i) = 1.0 / std::max(m_max(i) - m_min(i), epsilon);
             m_div_stdev(i) = 1.0 / std::max(m_stdev(i), epsilon);
@@ -62,11 +63,11 @@ scalar_stats_t& scalar_stats_t::done(const tensor_mem_t<uint8_t, 1>& enable_scal
         {
             if (N == 0)
             {
-                m_min(i) = 0.0;
-                m_max(i) = 0.0;
+                m_min(i)  = 0.0;
+                m_max(i)  = 0.0;
                 m_mean(i) = 0.0;
             }
-            m_stdev(i) = 0.0;
+            m_stdev(i)     = 0.0;
             m_div_range(i) = 1.0;
             m_div_stdev(i) = 1.0;
             m_mul_range(i) = 1.0;
@@ -76,10 +77,10 @@ scalar_stats_t& scalar_stats_t::done(const tensor_mem_t<uint8_t, 1>& enable_scal
         // NB: disable scaling for this dimension!
         if (i < enable_scaling.size() && enable_scaling(i) == 0x00)
         {
-            m_min(i) = 0.0;
-            m_max(i) = 0.0;
-            m_mean(i) = 0.0;
-            m_stdev(i) = 0.0;
+            m_min(i)       = 0.0;
+            m_max(i)       = 0.0;
+            m_mean(i)      = 0.0;
+            m_stdev(i)     = 0.0;
             m_div_range(i) = 1.0;
             m_div_stdev(i) = 1.0;
             m_mul_range(i) = 1.0;
@@ -96,7 +97,7 @@ void scalar_stats_t::scale(scaling_type scaling, tensor2d_map_t values) const
     switch (scaling)
     {
     case scaling_type::none:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
             nan2zero(array);
@@ -104,35 +105,33 @@ void scalar_stats_t::scale(scaling_type scaling, tensor2d_map_t values) const
         break;
 
     case scaling_type::mean:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = (array - m_mean.array()) * m_div_range.array();
+            array      = (array - m_mean.array()) * m_div_range.array();
             nan2zero(array);
         }
         break;
 
     case scaling_type::minmax:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = (array - m_min.array()) * m_div_range.array();
+            array      = (array - m_min.array()) * m_div_range.array();
             nan2zero(array);
         }
         break;
 
     case scaling_type::standard:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = (array - m_mean.array()) * m_div_stdev.array();
+            array      = (array - m_mean.array()) * m_div_stdev.array();
             nan2zero(array);
         }
         break;
 
-    default:
-        throw std::runtime_error("unhandled scaling type");
-        break;
+    default: throw std::runtime_error("unhandled scaling type"); break;
     }
 }
 
@@ -149,36 +148,33 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
 
     switch (scaling)
     {
-    case scaling_type::none:
-        break;
+    case scaling_type::none: break;
 
     case scaling_type::mean:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = m_mean.array() + array * m_mul_range.array();
+            array      = m_mean.array() + array * m_mul_range.array();
         }
         break;
 
     case scaling_type::minmax:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = m_min.array() + array * m_mul_range.array();
+            array      = m_min.array() + array * m_mul_range.array();
         }
         break;
 
     case scaling_type::standard:
-        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++ sample)
+        for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
         {
             auto array = values.array(sample);
-            array = m_mean.array() + array * m_mul_stdev.array();
+            array      = m_mean.array() + array * m_mul_stdev.array();
         }
         break;
 
-    default:
-        throw std::runtime_error("unhandled scaling type");
-        break;
+    default: throw std::runtime_error("unhandled scaling type"); break;
     }
 }
 
@@ -197,31 +193,29 @@ static auto make_scaling(const scalar_stats_t& stats, scaling_type scaling)
     switch (scaling)
     {
     case scaling_type::mean:
-        w = stats.div_range();
+        w         = stats.div_range();
         b.array() = -stats.mean().array() * stats.div_range().array();
         break;
 
     case scaling_type::minmax:
-        w = stats.div_range();
+        w         = stats.div_range();
         b.array() = -stats.min().array() * stats.div_range().array();
         break;
 
     case scaling_type::standard:
-        w = stats.div_stdev();
+        w         = stats.div_stdev();
         b.array() = -stats.mean().array() * stats.div_stdev().array();
         break;
 
-    default:
-        break;
+    default: break;
     }
 
     return std::make_pair(w, b);
 }
 
-void nano::upscale(
-    const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
-    const scalar_stats_t& targets_stats, scaling_type targets_scaling,
-    tensor2d_map_t weights, tensor1d_map_t bias)
+void nano::upscale(const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
+                   const scalar_stats_t& targets_stats, scaling_type targets_scaling, tensor2d_map_t weights,
+                   tensor1d_map_t bias)
 {
     assert(bias.size<0>() == targets_stats.size());
     assert(weights.size<0>() == targets_stats.size());
@@ -241,10 +235,9 @@ void nano::upscale(
     weights.matrix().array().rowwise() *= flatten_w.array().transpose();
 }
 
-void nano::upscale(
-    const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
-    const targets_stats_t& targets_stats, scaling_type targets_scaling,
-    tensor2d_map_t weights, tensor1d_map_t bias)
+void nano::upscale(const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
+                   const targets_stats_t& targets_stats, scaling_type targets_scaling, tensor2d_map_t weights,
+                   tensor1d_map_t bias)
 {
     if (const auto* ptargets_stats = std::get_if<scalar_stats_t>(&targets_stats))
     {
@@ -266,9 +259,9 @@ void nano::upscale(
 
 sclass_stats_t::sclass_stats_t() = default;
 
-sclass_stats_t::sclass_stats_t(tensor_size_t classes) :
-    m_class_counts(classes),
-    m_class_weights(classes)
+sclass_stats_t::sclass_stats_t(tensor_size_t classes)
+    : m_class_counts(classes)
+    , m_class_weights(classes)
 {
     m_class_counts.zero();
     m_class_weights.zero();
@@ -276,19 +269,16 @@ sclass_stats_t::sclass_stats_t(tensor_size_t classes) :
 
 sclass_stats_t& sclass_stats_t::done()
 {
-    m_class_weights.array() =
-        static_cast<scalar_t>(m_samples) /
-        static_cast<scalar_t>(m_class_counts.size()) /
-        m_class_counts.array().cast<scalar_t>().max(1.0);
+    m_class_weights.array() = static_cast<scalar_t>(m_samples) / static_cast<scalar_t>(m_class_counts.size()) /
+                              m_class_counts.array().cast<scalar_t>().max(1.0);
     return *this;
 }
 
-
 mclass_stats_t::mclass_stats_t() = default;
 
-mclass_stats_t::mclass_stats_t(tensor_size_t classes) :
-    m_class_counts(2 * classes),
-    m_class_weights(2 * classes)
+mclass_stats_t::mclass_stats_t(tensor_size_t classes)
+    : m_class_counts(2 * classes)
+    , m_class_weights(2 * classes)
 {
     m_class_counts.zero();
     m_class_weights.zero();
@@ -296,9 +286,7 @@ mclass_stats_t::mclass_stats_t(tensor_size_t classes) :
 
 mclass_stats_t& mclass_stats_t::done()
 {
-    m_class_weights.array() =
-        static_cast<scalar_t>(m_samples) /
-        static_cast<scalar_t>(m_class_counts.size()) /
-        m_class_counts.array().cast<scalar_t>().max(1.0);
+    m_class_weights.array() = static_cast<scalar_t>(m_samples) / static_cast<scalar_t>(m_class_counts.size()) /
+                              m_class_counts.array().cast<scalar_t>().max(1.0);
     return *this;
 }

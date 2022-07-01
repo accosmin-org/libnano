@@ -11,32 +11,44 @@ namespace nano
     class lsearch_step_t
     {
     public:
-
         ///
         /// \brief interpolation method using the information at two trials.
         ///
         enum class interpolation
         {
-            bisection,              ///<
-            quadratic,              ///<
-            cubic                   ///<
+            bisection, ///<
+            quadratic, ///<
+            cubic      ///<
         };
 
         ///
         /// \brief construction
         ///
-        lsearch_step_t() = default;
+        lsearch_step_t()                          = default;
         lsearch_step_t(lsearch_step_t&&) noexcept = default;
-        lsearch_step_t(const lsearch_step_t&) = default;
+        lsearch_step_t(const lsearch_step_t&)     = default;
+
         // cppcheck-suppress noExplicitConstructor
-        lsearch_step_t(const solver_state_t& state) : t(state.t), f(state.f), g(state.dg()) {} // NOLINT(hicpp-explicit-conversions)
-        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg) : t(tt), f(ff), g(gg) {}
+        lsearch_step_t(const solver_state_t& state) // NOLINT(hicpp-explicit-conversions)
+            : t(state.t)
+            , f(state.f)
+            , g(state.dg())
+        {
+        }
+
+        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg)
+            : t(tt)
+            , f(ff)
+            , g(gg)
+        {
+        }
 
         ///
         /// \brief assignment
         ///
         lsearch_step_t& operator=(lsearch_step_t&&) noexcept = default;
         lsearch_step_t& operator=(const lsearch_step_t&) = default;
+
         lsearch_step_t& operator=(const solver_state_t& state)
         {
             t = state.t, f = state.f, g = state.dg();
@@ -96,10 +108,7 @@ namespace nano
         ///
         /// \brief bisection interpolation of two line-search steps.
         ///
-        static auto bisection(const lsearch_step_t& u, const lsearch_step_t& v)
-        {
-            return (u.t + v.t) / 2;
-        }
+        static auto bisection(const lsearch_step_t& u, const lsearch_step_t& v) { return (u.t + v.t) / 2; }
 
         ///
         /// \brief interpolation of two line-search steps.
@@ -114,33 +123,28 @@ namespace nano
 
             switch (method)
             {
-            case interpolation::cubic:
-                return  std::isfinite(tc) ? tc :
-                        std::isfinite(tq) ? tq : tb;
+            case interpolation::cubic: return std::isfinite(tc) ? tc : std::isfinite(tq) ? tq : tb;
 
-            case interpolation::quadratic:
-                return  std::isfinite(tq) ? tq : tb;
+            case interpolation::quadratic: return std::isfinite(tq) ? tq : tb;
 
             case interpolation::bisection:
-            default:
-                return  tb;
+            default: return tb;
             }
         }
 
         // attributes
-        scalar_t t{0};  ///< line-search step
-        scalar_t f{0};  ///< line-search function value
-        scalar_t g{0};  ///< line-search gradient
+        scalar_t t{0}; ///< line-search step
+        scalar_t f{0}; ///< line-search function value
+        scalar_t g{0}; ///< line-search gradient
     };
 
     template <>
     inline enum_map_t<lsearch_step_t::interpolation> enum_string<lsearch_step_t::interpolation>()
     {
-        return
-        {
-            { lsearch_step_t::interpolation::bisection,     "bisection"},
-            { lsearch_step_t::interpolation::quadratic,     "quadratic"},
-            { lsearch_step_t::interpolation::cubic,         "cubic"}
+        return {
+            {lsearch_step_t::interpolation::bisection, "bisection"},
+            {lsearch_step_t::interpolation::quadratic, "quadratic"},
+            {    lsearch_step_t::interpolation::cubic,     "cubic"}
         };
     }
-}
+} // namespace nano

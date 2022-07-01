@@ -2,9 +2,9 @@
 
 using namespace nano;
 
-function_qing_t::function_qing_t(tensor_size_t dims) :
-    benchmark_function_t("Qing", dims),
-    m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+function_qing_t::function_qing_t(tensor_size_t dims)
+    : benchmark_function_t("Qing", dims)
+    , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
     convex(false);
     smooth(true);

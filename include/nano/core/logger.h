@@ -12,7 +12,6 @@ namespace nano
     class NANO_PUBLIC logger_t
     {
     public:
-
         enum class type
         {
             info,
@@ -62,10 +61,9 @@ namespace nano
         }
 
     private:
-
         // attributes
-        std::ostream&   m_stream;       ///< stream to write into
-        std::streamsize m_precision;    ///< original precision to restore
+        std::ostream&   m_stream;    ///< stream to write into
+        std::streamsize m_precision; ///< original precision to restore
     };
 
     ///
@@ -129,4 +127,4 @@ namespace nano
             return EXIT_FAILURE;
         }
     }
-}
+} // namespace nano

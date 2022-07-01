@@ -16,7 +16,6 @@ namespace nano
     class NANO_PUBLIC function_geometric_optimization_t final : public benchmark_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -33,9 +32,8 @@ namespace nano
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
     private:
-
         // attributes
-        vector_t    m_a;    ///<
-        matrix_t    m_A;    ///<
+        vector_t m_a; ///<
+        matrix_t m_A; ///<
     };
-}
+} // namespace nano

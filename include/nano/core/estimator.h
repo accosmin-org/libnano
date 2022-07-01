@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/version.h>
 #include <nano/core/parameter.h>
+#include <nano/version.h>
 
 namespace nano
 {
@@ -14,7 +14,6 @@ namespace nano
     class NANO_PUBLIC estimator_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -83,18 +82,19 @@ namespace nano
         /// \brief returns the software version.
         ///
         auto major_version() const { return m_major_version; }
+
         auto minor_version() const { return m_minor_version; }
+
         auto patch_version() const { return m_patch_version; }
 
     private:
-
         // attributes
-        int32_t         m_major_version{::nano::major_version}; ///<
-        int32_t         m_minor_version{::nano::minor_version}; ///<
-        int32_t         m_patch_version{::nano::patch_version}; ///<
-        parameters_t    m_parameters;                           ///<
+        int32_t      m_major_version{::nano::major_version}; ///<
+        int32_t      m_minor_version{::nano::minor_version}; ///<
+        int32_t      m_patch_version{::nano::patch_version}; ///<
+        parameters_t m_parameters;                           ///<
     };
 
     NANO_PUBLIC std::istream& read(std::istream& stream, estimator_t&);
     NANO_PUBLIC std::ostream& write(std::ostream& stream, const estimator_t&);
-}
+} // namespace nano

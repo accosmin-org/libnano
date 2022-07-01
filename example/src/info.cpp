@@ -1,13 +1,13 @@
-#include <nano/loss.h>
-#include <nano/solver.h>
-#include <nano/version.h>
-#include <nano/dataset.h>
-#include <nano/lsearch0.h>
-#include <nano/lsearchk.h>
-#include <nano/generator.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
 #include <nano/core/factory_util.h>
+#include <nano/core/logger.h>
+#include <nano/dataset.h>
+#include <nano/generator.h>
+#include <nano/loss.h>
+#include <nano/lsearch0.h>
+#include <nano/lsearchk.h>
+#include <nano/solver.h>
+#include <nano/version.h>
 
 using namespace nano;
 
@@ -15,25 +15,25 @@ static int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("display the registered objects");
-    cmdline.add("", "lsearch0",         "regex to select line-search initialization methods", ".+");
-    cmdline.add("", "lsearchk",         "regex to select line-search strategies", ".+");
-    cmdline.add("", "solver",           "regex to select numerical optimization methods", ".+");
-    cmdline.add("", "loss",             "regex to select loss functions", ".+");
-    cmdline.add("", "dataset",          "regex to select machine learning datasets", ".+");
-    cmdline.add("", "generator",        "regex to select feature generation methods", ".+");
-    cmdline.add("", "version",          "library version");
-    cmdline.add("", "git-hash",         "git commit hash");
+    cmdline.add("", "lsearch0", "regex to select line-search initialization methods", ".+");
+    cmdline.add("", "lsearchk", "regex to select line-search strategies", ".+");
+    cmdline.add("", "solver", "regex to select numerical optimization methods", ".+");
+    cmdline.add("", "loss", "regex to select loss functions", ".+");
+    cmdline.add("", "dataset", "regex to select machine learning datasets", ".+");
+    cmdline.add("", "generator", "regex to select feature generation methods", ".+");
+    cmdline.add("", "version", "library version");
+    cmdline.add("", "git-hash", "git commit hash");
 
     const auto options = cmdline.process(argc, argv);
 
-    const auto has_lsearch0 = options.has("lsearch0");
-    const auto has_lsearchk = options.has("lsearchk");
-    const auto has_loss = options.has("loss");
-    const auto has_solver = options.has("solver");
-    const auto has_dataset = options.has("dataset");
+    const auto has_lsearch0  = options.has("lsearch0");
+    const auto has_lsearchk  = options.has("lsearchk");
+    const auto has_loss      = options.has("loss");
+    const auto has_solver    = options.has("solver");
+    const auto has_dataset   = options.has("dataset");
     const auto has_generator = options.has("generator");
-    const auto has_version = options.has("version");
-    const auto has_git_hash = options.has("git-hash");
+    const auto has_version   = options.has("version");
+    const auto has_git_hash  = options.has("git-hash");
 
     if (options.has("help"))
     {
@@ -41,13 +41,7 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
-    if (!has_lsearch0 &&
-        !has_lsearchk &&
-        !has_solver &&
-        !has_loss &&
-        !has_dataset &&
-        !has_generator &&
-        !has_version &&
+    if (!has_lsearch0 && !has_lsearchk && !has_solver && !has_loss && !has_dataset && !has_generator && !has_version &&
         !has_git_hash)
     {
         cmdline.usage();

@@ -1,13 +1,13 @@
 #include <iomanip>
-#include <utest/utest.h>
-#include <nano/solver.h>
 #include <nano/core/numeric.h>
-#include <nano/lsearchk/fletcher.h>
+#include <nano/function/benchmark.h>
 #include <nano/lsearchk/backtrack.h>
 #include <nano/lsearchk/cgdescent.h>
+#include <nano/lsearchk/fletcher.h>
 #include <nano/lsearchk/lemarechal.h>
 #include <nano/lsearchk/morethuente.h>
-#include <nano/function/benchmark.h>
+#include <nano/solver.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -54,32 +54,29 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
 
     // log the line-search trials
-    lsearch.logger([&, c1=c1, c2=c2] (const solver_state_t& state0, const solver_state_t& state)
-    {
-        stream
-            << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << ",armijo=" << state.has_armijo(state0, c1)
-            << ",wolfe=" << state.has_wolfe(state0, c2)
-            << ",swolfe=" << state.has_strong_wolfe(state0, c2)
-            << ",awolfe=" << state.has_approx_wolfe(state0, c1, c2) << ".\n";
-    });
+    lsearch.logger(
+        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
+        {
+            stream << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+                   << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
+                   << ",swolfe=" << state.has_strong_wolfe(state0, c2)
+                   << ",awolfe=" << state.has_approx_wolfe(state0, c1, c2) << ".\n";
+        });
 }
 
-static void test(
-    lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function,
-    const lsearch_type type, const vector_t& x0, const scalar_t t0)
+static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type,
+                 const vector_t& x0, const scalar_t t0)
 {
     const auto old_n_failures = utest_n_failures.load();
 
     auto state0 = solver_state_t{function, x0};
     UTEST_CHECK(state0);
-    state0.d = -state0.g;
-    const auto epsilon = 1e-6;// todo: get the updated value of epsilon for CGDESCENT!!!
+    state0.d           = -state0.g;
+    const auto epsilon = 1e-6; // todo: get the updated value of epsilon for CGDESCENT!!!
 
     std::stringstream stream;
-    stream
-        << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id
-        << ": x0=[" << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
+    stream << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id << ": x0=["
+           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
     setup_logger(lsearch, stream);
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
@@ -91,9 +88,7 @@ static void test(
 
     switch (type)
     {
-    case lsearch_type::backtrack:
-        UTEST_CHECK(state.has_armijo(state0, c1));
-        break;
+    case lsearch_type::backtrack: UTEST_CHECK(state.has_armijo(state0, c1)); break;
 
     case lsearch_type::lemarechal:
         UTEST_CHECK(state.has_armijo(state0, c1));
@@ -121,13 +116,11 @@ static void test(
         break;
 
     case lsearch_type::cgdescent_wolfe_approx_wolfe:
-        UTEST_CHECK(
-            (state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
-            (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, c1, c2)));
+        UTEST_CHECK((state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
+                    (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, c1, c2)));
         break;
 
-    default:
-        break;
+    default: break;
     }
 
     if (old_n_failures != utest_n_failures.load())
@@ -136,10 +129,13 @@ static void test(
     }
 }
 
-static void test(
-    lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
+static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
 {
-    for (const auto& c12 : std::vector<std::tuple<scalar_t, scalar_t>>{{1e-4, 1e-1}, {1e-4, 9e-1}, {1e-1, 9e-1}})
+    for (const auto& c12 : std::vector<std::tuple<scalar_t, scalar_t>>{
+             {1e-4, 1e-1},
+             {1e-4, 9e-1},
+             {1e-1, 9e-1}
+    })
     {
         UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
 
@@ -168,8 +164,8 @@ UTEST_CASE(interpolate)
 
 UTEST_CASE(backtrack_cubic)
 {
-    const auto *const lsearch_id = "backtrack";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                             = "backtrack";
+    const auto        lsearch                                = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::cubic;
 
     for (const auto& function : make_functions())
@@ -180,8 +176,8 @@ UTEST_CASE(backtrack_cubic)
 
 UTEST_CASE(backtrack_quadratic)
 {
-    const auto *const lsearch_id = "backtrack";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                             = "backtrack";
+    const auto        lsearch                                = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::quadratic;
 
     for (const auto& function : make_functions())
@@ -192,8 +188,8 @@ UTEST_CASE(backtrack_quadratic)
 
 UTEST_CASE(backtrack_bisection)
 {
-    const auto *const lsearch_id = "backtrack";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                             = "backtrack";
+    const auto        lsearch                                = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::bisection;
 
     for (const auto& function : make_functions())
@@ -204,8 +200,8 @@ UTEST_CASE(backtrack_bisection)
 
 UTEST_CASE(lemarechal_cubic)
 {
-    const auto *const lsearch_id = "lemarechal";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                              = "lemarechal";
+    const auto        lsearch                                 = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::lemarechal::interpolation") = lsearchk_t::interpolation::cubic;
 
     for (const auto& function : make_functions())
@@ -228,8 +224,8 @@ UTEST_CASE(lemarechal_cubic)
 
 UTEST_CASE(lemarechal_bisection)
 {
-    const auto *const lsearch_id = "lemarechal";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                              = "lemarechal";
+    const auto        lsearch                                 = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::lemarechal::interpolation") = lsearchk_t::interpolation::bisection;
 
     for (const auto& function : make_functions())
@@ -240,8 +236,8 @@ UTEST_CASE(lemarechal_bisection)
 
 UTEST_CASE(morethuente)
 {
-    const auto *const lsearch_id = "morethuente";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id = "morethuente";
+    const auto        lsearch    = get_lsearch(lsearch_id);
 
     for (const auto& function : make_functions())
     {
@@ -251,8 +247,8 @@ UTEST_CASE(morethuente)
 
 UTEST_CASE(fletcher_cubic)
 {
-    const auto *const lsearch_id = "fletcher";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                            = "fletcher";
+    const auto        lsearch                               = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::cubic;
 
     for (const auto& function : make_functions())
@@ -263,8 +259,8 @@ UTEST_CASE(fletcher_cubic)
 
 UTEST_CASE(fletcher_quadratic)
 {
-    const auto *const lsearch_id = "fletcher";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                            = "fletcher";
+    const auto        lsearch                               = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::quadratic;
 
     for (const auto& function : make_functions())
@@ -275,8 +271,8 @@ UTEST_CASE(fletcher_quadratic)
 
 UTEST_CASE(fletcher_bisection)
 {
-    const auto *const lsearch_id = "fletcher";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                            = "fletcher";
+    const auto        lsearch                               = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::bisection;
 
     for (const auto& function : make_functions())
@@ -287,8 +283,8 @@ UTEST_CASE(fletcher_bisection)
 
 UTEST_CASE(cgdescent_wolfe)
 {
-    const auto *const lsearch_id = "cgdscent";
-    auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
+    const auto* const lsearch_id = "cgdscent";
+    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
 
     for (const auto& function : make_functions())
     {
@@ -298,8 +294,8 @@ UTEST_CASE(cgdescent_wolfe)
 
 UTEST_CASE(cgdescent_approx_wolfe)
 {
-    const auto *const lsearch_id = "cgdscent";
-    auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::approx_wolfe);
+    const auto* const lsearch_id = "cgdscent";
+    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::approx_wolfe);
 
     for (const auto& function : make_functions())
     {
@@ -309,8 +305,8 @@ UTEST_CASE(cgdescent_approx_wolfe)
 
 UTEST_CASE(cgdescent_wolfe_approx_wolfe)
 {
-    const auto *const lsearch_id = "cgdscent";
-    auto lsearch = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe);
+    const auto* const lsearch_id = "cgdscent";
+    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe);
 
     for (const auto& function : make_functions())
     {

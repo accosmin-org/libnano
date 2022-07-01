@@ -6,14 +6,15 @@ UTEST_BEGIN_MODULE(test_linear_dataset)
 
 UTEST_CASE(dataset)
 {
-    const auto targets = tensor_size_t{3};
-    const auto samples = tensor_size_t{10};
+    const auto targets  = tensor_size_t{3};
+    const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
 
-    const auto dataset = make_dataset(samples, targets, features);
+    const auto dataset   = make_dataset(samples, targets, features);
     const auto generator = make_generator(dataset);
 
-    UTEST_CHECK_EQUAL(generator.target(), feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.target(),
+                      feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));
 
     const auto bias = dataset.bias().vector();
     UTEST_REQUIRE_EQUAL(bias.size(), targets);

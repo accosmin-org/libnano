@@ -23,7 +23,6 @@ namespace nano
     class solver_asga_t : public solver_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -37,7 +36,6 @@ namespace nano
     class NANO_PUBLIC solver_asga2_t final : public solver_asga_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -56,7 +54,6 @@ namespace nano
     class NANO_PUBLIC solver_asga4_t final : public solver_asga_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -67,4 +64,4 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
     };
-}
+} // namespace nano

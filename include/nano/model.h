@@ -1,15 +1,15 @@
 #pragma once
 
+#include <nano/generator.h>
 #include <nano/loss.h>
 #include <nano/solver.h>
-#include <nano/generator.h>
 
 namespace nano
 {
     class model_t;
     using model_factory_t = factory_t<model_t>;
-    using rmodel_t = model_factory_t::trobject;
-    using rmodels_t = std::vector<rmodel_t>;
+    using rmodel_t        = model_factory_t::trobject;
+    using rmodels_t       = std::vector<rmodel_t>;
 
     ///
     /// \brief cross-validation statistics obtained while fitting a ML model.
@@ -21,20 +21,21 @@ namespace nano
             cv_result_t();
             cv_result_t(tensor1d_t params, tensor_size_t folds);
 
-            tensor1d_t  m_params;                       ///< hyper-parameter values
-            tensor1d_t  m_train_errors, m_train_values; ///< error and loss values for training samples
-            tensor1d_t  m_valid_errors, m_valid_values; ///< error and loss values for validation samples
+            tensor1d_t m_params;                       ///< hyper-parameter values
+            tensor1d_t m_train_errors, m_train_values; ///< error and loss values for training samples
+            tensor1d_t m_valid_errors, m_valid_values; ///< error and loss values for validation samples
         };
+
         using cv_results_t = std::vector<cv_result_t>;
 
         static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
         // attributes
-        strings_t       m_param_names;                  ///<
-        cv_results_t    m_cv_results;                   ///<
-        tensor1d_t      m_refit_params;                 ///<
-        scalar_t        m_refit_error{NaN};             ///<
-        scalar_t        m_refit_value{NaN};             ///<
+        strings_t    m_param_names;      ///<
+        cv_results_t m_cv_results;       ///<
+        tensor1d_t   m_refit_params;     ///<
+        scalar_t     m_refit_error{NaN}; ///<
+        scalar_t     m_refit_value{NaN}; ///<
     };
 
     ///
@@ -48,7 +49,6 @@ namespace nano
     class NANO_PUBLIC model_t : public estimator_t
     {
     public:
-
         ///
         /// \brief logging operator: op(fit_result, prefix)
         ///
@@ -96,24 +96,22 @@ namespace nano
         void logger(const logger_t& logger);
 
     protected:
-
         void log(const fit_result_t&, const string_t& prefix) const;
 
     private:
-
         void compatible(const dataset_generator_t&) const;
 
         virtual fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
-        virtual tensor4d_t do_predict(const dataset_generator_t&, const indices_t&) const = 0;
+        virtual tensor4d_t   do_predict(const dataset_generator_t&, const indices_t&) const                       = 0;
 
         // attributes
-        features_t      m_inputs;       ///< input features
-        feature_t       m_target;       ///< optional target feature
-        logger_t        m_logger;       ///<
+        features_t m_inputs; ///< input features
+        feature_t  m_target; ///< optional target feature
+        logger_t   m_logger; ///<
     };
 
     /*
     using imodel_t = identifiable_t<model_t>;
     using imodels_t = std::vector<imodel_t>;
     */
-}
+} // namespace nano

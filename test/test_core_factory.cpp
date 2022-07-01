@@ -1,26 +1,32 @@
-#include <utest/utest.h>
-#include <nano/core/strutil.h>
 #include <nano/core/factory_util.h>
+#include <nano/core/strutil.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
 struct object_t
 {
-    object_t() = default;
-    virtual ~object_t() = default;
-    object_t(object_t&&) = default;
+    object_t()                = default;
+    virtual ~object_t()       = default;
+    object_t(object_t&&)      = default;
     object_t(const object_t&) = default;
-    object_t& operator=(object_t&&) = default;
-    object_t& operator=(const object_t&) = default;
-    virtual int get() const = 0;
+    object_t&   operator=(object_t&&) = default;
+    object_t&   operator=(const object_t&) = default;
+    virtual int get() const                = 0;
 };
 
 template <int tv>
 struct objectx_t final : public object_t
 {
     objectx_t() = default;
-    explicit objectx_t(const int v) : m_v(v) {}
+
+    explicit objectx_t(const int v)
+        : m_v(v)
+    {
+    }
+
     int get() const override { return m_v; }
+
     int m_v{tv};
 };
 
@@ -32,12 +38,13 @@ template <int tv>
 struct factory_traits_t<objectx_t<tv>>
 {
     static string_t id() { return scat("id", tv); }
+
     static string_t description() { return scat("desc", tv); }
 };
 
 std::ostream& operator<<(std::ostream& os, const strings_t& strings)
 {
-    for (size_t i = 0; i < strings.size(); ++ i)
+    for (size_t i = 0; i < strings.size(); ++i)
     {
         os << strings[i] << (i + 1 == strings.size() ? "" : ",");
     }
@@ -112,9 +119,9 @@ UTEST_CASE(retrieval)
     UTEST_CHECK(manager.get("not there") == nullptr);
 
     // check retrieval by regex
-    const auto ids0 = strings_t{};
-    const auto ids1 = strings_t{id1};
-    const auto ids12 = strings_t{id1, id2};
+    const auto ids0   = strings_t{};
+    const auto ids1   = strings_t{id1};
+    const auto ids12  = strings_t{id1, id2};
     const auto ids123 = strings_t{id1, id2, id3};
     UTEST_CHECK_EQUAL(manager.ids(), ids123);
     UTEST_CHECK_EQUAL(manager.ids(std::regex("[a-z]+[0-9]")), ids123);
@@ -173,14 +180,13 @@ UTEST_CASE(make_object_table)
     UTEST_CHECK(manager.add<object3_t>("id3", "desc3"));
 
     const auto table = make_table("object", manager);
-    UTEST_CHECK_EQUAL(scat(table),
-        "|--------|-------------|\n"\
-        "| object | description |\n"\
-        "|--------|-------------|\n"\
-        "| id1    | desc1       |\n"\
-        "| id2    | desc2       |\n"\
-        "| id3    | desc3       |\n"\
-        "|--------|-------------|\n");
+    UTEST_CHECK_EQUAL(scat(table), "|--------|-------------|\n"
+                                   "| object | description |\n"
+                                   "|--------|-------------|\n"
+                                   "| id1    | desc1       |\n"
+                                   "| id2    | desc2       |\n"
+                                   "| id3    | desc3       |\n"
+                                   "|--------|-------------|\n");
 }
 
 UTEST_END_MODULE()

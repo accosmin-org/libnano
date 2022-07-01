@@ -17,16 +17,15 @@ namespace nano
     class NANO_PUBLIC lsearchk_cgdescent_t final : public lsearchk_t
     {
     public:
-
         ///
         /// \brief convergence criterion following (2).
         ///
         enum class criterion
         {
-            wolfe,                  ///< criterion v1: Wolfe conditions
-            approx_wolfe,           ///< criterion V2: approximate Wolfe conditions
-            wolfe_approx_wolfe      ///< criterion V3: Wolfe conditions until the function changes slowly
-                                    ///<    then switch to approximate Wolfe conditions
+            wolfe,             ///< criterion v1: Wolfe conditions
+            approx_wolfe,      ///< criterion V2: approximate Wolfe conditions
+            wolfe_approx_wolfe ///< criterion V3: Wolfe conditions until the function changes slowly
+                               ///<    then switch to approximate Wolfe conditions
         };
 
         ///
@@ -45,12 +44,11 @@ namespace nano
         bool get(const solver_state_t& state0, solver_state_t& state) final;
 
     private:
-
         enum class status
         {
-            exit,           ///< exit criterion generated (Wolfe + approximate Wolfe)
-            fail,           ///< search failed
-            done            ///< search succeeded, apply next step
+            exit, ///< exit criterion generated (Wolfe + approximate Wolfe)
+            fail, ///< search failed
+            done  ///< search succeeded, apply next step
         };
 
         bool evaluate(const solver_state_t&, const solver_state_t&);
@@ -62,19 +60,18 @@ namespace nano
         status bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
 
         // attributes
-        scalar_t    m_sumQ{0};                                                          ///< see (2)
-        scalar_t    m_sumC{0};                                                          ///< see (2)
-        bool        m_approx{false};                                                    ///< see (2)
+        scalar_t m_sumQ{0};       ///< see (2)
+        scalar_t m_sumC{0};       ///< see (2)
+        bool     m_approx{false}; ///< see (2)
     };
 
     template <>
     inline enum_map_t<lsearchk_cgdescent_t::criterion> enum_string<lsearchk_cgdescent_t::criterion>()
     {
-        return
-        {
-            { lsearchk_cgdescent_t::criterion::wolfe,               "wolfe"},
-            { lsearchk_cgdescent_t::criterion::approx_wolfe,        "approx_wolfe"},
-            { lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe,  "wolfe_approx_wolfe"}
+        return {
+            {             lsearchk_cgdescent_t::criterion::wolfe,              "wolfe"},
+            {      lsearchk_cgdescent_t::criterion::approx_wolfe,       "approx_wolfe"},
+            {lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe, "wolfe_approx_wolfe"}
         };
     }
-}
+} // namespace nano

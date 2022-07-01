@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/dataset/storage.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -21,7 +21,7 @@ UTEST_CASE(scalar)
 
         for (tensor_size_t sample : {0, 11})
         {
-            const auto value = 14.6F;
+            const auto value          = 14.6F;
             const auto expected_value = make_full_tensor<scalar_t>(dims, value);
 
             // check if possible to set with scalar
@@ -49,7 +49,7 @@ UTEST_CASE(scalar)
             }
             {
                 const auto [dim0, dim1, dim2] = dims;
-                const auto values_nok = make_full_tensor<scalar_t>(make_dims(dim0, dim1 + 1, dim2), value);
+                const auto values_nok         = make_full_tensor<scalar_t>(make_dims(dim0, dim1 + 1, dim2), value);
                 UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
             }
 
@@ -75,23 +75,23 @@ UTEST_CASE(sclass)
     values.zero();
     for (tensor_size_t sample : {2, 7})
     {
-        const auto value = feature.classes() - 1;
+        const auto value          = feature.classes() - 1;
         const auto expected_value = value;
 
         // cannot set multi-label indices
         for (const auto& values_nok : {
-            make_full_tensor<uint8_t>(make_dims(1), value),
-            make_full_tensor<uint8_t>(make_dims(feature.classes()), value),
-        })
+                 make_full_tensor<uint8_t>(make_dims(1), value),
+                 make_full_tensor<uint8_t>(make_dims(feature.classes()), value),
+             })
         {
             UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
         }
 
         // cannot set multivariate scalars
         for (const auto& values_nok : {
-            make_full_tensor<int>(make_dims(1, 1, 1), value),
-            make_full_tensor<int>(make_dims(2, 1, 3), value),
-        })
+                 make_full_tensor<int>(make_dims(1, 1, 1), value),
+                 make_full_tensor<int>(make_dims(2, 1, 3), value),
+             })
         {
             UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
         }
@@ -122,14 +122,14 @@ UTEST_CASE(mclass)
     values.zero();
     for (tensor_size_t sample : {11, 17})
     {
-        const auto value = make_tensor<uint16_t>(make_dims(feature.classes()), 1, 0, 1);
+        const auto value          = make_tensor<uint16_t>(make_dims(feature.classes()), 1, 0, 1);
         const auto expected_value = make_tensor<uint8_t>(make_dims(feature.classes()), 1, 0, 1);
 
         // cannot set multi-label indices of invalid size
         for (const auto& values_nok : {
-            make_full_tensor<uint8_t>(make_dims(feature.classes() - 1), 0),
-            make_full_tensor<uint8_t>(make_dims(feature.classes() + 1), 0),
-        })
+                 make_full_tensor<uint8_t>(make_dims(feature.classes() - 1), 0),
+                 make_full_tensor<uint8_t>(make_dims(feature.classes() + 1), 0),
+             })
         {
             UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
         }
@@ -140,9 +140,9 @@ UTEST_CASE(mclass)
 
         // cannot set multivariate scalars
         for (const auto& values_nok : {
-            make_full_tensor<uint8_t>(make_dims(1, 1, 1), 1),
-            make_full_tensor<uint8_t>(make_dims(2, 1, 3), 1),
-        })
+                 make_full_tensor<uint8_t>(make_dims(1, 1, 1), 1),
+                 make_full_tensor<uint8_t>(make_dims(2, 1, 3), 1),
+             })
         {
             UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
         }

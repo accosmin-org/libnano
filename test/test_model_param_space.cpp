@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/model/param_space.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -35,7 +35,7 @@ UTEST_CASE(param_space_invalid)
 
 UTEST_CASE(param_space_log10)
 {
-    const auto type = param_space_t::type::log10;
+    const auto type  = param_space_t::type::log10;
     const auto space = param_space_t{type, make_tensor<scalar_t>(make_dims(4), 1e-6, 1e-3, 1e+1, 1e+2)};
 
     UTEST_CHECK_CLOSE(space.to_surrogate(1e-5), -5.0, 1e-12);
@@ -61,7 +61,7 @@ UTEST_CASE(param_space_log10)
 
 UTEST_CASE(param_space_linear)
 {
-    const auto type = param_space_t::type::linear;
+    const auto type  = param_space_t::type::linear;
     const auto space = param_space_t{type, make_tensor<scalar_t>(make_dims(4), 0.1, 0.2, 0.5, 1.0)};
 
     UTEST_CHECK_CLOSE(space.to_surrogate(0.10), +0.0, 1e-12);
@@ -81,7 +81,7 @@ UTEST_CASE(param_space_linear)
     UTEST_CHECK_CLOSE(space.closest_grid_value_from_surrogate(+0.1), 0.20, 1e-12);
     UTEST_CHECK_CLOSE(space.closest_grid_value_from_surrogate(+0.5), 0.50, 1e-12);
     UTEST_CHECK_CLOSE(space.closest_grid_value_from_surrogate(+1.0), 1.00, 1e-12);
-    UTEST_CHECK_CLOSE(space.closest_grid_value_from_surrogate(+1.1), 1.00,1e-12);
+    UTEST_CHECK_CLOSE(space.closest_grid_value_from_surrogate(+1.1), 1.00, 1e-12);
 }
 
 UTEST_END_MODULE()

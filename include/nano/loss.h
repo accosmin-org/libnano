@@ -1,14 +1,14 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/tensor.h>
 #include <nano/core/factory.h>
+#include <nano/tensor.h>
 
 namespace nano
 {
     class loss_t;
     using loss_factory_t = factory_t<loss_t>;
-    using rloss_t = loss_factory_t::trobject;
+    using rloss_t        = loss_factory_t::trobject;
 
     ///
     /// \brief generic multivariate loss function of two parameters:
@@ -21,7 +21,6 @@ namespace nano
     class NANO_PUBLIC loss_t
     {
     public:
-
         ///
         /// \brief returns the available implementations
         ///
@@ -95,14 +94,12 @@ namespace nano
         bool smooth() const { return m_smooth; }
 
     protected:
-
         void convex(bool);
         void smooth(bool);
 
     private:
-
         // attributes
-        bool        m_convex{false};    ///< whether the loss function is convex
-        bool        m_smooth{false};    ///< whether the loss function is smooth (otherwise subgradients should be used)
+        bool m_convex{false}; ///< whether the loss function is convex
+        bool m_smooth{false}; ///< whether the loss function is smooth (otherwise subgradients should be used)
     };
-}
+} // namespace nano

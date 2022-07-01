@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_chung_reynolds_t::function_chung_reynolds_t(tensor_size_t dims) :
-    benchmark_function_t("Chung-Reynolds", dims)
+function_chung_reynolds_t::function_chung_reynolds_t(tensor_size_t dims)
+    : benchmark_function_t("Chung-Reynolds", dims)
 {
     convex(true);
     smooth(true);

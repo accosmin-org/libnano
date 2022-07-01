@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/core/table.h>
 #include <nano/core/factory.h>
+#include <nano/core/table.h>
 
 namespace nano
 {
@@ -17,7 +17,8 @@ namespace nano
     } // LCOV_EXCL_LINE
 
     template <typename tobject>
-    void append_table(table_t& table, const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
+    void append_table(table_t& table, const string_t& name, const factory_t<tobject>& factory,
+                      const string_t& regex = ".+")
     {
         table.header() << name << "description";
         table.delim();
@@ -26,4 +27,4 @@ namespace nano
             table.append() << id << factory.description(id);
         }
     } // LCOV_EXCL_LINE
-}
+} // namespace nano

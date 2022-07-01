@@ -1,10 +1,10 @@
 #pragma once
 
-#include <nano/loss.h>
 #include <nano/dataset.h>
 #include <nano/function.h>
-#include <nano/parameter.h>
+#include <nano/loss.h>
 #include <nano/mlearn/cluster.h>
+#include <nano/parameter.h>
 
 namespace nano
 {
@@ -18,7 +18,6 @@ namespace nano
     class NANO_PUBLIC gboost_function_t : public function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -34,13 +33,13 @@ namespace nano
         /// \brief access functions
         ///
         auto vAreg() const { return m_vAreg.get(); }
+
         auto batch() const { return m_batch.get(); }
 
     private:
-
         // attributes
-        sparam1_t           m_vAreg{"gboost::VA", 0, LE, 0, LE, 1e+8};      ///< regularization factor - see (1)
-        iparam1_t           m_batch{"gboost::batch", 1, LE, 32, LE, 4092};  ///< batch size in number of samples
+        sparam1_t m_vAreg{"gboost::VA", 0, LE, 0, LE, 1e+8};     ///< regularization factor - see (1)
+        iparam1_t m_batch{"gboost::batch", 1, LE, 32, LE, 4092}; ///< batch size in number of samples
     };
 
     ///
@@ -55,7 +54,6 @@ namespace nano
     class NANO_PUBLIC gboost_grads_function_t final : public gboost_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -72,13 +70,12 @@ namespace nano
         const tensor4d_t& gradients(const tensor4d_cmap_t& outputs) const;
 
     private:
-
         // attributes
-        const loss_t&       m_loss;         ///<
-        const dataset_t&    m_dataset;      ///<
-        const indices_t&    m_samples;      ///<
-        mutable tensor1d_t  m_values;       ///<
-        mutable tensor4d_t  m_vgrads;       ///<
+        const loss_t&      m_loss;    ///<
+        const dataset_t&   m_dataset; ///<
+        const indices_t&   m_samples; ///<
+        mutable tensor1d_t m_values;  ///<
+        mutable tensor4d_t m_vgrads;  ///<
     };
 
     ///
@@ -90,7 +87,6 @@ namespace nano
     class NANO_PUBLIC gboost_bias_function_t final : public gboost_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -102,11 +98,10 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
     private:
-
         // attributes
-        const loss_t&       m_loss;         ///<
-        const dataset_t&    m_dataset;      ///<
-        const indices_t&    m_samples;      ///<
+        const loss_t&    m_loss;    ///<
+        const dataset_t& m_dataset; ///<
+        const indices_t& m_samples; ///<
     };
 
     ///
@@ -119,12 +114,11 @@ namespace nano
     class NANO_PUBLIC gboost_scale_function_t final : public gboost_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
         gboost_scale_function_t(const loss_t&, const dataset_t&, const indices_t&, const cluster_t&,
-            const tensor4d_t& outputs, const tensor4d_t& woutputs);
+                                const tensor4d_t& outputs, const tensor4d_t& woutputs);
 
         ///
         /// \brief @see function_t
@@ -132,13 +126,12 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
     private:
-
         // attributes
-        const loss_t&       m_loss;         ///<
-        const dataset_t&    m_dataset;      ///<
-        const indices_t&    m_samples;      ///<
-        const cluster_t&    m_cluster;      ///<
-        const tensor4d_t&   m_outputs;      ///< predictions of the strong learner so far
-        const tensor4d_t&   m_woutputs;     ///< predictions of the current weak learner
+        const loss_t&     m_loss;     ///<
+        const dataset_t&  m_dataset;  ///<
+        const indices_t&  m_samples;  ///<
+        const cluster_t&  m_cluster;  ///<
+        const tensor4d_t& m_outputs;  ///< predictions of the strong learner so far
+        const tensor4d_t& m_woutputs; ///< predictions of the current weak learner
     };
-}
+} // namespace nano

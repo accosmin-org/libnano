@@ -14,7 +14,6 @@ namespace nano
     class NANO_PUBLIC lsearchk_fletcher_t final : public lsearchk_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -31,7 +30,6 @@ namespace nano
         bool get(const solver_state_t& state0, solver_state_t& state) final;
 
     private:
-
         bool zoom(const solver_state_t&, lsearch_step_t lo, lsearch_step_t hi, solver_state_t&) const;
     };
-}
+} // namespace nano

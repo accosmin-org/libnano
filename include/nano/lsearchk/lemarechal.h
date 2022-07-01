@@ -11,7 +11,6 @@ namespace nano
     class NANO_PUBLIC lsearchk_lemarechal_t final : public lsearchk_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -27,4 +26,4 @@ namespace nano
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
     };
-}
+} // namespace nano

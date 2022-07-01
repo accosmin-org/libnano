@@ -11,7 +11,7 @@ static auto make_suffix(scalar_t alpha1, scalar_t alpha2)
     }
     else
     {
-        return alpha2 == 0.0 ? "Lasso": "ElasticNet";
+        return alpha2 == 0.0 ? "Lasso" : "ElasticNet";
     }
 }
 
@@ -31,11 +31,11 @@ static auto make_outputs(tensor_size_t)
 }
 
 template <typename tloss>
-function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands) :
-    benchmark_function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims)),
-    tloss(summands, make_outputs(dims), make_inputs(dims)),
-    m_alpha1(alpha1),
-    m_alpha2(alpha2)
+function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands)
+    : benchmark_function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims))
+    , tloss(summands, make_outputs(dims), make_inputs(dims))
+    , m_alpha1(alpha1)
+    , m_alpha2(alpha2)
 {
     convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
@@ -50,7 +50,7 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_co
 
     if (!config.m_summands.valid(this->summands()))
     {
-        const auto inputs = this->inputs();
+        const auto inputs  = this->inputs();
         const auto targets = this->targets();
         const auto outputs = this->outputs(x);
 
@@ -58,7 +58,7 @@ scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_co
     }
     else
     {
-        const auto inputs = this->inputs(config.m_summands);
+        const auto inputs  = this->inputs(config.m_summands);
         const auto targets = this->targets(config.m_summands);
         const auto outputs = this->outputs(x, config.m_summands);
 

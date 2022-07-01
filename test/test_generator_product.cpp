@@ -1,7 +1,7 @@
-#include <utest/utest.h>
 #include "fixture/generator.h"
 #include "fixture/generator_dataset.h"
 #include <nano/generator/pairwise_product.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -9,7 +9,7 @@ UTEST_BEGIN_MODULE(test_generator_product)
 
 UTEST_CASE(empty)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset   = make_dataset(10, string_t::npos);
     const auto generator = dataset_generator_t{dataset};
 
     UTEST_CHECK_EQUAL(generator.columns(), 0);
@@ -38,18 +38,11 @@ UTEST_CASE(product)
     check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 6, N, N, N, N, Na, 12, Na, Na, Na));
     check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 9, N, N, 0, N, Na, +9, Na, Na, 36));
 
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 6),
-        1, 2, 3, 4, 6, 9,
-        0, N, N, N, N, N,
-        1, 0, N, 0, N, N,
-        4, N, 0, N, N, 0,
-        9, 6, N, 4, N, N,
-        16, Na, Na, Na, Na, Na,
-        25, 20, 15, 16, 12, +9,
-        36, Na, Na, Na, Na, Na,
-        49, 42, Na, 36, Na, Na,
-        64, Na, 48, Na, Na, 36),
-        make_indices(0, 1, 2, 3, 4, 5));
+    check_flatten(generator,
+                  make_tensor<scalar_t>(make_dims(10, 6), 1, 2, 3, 4, 6, 9, 0, N, N, N, N, N, 1, 0, N, 0, N, N, 4, N, 0,
+                                        N, N, 0, 9, 6, N, 4, N, N, 16, Na, Na, Na, Na, Na, 25, 20, 15, 16, 12, +9, 36,
+                                        Na, Na, Na, Na, Na, 49, 42, Na, 36, Na, Na, 64, Na, 48, Na, Na, 36),
+                  make_indices(0, 1, 2, 3, 4, 5));
 }
 
 UTEST_END_MODULE()

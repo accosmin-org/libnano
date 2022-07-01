@@ -1,14 +1,14 @@
 #pragma once
 
-#include <nano/solver/lstep.h>
-#include <nano/core/factory.h>
 #include <nano/core/estimator.h>
+#include <nano/core/factory.h>
+#include <nano/solver/lstep.h>
 
 namespace nano
 {
     class lsearch0_t;
     using lsearch0_factory_t = factory_t<lsearch0_t>;
-    using rlsearch0_t = lsearch0_factory_t::trobject;
+    using rlsearch0_t        = lsearch0_factory_t::trobject;
 
     ///
     /// \brief estimate the initial step length of the line-search procedure.
@@ -18,7 +18,6 @@ namespace nano
     class NANO_PUBLIC lsearch0_t : public estimator_t
     {
     public:
-
         ///
         /// logging operator: op(solver_state, proposed_line_search_step_length_length).
         ///
@@ -51,7 +50,6 @@ namespace nano
         void logger(const logger_t& logger) { m_logger = logger; }
 
     protected:
-
         ///
         /// \brief log the current line-search trial length (if the logger is provided)
         ///
@@ -64,8 +62,7 @@ namespace nano
         }
 
     private:
-
         // attributes
-        logger_t    m_logger;                                           ///<
+        logger_t m_logger; ///<
     };
-}
+} // namespace nano

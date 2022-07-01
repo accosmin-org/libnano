@@ -13,12 +13,9 @@ rlsearchk_t lsearchk_morethuente_t::clone() const
     return std::make_unique<lsearchk_morethuente_t>(*this);
 }
 
-void lsearchk_morethuente_t::dcstep(
-    scalar_t& stx, scalar_t& fx, scalar_t& dx,
-    scalar_t& sty, scalar_t& fy, scalar_t& dy,
-    scalar_t& stp, const scalar_t& fp, const scalar_t& dp,
-    bool& brackt,
-    const scalar_t stpmin, const scalar_t stpmax) const
+void lsearchk_morethuente_t::dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, scalar_t& fy,
+                                    scalar_t& dy, scalar_t& stp, const scalar_t& fp, const scalar_t& dp, bool& brackt,
+                                    const scalar_t stpmin, const scalar_t stpmax) const
 {
     const auto delta = parameter("lsearchk::morethuente::delta").value<scalar_t>();
 
@@ -127,24 +124,23 @@ void lsearchk_morethuente_t::dcstep(
         }
     }
 
-
     if (fp > fx)
     {
         sty = stp;
-        fy = fp;
-        dy = dp;
+        fy  = fp;
+        dy  = dp;
     }
     else
     {
         if (sgnd < 0.)
         {
             sty = stx;
-            fy = fx;
-            dy = dx;
+            fy  = fx;
+            dy  = dx;
         }
         stx = stp;
-        fx = fp;
-        dx = dp;
+        fx  = fp;
+        dx  = dp;
     }
 
     stp = stpf;
@@ -152,27 +148,27 @@ void lsearchk_morethuente_t::dcstep(
 
 bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)
 {
-    const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
+    const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
     const auto ftol = c1;
     const auto gtol = c2;
     const auto xtol = epsilon0<scalar_t>();
 
-    int stage = 1;
+    int  stage  = 1;
     bool brackt = false;
 
     scalar_t stp = state.t, f = state.f, g = state.dg();
     scalar_t stmin = 0, stmax = stp + stp * 4;
 
-    scalar_t width = stpmax() - stpmin();
+    scalar_t width  = stpmax() - stpmin();
     scalar_t width1 = 2 * width;
 
     scalar_t finit = state0.f, ginit = state0.dg(), gtest = ftol * ginit;
     scalar_t stx = 0, fx = finit, gx = ginit;
     scalar_t sty = 0, fy = finit, gy = ginit;
 
-    for (int i = 0; i < max_iterations; ++ i)
+    for (int i = 0; i < max_iterations; ++i)
     {
         const auto ftest = finit + stp * gtest;
         if (stage == 1 && f <= ftest && g >= scalar_t(0))
@@ -181,10 +177,22 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         }
 
         // Check if further progress can be made
-        if (brackt && (stp <= stmin || stp >= stmax))       { return true; }
-        if (brackt && (stmax - stmin) <= xtol * stmax)      { return true; }
-        if (stp >= stpmax() && f <= ftest && g <= gtest)    { return true; }
-        if (stp <= stpmin() && (f > ftest || g >= gtest))   { return true; }
+        if (brackt && (stp <= stmin || stp >= stmax))
+        {
+            return true;
+        }
+        if (brackt && (stmax - stmin) <= xtol * stmax)
+        {
+            return true;
+        }
+        if (stp >= stpmax() && f <= ftest && g <= gtest)
+        {
+            return true;
+        }
+        if (stp <= stpmin() && (f > ftest || g >= gtest))
+        {
+            return true;
+        }
 
         // Check convergence
         if (f <= ftest && std::fabs(g) <= gtol * (-ginit))
@@ -195,10 +203,10 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         // Interpolate the next point to evaluate
         if (stage == 1 && f <= fx && f > ftest)
         {
-            auto fm = f - stp * gtest;
+            auto fm  = f - stp * gtest;
             auto fxm = fx - stx * gtest;
             auto fym = fy - sty * gtest;
-            auto gm = g - gtest;
+            auto gm  = g - gtest;
             auto gxm = gx - gtest;
             auto gym = gy - gtest;
 
@@ -222,7 +230,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
                 stp = stx + (sty - stx) * scalar_t(0.5);
             }
             width1 = width;
-            width = std::fabs(sty - stx);
+            width  = std::fabs(sty - stx);
 
             // Set the minimum and maximum steps allowed for stp
             stmin = std::min(stx, sty);
@@ -239,8 +247,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         stp = std::clamp(stp, stpmin(), stpmax());
 
         // If further progress is not possible, let stp be the best point obtained during the search
-        if ((brackt && (stp <= stmin || stp >= stmax)) ||
-            (brackt && stmax - stmin <= xtol * stmax))
+        if ((brackt && (stp <= stmin || stp >= stmax)) || (brackt && stmax - stmin <= xtol * stmax))
         {
             stp = stx;
         }

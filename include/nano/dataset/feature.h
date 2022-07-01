@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include <nano/arch.h>
-#include <nano/tensor.h>
 #include <nano/dataset/task.h>
+#include <nano/tensor.h>
 
 namespace nano
 {
@@ -28,34 +28,30 @@ namespace nano
         float64,
 
         // discrete features
-        sclass,         ///< categorical feature (single-label - one value possible out of a fixed set)
-        mclass,         ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
+        sclass, ///< categorical feature (single-label - one value possible out of a fixed set)
+        mclass, ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
     };
 
     template <>
     inline enum_map_t<feature_type> enum_string<feature_type>()
     {
-        return
-        {
-            { feature_type::int8,       "int8" },
-            { feature_type::int16,      "int16" },
-            { feature_type::int32,      "int32" },
-            { feature_type::int64,      "int64" },
-            { feature_type::uint8,      "uint8" },
-            { feature_type::uint16,     "uint16" },
-            { feature_type::uint32,     "uint32" },
-            { feature_type::uint64,     "uint64" },
-            { feature_type::float32,    "float32" },
-            { feature_type::float64,    "float64" },
-            { feature_type::sclass,     "sclass" },
-            { feature_type::mclass,     "mclass" },
+        return {
+            {   feature_type::int8,    "int8"},
+            {  feature_type::int16,   "int16"},
+            {  feature_type::int32,   "int32"},
+            {  feature_type::int64,   "int64"},
+            {  feature_type::uint8,   "uint8"},
+            { feature_type::uint16,  "uint16"},
+            { feature_type::uint32,  "uint32"},
+            { feature_type::uint64,  "uint64"},
+            {feature_type::float32, "float32"},
+            {feature_type::float64, "float64"},
+            { feature_type::sclass,  "sclass"},
+            { feature_type::mclass,  "mclass"},
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, feature_type value)
-    {
-        return stream << scat(value);
-    }
+    inline std::ostream& operator<<(std::ostream& stream, feature_type value) { return stream << scat(value); }
 
     ///
     /// \brief input feature (e.g. describes a column in a csv file)
@@ -65,7 +61,6 @@ namespace nano
     class NANO_PUBLIC feature_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -132,18 +127,21 @@ namespace nano
         /// \brief access functions
         ///
         auto type() const { return m_type; }
+
         const auto& dims() const { return m_dims; }
+
         const auto& name() const { return m_name; }
+
         const auto& labels() const { return m_labels; }
+
         auto classes() const { return static_cast<tensor_size_t>(m_labels.size()); }
 
     private:
-
         // attributes
-        feature_type        m_type{feature_type::float32};  ///<
-        tensor3d_dims_t     m_dims{1, 1, 1};        ///< dimensions (if continuous)
-        string_t            m_name;                 ///<
-        mutable strings_t   m_labels;               ///< possible labels (if the feature is discrete/categorical)
+        feature_type      m_type{feature_type::float32}; ///<
+        tensor3d_dims_t   m_dims{1, 1, 1};               ///< dimensions (if continuous)
+        string_t          m_name;                        ///<
+        mutable strings_t m_labels;                      ///< possible labels (if the feature is discrete/categorical)
     };
 
     NANO_PUBLIC bool operator==(const feature_t& f1, const feature_t& f2);
@@ -163,7 +161,6 @@ namespace nano
     class NANO_PUBLIC feature_info_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -193,14 +190,15 @@ namespace nano
         /// \brief access functions
         ///
         auto count() const { return m_count; }
+
         auto feature() const { return m_feature; }
+
         auto importance() const { return m_importance; }
 
     private:
-
         // attributes
-        tensor_size_t   m_feature{-1};      ///< feature index
-        tensor_size_t   m_count{0};         ///< how many times it was selected (e.g. folds)
-        scalar_t        m_importance{0.0};  ///< feature importance (e.g. impact on performance)
+        tensor_size_t m_feature{-1};     ///< feature index
+        tensor_size_t m_count{0};        ///< how many times it was selected (e.g. folds)
+        scalar_t      m_importance{0.0}; ///< feature importance (e.g. impact on performance)
     };
-}
+} // namespace nano

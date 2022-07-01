@@ -2,8 +2,8 @@
 
 #include <array>
 #include <cassert>
-#include <ostream>
 #include <nano/tensor/index.h>
+#include <ostream>
 
 namespace nano
 {
@@ -39,7 +39,7 @@ namespace nano
         template <size_t idim, size_t trank>
         tensor_size_t product(const tensor_dims_t<trank>& dims)
         {
-            if constexpr(idim == trank)
+            if constexpr (idim == trank)
             {
                 return 1;
             }
@@ -65,7 +65,7 @@ namespace nano
         template <size_t idim, size_t trank>
         tensor_size_t get_index0(const tensor_dims_t<trank>&)
         {
-                return 0;
+            return 0;
         }
 
         template <size_t idim, size_t trank, typename... tindices>
@@ -78,14 +78,14 @@ namespace nano
         template <size_t idim, size_t trank, size_t trankx>
         void get_dims0(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
         {
-            if constexpr(idim < trank)
+            if constexpr (idim < trank)
             {
                 static_assert(idim >= trank - trankx && idim < trank);
                 std::get<idim + trankx - trank>(dimsx) = std::get<idim>(dims);
                 get_dims0<idim + 1>(dims, dimsx);
             }
         }
-    }
+    } // namespace detail
 
     ///
     /// \brief index a multi-dimensional tensor.
@@ -108,6 +108,7 @@ namespace nano
         static_assert(sizeof...(indices) <= trank, "invalid number of tensor indices");
         return detail::get_index0<0>(dims, indices...);
     }
+
     ///
     /// \brief gather the missing dimensions in a multi-dimensional tensor
     ///     (assuming the last dimensions that are ignored are zero).
@@ -147,7 +148,7 @@ namespace nano
     {
         return !(dims1 == dims2);
     }
-}
+} // namespace nano
 
 namespace std // NOLINT(cert-dcl58-cpp)
 {
@@ -157,10 +158,10 @@ namespace std // NOLINT(cert-dcl58-cpp)
     template <size_t trank>
     std::ostream& operator<<(std::ostream& os, const ::nano::tensor_dims_t<trank>& dims)
     {
-        for (size_t d = 0; d < dims.size(); ++ d)
+        for (size_t d = 0; d < dims.size(); ++d)
         {
             os << dims[d] << (d + 1 == dims.size() ? "" : "x");
         }
         return os;
     }
-}
+} // namespace std

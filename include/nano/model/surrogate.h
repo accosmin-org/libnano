@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/loss.h>
 #include <nano/function.h>
+#include <nano/loss.h>
 
 namespace nano
 {
@@ -17,7 +17,6 @@ namespace nano
     class NANO_PUBLIC quadratic_surrogate_fit_t final : public function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -29,14 +28,13 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override;
 
     private:
-
         // attributes
-        const loss_t&       m_loss;         ///<
-        tensor2d_t          m_p2;           ///< quadratic terms of hyper-parameter values p
-        tensor1d_t          m_y;            ///< target
-        mutable tensor4d_t  m_loss_outputs; ///<
-        mutable tensor1d_t  m_loss_values;  ///<
-        mutable tensor4d_t  m_loss_vgrads;  ///<
+        const loss_t&      m_loss;         ///<
+        tensor2d_t         m_p2;           ///< quadratic terms of hyper-parameter values p
+        tensor1d_t         m_y;            ///< target
+        mutable tensor4d_t m_loss_outputs; ///<
+        mutable tensor1d_t m_loss_values;  ///<
+        mutable tensor4d_t m_loss_vgrads;  ///<
     };
 
     ///
@@ -45,7 +43,6 @@ namespace nano
     class NANO_PUBLIC quadratic_surrogate_t final : public function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -57,8 +54,7 @@ namespace nano
         scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override;
 
     private:
-
         // attributes
-        vector_t            m_model;        ///< coefficients of the quadratic terms of hyper-parameter values p
+        vector_t m_model; ///< coefficients of the quadratic terms of hyper-parameter values p
     };
-}
+} // namespace nano

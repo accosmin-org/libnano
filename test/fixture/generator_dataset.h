@@ -1,11 +1,11 @@
 #include <nano/dataset.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
 static auto make_features()
 {
-    return features_t
-    {
+    return features_t{
         feature_t{"mclass0"}.mclass(strings_t{"m00", "m01", "m02"}),
         feature_t{"mclass1"}.mclass(strings_t{"m10", "m11", "m12", "m13"}),
         feature_t{"sclass0"}.sclass(strings_t{"s00", "s01", "s02"}),
@@ -23,16 +23,14 @@ static auto make_features()
 class fixture_dataset_t final : public dataset_t
 {
 public:
-
-    explicit fixture_dataset_t(tensor_size_t samples, size_t target = string_t::npos) :
-        m_samples(samples),
-        m_features(make_features()),
-        m_target(target)
+    explicit fixture_dataset_t(tensor_size_t samples, size_t target = string_t::npos)
+        : m_samples(samples)
+        , m_features(make_features())
+        , m_target(target)
     {
     }
 
 private:
-
     void set_mclass(tensor_size_t ifeature, tensor_size_t classes, tensor_size_t modulo)
     {
         tensor_mem_t<tensor_size_t, 1> hits(classes);
@@ -93,9 +91,9 @@ private:
         set_struct(10, make_dims(3, 1, 1), 3);
     }
 
-    tensor_size_t   m_samples{0};
-    features_t      m_features;
-    size_t          m_target;
+    tensor_size_t m_samples{0};
+    features_t    m_features;
+    size_t        m_target;
 };
 
 static auto make_dataset(tensor_size_t samples, size_t target)

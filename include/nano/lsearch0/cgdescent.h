@@ -10,7 +10,6 @@ namespace nano
     class NANO_PUBLIC lsearch0_cgdescent_t final : public lsearch0_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -26,4 +25,4 @@ namespace nano
         ///
         scalar_t get(const solver_state_t&) final;
     };
-}
+} // namespace nano

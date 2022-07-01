@@ -10,6 +10,7 @@ namespace nano
     struct factory_traits_t<wlearner_stump_t>
     {
         static string_t id() { return "stump"; }
+
         static string_t description() { return "decision stump weak learner"; }
     };
 
@@ -30,7 +31,6 @@ namespace nano
     class NANO_PUBLIC wlearner_stump_t final : public wlearner_feature1_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -72,8 +72,7 @@ namespace nano
         auto threshold() const { return m_threshold; }
 
     private:
-
         // attributes
-        scalar_t        m_threshold{0};         ///< threshold
+        scalar_t m_threshold{0}; ///< threshold
     };
-}
+} // namespace nano

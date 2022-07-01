@@ -2,16 +2,16 @@
 
 using namespace nano;
 
-function_quadratic_t::function_quadratic_t(tensor_size_t dims) :
-    benchmark_function_t("Quadratic", dims),
-    m_a(vector_t::Random(dims))
+function_quadratic_t::function_quadratic_t(tensor_size_t dims)
+    : benchmark_function_t("Quadratic", dims)
+    , m_a(vector_t::Random(dims))
 {
     convex(true);
     smooth(true);
 
     // NB: generate random positive semi-definite matrix to keep the function convex
     matrix_t A = matrix_t::Random(dims, dims);
-    m_A = matrix_t::Identity(dims, dims) + A * A.transpose();
+    m_A        = matrix_t::Identity(dims, dims) + A * A.transpose();
 }
 
 scalar_t function_quadratic_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const

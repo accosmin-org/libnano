@@ -1,9 +1,9 @@
 #pragma once
 
-#include <nano/loss.h>
 #include <nano/function.h>
-#include <nano/linear/cache.h>
 #include <nano/generator/iterator.h>
+#include <nano/linear/cache.h>
+#include <nano/loss.h>
 
 namespace nano::linear
 {
@@ -20,7 +20,6 @@ namespace nano::linear
     class NANO_PUBLIC function_t final : public ::nano::function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -69,20 +68,20 @@ namespace nano::linear
         /// \brief access functions
         ///
         const auto& loss() const { return m_loss; }
+
         const auto& iterator() const { return m_iterator; }
 
     private:
-
         using caches_t = std::vector<cache_t>;
 
         // attributes
-        flatten_iterator_t  m_iterator;         ///<
-        const loss_t&       m_loss;             ///<
-        scalar_t            m_l1reg{0.0};       ///< regularization factor - see (1), (3)
-        scalar_t            m_l2reg{0.0};       ///< regularization factor - see (2), (3)
-        scalar_t            m_vAreg{0.0};       ///< regularization factor - see (4)
-        tensor_size_t       m_isize{0};         ///< #inputs (e.g. size of the flatten input feature tensor)
-        tensor_size_t       m_tsize{0};         ///< #targets (e.g. size of the flatten target tensor, number of classes)
-        mutable caches_t    m_caches;           ///< liner model-specific buffers per thread
+        flatten_iterator_t m_iterator;   ///<
+        const loss_t&      m_loss;       ///<
+        scalar_t           m_l1reg{0.0}; ///< regularization factor - see (1), (3)
+        scalar_t           m_l2reg{0.0}; ///< regularization factor - see (2), (3)
+        scalar_t           m_vAreg{0.0}; ///< regularization factor - see (4)
+        tensor_size_t      m_isize{0};   ///< #inputs (e.g. size of the flatten input feature tensor)
+        tensor_size_t      m_tsize{0};   ///< #targets (e.g. size of the flatten target tensor, number of classes)
+        mutable caches_t   m_caches;     ///< liner model-specific buffers per thread
     };
-}
+} // namespace nano::linear

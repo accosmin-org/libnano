@@ -55,7 +55,7 @@ cache_t& cache_t::operator/=(tensor_size_t samples)
 const cache_t& cache_t::reduce(std::vector<cache_t>& caches, tensor_size_t samples)
 {
     auto& cache0 = caches[0];
-    for (size_t i = 1; i < caches.size(); ++ i)
+    for (size_t i = 1; i < caches.size(); ++i)
     {
         cache0 += caches[i];
     }

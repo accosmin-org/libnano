@@ -1,12 +1,12 @@
 #pragma once
 
+#include <algorithm>
+#include <nano/string.h>
 #include <regex>
 #include <sstream>
-#include <utility>
-#include <typeinfo>
-#include <algorithm>
 #include <stdexcept>
-#include <nano/string.h>
+#include <typeinfo>
+#include <utility>
 
 namespace nano
 {
@@ -59,14 +59,15 @@ namespace nano
                 for (const auto& elem : enum_string<tvalue>())
                 {
                     if (elem.first == value)
-                    {   // cppcheck-suppress useStlAlgorithm
+                    { // cppcheck-suppress useStlAlgorithm
                         stream << elem.second;
                         return;
                     }
                 }
 
                 const auto str = std::to_string(static_cast<int>(value));
-                const auto msg = string_t("missing mapping for enumeration ") + typeid(tvalue).name() + " <" + str + ">!";
+                const auto msg =
+                    string_t("missing mapping for enumeration ") + typeid(tvalue).name() + " <" + str + ">!";
                 throw std::invalid_argument(msg);
             }
             else
@@ -78,10 +79,10 @@ namespace nano
         template <typename tvalue>
         void scat(std::ostringstream& stream, const std::vector<tvalue>& values)
         {
-            for (auto begin = values.begin(), end = values.end(); begin != end; )
+            for (auto begin = values.begin(), end = values.end(); begin != end;)
             {
                 scat(stream, *begin);
-                if (++ begin != end)
+                if (++begin != end)
                 {
                     stream << ",";
                 }
@@ -93,7 +94,7 @@ namespace nano
         {
             (scat(stream, values), ...);
         }
-    }
+    } // namespace detail
 
     template <typename... tvalues>
     string_t scat(const tvalues&... values)
@@ -136,7 +137,7 @@ namespace nano
             for (const auto& option : options)
             {
                 if (option.second == str)
-                {   // cppcheck-suppress useStlAlgorithm
+                { // cppcheck-suppress useStlAlgorithm
                     return option.first;
                 }
             }
@@ -169,7 +170,7 @@ namespace nano
     }
 
     ///
-    /// \brief check if a string starts with a token (case sensitive)
+    /// \brief check if a string starts with a token (case sensitive).
     ///
     inline bool starts_with(const string_t& str, const string_t& token)
     {
@@ -177,9 +178,9 @@ namespace nano
     }
 
     ///
-    /// \brief check if a string ends with a token (case sensitive)
+    /// \brief check if a string ends with a token (case sensitive).
     ///
-    inline bool ends_with(const string_t& str, const string_t& token)
+    inline bool ends_with(const string_t& str, const string_t& token) noexcept
     {
         return str.size() >= token.size() && std::equal(token.rbegin(), token.rend(), str.rbegin());
     }
@@ -187,8 +188,8 @@ namespace nano
     ///
     /// \brief align a string to fill the given size (if possible).
     ///
-    inline string_t align(const string_t& str, const size_t str_size,
-        const alignment mode = alignment::left, const char fill_char = ' ')
+    inline string_t align(const string_t& str, const size_t str_size, const alignment mode = alignment::left,
+                          const char fill_char = ' ')
     {
         const auto fill_size = (str.size() > str_size) ? (0) : (str_size - str.size());
 
@@ -215,4 +216,4 @@ namespace nano
 
         return ret;
     } // LCOV_EXCL_LINE
-}
+} // namespace nano

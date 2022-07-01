@@ -5,22 +5,15 @@ using namespace nano;
 class proxy_t
 {
 public:
-
-    explicit proxy_t(const vector_t& z0, scalar_t epsilon) :
-        m_z0(z0),
-        m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
+    explicit proxy_t(const vector_t& z0, scalar_t epsilon)
+        : m_z0(z0)
+        , m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
     {
     }
 
-    auto Q(const vector_t& z) const
-    {
-        return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0);
-    }
+    auto Q(const vector_t& z) const { return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0); }
 
-    auto gQ(const vector_t& z) const
-    {
-        return z - m_z0;
-    }
+    auto gQ(const vector_t& z) const { return z - m_z0; }
 
     auto E(scalar_t gamma, const vector_t& h) const
     {
@@ -36,24 +29,16 @@ public:
             return h.dot(h) / (beta + sqrt);
         }
     }
-    auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const
-    {
-        return E(gamma - fx, h);
-    }
 
-    auto U(scalar_t gamma, const vector_t& h) const
-    {
-        return m_z0 - h / E(gamma, h);
-    }
-    auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const
-    {
-        return U(gamma - fx, h);
-    }
+    auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const { return E(gamma - fx, h); }
+
+    auto U(scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
+
+    auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const { return U(gamma - fx, h); }
 
 private:
-
-    const vector_t& m_z0;       ///<
-    scalar_t        m_Q0{0.0};  ///<
+    const vector_t& m_z0;      ///<
+    scalar_t        m_Q0{0.0}; ///<
 };
 
 static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, scalar_t epsilon)
@@ -61,13 +46,10 @@ static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, sca
     const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
     const auto df = std::fabs(fxk1 - fxk);
 
-    return
-        !std::isfinite(fxk) || !std::isfinite(fxk1) ||
-        (
-            dx > std::numeric_limits<scalar_t>::epsilon() &&
+    return !std::isfinite(fxk) || !std::isfinite(fxk1) ||
+           (dx > std::numeric_limits<scalar_t>::epsilon() &&
             dx <= epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
-            df <= epsilon * std::max(1.0, std::fabs(fxk1))
-        );
+            df <= epsilon * std::max(1.0, std::fabs(fxk1)));
 }
 
 solver_osga_t::solver_osga_t()
@@ -81,23 +63,23 @@ solver_osga_t::solver_osga_t()
 
 solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
 {
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
-    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
-    const auto lambda = parameter("solver::osga::lambda").value<scalar_t>();
-    const auto alpha_max = parameter("solver::osga::alpha_max").value<scalar_t>();
+    const auto epsilon              = parameter("solver::epsilon").value<scalar_t>();
+    const auto max_evals            = parameter("solver::max_evals").value<int64_t>();
+    const auto lambda               = parameter("solver::osga::lambda").value<scalar_t>();
+    const auto alpha_max            = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
 
-    const auto miu = function_.strong_convexity() / 2.0;
+    const auto miu  = function_.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
     const auto proxy = proxy_t{x0, epsilon};
 
-    auto function = make_function(function_, x0);
-    auto state = solver_state_t{function, x0};
-    vector_t& xb = state.x;     // store the best function point
-    scalar_t& fb = state.f;     // store the best function value
-    vector_t& g = state.g;      // buffer to reuse
-    vector_t& h = state.d;      // buffer to reuse
+    auto      function = make_function(function_, x0);
+    auto      state    = solver_state_t{function, x0};
+    vector_t& xb       = state.x; // store the best function point
+    scalar_t& fb       = state.f; // store the best function value
+    vector_t& g        = state.g; // buffer to reuse
+    vector_t& h        = state.d; // buffer to reuse
 
     // see the reference papers for the notation
     vector_t x, x_prime, h_hat, u_hat, u_prime;
@@ -107,29 +89,29 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     scalar_t alpha = alpha_max;
     scalar_t gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
 
-    vector_t u = proxy.U(gamma, h, fb);
+    vector_t u   = proxy.U(gamma, h, fb);
     scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
     {
-        x = xb + alpha * (u - xb);
+        x            = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);
-        g = g - miu * proxy.gQ(x);
+        g            = g - miu * proxy.gQ(x);
 
-        h_hat = h + alpha * (g - h);
+        h_hat                = h + alpha * (g - h);
         const auto gamma_hat = gamma + alpha * (f - miu * proxy.Q(x) - g.dot(x) - gamma);
 
         const auto& xb_prime = (f < fb) ? x : xb;
         const auto& fb_prime = (f < fb) ? f : fb;
 
-        u_prime = proxy.U(gamma_hat - fb_prime, h_hat);
-        x_prime = xb + alpha * (u_prime - xb);
+        u_prime            = proxy.U(gamma_hat - fb_prime, h_hat);
+        x_prime            = xb + alpha * (u_prime - xb);
         const auto f_prime = function.vgrad(x_prime);
 
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
-        u_hat = proxy.U(gamma_hat, h_hat, fb_hat);
+        u_hat              = proxy.U(gamma_hat, h_hat, fb_hat);
         const auto eta_hat = proxy.E(gamma_hat, h_hat, fb_hat) - miu;
 
         // check convergence
@@ -144,15 +126,13 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
         // the algorithm to update the parameters (alpha, h, gamma, eta, u)
         const auto R = (eta - eta_hat) / (lambda * alpha * eta);
 
-        alpha = (R < 1.0) ?
-            (alpha * std::exp(-kappa)) :
-            std::min(alpha * std::exp(kappa_prime * (R - 1.0)), alpha_max);
+        alpha = (R < 1.0) ? (alpha * std::exp(-kappa)) : std::min(alpha * std::exp(kappa_prime * (R - 1.0)), alpha_max);
 
         if (eta_hat < eta)
         {
-            h = h_hat;
-            u = u_hat;
-            eta = eta_hat;
+            h     = h_hat;
+            u     = u_hat;
+            eta   = eta_hat;
             gamma = gamma_hat;
         }
     }

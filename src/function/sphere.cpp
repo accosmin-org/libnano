@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_sphere_t::function_sphere_t(tensor_size_t dims) :
-    benchmark_function_t("Sphere", dims)
+function_sphere_t::function_sphere_t(tensor_size_t dims)
+    : benchmark_function_t("Sphere", dims)
 {
     convex(true);
     smooth(true);

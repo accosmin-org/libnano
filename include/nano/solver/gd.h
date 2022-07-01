@@ -10,7 +10,6 @@ namespace nano
     class NANO_PUBLIC solver_gd_t final : public solver_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -21,4 +20,4 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
     };
-}
+} // namespace nano

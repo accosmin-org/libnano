@@ -3,8 +3,8 @@
 
 using namespace nano;
 
-function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims) :
-    benchmark_function_t("Rotated Ellipsoid", dims)
+function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims)
+    : benchmark_function_t("Rotated Ellipsoid", dims)
 {
     convex(true);
     smooth(true);
@@ -13,7 +13,7 @@ function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims) :
 scalar_t function_rotated_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
 {
     scalar_t fx = 0, fi = 0;
-    for (tensor_size_t i = 0; i < size(); i ++)
+    for (tensor_size_t i = 0; i < size(); i++)
     {
         fi += x(i);
         fx += nano::square(fi);
@@ -25,7 +25,7 @@ scalar_t function_rotated_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx, vg
 
     if (gx != nullptr)
     {
-        for (auto i = size() - 2; i >= 0; i --)
+        for (auto i = size() - 2; i >= 0; i--)
         {
             (*gx)(i) += (*gx)(i + 1);
         }

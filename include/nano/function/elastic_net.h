@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/function/linear.h>
 #include <nano/function/benchmark.h>
+#include <nano/function/linear.h>
 
 namespace nano
 {
@@ -14,12 +14,11 @@ namespace nano
     class NANO_PUBLIC function_enet_t final : public benchmark_function_t, private tloss
     {
     public:
-
         ///
         /// \brief constructor
         ///
-        explicit function_enet_t(
-            tensor_size_t dims = 10, scalar_t alpha1 = 1.0, scalar_t alpha2 = 1.0, tensor_size_t summands = 100);
+        explicit function_enet_t(tensor_size_t dims = 10, scalar_t alpha1 = 1.0, scalar_t alpha2 = 1.0,
+                                 tensor_size_t summands = 100);
 
         ///
         /// \brief @see function_t
@@ -32,10 +31,9 @@ namespace nano
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
     private:
-
         // attributes
-        scalar_t    m_alpha1{1.0};  ///< regularization term: L1-norm of the weights
-        scalar_t    m_alpha2{1.0};  ///< regularization term: squared L2-norm of the weights
+        scalar_t m_alpha1{1.0}; ///< regularization term: L1-norm of the weights
+        scalar_t m_alpha2{1.0}; ///< regularization term: squared L2-norm of the weights
     };
 
     ///
@@ -44,9 +42,8 @@ namespace nano
     class NANO_PUBLIC loss_mse_t : public synthetic_scalar_t
     {
     public:
-
-        static constexpr auto convex = true;
-        static constexpr auto smooth = true;
+        static constexpr auto convex   = true;
+        static constexpr auto smooth   = true;
         static constexpr auto basename = "MSE";
 
         using synthetic_scalar_t::synthetic_scalar_t;
@@ -71,9 +68,8 @@ namespace nano
     class NANO_PUBLIC loss_mae_t : public synthetic_scalar_t
     {
     public:
-
-        static constexpr auto convex = true;
-        static constexpr auto smooth = false;
+        static constexpr auto convex   = true;
+        static constexpr auto smooth   = false;
         static constexpr auto basename = "MAE";
 
         using synthetic_scalar_t::synthetic_scalar_t;
@@ -98,9 +94,8 @@ namespace nano
     class NANO_PUBLIC loss_cauchy_t : public synthetic_scalar_t
     {
     public:
-
-        static constexpr auto convex = false;
-        static constexpr auto smooth = false;
+        static constexpr auto convex   = false;
+        static constexpr auto smooth   = false;
         static constexpr auto basename = "Cauchy";
 
         using synthetic_scalar_t::synthetic_scalar_t;
@@ -125,9 +120,8 @@ namespace nano
     class NANO_PUBLIC loss_hinge_t : public synthetic_sclass_t
     {
     public:
-
-        static constexpr auto convex = true;
-        static constexpr auto smooth = false;
+        static constexpr auto convex   = true;
+        static constexpr auto smooth   = false;
         static constexpr auto basename = "Hinge";
 
         using synthetic_sclass_t::synthetic_sclass_t;
@@ -135,7 +129,7 @@ namespace nano
         template <typename tinputs, typename ttargets>
         scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_t* gx) const
         {
-            const auto edges = - outputs.array() * targets.array();
+            const auto edges = -outputs.array() * targets.array();
 
             if (gx != nullptr)
             {
@@ -152,9 +146,8 @@ namespace nano
     class NANO_PUBLIC loss_logistic_t : public synthetic_sclass_t
     {
     public:
-
-        static constexpr auto convex = true;
-        static constexpr auto smooth = true;
+        static constexpr auto convex   = true;
+        static constexpr auto smooth   = true;
         static constexpr auto basename = "Logistic";
 
         using synthetic_sclass_t::synthetic_sclass_t;
@@ -173,9 +166,9 @@ namespace nano
         }
     };
 
-    using function_enet_mae_t = function_enet_t<loss_mae_t>;
-    using function_enet_mse_t = function_enet_t<loss_mse_t>;
-    using function_enet_hinge_t = function_enet_t<loss_hinge_t>;
-    using function_enet_cauchy_t = function_enet_t<loss_cauchy_t>;
+    using function_enet_mae_t      = function_enet_t<loss_mae_t>;
+    using function_enet_mse_t      = function_enet_t<loss_mse_t>;
+    using function_enet_hinge_t    = function_enet_t<loss_hinge_t>;
+    using function_enet_cauchy_t   = function_enet_t<loss_cauchy_t>;
     using function_enet_logistic_t = function_enet_t<loss_logistic_t>;
-}
+} // namespace nano

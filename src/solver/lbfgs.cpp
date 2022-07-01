@@ -14,10 +14,10 @@ solver_lbfgs_t::solver_lbfgs_t()
 solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
-    const auto history = parameter("solver::lbfgs::history").value<size_t>();
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
+    const auto history   = parameter("solver::lbfgs::history").value<size_t>();
 
-    auto lsearch = make_lsearch();
+    auto lsearch  = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
@@ -27,11 +27,11 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
         return cstate;
     }
 
-    vector_t q, r;
-    solver_state_t pstate;
+    vector_t             q, r;
+    solver_state_t       pstate;
     std::deque<vector_t> ss, ys;
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)
@@ -40,7 +40,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
         const auto hsize = ss.size();
 
         std::vector<scalar_t> alphas(hsize);
-        for (size_t j = 0; j < hsize; ++ j)
+        for (size_t j = 0; j < hsize; ++j)
         {
             const auto& s = ss[hsize - 1 - j];
             const auto& y = ys[hsize - 1 - j];
@@ -62,17 +62,17 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
             r = s.dot(y) / y.dot(y) * q;
         }
 
-        for (size_t j = 0; j < hsize; ++ j)
+        for (size_t j = 0; j < hsize; ++j)
         {
             const auto& s = ss[j];
             const auto& y = ys[j];
 
             const scalar_t alpha = alphas[hsize - 1 - j];
-            const scalar_t beta = y.dot(r) / s.dot(y);
+            const scalar_t beta  = y.dot(r) / s.dot(y);
             r.noalias() += s * (alpha - beta);
         }
 
-        cstate.d = -r;
+        cstate.d               = -r;
         const auto has_descent = cstate.has_descent();
 
         // Force descent direction
@@ -82,7 +82,7 @@ solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vecto
         }
 
         // line-search
-        pstate = cstate;
+        pstate             = cstate;
         const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {

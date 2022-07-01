@@ -1,8 +1,8 @@
-#include <fstream>
-#include <utest/utest.h>
 #include "fixture/enum.h"
-#include <nano/core/stream.h>
+#include <fstream>
 #include <nano/core/estimator.h>
+#include <nano/core/stream.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -27,12 +27,12 @@ static auto check_stream(const estimator_t& estimator)
         str = stream.str();
     }
     {
-        estimator_t xestimator;
+        estimator_t        xestimator;
         std::istringstream stream(str);
         UTEST_CHECK_NOTHROW(xestimator.read(stream));
     }
     {
-        estimator_t xestimator;
+        estimator_t   xestimator;
         std::ifstream stream;
         UTEST_CHECK_THROW(xestimator.read(stream), std::runtime_error);
     }
@@ -40,7 +40,7 @@ static auto check_stream(const estimator_t& estimator)
         std::ostringstream ostream;
         UTEST_CHECK_NOTHROW(::nano::write(ostream, estimator));
 
-        estimator_t xestimator;
+        estimator_t        xestimator;
         std::istringstream istream(ostream.str());
         UTEST_CHECK_NOTHROW(::nano::read(istream, xestimator));
         return xestimator;
@@ -60,7 +60,7 @@ UTEST_CASE(string)
         const auto ostring = ostream.str();
         UTEST_CHECK_EQUAL(ostring.size(), string.size() + 4);
 
-        std::string istring;
+        std::string        istring;
         std::istringstream istream(ostring);
         UTEST_REQUIRE(istream);
         UTEST_REQUIRE_NOTHROW(::nano::read(istream, istring));
@@ -68,7 +68,7 @@ UTEST_CASE(string)
 
         UTEST_CHECK_EQUAL(string, istring);
 
-        std::string ifstring;
+        std::string   ifstring;
         std::ifstream ifstream;
         UTEST_REQUIRE(ifstream);
         UTEST_REQUIRE_NOTHROW(::nano::read(ifstream, ifstring));
@@ -88,7 +88,7 @@ UTEST_CASE(vector)
     UTEST_CHECK_EQUAL(ostring.size(), 4U * vector.size() + 8U);
 
     std::vector<int32_t> ivector;
-    std::istringstream istream(ostring);
+    std::istringstream   istream(ostring);
     UTEST_REQUIRE(istream);
     UTEST_REQUIRE_NOTHROW(::nano::read(istream, ivector));
     UTEST_REQUIRE(istream);
@@ -200,7 +200,7 @@ UTEST_CASE(estimator_read_fail_major)
 {
     auto estimator = estimator_t{};
 
-    auto str = to_string(estimator);
+    auto str                                                     = to_string(estimator);
     reinterpret_cast<int32_t*>(const_cast<char*>(str.data()))[0] = ::nano::major_version + 1; // NOLINT
 
     std::istringstream stream(str);
@@ -211,7 +211,7 @@ UTEST_CASE(estimator_read_fail_minor)
 {
     auto estimator = estimator_t{};
 
-    auto str = to_string(estimator);
+    auto str                                                     = to_string(estimator);
     reinterpret_cast<int32_t*>(const_cast<char*>(str.data()))[1] = ::nano::minor_version + 1; // NOLINT
 
     std::istringstream stream(str);
@@ -222,7 +222,7 @@ UTEST_CASE(estimator_read_fail_patch)
 {
     auto estimator = estimator_t{};
 
-    auto str = to_string(estimator);
+    auto str                                                     = to_string(estimator);
     reinterpret_cast<int32_t*>(const_cast<char*>(str.data()))[2] = ::nano::patch_version + 1; // NOLINT
 
     std::istringstream stream(str);
@@ -231,16 +231,13 @@ UTEST_CASE(estimator_read_fail_patch)
 
 UTEST_CASE(no_parameters)
 {
-    const auto check_params = [] (const estimator_t& estimator)
-    {
-        UTEST_CHECK(estimator.parameters().empty());
-    };
+    const auto check_params = [](const estimator_t& estimator) { UTEST_CHECK(estimator.parameters().empty()); };
 
     auto estimator = estimator_t{};
     check_params(estimator);
 
     const auto* const pname = "nonexistent_param_name";
-    const auto sname = string_t{"unknown_param_name"};
+    const auto        sname = string_t{"unknown_param_name"};
 
     UTEST_CHECK_THROW(estimator.parameter(pname), std::runtime_error);
     UTEST_CHECK_THROW(estimator.parameter(sname), std::runtime_error);
@@ -261,7 +258,7 @@ UTEST_CASE(parameters)
     const auto iparam = parameter_t::make_integer("iparam", 1, LE, 5, LE, 9);
     const auto fparam = parameter_t::make_scalar_pair("fparam", 1.0, LT, 2.0, LE, 2.0, LT, 5.0);
 
-    const auto check_params = [&] (const estimator_t& estimator)
+    const auto check_params = [&](const estimator_t& estimator)
     {
         UTEST_CHECK_EQUAL(estimator.parameters().size(), 3U);
 

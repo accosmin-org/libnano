@@ -1,6 +1,6 @@
-#include <utest/utest.h>
 #include "fixture/gboost.h"
 #include <nano/core/numeric.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -12,13 +12,9 @@ inline std::ostream& operator<<(std::ostream& stream, hinge type)
 class whinge_dataset_t : public fixture_dataset_t
 {
 public:
-
     whinge_dataset_t() = default;
 
-    tensor_size_t groups() const override
-    {
-        return 1;
-    }
+    tensor_size_t groups() const override { return 1; }
 
     void check_wlearner(const wlearner_hinge_t& wlearner) const
     {
@@ -30,27 +26,24 @@ public:
     }
 
     scalar_t threshold() const { return 2.5; }
+
     tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
-    virtual ::nano::hinge hinge() const = 0;
-    virtual tensor4d_t tables() const = 0;
+
+    virtual ::nano::hinge hinge() const  = 0;
+    virtual tensor4d_t    tables() const = 0;
 };
 
 class whinge_left_dataset_t : public whinge_dataset_t
 {
 public:
-
     whinge_left_dataset_t() = default;
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).full(
-            make_hinge_target(sample, gt_feature(), 5, 2.5, +3.0, ::nano::hinge::left, 0));
+        target(sample).full(make_hinge_target(sample, gt_feature(), 5, 2.5, +3.0, ::nano::hinge::left, 0));
     }
 
-    ::nano::hinge hinge() const override
-    {
-        return ::nano::hinge::left;
-    }
+    ::nano::hinge hinge() const override { return ::nano::hinge::left; }
 
     tensor4d_t tables() const override
     {
@@ -61,19 +54,14 @@ public:
 class whinge_right_dataset_t : public whinge_dataset_t
 {
 public:
-
     whinge_right_dataset_t() = default;
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).full(
-            make_hinge_target(sample, gt_feature(), 5, 2.5, -2.1, ::nano::hinge::right, 0));
+        target(sample).full(make_hinge_target(sample, gt_feature(), 5, 2.5, -2.1, ::nano::hinge::right, 0));
     }
 
-    ::nano::hinge hinge() const override
-    {
-        return ::nano::hinge::right;
-    }
+    ::nano::hinge hinge() const override { return ::nano::hinge::right; }
 
     tensor4d_t tables() const override
     {
@@ -85,7 +73,7 @@ UTEST_BEGIN_MODULE(test_gboost_whinge)
 
 UTEST_CASE(fitting_left)
 {
-    const auto dataset = make_dataset<whinge_left_dataset_t>();
+    const auto dataset   = make_dataset<whinge_left_dataset_t>();
     const auto datasetx1 = make_dataset<whinge_left_dataset_t>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<whinge_left_dataset_t>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<whinge_left_dataset_t>>();
@@ -97,7 +85,7 @@ UTEST_CASE(fitting_left)
 
 UTEST_CASE(fitting_right)
 {
-    const auto dataset = make_dataset<whinge_right_dataset_t>();
+    const auto dataset   = make_dataset<whinge_right_dataset_t>();
     const auto datasetx1 = make_dataset<whinge_right_dataset_t>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<whinge_right_dataset_t>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<whinge_right_dataset_t>>();

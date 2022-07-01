@@ -1,23 +1,23 @@
 #pragma once
 
-#include <cmath>
-#include <vector>
+#include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <iterator>
 #include <numeric>
 #include <ostream>
-#include <iterator>
-#include <algorithm>
+#include <vector>
 
 namespace nano
 {
     namespace detail
     {
         template <typename titerator, typename toperator>
-        auto percentile(titerator begin, titerator end, double percentage, const toperator& from_position)
+        auto percentile(titerator begin, titerator end, double percentage, const toperator& from_position) noexcept
         {
             assert(percentage >= 0.0 && percentage <= 100.0);
 
-            const auto size = std::distance(begin, end);
+            const auto   size     = std::distance(begin, end);
             const double position = percentage * static_cast<double>(size - 1) / 100.0;
 
             const auto lpos = static_cast<decltype(size)>(std::floor(position));
@@ -34,15 +34,15 @@ namespace nano
                 return (lvalue + rvalue) / 2;
             }
         }
-    }
+    } // namespace detail
 
     ///
     /// \brief returns the percentile value from a potentially not sorted list of values.
     ///
     template <typename titerator>
-    auto percentile(titerator begin, titerator end, double percentage)
+    auto percentile(titerator begin, titerator end, double percentage) noexcept
     {
-        const auto from_position = [&] (auto pos)
+        const auto from_position = [&](auto pos)
         {
             auto middle = begin;
             std::advance(middle, pos);
@@ -57,11 +57,11 @@ namespace nano
     /// \brief returns the percentile value from a sorted list of values.
     ///
     template <typename titerator>
-    auto percentile_sorted(titerator begin, titerator end, double percentage)
+    auto percentile_sorted(titerator begin, titerator end, double percentage) noexcept
     {
         assert(std::is_sorted(begin, end));
 
-        const auto from_position = [&] (auto pos)
+        const auto from_position = [&](auto pos)
         {
             auto middle = begin;
             std::advance(middle, pos);
@@ -75,7 +75,7 @@ namespace nano
     /// \brief returns the median value from a potentially not sorted list of values.
     ///
     template <typename titerator>
-    auto median(titerator begin, titerator end)
+    auto median(titerator begin, titerator end) noexcept
     {
         return percentile(begin, end, 50);
     }
@@ -84,8 +84,8 @@ namespace nano
     /// \brief returns the median value from a sorted list of values.
     ///
     template <typename titerator>
-    auto median_sorted(titerator begin, titerator end)
+    auto median_sorted(titerator begin, titerator end) noexcept
     {
         return percentile_sorted(begin, end, 50);
     }
-}
+} // namespace nano

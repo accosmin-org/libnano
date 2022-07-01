@@ -1,6 +1,6 @@
-#include <utest/utest.h>
 #include "fixture/gboost.h"
 #include <nano/core/numeric.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -8,18 +8,13 @@ template <tensor_size_t fvalue>
 class wdstep_dataset_t : public fixture_dataset_t
 {
 public:
-
     wdstep_dataset_t() = default;
 
-    tensor_size_t groups() const override
-    {
-        return 1;
-    }
+    tensor_size_t groups() const override { return 1; }
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).full(
-            make_dstep_target(sample, gt_feature(), 3, 5.0, fvalue, 0));
+        target(sample).full(make_dstep_target(sample, gt_feature(), 3, 5.0, fvalue, 0));
     }
 
     void check_wlearner(const wlearner_dstep_t& wlearner) const
@@ -32,7 +27,9 @@ public:
     }
 
     tensor_size_t the_discrete_feature() const { return gt_feature(); }
+
     tensor_size_t gt_feature(bool discrete = true) const { return get_feature(discrete); }
+
     tensor4d_t tables() const
     {
         const auto table0 = fvalue == 0 ? 5.0 : 0.0;
@@ -46,7 +43,7 @@ UTEST_BEGIN_MODULE(test_gboost_wdstep)
 
 UTEST_CASE(fitting0)
 {
-    const auto dataset = make_dataset<wdstep_dataset_t<0>>();
+    const auto dataset   = make_dataset<wdstep_dataset_t<0>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<0>>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wdstep_dataset_t<0>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<0>>>();
@@ -59,7 +56,7 @@ UTEST_CASE(fitting0)
 
 UTEST_CASE(fitting1)
 {
-    const auto dataset = make_dataset<wdstep_dataset_t<1>>();
+    const auto dataset   = make_dataset<wdstep_dataset_t<1>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<1>>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wdstep_dataset_t<1>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<1>>>();
@@ -72,7 +69,7 @@ UTEST_CASE(fitting1)
 
 UTEST_CASE(fitting2)
 {
-    const auto dataset = make_dataset<wdstep_dataset_t<2>>();
+    const auto dataset   = make_dataset<wdstep_dataset_t<2>>();
     const auto datasetx1 = make_dataset<wdstep_dataset_t<2>>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wdstep_dataset_t<2>>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdstep_dataset_t<2>>>();

@@ -7,24 +7,21 @@ using namespace nano;
 
 static auto find(const cmdline_t::options_t& options, const string_t& name_or_short_name)
 {
-    return  std::find_if(options.begin(), options.end(),
-            [&] (const cmdline_t::option_t& option)
-            {
-                return  option.m_short_name == name_or_short_name ||
-                        option.m_name == name_or_short_name;
-            });
+    return std::find_if(options.begin(), options.end(),
+                        [&](const cmdline_t::option_t& option)
+                        { return option.m_short_name == name_or_short_name || option.m_name == name_or_short_name; });
 }
 
-static const auto str_dash = string_t{"-"}; // NOLINT(cert-err58-cpp)
+static const auto str_dash      = string_t{"-"};  // NOLINT(cert-err58-cpp)
 static const auto str_dash_dash = string_t{"--"}; // NOLINT(cert-err58-cpp)
 
 cmdline_t::option_t::option_t() = default; // LCOV_EXCL_LINE
 
-cmdline_t::option_t::option_t(string_t short_name, string_t name, string_t description, string_t default_value) :
-    m_short_name(std::move(short_name)),
-    m_name(std::move(name)),
-    m_description(std::move(description)),
-    m_default_value(std::move(default_value))
+cmdline_t::option_t::option_t(string_t short_name, string_t name, string_t description, string_t default_value)
+    : m_short_name(std::move(short_name))
+    , m_name(std::move(name))
+    , m_description(std::move(description))
+    , m_default_value(std::move(default_value))
 {
 }
 
@@ -68,8 +65,8 @@ string_t cmdline_t::result_t::get(const string_t& name) const
     return it->second;
 }
 
-cmdline_t::cmdline_t(string_t title) :
-    m_title(std::move(title))
+cmdline_t::cmdline_t(string_t title)
+    : m_title(std::move(title))
 {
     add("h", "help", "usage");
 }
@@ -81,6 +78,7 @@ void cmdline_t::add(string_t short_name, string_t name, string_t description)
 
 void cmdline_t::add(string_t short_name, string_t name, string_t description, string_t default_value)
 {
+    // NOLINTNEXTLINE(readability-suspicious-call-argument)
     if (name.empty() || nano::starts_with(name, str_dash_dash) || nano::starts_with(name, str_dash))
     {
         throw std::runtime_error(scat("cmdline: invalid option name [", name, "]"));
@@ -108,11 +106,12 @@ void cmdline_t::add(string_t short_name, string_t name, string_t description, st
 cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
 {
     std::vector<std::pair<string_t, int>> tokens;
-    for (int i = 1; i < argc; ++ i)
+    for (int i = 1; i < argc; ++i)
     {
         string_t token = argv[i];
         assert(!token.empty());
 
+        // NOLINTNEXTLINE(readability-suspicious-call-argument)
         if (nano::starts_with(token, str_dash_dash))
         {
             if (token.size() == 2U)
@@ -122,6 +121,7 @@ cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
 
             tokens.emplace_back(token.substr(2), 0);
         }
+        // NOLINTNEXTLINE(readability-suspicious-call-argument)
         else if (nano::starts_with(token, str_dash))
         {
             if (token.size() != 2U)
@@ -137,7 +137,7 @@ cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
         }
     }
 
-    const auto get_mandatory_value = [&] (const string_t& name, size_t i)
+    const auto get_mandatory_value = [&](const string_t& name, size_t i)
     {
         if (i + 1 == tokens.size())
         {
@@ -162,7 +162,7 @@ cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
         }
     }
 
-    for (size_t i = 0; i < tokens.size(); )
+    for (size_t i = 0; i < tokens.size();)
     {
         const auto& [name, type] = tokens[i];
 
@@ -198,20 +198,20 @@ cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
 cmdline_t::result_t cmdline_t::process(const string_t& config) const
 {
     strings_t tokens;
-    for (auto tokenizer = tokenizer_t{config, " \t\n\r"}; tokenizer; ++ tokenizer)
+    for (auto tokenizer = tokenizer_t{config, " \t\n\r"}; tokenizer; ++tokenizer)
     {
         tokens.push_back(tokenizer.get());
     }
 
     std::vector<const char*> ptokens(tokens.size() + 1, nullptr);
-    std::transform(tokens.begin(), tokens.end(), ptokens.begin() + 1, [&] (const auto& token) { return token.c_str(); });
+    std::transform(tokens.begin(), tokens.end(), ptokens.begin() + 1, [&](const auto& token) { return token.c_str(); });
 
     return process(static_cast<int>(ptokens.size()), ptokens.data());
 }
 
 cmdline_t::result_t cmdline_t::process_config_file(const string_t& path) const
 {
-    std::ifstream in(path.c_str());
+    std::ifstream  in(path.c_str());
     const string_t config((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
     return process(config);
@@ -230,8 +230,8 @@ void cmdline_t::usage(std::ostream& os, size_t indent) const
     max_option_size += 4;
     for (const auto& option : m_options)
     {
-        os << string_t(indent, ' ')
-           << nano::align(option.describe(), max_option_size) << option.m_description << std::endl;
+        os << string_t(indent, ' ') << nano::align(option.describe(), max_option_size) << option.m_description
+           << std::endl;
     }
 
     os << std::endl;

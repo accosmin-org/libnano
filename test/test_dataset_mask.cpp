@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/dataset/mask.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -13,7 +13,7 @@ UTEST_CASE(mask)
         UTEST_CHECK_EQUAL(mask.size(), ((samples + 7) / 8));
         UTEST_CHECK(optional(mask, samples));
 
-        for (auto sample = tensor_size_t{0}; sample < samples; ++ sample)
+        for (auto sample = tensor_size_t{0}; sample < samples; ++sample)
         {
             UTEST_CHECK(!getbit(mask, sample));
         }
@@ -24,19 +24,19 @@ UTEST_CASE(mask)
         }
         UTEST_CHECK(optional(mask, samples) == (samples > 1));
 
-        for (auto sample = tensor_size_t{0}; sample < samples; ++ sample)
+        for (auto sample = tensor_size_t{0}; sample < samples; ++sample)
         {
             const auto bit = (sample % 3) == 0;
             UTEST_CHECK(getbit(mask, sample) == bit);
         }
 
-        for (auto sample = tensor_size_t{0}; sample < samples; ++ sample)
+        for (auto sample = tensor_size_t{0}; sample < samples; ++sample)
         {
             setbit(mask, sample);
         }
         UTEST_CHECK(!optional(mask, samples));
 
-        for (auto sample = tensor_size_t{0}; sample < samples; ++ sample)
+        for (auto sample = tensor_size_t{0}; sample < samples; ++sample)
         {
             UTEST_CHECK(getbit(mask, sample));
         }

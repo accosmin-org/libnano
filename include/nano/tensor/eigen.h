@@ -9,26 +9,16 @@ namespace nano
     ///
     /// \brief vector types.
     ///
-    template
-    <
-        typename tscalar_,
-        int trows = Eigen::Dynamic,
-        typename tscalar = std::remove_const_t<tscalar_>
-    >
+    template <typename tscalar_, int trows = Eigen::Dynamic, typename tscalar = std::remove_const_t<tscalar_>>
     using tensor_vector_t = Eigen::Matrix<tscalar, trows, 1, Eigen::ColMajor>;
 
     ///
     /// \brief map non-constant arrays to vectors.
     ///
-    template
-    <
-        int alignment = Eigen::Unaligned,
-        typename tscalar_,
-        typename tsize,
-        typename tscalar = std::remove_const_t<tscalar_>,
-        typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>
-    >
-    tresult map_vector(tscalar_* data, tsize rows)
+    template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+              typename tscalar = std::remove_const_t<tscalar_>,
+              typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>>
+    tresult map_vector(tscalar_* data, tsize rows) noexcept
     {
         return tresult(data, rows);
     }
@@ -36,15 +26,10 @@ namespace nano
     ///
     /// \brief map constant arrays to vectors.
     ///
-    template
-    <
-        int alignment = Eigen::Unaligned,
-        typename tscalar_,
-        typename tsize,
-        typename tscalar = std::remove_const_t<tscalar_>,
-        typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>
-    >
-    tresult map_vector(const tscalar_* data, tsize rows)
+    template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+              typename tscalar = std::remove_const_t<tscalar_>,
+              typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>>
+    tresult map_vector(const tscalar_* data, tsize rows) noexcept
     {
         return tresult(data, rows);
     }
@@ -52,27 +37,17 @@ namespace nano
     ///
     /// \brief matrix types.
     ///
-    template
-    <
-        typename tscalar_,
-        int trows = Eigen::Dynamic,
-        int tcols = Eigen::Dynamic,
-        typename tscalar = std::remove_const_t<tscalar_>
-    >
+    template <typename tscalar_, int trows = Eigen::Dynamic, int tcols = Eigen::Dynamic,
+              typename tscalar = std::remove_const_t<tscalar_>>
     using tensor_matrix_t = Eigen::Matrix<tscalar, trows, tcols, Eigen::RowMajor>;
 
     ///
     /// \brief map non-constant data to matrices.
     ///
-    template
-    <
-        int alignment = Eigen::Unaligned,
-        typename tscalar_,
-        typename tsize,
-        typename tscalar = std::remove_const_t<tscalar_>,
-        typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>
-    >
-    tresult map_matrix(tscalar_* data, tsize rows, tsize cols)
+    template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+              typename tscalar = std::remove_const_t<tscalar_>,
+              typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>>
+    tresult map_matrix(tscalar_* data, tsize rows, tsize cols) noexcept
     {
         return tresult(data, rows, cols);
     }
@@ -80,15 +55,10 @@ namespace nano
     ///
     /// \brief map constant data to Eigen matrices.
     ///
-    template
-    <
-        int alignment = Eigen::Unaligned,
-        typename tscalar_,
-        typename tsize,
-        typename tscalar = std::remove_const_t<tscalar_>,
-        typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>
-    >
-    tresult map_matrix(const tscalar_* data, tsize rows, tsize cols)
+    template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+              typename tscalar = std::remove_const_t<tscalar_>,
+              typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>>
+    tresult map_matrix(const tscalar_* data, tsize rows, tsize cols) noexcept
     {
         return tresult(data, rows, cols);
     }
@@ -132,16 +102,10 @@ namespace nano
     ///
     /// \brief returns true if the two Eigen vectors or matrices are close.
     ///
-    template
-    <
-        typename teigen1,
-        typename teigen2,
-        typename tscalar,
-        std::enable_if_t<is_eigen_v<teigen1>, bool> = true,
-        std::enable_if_t<is_eigen_v<teigen2>, bool> = true,
-        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
-    >
-    bool close(const teigen1& lhs, const teigen2& rhs, tscalar epsilon)
+    template <typename teigen1, typename teigen2, typename tscalar, std::enable_if_t<is_eigen_v<teigen1>, bool> = true,
+              std::enable_if_t<is_eigen_v<teigen2>, bool>           = true,
+              std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
+    bool close(const teigen1& lhs, const teigen2& rhs, tscalar epsilon) noexcept
     {
         if (lhs.size() != rhs.size())
         {
@@ -153,11 +117,11 @@ namespace nano
         }
         else
         {
-            return  (lhs - rhs).array().abs().maxCoeff() <
-                    epsilon * (1 + lhs.array().abs().maxCoeff() + rhs.array().abs().maxCoeff());
+            return (lhs - rhs).array().abs().maxCoeff() <
+                   epsilon * (1 + lhs.array().abs().maxCoeff() + rhs.array().abs().maxCoeff());
         }
     }
-}
+} // namespace nano
 
 namespace Eigen
 {
@@ -165,26 +129,26 @@ namespace Eigen
     /// \brief iterators for Eigen matrices for STL compatibility.
     ///
     template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    auto begin(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    auto begin(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
     {
         return m.data();
     }
 
     template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    auto begin(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    auto begin(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
     {
         return m.data();
     }
 
     template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    auto end(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    auto end(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
     {
         return m.data() + m.size();
     }
 
     template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    auto end(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m)
+    auto end(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
     {
         return m.data() + m.size();
     }
-}
+} // namespace Eigen

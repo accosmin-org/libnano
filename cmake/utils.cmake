@@ -1,9 +1,6 @@
 # function to setup compilation flags for various targets
 function(target_compile_configure target)
     target_compile_options(${target}
-        PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic -Wsign-conversion>
-        PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic -Wsign-conversion>
-        PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -pedantic -Wsign-conversion>
         PRIVATE -DEIGEN_MPL2_ONLY -DEIGEN_DONT_PARALLELIZE)
     target_compile_features(${target}
         PUBLIC cxx_std_17

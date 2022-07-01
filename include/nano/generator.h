@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/generator/iterator.h>
 #include <nano/generator/generator.h>
+#include <nano/generator/iterator.h>
 
 namespace nano
 {
@@ -11,7 +11,6 @@ namespace nano
     class NANO_PUBLIC dataset_generator_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -85,8 +84,8 @@ namespace nano
         ///
         /// \brief support for feature importance estimation using sample-permutation like methods.
         ///
-        void unshuffle() const;
-        void shuffle(tensor_size_t feature) const;
+        void      unshuffle() const;
+        void      shuffle(tensor_size_t feature) const;
         indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
 
         ///
@@ -109,17 +108,20 @@ namespace nano
 
         // access functions
         const dataset_t& dataset() const { return m_dataset; }
+
         const indices_t& sclass_features() const { return m_select_stats.m_sclass_features; }
+
         const indices_t& mclass_features() const { return m_select_stats.m_mclass_features; }
+
         const indices_t& scalar_features() const { return m_select_stats.m_scalar_features; }
+
         const indices_t& struct_features() const { return m_select_stats.m_struct_features; }
 
     private:
-
-        void update();
-        void update_stats();
-        void check(tensor_size_t feature) const;
-        void check(indices_cmap_t samples) const;
+        void                update();
+        void                update_stats();
+        void                check(tensor_size_t feature) const;
+        void                check(indices_cmap_t samples) const;
         const rgenerator_t& byfeature(tensor_size_t feature) const;
 
         // per column:
@@ -139,11 +141,11 @@ namespace nano
         using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const dataset_t&        m_dataset;              ///<
-        rgenerators_t           m_generators;           ///<
-        column_mapping_t        m_column_mapping;       ///<
-        feature_mapping_t       m_feature_mapping;      ///<
-        generator_mapping_t     m_generator_mapping;    ///<
-        select_stats_t          m_select_stats;         ///<
+        const dataset_t&    m_dataset;           ///<
+        rgenerators_t       m_generators;        ///<
+        column_mapping_t    m_column_mapping;    ///<
+        feature_mapping_t   m_feature_mapping;   ///<
+        generator_mapping_t m_generator_mapping; ///<
+        select_stats_t      m_select_stats;      ///<
     };
-}
+} // namespace nano

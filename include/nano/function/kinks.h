@@ -10,7 +10,6 @@ namespace nano
     class NANO_PUBLIC function_kinks_t final : public benchmark_function_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -27,9 +26,8 @@ namespace nano
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
     private:
-
         // attributes
-        matrix_t    m_kinks;        ///<
-        scalar_t    m_offset{0};    ///< offset so that the global minimum is exactly zero
+        matrix_t m_kinks;     ///<
+        scalar_t m_offset{0}; ///< offset so that the global minimum is exactly zero
     };
-}
+} // namespace nano

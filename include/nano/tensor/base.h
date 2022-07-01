@@ -9,39 +9,27 @@ namespace nano
     ///     - stores dimensions
     ///     - handles the indexing
     ///
-    template
-    <
-        typename tscalar, size_t trank,
-        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
-    >
+    template <typename tscalar, size_t trank, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
     class tensor_base_t
     {
     public:
-
-        static_assert(
-            trank >= 1,
-            "cannot create tensors with fewer than one dimension");
+        static_assert(trank >= 1, "cannot create tensors with fewer than one dimension");
 
         using tscalar_remove_cvref = std::remove_cv_t<std::remove_reference_t<tscalar>>;
-        static_assert(
-            std::is_same_v<tscalar, tscalar_remove_cvref>,
-            "cannot create tensors with cvref scalars");
+        static_assert(std::is_same_v<tscalar, tscalar_remove_cvref>, "cannot create tensors with cvref scalars");
 
         using tdims = tensor_dims_t<trank>;
 
         ///
         /// \brief default constructor
         ///
-        tensor_base_t()
-        {
-            m_dims.fill(0);
-        }
+        tensor_base_t() { m_dims.fill(0); }
 
         ///
         /// \brief constructor.
         ///
-        explicit tensor_base_t(tdims dims) :
-            m_dims(std::move(dims))
+        explicit tensor_base_t(tdims dims)
+            : m_dims(std::move(dims))
         {
         }
 
@@ -65,18 +53,12 @@ namespace nano
         ///
         /// \brief number of dimensions (aka the rank of the tensor).
         ///
-        static constexpr auto rank()
-        {
-            return trank;
-        }
+        static constexpr auto rank() { return trank; }
 
         ///
         /// \brief list of dimensions.
         ///
-        const auto& dims() const
-        {
-            return m_dims;
-        }
+        const auto& dims() const { return m_dims; }
 
         ///
         /// \brief gather the missing dimensions in a multi-dimensional tensor
@@ -92,10 +74,7 @@ namespace nano
         ///
         /// \brief total number of elements.
         ///
-        auto size() const
-        {
-            return nano::size(m_dims);
-        }
+        auto size() const { return nano::size(m_dims); }
 
         ///
         /// \brief number of elements for the given dimension.
@@ -116,6 +95,7 @@ namespace nano
             static_assert(trank >= 2);
             return size<trank - 2>();
         }
+
         auto cols() const
         {
             static_assert(trank >= 2);
@@ -146,14 +126,10 @@ namespace nano
         ///
         /// \brief change size.
         ///
-        void resize(const tdims& dims)
-        {
-            m_dims = dims;
-        }
+        void resize(const tdims& dims) { m_dims = dims; }
 
     private:
-
         // attributes
-        tensor_dims_t<trank>    m_dims{};     ///<
+        tensor_dims_t<trank> m_dims{}; ///<
     };
-}
+} // namespace nano

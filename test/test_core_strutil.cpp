@@ -1,6 +1,6 @@
 #include <iomanip>
-#include <utest/utest.h>
 #include <nano/core/strutil.h>
+#include <utest/utest.h>
 
 namespace nano
 {
@@ -14,10 +14,9 @@ namespace nano
     template <>
     enum_map_t<nano::enum_type> enum_string<nano::enum_type>() // cppcheck-suppress unusedFunction
     {
-        return
-        {
-            { enum_type::type1,     "type1" },
-            { enum_type::type3,     "type3" }
+        return {
+            {enum_type::type1, "type1"},
+            {enum_type::type3, "type3"}
         };
     }
 
@@ -25,7 +24,7 @@ namespace nano
     {
         return stream << scat(enums);
     }
-}
+} // namespace nano
 
 UTEST_BEGIN_MODULE(test_core_strutil)
 
@@ -77,9 +76,9 @@ UTEST_CASE(enum_values)
 
 UTEST_CASE(resize)
 {
-    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::left, '='),   "text======");
-    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::right, '='),  "======text");
-    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::left, '='),   "text======");
+    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::left, '='), "text======");
+    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::right, '='), "======text");
+    UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::left, '='), "text======");
     UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::center, '='), "===text===");
 }
 

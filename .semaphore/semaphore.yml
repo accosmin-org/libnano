@@ -2,7 +2,7 @@ version: v1.0
 name: libnano pipeline
 agent:
   machine:
-    type: e1-standard-4
+    type: e1-standard-8
     os_image: ubuntu2004
 blocks:
   - name: Ubuntu 20.04
@@ -12,6 +12,10 @@ blocks:
           - checkout
           - bash scripts/setup_ubuntu2004.sh --default
       jobs:
+        - name: format
+          commands:
+            - bash scripts/setup_ubuntu2004.sh --llvm 13
+            - bash scripts/build.sh --clang-suffix -13 --clang-format
         - name: debug (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example
@@ -21,21 +25,37 @@ blocks:
         - name: debug (clang)
           commands:
             - CXX=clang++ bash scripts/build.sh --build-type Debug --libcpp --config --build --test --install --build-example
-        - name: ASAN (gcc)
+        - name: ASAN (clang)
           commands:
-            - CXX=g++ bash scripts/build.sh --build-type Debug --asan --config --build --test
-        - name: LSAN (gcc)
+            - CXX=clang++ bash scripts/build.sh --build-type Debug --asan --config --build --test
+        - name: LSAN (clang)
           commands:
-            - CXX=g++ bash scripts/build.sh --build-type Debug --lsan --config --build --test
-        - name: USAN (gcc)
+            - CXX=clang++ bash scripts/build.sh --build-type Debug --lsan --config --build --test
+        - name: USAN (clang)
           commands:
-            - CXX=g++ bash scripts/build.sh --build-type Debug --usan --config --build --test
-        - name: TSAN (gcc)
+            - CXX=clang++ bash scripts/build.sh --build-type Debug --usan --config --build --test
+        - name: TSAN (clang)
           commands:
-            - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
-        - name: clang-tidy (clang)
+            - CXX=clang++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
+        - name: clang-tidy (clang, misc, cert, hicpp, bugprone)
           commands:
-            - CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-all
+            - CXX=clang++ bash scripts/build.sh --config --build
+              --clang-tidy-misc
+              --clang-tidy-cert
+              --clang-tidy-hicpp
+              --clang-tidy-bugprone
+        - name: clang-tidy (clang, modernize, performance, portability, readability)
+          commands:
+            - CXX=clang++ bash scripts/build.sh --config --build
+              --clang-tidy-modernize
+              --clang-tidy-performance
+              --clang-tidy-portability
+              --clang-tidy-readability
+        - name: clang-tidy (clang, clang_analyzer, cppcoreguidelines)
+          commands:
+            - CXX=clang++ bash scripts/build.sh --config --build
+              --clang-tidy-clang-analyzer
+              --clang-tidy-cppcoreguidelines
         - name: cppcheck
           commands:
             - CXX=g++ bash scripts/build.sh --config --cppcheck

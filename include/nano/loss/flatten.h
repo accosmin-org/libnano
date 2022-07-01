@@ -26,7 +26,6 @@ namespace nano
     class flatten_loss_t final : public loss_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -44,7 +43,7 @@ namespace nano
             assert(targets.dims() == outputs.dims());
             assert(errors.size() == targets.size<0>());
 
-            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++ i)
+            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
                 errors(i) = top::error(targets.array(i), outputs.array(i));
             }
@@ -58,7 +57,7 @@ namespace nano
             assert(targets.dims() == outputs.dims());
             assert(values.size() == targets.size<0>());
 
-            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++ i)
+            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
                 values(i) = top::value(targets.array(i), outputs.array(i));
             }
@@ -72,7 +71,7 @@ namespace nano
             assert(targets.dims() == vgrads.dims());
             assert(targets.dims() == outputs.dims());
 
-            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++ i)
+            for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
                 top::vgrad(targets.array(i), outputs.array(i), vgrads.array(i));
             }
@@ -102,7 +101,7 @@ namespace nano
             template <typename tarray>
             static auto error(const tarray& target, const tarray& output)
             {
-                const auto edges = target * output;
+                const auto edges   = target * output;
                 const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
                 return static_cast<scalar_t>((edges < epsilon).count());
             }
@@ -125,7 +124,7 @@ namespace nano
                 }
                 else
                 {
-                    const auto edges = target.array() * output.array();
+                    const auto edges   = target.array() * output.array();
                     const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
                     return static_cast<scalar_t>((edges < epsilon).count());
                 }
@@ -145,10 +144,10 @@ namespace nano
             static auto value(const tarray& target, const tarray& output)
             {
                 tensor_size_t imax = 0;
-                const auto omax = output.maxCoeff(&imax);
+                const auto    omax = output.maxCoeff(&imax);
 
                 scalar_t value = std::numeric_limits<scalar_t>::epsilon(), posum = 0;
-                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     value += std::exp(output(i) - omax);
                     if (is_pos_target(target(i)))
@@ -163,14 +162,14 @@ namespace nano
             static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
                 tensor_size_t imax = 0;
-                const auto omax = output.maxCoeff(&imax);
+                const auto    omax = output.maxCoeff(&imax);
 
                 scalar_t value = 0;
-                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     value += (vgrad(i) = std::exp(output(i) - omax));
                 }
-                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     vgrad(i) /= value;
                     if (is_pos_target(target(i)))
@@ -216,7 +215,7 @@ namespace nano
             static auto value(const tarray& target, const tarray& output)
             {
                 scalar_t value = 0.0;
-                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     const auto x = -target(i) * output(i);
                     value += (x < 1.0) ? std::log1p(std::exp(x)) : (x + std::log1p(std::exp(-x)));
@@ -227,11 +226,11 @@ namespace nano
             template <typename tarray, typename tgarray>
             static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
             {
-                for (tensor_size_t i = 0, size = target.size(); i < size; ++ i)
+                for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     const auto x = -target(i) * output(i);
                     const auto g = (x < 1.0) ? (std::exp(x) / (1.0 + std::exp(x))) : (1.0 / (1.0 + std::exp(-x)));
-                    vgrad(i) = -target(i) * g;
+                    vgrad(i)     = -target(i) * g;
                 }
             }
         };
@@ -389,24 +388,24 @@ namespace nano
                 vgrad = (output - target) / (1 + (output - target).square());
             }
         };
-    }
+    } // namespace detail
 
-    using cauchy_loss_t = flatten_loss_t<detail::cauchy_t<detail::absdiff_t>>;
-    using squared_loss_t = flatten_loss_t<detail::squared_t<detail::absdiff_t>>;
+    using cauchy_loss_t   = flatten_loss_t<detail::cauchy_t<detail::absdiff_t>>;
+    using squared_loss_t  = flatten_loss_t<detail::squared_t<detail::absdiff_t>>;
     using absolute_loss_t = flatten_loss_t<detail::absolute_t<detail::absdiff_t>>;
 
-    using shinge_loss_t = flatten_loss_t<detail::hinge_t<detail::sclass_t>>;
-    using ssavage_loss_t = flatten_loss_t<detail::savage_t<detail::sclass_t>>;
-    using stangent_loss_t = flatten_loss_t<detail::tangent_t<detail::sclass_t>>;
-    using sclassnll_loss_t = flatten_loss_t<detail::classnll_t<detail::sclass_t>>;
-    using slogistic_loss_t = flatten_loss_t<detail::logistic_t<detail::sclass_t>>;
-    using sexponential_loss_t = flatten_loss_t<detail::exponential_t<detail::sclass_t>>;
+    using shinge_loss_t         = flatten_loss_t<detail::hinge_t<detail::sclass_t>>;
+    using ssavage_loss_t        = flatten_loss_t<detail::savage_t<detail::sclass_t>>;
+    using stangent_loss_t       = flatten_loss_t<detail::tangent_t<detail::sclass_t>>;
+    using sclassnll_loss_t      = flatten_loss_t<detail::classnll_t<detail::sclass_t>>;
+    using slogistic_loss_t      = flatten_loss_t<detail::logistic_t<detail::sclass_t>>;
+    using sexponential_loss_t   = flatten_loss_t<detail::exponential_t<detail::sclass_t>>;
     using ssquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<detail::sclass_t>>;
 
-    using mhinge_loss_t = flatten_loss_t<detail::hinge_t<detail::mclass_t>>;
-    using msavage_loss_t = flatten_loss_t<detail::savage_t<detail::mclass_t>>;
-    using mtangent_loss_t = flatten_loss_t<detail::tangent_t<detail::mclass_t>>;
-    using mlogistic_loss_t = flatten_loss_t<detail::logistic_t<detail::mclass_t>>;
-    using mexponential_loss_t = flatten_loss_t<detail::exponential_t<detail::mclass_t>>;
+    using mhinge_loss_t         = flatten_loss_t<detail::hinge_t<detail::mclass_t>>;
+    using msavage_loss_t        = flatten_loss_t<detail::savage_t<detail::mclass_t>>;
+    using mtangent_loss_t       = flatten_loss_t<detail::tangent_t<detail::mclass_t>>;
+    using mlogistic_loss_t      = flatten_loss_t<detail::logistic_t<detail::mclass_t>>;
+    using mexponential_loss_t   = flatten_loss_t<detail::exponential_t<detail::mclass_t>>;
     using msquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<detail::mclass_t>>;
-}
+} // namespace nano

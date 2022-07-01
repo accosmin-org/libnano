@@ -1,13 +1,13 @@
 #pragma once
 
-#include <nano/solver/lsearch.h>
 #include <nano/solver/function.h>
+#include <nano/solver/lsearch.h>
 
 namespace nano
 {
     class solver_t;
     using solver_factory_t = factory_t<solver_t>;
-    using rsolver_t = solver_factory_t::trobject;
+    using rsolver_t        = solver_factory_t::trobject;
 
     ///
     /// \brief unconstrained numerical optimization algorithm that uses line-search
@@ -20,7 +20,6 @@ namespace nano
     class NANO_PUBLIC solver_t : public estimator_t
     {
     public:
-
         ///
         /// \brief logging operator: op(state), returns false if the optimization should stop
         ///
@@ -46,20 +45,20 @@ namespace nano
         virtual solver_state_t minimize(const function_t&, const vector_t& x0) const = 0;
 
         ///
-        /// \brief set the logging callback
+        /// \brief set the logging callback.
         ///
         void logger(const logger_t& logger);
         void lsearch0_logger(const lsearch0_t::logger_t& logger);
         void lsearchk_logger(const lsearchk_t::logger_t& logger);
 
         ///
-        /// \brief set the line-search initialization
+        /// \brief set the line-search initialization method.
         ///
         void lsearch0(const string_t& id);
         void lsearch0(const string_t& id, rlsearch0_t&&);
 
         ///
-        /// \brief set the line-search strategy
+        /// \brief set the line-search strategy method.
         ///
         void lsearchk(const string_t& id);
         void lsearchk(const string_t& id, rlsearchk_t&&);
@@ -74,13 +73,16 @@ namespace nano
         bool monotonic() const;
 
         ///
-        /// \brief access functions
+        /// \brief return the id of the line-search initialization method.
         ///
         const auto& lsearch0_id() const { return m_lsearch0_id; }
+
+        ///
+        /// \brief return the id of the line-search strategy method.
+        ///
         const auto& lsearchk_id() const { return m_lsearchk_id; }
 
     protected:
-
         ///
         /// \brief create a copy of the line-search utility.
         ///
@@ -89,7 +91,7 @@ namespace nano
         ///
         /// \brief create a solver function to keep track of various statistics.
         ///
-        solver_function_t make_function(const function_t&, const vector_t& x0) const;
+        static solver_function_t make_function(const function_t&, const vector_t& x0);
 
         ///
         /// \brief log the current optimization state (if the logger is provided).
@@ -107,13 +109,12 @@ namespace nano
         void monotonic(bool);
 
     private:
-
         // attributes
-        logger_t        m_logger;                   ///<
-        string_t        m_lsearch0_id;              ///<
-        rlsearch0_t     m_lsearch0;                 ///<
-        string_t        m_lsearchk_id;              ///<
-        rlsearchk_t     m_lsearchk;                 ///<
-        bool            m_monotonic{true};          ///<
+        logger_t    m_logger;          ///<
+        string_t    m_lsearch0_id;     ///<
+        rlsearch0_t m_lsearch0;        ///<
+        string_t    m_lsearchk_id;     ///<
+        rlsearchk_t m_lsearchk;        ///<
+        bool        m_monotonic{true}; ///<
     };
-}
+} // namespace nano

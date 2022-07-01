@@ -10,6 +10,7 @@ namespace nano
     struct factory_traits_t<wlearner_dtree_t>
     {
         static string_t id() { return "dtree"; }
+
         static string_t description() { return "decision tree weak learner"; }
     };
 
@@ -19,36 +20,32 @@ namespace nano
     class dtree_node_t
     {
     public:
-
         dtree_node_t() = default;
 
-        dtree_node_t(
-            tensor_size_t feature, tensor_size_t classes, scalar_t threshold, size_t next, tensor_size_t table) :
-            m_feature(feature),
-            m_classes(classes),
-            m_threshold(threshold),
-            m_next(next),
-            m_table(table)
+        dtree_node_t(tensor_size_t feature, tensor_size_t classes, scalar_t threshold, size_t next, tensor_size_t table)
+            : m_feature(feature)
+            , m_classes(classes)
+            , m_threshold(threshold)
+            , m_next(next)
+            , m_table(table)
         {
         }
 
         // attributes
-        tensor_size_t   m_feature{-1};      ///< feature to evaluate (if a decision node)
-        tensor_size_t   m_classes{-1};      ///< number of classes (distinct values), if a discrete feature
-        scalar_t        m_threshold{0};     ///< feature value threshold, if a continuous feature
-        size_t          m_next{0};          ///< offset to the next node
-        tensor_size_t   m_table{-1};        ///< index in the tables at the leaves
+        tensor_size_t m_feature{-1};  ///< feature to evaluate (if a decision node)
+        tensor_size_t m_classes{-1};  ///< number of classes (distinct values), if a discrete feature
+        scalar_t      m_threshold{0}; ///< feature value threshold, if a continuous feature
+        size_t        m_next{0};      ///< offset to the next node
+        tensor_size_t m_table{-1};    ///< index in the tables at the leaves
     };
 
     using dtree_nodes_t = std::vector<dtree_node_t>;
 
     inline bool operator==(const dtree_node_t& lhs, const dtree_node_t& rhs)
     {
-        return  lhs.m_feature == rhs.m_feature &&
-                lhs.m_classes == rhs.m_classes &&
-                std::fabs(lhs.m_threshold - rhs.m_threshold) < 1e-8 &&
-                lhs.m_next == rhs.m_next &&
-                lhs.m_table == rhs.m_table;
+        return lhs.m_feature == rhs.m_feature && lhs.m_classes == rhs.m_classes &&
+               std::fabs(lhs.m_threshold - rhs.m_threshold) < 1e-8 && lhs.m_next == rhs.m_next &&
+               lhs.m_table == rhs.m_table;
     }
 
     inline std::ostream& operator<<(std::ostream& os, const dtree_node_t& node)
@@ -80,7 +77,6 @@ namespace nano
     class NANO_PUBLIC wlearner_dtree_t final : public wlearner_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -144,19 +140,21 @@ namespace nano
         /// \brief access functions
         ///
         const auto& nodes() const { return m_nodes; }
+
         const auto& tables() const { return m_tables; }
+
         auto max_depth() const { return m_max_depth.get(); }
+
         auto min_split() const { return m_min_split.get(); }
 
     private:
-
         void compatible(const dataset_t&) const;
 
         // attributes
-        iparam1_t       m_max_depth{"dtree::max_depth", 1, LE, 3, LE, 10};  ///< maximum depth
-        iparam1_t       m_min_split{"dtree::min_split", 1, LE, 5, LE, 10};  ///< minimum ratio of samples to split
-        dtree_nodes_t   m_nodes;                ///< nodes in the decision tree
-        tensor4d_t      m_tables;               ///< (#feature values, #outputs) - predictions at the leaves
-        indices_t       m_features;             ///< unique set of the selected features
+        iparam1_t     m_max_depth{"dtree::max_depth", 1, LE, 3, LE, 10}; ///< maximum depth
+        iparam1_t     m_min_split{"dtree::min_split", 1, LE, 5, LE, 10}; ///< minimum ratio of samples to split
+        dtree_nodes_t m_nodes;                                           ///< nodes in the decision tree
+        tensor4d_t    m_tables;   ///< (#feature values, #outputs) - predictions at the leaves
+        indices_t     m_features; ///< unique set of the selected features
     };
-}
+} // namespace nano

@@ -6,8 +6,8 @@
 namespace nano
 {
     // bitwise mask for a feature: (sample) = 1 if the feature value is available, otherwise 0
-    using mask_t = tensor_mem_t<uint8_t, 1>;
-    using mask_map_t = tensor_map_t<uint8_t, 1>;
+    using mask_t      = tensor_mem_t<uint8_t, 1>;
+    using mask_map_t  = tensor_map_t<uint8_t, 1>;
     using mask_cmap_t = tensor_cmap_t<uint8_t, 1>;
 
     ///
@@ -18,7 +18,7 @@ namespace nano
     {
         const auto samples = std::get<trank - 1>(dims);
 
-        auto bit_dims = dims;
+        auto bit_dims       = dims;
         bit_dims[trank - 1] = (samples + 7) / 8;
 
         tensor_mem_t<uint8_t, trank> mask(bit_dims);
@@ -48,4 +48,4 @@ namespace nano
     /// \brief returns true if the feature is optional (aka some samples haven't been set).
     ///
     NANO_PUBLIC bool optional(const mask_cmap_t& mask, tensor_size_t samples);
-}
+} // namespace nano

@@ -1,17 +1,17 @@
 #pragma once
 
-#include <nano/stream.h>
 #include <nano/dataset.h>
 #include <nano/factory.h>
-#include <nano/parameter.h>
 #include <nano/mlearn/cluster.h>
+#include <nano/parameter.h>
+#include <nano/stream.h>
 
 namespace nano
 {
     class wlearner_t;
     using wlearner_factory_t = factory_t<wlearner_t>;
-    using rwlearner_t = wlearner_factory_t::trobject;
-    using wlearners_t = std::vector<rwlearner_t>;
+    using rwlearner_t        = wlearner_factory_t::trobject;
+    using wlearners_t        = std::vector<rwlearner_t>;
 
     ///
     /// \brief a weak learner is a machine learning model:
@@ -22,7 +22,6 @@ namespace nano
     class NANO_PUBLIC wlearner_t : public serializable_t
     {
     public:
-
         ///
         /// \brief returns the available implementations.
         ///
@@ -62,7 +61,7 @@ namespace nano
         /// NB: the given sample indices
         ///     are relative to the whole dataset in the range [0, dataset.samples()).
         ///
-        tensor4d_t predict(const dataset_t&, const indices_cmap_t&) const;
+        tensor4d_t   predict(const dataset_t&, const indices_cmap_t&) const;
         virtual void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const = 0;
 
         ///
@@ -111,13 +110,11 @@ namespace nano
         auto batch() const { return m_batch.get(); }
 
     protected:
-
         static void check(const indices_t& samples);
         static void scale(tensor4d_t& tables, const vector_t& scale);
 
     private:
-
         // attributes
-        iparam1_t   m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};        ///< batch size
+        iparam1_t m_batch{"wlearner::batch", 1, LE, 32, LE, 1024}; ///< batch size
     };
-}
+} // namespace nano

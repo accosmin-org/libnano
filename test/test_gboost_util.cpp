@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/gboost/util.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -7,9 +7,9 @@ struct cache_t
 {
     cache_t() = default;
 
-    cache_t(scalar_t score, tensor_size_t index) :
-        m_score(score),
-        m_index(index)
+    cache_t(scalar_t score, tensor_size_t index)
+        : m_score(score)
+        , m_index(index)
     {
     }
 
@@ -25,8 +25,8 @@ struct cache_t
         return *this;
     }
 
-    scalar_t        m_score{0};
-    tensor_size_t   m_index{0};
+    scalar_t      m_score{0};
+    tensor_size_t m_index{0};
 };
 
 UTEST_BEGIN_MODULE(test_gboost_util)

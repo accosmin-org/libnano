@@ -29,12 +29,11 @@ namespace nano
     class combinatorial_iterator_t
     {
     public:
-
-        explicit combinatorial_iterator_t(const tensor_mem_t<tindex, 1>& counts) :
-            m_counts(counts),
-            m_current(counts.size()),
-            m_dimensions(counts.size()),
-            m_combinations(product(counts))
+        explicit combinatorial_iterator_t(const tensor_mem_t<tindex, 1>& counts)
+            : m_counts(counts)
+            , m_current(counts.size())
+            , m_dimensions(counts.size())
+            , m_combinations(product(counts))
         {
             m_current.zero();
 
@@ -42,76 +41,63 @@ namespace nano
             assert(m_combinations > 0);
         }
 
-        explicit operator bool() const
-        {
-            return m_combination < m_combinations;
-        }
+        explicit operator bool() const { return m_combination < m_combinations; }
 
         combinatorial_iterator_t& operator++()
         {
-            for ( ; m_combination < m_combinations; )
+            for (; m_combination < m_combinations;)
             {
                 if (m_dimension + 1 == m_dimensions)
                 {
-                    for ( ; m_current(m_dimension) + 1 < m_counts(m_dimension); )
+                    for (; m_current(m_dimension) + 1 < m_counts(m_dimension);)
                     {
-                        ++ m_combination;
-                        ++ m_current(m_dimension);
+                        ++m_combination;
+                        ++m_current(m_dimension);
                         return *this;
                     }
 
-                    for ( ; m_dimension >= 0; )
+                    for (; m_dimension >= 0;)
                     {
                         if (m_current(m_dimension) + 1 >= m_counts(m_dimension))
                         {
-                            m_current(m_dimension --) = 0;
+                            m_current(m_dimension--) = 0;
                         }
                         else
                         {
-                            ++ m_combination;
-                            ++ m_current(m_dimension);
+                            ++m_combination;
+                            ++m_current(m_dimension);
                             return *this;
                         }
                     }
                 }
                 else
                 {
-                    m_current(++ m_dimension) = 0;
+                    m_current(++m_dimension) = 0;
                 }
             }
 
             return *this;
         }
 
-        const auto& operator*() const
-        {
-            return m_current;
-        }
+        const auto& operator*() const { return m_current; }
 
-        tensor_size_t index() const
-        {
-            return m_combination;
-        }
+        tensor_size_t index() const { return m_combination; }
 
-        tensor_size_t size() const
-        {
-            return m_combinations;
-        }
+        tensor_size_t size() const { return m_combinations; }
 
     private:
-
         static tensor_size_t product(const tensor_mem_t<tindex, 1>& counts)
         {
-            const auto multiply = [] (tensor_size_t acc, tindex val) { return acc * static_cast<tensor_size_t>(val); };
+            const auto multiply = [](tensor_size_t acc, tindex val) { return acc * static_cast<tensor_size_t>(val); };
             return std::accumulate(begin(counts), end(counts), tensor_size_t{1}, multiply);
         }
 
         // attributes
-        tensor_mem_t<tindex, 1> m_counts;           ///<
-        tensor_mem_t<tindex, 1> m_current;          ///< current combination as indices in the counts
-        tensor_size_t           m_dimension{0};     ///< index of the current dimension
-        tensor_size_t           m_dimensions{0};    ///< total number of dimensions
-        tensor_size_t           m_combination{0};   ///< index of the current combination
-        tensor_size_t           m_combinations{1};  ///< total number of combinations
+        tensor_mem_t<tindex, 1> m_counts;          ///<
+        tensor_mem_t<tindex, 1> m_current;         ///< current combination as indices in the counts
+        tensor_size_t           m_dimension{0};    ///< index of the current dimension
+        tensor_size_t           m_dimensions{0};   ///< total number of dimensions
+        tensor_size_t           m_combination{0};  ///< index of the current combination
+        tensor_size_t           m_combinations{1}; ///< total number of combinations
     };
-}
+} // namespace nano

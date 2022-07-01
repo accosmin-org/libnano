@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_cauchy_t::function_cauchy_t(tensor_size_t dims) :
-    benchmark_function_t("Cauchy", dims)
+function_cauchy_t::function_cauchy_t(tensor_size_t dims)
+    : benchmark_function_t("Cauchy", dims)
 {
     convex(false);
     smooth(true);

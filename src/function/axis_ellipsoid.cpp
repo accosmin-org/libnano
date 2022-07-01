@@ -2,9 +2,9 @@
 
 using namespace nano;
 
-function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims) :
-    benchmark_function_t("Axis-Parallel Ellipsoid", dims),
-    m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
+    : benchmark_function_t("Axis-Parallel Ellipsoid", dims)
+    , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
     convex(true);
     smooth(true);

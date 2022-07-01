@@ -10,53 +10,51 @@ namespace nano
     class NANO_PUBLIC cifar_dataset_t : public dataset_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
         cifar_dataset_t(string_t dir, string_t name, feature_t target);
 
     protected:
-
         void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
 
     private:
-
         ///
         /// \brief describes how to load a file in the CIFAR-10/100 archives.
         ///
         struct file_t
         {
             file_t() = default;
-            file_t(string_t&& filename,
-                tensor_size_t offset, tensor_size_t expected,
-                tensor_size_t label_size, tensor_size_t label_index) :
-                m_filename(filename),
-                m_offset(offset),
-                m_expected(expected),
-                m_label_size(label_size),
-                m_label_index(label_index)
+
+            file_t(string_t&& filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
+                   tensor_size_t label_index)
+                : m_filename(filename)
+                , m_offset(offset)
+                , m_expected(expected)
+                , m_label_size(label_size)
+                , m_label_index(label_index)
             {
             }
 
             // attributes
-            string_t        m_filename;         ///<
-            tensor_size_t   m_offset{0};        ///<
-            tensor_size_t   m_expected{0};      ///<
-            tensor_size_t   m_label_size{1};    ///<
-            tensor_size_t   m_label_index{0};   ///<
+            string_t      m_filename;       ///<
+            tensor_size_t m_offset{0};      ///<
+            tensor_size_t m_expected{0};    ///<
+            tensor_size_t m_label_size{1};  ///<
+            tensor_size_t m_label_index{0}; ///<
         };
+
         using files_t = std::vector<file_t>;
 
         void do_load() override;
         bool iread(const file_t& file);
 
         // attributes
-        string_t        m_dir;              ///< directory where to load the data from
-        string_t        m_path;             ///< path to the archive where to load the data from
-        string_t        m_name;             ///< dataset name
-        feature_t       m_target;           ///< target feature
-        files_t         m_files;            ///<
+        string_t  m_dir;    ///< directory where to load the data from
+        string_t  m_path;   ///< path to the archive where to load the data from
+        string_t  m_name;   ///< dataset name
+        feature_t m_target; ///< target feature
+        files_t   m_files;  ///<
     };
 
     ///
@@ -70,7 +68,6 @@ namespace nano
     class NANO_PUBLIC cifar10_dataset_t final : public cifar_dataset_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -88,7 +85,6 @@ namespace nano
     class NANO_PUBLIC cifar100c_dataset_t final : public cifar_dataset_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -106,10 +102,9 @@ namespace nano
     class NANO_PUBLIC cifar100f_dataset_t final : public cifar_dataset_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
         cifar100f_dataset_t();
     };
-}
+} // namespace nano

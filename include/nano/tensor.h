@@ -28,4 +28,4 @@ namespace nano
     using tensor3d_cmap_t = tensor_cmap_t<scalar_t, 3>;
     using tensor4d_cmap_t = tensor_cmap_t<scalar_t, 4>;
     using tensor5d_cmap_t = tensor_cmap_t<scalar_t, 5>;
-}
+} // namespace nano

@@ -10,13 +10,14 @@ namespace nano
     class tokenizer_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
-        tokenizer_t(const std::string& str, const char* delims, size_t pos = 0) :
-            m_str(str), m_delims(delims),
-            m_pos(pos), m_end(pos)
+        tokenizer_t(const std::string& str, const char* delims, size_t pos = 0)
+            : m_str(str)
+            , m_delims(delims)
+            , m_pos(pos)
+            , m_end(pos)
         {
             next();
         }
@@ -85,7 +86,6 @@ namespace nano
         auto count() const { return m_count; }
 
     private:
-
         void next()
         {
             m_pos = m_str.find_first_not_of(m_delims, m_end);
@@ -97,15 +97,15 @@ namespace nano
 
             if (this->operator bool())
             {
-                ++ m_count;
+                ++m_count;
             }
         }
 
         // attributes
-        const std::string&  m_str;      ///< string to parse
-        const char*         m_delims;   ///< delimiting characters
-        size_t              m_pos{0};   ///< the begining of the current token
-        size_t              m_end{0};   ///< the end of the current token
-        size_t              m_count{0}; ///< the number of tokens found so far
+        const std::string& m_str;      ///< string to parse
+        const char*        m_delims;   ///< delimiting characters
+        size_t             m_pos{0};   ///< the begining of the current token
+        size_t             m_end{0};   ///< the end of the current token
+        size_t             m_count{0}; ///< the number of tokens found so far
     };
-}
+} // namespace nano

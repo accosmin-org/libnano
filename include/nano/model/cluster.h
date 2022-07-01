@@ -13,7 +13,6 @@ namespace nano
     class NANO_PUBLIC cluster_t
     {
     public:
-
         cluster_t() = default;
 
         explicit cluster_t(tensor_size_t samples, const indices_t& indices);
@@ -37,7 +36,7 @@ namespace nano
         {
             assert(group >= 0 && group < groups());
 
-            for (tensor_size_t i = 0, size = samples(); i < size; ++ i)
+            for (tensor_size_t i = 0, size = samples(); i < size; ++i)
             {
                 if (m_indices(i) == group)
                 {
@@ -68,23 +67,16 @@ namespace nano
         ///
         /// \brief returns the number of groups.
         ///
-        tensor_size_t groups() const
-        {
-            return m_groups;
-        }
+        tensor_size_t groups() const { return m_groups; }
 
         ///
         /// \brief returns the number of samples.
         ///
-        tensor_size_t samples() const
-        {
-            return m_indices.size();
-        }
+        tensor_size_t samples() const { return m_indices.size(); }
 
     private:
-
         // attributes
-        indices_t       m_indices;      ///< group indices / sample
-        tensor_size_t   m_groups{0};    ///< #number of groups
+        indices_t     m_indices;   ///< group indices / sample
+        tensor_size_t m_groups{0}; ///< #number of groups
     };
-}
+} // namespace nano

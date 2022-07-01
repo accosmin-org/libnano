@@ -6,27 +6,27 @@ namespace nano
 {
     class generator_t;
     using generator_factory_t = factory_t<generator_t>;
-    using rgenerator_t = generator_factory_t::trobject;
-    using rgenerators_t = std::vector<rgenerator_t>;
+    using rgenerator_t        = generator_factory_t::trobject;
+    using rgenerators_t       = std::vector<rgenerator_t>;
 
     // single-label categorical feature values: (sample index) = label/class index
-    using sclass_mem_t = tensor_mem_t<int32_t, 1>;
-    using sclass_map_t = tensor_map_t<int32_t, 1>;
+    using sclass_mem_t  = tensor_mem_t<int32_t, 1>;
+    using sclass_map_t  = tensor_map_t<int32_t, 1>;
     using sclass_cmap_t = tensor_cmap_t<int32_t, 1>;
 
     // multi-label categorical feature values: (sample index, label/class index) = 0 or 1
-    using mclass_mem_t = tensor_mem_t<int8_t, 2>;
-    using mclass_map_t = tensor_map_t<int8_t, 2>;
+    using mclass_mem_t  = tensor_mem_t<int8_t, 2>;
+    using mclass_map_t  = tensor_map_t<int8_t, 2>;
     using mclass_cmap_t = tensor_cmap_t<int8_t, 2>;
 
     // scalar continuous feature values: (sample index) = scalar feature value
-    using scalar_mem_t = tensor_mem_t<scalar_t, 1>;
-    using scalar_map_t = tensor_map_t<scalar_t, 1>;
+    using scalar_mem_t  = tensor_mem_t<scalar_t, 1>;
+    using scalar_map_t  = tensor_map_t<scalar_t, 1>;
     using scalar_cmap_t = tensor_cmap_t<scalar_t, 1>;
 
     // structured continuous feature values: (sample index, dim1, dim2, dim3)
-    using struct_mem_t = tensor_mem_t<scalar_t, 4>;
-    using struct_map_t = tensor_map_t<scalar_t, 4>;
+    using struct_mem_t  = tensor_mem_t<scalar_t, 4>;
+    using struct_map_t  = tensor_map_t<scalar_t, 4>;
     using struct_cmap_t = tensor_cmap_t<scalar_t, 4>;
 
     // (original feature index, feature component, ...)
@@ -43,10 +43,25 @@ namespace nano
         structured,
     };
 
-    struct generated_sclass_t { static constexpr auto generated_type = generator_type::sclass; };
-    struct generated_mclass_t { static constexpr auto generated_type = generator_type::mclass; };
-    struct generated_scalar_t { static constexpr auto generated_type = generator_type::scalar; };
-    struct generated_struct_t { static constexpr auto generated_type = generator_type::structured; };
+    struct generated_sclass_t
+    {
+        static constexpr auto generated_type = generator_type::sclass;
+    };
+
+    struct generated_mclass_t
+    {
+        static constexpr auto generated_type = generator_type::mclass;
+    };
+
+    struct generated_scalar_t
+    {
+        static constexpr auto generated_type = generator_type::scalar;
+    };
+
+    struct generated_struct_t
+    {
+        static constexpr auto generated_type = generator_type::structured;
+    };
 
     ///
     /// \brief generate features from a given collection of samples of a dataset (e.g. the training samples).
@@ -66,7 +81,6 @@ namespace nano
     class NANO_PUBLIC generator_t
     {
     public:
-
         ///
         /// \brief returns the available implementations.
         ///
@@ -120,8 +134,8 @@ namespace nano
         ///
         /// \brief toggle sample permutation of features, useful for feature importance analysis.
         ///
-        void unshuffle();
-        void shuffle(tensor_size_t feature);
+        void      unshuffle();
+        void      shuffle(tensor_size_t feature);
         indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
 
         ///
@@ -142,57 +156,59 @@ namespace nano
         virtual void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column) const = 0;
 
     protected:
-
         void allocate(tensor_size_t features);
 
         const dataset_t& dataset() const;
 
         auto should_drop(tensor_size_t feature) const { return m_feature_infos(feature) == 0x01; }
+
         auto should_shuffle(tensor_size_t feature) const { return m_feature_infos(feature) == 0x02; }
 
-        void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize) const;
+        static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
 
         template <size_t input_rank1, typename toperator>
-        void iterate(
-            indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal,
-            const toperator& op) const
+        void iterate(indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal, const toperator& op) const
         {
-            dataset().visit_inputs(ioriginal, [&] (const auto&, const auto& data, const auto& mask)
-            {
-                if (should_shuffle(ifeature))
-                {
-                    loop_samples<input_rank1>(data, mask, shuffled(samples, ifeature), op);
-                }
-                else
-                {
-                    loop_samples<input_rank1>(data, mask, samples, op);
-                }
-            });
+            dataset().visit_inputs(ioriginal,
+                                   [&](const auto&, const auto& data, const auto& mask)
+                                   {
+                                       if (should_shuffle(ifeature))
+                                       {
+                                           loop_samples<input_rank1>(data, mask, shuffled(samples, ifeature), op);
+                                       }
+                                       else
+                                       {
+                                           loop_samples<input_rank1>(data, mask, samples, op);
+                                       }
+                                   });
         }
 
         template <size_t input_rank1, size_t input_rank2, typename toperator>
-        void iterate(
-            indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal1, tensor_size_t ioriginal2,
-            const toperator& op) const
+        void iterate(indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal1, tensor_size_t ioriginal2,
+                     const toperator& op) const
         {
-            dataset().visit_inputs(ioriginal1, [&] (const auto&, const auto& data1, const auto& mask1)
-            {
-                dataset().visit_inputs(ioriginal2, [&] (const auto&, const auto& data2, const auto& mask2)
-                {
-                    if (should_shuffle(ifeature))
-                    {
-                        loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, shuffled(samples, ifeature), op);
-                    }
-                    else
-                    {
-                        loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, samples, op);
-                    }
-                });
-            });
+            dataset().visit_inputs(ioriginal1,
+                                   [&](const auto&, const auto& data1, const auto& mask1)
+                                   {
+                                       dataset().visit_inputs(ioriginal2,
+                                                              [&](const auto&, const auto& data2, const auto& mask2)
+                                                              {
+                                                                  if (should_shuffle(ifeature))
+                                                                  {
+                                                                      loop_samples<input_rank1, input_rank2>(
+                                                                          data1, mask1, data2, mask2,
+                                                                          shuffled(samples, ifeature), op);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      loop_samples<input_rank1, input_rank2>(
+                                                                          data1, mask1, data2, mask2, samples, op);
+                                                                  }
+                                                              });
+                                   });
         }
 
     private:
-
         // per feature:
         //  - 0: flags - 0 - default, 1 - to drop, 2 - to shuffle
         using feature_infos_t = tensor_mem_t<uint8_t, 1>;
@@ -202,8 +218,8 @@ namespace nano
         using feature_rands_t = std::vector<rng_t>;
 
         // attributes
-        const dataset_t*    m_dataset{nullptr}; ///<
-        feature_infos_t     m_feature_infos;    ///<
-        feature_rands_t     m_feature_rands;    ///<
+        const dataset_t* m_dataset{nullptr}; ///<
+        feature_infos_t  m_feature_infos;    ///<
+        feature_rands_t  m_feature_rands;    ///<
     };
-}
+} // namespace nano

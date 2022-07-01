@@ -1,14 +1,14 @@
 #pragma once
 
-#include <nano/solver/lstep.h>
-#include <nano/core/factory.h>
 #include <nano/core/estimator.h>
+#include <nano/core/factory.h>
+#include <nano/solver/lstep.h>
 
 namespace nano
 {
     class lsearchk_t;
     using lsearchk_factory_t = factory_t<lsearchk_t>;
-    using rlsearchk_t = lsearchk_factory_t::trobject;
+    using rlsearchk_t        = lsearchk_factory_t::trobject;
 
     ///
     /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.
@@ -18,7 +18,6 @@ namespace nano
     class NANO_PUBLIC lsearchk_t : public estimator_t
     {
     public:
-
         using interpolation = lsearch_step_t::interpolation;
 
         ///
@@ -54,21 +53,14 @@ namespace nano
         ///
         /// \brief minimum allowed line-search step.
         ///
-        static scalar_t stpmin()
-        {
-            return scalar_t(10) * std::numeric_limits<scalar_t>::epsilon();
-        }
+        static scalar_t stpmin() { return scalar_t(10) * std::numeric_limits<scalar_t>::epsilon(); }
 
         ///
         /// \brief maximum allowed line-search step.
         ///
-        static scalar_t stpmax()
-        {
-            return scalar_t(1) / stpmin();
-        }
+        static scalar_t stpmax() { return scalar_t(1) / stpmin(); }
 
     protected:
-
         ///
         /// \brief compute the step size given the previous state and the current state
         ///
@@ -86,8 +78,7 @@ namespace nano
         }
 
     private:
-
         // attributes
-        logger_t    m_logger;                                                           ///<
+        logger_t m_logger; ///<
     };
-}
+} // namespace nano

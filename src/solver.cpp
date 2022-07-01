@@ -1,13 +1,13 @@
 #include <mutex>
-#include <nano/solver/gd.h>
-#include <nano/solver/cgd.h>
-#include <nano/solver/asga.h>
-#include <nano/solver/osga.h>
-#include <nano/solver/lbfgs.h>
-#include <nano/solver/quasi.h>
-#include <nano/solver/ellipsoid.h>
-#include <nano/solver/universal.h>
 #include <nano/core/logger.h>
+#include <nano/solver/asga.h>
+#include <nano/solver/cgd.h>
+#include <nano/solver/ellipsoid.h>
+#include <nano/solver/gd.h>
+#include <nano/solver/lbfgs.h>
+#include <nano/solver/osga.h>
+#include <nano/solver/quasi.h>
+#include <nano/solver/universal.h>
 
 using namespace nano;
 
@@ -28,12 +28,10 @@ void solver_t::lsearch0(const string_t& id)
 
 void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
 {
-    critical(
-        !init,
-        "solver: invalid line-search initialization (", id, ")!");
+    critical(!init, "solver: invalid line-search initialization (", id, ")!");
 
     m_lsearch0_id = id;
-    m_lsearch0 = std::move(init);
+    m_lsearch0    = std::move(init);
 }
 
 void solver_t::lsearchk(const string_t& id)
@@ -43,12 +41,10 @@ void solver_t::lsearchk(const string_t& id)
 
 void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
 {
-    critical(
-        !strategy,
-        "solver: invalid line-search strategy (", id, ")!");
+    critical(!strategy, "solver: invalid line-search strategy (", id, ")!");
 
     m_lsearchk_id = id;
-    m_lsearchk = std::move(strategy);
+    m_lsearchk    = std::move(strategy);
 }
 
 void solver_t::lsearch0_logger(const lsearch0_t::logger_t& logger)
@@ -84,16 +80,15 @@ lsearch_t solver_t::make_lsearch() const
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
 
-    lsearch0->parameter("lsearch0::epsilon") = parameter("solver::epsilon").value<scalar_t>();
+    lsearch0->parameter("lsearch0::epsilon")   = parameter("solver::epsilon").value<scalar_t>();
     lsearchk->parameter("lsearchk::tolerance") = parameter("solver::tolerance").value_pair<scalar_t>();
     return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 }
 
-solver_function_t solver_t::make_function(const function_t& function_, const vector_t& x0) const
+solver_function_t solver_t::make_function(const function_t& function_, const vector_t& x0)
 {
-    critical(
-        function_.size() != x0.size(),
-        "solver: incompatible initial point (", x0.size(), " dimensions), expecting ", function_.size(), " dimensions!");
+    critical(function_.size() != x0.size(), "solver: incompatible initial point (", x0.size(),
+             " dimensions), expecting ", function_.size(), " dimensions!");
 
     return solver_function_t{function_};
 }
@@ -108,9 +103,7 @@ bool solver_t::done(const solver_function_t& function, solver_state_t& state, bo
     if (converged || !step_ok)
     {
         // either converged or failed
-        state.m_status = converged ?
-            solver_state_t::status::converged :
-            solver_state_t::status::failed;
+        state.m_status = converged ? solver_state_t::status::converged : solver_state_t::status::failed;
         log(state);
         return true;
     }
@@ -128,7 +121,7 @@ bool solver_t::done(const solver_function_t& function, solver_state_t& state, bo
 bool solver_t::log(solver_state_t& state) const
 {
     const auto status = !m_logger ? true : m_logger(state);
-    state.m_iterations ++;
+    state.m_iterations++;
     return status;
 }
 
@@ -137,34 +130,35 @@ solver_factory_t& solver_t::all()
     static solver_factory_t manager;
 
     static std::once_flag flag;
-    std::call_once(flag, [] ()
-    {
-        manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
-        manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
-        manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
-        manager.add<solver_cgd_fr_t>("cgd-fr", "conjugate gradient descent (FR)");
-        manager.add<solver_cgd_pr_t>("cgd-pr", "conjugate gradient descent (PR+)");
-        manager.add<solver_cgd_cd_t>("cgd-cd", "conjugate gradient descent (CD)");
-        manager.add<solver_cgd_ls_t>("cgd-ls", "conjugate gradient descent (LS+)");
-        manager.add<solver_cgd_dy_t>("cgd-dy", "conjugate gradient descent (DY)");
-        manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
-        manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");
-        manager.add<solver_cgd_frpr_t>("cgd-prfr", "conjugate gradient descent (FRPR)");
-        manager.add<solver_osga_t>("osga", "optimal sub-gradient algorithm (OSGA)");
-        manager.add<solver_lbfgs_t>("lbfgs", "limited-memory BFGS");
-        manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");
-        manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");
-        manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
-        manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
-        manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
-        manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
-        manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
-        manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
-        manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
-        manager.add<solver_asga2_t>("asga2", "accelerated sub-gradient algorithm 2 (ASGA)");
-        manager.add<solver_asga4_t>("asga4", "accelerated sub-gradient algorithm 4 (ASGA)");
-    });
+    std::call_once(flag,
+                   []()
+                   {
+                       manager.add<solver_gd_t>("gd", "gradient descent");
+                       manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
+                       manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
+                       manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
+                       manager.add<solver_cgd_fr_t>("cgd-fr", "conjugate gradient descent (FR)");
+                       manager.add<solver_cgd_pr_t>("cgd-pr", "conjugate gradient descent (PR+)");
+                       manager.add<solver_cgd_cd_t>("cgd-cd", "conjugate gradient descent (CD)");
+                       manager.add<solver_cgd_ls_t>("cgd-ls", "conjugate gradient descent (LS+)");
+                       manager.add<solver_cgd_dy_t>("cgd-dy", "conjugate gradient descent (DY)");
+                       manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
+                       manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");
+                       manager.add<solver_cgd_frpr_t>("cgd-prfr", "conjugate gradient descent (FRPR)");
+                       manager.add<solver_osga_t>("osga", "optimal sub-gradient algorithm (OSGA)");
+                       manager.add<solver_lbfgs_t>("lbfgs", "limited-memory BFGS");
+                       manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");
+                       manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");
+                       manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
+                       manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
+                       manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
+                       manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
+                       manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
+                       manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
+                       manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
+                       manager.add<solver_asga2_t>("asga2", "accelerated sub-gradient algorithm 2 (ASGA)");
+                       manager.add<solver_asga4_t>("asga4", "accelerated sub-gradient algorithm 4 (ASGA)");
+                   });
 
     return manager;
 }

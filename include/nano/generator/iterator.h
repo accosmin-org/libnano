@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/dataset/stats.h>
 #include <nano/core/execution.h>
+#include <nano/dataset/stats.h>
 #include <nano/generator/generator.h>
 
 namespace nano
@@ -14,8 +14,8 @@ namespace nano
     ///     (tensor_size_t sample_range, size_t thread_number, flatten_feature_values, target_values)
     ///
     /// NB: the thread number is set to zero if the execution policy is sequential.
-    using targets_callback_t = std::function<void(tensor_range_t, size_t, tensor4d_cmap_t)>;
-    using flatten_callback_t = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t)>;
+    using targets_callback_t         = std::function<void(tensor_range_t, size_t, tensor4d_cmap_t)>;
+    using flatten_callback_t         = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t)>;
     using flatten_targets_callback_t = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t, tensor4d_cmap_t)>;
 
     ///
@@ -39,7 +39,6 @@ namespace nano
     class NANO_PUBLIC targets_iterator_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -67,34 +66,38 @@ namespace nano
         /// \brief access functions.
         ///
         auto batch() const { return m_batch; }
+
         auto scaling() const { return m_scaling; }
+
         auto execution() const { return m_execution; }
+
         auto concurrency() const { return m_targets_buffers.size(); }
+
         const auto& samples() const { return m_samples; }
+
         const auto& generator() const { return m_generator; }
+
         const auto& targets_stats() const { return m_targets_stats; }
 
     protected:
-
         tensor4d_cmap_t targets(tensor4d_map_t) const;
         tensor4d_cmap_t targets(size_t tnum, const tensor_range_t& range) const;
 
     private:
-
         targets_stats_t make_targets_stats() const;
 
-        using buffers_t = std::vector<tensor4d_t>;
+        using buffers_t    = std::vector<tensor4d_t>;
         using dgenerator_t = dataset_generator_t;
 
         // attributes
-        const dgenerator_t& m_generator;                    ///<
-        indices_t           m_samples;                      ///<
-        tensor_size_t       m_batch{100};                   ///<
-        execution_type      m_execution{execution_type::par};///<
-        scaling_type        m_scaling{scaling_type::none};  ///< scaling method for flatten feature values & targets
-        tensor4d_t          m_targets;                      ///< cached targets values
-        targets_stats_t     m_targets_stats;                ///< statistics for targets
-        mutable buffers_t   m_targets_buffers;              ///< per-thread buffer
+        const dgenerator_t& m_generator;                      ///<
+        indices_t           m_samples;                        ///<
+        tensor_size_t       m_batch{100};                     ///<
+        execution_type      m_execution{execution_type::par}; ///<
+        scaling_type        m_scaling{scaling_type::none};    ///< scaling method for flatten feature values & targets
+        tensor4d_t          m_targets;                        ///< cached targets values
+        targets_stats_t     m_targets_stats;                  ///< statistics for targets
+        mutable buffers_t   m_targets_buffers;                ///< per-thread buffer
     };
 
     ///
@@ -104,7 +107,6 @@ namespace nano
     class NANO_PUBLIC flatten_iterator_t : public targets_iterator_t
     {
     public:
-
         using targets_iterator_t::loop;
 
         ///
@@ -125,7 +127,8 @@ namespace nano
 
         ///
         /// \brief loop through flatten feature values and the associated targets with the following callback:
-        ///     - op(tensor_range_t sample_range, size_t thread_number, tensor2d_cmap_t flatten, tensor4d_cmap_t targets)
+        ///     - op(tensor_range_t sample_range, size_t thread_number, tensor2d_cmap_t flatten, tensor4d_cmap_t
+        ///     targets)
         ///
         void loop(const flatten_targets_callback_t&) const;
 
@@ -135,7 +138,6 @@ namespace nano
         const auto& flatten_stats() const { return m_flatten_stats; }
 
     private:
-
         flatten_stats_t make_flatten_stats() const;
         tensor2d_cmap_t flatten(tensor2d_map_t) const;
         tensor2d_cmap_t flatten(size_t tnum, const tensor_range_t& range) const;
@@ -143,9 +145,9 @@ namespace nano
         using buffers_t = std::vector<tensor2d_t>;
 
         // attributes
-        flatten_stats_t     m_flatten_stats;                ///< statistics for flatten feature values
-        mutable buffers_t   m_flatten_buffers;              ///< per-thread buffer
-        tensor2d_t          m_flatten;                      ///< cached feature values
+        flatten_stats_t   m_flatten_stats;   ///< statistics for flatten feature values
+        mutable buffers_t m_flatten_buffers; ///< per-thread buffer
+        tensor2d_t        m_flatten;         ///< cached feature values
     };
 
     ///
@@ -155,7 +157,6 @@ namespace nano
     class NANO_PUBLIC select_iterator_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -188,24 +189,24 @@ namespace nano
         /// \brief access functions.
         ///
         auto concurrency() const { return m_buffers.size(); }
+
         const auto& generator() const { return m_generator; }
 
     private:
-
         struct buffer_t
         {
-            sclass_mem_t        m_sclass;
-            mclass_mem_t        m_mclass;
-            scalar_mem_t        m_scalar;
-            struct_mem_t        m_struct;
+            sclass_mem_t m_sclass;
+            mclass_mem_t m_mclass;
+            scalar_mem_t m_scalar;
+            struct_mem_t m_struct;
         };
 
-        using buffers_t = std::vector<buffer_t>;
+        using buffers_t    = std::vector<buffer_t>;
         using dgenerator_t = dataset_generator_t;
 
         // attributes
-        const dgenerator_t& m_generator;                        ///<
-        execution_type      m_execution{execution_type::par};   ///<
-        mutable buffers_t   m_buffers;                          ///< per-thread buffer
+        const dgenerator_t& m_generator;                      ///<
+        execution_type      m_execution{execution_type::par}; ///<
+        mutable buffers_t   m_buffers;                        ///< per-thread buffer
     };
-}
+} // namespace nano

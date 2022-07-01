@@ -23,6 +23,7 @@ make_test(test_loss NANO::nano)
 make_test(test_solver NANO::nano)
 make_test(test_lsearch NANO::nano)
 make_test(test_function NANO::nano)
+make_test(test_constrained NANO::nano)
 
 make_test(test_dataset_mask NANO::nano)
 make_test(test_dataset_stats NANO::nano)

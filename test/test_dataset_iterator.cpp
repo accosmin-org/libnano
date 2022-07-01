@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/dataset/iterator.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -38,7 +38,7 @@ UTEST_CASE(data1D)
             UTEST_CHECK_EQUAL(value, -1);
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 1);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -49,7 +49,7 @@ UTEST_CASE(data1D)
             UTEST_CHECK_EQUAL(value, 9);
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 2);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -60,7 +60,7 @@ UTEST_CASE(data1D)
             UTEST_CHECK_EQUAL(value, -1);
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 3);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -71,7 +71,7 @@ UTEST_CASE(data1D)
             UTEST_CHECK_EQUAL(value, 11);
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 4);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -82,18 +82,18 @@ UTEST_CASE(data1D)
             UTEST_CHECK_EQUAL(value, -1);
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 5);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
     }
     {
-        const auto samples = arange(4, 16);
+        const auto samples          = arange(4, 16);
         const auto expected_indices = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-        const auto expected_givens = std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
-        const auto expected_values = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
+        const auto expected_givens  = std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        const auto expected_values  = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
 
-        auto it = make_iterator(data, mask, samples);
+        auto       it     = make_iterator(data, mask, samples);
         const auto it_end = make_end_iterator(samples);
         UTEST_CHECK_EQUAL(it.size(), 12);
         UTEST_CHECK_EQUAL(it.index(), 0);
@@ -103,7 +103,7 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(static_cast<bool>(it_end), false);
 
         std::vector<int> indices, givens, values;
-        for ( ; it != it_end; ++ it)
+        for (; it != it_end; ++it)
         {
             const auto [index, given, value] = *it;
             indices.push_back(static_cast<int>(index));
@@ -118,9 +118,9 @@ UTEST_CASE(data1D)
         indices.clear();
         givens.clear();
         values.clear();
-        for (auto it = make_iterator(data, mask, samples); it; ++ it)
+        for (auto it2 = make_iterator(data, mask, samples); it2; ++it2)
         {
-            const auto [index, given, value] = *it;
+            const auto [index, given, value] = *it2;
             indices.push_back(static_cast<int>(index));
             givens.push_back(static_cast<int>(given));
             values.push_back(value);
@@ -167,7 +167,7 @@ UTEST_CASE(data4D)
             UTEST_CHECK_EQUAL(value.dims(), make_dims(3, 2, 1));
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 3);
         UTEST_CHECK_EQUAL(it.index(), 1);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -180,7 +180,7 @@ UTEST_CASE(data4D)
             UTEST_CHECK_EQUAL(value.dims(), make_dims(3, 2, 1));
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 3);
         UTEST_CHECK_EQUAL(it.index(), 2);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -193,7 +193,7 @@ UTEST_CASE(data4D)
             UTEST_CHECK_EQUAL(value.dims(), make_dims(3, 2, 1));
         }
 
-        ++ it;
+        ++it;
         UTEST_CHECK_EQUAL(it.size(), 3);
         UTEST_CHECK_EQUAL(it.index(), 3);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
@@ -226,7 +226,7 @@ UTEST_CASE(pairwise)
     }
     {
         auto it = make_iterator(data1, mask1, data2, mask2, samples);
-        for (auto i = 0; i < 4; ++ i, ++ it)
+        for (auto i = 0; i < 4; ++i, ++it)
         {
             UTEST_CHECK_EQUAL(it.size(), 4);
             UTEST_CHECK_EQUAL(it.index(), i);
@@ -246,7 +246,7 @@ UTEST_CASE(pairwise)
     }
     {
         auto it = make_iterator(data1, mask1, data1, mask1, samples);
-        for (auto i = 0; i < 4; ++ i, ++ it)
+        for (auto i = 0; i < 4; ++i, ++it)
         {
             UTEST_CHECK_EQUAL(it.size(), 4);
             UTEST_CHECK_EQUAL(it.index(), i);
@@ -266,7 +266,7 @@ UTEST_CASE(pairwise)
     }
     {
         auto it = make_iterator(data2, mask2, data1, mask1, samples);
-        for (auto i = 0; i < 4; ++ i, ++ it)
+        for (auto i = 0; i < 4; ++i, ++it)
         {
             UTEST_CHECK_EQUAL(it.size(), 4);
             UTEST_CHECK_EQUAL(it.index(), i);
@@ -286,7 +286,7 @@ UTEST_CASE(pairwise)
     }
     {
         auto it = make_iterator(data2, mask2, data2, mask2, samples);
-        for (auto i = 0; i < 4; ++ i, ++ it)
+        for (auto i = 0; i < 4; ++i, ++it)
         {
             UTEST_CHECK_EQUAL(it.size(), 4);
             UTEST_CHECK_EQUAL(it.index(), i);
@@ -318,32 +318,32 @@ UTEST_CASE(loop_samples)
 
     {
         bool called = false;
-        loop_samples<1U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples<1U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<2U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples<2U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U, 4U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples<4U, 4U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples<4U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
     {
         bool called = false;
-        loop_samples<4U, 4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&] (auto) { called = true; });
+        loop_samples<4U, 4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
     {
         bool called = false;
-        loop_samples<1U, 1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples<1U, 1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
 }

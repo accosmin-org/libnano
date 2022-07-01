@@ -8,13 +8,12 @@ namespace nano
     /// \brief non-linear conjugate gradient descent with line-search.
     ///     see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
     ///     see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
-    ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager & Zhang
-    ///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
+    ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager &
+    ///     Zhang see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
     class NANO_PUBLIC solver_cgd_t : public solver_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -26,7 +25,6 @@ namespace nano
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
 
     private:
-
         ///
         /// \brief compute the adjustment factor for the descent direction
         ///
@@ -39,7 +37,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_n_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -57,7 +54,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_cd_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -75,7 +71,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_dy_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -93,7 +88,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_fr_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -111,7 +105,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_hs_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -129,7 +122,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_ls_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -147,7 +139,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_pr_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -165,7 +156,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_dycd_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -183,7 +173,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_dyhs_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -201,7 +190,6 @@ namespace nano
     class NANO_PUBLIC solver_cgd_frpr_t final : public solver_cgd_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -212,4 +200,4 @@ namespace nano
         ///
         scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
     };
-}
+} // namespace nano

@@ -1,8 +1,8 @@
-#include <sstream>
 #include <iomanip>
-#include <utest/utest.h>
 #include <nano/core/logger.h>
 #include <nano/core/strutil.h>
+#include <sstream>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -108,24 +108,21 @@ UTEST_CASE(critical)
 
 UTEST_CASE(main)
 {
-    const auto op_ok = [] (int, const char* [])
-    {
-        return EXIT_SUCCESS;
-    };
+    const auto op_ok = [](int, const char*[]) { return EXIT_SUCCESS; };
 
-    const auto op_unknown = [] (int, const char* [])
+    const auto op_unknown = [](int, const char*[])
     {
-        throw 42; // NOLINT(hicpp-exception-baseclass)
+        throw 42;            // NOLINT(hicpp-exception-baseclass)
         return EXIT_SUCCESS; // cppcheck-suppress duplicateBreak
     };
 
-    const auto op_exception = [] (int, const char* [])
+    const auto op_exception = [](int, const char*[])
     {
         throw std::runtime_error("runtime error");
         return EXIT_SUCCESS; // cppcheck-suppress duplicateBreak
     };
 
-    const auto argc = 1;
+    const auto  argc   = 1;
     const char* argv[] = {"main"};
 
     UTEST_CHECK_NOTHROW(nano::main(op_ok, argc, argv));

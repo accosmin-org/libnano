@@ -16,21 +16,21 @@ lsearchk_cgdescent_t::lsearchk_cgdescent_t()
 
 rlsearchk_t lsearchk_cgdescent_t::clone() const
 {
-    auto lsearchk = std::make_unique<lsearchk_cgdescent_t>(*this);
-    lsearchk->m_sumQ = 0;
-    lsearchk->m_sumC = 0;
+    auto lsearchk      = std::make_unique<lsearchk_cgdescent_t>(*this);
+    lsearchk->m_sumQ   = 0;
+    lsearchk->m_sumC   = 0;
     lsearchk->m_approx = false;
     return rlsearchk_t{lsearchk.release()};
 }
 
-lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t& state0, lsearch_step_t& a,
+                                                           lsearch_step_t& b, solver_state_t& c)
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
-    const auto theta = parameter("lsearchk::cgdescent::theta").value<scalar_t>();
-    const auto epsilon = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
+    const auto theta          = parameter("lsearchk::cgdescent::theta").value<scalar_t>();
+    const auto epsilon        = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
 
-    for (int64_t i = 0; i < max_iterations && (b.t - a.t) > stpmin(); ++ i)
+    for (int64_t i = 0; i < max_iterations && (b.t - a.t) > stpmin(); ++i)
     {
         if (evaluate(state0, (1 - theta) * a.t + theta * b.t, c))
         {
@@ -54,8 +54,8 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::updateU(const solver_state_t&
     return status::fail;
 }
 
-lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& state0, lsearch_step_t& a,
+                                                          lsearch_step_t& b, solver_state_t& c)
 {
     const auto epsilon = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
 
@@ -80,8 +80,8 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::update(const solver_state_t& 
     }
 }
 
-lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t& state0, lsearch_step_t& a,
+                                                           lsearch_step_t& b, solver_state_t& c)
 {
     const auto a0 = a, b0 = b;
     const auto tc = lsearch_step_t::secant(a0, b0);
@@ -98,13 +98,11 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t&
     }
     else if (std::fabs(tc - a.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::secant(a0, a), c) ?
-                status::exit : update(state0, a, b, c);
+        return evaluate(state0, lsearch_step_t::secant(a0, a), c) ? status::exit : update(state0, a, b, c);
     }
     else if (std::fabs(tc - b.t) < epsilon0<scalar_t>())
     {
-        return  evaluate(state0, lsearch_step_t::secant(b0, b), c) ?
-                status::exit : update(state0, a, b, c);
+        return evaluate(state0, lsearch_step_t::secant(b0, b), c) ? status::exit : update(state0, a, b, c);
     }
     else
     {
@@ -112,15 +110,15 @@ lsearchk_cgdescent_t::status lsearchk_cgdescent_t::secant2(const solver_state_t&
     }
 }
 
-lsearchk_cgdescent_t::status lsearchk_cgdescent_t::bracket(const solver_state_t& state0,
-    lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c)
+lsearchk_cgdescent_t::status lsearchk_cgdescent_t::bracket(const solver_state_t& state0, lsearch_step_t& a,
+                                                           lsearch_step_t& b, solver_state_t& c)
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
-    const auto ro = parameter("lsearchk::cgdescent::ro").value<scalar_t>();
-    const auto epsilon = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
+    const auto ro             = parameter("lsearchk::cgdescent::ro").value<scalar_t>();
+    const auto epsilon        = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
 
     auto last_a = a;
-    for (int64_t i = 0; i < max_iterations; ++ i)
+    for (int64_t i = 0; i < max_iterations; ++i)
     {
         if (!c.has_descent())
         {
@@ -158,25 +156,21 @@ bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
 {
     const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
-    const auto omega = parameter("lsearchk::cgdescent::omega").value<scalar_t>();
-    const auto epsilon = parameter("lsearchk::cgdescent::omega").value<scalar_t>();
+    const auto omega    = parameter("lsearchk::cgdescent::omega").value<scalar_t>();
+    const auto epsilon  = parameter("lsearchk::cgdescent::omega").value<scalar_t>();
 
     switch (parameter("lsearchk::cgdescent::criterion").value<criterion>())
     {
-    case criterion::wolfe:
-        return  state.has_armijo(state0, c1) &&
-                state.has_wolfe(state0, c2);
+    case criterion::wolfe: return state.has_armijo(state0, c1) && state.has_wolfe(state0, c2);
 
     case criterion::approx_wolfe:
-        return  state.has_approx_armijo(state0, epsilon * m_sumC) &&
-                state.has_approx_wolfe(state0, c1, c2);
+        return state.has_approx_armijo(state0, epsilon * m_sumC) && state.has_approx_wolfe(state0, c1, c2);
 
     case criterion::wolfe_approx_wolfe:
     default:
         if (!m_approx)
         {
-            if (state.has_armijo(state0, c1) &&
-                state.has_wolfe(state0, c2))
+            if (state.has_armijo(state0, c1) && state.has_wolfe(state0, c2))
             {
                 // decide if to switch permanently to the approximate Wolfe conditions
                 m_approx = std::fabs(state.f - state0.f) <= omega * m_sumC;
@@ -186,8 +180,7 @@ bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_s
         }
         else
         {
-            return  state.has_approx_armijo(state0, epsilon * m_sumC) &&
-                    state.has_approx_wolfe(state0, c1, c2);
+            return state.has_approx_armijo(state0, epsilon * m_sumC) && state.has_approx_wolfe(state0, c1, c2);
         }
     }
 }
@@ -195,8 +188,8 @@ bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_s
 bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
-    const auto delta = parameter("lsearchk::cgdescent::delta").value<scalar_t>();
-    const auto gamma = parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
+    const auto delta          = parameter("lsearchk::cgdescent::delta").value<scalar_t>();
+    const auto gamma          = parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
 
     // estimate an upper bound of the function value
     // (to be used for the approximate Wolfe condition)
@@ -214,21 +207,21 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
     lsearch_step_t a = state0, b = c;
     switch (bracket(state0, a, b, c))
     {
-    case status::exit:  return true;
-    case status::fail:  return false;
-    default:            break;
+    case status::exit: return true;
+    case status::fail: return false;
+    default: break;
     }
 
     // iteratively update the search interval [a, b]
-    for (int i = 0; i < max_iterations; ++ i)
+    for (int i = 0; i < max_iterations; ++i)
     {
         // secant interpolation
         const auto prev_width = b.t - a.t;
         switch (secant2(state0, a, b, c))
         {
-        case status::exit:  return true;
-        case status::fail:  return false;
-        default:            break;
+        case status::exit: return true;
+        case status::fail: return false;
+        default: break;
         }
 
         // update search interval
@@ -241,9 +234,9 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
 
             switch (update(state0, a, b, c))
             {
-            case status::exit:  return true;
-            case status::fail:  return false;
-            default:            break;
+            case status::exit: return true;
+            case status::fail: return false;
+            default: break;
             }
         }
     }

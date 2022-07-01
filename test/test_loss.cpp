@@ -1,18 +1,20 @@
-#include <nano/loss.h>
-#include <utest/utest.h>
-#include <nano/function.h>
 #include "fixture/function.h"
-#include <nano/model/class.h>
-#include <nano/core/random.h>
 #include <nano/core/numeric.h>
+#include <nano/core/random.h>
+#include <nano/function.h>
+#include <nano/loss.h>
+#include <nano/model/class.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
 struct loss_function_t final : public function_t
 {
-    loss_function_t(const rloss_t& loss, const tensor_size_t xmaps) :
-        function_t("loss", 3 * xmaps),
-        m_loss(loss), m_target(3, xmaps, 1, 1), m_values(3)
+    loss_function_t(const rloss_t& loss, const tensor_size_t xmaps)
+        : function_t("loss", 3 * xmaps)
+        , m_loss(loss)
+        , m_target(3, xmaps, 1, 1)
+        , m_values(3)
     {
         m_target.tensor(0) = class_target(xmaps, 11 % xmaps);
         m_target.tensor(1) = class_target(xmaps, 12 % xmaps);
@@ -40,9 +42,9 @@ struct loss_function_t final : public function_t
         return m_values.array().sum();
     }
 
-    const rloss_t&      m_loss;
-    tensor4d_t          m_target;
-    mutable tensor1d_t  m_values;
+    const rloss_t&     m_loss;
+    tensor4d_t         m_target;
+    mutable tensor1d_t m_values;
 };
 
 UTEST_BEGIN_MODULE(test_loss)
@@ -57,9 +59,9 @@ UTEST_CASE(gradient)
     {
         [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
 
-        for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++ cmd_dims)
+        for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++cmd_dims)
         {
-            const auto loss = loss_t::all().get(loss_id);
+            const auto loss     = loss_t::all().get(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
 
             UTEST_CHECK_EQUAL(loss->convex(), function.convex());
@@ -68,7 +70,7 @@ UTEST_CASE(gradient)
             vector_t x(function.size());
 
             const auto max_power = (loss_id == "m-exponential" || loss_id == "s-exponential") ? 5 : 20;
-            for (int power = 0; power <= max_power; ++ power)
+            for (int power = 0; power <= max_power; ++power)
             {
                 x.setRandom();
                 x.array() *= std::pow(std::exp(1.0), power);
@@ -135,10 +137,11 @@ UTEST_CASE(single_label_multi_class)
         targets.tensor(3) = class_target(n_classes, 11);
 
         tensor4d_t outputs(4, n_classes, 1, 1);
-        outputs.tensor(0) = class_target(n_classes, 11);
-        outputs.tensor(1) = class_target(n_classes, 12);
-        outputs.tensor(2) = class_target(n_classes, 11); outputs.vector(2)(7) = pos_target() + 1;
-        outputs.tensor(3) = class_target(n_classes);
+        outputs.tensor(0)    = class_target(n_classes, 11);
+        outputs.tensor(1)    = class_target(n_classes, 12);
+        outputs.tensor(2)    = class_target(n_classes, 11);
+        outputs.vector(2)(7) = pos_target() + 1;
+        outputs.tensor(3)    = class_target(n_classes);
 
         tensor1d_t errors;
         loss->error(targets, outputs, errors);

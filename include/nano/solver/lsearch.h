@@ -13,13 +13,12 @@ namespace nano
     class lsearch_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
-        lsearch_t(rlsearch0_t&& lsearch0, rlsearchk_t&& lsearchk) :
-            m_lsearch0(std::move(lsearch0)),
-            m_lsearchk(std::move(lsearchk))
+        lsearch_t(rlsearch0_t&& lsearch0, rlsearchk_t&& lsearchk)
+            : m_lsearch0(std::move(lsearch0))
+            , m_lsearchk(std::move(lsearchk))
         {
         }
 
@@ -36,9 +35,8 @@ namespace nano
         }
 
     private:
-
         // attributes
-        rlsearch0_t         m_lsearch0;     ///< procedure to guess the initial step length
-        rlsearchk_t         m_lsearchk;     ///< procedure to adjust the step length
+        rlsearch0_t m_lsearch0; ///< procedure to guess the initial step length
+        rlsearchk_t m_lsearchk; ///< procedure to adjust the step length
     };
-}
+} // namespace nano

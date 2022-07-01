@@ -1,9 +1,9 @@
-#include <utest/utest.h>
 #include <nano/tensor/storage.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
-using vector_t = tensor_vector_t<double>;
+using vector_t         = tensor_vector_t<double>;
 using vector_storage_t = tensor_vector_storage_t<double, 1U>;
 using carray_storage_t = tensor_carray_storage_t<double, 1U>;
 using marray_storage_t = tensor_marray_storage_t<double, 1U>;
@@ -31,7 +31,7 @@ UTEST_BEGIN_MODULE(test_tensor_storage)
 
 UTEST_CASE(vector_init)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
+    vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
 
     // vector(dims)
@@ -74,7 +74,7 @@ UTEST_CASE(vector_init)
 
 UTEST_CASE(carray_init)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
+    vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
 
     // carray(carray)
@@ -88,9 +88,9 @@ UTEST_CASE(carray_init)
     }
     // carray(vector)
     {
-        auto vector = vector_storage_t{data1.size()};
+        auto vector                              = vector_storage_t{data1.size()};
         map_vector(vector.data(), vector.size()) = data1;
-        const auto carray = carray_storage_t{vector};
+        const auto carray                        = carray_storage_t{vector};
         storage_must_match(carray, vector);
         storage_must_match(carray, data1);
         UTEST_CHECK_NOT_EQUAL(vector.data(), data1.data());
@@ -122,9 +122,9 @@ UTEST_CASE(marray_init)
     }
     // marray(vector)
     {
-        auto vector = vector_storage_t{data0.size()};
+        auto vector                              = vector_storage_t{data0.size()};
         map_vector(vector.data(), vector.size()) = data0;
-        const auto marray = marray_storage_t{vector};
+        const auto marray                        = marray_storage_t{vector};
         storage_must_match(marray, vector);
         storage_must_match(marray, data0);
         UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
@@ -134,7 +134,7 @@ UTEST_CASE(marray_init)
 
 UTEST_CASE(vector_copy)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
+    vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(5, 1);
     const vector_t data2 = vector_t::Constant(6, 2);
 
@@ -143,19 +143,19 @@ UTEST_CASE(vector_copy)
     UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
 
     const auto vother = make_vector_storage(data1);
-    vector = vother;
+    vector            = vother;
     storage_must_match(vector, data1);
     UTEST_CHECK_NOT_EQUAL(vector.data(), data1.data());
     UTEST_CHECK_NOT_EQUAL(vector.data(), vother.data());
 
     const auto carray = carray_storage_t{data2.data(), data2.size()};
-    vector = carray;
+    vector            = carray;
     storage_must_match(vector, data2);
     UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
     UTEST_CHECK_NOT_EQUAL(vector.data(), carray.data());
 
     const auto marray = marray_storage_t{data0.data(), data0.size()};
-    vector = marray;
+    vector            = marray;
     storage_must_match(vector, data0);
     UTEST_CHECK_NOT_EQUAL(vector.data(), data0.data());
     UTEST_CHECK_NOT_EQUAL(vector.data(), marray.data());
@@ -163,7 +163,7 @@ UTEST_CASE(vector_copy)
 
 UTEST_CASE(marray_copy)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
+    vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
     const vector_t data2 = vector_t::Constant(7, 2);
 
@@ -200,7 +200,7 @@ UTEST_CASE(marray_copy)
 
 UTEST_CASE(resize)
 {
-    vector_t data0 = vector_t::Constant(7, 0);
+    vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
     const vector_t data2 = vector_t::Constant(7, 2);
 
@@ -215,9 +215,9 @@ UTEST_CASE(resize)
     vector.resize(31);
     UTEST_CHECK_EQUAL(vector.size(), 31)
 
-    //marray.resize(31);
-    //carray.resize(31);
-    // TODO: to check that this doesn't compile within the same process?! (std::is_invocable doesn't work for =delete)!
+    // marray.resize(31);
+    // carray.resize(31);
+    //  TODO: to check that this doesn't compile within the same process?! (std::is_invocable doesn't work for =delete)!
 }
 
 UTEST_END_MODULE()

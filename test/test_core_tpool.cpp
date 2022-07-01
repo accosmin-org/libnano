@@ -1,9 +1,9 @@
-#include <numeric>
 #include <algorithm>
-#include <utest/utest.h>
-#include <nano/core/tpool.h>
-#include <nano/core/random.h>
 #include <nano/core/numeric.h>
+#include <nano/core/random.h>
+#include <nano/core/tpool.h>
+#include <numeric>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -14,7 +14,7 @@ namespace
     auto test_single(size_t size, const toperator op)
     {
         std::vector<double> results(size);
-        for (size_t i = 0; i < results.size(); ++ i)
+        for (size_t i = 0; i < results.size(); ++i)
         {
             results[i] = op(i);
         }
@@ -27,13 +27,14 @@ namespace
     auto test_loopi(size_t size, const toperator op)
     {
         std::vector<double> results(size, -1);
-        nano::loopi(size, [&] (size_t i, size_t tnum)
-        {
-            UTEST_CHECK_LESS(i, size);
-            UTEST_CHECK_LESS(tnum, tpool_t::size());
+        nano::loopi(size,
+                    [&](size_t i, size_t tnum)
+                    {
+                        UTEST_CHECK_LESS(i, size);
+                        UTEST_CHECK_LESS(tnum, tpool_t::size());
 
-            results[i] = op(i);
-        });
+                        results[i] = op(i);
+                    });
 
         return std::accumulate(results.begin(), results.end(), 0.0);
     }
@@ -43,22 +44,23 @@ namespace
     auto test_loopr(size_t size, size_t chunk, const toperator op)
     {
         std::vector<double> results(size, -1);
-        nano::loopr(size, chunk, [&] (size_t begin, size_t end, size_t tnum)
-        {
-            UTEST_CHECK_LESS(begin, end);
-            UTEST_CHECK_LESS_EQUAL(end, size);
-            UTEST_CHECK_LESS(tnum, tpool_t::size());
-            UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
+        nano::loopr(size, chunk,
+                    [&](size_t begin, size_t end, size_t tnum)
+                    {
+                        UTEST_CHECK_LESS(begin, end);
+                        UTEST_CHECK_LESS_EQUAL(end, size);
+                        UTEST_CHECK_LESS(tnum, tpool_t::size());
+                        UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
 
-            for (auto i = begin; i < end; ++ i)
-            {
-                results[i] = op(i);
-            }
-        });
+                        for (auto i = begin; i < end; ++i)
+                        {
+                            results[i] = op(i);
+                        }
+                    });
 
         return std::accumulate(results.begin(), results.end(), 0.0);
     }
-}
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_tpool)
 
@@ -74,7 +76,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(future)
 {
-    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
 
     auto future = task.get_future();
     task(2, 9);
@@ -84,7 +86,7 @@ UTEST_CASE(future)
 
 UTEST_CASE(future_join)
 {
-    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
 
     auto future = task.get_future();
     auto thread = std::thread{std::move(task), 2, 10};
@@ -95,7 +97,7 @@ UTEST_CASE(future_join)
 
 UTEST_CASE(future_detach)
 {
-    std::packaged_task<int(int,int)> task([] (int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
 
     auto future = task.get_future();
     auto thread = std::thread{std::move(task), 2, 11};
@@ -108,31 +110,32 @@ UTEST_CASE(enqueue)
 {
     auto& pool = tpool_t::instance();
 
-    size_t max_tasks = 1024;
-    const auto tasks = urand<size_t>(1U, max_tasks, make_rng());
+    size_t     max_tasks = 1024;
+    const auto tasks     = urand<size_t>(1U, max_tasks, make_rng());
 
-    std::mutex mutex;
+    std::mutex          mutex;
     std::vector<size_t> tasks_done;
     {
         tpool_section_t<future_t> futures;
-        for (size_t j = 0; j < tasks; ++ j)
+        for (size_t j = 0; j < tasks; ++j)
         {
-            futures.push_back(pool.enqueue([=, &mutex, &tasks_done](size_t)
-            {
-                const auto sleep1 = urand<size_t>(1, 5, make_rng());
-                std::this_thread::sleep_for(std::chrono::milliseconds(sleep1));
-
+            futures.push_back(pool.enqueue(
+                [=, &mutex, &tasks_done](size_t)
                 {
-                    const std::lock_guard<std::mutex> lock(mutex);
+                    const auto sleep1 = urand<size_t>(1, 5, make_rng());
+                    std::this_thread::sleep_for(std::chrono::milliseconds(sleep1));
 
-                    tasks_done.push_back(j + 1);
-                }
-            }));
+                    {
+                        const std::lock_guard<std::mutex> lock(mutex);
+
+                        tasks_done.push_back(j + 1);
+                    }
+                }));
         }
     }
 
     UTEST_CHECK_EQUAL(tasks_done.size(), tasks);
-    for (size_t j = 0; j < tasks; ++ j)
+    for (size_t j = 0; j < tasks; ++j)
     {
         UTEST_CHECK(std::find(tasks_done.begin(), tasks_done.end(), j + 1) != tasks_done.end());
     }
@@ -140,7 +143,7 @@ UTEST_CASE(enqueue)
 
 UTEST_CASE(loopi)
 {
-    const auto op = [] (size_t i) { return std::sin(i); };
+    const auto op = [](size_t i) { return std::sin(i); };
 
     for (size_t size = 1; size <= size_t(123); size *= 3)
     {
@@ -153,7 +156,7 @@ UTEST_CASE(loopi)
 
 UTEST_CASE(loopr)
 {
-    const auto op = [] (size_t i) { return std::cos(i); };
+    const auto op = [](size_t i) { return std::cos(i); };
 
     for (size_t size = 1; size <= size_t(128); size *= 2)
     {

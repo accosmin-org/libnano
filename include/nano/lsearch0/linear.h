@@ -12,7 +12,6 @@ namespace nano
     class NANO_PUBLIC lsearch0_linear_t final : public lsearch0_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -29,8 +28,7 @@ namespace nano
         scalar_t get(const solver_state_t&) final;
 
     private:
-
         // attributes
-        scalar_t    m_prevdg{1};            ///< previous direction dot product: dg_{k-1}
+        scalar_t m_prevdg{1}; ///< previous direction dot product: dg_{k-1}
     };
-}
+} // namespace nano

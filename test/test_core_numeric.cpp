@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/core/numeric.h>
+#include <utest/utest.h>
 
 #include <iomanip>
 
@@ -57,7 +57,6 @@ UTEST_CASE(iround)
     UTEST_CHECK_EQUAL(iround(4, 4), 4);
     UTEST_CHECK_EQUAL(iround(7, 4), 8);
     UTEST_CHECK_EQUAL(iround(11, 4), 12);
-
 }
 
 UTEST_CASE(close)

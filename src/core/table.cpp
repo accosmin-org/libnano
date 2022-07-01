@@ -16,7 +16,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             if (span == 1)
             {
                 const auto size = cell.m_data.size() + cell.m_mark.size();
-                for (size_t c = 0; c < span; ++ c, ++ icol)
+                for (size_t c = 0; c < span; ++c, ++icol)
                 {
                     colsizes[icol] = std::max(colsizes[icol], idiv(size, span));
                 }
@@ -38,11 +38,10 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             if (span > 1)
             {
                 const auto size = cell.m_data.size() + cell.m_mark.size();
-                if (std::accumulate(
-                    colsizes.begin() + static_cast<int>(icol),
-                    colsizes.begin() + static_cast<int>(icol + span), size_t(0)) < size)
+                if (std::accumulate(colsizes.begin() + static_cast<int>(icol),
+                                    colsizes.begin() + static_cast<int>(icol + span), size_t(0)) < size)
                 {
-                    for (size_t c = 0; c < span; ++ c, ++ icol)
+                    for (size_t c = 0; c < span; ++c, ++icol)
                     {
                         colsizes[icol] = std::max(colsizes[icol], idiv(size, span));
                     }
@@ -60,7 +59,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
     }
 
     //
-    const auto print_row_delim = [&] ()
+    const auto print_row_delim = [&]()
     {
         for (const auto colsize : colsizes)
         {
@@ -76,9 +75,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
         auto it = colsizes.begin();
         switch (row.type())
         {
-        case row_t::mode::delim:
-            print_row_delim();
-            break;
+        case row_t::mode::delim: print_row_delim(); break;
 
         default:
             for (const auto& cell : row.cells())

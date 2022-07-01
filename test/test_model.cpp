@@ -1,9 +1,9 @@
-#include <sstream>
-#include <nano/model.h>
-#include <utest/utest.h>
 #include "fixture/generator.h"
 #include "fixture/generator_dataset.h"
 #include <nano/generator/elemwise_identity.h>
+#include <nano/model.h>
+#include <sstream>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -25,11 +25,7 @@ static auto make_generator(const dataset_t& dataset)
 class fixture_model_t final : public model_t
 {
 public:
-
-    rmodel_t clone() const override
-    {
-        return std::make_unique<fixture_model_t>(*this);
-    }
+    rmodel_t clone() const override { return std::make_unique<fixture_model_t>(*this); }
 
     fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) override
     {
@@ -51,7 +47,7 @@ static auto check_stream(const fixture_model_t& model)
         str = stream.str();
     }
     {
-        fixture_model_t xmodel;
+        fixture_model_t    xmodel;
         std::istringstream stream(str);
         UTEST_CHECK_NOTHROW(read(stream, xmodel));
         UTEST_CHECK_EQUAL(xmodel.parameters(), model.parameters());
@@ -59,8 +55,8 @@ static auto check_stream(const fixture_model_t& model)
     }
 }
 
-static auto check_fit(
-    const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver)
+static auto check_fit(const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss,
+                      const solver_t& solver)
 {
     auto model = fixture_model_t{};
     UTEST_CHECK_NOTHROW(model.fit(dataset, samples, loss, solver));
@@ -90,7 +86,7 @@ UTEST_CASE(parameters)
 
 UTEST_CASE(fit_predict)
 {
-    const auto rloss = loss_t::all().get("squared");
+    const auto rloss   = loss_t::all().get("squared");
     const auto rsolver = solver_t::all().get("lbfgs");
 
     const auto train_samples = arange(0, 80);

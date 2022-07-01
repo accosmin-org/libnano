@@ -15,8 +15,8 @@ rlsearch0_t lsearch0_linear_t::clone() const
 
 scalar_t lsearch0_linear_t::get(const solver_state_t& state)
 {
-    const auto beta = parameter("lsearch0::linear::beta").value<scalar_t>();
-    const auto alpha = parameter("lsearch0::linear::alpha").value<scalar_t>();
+    const auto beta    = parameter("lsearch0::linear::beta").value<scalar_t>();
+    const auto alpha   = parameter("lsearch0::linear::alpha").value<scalar_t>();
     const auto epsilon = parameter("lsearch0::epsilon").value<scalar_t>();
 
     scalar_t t0 = 0;

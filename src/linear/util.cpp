@@ -3,11 +3,11 @@
 using namespace nano;
 
 void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
-    tensor4d_map_t&& outputs)
+                     tensor4d_map_t&& outputs)
 {
-    [[maybe_unused]] const auto isize = weights.cols();
-    const auto tsize = weights.rows();
-    const auto samples = inputs.size<0>();
+    [[maybe_unused]] const auto isize   = weights.cols();
+    const auto                  tsize   = weights.rows();
+    const auto                  samples = inputs.size<0>();
 
     assert(tsize == bias.size());
     assert(samples == inputs.size<0>());
@@ -20,7 +20,7 @@ void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weigh
 }
 
 void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
-    tensor4d_t& outputs)
+                     tensor4d_t& outputs)
 {
     outputs.resize(inputs.size<0>(), bias.size(), 1, 1);
     predict(inputs, weights, bias, outputs.tensor());

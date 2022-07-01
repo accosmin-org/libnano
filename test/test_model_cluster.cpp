@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/model/cluster.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -82,9 +82,9 @@ UTEST_CASE(assign)
 UTEST_CASE(loop)
 {
     auto indices = indices_t{3};
-    indices(0) = 0;
-    indices(1) = 4;
-    indices(2) = 5;
+    indices(0)   = 0;
+    indices(1)   = 4;
+    indices(2)   = 5;
 
     auto split = cluster_t{7, indices};
     UTEST_CHECK_EQUAL(split.groups(), 1);
@@ -93,7 +93,7 @@ UTEST_CASE(loop)
 
     indices_t all_indices(7);
     all_indices.full(-1);
-    split.loop(0, [&] (const tensor_size_t index) { all_indices(index) = +1; });
+    split.loop(0, [&](const tensor_size_t index) { all_indices(index) = +1; });
     UTEST_CHECK_EQUAL(all_indices(0), +1);
     UTEST_CHECK_EQUAL(all_indices(1), -1);
     UTEST_CHECK_EQUAL(all_indices(2), -1);
@@ -108,7 +108,7 @@ UTEST_CASE(loop)
     UTEST_CHECK_EQUAL(split.count(0), 4);
     UTEST_CHECK_EQUAL(split.samples(), 7);
 
-    split.loop(0, [&] (const tensor_size_t index) { all_indices(index) = +1; });
+    split.loop(0, [&](const tensor_size_t index) { all_indices(index) = +1; });
     UTEST_CHECK_EQUAL(all_indices(0), +1);
     UTEST_CHECK_EQUAL(all_indices(1), -1);
     UTEST_CHECK_EQUAL(all_indices(2), -1);

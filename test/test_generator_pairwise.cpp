@@ -1,28 +1,22 @@
-#include <utest/utest.h>
 #include "fixture/generator.h"
 #include "fixture/generator_dataset.h"
 #include <nano/generator/pairwise.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
 class scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
 {
 public:
-
     using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
 
-    feature_t feature(tensor_size_t ifeature) const override
-    {
-        return make_scalar_feature(ifeature, "sum");
-    }
+    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
-    auto process(tensor_size_t) const
+    static auto process(tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
-        const auto process = [=] (const auto& values1, const auto& values2)
-        {
-            return static_cast<scalar_t>(values1(0)) + static_cast<scalar_t>(values2(0));
-        };
+        const auto process = [=](const auto& values1, const auto& values2)
+        { return static_cast<scalar_t>(values1(0)) + static_cast<scalar_t>(values2(0)); };
         return std::make_tuple(process, colsize);
     }
 };
@@ -30,7 +24,6 @@ public:
 class scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
 {
 public:
-
     using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
 
     feature_t feature(tensor_size_t ifeature) const override
@@ -38,16 +31,16 @@ public:
         return make_struct_feature(ifeature, "pow", make_dims(3, 1, 1));
     }
 
-    auto process(tensor_size_t) const
+    static auto process(tensor_size_t)
     {
         const auto colsize = tensor_size_t{3};
-        const auto process = [=] (const auto& values1, const auto& values2, auto&& structured)
+        const auto process = [=](const auto& values1, const auto& values2, auto&& structured)
         {
             const auto value1 = static_cast<scalar_t>(values1(0));
             const auto value2 = static_cast<scalar_t>(values2(0));
-            structured(0) = value1 * value1;
-            structured(1) = value1 * value2;
-            structured(2) = value2 * value2;
+            structured(0)     = value1 * value1;
+            structured(1)     = value1 * value2;
+            structured(2)     = value2 * value2;
         };
         return std::make_tuple(process, colsize);
     }
@@ -56,7 +49,6 @@ public:
 class scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
 {
 public:
-
     using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
 
     feature_t feature(tensor_size_t ifeature) const override
@@ -64,10 +56,10 @@ public:
         return make_sclass_feature(ifeature, "sign", strings_t{"neg", "pos"});
     }
 
-    auto process(tensor_size_t) const
+    static auto process(tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
-        const auto process = [=] (const auto& values1, const auto& values2)
+        const auto process = [=](const auto& values1, const auto& values2)
         {
             const auto value1 = static_cast<scalar_t>(values1(0));
             const auto value2 = static_cast<scalar_t>(values2(0));
@@ -80,7 +72,6 @@ public:
 class scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
 {
 public:
-
     using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
 
     feature_t feature(tensor_size_t ifeature) const override
@@ -88,15 +79,15 @@ public:
         return make_mclass_feature(ifeature, "mod", strings_t{"mod2", "mod3"});
     }
 
-    auto process(tensor_size_t) const
+    static auto process(tensor_size_t)
     {
         const auto colsize = tensor_size_t{2};
-        const auto process = [=] (const auto& values1, const auto& values2, auto&& mclass)
+        const auto process = [=](const auto& values1, const auto& values2, auto&& mclass)
         {
             const auto value1 = static_cast<int>(static_cast<scalar_t>(values1(0)));
             const auto value2 = static_cast<int>(static_cast<scalar_t>(values2(0)));
-            mclass(0) = (value1 + value2) % 2 == 0 ? 0x01 : 0x00;
-            mclass(1) = (value1 + value2) % 3 == 0 ? 0x01 : 0x00;
+            mclass(0)         = (value1 + value2) % 2 == 0 ? 0x01 : 0x00;
+            mclass(1)         = (value1 + value2) % 3 == 0 ? 0x01 : 0x00;
         };
         return std::make_tuple(process, colsize);
     }
@@ -105,21 +96,15 @@ public:
 class sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
 {
 public:
-
     using pairwise_input_sclass_sclass_t::pairwise_input_sclass_sclass_t;
 
-    feature_t feature(tensor_size_t ifeature) const override
-    {
-        return make_scalar_feature(ifeature, "sum");
-    }
+    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
-    auto process(tensor_size_t) const
+    static auto process(tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
-        const auto process = [=] (const auto& value1, const auto& value2)
-        {
-            return static_cast<scalar_t>(value1) + static_cast<scalar_t>(value2);
-        };
+        const auto process = [=](const auto& value1, const auto& value2)
+        { return static_cast<scalar_t>(value1) + static_cast<scalar_t>(value2); };
         return std::make_tuple(process, colsize);
     }
 };
@@ -143,7 +128,8 @@ UTEST_CASE(scalar_scalar)
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sum(scalar1,scalar1)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sum(scalar1,scalar2)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sum(scalar2,scalar2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(6), feature_t{"pow(scalar1,scalar1)"}.scalar(feature_type::float64, make_dims(3, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(6),
+                      feature_t{"pow(scalar1,scalar1)"}.scalar(feature_type::float64, make_dims(3, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"sign(scalar0,scalar0)"}.sclass(strings_t{"neg", "pos"}));
     UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"sign(scalar0,scalar1)"}.sclass(strings_t{"neg", "pos"}));
     UTEST_CHECK_EQUAL(generator.feature(9), feature_t{"sign(scalar0,scalar2)"}.sclass(strings_t{"neg", "pos"}));
@@ -159,46 +145,49 @@ UTEST_CASE(scalar_scalar)
     check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), -4, N, 0, N, 4, N, +8, Na, 12, Na));
     check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), -5, N, N, N, N, N, +7, Na, Na, Na));
     check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), -6, N, N, 0, N, N, +6, Na, Na, 12));
-    check_select(generator, 6, make_tensor<scalar_t>(make_dims(10, 3, 1, 1),
-        4, 4, 4, N, N, N, 0, 0, 0, N, N, N, 4, 4, 4, N, N, N, 16, 16, 16, N, N, N, 36, 36, 36, N, N, N));
+    check_select(generator, 6,
+                 make_tensor<scalar_t>(make_dims(10, 3, 1, 1), 4, 4, 4, N, N, N, 0, 0, 0, N, N, N, 4, 4, 4, N, N, N, 16,
+                                       16, 16, N, N, N, 36, 36, 36, N, N, N));
     check_select(generator, 7, make_tensor<int32_t>(make_dims(10), +0, +1, +1, +1, +1, +1, +1, +1, +1, +1));
     check_select(generator, 8, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
     check_select(generator, 9, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
     check_select(generator, 10, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
     check_select(generator, 11, make_tensor<int32_t>(make_dims(10), +0, -1, -1, -1, -1, -1, +1, -1, -1, -1));
     check_select(generator, 12, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
-    check_select(generator, 13, make_tensor<int8_t>(make_dims(10, 2),
-        +1, +0, -1, -1, +1, +1, -1, -1, +1, +0, -1, -1, +1, +0, -1, -1, +1, +1, -1, -1));
-    check_select(generator, 14, make_tensor<int8_t>(make_dims(10, 2),
-        +0, +0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, +0, +0, -1, -1, -1, -1, -1, -1));
+    check_select(generator, 13,
+                 make_tensor<int8_t>(make_dims(10, 2), +1, +0, -1, -1, +1, +1, -1, -1, +1, +0, -1, -1, +1, +0, -1, -1,
+                                     +1, +1, -1, -1));
+    check_select(generator, 14,
+                 make_tensor<int8_t>(make_dims(10, 2), +0, +0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, +0, +0, -1, -1,
+                                     -1, -1, -1, -1));
 
     generator.drop(0);
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 19),
-        Na, -3, -4, -4, -5, -6, +4, +4, +4, +1, +1, +1, +1, +1, +1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +1, Na, +0, Na, Na, +0, +0, +0, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
-        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na,
-        Na, +5, Na, +4, Na, Na, +4, +4, +4, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +9, +8, +8, +7, +6, 16, 16, 16, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, 13, Na, 12, Na, Na, 36, 36, 36, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
-        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
-        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
+    check_flatten(generator,
+                  make_tensor<scalar_t>(make_dims(10, 19), Na, -3, -4, -4, -5, -6, +4, +4, +4, +1, +1, +1, +1, +1, +1,
+                                        +1, -1, -1, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na,
+                                        Na, Na, Na, Na, +1, Na, +0, Na, Na, +0, +0, +0, -1, -1, Na, -1, Na, Na, +1, +1,
+                                        Na, Na, Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na,
+                                        Na, Na, +5, Na, +4, Na, Na, +4, +4, +4, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
+                                        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+                                        +9, +8, +8, +7, +6, 16, 16, 16, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1, Na, Na,
+                                        Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, 13, Na,
+                                        12, Na, Na, 36, 36, 36, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na, Na, Na, 14, Na,
+                                        Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
+                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
 
     generator.drop(6);
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 19),
-        Na, -3, -4, -4, -5, -6, Na, Na, Na, +1, +1, +1, +1, +1, +1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +1, Na, +0, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
-        Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na,
-        Na, +5, Na, +4, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, +9, +8, +8, +7, +6, Na, Na, Na, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1,
-        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na,
-        Na, 13, Na, 12, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na,
-        Na, Na, 14, Na, Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
-        make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
+    check_flatten(generator,
+                  make_tensor<scalar_t>(make_dims(10, 19), Na, -3, -4, -4, -5, -6, Na, Na, Na, +1, +1, +1, +1, +1, +1,
+                                        +1, -1, -1, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na,
+                                        Na, Na, Na, Na, +1, Na, +0, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1,
+                                        Na, Na, Na, Na, +2, Na, Na, +0, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na,
+                                        Na, Na, +5, Na, +4, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, -1, Na, Na,
+                                        Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na,
+                                        +9, +8, +8, +7, +6, Na, Na, Na, -1, -1, -1, -1, -1, -1, +1, -1, -1, -1, Na, Na,
+                                        Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, 13, Na,
+                                        12, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na, Na, Na, 14, Na,
+                                        Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
+                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
 }
 
 UTEST_CASE(sclass_sclass)
@@ -223,18 +212,11 @@ UTEST_CASE(sclass_sclass)
     check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 1, N, 1, N, 1, N, 1, N, 1, N));
     check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 0, N, 0, N, 0, N, 0, N, 0, N));
 
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 6),
-        4, 3, 2, 2, 1, 0,
-        N, N, N, 0, N, N,
-        2, 2, 1, 2, 1, 0,
-        N, N, N, 0, N, N,
-        0, 1, 0, 2, 1, 0,
-        N, N, N, 0, N, N,
-        4, 3, 2, 2, 1, 0,
-        N, N, N, 0, N, N,
-        2, 2, 1, 2, 1, 0,
-        N, N, N, 0, N, N),
-        make_indices(0, 1, 2, 3, 4, 5));
+    check_flatten(generator,
+                  make_tensor<scalar_t>(make_dims(10, 6), 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N, 2, 2, 1, 2, 1, 0, N, N, N,
+                                        0, N, N, 0, 1, 0, 2, 1, 0, N, N, N, 0, N, N, 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N,
+                                        2, 2, 1, 2, 1, 0, N, N, N, 0, N, N),
+                  make_indices(0, 1, 2, 3, 4, 5));
 }
 
 UTEST_END_MODULE()

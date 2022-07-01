@@ -25,7 +25,6 @@ namespace nano
     class solver_universal_t : public solver_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -39,7 +38,6 @@ namespace nano
     class NANO_PUBLIC solver_pgm_t final : public solver_universal_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -58,7 +56,6 @@ namespace nano
     class NANO_PUBLIC solver_dgm_t final : public solver_universal_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -77,7 +74,6 @@ namespace nano
     class NANO_PUBLIC solver_fgm_t final : public solver_universal_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -88,4 +84,4 @@ namespace nano
         ///
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
     };
-}
+} // namespace nano

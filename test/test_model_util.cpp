@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/model/util.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -8,11 +8,11 @@ static tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 {
     auto iter = combinatorial_iterator_t{counts};
 
-    const auto dimensions = counts.size();
+    const auto dimensions   = counts.size();
     const auto combinations = iter.size();
 
     tensor_mem_t<tindex, 2> product(combinations, dimensions);
-    for (; iter; ++ iter)
+    for (; iter; ++iter)
     {
         product.tensor(iter.index()) = *iter;
     }
@@ -24,7 +24,7 @@ UTEST_BEGIN_MODULE(test_model_util)
 
 UTEST_CASE(sample_with_replacement)
 {
-    for (auto trial = 0; trial < 100; ++ trial)
+    for (auto trial = 0; trial < 100; ++trial)
     {
         const auto indices = nano::sample_with_replacement(120, 50);
 
@@ -37,7 +37,7 @@ UTEST_CASE(sample_with_replacement)
 
 UTEST_CASE(sample_without_replacement)
 {
-    for (auto trial = 0; trial < 100; ++ trial)
+    for (auto trial = 0; trial < 100; ++trial)
     {
         const auto indices = nano::sample_without_replacement(140, 60);
 
@@ -64,21 +64,12 @@ UTEST_CASE(exhaustive)
     const auto config4 = make_tensor<tensor_size_t>(make_dims(3), 2, 3, 3);
 
     const auto product1 = make_tensor<tensor_size_t>(make_dims(3, 1), 0, 1, 2);
-    const auto product2 = make_tensor<tensor_size_t>(make_dims(6, 2),
-        0, 0, 0, 1,
-        1, 0, 1, 1,
-        2, 0, 2, 1);
-    const auto product3 = make_tensor<tensor_size_t>(make_dims(12, 3),
-        0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1,
-        1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1,
-        2, 0, 0, 2, 0, 1, 2, 1, 0, 2, 1, 1);
-    const auto product4 = make_tensor<tensor_size_t>(make_dims(18, 3),
-        0, 0, 0, 0, 0, 1, 0, 0, 2,
-        0, 1, 0, 0, 1, 1, 0, 1, 2,
-        0, 2, 0, 0, 2, 1, 0, 2, 2,
-        1, 0, 0, 1, 0, 1, 1, 0, 2,
-        1, 1, 0, 1, 1, 1, 1, 1, 2,
-        1, 2, 0, 1, 2, 1, 1, 2, 2);
+    const auto product2 = make_tensor<tensor_size_t>(make_dims(6, 2), 0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1);
+    const auto product3 = make_tensor<tensor_size_t>(make_dims(12, 3), 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1,
+                                                     0, 1, 1, 1, 0, 1, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1, 0, 2, 1, 1);
+    const auto product4 = make_tensor<tensor_size_t>(make_dims(18, 3), 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 1, 0, 0, 1, 1, 0,
+                                                     1, 2, 0, 2, 0, 0, 2, 1, 0, 2, 2, 1, 0, 0, 1, 0, 1, 1, 0, 2, 1, 1,
+                                                     0, 1, 1, 1, 1, 1, 2, 1, 2, 0, 1, 2, 1, 1, 2, 2);
 
     UTEST_CHECK_EQUAL(exhaustive(config1), product1);
     UTEST_CHECK_EQUAL(exhaustive(config2), product2);

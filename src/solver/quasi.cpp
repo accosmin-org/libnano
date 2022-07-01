@@ -7,7 +7,7 @@ namespace
     template <typename tvector>
     auto SR1(const matrix_t& H, const tvector& dx, const tvector& dg)
     {
-        return  H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
+        return H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
     }
 
     template <typename tvector>
@@ -25,8 +25,7 @@ namespace
     template <typename tvector>
     auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
     {
-        return  H + (dx * dx.transpose()) / dx.dot(dg) -
-                (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
+        return H + (dx * dx.transpose()) / dx.dot(dg) - (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
     }
 
     template <typename tvector>
@@ -34,8 +33,8 @@ namespace
     {
         const auto I = matrix_t::Identity(H.rows(), H.cols());
 
-        return  (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
-                dx * dx.transpose() / dx.dot(dg);
+        return (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
+               dx * dx.transpose() / dx.dot(dg);
     }
 
     template <typename tvector>
@@ -43,7 +42,7 @@ namespace
     {
         const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
 
-        return  (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
+        return (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
     }
 
     template <typename tvector>
@@ -64,7 +63,7 @@ namespace
             H = SR1(H, dx, dg);
         }
     }
-}
+} // namespace
 
 solver_quasi_t::solver_quasi_t()
 {
@@ -77,10 +76,10 @@ solver_quasi_t::solver_quasi_t()
 solver_state_t solver_quasi_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
-    const auto init = parameter("solver::quasi::initialization").value<initialization>();
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
+    const auto init      = parameter("solver::quasi::initialization").value<initialization>();
 
-    auto lsearch = make_lsearch();
+    auto lsearch  = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
@@ -94,7 +93,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
     {
         // descent direction
         cstate.d = -H * cstate.g;
@@ -108,7 +107,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
         }
 
         // line-search
-        pstate = cstate;
+        pstate             = cstate;
         const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {
@@ -120,7 +119,7 @@ solver_state_t solver_quasi_t::minimize(const function_t& function_, const vecto
         {
             const auto dx = cstate.x - pstate.x;
             const auto dg = cstate.g - pstate.g;
-            H = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
+            H             = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
         }
 
         // update approximation of the Hessian

@@ -19,18 +19,20 @@ namespace nano
     class feature_storage_t
     {
     public:
-
         ///
         /// \brief constructor.
         ///
-        explicit feature_storage_t(const feature_t& feature) :
-            m_feature(feature)
+        explicit feature_storage_t(const feature_t& feature)
+            : m_feature(feature)
         {
         }
 
         auto classes() const { return m_feature.classes(); }
+
         const auto& dims() const { return m_feature.dims(); }
+
         const auto& name() const { return m_feature.name(); }
+
         const feature_t& feature() const { return m_feature; }
 
         ///
@@ -53,10 +55,8 @@ namespace nano
                 critical0("in-memory dataset: cannot set single-label feature <", name(), ">!");
             }
 
-            critical(
-                label < 0 || label >= classes(),
-                "in-memory dataset: cannot set single-label feature <", name(),
-                ">: invalid label ", label, " not in [0, ", classes(), ")!");
+            critical(label < 0 || label >= classes(), "in-memory dataset: cannot set single-label feature <", name(),
+                     ">: invalid label ", label, " not in [0, ", classes(), ")!");
 
             data(sample) = static_cast<tscalar>(label);
         }
@@ -71,10 +71,8 @@ namespace nano
             {
                 if constexpr (tvalue::rank() == 1)
                 {
-                    critical(
-                        value.size() != classes(),
-                        "in-memory dataset: cannot set multi-label feature <", name(),
-                        ">: invalid number of labels ", value.size(), " vs. ", classes(), "!");
+                    critical(value.size() != classes(), "in-memory dataset: cannot set multi-label feature <", name(),
+                             ">: invalid number of labels ", value.size(), " vs. ", classes(), "!");
 
                     data.vector(sample) = value.vector().template cast<tscalar>();
                 }
@@ -97,28 +95,22 @@ namespace nano
         {
             if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*>)
             {
-                critical(
-                    ::nano::size(dims()) != 1,
-                    "in-memory dataset: cannot set scalar feature <", name(),
-                    ">: invalid tensor dimensions ", dims(), "!");
+                critical(::nano::size(dims()) != 1, "in-memory dataset: cannot set scalar feature <", name(),
+                         ">: invalid tensor dimensions ", dims(), "!");
 
                 data(sample) = check_from_string<tscalar>("scalar", value);
             }
             else if constexpr (std::is_arithmetic_v<tvalue>)
             {
-                critical(
-                    ::nano::size(dims()) != 1,
-                    "in-memory dataset: cannot set scalar feature <", name(),
-                    ">: invalid tensor dimensions ", dims(), "!");
+                critical(::nano::size(dims()) != 1, "in-memory dataset: cannot set scalar feature <", name(),
+                         ">: invalid tensor dimensions ", dims(), "!");
 
                 data(sample) = static_cast<tscalar>(value);
             }
             else if constexpr (::nano::is_tensor_v<tvalue>)
             {
-                critical(
-                    ::nano::size(dims()) != value.size(),
-                    "in-memory dataset: cannot set scalar feature <", name(),
-                    ">: invalid tensor dimensions ", dims(), " vs. ", value.dims(), "!");
+                critical(::nano::size(dims()) != value.size(), "in-memory dataset: cannot set scalar feature <", name(),
+                         ">: invalid tensor dimensions ", dims(), " vs. ", value.dims(), "!");
 
                 data.vector(sample) = value.vector().template cast<tscalar>();
             }
@@ -129,7 +121,6 @@ namespace nano
         }
 
     private:
-
         template <typename tscalar>
         auto check_from_string(const char* type, const string_t& value) const
         {
@@ -140,14 +131,13 @@ namespace nano
             }
             catch (std::exception& e)
             {
-                critical0(
-                    "in-memory dataset: cannot set ", type, " feature <", name(),
-                    ">: caught exception <", e.what(), ">!");
+                critical0("in-memory dataset: cannot set ", type, " feature <", name(), ">: caught exception <",
+                          e.what(), ">!");
             }
             return scalar;
         }
 
         // attributes
-        const feature_t&    m_feature;  ///<
+        const feature_t& m_feature; ///<
     };
-}
+} // namespace nano

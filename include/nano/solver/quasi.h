@@ -14,14 +14,13 @@ namespace nano
     class NANO_PUBLIC solver_quasi_t : public solver_t
     {
     public:
-
         ///
         /// \brief methods to initialize the first approximation of the Hessian's inverse.
         ///
         enum class initialization
         {
-            identity,       ///< H0 = I
-            scaled,         ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
+            identity, ///< H0 = I
+            scaled,   ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
         };
 
         ///
@@ -35,7 +34,6 @@ namespace nano
         solver_state_t minimize(const function_t&, const vector_t& x0) const final;
 
     private:
-
         virtual void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const = 0;
     };
 
@@ -45,7 +43,6 @@ namespace nano
     class NANO_PUBLIC solver_quasi_sr1_t final : public solver_quasi_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -63,7 +60,6 @@ namespace nano
     class NANO_PUBLIC solver_quasi_dfp_t final : public solver_quasi_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -81,7 +77,6 @@ namespace nano
     class NANO_PUBLIC solver_quasi_bfgs_t final : public solver_quasi_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -99,7 +94,6 @@ namespace nano
     class NANO_PUBLIC solver_quasi_hoshino_t final : public solver_quasi_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -117,7 +111,6 @@ namespace nano
     class NANO_PUBLIC solver_quasi_fletcher_t final : public solver_quasi_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -132,10 +125,9 @@ namespace nano
     template <>
     inline enum_map_t<solver_quasi_t::initialization> enum_string<solver_quasi_t::initialization>()
     {
-        return
-        {
-            { solver_quasi_t::initialization::identity,     "identity" },
-            { solver_quasi_t::initialization::scaled,       "scaled" }
+        return {
+            {solver_quasi_t::initialization::identity, "identity"},
+            {  solver_quasi_t::initialization::scaled,   "scaled"}
         };
     }
-}
+} // namespace nano

@@ -10,22 +10,20 @@ namespace nano
     class NANO_PUBLIC base_mnist_dataset_t : public dataset_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
         base_mnist_dataset_t(string_t dir, string_t name, feature_t target);
 
     private:
-
         void do_load() override;
         bool iread(const string_t&, tensor_size_t sample, tensor_size_t expected);
         bool tread(const string_t&, tensor_size_t sample, tensor_size_t expected);
 
         // attributes
-        string_t        m_dir;              ///< directory where to load the data from
-        string_t        m_name;             ///< dataset name
-        feature_t       m_target;           ///< target feature
+        string_t  m_dir;    ///< directory where to load the data from
+        string_t  m_name;   ///< dataset name
+        feature_t m_target; ///< target feature
     };
 
     ///
@@ -39,7 +37,6 @@ namespace nano
     class NANO_PUBLIC mnist_dataset_t final : public base_mnist_dataset_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -57,10 +54,9 @@ namespace nano
     class NANO_PUBLIC fashion_mnist_dataset_t final : public base_mnist_dataset_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
         fashion_mnist_dataset_t();
     };
-}
+} // namespace nano

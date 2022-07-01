@@ -10,6 +10,7 @@ namespace nano
     struct factory_traits_t<wlearner_table_t>
     {
         static string_t id() { return "table"; }
+
         static string_t description() { return "look-up-table weak learner"; }
     };
 
@@ -28,7 +29,6 @@ namespace nano
     class NANO_PUBLIC wlearner_table_t final : public wlearner_feature1_t
     {
     public:
-
         ///
         /// \brief default constructor
         ///
@@ -59,4 +59,4 @@ namespace nano
         ///
         auto fvalues() const { return tables().size<0>(); }
     };
-}
+} // namespace nano

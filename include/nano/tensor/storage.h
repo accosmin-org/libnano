@@ -22,43 +22,42 @@ namespace nano
     class tensor_vector_storage_t : public tensor_base_t<tscalar, trank>
     {
     public:
-
         using tbase = tensor_base_t<tscalar, trank>;
 
         using tbase::size;
-        using tdims = typename tbase::tdims;
+        using tdims       = typename tbase::tdims;
         using tmutableref = tscalar&;
-        using tconstref = const tscalar&;
+        using tconstref   = const tscalar&;
 
-        tensor_vector_storage_t() = default;
-        ~tensor_vector_storage_t() = default;
-        tensor_vector_storage_t(const tensor_vector_storage_t&) = default;
+        tensor_vector_storage_t()                                   = default;
+        ~tensor_vector_storage_t()                                  = default;
+        tensor_vector_storage_t(const tensor_vector_storage_t&)     = default;
         tensor_vector_storage_t(tensor_vector_storage_t&&) noexcept = default;
         tensor_vector_storage_t& operator=(const tensor_vector_storage_t&) = default;
         tensor_vector_storage_t& operator=(tensor_vector_storage_t&&) noexcept = default;
 
         template <typename... tsizes>
-        explicit tensor_vector_storage_t(tsizes... dims) :
-            tbase(make_dims(dims...)),
-            m_data(size())
+        explicit tensor_vector_storage_t(tsizes... dims)
+            : tbase(make_dims(dims...))
+            , m_data(size())
         {
         }
 
-        explicit tensor_vector_storage_t(tdims dims) :
-            tbase(std::move(dims)),
-            m_data(size())
+        explicit tensor_vector_storage_t(tdims dims)
+            : tbase(std::move(dims))
+            , m_data(size())
         {
         }
 
-        explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar, trank>& other) :
-            tbase(other.dims()),
-            m_data(map_vector(other.data(), other.size()))
+        explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar, trank>& other)
+            : tbase(other.dims())
+            , m_data(map_vector(other.data(), other.size()))
         {
         }
 
-        explicit tensor_vector_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
-            tbase(other.dims()),
-            m_data(map_vector(other.data(), other.size()))
+        explicit tensor_vector_storage_t(const tensor_marray_storage_t<tscalar, trank>& other)
+            : tbase(other.dims())
+            , m_data(map_vector(other.data(), other.size()))
         {
         }
 
@@ -91,19 +90,13 @@ namespace nano
             m_data.resize(size());
         }
 
-        auto data()
-        {
-            return m_data.data();
-        }
-        auto data() const
-        {
-            return m_data.data();
-        }
+        auto data() { return m_data.data(); }
+
+        auto data() const { return m_data.data(); }
 
     private:
-
         // attributes
-        tensor_vector_t<tscalar>    m_data;         ///< store tensor as a 1D vector.
+        tensor_vector_t<tscalar> m_data; ///< store tensor as a 1D vector.
     };
 
     ///
@@ -114,44 +107,43 @@ namespace nano
     class tensor_carray_storage_t : public tensor_base_t<tscalar, trank>
     {
     public:
-
         using tbase = tensor_base_t<tscalar, trank>;
 
         using tbase::size;
-        using tdims = typename tbase::tdims;
+        using tdims       = typename tbase::tdims;
         using tmutableref = const tscalar&;
-        using tconstref = const tscalar&;
+        using tconstref   = const tscalar&;
 
-        tensor_carray_storage_t() = default;
-        ~tensor_carray_storage_t() = default;
-        tensor_carray_storage_t(const tensor_carray_storage_t&) = default;
+        tensor_carray_storage_t()                                   = default;
+        ~tensor_carray_storage_t()                                  = default;
+        tensor_carray_storage_t(const tensor_carray_storage_t&)     = default;
         tensor_carray_storage_t(tensor_carray_storage_t&&) noexcept = default;
         tensor_carray_storage_t& operator=(tensor_carray_storage_t&& other) noexcept = default;
 
         template <typename... tsizes>
-        explicit tensor_carray_storage_t(const tscalar* data, tsizes... dims) :
-            tbase(make_dims(dims...)),
-            m_data(data)
+        explicit tensor_carray_storage_t(const tscalar* data, tsizes... dims)
+            : tbase(make_dims(dims...))
+            , m_data(data)
         {
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_carray_storage_t(const tscalar* data, tdims dims) :
-            tbase(std::move(dims)),
-            m_data(data)
+        explicit tensor_carray_storage_t(const tscalar* data, tdims dims)
+            : tbase(std::move(dims))
+            , m_data(data)
         {
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_carray_storage_t(const tensor_vector_storage_t<tscalar, trank>& other) :
-            tbase(other.dims()),
-            m_data(other.data())
+        explicit tensor_carray_storage_t(const tensor_vector_storage_t<tscalar, trank>& other)
+            : tbase(other.dims())
+            , m_data(other.data())
         {
         }
 
-        explicit tensor_carray_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
-            tbase(other.dims()),
-            m_data(other.data())
+        explicit tensor_carray_storage_t(const tensor_marray_storage_t<tscalar, trank>& other)
+            : tbase(other.dims())
+            , m_data(other.data())
         {
         }
 
@@ -160,18 +152,14 @@ namespace nano
         tensor_carray_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other) = delete;
 
         template <typename... tsizes>
-        void resize(tsizes...) = delete;
+        void resize(tsizes...)    = delete;
         void resize(const tdims&) = delete;
 
-        auto data() const
-        {
-            return m_data;
-        }
+        auto data() const { return m_data; }
 
     private:
-
         // attributes
-        const tscalar*      m_data{nullptr};    ///< wrap tensor over a contiguous array.
+        const tscalar* m_data{nullptr}; ///< wrap tensor over a contiguous array.
     };
 
     ///
@@ -182,18 +170,18 @@ namespace nano
     class tensor_marray_storage_t : public tensor_base_t<tscalar, trank>
     {
     public:
-
         using tbase = tensor_base_t<tscalar, trank>;
 
         using tbase::size;
-        using tdims = typename tbase::tdims;
+        using tdims       = typename tbase::tdims;
         using tmutableref = tscalar&;
-        using tconstref = tscalar&;
+        using tconstref   = tscalar&;
 
-        tensor_marray_storage_t() = default;
-        ~tensor_marray_storage_t() = default;
-        tensor_marray_storage_t(const tensor_marray_storage_t&) = default;
+        tensor_marray_storage_t()                                   = default;
+        ~tensor_marray_storage_t()                                  = default;
+        tensor_marray_storage_t(const tensor_marray_storage_t&)     = default;
         tensor_marray_storage_t(tensor_marray_storage_t&&) noexcept = default;
+
         tensor_marray_storage_t& operator=(tensor_marray_storage_t&& other) noexcept
         {
             copy(other);
@@ -201,23 +189,23 @@ namespace nano
         }
 
         template <typename... tsizes>
-        explicit tensor_marray_storage_t(tscalar* data, tsizes... dims) :
-            tbase(make_dims(dims...)),
-            m_data(data)
+        explicit tensor_marray_storage_t(tscalar* data, tsizes... dims)
+            : tbase(make_dims(dims...))
+            , m_data(data)
         {
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_marray_storage_t(tscalar* data, tdims dims) :
-            tbase(std::move(dims)),
-            m_data(data)
+        explicit tensor_marray_storage_t(tscalar* data, tdims dims)
+            : tbase(std::move(dims))
+            , m_data(data)
         {
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_marray_storage_t(tensor_vector_storage_t<tscalar, trank>& other) :
-            tbase(other.dims()),
-            m_data(other.data())
+        explicit tensor_marray_storage_t(tensor_vector_storage_t<tscalar, trank>& other)
+            : tbase(other.dims())
+            , m_data(other.data())
         {
         }
 
@@ -233,23 +221,20 @@ namespace nano
             return *this;
         }
 
-        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other) // NOLINT(cert-oop54-cpp,bugprone-unhandled-self-assignment)
+        // NOLINTNEXTLINE(cert-oop54-cpp,bugprone-unhandled-self-assignment)
+        tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other)
         {
             copy(other);
             return *this;
         }
 
         template <typename... tsizes>
-        void resize(tsizes...) = delete;
+        void resize(tsizes...)    = delete;
         void resize(const tdims&) = delete;
 
-        auto data() const
-        {
-            return m_data;
-        }
+        auto data() const { return m_data; }
 
     private:
-
         template <typename tstorage>
         void copy(const tstorage& other)
         {
@@ -258,6 +243,6 @@ namespace nano
         }
 
         // attributes
-        tscalar*            m_data{nullptr};    ///< wrap tensor over a contiguous array.
+        tscalar* m_data{nullptr}; ///< wrap tensor over a contiguous array.
     };
-}
+} // namespace nano

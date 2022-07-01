@@ -1,32 +1,25 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include <algorithm>
 #include <istream>
 #include <ostream>
-#include <algorithm>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 namespace nano
 {
-    template
-    <
-        typename tscalar,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename tscalar,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::ostream& write(std::ostream& stream, tscalar scalar)
     {
         return stream.write(
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<const char*>(&scalar),
-            static_cast<std::streamsize>(sizeof(tscalar)));
+            reinterpret_cast<const char*>(&scalar), static_cast<std::streamsize>(sizeof(tscalar)));
     }
 
-    template
-    <
-        typename tscalar, typename tcount,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename tscalar, typename tcount,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
     {
         return stream.write(
@@ -35,14 +28,11 @@ namespace nano
             static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }
 
-    template
-    <
-        typename twscalar, typename tscalar, typename tcount,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename twscalar, typename tscalar, typename tcount,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
     {
-        for (tcount i = 0; i < count; ++ i)
+        for (tcount i = 0; i < count; ++i)
         {
             write(stream, static_cast<twscalar>(data[i]));
         }
@@ -63,31 +53,25 @@ namespace nano
             return stream;
         }
 
-        [[maybe_unused]] const auto ret = std::any_of(values.begin(), values.end(), [&] (const auto& value)
-        {
-            return !write(stream, value);   // LCOV_EXCL_LINE
-        });
+        [[maybe_unused]] const auto ret = std::any_of(values.begin(), values.end(),
+                                                      [&](const auto& value)
+                                                      {
+                                                          return !write(stream, value); // LCOV_EXCL_LINE
+                                                      });
         return stream;
     }
 
-    template
-    <
-        typename tscalar,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename tscalar,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::istream& read(std::istream& stream, tscalar& scalar)
     {
         return stream.read(
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<char*>(&scalar),
-            static_cast<std::streamsize>(sizeof(tscalar)));
+            reinterpret_cast<char*>(&scalar), static_cast<std::streamsize>(sizeof(tscalar)));
     }
 
-    template
-    <
-        typename tscalar, typename tcount,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename tscalar, typename tcount,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::istream& read(std::istream& stream, tscalar* data, tcount count)
     {
         return stream.read(
@@ -96,11 +80,8 @@ namespace nano
             static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }
 
-    template
-    <
-        typename trscalar, typename tscalar,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename trscalar, typename tscalar,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::istream& read_cast(std::istream& stream, tscalar& scalar)
     {
         trscalar value{};
@@ -109,14 +90,11 @@ namespace nano
         return stream;
     }
 
-    template
-    <
-        typename trscalar, typename tscalar, typename tcount,
-        std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true
-    >
+    template <typename trscalar, typename tscalar, typename tcount,
+              std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
     std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
     {
-        for (tcount i = 0; i < count; ++ i)
+        for (tcount i = 0; i < count; ++i)
         {
             read_cast<trscalar>(stream, data[i]);
         }
@@ -158,4 +136,4 @@ namespace nano
         }
         return stream;
     }
-}
+} // namespace nano

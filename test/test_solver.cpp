@@ -1,11 +1,11 @@
-#include <iomanip>
-#include <utest/utest.h>
 #include "fixture/solver.h"
+#include <iomanip>
 #include <nano/core/logger.h>
 #include <nano/core/numeric.h>
-#include <nano/solver/quasi.h>
-#include <nano/function/sphere.h>
 #include <nano/function/benchmark.h>
+#include <nano/function/sphere.h>
+#include <nano/solver/quasi.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -15,13 +15,12 @@ static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>
     return stream << std::get<0>(values) << "," << std::get<1>(values);
 }
 
-static void check_consistency(
-    const function_t& function, const std::vector<scalar_t>& fvalues, const std::vector<scalar_t>& epsilons,
-    size_t reference = 0U)
+static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues,
+                              const std::vector<scalar_t>& epsilons, size_t reference = 0U)
 {
     if (function.convex())
     {
-        for (size_t i = 0U; i < fvalues.size(); ++ i)
+        for (size_t i = 0U; i < fvalues.size(); ++i)
         {
             UTEST_CHECK_CLOSE(fvalues[reference], fvalues[i], epsilons[i]);
         }
@@ -30,49 +29,150 @@ static void check_consistency(
 
 struct solver_description_t
 {
-    bool            m_monotonic{true};
-    bool            m_converges{true};
-    tensor_size_t   m_max_evals{1000};
-    scalar_t        m_epsilon{1e-6};
+    bool          m_monotonic{true};
+    bool          m_converges{true};
+    tensor_size_t m_max_evals{1000};
+    scalar_t      m_epsilon{1e-6};
 };
 
 static solver_description_t make_description(const string_t& solver_id)
 {
-    if (solver_id == "gd") { return {true, true, 10000, 1e-6}; }
-    else if (solver_id == "cgd") { return {true, true, 1000, 1e-6}; }
-    else if (solver_id == "cgd-n") { return {true, true, 1001, 1e-6}; }
-    else if (solver_id == "cgd-hs") { return {true, true, 1002, 1e-6}; }
-    else if (solver_id == "cgd-fr") { return {true, true, 1003, 1e-6}; }
-    else if (solver_id == "cgd-pr") { return {true, true, 1004, 1e-6}; }
-    else if (solver_id == "cgd-cd") { return {true, true, 1005, 1e-6}; }
-    else if (solver_id == "cgd-ls") { return {true, true, 1006, 1e-6}; }
-    else if (solver_id == "cgd-dy") { return {true, true, 1007, 1e-6}; }
-    else if (solver_id == "cgd-dycd") { return {true, true, 1008, 1e-6}; }
-    else if (solver_id == "cgd-dyhs") { return {true, true, 1009, 1e-6}; }
-    else if (solver_id == "cgd-prfr") { return {true, true, 1010, 1e-6}; }
-    else if (solver_id == "lbfgs") { return {true, true, 1011, 1e-6}; }
-    else if (solver_id == "dfp") { return {true, true, 1012, 1e-6}; }
-    else if (solver_id == "sr1") { return {true, true, 1013, 1e-6}; }
-    else if (solver_id == "bfgs") { return {true, true, 1014, 1e-6}; }
-    else if (solver_id == "hoshino") { return {true, true, 1015, 1e-6}; }
-    else if (solver_id == "fletcher") { return {true, true, 1016, 1e-6}; }
-    else if (solver_id == "osga") { return {false, true, 5000, 1e-6}; }
-    else if (solver_id == "pgm") { return {false, false, 301, 3e-2}; }
-    else if (solver_id == "dgm") { return {false, false, 302, 3e-2}; }
-    else if (solver_id == "fgm") { return {false, false, 303, 3e-2}; }
-    else if (solver_id == "ellipsoid") { return {false, true, 1000, 1e-4}; }
-    else if (solver_id == "asga2") { return {false, true, 3001, 3e-2}; }
-    else if (solver_id == "asga4") { return {false, true, 3002, 3e-2}; }
-    else { assert(false); return {}; }
+    if (solver_id == "gd")
+    {
+        return {true, true, 10000, 1e-6};
+    }
+    else if (solver_id == "cgd")
+    {
+        return {true, true, 1000, 1e-6};
+    }
+    else if (solver_id == "cgd-n")
+    {
+        return {true, true, 1001, 1e-6};
+    }
+    else if (solver_id == "cgd-hs")
+    {
+        return {true, true, 1002, 1e-6};
+    }
+    else if (solver_id == "cgd-fr")
+    {
+        return {true, true, 1003, 1e-6};
+    }
+    else if (solver_id == "cgd-pr")
+    {
+        return {true, true, 1004, 1e-6};
+    }
+    else if (solver_id == "cgd-cd")
+    {
+        return {true, true, 1005, 1e-6};
+    }
+    else if (solver_id == "cgd-ls")
+    {
+        return {true, true, 1006, 1e-6};
+    }
+    else if (solver_id == "cgd-dy")
+    {
+        return {true, true, 1007, 1e-6};
+    }
+    else if (solver_id == "cgd-dycd")
+    {
+        return {true, true, 1008, 1e-6};
+    }
+    else if (solver_id == "cgd-dyhs")
+    {
+        return {true, true, 1009, 1e-6};
+    }
+    else if (solver_id == "cgd-prfr")
+    {
+        return {true, true, 1010, 1e-6};
+    }
+    else if (solver_id == "lbfgs")
+    {
+        return {true, true, 1011, 1e-6};
+    }
+    else if (solver_id == "dfp")
+    {
+        return {true, true, 1012, 1e-6};
+    }
+    else if (solver_id == "sr1")
+    {
+        return {true, true, 1013, 1e-6};
+    }
+    else if (solver_id == "bfgs")
+    {
+        return {true, true, 1014, 1e-6};
+    }
+    else if (solver_id == "hoshino")
+    {
+        return {true, true, 1015, 1e-6};
+    }
+    else if (solver_id == "fletcher")
+    {
+        return {true, true, 1016, 1e-6};
+    }
+    else if (solver_id == "osga")
+    {
+        return {false, true, 5000, 1e-6};
+    }
+    else if (solver_id == "pgm")
+    {
+        return {false, false, 301, 3e-2};
+    }
+    else if (solver_id == "dgm")
+    {
+        return {false, false, 302, 3e-2};
+    }
+    else if (solver_id == "fgm")
+    {
+        return {false, false, 303, 3e-2};
+    }
+    else if (solver_id == "ellipsoid")
+    {
+        return {false, true, 1000, 1e-4};
+    }
+    else if (solver_id == "asga2")
+    {
+        return {false, true, 3001, 3e-2};
+    }
+    else if (solver_id == "asga4")
+    {
+        return {false, true, 3002, 3e-2};
+    }
+    else
+    {
+        assert(false);
+        return {};
+    }
 }
 
-static auto make_lsearch0_ids() { return lsearch0_t::all().ids(); }
-static auto make_lsearchk_ids() { return lsearchk_t::all().ids(); }
+static auto make_lsearch0_ids()
+{
+    return lsearch0_t::all().ids();
+}
 
-static auto make_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_smooth_solver_ids() { return solver_t::all().ids(std::regex(".+")); }
-static auto make_nonsmooth_solver_ids() { return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid|asga2|asga4")); }
-static auto make_best_smooth_solver_ids() { return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));}
+static auto make_lsearchk_ids()
+{
+    return lsearchk_t::all().ids();
+}
+
+static auto make_solver_ids()
+{
+    return solver_t::all().ids(std::regex(".+"));
+}
+
+static auto make_smooth_solver_ids()
+{
+    return solver_t::all().ids(std::regex(".+"));
+}
+
+static auto make_nonsmooth_solver_ids()
+{
+    return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid|asga2|asga4"));
+}
+
+static auto make_best_smooth_solver_ids()
+{
+    return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
+}
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
 
@@ -89,14 +189,14 @@ UTEST_CASE(state_str)
 UTEST_CASE(state_valid)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     UTEST_CHECK(state);
 }
 
 UTEST_CASE(state_invalid_tINF)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     state.t = INFINITY;
     UTEST_CHECK(!state);
 }
@@ -104,7 +204,7 @@ UTEST_CASE(state_invalid_tINF)
 UTEST_CASE(state_invalid_fNAN)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     state.f = NAN;
     UTEST_CHECK(!state);
 }
@@ -112,7 +212,7 @@ UTEST_CASE(state_invalid_fNAN)
 UTEST_CASE(state_has_descent)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     state.d = -state.g;
     UTEST_CHECK(state.has_descent());
 }
@@ -120,7 +220,7 @@ UTEST_CASE(state_has_descent)
 UTEST_CASE(state_has_no_descent0)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     state.d.setZero();
     UTEST_CHECK(!state.has_descent());
 }
@@ -128,7 +228,7 @@ UTEST_CASE(state_has_no_descent0)
 UTEST_CASE(state_has_no_descent1)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()));
+    solver_state_t          state(function, vector_t::Random(function.size()));
     state.d = state.g;
     UTEST_CHECK(!state.has_descent());
 }
@@ -136,9 +236,9 @@ UTEST_CASE(state_has_no_descent1)
 UTEST_CASE(state_update_if_better)
 {
     const function_sphere_t function(2);
-    const auto x0 = vector_t::Constant(function.size(), 0.0);
-    const auto x1 = vector_t::Constant(function.size(), 1.0);
-    const auto x2 = vector_t::Constant(function.size(), 2.0);
+    const auto              x0 = vector_t::Constant(function.size(), 0.0);
+    const auto              x1 = vector_t::Constant(function.size(), 1.0);
+    const auto              x2 = vector_t::Constant(function.size(), 2.0);
 
     solver_state_t state(function, x1);
     UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
@@ -157,7 +257,7 @@ UTEST_CASE(state_update_if_better)
 UTEST_CASE(state_convergence0)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Zero(function.size()));
+    solver_state_t          state(function, vector_t::Zero(function.size()));
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon0<scalar_t>());
@@ -166,7 +266,7 @@ UTEST_CASE(state_convergence0)
 UTEST_CASE(state_convergence1)
 {
     const function_sphere_t function(7);
-    solver_state_t state(function, vector_t::Random(function.size()) * epsilon1<scalar_t>());
+    solver_state_t          state(function, vector_t::Random(function.size()) * epsilon1<scalar_t>());
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
@@ -297,7 +397,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_conex)
 
         const vector_t x0 = vector_t::Ones(function->size());
 
-        size_t reference = 0U;
+        size_t                reference = 0U;
         std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_nonsmooth_solver_ids())
         {
@@ -310,7 +410,8 @@ UTEST_CASE(default_solvers_on_nonsmooth_conex)
                 reference = fvalues.size();
             }
 
-            const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals, dd.m_epsilon, dd.m_converges);
+            const auto state =
+                check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals, dd.m_epsilon, dd.m_converges);
             fvalues.push_back(state.f);
             epsilons.push_back(dd.m_epsilon);
             log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
@@ -381,9 +482,9 @@ UTEST_CASE(quasi_bfgs_with_initializations)
     {
         UTEST_REQUIRE(function);
         {
-            const auto *const solver_id = "bfgs";
-            const auto *const pname = "solver::quasi::initialization";
-            auto solver = solver_quasi_bfgs_t{};
+            const auto* const solver_id = "bfgs";
+            const auto* const pname     = "solver::quasi::initialization";
+            auto              solver    = solver_quasi_bfgs_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
             check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
@@ -392,9 +493,9 @@ UTEST_CASE(quasi_bfgs_with_initializations)
             check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
         }
         {
-            const auto *const solver_id = "fletcher";
-            const auto *const pname = "solver::quasi::initialization";
-            auto solver = solver_quasi_fletcher_t{};
+            const auto* const solver_id = "fletcher";
+            const auto* const pname     = "solver::quasi::initialization";
+            auto              solver    = solver_quasi_fletcher_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
             check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));

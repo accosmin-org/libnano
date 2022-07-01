@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/core/chrono.h>
+#include <utest/utest.h>
 
 UTEST_BEGIN_MODULE(test_core_chrono)
 
@@ -30,7 +30,7 @@ UTEST_CASE(timer)
 
 UTEST_CASE(measure)
 {
-    const auto op = [] ()
+    const auto op = []()
     {
         const auto volatile value = std::sqrt(std::fabs(std::sin(2.0)) + std::cos(3.0) * std::cos(3.0));
         return value;
@@ -39,7 +39,7 @@ UTEST_CASE(measure)
     for (auto trials : {1, 2, 4})
     {
         const auto min_trial_iterations = 1;
-        const auto min_trial_duration = nano::microseconds_t{100};
+        const auto min_trial_duration   = nano::microseconds_t{100};
         const auto duration = nano::measure<nano::milliseconds_t>(op, trials, min_trial_iterations, min_trial_duration);
         UTEST_CHECK_EQUAL(duration.count(), 0);
     }

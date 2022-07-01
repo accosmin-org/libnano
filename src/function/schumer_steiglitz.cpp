@@ -2,8 +2,8 @@
 
 using namespace nano;
 
-function_schumer_steiglitz_t::function_schumer_steiglitz_t(tensor_size_t dims) :
-    benchmark_function_t("Schumer-Steiglitz", dims)
+function_schumer_steiglitz_t::function_schumer_steiglitz_t(tensor_size_t dims)
+    : benchmark_function_t("Schumer-Steiglitz", dims)
 {
     convex(true);
     smooth(true);

@@ -6,63 +6,54 @@ namespace
 {
     scalar_t HS(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  curr.g.dot(curr.g - prev.g) /
-                prev.d.dot(curr.g - prev.g);
+        return curr.g.dot(curr.g - prev.g) / prev.d.dot(curr.g - prev.g);
     }
 
     scalar_t FR(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  curr.g.squaredNorm() /
-                prev.g.squaredNorm();
+        return curr.g.squaredNorm() / prev.g.squaredNorm();
     }
 
     scalar_t PR(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  curr.g.dot(curr.g - prev.g) /
-                prev.g.squaredNorm();
+        return curr.g.dot(curr.g - prev.g) / prev.g.squaredNorm();
     }
 
     scalar_t CD(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return -curr.g.squaredNorm() /
-                prev.d.dot(prev.g);
+        return -curr.g.squaredNorm() / prev.d.dot(prev.g);
     }
 
     scalar_t LS(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  -curr.g.dot(curr.g - prev.g) /
-                prev.d.dot(prev.g);
+        return -curr.g.dot(curr.g - prev.g) / prev.d.dot(prev.g);
     }
 
     scalar_t DY(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  curr.g.squaredNorm() /
-                prev.d.dot(curr.g - prev.g);
+        return curr.g.squaredNorm() / prev.d.dot(curr.g - prev.g);
     }
 
-    scalar_t N(const solver_state_t& prev, const solver_state_t& curr, scalar_t eta)      // N(+) - see (3)
+    scalar_t N(const solver_state_t& prev, const solver_state_t& curr, scalar_t eta) // N(+) - see (3)
     {
-        const auto y = curr.g - prev.g;
+        const auto y   = curr.g - prev.g;
         const auto div = +1 / prev.d.dot(y);
 
         const auto pd2 = prev.d.lpNorm<2>();
         const auto pg2 = prev.g.lpNorm<2>();
-        eta = -1 / (pd2 * std::min(eta, pg2));
+        eta            = -1 / (pd2 * std::min(eta, pg2));
 
-        return  std::max(eta,
-                div * (y - 2 * prev.d * y.squaredNorm() * div).dot(curr.g));
+        return std::max(eta, div * (y - 2 * prev.d * y.squaredNorm() * div).dot(curr.g));
     }
 
     scalar_t DYHS(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  std::max(scalar_t(0),
-                std::min(DY(prev, curr), HS(prev, curr)));
+        return std::max(scalar_t(0), std::min(DY(prev, curr), HS(prev, curr)));
     }
 
     scalar_t DYCD(const solver_state_t& prev, const solver_state_t& curr)
     {
-        return  curr.g.squaredNorm() /
-                std::max(prev.d.dot(curr.g - prev.g), -prev.d.dot(prev.g));
+        return curr.g.squaredNorm() / std::max(prev.d.dot(curr.g - prev.g), -prev.d.dot(prev.g));
     }
 
     scalar_t FRPR(const solver_state_t& prev, const solver_state_t& curr)
@@ -70,10 +61,9 @@ namespace
         const auto fr = ::FR(prev, curr);
         const auto pr = ::PR(prev, curr);
 
-        return  (pr < -fr) ? -fr :
-                (std::fabs(pr) <= fr) ? pr : fr;
+        return (pr < -fr) ? -fr : (std::fabs(pr) <= fr) ? pr : fr;
     }
-}
+} // namespace
 
 solver_cgd_t::solver_cgd_t()
 {
@@ -86,10 +76,10 @@ solver_cgd_t::solver_cgd_t()
 solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
 
-    auto lsearch = make_lsearch();
+    auto lsearch  = make_lsearch();
     auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
@@ -99,7 +89,7 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
         return cstate;
     }
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++ i)
+    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
     {
         // descent direction
         if (i == 0)
@@ -109,21 +99,20 @@ solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_
         else
         {
             const auto beta = this->beta(pstate, cstate);
-            cstate.d = -cstate.g + beta * pstate.d;
+            cstate.d        = -cstate.g + beta * pstate.d;
 
             // restart:
             //  - if not a descent direction
             //  - or two consecutive gradients far from being orthogonal
             //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.124-125)
-            if (!cstate.has_descent() ||
-                (std::fabs(cstate.g.dot(pstate.g)) >= orthotest * cstate.g.dot(cstate.g)))
+            if (!cstate.has_descent() || (std::fabs(cstate.g.dot(pstate.g)) >= orthotest * cstate.g.dot(cstate.g)))
             {
                 cstate.d = -cstate.g;
             }
         }
 
         // line-search
-        pstate = cstate;
+        pstate             = cstate;
         const auto iter_ok = lsearch.get(cstate);
         if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
         {

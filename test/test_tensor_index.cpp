@@ -1,7 +1,7 @@
-#include <utest/utest.h>
+#include <nano/core/strutil.h>
 #include <nano/tensor/dims.h>
 #include <nano/tensor/range.h>
-#include <nano/core/strutil.h>
+#include <utest/utest.h>
 
 using namespace nano;
 
@@ -125,9 +125,9 @@ UTEST_CASE(index3d)
 
 UTEST_CASE(range)
 {
-    const auto range_def = nano::tensor_range_t{};
-    const auto range_ok0 = nano::make_range(0, 1);
-    const auto range_ok1 = nano::make_range(1, 3);
+    const auto range_def  = nano::tensor_range_t{};
+    const auto range_ok0  = nano::make_range(0, 1);
+    const auto range_ok1  = nano::make_range(1, 3);
     const auto range_nok0 = nano::make_range(-1, 1);
     const auto range_nok1 = nano::make_range(+3, 1);
 

@@ -10,7 +10,11 @@ namespace nano
     struct factory_traits_t<linear_model_t>
     {
         static string_t id() { return "linear"; }
-        static string_t description() { return "linear model (and variants: Ridge, Lasso, ElasticNet, VadaBoost-like)"; }
+
+        static string_t description()
+        {
+            return "linear model (and variants: Ridge, Lasso, ElasticNet, VadaBoost-like)";
+        }
     };
 
     ///
@@ -32,7 +36,6 @@ namespace nano
     class NANO_PUBLIC linear_model_t final : public model_t
     {
     public:
-
         ///
         /// \brief constructor
         ///
@@ -67,12 +70,12 @@ namespace nano
         /// \brief access functions
         ///
         const auto& bias() const { return m_bias; }
+
         const auto& weights() const { return m_weights; }
 
     private:
-
         // attributes
-        tensor1d_t      m_bias;             ///< bias vector (#outputs)
-        tensor2d_t      m_weights;          ///< weight matrix (#inputs, #outputs)
+        tensor1d_t m_bias;    ///< bias vector (#outputs)
+        tensor2d_t m_weights; ///< weight matrix (#inputs, #outputs)
     };
-}
+} // namespace nano

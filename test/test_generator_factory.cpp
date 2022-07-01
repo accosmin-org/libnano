@@ -1,5 +1,5 @@
-#include <utest/utest.h>
 #include <nano/generator/generator.h>
+#include <utest/utest.h>
 
 using namespace nano;
 

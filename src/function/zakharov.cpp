@@ -3,9 +3,9 @@
 
 using namespace nano;
 
-function_zakharov_t::function_zakharov_t(tensor_size_t dims) :
-    benchmark_function_t("Zakharov", dims),
-    m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
+function_zakharov_t::function_zakharov_t(tensor_size_t dims)
+    : benchmark_function_t("Zakharov", dims)
+    , m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
 {
     convex(true);
     smooth(true);
