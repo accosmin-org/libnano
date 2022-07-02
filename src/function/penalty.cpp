@@ -2,10 +2,21 @@
 
 using namespace nano;
 
+static auto is_equality(const constraint_t& constraint)
+{
+    return std::get_if<equality_t>(&constraint) != nullptr;
+}
+
+static auto convex(const function_t& function)
+{
+    const auto op = [](const auto& constraint) { return ::nano::convex(constraint) && !is_equality(constraint); };
+    return function.convex() && std::all_of(function.constraints().begin(), function.constraints().end(), op);
+}
+
 static auto smooth(const function_t& function)
 {
-    return function.smooth() && std::all_of(function.constraints().begin(), function.constraints().end(),
-                                            [](const auto& constraint) { return ::nano::smooth(constraint); });
+    const auto op = [](const auto& constraint) { return ::nano::smooth(constraint); };
+    return function.smooth() && std::all_of(function.constraints().begin(), function.constraints().end(), op);
 }
 
 template <typename toperator>
@@ -16,10 +27,9 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
 
     for (const auto& constraint : function.constraints())
     {
-        const auto fc          = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
-        const auto is_equality = std::get_if<equality_t>(&constraint) != nullptr;
+        const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
 
-        if (is_equality)
+        if (is_equality(constraint))
         {
             if (fc > 0.0)
             {
@@ -55,7 +65,7 @@ penalty_function_t& penalty_function_t::penalty_term(scalar_t penalty_term)
 linear_penalty_function_t::linear_penalty_function_t(const function_t& constrained)
     : penalty_function_t(constrained)
 {
-    convex(false); // NB: cannot guarantee convexity!
+    convex(::convex(constrained));
     smooth(constrained.constraints().empty() ? ::smooth(constrained) : false);
 }
 
@@ -78,7 +88,7 @@ scalar_t linear_penalty_function_t::vgrad(const vector_t& x, vector_t* gx) const
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& constrained)
     : penalty_function_t(constrained)
 {
-    convex(false); // NB: cannot guarantee convexity!
+    convex(::convex(constrained));
     smooth(::smooth(constrained));
 }
 

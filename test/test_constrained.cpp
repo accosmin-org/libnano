@@ -10,7 +10,7 @@ static vector_t make_x(tvalues... values)
 }
 
 template <typename tpenalty>
-static void check_penalty(const function_t& constrained, bool expected_smoothness)
+static void check_penalty(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
 {
     auto penalty = tpenalty{constrained};
 
@@ -21,16 +21,16 @@ static void check_penalty(const function_t& constrained, bool expected_smoothnes
         check_gradient(penalty);
 
         UTEST_CHECK_EQUAL(penalty.strong_convexity(), 0.0);
-        UTEST_CHECK_EQUAL(penalty.convex(), false);
+        UTEST_CHECK_EQUAL(penalty.convex(), expected_convexity);
         UTEST_CHECK_EQUAL(penalty.smooth(), expected_smoothness);
     }
 }
 
-static void check_penalties(const function_t& constrained, bool expected_smoothness)
+static void check_penalties(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
 {
-    check_penalty<linear_penalty_function_t>(constrained,
+    check_penalty<linear_penalty_function_t>(constrained, expected_convexity,
                                              constrained.constraints().empty() ? expected_smoothness : false);
-    check_penalty<quadratic_penalty_function_t>(constrained, expected_smoothness);
+    check_penalty<quadratic_penalty_function_t>(constrained, expected_convexity, expected_smoothness);
 }
 
 template <typename tpenalty>
@@ -129,7 +129,7 @@ UTEST_CASE(noconstraint_sum)
     auto constrained = sum_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
 
-    check_penalties(constrained, true);
+    check_penalties(constrained, true, true);
     for (auto trial = 0; trial < 100; ++trial)
     {
         check_penalties(constrained, vector_t::Random(3), true);
@@ -141,7 +141,7 @@ UTEST_CASE(noconstraint_sumabsm1)
     auto constrained = sumabsm1_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
 
-    check_penalties(constrained, false);
+    check_penalties(constrained, true, false);
     for (auto trial = 0; trial < 100; ++trial)
     {
         check_penalties(constrained, vector_t::Random(3), true);
@@ -156,7 +156,7 @@ UTEST_CASE(constrained_box1)
     UTEST_CHECK(constrained.constrain_box(-0.5, +0.5));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
 
-    check_penalties(constrained, true);
+    check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(-0.1, -0.1, -0.1), true);
     check_penalties(constrained, make_x(+0.2, +0.2, +0.2), true);
     check_penalties(constrained, make_x(+0.5, +0.5, +0.5), true);
@@ -176,7 +176,7 @@ UTEST_CASE(constrained_box2)
     UTEST_CHECK(constrained.constrain_box(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
 
-    check_penalties(constrained, true);
+    check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
     check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
     check_penalties(constrained, make_x(-0.2, +0.6, +0.0), false);
@@ -191,7 +191,7 @@ UTEST_CASE(constrained_ball)
     UTEST_CHECK(constrained.constrain_ball(make_x(0.0, 0.0, 0.0), 1.0));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, true);
+    check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
     check_penalties(constrained, make_x(0.5, 0.5, 0.5), true);
     check_penalties(constrained, make_x(0.6, 0.6, 0.6), false);
@@ -205,7 +205,7 @@ UTEST_CASE(constrained_linear_equality)
     UTEST_CHECK(constrained.constrain_equality(make_x(1.0, 1.0, 1.0), -3.0));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, false);
+    check_penalties(constrained, false, false);
     check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
     check_penalties(constrained, make_x(1.0, 1.0, 1.0), true);
     check_penalties(constrained, make_x(0.1, 0.2, 0.3), false);
@@ -220,7 +220,7 @@ UTEST_CASE(constrained_linear_inequality)
     UTEST_CHECK(constrained.constrain_inequality(make_x(1.0, 1.0, 1.0), -3.0));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, false);
+    check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.1, 0.2, 0.3), true);
     check_penalties(constrained, make_x(0.1, 1.2, 1.3), true);
     check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
@@ -233,7 +233,7 @@ UTEST_CASE(constrained_cauchy_inequality)
     UTEST_CHECK(constrained.constrain_inequality(std::make_unique<cauchy_function_t>(3)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, true);
+    check_penalties(constrained, false, true);
     check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
     check_penalties(constrained, make_x(0.0, 0.0, 0.7), true);
     check_penalties(constrained, make_x(0.8, 0.0, 0.0), true);
@@ -249,7 +249,7 @@ UTEST_CASE(constrained_sumabsm1_equality)
     UTEST_CHECK(constrained.constrain_equality(std::make_unique<sumabsm1_function_t>(3)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, false);
+    check_penalties(constrained, false, false);
     check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
     check_penalties(constrained, make_x(-0.9, 0.1, 0.0), true);
     check_penalties(constrained, make_x(0.0, 0.9, 0.0), false);
@@ -264,7 +264,7 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     UTEST_CHECK(constrained.constrain_inequality(std::make_unique<sumabsm1_function_t>(3)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, false);
+    check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
     check_penalties(constrained, make_x(0.0, 0.9, 0.0), true);
     check_penalties(constrained, make_x(-0.6, +0.2, 0.1), true);
