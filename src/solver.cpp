@@ -1,13 +1,11 @@
 #include <mutex>
 #include <nano/core/logger.h>
-#include <nano/solver/asga.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/quasi.h>
-#include <nano/solver/universal.h>
 
 using namespace nano;
 
@@ -152,12 +150,7 @@ solver_factory_t& solver_t::all()
                        manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
                        manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
                        manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
-                       manager.add<solver_pgm_t>("pgm", "universal primal gradient method (PGM)");
-                       manager.add<solver_dgm_t>("dgm", "universal dual gradient method (DGM)");
-                       manager.add<solver_fgm_t>("fgm", "universal fast gradient method (FGM)");
                        manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
-                       manager.add<solver_asga2_t>("asga2", "accelerated sub-gradient algorithm 2 (ASGA)");
-                       manager.add<solver_asga4_t>("asga4", "accelerated sub-gradient algorithm 4 (ASGA)");
                    });
 
     return manager;

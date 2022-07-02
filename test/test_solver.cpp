@@ -113,29 +113,9 @@ static solver_description_t make_description(const string_t& solver_id)
     {
         return {false, true, 5000, 1e-6};
     }
-    else if (solver_id == "pgm")
-    {
-        return {false, false, 301, 3e-2};
-    }
-    else if (solver_id == "dgm")
-    {
-        return {false, false, 302, 3e-2};
-    }
-    else if (solver_id == "fgm")
-    {
-        return {false, false, 303, 3e-2};
-    }
     else if (solver_id == "ellipsoid")
     {
         return {false, true, 1000, 1e-4};
-    }
-    else if (solver_id == "asga2")
-    {
-        return {false, true, 3001, 3e-2};
-    }
-    else if (solver_id == "asga4")
-    {
-        return {false, true, 3002, 3e-2};
     }
     else
     {

@@ -85,7 +85,6 @@ std::cout << make_table("solver", solver_t::all());
 |----------|--------------------------------------------------|
 | solver   | description                                      |
 |----------|--------------------------------------------------|
-| asgm     | sub-gradient method with an adaptive step length |
 | bfgs     | quasi-newton method (BFGS)                       |
 | cgd      | conjugate gradient descent (default)             |
 | ........ | ................................................ |
