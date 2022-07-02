@@ -33,7 +33,7 @@ public:
         smooth(true);
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
         {
@@ -54,7 +54,7 @@ public:
         smooth(true);
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
         {
@@ -75,7 +75,7 @@ public:
         smooth(false);
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
         {

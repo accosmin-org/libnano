@@ -22,13 +22,8 @@ namespace nano
 
         auto inputs() const { return m_inputs.matrix(); }
 
-        auto inputs(tensor_range_t summands) const { return m_inputs.slice(summands).matrix(); }
-
         tensor2d_t outputs(const vector_t& x) const;
         tensor2d_t outputs(tensor2d_cmap_t w) const;
-
-        tensor2d_t outputs(const vector_t& x, tensor_range_t summands) const;
-        tensor2d_t outputs(tensor2d_cmap_t w, tensor_range_t summands) const;
 
         auto make_w(vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
 
@@ -63,8 +58,6 @@ namespace nano
 
         auto targets() const { return m_targets.matrix(); }
 
-        auto targets(tensor_range_t summands) const { return m_targets.slice(summands).matrix(); }
-
     private:
         tensor2d_t m_targets; ///<
     };
@@ -79,8 +72,6 @@ namespace nano
                            tensor_size_t modulo_correlated_inputs = 1);
 
         auto targets() const { return m_targets.matrix(); }
-
-        auto targets(tensor_range_t summands) const { return m_targets.slice(summands).matrix(); }
 
     private:
         tensor2d_t m_targets; ///<

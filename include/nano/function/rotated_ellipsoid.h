@@ -18,7 +18,7 @@ namespace nano
         ///
         /// \brief @see function_t
         ///
-        scalar_t vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const override;
+        scalar_t vgrad(const vector_t& x, vector_t* gx) const override;
 
         ///
         /// \brief @see benchmark_function_t

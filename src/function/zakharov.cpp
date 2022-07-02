@@ -11,7 +11,7 @@ function_zakharov_t::function_zakharov_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_zakharov_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_zakharov_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     const scalar_t u = x.dot(x);
     const scalar_t v = x.dot(m_bias);

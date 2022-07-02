@@ -9,7 +9,7 @@ function_styblinski_tang_t::function_styblinski_tang_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_styblinski_tang_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_styblinski_tang_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

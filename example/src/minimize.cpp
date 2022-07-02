@@ -15,7 +15,7 @@ public:
         smooth(true);
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());

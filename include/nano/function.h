@@ -4,7 +4,6 @@
 #include <nano/arch.h>
 #include <nano/eigen.h>
 #include <nano/string.h>
-#include <nano/tensor/range.h>
 #include <variant>
 
 namespace nano
@@ -37,22 +36,6 @@ namespace nano
 
     using constraint_t  = std::variant<minimum_t, maximum_t, equality_t, inequality_t>;
     using constraints_t = std::vector<constraint_t>;
-
-    ///
-    /// \brief configure the computation of a function's value and gradient.
-    ///
-    struct vgrad_config_t
-    {
-        vgrad_config_t() = default;
-
-        explicit vgrad_config_t(tensor_range_t summands)
-            : m_summands(summands)
-        {
-        }
-
-        // attributes
-        tensor_range_t m_summands; ///< summands range useful for stochastic solvers, ignored if not valid
-    };
 
     ///
     /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
@@ -129,14 +112,6 @@ namespace nano
         bool smooth() const { return m_smooth; }
 
         ///
-        /// \brief returns the number of summands the function can be decomposed into.
-        ///
-        /// NB: if not applicable, then the number of summands is one.
-        /// NB: if many summands, then stochastic optimization methods may be appropriate (e.g. ML problems).
-        ///
-        tensor_size_t summands() const { return m_summands; }
-
-        ///
         /// \brief returns the strong convexity coefficient.
         ///
         /// NB: if not convex, then the coefficient is zero.
@@ -207,12 +182,11 @@ namespace nano
         /// \brief evaluate the function's value at the given point
         ///     (and its gradient or sub-gradient if not smooth).
         ///
-        virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const = 0;
+        virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
     protected:
         void convex(bool);
         void smooth(bool);
-        void summands(tensor_size_t);
         void strong_convexity(scalar_t);
 
     private:
@@ -221,7 +195,6 @@ namespace nano
         tensor_size_t m_size{0};       ///< #free dimensions to optimize for
         bool          m_convex{false}; ///< whether the function is convex
         bool          m_smooth{false}; ///< whether the function is smooth (otherwise subgradients should be used)
-        tensor_size_t m_summands{1};   ///< number of summands (if stochastic optimization methods are appropriate)
         scalar_t      m_sconvexity{0}; ///< strong-convexity coefficient
         constraints_t m_constraints;   ///< optional equality and inequality constraints
     };

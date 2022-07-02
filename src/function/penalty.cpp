@@ -59,7 +59,7 @@ linear_penalty_function_t::linear_penalty_function_t(const function_t& constrain
     smooth(constrained.constraints().empty() ? ::smooth(constrained) : false);
 }
 
-scalar_t linear_penalty_function_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t linear_penalty_function_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(x.size() == size());
 
@@ -82,7 +82,7 @@ quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& con
     smooth(::smooth(constrained));
 }
 
-scalar_t quadratic_penalty_function_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t quadratic_penalty_function_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(x.size() == size());
 

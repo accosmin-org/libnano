@@ -9,7 +9,7 @@ function_exponential_t::function_exponential_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_exponential_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_exponential_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto fx = std::exp(1 + x.dot(x) / scalar_t(size()));
 

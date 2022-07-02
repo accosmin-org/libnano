@@ -11,7 +11,7 @@ function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
     strong_convexity(2.0);
 }
 
-scalar_t function_axis_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_axis_ellipsoid_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

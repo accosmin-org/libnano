@@ -35,7 +35,7 @@ quadratic_surrogate_fit_t::quadratic_surrogate_fit_t(const loss_t& loss, tensor2
     }
 }
 
-scalar_t quadratic_surrogate_fit_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t quadratic_surrogate_fit_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     m_loss_outputs.vector() = m_p2.matrix() * x;
 
@@ -63,7 +63,7 @@ quadratic_surrogate_t::quadratic_surrogate_t(vector_t model)
     assert(m_model.size() == (size() + 1) * (size() + 2) / 2);
 }
 
-scalar_t quadratic_surrogate_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t quadratic_surrogate_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

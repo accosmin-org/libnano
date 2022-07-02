@@ -10,7 +10,7 @@ function_qing_t::function_qing_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_qing_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_qing_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

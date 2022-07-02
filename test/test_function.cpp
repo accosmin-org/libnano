@@ -24,7 +24,6 @@ UTEST_CASE(select)
                 ++total;
 
                 UTEST_CHECK(function != nullptr);
-                UTEST_CHECK_EQUAL((function->summands() - 1) * (function->summands() - 5), 0);
                 UTEST_CHECK_LESS_EQUAL(function->size(), 16);
                 UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
                 UTEST_CHECK(convex == convexity::ignore || function->convex() == (convex == convexity::yes));
@@ -93,48 +92,6 @@ UTEST_CASE(grad_accuracy)
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
         check_gradient(function);
-    }
-}
-
-UTEST_CASE(summands)
-{
-    for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 7}))
-    {
-        const auto&                 function = *rfunction;
-        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
-
-        const auto dims = function.size();
-        UTEST_CHECK_LESS_EQUAL(dims, 4);
-        UTEST_CHECK_GREATER_EQUAL(dims, 2);
-
-        const auto summands = function.summands();
-        if (summands != 1)
-        {
-            UTEST_CHECK_EQUAL(summands, 7);
-        }
-
-        for (auto trial = 0; trial < 100; ++trial)
-        {
-            const vector_t x = vector_t::Random(dims);
-
-            vector_t   gx = vector_t::Random(dims);
-            const auto fx = function.vgrad(x, &gx);
-
-            scalar_t fxsum = 0.0;
-            vector_t gxsum = vector_t::Constant(dims, 0.0);
-            for (tensor_size_t begin = 0; begin < summands; begin += 3)
-            {
-                vector_t gxs = vector_t::Random(dims);
-
-                const auto end = std::min(begin + 3, summands);
-                const auto fxs = function.vgrad(x, &gxs, vgrad_config_t{make_range(begin, end)});
-
-                fxsum += fxs * static_cast<scalar_t>(end - begin);
-                gxsum += gxs * static_cast<scalar_t>(end - begin);
-            }
-            UTEST_CHECK_CLOSE(fx, fxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());
-            UTEST_CHECK_CLOSE(gx, gxsum / static_cast<scalar_t>(summands), epsilon0<scalar_t>());
-        }
     }
 }
 

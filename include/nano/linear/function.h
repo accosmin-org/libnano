@@ -62,7 +62,7 @@ namespace nano::linear
         ///
         /// \brief @see function_t
         ///
-        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const override;
+        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
         ///
         /// \brief access functions

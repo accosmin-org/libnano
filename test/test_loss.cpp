@@ -24,7 +24,7 @@ struct loss_function_t final : public function_t
         smooth(m_loss->smooth());
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr, vgrad_config_t = vgrad_config_t{}) const override
+    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
     {
         UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
         const auto output = map_tensor(x.data(), m_target.dims());

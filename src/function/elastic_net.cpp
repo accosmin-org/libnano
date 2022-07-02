@@ -39,38 +39,25 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
 {
     convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
-    this->summands(summands);
     strong_convexity(m_alpha2);
 }
 
 template <typename tloss>
-scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t config) const
+scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx) const
 {
-    scalar_t fx = 0.0;
+    const auto inputs  = this->inputs();
+    const auto targets = this->targets();
+    const auto outputs = this->outputs(x);
 
-    if (!config.m_summands.valid(this->summands()))
-    {
-        const auto inputs  = this->inputs();
-        const auto targets = this->targets();
-        const auto outputs = this->outputs(x);
-
-        fx = tloss::vgrad(inputs, outputs, targets, gx);
-    }
-    else
-    {
-        const auto inputs  = this->inputs(config.m_summands);
-        const auto targets = this->targets(config.m_summands);
-        const auto outputs = this->outputs(x, config.m_summands);
-
-        fx = tloss::vgrad(inputs, outputs, targets, gx);
-    }
+    auto fx = tloss::vgrad(inputs, outputs, targets, gx);
 
     if (gx != nullptr)
     {
         gx->array() += m_alpha1 * x.array().sign() + m_alpha2 * x.array();
     }
 
-    return fx + m_alpha1 * x.template lpNorm<1>() + 0.5 * m_alpha2 * x.squaredNorm();
+    fx += m_alpha1 * x.template lpNorm<1>() + 0.5 * m_alpha2 * x.squaredNorm();
+    return fx;
 }
 
 template <typename tloss>

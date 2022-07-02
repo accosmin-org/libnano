@@ -20,7 +20,7 @@ function_kinks_t::function_kinks_t(tensor_size_t dims)
     }
 }
 
-scalar_t function_kinks_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_kinks_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

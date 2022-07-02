@@ -11,7 +11,7 @@ function_dixon_price_t::function_dixon_price_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_dixon_price_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_dixon_price_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto xsegm0 = x.segment(0, size() - 1);
     const auto xsegm1 = x.segment(1, size() - 1);

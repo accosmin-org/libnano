@@ -14,7 +14,7 @@ function_quadratic_t::function_quadratic_t(tensor_size_t dims)
     m_A        = matrix_t::Identity(dims, dims) + A * A.transpose();
 }
 
-scalar_t function_quadratic_t::vgrad(const vector_t& x, vector_t* gx, vgrad_config_t) const
+scalar_t function_quadratic_t::vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

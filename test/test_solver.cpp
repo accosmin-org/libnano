@@ -325,23 +325,6 @@ UTEST_CASE(solver_function)
 
         UTEST_CHECK_EQUAL(sfunction.fcalls(), 2);
         UTEST_CHECK_EQUAL(sfunction.gcalls(), 1);
-
-        if (sfunction.summands() > 1)
-        {
-            for (tensor_size_t begin = 0; begin < sfunction.summands(); begin += 5)
-            {
-                const auto end = std::min(begin + 5, sfunction.summands());
-                sfunction.vgrad(x, &gx, vgrad_config_t{make_range(begin, end)});
-            }
-
-            UTEST_CHECK_EQUAL(sfunction.fcalls(), 3);
-            UTEST_CHECK_EQUAL(sfunction.gcalls(), 2);
-
-            sfunction.vgrad(x);
-
-            UTEST_CHECK_EQUAL(sfunction.fcalls(), 4);
-            UTEST_CHECK_EQUAL(sfunction.gcalls(), 2);
-        }
     }
 }
 
