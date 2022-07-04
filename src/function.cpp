@@ -277,32 +277,30 @@ bool function_t::constrain_box(scalar_t min, scalar_t max)
 
 bool function_t::constrain_ball(vector_t origin, scalar_t radius)
 {
-    if (origin.size() != size() || radius <= 0.0)
-    {
-        return false;
-    }
-
-    return constrain_inequality(std::make_unique<ball_constraint_t>(std::move(origin), radius));
+    return origin.size() == size() && radius > 0.0 &&
+           constrain_inequality(std::make_unique<ball_constraint_t>(std::move(origin), radius));
 }
 
-bool function_t::constrain_equality(vector_t weights, scalar_t bias)
+bool function_t::constrain_equality(vector_t q, scalar_t r)
 {
-    if (weights.size() != size())
-    {
-        return false;
-    }
-
-    return constrain_equality(std::make_unique<affine_constraint_t>(std::move(weights), bias));
+    return q.size() == size() && constrain_equality(std::make_unique<affine_constraint_t>(std::move(q), r));
 }
 
-bool function_t::constrain_inequality(vector_t weights, scalar_t bias)
+bool function_t::constrain_equality(matrix_t P, vector_t q, scalar_t r)
 {
-    if (weights.size() != size())
-    {
-        return false;
-    }
+    return q.size() == size() && P.rows() == size() && P.cols() == size() &&
+           constrain_equality(std::make_unique<quadratic_constraint_t>(std::move(P), std::move(q), r));
+}
 
-    return constrain_inequality(std::make_unique<affine_constraint_t>(std::move(weights), bias));
+bool function_t::constrain_inequality(vector_t q, scalar_t r)
+{
+    return q.size() == size() && constrain_inequality(std::make_unique<affine_constraint_t>(std::move(q), r));
+}
+
+bool function_t::constrain_inequality(matrix_t P, vector_t q, scalar_t r)
+{
+    return q.size() == size() && P.rows() == size() && P.cols() == size() &&
+           constrain_inequality(std::make_unique<quadratic_constraint_t>(std::move(P), std::move(q), r));
 }
 
 bool function_t::valid(const vector_t& x) const

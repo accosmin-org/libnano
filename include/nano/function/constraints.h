@@ -27,7 +27,7 @@ namespace nano
     };
 
     ///
-    /// \brief models an affine (equality or inequality) constraint: c(x) = weights.dot(x) + bias.
+    /// \brief models an affine (equality or inequality) constraint: c(x) = q.dot(x) + r.
     ///
     class NANO_PUBLIC affine_constraint_t final : public function_t
     {
@@ -35,7 +35,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        affine_constraint_t(vector_t weights, scalar_t bias);
+        affine_constraint_t(vector_t q, scalar_t r);
 
         ///
         /// \brief @see function_t
@@ -44,9 +44,30 @@ namespace nano
 
     private:
         // attributes
-        vector_t m_weights;   ///<
-        scalar_t m_bias{0.0}; ///<
+        vector_t m_q;      ///<
+        scalar_t m_r{0.0}; ///<
     };
 
-    // TODO: add quadratic constraints
+    ///
+    /// \brief models a quadratic (equality or inequality) constraint: c(x) = 1/2 * x.dot(P * x) + q.dot(x) + r.
+    ///
+    class NANO_PUBLIC quadratic_constraint_t final : public function_t
+    {
+    public:
+        ///
+        /// \brief constructor
+        ///
+        quadratic_constraint_t(matrix_t P, vector_t q, scalar_t r);
+
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+
+    private:
+        // attributes
+        matrix_t m_P;      ///<
+        vector_t m_q;      ///<
+        scalar_t m_r{0.0}; ///<
+    };
 } // namespace nano

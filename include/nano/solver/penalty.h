@@ -14,7 +14,7 @@ namespace nano
     ///     a given solver gradient descent with line-search.
     ///
     template <typename tpenalty, std::enable_if_t<std::is_base_of_v<penalty_function_t, tpenalty>, bool> = true>
-        > class NANO_PUBLIC solver_penalty_t
+        > class NANO_PUBLIC solver_penalty_t final : public estimator_t
     {
     public:
         ///
@@ -25,11 +25,7 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
-
-    private:
-        // attributes
-        rsolver_t m_solver; ///< base solver
+        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const;
     };
 
     using solver_linear_penalty_t    = solver_penalty_t<linear_penalty_function_t>;

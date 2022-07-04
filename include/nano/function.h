@@ -125,49 +125,63 @@ namespace nano
         bool valid(const vector_t& x) const;
 
         ///
-        /// \brief register a new equality constraint: h(x) = 0.
+        /// \brief register an equality constraint: h(x) = 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain_equality(rfunction_t&& constraint);
 
         ///
-        /// \brief register a new inequality constraint: g(x) <= 0.
+        /// \brief register an inequality constraint: g(x) <= 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain_inequality(rfunction_t&& constraint);
 
         ///
-        /// \brief registers a new affine equality constraint: h(x) = weights.dot(x) + bias = 0.
+        /// \brief registers an affine equality constraint: h(x) = q.dot(x) + r = 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
-        bool constrain_equality(vector_t weights, scalar_t bias);
+        bool constrain_equality(vector_t q, scalar_t r);
 
         ///
-        /// \brief registers a new affine inequality constraint: g(x) = weights.dot(x) + bias <= 0.
+        /// \brief registers an affine inequality constraint: g(x) = q.dot(x) + r <= 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
-        bool constrain_inequality(vector_t weights, scalar_t bias);
+        bool constrain_inequality(vector_t q, scalar_t r);
 
         ///
-        /// \brief registers a new box constraint per dimension: min_i <= x_i <= max_i.
+        /// \brief registers a quadratic equality constraint: h(x) = 1/2 * x.dot(P * x) + q.dot(x) + r = 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_equality(matrix_t P, vector_t q, scalar_t r);
+
+        ///
+        /// \brief registers a quadratic inequality constraint: h(x) = 1/2 * x.dot(P * x) + q.dot(x) + r <= 0.
+        ///
+        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        ///
+        bool constrain_inequality(matrix_t P, vector_t q, scalar_t r);
+
+        ///
+        /// \brief registers a box constraint per dimension: min_i <= x_i <= max_i.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain_box(vector_t min, vector_t max);
 
         ///
-        /// \brief registers a new box constraint for all dimensions: min <= x_i <= max.
+        /// \brief registers a box constraint for all dimensions: min <= x_i <= max.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain_box(scalar_t min, scalar_t max);
 
         ///
-        /// \brief registers a new constraint: g(x) = ||x - origin||^2 <= radius^2.
+        /// \brief registers a ball constraint: g(x) = ||x - origin||^2 <= radius^2.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///

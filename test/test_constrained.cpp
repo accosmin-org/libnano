@@ -9,6 +9,12 @@ static vector_t make_x(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).vector();
 }
 
+template <tensor_size_t trows, typename... tvalues>
+static matrix_t make_X(tvalues... values)
+{
+    return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
+}
+
 template <typename tpenalty>
 static void check_penalty(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
 {
@@ -270,6 +276,52 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     check_penalties(constrained, make_x(-0.6, +0.2, 0.1), true);
     check_penalties(constrained, make_x(-1.6, +0.8, 0.1), false);
     check_penalties(constrained, make_x(-0.2, +0.8, 0.1), false);
+}
+
+UTEST_CASE(constrained_quadratic)
+{
+    auto q2 = make_x(1.0, 1.0);
+    auto q3 = make_x(1.0, 1.0, 1.0);
+    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
+
+    auto P2x2 = make_X<2>(1.0, 2.0, 2.0, 1.0);
+    auto P2x3 = make_X<2>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
+    auto P3x2 = make_X<3>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
+
+    auto P3x3 = make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
+    auto P3x4 = make_X<3>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P4x3 = make_X<4>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+
+    {
+        auto constrained = sum_function_t{2};
+        UTEST_CHECK(!constrained.constrain_inequality(P2x2, q3, 1.0));
+        UTEST_CHECK(!constrained.constrain_inequality(P2x3, q2, 1.0));
+        UTEST_CHECK(!constrained.constrain_inequality(P3x2, q2, 1.0));
+        UTEST_CHECK(constrained.constrain_inequality(P2x2, q2, 1.0));
+        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+
+        check_penalties(constrained, false, true);
+    }
+    {
+        auto constrained = sum_function_t{3};
+        UTEST_CHECK(!constrained.constrain_inequality(P3x3, q4, 1.0));
+        UTEST_CHECK(!constrained.constrain_inequality(P3x4, q3, 1.0));
+        UTEST_CHECK(!constrained.constrain_inequality(P4x3, q3, 1.0));
+        UTEST_CHECK(constrained.constrain_inequality(P3x3, q3, 1.0));
+        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+
+        check_penalties(constrained, true, true);
+    }
+    {
+        auto constrained = sum_function_t{3};
+        UTEST_CHECK(!constrained.constrain_equality(P3x3, q4, 1.0));
+        UTEST_CHECK(!constrained.constrain_equality(P3x4, q3, 1.0));
+        UTEST_CHECK(!constrained.constrain_equality(P4x3, q3, 1.0));
+        UTEST_CHECK(constrained.constrain_equality(P3x3, q3, 1.0));
+        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+
+        check_penalties(constrained, false, true);
+    }
 }
 
 UTEST_END_MODULE()
