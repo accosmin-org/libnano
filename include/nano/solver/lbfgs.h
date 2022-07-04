@@ -9,6 +9,8 @@ namespace nano
     ///     see "Updating Quasi-Newton Matrices with Limited Storage", by J. Nocedal, 1980
     ///     see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_lbfgs_t final : public solver_t
     {
     public:

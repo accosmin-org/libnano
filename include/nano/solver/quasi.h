@@ -40,6 +40,8 @@ namespace nano
     ///
     /// \brief Symmetric Rank One (SR1).
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_quasi_sr1_t final : public solver_quasi_t
     {
     public:
@@ -56,6 +58,8 @@ namespace nano
 
     ///
     /// \brief Davidon-Fletcher-Powell (DFP).
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_quasi_dfp_t final : public solver_quasi_t
     {
@@ -74,6 +78,8 @@ namespace nano
     ///
     /// \brief Broyden-Fletcher-Goldfarb-Shanno (BFGS).
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_quasi_bfgs_t final : public solver_quasi_t
     {
     public:
@@ -91,6 +97,8 @@ namespace nano
     ///
     /// \brief Hoshino formula (part of Broyden family) for the convex class.
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_quasi_hoshino_t final : public solver_quasi_t
     {
     public:
@@ -107,6 +115,8 @@ namespace nano
 
     ///
     /// \brief Fletcher switch (SR1 truncated to the convex class) - see (4).
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_quasi_fletcher_t final : public solver_quasi_t
     {

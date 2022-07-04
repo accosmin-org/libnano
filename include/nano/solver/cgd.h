@@ -34,6 +34,8 @@ namespace nano
     ///
     /// \brief CGD update parameters (Hager and Zhang, 2005 - see (1)) aka CG_DESCENT
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_cgd_n_t final : public solver_cgd_t
     {
     public:
@@ -50,6 +52,8 @@ namespace nano
 
     ///
     /// \brief CGD update parameters (Fletcher - Conjugate Descent, 1987 - see (1))
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_cgd_cd_t final : public solver_cgd_t
     {
@@ -68,6 +72,8 @@ namespace nano
     ///
     /// \brief CGD update parameters (Dai and Yuan, 1999 - see (1))
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_cgd_dy_t final : public solver_cgd_t
     {
     public:
@@ -84,6 +90,8 @@ namespace nano
 
     ///
     /// \brief CGD update parameters (Fletcher and Reeves, 1964 - see (1))
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_cgd_fr_t final : public solver_cgd_t
     {
@@ -102,6 +110,8 @@ namespace nano
     ///
     /// \brief CGD update parameters (Hestenes and Stiefel, 1952 - see (1))
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_cgd_hs_t final : public solver_cgd_t
     {
     public:
@@ -118,6 +128,8 @@ namespace nano
 
     ///
     /// \brief CGD update parameters (Liu and Storey, 1991 - see (1))
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_cgd_ls_t final : public solver_cgd_t
     {
@@ -136,6 +148,8 @@ namespace nano
     ///
     /// \brief CGD update parameters (Polak and Ribiere, 1969 - see (1))
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_cgd_pr_t final : public solver_cgd_t
     {
     public:
@@ -152,6 +166,8 @@ namespace nano
 
     ///
     /// \brief CGD update parameters (Dai, 2002 - see (2), page 22)
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_cgd_dycd_t final : public solver_cgd_t
     {
@@ -170,6 +186,8 @@ namespace nano
     ///
     /// \brief CGD update parameters (Dai and Yuan, 2001  - see (2), page 21)
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_cgd_dyhs_t final : public solver_cgd_t
     {
     public:
@@ -186,6 +204,8 @@ namespace nano
 
     ///
     /// \brief CGD update parameters (FR-PR - see (4), formula 5.48)
+    ///
+    /// NB: the functional constraints (if any) are all ignored.
     ///
     class NANO_PUBLIC solver_cgd_frpr_t final : public solver_cgd_t
     {

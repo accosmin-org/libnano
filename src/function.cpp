@@ -1,7 +1,7 @@
 #include <nano/core/numeric.h>
 #include <nano/core/strutil.h>
 #include <nano/core/util.h>
-#include <nano/function.h>
+#include <nano/function/constraints.h>
 
 using namespace nano;
 
@@ -114,60 +114,6 @@ static scalar_t strong_convexity(const inequality_t& constraint)
 {
     return constraint.m_function->strong_convexity();
 }
-
-class linear_function_t final : public function_t
-{
-public:
-    linear_function_t(vector_t weights, scalar_t bias)
-        : function_t("affine", weights.size())
-        , m_weights(std::move(weights))
-        , m_bias(bias)
-    {
-        smooth(true);
-        convex(true);
-    }
-
-    scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            gx->noalias() = m_weights;
-        }
-
-        return m_weights.dot(x) + m_bias;
-    }
-
-private:
-    vector_t m_weights;   ///<
-    scalar_t m_bias{0.0}; ///<
-};
-
-class ball_function_t final : public function_t
-{
-public:
-    ball_function_t(vector_t origin, scalar_t radius)
-        : function_t("ball", origin.size())
-        , m_origin(std::move(origin))
-        , m_radius(radius)
-    {
-        smooth(true);
-        convex(true);
-    }
-
-    scalar_t vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            gx->noalias() = 2.0 * (x - m_origin);
-        }
-
-        return (x - m_origin).dot(x - m_origin) - m_radius * m_radius;
-    }
-
-private:
-    vector_t m_origin;      ///<
-    scalar_t m_radius{0.0}; ///<
-};
 
 function_t::function_t(string_t name, tensor_size_t size)
     : m_name(std::move(name))
@@ -336,7 +282,7 @@ bool function_t::constrain_ball(vector_t origin, scalar_t radius)
         return false;
     }
 
-    return constrain_inequality(std::make_unique<ball_function_t>(std::move(origin), radius));
+    return constrain_inequality(std::make_unique<ball_constraint_t>(std::move(origin), radius));
 }
 
 bool function_t::constrain_equality(vector_t weights, scalar_t bias)
@@ -346,7 +292,7 @@ bool function_t::constrain_equality(vector_t weights, scalar_t bias)
         return false;
     }
 
-    return constrain_equality(std::make_unique<linear_function_t>(std::move(weights), bias));
+    return constrain_equality(std::make_unique<affine_constraint_t>(std::move(weights), bias));
 }
 
 bool function_t::constrain_inequality(vector_t weights, scalar_t bias)
@@ -356,7 +302,7 @@ bool function_t::constrain_inequality(vector_t weights, scalar_t bias)
         return false;
     }
 
-    return constrain_inequality(std::make_unique<linear_function_t>(std::move(weights), bias));
+    return constrain_inequality(std::make_unique<affine_constraint_t>(std::move(weights), bias));
 }
 
 bool function_t::valid(const vector_t& x) const

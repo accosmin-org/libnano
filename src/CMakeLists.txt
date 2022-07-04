@@ -48,12 +48,14 @@ target_sources(nano PRIVATE
     solver/osga.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
+    #solver/penalty.cpp
     solver/ellipsoid.cpp
     function.cpp
     function/axis_ellipsoid.cpp
     function/benchmark.cpp
     function/cauchy.cpp
     function/chung_reynolds.cpp
+    function/constraints.cpp
     function/dixon_price.cpp
     function/elastic_net.cpp
     function/exponential.cpp

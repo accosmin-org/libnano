@@ -7,6 +7,8 @@ namespace nano
     ///
     /// \brief gradient descent with line-search.
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_gd_t final : public solver_t
     {
     public:

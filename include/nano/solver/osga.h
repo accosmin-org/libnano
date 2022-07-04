@@ -12,6 +12,8 @@ namespace nano
     ///     optimization", by M. Ahookhosh, A. Neumaier, 2015 see "An optimal subgradient algorithm for large-scale
     ///     convex optimization in simple domains", by M. Ahookhosh, A. Neumaier, 2015
     ///
+    /// NB: the functional constraints (if any) are all ignored.
+    ///
     class NANO_PUBLIC solver_osga_t final : public solver_t
     {
     public:

@@ -198,14 +198,14 @@ UTEST_CASE(constrained_ball)
     check_penalties(constrained, make_x(1.0, 1.0, 1.0), false);
 }
 
-UTEST_CASE(constrained_linear_equality)
+UTEST_CASE(constrained_affine_equality)
 {
     auto constrained = sumabsm1_function_t{3};
     UTEST_CHECK(!constrained.constrain_equality(make_x(1.0, 1.0, 1.0, 1.0), -3.0));
     UTEST_CHECK(constrained.constrain_equality(make_x(1.0, 1.0, 1.0), -3.0));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-    check_penalties(constrained, false, false);
+    check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
     check_penalties(constrained, make_x(1.0, 1.0, 1.0), true);
     check_penalties(constrained, make_x(0.1, 0.2, 0.3), false);
@@ -213,7 +213,7 @@ UTEST_CASE(constrained_linear_equality)
     check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
 }
 
-UTEST_CASE(constrained_linear_inequality)
+UTEST_CASE(constrained_affine_inequality)
 {
     auto constrained = sumabsm1_function_t{3};
     UTEST_CHECK(!constrained.constrain_inequality(make_x(1.0, 1.0, 1.0, 1.0), -3.0));

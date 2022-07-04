@@ -1,3 +1,4 @@
+#include <nano/function/constraints.h>
 #include <nano/function/penalty.h>
 
 using namespace nano;
@@ -7,9 +8,16 @@ static auto is_equality(const constraint_t& constraint)
     return std::get_if<equality_t>(&constraint) != nullptr;
 }
 
+static auto is_affine_equality(const constraint_t& constraint)
+{
+    const auto* const pconstraint = std::get_if<equality_t>(&constraint);
+    return pconstraint != nullptr && dynamic_cast<const affine_constraint_t*>(pconstraint->m_function.get()) != nullptr;
+}
+
 static auto convex(const function_t& function)
 {
-    const auto op = [](const auto& constraint) { return ::nano::convex(constraint) && !is_equality(constraint); };
+    const auto op = [](const auto& constraint)
+    { return ::nano::convex(constraint) && (!is_equality(constraint) || is_affine_equality(constraint)); };
     return function.convex() && std::all_of(function.constraints().begin(), function.constraints().end(), op);
 }
 

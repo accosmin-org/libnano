@@ -139,14 +139,14 @@ namespace nano
         bool constrain_inequality(rfunction_t&& constraint);
 
         ///
-        /// \brief registers a new linear equality constraint: h(x) = weights.dot(x) + bias = 0.
+        /// \brief registers a new affine equality constraint: h(x) = weights.dot(x) + bias = 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain_equality(vector_t weights, scalar_t bias);
 
         ///
-        /// \brief registers a new linear inequality constraint: g(x) = weights.dot(x) + bias <= 0.
+        /// \brief registers a new affine inequality constraint: g(x) = weights.dot(x) + bias <= 0.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
