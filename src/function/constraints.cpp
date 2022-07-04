@@ -47,7 +47,7 @@ quadratic_constraint_t::quadratic_constraint_t(matrix_t P, vector_t q, scalar_t 
     , m_q(std::move(q))
     , m_r(r)
 {
-    const auto eigenvalues = m_P.eigenvalues();
+    const auto eigenvalues         = m_P.eigenvalues();
     const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
 
     smooth(true);
