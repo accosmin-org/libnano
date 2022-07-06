@@ -1,4 +1,5 @@
 #include "fixture/function.h"
+#include <nano/function/constraints.h>
 #include <nano/function/penalty.h>
 
 using namespace nano;
@@ -157,9 +158,11 @@ UTEST_CASE(noconstraint_sumabsm1)
 UTEST_CASE(constrained_box1)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain_box(-0.5, -0.5));
-    UTEST_CHECK(!constrained.constrain_box(+0.5, -0.5));
-    UTEST_CHECK(constrained.constrain_box(-0.5, +0.5));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(-0.5, -0.5, 3)));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(+0.5, -0.5, 3)));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(-0.5, +0.5, 0)));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(-0.5, +0.5, 4)));
+    UTEST_CHECK(constrained.constrain(make_box_constraints(-0.5, +0.5, 3)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
 
     check_penalties(constrained, true, true);
@@ -176,10 +179,10 @@ UTEST_CASE(constrained_box1)
 UTEST_CASE(constrained_box2)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain_box(make_x(-0.5, -0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
-    UTEST_CHECK(!constrained.constrain_box(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5, +0.5)));
-    UTEST_CHECK(!constrained.constrain_box(make_x(+0.5, +0.5, +0.5), make_x(-0.5, -0.5, -0.5)));
-    UTEST_CHECK(constrained.constrain_box(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(make_x(-0.5, -0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5))));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5, +0.5))));
+    UTEST_CHECK(!constrained.constrain(make_box_constraints(make_x(+0.5, +0.5, +0.5), make_x(-0.5, -0.5, -0.5))));
+    UTEST_CHECK(constrained.constrain(make_box_constraints(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5))));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
 
     check_penalties(constrained, true, true);
@@ -192,9 +195,9 @@ UTEST_CASE(constrained_box2)
 UTEST_CASE(constrained_ball)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain_ball(make_x(1.0, 1.0, 1.0, 1.0), 1.0));
-    UTEST_CHECK(!constrained.constrain_ball(make_x(1.0, 1.0, 1.0), 0.0));
-    UTEST_CHECK(constrained.constrain_ball(make_x(0.0, 0.0, 0.0), 1.0));
+    UTEST_CHECK(!constrained.constrain(make_ball_constraint(make_x(1.0, 1.0, 1.0, 1.0), 1.0)));
+    UTEST_CHECK(!constrained.constrain(make_ball_constraint(make_x(1.0, 1.0, 1.0), 0.0)));
+    UTEST_CHECK(constrained.constrain(make_ball_constraint(make_x(0.0, 0.0, 0.0), 1.0)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, true);
@@ -207,8 +210,8 @@ UTEST_CASE(constrained_ball)
 UTEST_CASE(constrained_affine_equality)
 {
     auto constrained = sumabsm1_function_t{3};
-    UTEST_CHECK(!constrained.constrain_equality(make_x(1.0, 1.0, 1.0, 1.0), -3.0));
-    UTEST_CHECK(constrained.constrain_equality(make_x(1.0, 1.0, 1.0), -3.0));
+    UTEST_CHECK(!constrained.constrain(make_affine_equality_constraint(make_x(1.0, 1.0, 1.0, 1.0), -3.0)));
+    UTEST_CHECK(constrained.constrain(make_affine_equality_constraint(make_x(1.0, 1.0, 1.0), -3.0)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, false);
@@ -222,8 +225,8 @@ UTEST_CASE(constrained_affine_equality)
 UTEST_CASE(constrained_affine_inequality)
 {
     auto constrained = sumabsm1_function_t{3};
-    UTEST_CHECK(!constrained.constrain_inequality(make_x(1.0, 1.0, 1.0, 1.0), -3.0));
-    UTEST_CHECK(constrained.constrain_inequality(make_x(1.0, 1.0, 1.0), -3.0));
+    UTEST_CHECK(!constrained.constrain(make_affine_inequality_constraint(make_x(1.0, 1.0, 1.0, 1.0), -3.0)));
+    UTEST_CHECK(constrained.constrain(make_affine_inequality_constraint(make_x(1.0, 1.0, 1.0), -3.0)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, false);
@@ -235,8 +238,8 @@ UTEST_CASE(constrained_affine_inequality)
 UTEST_CASE(constrained_cauchy_inequality)
 {
     auto constrained = cauchy_function_t{3};
-    UTEST_CHECK(!constrained.constrain_inequality(std::make_unique<cauchy_function_t>(4)));
-    UTEST_CHECK(constrained.constrain_inequality(std::make_unique<cauchy_function_t>(3)));
+    UTEST_CHECK(!constrained.constrain(make_inequality_constraint(std::make_unique<cauchy_function_t>(4))));
+    UTEST_CHECK(constrained.constrain(make_inequality_constraint(std::make_unique<cauchy_function_t>(3))));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, false, true);
@@ -251,8 +254,8 @@ UTEST_CASE(constrained_cauchy_inequality)
 UTEST_CASE(constrained_sumabsm1_equality)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain_equality(std::make_unique<sumabsm1_function_t>(4)));
-    UTEST_CHECK(constrained.constrain_equality(std::make_unique<sumabsm1_function_t>(3)));
+    UTEST_CHECK(!constrained.constrain(make_equality_constraint(std::make_unique<sumabsm1_function_t>(4))));
+    UTEST_CHECK(constrained.constrain(make_equality_constraint(std::make_unique<sumabsm1_function_t>(3))));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, false, false);
@@ -266,8 +269,8 @@ UTEST_CASE(constrained_sumabsm1_equality)
 UTEST_CASE(constrained_sumabsm1_inequality)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain_inequality(std::make_unique<sumabsm1_function_t>(4)));
-    UTEST_CHECK(constrained.constrain_inequality(std::make_unique<sumabsm1_function_t>(3)));
+    UTEST_CHECK(!constrained.constrain(make_inequality_constraint(std::make_unique<sumabsm1_function_t>(4))));
+    UTEST_CHECK(constrained.constrain(make_inequality_constraint(std::make_unique<sumabsm1_function_t>(3))));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, false);
@@ -294,30 +297,30 @@ UTEST_CASE(constrained_quadratic)
 
     {
         auto constrained = sum_function_t{2};
-        UTEST_CHECK(!constrained.constrain_inequality(P2x2, q3, 1.0));
-        UTEST_CHECK(!constrained.constrain_inequality(P2x3, q2, 1.0));
-        UTEST_CHECK(!constrained.constrain_inequality(P3x2, q2, 1.0));
-        UTEST_CHECK(constrained.constrain_inequality(P2x2, q2, 1.0));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P2x2, q3, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P2x3, q2, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P3x2, q2, 1.0)));
+        UTEST_CHECK(constrained.constrain(make_quadratic_inequality_constraint(P2x2, q2, 1.0)));
         UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
         check_penalties(constrained, false, true);
     }
     {
         auto constrained = sum_function_t{3};
-        UTEST_CHECK(!constrained.constrain_inequality(P3x3, q4, 1.0));
-        UTEST_CHECK(!constrained.constrain_inequality(P3x4, q3, 1.0));
-        UTEST_CHECK(!constrained.constrain_inequality(P4x3, q3, 1.0));
-        UTEST_CHECK(constrained.constrain_inequality(P3x3, q3, 1.0));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P3x3, q4, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P3x4, q3, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_inequality_constraint(P4x3, q3, 1.0)));
+        UTEST_CHECK(constrained.constrain(make_quadratic_inequality_constraint(P3x3, q3, 1.0)));
         UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
         check_penalties(constrained, true, true);
     }
     {
         auto constrained = sum_function_t{3};
-        UTEST_CHECK(!constrained.constrain_equality(P3x3, q4, 1.0));
-        UTEST_CHECK(!constrained.constrain_equality(P3x4, q3, 1.0));
-        UTEST_CHECK(!constrained.constrain_equality(P4x3, q3, 1.0));
-        UTEST_CHECK(constrained.constrain_equality(P3x3, q3, 1.0));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_equality_constraint(P3x3, q4, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_equality_constraint(P3x4, q3, 1.0)));
+        UTEST_CHECK(!constrained.constrain(make_quadratic_equality_constraint(P4x3, q3, 1.0)));
+        UTEST_CHECK(constrained.constrain(make_quadratic_equality_constraint(P3x3, q3, 1.0)));
         UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
         check_penalties(constrained, false, true);

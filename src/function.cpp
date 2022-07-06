@@ -1,6 +1,6 @@
 #include <nano/core/strutil.h>
+#include <nano/core/util.h>
 #include <nano/function/constraints.h>
-#include <nano/function/util.h>
 
 using namespace nano;
 
@@ -30,92 +30,57 @@ string_t function_t::name(bool with_size) const
     return with_size ? scat(m_name, "[", size(), "D]") : m_name;
 }
 
-bool function_t::constrain_equality(rfunction_t&& constraint)
+bool function_t::compatible(const minimum_t& constraint) const
 {
-    if (constraint->size() != size())
-    {
-        return false;
-    }
-
-    m_constraints.emplace_back(equality_t{std::move(constraint)});
-    return true;
+    return constraint.m_dimension >= 0 && constraint.m_dimension < size();
 }
 
-bool function_t::constrain_inequality(rfunction_t&& constraint)
+bool function_t::compatible(const maximum_t& constraint) const
 {
-    if (constraint->size() != size())
-    {
-        return false;
-    }
-
-    m_constraints.emplace_back(inequality_t{std::move(constraint)});
-    return true;
+    return constraint.m_dimension >= 0 && constraint.m_dimension < size();
 }
 
-bool function_t::constrain_box(vector_t min, vector_t max)
+bool function_t::compatible(const equality_t& constraint) const
 {
-    if (min.size() != size() || max.size() != size())
-    {
-        return false;
-    }
+    return static_cast<bool>(constraint.m_function) && constraint.m_function->size() == size();
+}
 
-    for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
+bool function_t::compatible(const inequality_t& constraint) const
+{
+    return static_cast<bool>(constraint.m_function) && constraint.m_function->size() == size();
+}
+
+bool function_t::compatible(const constraint_t& constraint) const
+{
+    return std::visit(overloaded{[&](const minimum_t& constraint) { return this->compatible(constraint); },
+                                 [&](const maximum_t& constraint) { return this->compatible(constraint); },
+                                 [&](const equality_t& constraint) { return this->compatible(constraint); },
+                                 [&](const inequality_t& constraint) { return this->compatible(constraint); }},
+                      constraint);
+}
+
+bool function_t::constrain(constraint_t&& constraint)
+{
+    if (compatible(constraint))
     {
-        if (min(i) >= max(i))
+        m_constraints.emplace_back(std::move(constraint));
+        return true;
+    }
+    return false;
+}
+
+bool function_t::constrain(constraints_t&& constraints)
+{
+    const auto op = [&](const constraint_t& constraint) { return compatible(constraint); };
+    if (!constraints.empty() && std::all_of(std::begin(constraints), std::end(constraints), op))
+    {
+        for (auto& constraint : constraints)
         {
-            return false;
+            m_constraints.emplace_back(std::move(constraint));
         }
+        return true;
     }
-
-    for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
-    {
-        m_constraints.emplace_back(minimum_t{min(i), i});
-        m_constraints.emplace_back(maximum_t{max(i), i});
-    }
-    return true;
-}
-
-bool function_t::constrain_box(scalar_t min, scalar_t max)
-{
-    if (min >= max)
-    {
-        return false;
-    }
-
-    for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
-    {
-        m_constraints.emplace_back(minimum_t{min, i});
-        m_constraints.emplace_back(maximum_t{max, i});
-    }
-    return true;
-}
-
-bool function_t::constrain_ball(vector_t origin, scalar_t radius)
-{
-    return origin.size() == size() && radius > 0.0 &&
-           constrain_inequality(std::make_unique<ball_constraint_t>(std::move(origin), radius));
-}
-
-bool function_t::constrain_equality(vector_t q, scalar_t r)
-{
-    return q.size() == size() && constrain_equality(std::make_unique<affine_constraint_t>(std::move(q), r));
-}
-
-bool function_t::constrain_equality(matrix_t P, vector_t q, scalar_t r)
-{
-    return q.size() == size() && P.rows() == size() && P.cols() == size() &&
-           constrain_equality(std::make_unique<quadratic_constraint_t>(std::move(P), std::move(q), r));
-}
-
-bool function_t::constrain_inequality(vector_t q, scalar_t r)
-{
-    return q.size() == size() && constrain_inequality(std::make_unique<affine_constraint_t>(std::move(q), r));
-}
-
-bool function_t::constrain_inequality(matrix_t P, vector_t q, scalar_t r)
-{
-    return q.size() == size() && P.rows() == size() && P.cols() == size() &&
-           constrain_inequality(std::make_unique<quadratic_constraint_t>(std::move(P), std::move(q), r));
+    return false;
 }
 
 bool function_t::valid(const vector_t& x) const

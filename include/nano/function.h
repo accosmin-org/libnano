@@ -15,13 +15,13 @@ namespace nano
     struct minimum_t
     {
         scalar_t      m_value{0.0};
-        tensor_size_t m_dimension{0};
+        tensor_size_t m_dimension{-1};
     };
 
     struct maximum_t
     {
         scalar_t      m_value{0.0};
-        tensor_size_t m_dimension{0};
+        tensor_size_t m_dimension{-1};
     };
 
     struct equality_t
@@ -115,67 +115,18 @@ namespace nano
         bool valid(const vector_t& x) const;
 
         ///
-        /// \brief register an equality constraint: h(x) = 0.
+        /// \brief register a constraint.
         ///
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
-        bool constrain_equality(rfunction_t&& constraint);
+        bool constrain(constraint_t&&);
 
         ///
-        /// \brief register an inequality constraint: g(x) <= 0.
+        /// \brief register a set of constraints.
         ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+        /// NB: returns false if any of the constraint is neither valid nor compatible with the objective function.
         ///
-        bool constrain_inequality(rfunction_t&& constraint);
-
-        ///
-        /// \brief registers an affine equality constraint: h(x) = q.dot(x) + r = 0.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_equality(vector_t q, scalar_t r);
-
-        ///
-        /// \brief registers an affine inequality constraint: g(x) = q.dot(x) + r <= 0.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_inequality(vector_t q, scalar_t r);
-
-        ///
-        /// \brief registers a quadratic equality constraint: h(x) = 1/2 * x.dot(P * x) + q.dot(x) + r = 0.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_equality(matrix_t P, vector_t q, scalar_t r);
-
-        ///
-        /// \brief registers a quadratic inequality constraint: h(x) = 1/2 * x.dot(P * x) + q.dot(x) + r <= 0.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_inequality(matrix_t P, vector_t q, scalar_t r);
-
-        ///
-        /// \brief registers a box constraint per dimension: min_i <= x_i <= max_i.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_box(vector_t min, vector_t max);
-
-        ///
-        /// \brief registers a box constraint for all dimensions: min <= x_i <= max.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_box(scalar_t min, scalar_t max);
-
-        ///
-        /// \brief registers a ball constraint: g(x) = ||x - origin||^2 <= radius^2.
-        ///
-        /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain_ball(vector_t origin, scalar_t radius);
+        bool constrain(constraints_t&&);
 
         ///
         /// \brief returns the set of registered constraints.
@@ -207,6 +158,12 @@ namespace nano
         void convex(bool);
         void smooth(bool);
         void strong_convexity(scalar_t);
+
+        bool compatible(const minimum_t&) const;
+        bool compatible(const maximum_t&) const;
+        bool compatible(const equality_t&) const;
+        bool compatible(const inequality_t&) const;
+        bool compatible(const constraint_t&) const;
 
         virtual scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
