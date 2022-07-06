@@ -2,6 +2,7 @@
 #include <nano/core/numeric.h>
 #include <nano/core/random.h>
 #include <nano/function.h>
+#include <nano/function/util.h>
 #include <nano/loss.h>
 #include <nano/model/class.h>
 #include <utest/utest.h>
@@ -78,7 +79,7 @@ UTEST_CASE(gradient)
                 const auto f = function.vgrad(x);
                 UTEST_CHECK_EQUAL(std::isfinite(f), true);
                 UTEST_CHECK_GREATER_EQUAL(f, scalar_t(0));
-                UTEST_CHECK_LESS(function.grad_accuracy(x), 5 * epsilon2<scalar_t>());
+                UTEST_CHECK_LESS(grad_accuracy(function, x), 5 * epsilon2<scalar_t>());
             }
 
             check_convexity(function);

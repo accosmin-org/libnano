@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <nano/function/util.h>
 #include <nano/solver/lbfgs.h>
 
 using namespace nano;
@@ -49,7 +50,7 @@ int main(const int, char*[])
         const vector_t x0 = nano::vector_t::Random(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "check_grad[" << (trial + 1) << "/" << trials
-                  << "]: dg=" << objective.grad_accuracy(x0) << std::endl;
+                  << "]: dg=" << grad_accuracy(objective, x0) << std::endl;
     }
     std::cout << std::endl;
 

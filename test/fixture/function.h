@@ -1,5 +1,6 @@
 #include <nano/core/numeric.h>
 #include <nano/function.h>
+#include <nano/function/util.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -9,7 +10,7 @@ using namespace nano;
     for (auto trial = 0; trial < trials; ++trial)
     {
         const vector_t x = vector_t::Random(function.size());
-        UTEST_CHECK_LESS(function.grad_accuracy(x), epsilon_factor * epsilon2<scalar_t>());
+        UTEST_CHECK_LESS(grad_accuracy(function, x), epsilon_factor * epsilon2<scalar_t>());
     }
 }
 
@@ -19,7 +20,7 @@ using namespace nano;
     {
         const vector_t x0 = vector_t::Random(function.size());
         const vector_t x1 = vector_t::Random(function.size());
-        UTEST_CHECK(function.is_convex(x0, x1, 20));
+        UTEST_CHECK(is_convex(function, x0, x1, 20));
     }
 }
 

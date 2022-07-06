@@ -51,29 +51,30 @@ target_sources(nano PRIVATE
     #solver/penalty.cpp
     solver/ellipsoid.cpp
     function.cpp
-    function/axis_ellipsoid.cpp
     function/benchmark.cpp
-    function/cauchy.cpp
-    function/chung_reynolds.cpp
     function/constraints.cpp
-    function/dixon_price.cpp
-    function/elastic_net.cpp
-    function/exponential.cpp
-    function/geometric.cpp
-    function/kinks.cpp
-    function/linear.cpp
     function/penalty.cpp
-    function/powell.cpp
-    function/qing.cpp
-    function/quadratic.cpp
-    function/rosenbrock.cpp
-    function/rotated_ellipsoid.cpp
-    function/sargan.cpp
-    function/schumer_steiglitz.cpp
-    function/sphere.cpp
-    function/styblinski_tang.cpp
-    function/trid.cpp
-    function/zakharov.cpp
+    function/util.cpp
+    function/benchmark/axis_ellipsoid.cpp
+    function/benchmark/cauchy.cpp
+    function/benchmark/chung_reynolds.cpp
+    function/benchmark/dixon_price.cpp
+    function/benchmark/elastic_net.cpp
+    function/benchmark/exponential.cpp
+    function/benchmark/geometric.cpp
+    function/benchmark/kinks.cpp
+    function/benchmark/linear.cpp
+    function/benchmark/powell.cpp
+    function/benchmark/qing.cpp
+    function/benchmark/quadratic.cpp
+    function/benchmark/rosenbrock.cpp
+    function/benchmark/rotated_ellipsoid.cpp
+    function/benchmark/sargan.cpp
+    function/benchmark/schumer_steiglitz.cpp
+    function/benchmark/sphere.cpp
+    function/benchmark/styblinski_tang.cpp
+    function/benchmark/trid.cpp
+    function/benchmark/zakharov.cpp
     loss.cpp
     model.cpp
     model/util.cpp

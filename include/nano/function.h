@@ -86,16 +86,6 @@ namespace nano
         tensor_size_t size() const { return m_size; }
 
         ///
-        /// \brief compute the gradient accuracy (given vs. central finite difference approximation).
-        ///
-        scalar_t grad_accuracy(const vector_t& x) const;
-
-        ///
-        /// \brief check if the function is convex along the [x1, x2] line.
-        ///
-        bool is_convex(const vector_t& x1, const vector_t& x2, int steps) const;
-
-        ///
         /// \brief returns whether the function is convex.
         ///
         bool convex() const { return m_convex; }
@@ -212,30 +202,4 @@ namespace nano
         scalar_t      m_sconvexity{0}; ///< strong-convexity coefficient
         constraints_t m_constraints;   ///< optional equality and inequality constraints
     };
-
-    ///
-    /// \brief returns whether the given constraint is convex.
-    ///
-    NANO_PUBLIC bool convex(const constraint_t&);
-
-    ///
-    /// \brief returns whether the given constraint is smooth.
-    ///
-    NANO_PUBLIC bool smooth(const constraint_t&);
-
-    ///
-    /// \brief returns whether the strong convexity coefficient of the given constraint.
-    ///
-    NANO_PUBLIC scalar_t strong_convexity(const constraint_t&);
-
-    ///
-    /// \brief returns how much a point violates the given constraint (the larger, the worse).
-    ///
-    NANO_PUBLIC scalar_t valid(const vector_t&, const constraint_t&);
-
-    ///
-    /// \brief evaluate the given constraint's function value at the given point
-    ///     (and its gradient or sub-gradient if not smooth).
-    ///
-    NANO_PUBLIC scalar_t vgrad(const constraint_t&, const vector_t& x, vector_t* gx = nullptr);
 } // namespace nano

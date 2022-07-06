@@ -1,5 +1,5 @@
 #include <nano/core/strutil.h>
-#include <nano/function/elastic_net.h>
+#include <nano/function/benchmark/elastic_net.h>
 
 using namespace nano;
 

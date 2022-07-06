@@ -1,5 +1,5 @@
 #include <nano/core/numeric.h>
-#include <nano/function/powell.h>
+#include <nano/function/benchmark/powell.h>
 
 using namespace nano;
 

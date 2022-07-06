@@ -1,25 +1,25 @@
 #include <mutex>
 #include <nano/function/benchmark.h>
 
-#include <nano/function/axis_ellipsoid.h>
-#include <nano/function/cauchy.h>
-#include <nano/function/chung_reynolds.h>
-#include <nano/function/dixon_price.h>
-#include <nano/function/elastic_net.h>
-#include <nano/function/exponential.h>
-#include <nano/function/geometric.h>
-#include <nano/function/kinks.h>
-#include <nano/function/powell.h>
-#include <nano/function/qing.h>
-#include <nano/function/quadratic.h>
-#include <nano/function/rosenbrock.h>
-#include <nano/function/rotated_ellipsoid.h>
-#include <nano/function/sargan.h>
-#include <nano/function/schumer_steiglitz.h>
-#include <nano/function/sphere.h>
-#include <nano/function/styblinski_tang.h>
-#include <nano/function/trid.h>
-#include <nano/function/zakharov.h>
+#include <nano/function/benchmark/axis_ellipsoid.h>
+#include <nano/function/benchmark/cauchy.h>
+#include <nano/function/benchmark/chung_reynolds.h>
+#include <nano/function/benchmark/dixon_price.h>
+#include <nano/function/benchmark/elastic_net.h>
+#include <nano/function/benchmark/exponential.h>
+#include <nano/function/benchmark/geometric.h>
+#include <nano/function/benchmark/kinks.h>
+#include <nano/function/benchmark/powell.h>
+#include <nano/function/benchmark/qing.h>
+#include <nano/function/benchmark/quadratic.h>
+#include <nano/function/benchmark/rosenbrock.h>
+#include <nano/function/benchmark/rotated_ellipsoid.h>
+#include <nano/function/benchmark/sargan.h>
+#include <nano/function/benchmark/schumer_steiglitz.h>
+#include <nano/function/benchmark/sphere.h>
+#include <nano/function/benchmark/styblinski_tang.h>
+#include <nano/function/benchmark/trid.h>
+#include <nano/function/benchmark/zakharov.h>
 
 using namespace nano;
 

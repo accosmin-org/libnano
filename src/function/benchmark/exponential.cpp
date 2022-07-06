@@ -1,4 +1,4 @@
-#include <nano/function/exponential.h>
+#include <nano/function/benchmark/exponential.h>
 
 using namespace nano;
 

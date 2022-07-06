@@ -1,4 +1,4 @@
-#include <nano/function/qing.h>
+#include <nano/function/benchmark/qing.h>
 
 using namespace nano;
 

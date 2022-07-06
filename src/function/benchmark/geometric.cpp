@@ -1,5 +1,5 @@
 #include <nano/core/random.h>
-#include <nano/function/geometric.h>
+#include <nano/function/benchmark/geometric.h>
 
 using namespace nano;
 

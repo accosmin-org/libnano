@@ -1,11 +1,12 @@
 #include <iomanip>
-#include <nano/core/table.h>
-#include <nano/core/stats.h>
 #include <nano/core/chrono.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
 #include <nano/core/factory_util.h>
+#include <nano/core/logger.h>
+#include <nano/core/stats.h>
+#include <nano/core/table.h>
 #include <nano/function/benchmark.h>
+#include <nano/function/util.h>
 
 using namespace nano;
 
@@ -33,7 +34,7 @@ static void eval_func(const function_t& function, table_t& table)
     scalar_t grad_accuracy = 0;
     for (size_t i = 0; i < trials; ++ i)
     {
-        grad_accuracy += function.grad_accuracy(vector_t::Random(dims));
+        grad_accuracy += ::nano::grad_accuracy(function, vector_t::Random(dims));
     }
 
     auto& row = table.append();

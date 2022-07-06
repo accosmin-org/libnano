@@ -3,7 +3,7 @@
 #include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/function/benchmark.h>
-#include <nano/function/sphere.h>
+#include <nano/function/benchmark/sphere.h>
 #include <nano/solver/quasi.h>
 #include <utest/utest.h>
 

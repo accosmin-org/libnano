@@ -1,4 +1,4 @@
-#include <nano/function/trid.h>
+#include <nano/function/benchmark/trid.h>
 
 using namespace nano;
 

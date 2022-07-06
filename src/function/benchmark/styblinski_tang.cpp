@@ -1,4 +1,4 @@
-#include <nano/function/styblinski_tang.h>
+#include <nano/function/benchmark/styblinski_tang.h>
 
 using namespace nano;
 

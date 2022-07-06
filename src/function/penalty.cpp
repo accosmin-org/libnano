@@ -1,5 +1,6 @@
 #include <nano/function/constraints.h>
 #include <nano/function/penalty.h>
+#include <nano/function/util.h>
 
 using namespace nano;
 

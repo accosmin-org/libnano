@@ -1,4 +1,4 @@
-#include <nano/function/schumer_steiglitz.h>
+#include <nano/function/benchmark/schumer_steiglitz.h>
 
 using namespace nano;
 

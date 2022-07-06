@@ -1,5 +1,5 @@
 #include <nano/core/stats.h>
-#include <nano/function/kinks.h>
+#include <nano/function/benchmark/kinks.h>
 
 using namespace nano;
 

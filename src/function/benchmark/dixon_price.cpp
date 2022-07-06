@@ -1,5 +1,5 @@
 #include <nano/core/numeric.h>
-#include <nano/function/dixon_price.h>
+#include <nano/function/benchmark/dixon_price.h>
 
 using namespace nano;
 
