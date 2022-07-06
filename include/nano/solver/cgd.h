@@ -22,7 +22,7 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
+        solver_state_t do_minimize(const function_t&, const vector_t& x0) const final;
 
     private:
         ///

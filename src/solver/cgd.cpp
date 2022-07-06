@@ -73,14 +73,13 @@ solver_cgd_t::solver_cgd_t()
     register_parameter(parameter_t::make_scalar("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
 }
 
-solver_state_t solver_cgd_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
 
     auto lsearch  = make_lsearch();
-    auto function = make_function(function_, x0);
 
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;

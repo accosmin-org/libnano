@@ -31,7 +31,7 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t minimize(const function_t&, const vector_t& x0) const final;
+        solver_state_t do_minimize(const function_t&, const vector_t& x0) const final;
 
     private:
         virtual void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const = 0;

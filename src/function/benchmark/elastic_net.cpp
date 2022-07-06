@@ -43,7 +43,7 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
 }
 
 template <typename tloss>
-scalar_t function_enet_t<tloss>::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_enet_t<tloss>::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto inputs  = this->inputs();
     const auto targets = this->targets();

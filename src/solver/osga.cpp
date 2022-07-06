@@ -61,7 +61,7 @@ solver_osga_t::solver_osga_t()
     register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
 }
 
-solver_state_t solver_osga_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_osga_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto epsilon              = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals            = parameter("solver::max_evals").value<int64_t>();
@@ -69,17 +69,16 @@ solver_state_t solver_osga_t::minimize(const function_t& function_, const vector
     const auto alpha_max            = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
 
-    const auto miu  = function_.strong_convexity() / 2.0;
+    const auto miu  = function.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
     const auto proxy = proxy_t{x0, epsilon};
 
-    auto      function = make_function(function_, x0);
-    auto      state    = solver_state_t{function, x0};
-    vector_t& xb       = state.x; // store the best function point
-    scalar_t& fb       = state.f; // store the best function value
-    vector_t& g        = state.g; // buffer to reuse
-    vector_t& h        = state.d; // buffer to reuse
+    auto      state = solver_state_t{function, x0};
+    vector_t& xb    = state.x; // store the best function point
+    scalar_t& fb    = state.f; // store the best function value
+    vector_t& g     = state.g; // buffer to reuse
+    vector_t& h     = state.d; // buffer to reuse
 
     // see the reference papers for the notation
     vector_t x, x_prime, h_hat, u_hat, u_prime;

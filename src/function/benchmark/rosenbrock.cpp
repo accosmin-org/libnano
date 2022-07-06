@@ -10,7 +10,7 @@ function_rosenbrock_t::function_rosenbrock_t(tensor_size_t dims)
     smooth(true);
 }
 
-scalar_t function_rosenbrock_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_rosenbrock_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto ct = scalar_t(100);
 

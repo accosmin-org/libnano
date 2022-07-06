@@ -80,7 +80,7 @@ gboost_scale_function_t::gboost_scale_function_t(const loss_t& loss, const datas
     assert(m_outputs.dims() == cat_dims(samples.size(), m_dataset.tdims()));
 }
 
-scalar_t gboost_scale_function_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t gboost_scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());
     assert(x.size() == m_cluster.groups());
@@ -141,7 +141,7 @@ gboost_bias_function_t::gboost_bias_function_t(const loss_t& loss, const dataset
 {
 }
 
-scalar_t gboost_bias_function_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t gboost_bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto tsize = nano::size(m_dataset.tdims());
 
@@ -192,7 +192,7 @@ gboost_grads_function_t::gboost_grads_function_t(const loss_t& loss, const datas
 {
 }
 
-scalar_t gboost_grads_function_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t gboost_grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     const auto odims = cat_dims(m_samples.size(), m_dataset.tdims());
 

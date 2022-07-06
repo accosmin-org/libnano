@@ -12,7 +12,7 @@ ball_constraint_t::ball_constraint_t(vector_t origin, scalar_t radius)
     convex(true);
 }
 
-scalar_t ball_constraint_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t ball_constraint_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {
@@ -31,7 +31,7 @@ affine_constraint_t::affine_constraint_t(vector_t q, scalar_t r)
     convex(true);
 }
 
-scalar_t affine_constraint_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t affine_constraint_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {
@@ -54,7 +54,7 @@ quadratic_constraint_t::quadratic_constraint_t(matrix_t P, vector_t q, scalar_t 
     convex(std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue));
 }
 
-scalar_t quadratic_constraint_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t quadratic_constraint_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {

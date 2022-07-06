@@ -8,6 +8,31 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_function)
 
+UTEST_CASE(stats)
+{
+    for (const auto& function : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
+    {
+        UTEST_CHECK_EQUAL(function->fcalls(), 0);
+        UTEST_CHECK_EQUAL(function->gcalls(), 0);
+
+        vector_t x = vector_t::Random(function->size());
+        function->vgrad(x);
+
+        UTEST_CHECK_EQUAL(function->fcalls(), 1);
+        UTEST_CHECK_EQUAL(function->gcalls(), 0);
+
+        vector_t gx(x.size());
+        function->vgrad(x, &gx);
+
+        UTEST_CHECK_EQUAL(function->fcalls(), 2);
+        UTEST_CHECK_EQUAL(function->gcalls(), 1);
+
+        function->clear_statistics();
+        UTEST_CHECK_EQUAL(function->fcalls(), 0);
+        UTEST_CHECK_EQUAL(function->gcalls(), 0);
+    }
+}
+
 UTEST_CASE(select)
 {
     for (const auto convex : {convexity::ignore, convexity::yes, convexity::no})

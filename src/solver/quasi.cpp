@@ -73,14 +73,13 @@ solver_quasi_t::solver_quasi_t()
     register_parameter(parameter_t::make_enum("solver::quasi::initialization", initialization::identity));
 }
 
-solver_state_t solver_quasi_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto init      = parameter("solver::quasi::initialization").value<initialization>();
 
-    auto lsearch  = make_lsearch();
-    auto function = make_function(function_, x0);
+    auto lsearch = make_lsearch();
 
     auto cstate = solver_state_t{function, x0};
     if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))

@@ -25,7 +25,7 @@ struct loss_function_t final : public function_t
         smooth(m_loss->smooth());
     }
 
-    scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
     {
         UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
         const auto output = map_tensor(x.data(), m_target.dims());
@@ -55,7 +55,6 @@ UTEST_CASE(gradient)
     const tensor_size_t cmd_min_dims = 2;
     const tensor_size_t cmd_max_dims = 5;
 
-    // evaluate the analytical gradient vs. the finite difference approximation
     for (const auto& loss_id : loss_t::all().ids())
     {
         [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};

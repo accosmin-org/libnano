@@ -62,7 +62,7 @@ namespace nano
         ///
         /// \brief @see function_t
         ///
-        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+        scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
         ///
         /// \brief compute the gradient wrt output for each sample.
@@ -95,7 +95,7 @@ namespace nano
         ///
         /// \brief @see function_t
         ///
-        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+        scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
     private:
         // attributes
@@ -123,7 +123,7 @@ namespace nano
         ///
         /// \brief @see function_t
         ///
-        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+        scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
 
     private:
         // attributes

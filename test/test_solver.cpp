@@ -299,35 +299,6 @@ UTEST_CASE(config_solvers)
     }
 }
 
-UTEST_CASE(solver_function)
-{
-    for (const auto& function : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
-    {
-        const auto sfunction = solver_function_t{*function};
-
-        UTEST_CHECK_EQUAL(sfunction.size(), function->size());
-        UTEST_CHECK_EQUAL(sfunction.name(), function->name());
-        UTEST_CHECK_EQUAL(sfunction.convex(), function->convex());
-        UTEST_CHECK_EQUAL(sfunction.smooth(), function->smooth());
-        UTEST_CHECK_CLOSE(sfunction.strong_convexity(), function->strong_convexity(), epsilon0<scalar_t>());
-
-        UTEST_CHECK_EQUAL(sfunction.fcalls(), 0);
-        UTEST_CHECK_EQUAL(sfunction.gcalls(), 0);
-
-        vector_t x = vector_t::Random(sfunction.size());
-        sfunction.vgrad(x);
-
-        UTEST_CHECK_EQUAL(sfunction.fcalls(), 1);
-        UTEST_CHECK_EQUAL(sfunction.gcalls(), 0);
-
-        vector_t gx(x.size());
-        sfunction.vgrad(x, &gx);
-
-        UTEST_CHECK_EQUAL(sfunction.fcalls(), 2);
-        UTEST_CHECK_EQUAL(sfunction.gcalls(), 1);
-    }
-}
-
 UTEST_CASE(default_solvers_on_smooth_convex)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))

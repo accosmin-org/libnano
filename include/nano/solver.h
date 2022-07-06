@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/solver/function.h>
 #include <nano/solver/lsearch.h>
 
 namespace nano
@@ -42,7 +41,7 @@ namespace nano
         ///     - the user canceled the optimization (using the logging function) or
         ///     - the solver failed (e.g. line-search failed)
         ///
-        virtual solver_state_t minimize(const function_t&, const vector_t& x0) const = 0;
+        solver_state_t minimize(const function_t&, const vector_t& x0) const;
 
         ///
         /// \brief set the logging callback.
@@ -89,24 +88,21 @@ namespace nano
         lsearch_t make_lsearch() const;
 
         ///
-        /// \brief create a solver function to keep track of various statistics.
-        ///
-        static solver_function_t make_function(const function_t&, const vector_t& x0);
-
-        ///
         /// \brief log the current optimization state (if the logger is provided).
         ///
-        bool log(solver_state_t& state) const;
+        bool log(solver_state_t&) const;
 
         ///
         /// \brief check if the optimization is done (convergence or error) after an iteration.
         ///
-        bool done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged) const;
+        bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
 
         ///
         /// \brief sets the monotonicity.
         ///
         void monotonic(bool);
+
+        virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
 
     private:
         // attributes

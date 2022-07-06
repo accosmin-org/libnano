@@ -132,3 +132,26 @@ const constraints_t& function_t::constraints() const
 {
     return m_constraints;
 }
+
+scalar_t function_t::vgrad(const vector_t& x, vector_t* gx) const
+{
+    m_fcalls += 1;
+    m_gcalls += (gx != nullptr) ? 1 : 0;
+    return do_vgrad(x, gx);
+}
+
+tensor_size_t function_t::fcalls() const
+{
+    return m_fcalls;
+}
+
+tensor_size_t function_t::gcalls() const
+{
+    return m_gcalls;
+}
+
+void function_t::clear_statistics() const
+{
+    m_fcalls = 0;
+    m_gcalls = 0;
+}

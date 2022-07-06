@@ -83,15 +83,17 @@ lsearch_t solver_t::make_lsearch() const
     return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 }
 
-solver_function_t solver_t::make_function(const function_t& function_, const vector_t& x0)
+solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0) const
 {
-    critical(function_.size() != x0.size(), "solver: incompatible initial point (", x0.size(),
-             " dimensions), expecting ", function_.size(), " dimensions!");
+    critical(function.size() != x0.size(), "solver: incompatible initial point (", x0.size(),
+             " dimensions), expecting ", function.size(), " dimensions!");
 
-    return solver_function_t{function_};
+    function.clear_statistics();
+
+    return do_minimize(function, x0);
 }
 
-bool solver_t::done(const solver_function_t& function, solver_state_t& state, bool iter_ok, bool converged) const
+bool solver_t::done(const function_t& function, solver_state_t& state, bool iter_ok, bool converged) const
 {
     state.m_fcalls = function.fcalls();
     state.m_gcalls = function.gcalls();

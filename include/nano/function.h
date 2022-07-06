@@ -186,12 +186,29 @@ namespace nano
         /// \brief evaluate the function's value at the given point
         ///     (and its gradient or sub-gradient if not smooth).
         ///
-        virtual scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
+        scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const;
+
+        ///
+        /// \brief returns the number of function evaluation calls registered so far.
+        ///
+        tensor_size_t fcalls() const;
+
+        ///
+        /// \brief returns the number of function gradient calls registered so far.
+        ///
+        tensor_size_t gcalls() const;
+
+        ///
+        /// \brief clear collected statistics (e.g. function calls).
+        ///
+        void clear_statistics() const;
 
     protected:
         void convex(bool);
         void smooth(bool);
         void strong_convexity(scalar_t);
+
+        virtual scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
     private:
         // attributes
@@ -201,5 +218,7 @@ namespace nano
         bool          m_smooth{false}; ///< whether the function is smooth (otherwise subgradients should be used)
         scalar_t      m_sconvexity{0}; ///< strong-convexity coefficient
         constraints_t m_constraints;   ///< optional equality and inequality constraints
+        mutable tensor_size_t m_fcalls{0}; ///< #function value evaluations
+        mutable tensor_size_t m_gcalls{0}; ///< #function gradient evaluations
     };
 } // namespace nano

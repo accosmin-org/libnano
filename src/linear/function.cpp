@@ -34,7 +34,7 @@ linear::function_t::function_t(flatten_iterator_t iterator, const loss_t& loss, 
     strong_convexity(m_l2reg / static_cast<scalar_t>(m_isize * m_tsize));
 }
 
-scalar_t linear::function_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());
     assert(x.size() == (m_isize + 1) * m_tsize);

@@ -11,14 +11,13 @@ solver_lbfgs_t::solver_lbfgs_t()
     register_parameter(parameter_t::make_integer("solver::lbfgs::history", 1, LE, 6, LE, 1000));
 }
 
-solver_state_t solver_lbfgs_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto history   = parameter("solver::lbfgs::history").value<size_t>();
 
-    auto lsearch  = make_lsearch();
-    auto function = make_function(function_, x0);
+    auto lsearch = make_lsearch();
 
     auto cstate = solver_state_t{function, x0};
 

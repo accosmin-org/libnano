@@ -8,13 +8,12 @@ solver_gd_t::solver_gd_t()
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 }
 
-solver_state_t solver_gd_t::minimize(const function_t& function_, const vector_t& x0) const
+solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
 
-    auto lsearch  = make_lsearch();
-    auto function = make_function(function_, x0);
+    auto lsearch = make_lsearch();
 
     auto cstate = solver_state_t{function, x0};
     if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))

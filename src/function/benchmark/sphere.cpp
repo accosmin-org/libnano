@@ -10,7 +10,7 @@ function_sphere_t::function_sphere_t(tensor_size_t dims)
     strong_convexity(2.0);
 }
 
-scalar_t function_sphere_t::vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_sphere_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     if (gx != nullptr)
     {
