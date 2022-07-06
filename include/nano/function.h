@@ -212,12 +212,12 @@ namespace nano
 
     private:
         // attributes
-        string_t      m_name;          ///<
-        tensor_size_t m_size{0};       ///< #free dimensions to optimize for
-        bool          m_convex{false}; ///< whether the function is convex
-        bool          m_smooth{false}; ///< whether the function is smooth (otherwise subgradients should be used)
-        scalar_t      m_sconvexity{0}; ///< strong-convexity coefficient
-        constraints_t m_constraints;   ///< optional equality and inequality constraints
+        string_t      m_name;              ///<
+        tensor_size_t m_size{0};           ///< #free dimensions to optimize for
+        bool          m_convex{false};     ///< whether the function is convex
+        bool          m_smooth{false};     ///< whether the function is smooth (otherwise subgradients should be used)
+        scalar_t      m_sconvexity{0};     ///< strong-convexity coefficient
+        constraints_t m_constraints;       ///< optional equality and inequality constraints
         mutable tensor_size_t m_fcalls{0}; ///< #function value evaluations
         mutable tensor_size_t m_gcalls{0}; ///< #function gradient evaluations
     };

@@ -79,7 +79,7 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
 
-    auto lsearch  = make_lsearch();
+    auto lsearch = make_lsearch();
 
     auto cstate = solver_state_t{function, x0};
     auto pstate = cstate;
