@@ -16,19 +16,18 @@ lsearchk_t::lsearchk_t()
 
 lsearchk_factory_t& lsearchk_t::all()
 {
-    static lsearchk_factory_t manager;
+    static auto manager = lsearchk_factory_t{};
+    const auto  op      = []()
+    {
+        manager.add<lsearchk_fletcher_t>("fletcher", "Fletcher (strong Wolfe conditions)");
+        manager.add<lsearchk_backtrack_t>("backtrack", "backtrack using cubic interpolation (Armijo conditions)");
+        manager.add<lsearchk_cgdescent_t>("cgdescent", "CG-DESCENT (regular and approximate Wolfe conditions)");
+        manager.add<lsearchk_lemarechal_t>("lemarechal", "LeMarechal (regular Wolfe conditions)");
+        manager.add<lsearchk_morethuente_t>("morethuente", "More&Thuente (strong Wolfe conditions)");
+    };
 
     static std::once_flag flag;
-    std::call_once(
-        flag,
-        []()
-        {
-            manager.add<lsearchk_fletcher_t>("fletcher", "Fletcher (strong Wolfe conditions)");
-            manager.add<lsearchk_backtrack_t>("backtrack", "backtrack using cubic interpolation (Armijo conditions)");
-            manager.add<lsearchk_cgdescent_t>("cgdescent", "CG-DESCENT (regular and approximate Wolfe conditions)");
-            manager.add<lsearchk_lemarechal_t>("lemarechal", "LeMarechal (regular Wolfe conditions)");
-            manager.add<lsearchk_morethuente_t>("morethuente", "More&Thuente (strong Wolfe conditions)");
-        });
+    std::call_once(flag, op);
 
     return manager;
 }

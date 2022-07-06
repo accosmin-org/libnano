@@ -100,15 +100,15 @@ tensor4d_t model_t::predict(const dataset_generator_t& dataset, const indices_t&
 
 model_factory_t& model_t::all()
 {
-    static model_factory_t manager;
+    static auto manager = model_factory_t{};
+    const auto  op      = []()
+    {
+        // manager.add_by_type<gboost_model_t>();
+        manager.add_by_type<linear_model_t>();
+    };
 
     static std::once_flag flag;
-    std::call_once(flag,
-                   [&]()
-                   {
-                       // manager.add_by_type<gboost_model_t>();
-                       manager.add_by_type<linear_model_t>();
-                   });
+    std::call_once(flag, op);
 
     return manager;
 }

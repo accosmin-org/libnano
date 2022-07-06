@@ -62,22 +62,22 @@ tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 
 wlearner_factory_t& wlearner_t::all()
 {
-    static wlearner_factory_t manager;
+    static auto manager = wlearner_factory_t{};
+    const auto  op      = []()
+    {
+        manager.add_by_type<wlearner_lin1_t>();
+        manager.add_by_type<wlearner_log1_t>();
+        manager.add_by_type<wlearner_cos1_t>();
+        manager.add_by_type<wlearner_sin1_t>();
+        manager.add_by_type<wlearner_dstep_t>();
+        manager.add_by_type<wlearner_dtree_t>();
+        manager.add_by_type<wlearner_hinge_t>();
+        manager.add_by_type<wlearner_stump_t>();
+        manager.add_by_type<wlearner_table_t>();
+    };
 
     static std::once_flag flag;
-    std::call_once(flag,
-                   []()
-                   {
-                       manager.add_by_type<wlearner_lin1_t>();
-                       manager.add_by_type<wlearner_log1_t>();
-                       manager.add_by_type<wlearner_cos1_t>();
-                       manager.add_by_type<wlearner_sin1_t>();
-                       manager.add_by_type<wlearner_dstep_t>();
-                       manager.add_by_type<wlearner_dtree_t>();
-                       manager.add_by_type<wlearner_hinge_t>();
-                       manager.add_by_type<wlearner_stump_t>();
-                       manager.add_by_type<wlearner_table_t>();
-                   });
+    std::call_once(flag, op);
 
     return manager;
 }

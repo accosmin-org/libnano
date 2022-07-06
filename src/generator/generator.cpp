@@ -85,32 +85,31 @@ const dataset_t& generator_t::dataset() const
 
 generator_factory_t& generator_t::all()
 {
-    static generator_factory_t manager;
+    static auto manager = generator_factory_t{};
+    const auto  op      = []()
+    {
+        manager.add<elemwise_generator_t<elemwise_gradient_t>>(
+            "gradient",
+            "gradient-like features (e.g. edge orientation & magnitude) from structured features (e.g. images)");
+
+        manager.add<elemwise_generator_t<sclass_identity_t>>(
+            "identity-sclass", "identity transformation, forward the single-label features");
+
+        manager.add<elemwise_generator_t<mclass_identity_t>>(
+            "identity-mclass", "identity transformation, forward the multi-label features");
+
+        manager.add<elemwise_generator_t<scalar_identity_t>>("identity-scalar",
+                                                             "identity transformation, forward the scalar features");
+
+        manager.add<elemwise_generator_t<struct_identity_t>>(
+            "identity-struct", "identity transformation, forward the structured features (e.g. images)");
+
+        manager.add<pairwise_generator_t<pairwise_product_t>>("product",
+                                                              "product of scalar features to generate quadratic terms");
+    };
 
     static std::once_flag flag;
-    std::call_once(
-        flag,
-        []()
-        {
-            manager.add<elemwise_generator_t<elemwise_gradient_t>>(
-                "gradient",
-                "gradient-like features (e.g. edge orientation & magnitude) from structured features (e.g. images)");
-
-            manager.add<elemwise_generator_t<sclass_identity_t>>(
-                "identity-sclass", "identity transformation, forward the single-label features");
-
-            manager.add<elemwise_generator_t<mclass_identity_t>>(
-                "identity-mclass", "identity transformation, forward the multi-label features");
-
-            manager.add<elemwise_generator_t<scalar_identity_t>>(
-                "identity-scalar", "identity transformation, forward the scalar features");
-
-            manager.add<elemwise_generator_t<struct_identity_t>>(
-                "identity-struct", "identity transformation, forward the structured features (e.g. images)");
-
-            manager.add<pairwise_generator_t<pairwise_product_t>>(
-                "product", "product of scalar features to generate quadratic terms");
-        });
+    std::call_once(flag, op);
 
     return manager;
 }
