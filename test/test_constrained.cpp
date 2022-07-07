@@ -132,6 +132,88 @@ public:
     }
 };
 
+class objective1_function_t final : public function_t
+{
+public:
+    explicit objective1_function_t()
+        : function_t("objective", 2)
+    {
+        convex(true);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            gx->noalias() = vector_t::Ones(x.size());
+        }
+        return x.sum();
+    }
+};
+
+class objective2_function_t final : public function_t
+{
+public:
+    explicit objective2_function_t()
+        : function_t("objective", 2)
+    {
+        convex(true);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            (*gx)(0) = -10.0 * x(0);
+            (*gx)(1) = +2.0 * x(1);
+        }
+        return -5.0 * x(0) * x(0) + x(1) * x(1);
+    }
+};
+
+class objective3_function_t final : public function_t
+{
+public:
+    explicit objective3_function_t()
+        : function_t("objective", 1)
+    {
+        convex(true);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            gx->noalias() = vector_t::Ones(x.size());
+        }
+        return x.sum();
+    }
+};
+
+class objective4_function_t final : public function_t
+{
+public:
+    explicit objective4_function_t()
+        : function_t("objective", 2)
+    {
+        convex(true);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            (*gx)(0) = 4.0 * x(0) - 1.0;
+            (*gx)(1) = 4.0 * x(1);
+        }
+        return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
+    }
+};
+
 UTEST_BEGIN_MODULE(test_constrained)
 
 UTEST_CASE(constraint_minimum)
@@ -391,13 +473,15 @@ UTEST_CASE(constrained_quadratic)
     }
 }
 
-UTEST_CASE(minimize_case0)
+UTEST_CASE(minimize_objective1)
 {
-    auto function = sum_function_t{2};
+    // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
+    auto function = objective1_function_t{};
     function.constrain(make_ball_equality_constraint(make_x(0.0, 0.0), std::sqrt(2.0)));
 
     const auto base_solver = solver_t::all().get("lbfgs");
 
+    // TODO: this should work for any starting point
     {
         const auto solver = solver_linear_penalty_t{};
         solver.minimize(*base_solver, function, make_x(0.0, 0.0));
