@@ -48,7 +48,7 @@ target_sources(nano PRIVATE
     solver/osga.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
-    #solver/penalty.cpp
+    solver/penalty.cpp
     solver/ellipsoid.cpp
     function.cpp
     function/benchmark.cpp

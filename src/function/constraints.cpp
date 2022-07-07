@@ -295,7 +295,18 @@ constraints_t nano::make_box_constraints(scalar_t min, scalar_t max, tensor_size
     return constraints;
 }
 
-constraint_t nano::make_ball_constraint(vector_t origin, scalar_t radius)
+constraint_t nano::make_ball_equality_constraint(vector_t origin, scalar_t radius)
+{
+    auto constraint = constraint_t{};
+    if (radius > 0.0)
+    {
+        constraint = equality_t{std::make_unique<ball_constraint_t>(std::move(origin), radius)};
+    }
+
+    return constraint;
+}
+
+constraint_t nano::make_ball_inequality_constraint(vector_t origin, scalar_t radius)
 {
     auto constraint = constraint_t{};
     if (radius > 0.0)

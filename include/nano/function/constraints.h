@@ -71,9 +71,14 @@ namespace nano
     NANO_PUBLIC constraints_t make_box_constraints(scalar_t min, scalar_t max, tensor_size_t size);
 
     ///
+    /// \brief registers a ball constraint: g(x) = ||x - origin||^2 == radius^2.
+    ///
+    NANO_PUBLIC constraint_t make_ball_equality_constraint(vector_t origin, scalar_t radius);
+
+    ///
     /// \brief registers a ball constraint: g(x) = ||x - origin||^2 <= radius^2.
     ///
-    NANO_PUBLIC constraint_t make_ball_constraint(vector_t origin, scalar_t radius);
+    NANO_PUBLIC constraint_t make_ball_inequality_constraint(vector_t origin, scalar_t radius);
 
     ///
     /// \brief models a hyper-ball (equality or inequality) constraint: c(x) = ||x - origin||^2 - radius^2.

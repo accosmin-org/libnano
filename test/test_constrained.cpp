@@ -1,6 +1,7 @@
 #include "fixture/function.h"
 #include <nano/function/constraints.h>
 #include <nano/function/penalty.h>
+#include <nano/solver/penalty.h>
 
 using namespace nano;
 
@@ -67,6 +68,69 @@ static void check_penalties(const function_t& constrained, const vector_t& x, bo
     check_penalty<linear_penalty_function_t>(constrained, x, expected_valid);
     check_penalty<quadratic_penalty_function_t>(constrained, x, expected_valid);
 }
+
+class sum_function_t final : public function_t
+{
+public:
+    explicit sum_function_t(tensor_size_t size)
+        : function_t("sum", size)
+    {
+        convex(true);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            gx->noalias() = vector_t::Ones(x.size());
+        }
+
+        return x.sum();
+    }
+};
+
+class cauchy_function_t final : public function_t
+{
+public:
+    explicit cauchy_function_t(tensor_size_t size)
+        : function_t("cauchy", size)
+    {
+        convex(false);
+        smooth(true);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            gx->noalias() = 2.0 * x / (0.36 + x.dot(x));
+        }
+
+        return std::log(0.36 + x.dot(x));
+    }
+};
+
+class sumabsm1_function_t final : public function_t
+{
+public:
+    explicit sumabsm1_function_t(tensor_size_t size)
+        : function_t("sumabsm1", size)
+    {
+        convex(true);
+        smooth(false);
+    }
+
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    {
+        if (gx != nullptr)
+        {
+            gx->array() = x.array().sign();
+        }
+
+        return x.array().abs().sum() - 1.0;
+    }
+};
 
 UTEST_BEGIN_MODULE(test_constrained)
 
@@ -192,12 +256,12 @@ UTEST_CASE(constrained_box2)
     check_penalties(constrained, make_x(-0.2, -0.9, +1.0), false);
 }
 
-UTEST_CASE(constrained_ball)
+UTEST_CASE(constrained_ball_inequality)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain(make_ball_constraint(make_x(1.0, 1.0, 1.0, 1.0), 1.0)));
-    UTEST_CHECK(!constrained.constrain(make_ball_constraint(make_x(1.0, 1.0, 1.0), 0.0)));
-    UTEST_CHECK(constrained.constrain(make_ball_constraint(make_x(0.0, 0.0, 0.0), 1.0)));
+    UTEST_CHECK(!constrained.constrain(make_ball_inequality_constraint(make_x(1.0, 1.0, 1.0, 1.0), 1.0)));
+    UTEST_CHECK(!constrained.constrain(make_ball_inequality_constraint(make_x(1.0, 1.0, 1.0), 0.0)));
+    UTEST_CHECK(constrained.constrain(make_ball_inequality_constraint(make_x(0.0, 0.0, 0.0), 1.0)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, true);
@@ -324,6 +388,23 @@ UTEST_CASE(constrained_quadratic)
         UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
         check_penalties(constrained, false, true);
+    }
+}
+
+UTEST_CASE(minimize_case0)
+{
+    auto function = sum_function_t{2};
+    function.constrain(make_ball_equality_constraint(make_x(0.0, 0.0), std::sqrt(2.0)));
+
+    const auto base_solver = solver_t::all().get("lbfgs");
+
+    {
+        const auto solver = solver_linear_penalty_t{};
+        solver.minimize(*base_solver, function, make_x(0.0, 0.0));
+    }
+    {
+        const auto solver = solver_quadratic_penalty_t{};
+        solver.minimize(*base_solver, function, make_x(0.0, 0.0));
     }
 }
 
