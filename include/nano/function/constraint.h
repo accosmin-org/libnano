@@ -15,18 +15,40 @@ namespace nano
     {
         struct ball_t
         {
+            ball_t() = default;
+            ball_t(vector_t origin, scalar_t radius)
+                : m_origin(std::move(origin))
+                , m_radius(radius)
+            {
+            }
+
             vector_t m_origin;
             scalar_t m_radius{0.0};
         };
 
         struct linear_t
         {
+            linear_t() = default;
+            linear_t(vector_t q, scalar_t r)
+                : m_q(std::move(q))
+                , m_r(r)
+            {
+            }
+
             vector_t m_q;
             scalar_t m_r{0.0};
         };
 
         struct quadratic_t
         {
+            quadratic_t() = default;
+            quadratic_t(matrix_t P, vector_t q, scalar_t r)
+                : m_P(std::move(P))
+                , m_q(std::move(q))
+                , m_r(r)
+            {
+            }
+
             matrix_t m_P;
             vector_t m_q;
             scalar_t m_r{0.0};
@@ -34,6 +56,12 @@ namespace nano
 
         struct functional_t
         {
+            functional_t() = default;
+            explicit functional_t(rfunction_t&& function)
+                : m_function(std::move(function))
+            {
+            }
+
             rfunction_t m_function;
         };
 
@@ -42,6 +70,11 @@ namespace nano
         ///
         struct ball_equality_t : ball_t
         {
+            ball_equality_t() = default;
+            ball_equality_t(vector_t origin, scalar_t radius)
+                : ball_t(std::move(origin), radius)
+            {
+            }
         };
 
         ///
@@ -49,6 +82,11 @@ namespace nano
         ///
         struct ball_inequality_t : ball_t
         {
+            ball_inequality_t() = default;
+            ball_inequality_t(vector_t origin, scalar_t radius)
+                : ball_t(std::move(origin), radius)
+            {
+            }
         };
 
         ///
@@ -56,6 +94,13 @@ namespace nano
         ///
         struct constant_t
         {
+            constant_t() = default;
+            constant_t(scalar_t value, tensor_size_t dimension)
+                : m_value(value)
+                , m_dimension(dimension)
+            {
+            }
+
             scalar_t      m_value{0.0};
             tensor_size_t m_dimension{-1};
         };
@@ -65,6 +110,11 @@ namespace nano
         ///
         struct minimum_t : constant_t
         {
+            minimum_t() = default;
+            minimum_t(scalar_t value, tensor_size_t dimension)
+                : constant_t(value, dimension)
+            {
+            }
         };
 
         ///
@@ -72,6 +122,11 @@ namespace nano
         ///
         struct maximum_t : constant_t
         {
+            maximum_t() = default;
+            maximum_t(scalar_t value, tensor_size_t dimension)
+                : constant_t(value, dimension)
+            {
+            }
         };
 
         ///
@@ -79,6 +134,11 @@ namespace nano
         ///
         struct linear_equality_t : linear_t
         {
+            linear_equality_t() = default;
+            linear_equality_t(vector_t q, scalar_t r)
+                : linear_t(std::move(q), r)
+            {
+            }
         };
 
         ///
@@ -86,6 +146,11 @@ namespace nano
         ///
         struct linear_inequality_t : linear_t
         {
+            linear_inequality_t() = default;
+            linear_inequality_t(vector_t q, scalar_t r)
+                : linear_t(std::move(q), r)
+            {
+            }
         };
 
         ///
@@ -93,6 +158,11 @@ namespace nano
         ///
         struct quadratic_equality_t : quadratic_t
         {
+            quadratic_equality_t() = default;
+            quadratic_equality_t(matrix_t P, vector_t q, scalar_t r)
+                : quadratic_t(std::move(P), std::move(q), r)
+            {
+            }
         };
 
         ///
@@ -100,6 +170,11 @@ namespace nano
         ///
         struct quadratic_inequality_t : quadratic_t
         {
+            quadratic_inequality_t() = default;
+            quadratic_inequality_t(matrix_t P, vector_t q, scalar_t r)
+                : quadratic_t(std::move(P), std::move(q), r)
+            {
+            }
         };
 
         ///
@@ -107,6 +182,11 @@ namespace nano
         ///
         struct functional_equality_t : functional_t
         {
+            functional_equality_t() = default;
+            explicit functional_equality_t(rfunction_t&& function)
+                : functional_t(std::move(function))
+            {
+            }
         };
 
         ///
@@ -114,8 +194,13 @@ namespace nano
         ///
         struct functional_inequality_t : functional_t
         {
+            functional_inequality_t() = default;
+            explicit functional_inequality_t(rfunction_t&& function)
+                : functional_t(std::move(function))
+            {
+            }
         };
-    }; // namespace constraint
+    } // namespace constraint
 
     ///
     /// \brief models a constraint that can be applied to an objective function.

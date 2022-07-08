@@ -35,13 +35,13 @@ namespace nano
         ///
         /// \brief enable moving
         ///
-        function_t(function_t&&) noexcept = default;
-        function_t& operator=(function_t&&) noexcept = default;
+        function_t(function_t&&) noexcept;
+        function_t& operator=(function_t&&) noexcept;
 
         ///
         /// \brief destructor
         ///
-        virtual ~function_t() = default;
+        virtual ~function_t();
 
         ///
         /// \brief function name to identify it in tests and benchmarks.

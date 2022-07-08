@@ -8,7 +8,7 @@ using namespace nano;
 class objective_t final : public function_t
 {
 public:
-    objective_t(const int size)
+    objective_t(tensor_size_t size)
         : function_t("objective's name", size)
         , m_b(vector_t::Random(size))
     {
@@ -21,7 +21,7 @@ public:
         assert(size() == x.size());
         assert(size() == m_b.size());
 
-        const auto dx = 1 + (x - m_b).dot(x - m_b) / 2;
+        const auto dx = 1.0 + (x - m_b).dot(x - m_b) / 2;
 
         if (gx != nullptr)
         {

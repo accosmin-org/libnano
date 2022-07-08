@@ -3,6 +3,12 @@
 
 using namespace nano;
 
+function_t::function_t(function_t&&) noexcept = default;
+
+function_t& function_t::operator=(function_t&&) noexcept = default;
+
+function_t::~function_t() = default;
+
 function_t::function_t(string_t name, tensor_size_t size)
     : m_name(std::move(name))
     , m_size(size)
