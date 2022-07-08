@@ -52,7 +52,7 @@ target_sources(nano PRIVATE
     solver/ellipsoid.cpp
     function.cpp
     function/benchmark.cpp
-    function/constraints.cpp
+    function/constraint.cpp
     function/penalty.cpp
     function/util.cpp
     function/benchmark/axis_ellipsoid.cpp

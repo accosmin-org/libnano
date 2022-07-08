@@ -1,4 +1,3 @@
-#include <nano/function/constraints.h>
 #include <nano/solver/penalty.h>
 
 #include <iomanip>
@@ -13,7 +12,7 @@ static void update_penalties(const function_t& function, const vector_t& x, vect
     penalties.resize(static_cast<tensor_size_t>(constraints.size()));
     for (size_t i = 0U, size = constraints.size(); i < size; ++i)
     {
-        penalties(static_cast<tensor_size_t>(i)) = ::nano::valid(x, constraints[i]);
+        penalties(static_cast<tensor_size_t>(i)) = ::nano::valid(constraints[i], x);
     }
 }
 

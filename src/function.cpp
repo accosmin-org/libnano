@@ -1,6 +1,5 @@
 #include <nano/core/strutil.h>
-#include <nano/core/util.h>
-#include <nano/function/constraints.h>
+#include <nano/function.h>
 
 using namespace nano;
 
@@ -30,38 +29,9 @@ string_t function_t::name(bool with_size) const
     return with_size ? scat(m_name, "[", size(), "D]") : m_name;
 }
 
-bool function_t::compatible(const minimum_t& constraint) const
-{
-    return constraint.m_dimension >= 0 && constraint.m_dimension < size();
-}
-
-bool function_t::compatible(const maximum_t& constraint) const
-{
-    return constraint.m_dimension >= 0 && constraint.m_dimension < size();
-}
-
-bool function_t::compatible(const equality_t& constraint) const
-{
-    return static_cast<bool>(constraint.m_function) && constraint.m_function->size() == size();
-}
-
-bool function_t::compatible(const inequality_t& constraint) const
-{
-    return static_cast<bool>(constraint.m_function) && constraint.m_function->size() == size();
-}
-
-bool function_t::compatible(const constraint_t& constraint) const
-{
-    return std::visit(overloaded{[&](const minimum_t& constraint) { return this->compatible(constraint); },
-                                 [&](const maximum_t& constraint) { return this->compatible(constraint); },
-                                 [&](const equality_t& constraint) { return this->compatible(constraint); },
-                                 [&](const inequality_t& constraint) { return this->compatible(constraint); }},
-                      constraint);
-}
-
 bool function_t::constrain(constraint_t&& constraint)
 {
-    if (compatible(constraint))
+    if (compatible(constraint, *this))
     {
         m_constraints.emplace_back(std::move(constraint));
         return true;
@@ -69,14 +39,39 @@ bool function_t::constrain(constraint_t&& constraint)
     return false;
 }
 
-bool function_t::constrain(constraints_t&& constraints)
+bool function_t::constrain(scalar_t min, scalar_t max, tensor_size_t dimension)
 {
-    const auto op = [&](const constraint_t& constraint) { return compatible(constraint); };
-    if (!constraints.empty() && std::all_of(std::begin(constraints), std::end(constraints), op))
+    if (min < max && dimension >= 0 && dimension < size())
     {
-        for (auto& constraint : constraints)
+        m_constraints.emplace_back(constraint::minimum_t{min, dimension});
+        m_constraints.emplace_back(constraint::maximum_t{max, dimension});
+        return true;
+    }
+    return false;
+}
+
+bool function_t::constrain(scalar_t min, scalar_t max)
+{
+    if (min < max)
+    {
+        for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
         {
-            m_constraints.emplace_back(std::move(constraint));
+            m_constraints.emplace_back(constraint::minimum_t{min, i});
+            m_constraints.emplace_back(constraint::maximum_t{max, i});
+        }
+        return true;
+    }
+    return false;
+}
+
+bool function_t::constrain(const vector_t& min, const vector_t& max)
+{
+    if (min.size() == size() && max.size() == size() && (max - min).minCoeff() > 0.0)
+    {
+        for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
+        {
+            m_constraints.emplace_back(constraint::minimum_t{min(i), i});
+            m_constraints.emplace_back(constraint::maximum_t{max(i), i});
         }
         return true;
     }
@@ -88,7 +83,7 @@ bool function_t::valid(const vector_t& x) const
     assert(x.size() == size());
 
     const auto op = [&](const constraint_t& constraint)
-    { return ::nano::valid(x, constraint) < std::numeric_limits<scalar_t>::epsilon(); };
+    { return ::nano::valid(constraint, x) < std::numeric_limits<scalar_t>::epsilon(); };
 
     return std::all_of(m_constraints.begin(), m_constraints.end(), op);
 }

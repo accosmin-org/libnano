@@ -1,42 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <nano/arch.h>
-#include <nano/eigen.h>
+#include <nano/function/constraint.h>
 #include <nano/string.h>
-#include <variant>
 
 namespace nano
 {
-    class function_t;
-    using rfunction_t  = std::unique_ptr<function_t>;
-    using rfunctions_t = std::vector<rfunction_t>;
-
-    struct minimum_t
-    {
-        scalar_t      m_value{0.0};
-        tensor_size_t m_dimension{-1};
-    };
-
-    struct maximum_t
-    {
-        scalar_t      m_value{0.0};
-        tensor_size_t m_dimension{-1};
-    };
-
-    struct equality_t
-    {
-        rfunction_t m_function;
-    };
-
-    struct inequality_t
-    {
-        rfunction_t m_function;
-    };
-
-    using constraint_t  = std::variant<minimum_t, maximum_t, equality_t, inequality_t>;
-    using constraints_t = std::vector<constraint_t>;
-
     ///
     /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
     ///
@@ -120,13 +88,9 @@ namespace nano
         /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
         ///
         bool constrain(constraint_t&&);
-
-        ///
-        /// \brief register a set of constraints.
-        ///
-        /// NB: returns false if any of the constraint is neither valid nor compatible with the objective function.
-        ///
-        bool constrain(constraints_t&&);
+        bool constrain(scalar_t min, scalar_t max);
+        bool constrain(scalar_t min, scalar_t max, tensor_size_t dimension);
+        bool constrain(const vector_t& min, const vector_t& max);
 
         ///
         /// \brief returns the set of registered constraints.
@@ -158,12 +122,6 @@ namespace nano
         void convex(bool);
         void smooth(bool);
         void strong_convexity(scalar_t);
-
-        bool compatible(const minimum_t&) const;
-        bool compatible(const maximum_t&) const;
-        bool compatible(const equality_t&) const;
-        bool compatible(const inequality_t&) const;
-        bool compatible(const constraint_t&) const;
 
         virtual scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
