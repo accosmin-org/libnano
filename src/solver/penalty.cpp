@@ -19,23 +19,25 @@ static void update_penalties(const function_t& function, const vector_t& x, vect
 template <typename tpenalty>
 solver_penalty_t<tpenalty>::solver_penalty_t()
 {
-    // FIXME: configurable solver
-    register_parameter(parameter_t::make_scalar("solver::penalty::c0", 0.0, LT, 1.0, LE, 1e+3));
-    register_parameter(parameter_t::make_scalar("solver::penalty::gamma", 1.0, LT, 2.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::t0", 0.0, LT, 1.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::gamma", 1.0, LT, 10.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-7, LE, 1e-1));
+    register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
 
 template <typename tpenalty>
 solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, const function_t& function,
                                                     const vector_t& x0) const
 {
-    const auto t0         = 1.0;
-    const auto gamma      = 10.0;
-    const auto max_outers = tensor_size_t{30};
+    const auto t0         = parameter("solver::penalty::t0").template value<scalar_t>();
+    const auto gamma      = parameter("solver::penalty::gamma").template value<scalar_t>();
+    const auto epsilon    = parameter("solver::penalty::epsilon").template value<scalar_t>();
+    const auto max_outers = parameter("solver::penalty::max_outer_iters").template value<tensor_size_t>();
 
     auto t                = t0;
     auto x                = x0;
     auto penalties        = vector_t{};
-    auto bstate           = solver_state_t{};
+    auto state            = solver_state_t{};
     auto penalty_function = tpenalty{function};
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
@@ -44,7 +46,7 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
 
         // solver->parameter("solver::epsilon") = epsilon;
 
-        const auto state = solver.minimize(penalty_function, x);
+        state = solver.minimize(penalty_function, x);
         update_penalties(function, state.x, penalties);
 
         std::cout << std::fixed << std::setprecision(10) << "outer=" << outer << "|" << max_outers << ",t=" << t
@@ -52,12 +54,19 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
                   << ",gcalls=" << state.m_gcalls << ",pmin=" << penalties.minCoeff() << ",psum=" << penalties.sum()
                   << ",status=" << state.m_status << std::endl;
 
+        if (penalties.sum() < epsilon)
+        {
+            // TODO: setup status
+            // TODO: store the total number of function evaluations...
+            // TODO: store penalties
+            break;
+        }
+
         x = state.x;
         t *= gamma;
-        bstate = state;
     }
 
-    return bstate;
+    return state;
 }
 
 template class nano::solver_penalty_t<linear_penalty_function_t>;

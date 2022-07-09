@@ -618,17 +618,127 @@ UTEST_CASE(minimize_objective1)
     auto function = objective1_function_t{};
     function.constrain(ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
 
-    const auto base_solver = solver_t::all().get("lbfgs");
+    const auto fbest = -2.0;
+    const auto xbest = make_x(-1.0, -1.0);
 
-    // TODO: this should work for any starting point
+    // const auto lsolver = solver_linear_penalty_t{};
+    const auto qsolver = solver_quadratic_penalty_t{};
+
+    // const auto ref_osga  = solver_t::all().get("osga");
+    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+
+    for (tensor_size_t trial = 0; trial < 100; ++trial)
     {
-        const auto solver = solver_linear_penalty_t{};
-        solver.minimize(*base_solver, function, make_x(0.0, 0.0));
-    }
-    {
-        const auto solver = solver_quadratic_penalty_t{};
-        solver.minimize(*base_solver, function, make_x(0.0, 0.0));
+        const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+        /*{
+            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }*/
+        {
+            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
     }
 }
+
+/*UTEST_CASE(minimize_objective2)
+{
+    // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
+    auto function = objective2_function_t{};
+    function.constrain(constant_t{1.0, 0});
+
+    const auto fbest = -5.0;
+    const auto xbest = make_x(1.0, 0.0);
+
+    // const auto lsolver = solver_linear_penalty_t{};
+    const auto qsolver = solver_quadratic_penalty_t{};
+
+    // const auto ref_osga  = solver_t::all().get("osga");
+    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+
+    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    {
+        const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+        {
+            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
+        {
+            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
+    }
+}*/
+
+UTEST_CASE(minimize_objective3)
+{
+    // see 17.24, "Numerical optimization", Nocedal & Wright, 2nd edition
+    auto function = objective3_function_t{};
+    function.constrain(minimum_t{1.0, 0});
+
+    const auto fbest = +1.0;
+    const auto xbest = make_x(1.0);
+
+    // const auto lsolver = solver_linear_penalty_t{};
+    const auto qsolver = solver_quadratic_penalty_t{};
+
+    // const auto ref_osga  = solver_t::all().get("osga");
+    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+
+    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    {
+        const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+        /*{
+            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }*/
+        {
+            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
+    }
+}
+
+UTEST_CASE(minimize_objective4)
+{
+    // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
+    auto function = objective4_function_t{};
+    function.constrain(ball_equality_t{make_x(0.0, 0.0), 1.0});
+
+    const auto fbest = -1.0;
+    const auto xbest = make_x(1.0, 0.0);
+
+    // const auto lsolver = solver_linear_penalty_t{};
+    const auto qsolver = solver_quadratic_penalty_t{};
+
+    // const auto ref_osga  = solver_t::all().get("osga");
+    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+
+    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    {
+        const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+        /*{
+            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }*/
+        {
+            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
+    }
+}
+
+// TODO: make it work for objective2 as well
+// TODO: make it work for linear penalty as well
+// TODO: research and implement smooth exact penalties
+// TODO: check the case when the constraints are not feasible
 
 UTEST_END_MODULE()
