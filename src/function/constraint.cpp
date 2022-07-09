@@ -61,7 +61,7 @@ static auto strong_convexity(const quadratic_t& constraint)
     const auto eigenvalues = constraint.m_P.eigenvalues();
     const auto peigenvalue = [](const auto& lhs, const auto& rhs) { return lhs.real() < rhs.real(); };
 
-    const auto it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
+    const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
     return std::max(0.0, it->real());
 }
 
