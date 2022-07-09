@@ -643,7 +643,7 @@ UTEST_CASE(minimize_objective1)
     }
 }
 
-/*UTEST_CASE(minimize_objective2)
+UTEST_CASE(minimize_objective2)
 {
     // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective2_function_t{};
@@ -661,18 +661,18 @@ UTEST_CASE(minimize_objective1)
     for (tensor_size_t trial = 0; trial < 100; ++trial)
     {
         const vector_t x0 = vector_t::Random(function.size()) * 5.0;
-        {
+        /*{
             const auto state = lsolver.minimize(*ref_osga, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
-        }
+        }*/
         {
             const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
     }
-}*/
+}
 
 UTEST_CASE(minimize_objective3)
 {
@@ -736,7 +736,6 @@ UTEST_CASE(minimize_objective4)
     }
 }
 
-// TODO: make it work for objective2 as well
 // TODO: make it work for linear penalty as well
 // TODO: research and implement smooth exact penalties
 // TODO: check the case when the constraints are not feasible

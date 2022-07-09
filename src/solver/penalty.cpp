@@ -40,6 +40,8 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
     auto state            = solver_state_t{};
     auto penalty_function = tpenalty{function};
 
+    update_penalties(function, x, penalties);
+
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
         penalty_function.penalty_term(t);
@@ -47,23 +49,32 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
         // solver->parameter("solver::epsilon") = epsilon;
 
         state = solver.minimize(penalty_function, x);
+
+        const auto old_penalties_sum = penalties.sum();
+
         update_penalties(function, state.x, penalties);
+
+        const auto new_penalties_sum = penalties.sum();
 
         std::cout << std::fixed << std::setprecision(10) << "outer=" << outer << "|" << max_outers << ",t=" << t
                   << ",fx=" << state.f << ",x=" << state.x.transpose() << ",fcalls=" << state.m_fcalls
                   << ",gcalls=" << state.m_gcalls << ",pmin=" << penalties.minCoeff() << ",psum=" << penalties.sum()
                   << ",status=" << state.m_status << std::endl;
 
-        if (penalties.sum() < epsilon)
-        {
-            // TODO: setup status
-            // TODO: store the total number of function evaluations...
-            // TODO: store penalties
-            break;
-        }
-
-        x = state.x;
         t *= gamma;
+
+        if (new_penalties_sum < old_penalties_sum)
+        {
+            if (penalties.sum() < epsilon)
+            {
+                // TODO: setup status
+                // TODO: store the total number of function evaluations...
+                // TODO: store penalties
+                break;
+            }
+
+            x = state.x;
+        }
     }
 
     return state;
