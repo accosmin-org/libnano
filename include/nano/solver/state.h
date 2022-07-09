@@ -193,7 +193,7 @@ namespace nano
 
     inline std::ostream& operator<<(std::ostream& os, const solver_state_t& state)
     {
-        return os << "it=" << state.m_iterations << ",calls=" << state.m_fcalls << "|" << state.m_gcalls
-                  << ",fx=" << state.f << ",gx=" << state.convergence_criterion() << ",status=" << state.m_status;
+        return os << "i=" << state.m_iterations << ",calls=" << state.m_fcalls << "|" << state.m_gcalls
+                  << ",f=" << state.f << ",g=" << state.convergence_criterion() << "[" << state.m_status << "]";
     }
 } // namespace nano

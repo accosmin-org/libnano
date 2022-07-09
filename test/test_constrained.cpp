@@ -17,6 +17,16 @@ static matrix_t make_X(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
 }
 
+static auto make_smooth_solver()
+{
+    return solver_t::all().get("lbfgs");
+}
+
+/*static auto make_nonsmooth_solver()
+{
+    return solver_t::all().get("osga");
+}*/
+
 template <typename tpenalty>
 static void check_penalty(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
 {
@@ -622,21 +632,21 @@ UTEST_CASE(minimize_objective1)
     const auto xbest = make_x(-1.0, -1.0);
 
     // const auto lsolver = solver_linear_penalty_t{};
-    const auto qsolver = solver_quadratic_penalty_t{};
+    // const auto ref_nonsmooth_solver = make_nonsmooth_solver();
 
-    // const auto ref_osga  = solver_t::all().get("osga");
-    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+    const auto qsolver           = solver_quadratic_penalty_t{};
+    const auto ref_smooth_solver = make_smooth_solver();
 
-    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    for (tensor_size_t trial = 0; trial < 10; ++trial)
     {
         const vector_t x0 = vector_t::Random(function.size()) * 5.0;
         /*{
-            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            const auto state = lsolver.minimize(*ref_nonsmooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }*/
         {
-            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            const auto state = qsolver.minimize(*ref_smooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
@@ -653,21 +663,21 @@ UTEST_CASE(minimize_objective2)
     const auto xbest = make_x(1.0, 0.0);
 
     // const auto lsolver = solver_linear_penalty_t{};
-    const auto qsolver = solver_quadratic_penalty_t{};
+    // const auto ref_nonsmooth_solver = make_nonsmooth_solver();
 
-    // const auto ref_osga  = solver_t::all().get("osga");
-    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+    const auto qsolver           = solver_quadratic_penalty_t{};
+    const auto ref_smooth_solver = make_smooth_solver();
 
-    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    for (tensor_size_t trial = 0; trial < 10; ++trial)
     {
         const vector_t x0 = vector_t::Random(function.size()) * 5.0;
         /*{
-            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            const auto state = lsolver.minimize(*ref_nonsmooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }*/
         {
-            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            const auto state = qsolver.minimize(*ref_smooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
@@ -684,21 +694,21 @@ UTEST_CASE(minimize_objective3)
     const auto xbest = make_x(1.0);
 
     // const auto lsolver = solver_linear_penalty_t{};
-    const auto qsolver = solver_quadratic_penalty_t{};
+    // const auto ref_nonsmooth_solver = make_nonsmooth_solver();
 
-    // const auto ref_osga  = solver_t::all().get("osga");
-    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+    const auto qsolver           = solver_quadratic_penalty_t{};
+    const auto ref_smooth_solver = make_smooth_solver();
 
-    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    for (tensor_size_t trial = 0; trial < 10; ++trial)
     {
         const vector_t x0 = vector_t::Random(function.size()) * 5.0;
         /*{
-            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            const auto state = lsolver.minimize(*ref_nonsmooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }*/
         {
-            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            const auto state = qsolver.minimize(*ref_smooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
@@ -715,21 +725,21 @@ UTEST_CASE(minimize_objective4)
     const auto xbest = make_x(1.0, 0.0);
 
     // const auto lsolver = solver_linear_penalty_t{};
-    const auto qsolver = solver_quadratic_penalty_t{};
+    // const auto ref_nonsmooth_solver = make_nonsmooth_solver();
 
-    // const auto ref_osga  = solver_t::all().get("osga");
-    const auto ref_lbfgs = solver_t::all().get("lbfgs");
+    const auto qsolver           = solver_quadratic_penalty_t{};
+    const auto ref_smooth_solver = make_smooth_solver();
 
-    for (tensor_size_t trial = 0; trial < 100; ++trial)
+    for (tensor_size_t trial = 0; trial < 10; ++trial)
     {
         const vector_t x0 = vector_t::Random(function.size()) * 5.0;
         /*{
-            const auto state = lsolver.minimize(*ref_osga, function, x0);
+            const auto state = lsolver.minimize(*ref_nonsmooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }*/
         {
-            const auto state = qsolver.minimize(*ref_lbfgs, function, x0);
+            const auto state = qsolver.minimize(*ref_smooth_solver, function, x0);
             UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
