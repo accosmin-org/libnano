@@ -14,7 +14,7 @@ solver_t::solver_t()
     lsearch0("quadratic");
     lsearchk("morethuente");
 
-    register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-6, LE, 1e-1));
+    register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-8, LE, 1e-1));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
     register_parameter(parameter_t::make_scalar_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }

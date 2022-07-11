@@ -5,13 +5,9 @@
 
 namespace nano
 {
-    // TODO: solver_state_t like class to store results related to constraints - violation per constraint, Lagrangian
-    // etc.
-    // TODO: the penalty solver cannot be a true solver
-
     ///
-    /// \brief penalty method to solve constrained optimization problem using
-    ///     a given solver gradient descent with line-search.
+    /// \brief penalty method to solve constrained optimization problem using a given solver.
+    ///     see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
     ///
     template <typename tpenalty>
     class NANO_PUBLIC solver_penalty_t final : public estimator_t
