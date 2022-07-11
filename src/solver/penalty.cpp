@@ -51,7 +51,7 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
         const auto new_penalties_sum = penalties.sum();
 
         std::cout << std::fixed << std::setprecision(10) << "o=" << outer << "|" << max_outers << ",t=" << penalty_term
-                  << ",p=" << new_penalties_sum << "," << state << std::endl;
+                  << ",p=" << new_penalties_sum << "," << state << ",x=" << state.x.transpose() << std::endl;
 
         penalty_term *= gamma;
         best_state.m_fcalls += state.m_fcalls;

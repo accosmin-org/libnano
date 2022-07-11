@@ -29,9 +29,25 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
     for (int64_t i = 0; function.fcalls() < max_evals; ++i)
     {
         const auto gHg = g.dot(H * g);
+        if (gHg < std::numeric_limits<scalar_t>::epsilon())
+        {
+            const auto iter_ok   = true;
+            const auto converged = true;
+            solver_t::done(function, state, iter_ok, converged);
+            break;
+        }
 
-        x.noalias() = x - (H * g) / static_cast<scalar_t>(n + 1) / std::sqrt(gHg);
-        H           = (n * n) / (n * n - 1) * (H - 2.0 / (n + 1.0) * (H * g * g.transpose() * H) / gHg);
+        if (function.size() == 1)
+        {
+            // NB: the ellipsoid method becomes bisection for the 1D case.
+            x.array() += H(0, 0) * (g(0) < 0.0 ? +1.0 : -1.0);
+            H /= 2.0;
+        }
+        else
+        {
+            x.noalias() = x - (H * g) / static_cast<scalar_t>(n + 1) / std::sqrt(gHg);
+            H           = (n * n) / (n * n - 1) * (H - 2.0 / (n + 1.0) * (H * g * g.transpose() * H) / gHg);
+        }
 
         const auto f = function.vgrad(x, &g);
         state.update_if_better(x, g, f);
