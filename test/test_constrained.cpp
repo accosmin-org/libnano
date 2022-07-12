@@ -17,7 +17,7 @@ static matrix_t make_X(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
 }
 
-static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-8, int max_evals = 1000)
+static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-7, int max_evals = 5000)
 {
     auto solver = solver_t::all().get(solver_id);
     UTEST_REQUIRE(solver != nullptr);
@@ -85,7 +85,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
     const auto lsolver = solver_linear_penalty_t{};
     const auto qsolver = solver_quadratic_penalty_t{};
 
-    for (const auto* const solver_id : {"ellipsoid"}) // TODO: OSGA as well!!!
+    for (const auto* const solver_id : {"osga", "ellipsoid"})
     {
         [[maybe_unused]] const auto _ = utest_test_name_t{scat(function.name(), "_linear_penalty_solver_", solver_id)};
 
@@ -703,7 +703,7 @@ UTEST_CASE(minimize_objective4)
     const auto fbest = -1.0;
     const auto xbest = make_x(1.0, 0.0);
 
-    check_penalty_solver(function, xbest, fbest, false);
+    check_penalty_solver(function, xbest, fbest);
 }
 
 // TODO: research and implement smooth exact penalties
