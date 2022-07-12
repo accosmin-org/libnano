@@ -28,9 +28,9 @@ static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-7, int max_
 }
 
 template <typename tpenalty>
-static void check_penalty(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
+static void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
-    auto penalty = tpenalty{constrained};
+    auto penalty = tpenalty{function};
 
     for (const auto penalty_term : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
@@ -44,23 +44,23 @@ static void check_penalty(const function_t& constrained, bool expected_convexity
     }
 }
 
-static void check_penalties(const function_t& constrained, bool expected_convexity, bool expected_smoothness)
+static void check_penalties(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
-    check_penalty<linear_penalty_function_t>(constrained, expected_convexity,
-                                             constrained.constraints().empty() ? expected_smoothness : false);
-    check_penalty<quadratic_penalty_function_t>(constrained, expected_convexity, expected_smoothness);
+    check_penalty<linear_penalty_function_t>(function, expected_convexity,
+                                             function.constraints().empty() ? expected_smoothness : false);
+    check_penalty<quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
 }
 
 template <typename tpenalty>
-static void check_penalty(const function_t& constrained, const vector_t& x, bool expected_valid)
+static void check_penalty(const function_t& function, const vector_t& x, bool expected_valid)
 {
-    UTEST_CHECK_EQUAL(constrained.valid(x), expected_valid);
+    UTEST_CHECK_EQUAL(function.valid(x), expected_valid);
 
-    auto penalty = tpenalty{constrained};
+    auto penalty = tpenalty{function};
 
     for (const auto penalty_term : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
-        const auto fx = constrained.vgrad(x);
+        const auto fx = function.vgrad(x);
         const auto qx = penalty.penalty_term(penalty_term).vgrad(x);
         if (expected_valid)
         {
@@ -73,33 +73,38 @@ static void check_penalty(const function_t& constrained, const vector_t& x, bool
     }
 }
 
-static void check_penalties(const function_t& constrained, const vector_t& x, bool expected_valid)
+static void check_penalties(const function_t& function, const vector_t& x, bool expected_valid)
 {
-    check_penalty<linear_penalty_function_t>(constrained, x, expected_valid);
-    check_penalty<quadratic_penalty_function_t>(constrained, x, expected_valid);
+    check_penalty<linear_penalty_function_t>(function, x, expected_valid);
+    check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
-static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
-                                 bool check_linear = true)
+static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
     const auto lsolver = solver_linear_penalty_t{};
     const auto qsolver = solver_quadratic_penalty_t{};
 
     for (const auto* const solver_id : {"osga", "ellipsoid"})
     {
+        if (!linear_penalty_function_t{function}.convex())
+        {
+            // NB: cannot solver non-convex non-smooth problems precisely!
+            continue;
+        }
+
         [[maybe_unused]] const auto _ = utest_test_name_t{scat(function.name(), "_linear_penalty_solver_", solver_id)};
 
         const auto ref_solver = make_solver(solver_id);
-        for (tensor_size_t trial = 0; trial < 10 && check_linear; ++trial)
+        for (tensor_size_t trial = 0; trial < 10; ++trial)
         {
             const vector_t x0    = vector_t::Random(function.size()) * 5.0;
             const auto     state = lsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-4); // TODO: more accurate solution
-            UTEST_CHECK_CLOSE(state.x, xbest, 1e-3); // TODO: more accurate solution
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-4);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-3);
         }
     }
 
-    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"}) // TODO: OSGA, Ellipsoid as well!!!
+    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
     {
         [[maybe_unused]] const auto _ =
             utest_test_name_t{scat(function.name(), "_quadratic_penalty_solver_", solver_id)};
@@ -708,5 +713,6 @@ UTEST_CASE(minimize_objective4)
 
 // TODO: research and implement smooth exact penalties
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
+// TODO: check that it works with various gamma {2.0, 5.0, 10.0}
 
 UTEST_END_MODULE()
