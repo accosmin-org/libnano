@@ -13,7 +13,8 @@ static auto is_equality(const constraint_t& constraint)
 
 static auto is_linear_equality(const constraint_t& constraint)
 {
-    return std::get_if<constraint::constant_t>(&constraint) || std::get_if<constraint::linear_equality_t>(&constraint);
+    return std::get_if<constraint::constant_t>(&constraint) != nullptr ||
+           std::get_if<constraint::linear_equality_t>(&constraint) != nullptr;
 }
 
 static auto convex(const function_t& function)
