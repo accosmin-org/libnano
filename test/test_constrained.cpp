@@ -49,6 +49,7 @@ static void check_penalties(const function_t& function, bool expected_convexity,
     check_penalty<linear_penalty_function_t>(function, expected_convexity,
                                              function.constraints().empty() ? expected_smoothness : false);
     check_penalty<quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
+    check_penalty<linear_quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
 }
 
 template <typename tpenalty>

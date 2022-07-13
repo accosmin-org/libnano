@@ -59,9 +59,9 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
     return fx;
 }
 
-penalty_function_t::penalty_function_t(const function_t& constrained)
-    : function_t("penalty", constrained.size())
-    , m_constrained(constrained)
+penalty_function_t::penalty_function_t(const function_t& function)
+    : function_t("penalty", function.size())
+    , m_function(function)
 {
     strong_convexity(0.0); // NB: cannot estimate the strong convexity coefficient in general!
 }
@@ -72,11 +72,11 @@ penalty_function_t& penalty_function_t::penalty_term(scalar_t penalty_term)
     return *this;
 }
 
-linear_penalty_function_t::linear_penalty_function_t(const function_t& constrained)
-    : penalty_function_t(constrained)
+linear_penalty_function_t::linear_penalty_function_t(const function_t& function)
+    : penalty_function_t(function)
 {
-    convex(::convex(constrained));
-    smooth(constrained.constraints().empty() ? ::smooth(constrained) : false);
+    convex(::convex(function));
+    smooth(function.constraints().empty() ? ::smooth(function) : false);
 }
 
 scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
@@ -92,14 +92,14 @@ scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) co
         return penalty_term() * fc;
     };
 
-    return penalty_vgrad(constrained(), x, gx, op);
+    return penalty_vgrad(function(), x, gx, op);
 }
 
-quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& constrained)
-    : penalty_function_t(constrained)
+quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
+    : penalty_function_t(function)
 {
-    convex(::convex(constrained));
-    smooth(::smooth(constrained));
+    convex(::convex(function));
+    smooth(::smooth(function));
 }
 
 scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
@@ -115,5 +115,35 @@ scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx)
         return penalty_term() * fc * fc;
     };
 
-    return penalty_vgrad(constrained(), x, gx, op);
+    return penalty_vgrad(function(), x, gx, op);
+}
+
+linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const function_t& function)
+    : penalty_function_t(function)
+{
+    convex(::convex(function));
+    smooth(::smooth(function));
+}
+
+void linear_quadratic_penalty_function_t::epsilon(scalar_t epsilon)
+{
+    m_epsilon = epsilon;
+}
+
+scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+{
+    assert(x.size() == size());
+
+    const auto op = [&](scalar_t fc, const auto& gc)
+    {
+        const auto quadratic = fc < m_epsilon;
+
+        if (gx != nullptr)
+        {
+            gx->noalias() += penalty_term() * (quadratic ? (fc / m_epsilon) : 1.0) * gc;
+        }
+        return penalty_term() * (quadratic ? (fc * fc / (2.0 * m_epsilon)) : (fc - m_epsilon / 2.0));
+    };
+
+    return penalty_vgrad(function(), x, gx, op);
 }
