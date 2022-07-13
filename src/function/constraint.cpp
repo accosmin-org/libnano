@@ -6,7 +6,7 @@
 using namespace nano;
 using namespace nano::constraint;
 
-static auto smooth(const ball_t&)
+static auto smooth(const euclidean_ball_t&)
 {
     return true;
 }
@@ -33,7 +33,7 @@ static auto smooth(const functional_t& constraint)
 
 bool nano::smooth(const constraint_t& constraint)
 {
-    return std::visit(overloaded{[&](const ball_t& ct) { return ::smooth(ct); },
+    return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::smooth(ct); },
                                  [&](const linear_t& ct) { return ::smooth(ct); },
                                  [&](const constant_t& ct) { return ::smooth(ct); },
                                  [&](const quadratic_t& ct) { return ::smooth(ct); },
@@ -41,7 +41,7 @@ bool nano::smooth(const constraint_t& constraint)
                       constraint);
 }
 
-static auto strong_convexity(const ball_t&)
+static auto strong_convexity(const euclidean_ball_t&)
 {
     return 2.0;
 }
@@ -72,7 +72,7 @@ static scalar_t strong_convexity(const functional_t& constraint)
 
 scalar_t nano::strong_convexity(const constraint_t& constraint)
 {
-    return std::visit(overloaded{[&](const ball_t& ct) { return ::strong_convexity(ct); },
+    return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::strong_convexity(ct); },
                                  [&](const linear_t& ct) { return ::strong_convexity(ct); },
                                  [&](const constant_t& ct) { return ::strong_convexity(ct); },
                                  [&](const quadratic_t& ct) { return ::strong_convexity(ct); },
@@ -80,7 +80,7 @@ scalar_t nano::strong_convexity(const constraint_t& constraint)
                       constraint);
 }
 
-static auto vgrad(const ball_t& constraint, const vector_t& x, vector_t* gx = nullptr)
+static auto vgrad(const euclidean_ball_t& constraint, const vector_t& x, vector_t* gx = nullptr)
 {
     if (gx != nullptr)
     {
@@ -144,7 +144,7 @@ static auto vgrad(const functional_t& constraint, const vector_t& x, vector_t* g
 
 scalar_t nano::vgrad(const constraint_t& constraint, const vector_t& x, vector_t* gx)
 {
-    return std::visit(overloaded{[&](const ball_t& ct) { return ::vgrad(ct, x, gx); },
+    return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::vgrad(ct, x, gx); },
                                  [&](const linear_t& ct) { return ::vgrad(ct, x, gx); },
                                  [&](const constant_t& ct) { return ::vgrad(ct, x, gx); },
                                  [&](const maximum_t& ct) { return ::vgrad(ct, x, gx); },
@@ -154,7 +154,7 @@ scalar_t nano::vgrad(const constraint_t& constraint, const vector_t& x, vector_t
                       constraint);
 }
 
-static bool convex(const ball_t&)
+static bool convex(const euclidean_ball_t&)
 {
     return true;
 }
@@ -184,7 +184,7 @@ static bool convex(const functional_t& constraint)
 
 bool nano::convex(const constraint_t& constraint)
 {
-    return std::visit(overloaded{[&](const ball_t& ct) { return ::convex(ct); },
+    return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::convex(ct); },
                                  [&](const linear_t& ct) { return ::convex(ct); },
                                  [&](const constant_t& ct) { return ::convex(ct); },
                                  [&](const quadratic_t& ct) { return ::convex(ct); },
@@ -207,12 +207,12 @@ static auto valid(const maximum_t& constraint, const vector_t& x)
     return std::max(x(constraint.m_dimension) - constraint.m_value, 0.0);
 }
 
-static auto valid(const ball_equality_t& constraint, const vector_t& x)
+static auto valid(const euclidean_ball_equality_t& constraint, const vector_t& x)
 {
     return std::fabs(::vgrad(constraint, x));
 }
 
-static auto valid(const ball_inequality_t& constraint, const vector_t& x)
+static auto valid(const euclidean_ball_inequality_t& constraint, const vector_t& x)
 {
     return std::max(::vgrad(constraint, x), 0.0);
 }
@@ -252,8 +252,8 @@ scalar_t nano::valid(const constraint_t& constraint, const vector_t& x)
     return std::visit(overloaded{[&](const minimum_t& ct) { return ::valid(ct, x); },
                                  [&](const maximum_t& ct) { return ::valid(ct, x); },
                                  [&](const constant_t& ct) { return ::valid(ct, x); },
-                                 [&](const ball_equality_t& ct) { return ::valid(ct, x); },
-                                 [&](const ball_inequality_t& ct) { return ::valid(ct, x); },
+                                 [&](const euclidean_ball_equality_t& ct) { return ::valid(ct, x); },
+                                 [&](const euclidean_ball_inequality_t& ct) { return ::valid(ct, x); },
                                  [&](const linear_equality_t& ct) { return ::valid(ct, x); },
                                  [&](const linear_inequality_t& ct) { return ::valid(ct, x); },
                                  [&](const quadratic_equality_t& ct) { return ::valid(ct, x); },
@@ -263,7 +263,7 @@ scalar_t nano::valid(const constraint_t& constraint, const vector_t& x)
                       constraint);
 }
 
-static auto compatible(const function_t& function, const ball_t& constraint)
+static auto compatible(const function_t& function, const euclidean_ball_t& constraint)
 {
     return constraint.m_origin.size() == function.size() && constraint.m_radius > 0.0;
 }
@@ -291,7 +291,7 @@ static auto compatible(const function_t& function, const functional_t& constrain
 
 bool nano::compatible(const constraint_t& constraint, const function_t& function)
 {
-    return std::visit(overloaded{[&](const ball_t& ct) { return ::compatible(function, ct); },
+    return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::compatible(function, ct); },
                                  [&](const linear_t& ct) { return ::compatible(function, ct); },
                                  [&](const constant_t& ct) { return ::compatible(function, ct); },
                                  [&](const quadratic_t& ct) { return ::compatible(function, ct); },

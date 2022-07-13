@@ -13,10 +13,10 @@ namespace nano
 
     namespace constraint
     {
-        struct ball_t
+        struct euclidean_ball_t
         {
-            ball_t() = default;
-            ball_t(vector_t origin, scalar_t radius)
+            euclidean_ball_t() = default;
+            euclidean_ball_t(vector_t origin, scalar_t radius)
                 : m_origin(std::move(origin))
                 , m_radius(radius)
             {
@@ -68,11 +68,11 @@ namespace nano
         ///
         /// \brief equality constraint: h(x) = ||x - origin||^2 - radius^2 <= 0
         ///
-        struct ball_equality_t : ball_t
+        struct euclidean_ball_equality_t : euclidean_ball_t
         {
-            ball_equality_t() = default;
-            ball_equality_t(vector_t origin, scalar_t radius)
-                : ball_t(std::move(origin), radius)
+            euclidean_ball_equality_t() = default;
+            euclidean_ball_equality_t(vector_t origin, scalar_t radius)
+                : euclidean_ball_t(std::move(origin), radius)
             {
             }
         };
@@ -80,11 +80,11 @@ namespace nano
         ///
         /// \brief inequality constraint: g(x) = ||x - origin||^2 - radius^2 = 0
         ///
-        struct ball_inequality_t : ball_t
+        struct euclidean_ball_inequality_t : euclidean_ball_t
         {
-            ball_inequality_t() = default;
-            ball_inequality_t(vector_t origin, scalar_t radius)
-                : ball_t(std::move(origin), radius)
+            euclidean_ball_inequality_t() = default;
+            euclidean_ball_inequality_t(vector_t origin, scalar_t radius)
+                : euclidean_ball_t(std::move(origin), radius)
             {
             }
         };
@@ -207,11 +207,11 @@ namespace nano
     ///
     /// NB: the default constraint is by construction invalid.
     ///
-    using constraint_t =
-        std::variant<constraint::constant_t, constraint::minimum_t, constraint::maximum_t, constraint::ball_equality_t,
-                     constraint::ball_inequality_t, constraint::linear_equality_t, constraint::linear_inequality_t,
-                     constraint::quadratic_equality_t, constraint::quadratic_inequality_t,
-                     constraint::functional_equality_t, constraint::functional_inequality_t>;
+    using constraint_t = std::variant<constraint::constant_t, constraint::minimum_t, constraint::maximum_t,
+                                      constraint::euclidean_ball_equality_t, constraint::euclidean_ball_inequality_t,
+                                      constraint::linear_equality_t, constraint::linear_inequality_t,
+                                      constraint::quadratic_equality_t, constraint::quadratic_inequality_t,
+                                      constraint::functional_equality_t, constraint::functional_inequality_t>;
 
     using constraints_t = std::vector<constraint_t>;
 

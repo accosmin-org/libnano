@@ -330,10 +330,10 @@ UTEST_CASE(constant)
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 0.8)), 0.2, 1e-15);
 }
 
-UTEST_CASE(ball_equality)
+UTEST_CASE(euclidean_ball_equality)
 {
     const auto constraint = constraint_t{
-        ball_equality_t{make_x(0.0, 0.0), 1.0}
+        euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -346,10 +346,10 @@ UTEST_CASE(ball_equality)
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 1.0, 1e-15);
 }
 
-UTEST_CASE(ball_inequality)
+UTEST_CASE(euclidean_ball_inequality)
 {
     const auto constraint = constraint_t{
-        ball_inequality_t{make_x(0.0, 0.0), 1.0}
+        euclidean_ball_inequality_t{make_x(0.0, 0.0), 1.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -562,12 +562,12 @@ UTEST_CASE(constrained_constant)
     check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
 }
 
-UTEST_CASE(constrained_ball_inequality)
+UTEST_CASE(constrained_euclidean_ball_inequality)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain(ball_inequality_t{make_x(1.0, 1.0, 1.0, 1.0), 1.0}));
-    UTEST_CHECK(!constrained.constrain(ball_inequality_t{make_x(1.0, 1.0, 1.0), 0.0}));
-    UTEST_CHECK(constrained.constrain(ball_inequality_t{make_x(0.0, 0.0, 0.0), 1.0}));
+    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_x(1.0, 1.0, 1.0, 1.0), 1.0}));
+    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_x(1.0, 1.0, 1.0), 0.0}));
+    UTEST_CHECK(constrained.constrain(euclidean_ball_inequality_t{make_x(0.0, 0.0, 0.0), 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
     check_penalties(constrained, true, true);
@@ -701,7 +701,7 @@ UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective1_function_t{};
-    function.constrain(ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
+    function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
 
     const auto fbest = -2.0;
     const auto xbest = make_x(-1.0, -1.0);
@@ -737,7 +737,7 @@ UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective4_function_t{};
-    function.constrain(ball_equality_t{make_x(0.0, 0.0), 1.0});
+    function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0});
 
     const auto fbest = -1.0;
     const auto xbest = make_x(1.0, 0.0);
