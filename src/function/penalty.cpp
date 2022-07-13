@@ -30,7 +30,8 @@ static auto smooth(const function_t& function)
 }
 
 template <typename toperator>
-static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
+static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, scalar_t penalty_term,
+                          const toperator& op)
 {
     scalar_t fx = function.vgrad(x, gx);
     vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
@@ -41,13 +42,10 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
 
         if (is_equality(constraint))
         {
-            if (fc > 0.0)
+            fx += penalty_term * fc * fc;
+            if (gx != nullptr)
             {
-                fx += op(fc, gc);
-            }
-            else if (fc < 0.0)
-            {
-                fx += op(-fc, -gc);
+                gx->noalias() += penalty_term * 2.0 * fc * gc;
             }
         }
         else if (fc > 0.0)
@@ -92,7 +90,7 @@ scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) co
         return penalty_term() * fc;
     };
 
-    return penalty_vgrad(function(), x, gx, op);
+    return penalty_vgrad(function(), x, gx, penalty_term(), op);
 }
 
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
@@ -115,7 +113,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx)
         return penalty_term() * fc * fc;
     };
 
-    return penalty_vgrad(function(), x, gx, op);
+    return penalty_vgrad(function(), x, gx, penalty_term(), op);
 }
 
 linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const function_t& function)
@@ -125,7 +123,7 @@ linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const f
     smooth(::smooth(function));
 }
 
-void linear_quadratic_penalty_function_t::epsilon(scalar_t epsilon)
+void linear_quadratic_penalty_function_t::epsilon_term(scalar_t epsilon)
 {
     m_epsilon = epsilon;
 }
@@ -145,5 +143,5 @@ scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector
         return penalty_term() * (quadratic ? (fc * fc / (2.0 * m_epsilon)) : (fc - m_epsilon / 2.0));
     };
 
-    return penalty_vgrad(function(), x, gx, op);
+    return penalty_vgrad(function(), x, gx, penalty_term(), op);
 }

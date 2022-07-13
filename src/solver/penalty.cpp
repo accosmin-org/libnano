@@ -78,3 +78,70 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
 
 template class nano::solver_penalty_t<linear_penalty_function_t>;
 template class nano::solver_penalty_t<quadratic_penalty_function_t>;
+
+solver_linear_quadratic_penalty_t::solver_linear_quadratic_penalty_t()
+{
+    register_parameter(parameter_t::make_scalar("solver::penalty::t0", 0.0, LT, 1.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::eta1", 0.0, LT, 0.1, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::penalty::eta2", 1.0, LT, 10.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-8, LE, 1e-1));
+    register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 30, LE, 100));
+}
+
+solver_state_t solver_linear_quadratic_penalty_t::minimize(const solver_t& solver, const function_t& function,
+                                                           const vector_t& x0) const
+{
+    const auto t0         = parameter("solver::penalty::t0").value<scalar_t>();
+    const auto eta1       = parameter("solver::penalty::eta1").value<scalar_t>();
+    const auto eta2       = parameter("solver::penalty::eta2").value<scalar_t>();
+    const auto epsilon    = parameter("solver::penalty::epsilon").value<scalar_t>();
+    const auto max_outers = parameter("solver::penalty::max_outer_iters").value<tensor_size_t>();
+
+    auto penalty_term     = t0;
+    auto penalty_function = linear_quadratic_penalty_function_t{function};
+    auto best_state       = solver_state_t{function, x0};
+
+    auto penalties = vector_t{};
+    update_penalties(function, best_state.x, penalties);
+
+    auto epsilon_term = penalties.maxCoeff();
+
+    for (tensor_size_t outer = 0; outer < max_outers; ++outer)
+    {
+        penalty_function.epsilon_term(epsilon_term);
+        penalty_function.penalty_term(penalty_term);
+        const auto state = solver.minimize(penalty_function, best_state.x);
+
+        update_penalties(function, state.x, penalties);
+
+        std::cout << std::fixed << std::setprecision(10) << "o=" << outer << "|" << max_outers << ",t=" << penalty_term
+                  << ",p=" << penalties.sum() << ",e=" << epsilon_term << "," << state << ",x=" << state.x.transpose()
+                  << std::endl;
+
+        best_state.m_fcalls += state.m_fcalls;
+        best_state.m_gcalls += state.m_gcalls;
+        // TODO: also store penalties in the state!
+
+        if (penalties.maxCoeff() <= epsilon_term)
+        {
+            best_state.f = state.f;
+            best_state.x = state.x;
+
+            if (epsilon_term <= epsilon)
+            {
+                best_state.m_status = solver_state_t::status::converged;
+                break;
+            }
+            else
+            {
+                epsilon_term = eta1 * penalties.maxCoeff();
+            }
+        }
+        else
+        {
+            penalty_term *= eta2;
+        }
+    }
+
+    return best_state;
+}

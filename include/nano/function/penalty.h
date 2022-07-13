@@ -5,19 +5,15 @@
 namespace nano
 {
     ///
-    /// \brief generic penalty function: q(c, x) = f(x) + c * sum(p(g_i(x)), i), where:
-    ///
-    ///     f(x) is the objective function to minimize,
-    ///
-    ///     c > 0 is the penalty term - the higher the better the penalty function approximates
+    /// \brief generic penalty function: q(c, x) = f(x) + c * sum(h_j(x)^2, j) + c * sum(p(g_i(x)), i), where:
+    ///     * f(x) is the objective function to minimize,
+    ///     * c > 0 is the penalty term - the higher the better the penalty function approximates
     ///         the original constrained optimization problem,
+    ///     * p(y) is the penalty function with p(y) = 0 whenever y <= 0 and p(y) > 0 otherwise,
+    ///     * {h_j(x) == 0} is the set of equality constraints (always squared) and
+    ///     * {g_i(x) <= 0} is the set of inequality constraints.
     ///
-    ///     p(y) is the penalty function with p(y) = 0 whenever y <= 0 and p(y) > 0 otherwise
-    ///
-    ///     and {g_i(x) <= 0} is the set of inequality constraints.
-    ///
-    /// NB: the equality constraints h(x) = 0 are transformed into two inequality constraints: h(x) <= 0 and -h(x) <= 0.
-    /// NB: see "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+    ///     see "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     ///
     class NANO_PUBLIC penalty_function_t : public function_t
     {
@@ -84,11 +80,11 @@ namespace nano
 
     ///
     /// \brief epsilon-smoothed linear quadratic penalty function: p(y, epsilon) =
-    ///     0, if y <= 0,
-    ///     y^2 / (2 * epsilon), if 0 <= y <= epsilon,
-    ///     y - epsilon / 2, if y >= epsilon.
+    ///     * 0, if y <= 0,
+    ///     * y^2 / (2 * epsilon), if 0 <= y <= epsilon,
+    ///     * y - epsilon / 2, if y >= epsilon.
     ///
-    /// NB: see "On smoothing exact penalty functions for convex constrained optimization", by M. Pinar, S. Zenios, 1994
+    ///     see "On smoothing exact penalty functions for convex constrained optimization", by M. Pinar, S. Zenios, 1994
     ///
     class NANO_PUBLIC linear_quadratic_penalty_function_t final : public penalty_function_t
     {
@@ -101,7 +97,7 @@ namespace nano
         ///
         /// \brief set the smoothing factor.
         ///
-        void epsilon(scalar_t);
+        void epsilon_term(scalar_t);
 
         ///
         /// \brief @see function_t

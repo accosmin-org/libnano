@@ -17,7 +17,7 @@ static matrix_t make_X(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
 }
 
-static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-7, int max_evals = 1000)
+static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-9, int max_evals = 1000)
 {
     auto solver = solver_t::all().get(solver_id);
     UTEST_REQUIRE(solver != nullptr);
@@ -78,25 +78,20 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
 {
     check_penalty<linear_penalty_function_t>(function, x, expected_valid);
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
+    check_penalty<linear_quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
 static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
     const auto lsolver = solver_linear_penalty_t{};
     const auto qsolver = solver_quadratic_penalty_t{};
+    const auto lqsolver = solver_linear_quadratic_penalty_t{};
 
-    for (const auto* const solver_id :
-         {"osga", "ellipsoid"}) // TODO: why OSGA doesn't work properly for the convex objective2 ?!
+    for (const auto* const solver_id : {"osga", "ellipsoid"})
     {
         if (!linear_penalty_function_t{function}.convex())
         {
             // NB: cannot solver non-convex non-smooth problems precisely!
-            continue;
-        }
-
-        if (function.name() == "objective2[2D]" && string_t{solver_id} == "osga")
-        {
-            // NB: OSGA cannot handle this case where the first dimension's gradient is 10-100 times bigger!
             continue;
         }
 
@@ -112,7 +107,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
+    for (const auto* const solver_id : {"lbfgs", "bfgs"})
     {
         [[maybe_unused]] const auto _ =
             utest_test_name_t{scat(function.name(), "_quadratic_penalty_solver_", solver_id)};
@@ -122,7 +117,22 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         {
             const vector_t x0    = vector_t::Random(function.size()) * 5.0;
             const auto     state = qsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-7);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-6);
+            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+        }
+    }
+
+    for (const auto* const solver_id : {"lbfgs", "bfgs"})
+    {
+        [[maybe_unused]] const auto _ =
+            utest_test_name_t{scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id)};
+
+        const auto ref_solver = make_solver(solver_id);
+        for (tensor_size_t trial = 0; trial < 10; ++trial)
+        {
+            const vector_t x0    = vector_t::Random(function.size()) * 5.0;
+            const auto     state = lqsolver.minimize(*ref_solver, function, x0);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-6);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
         }
     }
@@ -735,7 +745,6 @@ UTEST_CASE(minimize_objective4)
     check_penalty_solver(function, xbest, fbest);
 }
 
-// TODO: research and implement smooth exact penalties
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 // TODO: check that it works with various gamma {2.0, 5.0, 10.0}
 
