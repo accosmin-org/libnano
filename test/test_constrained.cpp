@@ -83,8 +83,8 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
 
 static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
-    const auto lsolver = solver_linear_penalty_t{};
-    const auto qsolver = solver_quadratic_penalty_t{};
+    const auto lsolver  = solver_linear_penalty_t{};
+    const auto qsolver  = solver_quadratic_penalty_t{};
     const auto lqsolver = solver_linear_quadratic_penalty_t{};
 
     for (const auto* const solver_id : {"osga", "ellipsoid"})
