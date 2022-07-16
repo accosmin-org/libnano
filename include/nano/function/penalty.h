@@ -40,8 +40,8 @@ namespace nano
 
     private:
         // attributes
-        const function_t& m_function;          ///<
-        scalar_t          m_penalty_term{1.0}; ///<
+        const function_t& m_function;              ///<
+        scalar_t          m_penalty_term{1.0};     ///<
     };
 
     ///
@@ -95,9 +95,9 @@ namespace nano
         explicit linear_quadratic_penalty_function_t(const function_t&);
 
         ///
-        /// \brief set the smoothing factor.
+        /// \brief set the smoothing factor (if applicable).
         ///
-        void epsilon_term(scalar_t);
+        linear_quadratic_penalty_function_t& smoothing_factor(scalar_t);
 
         ///
         /// \brief @see function_t
@@ -106,6 +106,6 @@ namespace nano
 
     private:
         // attributes
-        scalar_t m_epsilon{1.0}; ///<
+        scalar_t m_smoothing_factor{1.0}; ///<
     };
 } // namespace nano

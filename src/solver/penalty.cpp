@@ -16,6 +16,33 @@ static void update_penalties(const function_t& function, const vector_t& x, vect
     }
 }
 
+static auto converged(const function_t& function, const solver_state_t& state, solver_state_t& best_state,
+                      vector_t& penalties, scalar_t epsilon)
+{
+    const auto old_penalties_sum = penalties.sum();
+    update_penalties(function, state.x, penalties);
+    const auto new_penalties_sum = penalties.sum();
+
+    best_state.m_fcalls += state.m_fcalls;
+    best_state.m_gcalls += state.m_gcalls;
+
+    auto converged = false;
+    if (new_penalties_sum < old_penalties_sum)
+    {
+        best_state.f = state.f;
+        best_state.x = state.x;
+
+        if (new_penalties_sum < epsilon)
+        {
+            best_state.m_status = solver_state_t::status::converged;
+            // TODO: store penalties
+            converged = true;
+        }
+    }
+
+    return converged;
+}
+
 template <typename tpenalty>
 solver_penalty_t<tpenalty>::solver_penalty_t()
 {
@@ -46,31 +73,16 @@ solver_state_t solver_penalty_t<tpenalty>::minimize(const solver_t& solver, cons
         penalty_function.penalty_term(penalty_term);
         const auto state = solver.minimize(penalty_function, best_state.x);
 
-        const auto old_penalties_sum = penalties.sum();
-        update_penalties(function, state.x, penalties);
-        const auto new_penalties_sum = penalties.sum();
+        const auto converged = ::converged(function, state, best_state, penalties, epsilon);
 
         std::cout << std::fixed << std::setprecision(10) << "o=" << outer << "|" << max_outers << ",t=" << penalty_term
-                  << ",p=" << new_penalties_sum << "," << state << ",x=" << state.x.transpose() << std::endl;
+                  << ",p=" << penalties.sum() << "," << state << ",x=" << state.x.transpose() << std::endl;
 
-        penalty_term *= gamma;
-        best_state.m_fcalls += state.m_fcalls;
-        best_state.m_gcalls += state.m_gcalls;
-
-        if (new_penalties_sum < old_penalties_sum)
+        if (converged)
         {
-            best_state.f = state.f;
-            best_state.x = state.x;
-
-            if (penalties.sum() < epsilon)
-            {
-                best_state.m_status = solver_state_t::status::converged;
-
-                // TODO: store the total number of function evaluations...
-                // TODO: store penalties
-                break;
-            }
+            break;
         }
+        penalty_term *= gamma;
     }
 
     return best_state;
@@ -85,7 +97,7 @@ solver_linear_quadratic_penalty_t::solver_linear_quadratic_penalty_t()
     register_parameter(parameter_t::make_scalar("solver::penalty::eta1", 0.0, LT, 0.1, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::penalty::eta2", 1.0, LT, 10.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-8, LE, 1e-1));
-    register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 30, LE, 100));
+    register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
 
 solver_state_t solver_linear_quadratic_penalty_t::minimize(const solver_t& solver, const function_t& function,
@@ -104,37 +116,35 @@ solver_state_t solver_linear_quadratic_penalty_t::minimize(const solver_t& solve
     auto penalties = vector_t{};
     update_penalties(function, best_state.x, penalties);
 
-    auto epsilon_term = penalties.maxCoeff();
+    auto smoothing_factor = penalties.maxCoeff();
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
-        penalty_function.epsilon_term(epsilon_term);
         penalty_function.penalty_term(penalty_term);
+        penalty_function.smoothing_factor(smoothing_factor);
         const auto state = solver.minimize(penalty_function, best_state.x);
 
-        update_penalties(function, state.x, penalties);
+        const auto converged = ::converged(function, state, best_state, penalties, epsilon);
 
         std::cout << std::fixed << std::setprecision(10) << "o=" << outer << "|" << max_outers << ",t=" << penalty_term
-                  << ",p=" << penalties.sum() << ",e=" << epsilon_term << "," << state << ",x=" << state.x.transpose()
-                  << std::endl;
+                  << ",p=" << penalties.sum() << ",e=" << smoothing_factor << "," << state
+                  << ",x=" << state.x.transpose() << std::endl;
 
-        best_state.m_fcalls += state.m_fcalls;
-        best_state.m_gcalls += state.m_gcalls;
-        // TODO: also store penalties in the state!
-
-        if (penalties.maxCoeff() <= epsilon_term)
+        if (converged)
         {
-            best_state.f = state.f;
-            best_state.x = state.x;
+            break;
+        }
 
-            if (epsilon_term <= epsilon)
+        if (penalties.maxCoeff() <= smoothing_factor)
+        {
+            if (penalties.sum() < epsilon)
             {
                 best_state.m_status = solver_state_t::status::converged;
                 break;
             }
             else
             {
-                epsilon_term = eta1 * penalties.maxCoeff();
+                smoothing_factor = eta1 * penalties.maxCoeff();
             }
         }
         else

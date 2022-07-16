@@ -30,25 +30,28 @@ static auto smooth(const function_t& function)
 }
 
 template <typename toperator>
-static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, scalar_t penalty_term,
-                          const toperator& op)
+static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
 {
     scalar_t fx = function.vgrad(x, gx);
     vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
 
+    const auto max_penalty = 1e+3;
+
     for (const auto& constraint : function.constraints())
     {
         const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
+        const auto eq = is_equality(constraint);
 
-        if (is_equality(constraint))
+        if ((eq && std::fabs(fc) > max_penalty) || (!eq && fc > max_penalty))
         {
-            fx += penalty_term * fc * fc;
             if (gx != nullptr)
             {
-                gx->noalias() += penalty_term * 2.0 * fc * gc;
+                gx->array() = std::numeric_limits<scalar_t>::infinity();
             }
+            fx = std::numeric_limits<scalar_t>::infinity();
+            break;
         }
-        else if (fc > 0.0)
+        else if (eq || fc > 0.0)
         {
             fx += op(fc, gc);
         }
@@ -85,12 +88,12 @@ scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) co
     {
         if (gx != nullptr)
         {
-            gx->noalias() += penalty_term() * gc;
+            gx->noalias() += penalty_term() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
         }
-        return penalty_term() * fc;
+        return penalty_term() * std::fabs(fc);
     };
 
-    return penalty_vgrad(function(), x, gx, penalty_term(), op);
+    return penalty_vgrad(function(), x, gx, op);
 }
 
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
@@ -113,7 +116,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx)
         return penalty_term() * fc * fc;
     };
 
-    return penalty_vgrad(function(), x, gx, penalty_term(), op);
+    return penalty_vgrad(function(), x, gx, op);
 }
 
 linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const function_t& function)
@@ -123,9 +126,10 @@ linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const f
     smooth(::smooth(function));
 }
 
-void linear_quadratic_penalty_function_t::epsilon_term(scalar_t epsilon)
+linear_quadratic_penalty_function_t& linear_quadratic_penalty_function_t::smoothing_factor(scalar_t smoothing_factor)
 {
-    m_epsilon = epsilon;
+    m_smoothing_factor = smoothing_factor;
+    return *this;
 }
 
 scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
@@ -134,14 +138,18 @@ scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector
 
     const auto op = [&](scalar_t fc, const auto& gc)
     {
-        const auto quadratic = fc < m_epsilon;
+        const auto penalty  = penalty_term();
+        const auto epsilon  = m_smoothing_factor;
+        const auto hepsilon = epsilon / 2.0;
+        const auto negative = fc < -epsilon;
+        const auto positive = fc > +epsilon;
 
         if (gx != nullptr)
         {
-            gx->noalias() += penalty_term() * (quadratic ? (fc / m_epsilon) : 1.0) * gc;
+            gx->noalias() += penalty * (negative ? -1.0 : (positive ? +1.0 : (fc / epsilon))) * gc;
         }
-        return penalty_term() * (quadratic ? (fc * fc / (2.0 * m_epsilon)) : (fc - m_epsilon / 2.0));
+        return penalty * (negative ? (-fc - hepsilon) : (positive ? (+fc - hepsilon) : (fc * fc / (2.0 * epsilon))));
     };
 
-    return penalty_vgrad(function(), x, gx, penalty_term(), op);
+    return penalty_vgrad(function(), x, gx, op);
 }

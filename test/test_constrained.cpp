@@ -17,11 +17,12 @@ static matrix_t make_X(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
 }
 
-static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-9, int max_evals = 1000)
+static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-9, int max_evals = 5000)
 {
     auto solver = solver_t::all().get(solver_id);
     UTEST_REQUIRE(solver != nullptr);
 
+    solver->lsearchk("cgdescent");
     solver->parameter("solver::epsilon")   = epsilon;
     solver->parameter("solver::max_evals") = max_evals;
     return solver;
@@ -46,8 +47,9 @@ static void check_penalty(const function_t& function, bool expected_convexity, b
 
 static void check_penalties(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
-    check_penalty<linear_penalty_function_t>(function, expected_convexity,
-                                             function.constraints().empty() ? expected_smoothness : false);
+    const auto unconstrained = function.constraints().empty();
+
+    check_penalty<linear_penalty_function_t>(function, expected_convexity, unconstrained ? expected_smoothness : false);
     check_penalty<quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
     check_penalty<linear_quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
 }
@@ -65,7 +67,7 @@ static void check_penalty(const function_t& function, const vector_t& x, bool ex
         const auto qx = penalty.penalty_term(penalty_term).vgrad(x);
         if (expected_valid)
         {
-            UTEST_CHECK_CLOSE(fx, qx, 1e-15);
+            UTEST_CHECK_CLOSE(fx, qx, 1e-16);
         }
         else
         {
@@ -95,22 +97,21 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
             continue;
         }
 
-        [[maybe_unused]] const auto _ = utest_test_name_t{scat(function.name(), "_linear_penalty_solver_", solver_id)};
+        UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
         {
             const vector_t x0    = vector_t::Random(function.size()) * 5.0;
             const auto     state = lsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-4);
+            UTEST_CHECK_CLOSE(state.f, fbest, 1e-3);
             UTEST_CHECK_CLOSE(state.x, xbest, 1e-3);
         }
     }
 
     for (const auto* const solver_id : {"lbfgs", "bfgs"})
     {
-        [[maybe_unused]] const auto _ =
-            utest_test_name_t{scat(function.name(), "_quadratic_penalty_solver_", solver_id)};
+        UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
@@ -124,8 +125,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
 
     for (const auto* const solver_id : {"lbfgs", "bfgs"})
     {
-        [[maybe_unused]] const auto _ =
-            utest_test_name_t{scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id)};
+        UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
