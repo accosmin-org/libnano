@@ -149,7 +149,7 @@ UTEST_CASE(regularization_none)
     const auto param_names = strings_t{};
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
@@ -174,7 +174,7 @@ UTEST_CASE(regularization_lasso)
     const auto param_names = strings_t{"l1reg"};
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_nonsmooth_solver();
@@ -199,7 +199,7 @@ UTEST_CASE(regularization_ridge)
     const auto param_names = strings_t{"l2reg"};
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
@@ -224,7 +224,7 @@ UTEST_CASE(regularization_variance)
     const auto param_names = strings_t{"vAreg"};
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
@@ -249,7 +249,7 @@ UTEST_CASE(regularization_elasticnet)
     const auto param_names = strings_t{"l1reg", "l2reg"};
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_nonsmooth_solver();

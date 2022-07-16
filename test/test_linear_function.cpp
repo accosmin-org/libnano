@@ -87,7 +87,7 @@ UTEST_CASE(function)
         const auto iterator      = make_iterator(generator, scaling);
         const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/noreg")};
+            UTEST_NAMED_CASE(scat(scaling, "/noreg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
@@ -100,7 +100,7 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l1reg")};
+            UTEST_NAMED_CASE(scat(scaling, "/l1reg"));
 
             const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
@@ -112,7 +112,7 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l2reg")};
+            UTEST_NAMED_CASE(scat(scaling, "/l2reg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
@@ -124,7 +124,7 @@ UTEST_CASE(function)
             check_convexity(function, trials);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/vAreg")};
+            UTEST_NAMED_CASE(scat(scaling, "/vAreg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
             UTEST_CHECK_EQUAL(function.size(), expected_size);
@@ -152,7 +152,7 @@ UTEST_CASE(minimize)
         const auto loss     = make_loss(scaling);
         const auto iterator = make_iterator(generator, scaling);
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/noreg")};
+            UTEST_NAMED_CASE(scat(scaling, "/noreg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
 
@@ -175,7 +175,7 @@ UTEST_CASE(minimize)
             check_linear(generator, function_weights, function_bias, epsilon);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l1reg")};
+            UTEST_NAMED_CASE(scat(scaling, "/l1reg"));
 
             const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
 
@@ -183,7 +183,7 @@ UTEST_CASE(minimize)
             UTEST_CHECK_GREATER(state.m_iterations, 10);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/l2reg")};
+            UTEST_NAMED_CASE(scat(scaling, "/l2reg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
 
@@ -191,7 +191,7 @@ UTEST_CASE(minimize)
             UTEST_CHECK_GREATER(state.m_iterations, 10);
         }
         {
-            [[maybe_unused]] const auto _ = utest_test_name_t{scat(scaling, "/vAreg")};
+            UTEST_NAMED_CASE(scat(scaling, "/vAreg"));
 
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
 

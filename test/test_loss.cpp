@@ -57,7 +57,7 @@ UTEST_CASE(gradient)
 
     for (const auto& loss_id : loss_t::all().ids())
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++cmd_dims)
         {
@@ -90,7 +90,7 @@ UTEST_CASE(single_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
@@ -123,7 +123,7 @@ UTEST_CASE(single_label_multi_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("s-.+")))
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
@@ -157,7 +157,7 @@ UTEST_CASE(multi_label_multi_class)
 {
     for (const auto& loss_id : loss_t::all().ids(std::regex("m-.+")))
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);
@@ -196,7 +196,7 @@ UTEST_CASE(regression)
 {
     for (const auto& loss_id : {"absolute", "squared", "cauchy"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss = loss_t::all().get(loss_id);
         UTEST_REQUIRE(loss);

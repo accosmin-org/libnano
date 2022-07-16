@@ -92,8 +92,8 @@ UTEST_CASE(convexity)
 {
     for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
-        const auto&                 function = *rfunction;
-        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
+        const auto& function = *rfunction;
+        UTEST_NAMED_CASE(function.name());
 
         const auto dims = function.size();
         UTEST_CHECK_LESS_EQUAL(dims, 4);
@@ -109,8 +109,8 @@ UTEST_CASE(grad_accuracy)
 {
     for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
-        const auto&                 function = *rfunction;
-        [[maybe_unused]] const auto _        = utest_test_name_t{function.name()};
+        const auto& function = *rfunction;
+        UTEST_NAMED_CASE(function.name());
 
         const auto dims = function.size();
         UTEST_CHECK_LESS_EQUAL(dims, 4);

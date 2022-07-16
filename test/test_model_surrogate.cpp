@@ -30,7 +30,7 @@ static void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const 
 {
     for (const auto* const loss_id : {"squared", "absolute"})
     {
-        [[maybe_unused]] const auto _ = utest_test_name_t{loss_id};
+        UTEST_NAMED_CASE(loss_id);
 
         const auto loss     = make_loss(loss_id);
         const auto function = quadratic_surrogate_fit_t(*loss, p, y);
