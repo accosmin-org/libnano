@@ -147,10 +147,10 @@ namespace nano
         scalar_t          f{0};              ///< function value
         scalar_t          t{0};              ///< step size (line-search solvers)
         solver_status     status{solver_status::max_iters}; ///< optimization status
-        tensor_size_t     fcalls{0};         ///< number of function value evaluations so far
-        tensor_size_t     gcalls{0};         ///< number of function gradient evaluations so far
-        tensor_size_t     inner_iters{0};    ///< number of inner iterations so far
-        tensor_size_t     outer_iters{0};    ///< number of outer iterations so far (if constrained)
+        tensor_size_t     fcalls{0};                        ///< number of function value evaluations so far
+        tensor_size_t     gcalls{0};                        ///< number of function gradient evaluations so far
+        tensor_size_t     inner_iters{0};                   ///< number of inner iterations so far
+        tensor_size_t     outer_iters{0};                   ///< number of outer iterations so far (if constrained)
 
     private:
         void update_penalties();
@@ -169,5 +169,5 @@ namespace nano
 
     NANO_PUBLIC std::ostream& operator<<(std::ostream& os, solver_status);
     NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
-    NANO_PUBLIC bool operator<(const solver_state_t& lhs, const solver_state_t& rhs);
+    NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano

@@ -77,9 +77,7 @@ int main(const int, char*[])
         solver.logger(
             [&](const nano::solver_state_t& state)
             {
-                std::cout << "\tdescent: i=" << state.m_iterations << ",f=" << state.f
-                          << ",g=" << state.convergence_criterion() << "[" << state.m_status << "]"
-                          << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << ".\n";
+                std::cout << "\tdescent: " << state << ".\n";
                 return true;
             });
 
@@ -105,12 +103,8 @@ int main(const int, char*[])
         const auto state = solver.minimize(objective, x0);
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.f
-                  << ", g=" << state.convergence_criterion()
-                  << ", x-x*=" << (state.x - objective.b()).lpNorm<Eigen::Infinity>()
-                  << ", iters=" << state.m_iterations << ", fcalls=" << state.m_fcalls << ", gcalls=" << state.m_gcalls
-                  << ", status=" << state.m_status << "\n"
-                  << std::endl;
+                  << "]: f0=" << objective.vgrad(x0, nullptr)
+                  << ",x-x*=" << (state.x - objective.b()).lpNorm<Eigen::Infinity>() << "," << state << ".\n";
     }
 
     return EXIT_SUCCESS;
