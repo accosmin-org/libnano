@@ -31,17 +31,16 @@ static auto make_solver(const char* solver_id, scalar_t epsilon = 1e-9, int max_
 template <typename tpenalty>
 static void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
-    auto penalty = tpenalty{function};
+    auto penalty_function = tpenalty{function};
 
-    for (const auto penalty_term : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
+    for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
-        penalty.penalty_term(penalty_term);
+        penalty_function.penalty(penalty);
 
-        check_gradient(penalty);
-
-        UTEST_CHECK_EQUAL(penalty.strong_convexity(), 0.0);
-        UTEST_CHECK_EQUAL(penalty.convex(), expected_convexity);
-        UTEST_CHECK_EQUAL(penalty.smooth(), expected_smoothness);
+        check_gradient(penalty_function);
+        UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), 0.0);
+        UTEST_CHECK_EQUAL(penalty_function.convex(), expected_convexity);
+        UTEST_CHECK_EQUAL(penalty_function.smooth(), expected_smoothness);
     }
 }
 
@@ -59,19 +58,35 @@ static void check_penalty(const function_t& function, const vector_t& x, bool ex
 {
     UTEST_CHECK_EQUAL(function.valid(x), expected_valid);
 
-    auto penalty = tpenalty{function};
+    auto penalty_function = tpenalty{function};
 
-    for (const auto penalty_term : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
+    for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
         const auto fx = function.vgrad(x);
-        const auto qx = penalty.penalty_term(penalty_term).vgrad(x);
-        if (expected_valid)
+        const auto op = [&]()
         {
-            UTEST_CHECK_CLOSE(fx, qx, 1e-16);
+            const auto qx = penalty_function.penalty(penalty).vgrad(x);
+            if (expected_valid)
+            {
+                UTEST_CHECK_CLOSE(fx, qx, 1e-16);
+            }
+            else
+            {
+                UTEST_CHECK_LESS(fx + 1e-8, qx);
+            }
+        };
+
+        if constexpr (std::is_same_v<tpenalty, linear_quadratic_penalty_function_t>)
+        {
+            for (const auto smoothing : {1e-2, 1e+0, 1e+2})
+            {
+                penalty_function.smoothing(smoothing);
+                op();
+            }
         }
         else
         {
-            UTEST_CHECK_LESS(fx + 1e-6, qx);
+            op();
         }
     }
 }
@@ -89,7 +104,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
     const auto qsolver  = solver_quadratic_penalty_t{};
     const auto lqsolver = solver_linear_quadratic_penalty_t{};
 
-    for (const auto* const solver_id : {"osga", "ellipsoid"})
+    for (const auto* const solver_id : {"ellipsoid"})
     {
         if (!linear_penalty_function_t{function}.convex())
         {
@@ -109,7 +124,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"lbfgs", "bfgs"})
+    for (const auto* const solver_id : {"lbfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
 
@@ -123,7 +138,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"lbfgs", "bfgs"})
+    for (const auto* const solver_id : {"lbfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
 

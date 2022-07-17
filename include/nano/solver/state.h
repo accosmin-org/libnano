@@ -10,6 +10,7 @@ namespace nano
     ///     * current point (x),
     ///     * function value (f),
     ///     * function gradient (g),
+    ///     * penalties (p) - the constraint violations (if any constraint),
     ///     * descent direction (d) - if applicable,
     ///     * line-search step (t) - if applicable.
     ///
@@ -163,7 +164,7 @@ namespace nano
 
         // attributes
         const function_t* function{nullptr};           ///<
-        vector_t          x, g, d;                     ///< parameter, gradient, descent direction
+        vector_t          x, g, d, p; ///< parameter, gradient, descent direction, penalties (if constrained)
         scalar_t          f{0};                        ///< function value
         scalar_t          t{0};                        ///< step size (line-search solvers)
         status            m_status{status::max_iters}; ///< optimization status
