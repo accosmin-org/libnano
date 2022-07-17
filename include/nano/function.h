@@ -95,7 +95,7 @@ namespace nano
         ///
         /// \brief returns the set of registered constraints.
         ///
-        const constraints_t& constraints() const;
+        virtual const constraints_t& constraints() const;
 
         ///
         /// \brief evaluate the function's value at the given point

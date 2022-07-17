@@ -79,12 +79,18 @@ namespace nano
         const auto& parameters() const { return m_parameters; }
 
         ///
-        /// \brief returns the software version.
+        /// \brief returns the software's major version.
         ///
         auto major_version() const { return m_major_version; }
 
+        ///
+        /// \brief returns the software's minor version.
+        ///
         auto minor_version() const { return m_minor_version; }
 
+        ///
+        /// \brief returns the software's patch version.
+        ///
         auto patch_version() const { return m_patch_version; }
 
     private:

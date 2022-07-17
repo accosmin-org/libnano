@@ -95,22 +95,22 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
 bool solver_t::done(const function_t& function, solver_state_t& state, bool iter_ok, bool converged) const
 {
-    state.m_fcalls = function.fcalls();
-    state.m_gcalls = function.gcalls();
+    state.fcalls = function.fcalls();
+    state.gcalls = function.gcalls();
 
     const auto step_ok = iter_ok && state;
 
     if (converged || !step_ok)
     {
         // either converged or failed
-        state.m_status = converged ? solver_state_t::status::converged : solver_state_t::status::failed;
+        state.status = converged ? solver_status::converged : solver_status::failed;
         log(state);
         return true;
     }
     else if (!log(state))
     {
         // stopping was requested
-        state.m_status = solver_state_t::status::stopped;
+        state.status = solver_status::stopped;
         return true;
     }
 
@@ -121,7 +121,7 @@ bool solver_t::done(const function_t& function, solver_state_t& state, bool iter
 bool solver_t::log(solver_state_t& state) const
 {
     const auto status = !m_logger ? true : m_logger(state);
-    state.m_iterations++;
+    state.inner_iters++;
     return status;
 }
 

@@ -52,6 +52,11 @@ namespace nano
         ///
         const auto& function() const { return m_function; }
 
+        ///
+        /// \brief returns the set of registered constraints.
+        ///
+        const constraints_t& constraints() const override { return m_function.constraints(); }
+
     private:
         // attributes
         const function_t& m_function;     ///<

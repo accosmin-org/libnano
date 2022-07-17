@@ -21,7 +21,6 @@ using namespace nano;
 
 static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_size_t& iterations)
 {
-    // log the optimization steps
     solver.logger(
         [&](const solver_state_t& state)
         {
@@ -30,7 +29,6 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
             return true;
         });
 
-    // log the line-search steps
     solver.lsearch0_logger(
         [&](const solver_state_t& state0, const scalar_t t)
         {
@@ -51,7 +49,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
 
 [[maybe_unused]] static auto check_minimize(solver_t& solver, const string_t& solver_id, const function_t& function,
                                             const vector_t& x0, tensor_size_t max_evals = 50000,
-                                            scalar_t epsilon = 1e-6, bool convergences = true)
+                                            scalar_t epsilon = 1e-6, bool converges = true)
 {
     const auto old_n_failures = utest_n_failures.load();
     const auto state0         = solver_state_t{function, x0};
@@ -82,9 +80,8 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     {
         UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
     }
-    UTEST_CHECK_EQUAL(state.m_status,
-                      convergences ? solver_state_t::status::converged : solver_state_t::status::max_iters);
-    UTEST_CHECK_EQUAL(iterations, state.m_iterations);
+    UTEST_CHECK_EQUAL(state.status, converges ? solver_status::converged : solver_status::max_iters);
+    UTEST_CHECK_EQUAL(iterations, state.inner_iters);
 
     if (old_n_failures != utest_n_failures.load())
     {

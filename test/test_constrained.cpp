@@ -98,11 +98,48 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     check_penalty<linear_quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
+static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
+                           const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
+{
+    const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(12) << "x0=" << x0.transpose() << "." << std::endl;
+
+    solver.logger(
+        [&](const auto& state)
+        {
+            stream << std::fixed << std::setprecision(12) << state << ",x=" << state.x.transpose() << "." << std::endl;
+            return true;
+        });
+
+    penalty_solver.logger(
+        [&](const auto& state)
+        {
+            stream << std::fixed << std::setprecision(12) << state << ",x=" << state.x.transpose() << "." << std::endl;
+            return true;
+        });
+
+    const auto state = penalty_solver.minimize(solver, function, x0);
+
+    const auto old_n_failures = utest_n_failures.load();
+
+    UTEST_CHECK_CLOSE(state.f, fbest, epsilon);
+    UTEST_CHECK_CLOSE(state.x, xbest, epsilon);
+    UTEST_CHECK_EQUAL(state.status, solver_status::converged);
+    UTEST_CHECK_LESS(state.p.sum(), penalty_solver.parameter("solver::penalty::epsilon").value<scalar_t>());
+
+    if (old_n_failures != utest_n_failures.load())
+    {
+        std::cout << stream.str() << std::endl;
+    }
+}
+
 static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
-    const auto lsolver  = solver_linear_penalty_t{};
-    const auto qsolver  = solver_quadratic_penalty_t{};
-    const auto lqsolver = solver_linear_quadratic_penalty_t{};
+    auto lsolver  = solver_linear_penalty_t{};
+    auto qsolver  = solver_quadratic_penalty_t{};
+    auto lqsolver = solver_linear_quadratic_penalty_t{};
 
     for (const auto* const solver_id : {"ellipsoid"})
     {
@@ -117,10 +154,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
         {
-            const vector_t x0    = vector_t::Random(function.size()) * 5.0;
-            const auto     state = lsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-3);
-            UTEST_CHECK_CLOSE(state.x, xbest, 1e-3);
+            check_minimize(lsolver, *ref_solver, function, xbest, fbest, 1e-4);
         }
     }
 
@@ -131,10 +165,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
         {
-            const vector_t x0    = vector_t::Random(function.size()) * 5.0;
-            const auto     state = qsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-6);
-            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+            check_minimize(qsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }
     }
 
@@ -145,10 +176,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         const auto ref_solver = make_solver(solver_id);
         for (tensor_size_t trial = 0; trial < 10; ++trial)
         {
-            const vector_t x0    = vector_t::Random(function.size()) * 5.0;
-            const auto     state = lqsolver.minimize(*ref_solver, function, x0);
-            UTEST_CHECK_CLOSE(state.f, fbest, 1e-6);
-            UTEST_CHECK_CLOSE(state.x, xbest, 1e-6);
+            check_minimize(lqsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }
     }
 }

@@ -14,22 +14,22 @@ using namespace nano;
 struct result_t
 {
     result_t() = default;
-    result_t(const solver_state_t& state, int64_t milliseconds) :
-        m_value(state.f),
-        m_gnorm(state.convergence_criterion()),
-        m_status(state.m_status),
-        m_fcalls(state.m_fcalls),
-        m_gcalls(state.m_gcalls),
-        m_milliseconds(milliseconds)
+    result_t(const solver_state_t& state, int64_t milliseconds)
+        : m_value(state.f)
+        , m_gnorm(state.convergence_criterion())
+        , m_status(state.status)
+        , m_fcalls(state.fcalls)
+        , m_gcalls(state.gcalls)
+        , m_milliseconds(milliseconds)
     {
     }
 
-    scalar_t                m_value{0.0};
-    scalar_t                m_gnorm{0.0};
-    solver_state_t::status  m_status{solver_state_t::status::converged};
-    tensor_size_t           m_fcalls{0};
-    tensor_size_t           m_gcalls{0};
-    int64_t                 m_milliseconds{0};
+    scalar_t      m_value{0.0};
+    scalar_t      m_gnorm{0.0};
+    solver_status m_status{solver_status::converged};
+    tensor_size_t m_fcalls{0};
+    tensor_size_t m_gcalls{0};
+    int64_t       m_milliseconds{0};
 };
 
 struct solver_function_stats_t
@@ -52,8 +52,8 @@ struct solver_function_stats_t
         const auto itrial = static_cast<tensor_size_t>(trial);
         m_values(itrial) = result.m_value;
         m_gnorms(itrial) = result.m_gnorm;
-        m_errors(itrial) = result.m_status == solver_state_t::status::failed ? 1.0 : 0.0;
-        m_maxits(itrial) = result.m_status == solver_state_t::status::max_iters ? 1.0 : 0.0;
+        m_errors(itrial)     = result.m_status == solver_status::failed ? 1.0 : 0.0;
+        m_maxits(itrial)     = result.m_status == solver_status::max_iters ? 1.0 : 0.0;
         m_fcalls(itrial) = static_cast<scalar_t>(result.m_fcalls);
         m_gcalls(itrial) = static_cast<scalar_t>(result.m_gcalls);
         m_millis(itrial) = static_cast<scalar_t>(result.m_milliseconds);
@@ -128,13 +128,12 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
         << "],lsearchk[" << (solver->monotonic() ? solver->lsearchk_id() : string_t("N/A"))
         << "]" << std::endl;
 
-    solver->logger([&] (const solver_state_t& state)
-    {
-        std::cout
-            << "descent: i=" << state.m_iterations << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << "[" << state.m_status << "]" << ",calls=" << state.m_fcalls << "/" << state.m_gcalls << "." << std::endl;
-        return true;
-    });
+    solver->logger(
+        [&](const solver_state_t& state)
+        {
+            std::cout << "descent: " << state << "." << std::endl;
+            return true;
+        });
 
     solver->lsearch0_logger([&] (const solver_state_t& state0, const scalar_t t)
     {
@@ -185,14 +184,14 @@ static auto minimize_all(const function_t& function, const solvers_t& solvers,
     for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++ i)
     {
         // log in full detail the optimization trajectory if it fails
-        if ((results[i].m_status == solver_state_t::status::max_iters && log_maxits) ||
-            (results[i].m_status == solver_state_t::status::failed && log_failures))
+        if ((results[i].m_status == solver_status::max_iters && log_maxits) ||
+            (results[i].m_status == solver_status::failed && log_failures))
         {
             const auto& x0 = x0s[i / solvers.size()];
             const auto& solver = solvers[i % solvers.size()].second;
             const auto& solver_id = solvers[i % solvers.size()].first;
             const auto state = log_solver(function, solver, solver_id, x0);
-            assert(state.m_status == results[i].m_status);
+            assert(state.status == results[i].m_status);
         }
     }
 

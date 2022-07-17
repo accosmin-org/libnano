@@ -5,8 +5,13 @@
 
 namespace nano
 {
+    // TODO: implement the penalty method from "A new exact penalty function", by W. Huyer and A. Neumaier, 2003.
+
     ///
-    /// \brief base class for penalty methods to solve constrained optimization problem using a given solver.
+    /// \brief interface for penalty methods to solve constrained optimization problem using a given solver.
+    ///
+    /// NB: the penalty method works by increasing the penalty term in the outer loop
+    ///     and using the given solver to minimize the penalty function (the inner loop).
     ///
     class NANO_PUBLIC solver_penalty_t : public estimator_t
     {
@@ -15,6 +20,28 @@ namespace nano
         /// \brief constructor
         ///
         solver_penalty_t();
+
+        ///
+        /// \brief destructor
+        ///
+        virtual ~solver_penalty_t();
+
+        ///
+        /// \brief set the logging callback.
+        ///
+        void logger(const solver_t::logger_t& logger);
+
+        ///
+        /// \brief minimize the given constrained function starting from the initial point x0.
+        ///
+        virtual solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const = 0;
+
+    protected:
+        bool done(const solver_state_t& curr_state, solver_state_t& best_state, scalar_t epsilon) const;
+
+    private:
+        // attributes
+        solver_t::logger_t m_logger; ///<
     };
 
     ///
@@ -28,9 +55,9 @@ namespace nano
     {
     public:
         ///
-        /// \brief @see solver_t
+        /// \brief @see solver_penalty_t
         ///
-        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const;
+        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const override;
     };
 
     ///
@@ -44,9 +71,9 @@ namespace nano
     {
     public:
         ///
-        /// \brief @see solver_t
+        /// \brief @see solver_penalty_t
         ///
-        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const;
+        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const override;
     };
 
     ///
@@ -60,8 +87,8 @@ namespace nano
     {
     public:
         ///
-        /// \brief @see solver_t
+        /// \brief @see solver_penalty_t
         ///
-        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const;
+        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const override;
     };
 } // namespace nano

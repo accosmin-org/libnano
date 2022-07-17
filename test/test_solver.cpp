@@ -158,7 +158,7 @@ UTEST_BEGIN_MODULE(test_solver_lsearch)
 
 UTEST_CASE(state_str)
 {
-    for (const auto status : enum_values<solver_state_t::status>())
+    for (const auto status : enum_values<solver_status>())
     {
         std::stringstream stream;
         stream << status;

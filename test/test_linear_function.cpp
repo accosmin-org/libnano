@@ -158,7 +158,7 @@ UTEST_CASE(minimize)
 
             auto [state, epsilon] = check_minimize(function);
             UTEST_CHECK_CLOSE(state.f, 0.0, epsilon);
-            UTEST_CHECK_GREATER(state.m_iterations, 10);
+            UTEST_CHECK_GREATER(state.inner_iters, 10);
 
             ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling,
                             function.weights(state.x), function.bias(state.x));
@@ -180,7 +180,7 @@ UTEST_CASE(minimize)
             const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
 
             [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.m_iterations, 10);
+            UTEST_CHECK_GREATER(state.inner_iters, 10);
         }
         {
             UTEST_NAMED_CASE(scat(scaling, "/l2reg"));
@@ -188,7 +188,7 @@ UTEST_CASE(minimize)
             const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
 
             [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.m_iterations, 10);
+            UTEST_CHECK_GREATER(state.inner_iters, 10);
         }
         {
             UTEST_NAMED_CASE(scat(scaling, "/vAreg"));
@@ -196,7 +196,7 @@ UTEST_CASE(minimize)
             const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
 
             [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.m_iterations, 10);
+            UTEST_CHECK_GREATER(state.inner_iters, 10);
         }
     }
 }

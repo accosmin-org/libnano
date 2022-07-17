@@ -5,6 +5,14 @@
 
 namespace nano
 {
+    enum class solver_status : int32_t
+    {
+        max_iters, ///< maximum number of iterations reached without convergence (default)
+        converged, ///< convergence criterion reached
+        failed,    ///< optimization failed (e.g. line-search failed)
+        stopped    ///< user requested stop
+    };
+
     ///
     /// \brief models a state (step) in an unconstrained numerical optimization method:
     ///     * current point (x),
@@ -14,34 +22,18 @@ namespace nano
     ///     * descent direction (d) - if applicable,
     ///     * line-search step (t) - if applicable.
     ///
-    class solver_state_t
+    class NANO_PUBLIC solver_state_t
     {
     public:
-        enum class status
-        {
-            converged, ///< convergence criterion reached
-            max_iters, ///< maximum number of iterations reached without convergence (default)
-            failed,    ///< optimization failed (e.g. line-search failed)
-            stopped    ///< user requested stop
-        };
-
         ///
         /// \brief default constructor
         ///
-        solver_state_t() = default;
+        solver_state_t();
 
         ///
         /// \brief constructor
         ///
-        template <typename tvector>
-        solver_state_t(const function_t& ffunction, tvector x0)
-            : function(&ffunction)
-            , x(std::move(x0))
-            , g(vector_t::Zero(x.size()))
-            , d(vector_t::Zero(x.size()))
-            , f(function->vgrad(x, &g))
-        {
-        }
+        solver_state_t(const function_t&, vector_t x0);
 
         ///
         /// \brief move to another point.
@@ -54,6 +46,7 @@ namespace nano
             assert(x.size() == function->size());
             x = xx;
             f = function->vgrad(x, &g);
+            update_penalties();
             return static_cast<bool>(*this);
         }
 
@@ -71,21 +64,7 @@ namespace nano
         /// \brief update the current state, if the given function value is smaller than the current one.
         /// returns true if the update was performed.
         ///
-        bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx)
-        {
-            if (std::isfinite(fx) && fx < f)
-            {
-                this->x = x;
-                this->f = fx;
-                this->g = gx;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
+        bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
         bool update_if_better(const vector_t& x, scalar_t fx) { return update_if_better(x, g, fx); }
 
         ///
@@ -163,38 +142,32 @@ namespace nano
         }
 
         // attributes
-        const function_t* function{nullptr};           ///<
-        vector_t          x, g, d, p; ///< parameter, gradient, descent direction, penalties (if constrained)
-        scalar_t          f{0};                        ///< function value
-        scalar_t          t{0};                        ///< step size (line-search solvers)
-        status            m_status{status::max_iters}; ///< optimization status
-        tensor_size_t     m_fcalls{0};                 ///< #function value evaluations so far
-        tensor_size_t     m_gcalls{0};                 ///< #function gradient evaluations so far
-        tensor_size_t     m_iterations{0};             ///< #optimization iterations so far
+        const function_t* function{nullptr}; ///<
+        vector_t          x, g, d, p;        ///< parameter, gradient, descent direction, penalties (if constrained)
+        scalar_t          f{0};              ///< function value
+        scalar_t          t{0};              ///< step size (line-search solvers)
+        solver_status     status{solver_status::max_iters}; ///< optimization status
+        tensor_size_t     fcalls{0};         ///< number of function value evaluations so far
+        tensor_size_t     gcalls{0};         ///< number of function gradient evaluations so far
+        tensor_size_t     inner_iters{0};    ///< number of inner iterations so far
+        tensor_size_t     outer_iters{0};    ///< number of outer iterations so far (if constrained)
+
+    private:
+        void update_penalties();
     };
 
     template <>
-    inline enum_map_t<solver_state_t::status> enum_string<solver_state_t::status>()
+    inline enum_map_t<solver_status> enum_string<solver_status>()
     {
         return {
-            {solver_state_t::status::converged, "converged"},
-            {solver_state_t::status::max_iters, "max_iters"},
-            {   solver_state_t::status::failed,    "failed"},
-            {  solver_state_t::status::stopped,   "stopped"}
+            {solver_status::converged, "converged"},
+            {solver_status::max_iters, "max_iters"},
+            {   solver_status::failed,    "failed"},
+            {  solver_status::stopped,   "stopped"}
         };
     }
 
-    inline bool operator<(const solver_state_t& one, const solver_state_t& two)
-    {
-        return (std::isfinite(one.f) ? one.f : std::numeric_limits<scalar_t>::max()) <
-               (std::isfinite(two.f) ? two.f : std::numeric_limits<scalar_t>::max());
-    }
-
-    inline std::ostream& operator<<(std::ostream& os, solver_state_t::status status) { return os << scat(status); }
-
-    inline std::ostream& operator<<(std::ostream& os, const solver_state_t& state)
-    {
-        return os << "i=" << state.m_iterations << ",calls=" << state.m_fcalls << "|" << state.m_gcalls
-                  << ",f=" << state.f << ",g=" << state.convergence_criterion() << "[" << state.m_status << "]";
-    }
+    NANO_PUBLIC std::ostream& operator<<(std::ostream& os, solver_status);
+    NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
+    NANO_PUBLIC bool operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano

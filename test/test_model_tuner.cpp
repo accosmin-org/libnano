@@ -28,8 +28,8 @@ static void check_tuner(const tuner_t& tuner, const tensor2d_t& initial_params, 
     {
         if (step.m_surrogate_fit.function != nullptr)
         {
-            UTEST_CHECK_EQUAL(step.m_surrogate_fit.m_status, solver_state_t::status::converged);
-            UTEST_CHECK_EQUAL(step.m_surrogate_opt.m_status, solver_state_t::status::converged);
+            UTEST_CHECK_EQUAL(step.m_surrogate_fit.status, solver_status::converged);
+            UTEST_CHECK_EQUAL(step.m_surrogate_opt.status, solver_status::converged);
         }
     }
 }
