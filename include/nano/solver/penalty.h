@@ -22,11 +22,6 @@ namespace nano
         solver_penalty_t();
 
         ///
-        /// \brief destructor
-        ///
-        virtual ~solver_penalty_t();
-
-        ///
         /// \brief set the logging callback.
         ///
         void logger(const solver_t::logger_t& logger);

@@ -32,8 +32,6 @@ solver_penalty_t::solver_penalty_t()
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
 
-solver_penalty_t::~solver_penalty_t() = default;
-
 void solver_penalty_t::logger(const solver_t::logger_t& logger)
 {
     m_logger = logger;
