@@ -86,8 +86,6 @@ function config {
 
 function build {
     cd ${libnanodir}
-    command=$(grep test_mlearn.cpp compile_commands.json | grep command)
-    printf "${command}\n"
     cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
@@ -158,6 +156,7 @@ function codecov {
     lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
     lcov ${options} --list ${output} || return 1
     genhtml ${options} --output lcovhtml ${output} || return 1
+
     if [ -n "$CODECOV_TOKEN" ]; then
         printf "Uploading code coverage report to codecov.io ...\n"
         curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
@@ -171,6 +170,7 @@ function codecov {
         chmod +x codecov
         ./codecov -t ${CODECOV_TOKEN} -f ${output} || return 1
     fi
+
     #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
@@ -407,6 +407,31 @@ function clang_format {
     fi
 }
 
+function sonar {
+    cd ${libnanodir}
+
+    export SONAR_SCANNER_VERSION=4.7.0.2747
+    export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
+    curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
+        https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
+    unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+    export PATH=$SONAR_SCANNER_HOME/bin:$PATH
+    export SONAR_SCANNER_OPTS="-server"
+
+    curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+    unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
+    export PATH=$HOME/.sonar/build-wrapper-linux-x86:$PATH
+
+    build-wrapper-linux-x86-64 --out-dir bw-output cmake --build ${libnanodir} -- -j ${threads}
+
+    sonar-scanner \
+      -Dsonar.organization=accosmin \
+      -Dsonar.projectKey=accosmin_libnano \
+      -Dsonar.sources=. \
+      -Dsonar.cfamily.build-wrapper-output=bw-output \
+      -Dsonar.host.url=https://sonarcloud.io
+}
+
 function usage {
     cat <<EOF
 usage: $0 [OPTIONS]
@@ -482,6 +507,8 @@ options:
         build libnano as a shared library (default)
     --static
         build libnano as a static library
+    --clang-format
+        check formatting with clang-format (the code will be modified in-place)
 EOF
     exit 1
 }
@@ -534,6 +561,7 @@ while [ "$1" != "" ]; do
         --shared)                       build_shared="ON";;
         --static)                       build_shared="OFF";;
         --clang-format)                 clang_format || exit 1;;
+        --sonar)                        sonar || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac
