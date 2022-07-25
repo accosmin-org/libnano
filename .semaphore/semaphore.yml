@@ -62,9 +62,7 @@ blocks:
         - name: memcheck (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
-        - name: codecov (gcc)
+        - name: coverage (gcc, lcov, genhtml)
           commands:
-            - sudo -H pip install --upgrade pip
-            - sudo -H pip install coverage
-            - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type RelWithDebInfo --coverage --config --build --test --codecov
+            - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type RelWithDebInfo --coverage --config --build --test --lcov
     dependencies: []

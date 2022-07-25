@@ -15,23 +15,17 @@ namespace nano
     ///
     /// \brief cell in a table, potentially spanning multiple columns.
     ///
-    struct cell_t
+    struct NANO_PUBLIC cell_t
     {
         ///
         /// \brief default constructor
         ///
-        cell_t() = default;
+        cell_t();
 
         ///
         /// \brief constructor
         ///
-        cell_t(string_t data, const size_t span, const alignment align, const char fill)
-            : m_data(std::move(data))
-            , m_span(span)
-            , m_fill(fill)
-            , m_alignment(align)
-        {
-        }
+        cell_t(string_t data, const size_t span, const alignment align, const char fill);
 
         // attributes
         string_t  m_data;                       ///<
@@ -54,6 +48,8 @@ namespace nano
         size_t m_span{1};
     };
 
+    inline colspan_t colspan(const size_t span) { return {span}; }
+
     ///
     /// \brief control filling for aligning text in a cell.
     ///
@@ -62,14 +58,12 @@ namespace nano
         char m_fill{' '};
     };
 
-    inline colspan_t colspan(const size_t span) { return {span}; }
-
     inline colfill_t colfill(const char fill) { return {fill}; }
 
     ///
     /// \brief row in a table, consisting of a list of cells.
     ///
-    class row_t
+    class NANO_PUBLIC row_t
     {
     public:
         enum class mode
@@ -82,15 +76,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        row_t() = default;
+        row_t();
 
         ///
         /// \brief constructor
         ///
-        explicit row_t(const mode t)
-            : m_type(t)
-        {
-        }
+        explicit row_t(mode t);
 
         ///
         /// \brief change the current formatting to be used by the next cells
@@ -149,48 +140,16 @@ namespace nano
         }
 
         ///
-        /// \brief find the a cell taking into account column spanning
+        /// \brief find the a cell taking into account column spanning.
         ///
-        cell_t* find(const size_t col)
-        {
-            size_t     icol = 0;
-            const auto it   = std::find_if(m_cells.begin(), m_cells.end(),
-                                           [&](const auto& cell)
-                                           {
-                                             icol += cell.m_span;
-                                             return icol > col;
-                                           });
-            return (it == m_cells.end()) ? nullptr : &*it;
-        }
-
-        const cell_t* find(const size_t col) const
-        {
-            size_t     icol = 0;
-            const auto it   = std::find_if(m_cells.begin(), m_cells.end(),
-                                           [&](const auto& cell)
-                                           {
-                                             icol += cell.m_span;
-                                             return icol > col;
-                                           });
-            return (it == m_cells.end()) ? nullptr : &*it;
-        }
+        cell_t*       find(const size_t col);
+        const cell_t* find(const size_t col) const;
 
         ///
-        /// \brief change a column's mark or data (finds the right cell taking into account column spanning)
+        /// \brief change a column's mark or data (finds the right cell taking into account column spanning).
         ///
-        void data(const size_t col, const string_t& str)
-        {
-            auto* cell = find(col);
-            assert(cell);
-            cell->m_data = str;
-        }
-
-        void mark(const size_t col, const string_t& str)
-        {
-            auto* cell = find(col);
-            assert(cell);
-            cell->m_mark = str;
-        }
+        void data(const size_t col, const string_t& str);
+        void mark(const size_t col, const string_t& str);
 
         ///
         /// \brief collect the columns as scalar values using nano::from_string<tscalar>
@@ -243,24 +202,11 @@ namespace nano
         /// \brief access functions
         ///
         auto cols() const { return m_cols; }
-
         auto type() const { return m_type; }
-
         const auto& cells() const { return m_cells; }
 
-        auto data(const size_t col) const
-        {
-            const auto* cell = find(col);
-            assert(cell);
-            return cell->m_data;
-        }
-
-        auto mark(const size_t col) const
-        {
-            const auto* cell = find(col);
-            assert(cell);
-            return cell->m_mark;
-        }
+        const string_t& data(const size_t col) const;
+        const string_t& mark(const size_t col) const;
 
     private:
         // attributes
@@ -280,79 +226,61 @@ namespace nano
     ///
     /// \brief stores and formats tabular data for display.
     ///
-    class table_t
+    class NANO_PUBLIC table_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        table_t() = default;
+        table_t();
 
         ///
-        /// \brief remove all rows, but keeps the header
+        /// \brief append a row as a delimeter row, as a header or as a data row.
         ///
-        void clear();
+        row_t& delim();
+        row_t& header();
+        row_t& append();
 
         ///
-        /// \brief append a row as a header, as a data or as a delimeter row
-        ///
-        row_t& delim()
-        {
-            m_rows.emplace_back(row_t::mode::delim);
-            return *m_rows.rbegin();
-        }
-
-        row_t& header()
-        {
-            m_rows.emplace_back(row_t::mode::header);
-            return *m_rows.rbegin();
-        }
-
-        row_t& append()
-        {
-            m_rows.emplace_back(row_t::mode::data);
-            return *m_rows.rbegin();
-        }
-
-        ///
-        /// \brief (stable) sort the table using the given operator and columns
+        /// \brief (stable) sort the table using the given operator and columns.
         /// e.g. toperator can be nano::make_[less|greater]_from_string<tscalar>
         ///
         template <typename toperator>
         void sort(const toperator& comp, const std::vector<size_t>& columns)
         {
-            std::stable_sort(m_rows.begin(), m_rows.end(),
-                             [&](const row_t& row1, const row_t& row2)
-                             {
-                                 if (row1.type() == row_t::mode::data && row2.type() == row_t::mode::data)
-                                 {
-                                     assert(row1.cols() == row2.cols());
-                                     for (const auto col : columns)
-                                     {
-                                         const auto* cell1 = row1.find(col);
-                                         const auto* cell2 = row2.find(col);
-                                         assert(cell1 && cell2);
+            const auto op = [&](const row_t& row1, const row_t& row2)
+            {
+                if (row1.type() == row_t::mode::data && row2.type() == row_t::mode::data)
+                {
+                    assert(row1.cols() == row2.cols());
+                    for (const auto col : columns)
+                    {
+                        const auto* cell1 = row1.find(col);
+                        const auto* cell2 = row2.find(col);
+                        assert(cell1 && cell2);
 
-                                         if (comp(cell1->m_data, cell2->m_data))
-                                         {
-                                             return true;
-                                         }
-                                         else if (comp(cell2->m_data, cell1->m_data))
-                                         {
-                                             return false;
-                                         }
-                                     }
-                                     return true;
-                                 }
-                                 else
-                                 {
-                                     return false;
-                                 }
-                             });
+                        if (comp(cell1->m_data, cell2->m_data))
+                        {
+                            return true;
+                        }
+                        else if (comp(cell2->m_data, cell1->m_data))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            };
+
+            std::stable_sort(m_rows.begin(), m_rows.end(), op);
         }
 
         ///
-        /// \brief mark row-wise the selected columns with the given operator
+        /// \brief mark row-wise the selected columns with the given operator.
         ///
         template <typename tmarker>
         void mark(const tmarker& marker, const char* marker_string = " (*)")
@@ -391,13 +319,6 @@ namespace nano
         // attributes
         std::vector<row_t> m_rows;
     };
-
-    inline size_t table_t::cols() const
-    {
-        const auto op = [](const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
-        const auto it = std::max_element(m_rows.begin(), m_rows.end(), op);
-        return (it == m_rows.end()) ? size_t(0) : it->cols();
-    }
 
     inline bool operator==(const table_t& t1, const table_t& t2) { return std::operator==(t1.content(), t2.content()); }
 
@@ -478,12 +399,12 @@ namespace nano
     } // namespace detail
 
     ///
-    /// \brief select the column with the minimum value
+    /// \brief select the column with the minimum value.
     ///
     template <typename tscalar>
     auto make_marker_minimum_col()
     {
-        return [=](const row_t& row)
+        return [](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
             const auto it     = detail::min_element(values);
@@ -492,12 +413,12 @@ namespace nano
     }
 
     ///
-    /// \brief select the column with the maximum value
+    /// \brief select the column with the maximum value.
     ///
     template <typename tscalar>
     auto make_marker_maximum_col()
     {
-        return [=](const row_t& row) -> std::vector<size_t>
+        return [](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
             const auto it     = detail::max_element(values);
@@ -506,7 +427,7 @@ namespace nano
     }
 
     ///
-    /// \brief select the columns within [0, epsilon] from the maximum value
+    /// \brief select the columns within [0, epsilon] from the maximum value.
     ///
     template <typename tscalar>
     auto make_marker_maximum_epsilon_cols(const tscalar epsilon)
@@ -520,7 +441,7 @@ namespace nano
     }
 
     ///
-    /// \brief select the columns within [0, epsilon] from the minimum value
+    /// \brief select the columns within [0, epsilon] from the minimum value.
     ///
     template <typename tscalar>
     auto make_marker_minimum_epsilon_cols(const tscalar epsilon)
@@ -534,7 +455,7 @@ namespace nano
     }
 
     ///
-    /// \brief select the columns within [0, percentage]% from the maximum value
+    /// \brief select the columns within [0, percentage]% from the maximum value.
     ///
     template <typename tscalar>
     auto make_marker_maximum_percentage_cols(const tscalar percentage)
@@ -554,7 +475,7 @@ namespace nano
     }
 
     ///
-    /// \brief select the columns within [0, percentage]% from the minimum value
+    /// \brief select the columns within [0, percentage]% from the minimum value.
     ///
     template <typename tscalar>
     auto make_marker_minimum_percentage_cols(const tscalar percentage)
