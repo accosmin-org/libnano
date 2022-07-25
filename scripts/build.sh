@@ -67,6 +67,10 @@ function coverage {
     export CXXFLAGS="${CXXFLAGS} -coverage -O0"
 }
 
+function llvm_coverage {
+    export CXXFLAGS="${CXXFLAGS} -fprofile-instr-generate -fcoverage-mapping"
+}
+
 function suffix {
     installdir=${basedir}/install/$1
     libnanodir=${basedir}/build/libnano/$1
@@ -143,7 +147,7 @@ function cppcheck {
         --suppress=unmatchedSuppression
 }
 
-function codecov {
+function lcov {
     cd ${basedir}
 
     local output=${basedir}/coverage.info
@@ -156,28 +160,33 @@ function codecov {
     lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
     lcov ${options} --list ${output} || return 1
     genhtml ${options} --output lcovhtml ${output} || return 1
-
-    if [ -n "$CODECOV_TOKEN" ]; then
-        printf "Uploading code coverage report to codecov.io ...\n"
-        curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-
-        gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-        shasum -a 256 -c codecov.SHA256SUM
-
-        chmod +x codecov
-        ./codecov -t ${CODECOV_TOKEN} -f ${output} || return 1
-    fi
-
-    #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
-function coveralls {
+function llvm_cov {
     cd ${basedir}
 
-    coveralls --root ${basedir} --gcov-options '\-lp' || return 1
+    rm -rf ${libnanodir}/test/*.profraw
+    rm -rf ${libnanodir}/test/*.profdata
+
+    tests=$(find ${libnanodir}/test/test_*)
+
+    for utest in ${tests}; do
+        echo $utest ${name}
+        LLVM_PROFILE_FILE=${utest}.profraw ${utest}
+        llvm-profdata merge -sparse ${utest}.profraw -o ${utest}.profdata
+        llvm-cov report ${utest} -instr-profile=${utest}.profdata -ignore-filename-regex=test\/
+    done
+
+    llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${libnanodir}/test/libnano.profdata
+    llvm-cov show ${tests} \
+        -format=html -instr-profile=${libnanodir}/test/libnano.profdata \
+        -ignore-filename-regex=test\/ \
+        -show-line-counts-or-regions --show-branches=count --show-expansions \
+        -output-dir llvmcovhtml
+
+    # TODO: fix symbol demangler
+    # TODO: show nice global repor
+    # TODO: push to sonar
 }
 
 function build_valgrind {
@@ -460,7 +469,9 @@ options:
     --libcpp
         setup compiler and linker flags to use libc++
     --coverage
-        setup compiler and linker flags to setup code coverage
+        setup compiler and linker flags to setup code coverage using gcov (gcc and clang)
+    --llvm-coverage
+        setup compiler and linker flags to setup source-based code coverage (clang)
     --suffix <string>
         suffix for the build and installation directories
     --build-type [Debug,Release,RelWithDebInfo,MinSizeRel]
@@ -475,10 +486,10 @@ options:
         install the library and the command line applications
     --cppcheck
         run cppcheck (static code analyzer)
-    --codecov
-        upload code coverage results to codecov.io
-    --coveralls
-        upload code coverage results to coveralls.io
+    --lcov
+        generate the code coverage report using lcov and genhtml
+    --llvm-cov
+        generate the code coverage report usign llvm's source-based code coverage
     --memcheck
         run the unit tests through memcheck (e.g. detects unitialized variales, memory leaks, invalid memory accesses)
     --helgrind
@@ -531,6 +542,7 @@ while [ "$1" != "" ]; do
         --native)                       native;;
         --libcpp)                       libcpp;;
         --coverage)                     coverage;;
+        --llvm-coverage)                llvm_coverage;;
         --suffix)                       shift; suffix $1;;
         --build-type)                   shift; build_type=$1;;
         --config)                       config || exit 1;;
@@ -538,8 +550,8 @@ while [ "$1" != "" ]; do
         --test)                         tests || exit 1;;
         --install)                      install || exit 1;;
         --cppcheck)                     cppcheck || exit 1;;
-        --codecov)                      codecov || exit 1;;
-        --coveralls)                    coveralls || exit 1;;
+        --lcov)                         lcov || exit 1;;
+        --llvm-cov)                     llvm_cov || exit 1;;
         --memcheck)                     memcheck || exit 1;;
         --helgrind)                     helgrind || exit 1;;
         --clang-suffix)                 shift; clang_suffix=$1;;

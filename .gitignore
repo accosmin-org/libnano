@@ -40,5 +40,6 @@ install
 
 coverage.info
 lcovhtml
+llvmcovhtml
 datasets
 doxygen

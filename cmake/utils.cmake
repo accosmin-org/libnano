@@ -15,6 +15,7 @@ function(make_test test libs)
         SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>)
     target_link_libraries(${test}
         PRIVATE ${libs})
+
     add_test(${test} ${test})
 endfunction()
 
