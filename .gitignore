@@ -38,7 +38,7 @@
 build
 install
 
-coverage.info
+*.info
 lcovhtml
 llvmcovhtml
 datasets
