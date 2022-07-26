@@ -201,8 +201,8 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto cols() const { return m_cols; }
-        auto type() const { return m_type; }
+        auto        cols() const { return m_cols; }
+        auto        type() const { return m_type; }
         const auto& cells() const { return m_cells; }
 
         const string_t& data(const size_t col) const;
