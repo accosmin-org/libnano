@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <nano/core/cmdline.h>
 #include <utest/utest.h>
@@ -222,7 +223,7 @@ UTEST_CASE(parse_config_file)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const std::string path = "config";
+    const std::string path = std::filesystem::temp_directory_path() / "libnano.config.tmp";
     {
         std::ofstream out(path.c_str());
         out << "-v\n";
