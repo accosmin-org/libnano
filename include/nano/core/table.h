@@ -25,7 +25,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        cell_t(string_t data, const size_t span, const alignment align, const char fill);
+        cell_t(string_t data, size_t span, alignment align, char fill);
 
         // attributes
         string_t  m_data;                       ///<
@@ -84,42 +84,17 @@ namespace nano
         explicit row_t(mode t);
 
         ///
-        /// \brief change the current formatting to be used by the next cells
+        /// \brief change the current formatting to be used by the next cells.
         ///
-        row_t& operator<<(const alignment align)
-        {
-            m_alignment = align;
-            return *this;
-        }
-
-        row_t& operator<<(const colfill_t colfill)
-        {
-            m_colfill = colfill.m_fill;
-            return *this;
-        }
-
-        row_t& operator<<(const colspan_t colspan)
-        {
-            m_colspan = colspan.m_span;
-            return *this;
-        }
+        row_t& operator<<(alignment);
+        row_t& operator<<(colfill_t);
+        row_t& operator<<(colspan_t);
 
         ///
         /// \brief insert new cells using the current formatting settings
         ///
-        row_t& operator<<(const char* string)
-        {
-            m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
-            m_cols += m_colspan;
-            return (*this) << colspan(1) << alignment::left << colfill(' ');
-        }
-
-        row_t& operator<<(const string_t& string)
-        {
-            m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
-            m_cols += m_colspan;
-            return (*this) << colspan(1) << alignment::left << colfill(' ');
-        }
+        row_t& operator<<(const char*);
+        row_t& operator<<(const string_t&);
 
         template <typename tscalar>
         row_t& operator<<(const tscalar& value)
@@ -142,14 +117,14 @@ namespace nano
         ///
         /// \brief find the a cell taking into account column spanning.
         ///
-        cell_t*       find(const size_t col);
-        const cell_t* find(const size_t col) const;
+        cell_t*       find(size_t col);
+        const cell_t* find(size_t col) const;
 
         ///
         /// \brief change a column's mark or data (finds the right cell taking into account column spanning).
         ///
-        void data(const size_t col, const string_t& str);
-        void mark(const size_t col, const string_t& str);
+        void data(size_t col, const string_t& str);
+        void mark(size_t col, const string_t& str);
 
         ///
         /// \brief collect the columns as scalar values using nano::from_string<tscalar>
@@ -205,8 +180,8 @@ namespace nano
         auto        type() const { return m_type; }
         const auto& cells() const { return m_cells; }
 
-        const string_t& data(const size_t col) const;
-        const string_t& mark(const size_t col) const;
+        const string_t& data(size_t col) const;
+        const string_t& mark(size_t col) const;
 
     private:
         // attributes
@@ -303,17 +278,9 @@ namespace nano
 
         const auto& content() const { return m_rows; }
 
-        auto& row(const size_t r)
-        {
-            assert(r < rows());
-            return m_rows[r];
-        }
+        row_t& row(size_t row_index);
 
-        const auto& row(const size_t r) const
-        {
-            assert(r < rows());
-            return m_rows[r];
-        }
+        const row_t& row(size_t row_index) const;
 
     private:
         // attributes

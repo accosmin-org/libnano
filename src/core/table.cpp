@@ -19,6 +19,38 @@ row_t::row_t(const mode t)
 {
 }
 
+row_t& row_t::operator<<(const alignment align)
+{
+    m_alignment = align;
+    return *this;
+}
+
+row_t& row_t::operator<<(const colfill_t colfill)
+{
+    m_colfill = colfill.m_fill;
+    return *this;
+}
+
+row_t& row_t::operator<<(const colspan_t colspan)
+{
+    m_colspan = colspan.m_span;
+    return *this;
+}
+
+row_t& row_t::operator<<(const char* string)
+{
+    m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
+    m_cols += m_colspan;
+    return (*this) << colspan(1) << alignment::left << colfill(' ');
+}
+
+row_t& row_t::operator<<(const string_t& string)
+{
+    m_cells.emplace_back(string, m_colspan, m_alignment, m_colfill);
+    m_cols += m_colspan;
+    return (*this) << colspan(1) << alignment::left << colfill(' ');
+}
+
 cell_t* row_t::find(const size_t col)
 {
     size_t     icol = 0;
@@ -96,6 +128,18 @@ size_t table_t::cols() const
     const auto op = [](const row_t& row1, const row_t& row2) { return row1.cols() < row2.cols(); };
     const auto it = std::max_element(m_rows.begin(), m_rows.end(), op);
     return (it == m_rows.end()) ? size_t(0) : it->cols();
+}
+
+row_t& table_t::row(const size_t r)
+{
+    assert(r < rows());
+    return m_rows[r];
+}
+
+const row_t& table_t::row(const size_t r) const
+{
+    assert(r < rows());
+    return m_rows[r];
 }
 
 std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
