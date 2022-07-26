@@ -147,23 +147,25 @@ function cppcheck {
         --suppress=unmatchedSuppression
 }
 
-function lcov {
+function lcov_coverage {
     cd ${basedir}
 
-    local output=${basedir}/coverage.info
+    local output=${basedir}/lcov.info
 
     options=""
     options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
     options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
 
-    lcov ${options} --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
+    lcov ${options} --directory ${libnanodir} --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
     lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
     lcov ${options} --list ${output} || return 1
     genhtml ${options} --output lcovhtml ${output} || return 1
 }
 
-function llvm_cov {
+function llvm_cov_coverage {
     cd ${basedir}
+
+    local output=${basedir}/llvmcov.info
 
     rm -rf ${libnanodir}/test/*.profraw
     rm -rf ${libnanodir}/test/*.profdata
@@ -177,15 +179,18 @@ function llvm_cov {
         llvm-cov report ${utest} -instr-profile=${utest}.profdata -ignore-filename-regex=test\/
     done
 
-    llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${libnanodir}/test/libnano.profdata
+    llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${output}
     llvm-cov show ${tests} \
-        -format=html -instr-profile=${libnanodir}/test/libnano.profdata \
+        -format=html -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
         -show-line-counts-or-regions --show-branches=count --show-expansions \
         -output-dir llvmcovhtml
 
+    return 0
+
     # TODO: fix symbol demangler
-    # TODO: show nice global repor
+    # TODO: show nice global report
+    # TODO: integrate with running in cmake?!
     # TODO: push to sonar
 }
 
@@ -550,8 +555,8 @@ while [ "$1" != "" ]; do
         --test)                         tests || exit 1;;
         --install)                      install || exit 1;;
         --cppcheck)                     cppcheck || exit 1;;
-        --lcov)                         lcov || exit 1;;
-        --llvm-cov)                     llvm_cov || exit 1;;
+        --lcov)                         lcov_coverage || exit 1;;
+        --llvm-cov)                     llvm_cov_coverage || exit 1;;
         --memcheck)                     memcheck || exit 1;;
         --helgrind)                     helgrind || exit 1;;
         --clang-suffix)                 shift; clang_suffix=$1;;

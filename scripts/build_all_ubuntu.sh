@@ -4,22 +4,15 @@ set -e
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
-CXX=clang++ \
-    bash scripts/build.sh --suffix llvm-coverage --build-type RelWithDebInfo \
-    --generator Ninja --llvm-coverage --libcpp -DNANO_LLVM_COVERAGE=ON --config --build --llvm-cov
-
-exit 0
-
-CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type RelWithDebInfo \
-    --generator Ninja --coverage --config --build --test --lcov
-
-exit 0
-
 CXX=g++ bash scripts/build.sh --suffix cppcheck \
     --generator Ninja --config --cppcheck
 
 CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type RelWithDebInfo \
-    --generator Ninja --coverage --config --build --test --codecov
+    --generator Ninja --coverage --config --build --test --lcov
+
+CXX=clang++ \
+    bash scripts/build.sh --suffix llvm-coverage --build-type RelWithDebInfo \
+    --generator Ninja --llvm-coverage --libcpp --config --build --llvm-cov
 
 CXX=g++ bash scripts/build.sh --suffix gcc-debug --build-type Debug \
     --generator Ninja --config --build --test --install --build-example
