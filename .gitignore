@@ -38,7 +38,11 @@
 build
 install
 
-coverage.info
+lcov.info
+llvmcov.info
+
 lcovhtml
+llvmcovhtml
+
 datasets
 doxygen
