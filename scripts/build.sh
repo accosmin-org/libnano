@@ -67,6 +67,10 @@ function coverage {
     export CXXFLAGS="${CXXFLAGS} -coverage -O0"
 }
 
+function llvm_coverage {
+    export CXXFLAGS="${CXXFLAGS} -fprofile-instr-generate -fcoverage-mapping"
+}
+
 function suffix {
     installdir=${basedir}/install/$1
     libnanodir=${basedir}/build/libnano/$1
@@ -143,63 +147,47 @@ function cppcheck {
         --suppress=unmatchedSuppression
 }
 
-function codecov {
+function lcov_coverage {
     cd ${basedir}
 
-    local output=${basedir}/coverage.info
+    local output=${basedir}/lcov.info
 
     options=""
     options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
     options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
 
-    lcov ${options} --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
+    lcov ${options} --directory ${libnanodir} --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
     lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
     lcov ${options} --list ${output} || return 1
     genhtml ${options} --output lcovhtml ${output} || return 1
-
-    if [ -n "$CODECOV_TOKEN" ]; then
-        printf "Uploading code coverage report to codecov.io ...\n"
-        curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-        curl -Os https://uploader.codecov.io/latest/linux/codecov
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-        curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-
-        gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-        shasum -a 256 -c codecov.SHA256SUM
-
-        chmod +x codecov
-        ./codecov -t ${CODECOV_TOKEN} -f ${output} || return 1
-    fi
-
-    #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 
-function coveralls {
+function llvm_cov_coverage {
     cd ${basedir}
 
-    coveralls --root ${basedir} --gcov-options '\-lp' || return 1
-}
+    local output=${basedir}/llvmcov.info
 
-function build_valgrind {
-    version=3.17.0
-    installed_version=$(/tmp/valgrind/bin/valgrind --version)
+    tests=$(find ${libnanodir}/test/test_* | grep -v profraw | grep -v profdata)
+    objects="$(find ${libnanodir}/src/libnano*)"
+    for utest in ${tests}; do
+        objects="${objects} -object ${utest}"
+    done
 
-    if [ "${installed_version}" != "valgrind-${version}" ]; then
-        wget -N https://sourceware.org/pub/valgrind/valgrind-${version}.tar.bz2 || return 1
-        tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
+    llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${output}
 
-        OLD_CXXFLAGS=${CXXFLAGS}
-        export CXXFLAGS=""
-        cd valgrind-${version}
-        ./autogen.sh > autogen.log 2>&1 || return 1
-        ./configure --prefix=/tmp/valgrind > config.log 2>&1 || return 1
-        make -j > build.log 2>&1 || return 1
-        make install > install.log 2>&1 || return 1
-        cd ..
-        export CXXFLAGS="${OLD_CXXFLAGS}"
-    fi
+    llvm-cov show \
+        -instr-profile=${output} \
+        -ignore-filename-regex=test\/ \
+        -format=html -Xdemangler=c++filt -tab-size=4 \
+        -show-line-counts -show-line-counts-or-regions --show-branches=count --show-expansions --show-regions \
+        -output-dir llvmcovhtml \
+        ${objects}
 
-    /tmp/valgrind/bin/valgrind --version || return 1
+    llvm-cov report \
+        -instr-profile=${output} \
+        -ignore-filename-regex=test\/ \
+        -show-region-summary -show-branch-summary \
+        ${objects}
 }
 
 function memcheck {
@@ -210,15 +198,13 @@ function memcheck {
 function helgrind {
     cd ${libnanodir}
 
-    build_valgrind || return 1
-
     returncode=0
     utests="test/test_tpool"
     for utest in ${utests}
     do
         printf "Running helgrind@%s ...\n" ${utest}
         log=helgrind_${utest/test\//}.log
-        /tmp/valgrind/bin/valgrind --tool=helgrind \
+        valgrind --tool=helgrind \
             --error-exitcode=1 \
             --log-file=${log} ${utest}
 
@@ -460,7 +446,9 @@ options:
     --libcpp
         setup compiler and linker flags to use libc++
     --coverage
-        setup compiler and linker flags to setup code coverage
+        setup compiler and linker flags to setup code coverage using gcov (gcc and clang)
+    --llvm-coverage
+        setup compiler and linker flags to setup source-based code coverage (clang)
     --suffix <string>
         suffix for the build and installation directories
     --build-type [Debug,Release,RelWithDebInfo,MinSizeRel]
@@ -475,10 +463,10 @@ options:
         install the library and the command line applications
     --cppcheck
         run cppcheck (static code analyzer)
-    --codecov
-        upload code coverage results to codecov.io
-    --coveralls
-        upload code coverage results to coveralls.io
+    --lcov
+        generate the code coverage report using lcov and genhtml
+    --llvm-cov
+        generate the code coverage report usign llvm's source-based code coverage
     --memcheck
         run the unit tests through memcheck (e.g. detects unitialized variales, memory leaks, invalid memory accesses)
     --helgrind
@@ -531,6 +519,7 @@ while [ "$1" != "" ]; do
         --native)                       native;;
         --libcpp)                       libcpp;;
         --coverage)                     coverage;;
+        --llvm-coverage)                llvm_coverage;;
         --suffix)                       shift; suffix $1;;
         --build-type)                   shift; build_type=$1;;
         --config)                       config || exit 1;;
@@ -538,8 +527,8 @@ while [ "$1" != "" ]; do
         --test)                         tests || exit 1;;
         --install)                      install || exit 1;;
         --cppcheck)                     cppcheck || exit 1;;
-        --codecov)                      codecov || exit 1;;
-        --coveralls)                    coveralls || exit 1;;
+        --lcov)                         lcov_coverage || exit 1;;
+        --llvm-cov)                     llvm_cov_coverage || exit 1;;
         --memcheck)                     memcheck || exit 1;;
         --helgrind)                     helgrind || exit 1;;
         --clang-suffix)                 shift; clang_suffix=$1;;
