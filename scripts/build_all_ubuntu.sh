@@ -12,7 +12,7 @@ CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type RelWithDe
 
 CXX=clang++ \
     bash scripts/build.sh --suffix llvm-coverage --build-type RelWithDebInfo \
-    --generator Ninja --llvm-coverage --libcpp --config --build --llvm-cov
+    --generator Ninja --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov
 
 CXX=g++ bash scripts/build.sh --suffix gcc-debug --build-type Debug \
     --generator Ninja --config --build --test --install --build-example

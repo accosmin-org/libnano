@@ -167,53 +167,27 @@ function llvm_cov_coverage {
 
     local output=${basedir}/llvmcov.info
 
-    rm -rf ${libnanodir}/test/*.profraw
-    rm -rf ${libnanodir}/test/*.profdata
-
-    tests=$(find ${libnanodir}/test/test_*)
-
+    tests=$(find ${libnanodir}/test/test_* | grep -v profraw | grep -v profdata)
+    objects="$(find ${libnanodir}/src/libnano*)"
     for utest in ${tests}; do
-        echo $utest ${name}
-        LLVM_PROFILE_FILE=${utest}.profraw ${utest}
-        llvm-profdata merge -sparse ${utest}.profraw -o ${utest}.profdata
-        llvm-cov report ${utest} -instr-profile=${utest}.profdata -ignore-filename-regex=test\/
+        objects="${objects} -object ${utest}"
     done
 
     llvm-profdata merge -sparse $(find ${libnanodir}/test/*.profraw) -o ${output}
-    llvm-cov show ${tests} \
-        -format=html -instr-profile=${output} \
+
+    llvm-cov show \
+        -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
-        -show-line-counts-or-regions --show-branches=count --show-expansions \
-        -output-dir llvmcovhtml
+        -format=html -Xdemangler=c++filt -tab-size=4 \
+        -show-line-counts -show-line-counts-or-regions --show-branches=count --show-expansions --show-regions \
+        -output-dir llvmcovhtml \
+        ${objects}
 
-    return 0
-
-    # TODO: fix symbol demangler
-    # TODO: show nice global report
-    # TODO: integrate with running in cmake?!
-    # TODO: push to sonar
-}
-
-function build_valgrind {
-    version=3.17.0
-    installed_version=$(/tmp/valgrind/bin/valgrind --version)
-
-    if [ "${installed_version}" != "valgrind-${version}" ]; then
-        wget -N https://sourceware.org/pub/valgrind/valgrind-${version}.tar.bz2 || return 1
-        tar -xf valgrind-${version}.tar.bz2 > /dev/null || return 1
-
-        OLD_CXXFLAGS=${CXXFLAGS}
-        export CXXFLAGS=""
-        cd valgrind-${version}
-        ./autogen.sh > autogen.log 2>&1 || return 1
-        ./configure --prefix=/tmp/valgrind > config.log 2>&1 || return 1
-        make -j > build.log 2>&1 || return 1
-        make install > install.log 2>&1 || return 1
-        cd ..
-        export CXXFLAGS="${OLD_CXXFLAGS}"
-    fi
-
-    /tmp/valgrind/bin/valgrind --version || return 1
+    llvm-cov report \
+        -instr-profile=${output} \
+        -ignore-filename-regex=test\/ \
+        -show-region-summary -show-branch-summary \
+        ${objects}
 }
 
 function memcheck {
@@ -224,15 +198,13 @@ function memcheck {
 function helgrind {
     cd ${libnanodir}
 
-    build_valgrind || return 1
-
     returncode=0
     utests="test/test_tpool"
     for utest in ${utests}
     do
         printf "Running helgrind@%s ...\n" ${utest}
         log=helgrind_${utest/test\//}.log
-        /tmp/valgrind/bin/valgrind --tool=helgrind \
+        valgrind --tool=helgrind \
             --error-exitcode=1 \
             --log-file=${log} ${utest}
 

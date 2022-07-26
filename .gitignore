@@ -38,8 +38,11 @@
 build
 install
 
-*.info
+lcov.info
+llvmcov.info
+
 lcovhtml
 llvmcovhtml
+
 datasets
 doxygen

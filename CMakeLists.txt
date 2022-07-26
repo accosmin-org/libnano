@@ -4,8 +4,9 @@ project(libnano
     LANGUAGES CXX
     DESCRIPTION "Eigen-based numerical optimization and machine learning utilities")
 
-option(NANO_BUILD_TESTS   "Build unit tests" ON)
-option(NANO_BUILD_CMD_APP "Build command line utilities and benchmarks" ON)
+option(NANO_BUILD_TESTS     "Build unit tests" ON)
+option(NANO_BUILD_CMD_APP   "Build command line utilities and benchmarks" ON)
+option(NANO_ENABLE_LLVM_COV "Run unit tests using llvm-cov to generate profile per unit test" OFF)
 
 ##################################################################################################
 # setup project

@@ -16,7 +16,17 @@ function(make_test test libs)
     target_link_libraries(${test}
         PRIVATE ${libs})
 
-    add_test(${test} ${test})
+    if (NANO_ENABLE_LLVM_COV)
+        # FIXME: Not working on Windows!
+        add_test(
+            NAME ${test}
+            COMMAND bash -c "rm -f ${test}.profraw ${test}.profdata; \
+                    LLVM_PROFILE_FILE=${test}.profraw ${CMAKE_CURRENT_BINARY_DIR}/${test}; \
+                    llvm-profdata merge -sparse ${test}.profraw -o ${test}.profdata"
+        )
+    else()
+        add_test(${test} ${test})
+    endif()
 endfunction()
 
 # function to create an executable
