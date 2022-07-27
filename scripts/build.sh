@@ -331,7 +331,6 @@ function clang_tidy_clang_analyzer {
 
 function clang_tidy_cppcoreguidelines {
     checks="cppcoreguidelines*"
-    checks="${checks},-cppcoreguidelines-macro-usage"
     checks="${checks},-cppcoreguidelines-avoid-c-arrays"
     checks="${checks},-cppcoreguidelines-avoid-magic-numbers"
     checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
