@@ -8,11 +8,7 @@ installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_suffix=""
-build_type="RelWithDebInfo"
 cmake_options=""
-
-generator=""
-build_shared="ON"
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
 threads=$((cores+1))
@@ -81,9 +77,7 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake ${generator} -H. -B${libnanodir} ${cmake_options} \
-        -DCMAKE_BUILD_TYPE=${build_type} \
-        -DBUILD_SHARED_LIBS=${build_shared} \
+    cmake -H${basedir} -B${libnanodir} ${cmake_options} \
         -DCMAKE_INSTALL_RPATH=${installdir}/lib \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
@@ -105,7 +99,7 @@ function install {
 
 function build_example {
     cd ${basedir}
-    cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=${build_type} || return 1
+    cmake -Hexample -B${exampledir} ${cmake_options} || return 1
     cd ${exampledir}
     cmake --build ${exampledir} -- -j ${threads} || return 1
     ctest --output-on-failure -j ${threads} || return 1
@@ -124,7 +118,7 @@ function cppcheck {
         OLD_CXXFLAGS=${CXXFLAGS}
         export CXXFLAGS=""
         cd cppcheck-${version} && rm -rf build && mkdir build && cd build
-        cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
         cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
         cmake --build . --target install > install.log 2>&1 || return 1
         cd ../../
@@ -451,8 +445,6 @@ options:
         setup compiler and linker flags to setup source-based code coverage (clang)
     --suffix <string>
         suffix for the build and installation directories
-    --build-type [Debug,Release,RelWithDebInfo,MinSizeRel]
-        build type as defined by CMake
     --config
         generate build using CMake
     --build
@@ -461,6 +453,8 @@ options:
         run the unit tests
     --install
         install the library and the command line applications
+    --build-example
+        build example project
     --cppcheck
         run cppcheck (static code analyzer)
     --lcov
@@ -487,16 +481,12 @@ options:
     --clang-tidy-readability
     --clang-tidy-clang-analyzer
     --clang-tidy-cppcoreguidelines
-    --build-example
-        build example project
-    --generator
-        overwrite the default build generator (e.g. --generator Ninja to use Ninja as the build system)
-    --shared
-        build libnano as a shared library (default)
-    --static
-        build libnano as a static library
     --clang-format
         check formatting with clang-format (the code will be modified in-place)
+    -D[option]
+        options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
+    -G[option]
+        options to pass directly to cmake build (e.g. -GNinja)
 EOF
     exit 1
 }
@@ -521,7 +511,6 @@ while [ "$1" != "" ]; do
         --coverage)                     coverage;;
         --llvm-coverage)                llvm_coverage;;
         --suffix)                       shift; suffix $1;;
-        --build-type)                   shift; build_type=$1;;
         --config)                       config || exit 1;;
         --build)                        build || exit 1;;
         --test)                         tests || exit 1;;
@@ -546,12 +535,10 @@ while [ "$1" != "" ]; do
         --clang-tidy-clang-analyzer)    clang_tidy_clang_analyzer || exit 1;;
         --clang-tidy-cppcoreguidelines) clang_tidy_cppcoreguidelines || exit 1;;
         --build-example)                build_example || exit 1;;
-        --generator)                    shift; generator="-G$1";;
-        --shared)                       build_shared="ON";;
-        --static)                       build_shared="OFF";;
         --clang-format)                 clang_format || exit 1;;
         --sonar)                        sonar || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
+        -G*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac
     shift
