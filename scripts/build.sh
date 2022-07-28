@@ -8,7 +8,7 @@ installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_suffix=""
-cmake_options=""
+cmake_options="-GNinja"
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
 threads=$((cores+1))
