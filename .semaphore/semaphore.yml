@@ -44,21 +44,24 @@ blocks:
             - CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
         - name: clang-tidy (clang, misc, cert, hicpp, bugprone)
           commands:
-            - CXX=clang++ bash scripts/build.sh --config --build
+            - bash scripts/setup_ubuntu2004.sh --llvm 13
+            - CXX=clang++-13 bash scripts/build.sh --clang-suffix -13 --config --build
               --clang-tidy-misc
               --clang-tidy-cert
               --clang-tidy-hicpp
               --clang-tidy-bugprone
         - name: clang-tidy (clang, modernize, performance, portability, readability)
           commands:
-            - CXX=clang++ bash scripts/build.sh --config --build
+            - bash scripts/setup_ubuntu2004.sh --llvm 13
+            - CXX=clang++-13 bash scripts/build.sh --clang-suffix -13 --config --build
               --clang-tidy-modernize
               --clang-tidy-performance
               --clang-tidy-portability
               --clang-tidy-readability
         - name: clang-tidy (clang, clang_analyzer, cppcoreguidelines)
           commands:
-            - CXX=clang++ bash scripts/build.sh --config --build
+            - bash scripts/setup_ubuntu2004.sh --llvm 13
+            - CXX=clang++-13 bash scripts/build.sh --clang-suffix -13 --config --build
               --clang-tidy-clang-analyzer
               --clang-tidy-cppcoreguidelines
         - name: cppcheck
@@ -67,9 +70,10 @@ blocks:
         - name: memcheck (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck
-        - name: quality (gcc, llvm-cov, sonar scanner)
+        - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
           commands:
-            - CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            - bash scripts/setup_ubuntu2004.sh --llvm 13
+            - CXX=clang++-13 bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo
               --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov
               --sonar
     dependencies: []
