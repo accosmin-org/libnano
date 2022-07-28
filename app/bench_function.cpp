@@ -19,17 +19,24 @@ static void eval_func(const function_t& function, table_t& table)
     const size_t trials = 16;
 
     volatile scalar_t fx = 0;
-    const auto fval_time = measure<nanoseconds_t>([&] ()
-    {
-        fx += function.vgrad(x);
-    }, trials).count();
-
     volatile scalar_t gx = 0;
-    const auto grad_time = measure<nanoseconds_t>([&] ()
+
+    const auto measure_fval = [&]()
     {
+        const auto old_value = fx;
+
+        fx = old_value + function.vgrad(x);
+    };
+    const auto measure_grad = [&]()
+    {
+        const auto old_value = gx;
+
         function.vgrad(x, &g);
-        gx += g.template lpNorm<Eigen::Infinity>();
-    }, trials).count();
+        gx = old_value + g.template lpNorm<Eigen::Infinity>();
+    };
+
+    const auto fval_time = measure<nanoseconds_t>(measure_fval, trials).count();
+    const auto grad_time = measure<nanoseconds_t>(measure_grad, trials).count();
 
     scalar_t grad_accuracy = 0;
     for (size_t i = 0; i < trials; ++ i)
