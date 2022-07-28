@@ -20,13 +20,16 @@ blocks:
             - bash scripts/build.sh --clang-suffix -13 --clang-format
         - name: debug (gcc)
           commands:
-            - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
+            - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test
+              --install --build-example
         - name: release (gcc)
           commands:
-            - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Release --config --build --test --install --build-example
+            - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Release --config --build --test
+              --install --build-example
         - name: debug (clang)
           commands:
-            - CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --libcpp --config --build --test --install --build-example
+            - CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --libcpp --config --build --test
+              --install --build-example
         - name: ASAN (clang)
           commands:
             - CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
@@ -64,7 +67,9 @@ blocks:
         - name: memcheck (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck
-        - name: coverage (gcc, lcov, genhtml)
+        - name: quality (gcc, llvm-cov, sonar scanner)
           commands:
-            - CXX=g++ GCOV=gcov bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --coverage --config --build --test --lcov
+            - CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo
+              --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov
+              --sonar
     dependencies: []
