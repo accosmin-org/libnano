@@ -27,14 +27,15 @@ CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
 ###############################################################################################################
 # code coverage:
 #   - lcov + genhtml
-#   - llvm-cov
+#   - llvm-cov + sonar scanner
 ###############################################################################################################
 
 CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --test --lcov
 
 CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov
+    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov \
+    --sonar
 
 ###############################################################################################################
 # standard debug/release/release+lto GCC builds

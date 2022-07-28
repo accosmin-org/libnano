@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(libnano
-    VERSION 1.0.0
+    VERSION 0.0.1
     LANGUAGES CXX
     DESCRIPTION "Eigen-based numerical optimization and machine learning utilities")
 

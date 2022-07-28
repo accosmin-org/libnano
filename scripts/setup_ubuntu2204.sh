@@ -2,7 +2,7 @@
 
 function setup {
     sudo apt update -qq
-    sudo apt install -y git vim cmake lcov cppcheck valgrind ninja-build iwyu
+    sudo apt install -y git vim cmake lcov cppcheck valgrind ninja-build
     sudo apt install -y libomp-dev libeigen3-dev
     sudo apt install -y gcc g++
     sudo apt install -y clang clang-format clang-tidy clang-tools python3-pretty-yaml libc++-dev libc++abi-dev llvm-dev
