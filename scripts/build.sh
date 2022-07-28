@@ -8,11 +8,7 @@ installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
 clang_suffix=""
-build_type="RelWithDebInfo"
-cmake_options=""
-
-generator=""
-build_shared="ON"
+cmake_options="-GNinja"
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
 threads=$((cores+1))
@@ -81,9 +77,7 @@ function suffix {
 
 function config {
     cd ${basedir}
-    cmake ${generator} -H. -B${libnanodir} ${cmake_options} \
-        -DCMAKE_BUILD_TYPE=${build_type} \
-        -DBUILD_SHARED_LIBS=${build_shared} \
+    cmake -H${basedir} -B${libnanodir} ${cmake_options} \
         -DCMAKE_INSTALL_RPATH=${installdir}/lib \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
@@ -105,39 +99,23 @@ function install {
 
 function build_example {
     cd ${basedir}
-    cmake ${generator} -Hexample -B${exampledir} -DCMAKE_BUILD_TYPE=${build_type} || return 1
+    cmake -Hexample -B${exampledir} ${cmake_options} || return 1
     cd ${exampledir}
     cmake --build ${exampledir} -- -j ${threads} || return 1
     ctest --output-on-failure -j ${threads} || return 1
 }
 
-function cppcheck {
+function call_cppcheck {
     cd ${libnanodir}
 
-    version=2.8
-    installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
-
-    if [ "${installed_version}" != "Cppcheck ${version}" ]; then
-        wget -N https://github.com/danmar/cppcheck/archive/${version}.tar.gz || return 1
-        tar -xf ${version}.tar.gz > /dev/null || return 1
-
-        OLD_CXXFLAGS=${CXXFLAGS}
-        export CXXFLAGS=""
-        cd cppcheck-${version} && rm -rf build && mkdir build && cd build
-        cmake .. ${generator} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/cppcheck > config.log 2>&1 || return 1
-        cmake --build . -- -j ${threads} > build.log 2>&1 || return 1
-        cmake --build . --target install > install.log 2>&1 || return 1
-        cd ../../
-        export CXXFLAGS="${OLD_CXXFLAGS}"
-    fi
-
-    /tmp/cppcheck/bin/cppcheck --version || return 1
+    cppcheck_version=$(cppcheck --version)
+    echo "-- Using cppcheck ${cppcheck_version/* /}"
 
     # NB: the warnings are not fatal (exitcode=0) as they are usually false alarms!
     #--suppress=shadowFunction
     #--suppress=shadowVar
     #--suppress=unusedFunction
-    /tmp/cppcheck/bin/cppcheck -j ${threads} \
+    cppcheck -j ${threads} \
         --project=compile_commands.json \
         --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
         --template='{file}:{line},{severity},{id},{message}' \
@@ -188,6 +166,13 @@ function llvm_cov_coverage {
         -ignore-filename-regex=test\/ \
         -show-region-summary -show-branch-summary \
         ${objects}
+
+    llvm-cov show \
+        -instr-profile=${output} \
+        -ignore-filename-regex=test\/ \
+        -format=text -Xdemangler=c++filt -tab-size=4 \
+        -show-line-counts -show-line-counts-or-regions --show-branches=count --show-expansions --show-regions \
+        ${objects} > ${basedir}/llvmcov.text
 }
 
 function memcheck {
@@ -225,13 +210,13 @@ function clang_tidy {
 
     check=$1
 
-    printf "Running $check ...\n"
+    echo "-- Running clang-tidy-$check"
     log=clang_tidy_${check//\**/}.log
-    printf "Logging to ${log} ...\n"
+    echo "-- Logging to ${log}"
 
     wrapper=run-clang-tidy${clang_suffix}
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
-    printf "Using wrapper ${wrapper} ...\n"
+    echo "-- Using wrapper ${wrapper}"
     ${wrapper} -clang-tidy-binary clang-tidy${clang_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
 
@@ -240,7 +225,6 @@ function clang_tidy {
         return 1
     fi
 
-    printf "\n"
     started="0"
     while read line; do
         if [[ $line == *"Enabled checks:"* ]]; then
@@ -253,9 +237,7 @@ function clang_tidy {
         fi
     done < ${log}
 
-    printf "\n"
     cat $log | grep -E "warning:|error:" | grep -oE "[^ ]+$" | sort | uniq -c
-    printf "\n"
 
     # show log only if any warning or error is detected
     warnings=$(cat $log | grep -E "warning:|error:" | sort -u | grep -v Eigen | wc -l)
@@ -267,10 +249,10 @@ function clang_tidy {
     # decide if should exit with failure
     if [[ $warnings -gt 0 ]]
     then
-        printf "failed with $warnings warnings and errors!\n\n"
+        echo "!! Failed with $warnings warnings and errors!"
         return 1
     else
-        printf "passed.\n"
+        echo "-- Check done"
         return 0
     fi
 }
@@ -337,7 +319,6 @@ function clang_tidy_clang_analyzer {
 
 function clang_tidy_cppcoreguidelines {
     checks="cppcoreguidelines*"
-    checks="${checks},-cppcoreguidelines-macro-usage"
     checks="${checks},-cppcoreguidelines-avoid-c-arrays"
     checks="${checks},-cppcoreguidelines-avoid-magic-numbers"
     checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
@@ -368,7 +349,7 @@ function clang_format {
         -type f \( -name "*.h" -o -name "*.cpp" \))
 
     cmd=clang-format${clang_suffix}
-    echo "Using ${cmd}..."
+    echo "-- Using ${cmd}..."
 
     log=${basedir}/clang_format.log
     rm -f ${log}
@@ -394,7 +375,7 @@ function clang_format {
 }
 
 function sonar {
-    cd ${libnanodir}
+    cd ${basedir}
 
     export SONAR_SCANNER_VERSION=4.7.0.2747
     export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
@@ -404,18 +385,21 @@ function sonar {
     export PATH=$SONAR_SCANNER_HOME/bin:$PATH
     export SONAR_SCANNER_OPTS="-server"
 
-    curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+    curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip \
+        https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
     unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
     export PATH=$HOME/.sonar/build-wrapper-linux-x86:$PATH
 
-    build-wrapper-linux-x86-64 --out-dir bw-output cmake --build ${libnanodir} -- -j ${threads}
-
     sonar-scanner \
-      -Dsonar.organization=accosmin \
-      -Dsonar.projectKey=accosmin_libnano \
-      -Dsonar.sources=. \
-      -Dsonar.cfamily.build-wrapper-output=bw-output \
-      -Dsonar.host.url=https://sonarcloud.io
+        -Dsonar.organization=accosmin \
+        -Dsonar.projectKey=libnano \
+        -Dsonar.sources=${basedir}/src,${basedir}/include/nano \
+        -Dsonar.projectVersion=0.0.1 \
+        -Dsonar.python.version=3 \
+        -Dsonar.cfamily.compile-commands=${libnanodir}/compile_commands.json \
+        -Dsonar.cfamily.llvm-cov.reportPath=${basedir}/llvmcov.text \
+        -Dsonar.sourceEncoding=UTF-8 \
+        -Dsonar.host.url=https://sonarcloud.io
 }
 
 function usage {
@@ -451,8 +435,6 @@ options:
         setup compiler and linker flags to setup source-based code coverage (clang)
     --suffix <string>
         suffix for the build and installation directories
-    --build-type [Debug,Release,RelWithDebInfo,MinSizeRel]
-        build type as defined by CMake
     --config
         generate build using CMake
     --build
@@ -461,6 +443,8 @@ options:
         run the unit tests
     --install
         install the library and the command line applications
+    --build-example
+        build example project
     --cppcheck
         run cppcheck (static code analyzer)
     --lcov
@@ -487,16 +471,12 @@ options:
     --clang-tidy-readability
     --clang-tidy-clang-analyzer
     --clang-tidy-cppcoreguidelines
-    --build-example
-        build example project
-    --generator
-        overwrite the default build generator (e.g. --generator Ninja to use Ninja as the build system)
-    --shared
-        build libnano as a shared library (default)
-    --static
-        build libnano as a static library
     --clang-format
         check formatting with clang-format (the code will be modified in-place)
+    -D[option]
+        options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
+    -G[option]
+        options to pass directly to cmake build (e.g. -GNinja)
 EOF
     exit 1
 }
@@ -521,12 +501,11 @@ while [ "$1" != "" ]; do
         --coverage)                     coverage;;
         --llvm-coverage)                llvm_coverage;;
         --suffix)                       shift; suffix $1;;
-        --build-type)                   shift; build_type=$1;;
         --config)                       config || exit 1;;
         --build)                        build || exit 1;;
         --test)                         tests || exit 1;;
         --install)                      install || exit 1;;
-        --cppcheck)                     cppcheck || exit 1;;
+        --cppcheck)                     call_cppcheck || exit 1;;
         --lcov)                         lcov_coverage || exit 1;;
         --llvm-cov)                     llvm_cov_coverage || exit 1;;
         --memcheck)                     memcheck || exit 1;;
@@ -546,12 +525,10 @@ while [ "$1" != "" ]; do
         --clang-tidy-clang-analyzer)    clang_tidy_clang_analyzer || exit 1;;
         --clang-tidy-cppcoreguidelines) clang_tidy_cppcoreguidelines || exit 1;;
         --build-example)                build_example || exit 1;;
-        --generator)                    shift; generator="-G$1";;
-        --shared)                       build_shared="ON";;
-        --static)                       build_shared="OFF";;
         --clang-format)                 clang_format || exit 1;;
         --sonar)                        sonar || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
+        -G*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
     esac
     shift

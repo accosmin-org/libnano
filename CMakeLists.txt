@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(libnano
-    VERSION 1.0.0
+    VERSION 0.0.1
     LANGUAGES CXX
     DESCRIPTION "Eigen-based numerical optimization and machine learning utilities")
 
@@ -115,6 +115,7 @@ message(STATUS "CXX MINSIZEREL FLAGS:          " "${CMAKE_CXX_FLAGS_MINSIZEREL}"
 message(STATUS "CMAKE_EXE_LINKER_FLAGS:        " "${CMAKE_EXE_LINKER_FLAGS}")
 message(STATUS "------------------------------------------------------------------------------" "")
 message(STATUS "BUILD TYPE:                    " "${CMAKE_BUILD_TYPE}")
+message(STATUS "SHARED LIBS:                   " "${BUILD_SHARED_LIBS}")
 message(STATUS "------------------------------------------------------------------------------" "")
 
 ##################################################################################################
