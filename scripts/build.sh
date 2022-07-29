@@ -89,7 +89,7 @@ function build {
 
 function tests {
     cd ${libnanodir}
-    ctest --output-on-failure -j ${threads} || return 1
+    ctest --output-on-failure || return 1
 }
 
 function install {
