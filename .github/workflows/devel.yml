@@ -1,4 +1,4 @@
-name: libnano
+name: libnano-devel
 
 on: [push]
 
@@ -11,33 +11,6 @@ jobs:
       run: bash scripts/setup_ubuntu2204.sh --default
     - name: clang-format
       run: bash scripts/build.sh --clang-format
-
-  debug-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: debug (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
-
-  release-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: release (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Release --config --build --test --install --build-example
-
-  debug-clang:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: debug (clang)
-      run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --libcpp --config --build --test --install --build-example
 
   asan-gcc:
     runs-on: ubuntu-22.04
