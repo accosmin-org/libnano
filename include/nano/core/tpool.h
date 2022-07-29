@@ -36,7 +36,7 @@ namespace nano
 
             const std::lock_guard<std::mutex> lock(m_mutex);
             m_tasks.emplace_back(std::move(task));
-            m_condition.notify_one();
+            m_condition.notify_all();
 
             return future;
         }

@@ -84,12 +84,14 @@ function config {
 
 function build {
     cd ${libnanodir}
+    echo "-- Using ${threads} threads to build"
     cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
 function tests {
     cd ${libnanodir}
-    ctest --output-on-failure || return 1
+    echo "-- Using ${threads} threads to test"
+    ctest --output-on-failure -j ${threads} || return 1
 }
 
 function install {
@@ -101,7 +103,9 @@ function build_example {
     cd ${basedir}
     cmake -Hexample -B${exampledir} ${cmake_options} || return 1
     cd ${exampledir}
+    echo "-- Using ${threads} threads to build"
     cmake --build ${exampledir} -- -j ${threads} || return 1
+    echo "-- Using ${threads} threads to test"
     ctest --output-on-failure -j ${threads} || return 1
 }
 
@@ -177,6 +181,7 @@ function llvm_cov_coverage {
 
 function memcheck {
     cd ${libnanodir}
+    echo "-- Using ${threads} threads to test"
     ctest -T memcheck --output-on-failure -j ${threads} || return 1
 }
 
