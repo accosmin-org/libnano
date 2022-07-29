@@ -34,9 +34,11 @@ namespace nano
             auto task   = tpool_task_t(f);
             auto future = task.get_future();
 
-            const std::lock_guard<std::mutex> lock(m_mutex);
-            m_tasks.emplace_back(std::move(task));
-            m_condition.notify_all();
+            {
+                const std::lock_guard<std::mutex> lock(m_mutex);
+                m_tasks.emplace_back(std::move(task));
+            }
+            m_condition.notify_one();
 
             return future;
         }

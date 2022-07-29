@@ -27,6 +27,7 @@ void tpool_worker_t::operator()() const
             if (m_queue.m_stop)
             {
                 m_queue.m_tasks.clear();
+                lock.unlock();
                 m_queue.m_condition.notify_all();
                 break;
             }
@@ -59,8 +60,8 @@ tpool_t::~tpool_t()
     {
         const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
         m_queue.m_stop = true;
-        m_queue.m_condition.notify_all();
     }
+    m_queue.m_condition.notify_all();
 
     for (auto& thread : m_threads)
     {
