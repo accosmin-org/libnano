@@ -191,5 +191,5 @@ jobs:
       run: bash scripts/setup_ubuntu2204.sh --default
     - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
       run: |
-        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov --sonar
