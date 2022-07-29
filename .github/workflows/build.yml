@@ -3,7 +3,7 @@ name: libnano
 on: [push]
 
 jobs:
-  format:
+  clang-format:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
@@ -183,7 +183,7 @@ jobs:
     - name: memcheck
       run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck
 
-  coverage:
+  coverage-and-sonar:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
