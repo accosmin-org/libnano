@@ -4,7 +4,7 @@ name: libnano pipeline
 agent:
   machine:
     type: e1-standard-8
-    os_image: ubuntu2004
+    os_image: ubuntu2204
 
 blocks:
   - name: Ubuntu 20.04
