@@ -27,13 +27,13 @@ namespace nano
         ///
         /// \brief disable copying
         ///
-        logger_t(const logger_t&) = delete;
+        logger_t(const logger_t&)            = delete;
         logger_t& operator=(const logger_t&) = delete;
 
         ///
         /// \brief disable moving
         ///
-        logger_t(logger_t&&) noexcept = default;
+        logger_t(logger_t&&) noexcept            = default;
         logger_t& operator=(logger_t&&) noexcept = delete;
 
         ///

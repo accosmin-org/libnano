@@ -10,7 +10,7 @@ cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 # code formatting using a fixed version of clang-format
 ###############################################################################################################
 
-CXX=clang++-13 bash scripts/build.sh --clang-suffix -13 --clang-format
+CXX=clang++ bash scripts/build.sh --clang-format
 
 ###############################################################################################################
 # static analysis:

@@ -26,5 +26,8 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, task_type value) { return stream << scat(value); }
+    inline std::ostream& operator<<(std::ostream& stream, task_type value)
+    {
+        return stream << scat(value);
+    }
 } // namespace nano

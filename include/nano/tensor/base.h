@@ -36,13 +36,13 @@ namespace nano
         ///
         /// \brief enable copying.
         ///
-        tensor_base_t(const tensor_base_t&) = default;
+        tensor_base_t(const tensor_base_t&)            = default;
         tensor_base_t& operator=(const tensor_base_t&) = default;
 
         ///
         /// \brief enable moving.
         ///
-        tensor_base_t(tensor_base_t&&) noexcept = default;
+        tensor_base_t(tensor_base_t&&) noexcept            = default;
         tensor_base_t& operator=(tensor_base_t&&) noexcept = default;
 
         ///

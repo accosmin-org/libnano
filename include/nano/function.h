@@ -29,7 +29,7 @@ namespace nano
         ///
         /// \brief disable copying
         ///
-        function_t(const function_t&) = delete;
+        function_t(const function_t&)            = delete;
         function_t& operator=(const function_t&) = delete;
 
         ///

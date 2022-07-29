@@ -132,13 +132,13 @@ namespace nano
         ///
         /// \brief enable copying (delegate to the storage object).
         ///
-        tensor_t(const tensor_t&) = default;
+        tensor_t(const tensor_t&)            = default;
         tensor_t& operator=(const tensor_t&) = default;
 
         ///
         /// \brief enable moving (delegate to the storage object).
         ///
-        tensor_t(tensor_t&&) noexcept = default;
+        tensor_t(tensor_t&&) noexcept            = default;
         tensor_t& operator=(tensor_t&&) noexcept = default;
 
         ///

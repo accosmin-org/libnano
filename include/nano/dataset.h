@@ -37,13 +37,13 @@ namespace nano
         ///
         /// \brief disable copying
         ///
-        dataset_t(const dataset_t&) = default;
+        dataset_t(const dataset_t&)            = default;
         dataset_t& operator=(const dataset_t&) = default;
 
         ///
         /// \brief enable moving
         ///
-        dataset_t(dataset_t&&) noexcept = default;
+        dataset_t(dataset_t&&) noexcept            = default;
         dataset_t& operator=(dataset_t&&) noexcept = default;
 
         ///

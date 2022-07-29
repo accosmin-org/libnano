@@ -21,5 +21,8 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& os, enum_type type) { return os << scat(type); }
+    inline std::ostream& operator<<(std::ostream& os, enum_type type)
+    {
+        return os << scat(type);
+    }
 } // namespace nano

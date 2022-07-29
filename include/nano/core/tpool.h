@@ -87,13 +87,13 @@ namespace nano
         ///
         /// \brief disable copying
         ///
-        tpool_section_t(const tpool_section_t&) = delete;
+        tpool_section_t(const tpool_section_t&)            = delete;
         tpool_section_t& operator=(const tpool_section_t&) = delete;
 
         ///
         /// \brief enable moving
         ///
-        tpool_section_t(tpool_section_t&&) noexcept = default;
+        tpool_section_t(tpool_section_t&&) noexcept            = default;
         tpool_section_t& operator=(tpool_section_t&&) noexcept = default;
 
         ///
@@ -136,13 +136,13 @@ namespace nano
         ///
         /// \brief disable copying
         ///
-        tpool_t(const tpool_t&) = delete;
+        tpool_t(const tpool_t&)            = delete;
         tpool_t& operator=(const tpool_t&) = delete;
 
         ///
         /// \brief disable moving
         ///
-        tpool_t(tpool_t&&) noexcept = delete;
+        tpool_t(tpool_t&&) noexcept            = delete;
         tpool_t& operator=(tpool_t&&) noexcept = delete;
 
         ///

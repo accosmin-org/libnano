@@ -26,5 +26,8 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, scaling_type value) { return stream << scat(value); }
+    inline std::ostream& operator<<(std::ostream& stream, scaling_type value)
+    {
+        return stream << scat(value);
+    }
 } // namespace nano

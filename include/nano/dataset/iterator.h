@@ -180,7 +180,10 @@ namespace nano
     ///
     /// \brief construct an invalid (end) iterator from the given inputs.
     ///
-    inline auto make_end_iterator(indices_cmap_t samples) { return base_dataset_iterator_t{samples, samples.size()}; }
+    inline auto make_end_iterator(indices_cmap_t samples)
+    {
+        return base_dataset_iterator_t{samples, samples.size()};
+    }
 
     ///
     /// \brief call the appropriate operator for the given data,

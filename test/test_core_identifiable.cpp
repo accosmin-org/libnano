@@ -16,9 +16,9 @@ struct object_t : public estimator_t
     object_t()           = default;
     ~object_t() override = default;
     static object_factory_t& all();
-    object_t(object_t&&)      = default;
-    object_t(const object_t&) = default;
-    object_t&         operator=(object_t&&) = default;
+    object_t(object_t&&)                         = default;
+    object_t(const object_t&)                    = default;
+    object_t&         operator=(object_t&&)      = default;
     object_t&         operator=(const object_t&) = default;
     virtual int       get() const                = 0;
     virtual robject_t clone() const              = 0;
