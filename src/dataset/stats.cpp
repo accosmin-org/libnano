@@ -131,7 +131,7 @@ void scalar_stats_t::scale(scaling_type scaling, tensor2d_map_t values) const
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type"); break;
+    default: throw std::runtime_error("unhandled scaling type");
     }
 }
 
@@ -174,7 +174,7 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type"); break;
+    default: throw std::runtime_error("unhandled scaling type");
     }
 }
 

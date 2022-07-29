@@ -38,11 +38,17 @@
 build
 install
 
+# Code coverage
 lcov.info
 llvmcov.info
+llvmcov.text
 
 lcovhtml
 llvmcovhtml
 
+# Sonar scanner analysis
+.scannerwork
+
+#
 datasets
 doxygen
