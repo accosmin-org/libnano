@@ -35,10 +35,10 @@ static auto decode_params(const tensor1d_t& params, regularization_type regulari
 }
 
 static auto evaluate(const estimator_t& estimator, const dataset_generator_t& dataset, const indices_t& samples,
-                     const loss_t& loss, const tensor2d_t& weights, const tensor1d_t& bias)
+                     const loss_t& loss, const tensor2d_t& weights, const tensor1d_t& bias, execution_type execution)
 {
     auto iterator = flatten_iterator_t{dataset, samples};
-    iterator.execution(execution_type::par);
+    iterator.execution(execution);
     iterator.scaling(scaling_type::none);
     iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
 
@@ -57,10 +57,11 @@ static auto evaluate(const estimator_t& estimator, const dataset_generator_t& da
 }
 
 static auto fit(const estimator_t& estimator, const dataset_generator_t& dataset, const indices_t& samples,
-                const loss_t& loss, const solver_t& solver, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg)
+                const loss_t& loss, const solver_t& solver, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg,
+                execution_type execution)
 {
     auto iterator = flatten_iterator_t{dataset, samples};
-    iterator.execution(execution_type::par);
+    iterator.execution(execution);
     iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
     iterator.scaling(estimator.parameter("model::linear::scaling").value<scaling_type>());
     iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
@@ -126,24 +127,28 @@ fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const in
 
     const auto callback = [&](const tensor1d_t& params)
     {
-        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
-
         fit_result_t::cv_result_t cv_result{params, folds};
-        ::nano::loopi(
-            folds,
-            [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](tensor_size_t fold, size_t)
-            {
-                const auto [train_samples, valid_samples] = cv.split(fold);
 
-                const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg);
-                const auto [train_error, train_value] = ::evaluate(*this, dataset, train_samples, loss, weights, bias);
-                const auto [valid_error, valid_value] = ::evaluate(*this, dataset, valid_samples, loss, weights, bias);
+        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
+        const auto loopi_callback        = [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](tensor_size_t fold, size_t)
+        {
+            const auto execution                      = execution_type::seq;
+            const auto [train_samples, valid_samples] = cv.split(fold);
 
-                cv_result.m_train_errors(fold) = train_error;
-                cv_result.m_train_values(fold) = train_value;
-                cv_result.m_valid_errors(fold) = valid_error;
-                cv_result.m_valid_values(fold) = valid_value;
-            });
+            const auto [weights, bias] =
+                ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, execution);
+            const auto [train_error, train_value] =
+                ::evaluate(*this, dataset, train_samples, loss, weights, bias, execution);
+            const auto [valid_error, valid_value] =
+                ::evaluate(*this, dataset, valid_samples, loss, weights, bias, execution);
+
+            cv_result.m_train_errors(fold) = train_error;
+            cv_result.m_train_values(fold) = train_value;
+            cv_result.m_valid_errors(fold) = valid_error;
+            cv_result.m_valid_values(fold) = valid_value;
+        };
+
+        ::nano::loopi(folds, loopi_callback);
 
         const auto goodness = std::log(cv_result.m_train_errors.mean() + std::numeric_limits<scalar_t>::epsilon());
 
@@ -156,10 +161,11 @@ fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const in
 
     const auto refit = [&](const tensor1d_t& params)
     {
+        const auto execution             = execution_type::par;
         const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
 
-        const auto [weights, bias]            = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
-        const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias);
+        const auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg, execution);
+        const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias, execution);
 
         result.m_refit_params = params;
         result.m_refit_error  = refit_error;

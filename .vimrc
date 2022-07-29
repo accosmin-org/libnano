@@ -71,6 +71,6 @@ autocmd BufWritePre     * :call StripTrailingWhitespaces()
 
 function! Formatonsave()
   let l:formatdiff = 10
-  py3f /usr/share/clang/clang-format-13/clang-format.py
+  py3f /usr/share/clang/clang-format-14/clang-format.py
 endfunction
 autocmd BufWritePre *.h,*.cc,*.cpp call Formatonsave()
