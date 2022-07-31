@@ -137,8 +137,7 @@ private:
             m_weights.matrix().row(column).setConstant(0.0);
         }
 
-        auto iterator = flatten_iterator_t{generator, arange(0, m_samples)};
-        iterator.execution(execution_type::seq);
+        auto iterator = flatten_iterator_t{generator, arange(0, m_samples), 1U};
         iterator.loop(
             [&](tensor_range_t range, size_t, tensor2d_cmap_t inputs)
             {
@@ -187,17 +186,6 @@ private:
     return generator;
 }
 
-[[maybe_unused]] static auto make_iterator(const dataset_generator_t& generator, execution_type execution,
-                                           tensor_size_t batch, scaling_type scaling)
-{
-    const auto samples  = generator.dataset().samples();
-    auto       iterator = flatten_iterator_t{generator, arange(0, samples)};
-    iterator.batch(batch);
-    iterator.scaling(scaling);
-    iterator.execution(execution);
-    return iterator;
-}
-
 template <typename tweights, typename tbias>
 [[maybe_unused]] static void check_linear(const dataset_generator_t& generator, tweights weights, tbias bias,
                                           scalar_t epsilon)
@@ -206,10 +194,9 @@ template <typename tweights, typename tbias>
 
     auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
 
-    auto iterator = flatten_iterator_t{generator, arange(0, samples)};
+    auto iterator = flatten_iterator_t{generator, arange(0, samples), 1U};
     iterator.batch(11);
     iterator.scaling(scaling_type::none);
-    iterator.execution(execution_type::seq);
     iterator.loop(
         [&](tensor_range_t range, size_t, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
         {

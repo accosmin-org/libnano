@@ -7,10 +7,9 @@ using namespace nano;
 static void check_outputs(const dataset_generator_t& generator, const indices_t& samples, const tensor4d_t& outputs,
                           scalar_t epsilon)
 {
-    auto iterator = flatten_iterator_t{generator, samples};
+    auto iterator = flatten_iterator_t{generator, samples, 1U};
     iterator.batch(7);
     iterator.scaling(scaling_type::none);
-    iterator.execution(execution_type::seq);
     iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets)
                   { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
 }

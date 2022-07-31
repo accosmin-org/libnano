@@ -1,15 +1,17 @@
 #include <iomanip>
+#include <nano/core/chrono.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/factory_util.h>
+#include <nano/core/logger.h>
+#include <nano/core/numeric.h>
+#include <nano/core/parallel.h>
+#include <nano/function/benchmark.h>
 #include <nano/solver.h>
 #include <nano/tensor.h>
-#include <nano/core/tpool.h>
-#include <nano/core/chrono.h>
-#include <nano/core/logger.h>
-#include <nano/core/cmdline.h>
-#include <nano/core/numeric.h>
-#include <nano/core/factory_util.h>
-#include <nano/function/benchmark.h>
 
 using namespace nano;
+
+static auto pool = parallel::pool_t{};
 
 struct result_t
 {
@@ -168,18 +170,19 @@ static auto minimize_all(const function_t& function, const solvers_t& solvers,
     const points_t& x0s, bool log_failures, bool log_maxits)
 {
     results_t results{x0s.size() * solvers.size()};
-    loopi(results.size(), [&] (size_t i, size_t)
-    {
-        const auto timer = nano::timer_t{};
+    pool.loopi(results.size(),
+               [&](size_t i, size_t)
+               {
+                   const auto timer = nano::timer_t{};
 
-        const auto& x0 = x0s[i / solvers.size()];
-        const auto& solver = solvers[i % solvers.size()].second;
-        const auto state = solver->minimize(function, x0);
+                   const auto& x0     = x0s[i / solvers.size()];
+                   const auto& solver = solvers[i % solvers.size()].second;
+                   const auto  state  = solver->minimize(function, x0);
 
-        const auto milliseconds = timer.milliseconds().count();
+                   const auto milliseconds = timer.milliseconds().count();
 
-        results[i] = result_t{state, milliseconds};
-    });
+                   results[i] = result_t{state, milliseconds};
+               });
 
     for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++ i)
     {

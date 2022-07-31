@@ -1,16 +1,18 @@
 #include <iomanip>
-#include <nano/tensor.h>
-#include <nano/core/tpool.h>
-#include <nano/core/table.h>
 #include <nano/core/chrono.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
+#include <nano/core/logger.h>
+#include <nano/core/parallel.h>
+#include <nano/core/table.h>
+#include <nano/tensor.h>
 
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
 using namespace nano;
+
+static auto pool = parallel::pool_t{};
 
 struct exp_t
 {
@@ -69,11 +71,9 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(static_cast<tensor_size_t>(tpool_t::size()));
-    nano::loopi(targets.rows(), [&] (tensor_size_t i, size_t t)
-    {
-        values(static_cast<tensor_size_t>(t)) += sti<toperator>(i, targets, outputs);
-    });
+    vector_t values = vector_t::Zero(static_cast<tensor_size_t>(pool.size()));
+    pool.loopi(targets.rows(), [&](tensor_size_t i, size_t t)
+               { values(static_cast<tensor_size_t>(t)) += sti<toperator>(i, targets, outputs); });
 
     return values.sum() / static_cast<scalar_t>(targets.rows());
 }
@@ -141,7 +141,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
 
     // multi-threaded (using the thread pool)
     auto& row2 = table.append();
-    row2 << scat("reduce-", toperator::name()) << scat("tpool(x", tpool_t::size(), ")");
+    row2 << scat("reduce-", toperator::name()) << scat("tpool(x", pool.size(), ")");
     for (size_t i = 0; i < single_deltas.size(); ++ i)
     {
         const auto deltaST = single_deltas[i];

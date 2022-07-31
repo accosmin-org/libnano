@@ -14,10 +14,10 @@ static auto tsize(const flatten_iterator_t& iterator)
     return ::nano::size(iterator.generator().target_dims());
 }
 
-linear::function_t::function_t(flatten_iterator_t iterator, const loss_t& loss, scalar_t l1reg, scalar_t l2reg,
+linear::function_t::function_t(const flatten_iterator_t& iterator, const loss_t& loss, scalar_t l1reg, scalar_t l2reg,
                                scalar_t vAreg)
     : ::nano::function_t("linear", (::isize(iterator) + 1) * ::tsize(iterator))
-    , m_iterator(std::move(iterator))
+    , m_iterator(iterator)
     , m_loss(loss)
     , m_l1reg(l1reg)
     , m_l2reg(l2reg)

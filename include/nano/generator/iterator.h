@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/execution.h>
+#include <nano/core/parallel.h>
 #include <nano/dataset/stats.h>
 #include <nano/generator/generator.h>
 
@@ -13,7 +13,6 @@ namespace nano
     ///     (tensor_size_t sample_range, size_t thread_number, target_values)
     ///     (tensor_size_t sample_range, size_t thread_number, flatten_feature_values, target_values)
     ///
-    /// NB: the thread number is set to zero if the execution policy is sequential.
     using targets_callback_t         = std::function<void(tensor_range_t, size_t, tensor4d_cmap_t)>;
     using flatten_callback_t         = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t)>;
     using flatten_targets_callback_t = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t, tensor4d_cmap_t)>;
@@ -22,27 +21,59 @@ namespace nano
     /// \brief callbacks useful for feature selection-based models with the following signature:
     ///     (tensor_size_t feature_index, size_t thread_number, feature_values)
     ///
-    /// NB: the thread number is set to zero if the execution policy is sequential.
     using sclass_callback_t = std::function<void(tensor_size_t, size_t, sclass_cmap_t)>;
     using mclass_callback_t = std::function<void(tensor_size_t, size_t, mclass_cmap_t)>;
     using scalar_callback_t = std::function<void(tensor_size_t, size_t, scalar_cmap_t)>;
     using struct_callback_t = std::function<void(tensor_size_t, size_t, struct_cmap_t)>;
 
     ///
-    /// \brief iterator to loop through target values
-    ///     in single and multi-threaded scenarious, useful for training and evaluating dense models.
+    /// \brief base iterator to loop through generated input and target feature values.
     ///
-    /// the feature and the target values can be:
-    ///     - cached to speed-up access (useful if slow to compute on the fly)
-    ///     - scaled to speed-up training by improving the convergence rate of the solver.
-    ///
-    class NANO_PUBLIC targets_iterator_t
+    class NANO_PUBLIC base_generator_iterator_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        targets_iterator_t(const dataset_generator_t&, indices_cmap_t samples);
+        base_generator_iterator_t(const dataset_generator_t& generator, size_t threads = parallel::pool_t::max_size());
+
+        ///
+        /// \brief returns the maximum number of threads available for processing.
+        ///
+        auto concurrency() const { return m_pool.size(); }
+
+        ///
+        /// \brief returns the wrapped feature generator.
+        ///
+        const auto& generator() const { return m_generator; }
+
+    protected:
+        auto& pool() const { return m_pool; }
+
+    private:
+        using tgenerator = dataset_generator_t;
+
+        // attributes
+        const tgenerator&        m_generator; ///<
+        mutable parallel::pool_t m_pool;      ///< thread pool to speed-up feature generation
+    };
+
+    ///
+    /// \brief iterator to loop through target values
+    ///     useful for training and evaluating dense models.
+    ///
+    /// the feature and the target values can be:
+    ///     - cached to speed-up access (useful if slow to compute on the fly)
+    ///     - scaled to speed-up training by improving the convergence rate of the solver.
+    ///
+    class NANO_PUBLIC targets_iterator_t : public base_generator_iterator_t
+    {
+    public:
+        ///
+        /// \brief constructor
+        ///
+        targets_iterator_t(const dataset_generator_t&, indices_cmap_t samples,
+                           size_t threads = parallel::pool_t::max_size());
 
         ///
         /// \brief returns true if the target values can be cached in memory in the given number of bytes.
@@ -60,7 +91,6 @@ namespace nano
         ///
         void batch(tensor_size_t);
         void scaling(scaling_type);
-        void execution(execution_type);
 
         ///
         /// \brief access functions.
@@ -69,13 +99,7 @@ namespace nano
 
         auto scaling() const { return m_scaling; }
 
-        auto execution() const { return m_execution; }
-
-        auto concurrency() const { return m_targets_buffers.size(); }
-
         const auto& samples() const { return m_samples; }
-
-        const auto& generator() const { return m_generator; }
 
         const auto& targets_stats() const { return m_targets_stats; }
 
@@ -86,23 +110,20 @@ namespace nano
     private:
         targets_stats_t make_targets_stats() const;
 
-        using buffers_t    = std::vector<tensor4d_t>;
-        using dgenerator_t = dataset_generator_t;
+        using buffers_t = std::vector<tensor4d_t>;
 
         // attributes
-        const dgenerator_t& m_generator;                      ///<
-        indices_t           m_samples;                        ///<
-        tensor_size_t       m_batch{100};                     ///<
-        execution_type      m_execution{execution_type::par}; ///<
-        scaling_type        m_scaling{scaling_type::none};    ///< scaling method for flatten feature values & targets
-        tensor4d_t          m_targets;                        ///< cached targets values
-        targets_stats_t     m_targets_stats;                  ///< statistics for targets
-        mutable buffers_t   m_targets_buffers;                ///< per-thread buffer
+        indices_t         m_samples;                     ///<
+        tensor_size_t     m_batch{100};                  ///<
+        scaling_type      m_scaling{scaling_type::none}; ///< scaling method for flatten feature values & targets
+        tensor4d_t        m_targets;                     ///< cached targets values
+        targets_stats_t   m_targets_stats;               ///< statistics for targets
+        mutable buffers_t m_targets_buffers;             ///< per-thread buffer
     };
 
     ///
     /// \brief iterator to loop through flatten feature values and target values
-    ///     in single and multi-threaded scenarious, useful for training and evaluating dense models.
+    ///     useful for training and evaluating dense models.
     ///
     class NANO_PUBLIC flatten_iterator_t : public targets_iterator_t
     {
@@ -112,7 +133,8 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        flatten_iterator_t(const dataset_generator_t&, indices_cmap_t samples);
+        flatten_iterator_t(const dataset_generator_t&, indices_cmap_t samples,
+                           size_t threads = parallel::pool_t::max_size());
 
         ///
         /// \brief returns true if the flatten feature values can be cached in memory in the given number of bytes.
@@ -138,7 +160,7 @@ namespace nano
         const auto& flatten_stats() const { return m_flatten_stats; }
 
     private:
-        flatten_stats_t make_flatten_stats() const;
+        flatten_stats_t make_flatten_stats();
         tensor2d_cmap_t flatten(tensor2d_map_t) const;
         tensor2d_cmap_t flatten(size_t tnum, const tensor_range_t& range) const;
 
@@ -152,15 +174,15 @@ namespace nano
 
     ///
     /// \brief iterator to loop through features of a particular type
-    ///     in single and multi-threaded scenarious, useful for feature selection-based models.
+    ///     useful for feature selection-based models.
     ///
-    class NANO_PUBLIC select_iterator_t
+    class NANO_PUBLIC select_iterator_t : public base_generator_iterator_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        explicit select_iterator_t(const dataset_generator_t&);
+        explicit select_iterator_t(const dataset_generator_t&, size_t threads = parallel::pool_t::max_size());
 
         ///
         /// \brief loop through all features of the same type with the following callback:
@@ -180,18 +202,6 @@ namespace nano
         void loop(indices_cmap_t samples, indices_cmap_t features, const scalar_callback_t&) const;
         void loop(indices_cmap_t samples, indices_cmap_t features, const struct_callback_t&) const;
 
-        ///
-        /// \brief change parameters.
-        ///
-        void execution(execution_type);
-
-        ///
-        /// \brief access functions.
-        ///
-        auto concurrency() const { return m_buffers.size(); }
-
-        const auto& generator() const { return m_generator; }
-
     private:
         struct buffer_t
         {
@@ -201,12 +211,9 @@ namespace nano
             struct_mem_t m_struct;
         };
 
-        using buffers_t    = std::vector<buffer_t>;
-        using dgenerator_t = dataset_generator_t;
+        using buffers_t = std::vector<buffer_t>;
 
         // attributes
-        const dgenerator_t& m_generator;                      ///<
-        execution_type      m_execution{execution_type::par}; ///<
-        mutable buffers_t   m_buffers;                        ///< per-thread buffer
+        mutable buffers_t m_buffers; ///< per-thread buffer
     };
 } // namespace nano

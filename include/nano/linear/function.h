@@ -23,7 +23,7 @@ namespace nano::linear
         ///
         /// \brief constructor
         ///
-        function_t(flatten_iterator_t, const loss_t&, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg);
+        function_t(const flatten_iterator_t&, const loss_t&, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg);
 
         ///
         /// \brief extract the weight matrix from the given tensor
@@ -75,13 +75,13 @@ namespace nano::linear
         using caches_t = std::vector<cache_t>;
 
         // attributes
-        flatten_iterator_t m_iterator;   ///<
-        const loss_t&      m_loss;       ///<
-        scalar_t           m_l1reg{0.0}; ///< regularization factor - see (1), (3)
-        scalar_t           m_l2reg{0.0}; ///< regularization factor - see (2), (3)
-        scalar_t           m_vAreg{0.0}; ///< regularization factor - see (4)
-        tensor_size_t      m_isize{0};   ///< #inputs (e.g. size of the flatten input feature tensor)
-        tensor_size_t      m_tsize{0};   ///< #targets (e.g. size of the flatten target tensor, number of classes)
-        mutable caches_t   m_caches;     ///< liner model-specific buffers per thread
+        const flatten_iterator_t& m_iterator;   ///<
+        const loss_t&             m_loss;       ///<
+        scalar_t                  m_l1reg{0.0}; ///< regularization factor - see (1), (3)
+        scalar_t                  m_l2reg{0.0}; ///< regularization factor - see (2), (3)
+        scalar_t                  m_vAreg{0.0}; ///< regularization factor - see (4)
+        tensor_size_t             m_isize{0};   ///< #inputs (e.g. size of the flatten input feature tensor)
+        tensor_size_t             m_tsize{0}; ///< #targets (e.g. size of the flatten target tensor, number of classes)
+        mutable caches_t          m_caches;   ///< liner model-specific buffers per thread
     };
 } // namespace nano::linear

@@ -1,4 +1,3 @@
-#include <nano/core/tpool.h>
 #include <nano/dataset/iterator.h>
 #include <nano/generator.h>
 
@@ -38,40 +37,6 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
         buffer.resize(dims...);
     }
     return map_tensor(buffer.data(), dims...);
-}
-
-template <typename toperator>
-static void loop(execution_type execution, indices_cmap_t samples, tensor_size_t batch, const toperator& op)
-{
-    switch (execution)
-    {
-    case execution_type::par: ::nano::loopr(samples.size(), batch, op); break;
-
-    default:
-        for (tensor_size_t begin = 0, size = samples.size(); begin < size; begin += batch)
-        {
-            op(begin, std::min(begin + batch, size), 0U);
-        }
-        break;
-    }
-}
-
-template <typename toperator>
-static void loop(execution_type execution, indices_cmap_t ifeatures, const toperator& op)
-{
-    switch (execution)
-    {
-    case execution_type::par:
-        ::nano::loopi(ifeatures.size(), [&](tensor_size_t index, size_t tnum) { op(ifeatures(index), tnum); });
-        break;
-
-    default:
-        for (tensor_size_t ifeature : ifeatures)
-        {
-            op(ifeature, 0U);
-        }
-        break;
-    }
 }
 
 dataset_generator_t::dataset_generator_t(const dataset_t& dataset)

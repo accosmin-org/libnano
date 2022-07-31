@@ -1,22 +1,23 @@
 #include <algorithm>
 #include <iterator>
-#include <nano/core/tpool.h>
+#include <nano/core/parallel.h>
 
 using namespace nano;
+using namespace nano::parallel;
 
-tpool_queue_t::tpool_queue_t() = default;
+queue_t::queue_t() = default;
 
-tpool_worker_t::tpool_worker_t(tpool_queue_t& queue, size_t tnum)
+worker_t::worker_t(queue_t& queue, size_t tnum)
     : m_queue(queue)
     , m_tnum(tnum)
 {
 }
 
-void tpool_worker_t::operator()() const
+void worker_t::operator()() const
 {
     while (true)
     {
-        tpool_task_t task;
+        task_t task;
 
         // wait for a new task to be available in the queue
         {
@@ -41,9 +42,30 @@ void tpool_worker_t::operator()() const
     }
 }
 
-tpool_t::tpool_t()
+void section_t::block(bool raise)
 {
-    const auto n_workers = size();
+    for (auto it = this->begin(); it != this->end(); ++it)
+    {
+        if (it->valid())
+        {
+            raise ? (void)it->get() : it->wait();
+        }
+    }
+}
+
+section_t::~section_t()
+{
+    block(false);
+}
+
+pool_t::pool_t()
+    : pool_t(max_size())
+{
+}
+
+pool_t::pool_t(size_t threads)
+{
+    const auto n_workers = std::clamp(threads, size_t(1), max_size());
 
     m_workers.reserve(n_workers);
     for (size_t tnum = 0; tnum < n_workers; ++tnum)
@@ -55,7 +77,12 @@ tpool_t::tpool_t()
                    [](const auto& worker) { return std::thread(std::cref(worker)); });
 }
 
-tpool_t::~tpool_t()
+size_t pool_t::max_size()
+{
+    return std::max(size_t(1), static_cast<size_t>(std::thread::hardware_concurrency()));
+}
+
+pool_t::~pool_t()
 {
     {
         const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
