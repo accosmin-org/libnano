@@ -26,7 +26,7 @@ namespace nano::parallel
         queue_t();
 
         ///
-        /// \brief enqueue a new task to execute
+        /// \brief enqueue a new task to execute.
         ///
         template <typename tfunction>
         auto enqueue(tfunction&& f)
@@ -144,7 +144,7 @@ namespace nano::parallel
         template <typename tfunction>
         auto enqueue(tfunction&& f)
         {
-            return m_queue.enqueue(std::move(f));
+            return m_queue.enqueue(std::forward<tfunction>(f));
         }
 
         ///

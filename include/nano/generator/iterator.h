@@ -35,7 +35,8 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        base_generator_iterator_t(const dataset_generator_t& generator, size_t threads = parallel::pool_t::max_size());
+        explicit base_generator_iterator_t(const dataset_generator_t& generator,
+                                           size_t                     threads = parallel::pool_t::max_size());
 
         ///
         /// \brief returns the maximum number of threads available for processing.

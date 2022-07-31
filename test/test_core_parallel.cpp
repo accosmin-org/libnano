@@ -43,7 +43,7 @@ template <typename toperator>
 auto test_loopr(parallel::pool_t& pool, size_t size, size_t chunk, const toperator op)
 {
     std::vector<double> results(size, -1);
-    pool.loopr(size, chunk,
+    pool.loopr(size, chunk, // NOLINT(readability-suspicious-call-argument)
                [&](size_t begin, size_t end, size_t tnum)
                {
                    UTEST_CHECK_LESS(begin, end);

@@ -44,11 +44,11 @@ void worker_t::operator()() const
 
 void section_t::block(bool raise)
 {
-    for (auto it = this->begin(); it != this->end(); ++it)
+    for (auto& future : *this)
     {
-        if (it->valid())
+        if (future.valid())
         {
-            raise ? (void)it->get() : it->wait();
+            raise ? (void)future.get() : future.wait();
         }
     }
 }
