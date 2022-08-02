@@ -49,7 +49,17 @@ namespace nano
         const auto& generator() const { return m_generator; }
 
     protected:
-        auto& pool() const { return m_pool; }
+        template <typename toperator>
+        void map(tensor_size_t elements, const toperator& op) const
+        {
+            m_pool.map(elements, op);
+        }
+
+        template <typename toperator>
+        void map(tensor_size_t elements, tensor_size_t chunksize, const toperator& op) const
+        {
+            m_pool.map(elements, chunksize, op);
+        }
 
     private:
         using tgenerator = dataset_generator_t;

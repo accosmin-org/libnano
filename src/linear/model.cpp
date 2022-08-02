@@ -133,8 +133,9 @@ fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const in
 
         fit_result_t::cv_result_t cv_result{params, folds};
 
-        const auto fold_callback = [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](auto fold, size_t)
+        const auto fold_callback = [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](tensor_size_t fold, size_t)
         {
+            assert(fold >= 0 && fold < folds);
             const auto [train_samples, valid_samples] = cv.split(fold);
 
             const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, th);
@@ -146,7 +147,7 @@ fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const in
             cv_result.m_valid_errors(fold) = valid_error;
             cv_result.m_valid_values(fold) = valid_value;
         };
-        pool.loopi(folds, fold_callback);
+        pool.map(folds, fold_callback);
 
         const auto goodness = std::log(cv_result.m_train_errors.mean() + std::numeric_limits<scalar_t>::epsilon());
 

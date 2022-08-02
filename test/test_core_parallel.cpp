@@ -26,14 +26,14 @@ template <typename toperator>
 static auto test_loopi(parallel::pool_t& pool, size_t size, const toperator op)
 {
     std::vector<double> results(size, -1);
-    pool.loopi(size,
-               [&](size_t i, size_t tnum)
-               {
-                   UTEST_CHECK_LESS(i, size);
-                   UTEST_CHECK_LESS(tnum, pool.size());
+    pool.map(size,
+             [&](size_t i, size_t tnum)
+             {
+                 UTEST_CHECK_LESS(i, size);
+                 UTEST_CHECK_LESS(tnum, pool.size());
 
-                   results[i] = op(i);
-               });
+                 results[i] = op(i);
+             });
 
     return std::accumulate(results.begin(), results.end(), 0.0);
 }
@@ -43,19 +43,19 @@ template <typename toperator>
 auto test_loopr(parallel::pool_t& pool, size_t size, size_t chunk, const toperator op)
 {
     std::vector<double> results(size, -1);
-    pool.loopr(size, chunk, // NOLINT(readability-suspicious-call-argument)
-               [&](size_t begin, size_t end, size_t tnum)
-               {
-                   UTEST_CHECK_LESS(begin, end);
-                   UTEST_CHECK_LESS_EQUAL(end, size);
-                   UTEST_CHECK_LESS(tnum, pool.size());
-                   UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
+    pool.map(size, chunk, // NOLINT(readability-suspicious-call-argument)
+             [&](size_t begin, size_t end, size_t tnum)
+             {
+                 UTEST_CHECK_LESS(begin, end);
+                 UTEST_CHECK_LESS_EQUAL(end, size);
+                 UTEST_CHECK_LESS(tnum, pool.size());
+                 UTEST_CHECK_LESS_EQUAL(end - begin, chunk);
 
-                   for (auto i = begin; i < end; ++i)
-                   {
-                       results[i] = op(i);
-                   }
-               });
+                 for (auto i = begin; i < end; ++i)
+                 {
+                     results[i] = op(i);
+                 }
+             });
 
     return std::accumulate(results.begin(), results.end(), 0.0);
 }

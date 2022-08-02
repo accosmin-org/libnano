@@ -31,7 +31,7 @@ namespace nano::parallel
         template <typename tfunction>
         auto enqueue(tfunction&& f)
         {
-            auto task   = task_t(f);
+            auto task   = task_t(std::forward<tfunction>(f));
             auto future = task.get_future();
             {
                 const std::lock_guard<std::mutex> lock(m_mutex);
@@ -158,13 +158,14 @@ namespace nano::parallel
         static size_t max_size();
 
         ///
-        /// \brief process the given number of elements in parallel.
+        /// \brief process the given number of elements in parallel and
+        ///     wait for all results to be available (map-reduce).
         ///
         /// NB: the operator receives the element index to process and the assigned thread index:
         ///     op(index, tnum)
         ///
         template <typename tsize, typename toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
-        void loopi(tsize elements, const toperator& op, bool raise = true)
+        void map(tsize elements, const toperator& op, bool raise = true)
         {
             if (size() == 1)
             {
@@ -176,9 +177,10 @@ namespace nano::parallel
             else
             {
                 section_t section;
+                section.reserve(static_cast<size_t>(elements));
                 for (tsize index = 0; index < elements; ++index)
                 {
-                    section.emplace_back(enqueue([&op, index = index](size_t tnum) { op(index, tnum); }));
+                    section.emplace_back(enqueue([op = op, index = index](size_t tnum) { op(index, tnum); }));
                 }
 
                 section.block(raise);
@@ -186,13 +188,14 @@ namespace nano::parallel
         }
 
         ///
-        /// \brief process the given number of elements in parallel in chunks of fixed size.
+        /// \brief process the given number of elements in parallel in chunks of fixed size
+        ///     and wait for all results to be available (map-reduce).
         ///
         /// NB: the operator receives the range [begin, end) of elements to process and the assigned thread index:
         ///     op(begin, end, tnum)
         ///
         template <typename tsize, typename toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
-        void loopr(tsize elements, tsize chunksize, const toperator& op, bool raise = true)
+        void map(tsize elements, tsize chunksize, const toperator& op, bool raise = true)
         {
             assert(chunksize >= tsize(1));
 
@@ -206,11 +209,12 @@ namespace nano::parallel
             else
             {
                 section_t section;
+                section.reserve(static_cast<size_t>((elements + chunksize - 1) / chunksize));
                 for (tsize begin = 0; begin < elements; begin += chunksize)
                 {
+                    const auto end = std::min(begin + chunksize, elements);
                     section.emplace_back(
-                        enqueue([&op, begin = begin, elements = elements, chunksize = chunksize](size_t tnum)
-                                { op(begin, std::min(begin + chunksize, elements), tnum); }));
+                        enqueue([op = op, begin = begin, end = end](size_t tnum) { op(begin, end, tnum); }));
                 }
 
                 section.block(raise);

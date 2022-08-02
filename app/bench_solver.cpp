@@ -168,19 +168,19 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
                          const points_t& x0s, bool log_failures, bool log_maxits)
 {
     results_t results{x0s.size() * solvers.size()};
-    pool.loopi(results.size(),
-               [&](size_t i, size_t)
-               {
-                   const auto timer = nano::timer_t{};
+    pool.map(results.size(),
+             [&](size_t i, size_t)
+             {
+                 const auto timer = nano::timer_t{};
 
-                   const auto& x0     = x0s[i / solvers.size()];
-                   const auto& solver = solvers[i % solvers.size()].second;
-                   const auto  state  = solver->minimize(function, x0);
+                 const auto& x0     = x0s[i / solvers.size()];
+                 const auto& solver = solvers[i % solvers.size()].second;
+                 const auto  state  = solver->minimize(function, x0);
 
-                   const auto milliseconds = timer.milliseconds().count();
+                 const auto milliseconds = timer.milliseconds().count();
 
-                   results[i] = result_t{state, milliseconds};
-               });
+                 results[i] = result_t{state, milliseconds};
+             });
 
     for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++ i)
     {
