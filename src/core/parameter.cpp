@@ -343,7 +343,7 @@ std::istream& parameter_t::read(std::istream& stream)
     case 2: m_storage = ::read(m_name, stream, frange_t{}); break;
     case 3: m_storage = ::read(m_name, stream, iprange_t{}); break;
     case 4: m_storage = ::read(m_name, stream, fprange_t{}); break;
-    default: critical0("parameter (", m_name, "): failed to read from stream (type=", type, ")!"); break;
+    default: critical0("parameter (", m_name, "): failed to read from stream (type=", type, ")!");
     }
 
     return stream;

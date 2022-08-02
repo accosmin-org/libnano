@@ -22,13 +22,13 @@ namespace nano
         ///
         /// \brief enable copying
         ///
-        estimator_t(const estimator_t&) = default;
+        estimator_t(const estimator_t&)            = default;
         estimator_t& operator=(const estimator_t&) = default;
 
         ///
         /// \brief enable moving
         ///
-        estimator_t(estimator_t&&) noexcept = default;
+        estimator_t(estimator_t&&) noexcept            = default;
         estimator_t& operator=(estimator_t&&) noexcept = default;
 
         ///

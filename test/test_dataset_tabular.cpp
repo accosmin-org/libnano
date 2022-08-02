@@ -72,9 +72,9 @@ public:
         std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    fixture_dataset_t(fixture_dataset_t&&)      = default;
-    fixture_dataset_t(const fixture_dataset_t&) = delete;
-    fixture_dataset_t& operator=(fixture_dataset_t&&) = default;
+    fixture_dataset_t(fixture_dataset_t&&)                 = default;
+    fixture_dataset_t(const fixture_dataset_t&)            = delete;
+    fixture_dataset_t& operator=(fixture_dataset_t&&)      = default;
     fixture_dataset_t& operator=(const fixture_dataset_t&) = delete;
 
     ~fixture_dataset_t() override

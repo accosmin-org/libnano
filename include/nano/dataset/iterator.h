@@ -5,7 +5,7 @@
 namespace nano
 {
     ///
-    /// \brief
+    /// \brief base iterator to iterate over the masked feature values of a given set of samples.
     ///
     class base_dataset_iterator_t
     {
@@ -92,7 +92,7 @@ namespace nano
     };
 
     ///
-    /// \brief utility to iterate over the masked feature values of a given set of samples.
+    /// \brief utility to iterate over the masked feature pair values of a given set of samples.
     ///
     template <typename tscalar1, size_t trank1, typename tscalar2, size_t trank2>
     class dataset_pairwise_iterator_t : public base_dataset_iterator_t
@@ -180,7 +180,10 @@ namespace nano
     ///
     /// \brief construct an invalid (end) iterator from the given inputs.
     ///
-    inline auto make_end_iterator(indices_cmap_t samples) { return base_dataset_iterator_t{samples, samples.size()}; }
+    inline auto make_end_iterator(indices_cmap_t samples)
+    {
+        return base_dataset_iterator_t{samples, samples.size()};
+    }
 
     ///
     /// \brief call the appropriate operator for the given data,

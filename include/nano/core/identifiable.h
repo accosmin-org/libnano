@@ -37,7 +37,7 @@ namespace nano
         ///
         /// \brief enable moving
         ///
-        identifiable_t(identifiable_t&&) noexcept = default;
+        identifiable_t(identifiable_t&&) noexcept            = default;
         identifiable_t& operator=(identifiable_t&&) noexcept = default;
 
         ///

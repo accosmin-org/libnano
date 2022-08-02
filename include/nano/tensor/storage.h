@@ -29,11 +29,11 @@ namespace nano
         using tmutableref = tscalar&;
         using tconstref   = const tscalar&;
 
-        tensor_vector_storage_t()                                   = default;
-        ~tensor_vector_storage_t()                                  = default;
-        tensor_vector_storage_t(const tensor_vector_storage_t&)     = default;
-        tensor_vector_storage_t(tensor_vector_storage_t&&) noexcept = default;
-        tensor_vector_storage_t& operator=(const tensor_vector_storage_t&) = default;
+        tensor_vector_storage_t()                                              = default;
+        ~tensor_vector_storage_t()                                             = default;
+        tensor_vector_storage_t(const tensor_vector_storage_t&)                = default;
+        tensor_vector_storage_t(tensor_vector_storage_t&&) noexcept            = default;
+        tensor_vector_storage_t& operator=(const tensor_vector_storage_t&)     = default;
         tensor_vector_storage_t& operator=(tensor_vector_storage_t&&) noexcept = default;
 
         template <typename... tsizes>
@@ -114,10 +114,10 @@ namespace nano
         using tmutableref = const tscalar&;
         using tconstref   = const tscalar&;
 
-        tensor_carray_storage_t()                                   = default;
-        ~tensor_carray_storage_t()                                  = default;
-        tensor_carray_storage_t(const tensor_carray_storage_t&)     = default;
-        tensor_carray_storage_t(tensor_carray_storage_t&&) noexcept = default;
+        tensor_carray_storage_t()                                                    = default;
+        ~tensor_carray_storage_t()                                                   = default;
+        tensor_carray_storage_t(const tensor_carray_storage_t&)                      = default;
+        tensor_carray_storage_t(tensor_carray_storage_t&&) noexcept                  = default;
         tensor_carray_storage_t& operator=(tensor_carray_storage_t&& other) noexcept = default;
 
         template <typename... tsizes>

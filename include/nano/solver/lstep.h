@@ -47,7 +47,7 @@ namespace nano
         /// \brief assignment
         ///
         lsearch_step_t& operator=(lsearch_step_t&&) noexcept = default;
-        lsearch_step_t& operator=(const lsearch_step_t&) = default;
+        lsearch_step_t& operator=(const lsearch_step_t&)     = default;
 
         lsearch_step_t& operator=(const solver_state_t& state)
         {

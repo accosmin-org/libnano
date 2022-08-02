@@ -59,7 +59,7 @@ cell_t* row_t::find(const size_t col)
                                    {
                                      icol += cell.m_span;
                                      return icol > col;
-                                   });
+                                 });
     return (it == m_cells.end()) ? nullptr : &*it;
 }
 
@@ -71,7 +71,7 @@ const cell_t* row_t::find(const size_t col) const
                                    {
                                      icol += cell.m_span;
                                      return icol > col;
-                                   });
+                                 });
     return (it == m_cells.end()) ? nullptr : &*it;
 }
 

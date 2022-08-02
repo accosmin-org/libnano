@@ -38,5 +38,8 @@ namespace nano
     ///
     /// \brief creates a range of dimensions.
     ///
-    inline auto make_range(tensor_size_t begin, tensor_size_t end) { return tensor_range_t{begin, end}; }
+    inline auto make_range(tensor_size_t begin, tensor_size_t end)
+    {
+        return tensor_range_t{begin, end};
+    }
 } // namespace nano

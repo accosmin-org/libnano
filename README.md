@@ -1,5 +1,6 @@
-# libnano [![build](https://accosmin.semaphoreci.com/badges/libnano/branches/master.svg)](https://accosmin.semaphoreci.com/projects/libnano) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+# libnano 
 
+[![Devel](https://github.com/accosmin-org/libnano/actions/workflows/devel.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/devel.yml) [![Deploy Ubuntu 20.04](https://github.com/accosmin-org/libnano/actions/workflows/deploy_ubuntu2004.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/deploy_ubuntu2004.yml) [![Deploy Ubuntu 22.04](https://github.com/accosmin-org/libnano/actions/workflows/deploy_ubuntu2204.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/deploy_ubuntu2204.yml) [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=libnano&metric=alert_status)](https://sonarcloud.io/summary/overall?id=libnano) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 Numerical optimization routines and machine learning utilities using [Eigen3](https://eigen.tuxfamily.org).
 

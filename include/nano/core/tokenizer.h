@@ -25,13 +25,13 @@ namespace nano
         ///
         /// \brief enable copying
         ///
-        tokenizer_t(const tokenizer_t&) = default;
+        tokenizer_t(const tokenizer_t&)            = default;
         tokenizer_t& operator=(const tokenizer_t&) = delete;
 
         ///
         /// \brief enable moving
         ///
-        tokenizer_t(tokenizer_t&&) noexcept = default;
+        tokenizer_t(tokenizer_t&&) noexcept            = default;
         tokenizer_t& operator=(tokenizer_t&&) noexcept = delete;
 
         ///

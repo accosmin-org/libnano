@@ -48,7 +48,10 @@ namespace nano
         size_t m_span{1};
     };
 
-    inline colspan_t colspan(const size_t span) { return {span}; }
+    inline colspan_t colspan(const size_t span)
+    {
+        return {span};
+    }
 
     ///
     /// \brief control filling for aligning text in a cell.
@@ -58,7 +61,10 @@ namespace nano
         char m_fill{' '};
     };
 
-    inline colfill_t colfill(const char fill) { return {fill}; }
+    inline colfill_t colfill(const char fill)
+    {
+        return {fill};
+    }
 
     ///
     /// \brief row in a table, consisting of a list of cells.
@@ -176,8 +182,10 @@ namespace nano
         ///
         /// \brief access functions
         ///
-        auto        cols() const { return m_cols; }
-        auto        type() const { return m_type; }
+        auto cols() const { return m_cols; }
+
+        auto type() const { return m_type; }
+
         const auto& cells() const { return m_cells; }
 
         const string_t& data(size_t col) const;
@@ -287,7 +295,10 @@ namespace nano
         std::vector<row_t> m_rows;
     };
 
-    inline bool operator==(const table_t& t1, const table_t& t2) { return std::operator==(t1.content(), t2.content()); }
+    inline bool operator==(const table_t& t1, const table_t& t2)
+    {
+        return std::operator==(t1.content(), t2.content());
+    }
 
     ///
     /// \brief pretty-print the table.

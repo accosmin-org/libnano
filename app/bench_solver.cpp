@@ -1,13 +1,13 @@
 #include <iomanip>
+#include <nano/core/chrono.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/factory_util.h>
+#include <nano/core/logger.h>
+#include <nano/core/numeric.h>
+#include <nano/core/parallel.h>
+#include <nano/function/benchmark.h>
 #include <nano/solver.h>
 #include <nano/tensor.h>
-#include <nano/core/tpool.h>
-#include <nano/core/chrono.h>
-#include <nano/core/logger.h>
-#include <nano/core/cmdline.h>
-#include <nano/core/numeric.h>
-#include <nano/core/factory_util.h>
-#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -164,22 +164,23 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     return state;
 }
 
-static auto minimize_all(const function_t& function, const solvers_t& solvers,
-    const points_t& x0s, bool log_failures, bool log_maxits)
+static auto minimize_all(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers,
+                         const points_t& x0s, bool log_failures, bool log_maxits)
 {
     results_t results{x0s.size() * solvers.size()};
-    loopi(results.size(), [&] (size_t i, size_t)
-    {
-        const auto timer = nano::timer_t{};
+    pool.map(results.size(),
+             [&](size_t i, size_t)
+             {
+                 const auto timer = nano::timer_t{};
 
-        const auto& x0 = x0s[i / solvers.size()];
-        const auto& solver = solvers[i % solvers.size()].second;
-        const auto state = solver->minimize(function, x0);
+                 const auto& x0     = x0s[i / solvers.size()];
+                 const auto& solver = solvers[i % solvers.size()].second;
+                 const auto  state  = solver->minimize(function, x0);
 
-        const auto milliseconds = timer.milliseconds().count();
+                 const auto milliseconds = timer.milliseconds().count();
 
-        results[i] = result_t{state, milliseconds};
-    });
+                 results[i] = result_t{state, milliseconds};
+             });
 
     for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++ i)
     {
@@ -198,15 +199,15 @@ static auto minimize_all(const function_t& function, const solvers_t& solvers,
     return results;
 }
 
-static auto benchmark(const function_t& function, const solvers_t& solvers,
-    size_t trials, bool log_failures, bool log_maxits)
+static auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, size_t trials,
+                      bool log_failures, bool log_maxits)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
     std::generate(x0s.begin(), x0s.end(), [&] () { return vector_t::Random(function.size()); });
 
     // and minimize in parallel all (solver, random initial point) combinations
-    const auto results = minimize_all(function, solvers, x0s, log_failures, log_maxits);
+    const auto results = minimize_all(pool, function, solvers, x0s, log_failures, log_maxits);
 
     // gather statistics per solver
     const auto max_evals = solvers[0U].second->parameter("solver::max_evals").value<int>();
@@ -487,11 +488,12 @@ static int unsafe_main(int argc, const char* argv[])
     }
 
     // benchmark solvers independently per function
+    parallel::pool_t pool;
     auto solver_stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{functions.size()}};
     for (size_t ifunction = 0U; ifunction < functions.size(); ++ ifunction)
     {
         const auto& function = functions[ifunction];
-        const auto solver_function_stats = benchmark(*function, solvers, trials, log_failures, log_maxits);
+        const auto  solver_function_stats = benchmark(pool, *function, solvers, trials, log_failures, log_maxits);
         for (size_t isolver = 0U; isolver < solvers.size(); ++ isolver)
         {
             const auto& stats = solver_function_stats[isolver];

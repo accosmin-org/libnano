@@ -16,6 +16,7 @@ namespace nano
         struct euclidean_ball_t
         {
             euclidean_ball_t() = default;
+
             euclidean_ball_t(vector_t origin, scalar_t radius)
                 : m_origin(std::move(origin))
                 , m_radius(radius)
@@ -29,6 +30,7 @@ namespace nano
         struct linear_t
         {
             linear_t() = default;
+
             linear_t(vector_t q, scalar_t r)
                 : m_q(std::move(q))
                 , m_r(r)
@@ -42,6 +44,7 @@ namespace nano
         struct quadratic_t
         {
             quadratic_t() = default;
+
             quadratic_t(matrix_t P, vector_t q, scalar_t r)
                 : m_P(std::move(P))
                 , m_q(std::move(q))
@@ -57,6 +60,7 @@ namespace nano
         struct functional_t
         {
             functional_t() = default;
+
             explicit functional_t(rfunction_t&& function)
                 : m_function(std::move(function))
             {
@@ -71,6 +75,7 @@ namespace nano
         struct euclidean_ball_equality_t : euclidean_ball_t
         {
             euclidean_ball_equality_t() = default;
+
             euclidean_ball_equality_t(vector_t origin, scalar_t radius)
                 : euclidean_ball_t(std::move(origin), radius)
             {
@@ -83,6 +88,7 @@ namespace nano
         struct euclidean_ball_inequality_t : euclidean_ball_t
         {
             euclidean_ball_inequality_t() = default;
+
             euclidean_ball_inequality_t(vector_t origin, scalar_t radius)
                 : euclidean_ball_t(std::move(origin), radius)
             {
@@ -95,6 +101,7 @@ namespace nano
         struct constant_t
         {
             constant_t() = default;
+
             constant_t(scalar_t value, tensor_size_t dimension)
                 : m_value(value)
                 , m_dimension(dimension)
@@ -111,6 +118,7 @@ namespace nano
         struct minimum_t : constant_t
         {
             minimum_t() = default;
+
             minimum_t(scalar_t value, tensor_size_t dimension)
                 : constant_t(value, dimension)
             {
@@ -123,6 +131,7 @@ namespace nano
         struct maximum_t : constant_t
         {
             maximum_t() = default;
+
             maximum_t(scalar_t value, tensor_size_t dimension)
                 : constant_t(value, dimension)
             {
@@ -135,6 +144,7 @@ namespace nano
         struct linear_equality_t : linear_t
         {
             linear_equality_t() = default;
+
             linear_equality_t(vector_t q, scalar_t r)
                 : linear_t(std::move(q), r)
             {
@@ -147,6 +157,7 @@ namespace nano
         struct linear_inequality_t : linear_t
         {
             linear_inequality_t() = default;
+
             linear_inequality_t(vector_t q, scalar_t r)
                 : linear_t(std::move(q), r)
             {
@@ -159,6 +170,7 @@ namespace nano
         struct quadratic_equality_t : quadratic_t
         {
             quadratic_equality_t() = default;
+
             quadratic_equality_t(matrix_t P, vector_t q, scalar_t r)
                 : quadratic_t(std::move(P), std::move(q), r)
             {
@@ -171,6 +183,7 @@ namespace nano
         struct quadratic_inequality_t : quadratic_t
         {
             quadratic_inequality_t() = default;
+
             quadratic_inequality_t(matrix_t P, vector_t q, scalar_t r)
                 : quadratic_t(std::move(P), std::move(q), r)
             {
@@ -183,6 +196,7 @@ namespace nano
         struct functional_equality_t : functional_t
         {
             functional_equality_t() = default;
+
             explicit functional_equality_t(rfunction_t&& function)
                 : functional_t(std::move(function))
             {
@@ -195,6 +209,7 @@ namespace nano
         struct functional_inequality_t : functional_t
         {
             functional_inequality_t() = default;
+
             explicit functional_inequality_t(rfunction_t&& function)
                 : functional_t(std::move(function))
             {

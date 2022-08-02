@@ -65,6 +65,7 @@ namespace nano
         /// returns true if the update was performed.
         ///
         bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
+
         bool update_if_better(const vector_t& x, scalar_t fx) { return update_if_better(x, g, fx); }
 
         ///

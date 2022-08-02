@@ -99,13 +99,13 @@ namespace nano
         ///
         /// \brief disable copying.
         ///
-        generator_t(const generator_t&) = delete;
+        generator_t(const generator_t&)            = delete;
         generator_t& operator=(const generator_t&) = delete;
 
         ///
         /// \brief enable moving.
         ///
-        generator_t(generator_t&&) noexcept = default;
+        generator_t(generator_t&&) noexcept            = default;
         generator_t& operator=(generator_t&&) noexcept = delete;
 
         ///

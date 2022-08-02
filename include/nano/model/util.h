@@ -45,22 +45,23 @@ namespace nano
 
         combinatorial_iterator_t& operator++()
         {
-            for (; m_combination < m_combinations;)
+            while (m_combination < m_combinations)
             {
                 if (m_dimension + 1 == m_dimensions)
                 {
-                    for (; m_current(m_dimension) + 1 < m_counts(m_dimension);)
+                    if (m_current(m_dimension) + 1 < m_counts(m_dimension))
                     {
                         ++m_combination;
                         ++m_current(m_dimension);
                         return *this;
                     }
 
-                    for (; m_dimension >= 0;)
+                    while (m_dimension >= 0)
                     {
                         if (m_current(m_dimension) + 1 >= m_counts(m_dimension))
                         {
-                            m_current(m_dimension--) = 0;
+                            m_current(m_dimension) = 0;
+                            --m_dimension;
                         }
                         else
                         {
@@ -72,7 +73,8 @@ namespace nano
                 }
                 else
                 {
-                    m_current(++m_dimension) = 0;
+                    ++m_dimension;
+                    m_current(m_dimension) = 0;
                 }
             }
 

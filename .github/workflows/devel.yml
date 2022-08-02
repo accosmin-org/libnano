@@ -1,0 +1,170 @@
+name: libnano-devel
+
+on: [push]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-format
+      run: bash scripts/build.sh --clang-format
+
+  asan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: ASAN (gcc)
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
+
+  lsan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: LSAN (gcc)
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
+
+  usan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: USAN (gcc)
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
+
+  tsan-gcc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: TSAN (gcc)
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
+
+  clang-tidy-cert:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-cert
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cert
+
+  clang-tidy-hicpp:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-hicpp
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-hicpp
+
+  clang-tidy-misc:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-misc
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-misc
+
+  clang-tidy-bugprone:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-bugprone
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-bugprone
+
+  clang-tidy-modernize:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-modernize
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-modernize
+
+  clang-tidy-performance:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-performance
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-performance
+
+  clang-tidy-portability:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-portability
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-portability
+
+  clang-tidy-readability:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-readability
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-readability
+
+  clang-tidy-clang-analyzer:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-clang-analyzer
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-clang-analyzer
+
+  clang-tidy-cppcoreguidelines:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: clang-tidy-cppcoreguidelines
+      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
+
+  cppcheck:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: cppcheck
+      run: CXX=g++ bash scripts/build.sh --config --cppcheck
+
+  memcheck:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: memcheck
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck
+
+  coverage-and-sonar:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov --sonar

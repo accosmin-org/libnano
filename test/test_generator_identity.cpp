@@ -266,19 +266,16 @@ UTEST_CASE(unsupervised)
     UTEST_CHECK_EQUAL(generator.target_dims(), make_dims(0, 0, 0));
 
     const auto samples = arange(0, generator.dataset().samples());
-    for (const auto execution : {execution_type::par, execution_type::seq})
-    {
-        auto iterator = flatten_iterator_t{generator, samples};
-        iterator.batch(128);
-        iterator.execution(execution);
 
-        UTEST_CHECK_THROW(iterator.loop([&](tensor_range_t, size_t, tensor4d_cmap_t) {}), std::runtime_error);
+    auto iterator = flatten_iterator_t{generator, samples};
+    iterator.batch(128);
 
-        const auto& stats = iterator.targets_stats();
-        UTEST_CHECK_EQUAL(std::holds_alternative<scalar_stats_t>(stats), false);
-        UTEST_CHECK_EQUAL(std::holds_alternative<sclass_stats_t>(stats), false);
-        UTEST_CHECK_EQUAL(std::holds_alternative<mclass_stats_t>(stats), false);
-    }
+    UTEST_CHECK_THROW(iterator.loop([&](tensor_range_t, size_t, tensor4d_cmap_t) {}), std::runtime_error);
+
+    const auto& stats = iterator.targets_stats();
+    UTEST_CHECK_EQUAL(std::holds_alternative<scalar_stats_t>(stats), false);
+    UTEST_CHECK_EQUAL(std::holds_alternative<sclass_stats_t>(stats), false);
+    UTEST_CHECK_EQUAL(std::holds_alternative<mclass_stats_t>(stats), false);
 }
 
 UTEST_CASE(sclassification)

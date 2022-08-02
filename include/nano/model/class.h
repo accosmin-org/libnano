@@ -7,24 +7,35 @@ namespace nano
     ///
     /// \brief target value of the positive class.
     ///
-    inline scalar_t pos_target() { return +1; }
+    inline scalar_t pos_target()
+    {
+        return +1;
+    }
 
     ///
     /// \brief target value of the negative class.
     ///
-    inline scalar_t neg_target() { return -1; }
+    inline scalar_t neg_target()
+    {
+        return -1;
+    }
 
     ///
     /// \brief check if a target value maps to a positive class.
     ///
-    inline bool is_pos_target(const scalar_t target) { return target > 0; }
+    inline bool is_pos_target(const scalar_t target)
+    {
+        return target > 0;
+    }
 
     ///
     /// \brief target tensor for single and multi-label classification problems with [n_labels] classes.
     ///
     namespace detail
     {
-        inline void class_target(tensor3d_t&) {}
+        inline void class_target(tensor3d_t&)
+        {
+        }
 
         template <typename... tindices>
         inline void class_target(tensor3d_t& target, const tensor_size_t index, const tindices... indices)

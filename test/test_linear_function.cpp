@@ -17,14 +17,9 @@ static auto make_batch(scaling_type scaling)
     return (scaling == scaling_type::standard) ? 20 : 15;
 }
 
-static auto make_execution(scaling_type scaling)
+static auto make_threads(scaling_type scaling)
 {
-    return (scaling == scaling_type::minmax) ? execution_type::par : execution_type::seq;
-}
-
-static auto make_iterator(const dataset_generator_t& generator, scaling_type scaling)
-{
-    return make_iterator(generator, make_execution(scaling), make_batch(scaling), scaling);
+    return (scaling == scaling_type::minmax) ? parallel::pool_t::max_size() : size_t{1U};
 }
 
 static void check_vgrad(const linear::function_t& function, int trials = 100)
@@ -83,8 +78,14 @@ UTEST_CASE(function)
 
     for (const auto scaling : enum_values<scaling_type>())
     {
-        const auto loss          = make_loss(scaling);
-        const auto iterator      = make_iterator(generator, scaling);
+        const auto loss    = make_loss(scaling);
+        const auto batch   = make_batch(scaling);
+        const auto threads = make_threads(scaling);
+
+        auto iterator = flatten_iterator_t{generator, arange(0, samples), threads};
+        iterator.batch(batch);
+        iterator.scaling(scaling);
+
         const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
         {
             UTEST_NAMED_CASE(scat(scaling, "/noreg"));
@@ -149,8 +150,13 @@ UTEST_CASE(minimize)
 
     for (const auto scaling : enum_values<scaling_type>())
     {
-        const auto loss     = make_loss(scaling);
-        const auto iterator = make_iterator(generator, scaling);
+        const auto loss    = make_loss(scaling);
+        const auto batch   = make_batch(scaling);
+        const auto threads = make_threads(scaling);
+
+        auto iterator = flatten_iterator_t{generator, arange(0, samples), threads};
+        iterator.batch(batch);
+        iterator.scaling(scaling);
         {
             UTEST_NAMED_CASE(scat(scaling, "/noreg"));
 

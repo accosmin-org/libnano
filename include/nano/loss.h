@@ -34,13 +34,13 @@ namespace nano
         ///
         /// \brief enable copying
         ///
-        loss_t(const loss_t&) = default;
+        loss_t(const loss_t&)            = default;
         loss_t& operator=(const loss_t&) = default;
 
         ///
         /// \brief enable moving
         ///
-        loss_t(loss_t&&) noexcept = default;
+        loss_t(loss_t&&) noexcept            = default;
         loss_t& operator=(loss_t&&) noexcept = default;
 
         ///
