@@ -10,4 +10,4 @@ jobs:
     - name: setup
       run: bash scripts/setup_osxbrew.sh
     - name: debug (apple clang)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
+      run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
