@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <nano/core/seed.h>
 #include <random>
@@ -26,8 +27,17 @@ namespace nano
         }
         else
         {
-            // todo: use seed_seq to initialize the RNG (see C++17)
-            return rng_t{std::random_device{}()};
+            static constexpr auto rng_state_bytes = rng_t::state_size * sizeof(rng_t::result_type);
+
+            auto source = std::random_device{};
+
+            std::random_device::result_type random_data[(rng_state_bytes - 1) / sizeof(source()) + 1];
+
+            std::generate(std::begin(random_data), std::end(random_data), std::ref(source));
+
+            auto seed_seq = std::seed_seq{std::begin(random_data), std::end(random_data)};
+
+            return rng_t{seed_seq};
         }
     }
 
