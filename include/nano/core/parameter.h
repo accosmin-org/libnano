@@ -146,13 +146,24 @@ namespace nano
         ///
         /// \brief change the parameter's value, throws an exception if not possible.
         ///
-        parameter_t& operator=(int32_t);
-        parameter_t& operator=(int64_t);
-        parameter_t& operator=(scalar_t);
         parameter_t& operator=(string_t);
         parameter_t& operator=(std::tuple<int32_t, int32_t>);
         parameter_t& operator=(std::tuple<int64_t, int64_t>);
         parameter_t& operator=(std::tuple<scalar_t, scalar_t>);
+
+        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
+        parameter_t& operator=(tscalar value)
+        {
+            if constexpr (std::is_integral_v<tscalar>)
+            {
+                seti(static_cast<int64_t>(value));
+            }
+            else
+            {
+                setd(static_cast<scalar_t>(value));
+            }
+            return *this;
+        }
 
         template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
         parameter_t& operator=(tenum value)
@@ -235,6 +246,8 @@ namespace nano
         auto domain() const { return domain_t{*this}; }
 
     private:
+        parameter_t& seti(int64_t);
+        parameter_t& setd(scalar_t);
         parameter_t(string_t name, enum_t);
         parameter_t(string_t name, irange_t);
         parameter_t(string_t name, frange_t);
