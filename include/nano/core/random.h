@@ -35,7 +35,7 @@ namespace nano
 
             std::generate(std::begin(random_data), std::end(random_data), std::ref(source));
 
-            auto seed_seq = std::seed_seq{std::begin(random_data), std::end(random_data)};
+            auto seed_seq = std::seed_seq(std::begin(random_data), std::end(random_data));
 
             return rng_t{seed_seq};
         }
