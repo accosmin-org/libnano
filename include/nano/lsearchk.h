@@ -18,8 +18,6 @@ namespace nano
     class NANO_PUBLIC lsearchk_t : public estimator_t
     {
     public:
-        using interpolation = lsearch_step_t::interpolation;
-
         ///
         /// logging operator: op(solver_state_at_0, solver_state_at_t), called for each trial of the line-search length.
         ///

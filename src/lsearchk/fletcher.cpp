@@ -5,7 +5,7 @@ using namespace nano;
 
 lsearchk_fletcher_t::lsearchk_fletcher_t()
 {
-    register_parameter(parameter_t::make_enum("lsearchk::fletcher::interpolation", interpolation::cubic));
+    register_parameter(parameter_t::make_enum("lsearchk::fletcher::interpolation", interpolation_type::cubic));
     register_parameter(parameter_t::make_scalar("lsearchk::fletcher::tau1", 2, LT, 9.0, LT, 1e+6));
     register_parameter(parameter_t::make_scalar_pair("lsearchk::fletcher::tau23", 0, LT, 0.1, LT, 0.5, LE, 0.5));
 }
@@ -21,13 +21,13 @@ bool lsearchk_fletcher_t::zoom(const solver_state_t& state0, lsearch_step_t lo, 
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
     const auto [tau2, tau3]   = parameter("lsearchk::fletcher::tau23").value_pair<scalar_t>();
-    const auto interp         = parameter("lsearchk::fletcher::interpolation").value<interpolation>();
+    const auto interpolation  = parameter("lsearchk::fletcher::interpolation").value<interpolation_type>();
 
     for (int i = 0; i < max_iterations && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++i)
     {
         const auto tmin = lo.t + std::min(tau2, c2) * (hi.t - lo.t);
         const auto tmax = hi.t - tau3 * (hi.t - lo.t);
-        const auto next = lsearch_step_t::interpolate(lo, hi, interp);
+        const auto next = lsearch_step_t::interpolate(lo, hi, interpolation);
         const auto ok   = state.update(state0, std::clamp(next, std::min(tmin, tmax), std::max(tmin, tmax)));
         log(state0, state);
 
@@ -62,7 +62,7 @@ bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& stat
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
     const auto tau1           = parameter("lsearchk::fletcher::tau1").value<scalar_t>();
-    const auto interp         = parameter("lsearchk::fletcher::interpolation").value<interpolation>();
+    const auto interpolation  = parameter("lsearchk::fletcher::interpolation").value<interpolation_type>();
 
     lsearch_step_t prev = state0;
     lsearch_step_t curr = state;
@@ -85,7 +85,7 @@ bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& stat
         // next trial
         const auto tmin = curr.t + 2 * (curr.t - prev.t);
         const auto tmax = curr.t + tau1 * (curr.t - prev.t);
-        const auto next = lsearch_step_t::interpolate(prev, curr, interp);
+        const auto next = lsearch_step_t::interpolate(prev, curr, interpolation);
         const auto ok   = state.update(state0, std::clamp(next, tmin, tmax));
         log(state0, state);
 

@@ -151,9 +151,9 @@ UTEST_CASE(interpolate)
     const auto u = lsearch_step_t{4.2, 1.0, 0.5};
     const auto v = u;
 
-    const auto tc = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::cubic);
-    const auto tq = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::quadratic);
-    const auto tb = lsearch_step_t::interpolate(u, v, lsearchk_t::interpolation::bisection);
+    const auto tc = lsearch_step_t::interpolate(u, v, interpolation_type::cubic);
+    const auto tq = lsearch_step_t::interpolate(u, v, interpolation_type::quadratic);
+    const auto tb = lsearch_step_t::interpolate(u, v, interpolation_type::bisection);
 
     UTEST_CHECK_CLOSE(tc, 4.2, 1e-16);
     UTEST_CHECK_CLOSE(tq, 4.2, 1e-16);
@@ -164,7 +164,7 @@ UTEST_CASE(backtrack_cubic)
 {
     const auto* const lsearch_id                             = "backtrack";
     const auto        lsearch                                = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::cubic;
+    lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
@@ -176,7 +176,7 @@ UTEST_CASE(backtrack_quadratic)
 {
     const auto* const lsearch_id                             = "backtrack";
     const auto        lsearch                                = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::quadratic;
+    lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
@@ -188,7 +188,7 @@ UTEST_CASE(backtrack_bisection)
 {
     const auto* const lsearch_id                             = "backtrack";
     const auto        lsearch                                = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::backtrack::interpolation") = lsearchk_t::interpolation::bisection;
+    lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {
@@ -200,7 +200,7 @@ UTEST_CASE(lemarechal_cubic)
 {
     const auto* const lsearch_id                              = "lemarechal";
     const auto        lsearch                                 = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::lemarechal::interpolation") = lsearchk_t::interpolation::cubic;
+    lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
@@ -212,7 +212,7 @@ UTEST_CASE(lemarechal_quadratic)
 {
     const auto *const lsearch_id = "lemarechal";
     const auto lsearch = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::lemarechal::interpolation") = lsearchk_t::interpolation::quadratic;
+    lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
@@ -224,7 +224,7 @@ UTEST_CASE(lemarechal_bisection)
 {
     const auto* const lsearch_id                              = "lemarechal";
     const auto        lsearch                                 = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::lemarechal::interpolation") = lsearchk_t::interpolation::bisection;
+    lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {
@@ -247,7 +247,7 @@ UTEST_CASE(fletcher_cubic)
 {
     const auto* const lsearch_id                            = "fletcher";
     const auto        lsearch                               = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::cubic;
+    lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
@@ -259,7 +259,7 @@ UTEST_CASE(fletcher_quadratic)
 {
     const auto* const lsearch_id                            = "fletcher";
     const auto        lsearch                               = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::quadratic;
+    lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
@@ -271,7 +271,7 @@ UTEST_CASE(fletcher_bisection)
 {
     const auto* const lsearch_id                            = "fletcher";
     const auto        lsearch                               = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::fletcher::interpolation") = lsearchk_t::interpolation::bisection;
+    lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {

@@ -5,22 +5,22 @@
 namespace nano
 {
     ///
+    /// \brief interpolation method using the information at two line-search step trials.
+    ///
+    enum class interpolation_type
+    {
+        bisection, ///<
+        quadratic, ///<
+        cubic      ///<
+    };
+
+    ///
     /// \brief line-search step function:
     ///     phi(t) = f(x + t * d), f - the function to minimize and d - the descent direction.
     ///
     class lsearch_step_t
     {
     public:
-        ///
-        /// \brief interpolation method using the information at two trials.
-        ///
-        enum class interpolation
-        {
-            bisection, ///<
-            quadratic, ///<
-            cubic      ///<
-        };
-
         ///
         /// \brief construction
         ///
@@ -115,7 +115,7 @@ namespace nano
         ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
         ///         until the interpolated point is valid.
         ///
-        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation method)
+        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation_type method)
         {
             const auto tc = cubic(u, v);
             const auto tq = quadratic(u, v);
@@ -123,11 +123,11 @@ namespace nano
 
             switch (method)
             {
-            case interpolation::cubic: return std::isfinite(tc) ? tc : std::isfinite(tq) ? tq : tb;
+            case interpolation_type::cubic: return std::isfinite(tc) ? tc : std::isfinite(tq) ? tq : tb;
 
-            case interpolation::quadratic: return std::isfinite(tq) ? tq : tb;
+            case interpolation_type::quadratic: return std::isfinite(tq) ? tq : tb;
 
-            case interpolation::bisection:
+            case interpolation_type::bisection: [[fallthrough]];
             default: return tb;
             }
         }
@@ -139,12 +139,12 @@ namespace nano
     };
 
     template <>
-    inline enum_map_t<lsearch_step_t::interpolation> enum_string<lsearch_step_t::interpolation>()
+    inline enum_map_t<interpolation_type> enum_string<interpolation_type>()
     {
         return {
-            {lsearch_step_t::interpolation::bisection, "bisection"},
-            {lsearch_step_t::interpolation::quadratic, "quadratic"},
-            {    lsearch_step_t::interpolation::cubic,     "cubic"}
+            {interpolation_type::bisection, "bisection"},
+            {interpolation_type::quadratic, "quadratic"},
+            {    interpolation_type::cubic,     "cubic"}
         };
     }
 } // namespace nano
