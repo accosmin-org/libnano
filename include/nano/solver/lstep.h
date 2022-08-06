@@ -39,12 +39,7 @@ namespace nano
         ///
         lsearch_step_t& operator=(lsearch_step_t&&) noexcept = default;
         lsearch_step_t& operator=(const lsearch_step_t&)     = default;
-
-        lsearch_step_t& operator=(const solver_state_t& state)
-        {
-            t = state.t, f = state.f, g = state.dg();
-            return *this;
-        }
+        lsearch_step_t& operator=(const solver_state_t& state);
 
         ///
         /// \brief destructor

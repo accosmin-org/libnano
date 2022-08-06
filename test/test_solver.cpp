@@ -9,6 +9,11 @@
 
 using namespace nano;
 
+static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
+{
+    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
+}
+
 template <typename tscalar>
 static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>& values)
 {
@@ -168,57 +173,57 @@ UTEST_CASE(state_str)
 
 UTEST_CASE(state_valid)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    const auto state    = solver_state_t{function, make_random_x0(function)};
     UTEST_CHECK(state);
 }
 
 UTEST_CASE(state_invalid_tINF)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.t = INFINITY;
     UTEST_CHECK(!state);
 }
 
 UTEST_CASE(state_invalid_fNAN)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.f = NAN;
     UTEST_CHECK(!state);
 }
 
 UTEST_CASE(state_has_descent)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.d = -state.g;
     UTEST_CHECK(state.has_descent());
 }
 
 UTEST_CASE(state_has_no_descent0)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.d.setZero();
     UTEST_CHECK(!state.has_descent());
 }
 
 UTEST_CASE(state_has_no_descent1)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.d = state.g;
     UTEST_CHECK(!state.has_descent());
 }
 
 UTEST_CASE(state_update_if_better)
 {
-    const function_sphere_t function(2);
-    const auto              x0 = vector_t::Constant(function.size(), 0.0);
-    const auto              x1 = vector_t::Constant(function.size(), 1.0);
-    const auto              x2 = vector_t::Constant(function.size(), 2.0);
+    const auto function = function_sphere_t{2};
+    const auto x0       = vector_t::Constant(function.size(), 0.0);
+    const auto x1       = vector_t::Constant(function.size(), 1.0);
+    const auto x2       = vector_t::Constant(function.size(), 2.0);
 
     solver_state_t state(function, x1);
     UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
@@ -236,8 +241,8 @@ UTEST_CASE(state_update_if_better)
 
 UTEST_CASE(state_convergence0)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Zero(function.size()));
+    const auto function = function_sphere_t{7};
+    const auto state    = solver_state_t{function, vector_t::Zero(function.size())};
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon0<scalar_t>());
@@ -245,8 +250,8 @@ UTEST_CASE(state_convergence0)
 
 UTEST_CASE(state_convergence1)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()) * epsilon1<scalar_t>());
+    const auto function = function_sphere_t{7};
+    const auto state  = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
@@ -305,7 +310,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Random(function->size());
+        const auto x0 = make_random_x0(*function);
 
         std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_smooth_solver_ids())
@@ -361,7 +366,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Random(function->size());
+        const auto x0 = make_random_x0(*function);
 
         std::vector<scalar_t> fvalues, epsilons;
         for (const auto& solver_id : make_best_smooth_solver_ids())
@@ -399,13 +404,13 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
             UTEST_REQUIRE(solver);
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, make_random_x0(*function));
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, make_random_x0(*function));
 
             UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(*solver, solver_id, *function, make_random_x0(*function));
         }
     }
 }
@@ -421,10 +426,10 @@ UTEST_CASE(quasi_bfgs_with_initializations)
             auto              solver    = solver_quasi_bfgs_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, make_random_x0(*function));
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, make_random_x0(*function));
         }
         {
             const auto* const solver_id = "fletcher";
@@ -432,10 +437,10 @@ UTEST_CASE(quasi_bfgs_with_initializations)
             auto              solver    = solver_quasi_fletcher_t{};
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, make_random_x0(*function));
 
             UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+            check_minimize(solver, solver_id, *function, make_random_x0(*function));
         }
     }
 }

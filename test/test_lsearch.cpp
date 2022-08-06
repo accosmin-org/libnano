@@ -13,7 +13,7 @@ using namespace nano;
 
 static auto make_functions()
 {
-    return benchmark_function_t::make({1, 16, convexity::no, smoothness::yes, 10}, std::regex(".+"));
+    return benchmark_function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
 }
 
 static auto get_lsearch(const string_t& id)
@@ -21,6 +21,11 @@ static auto get_lsearch(const string_t& id)
     auto lsearch = lsearchk_t::all().get(id);
     UTEST_REQUIRE(lsearch);
     return lsearch;
+}
+
+static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
+{
+    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
 }
 
 [[maybe_unused]] static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
@@ -65,6 +70,7 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     UTEST_CHECK(state0);
     state0.d           = -state0.g;
     const auto epsilon = 1e-6; // todo: get the updated value of epsilon for CGDESCENT!!!
+    UTEST_CHECK(state0.has_descent());
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch_id << ": x0=["
@@ -78,7 +84,7 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     UTEST_CHECK(state);
 
     UTEST_CHECK_GREATER(state.t, 0.0);
-    UTEST_CHECK_LESS(state.f, state0.f);
+    UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
 
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
 
@@ -135,7 +141,7 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     {
         UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
 
-        const vector_t x0 = vector_t::Random(function.size());
+        const auto x0 = make_random_x0(function);
 
         test(lsearch, lsearch_id, function, type, x0, 1e-1);
         test(lsearch, lsearch_id, function, type, x0, 3e-1);

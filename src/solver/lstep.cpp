@@ -16,6 +16,12 @@ lsearch_step_t::lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg)
 {
 }
 
+lsearch_step_t& lsearch_step_t::operator=(const solver_state_t& state)
+{
+    t = state.t, f = state.f, g = state.dg();
+    return *this;
+}
+
 scalar_t lsearch_step_t::cubic(const lsearch_step_t& u, const lsearch_step_t& v)
 {
     const auto d1 = u.g + v.g - 3 * (u.f - v.f) / (u.t - v.t);
