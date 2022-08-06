@@ -68,8 +68,7 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
 
     auto state0 = solver_state_t{function, x0};
     UTEST_CHECK(state0);
-    state0.d           = -state0.g;
-    const auto epsilon = 1e-6; // todo: get the updated value of epsilon for CGDESCENT!!!
+    state0.d = -state0.g;
     UTEST_CHECK(state0.has_descent());
 
     std::stringstream stream;
@@ -87,6 +86,13 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
 
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
+
+    const auto has_approx_armijo = [&]()
+    {
+        const auto* const cgdescent_lsearch = dynamic_cast<const lsearchk_cgdescent_t*>(&lsearch);
+
+        return state.has_approx_armijo(state0, cgdescent_lsearch->approx_armijo_epsilon());
+    };
 
     switch (type)
     {
@@ -113,13 +119,13 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
         break;
 
     case lsearch_type::cgdescent_approx_wolfe:
-        UTEST_CHECK(state.has_approx_armijo(state0, epsilon));
+        UTEST_CHECK(has_approx_armijo());
         UTEST_CHECK(state.has_approx_wolfe(state0, c1, c2));
         break;
 
     case lsearch_type::cgdescent_wolfe_approx_wolfe:
         UTEST_CHECK((state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
-                    (state.has_approx_armijo(state0, epsilon) && state.has_approx_wolfe(state0, c1, c2)));
+                    (has_approx_armijo() && state.has_approx_wolfe(state0, c1, c2)));
         break;
 
     default: break;
@@ -216,8 +222,8 @@ UTEST_CASE(lemarechal_cubic)
 
 UTEST_CASE(lemarechal_quadratic)
 {
-    const auto *const lsearch_id = "lemarechal";
-    const auto lsearch = get_lsearch(lsearch_id);
+    const auto* const lsearch_id                              = "lemarechal";
+    const auto        lsearch                                 = get_lsearch(lsearch_id);
     lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
@@ -285,7 +291,7 @@ UTEST_CASE(fletcher_bisection)
     }
 }
 
-/*UTEST_CASE(cgdescent_wolfe)
+UTEST_CASE(cgdescent_wolfe)
 {
     const auto* const lsearch_id = "cgdscent";
     auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
@@ -316,6 +322,6 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
     }
-}*/
+}
 
 UTEST_END_MODULE()

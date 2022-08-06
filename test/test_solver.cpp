@@ -182,7 +182,7 @@ UTEST_CASE(state_invalid_tINF)
 {
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.t = INFINITY;
+    state.t             = INFINITY;
     UTEST_CHECK(!state);
 }
 
@@ -190,7 +190,7 @@ UTEST_CASE(state_invalid_fNAN)
 {
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.f = NAN;
+    state.f             = NAN;
     UTEST_CHECK(!state);
 }
 
@@ -198,7 +198,7 @@ UTEST_CASE(state_has_descent)
 {
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.d = -state.g;
+    state.d             = -state.g;
     UTEST_CHECK(state.has_descent());
 }
 
@@ -214,7 +214,7 @@ UTEST_CASE(state_has_no_descent1)
 {
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.d = state.g;
+    state.d             = state.g;
     UTEST_CHECK(!state.has_descent());
 }
 
@@ -251,7 +251,7 @@ UTEST_CASE(state_convergence0)
 UTEST_CASE(state_convergence1)
 {
     const auto function = function_sphere_t{7};
-    const auto state  = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
+    const auto state    = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());

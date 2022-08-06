@@ -43,6 +43,11 @@ namespace nano
         ///
         bool get(const solver_state_t& state0, solver_state_t& state) final;
 
+        ///
+        /// \brief returns the constant used in the approximate Armijo condition.
+        ///
+        scalar_t approx_armijo_epsilon() const;
+
     private:
         enum class status
         {
