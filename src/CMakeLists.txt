@@ -10,6 +10,7 @@ target_sources(nano PRIVATE
     core/table.cpp
     core/chrono.cpp
     core/logger.cpp
+    core/random.cpp
     core/cmdline.cpp
     core/parallel.cpp
     core/histogram.cpp
