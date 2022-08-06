@@ -16,24 +16,16 @@ static auto make_functions()
     return benchmark_function_t::make({1, 16, convexity::no, smoothness::yes, 10}, std::regex(".+"));
 }
 
-static void config_lsearch(lsearchk_t& lsearch, scalar_t c1 = 1e-4, scalar_t c2 = 9e-1)
-{
-    UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = std::make_tuple(c1, c2));
-    UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::max_iterations") = 100);
-}
-
-static auto get_lsearch(const string_t& id, scalar_t c1 = 1e-4, scalar_t c2 = 9e-1)
+static auto get_lsearch(const string_t& id)
 {
     auto lsearch = lsearchk_t::all().get(id);
     UTEST_REQUIRE(lsearch);
-    config_lsearch(*lsearch, c1, c2);
     return lsearch;
 }
 
-static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
+[[maybe_unused]] static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
 {
     auto lsearch = lsearchk_cgdescent_t{};
-    config_lsearch(lsearch);
     UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::cgdescent::criterion") = criterion);
     return lsearch;
 }
@@ -75,14 +67,18 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     const auto epsilon = 1e-6; // todo: get the updated value of epsilon for CGDESCENT!!!
 
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(16) << function.name() << " " << lsearch_id << ": x0=["
-           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << "\n";
+    stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch_id << ": x0=["
+           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << ",g0=" << state0.convergence_criterion()
+           << "\n";
     setup_logger(lsearch, stream);
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
     auto state = state0;
     UTEST_CHECK(lsearch.get(state, t0));
     UTEST_CHECK(state);
+
+    UTEST_CHECK_GREATER(state.t, 0.0);
+    UTEST_CHECK_LESS(state.f, state0.f);
 
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
 
@@ -139,10 +135,12 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
     {
         UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
 
-        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 1e-1);
-        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 3e-1);
-        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 1e+0);
-        test(lsearch, lsearch_id, function, type, vector_t::Random(function.size()), 3e+1);
+        const vector_t x0 = vector_t::Random(function.size());
+
+        test(lsearch, lsearch_id, function, type, x0, 1e-1);
+        test(lsearch, lsearch_id, function, type, x0, 3e-1);
+        test(lsearch, lsearch_id, function, type, x0, 1e+0);
+        test(lsearch, lsearch_id, function, type, x0, 3e+1);
     }
 }
 
@@ -210,7 +208,7 @@ UTEST_CASE(lemarechal_cubic)
     }
 }
 
-/*UTEST_CASE(lemarechal_quadratic)
+UTEST_CASE(lemarechal_quadratic)
 {
     const auto *const lsearch_id = "lemarechal";
     const auto lsearch = get_lsearch(lsearch_id);
@@ -220,7 +218,7 @@ UTEST_CASE(lemarechal_cubic)
     {
         test(*lsearch, lsearch_id, *function, lsearch_type::lemarechal);
     }
-}*/
+}
 
 UTEST_CASE(lemarechal_bisection)
 {
@@ -281,7 +279,7 @@ UTEST_CASE(fletcher_bisection)
     }
 }
 
-UTEST_CASE(cgdescent_wolfe)
+/*UTEST_CASE(cgdescent_wolfe)
 {
     const auto* const lsearch_id = "cgdscent";
     auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
@@ -312,6 +310,6 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
     {
         test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
     }
-}
+}*/
 
 UTEST_END_MODULE()
