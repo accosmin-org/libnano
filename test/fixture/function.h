@@ -16,7 +16,7 @@ using namespace nano;
     std::vector<vector_t> vectors;
     vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
 
-    // NB: specific starting points that have made solvers fail (and for which it shouldn't fail anymore!)
+    // BUG: OSGA solver
     if (function.name() == "Exponential[4D]")
     {
         vectors.emplace_back(make_tensor<scalar_t>(dims, 0.9460835747689484, 0.3166827894775206, -0.0416191904634331,
