@@ -22,3 +22,8 @@ using namespace nano;
         UTEST_CHECK(is_convex(function, x0, x1, 20));
     }
 }
+
+[[maybe_unused]] static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
+{
+    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
+}

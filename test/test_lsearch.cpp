@@ -1,13 +1,11 @@
+#include "fixture/function.h"
 #include <iomanip>
-#include <nano/core/numeric.h>
 #include <nano/function/benchmark.h>
 #include <nano/lsearchk/backtrack.h>
 #include <nano/lsearchk/cgdescent.h>
 #include <nano/lsearchk/fletcher.h>
 #include <nano/lsearchk/lemarechal.h>
 #include <nano/lsearchk/morethuente.h>
-#include <nano/solver.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -21,11 +19,6 @@ static auto get_lsearch(const string_t& id)
     auto lsearch = lsearchk_t::all().get(id);
     UTEST_REQUIRE(lsearch);
     return lsearch;
-}
-
-static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
-{
-    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
 }
 
 [[maybe_unused]] static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
@@ -61,9 +54,14 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
         });
 }
 
-static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type,
-                 const vector_t& x0, const scalar_t t0)
+static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const function_t& function,
+                 const lsearch_type type, const vector_t& x0, const scalar_t t0)
 {
+    // NB: some line-search methods (e.g. cgdescent) are stateful,
+    // so clear the state to make sure they would work as expected!
+    const auto rlsearch = lsearch_.clone();
+    auto&      lsearch  = *rlsearch;
+
     const auto old_n_failures = utest_n_failures.load();
 
     auto state0 = solver_state_t{function, x0};

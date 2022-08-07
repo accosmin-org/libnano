@@ -155,13 +155,6 @@ bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const scalar_t
 
 bool lsearchk_cgdescent_t::evaluate(const solver_state_t& state0, const solver_state_t& state)
 {
-    if (state.t < 0.0)
-    {
-        // FIXME: the line-search step is often negative for non-convex smooth problems!
-        // FIXME: double check the implementation and the source article for any guarante that state.t > 0
-        return false;
-    }
-
     const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto omega    = parameter("lsearchk::cgdescent::omega").value<scalar_t>();
     const auto epsilon  = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();

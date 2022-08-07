@@ -1,18 +1,12 @@
+#include "fixture/function.h"
 #include "fixture/solver.h"
 #include <iomanip>
 #include <nano/core/logger.h>
-#include <nano/core/numeric.h>
 #include <nano/function/benchmark.h>
 #include <nano/function/benchmark/sphere.h>
 #include <nano/solver/quasi.h>
-#include <utest/utest.h>
 
 using namespace nano;
-
-static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
-{
-    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
-}
 
 template <typename tscalar>
 static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>& values)
