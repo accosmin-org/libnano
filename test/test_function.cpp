@@ -12,7 +12,7 @@ UTEST_CASE(stats)
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
 
-        auto x = make_random_x0(*function);
+        const auto x = make_random_x0(*function);
         function->vgrad(x);
 
         UTEST_CHECK_EQUAL(function->fcalls(), 1);
