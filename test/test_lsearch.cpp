@@ -82,6 +82,7 @@ static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const f
 
     if (lsearch_id != "cgdescent" || function.convex())
     {
+        // FIXME: the line-search step length can be negative for CG_DESCENT?! (to double check the paper)
         UTEST_CHECK_GREATER(state.t, 0.0);
         UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
     }
