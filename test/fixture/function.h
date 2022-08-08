@@ -16,12 +16,19 @@ using namespace nano;
     std::vector<vector_t> vectors;
     vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
 
-    // BUG: OSGA solver
+    const auto make_vector = [&](const auto... tscalars) { return make_tensor<scalar_t>(dims, tscalars...); };
+
+    // bug: OSGA solver fails here
     if (function.name() == "Exponential[4D]")
     {
-        vectors.emplace_back(make_tensor<scalar_t>(dims, 0.9460835747689484, 0.3166827894775206, -0.0416191904634331,
-                                                   -0.9001861362105115)
-                                 .vector());
+        vectors.emplace_back(
+            make_vector(0.9460835747689484, 0.3166827894775206, -0.0416191904634331, -0.9001861362105115).vector());
+    }
+
+    // bug: cgdescent line-search fails here
+    if (function.name() == "Dixon-Price[2D]")
+    {
+        vectors.emplace_back(make_vector(0.439934771063, -0.788200738134).vector());
     }
 
     return vectors;

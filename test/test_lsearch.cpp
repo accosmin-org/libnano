@@ -141,20 +141,21 @@ static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const f
 
 static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
 {
-    for (const auto& c12 : std::vector<std::tuple<scalar_t, scalar_t>>{
-             {1e-4, 1e-1},
-             {1e-4, 9e-1},
-             {1e-1, 9e-1}
-    })
+    for (const auto& x0 : make_random_x0s(function))
     {
-        UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
+        for (const auto& c12 : std::vector<std::tuple<scalar_t, scalar_t>>{
+                 {1e-4, 1e-1},
+                 {1e-4, 9e-1},
+                 {1e-1, 9e-1}
+        })
+        {
+            UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
 
-        const auto x0 = make_random_x0(function);
-
-        test(lsearch, lsearch_id, function, type, x0, 1e-1);
-        test(lsearch, lsearch_id, function, type, x0, 3e-1);
-        test(lsearch, lsearch_id, function, type, x0, 1e+0);
-        test(lsearch, lsearch_id, function, type, x0, 3e+1);
+            test(lsearch, lsearch_id, function, type, x0, 1e-1);
+            test(lsearch, lsearch_id, function, type, x0, 3e-1);
+            test(lsearch, lsearch_id, function, type, x0, 1e+0);
+            test(lsearch, lsearch_id, function, type, x0, 3e+1);
+        }
     }
 }
 
