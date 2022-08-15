@@ -21,13 +21,6 @@ static auto get_lsearch(const string_t& id)
     return lsearch;
 }
 
-[[maybe_unused]] static auto get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion criterion)
-{
-    auto lsearch = lsearchk_cgdescent_t{};
-    UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::cgdescent::criterion") = criterion);
-    return lsearch;
-}
-
 enum class lsearch_type
 {
     fletcher,
@@ -55,12 +48,15 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
 }
 
 static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const function_t& function,
-                 const lsearch_type type, const vector_t& x0, const scalar_t t0)
+                 const lsearch_type type, const vector_t& x0, const scalar_t t0,
+                 const std::tuple<scalar_t, scalar_t>& c12)
 {
     // NB: some line-search methods (e.g. cgdescent) are stateful,
     // so clear the state to make sure they would work as expected!
     const auto rlsearch = lsearch_.clone();
     auto&      lsearch  = *rlsearch;
+
+    UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
 
     const auto old_n_failures = utest_n_failures.load();
 
@@ -139,7 +135,8 @@ static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const f
     }
 }
 
-static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const lsearch_type type)
+static void test(const lsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function,
+                 const lsearch_type type)
 {
     for (const auto& x0 : make_random_x0s(function))
     {
@@ -149,12 +146,10 @@ static void test(lsearchk_t& lsearch, const string_t& lsearch_id, const function
                  {1e-1, 9e-1}
         })
         {
-            UTEST_REQUIRE_NOTHROW(lsearch.parameter("lsearchk::tolerance") = c12);
-
-            test(lsearch, lsearch_id, function, type, x0, 1e-1);
-            test(lsearch, lsearch_id, function, type, x0, 3e-1);
-            test(lsearch, lsearch_id, function, type, x0, 1e+0);
-            test(lsearch, lsearch_id, function, type, x0, 3e+1);
+            test(lsearch, lsearch_id, function, type, x0, 1e-1, c12);
+            test(lsearch, lsearch_id, function, type, x0, 3e-1, c12);
+            test(lsearch, lsearch_id, function, type, x0, 1e+0, c12);
+            test(lsearch, lsearch_id, function, type, x0, 3e+1, c12);
         }
     }
 }
@@ -296,34 +291,37 @@ UTEST_CASE(fletcher_bisection)
 
 UTEST_CASE(cgdescent_wolfe)
 {
-    const auto* const lsearch_id = "cgdescent";
-    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe);
+    const auto* const lsearch_id                         = "cgdescent";
+    const auto        lsearch                            = get_lsearch(lsearch_id);
+    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::wolfe;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
+        test(*lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
     }
 }
 
 UTEST_CASE(cgdescent_approx_wolfe)
 {
-    const auto* const lsearch_id = "cgdescent";
-    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::approx_wolfe);
+    const auto* const lsearch_id                         = "cgdescent";
+    const auto        lsearch                            = get_lsearch(lsearch_id);
+    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::approx_wolfe;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
+        test(*lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
     }
 }
 
 UTEST_CASE(cgdescent_wolfe_approx_wolfe)
 {
-    const auto* const lsearch_id = "cgdescent";
-    auto              lsearch    = get_lsearch_cgdescent(lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe);
+    const auto* const lsearch_id                         = "cgdescent";
+    const auto        lsearch                            = get_lsearch(lsearch_id);
+    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
+        test(*lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
     }
 }
 

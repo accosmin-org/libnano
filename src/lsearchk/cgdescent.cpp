@@ -3,6 +3,21 @@
 
 using namespace nano;
 
+static auto initial_params(const estimator_t& estimator)
+{
+    const auto [c1, c2]       = estimator.parameter("lsearchk::tolerance").value_pair<scalar_t>();
+    const auto max_iterations = estimator.parameter("lsearchk::max_iterations").value<int>();
+    const auto theta          = estimator.parameter("lsearchk::cgdescent::theta").value<scalar_t>();
+    const auto epsilon        = estimator.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
+    const auto ro             = estimator.parameter("lsearchk::cgdescent::ro").value<scalar_t>();
+    const auto omega          = estimator.parameter("lsearchk::cgdescent::omega").value<scalar_t>();
+    const auto delta          = estimator.parameter("lsearchk::cgdescent::delta").value<scalar_t>();
+    const auto gamma          = estimator.parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
+    const auto crit = estimator.parameter("lsearchk::cgdescent::criterion").value<lsearchk_cgdescent_t::criterion>();
+
+    return std::make_tuple(c1, c2, max_iterations, theta, epsilon, ro, omega, delta, gamma, crit);
+}
+
 lsearchk_cgdescent_t::lsearchk_cgdescent_t()
 {
     register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::epsilon", 0, LT, 1e-6, LT, 1e+6));
@@ -192,9 +207,7 @@ scalar_t lsearchk_cgdescent_t::approx_armijo_epsilon() const
 
 bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
 {
-    const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
-    const auto delta          = parameter("lsearchk::cgdescent::delta").value<scalar_t>();
-    const auto gamma          = parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
+    const auto [c1, c2, max_iterations, theta, epsilon, ro, omega, delta, gamma, crit] = initial_params(*this);
 
     // estimate an upper bound of the function value
     // (to be used for the approximate Wolfe condition)
