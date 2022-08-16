@@ -20,7 +20,7 @@ namespace nano
         ///
         /// \brief convergence criterion following (2).
         ///
-        enum class criterion
+        enum class criterion_type
         {
             wolfe,             ///< criterion v1: Wolfe conditions
             approx_wolfe,      ///< criterion V2: approximate Wolfe conditions
@@ -49,34 +49,20 @@ namespace nano
         scalar_t approx_armijo_epsilon() const;
 
     private:
-        enum class status
-        {
-            exit, ///< exit criterion generated (Wolfe + approximate Wolfe)
-            fail, ///< search failed
-            done  ///< search succeeded, apply next step
-        };
-
-        bool evaluate(const solver_state_t&, const solver_state_t&);
-        bool evaluate(const solver_state_t&, scalar_t, solver_state_t&);
-
-        status update(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        status updateU(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        status secant2(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
-        status bracket(const solver_state_t&, lsearch_step_t& a, lsearch_step_t& b, solver_state_t& c);
 
         // attributes
-        scalar_t m_sumQ{0};       ///< see (2)
-        scalar_t m_sumC{0};       ///< see (2)
+        scalar_t m_Qk{0};         ///< see (2)
+        scalar_t m_Ck{0};         ///< see (2)
         bool     m_approx{false}; ///< see (2)
     };
 
     template <>
-    inline enum_map_t<lsearchk_cgdescent_t::criterion> enum_string<lsearchk_cgdescent_t::criterion>()
+    inline enum_map_t<lsearchk_cgdescent_t::criterion_type> enum_string<lsearchk_cgdescent_t::criterion_type>()
     {
         return {
-            {             lsearchk_cgdescent_t::criterion::wolfe,              "wolfe"},
-            {      lsearchk_cgdescent_t::criterion::approx_wolfe,       "approx_wolfe"},
-            {lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe, "wolfe_approx_wolfe"}
+            {             lsearchk_cgdescent_t::criterion_type::wolfe,              "wolfe"},
+            {      lsearchk_cgdescent_t::criterion_type::approx_wolfe,       "approx_wolfe"},
+            {lsearchk_cgdescent_t::criterion_type::wolfe_approx_wolfe, "wolfe_approx_wolfe"}
         };
     }
 } // namespace nano
