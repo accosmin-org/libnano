@@ -48,12 +48,14 @@ scalar_t lsearchk_cgdescent_t::approx_armijo_epsilon() const
 }
 
 bool lsearchk_cgdescent_t::done(const state_t& state, const cgdescent_criterion_type criterion, const scalar_t c1,
-                                const scalar_t c2, const scalar_t epsilon, const scalar_t omega)
+                                const scalar_t c2, const scalar_t epsilon, const scalar_t omega,
+                                [[maybe_unused]] const bool bracketed)
 {
     assert(state.a.t <= state.b.t);
-    assert(state.a.f <= state.state0.f + epsilon * m_Ck);
     assert(state.a.g < 0.0);
-    assert(state.b.g >= 0.0);
+
+    assert(!bracketed || state.a.f <= state.state0.f + epsilon * m_Ck);
+    assert(!bracketed || state.b.g >= 0.0);
 
     if (!static_cast<bool>(state.c))
     {
@@ -192,11 +194,24 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
 
     // estimate an upper bound of the function value
     // (to be used for the approximate Wolfe condition)
-    m_Qk = 1 + m_Qk * delta;
+    m_Qk = 1.0 + m_Qk * delta;
     m_Ck = m_Ck + (std::fabs(state0.f) - m_Ck) / m_Qk;
+
+    std::cout << "t0=" << state0.t << ",t=" << state.t << std::endl;
+
+    /*
+    const auto epsilonk =
+        (criterion == cgdescent_criterion_type::wolfe ||
+         (criterion == cgdescent_criterion_type::wolfe_approx_wolfe && !m_approx)) ?
+        c1 : (epsilon * m_Ck);
+    */
 
     // current bracketing interval
     auto interval = state_t{state0, state};
+    if (done(interval, criterion, c1, c2, epsilon, omega, false))
+    {
+        return static_cast<bool>(state);
+    }
 
     // bracket the initial step size
     bracket(interval, ro, epsilon, theta, max_iterations);
@@ -218,13 +233,15 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
     };
 
     // iteratively update the search interval [a, b]
-    for (int i = 0; i < max_iterations; ++i)
+    for (int i = 0; i < max_iterations && (interval.b.t - interval.a.t) > stpmin(); ++i)
     {
         auto& a = interval.a;
         auto& b = interval.b;
 
-        std::cout << std::fixed << std::setprecision(12) << "a=[t=" << a.t << ",f=" << a.f << "], "
-                  << "b=[t=" << b.t << ",f=" << b.f << "]\n";
+        std::cout << std::fixed << std::setprecision(12) << "i=" << i << ", a=[t=" << a.t << ",f=" << a.f
+                  << ",a=" << (a.f <= state0.f + c1 * a.t * state0.dg()) << ",w=" << (a.g >= c2 * state0.dg()) << "]"
+                  << ",b=[t=" << b.t << ",f=" << b.f << ",a=" << (b.f <= state0.f + c1 * b.t * state0.dg())
+                  << ",w=" << (b.g >= c2 * state0.dg()) << "], c=[t=" << interval.c.t << "]\n";
 
         // secant interpolation
         const auto prev_width = b.t - a.t;
