@@ -14,7 +14,8 @@ using namespace nano;
     const auto dims = make_dims(function.size());
 
     std::vector<vector_t> vectors;
-    vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
+    (void)scale;
+    //    vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
 
     const auto make_vector = [&](const auto... tscalars) { return make_tensor<scalar_t>(dims, tscalars...); };
 

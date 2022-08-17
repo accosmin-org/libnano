@@ -293,7 +293,7 @@ UTEST_CASE(cgdescent_wolfe)
 {
     const auto* const lsearch_id                         = "cgdescent";
     const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::wolfe;
+    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::wolfe;
 
     for (const auto& function : make_functions())
     {
@@ -305,7 +305,7 @@ UTEST_CASE(cgdescent_approx_wolfe)
 {
     const auto* const lsearch_id                         = "cgdescent";
     const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::approx_wolfe;
+    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::approx_wolfe;
 
     for (const auto& function : make_functions())
     {
@@ -317,7 +317,7 @@ UTEST_CASE(cgdescent_wolfe_approx_wolfe)
 {
     const auto* const lsearch_id                         = "cgdescent";
     const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = lsearchk_cgdescent_t::criterion::wolfe_approx_wolfe;
+    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::wolfe_approx_wolfe;
 
     for (const auto& function : make_functions())
     {
