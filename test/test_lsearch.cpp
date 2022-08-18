@@ -27,8 +27,6 @@ enum class lsearch_type
     backtrack,
     lemarechal,
     morethuente,
-    cgdescent_wolfe,
-    cgdescent_approx_wolfe,
     cgdescent_wolfe_approx_wolfe,
 };
 
@@ -75,22 +73,10 @@ static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const f
     auto state = state0;
     UTEST_CHECK(lsearch.get(state, t0));
     UTEST_CHECK(state);
-
-    if (lsearch_id != "cgdescent" || function.convex())
-    {
-        // FIXME: the line-search step length can be negative for CG_DESCENT?! (to double check the paper)
-        UTEST_CHECK_GREATER(state.t, 0.0);
-        UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
-    }
+    UTEST_CHECK_GREATER(state.t, 0.0);
+    UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
 
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
-
-    const auto has_approx_armijo = [&]()
-    {
-        const auto* const cgdescent_lsearch = dynamic_cast<const lsearchk_cgdescent_t*>(&lsearch);
-
-        return state.has_approx_armijo(state0, cgdescent_lsearch->approx_armijo_epsilon());
-    };
 
     switch (type)
     {
@@ -111,19 +97,12 @@ static void test(const lsearchk_t& lsearch_, const string_t& lsearch_id, const f
         UTEST_CHECK(state.has_strong_wolfe(state0, c2));
         break;
 
-    case lsearch_type::cgdescent_wolfe:
-        UTEST_CHECK(state.has_armijo(state0, c1));
-        UTEST_CHECK(state.has_wolfe(state0, c2));
-        break;
-
-    case lsearch_type::cgdescent_approx_wolfe:
-        UTEST_CHECK(has_approx_armijo());
-        UTEST_CHECK(state.has_approx_wolfe(state0, c1, c2));
-        break;
-
     case lsearch_type::cgdescent_wolfe_approx_wolfe:
-        UTEST_CHECK((state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
-                    (has_approx_armijo() && state.has_approx_wolfe(state0, c1, c2)));
+        UTEST_CHECK(
+            (state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
+            (state.has_approx_armijo(state0, lsearch.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>() *
+                                                 std::fabs(state0.f)) &&
+             state.has_approx_wolfe(state0, c1, c2)));
         break;
 
     default: break;
@@ -289,35 +268,10 @@ UTEST_CASE(fletcher_bisection)
     }
 }
 
-UTEST_CASE(cgdescent_wolfe)
+UTEST_CASE(cgdescent)
 {
     const auto* const lsearch_id                         = "cgdescent";
     const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::wolfe;
-
-    for (const auto& function : make_functions())
-    {
-        test(*lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe);
-    }
-}
-
-UTEST_CASE(cgdescent_approx_wolfe)
-{
-    const auto* const lsearch_id                         = "cgdescent";
-    const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::approx_wolfe;
-
-    for (const auto& function : make_functions())
-    {
-        test(*lsearch, lsearch_id, *function, lsearch_type::cgdescent_approx_wolfe);
-    }
-}
-
-UTEST_CASE(cgdescent_wolfe_approx_wolfe)
-{
-    const auto* const lsearch_id                         = "cgdescent";
-    const auto        lsearch                            = get_lsearch(lsearch_id);
-    lsearch->parameter("lsearchk::cgdescent::criterion") = cgdescent_criterion_type::wolfe_approx_wolfe;
 
     for (const auto& function : make_functions())
     {

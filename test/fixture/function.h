@@ -14,8 +14,7 @@ using namespace nano;
     const auto dims = make_dims(function.size());
 
     std::vector<vector_t> vectors;
-    (void)scale;
-    //    vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
+    vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
 
     const auto make_vector = [&](const auto... tscalars) { return make_tensor<scalar_t>(dims, tscalars...); };
 
@@ -30,6 +29,12 @@ using namespace nano;
     if (function.name() == "Dixon-Price[2D]")
     {
         vectors.emplace_back(make_vector(0.439934771063, -0.788200738134).vector());
+    }
+
+    // bug: cgdescent line-search fails here
+    if (function.name() == "Exponential[1D]")
+    {
+        vectors.emplace_back(make_vector(0.817256233948).vector());
     }
 
     return vectors;
