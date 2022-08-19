@@ -15,7 +15,7 @@ using namespace nano;
     const auto dims = make_dims(function.size());
 
     std::vector<vector_t> vectors;
-    vectors.emplace_back(std::move(make_random_x0(function, scale)));
+    vectors.emplace_back(make_random_x0(function, scale));
 
     const auto append = [&](const auto... tscalars)
     {
@@ -34,6 +34,12 @@ using namespace nano;
     {
         append(0.2545247188178488, -0.6632348569872683, -0.6260742327486718, 0.5950229544941097);
     }
+
+    // bug: BFGS+backtrack solver fails here
+    /*if (function.name() == "Qing[4D]")
+    {
+        append(0.4958921077711123, 0.9830812076917252, -0.5192140013563706, 0.0439401045948384);
+    }*/
 
     // bug: cgdescent line-search fails here
     if (function.name() == "Dixon-Price[2D]")

@@ -29,7 +29,6 @@ static void check_consistency(const function_t& function, const std::vector<scal
 struct solver_description_t
 {
     bool          m_monotonic{true};
-    bool          m_converges{true};
     tensor_size_t m_max_evals{1000};
     scalar_t      m_epsilon{1e-6};
 };
@@ -38,83 +37,83 @@ static solver_description_t make_description(const string_t& solver_id)
 {
     if (solver_id == "gd")
     {
-        return {true, true, 10000, 1e-6};
+        return {true, 10000, 1e-6};
     }
     else if (solver_id == "cgd")
     {
-        return {true, true, 5000, 1e-6};
+        return {true, 5000, 1e-6};
     }
     else if (solver_id == "cgd-n")
     {
-        return {true, true, 5001, 1e-6};
+        return {true, 5001, 1e-6};
     }
     else if (solver_id == "cgd-hs")
     {
-        return {true, true, 5002, 1e-6};
+        return {true, 5002, 1e-6};
     }
     else if (solver_id == "cgd-fr")
     {
-        return {true, true, 5003, 1e-6};
+        return {true, 5003, 1e-6};
     }
     else if (solver_id == "cgd-pr")
     {
-        return {true, true, 5004, 1e-6};
+        return {true, 5004, 1e-6};
     }
     else if (solver_id == "cgd-cd")
     {
-        return {true, true, 5005, 1e-6};
+        return {true, 5005, 1e-6};
     }
     else if (solver_id == "cgd-ls")
     {
-        return {true, true, 5006, 1e-6};
+        return {true, 5006, 1e-6};
     }
     else if (solver_id == "cgd-dy")
     {
-        return {true, true, 5007, 1e-6};
+        return {true, 5007, 1e-6};
     }
     else if (solver_id == "cgd-dycd")
     {
-        return {true, true, 5008, 1e-6};
+        return {true, 5008, 1e-6};
     }
     else if (solver_id == "cgd-dyhs")
     {
-        return {true, true, 5009, 1e-6};
+        return {true, 5009, 1e-6};
     }
     else if (solver_id == "cgd-prfr")
     {
-        return {true, true, 5010, 1e-6};
+        return {true, 5010, 1e-6};
     }
     else if (solver_id == "lbfgs")
     {
-        return {true, true, 5011, 1e-6};
+        return {true, 5011, 1e-6};
     }
     else if (solver_id == "dfp")
     {
-        return {true, true, 5012, 1e-6};
+        return {true, 5012, 1e-6};
     }
     else if (solver_id == "sr1")
     {
-        return {true, true, 5013, 1e-6};
+        return {true, 5013, 1e-6};
     }
     else if (solver_id == "bfgs")
     {
-        return {true, true, 5014, 1e-6};
+        return {true, 5014, 1e-6};
     }
     else if (solver_id == "hoshino")
     {
-        return {true, true, 5015, 1e-6};
+        return {true, 5015, 1e-6};
     }
     else if (solver_id == "fletcher")
     {
-        return {true, true, 5016, 1e-6};
+        return {true, 5016, 1e-6};
     }
     else if (solver_id == "osga")
     {
-        return {false, true, 5000, 1e-4};
+        return {false, 5000, 1e-4};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, true, 5000, 1e-4};
+        return {false, 5001, 1e-6};
     }
     else
     {

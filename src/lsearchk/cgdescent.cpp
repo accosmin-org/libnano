@@ -29,19 +29,14 @@ rlsearchk_t lsearchk_cgdescent_t::clone() const
 }
 
 bool lsearchk_cgdescent_t::done(const state_t& state, const scalar_t c1, const scalar_t c2, const scalar_t epsilonk,
-                                [[maybe_unused]] const bool bracketed) const
+                                [[maybe_unused]] const bool bracketed)
 {
     assert(state.a.t <= state.b.t);
     assert(state.a.g < 0.0);
 
-    if (bracketed && (state.a.f > state.state0.f + epsilonk || state.b.g < 0.0))
+    if ((bracketed && (state.a.f > state.state0.f + epsilonk || state.b.g < 0.0)) || !static_cast<bool>(state.c))
     {
-        // bracketing failed
-        return true;
-    }
-    else if (!static_cast<bool>(state.c))
-    {
-        // diverged
+        // bracketing failed or diverged
         return true;
     }
     else if (state.c.t < state.a.t || state.c.t > state.b.t)

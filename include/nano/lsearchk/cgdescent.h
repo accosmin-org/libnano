@@ -48,7 +48,7 @@ namespace nano
             lsearch_step_t        a, b;   ///< lower/upper bounds of the bracketing interval
         };
 
-        bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true) const;
+        static bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true);
 
         void move(state_t&, scalar_t t) const;
         void update(state_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
