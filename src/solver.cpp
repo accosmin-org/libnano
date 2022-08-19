@@ -74,7 +74,8 @@ lsearch_t solver_t::make_lsearch() const
 {
     // NB: create new line-search objects:
     //  - to have the solver thread-safe
-    //  - to start with a fresh line-search history (needed for some strategies like CG_DESCENT)
+    //  - to start with a fresh line-search history
+    //  - to pass the solver's parameters
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
 

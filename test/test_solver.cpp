@@ -1,11 +1,10 @@
+#include "fixture/function.h"
 #include "fixture/solver.h"
 #include <iomanip>
 #include <nano/core/logger.h>
-#include <nano/core/numeric.h>
 #include <nano/function/benchmark.h>
 #include <nano/function/benchmark/sphere.h>
 #include <nano/solver/quasi.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -29,93 +28,27 @@ static void check_consistency(const function_t& function, const std::vector<scal
 
 struct solver_description_t
 {
-    bool          m_monotonic{true};
-    bool          m_converges{true};
-    tensor_size_t m_max_evals{1000};
-    scalar_t      m_epsilon{1e-6};
+    bool     m_monotonic{true};
+    scalar_t m_epsilon{1e-6};
 };
 
 static solver_description_t make_description(const string_t& solver_id)
 {
-    if (solver_id == "gd")
+    if (solver_id == "gd" || solver_id == "cgd" || solver_id == "cgd-n" || solver_id == "cgd-hs" ||
+        solver_id == "cgd-fr" || solver_id == "cgd-pr" || solver_id == "cgd-cd" || solver_id == "cgd-ls" ||
+        solver_id == "cgd-dy" || solver_id == "cgd-dycd" || solver_id == "cgd-dyhs" || solver_id == "cgd-prfr" ||
+        solver_id == "lbfgs" || solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" ||
+        solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return {true, true, 10000, 1e-6};
-    }
-    else if (solver_id == "cgd")
-    {
-        return {true, true, 1000, 1e-6};
-    }
-    else if (solver_id == "cgd-n")
-    {
-        return {true, true, 1001, 1e-6};
-    }
-    else if (solver_id == "cgd-hs")
-    {
-        return {true, true, 1002, 1e-6};
-    }
-    else if (solver_id == "cgd-fr")
-    {
-        return {true, true, 1003, 1e-6};
-    }
-    else if (solver_id == "cgd-pr")
-    {
-        return {true, true, 1004, 1e-6};
-    }
-    else if (solver_id == "cgd-cd")
-    {
-        return {true, true, 1005, 1e-6};
-    }
-    else if (solver_id == "cgd-ls")
-    {
-        return {true, true, 1006, 1e-6};
-    }
-    else if (solver_id == "cgd-dy")
-    {
-        return {true, true, 1007, 1e-6};
-    }
-    else if (solver_id == "cgd-dycd")
-    {
-        return {true, true, 1008, 1e-6};
-    }
-    else if (solver_id == "cgd-dyhs")
-    {
-        return {true, true, 1009, 1e-6};
-    }
-    else if (solver_id == "cgd-prfr")
-    {
-        return {true, true, 1010, 1e-6};
-    }
-    else if (solver_id == "lbfgs")
-    {
-        return {true, true, 1011, 1e-6};
-    }
-    else if (solver_id == "dfp")
-    {
-        return {true, true, 1012, 1e-6};
-    }
-    else if (solver_id == "sr1")
-    {
-        return {true, true, 1013, 1e-6};
-    }
-    else if (solver_id == "bfgs")
-    {
-        return {true, true, 1014, 1e-6};
-    }
-    else if (solver_id == "hoshino")
-    {
-        return {true, true, 1015, 1e-6};
-    }
-    else if (solver_id == "fletcher")
-    {
-        return {true, true, 1016, 1e-6};
-    }
-    else if (solver_id == "osga")
-    {
-        return {false, true, 5000, 1e-6};
+        return {true, 1e-6};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, true, 1000, 1e-4};
+        return {false, 1e-6};
+    }
+    else if (solver_id == "osga")
+    {
+        return {false, 1e-4};
     }
     else
     {
@@ -146,7 +79,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid|asga2|asga4"));
+    return solver_t::all().ids(std::regex("ellipsoid|osga"));
 }
 
 static auto make_best_smooth_solver_ids()
@@ -168,57 +101,57 @@ UTEST_CASE(state_str)
 
 UTEST_CASE(state_valid)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    const auto state    = solver_state_t{function, make_random_x0(function)};
     UTEST_CHECK(state);
 }
 
 UTEST_CASE(state_invalid_tINF)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
-    state.t = INFINITY;
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
+    state.t             = INFINITY;
     UTEST_CHECK(!state);
 }
 
 UTEST_CASE(state_invalid_fNAN)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
-    state.f = NAN;
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
+    state.f             = NAN;
     UTEST_CHECK(!state);
 }
 
 UTEST_CASE(state_has_descent)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
-    state.d = -state.g;
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
+    state.d             = -state.g;
     UTEST_CHECK(state.has_descent());
 }
 
 UTEST_CASE(state_has_no_descent0)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
     state.d.setZero();
     UTEST_CHECK(!state.has_descent());
 }
 
 UTEST_CASE(state_has_no_descent1)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()));
-    state.d = state.g;
+    const auto function = function_sphere_t{7};
+    auto       state    = solver_state_t{function, make_random_x0(function)};
+    state.d             = state.g;
     UTEST_CHECK(!state.has_descent());
 }
 
 UTEST_CASE(state_update_if_better)
 {
-    const function_sphere_t function(2);
-    const auto              x0 = vector_t::Constant(function.size(), 0.0);
-    const auto              x1 = vector_t::Constant(function.size(), 1.0);
-    const auto              x2 = vector_t::Constant(function.size(), 2.0);
+    const auto function = function_sphere_t{2};
+    const auto x0       = vector_t::Constant(function.size(), 0.0);
+    const auto x1       = vector_t::Constant(function.size(), 1.0);
+    const auto x2       = vector_t::Constant(function.size(), 2.0);
 
     solver_state_t state(function, x1);
     UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
@@ -236,8 +169,8 @@ UTEST_CASE(state_update_if_better)
 
 UTEST_CASE(state_convergence0)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Zero(function.size()));
+    const auto function = function_sphere_t{7};
+    const auto state    = solver_state_t{function, vector_t::Zero(function.size())};
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon0<scalar_t>());
@@ -245,8 +178,8 @@ UTEST_CASE(state_convergence0)
 
 UTEST_CASE(state_convergence1)
 {
-    const function_sphere_t function(7);
-    solver_state_t          state(function, vector_t::Random(function.size()) * epsilon1<scalar_t>());
+    const auto function = function_sphere_t{7};
+    const auto state    = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
     UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
     UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
     UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
@@ -305,53 +238,49 @@ UTEST_CASE(default_solvers_on_smooth_convex)
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Random(function->size());
-
-        std::vector<scalar_t> fvalues, epsilons;
-        for (const auto& solver_id : make_smooth_solver_ids())
+        for (const auto& x0 : make_random_x0s(*function))
         {
-            const auto solver = solver_t::all().get(solver_id);
-            UTEST_REQUIRE(solver);
+            std::vector<scalar_t> fvalues, epsilons;
+            for (const auto& solver_id : make_smooth_solver_ids())
+            {
+                const auto solver = solver_t::all().get(solver_id);
+                UTEST_REQUIRE(solver);
 
-            const auto state = check_minimize(*solver, solver_id, *function, x0);
-            fvalues.push_back(state.f);
-            epsilons.push_back(1e-6);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+                const auto descr = make_description(solver_id);
+                const auto state = check_minimize(*solver, solver_id, *function, x0);
+                fvalues.push_back(state.f);
+                epsilons.push_back(descr.m_epsilon);
+                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+            }
+
+            check_consistency(*function, fvalues, epsilons);
         }
-
-        check_consistency(*function, fvalues, epsilons);
     }
 }
 
-UTEST_CASE(default_solvers_on_nonsmooth_conex)
+UTEST_CASE(default_solvers_on_nonsmooth_convex)
 {
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 100}))
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Ones(function->size());
-
-        size_t                reference = 0U;
-        std::vector<scalar_t> fvalues, epsilons;
-        for (const auto& solver_id : make_nonsmooth_solver_ids())
+        for (const auto& x0 : make_random_x0s(*function))
         {
-            const auto solver = solver_t::all().get(solver_id);
-            UTEST_REQUIRE(solver);
-
-            const auto dd = make_description(solver_id);
-            if (solver_id == string_t{"osga"})
+            std::vector<scalar_t> fvalues, epsilons;
+            for (const auto& solver_id : make_nonsmooth_solver_ids())
             {
-                reference = fvalues.size();
+                const auto solver = solver_t::all().get(solver_id);
+                UTEST_REQUIRE(solver);
+
+                const auto descr = make_description(solver_id);
+                const auto state = check_minimize(*solver, solver_id, *function, x0);
+                fvalues.push_back(state.f);
+                epsilons.push_back(descr.m_epsilon);
+                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
             }
 
-            const auto state =
-                check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals, dd.m_epsilon, dd.m_converges);
-            fvalues.push_back(state.f);
-            epsilons.push_back(dd.m_epsilon);
-            log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+            check_consistency(*function, fvalues, epsilons);
         }
-
-        check_consistency(*function, fvalues, epsilons, reference);
     }
 }
 
@@ -361,29 +290,30 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
     {
         UTEST_REQUIRE(function);
 
-        const vector_t x0 = vector_t::Random(function->size());
-
-        std::vector<scalar_t> fvalues, epsilons;
-        for (const auto& solver_id : make_best_smooth_solver_ids())
+        for (const auto& x0 : make_random_x0s(*function))
         {
-            const auto solver = solver_t::all().get(solver_id);
-            UTEST_REQUIRE(solver);
-
-            for (const auto& lsearch0_id : make_lsearch0_ids())
+            std::vector<scalar_t> fvalues, epsilons;
+            for (const auto& solver_id : make_best_smooth_solver_ids())
             {
-                for (const auto& lsearchk_id : make_lsearchk_ids())
-                {
-                    UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
-                    UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
+                const auto solver = solver_t::all().get(solver_id);
+                UTEST_REQUIRE(solver);
 
-                    const auto state = check_minimize(*solver, solver_id, *function, x0);
-                    fvalues.push_back(state.f);
-                    epsilons.push_back(1e-6);
+                for (const auto& lsearch0_id : make_lsearch0_ids())
+                {
+                    for (const auto& lsearchk_id : make_lsearchk_ids())
+                    {
+                        UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
+                        UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
+
+                        const auto state = check_minimize(*solver, solver_id, *function, x0);
+                        fvalues.push_back(state.f);
+                        epsilons.push_back(1e-6);
+                    }
                 }
             }
-        }
 
-        check_consistency(*function, fvalues, epsilons);
+            check_consistency(*function, fvalues, epsilons);
+        }
     }
 }
 
@@ -393,19 +323,22 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
     {
         UTEST_REQUIRE(function);
 
-        for (const auto& solver_id : make_best_smooth_solver_ids())
+        for (const auto& x0 : make_random_x0s(*function))
         {
-            const auto solver = solver_t::all().get(solver_id);
-            UTEST_REQUIRE(solver);
+            for (const auto& solver_id : make_best_smooth_solver_ids())
+            {
+                const auto solver = solver_t::all().get(solver_id);
+                UTEST_REQUIRE(solver);
 
-            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
+                check_minimize(*solver, solver_id, *function, x0);
 
-            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
+                check_minimize(*solver, solver_id, *function, x0);
 
-            UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
-            check_minimize(*solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
+                check_minimize(*solver, solver_id, *function, x0);
+            }
         }
     }
 }
@@ -415,27 +348,31 @@ UTEST_CASE(quasi_bfgs_with_initializations)
     for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
+
+        for (const auto& x0 : make_random_x0s(*function))
         {
-            const auto* const solver_id = "bfgs";
-            const auto* const pname     = "solver::quasi::initialization";
-            auto              solver    = solver_quasi_bfgs_t{};
+            {
+                const auto* const solver_id = "bfgs";
+                const auto* const pname     = "solver::quasi::initialization";
+                auto              solver    = solver_quasi_bfgs_t{};
 
-            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
+                check_minimize(solver, solver_id, *function, x0);
 
-            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
-        }
-        {
-            const auto* const solver_id = "fletcher";
-            const auto* const pname     = "solver::quasi::initialization";
-            auto              solver    = solver_quasi_fletcher_t{};
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
+                check_minimize(solver, solver_id, *function, x0);
+            }
+            {
+                const auto* const solver_id = "fletcher";
+                const auto* const pname     = "solver::quasi::initialization";
+                auto              solver    = solver_quasi_fletcher_t{};
 
-            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
+                check_minimize(solver, solver_id, *function, x0);
 
-            UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-            check_minimize(solver, solver_id, *function, vector_t::Random(function->size()));
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
+                check_minimize(solver, solver_id, *function, x0);
+            }
         }
     }
 }

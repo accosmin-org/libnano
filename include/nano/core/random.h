@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <nano/arch.h>
 #include <nano/core/seed.h>
 #include <random>
 #include <type_traits>
@@ -16,20 +17,7 @@ namespace nano
     ///
     /// \brief create & initialize a random number generator.
     ///
-    inline auto make_rng(seed_t seed = seed_t{})
-    {
-        if (seed)
-        {
-            auto rng = rng_t{}; // NOLINT(cert-msc32-c,cert-msc51-cpp)
-            rng.seed(*seed);
-            return rng;
-        }
-        else
-        {
-            // todo: use seed_seq to initialize the RNG (see C++17)
-            return rng_t{std::random_device{}()};
-        }
-    }
+    NANO_PUBLIC rng_t make_rng(seed_t seed = seed_t{});
 
     ///
     /// \brief create an uniform distribution for the [min, max] range.

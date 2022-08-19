@@ -1,4 +1,4 @@
-name: libnano-deploy-ubuntu2004
+name: ubuntu2004
 
 on: [push]
 

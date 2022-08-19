@@ -1,4 +1,4 @@
-name: libnano-deploy-ubuntu2204
+name: ubuntu2204
 
 on: [push]
 

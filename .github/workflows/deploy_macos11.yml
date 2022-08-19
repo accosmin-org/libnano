@@ -1,0 +1,22 @@
+name: macos11
+
+on: [push]
+
+jobs:
+  debug-apple-clang:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_osxbrew.sh
+    - name: debug (apple clang)
+      run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
+
+  release-apple-clang:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_osxbrew.sh
+    - name: debug (apple clang)
+      run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Release --config --build --test --install --build-example

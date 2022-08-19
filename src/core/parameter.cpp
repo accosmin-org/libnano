@@ -259,19 +259,13 @@ parameter_t::parameter_t(string_t name, fprange_t param)
 {
 }
 
-parameter_t& parameter_t::operator=(int32_t value)
+parameter_t& parameter_t::seti(int64_t value)
 {
     ::update(m_name, m_storage, value);
     return *this;
 }
 
-parameter_t& parameter_t::operator=(int64_t value)
-{
-    ::update(m_name, m_storage, value);
-    return *this;
-}
-
-parameter_t& parameter_t::operator=(scalar_t value)
+parameter_t& parameter_t::setd(scalar_t value)
 {
     ::update(m_name, m_storage, value);
     return *this;

@@ -1,8 +1,5 @@
 #include "fixture/function.h"
-#include <nano/core/numeric.h>
-#include <nano/function.h>
 #include <nano/function/benchmark.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -15,7 +12,7 @@ UTEST_CASE(stats)
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
 
-        vector_t x = vector_t::Random(function->size());
+        const auto x = make_random_x0(*function);
         function->vgrad(x);
 
         UTEST_CHECK_EQUAL(function->fcalls(), 1);

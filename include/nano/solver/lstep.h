@@ -1,59 +1,45 @@
 #pragma once
 
+#include <nano/arch.h>
 #include <nano/solver/state.h>
 
 namespace nano
 {
     ///
+    /// \brief interpolation method using the information at two line-search step trials.
+    ///
+    enum class interpolation_type
+    {
+        bisection, ///<
+        quadratic, ///<
+        cubic      ///<
+    };
+
+    ///
     /// \brief line-search step function:
     ///     phi(t) = f(x + t * d), f - the function to minimize and d - the descent direction.
     ///
-    class lsearch_step_t
+    class NANO_PUBLIC lsearch_step_t
     {
     public:
         ///
-        /// \brief interpolation method using the information at two trials.
-        ///
-        enum class interpolation
-        {
-            bisection, ///<
-            quadratic, ///<
-            cubic      ///<
-        };
-
-        ///
-        /// \brief construction
+        /// \brief constructors
         ///
         lsearch_step_t()                          = default;
         lsearch_step_t(lsearch_step_t&&) noexcept = default;
         lsearch_step_t(const lsearch_step_t&)     = default;
 
         // cppcheck-suppress noExplicitConstructor
-        lsearch_step_t(const solver_state_t& state) // NOLINT(hicpp-explicit-conversions)
-            : t(state.t)
-            , f(state.f)
-            , g(state.dg())
-        {
-        }
+        lsearch_step_t(const solver_state_t&); // NOLINT(hicpp-explicit-conversions)
 
-        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg)
-            : t(tt)
-            , f(ff)
-            , g(gg)
-        {
-        }
+        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg);
 
         ///
         /// \brief assignment
         ///
         lsearch_step_t& operator=(lsearch_step_t&&) noexcept = default;
         lsearch_step_t& operator=(const lsearch_step_t&)     = default;
-
-        lsearch_step_t& operator=(const solver_state_t& state)
-        {
-            t = state.t, f = state.f, g = state.dg();
-            return *this;
-        }
+        lsearch_step_t& operator=(const solver_state_t& state);
 
         ///
         /// \brief destructor
@@ -68,12 +54,7 @@ namespace nano
         ///     minimizer: solution of 3*a*x^2 + 2*b*x + c = 0
         ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
         ///
-        static auto cubic(const lsearch_step_t& u, const lsearch_step_t& v)
-        {
-            const auto d1 = u.g + v.g - 3 * (u.f - v.f) / (u.t - v.t);
-            const auto d2 = (v.t > u.t ? +1 : -1) * std::sqrt(d1 * d1 - u.g * v.g);
-            return v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2 * d2);
-        }
+        static scalar_t cubic(const lsearch_step_t& u, const lsearch_step_t& v);
 
         ///
         /// \brief quadratic interpolation of two line-search steps.
@@ -82,16 +63,7 @@ namespace nano
         ///         given: q(v) = fv
         ///     minimizer: -b/2a
         ///
-        static auto quadratic(const lsearch_step_t& u, const lsearch_step_t& v, bool* convexity = nullptr)
-        {
-            const auto dt = u.t - v.t;
-            const auto df = u.f - v.f;
-            if (convexity != nullptr)
-            {
-                *convexity = (u.g - df / dt) * dt > 0;
-            }
-            return u.t - u.g * dt * dt / (2 * (u.g * dt - df));
-        }
+        static scalar_t quadratic(const lsearch_step_t& u, const lsearch_step_t& v, bool* convexity = nullptr);
 
         ///
         /// \brief secant interpolation of two line-search steps.
@@ -100,37 +72,19 @@ namespace nano
         ///         given: q'(v) = gv
         ///     minimizer: -b/2a
         ///
-        static auto secant(const lsearch_step_t& u, const lsearch_step_t& v)
-        {
-            return (v.t * u.g - u.t * v.g) / (u.g - v.g);
-        }
+        static scalar_t secant(const lsearch_step_t& u, const lsearch_step_t& v);
 
         ///
         /// \brief bisection interpolation of two line-search steps.
         ///
-        static auto bisection(const lsearch_step_t& u, const lsearch_step_t& v) { return (u.t + v.t) / 2; }
+        static scalar_t bisection(const lsearch_step_t& u, const lsearch_step_t& v);
 
         ///
         /// \brief interpolation of two line-search steps.
         ///     first try a cubic interpolation, then a quadratic interpolation and finally do bisection
         ///         until the interpolated point is valid.
         ///
-        static auto interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation method)
-        {
-            const auto tc = cubic(u, v);
-            const auto tq = quadratic(u, v);
-            const auto tb = bisection(u, v);
-
-            switch (method)
-            {
-            case interpolation::cubic: return std::isfinite(tc) ? tc : std::isfinite(tq) ? tq : tb;
-
-            case interpolation::quadratic: return std::isfinite(tq) ? tq : tb;
-
-            case interpolation::bisection:
-            default: return tb;
-            }
-        }
+        static scalar_t interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation_type);
 
         // attributes
         scalar_t t{0}; ///< line-search step
@@ -139,12 +93,12 @@ namespace nano
     };
 
     template <>
-    inline enum_map_t<lsearch_step_t::interpolation> enum_string<lsearch_step_t::interpolation>()
+    inline enum_map_t<interpolation_type> enum_string<interpolation_type>()
     {
         return {
-            {lsearch_step_t::interpolation::bisection, "bisection"},
-            {lsearch_step_t::interpolation::quadratic, "quadratic"},
-            {    lsearch_step_t::interpolation::cubic,     "cubic"}
+            {interpolation_type::bisection, "bisection"},
+            {interpolation_type::quadratic, "quadratic"},
+            {    interpolation_type::cubic,     "cubic"}
         };
     }
 } // namespace nano

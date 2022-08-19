@@ -101,7 +101,7 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
 static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
                            const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
 {
-    const vector_t x0 = vector_t::Random(function.size()) * 5.0;
+    const auto x0 = make_random_x0(function, 5.0);
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(12) << "x0=" << x0.transpose() << "." << std::endl;
@@ -511,7 +511,7 @@ UTEST_CASE(noconstraint_convex_smooth)
     check_penalties(constrained, true, true);
     for (auto trial = 0; trial < 100; ++trial)
     {
-        check_penalties(constrained, vector_t::Random(3), true);
+        check_penalties(constrained, make_random_x0(constrained), true);
     }
 }
 
@@ -523,7 +523,7 @@ UTEST_CASE(noconstraint_convex_nonsmooth)
     check_penalties(constrained, true, false);
     for (auto trial = 0; trial < 100; ++trial)
     {
-        check_penalties(constrained, vector_t::Random(3), true);
+        check_penalties(constrained, make_random_x0(constrained), true);
     }
 }
 
@@ -535,7 +535,7 @@ UTEST_CASE(noconstraint_nonconvex_smooth)
     check_penalties(constrained, false, true);
     for (auto trial = 0; trial < 100; ++trial)
     {
-        check_penalties(constrained, vector_t::Random(3), true);
+        check_penalties(constrained, make_random_x0(constrained), true);
     }
 }
 

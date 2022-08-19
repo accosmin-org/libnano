@@ -10,7 +10,7 @@ namespace nano
     ///     see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
     ///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager and
     ///     Zhang
-    ///      see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
+    ///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
     ///
     class NANO_PUBLIC solver_cgd_t : public solver_t
     {

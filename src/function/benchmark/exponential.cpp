@@ -11,11 +11,13 @@ function_exponential_t::function_exponential_t(tensor_size_t dims)
 
 scalar_t function_exponential_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
-    const auto fx = std::exp(1 + x.dot(x) / scalar_t(size()));
+    const auto alpha = 1.0 / static_cast<scalar_t>(size());
+
+    const auto fx = std::exp(1 + x.dot(x) * alpha);
 
     if (gx != nullptr)
     {
-        gx->noalias() = (2 * fx / scalar_t(size())) * x;
+        gx->noalias() = (2 * fx * alpha) * x;
     };
 
     return fx;

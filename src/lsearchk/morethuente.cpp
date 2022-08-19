@@ -146,7 +146,7 @@ void lsearchk_morethuente_t::dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, s
     stp = stpf;
 }
 
-bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();

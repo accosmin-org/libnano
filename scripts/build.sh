@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-basepath=`readlink -f "$0"`
+basepath=`readlink -f "$0" || greadlink -f "$0"`
 basedir=`dirname "${basepath}"`
 basedir=`dirname "${basedir}"`
 

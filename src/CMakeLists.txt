@@ -10,6 +10,7 @@ target_sources(nano PRIVATE
     core/table.cpp
     core/chrono.cpp
     core/logger.cpp
+    core/random.cpp
     core/cmdline.cpp
     core/parallel.cpp
     core/histogram.cpp
@@ -46,6 +47,7 @@ target_sources(nano PRIVATE
     solver/gd.cpp
     solver/cgd.cpp
     solver/osga.cpp
+    solver/lstep.cpp
     solver/lbfgs.cpp
     solver/quasi.cpp
     solver/state.cpp

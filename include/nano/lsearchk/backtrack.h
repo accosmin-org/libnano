@@ -24,6 +24,6 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) final;
+        bool get(const solver_state_t& state0, solver_state_t& state) const final;
     };
 } // namespace nano

@@ -241,8 +241,8 @@ static std::ostream& operator<<(std::ostream& os, const std::vector<tvalue>& val
     ++utest_n_checks;                                                                                                  \
     if (!::nano::close((left), (right), epsilon))                                                                      \
     {                                                                                                                  \
-        UTEST_HANDLE_FAILURE() << "check {" << UTEST_STRINGIFY(left<> right) << "} failed {" << (left) << " <> "       \
-                               << (right) << "}!" << RESET_COLOR << std::endl;                                         \
+        UTEST_HANDLE_FAILURE() << "check {" << UTEST_STRINGIFY(left<> right) << "} failed {" << (left) << " <"         \
+                               << (epsilon) << "> " << (right) << "}!" << RESET_COLOR << std::endl;                    \
         UTEST_HANDLE_CRITICAL(critical);                                                                               \
     }
 

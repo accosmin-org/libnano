@@ -11,7 +11,7 @@ using namespace nano;
 lsearchk_t::lsearchk_t()
 {
     register_parameter(parameter_t::make_scalar_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
-    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 50, LE, 100));
+    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 100, LE, 1000));
 }
 
 lsearchk_factory_t& lsearchk_t::all()
@@ -39,7 +39,7 @@ static auto make_state0(const solver_state_t& state)
     return state0;
 }
 
-bool lsearchk_t::get(solver_state_t& state, scalar_t t)
+bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
