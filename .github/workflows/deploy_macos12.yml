@@ -11,3 +11,12 @@ jobs:
       run: bash scripts/setup_osxbrew.sh
     - name: debug (apple clang)
       run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --config --build --test --install --build-example
+
+  release-apple-clang:
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_osxbrew.sh
+    - name: debug (apple clang)
+      run: CXX=clang++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Release --config --build --test --install --build-example
