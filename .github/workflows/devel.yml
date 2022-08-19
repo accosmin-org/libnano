@@ -1,4 +1,4 @@
-name: libnano-devel
+name: devel
 
 on: [push]
 

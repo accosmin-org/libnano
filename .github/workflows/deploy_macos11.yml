@@ -1,4 +1,4 @@
-name: libnano-deploy-macos11
+name: macos11
 
 on: [push]
 
