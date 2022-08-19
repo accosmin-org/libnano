@@ -36,10 +36,10 @@ using namespace nano;
     }
 
     // bug: BFGS+backtrack solver fails here
-    /*if (function.name() == "Qing[4D]")
+    if (function.name() == "Qing[4D]")
     {
         append(0.4958921077711123, 0.9830812076917252, -0.5192140013563706, 0.0439401045948384);
-    }*/
+    }
 
     // bug: cgdescent line-search fails here
     if (function.name() == "Dixon-Price[2D]")

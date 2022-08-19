@@ -29,91 +29,26 @@ static void check_consistency(const function_t& function, const std::vector<scal
 struct solver_description_t
 {
     bool          m_monotonic{true};
-    tensor_size_t m_max_evals{1000};
     scalar_t      m_epsilon{1e-6};
 };
 
 static solver_description_t make_description(const string_t& solver_id)
 {
-    if (solver_id == "gd")
+    if (solver_id == "gd" || solver_id == "cgd" || solver_id == "cgd-n" || solver_id == "cgd-hs" ||
+        solver_id == "cgd-fr" || solver_id == "cgd-pr" || solver_id == "cgd-cd" || solver_id == "cgd-ls" ||
+        solver_id == "cgd-dy" || solver_id == "cgd-dycd" || solver_id == "cgd-dyhs" || solver_id == "cgd-prfr" ||
+        solver_id == "lbfgs" || solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" ||
+        solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return {true, 10000, 1e-6};
-    }
-    else if (solver_id == "cgd")
-    {
-        return {true, 5000, 1e-6};
-    }
-    else if (solver_id == "cgd-n")
-    {
-        return {true, 5001, 1e-6};
-    }
-    else if (solver_id == "cgd-hs")
-    {
-        return {true, 5002, 1e-6};
-    }
-    else if (solver_id == "cgd-fr")
-    {
-        return {true, 5003, 1e-6};
-    }
-    else if (solver_id == "cgd-pr")
-    {
-        return {true, 5004, 1e-6};
-    }
-    else if (solver_id == "cgd-cd")
-    {
-        return {true, 5005, 1e-6};
-    }
-    else if (solver_id == "cgd-ls")
-    {
-        return {true, 5006, 1e-6};
-    }
-    else if (solver_id == "cgd-dy")
-    {
-        return {true, 5007, 1e-6};
-    }
-    else if (solver_id == "cgd-dycd")
-    {
-        return {true, 5008, 1e-6};
-    }
-    else if (solver_id == "cgd-dyhs")
-    {
-        return {true, 5009, 1e-6};
-    }
-    else if (solver_id == "cgd-prfr")
-    {
-        return {true, 5010, 1e-6};
-    }
-    else if (solver_id == "lbfgs")
-    {
-        return {true, 5011, 1e-6};
-    }
-    else if (solver_id == "dfp")
-    {
-        return {true, 5012, 1e-6};
-    }
-    else if (solver_id == "sr1")
-    {
-        return {true, 5013, 1e-6};
-    }
-    else if (solver_id == "bfgs")
-    {
-        return {true, 5014, 1e-6};
-    }
-    else if (solver_id == "hoshino")
-    {
-        return {true, 5015, 1e-6};
-    }
-    else if (solver_id == "fletcher")
-    {
-        return {true, 5016, 1e-6};
-    }
-    else if (solver_id == "osga")
-    {
-        return {false, 5000, 1e-4};
+        return {true, 1e-6};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, 5001, 1e-6};
+        return {false, 1e-6};
+    }
+    else if (solver_id == "osga")
+    {
+        return {false, 1e-4};
     }
     else
     {
@@ -311,10 +246,10 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 const auto solver = solver_t::all().get(solver_id);
                 UTEST_REQUIRE(solver);
 
-                const auto dd    = make_description(solver_id);
-                const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
+                const auto descr = make_description(solver_id);
+                const auto state = check_minimize(*solver, solver_id, *function, x0);
                 fvalues.push_back(state.f);
-                epsilons.push_back(dd.m_epsilon);
+                epsilons.push_back(descr.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
             }
 
@@ -337,10 +272,10 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 const auto solver = solver_t::all().get(solver_id);
                 UTEST_REQUIRE(solver);
 
-                const auto dd    = make_description(solver_id);
-                const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
+                const auto descr = make_description(solver_id);
+                const auto state = check_minimize(*solver, solver_id, *function, x0);
                 fvalues.push_back(state.f);
-                epsilons.push_back(dd.m_epsilon);
+                epsilons.push_back(descr.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
             }
 
