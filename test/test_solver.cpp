@@ -145,7 +145,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("osga|pgm|dgm|fgm|ellipsoid|asga2|asga4"));
+    return solver_t::all().ids(std::regex("osga|ellipsoid"));
 }
 
 static auto make_best_smooth_solver_ids()

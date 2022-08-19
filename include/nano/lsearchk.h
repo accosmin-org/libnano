@@ -29,19 +29,19 @@ namespace nano
         lsearchk_t();
 
         ///
-        /// \brief returns the available implementations
+        /// \brief returns the available implementations.
         ///
         static lsearchk_factory_t& all();
 
         ///
-        /// \brief clone the object, by keeping the parameters but with an internal "clean state"
+        /// \brief clone the object, by keeping the parameters but with an internal "clean state".
         ///
         virtual rlsearchk_t clone() const = 0;
 
         ///
-        /// \brief compute the step size starting from the given state and the initial estimate of the step size
+        /// \brief compute the step size starting from the given state and the initial estimate of the step size.
         ///
-        virtual bool get(solver_state_t& state, scalar_t t);
+        virtual bool get(solver_state_t& state, scalar_t t) const;
 
         ///
         /// \brief set the logging operator.
@@ -62,7 +62,7 @@ namespace nano
         ///
         /// \brief compute the step size given the previous state and the current state
         ///
-        virtual bool get(const solver_state_t& state0, solver_state_t&) = 0;
+        virtual bool get(const solver_state_t& state0, solver_state_t&) const = 0;
 
         ///
         /// \brief log the current line-search trial length (if the logger is provided)

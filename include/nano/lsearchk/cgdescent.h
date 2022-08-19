@@ -30,7 +30,7 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) final;
+        bool get(const solver_state_t& state0, solver_state_t& state) const final;
 
     private:
         struct state_t
@@ -48,7 +48,7 @@ namespace nano
             lsearch_step_t        a, b;   ///< lower/upper bounds of the bracketing interval
         };
 
-        bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true);
+        bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true) const;
 
         void move(state_t&, scalar_t t) const;
         void update(state_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;

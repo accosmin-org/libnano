@@ -57,7 +57,7 @@ bool lsearchk_fletcher_t::zoom(const solver_state_t& state0, lsearch_step_t lo, 
     return false;
 }
 
-bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_fletcher_t::get(const solver_state_t& state0, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();

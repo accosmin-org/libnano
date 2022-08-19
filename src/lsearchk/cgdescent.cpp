@@ -29,7 +29,7 @@ rlsearchk_t lsearchk_cgdescent_t::clone() const
 }
 
 bool lsearchk_cgdescent_t::done(const state_t& state, const scalar_t c1, const scalar_t c2, const scalar_t epsilonk,
-                                [[maybe_unused]] const bool bracketed)
+                                [[maybe_unused]] const bool bracketed) const
 {
     assert(state.a.t <= state.b.t);
     assert(state.a.g < 0.0);
@@ -153,7 +153,7 @@ void lsearchk_cgdescent_t::bracket(state_t& state, const scalar_t ro, const scal
     }
 }
 
-bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state)
+bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& state) const
 {
     assert(state0.has_descent());
 

@@ -39,7 +39,7 @@ static auto make_state0(const solver_state_t& state)
     return state0;
 }
 
-bool lsearchk_t::get(solver_state_t& state, scalar_t t)
+bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
