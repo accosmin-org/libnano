@@ -95,6 +95,9 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     vector_t u   = proxy.U(gamma, h, fb);
     scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
+    vector_t prev_x = state.x;
+    scalar_t prev_f = state.f;
+
     for (int i = 0; function.fcalls() < max_evals; ++i)
     {
         if (state.g.lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
@@ -116,6 +119,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         const auto& xb_prime = (f < fb) ? x : xb;
         const auto& fb_prime = (f < fb) ? f : fb;
+        state.update_if_better(xb_prime, fb_prime);
 
         u_prime            = proxy.U(gamma_hat - fb_prime, h_hat);
         x_prime            = xb + alpha * (u_prime - xb);
@@ -123,13 +127,13 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
+        state.update_if_better(xb_hat, fb_hat);
 
         u_hat              = proxy.U(gamma_hat, h_hat, fb_hat);
         const auto eta_hat = proxy.E(gamma_hat, h_hat, fb_hat) - miu;
 
         // check convergence
-        const auto converged = eta_hat <= eps0 || ::converged(xb, fb, xb_hat, fb_hat, epsilon);
-        state.update_if_better(xb_hat, fb_hat);
+        const auto converged = eta_hat <= eps0 || ::converged(prev_x, prev_f, x, f, epsilon);
         const auto iter_ok = static_cast<bool>(state);
         if (solver_t::done(function, state, iter_ok, converged))
         {
@@ -140,7 +144,6 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         const auto R = (eta - eta_hat) / (lambda * alpha * eta);
 
         alpha = (R < 1.0) ? (alpha * std::exp(-kappa)) : std::min(alpha * std::exp(kappa_prime * (R - 1.0)), alpha_max);
-
         if (eta_hat < eta)
         {
             h     = h_hat;
@@ -148,6 +151,9 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
             eta   = eta_hat;
             gamma = gamma_hat;
         }
+
+        prev_x = x;
+        prev_f = f;
     }
 
     // NB: make sure the gradient is updated at the returned point.
