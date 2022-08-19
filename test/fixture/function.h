@@ -6,7 +6,8 @@ using namespace nano;
 
 [[maybe_unused]] static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
 {
-    return make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector();
+    const auto tensor = make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale);
+    return tensor.vector();
 }
 
 [[maybe_unused]] static std::vector<vector_t> make_random_x0s(const function_t& function, const scalar_t scale = 1.0)
@@ -14,27 +15,36 @@ using namespace nano;
     const auto dims = make_dims(function.size());
 
     std::vector<vector_t> vectors;
-    vectors.emplace_back(make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale).vector());
+    vectors.emplace_back(std::move(make_random_x0(function, scale)));
 
-    const auto make_vector = [&](const auto... tscalars) { return make_tensor<scalar_t>(dims, tscalars...); };
+    const auto append = [&](const auto... tscalars)
+    {
+        const auto tensor = make_tensor<scalar_t>(dims, tscalars...);
+        vectors.emplace_back(tensor.vector());
+    };
 
     // bug: OSGA solver fails here
     if (function.name() == "Exponential[4D]")
     {
-        vectors.emplace_back(
-            make_vector(0.9460835747689484, 0.3166827894775206, -0.0416191904634331, -0.9001861362105115).vector());
+        append(0.6524579797097991, 0.3700950306557635, -0.1710712483548298, -0.1947479784347773);
+    }
+
+    // bug: OSGA solver fails here
+    if (function.name() == "Kinks[4D]")
+    {
+        append(0.2545247188178488, -0.6632348569872683, -0.6260742327486718, 0.5950229544941097);
     }
 
     // bug: cgdescent line-search fails here
     if (function.name() == "Dixon-Price[2D]")
     {
-        vectors.emplace_back(make_vector(0.439934771063, -0.788200738134).vector());
+        append(0.439934771063, -0.788200738134);
     }
 
     // bug: cgdescent line-search fails here
     if (function.name() == "Exponential[1D]")
     {
-        vectors.emplace_back(make_vector(0.817256233948).vector());
+        append(0.817256233948);
     }
 
     return vectors;

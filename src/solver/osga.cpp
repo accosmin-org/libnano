@@ -1,45 +1,49 @@
+#include <nano/core/numeric.h>
 #include <nano/solver/osga.h>
 
 using namespace nano;
 
-class proxy_t
+namespace
 {
-public:
-    explicit proxy_t(const vector_t& z0, scalar_t epsilon)
-        : m_z0(z0)
-        , m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
+    class proxy_t
     {
-    }
-
-    auto Q(const vector_t& z) const { return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0); }
-
-    auto gQ(const vector_t& z) const { return z - m_z0; }
-
-    auto E(scalar_t gamma, const vector_t& h) const
-    {
-        const auto beta = gamma + h.dot(m_z0);
-        const auto sqrt = std::sqrt(beta * beta + 2.0 * m_Q0 * h.dot(h));
-
-        if (beta <= 0.0)
+    public:
+        explicit proxy_t(const vector_t& z0, scalar_t epsilon)
+            : m_z0(z0)
+            , m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
         {
-            return (-beta + sqrt) / (2.0 * m_Q0);
         }
-        else
+
+        auto Q(const vector_t& z) const { return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0); }
+
+        auto gQ(const vector_t& z) const { return z - m_z0; }
+
+        auto E(scalar_t gamma, const vector_t& h) const
         {
-            return h.dot(h) / (beta + sqrt);
+            const auto beta = gamma + h.dot(m_z0);
+            const auto sqrt = std::sqrt(beta * beta + 2.0 * m_Q0 * h.dot(h));
+
+            if (beta <= 0.0)
+            {
+                return (-beta + sqrt) / (2.0 * m_Q0);
+            }
+            else
+            {
+                return h.dot(h) / (beta + sqrt);
+            }
         }
-    }
 
-    auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const { return E(gamma - fx, h); }
+        auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const { return E(gamma - fx, h); }
 
-    auto U(scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
+        auto U(scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
 
-    auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const { return U(gamma - fx, h); }
+        auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const { return U(gamma - fx, h); }
 
-private:
-    const vector_t& m_z0;      ///<
-    scalar_t        m_Q0{0.0}; ///<
-};
+    private:
+        const vector_t& m_z0;      ///<
+        scalar_t        m_Q0{0.0}; ///<
+    };
+} // namespace
 
 static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, scalar_t epsilon)
 {
@@ -64,7 +68,7 @@ solver_osga_t::solver_osga_t()
 solver_state_t solver_osga_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto epsilon              = parameter("solver::epsilon").value<scalar_t>();
-    const auto max_evals            = parameter("solver::max_evals").value<int64_t>();
+    const auto max_evals            = parameter("solver::max_evals").value<int>();
     const auto lambda               = parameter("solver::osga::lambda").value<scalar_t>();
     const auto alpha_max            = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
@@ -91,8 +95,18 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     vector_t u   = proxy.U(gamma, h, fb);
     scalar_t eta = proxy.E(gamma, h, fb) - miu;
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
+    for (int i = 0; function.fcalls() < max_evals; ++i)
     {
+        if (state.g.lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
+        {
+            const auto converged = true;
+            const auto iter_ok   = static_cast<bool>(state);
+            if (solver_t::done(function, state, iter_ok, converged))
+            {
+                break;
+            }
+        }
+
         x            = xb + alpha * (u - xb);
         const auto f = function.vgrad(x, &g);
         g            = g - miu * proxy.gQ(x);

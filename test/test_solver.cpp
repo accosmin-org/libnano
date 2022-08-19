@@ -42,79 +42,79 @@ static solver_description_t make_description(const string_t& solver_id)
     }
     else if (solver_id == "cgd")
     {
-        return {true, true, 1000, 1e-6};
+        return {true, true, 5000, 1e-6};
     }
     else if (solver_id == "cgd-n")
     {
-        return {true, true, 1001, 1e-6};
+        return {true, true, 5001, 1e-6};
     }
     else if (solver_id == "cgd-hs")
     {
-        return {true, true, 1002, 1e-6};
+        return {true, true, 5002, 1e-6};
     }
     else if (solver_id == "cgd-fr")
     {
-        return {true, true, 1003, 1e-6};
+        return {true, true, 5003, 1e-6};
     }
     else if (solver_id == "cgd-pr")
     {
-        return {true, true, 1004, 1e-6};
+        return {true, true, 5004, 1e-6};
     }
     else if (solver_id == "cgd-cd")
     {
-        return {true, true, 1005, 1e-6};
+        return {true, true, 5005, 1e-6};
     }
     else if (solver_id == "cgd-ls")
     {
-        return {true, true, 1006, 1e-6};
+        return {true, true, 5006, 1e-6};
     }
     else if (solver_id == "cgd-dy")
     {
-        return {true, true, 1007, 1e-6};
+        return {true, true, 5007, 1e-6};
     }
     else if (solver_id == "cgd-dycd")
     {
-        return {true, true, 1008, 1e-6};
+        return {true, true, 5008, 1e-6};
     }
     else if (solver_id == "cgd-dyhs")
     {
-        return {true, true, 1009, 1e-6};
+        return {true, true, 5009, 1e-6};
     }
     else if (solver_id == "cgd-prfr")
     {
-        return {true, true, 1010, 1e-6};
+        return {true, true, 5010, 1e-6};
     }
     else if (solver_id == "lbfgs")
     {
-        return {true, true, 1011, 1e-6};
+        return {true, true, 5011, 1e-6};
     }
     else if (solver_id == "dfp")
     {
-        return {true, true, 1012, 1e-6};
+        return {true, true, 5012, 1e-6};
     }
     else if (solver_id == "sr1")
     {
-        return {true, true, 1013, 1e-6};
+        return {true, true, 5013, 1e-6};
     }
     else if (solver_id == "bfgs")
     {
-        return {true, true, 1014, 1e-6};
+        return {true, true, 5014, 1e-6};
     }
     else if (solver_id == "hoshino")
     {
-        return {true, true, 1015, 1e-6};
+        return {true, true, 5015, 1e-6};
     }
     else if (solver_id == "fletcher")
     {
-        return {true, true, 1016, 1e-6};
+        return {true, true, 5016, 1e-6};
     }
     else if (solver_id == "osga")
     {
-        return {false, true, 5000, 1e-6};
+        return {false, true, 5000, 1e-5};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, true, 1000, 1e-4};
+        return {false, true, 5000, 1e-5};
     }
     else
     {
@@ -145,7 +145,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("osga|ellipsoid"));
+    return solver_t::all().ids(std::regex("ellipsoid|osga"));
 }
 
 static auto make_best_smooth_solver_ids()
@@ -312,9 +312,10 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 const auto solver = solver_t::all().get(solver_id);
                 UTEST_REQUIRE(solver);
 
-                const auto state = check_minimize(*solver, solver_id, *function, x0);
+                const auto dd = make_description(solver_id);
+                const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
                 fvalues.push_back(state.f);
-                epsilons.push_back(1e-6);
+                epsilons.push_back(dd.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
             }
 
@@ -331,7 +332,6 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            size_t                reference = 0U;
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_nonsmooth_solver_ids())
             {
@@ -339,19 +339,13 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_REQUIRE(solver);
 
                 const auto dd = make_description(solver_id);
-                if (solver_id == string_t{"osga"})
-                {
-                    reference = fvalues.size();
-                }
-
-                const auto state =
-                    check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals, dd.m_epsilon, dd.m_converges);
+                const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
                 fvalues.push_back(state.f);
                 epsilons.push_back(dd.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
             }
 
-            check_consistency(*function, fvalues, epsilons, reference);
+            check_consistency(*function, fvalues, epsilons);
         }
     }
 }
