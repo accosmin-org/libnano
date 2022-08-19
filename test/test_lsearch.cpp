@@ -265,8 +265,8 @@ UTEST_CASE(fletcher_bisection)
 
 UTEST_CASE(cgdescent)
 {
-    const auto* const lsearch_id                         = "cgdescent";
-    const auto        lsearch                            = get_lsearch(lsearch_id);
+    const auto* const lsearch_id = "cgdescent";
+    const auto        lsearch    = get_lsearch(lsearch_id);
 
     for (const auto& function : make_functions())
     {

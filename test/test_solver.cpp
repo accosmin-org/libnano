@@ -312,7 +312,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 const auto solver = solver_t::all().get(solver_id);
                 UTEST_REQUIRE(solver);
 
-                const auto dd = make_description(solver_id);
+                const auto dd    = make_description(solver_id);
                 const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
                 fvalues.push_back(state.f);
                 epsilons.push_back(dd.m_epsilon);
@@ -338,7 +338,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 const auto solver = solver_t::all().get(solver_id);
                 UTEST_REQUIRE(solver);
 
-                const auto dd = make_description(solver_id);
+                const auto dd    = make_description(solver_id);
                 const auto state = check_minimize(*solver, solver_id, *function, x0, dd.m_max_evals);
                 fvalues.push_back(state.f);
                 epsilons.push_back(dd.m_epsilon);
