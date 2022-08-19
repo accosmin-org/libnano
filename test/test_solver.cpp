@@ -28,8 +28,8 @@ static void check_consistency(const function_t& function, const std::vector<scal
 
 struct solver_description_t
 {
-    bool          m_monotonic{true};
-    scalar_t      m_epsilon{1e-6};
+    bool     m_monotonic{true};
+    scalar_t m_epsilon{1e-6};
 };
 
 static solver_description_t make_description(const string_t& solver_id)
