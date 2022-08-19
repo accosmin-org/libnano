@@ -110,11 +110,11 @@ static solver_description_t make_description(const string_t& solver_id)
     }
     else if (solver_id == "osga")
     {
-        return {false, true, 5000, 1e-5};
+        return {false, true, 5000, 1e-4};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, true, 5000, 1e-5};
+        return {false, true, 5000, 1e-4};
     }
     else
     {
