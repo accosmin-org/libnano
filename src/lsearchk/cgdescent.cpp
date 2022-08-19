@@ -69,29 +69,27 @@ void lsearchk_cgdescent_t::move(state_t& state, const scalar_t t) const
 void lsearchk_cgdescent_t::updateU(state_t& state, const scalar_t epsilonk, const scalar_t theta,
                                    const int max_iterations) const
 {
-    auto& a = state.a;
-    auto& b = state.b;
-    auto& d = state.c;
-
-    for (int i = 0; i < max_iterations && (b.t - a.t) > stpmin(); ++i)
+    for (int i = 0; i < max_iterations && (state.b.t - state.a.t) > stpmin(); ++i)
     {
-        move(state, (1 - theta) * a.t + theta * b.t);
+        auto& d = state.c;
+        move(state, (1 - theta) * state.a.t + theta * state.b.t);
+
         if (!d)
         {
             return;
         }
         else if (!d.has_descent())
         {
-            b = d;
+            state.b = d;
             return;
         }
         else if (d.has_approx_armijo(state.state0, epsilonk))
         {
-            a = d;
+            state.a = d;
         }
         else
         {
-            b = d;
+            state.b = d;
         }
     }
 }
@@ -99,25 +97,21 @@ void lsearchk_cgdescent_t::updateU(state_t& state, const scalar_t epsilonk, cons
 void lsearchk_cgdescent_t::update(state_t& state, const scalar_t epsilonk, const scalar_t theta,
                                   const int max_iterations) const
 {
-    auto& a = state.a;
-    auto& b = state.b;
-    auto& c = state.c;
-
-    if (c.t <= a.t || c.t >= b.t)
+    if (state.c.t <= state.a.t || state.c.t >= state.b.t)
     {
         return;
     }
-    else if (!c.has_descent())
+    else if (!state.c.has_descent())
     {
-        b = c;
+        state.b = state.c;
     }
-    else if (c.has_approx_armijo(state.state0, epsilonk))
+    else if (state.c.has_approx_armijo(state.state0, epsilonk))
     {
-        a = c;
+        state.a = state.c;
     }
     else
     {
-        b = c;
+        state.b = state.c;
         updateU(state, epsilonk, theta, max_iterations);
     }
 }
@@ -125,30 +119,27 @@ void lsearchk_cgdescent_t::update(state_t& state, const scalar_t epsilonk, const
 void lsearchk_cgdescent_t::bracket(state_t& state, const scalar_t ro, const scalar_t epsilonk, const scalar_t theta,
                                    const int max_iterations) const
 {
-    auto& a      = state.a;
-    auto& b      = state.b;
-    auto& c      = state.c;
-    auto  last_a = a;
+    auto last_a = state.a;
 
-    for (int i = 0; i < max_iterations && static_cast<bool>(c); ++i)
+    for (int i = 0; i < max_iterations && static_cast<bool>(state.c); ++i)
     {
-        if (!c.has_descent())
+        if (!state.c.has_descent())
         {
-            a = last_a;
-            b = c;
+            state.a = last_a;
+            state.b = state.c;
             return;
         }
-        else if (!c.has_approx_armijo(state.state0, epsilonk))
+        else if (!state.c.has_approx_armijo(state.state0, epsilonk))
         {
-            a = state.state0;
-            b = c;
+            state.a = state.state0;
+            state.b = state.c;
             updateU(state, epsilonk, theta, max_iterations);
             return;
         }
         else
         {
-            last_a = c;
-            move(state, ro * c.t);
+            last_a = state.c;
+            move(state, ro * state.c.t);
         }
     }
 }
@@ -176,7 +167,8 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
         return static_cast<bool>(state);
     }
 
-    const auto move_update_and_check_done = [&](const auto t)
+    const auto move_update_and_check_done =
+        [&, c1 = c1, c2 = c2, theta = theta, max_iterations = max_iterations](const auto t)
     {
         if (!std::isfinite(t))
         {
