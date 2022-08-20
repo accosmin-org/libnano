@@ -56,7 +56,7 @@ using namespace nano;
     return vectors;
 }
 
-[[maybe_unused]] static auto check_gradient(const function_t& function, int trials = 100, scalar_t epsilon_factor = 5.0)
+[[maybe_unused]] static auto check_gradient(const function_t& function, int trials = 100, scalar_t epsilon_factor = 7.0)
 {
     for (auto trial = 0; trial < trials; ++trial)
     {
