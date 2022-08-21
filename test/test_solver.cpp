@@ -308,8 +308,39 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         const auto state = check_minimize(*solver, solver_id, *function, x0);
                         fvalues.push_back(state.f);
                         epsilons.push_back(1e-6);
+                        log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=" << lsearch0_id
+                                   << ", lsearchk=" << lsearchk_id << ", f=" << state.f << ".";
                     }
                 }
+            }
+
+            check_consistency(*function, fvalues, epsilons);
+        }
+    }
+}
+
+UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
+{
+    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
+    {
+        UTEST_REQUIRE(function);
+
+        for (const auto& x0 : make_random_x0s(*function))
+        {
+            std::vector<scalar_t> fvalues, epsilons;
+            for (const auto& solver_id : make_best_smooth_solver_ids())
+            {
+                const auto solver = solver_t::all().get(solver_id);
+                UTEST_REQUIRE(solver);
+
+                UTEST_REQUIRE_NOTHROW(solver->lsearch0("cgdescent"));
+                UTEST_REQUIRE_NOTHROW(solver->lsearchk("cgdescent"));
+
+                const auto state = check_minimize(*solver, solver_id, *function, x0, 10000, 1e-10);
+                fvalues.push_back(state.f);
+                epsilons.push_back(1e-9);
+                log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=cgdescent"
+                           << ", lsearchk=cgdescent, f=" << state.f << ".";
             }
 
             check_consistency(*function, fvalues, epsilons);
