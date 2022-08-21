@@ -39,6 +39,7 @@ using namespace nano;
     if (function.name() == "Qing[4D]")
     {
         append(0.4958921077711123, 0.9830812076917252, -0.5192140013563706, 0.0439401045948384);
+        append(0.4708653254587751, -0.4933506021493146, 0.6892169862294326, -0.0050907711577802);
     }
 
     // bug: cgdescent line-search fails here
@@ -56,12 +57,13 @@ using namespace nano;
     return vectors;
 }
 
-[[maybe_unused]] static auto check_gradient(const function_t& function, int trials = 100, scalar_t epsilon_factor = 7.0)
+[[maybe_unused]] static auto check_gradient(const function_t& function, const int trials = 100,
+                                            const scalar_t epsilon = 1e-8)
 {
     for (auto trial = 0; trial < trials; ++trial)
     {
         const auto x = make_random_x0(function);
-        UTEST_CHECK_LESS(grad_accuracy(function, x), epsilon_factor * epsilon2<scalar_t>());
+        UTEST_CHECK_LESS(grad_accuracy(function, x, epsilon), epsilon);
     }
 }
 

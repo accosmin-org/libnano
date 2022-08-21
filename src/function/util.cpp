@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
+scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, const scalar_t desired_accuracy)
 {
     assert(x.size() == function.size());
 
@@ -20,7 +20,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
     // finite-difference approximated gradient
     //      see "Numerical optimization", Nocedal & Wright, 2nd edition, p.197
     auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto dx : {1e-8, 2e-8, 5e-8, 7e-8, 1e-7, 2e-7, 5e-7, 7e-7, 1e-6})
+    for (const auto dx : {1e-8, 2e-8, 7e-9, 5e-8, 5e-9, 7e-8, 2e-9, 1e-7, 1e-9})
     {
         xp = x;
         xn = x;
@@ -42,10 +42,14 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
             assert(std::isfinite(gx_approx(i)));
         }
 
-        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>());
+        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>()) / (1.0 + std::fabs(fx));
+        if (dg < desired_accuracy)
+        {
+            break;
+        }
     }
 
-    return dg / (1 + std::fabs(fx));
+    return dg;
 }
 
 bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)

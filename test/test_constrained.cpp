@@ -37,7 +37,10 @@ static void check_penalty(const function_t& function, bool expected_convexity, b
     {
         penalty_function.penalty(penalty);
 
-        check_gradient(penalty_function);
+        const auto trials  = 100;
+        const auto epsilon = 1e-7;
+
+        check_gradient(penalty_function, trials, epsilon);
         UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), 0.0);
         UTEST_CHECK_EQUAL(penalty_function.convex(), expected_convexity);
         UTEST_CHECK_EQUAL(penalty_function.smooth(), expected_smoothness);
@@ -135,7 +138,8 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
     }
 }
 
-static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
+static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
+                                 const int trials = 5)
 {
     auto lsolver  = solver_linear_penalty_t{};
     auto qsolver  = solver_quadratic_penalty_t{};
@@ -152,7 +156,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
-        for (tensor_size_t trial = 0; trial < 10; ++trial)
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
         {
             check_minimize(lsolver, *ref_solver, function, xbest, fbest, 1e-4);
         }
@@ -163,7 +167,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
-        for (tensor_size_t trial = 0; trial < 10; ++trial)
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
         {
             check_minimize(qsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }
@@ -174,7 +178,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
 
         const auto ref_solver = make_solver(solver_id);
-        for (tensor_size_t trial = 0; trial < 10; ++trial)
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
         {
             check_minimize(lqsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }

@@ -7,7 +7,7 @@ namespace nano
     ///
     /// \brief compute the gradient accuracy (given vs. central finite difference approximation).
     ///
-    NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x);
+    NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_t desired_epsilon = 0.0);
 
     ///
     /// \brief check if the function is convex along the [x1, x2] line.
