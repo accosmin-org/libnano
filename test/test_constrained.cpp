@@ -102,24 +102,23 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
 }
 
 static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
-                           const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
+                           const vector_t& x0, const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
 {
-    const auto x0 = make_random_x0(function, 5.0);
-
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(12) << "x0=" << x0.transpose() << "." << std::endl;
+    stream << std::fixed << std::setprecision(16) << function.name() << "\n"
+           << ":x0=[" << x0.transpose() << "]\n";
 
     solver.logger(
         [&](const auto& state)
         {
-            stream << std::fixed << std::setprecision(12) << state << ",x=" << state.x.transpose() << "." << std::endl;
+            stream << state << ",x=" << state.x.transpose() << "." << std::endl;
             return true;
         });
 
     penalty_solver.logger(
         [&](const auto& state)
         {
-            stream << std::fixed << std::setprecision(12) << state << ",x=" << state.x.transpose() << "." << std::endl;
+            stream << state << ",x=" << state.x.transpose() << "." << std::endl;
             return true;
         });
 
@@ -135,6 +134,15 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
     if (old_n_failures != utest_n_failures.load())
     {
         std::cout << stream.str() << std::endl;
+    }
+}
+
+static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
+                           const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
+{
+    for (const auto& x0 : make_random_x0s(function, 5.0))
+    {
+        check_minimize(penalty_solver, solver, function, x0, xbest, fbest, epsilon);
     }
 }
 

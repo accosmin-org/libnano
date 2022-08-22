@@ -54,6 +54,12 @@ using namespace nano;
         append(0.817256233948);
     }
 
+    // bug: LBFGS fails here (constrained objective2)
+    if (function.name() == "objective2[2D]")
+    {
+        append(-2.278061902088, 3.148238354814);
+    }
+
     return vectors;
 }
 
