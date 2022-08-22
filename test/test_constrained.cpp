@@ -139,7 +139,7 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
 }
 
 static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
-                                 const int trials = 5)
+                                 const int trials = 1)
 {
     auto lsolver  = solver_linear_penalty_t{};
     auto qsolver  = solver_quadratic_penalty_t{};
@@ -698,50 +698,61 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     check_penalties(constrained, make_x(-0.2, +0.8, 0.1), false);
 }
 
-UTEST_CASE(constrained_quadratic)
+UTEST_CASE(constrained_quadratic2x2_inequality)
 {
     auto q2 = make_x(1.0, 1.0);
     auto q3 = make_x(1.0, 1.0, 1.0);
-    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
 
     auto P2x2 = make_X<2>(1.0, 2.0, 2.0, 1.0);
     auto P2x3 = make_X<2>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
     auto P3x2 = make_X<3>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
 
+    auto constrained = sum_function_t{2};
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P2x2, q3, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P2x3, q2, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x2, q2, 1.0}));
+    UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P2x2, q2, 1.0}));
+    UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+
+    check_penalties(constrained, false, true);
+}
+
+UTEST_CASE(constrained_quadratic3x3_inequality)
+{
+    auto q3 = make_x(1.0, 1.0, 1.0);
+    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
+
     auto P3x3 = make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
     auto P3x4 = make_X<3>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
     auto P4x3 = make_X<4>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 
-    {
-        auto constrained = sum_function_t{2};
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P2x2, q3, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P2x3, q2, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x2, q2, 1.0}));
-        UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P2x2, q2, 1.0}));
-        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    auto constrained = sum_function_t{3};
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x3, q4, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x4, q3, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P4x3, q3, 1.0}));
+    UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P3x3, q3, 1.0}));
+    UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
 
-        check_penalties(constrained, false, true);
-    }
-    {
-        auto constrained = sum_function_t{3};
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x3, q4, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x4, q3, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P4x3, q3, 1.0}));
-        UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P3x3, q3, 1.0}));
-        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    check_penalties(constrained, true, true);
+}
 
-        check_penalties(constrained, true, true);
-    }
-    {
-        auto constrained = sum_function_t{3};
-        UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P3x3, q4, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P3x4, q3, 1.0}));
-        UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P4x3, q3, 1.0}));
-        UTEST_CHECK(constrained.constrain(quadratic_equality_t{P3x3, q3, 1.0}));
-        UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+UTEST_CASE(constrained_quadratic3x3_equality)
+{
+    auto q3 = make_x(1.0, 1.0, 1.0);
+    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
 
-        check_penalties(constrained, false, true);
-    }
+    auto P3x3 = make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
+    auto P3x4 = make_X<3>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P4x3 = make_X<4>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+
+    auto constrained = sum_function_t{3};
+    UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P3x3, q4, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P3x4, q3, 1.0}));
+    UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P4x3, q3, 1.0}));
+    UTEST_CHECK(constrained.constrain(quadratic_equality_t{P3x3, q3, 1.0}));
+    UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+
+    check_penalties(constrained, false, true);
 }
 
 UTEST_CASE(minimize_objective1)
