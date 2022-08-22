@@ -42,6 +42,12 @@ using namespace nano;
         append(0.4708653254587751, -0.4933506021493146, 0.6892169862294326, -0.0050907711577802);
     }
 
+    // bug: CGD+lemarechal solver fails here
+    if (function.name() == "Rosenbrock[4D]")
+    {
+        append(-0.5950864762215742, 0.6160556733668063, 0.2815843360435921, 0.2692838673927147);
+    }
+
     // bug: cgdescent line-search fails here
     if (function.name() == "Dixon-Price[2D]")
     {
