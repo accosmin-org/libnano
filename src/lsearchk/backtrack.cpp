@@ -4,6 +4,7 @@ using namespace nano;
 
 lsearchk_backtrack_t::lsearchk_backtrack_t()
 {
+    type(lsearch_type::armijo);
     register_parameter(parameter_t::make_enum("lsearchk::backtrack::interpolation", interpolation_type::cubic));
     register_parameter(parameter_t::make_scalar("lsearchk::backtrack::safeguard", 0.0, LT, 0.1, LT, 0.5));
 }

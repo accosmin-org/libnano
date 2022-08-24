@@ -74,3 +74,36 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
     //     in the function value when close to numerical precision!
     return get(state0, state) && state;
 }
+
+void lsearchk_t::log(const solver_state_t& state0, const solver_state_t& state) const
+{
+    if (m_logger)
+    {
+        m_logger(state0, state);
+    }
+}
+
+void lsearchk_t::logger(const lsearchk_t::logger_t& logger)
+{
+    m_logger = logger;
+}
+
+void lsearchk_t::type(lsearch_type type)
+{
+    m_type = type;
+}
+
+scalar_t lsearchk_t::stpmin()
+{
+    return scalar_t(10) * std::numeric_limits<scalar_t>::epsilon();
+}
+
+scalar_t lsearchk_t::stpmax()
+{
+    return scalar_t(1) / stpmin();
+}
+
+lsearch_type lsearchk_t::type() const
+{
+    return m_type;
+}

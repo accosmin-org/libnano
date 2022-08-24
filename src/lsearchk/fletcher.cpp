@@ -5,6 +5,7 @@ using namespace nano;
 
 lsearchk_fletcher_t::lsearchk_fletcher_t()
 {
+    type(lsearch_type::strong_wolfe);
     register_parameter(parameter_t::make_enum("lsearchk::fletcher::interpolation", interpolation_type::cubic));
     register_parameter(parameter_t::make_scalar("lsearchk::fletcher::tau1", 2, LT, 9.0, LT, 1e+6));
     register_parameter(parameter_t::make_scalar_pair("lsearchk::fletcher::tau23", 0, LT, 0.1, LT, 0.5, LE, 0.5));

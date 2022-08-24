@@ -67,7 +67,7 @@ namespace nano
         ///     - either the function value decreases
         ///     - or the optimization stops (e.g. convergence reached, line-search failed, user requested termination).
         ///
-        /// NB: the solver ignores the line-search attributes if not monotonic.
+        /// NB: the solver usually doesn't use line-search if not monotonic.
         ///
         bool monotonic() const;
 
@@ -82,25 +82,10 @@ namespace nano
         const auto& lsearchk_id() const { return m_lsearchk_id; }
 
     protected:
-        ///
-        /// \brief create a copy of the line-search utility.
-        ///
-        lsearch_t make_lsearch() const;
-
-        ///
-        /// \brief log the current optimization state (if the logger is provided).
-        ///
-        bool log(solver_state_t&) const;
-
-        ///
-        /// \brief check if the optimization is done (convergence or error) after an iteration.
-        ///
-        bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
-
-        ///
-        /// \brief sets the monotonicity.
-        ///
         void monotonic(bool);
+        lsearch_t make_lsearch() const;
+        bool log(solver_state_t&) const;
+        bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
 
         virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
 

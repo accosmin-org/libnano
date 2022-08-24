@@ -3,22 +3,10 @@
 
 using namespace nano;
 
-lsearchk_morethuente_t::lsearchk_morethuente_t()
+static void dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, scalar_t& fy, scalar_t& dy, scalar_t& stp,
+                   const scalar_t& fp, const scalar_t& dp, bool& brackt, const scalar_t stpmin, const scalar_t stpmax,
+                   const scalar_t delta)
 {
-    register_parameter(parameter_t::make_scalar("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));
-}
-
-rlsearchk_t lsearchk_morethuente_t::clone() const
-{
-    return std::make_unique<lsearchk_morethuente_t>(*this);
-}
-
-void lsearchk_morethuente_t::dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, scalar_t& fy,
-                                    scalar_t& dy, scalar_t& stp, const scalar_t& fp, const scalar_t& dp, bool& brackt,
-                                    const scalar_t stpmin, const scalar_t stpmax) const
-{
-    const auto delta = parameter("lsearchk::morethuente::delta").value<scalar_t>();
-
     scalar_t stpc = 0, stpq = 0, stpf = 0;
 
     const auto sgnd = dp * (dx / std::fabs(dx));
@@ -146,10 +134,22 @@ void lsearchk_morethuente_t::dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, s
     stp = stpf;
 }
 
+lsearchk_morethuente_t::lsearchk_morethuente_t()
+{
+    type(lsearch_type::strong_wolfe);
+    register_parameter(parameter_t::make_scalar("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));
+}
+
+rlsearchk_t lsearchk_morethuente_t::clone() const
+{
+    return std::make_unique<lsearchk_morethuente_t>(*this);
+}
+
 bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
+    const auto delta          = parameter("lsearchk::morethuente::delta").value<scalar_t>();
 
     const auto ftol = c1;
     const auto gtol = c2;
@@ -210,7 +210,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
             auto gxm = gx - gtest;
             auto gym = gy - gtest;
 
-            dcstep(stx, fxm, gxm, sty, fym, gym, stp, fm, gm, brackt, stmin, stmax);
+            dcstep(stx, fxm, gxm, sty, fym, gym, stp, fm, gm, brackt, stmin, stmax, delta);
 
             fx = fxm + stx * gtest;
             fy = fym + sty * gtest;
@@ -219,7 +219,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         }
         else
         {
-            dcstep(stx, fx, gx, sty, fy, gy, stp, f, g, brackt, stmin, stmax);
+            dcstep(stx, fx, gx, sty, fy, gy, stp, f, g, brackt, stmin, stmax, delta);
         }
 
         // Decide if a bisection step is needed

@@ -11,6 +11,18 @@ namespace nano
     using rlsearchk_t        = lsearchk_factory_t::trobject;
 
     ///
+    /// \brief the objective type of the line-search procedure.
+    ///
+    enum class lsearch_type
+    {
+        none,               ///<
+        armijo,             ///< sufficient decrease of the function value (Armijo)
+        wolfe,              ///< armijo + decrease of the slope (Wolfe)
+        strong_wolfe,       ///< armijo + small slow (Wolfe)
+        wolfe_approx_wolfe, ///< armijo + wolfe or approximated armijo + wolfe (see CG_DESCENT)
+    };
+
+    ///
     /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.
     ///
     /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
@@ -46,37 +58,32 @@ namespace nano
         ///
         /// \brief set the logging operator.
         ///
-        void logger(const logger_t& logger) { m_logger = logger; }
+        void logger(const logger_t& logger);
 
         ///
         /// \brief minimum allowed line-search step.
         ///
-        static scalar_t stpmin() { return scalar_t(10) * std::numeric_limits<scalar_t>::epsilon(); }
+        static scalar_t stpmin();
 
         ///
         /// \brief maximum allowed line-search step.
         ///
-        static scalar_t stpmax() { return scalar_t(1) / stpmin(); }
+        static scalar_t stpmax();
+
+        ///
+        /// \brief returns the objective optimized by the line-search implementation.
+        ///
+        lsearch_type type() const;
 
     protected:
-        ///
-        /// \brief compute the step size given the previous state and the current state
-        ///
-        virtual bool get(const solver_state_t& state0, solver_state_t&) const = 0;
+        void type(lsearch_type);
+        void log(const solver_state_t& state0, const solver_state_t& state) const;
 
-        ///
-        /// \brief log the current line-search trial length (if the logger is provided)
-        ///
-        void log(const solver_state_t& state0, const solver_state_t& state) const
-        {
-            if (m_logger)
-            {
-                m_logger(state0, state);
-            }
-        }
+        virtual bool get(const solver_state_t& state0, solver_state_t&) const = 0;
 
     private:
         // attributes
-        logger_t m_logger; ///<
+        logger_t     m_logger;                   ///<
+        lsearch_type m_type{lsearch_type::none}; ///<
     };
 } // namespace nano

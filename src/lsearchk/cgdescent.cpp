@@ -17,6 +17,7 @@ static auto initial_params(const estimator_t& estimator)
 
 lsearchk_cgdescent_t::lsearchk_cgdescent_t()
 {
+    type(lsearch_type::wolfe_approx_wolfe);
     register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::epsilon", 0, LT, 1e-6, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::theta", 0, LT, 0.5, LT, 1));
     register_parameter(parameter_t::make_scalar("lsearchk::cgdescent::gamma", 0, LT, 0.66, LT, 1));

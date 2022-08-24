@@ -21,15 +21,6 @@ static auto get_lsearch(const string_t& id)
     return lsearch;
 }
 
-enum class lsearch_type
-{
-    fletcher,
-    backtrack,
-    lemarechal,
-    morethuente,
-    cgdescent_wolfe_approx_wolfe,
-};
-
 static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
 {
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
@@ -45,9 +36,8 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
         });
 }
 
-static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function,
-                 const lsearch_type type, const vector_t& x0, const scalar_t t0,
-                 const std::tuple<scalar_t, scalar_t>& c12)
+static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const vector_t& x0,
+                 const scalar_t t0, const std::tuple<scalar_t, scalar_t>& c12)
 {
     UTEST_REQUIRE_NOTHROW(lsearch->parameter("lsearchk::tolerance") = c12);
 
@@ -75,26 +65,21 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
     UTEST_CHECK_GREATER(state.t, 0.0);
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
 
-    switch (type)
+    switch (lsearch->type())
     {
-    case lsearch_type::backtrack: UTEST_CHECK(state.has_armijo(state0, c1)); break;
+    case lsearch_type::armijo: UTEST_CHECK(state.has_armijo(state0, c1)); break;
 
-    case lsearch_type::lemarechal:
+    case lsearch_type::wolfe:
         UTEST_CHECK(state.has_armijo(state0, c1));
         UTEST_CHECK(state.has_wolfe(state0, c2));
         break;
 
-    case lsearch_type::morethuente:
+    case lsearch_type::strong_wolfe:
         UTEST_CHECK(state.has_armijo(state0, c1));
         UTEST_CHECK(state.has_strong_wolfe(state0, c2));
         break;
 
-    case lsearch_type::fletcher:
-        UTEST_CHECK(state.has_armijo(state0, c1));
-        UTEST_CHECK(state.has_strong_wolfe(state0, c2));
-        break;
-
-    case lsearch_type::cgdescent_wolfe_approx_wolfe:
+    case lsearch_type::wolfe_approx_wolfe:
         UTEST_CHECK((state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
                     (state.has_approx_armijo(state0, cgdescent_epsilon() * std::fabs(state0.f)) &&
                      state.has_approx_wolfe(state0, c1, c2)));
@@ -109,8 +94,7 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
     }
 }
 
-static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function,
-                 const lsearch_type type)
+static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function)
 {
     for (const auto& x0 : make_random_x0s(function))
     {
@@ -120,10 +104,10 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
                  {1e-1, 9e-1}
         })
         {
-            test(lsearch, lsearch_id, function, type, x0, 1e-1, c12);
-            test(lsearch, lsearch_id, function, type, x0, 3e-1, c12);
-            test(lsearch, lsearch_id, function, type, x0, 1e+0, c12);
-            test(lsearch, lsearch_id, function, type, x0, 3e+1, c12);
+            test(lsearch, lsearch_id, function, x0, 1e-1, c12);
+            test(lsearch, lsearch_id, function, x0, 3e-1, c12);
+            test(lsearch, lsearch_id, function, x0, 1e+0, c12);
+            test(lsearch, lsearch_id, function, x0, 3e+1, c12);
         }
     }
 }
@@ -152,7 +136,7 @@ UTEST_CASE(backtrack_cubic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::backtrack);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -164,7 +148,7 @@ UTEST_CASE(backtrack_quadratic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::backtrack);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -176,7 +160,7 @@ UTEST_CASE(backtrack_bisection)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::backtrack);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -188,7 +172,7 @@ UTEST_CASE(lemarechal_cubic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::lemarechal);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -200,7 +184,7 @@ UTEST_CASE(lemarechal_quadratic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::lemarechal);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -212,7 +196,7 @@ UTEST_CASE(lemarechal_bisection)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::lemarechal);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -223,7 +207,7 @@ UTEST_CASE(morethuente)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::morethuente);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -235,7 +219,7 @@ UTEST_CASE(fletcher_cubic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::fletcher);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -247,7 +231,7 @@ UTEST_CASE(fletcher_quadratic)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::fletcher);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -259,7 +243,7 @@ UTEST_CASE(fletcher_bisection)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::fletcher);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
@@ -270,7 +254,7 @@ UTEST_CASE(cgdescent)
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function, lsearch_type::cgdescent_wolfe_approx_wolfe);
+        test(lsearch, lsearch_id, *function);
     }
 }
 
