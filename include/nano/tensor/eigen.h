@@ -2,6 +2,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <nano/core/random.h>
 #include <type_traits>
 
 namespace nano
@@ -98,6 +99,32 @@ namespace nano
 
     template <class T>
     inline constexpr bool is_eigen_v = is_eigen<T>::value;
+
+    ///
+    /// \brief create a vector and fill it with random values uniformly distributed in the given range.
+    ///
+    template <typename tscalar, typename tscalar_value = tscalar>
+    auto make_random_vector(const Eigen::Index rows, const tscalar_value min_value = -1,
+                            const tscalar_value max_value = +1, const seed_t seed = seed_t{})
+    {
+        tensor_vector_t<tscalar> vector(rows);
+        urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(vector), end(vector),
+              make_rng(seed));
+        return vector;
+    }
+
+    ///
+    /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
+    ///
+    template <typename tscalar, typename tscalar_value = tscalar>
+    auto make_random_matrix(const Eigen::Index rows, const Eigen::Index cols, const tscalar_value min_value = -1,
+                            const tscalar_value max_value = +1, const seed_t seed = seed_t{})
+    {
+        tensor_matrix_t<tscalar> matrix(rows, cols);
+        urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(matrix), end(matrix),
+              make_rng(seed));
+        return matrix;
+    }
 
     ///
     /// \brief returns true if the two Eigen vectors or matrices are close.

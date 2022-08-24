@@ -200,7 +200,7 @@ namespace nano
         ///
         /// \brief set all elements to random values in the [min, max] range.
         ///
-        void random(tscalar min = -1, tscalar max = +1) { random(array(), min, max); }
+        void random(tscalar min = -1, tscalar max = +1, seed_t seed = seed_t{}) { random(array(), min, max, seed); }
 
         ///
         /// \brief set all elements in an arithmetic progression from min to max.
@@ -542,10 +542,10 @@ namespace nano
 
     private:
         template <typename tarray>
-        static void random(tarray&& array, tscalar min, tscalar max)
+        static void random(tarray&& array, tscalar min, tscalar max, seed_t seed)
         {
             assert(min < max);
-            urand(min, max, array.data(), array.data() + array.size(), make_rng());
+            urand(min, max, array.data(), array.data() + array.size(), make_rng(seed));
         }
 
         template <typename tdata, typename... tindices>
@@ -718,11 +718,11 @@ namespace nano
     /// \brief create a tensor and fill it with random values.
     ///
     template <typename tscalar, size_t trank, typename tscalar_value = tscalar>
-    auto make_random_tensor(const tensor_dims_t<trank>& dims, tscalar_value min_value = -1,
-                            tscalar_value max_value = +1)
+    auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
+                            const tscalar_value max_value = +1, const seed_t seed = seed_t{})
     {
         tensor_mem_t<tscalar, trank> tensor(dims);
-        tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value));
+        tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), seed);
         return tensor;
     } // LCOV_EXCL_LINE
 

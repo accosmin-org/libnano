@@ -29,12 +29,6 @@ using namespace nano;
         append(0.6524579797097991, 0.3700950306557635, -0.1710712483548298, -0.1947479784347773);
     }
 
-    // bug: OSGA solver fails here
-    if (function.name() == "Kinks[4D]")
-    {
-        append(0.2545247188178488, -0.6632348569872683, -0.6260742327486718, 0.5950229544941097);
-    }
-
     // bug: BFGS+backtrack solver fails here
     if (function.name() == "Qing[4D]")
     {

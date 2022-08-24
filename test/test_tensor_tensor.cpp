@@ -692,4 +692,53 @@ UTEST_CASE(mem_from_map)
     }
 }
 
+UTEST_CASE(make_random)
+{
+    for (auto trial = 0; trial < 100; ++trial)
+    {
+        const auto min = trial - 1;
+        const auto max = trial + 7;
+
+        const auto tensor = make_random_tensor<double>(make_dims(3, 4), min, max);
+        UTEST_CHECK_EQUAL(tensor.dims(), make_dims(3, 4));
+        UTEST_CHECK_LESS_EQUAL(min, tensor.min());
+        UTEST_CHECK_LESS_EQUAL(tensor.max(), max);
+
+        const auto vector = make_random_vector<double>(100, min, max);
+        UTEST_CHECK_EQUAL(vector.size(), 100);
+        UTEST_CHECK_LESS_EQUAL(min, vector.minCoeff());
+        UTEST_CHECK_LESS_EQUAL(vector.maxCoeff(), max);
+
+        const auto matrix = make_random_matrix<double>(10, 11, min, max);
+        UTEST_CHECK_EQUAL(matrix.rows(), 10);
+        UTEST_CHECK_EQUAL(matrix.cols(), 11);
+        UTEST_CHECK_LESS_EQUAL(min, matrix.minCoeff());
+        UTEST_CHECK_LESS_EQUAL(matrix.maxCoeff(), max);
+    }
+}
+
+UTEST_CASE(make_random_fixed_seed)
+{
+    const auto min = -1.0;
+    const auto max = +1.0;
+
+    const auto tensor0 = make_random_tensor<double>(make_dims(3, 4), min, max, seed_t{});
+    const auto tensor1 = make_random_tensor<double>(make_dims(3, 4), min, max, seed_t{42U});
+    const auto tensor2 = make_random_tensor<double>(make_dims(3, 4), min, max, seed_t{42U});
+    UTEST_CHECK_NOT_EQUAL(tensor0, tensor1);
+    UTEST_CHECK_EQUAL(tensor1, tensor2);
+
+    const auto vector0 = make_random_vector<double>(100, min, max, seed_t{});
+    const auto vector1 = make_random_vector<double>(100, min, max, seed_t{17U});
+    const auto vector2 = make_random_vector<double>(100, min, max, seed_t{17U});
+    UTEST_CHECK_NOT_EQUAL(vector0, vector1);
+    UTEST_CHECK_EQUAL(vector1, vector2);
+
+    const auto matrix0 = make_random_matrix<double>(10, 11, min, max, seed_t{});
+    const auto matrix1 = make_random_matrix<double>(10, 11, min, max, seed_t{11U});
+    const auto matrix2 = make_random_matrix<double>(10, 11, min, max, seed_t{11U});
+    UTEST_CHECK_NOT_EQUAL(matrix0, matrix1);
+    UTEST_CHECK_EQUAL(matrix1, matrix2);
+}
+
 UTEST_END_MODULE()

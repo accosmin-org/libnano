@@ -1,11 +1,13 @@
 #include <nano/core/stats.h>
 #include <nano/function/benchmark/kinks.h>
+#include <nano/tensor/tensor.h>
 
 using namespace nano;
 
 function_kinks_t::function_kinks_t(tensor_size_t dims)
     : benchmark_function_t("Kinks", dims)
-    , m_kinks(matrix_t::Random(static_cast<tensor_size_t>(std::sqrt(dims)), dims))
+    , m_kinks(make_random_matrix<scalar_t>(std::max(tensor_size_t(1), static_cast<tensor_size_t>(std::sqrt(dims))),
+                                           dims, -1.0, +1.0, seed_t{42U}))
 {
     convex(true);
     smooth(false);

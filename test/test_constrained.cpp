@@ -157,7 +157,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
     {
         if (!linear_penalty_function_t{function}.convex())
         {
-            // NB: cannot solver non-convex non-smooth problems precisely!
+            // NB: cannot solve non-convex non-smooth problems precisely!
             continue;
         }
 
@@ -170,7 +170,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"lbfgs"})
+    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
 
@@ -181,7 +181,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"lbfgs"})
+    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
 
