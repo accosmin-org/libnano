@@ -54,6 +54,12 @@ using namespace nano;
         append(0.817256233948);
     }
 
+    // bug: LBFGS fails here (constrained objective1)
+    if (function.name() == "objective1[2D]")
+    {
+        append(0.4020651394102064, -0.7157148180273429);
+    }
+
     // bug: LBFGS fails here (constrained objective2)
     if (function.name() == "objective2[2D]")
     {

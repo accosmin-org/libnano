@@ -10,12 +10,6 @@ using namespace nano;
     UTEST_REQUIRE(solver);
     solver->parameter("solver::epsilon")   = epsilon;
     solver->parameter("solver::max_evals") = max_evals;
-    solver->logger(
-        [](const solver_state_t& state)
-        {
-            std::cout << state << ".\n";
-            return true;
-        });
     return solver;
 }
 

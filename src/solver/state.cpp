@@ -55,7 +55,7 @@ std::ostream& nano::operator<<(std::ostream& os, solver_status status)
 
 std::ostream& nano::operator<<(std::ostream& os, const solver_state_t& state)
 {
-    return os << "i=" << state.inner_iters << "|" << state.outer_iters << ",calls=" << state.fcalls << "|"
+    return os << "i=" << state.outer_iters << "|" << state.inner_iters << ",calls=" << state.fcalls << "|"
               << state.gcalls << ",f=" << state.f << ",g=" << state.convergence_criterion() << ",p=" << state.p.sum()
               << "[" << state.status << "]";
 }
