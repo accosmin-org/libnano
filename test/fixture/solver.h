@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-[[maybe_unused]] inline auto make_solver(const char* name = "cgd", scalar_t epsilon = 1e-8, int max_evals = 100)
+[[maybe_unused]] inline auto make_solver(const char* name = "cgd", scalar_t epsilon = 1e-8, int max_evals = 10000)
 {
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);
