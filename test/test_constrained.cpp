@@ -91,9 +91,8 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     check_penalty<linear_quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
-[[maybe_unused]] static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver,
-                                            const function_t& function, const vector_t& x0, const vector_t& xbest,
-                                            const scalar_t fbest, const scalar_t epsilon)
+static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
+                           const vector_t& x0, const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
 {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
@@ -105,7 +104,7 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     penalty_solver.logger(
         [&](const auto& state)
         {
-            stream << state << ",x=" << state.x.transpose() << "." << std::endl;
+            stream << ">" << state << ",x=" << state.x.transpose() << "." << std::endl;
             return true;
         });
 
@@ -124,9 +123,8 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     }
 }
 
-[[maybe_unused]] static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver,
-                                            const function_t& function, const vector_t& xbest, const scalar_t fbest,
-                                            const scalar_t epsilon)
+static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
+                           const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
 {
     for (const auto& x0 : make_random_x0s(function, 5.0))
     {
@@ -134,12 +132,12 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     }
 }
 
-[[maybe_unused]] static void check_penalty_solver(const function_t& function, const vector_t& xbest,
-                                                  const scalar_t fbest, const int trials = 1)
+static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
+                                 const int trials = 1)
 {
     auto lsolver  = solver_linear_penalty_t{};
     auto qsolver  = solver_quadratic_penalty_t{};
-    auto lqsolver = solver_linear_quadratic_penalty_t{};
+    // auto lqsolver = solver_linear_quadratic_penalty_t{};
 
     for (const auto* const solver_id : {"osga", "ellipsoid"})
     {
@@ -169,7 +167,7 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
         }
     }
 
-    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
+    /*for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
 
@@ -178,7 +176,7 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
         {
             check_minimize(lqsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }
-    }
+    }*/
 }
 
 class sum_function_t final : public function_t
@@ -751,7 +749,7 @@ UTEST_CASE(constrained_quadratic3x3_equality)
     check_penalties(constrained, false, true);
 }
 
-/*UTEST_CASE(minimize_objective1)
+UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective1_function_t{};
@@ -797,7 +795,7 @@ UTEST_CASE(minimize_objective4)
     const auto xbest = make_x(1.0, 0.0);
 
     check_penalty_solver(function, xbest, fbest);
-}*/
+}
 
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 // TODO: check that it works with various gamma {2.0, 5.0, 10.0}

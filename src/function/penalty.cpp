@@ -41,7 +41,8 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
         const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
         const auto eq = is_equality(constraint);
 
-        if ((eq && std::fabs(fc) > cutoff) || (!eq && fc > cutoff))
+        (void)cutoff;
+        /*if ((eq && std::fabs(fc) > cutoff) || (!eq && fc > cutoff))
         {
             if (gx != nullptr)
             {
@@ -50,7 +51,8 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
             fx = std::numeric_limits<scalar_t>::infinity();
             break;
         }
-        else if (eq || fc > 0.0)
+        else*/
+        if (eq || fc > 0.0)
         {
             fx += op(fc, gc);
         }

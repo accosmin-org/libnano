@@ -1,5 +1,8 @@
 #include <nano/solver/penalty.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 static auto initial_params(const estimator_t& estimator)
@@ -24,10 +27,10 @@ static auto make_penalty_function(const function_t& function, const scalar_t cut
 
 solver_penalty_t::solver_penalty_t()
 {
-    register_parameter(parameter_t::make_scalar("solver::penalty::eta1", 0.0, LT, 0.1, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::penalty::eta1", 0.0, LT, 0.5, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::penalty::eta2", 1.0, LT, 20.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::cutoff", 0, LT, 1e+3, LE, 1e+10));
-    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-8, LE, 1e-1));
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-6, LE, 1e-1));
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
@@ -39,17 +42,24 @@ void solver_penalty_t::logger(const solver_t::logger_t& logger)
 
 bool solver_penalty_t::done(const solver_state_t& curr_state, solver_state_t& best_state, scalar_t epsilon) const
 {
-    best_state.f = curr_state.f;
-    best_state.x = curr_state.x;
-    best_state.g = curr_state.g;
-    best_state.p = curr_state.p;
+    const auto df = std::fabs(curr_state.f - best_state.f);
+    const auto dx = (curr_state.x - best_state.x).lpNorm<Eigen::Infinity>();
+
+    const auto pimproved = curr_state.p.sum() <= best_state.p.sum();
+    if (pimproved)
+    {
+        best_state.f = curr_state.f;
+        best_state.x = curr_state.x;
+        best_state.g = curr_state.g;
+        best_state.p = curr_state.p;
+    }
     best_state.fcalls += curr_state.fcalls;
     best_state.gcalls += curr_state.gcalls;
     best_state.inner_iters += curr_state.inner_iters;
     best_state.outer_iters++;
 
     auto done = false;
-    if (best_state.p.sum() < epsilon)
+    if (pimproved && df < epsilon && dx < epsilon)
     {
         done              = true;
         best_state.status = solver_status::converged;
@@ -134,16 +144,18 @@ solver_state_t solver_linear_quadratic_penalty_t::minimize(const solver_t& solve
         penalty_function.smoothing(smoothing);
 
         const auto curr_state = solver.minimize(penalty_function, best_state.x);
+        std::cout << std::fixed << std::setprecision(12) << ">penalty=" << penalty << ",smoothing=" << smoothing
+                  << ",pmax=" << curr_state.p.maxCoeff() << std::endl;
         if (done(curr_state, best_state, epsilon))
         {
             break;
         }
 
-        if (curr_state.p.maxCoeff() <= smoothing)
+        if (curr_state.p.maxCoeff() < smoothing && smoothing > epsilon)
         {
             smoothing = eta1 * curr_state.p.maxCoeff();
         }
-        else
+        else if (curr_state.p.sum() > epsilon)
         {
             penalty *= eta2;
         }
