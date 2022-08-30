@@ -7,8 +7,8 @@ using namespace nano;
 
 static void check_minimizer(const function_t& function, const vector_t& optimum)
 {
-    const auto* const solver_id = function.smooth() ? "lbfgs" : "osga";
-    const auto        epsilon   = 1e-9;
+    const auto* const solver_id = function.smooth() ? "lbfgs" : "ellipsoid";
+    const auto        epsilon   = 1e-7;
 
     const auto solver = make_solver(solver_id, epsilon);
     const auto state  = check_minimize(*solver, solver_id, function, make_random_x0(function), 20000, epsilon);
