@@ -25,10 +25,10 @@ static void check_penalty(const function_t& function, bool expected_convexity, b
 
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
-        penalty_function.penalty(penalty);
-
         const auto trials  = 100;
         const auto epsilon = 1e-7;
+
+        penalty_function.penalty(penalty);
 
         check_gradient(penalty_function, trials, epsilon);
         UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), 0.0);
@@ -135,11 +135,10 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
 static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
                                  const int trials = 1)
 {
-    auto lsolver  = solver_linear_penalty_t{};
-    auto qsolver  = solver_quadratic_penalty_t{};
-    // auto lqsolver = solver_linear_quadratic_penalty_t{};
+    auto lsolver = solver_linear_penalty_t{};
+    auto qsolver = solver_quadratic_penalty_t{};
 
-    for (const auto* const solver_id : {"osga", "ellipsoid"})
+    for (const auto* const solver_id : {"ellipsoid"})
     {
         if (!linear_penalty_function_t{function}.convex())
         {
@@ -166,17 +165,6 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
             check_minimize(qsolver, *ref_solver, function, xbest, fbest, 1e-6);
         }
     }
-
-    /*for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
-    {
-        UTEST_NAMED_CASE(scat(function.name(), "_linear_quadratic_penalty_solver_", solver_id));
-
-        const auto ref_solver = make_solver(solver_id);
-        for (auto trial = 0; trial < trials; ++trial)
-        {
-            check_minimize(lqsolver, *ref_solver, function, xbest, fbest, 1e-6);
-        }
-    }*/
 }
 
 class sum_function_t final : public function_t

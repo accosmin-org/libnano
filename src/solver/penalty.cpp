@@ -1,35 +1,27 @@
 #include <nano/solver/penalty.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 static auto initial_params(const estimator_t& estimator)
 {
-    const auto eta1       = estimator.parameter("solver::penalty::eta1").template value<scalar_t>();
-    const auto eta2       = estimator.parameter("solver::penalty::eta2").template value<scalar_t>();
-    const auto cutoff     = estimator.parameter("solver::penalty::cutoff").template value<scalar_t>();
+    const auto eta        = estimator.parameter("solver::penalty::eta").template value<scalar_t>();
     const auto epsilon    = estimator.parameter("solver::penalty::epsilon").template value<scalar_t>();
     const auto penalty0   = estimator.parameter("solver::penalty::penalty0").template value<scalar_t>();
     const auto max_outers = estimator.parameter("solver::penalty::max_outer_iters").template value<tensor_size_t>();
 
-    return std::make_tuple(eta1, eta2, cutoff, epsilon, penalty0, max_outers);
+    return std::make_tuple(eta, epsilon, penalty0, max_outers);
 }
 
 template <typename tpenalty>
-static auto make_penalty_function(const function_t& function, const scalar_t cutoff)
+static auto make_penalty_function(const function_t& function)
 {
     auto penalty_function = tpenalty{function};
-    penalty_function.cutoff(cutoff);
     return penalty_function;
 }
 
 solver_penalty_t::solver_penalty_t()
 {
-    register_parameter(parameter_t::make_scalar("solver::penalty::eta1", 0.0, LT, 0.5, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::penalty::eta2", 1.0, LT, 20.0, LE, 1e+3));
-    register_parameter(parameter_t::make_scalar("solver::penalty::cutoff", 0, LT, 1e+3, LE, 1e+10));
+    register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 10.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-6, LE, 1e-1));
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
@@ -45,7 +37,7 @@ bool solver_penalty_t::done(const solver_state_t& curr_state, solver_state_t& be
     const auto df = std::fabs(curr_state.f - best_state.f);
     const auto dx = (curr_state.x - best_state.x).lpNorm<Eigen::Infinity>();
 
-    const auto pimproved = curr_state.p.sum() <= best_state.p.sum();
+    const auto pimproved = curr_state.p.sum() <= best_state.p.sum() + epsilon;
     if (pimproved)
     {
         best_state.f = curr_state.f;
@@ -77,14 +69,13 @@ bool solver_penalty_t::done(const solver_state_t& curr_state, solver_state_t& be
     return done;
 }
 
-solver_state_t solver_linear_penalty_t::minimize(const solver_t& solver, const function_t& function,
-                                                 const vector_t& x0) const
+solver_state_t solver_penalty_t::minimize(const solver_t& solver, penalty_function_t& penalty_function,
+                                          const vector_t& x0) const
 {
-    [[maybe_unused]] const auto [eta1, eta2, cutoff, epsilon, penalty0, max_outers] = initial_params(*this);
+    const auto [eta, epsilon, penalty0, max_outers] = initial_params(*this);
 
-    auto penalty          = penalty0;
-    auto best_state       = solver_state_t{function, x0};
-    auto penalty_function = make_penalty_function<linear_penalty_function_t>(function, cutoff);
+    auto penalty    = penalty0;
+    auto best_state = solver_state_t{penalty_function.function(), x0};
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
@@ -96,70 +87,22 @@ solver_state_t solver_linear_penalty_t::minimize(const solver_t& solver, const f
             break;
         }
 
-        penalty *= eta2;
+        penalty *= eta;
     }
 
     return best_state;
+}
+
+solver_state_t solver_linear_penalty_t::minimize(const solver_t& solver, const function_t& function,
+                                                 const vector_t& x0) const
+{
+    auto penalty_function = linear_penalty_function_t{function};
+    return solver_penalty_t::minimize(solver, penalty_function, x0);
 }
 
 solver_state_t solver_quadratic_penalty_t::minimize(const solver_t& solver, const function_t& function,
                                                     const vector_t& x0) const
 {
-    [[maybe_unused]] const auto [eta1, eta2, cutoff, epsilon, penalty0, max_outers] = initial_params(*this);
-
-    auto penalty          = penalty0;
-    auto best_state       = solver_state_t{function, x0};
-    auto penalty_function = make_penalty_function<quadratic_penalty_function_t>(function, cutoff);
-
-    for (tensor_size_t outer = 0; outer < max_outers; ++outer)
-    {
-        penalty_function.penalty(penalty);
-
-        const auto curr_state = solver.minimize(penalty_function, best_state.x);
-        if (done(curr_state, best_state, epsilon))
-        {
-            break;
-        }
-
-        penalty *= eta2;
-    }
-
-    return best_state;
-}
-
-solver_state_t solver_linear_quadratic_penalty_t::minimize(const solver_t& solver, const function_t& function,
-                                                           const vector_t& x0) const
-{
-    [[maybe_unused]] const auto [eta1, eta2, cutoff, epsilon, penalty0, max_outers] = initial_params(*this);
-
-    auto penalty          = penalty0;
-    auto best_state       = solver_state_t{function, x0};
-    auto penalty_function = make_penalty_function<linear_quadratic_penalty_function_t>(function, cutoff);
-
-    auto smoothing = best_state.p.maxCoeff();
-
-    for (tensor_size_t outer = 0; outer < max_outers; ++outer)
-    {
-        penalty_function.penalty(penalty);
-        penalty_function.smoothing(smoothing);
-
-        const auto curr_state = solver.minimize(penalty_function, best_state.x);
-        std::cout << std::fixed << std::setprecision(12) << ">penalty=" << penalty << ",smoothing=" << smoothing
-                  << ",pmax=" << curr_state.p.maxCoeff() << std::endl;
-        if (done(curr_state, best_state, epsilon))
-        {
-            break;
-        }
-
-        if (curr_state.p.maxCoeff() < smoothing && smoothing > epsilon)
-        {
-            smoothing = eta1 * curr_state.p.maxCoeff();
-        }
-        else if (curr_state.p.sum() > epsilon)
-        {
-            penalty *= eta2;
-        }
-    }
-
-    return best_state;
+    auto penalty_function = quadratic_penalty_function_t{function};
+    return solver_penalty_t::minimize(solver, penalty_function, x0);
 }

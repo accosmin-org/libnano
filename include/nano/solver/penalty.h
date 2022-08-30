@@ -6,6 +6,8 @@
 namespace nano
 {
     // TODO: implement the penalty method from "A new exact penalty function", by W. Huyer and A. Neumaier, 2003.
+    // TODO: fix "On smoothing exact penalty functions for convex constrained optimization", by M. Pinar, S. Zenios,
+    // 1994
 
     ///
     /// \brief interface for penalty methods to solve constrained optimization problem using a given solver.
@@ -32,7 +34,8 @@ namespace nano
         virtual solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const = 0;
 
     protected:
-        bool done(const solver_state_t& curr_state, solver_state_t& best_state, scalar_t epsilon) const;
+        bool           done(const solver_state_t& curr_state, solver_state_t& best_state, scalar_t epsilon) const;
+        solver_state_t minimize(const solver_t&, penalty_function_t&, const vector_t& x0) const;
 
     private:
         // attributes
@@ -63,22 +66,6 @@ namespace nano
     /// NB: the penalty function is not exact, but it is smooth and thus the optimization is typically very precise.
     ///
     class NANO_PUBLIC solver_quadratic_penalty_t final : public solver_penalty_t
-    {
-    public:
-        ///
-        /// \brief @see solver_penalty_t
-        ///
-        solver_state_t minimize(const solver_t&, const function_t&, const vector_t& x0) const override;
-    };
-
-    ///
-    /// \brief penalty method using the epsilon-smoothed linear quadratic penalty.
-    ///
-    /// see "On smoothing exact penalty functions for convex constrained optimization", by M. Pinar, S. Zenios, 1994
-    ///
-    /// NB: the penalty function is exact and smooth and thus the optimization is typically very precise.
-    ///
-    class NANO_PUBLIC solver_linear_quadratic_penalty_t final : public solver_penalty_t
     {
     public:
         ///

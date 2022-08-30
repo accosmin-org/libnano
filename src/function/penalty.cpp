@@ -30,8 +30,7 @@ static auto smooth(const function_t& function)
 }
 
 template <typename toperator>
-static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op,
-                          const scalar_t cutoff)
+static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
 {
     scalar_t fx = function.vgrad(x, gx);
     vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
@@ -41,17 +40,6 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
         const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
         const auto eq = is_equality(constraint);
 
-        (void)cutoff;
-        /*if ((eq && std::fabs(fc) > cutoff) || (!eq && fc > cutoff))
-        {
-            if (gx != nullptr)
-            {
-                gx->array() = std::numeric_limits<scalar_t>::infinity();
-            }
-            fx = std::numeric_limits<scalar_t>::infinity();
-            break;
-        }
-        else*/
         if (eq || fc > 0.0)
         {
             fx += op(fc, gc);
@@ -66,12 +54,6 @@ penalty_function_t::penalty_function_t(const function_t& function)
     , m_function(function)
 {
     strong_convexity(0.0); // NB: cannot estimate the strong convexity coefficient in general!
-}
-
-penalty_function_t& penalty_function_t::cutoff(scalar_t cutoff)
-{
-    m_cutoff = cutoff;
-    return *this;
 }
 
 penalty_function_t& penalty_function_t::penalty(scalar_t penalty)
@@ -100,7 +82,7 @@ scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) co
         return penalty() * std::fabs(fc);
     };
 
-    return penalty_vgrad(function(), x, gx, op, cutoff());
+    return penalty_vgrad(function(), x, gx, op);
 }
 
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
@@ -123,7 +105,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx)
         return penalty() * fc * fc;
     };
 
-    return penalty_vgrad(function(), x, gx, op, cutoff());
+    return penalty_vgrad(function(), x, gx, op);
 }
 
 linear_quadratic_penalty_function_t::linear_quadratic_penalty_function_t(const function_t& function)
@@ -157,5 +139,5 @@ scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector
         return penalty() * (negative ? (-fc - hepsilon) : (positive ? (+fc - hepsilon) : (fc * fc / (2.0 * epsilon))));
     };
 
-    return penalty_vgrad(function(), x, gx, op, cutoff());
+    return penalty_vgrad(function(), x, gx, op);
 }

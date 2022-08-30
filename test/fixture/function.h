@@ -66,6 +66,12 @@ using namespace nano;
         append(-2.278061902088, 3.148238354814);
     }
 
+    // bug: BFGS fails here (constrained objective3)
+    if (function.name() == "objective3[1D]")
+    {
+        append(1.8100507324793256);
+    }
+
     return vectors;
 }
 

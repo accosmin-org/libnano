@@ -9,13 +9,12 @@ namespace nano
     ///     * f(x) is the objective function to minimize,
     ///     * c > 0 is the penalty term - the higher the better the penalty function approximates
     ///         the original constrained optimization problem,
-    ///     * p(y) is the penalty function with p(y) = 0 whenever y <= 0 and p(y) > 0 otherwise,
+    ///     * p(y) is the penalty function with p(y) = 0 whenever the constraint is not violated and p(y) > 0 otherwise,
     ///     * {h_j(x) == 0} is the set of equality constraints (each treated as two inequalities) and
     ///     * {g_i(x) <= 0} is the set of inequality constraints.
     ///
     /// see "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     ///
-    /// NB: each equality h(x) == 0 is treated as two inequalities: h(x) <= 0 and h(x) >= 0.
     /// NB: the penalty function is set to +infinity when at least one of the penalties is greater than the cutoff.
     /// NB: the cutoff constant forces the penalty function to be bounded whenever the objective function is bounded.
     ///
@@ -28,19 +27,9 @@ namespace nano
         explicit penalty_function_t(const function_t&);
 
         ///
-        /// \brief set the cutoff constant.
-        ///
-        penalty_function_t& cutoff(scalar_t);
-
-        ///
         /// \brief set the penalty term.
         ///
         penalty_function_t& penalty(scalar_t);
-
-        ///
-        /// \brief returns the cutoff constant.
-        ///
-        auto cutoff() const { return m_cutoff; }
 
         ///
         /// \brief returns the penalty term.
@@ -61,7 +50,6 @@ namespace nano
         // attributes
         const function_t& m_function;     ///<
         scalar_t          m_penalty{1.0}; ///<
-        scalar_t          m_cutoff{1e+3}; ///<
     };
 
     ///
