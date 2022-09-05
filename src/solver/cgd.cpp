@@ -123,32 +123,100 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
     return static_cast<bool>(cstate) ? cstate : pstate;
 }
 
-#define NANO_MAKE_CGD_CLONABLE(class_name, id)                                                                         \
-    class_name::class_name()                                                                                           \
-        : solver_cgd_t(id)                                                                                             \
-    {                                                                                                                  \
-    }                                                                                                                  \
-    rsolver_t class_name::clone() const                                                                                \
-    {                                                                                                                  \
-        return std::make_unique<class_name>(*this);                                                                    \
-    }
+solver_cgd_cd_t::solver_cgd_cd_t()
+    : solver_cgd_t("cgd-cd")
+{
+}
 
-NANO_MAKE_CGD_CLONABLE(solver_cgd_cd_t, "cgd-cd")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_dy_t, "cgd-dy")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_fr_t, "cgd-fr")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_hs_t, "cgd-hs")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_ls_t, "cgd-ls")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_pr_t, "cgd-pr")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_dycd_t, "cgd-dycd")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_dyhs_t, "cgd-dyhs")
-NANO_MAKE_CGD_CLONABLE(solver_cgd_frpr_t, "cgd-frpr")
+solver_cgd_dy_t::solver_cgd_dy_t()
+    : solver_cgd_t("cgd-dy")
+{
+}
 
-#undef NANO_MAKE_CGD_CLONABLE
+solver_cgd_fr_t::solver_cgd_fr_t()
+    : solver_cgd_t("cgd-fr")
+{
+}
+
+solver_cgd_hs_t::solver_cgd_hs_t()
+    : solver_cgd_t("cgd-hs")
+{
+}
+
+solver_cgd_ls_t::solver_cgd_ls_t()
+    : solver_cgd_t("cgd-ls")
+{
+}
+
+solver_cgd_pr_t::solver_cgd_pr_t()
+    : solver_cgd_t("cgd-pr")
+{
+}
+
+solver_cgd_dycd_t::solver_cgd_dycd_t()
+    : solver_cgd_t("cgd-dycd")
+{
+}
+
+solver_cgd_dyhs_t::solver_cgd_dyhs_t()
+    : solver_cgd_t("cgd-dyhs")
+{
+}
+
+solver_cgd_frpr_t::solver_cgd_frpr_t()
+    : solver_cgd_t("cgd-frpr")
+{
+}
 
 solver_cgd_n_t::solver_cgd_n_t()
     : solver_cgd_t("cgd-n")
 {
     register_parameter(parameter_t::make_scalar("solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6));
+}
+
+rsolver_t solver_cgd_cd_t::clone() const
+{
+    return std::make_unique<solver_cgd_cd_t>(*this);
+}
+
+rsolver_t solver_cgd_dy_t::clone() const
+{
+    return std::make_unique<solver_cgd_dy_t>(*this);
+}
+
+rsolver_t solver_cgd_fr_t::clone() const
+{
+    return std::make_unique<solver_cgd_fr_t>(*this);
+}
+
+rsolver_t solver_cgd_hs_t::clone() const
+{
+    return std::make_unique<solver_cgd_hs_t>(*this);
+}
+
+rsolver_t solver_cgd_ls_t::clone() const
+{
+    return std::make_unique<solver_cgd_ls_t>(*this);
+}
+
+rsolver_t solver_cgd_pr_t::clone() const
+{
+    return std::make_unique<solver_cgd_pr_t>(*this);
+}
+
+rsolver_t solver_cgd_dycd_t::clone() const
+{
+    return std::make_unique<solver_cgd_dycd_t>(*this);
+}
+
+rsolver_t solver_cgd_dyhs_t::clone() const
+{
+    return std::make_unique<solver_cgd_dyhs_t>(*this);
+}
+
+rsolver_t solver_cgd_frpr_t::clone() const
+{
+    return std::make_unique<solver_cgd_frpr_t>(*this);
 }
 
 rsolver_t solver_cgd_n_t::clone() const
