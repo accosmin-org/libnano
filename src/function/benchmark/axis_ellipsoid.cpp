@@ -3,12 +3,17 @@
 using namespace nano;
 
 function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
-    : benchmark_function_t("Axis-Parallel Ellipsoid", dims)
+    : function_t("axis-ellipsoid", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
     convex(true);
     smooth(true);
     strong_convexity(2.0);
+}
+
+rfunction_t function_axis_ellipsoid_t::clone() const
+{
+    return std::make_unique<function_axis_ellipsoid_t>(*this);
 }
 
 scalar_t function_axis_ellipsoid_t::do_vgrad(const vector_t& x, vector_t* gx) const

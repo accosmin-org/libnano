@@ -10,9 +10,9 @@ namespace nano
     class NANO_PUBLIC base_pairwise_generator_t : public generator_t
     {
     public:
-        base_pairwise_generator_t();
-        explicit base_pairwise_generator_t(indices_t original_features);
-        base_pairwise_generator_t(indices_t original_features1, indices_t original_features2);
+        explicit base_pairwise_generator_t(string_t id);
+        base_pairwise_generator_t(string_t id, indices_t original_features);
+        base_pairwise_generator_t(string_t id, indices_t original_features1, indices_t original_features2);
 
         void fit(const dataset_t& dataset) override;
 

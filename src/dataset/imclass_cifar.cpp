@@ -5,8 +5,9 @@
 
 using namespace nano;
 
-cifar_dataset_t::cifar_dataset_t(string_t dir, string_t name, feature_t target)
-    : m_dir(std::move(dir))
+cifar_dataset_t::cifar_dataset_t(string_t id, string_t dir, string_t name, feature_t target)
+    : dataset_t(std::move(id))
+    , m_dir(std::move(dir))
     , m_name(std::move(name))
     , m_target(std::move(target))
 {
@@ -66,7 +67,7 @@ bool cifar_dataset_t::iread(const file_t& file)
 }
 
 cifar10_dataset_t::cifar10_dataset_t()
-    : cifar_dataset_t(scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
+    : cifar_dataset_t("cifar10", scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
                       feature_t("class").sclass(strings_t{"airplane", "automobile", "bird", "cat", "deer", "dog",
                                                           "frog", "horse", "ship", "truck"}))
 {
@@ -78,8 +79,13 @@ cifar10_dataset_t::cifar10_dataset_t()
     file("cifar-10-batches-bin/test_batch.bin", 50000, 10000, 1, 0);
 }
 
+rdataset_t cifar10_dataset_t::clone() const
+{
+    return std::make_unique<cifar10_dataset_t>(*this);
+}
+
 cifar100c_dataset_t::cifar100c_dataset_t()
-    : cifar_dataset_t(scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+    : cifar_dataset_t("cifar100c", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
                       feature_t("class").sclass(strings_t{"aquatic mammals",
                                                           "fish",
                                                           "flowers",
@@ -105,9 +111,14 @@ cifar100c_dataset_t::cifar100c_dataset_t()
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 0);
 }
 
+rdataset_t cifar100c_dataset_t::clone() const
+{
+    return std::make_unique<cifar100c_dataset_t>(*this);
+}
+
 cifar100f_dataset_t::cifar100f_dataset_t()
     : cifar_dataset_t(
-          scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+          "cifar100f", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
           feature_t("class").sclass(strings_t{
               "apple",      "aquarium_fish", "baby",         "bear",       "beaver",      "bed",         "bee",
               "beetle",     "bicycle",       "bottle",       "bowl",       "boy",         "bridge",      "bus",
@@ -127,4 +138,9 @@ cifar100f_dataset_t::cifar100f_dataset_t()
 {
     file("cifar-100-binary/train.bin", 0, 50000, 2, 1);
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 1);
+}
+
+rdataset_t cifar100f_dataset_t::clone() const
+{
+    return std::make_unique<cifar100f_dataset_t>(*this);
 }

@@ -4,6 +4,7 @@
 using namespace nano;
 
 lsearchk_lemarechal_t::lsearchk_lemarechal_t()
+    : lsearchk_t("lemarechal")
 {
     type(lsearch_type::wolfe);
     register_parameter(parameter_t::make_enum("lsearchk::lemarechal::interpolation", interpolation_type::cubic));

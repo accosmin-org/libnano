@@ -8,7 +8,15 @@ using namespace nano;
 class scalar_to_scalar_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    using elemwise_input_scalar_t::elemwise_input_scalar_t;
+    scalar_to_scalar_t()
+        : elemwise_input_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_to_scalar_t(indices_t features)
+        : elemwise_input_scalar_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
 
@@ -23,7 +31,15 @@ public:
 class scalar_to_sclass_t : public elemwise_input_scalar_t, public generated_sclass_t
 {
 public:
-    using elemwise_input_scalar_t::elemwise_input_scalar_t;
+    scalar_to_sclass_t()
+        : elemwise_input_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_to_sclass_t(indices_t features)
+        : elemwise_input_scalar_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -41,7 +57,15 @@ public:
 class scalar_to_mclass_t : public elemwise_input_scalar_t, public generated_mclass_t
 {
 public:
-    using elemwise_input_scalar_t::elemwise_input_scalar_t;
+    scalar_to_mclass_t()
+        : elemwise_input_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_to_mclass_t(indices_t features)
+        : elemwise_input_scalar_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -64,7 +88,15 @@ public:
 class scalar_to_struct_t : public elemwise_input_scalar_t, public generated_struct_t
 {
 public:
-    using elemwise_input_scalar_t::elemwise_input_scalar_t;
+    scalar_to_struct_t()
+        : elemwise_input_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_to_struct_t(indices_t features)
+        : elemwise_input_scalar_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -89,7 +121,15 @@ public:
 class struct_to_scalar_t : public elemwise_input_struct_t, public generated_scalar_t
 {
 public:
-    using elemwise_input_struct_t::elemwise_input_struct_t;
+    struct_to_scalar_t()
+        : elemwise_input_struct_t("gg")
+    {
+    }
+
+    explicit struct_to_scalar_t(indices_t features)
+        : elemwise_input_struct_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
 
@@ -104,7 +144,15 @@ public:
 class struct_to_sclass_t : public elemwise_input_struct_t, public generated_sclass_t
 {
 public:
-    using elemwise_input_struct_t::elemwise_input_struct_t;
+    struct_to_sclass_t()
+        : elemwise_input_struct_t("gg")
+    {
+    }
+
+    explicit struct_to_sclass_t(indices_t features)
+        : elemwise_input_struct_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -123,7 +171,15 @@ public:
 class struct_to_mclass_t : public elemwise_input_struct_t, public generated_mclass_t
 {
 public:
-    using elemwise_input_struct_t::elemwise_input_struct_t;
+    struct_to_mclass_t()
+        : elemwise_input_struct_t("gg")
+    {
+    }
+
+    explicit struct_to_mclass_t(indices_t features)
+        : elemwise_input_struct_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -147,7 +203,15 @@ public:
 class struct_to_struct_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    using elemwise_input_struct_t::elemwise_input_struct_t;
+    struct_to_struct_t()
+        : elemwise_input_struct_t("gg")
+    {
+    }
+
+    explicit struct_to_struct_t(indices_t features)
+        : elemwise_input_struct_t("gg", std::move(features))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {

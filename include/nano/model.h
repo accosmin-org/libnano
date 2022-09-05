@@ -7,9 +7,7 @@
 namespace nano
 {
     class model_t;
-    using model_factory_t = factory_t<model_t>;
-    using rmodel_t        = model_factory_t::trobject;
-    using rmodels_t       = std::vector<rmodel_t>;
+    using rmodel_t = std::unique_ptr<model_t>;
 
     ///
     /// \brief cross-validation statistics obtained while fitting a ML model.
@@ -46,7 +44,7 @@ namespace nano
     ///     - prediction (constant) which evaluates the trained model on the given dataset,
     ///     - saving/reading to/from binary streams.
     ///
-    class NANO_PUBLIC model_t : public estimator_t
+    class NANO_PUBLIC model_t : public estimator_t, public clonable_t<model_t>
     {
     public:
         ///
@@ -55,14 +53,14 @@ namespace nano
         using logger_t = std::function<void(const fit_result_t&, const string_t&)>;
 
         ///
-        /// \brief returns the available implementations.
-        ///
-        static model_factory_t& all();
-
-        ///
         /// \brief default constructor.
         ///
-        model_t();
+        explicit model_t(string_t id);
+
+        ///
+        /// \brief returns the available implementations.
+        ///
+        static factory_t<model_t>& all();
 
         ///
         /// \brief @see estimator_t
@@ -73,11 +71,6 @@ namespace nano
         /// \brief @see estimator_t
         ///
         std::ostream& write(std::ostream&) const override;
-
-        ///
-        /// \brief clone the object.
-        ///
-        virtual rmodel_t clone() const = 0;
 
         ///
         /// \brief fit the model using the given samples and the current set of (hyper-)parameters

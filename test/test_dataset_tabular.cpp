@@ -58,14 +58,14 @@ public:
     }
 
     fixture_dataset_t(csvs_t csvs, features_t features)
-        : tabular_dataset_t(std::move(csvs), std::move(features))
+        : tabular_dataset_t("fixture", std::move(csvs), std::move(features))
     {
         std::remove(data_path()); // NOLINT(cert-err33-c)
         std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
     fixture_dataset_t(csvs_t csvs, features_t features, size_t target)
-        : tabular_dataset_t(std::move(csvs), std::move(features), target)
+        : tabular_dataset_t("fixture", std::move(csvs), std::move(features), target)
         , m_target(target)
     {
         std::remove(data_path()); // NOLINT(cert-err33-c)
@@ -73,7 +73,7 @@ public:
     }
 
     fixture_dataset_t(fixture_dataset_t&&)                 = default;
-    fixture_dataset_t(const fixture_dataset_t&)            = delete;
+    fixture_dataset_t(const fixture_dataset_t&)            = default;
     fixture_dataset_t& operator=(fixture_dataset_t&&)      = default;
     fixture_dataset_t& operator=(const fixture_dataset_t&) = delete;
 
@@ -127,6 +127,8 @@ public:
                                          +1.0, +0.8, +0.6, +0.4, +0.2, +0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.2, -1.4,
                                          -1.6, -1.8, -2.0, -2.2, -2.4, -2.6, -2.8, -3.0);
     }
+
+    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
 
 private:
     bool optional_cont() const { return m_optional_target || m_target == 1U; }

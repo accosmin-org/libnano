@@ -24,11 +24,14 @@ class fixture_dataset_t final : public dataset_t
 {
 public:
     explicit fixture_dataset_t(tensor_size_t samples, size_t target = string_t::npos)
-        : m_samples(samples)
+        : dataset_t("fixture")
+        , m_samples(samples)
         , m_features(make_features())
         , m_target(target)
     {
     }
+
+    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
 
 private:
     void set_mclass(tensor_size_t ifeature, tensor_size_t classes, tensor_size_t modulo)

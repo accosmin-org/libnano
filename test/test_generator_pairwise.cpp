@@ -8,7 +8,20 @@ using namespace nano;
 class scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
 {
 public:
-    using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
+    scalar_scalar_to_scalar_t()
+        : pairwise_input_scalar_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_scalar_to_scalar_t(indices_t features)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features))
+    {
+    }
+
+    scalar_scalar_to_scalar_t(indices_t features1, indices_t features2)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -24,7 +37,20 @@ public:
 class scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
 {
 public:
-    using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
+    scalar_scalar_to_struct_t()
+        : pairwise_input_scalar_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_scalar_to_struct_t(indices_t features)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features))
+    {
+    }
+
+    scalar_scalar_to_struct_t(indices_t features1, indices_t features2)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -49,7 +75,20 @@ public:
 class scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
 {
 public:
-    using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
+    scalar_scalar_to_sclass_t()
+        : pairwise_input_scalar_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_scalar_to_sclass_t(indices_t features)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features))
+    {
+    }
+
+    scalar_scalar_to_sclass_t(indices_t features1, indices_t features2)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -72,7 +111,20 @@ public:
 class scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
 {
 public:
-    using pairwise_input_scalar_scalar_t::pairwise_input_scalar_scalar_t;
+    scalar_scalar_to_mclass_t()
+        : pairwise_input_scalar_scalar_t("gg")
+    {
+    }
+
+    explicit scalar_scalar_to_mclass_t(indices_t features)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features))
+    {
+    }
+
+    scalar_scalar_to_mclass_t(indices_t features1, indices_t features2)
+        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override
     {
@@ -96,7 +148,20 @@ public:
 class sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
 {
 public:
-    using pairwise_input_sclass_sclass_t::pairwise_input_sclass_sclass_t;
+    sclass_sclass_to_scalar_t()
+        : pairwise_input_sclass_sclass_t("gg")
+    {
+    }
+
+    explicit sclass_sclass_to_scalar_t(indices_t features)
+        : pairwise_input_sclass_sclass_t("gg", std::move(features))
+    {
+    }
+
+    sclass_sclass_to_scalar_t(indices_t features1, indices_t features2)
+        : pairwise_input_sclass_sclass_t("gg", std::move(features1), std::move(features2))
+    {
+    }
 
     feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 

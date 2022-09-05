@@ -4,16 +4,22 @@
 
 using namespace nano;
 
-tabular_dataset_t::tabular_dataset_t(csvs_t csvs, features_t features)
-    : tabular_dataset_t(std::move(csvs), std::move(features), string_t::npos)
+tabular_dataset_t::tabular_dataset_t(string_t id, csvs_t csvs, features_t features)
+    : tabular_dataset_t(std::move(id), std::move(csvs), std::move(features), string_t::npos)
 {
 }
 
-tabular_dataset_t::tabular_dataset_t(csvs_t csvs, features_t features, size_t target)
-    : m_csvs(std::move(csvs))
+tabular_dataset_t::tabular_dataset_t(string_t id, csvs_t csvs, features_t features, size_t target)
+    : dataset_t(std::move(id))
+    , m_csvs(std::move(csvs))
     , m_features(std::move(features))
     , m_target(target)
 {
+}
+
+rdataset_t tabular_dataset_t::clone() const
+{
+    return std::make_unique<tabular_dataset_t>(*this);
 }
 
 void tabular_dataset_t::do_load()

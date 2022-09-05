@@ -4,10 +4,15 @@
 using namespace nano;
 
 function_sargan_t::function_sargan_t(tensor_size_t dims)
-    : benchmark_function_t("Sargan", dims)
+    : function_t("Sargan", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_sargan_t::clone() const
+{
+    return std::make_unique<function_sargan_t>(*this);
 }
 
 scalar_t function_sargan_t::do_vgrad(const vector_t& x, vector_t* gx) const

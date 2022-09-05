@@ -17,7 +17,8 @@ fit_result_t::cv_result_t::cv_result_t(tensor1d_t params, tensor_size_t folds)
 {
 }
 
-model_t::model_t()
+model_t::model_t(string_t id)
+    : clonable_t(std::move(id))
 {
     register_parameter(parameter_t::make_integer("model::folds", 2, LE, 5, LE, 100));
     register_parameter(
@@ -98,13 +99,13 @@ tensor4d_t model_t::predict(const dataset_generator_t& dataset, const indices_t&
     return do_predict(dataset, samples);
 }
 
-model_factory_t& model_t::all()
+factory_t<model_t>& model_t::all()
 {
-    static auto manager = model_factory_t{};
+    static auto manager = factory_t<model_t>{};
     const auto  op      = []()
     {
-        // manager.add_by_type<gboost_model_t>();
-        manager.add_by_type<linear_model_t>();
+        // manager.add<gboost_model_t>("");
+        manager.add<linear_model_t>("linear model (and variants: Ridge, Lasso, ElasticNet, VadaBoost-like)");
     };
 
     static std::once_flag flag;

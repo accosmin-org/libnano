@@ -23,6 +23,11 @@ namespace nano
         explicit quadratic_surrogate_fit_t(const loss_t& loss, tensor2d_t p, tensor1d_t y);
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
+
+        ///
         /// \brief @see function_t
         ///
         scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
@@ -47,6 +52,11 @@ namespace nano
         /// \brief constructor
         ///
         explicit quadratic_surrogate_t(vector_t model);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t

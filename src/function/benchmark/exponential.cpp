@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_exponential_t::function_exponential_t(tensor_size_t dims)
-    : benchmark_function_t("Exponential", dims)
+    : function_t("Exponential", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_exponential_t::clone() const
+{
+    return std::make_unique<function_exponential_t>(*this);
 }
 
 scalar_t function_exponential_t::do_vgrad(const vector_t& x, vector_t* gx) const

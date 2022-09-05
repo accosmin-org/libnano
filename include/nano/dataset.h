@@ -7,8 +7,7 @@
 namespace nano
 {
     class dataset_t;
-    using dataset_factory_t = factory_t<dataset_t>;
-    using rdataset_t        = dataset_factory_t::trobject;
+    using rdataset_t = std::unique_ptr<dataset_t>;
 
     ///
     /// \brief machine learning dataset consisting of a collection of iid samples.
@@ -21,35 +20,18 @@ namespace nano
     /// NB: the categorical features can be single-label or multi-label.
     /// NB: the continuous features can be structured (multi-dimensional) if feature_t::dims() != (1, 1, 1).
     ///
-    class NANO_PUBLIC dataset_t
+    class NANO_PUBLIC dataset_t : public clonable_t<dataset_t>
     {
     public:
         ///
-        /// \brief returns the available implementations.
-        ///
-        static dataset_factory_t& all();
-
-        ///
         /// \brief default constructor
         ///
-        dataset_t() = default;
+        explicit dataset_t(string_t id);
 
         ///
-        /// \brief disable copying
+        /// \brief returns the available implementations.
         ///
-        dataset_t(const dataset_t&)            = default;
-        dataset_t& operator=(const dataset_t&) = default;
-
-        ///
-        /// \brief enable moving
-        ///
-        dataset_t(dataset_t&&) noexcept            = default;
-        dataset_t& operator=(dataset_t&&) noexcept = default;
-
-        ///
-        /// \brief default destructor
-        ///
-        virtual ~dataset_t() = default;
+        static factory_t<dataset_t>& all();
 
         ///
         /// \brief load dataset in memory.

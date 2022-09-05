@@ -5,7 +5,6 @@
 #include <nano/core/logger.h>
 #include <nano/core/stats.h>
 #include <nano/core/table.h>
-#include <nano/function/benchmark.h>
 #include <nano/function/util.h>
 
 using namespace nano;
@@ -68,7 +67,7 @@ static int unsafe_main(int argc, const char* argv[])
 
     if (options.has("list-function"))
     {
-        std::cout << make_table("function", benchmark_function_t::all());
+        std::cout << make_table("function", function_t::all());
         return EXIT_SUCCESS;
     }
 
@@ -76,14 +75,14 @@ static int unsafe_main(int argc, const char* argv[])
     const auto min_dims = options.get<tensor_size_t>("min-dims");
     const auto max_dims = options.get<tensor_size_t>("max-dims");
     const auto fregex = std::regex(options.get<string_t>("function"));
-    const auto fconfig = benchmark_function_t::config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
+    const auto fconfig = function_t::config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
 
     table_t table;
     table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
-    for (const auto& function : benchmark_function_t::make(fconfig, fregex))
+    for (const auto& function : function_t::make(fconfig, fregex))
     {
         if (function->size() != prev_size)
         {

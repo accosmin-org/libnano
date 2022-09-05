@@ -6,6 +6,11 @@
 
 using namespace nano;
 
+dataset_t::dataset_t(string_t id)
+    : clonable_t(std::move(id))
+{
+}
+
 indices_t dataset_t::train_samples() const
 {
     return filter(samples() - m_testing.vector().sum(), 0);
@@ -143,15 +148,15 @@ void dataset_t::load()
     }
 }
 
-dataset_factory_t& dataset_t::all()
+factory_t<dataset_t>& dataset_t::all()
 {
-    static auto manager = dataset_factory_t{};
+    static auto manager = factory_t<dataset_t>{};
     const auto  op      = []()
     {
         const auto dir = scat(nano::getenv("HOME"), "/libnano/datasets/");
 
         manager.add<tabular_dataset_t>(
-            "iris", "classify flowers from physical measurements of the sepal and petal (Fisher, 1936)",
+            "classify flowers from physical measurements of the sepal and petal (Fisher, 1936)", "iris",
             csvs_t{csv_t{dir + "/iris/iris.data"}.delim(",").header(false).expected(150)},
             features_t{
                 feature_t{"sepal_length_cm"},
@@ -163,7 +168,7 @@ dataset_factory_t& dataset_t::all()
             4);
 
         manager.add<tabular_dataset_t>(
-            "wine", "predict the wine type from its constituents (Aeberhard, Coomans & de Vel, 1992)",
+            "predict the wine type from its constituents (Aeberhard, Coomans & de Vel, 1992)", "wine",
             csvs_t{csv_t{dir + "/wine/wine.data"}.delim(",").header(false).expected(178)},
             features_t{
                 feature_t{"class"}.sclass(3),
@@ -184,7 +189,7 @@ dataset_factory_t& dataset_t::all()
             0);
 
         manager.add<tabular_dataset_t>(
-            "adult", "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)",
+            "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)", "adult",
             csvs_t{
                 csv_t{dir + "/adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
                 csv_t{dir + "/adult/adult.test"}
@@ -214,7 +219,7 @@ dataset_factory_t& dataset_t::all()
             14);
 
         manager.add<tabular_dataset_t>(
-            "abalone", "predict the age of abalone from physical measurements (Waugh, 1995)",
+            "predict the age of abalone from physical measurements (Waugh, 1995)", "abalone",
             csvs_t{csv_t{dir + "/abalone/abalone.data"}.delim(",").header(false).expected(4177).testing(
                 make_range(3133, 4177))},
             features_t{
@@ -231,7 +236,7 @@ dataset_factory_t& dataset_t::all()
             8);
 
         manager.add<tabular_dataset_t>(
-            "forest-fires", "predict the burned area of the forest (Cortez & Morais, 2007)",
+            "predict the burned area of the forest (Cortez & Morais, 2007)", "forest-fires",
             csvs_t{csv_t{dir + "/forest-fires/forestfires.csv"}.delim(",").header(true).expected(517)},
             features_t{feature_t{"X"}.sclass(9), feature_t{"Y"}.sclass(8), feature_t{"month"}.sclass(12),
                        feature_t{"day"}.sclass(7), feature_t{"FFMC"}, feature_t{"DMC"}, feature_t{"DC"},
@@ -240,9 +245,8 @@ dataset_factory_t& dataset_t::all()
             12);
 
         manager.add<tabular_dataset_t>(
-            "breast-cancer",
             "diagnostic breast cancer using measurements of cell nucleai (Street, Wolberg & Mangasarian, 1992)",
-            csvs_t{csv_t{dir + "/breast-cancer/wdbc.data"}.delim(",").header(false).expected(569)},
+            "breast-cancer", csvs_t{csv_t{dir + "/breast-cancer/wdbc.data"}.delim(",").header(false).expected(569)},
             features_t{feature_t{"ID"},          feature_t{"Diagnosis"}.sclass(2),
 
                        feature_t{"radius1"},     feature_t{"texture1"},
@@ -265,7 +269,7 @@ dataset_factory_t& dataset_t::all()
             1);
 
         manager.add<tabular_dataset_t>(
-            "bank-marketing", "predict if a client has subscribed a term deposit (Moro, Laureano & Cortez, 2011)",
+            "predict if a client has subscribed a term deposit (Moro, Laureano & Cortez, 2011)", "bank-marketing",
             csvs_t{csv_t{dir + "/bank-marketing/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)},
             features_t{
                 feature_t{"age"},
@@ -292,13 +296,11 @@ dataset_factory_t& dataset_t::all()
             },
             20);
 
-        manager.add<mnist_dataset_t>("mnist", "classify 28x28 grayscale images of hand-written digits (MNIST)");
-        manager.add<cifar10_dataset_t>("cifar10", "classify 3x32x32 color images (CIFAR-10)");
-        manager.add<cifar100c_dataset_t>("cifar100c",
-                                         "classify 3x32x32 color images (CIFAR-100 with 20 coarse labels)");
-        manager.add<cifar100f_dataset_t>("cifar100f", "classify 3x32x32 color images (CIFAR-100 with 100 fine labels)");
-        manager.add<fashion_mnist_dataset_t>("fashion-mnist",
-                                             "classify 28x28 grayscale images of fashion articles (Fashion-MNIST)");
+        manager.add<mnist_dataset_t>("classify 28x28 grayscale images of hand-written digits (MNIST)");
+        manager.add<cifar10_dataset_t>("classify 3x32x32 color images (CIFAR-10)");
+        manager.add<cifar100c_dataset_t>("classify 3x32x32 color images (CIFAR-100 with 20 coarse labels)");
+        manager.add<cifar100f_dataset_t>("classify 3x32x32 color images (CIFAR-100 with 100 fine labels)");
+        manager.add<fashion_mnist_dataset_t>("classify 28x28 grayscale images of fashion articles (Fashion-MNIST)");
     };
 
     static std::once_flag flag;

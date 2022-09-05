@@ -19,12 +19,17 @@ namespace nano
         ///
         /// \brief constructor, set the CSV files to load and the input features.
         ///
-        tabular_dataset_t(csvs_t, features_t);
+        tabular_dataset_t(string_t id, csvs_t, features_t);
 
         ///
         /// \brief constructor, set the CSV files to load and the input and the target features.
         ///
-        tabular_dataset_t(csvs_t, features_t, size_t target);
+        tabular_dataset_t(string_t id, csvs_t, features_t, size_t target);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
 
     private:
         void do_load() override;

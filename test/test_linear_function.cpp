@@ -9,7 +9,7 @@ using namespace nano;
 
 static auto make_loss(scaling_type scaling)
 {
-    return make_loss(scaling == scaling_type::mean ? "absolute" : "squared");
+    return make_loss(scaling == scaling_type::mean ? "mae" : "mse");
 }
 
 static auto make_batch(scaling_type scaling)
@@ -53,14 +53,14 @@ static void check_vgrad(const linear::function_t& function, int trials = 100)
 
 static auto check_minimize(const function_t& function)
 {
-    const auto* const solver_id      = function.smooth() ? "lbfgs" : "osga";
+    const auto* const solver_id      = function.smooth() ? "lbfgs" : "ellipsoid";
     const auto        epsilon_linear = function.smooth() ? 1e-7 : (function.strong_convexity() > 0.0 ? 1e-4 : 1e-2);
     const auto        epsilon_solver = function.smooth() ? 1e-10 : (function.strong_convexity() > 0.0 ? 1e-6 : 1e-4);
     const auto        solver         = make_solver(solver_id);
     solver->lsearchk("cgdescent");
 
     const auto x0    = vector_t{vector_t::Zero(function.size())};
-    const auto state = check_minimize(*solver, solver_id, function, x0, 20000, epsilon_solver);
+    const auto state = check_minimize(*solver, function, x0, 20000, epsilon_solver);
     return std::make_pair(state, epsilon_linear);
 }
 

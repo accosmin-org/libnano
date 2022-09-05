@@ -64,6 +64,11 @@ namespace nano
         explicit linear_penalty_function_t(const function_t&);
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
+
+        ///
         /// \brief @see function_t
         ///
         scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
@@ -79,6 +84,11 @@ namespace nano
         /// \brief default constructor
         ///
         explicit quadratic_penalty_function_t(const function_t&);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t
@@ -106,6 +116,11 @@ namespace nano
         /// \brief set the smoothing factor.
         ///
         linear_quadratic_penalty_function_t& smoothing(scalar_t);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t

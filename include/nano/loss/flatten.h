@@ -22,7 +22,7 @@ namespace nano
     /// (2): "On the design of loss functions for classification: theory, robustness to outliers, and SavageBoost",
     ///      2008, by H. Masnadi-Shirazi, N. Vasconcelos
     ///
-    template <typename top>
+    template <typename tloss>
     class flatten_loss_t final : public loss_t
     {
     public:
@@ -30,10 +30,16 @@ namespace nano
         /// \brief constructor
         ///
         flatten_loss_t()
+            : loss_t(string_t(tloss::prefix) + string_t(tloss::basename))
         {
-            convex(top::convex);
-            smooth(top::smooth);
+            convex(tloss::convex);
+            smooth(tloss::smooth);
         }
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rloss_t clone() const override { return std::make_unique<flatten_loss_t<tloss>>(*this); }
 
         ///
         /// \brief @see loss_t
@@ -45,7 +51,7 @@ namespace nano
 
             for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
-                errors(i) = top::error(targets.array(i), outputs.array(i));
+                errors(i) = tloss::error(targets.array(i), outputs.array(i));
             }
         }
 
@@ -59,7 +65,7 @@ namespace nano
 
             for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
-                values(i) = top::value(targets.array(i), outputs.array(i));
+                values(i) = tloss::value(targets.array(i), outputs.array(i));
             }
         }
 
@@ -73,7 +79,7 @@ namespace nano
 
             for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
             {
-                top::vgrad(targets.array(i), outputs.array(i), vgrads.array(i));
+                tloss::vgrad(targets.array(i), outputs.array(i), vgrads.array(i));
             }
         }
     };
@@ -86,6 +92,8 @@ namespace nano
         ///
         struct absdiff_t
         {
+            static constexpr auto prefix = "";
+
             template <typename tarray>
             static auto error(const tarray& target, const tarray& output)
             {
@@ -98,6 +106,8 @@ namespace nano
         ///
         struct mclass_t
         {
+            static constexpr auto prefix = "m-";
+
             template <typename tarray>
             static auto error(const tarray& target, const tarray& output)
             {
@@ -112,6 +122,8 @@ namespace nano
         ///
         struct sclass_t
         {
+            static constexpr auto prefix = "s-";
+
             template <typename tarray>
             static auto error(const tarray& target, const tarray& output)
             {
@@ -137,8 +149,9 @@ namespace nano
         template <typename terror>
         struct classnll_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "classnll";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -186,8 +199,9 @@ namespace nano
         template <typename terror>
         struct exponential_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "exponential";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -208,8 +222,9 @@ namespace nano
         template <typename terror>
         struct logistic_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "logistic";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -241,8 +256,9 @@ namespace nano
         template <typename terror>
         struct hinge_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = false;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = false;
+            static constexpr auto basename = "hinge";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -263,8 +279,9 @@ namespace nano
         template <typename terror>
         struct squared_hinge_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "squared-hinge";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -285,8 +302,9 @@ namespace nano
         template <typename terror>
         struct savage_t : public terror
         {
-            static constexpr auto convex = false;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = false;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "savage";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -307,8 +325,9 @@ namespace nano
         template <typename terror>
         struct tangent_t : public terror
         {
-            static constexpr auto convex = false;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = false;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "tangent";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -327,10 +346,11 @@ namespace nano
         /// \brief absolute-difference loss.
         ///
         template <typename terror>
-        struct absolute_t : public terror
+        struct mae_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = false;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = false;
+            static constexpr auto basename = "mae";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -349,10 +369,11 @@ namespace nano
         /// \brief squared-difference loss.
         ///
         template <typename terror>
-        struct squared_t : public terror
+        struct mse_t : public terror
         {
-            static constexpr auto convex = true;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = true;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "mse";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -373,8 +394,9 @@ namespace nano
         template <typename terror>
         struct cauchy_t : public terror
         {
-            static constexpr auto convex = false;
-            static constexpr auto smooth = true;
+            static constexpr auto convex   = false;
+            static constexpr auto smooth   = true;
+            static constexpr auto basename = "cauchy";
 
             template <typename tarray>
             static auto value(const tarray& target, const tarray& output)
@@ -390,9 +412,9 @@ namespace nano
         };
     } // namespace detail
 
-    using cauchy_loss_t   = flatten_loss_t<detail::cauchy_t<detail::absdiff_t>>;
-    using squared_loss_t  = flatten_loss_t<detail::squared_t<detail::absdiff_t>>;
-    using absolute_loss_t = flatten_loss_t<detail::absolute_t<detail::absdiff_t>>;
+    using mae_loss_t    = flatten_loss_t<detail::mae_t<detail::absdiff_t>>;
+    using mse_loss_t    = flatten_loss_t<detail::mse_t<detail::absdiff_t>>;
+    using cauchy_loss_t = flatten_loss_t<detail::cauchy_t<detail::absdiff_t>>;
 
     using shinge_loss_t         = flatten_loss_t<detail::hinge_t<detail::sclass_t>>;
     using ssavage_loss_t        = flatten_loss_t<detail::savage_t<detail::sclass_t>>;

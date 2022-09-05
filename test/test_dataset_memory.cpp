@@ -29,11 +29,14 @@ class fixture_dataset_t final : public dataset_t
 {
 public:
     fixture_dataset_t(tensor_size_t samples, features_t features, size_t target)
-        : m_samples(samples)
+        : dataset_t("fixture")
+        , m_samples(samples)
         , m_features(std::move(features))
         , m_target(target)
     {
     }
+
+    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
 
     void actually_do_load(bool do_load) { m_do_load = do_load; }
 

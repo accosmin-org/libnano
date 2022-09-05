@@ -10,8 +10,8 @@ namespace nano
     class NANO_PUBLIC base_elemwise_generator_t : public generator_t
     {
     public:
-        base_elemwise_generator_t();
-        explicit base_elemwise_generator_t(indices_t original_features);
+        explicit base_elemwise_generator_t(string_t id);
+        base_elemwise_generator_t(string_t id, indices_t original_features);
 
         void fit(const dataset_t& dataset) override;
 

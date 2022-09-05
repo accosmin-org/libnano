@@ -18,6 +18,11 @@ namespace nano
         using tcomputer::tcomputer;
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rgenerator_t clone() const override { return std::make_unique<elemwise_generator_t<tcomputer>>(*this); }
+
+        ///
         /// \brief @see generator_t
         ///
         void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,

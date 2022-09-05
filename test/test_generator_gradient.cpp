@@ -48,11 +48,14 @@ class fixture_dataset_t final : public dataset_t
 public:
     fixture_dataset_t(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
                       tensor_size_t cols = 4)
-        : m_samples(samples)
+        : dataset_t("fixture")
+        , m_samples(samples)
         , m_features(make_features(channels, rows, cols))
         , m_target(target)
     {
     }
+
+    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
 
 private:
     void do_load() override

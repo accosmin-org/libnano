@@ -18,7 +18,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_cgd_t();
+        explicit solver_cgd_t(string_t id);
 
         ///
         /// \brief @see solver_t
@@ -46,6 +46,11 @@ namespace nano
         solver_cgd_n_t();
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
+
+        ///
         /// \brief @see solver_cgd_t
         ///
         scalar_t beta(const solver_state_t&, const solver_state_t&) const final;
@@ -62,7 +67,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_cd_t() = default;
+        solver_cgd_cd_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -81,7 +91,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_dy_t() = default;
+        solver_cgd_dy_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -100,7 +115,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_fr_t() = default;
+        solver_cgd_fr_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -119,7 +139,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_hs_t() = default;
+        solver_cgd_hs_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -138,7 +163,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_ls_t() = default;
+        solver_cgd_ls_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -157,7 +187,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_pr_t() = default;
+        solver_cgd_pr_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -176,7 +211,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_dycd_t() = default;
+        solver_cgd_dycd_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -195,7 +235,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_dyhs_t() = default;
+        solver_cgd_dyhs_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t
@@ -214,7 +259,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_cgd_frpr_t() = default;
+        solver_cgd_frpr_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_cgd_t

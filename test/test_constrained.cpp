@@ -155,7 +155,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         }
     }
 
-    for (const auto* const solver_id : {"cgd", "lbfgs", "bfgs"})
+    for (const auto* const solver_id : {"cgd-pr", "lbfgs", "bfgs"})
     {
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
 
@@ -177,6 +177,8 @@ public:
         smooth(true);
     }
 
+    rfunction_t clone() const override { return std::make_unique<sum_function_t>(*this); }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
@@ -196,6 +198,8 @@ public:
         convex(false);
         smooth(true);
     }
+
+    rfunction_t clone() const override { return std::make_unique<cauchy_function_t>(*this); }
 
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
@@ -217,6 +221,8 @@ public:
         smooth(false);
     }
 
+    rfunction_t clone() const override { return std::make_unique<sumabsm1_function_t>(*this); }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
@@ -237,6 +243,8 @@ public:
         smooth(true);
     }
 
+    rfunction_t clone() const override { return std::make_unique<objective1_function_t>(*this); }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
@@ -256,6 +264,8 @@ public:
         convex(true);
         smooth(true);
     }
+
+    rfunction_t clone() const override { return std::make_unique<objective2_function_t>(*this); }
 
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
@@ -278,6 +288,8 @@ public:
         smooth(true);
     }
 
+    rfunction_t clone() const override { return std::make_unique<objective3_function_t>(*this); }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {
         if (gx != nullptr)
@@ -297,6 +309,8 @@ public:
         convex(true);
         smooth(true);
     }
+
+    rfunction_t clone() const override { return std::make_unique<objective4_function_t>(*this); }
 
     scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
     {

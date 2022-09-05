@@ -13,7 +13,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        base_mnist_dataset_t(string_t dir, string_t name, feature_t target);
+        base_mnist_dataset_t(string_t id, string_t dir, string_t name, feature_t target);
 
     private:
         void do_load() override;
@@ -41,6 +41,11 @@ namespace nano
         /// \brief default constructor
         ///
         mnist_dataset_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
     };
 
     ///
@@ -58,5 +63,10 @@ namespace nano
         /// \brief default constructor
         ///
         fashion_mnist_dataset_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
     };
 } // namespace nano

@@ -3,7 +3,7 @@
 using namespace nano;
 
 function_quadratic_t::function_quadratic_t(tensor_size_t dims)
-    : benchmark_function_t("Quadratic", dims)
+    : function_t("quadratic", dims)
     , m_a(make_random_vector<scalar_t>(dims, -1.0, +1.0, seed_t{42}))
 {
     convex(true);
@@ -12,6 +12,11 @@ function_quadratic_t::function_quadratic_t(tensor_size_t dims)
     // NB: generate random positive semi-definite matrix to keep the function convex
     matrix_t A = make_random_matrix<scalar_t>(dims, dims, -1.0, +1.0, seed_t{42});
     m_A        = matrix_t::Identity(dims, dims) + A * A.transpose();
+}
+
+rfunction_t function_quadratic_t::clone() const
+{
+    return std::make_unique<function_quadratic_t>(*this);
 }
 
 scalar_t function_quadratic_t::do_vgrad(const vector_t& x, vector_t* gx) const

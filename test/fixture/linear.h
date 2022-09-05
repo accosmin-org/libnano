@@ -12,20 +12,19 @@ using namespace nano;
 /// NB: uniformly-distributed noise is added to targets if noise() > 0.
 /// NB: every column % modulo() is not taken into account.
 ///
-class fixture_dataset_t : public dataset_t
+class fixture_dataset_t final : public dataset_t
 {
 public:
     using dataset_t::features;
     using dataset_t::samples;
 
-    ///
-    /// \brief default constructor
-    ///
-    fixture_dataset_t() = default;
+    fixture_dataset_t()
+        : dataset_t("linear")
+    {
+    }
 
-    ///
-    /// \brief change parameters
-    ///
+    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+
     void noise(scalar_t noise) { m_noise = noise; }
 
     void modulo(tensor_size_t modulo) { m_modulo = modulo; }
@@ -36,9 +35,6 @@ public:
 
     void features(tensor_size_t features) { m_features = features; }
 
-    ///
-    /// \brief access functions
-    ///
     auto noise() const { return m_noise; }
 
     const auto& bias() const { return m_bias; }

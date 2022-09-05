@@ -79,7 +79,7 @@ tuner_t::steps_t tuner_t::optimize(const tensor2d_t& initial_params) const
     solver->parameter("solver::epsilon")   = parameter("tuner::solver::epsilon").value<scalar_t>();
     solver->parameter("solver::max_evals") = parameter("tuner::solver::max_evals").value<scalar_t>();
 
-    const auto loss = loss_t::all().get("squared");
+    const auto loss = loss_t::all().get("mse");
     assert(loss != nullptr);
 
     const auto to_surrogate   = [](const auto& space, auto value) { return space.to_surrogate(value); };

@@ -35,7 +35,7 @@ static auto make_nonsmooth_solver()
 
 static auto make_solver(const string_t& loss_id)
 {
-    return loss_id == "squared" ? make_smooth_solver() : make_nonsmooth_solver();
+    return loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
 }
 
 static auto make_model()
@@ -146,14 +146,14 @@ UTEST_CASE(regularization_none)
     model.parameter("model::linear::regularization") = linear::regularization_type::none;
 
     const auto param_names = strings_t{};
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
         const auto result  = model.fit(generator, samples, *loss, *solver);
-        const auto epsilon = string_t{loss_id} == "squared" ? 1e-6 : 1e-3;
+        const auto epsilon = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 0U, epsilon);
         check_model(model, generator, samples, epsilon);
@@ -171,7 +171,7 @@ UTEST_CASE(regularization_lasso)
     model.parameter("model::linear::regularization") = linear::regularization_type::lasso;
 
     const auto param_names = strings_t{"l1reg"};
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
@@ -196,14 +196,14 @@ UTEST_CASE(regularization_ridge)
     model.parameter("model::linear::regularization") = linear::regularization_type::ridge;
 
     const auto param_names = strings_t{"l2reg"};
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
         const auto result  = model.fit(generator, samples, *loss, *solver);
-        const auto epsilon = string_t{loss_id} == "squared" ? 1e-6 : 1e-3;
+        const auto epsilon = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 6U, epsilon);
         check_model(model, generator, samples, epsilon);
@@ -221,14 +221,14 @@ UTEST_CASE(regularization_variance)
     model.parameter("model::linear::regularization") = linear::regularization_type::variance;
 
     const auto param_names = strings_t{"vAreg"};
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss    = make_loss(loss_id);
         const auto solver  = make_solver(loss_id);
         const auto result  = model.fit(generator, samples, *loss, *solver);
-        const auto epsilon = string_t{loss_id} == "squared" ? 1e-6 : 1e-3;
+        const auto epsilon = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 6U, epsilon);
         check_model(model, generator, samples, epsilon);
@@ -246,7 +246,7 @@ UTEST_CASE(regularization_elasticnet)
     model.parameter("model::linear::regularization") = linear::regularization_type::elasticnet;
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 

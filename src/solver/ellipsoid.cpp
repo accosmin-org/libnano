@@ -3,12 +3,18 @@
 using namespace nano;
 
 solver_ellipsoid_t::solver_ellipsoid_t()
+    : solver_t("ellipsoid")
 {
     monotonic(false);
 
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
     register_parameter(parameter_t::make_scalar("solver::ellipsoid::R", 0.0, LT, 1e+1, LT, fmax));
+}
+
+rsolver_t solver_ellipsoid_t::clone() const
+{
+    return std::make_unique<solver_ellipsoid_t>(*this);
 }
 
 solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const vector_t& x0) const

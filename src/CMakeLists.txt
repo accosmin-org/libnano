@@ -54,7 +54,6 @@ target_sources(nano PRIVATE
     solver/penalty.cpp
     solver/ellipsoid.cpp
     function.cpp
-    function/benchmark.cpp
     function/constraint.cpp
     function/penalty.cpp
     function/util.cpp

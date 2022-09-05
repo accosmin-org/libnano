@@ -4,10 +4,15 @@
 using namespace nano;
 
 function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims)
-    : benchmark_function_t("Rotated Ellipsoid", dims)
+    : function_t("rotated-ellipsoid", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_rotated_ellipsoid_t::clone() const
+{
+    return std::make_unique<function_rotated_ellipsoid_t>(*this);
 }
 
 scalar_t function_rotated_ellipsoid_t::do_vgrad(const vector_t& x, vector_t* gx) const

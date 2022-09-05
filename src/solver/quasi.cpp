@@ -65,7 +65,8 @@ namespace
     }
 } // namespace
 
-solver_quasi_t::solver_quasi_t()
+solver_quasi_t::solver_quasi_t(string_t id)
+    : solver_t(std::move(id))
 {
     monotonic(true);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
@@ -128,9 +129,32 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     return static_cast<bool>(cstate) ? cstate : pstate;
 }
 
+#define NANO_MAKE_QUASI_CLONABLE(class_name, id)                                                                       \
+    class_name::class_name()                                                                                           \
+        : solver_quasi_t(id)                                                                                           \
+    {                                                                                                                  \
+    }                                                                                                                  \
+    rsolver_t class_name::clone() const                                                                                \
+    {                                                                                                                  \
+        return std::make_unique<class_name>(*this);                                                                    \
+    }
+
+NANO_MAKE_QUASI_CLONABLE(solver_quasi_dfp_t, "dfp")
+NANO_MAKE_QUASI_CLONABLE(solver_quasi_bfgs_t, "bfgs")
+NANO_MAKE_QUASI_CLONABLE(solver_quasi_hoshino_t, "hoshino")
+NANO_MAKE_QUASI_CLONABLE(solver_quasi_fletcher_t, "fletcher")
+
+#undef NANO_MAKE_QUASI_CLONABLE
+
 solver_quasi_sr1_t::solver_quasi_sr1_t()
+    : solver_quasi_t("sr1")
 {
     register_parameter(parameter_t::make_scalar("solver::quasiSR1::r", 0, LT, 1e-8, LT, 1));
+}
+
+rsolver_t solver_quasi_sr1_t::clone() const
+{
+    return std::make_unique<solver_quasi_sr1_t>(*this);
 }
 
 void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const

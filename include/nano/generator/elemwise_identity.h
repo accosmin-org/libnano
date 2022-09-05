@@ -10,6 +10,11 @@ namespace nano
     class NANO_PUBLIC sclass_identity_t : public elemwise_input_sclass_t, public generated_sclass_t
     {
     public:
+        sclass_identity_t()
+            : elemwise_input_sclass_t("identity-sclass")
+        {
+        }
+
         feature_t feature(tensor_size_t ifeature) const override;
 
         auto process(tensor_size_t ifeature) const
@@ -27,6 +32,11 @@ namespace nano
     class NANO_PUBLIC mclass_identity_t : public elemwise_input_mclass_t, public generated_mclass_t
     {
     public:
+        mclass_identity_t()
+            : elemwise_input_mclass_t("identity-mclass")
+        {
+        }
+
         feature_t feature(tensor_size_t ifeature) const override;
 
         auto process(tensor_size_t ifeature) const
@@ -51,6 +61,11 @@ namespace nano
     class NANO_PUBLIC scalar_identity_t : public elemwise_input_scalar_t, public generated_scalar_t
     {
     public:
+        scalar_identity_t()
+            : elemwise_input_scalar_t("identity-scalar")
+        {
+        }
+
         feature_t feature(tensor_size_t ifeature) const override;
 
         static auto process(tensor_size_t)
@@ -68,6 +83,11 @@ namespace nano
     class NANO_PUBLIC struct_identity_t : public elemwise_input_struct_t, public generated_struct_t
     {
     public:
+        struct_identity_t()
+            : elemwise_input_struct_t("identity-struct")
+        {
+        }
+
         feature_t feature(tensor_size_t ifeature) const override;
 
         auto process(tensor_size_t ifeature) const

@@ -24,32 +24,32 @@ using namespace nano;
     };
 
     // bug: OSGA solver fails here
-    if (function.name() == "Exponential[4D]")
+    if (function.name() == "exponential[4D]")
     {
         append(0.6524579797097991, 0.3700950306557635, -0.1710712483548298, -0.1947479784347773);
     }
 
     // bug: BFGS+backtrack solver fails here
-    if (function.name() == "Qing[4D]")
+    if (function.name() == "qing[4D]")
     {
         append(0.4958921077711123, 0.9830812076917252, -0.5192140013563706, 0.0439401045948384);
         append(0.4708653254587751, -0.4933506021493146, 0.6892169862294326, -0.0050907711577802);
     }
 
     // bug: CGD+lemarechal solver fails here
-    if (function.name() == "Rosenbrock[4D]")
+    if (function.name() == "rosenbrock[4D]")
     {
         append(-0.5950864762215742, 0.6160556733668063, 0.2815843360435921, 0.2692838673927147);
     }
 
     // bug: cgdescent line-search fails here
-    if (function.name() == "Dixon-Price[2D]")
+    if (function.name() == "dixon-price[2D]")
     {
         append(0.439934771063, -0.788200738134);
     }
 
     // bug: cgdescent line-search fails here
-    if (function.name() == "Exponential[1D]")
+    if (function.name() == "exponential[1D]")
     {
         append(0.817256233948);
     }

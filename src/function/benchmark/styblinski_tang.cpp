@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_styblinski_tang_t::function_styblinski_tang_t(tensor_size_t dims)
-    : benchmark_function_t("Styblinski-Tang", dims)
+    : function_t("styblinski-tang", dims)
 {
     convex(false);
     smooth(true);
+}
+
+rfunction_t function_styblinski_tang_t::clone() const
+{
+    return std::make_unique<function_styblinski_tang_t>(*this);
 }
 
 scalar_t function_styblinski_tang_t::do_vgrad(const vector_t& x, vector_t* gx) const

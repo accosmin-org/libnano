@@ -7,8 +7,7 @@
 namespace nano
 {
     class lsearchk_t;
-    using lsearchk_factory_t = factory_t<lsearchk_t>;
-    using rlsearchk_t        = lsearchk_factory_t::trobject;
+    using rlsearchk_t = std::unique_ptr<lsearchk_t>;
 
     ///
     /// \brief the objective type of the line-search procedure.
@@ -27,7 +26,7 @@ namespace nano
     ///
     /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
     ///
-    class NANO_PUBLIC lsearchk_t : public estimator_t
+    class NANO_PUBLIC lsearchk_t : public estimator_t, public clonable_t<lsearchk_t>
     {
     public:
         ///
@@ -38,17 +37,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearchk_t();
+        explicit lsearchk_t(string_t id);
 
         ///
         /// \brief returns the available implementations.
         ///
-        static lsearchk_factory_t& all();
-
-        ///
-        /// \brief clone the object, by keeping the parameters but with an internal "clean state".
-        ///
-        virtual rlsearchk_t clone() const = 0;
+        static factory_t<lsearchk_t>& all();
 
         ///
         /// \brief compute the step size starting from the given state and the initial estimate of the step size.

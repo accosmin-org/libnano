@@ -57,12 +57,18 @@ static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, sca
 }
 
 solver_osga_t::solver_osga_t()
+    : solver_t("osga")
 {
     monotonic(false);
 
     register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.99, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
     register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
+}
+
+rsolver_t solver_osga_t::clone() const
+{
+    return std::make_unique<solver_osga_t>(*this);
 }
 
 solver_state_t solver_osga_t::do_minimize(const function_t& function, const vector_t& x0) const

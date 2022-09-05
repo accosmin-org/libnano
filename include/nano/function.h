@@ -1,10 +1,28 @@
 #pragma once
 
+#include <nano/core/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/string.h>
 
 namespace nano
 {
+    class function_t;
+    using rfunction_t = std::unique_ptr<function_t>;
+
+    enum class convexity
+    {
+        ignore,
+        yes,
+        no
+    };
+
+    enum class smoothness
+    {
+        ignore,
+        yes,
+        no
+    };
+
     ///
     /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
     ///
@@ -18,30 +36,35 @@ namespace nano
     /// NB: the (sub-)gradient of the function must be implemented.
     /// NB: the functions can be convex or non-convex and smooth or non-smooth.
     ///
-    class NANO_PUBLIC function_t
+    class NANO_PUBLIC function_t : public clonable_t<function_t>
     {
     public:
         ///
         /// \brief constructor
         ///
-        function_t(string_t name, tensor_size_t size);
+        function_t(string_t id, tensor_size_t size);
 
         ///
-        /// \brief disable copying
+        /// \brief enable copying
         ///
-        function_t(const function_t&)            = delete;
-        function_t& operator=(const function_t&) = delete;
+        function_t(const function_t&);
+        function_t& operator=(const function_t&);
 
         ///
         /// \brief enable moving
         ///
-        function_t(function_t&&) noexcept;
-        function_t& operator=(function_t&&) noexcept;
+        function_t(function_t&&) noexcept            = default;
+        function_t& operator=(function_t&&) noexcept = default;
 
         ///
         /// \brief destructor
         ///
-        virtual ~function_t();
+        ~function_t() override = default;
+
+        ///
+        /// \brief returns the available implementations for benchmarking numerical optimization methods.
+        ///
+        static factory_t<function_t>& all();
 
         ///
         /// \brief function name to identify it in tests and benchmarks.
@@ -118,6 +141,28 @@ namespace nano
         ///
         void clear_statistics() const;
 
+        ///
+        /// \brief construct test functions having:
+        ///     - the number of dimensions within the given range,
+        ///     - the given number of summands and
+        ///     - the given requirements in terms of smoothness and convexity.
+        ///
+        struct config_t
+        {
+            tensor_size_t m_min_dims{2};                    ///<
+            tensor_size_t m_max_dims{8};                    ///<
+            convexity     m_convexity{convexity::ignore};   ///<
+            smoothness    m_smoothness{smoothness::ignore}; ///<
+            tensor_size_t m_summands{1000};                 ///<
+        };
+
+        static rfunctions_t make(config_t, const std::regex& id_regex = std::regex(".+"));
+
+        ///
+        /// \brief construct a test function with the given number of free dimensions and summands (if possible).
+        ///
+        virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+
     protected:
         void convex(bool);
         void smooth(bool);
@@ -127,7 +172,6 @@ namespace nano
 
     private:
         // attributes
-        string_t      m_name;              ///<
         tensor_size_t m_size{0};           ///< #free dimensions to optimize for
         bool          m_convex{false};     ///< whether the function is convex
         bool          m_smooth{false};     ///< whether the function is smooth (otherwise subgradients should be used)

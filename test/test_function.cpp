@@ -1,5 +1,4 @@
 #include "fixture/function.h"
-#include <nano/function/benchmark.h>
 
 using namespace nano;
 
@@ -7,7 +6,7 @@ UTEST_BEGIN_MODULE(test_function)
 
 UTEST_CASE(stats)
 {
-    for (const auto& function : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
+    for (const auto& function : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
     {
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
@@ -41,7 +40,7 @@ UTEST_CASE(select)
             std::map<bool, int>          counts_per_smoothness;
             std::map<tensor_size_t, int> counts_per_size;
 
-            for (const auto& function : benchmark_function_t::make({4, 16, convex, smooth, 5}))
+            for (const auto& function : function_t::make({4, 16, convex, smooth, 5}))
             {
                 ++total;
 
@@ -87,7 +86,7 @@ UTEST_CASE(select)
 
 UTEST_CASE(convexity)
 {
-    for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());
@@ -104,7 +103,7 @@ UTEST_CASE(convexity)
 
 UTEST_CASE(grad_accuracy)
 {
-    for (const auto& rfunction : benchmark_function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());

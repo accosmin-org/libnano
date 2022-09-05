@@ -5,8 +5,7 @@
 namespace nano
 {
     class solver_t;
-    using solver_factory_t = factory_t<solver_t>;
-    using rsolver_t        = solver_factory_t::trobject;
+    using rsolver_t = std::unique_ptr<solver_t>;
 
     ///
     /// \brief unconstrained numerical optimization algorithm that uses line-search
@@ -16,7 +15,7 @@ namespace nano
     ///     - the global minimum if the function is convex or
     ///     - a critical point (not necessarily a local minimum) otherwise.
     ///
-    class NANO_PUBLIC solver_t : public estimator_t
+    class NANO_PUBLIC solver_t : public estimator_t, public clonable_t<solver_t>
     {
     public:
         ///
@@ -27,12 +26,29 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_t();
+        explicit solver_t(string_t id);
 
         ///
-        /// \brief returns the available implementations
+        /// \brief enable copying
         ///
-        static solver_factory_t& all();
+        solver_t(const solver_t&);
+        solver_t& operator=(const solver_t&) = delete;
+
+        ///
+        /// \brief enable moving
+        ///
+        solver_t(solver_t&&) noexcept   = default;
+        solver_t& operator=(solver_t&&) = default;
+
+        ///
+        /// \brief destructor
+        ///
+        ~solver_t() override = default;
+
+        ///
+        /// \brief returns the available implementations.
+        ///
+        static factory_t<solver_t>& all();
 
         ///
         /// \brief minimize the given function starting from the initial point x0 until:
@@ -44,7 +60,7 @@ namespace nano
         solver_state_t minimize(const function_t&, const vector_t& x0) const;
 
         ///
-        /// \brief set the logging callback.
+        /// \brief set the logging callbacks.
         ///
         void logger(const logger_t& logger);
         void lsearch0_logger(const lsearch0_t::logger_t& logger);
@@ -53,14 +69,14 @@ namespace nano
         ///
         /// \brief set the line-search initialization method.
         ///
+        void lsearch0(const lsearch0_t&);
         void lsearch0(const string_t& id);
-        void lsearch0(const string_t& id, rlsearch0_t&&);
 
         ///
         /// \brief set the line-search strategy method.
         ///
+        void lsearchk(const lsearchk_t&);
         void lsearchk(const string_t& id);
-        void lsearchk(const string_t& id, rlsearchk_t&&);
 
         ///
         /// \brief return true if the solver is monotonic, which guarantees that at each iteration:
@@ -72,14 +88,14 @@ namespace nano
         bool monotonic() const;
 
         ///
-        /// \brief return the id of the line-search initialization method.
+        /// \brief return the line-search initialization method.
         ///
-        const auto& lsearch0_id() const { return m_lsearch0_id; }
+        const auto& lsearch0() const { return *m_lsearch0; }
 
         ///
-        /// \brief return the id of the line-search strategy method.
+        /// \brief return the the line-search strategy method.
         ///
-        const auto& lsearchk_id() const { return m_lsearchk_id; }
+        const auto& lsearchk() const { return *m_lsearchk; }
 
     protected:
         void      monotonic(bool);
@@ -92,9 +108,7 @@ namespace nano
     private:
         // attributes
         logger_t    m_logger;          ///<
-        string_t    m_lsearch0_id;     ///<
         rlsearch0_t m_lsearch0;        ///<
-        string_t    m_lsearchk_id;     ///<
         rlsearchk_t m_lsearchk;        ///<
         bool        m_monotonic{true}; ///<
     };

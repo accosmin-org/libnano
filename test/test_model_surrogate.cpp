@@ -11,7 +11,7 @@ static void check_minimizer(const function_t& function, const vector_t& optimum)
     const auto        epsilon   = 1e-7;
 
     const auto solver = make_solver(solver_id, epsilon);
-    const auto state  = check_minimize(*solver, solver_id, function, make_random_x0(function), 20000, epsilon);
+    const auto state  = check_minimize(*solver, function, make_random_x0(function), 20000, epsilon);
     UTEST_CHECK_CLOSE(state.f, 0.0, 1e-6);
     UTEST_CHECK_CLOSE(state.x, optimum, 1e-7);
 }
@@ -27,7 +27,7 @@ static void check_surrogate(const tensor1d_t& p, const tensor1d_t& q)
 
 static void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const tensor1d_t& y)
 {
-    for (const auto* const loss_id : {"squared", "absolute"})
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 

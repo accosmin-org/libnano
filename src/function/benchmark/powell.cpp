@@ -4,10 +4,15 @@
 using namespace nano;
 
 function_powell_t::function_powell_t(tensor_size_t dims)
-    : benchmark_function_t("Powell", std::max(tensor_size_t(4), dims - dims % 4))
+    : function_t("powell", std::max(tensor_size_t(4), dims - dims % 4))
 {
     convex(false);
     smooth(true);
+}
+
+rfunction_t function_powell_t::clone() const
+{
+    return std::make_unique<function_powell_t>(*this);
 }
 
 scalar_t function_powell_t::do_vgrad(const vector_t& x, vector_t* gx) const

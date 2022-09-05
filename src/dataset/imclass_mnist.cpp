@@ -5,8 +5,9 @@
 
 using namespace nano;
 
-base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name, feature_t target)
-    : m_dir(std::move(dir))
+base_mnist_dataset_t::base_mnist_dataset_t(string_t id, string_t dir, string_t name, feature_t target)
+    : dataset_t(std::move(id))
+    , m_dir(std::move(dir))
     , m_name(std::move(name))
     , m_target(std::move(target))
 {
@@ -94,15 +95,26 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t sample, ten
 }
 
 mnist_dataset_t::mnist_dataset_t()
-    : base_mnist_dataset_t(scat(nano::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
+    : base_mnist_dataset_t("mnist", scat(nano::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
                            feature_t("digit").sclass(strings_t{"digit0", "digit1", "digit2", "digit3", "digit4",
                                                                "digit5", "digit6", "digit7", "digit8", "digit9"}))
 {
 }
 
+rdataset_t mnist_dataset_t::clone() const
+{
+    return std::make_unique<mnist_dataset_t>(*this);
+}
+
 fashion_mnist_dataset_t::fashion_mnist_dataset_t()
-    : base_mnist_dataset_t(scat(nano::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST",
+    : base_mnist_dataset_t("fashion-mnist", scat(nano::getenv("HOME"), "/libnano/datasets/fashion-mnist"),
+                           "Fashion-MNIST",
                            feature_t("article").sclass(strings_t{"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
                                                                  "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"}))
 {
+}
+
+rdataset_t fashion_mnist_dataset_t::clone() const
+{
+    return std::make_unique<fashion_mnist_dataset_t>(*this);
 }

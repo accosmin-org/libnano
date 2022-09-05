@@ -22,6 +22,11 @@ namespace nano
         solver_ellipsoid_t();
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
+
+        ///
         /// \brief @see solver_t
         ///
         solver_state_t do_minimize(const function_t&, const vector_t& x0) const final;

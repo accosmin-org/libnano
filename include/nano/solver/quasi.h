@@ -26,7 +26,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_quasi_t();
+        explicit solver_quasi_t(string_t id);
 
         ///
         /// \brief @see solver_t
@@ -51,6 +51,11 @@ namespace nano
         solver_quasi_sr1_t();
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
+
+        ///
         /// \brief @see solver_quasi_t
         ///
         void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
@@ -67,7 +72,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_quasi_dfp_t() = default;
+        solver_quasi_dfp_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_quasi_t
@@ -86,7 +96,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_quasi_bfgs_t() = default;
+        solver_quasi_bfgs_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_quasi_t
@@ -105,7 +120,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_quasi_hoshino_t() = default;
+        solver_quasi_hoshino_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_quasi_t
@@ -124,7 +144,12 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        solver_quasi_fletcher_t() = default;
+        solver_quasi_fletcher_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const final;
 
         ///
         /// \brief @see solver_quasi_t

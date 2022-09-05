@@ -2,16 +2,22 @@
 
 using namespace nano;
 
-base_pairwise_generator_t::base_pairwise_generator_t() = default;
+base_pairwise_generator_t::base_pairwise_generator_t(string_t id)
+    : generator_t(std::move(id))
+{
+}
 
-base_pairwise_generator_t::base_pairwise_generator_t(indices_t original_features)
-    : m_original_features1(original_features)
+base_pairwise_generator_t::base_pairwise_generator_t(string_t id, indices_t original_features)
+    : generator_t(std::move(id))
+    , m_original_features1(original_features)
     , m_original_features2(std::move(original_features))
 {
 }
 
-base_pairwise_generator_t::base_pairwise_generator_t(indices_t original_features1, indices_t original_features2)
-    : m_original_features1(std::move(original_features1))
+base_pairwise_generator_t::base_pairwise_generator_t(string_t id, indices_t original_features1,
+                                                     indices_t original_features2)
+    : generator_t(std::move(id))
+    , m_original_features1(std::move(original_features1))
     , m_original_features2(std::move(original_features2))
 {
 }

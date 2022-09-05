@@ -31,6 +31,20 @@ static auto smooth(const functional_t& constraint)
     return constraint.m_function->smooth();
 }
 
+functional_t::functional_t(const functional_t& other)
+    : m_function(other.m_function->clone())
+{
+}
+
+functional_t& functional_t::operator=(const functional_t& other)
+{
+    if (this != &other)
+    {
+        m_function = other.m_function->clone();
+    }
+    return *this;
+}
+
 bool nano::smooth(const constraint_t& constraint)
 {
     return std::visit(overloaded{[&](const euclidean_ball_t& ct) { return ::smooth(ct); },

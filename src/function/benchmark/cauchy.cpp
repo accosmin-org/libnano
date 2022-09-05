@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_cauchy_t::function_cauchy_t(tensor_size_t dims)
-    : benchmark_function_t("Cauchy", dims)
+    : function_t("cauchy", dims)
 {
     convex(false);
     smooth(true);
+}
+
+rfunction_t function_cauchy_t::clone() const
+{
+    return std::make_unique<function_cauchy_t>(*this);
 }
 
 scalar_t function_cauchy_t::do_vgrad(const vector_t& x, vector_t* gx) const

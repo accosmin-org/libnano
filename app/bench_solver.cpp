@@ -5,7 +5,7 @@
 #include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/parallel.h>
-#include <nano/function/benchmark.h>
+#include <nano/function.h>
 #include <nano/solver.h>
 #include <nano/tensor.h>
 
@@ -104,28 +104,24 @@ static auto relative_precision(const result_t& result, const result_t& best_resu
     return relative_precision(result.m_value, best_result.m_value);
 }
 
-static auto make_solver_name(const std::pair<string_t, rsolver_t>& solver_info)
+static auto make_solver_name(const rsolver_t& solver)
 {
-    const auto& solver = solver_info.second;
-    const auto& solver_id = solver_info.first;
-
     return solver->monotonic() ?
-        scat(solver_id, " [", solver->lsearch0_id(), ",", solver->lsearchk_id(), "]") :
-        solver_id;
+        scat(solver->type_id(), " [", solver->lsearch0().type_id(), ",", solver->lsearchk().type_id(), "]") :
+        solver->type_id();
 }
 
 using points_t = std::vector<vector_t>;
 using results_t = std::vector<result_t>;
-using solvers_t = std::vector<std::pair<string_t, rsolver_t>>;
+using solvers_t = std::vector<rsolver_t>;
 
-static auto log_solver(const function_t& function, const rsolver_t& solver, const string_t& solver_id,
-    const vector_t& x0)
+static auto log_solver(const function_t& function, const rsolver_t& solver, const vector_t& x0)
 {
     std::cout << std::fixed << std::setprecision(10);
     std::cout << function.name()
-        << " solver[" << solver_id
-        << "],lsearch0[" << (solver->monotonic() ? solver->lsearch0_id() : string_t("N/A"))
-        << "],lsearchk[" << (solver->monotonic() ? solver->lsearchk_id() : string_t("N/A"))
+        << " solver[" << solver->type_id()
+        << "],lsearch0[" << (solver->monotonic() ? solver->lsearch0().type_id() : string_t("N/A"))
+        << "],lsearchk[" << (solver->monotonic() ? solver->lsearchk().type_id() : string_t("N/A"))
         << "]" << std::endl;
 
     solver->logger(
@@ -174,7 +170,7 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
                  const auto timer = nano::timer_t{};
 
                  const auto& x0     = x0s[i / solvers.size()];
-                 const auto& solver = solvers[i % solvers.size()].second;
+                 const auto& solver = solvers[i % solvers.size()];
                  const auto  state  = solver->minimize(function, x0);
 
                  const auto milliseconds = timer.milliseconds().count();
@@ -189,9 +185,8 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
             (results[i].m_status == solver_status::failed && log_failures))
         {
             const auto& x0 = x0s[i / solvers.size()];
-            const auto& solver = solvers[i % solvers.size()].second;
-            const auto& solver_id = solvers[i % solvers.size()].first;
-            const auto state = log_solver(function, solver, solver_id, x0);
+            const auto& solver = solvers[i % solvers.size()];
+            const auto state = log_solver(function, solver, x0);
             assert(state.status == results[i].m_status);
         }
     }
@@ -210,7 +205,7 @@ static auto benchmark(parallel::pool_t& pool, const function_t& function, const 
     const auto results = minimize_all(pool, function, solvers, x0s, log_failures, log_maxits);
 
     // gather statistics per solver
-    const auto max_evals = solvers[0U].second->parameter("solver::max_evals").value<int>();
+    const auto max_evals = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
     auto stats = std::vector<solver_function_stats_t>{solvers.size(), solver_function_stats_t{trials}};
@@ -348,7 +343,7 @@ static int unsafe_main(int argc, const char* argv[])
             {
                 table.delim();
             }
-            append_table(table, "function", benchmark_function_t::all());
+            append_table(table, "function", function_t::all());
         }
         std::cout << table;
         return EXIT_SUCCESS;
@@ -430,7 +425,7 @@ static int unsafe_main(int argc, const char* argv[])
         solver_ids.empty(),
         "at least a solver needs to be selected!");
 
-    const auto functions = benchmark_function_t::make({min_dims, max_dims, convex, smooth}, fregex);
+    const auto functions = function_t::make({min_dims, max_dims, convex, smooth}, fregex);
     critical(
         functions.empty(),
         "at least a function needs to be selected!");
@@ -473,17 +468,17 @@ static int unsafe_main(int argc, const char* argv[])
                     setup_xvalues(*lsearch0);
                     setup_xvalues(*lsearchk);
 
-                    solver->lsearch0(lsearch0_id, std::move(lsearch0));
-                    solver->lsearchk(lsearchk_id, std::move(lsearchk));
+                    solver->lsearch0(*lsearch0);
+                    solver->lsearchk(*lsearchk);
 
-                    solvers.emplace_back(solver_id, std::move(solver));
+                    solvers.emplace_back(std::move(solver));
                 }
             }
         }
         else
         {
             setup_xvalues(*solver);
-            solvers.emplace_back(solver_id, std::move(solver));
+            solvers.emplace_back(std::move(solver));
         }
     }
 

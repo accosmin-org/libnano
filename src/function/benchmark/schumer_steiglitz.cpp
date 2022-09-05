@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_schumer_steiglitz_t::function_schumer_steiglitz_t(tensor_size_t dims)
-    : benchmark_function_t("Schumer-Steiglitz", dims)
+    : function_t("schumer-steiglitz", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_schumer_steiglitz_t::clone() const
+{
+    return std::make_unique<function_schumer_steiglitz_t>(*this);
 }
 
 scalar_t function_schumer_steiglitz_t::do_vgrad(const vector_t& x, vector_t* gx) const

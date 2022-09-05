@@ -65,7 +65,8 @@ namespace
     }
 } // namespace
 
-solver_cgd_t::solver_cgd_t()
+solver_cgd_t::solver_cgd_t(string_t id)
+    : solver_t(std::move(id))
 {
     monotonic(true);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1);
@@ -122,9 +123,37 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
     return static_cast<bool>(cstate) ? cstate : pstate;
 }
 
+#define NANO_MAKE_CGD_CLONABLE(class_name, id)                                                                         \
+    class_name::class_name()                                                                                           \
+        : solver_cgd_t(id)                                                                                             \
+    {                                                                                                                  \
+    }                                                                                                                  \
+    rsolver_t class_name::clone() const                                                                                \
+    {                                                                                                                  \
+        return std::make_unique<class_name>(*this);                                                                    \
+    }
+
+NANO_MAKE_CGD_CLONABLE(solver_cgd_cd_t, "cgd-cd")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_dy_t, "cgd-dy")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_fr_t, "cgd-fr")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_hs_t, "cgd-hs")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_ls_t, "cgd-ls")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_pr_t, "cgd-pr")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_dycd_t, "cgd-dycd")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_dyhs_t, "cgd-dyhs")
+NANO_MAKE_CGD_CLONABLE(solver_cgd_frpr_t, "cgd-frpr")
+
+#undef NANO_MAKE_CGD_CLONABLE
+
 solver_cgd_n_t::solver_cgd_n_t()
+    : solver_cgd_t("cgd-n")
 {
     register_parameter(parameter_t::make_scalar("solver::cgdN::eta", 0, LT, 0.01, LT, 1e+6));
+}
+
+rsolver_t solver_cgd_n_t::clone() const
+{
+    return std::make_unique<solver_cgd_n_t>(*this);
 }
 
 scalar_t solver_cgd_hs_t::beta(const solver_state_t& prev, const solver_state_t& curr) const

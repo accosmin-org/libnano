@@ -34,6 +34,11 @@ linear::function_t::function_t(const flatten_iterator_t& iterator, const loss_t&
     strong_convexity(m_l2reg / static_cast<scalar_t>(m_isize * m_tsize));
 }
 
+rfunction_t linear::function_t::clone() const
+{
+    return std::make_unique<linear::function_t>(*this);
+}
+
 scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());

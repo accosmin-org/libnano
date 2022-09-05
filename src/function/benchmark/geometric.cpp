@@ -4,7 +4,7 @@
 using namespace nano;
 
 function_geometric_optimization_t::function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands)
-    : benchmark_function_t("Geometric Optimization", dims)
+    : function_t("geometric-optimziation, Geometric Optimization", dims)
     , m_a(make_random_vector<scalar_t>(summands, -1.0, +1.0, seed_t{42}))
     , m_A(make_random_matrix<scalar_t>(summands, dims, -1.0 / static_cast<scalar_t>(dims),
                                        +1.0 / static_cast<scalar_t>(dims), seed_t{42}))
@@ -12,6 +12,11 @@ function_geometric_optimization_t::function_geometric_optimization_t(tensor_size
     assert(summands > 0);
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_geometric_optimization_t::clone() const
+{
+    return std::make_unique<function_geometric_optimization_t>(*this);
 }
 
 scalar_t function_geometric_optimization_t::do_vgrad(const vector_t& x, vector_t* gx) const

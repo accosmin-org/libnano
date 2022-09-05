@@ -3,6 +3,7 @@
 using namespace nano;
 
 lsearchk_backtrack_t::lsearchk_backtrack_t()
+    : lsearchk_t("backtrack")
 {
     type(lsearch_type::armijo);
     register_parameter(parameter_t::make_enum("lsearchk::backtrack::interpolation", interpolation_type::cubic));

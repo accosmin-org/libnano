@@ -5,9 +5,8 @@
 namespace nano
 {
     class generator_t;
-    using generator_factory_t = factory_t<generator_t>;
-    using rgenerator_t        = generator_factory_t::trobject;
-    using rgenerators_t       = std::vector<rgenerator_t>;
+    using rgenerator_t  = std::unique_ptr<generator_t>;
+    using rgenerators_t = std::vector<rgenerator_t>;
 
     // single-label categorical feature values: (sample index) = label/class index
     using sclass_mem_t  = tensor_mem_t<int32_t, 1>;
@@ -78,35 +77,18 @@ namespace nano
     ///     - with NaN,
     ///         if accessing all features at once as flatten (e.g. linear models).
     ///
-    class NANO_PUBLIC generator_t
+    class NANO_PUBLIC generator_t : public clonable_t<generator_t>
     {
     public:
         ///
-        /// \brief returns the available implementations.
-        ///
-        static generator_factory_t& all();
-
-        ///
         /// \brief constructor.
         ///
-        generator_t();
+        explicit generator_t(string_t id);
 
         ///
-        /// \brief default destructor.
+        /// \brief returns the available implementations.
         ///
-        virtual ~generator_t();
-
-        ///
-        /// \brief disable copying.
-        ///
-        generator_t(const generator_t&)            = delete;
-        generator_t& operator=(const generator_t&) = delete;
-
-        ///
-        /// \brief enable moving.
-        ///
-        generator_t(generator_t&&) noexcept            = default;
-        generator_t& operator=(generator_t&&) noexcept = delete;
+        static factory_t<generator_t>& all();
 
         ///
         /// \brief process the whole dataset:

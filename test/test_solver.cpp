@@ -2,7 +2,6 @@
 #include "fixture/solver.h"
 #include <iomanip>
 #include <nano/core/logger.h>
-#include <nano/function/benchmark.h>
 #include <nano/function/benchmark/sphere.h>
 #include <nano/solver/quasi.h>
 
@@ -34,11 +33,11 @@ struct solver_description_t
 
 static solver_description_t make_description(const string_t& solver_id)
 {
-    if (solver_id == "gd" || solver_id == "cgd" || solver_id == "cgd-n" || solver_id == "cgd-hs" ||
-        solver_id == "cgd-fr" || solver_id == "cgd-pr" || solver_id == "cgd-cd" || solver_id == "cgd-ls" ||
-        solver_id == "cgd-dy" || solver_id == "cgd-dycd" || solver_id == "cgd-dyhs" || solver_id == "cgd-prfr" ||
-        solver_id == "lbfgs" || solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" ||
-        solver_id == "hoshino" || solver_id == "fletcher")
+    if (solver_id == "gd" || solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" ||
+        solver_id == "cgd-pr" || solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" ||
+        solver_id == "cgd-dycd" || solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" ||
+        solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" ||
+        solver_id == "fletcher")
     {
         return {true, 1e-6};
     }
@@ -84,7 +83,7 @@ static auto make_nonsmooth_solver_ids()
 
 static auto make_best_smooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("cgd|lbfgs|bfgs"));
+    return solver_t::all().ids(std::regex("cgd-pr|lbfgs|bfgs"));
 }
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
@@ -219,22 +218,19 @@ UTEST_CASE(config_solvers)
         UTEST_CHECK_EQUAL(solver->parameter("solver::tolerance").value_pair<scalar_t>(), std::make_tuple(1e-1, 9e-1));
 
         UTEST_CHECK_THROW(solver->lsearch0("invalid-lsearch0-id"), std::runtime_error);
-        UTEST_CHECK_THROW(solver->lsearch0("constant", rlsearch0_t()), std::runtime_error);
+        UTEST_CHECK_THROW(solver->lsearchk("invalid-lsearchk-id"), std::runtime_error);
 
         UTEST_CHECK_NOTHROW(solver->lsearch0("constant"));
-        UTEST_CHECK_NOTHROW(solver->lsearch0("constant", lsearch0_t::all().get("constant")));
-
-        UTEST_CHECK_THROW(solver->lsearchk("invalid-lsearchk-id"), std::runtime_error);
-        UTEST_CHECK_THROW(solver->lsearchk("backtrack", rlsearchk_t()), std::runtime_error);
+        UTEST_CHECK_NOTHROW(solver->lsearch0(*lsearch0_t::all().get("constant")));
 
         UTEST_CHECK_NOTHROW(solver->lsearchk("backtrack"));
-        UTEST_CHECK_NOTHROW(solver->lsearchk("backtrack", lsearchk_t::all().get("backtrack")));
+        UTEST_CHECK_NOTHROW(solver->lsearchk(*lsearchk_t::all().get("backtrack")));
     }
 }
 
 UTEST_CASE(default_solvers_on_smooth_convex)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -247,7 +243,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 UTEST_REQUIRE(solver);
 
                 const auto descr = make_description(solver_id);
-                const auto state = check_minimize(*solver, solver_id, *function, x0);
+                const auto state = check_minimize(*solver, *function, x0);
                 fvalues.push_back(state.f);
                 epsilons.push_back(descr.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
@@ -260,7 +256,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
 
 UTEST_CASE(default_solvers_on_nonsmooth_convex)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::no, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::yes, smoothness::no, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -273,7 +269,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_REQUIRE(solver);
 
                 const auto descr = make_description(solver_id);
-                const auto state = check_minimize(*solver, solver_id, *function, x0);
+                const auto state = check_minimize(*solver, *function, x0);
                 fvalues.push_back(state.f);
                 epsilons.push_back(descr.m_epsilon);
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
@@ -286,7 +282,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
 
 UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -309,7 +305,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         }
 
                         // NB: CGD cannot work with non-strong Wolfe-based line-search!
-                        if (solver_id == "cgd" && lsearchk_id == "lemarechal")
+                        if (solver_id == "cgd-pr" && lsearchk_id == "lemarechal")
                         {
                             continue;
                         }
@@ -317,7 +313,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
                         UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
-                        const auto state = check_minimize(*solver, solver_id, *function, x0);
+                        const auto state = check_minimize(*solver, *function, x0);
                         fvalues.push_back(state.f);
                         epsilons.push_back(1e-6);
                         log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=" << lsearch0_id
@@ -333,7 +329,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
 UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -348,7 +344,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
                 UTEST_REQUIRE_NOTHROW(solver->lsearch0("cgdescent"));
                 UTEST_REQUIRE_NOTHROW(solver->lsearchk("cgdescent"));
 
-                const auto state = check_minimize(*solver, solver_id, *function, x0, 10000, 1e-10);
+                const auto state = check_minimize(*solver, *function, x0, 10000, 1e-10);
                 fvalues.push_back(state.f);
                 epsilons.push_back(1e-9);
                 log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=cgdescent"
@@ -362,7 +358,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 
 UTEST_CASE(best_solvers_with_tolerances_on_smooth)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
@@ -374,13 +370,13 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
                 UTEST_REQUIRE(solver);
 
                 UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
-                check_minimize(*solver, solver_id, *function, x0);
+                check_minimize(*solver, *function, x0);
 
                 UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1));
-                check_minimize(*solver, solver_id, *function, x0);
+                check_minimize(*solver, *function, x0);
 
                 UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1));
-                check_minimize(*solver, solver_id, *function, x0);
+                check_minimize(*solver, *function, x0);
             }
         }
     }
@@ -388,33 +384,31 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
 
 UTEST_CASE(quasi_bfgs_with_initializations)
 {
-    for (const auto& function : benchmark_function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
         for (const auto& x0 : make_random_x0s(*function))
         {
             {
-                const auto* const solver_id = "bfgs";
-                const auto* const pname     = "solver::quasi::initialization";
-                auto              solver    = solver_quasi_bfgs_t{};
+                const auto* const pname  = "solver::quasi::initialization";
+                auto              solver = solver_quasi_bfgs_t{};
 
                 UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-                check_minimize(solver, solver_id, *function, x0);
+                check_minimize(solver, *function, x0);
 
                 UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-                check_minimize(solver, solver_id, *function, x0);
+                check_minimize(solver, *function, x0);
             }
             {
-                const auto* const solver_id = "fletcher";
-                const auto* const pname     = "solver::quasi::initialization";
-                auto              solver    = solver_quasi_fletcher_t{};
+                const auto* const pname  = "solver::quasi::initialization";
+                auto              solver = solver_quasi_fletcher_t{};
 
                 UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
-                check_minimize(solver, solver_id, *function, x0);
+                check_minimize(solver, *function, x0);
 
                 UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
-                check_minimize(solver, solver_id, *function, x0);
+                check_minimize(solver, *function, x0);
             }
         }
     }

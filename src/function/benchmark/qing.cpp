@@ -3,11 +3,16 @@
 using namespace nano;
 
 function_qing_t::function_qing_t(tensor_size_t dims)
-    : benchmark_function_t("Qing", dims)
+    : function_t("qing", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
     convex(false);
     smooth(true);
+}
+
+rfunction_t function_qing_t::clone() const
+{
+    return std::make_unique<function_qing_t>(*this);
 }
 
 scalar_t function_qing_t::do_vgrad(const vector_t& x, vector_t* gx) const

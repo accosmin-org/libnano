@@ -41,15 +41,16 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
         });
 }
 
-[[maybe_unused]] static auto check_minimize(solver_t& solver, const string_t& solver_id, const function_t& function,
-                                            const vector_t& x0, tensor_size_t max_evals = 50000,
-                                            scalar_t epsilon = 1e-6, bool converges = true)
+[[maybe_unused]] static auto check_minimize(solver_t& solver, const function_t& function, const vector_t& x0,
+                                            tensor_size_t max_evals = 50000, scalar_t epsilon = 1e-6,
+                                            bool converges = true)
 {
     const auto old_n_failures = utest_n_failures.load();
     const auto state0         = solver_state_t{function, x0};
 
-    const auto lsearch0_id = solver.monotonic() ? solver.lsearch0_id() : "N/A";
-    const auto lsearchk_id = solver.monotonic() ? solver.lsearchk_id() : "N/A";
+    const auto solver_id   = solver.type_id();
+    const auto lsearch0_id = solver.monotonic() ? solver.lsearch0().type_id() : "N/A";
+    const auto lsearchk_id = solver.monotonic() ? solver.lsearchk().type_id() : "N/A";
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << " " << solver_id << "[" << lsearch0_id << ","

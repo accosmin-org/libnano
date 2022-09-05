@@ -135,6 +135,7 @@ static void dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, sca
 }
 
 lsearchk_morethuente_t::lsearchk_morethuente_t()
+    : lsearchk_t("morethuente")
 {
     type(lsearch_type::strong_wolfe);
     register_parameter(parameter_t::make_scalar("lsearchk::morethuente::delta", 0, LT, 0.66, LT, 1));

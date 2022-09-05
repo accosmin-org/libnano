@@ -3,6 +3,7 @@
 using namespace nano;
 
 lsearch0_quadratic_t::lsearch0_quadratic_t()
+    : lsearch0_t("quadratic")
 {
     register_parameter(parameter_t::make_scalar("lsearch0::quadratic::beta", 1, LT, 10.0, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("lsearch0::quadratic::alpha", 1, LT, 1.01, LT, 1e+6));

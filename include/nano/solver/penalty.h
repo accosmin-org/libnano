@@ -10,7 +10,7 @@ namespace nano
     // 1994
 
     ///
-    /// \brief interface for penalty methods to solve constrained optimization problem using a given solver.
+    /// \brief interface for exterion penalty methods to solve constrained optimization problem using a given solver.
     ///
     /// NB: the penalty method works by increasing the penalty term in the outer loop
     ///     and using the given solver to minimize the penalty function (the inner loop).
@@ -43,7 +43,7 @@ namespace nano
     };
 
     ///
-    /// \brief penalty method using the linear penalty function.
+    /// \brief exterior penalty method using the linear penalty function.
     ///
     /// see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
     ///
@@ -59,7 +59,7 @@ namespace nano
     };
 
     ///
-    /// \brief penalty method using the quadratic penalty function.
+    /// \brief exterior penalty method using the quadratic penalty function.
     ///
     /// see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
     ///

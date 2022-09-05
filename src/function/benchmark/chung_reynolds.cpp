@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_chung_reynolds_t::function_chung_reynolds_t(tensor_size_t dims)
-    : benchmark_function_t("Chung-Reynolds", dims)
+    : function_t("chung-reynolds", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_chung_reynolds_t::clone() const
+{
+    return std::make_unique<function_chung_reynolds_t>(*this);
 }
 
 scalar_t function_chung_reynolds_t::do_vgrad(const vector_t& x, vector_t* gx) const

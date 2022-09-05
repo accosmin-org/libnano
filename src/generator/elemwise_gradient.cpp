@@ -4,7 +4,8 @@
 using namespace nano;
 
 elemwise_gradient_t::elemwise_gradient_t(kernel3x3_type type, indices_t original_features)
-    : m_type(type)
+    : elemwise_input_struct_t("gradient")
+    , m_type(type)
     , m_original_features(std::move(original_features))
 {
 }

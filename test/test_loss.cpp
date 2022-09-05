@@ -25,6 +25,8 @@ struct loss_function_t final : public function_t
         smooth(m_loss->smooth());
     }
 
+    rfunction_t clone() const override { return std::make_unique<loss_function_t>(*this); }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
     {
         UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
@@ -194,7 +196,7 @@ UTEST_CASE(multi_label_multi_class)
 
 UTEST_CASE(regression)
 {
-    for (const auto& loss_id : {"absolute", "squared", "cauchy"})
+    for (const auto& loss_id : {"mae", "mse", "cauchy"})
     {
         UTEST_NAMED_CASE(loss_id);
 

@@ -4,19 +4,6 @@
 
 namespace nano
 {
-    class linear_model_t;
-
-    template <>
-    struct factory_traits_t<linear_model_t>
-    {
-        static string_t id() { return "linear"; }
-
-        static string_t description()
-        {
-            return "linear model (and variants: Ridge, Lasso, ElasticNet, VadaBoost-like)";
-        }
-    };
-
     ///
     /// \brief a linear model is an affine transformation of the flatten input features x:
     ///     y(x) = weights * x + bias.
@@ -52,7 +39,7 @@ namespace nano
         std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see model_t
+        /// \brief @see clone_t
         ///
         rmodel_t clone() const override;
 

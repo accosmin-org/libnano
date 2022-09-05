@@ -78,6 +78,7 @@ static auto fit(const estimator_t& estimator, const dataset_generator_t& dataset
 }
 
 linear_model_t::linear_model_t()
+    : model_t("linear")
 {
     register_parameter(parameter_t::make_integer("model::linear::batch", 10, LE, 100, LE, 10000));
     register_parameter(parameter_t::make_enum("model::linear::scaling", scaling_type::standard));

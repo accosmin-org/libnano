@@ -35,6 +35,11 @@ quadratic_surrogate_fit_t::quadratic_surrogate_fit_t(const loss_t& loss, tensor2
     }
 }
 
+rfunction_t quadratic_surrogate_fit_t::clone() const
+{
+    return std::make_unique<quadratic_surrogate_fit_t>(*this);
+}
+
 scalar_t quadratic_surrogate_fit_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     m_loss_outputs.vector() = m_p2.matrix() * x;
@@ -61,6 +66,11 @@ quadratic_surrogate_t::quadratic_surrogate_t(vector_t model)
 
     assert(size() > 0);
     assert(m_model.size() == (size() + 1) * (size() + 2) / 2);
+}
+
+rfunction_t quadratic_surrogate_t::clone() const
+{
+    return std::make_unique<quadratic_surrogate_t>(*this);
 }
 
 scalar_t quadratic_surrogate_t::do_vgrad(const vector_t& x, vector_t* gx) const

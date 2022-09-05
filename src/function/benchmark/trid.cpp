@@ -3,10 +3,15 @@
 using namespace nano;
 
 function_trid_t::function_trid_t(tensor_size_t dims)
-    : benchmark_function_t("Trid", dims)
+    : function_t("trid", dims)
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_trid_t::clone() const
+{
+    return std::make_unique<function_trid_t>(*this);
 }
 
 scalar_t function_trid_t::do_vgrad(const vector_t& x, vector_t* gx) const

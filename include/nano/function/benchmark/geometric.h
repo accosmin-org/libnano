@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/function/benchmark.h>
+#include <nano/function.h>
 
 namespace nano
 {
@@ -13,7 +13,7 @@ namespace nano
     ///     seee "Convex Optimization",
     ///     by S. Boyd and L. Vanderberghe, p.458 (logarithmic version)
     ///
-    class NANO_PUBLIC function_geometric_optimization_t final : public benchmark_function_t
+    class NANO_PUBLIC function_geometric_optimization_t final : public function_t
     {
     public:
         ///
@@ -22,12 +22,17 @@ namespace nano
         explicit function_geometric_optimization_t(tensor_size_t dims = 10, tensor_size_t summands = 16);
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
+
+        ///
         /// \brief @see function_t
         ///
         scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
 
         ///
-        /// \brief @see benchmark_function_t
+        /// \brief @see function_t
         ///
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 

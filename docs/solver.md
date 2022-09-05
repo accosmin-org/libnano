@@ -43,6 +43,11 @@ public:
         smooth(true);
     }
 
+    rfunction_t clone() const override
+    {
+        return std::make_unique<objective_t>(*this);
+    }
+
     scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
     {
         assert(size() == x.size());

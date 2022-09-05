@@ -11,7 +11,6 @@ make_test(test_core_estimator NANO::nano)
 make_test(test_core_parameter NANO::nano)
 make_test(test_core_tokenizer NANO::nano)
 make_test(test_core_histogram NANO::nano)
-make_test(test_core_identifiable NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)

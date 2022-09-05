@@ -57,7 +57,7 @@ namespace nano
             scalar_t m_r{0.0};
         };
 
-        struct functional_t
+        struct NANO_PUBLIC functional_t
         {
             functional_t() = default;
 
@@ -65,6 +65,12 @@ namespace nano
                 : m_function(std::move(function))
             {
             }
+
+            ~functional_t()                       = default;
+            functional_t(functional_t&&) noexcept = default;
+            functional_t(const functional_t&);
+            functional_t& operator=(functional_t&&) noexcept = default;
+            functional_t& operator=(const functional_t&);
 
             rfunction_t m_function;
         };

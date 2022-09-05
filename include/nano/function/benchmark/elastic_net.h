@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/function/benchmark.h>
+#include <nano/function.h>
 #include <nano/function/benchmark/linear.h>
 
 namespace nano
@@ -11,7 +11,7 @@ namespace nano
     ///     where x=[W|b].
     ///
     template <typename tloss>
-    class NANO_PUBLIC function_enet_t final : public benchmark_function_t, private tloss
+    class NANO_PUBLIC function_enet_t final : public function_t, private tloss
     {
     public:
         ///
@@ -21,12 +21,17 @@ namespace nano
                                  tensor_size_t summands = 100);
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
+
+        ///
         /// \brief @see function_t
         ///
         scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
 
         ///
-        /// \brief @see benchmark_function_t
+        /// \brief @see function_t
         ///
         rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
@@ -44,7 +49,7 @@ namespace nano
     public:
         static constexpr auto convex   = true;
         static constexpr auto smooth   = true;
-        static constexpr auto basename = "MSE";
+        static constexpr auto basename = "mse";
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -70,7 +75,7 @@ namespace nano
     public:
         static constexpr auto convex   = true;
         static constexpr auto smooth   = false;
-        static constexpr auto basename = "MAE";
+        static constexpr auto basename = "mae";
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -96,7 +101,7 @@ namespace nano
     public:
         static constexpr auto convex   = false;
         static constexpr auto smooth   = false;
-        static constexpr auto basename = "Cauchy";
+        static constexpr auto basename = "cauchy";
 
         using synthetic_scalar_t::synthetic_scalar_t;
 
@@ -122,7 +127,7 @@ namespace nano
     public:
         static constexpr auto convex   = true;
         static constexpr auto smooth   = false;
-        static constexpr auto basename = "Hinge";
+        static constexpr auto basename = "hinge";
 
         using synthetic_sclass_t::synthetic_sclass_t;
 
@@ -148,7 +153,7 @@ namespace nano
     public:
         static constexpr auto convex   = true;
         static constexpr auto smooth   = true;
-        static constexpr auto basename = "Logistic";
+        static constexpr auto basename = "logistic";
 
         using synthetic_sclass_t::synthetic_sclass_t;
 

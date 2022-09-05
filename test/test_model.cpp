@@ -25,6 +25,11 @@ static auto make_generator(const dataset_t& dataset)
 class fixture_model_t final : public model_t
 {
 public:
+    fixture_model_t()
+        : model_t("fixture")
+    {
+    }
+
     rmodel_t clone() const override { return std::make_unique<fixture_model_t>(*this); }
 
     fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) override

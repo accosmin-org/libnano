@@ -1,6 +1,5 @@
 #include "fixture/function.h"
 #include <iomanip>
-#include <nano/function/benchmark.h>
 #include <nano/lsearchk/backtrack.h>
 #include <nano/lsearchk/cgdescent.h>
 #include <nano/lsearchk/fletcher.h>
@@ -11,7 +10,7 @@ using namespace nano;
 
 static auto make_functions()
 {
-    return benchmark_function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
+    return function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
 }
 
 static auto get_lsearch(const string_t& id)
@@ -36,8 +35,8 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
         });
 }
 
-static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function, const vector_t& x0,
-                 const scalar_t t0, const std::tuple<scalar_t, scalar_t>& c12)
+static void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,
+                 const std::tuple<scalar_t, scalar_t>& c12)
 {
     UTEST_REQUIRE_NOTHROW(lsearch->parameter("lsearchk::tolerance") = c12);
 
@@ -50,7 +49,7 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
     UTEST_CHECK(state0.has_descent());
 
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch_id << ": x0=["
+    stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
            << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << ",g0=" << state0.convergence_criterion()
            << "\n";
     setup_logger(*lsearch, stream);
@@ -94,7 +93,7 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
     }
 }
 
-static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const function_t& function)
+static void test(const rlsearchk_t& lsearch, const function_t& function)
 {
     for (const auto& x0 : make_random_x0s(function))
     {
@@ -104,10 +103,10 @@ static void test(const rlsearchk_t& lsearch, const string_t& lsearch_id, const f
                  {1e-1, 9e-1}
         })
         {
-            test(lsearch, lsearch_id, function, x0, 1e-1, c12);
-            test(lsearch, lsearch_id, function, x0, 3e-1, c12);
-            test(lsearch, lsearch_id, function, x0, 1e+0, c12);
-            test(lsearch, lsearch_id, function, x0, 3e+1, c12);
+            test(lsearch, function, x0, 1e-1, c12);
+            test(lsearch, function, x0, 3e-1, c12);
+            test(lsearch, function, x0, 1e+0, c12);
+            test(lsearch, function, x0, 3e+1, c12);
         }
     }
 }
@@ -130,131 +129,120 @@ UTEST_CASE(interpolate)
 
 UTEST_CASE(backtrack_cubic)
 {
-    const auto* const lsearch_id                             = "backtrack";
-    const auto        lsearch                                = get_lsearch(lsearch_id);
+    const auto lsearch                                       = get_lsearch("backtrack");
     lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(backtrack_quadratic)
 {
-    const auto* const lsearch_id                             = "backtrack";
-    const auto        lsearch                                = get_lsearch(lsearch_id);
+    const auto lsearch                                       = get_lsearch("backtrack");
     lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(backtrack_bisection)
 {
-    const auto* const lsearch_id                             = "backtrack";
-    const auto        lsearch                                = get_lsearch(lsearch_id);
+    const auto lsearch                                       = get_lsearch("backtrack");
     lsearch->parameter("lsearchk::backtrack::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(lemarechal_cubic)
 {
-    const auto* const lsearch_id                              = "lemarechal";
-    const auto        lsearch                                 = get_lsearch(lsearch_id);
+    const auto lsearch                                        = get_lsearch("lemarechal");
     lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(lemarechal_quadratic)
 {
-    const auto* const lsearch_id                              = "lemarechal";
-    const auto        lsearch                                 = get_lsearch(lsearch_id);
+    const auto lsearch                                        = get_lsearch("lemarechal");
     lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(lemarechal_bisection)
 {
-    const auto* const lsearch_id                              = "lemarechal";
-    const auto        lsearch                                 = get_lsearch(lsearch_id);
+    const auto lsearch                                        = get_lsearch("lemarechal");
     lsearch->parameter("lsearchk::lemarechal::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(morethuente)
 {
-    const auto* const lsearch_id = "morethuente";
-    const auto        lsearch    = get_lsearch(lsearch_id);
+    const auto lsearch = get_lsearch("morethuente");
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(fletcher_cubic)
 {
-    const auto* const lsearch_id                            = "fletcher";
-    const auto        lsearch                               = get_lsearch(lsearch_id);
+    const auto lsearch                                      = get_lsearch("fletcher");
     lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::cubic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(fletcher_quadratic)
 {
-    const auto* const lsearch_id                            = "fletcher";
-    const auto        lsearch                               = get_lsearch(lsearch_id);
+    const auto lsearch                                      = get_lsearch("fletcher");
     lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::quadratic;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(fletcher_bisection)
 {
-    const auto* const lsearch_id                            = "fletcher";
-    const auto        lsearch                               = get_lsearch(lsearch_id);
+    const auto lsearch                                      = get_lsearch("fletcher");
     lsearch->parameter("lsearchk::fletcher::interpolation") = interpolation_type::bisection;
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 
 UTEST_CASE(cgdescent)
 {
-    const auto* const lsearch_id = "cgdescent";
-    const auto        lsearch    = get_lsearch(lsearch_id);
+    const auto lsearch = get_lsearch("cgdescent");
 
     for (const auto& function : make_functions())
     {
-        test(lsearch, lsearch_id, *function);
+        test(lsearch, *function);
     }
 }
 

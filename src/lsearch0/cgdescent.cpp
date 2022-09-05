@@ -3,6 +3,7 @@
 using namespace nano;
 
 lsearch0_cgdescent_t::lsearch0_cgdescent_t()
+    : lsearch0_t("cgdescent")
 {
     register_parameter(parameter_t::make_scalar("lsearch0::cgdescent::phi0", 0, LT, 0.01, LT, 1));
     register_parameter(parameter_t::make_scalar("lsearch0::cgdescent::phi1", 0, LT, 0.10, LT, 1));

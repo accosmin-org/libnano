@@ -4,11 +4,16 @@
 using namespace nano;
 
 function_zakharov_t::function_zakharov_t(tensor_size_t dims)
-    : benchmark_function_t("Zakharov", dims)
+    : function_t("zakharov", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
 {
     convex(true);
     smooth(true);
+}
+
+rfunction_t function_zakharov_t::clone() const
+{
+    return std::make_unique<function_zakharov_t>(*this);
 }
 
 scalar_t function_zakharov_t::do_vgrad(const vector_t& x, vector_t* gx) const

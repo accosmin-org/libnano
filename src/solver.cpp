@@ -9,7 +9,8 @@
 
 using namespace nano;
 
-solver_t::solver_t()
+solver_t::solver_t(string_t id)
+    : clonable_t(std::move(id))
 {
     lsearch0("quadratic");
     lsearchk("morethuente");
@@ -19,30 +20,40 @@ solver_t::solver_t()
     register_parameter(parameter_t::make_scalar_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
 
-void solver_t::lsearch0(const string_t& id)
+solver_t::solver_t(const solver_t& other)
+    : estimator_t(other)
+    , clonable_t(other)
+    , m_logger(other.m_logger)
+    , m_lsearch0(other.lsearch0().clone())
+    , m_lsearchk(other.lsearchk().clone())
+    , m_monotonic(other.monotonic())
 {
-    lsearch0(id, lsearch0_t::all().get(id));
 }
 
-void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
+void solver_t::lsearch0(const string_t& id)
 {
-    critical(!init, "solver: invalid line-search initialization (", id, ")!");
+    auto lsearch0 = lsearch0_t::all().get(id);
+    critical(!lsearch0, "invalid lsearch0 id <", id, ">!");
 
-    m_lsearch0_id = id;
-    m_lsearch0    = std::move(init);
+    m_lsearch0 = std::move(lsearch0);
+}
+
+void solver_t::lsearch0(const lsearch0_t& lsearch0)
+{
+    m_lsearch0 = lsearch0.clone();
 }
 
 void solver_t::lsearchk(const string_t& id)
 {
-    lsearchk(id, lsearchk_t::all().get(id));
+    auto lsearchk = lsearchk_t::all().get(id);
+    critical(!lsearchk, "invalid lsearchk id <", id, ">!");
+
+    m_lsearchk = std::move(lsearchk);
 }
 
-void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
+void solver_t::lsearchk(const lsearchk_t& lsearchk)
 {
-    critical(!strategy, "solver: invalid line-search strategy (", id, ")!");
-
-    m_lsearchk_id = id;
-    m_lsearchk    = std::move(strategy);
+    m_lsearchk = lsearchk.clone();
 }
 
 void solver_t::lsearch0_logger(const lsearch0_t::logger_t& logger)
@@ -126,31 +137,31 @@ bool solver_t::log(solver_state_t& state) const
     return status;
 }
 
-solver_factory_t& solver_t::all()
+factory_t<solver_t>& solver_t::all()
 {
-    static auto manager = solver_factory_t{};
+    static auto manager = factory_t<solver_t>{};
     const auto  op      = []()
     {
-        manager.add<solver_gd_t>("gd", "gradient descent");
-        manager.add<solver_cgd_pr_t>("cgd", "conjugate gradient descent (default)");
-        manager.add<solver_cgd_n_t>("cgd-n", "conjugate gradient descent (N+)");
-        manager.add<solver_cgd_hs_t>("cgd-hs", "conjugate gradient descent (HS+)");
-        manager.add<solver_cgd_fr_t>("cgd-fr", "conjugate gradient descent (FR)");
-        manager.add<solver_cgd_pr_t>("cgd-pr", "conjugate gradient descent (PR+)");
-        manager.add<solver_cgd_cd_t>("cgd-cd", "conjugate gradient descent (CD)");
-        manager.add<solver_cgd_ls_t>("cgd-ls", "conjugate gradient descent (LS+)");
-        manager.add<solver_cgd_dy_t>("cgd-dy", "conjugate gradient descent (DY)");
-        manager.add<solver_cgd_dycd_t>("cgd-dycd", "conjugate gradient descent (DYCD)");
-        manager.add<solver_cgd_dyhs_t>("cgd-dyhs", "conjugate gradient descent (DYHS)");
-        manager.add<solver_cgd_frpr_t>("cgd-prfr", "conjugate gradient descent (FRPR)");
-        manager.add<solver_osga_t>("osga", "optimal sub-gradient algorithm (OSGA)");
-        manager.add<solver_lbfgs_t>("lbfgs", "limited-memory BFGS");
-        manager.add<solver_quasi_dfp_t>("dfp", "quasi-newton method (DFP)");
-        manager.add<solver_quasi_sr1_t>("sr1", "quasi-newton method (SR1)");
-        manager.add<solver_quasi_bfgs_t>("bfgs", "quasi-newton method (BFGS)");
-        manager.add<solver_quasi_hoshino_t>("hoshino", "quasi-newton method (Hoshino formula)");
-        manager.add<solver_quasi_fletcher_t>("fletcher", "quasi-newton method (Fletcher's switch)");
-        manager.add<solver_ellipsoid_t>("ellipsoid", "ellipsoid method");
+        manager.add<solver_gd_t>("gradient descent");
+        manager.add<solver_cgd_pr_t>("conjugate gradient descent (default)");
+        manager.add<solver_cgd_n_t>("conjugate gradient descent (N+)");
+        manager.add<solver_cgd_hs_t>("conjugate gradient descent (HS+)");
+        manager.add<solver_cgd_fr_t>("conjugate gradient descent (FR)");
+        manager.add<solver_cgd_pr_t>("conjugate gradient descent (PR+)");
+        manager.add<solver_cgd_cd_t>("conjugate gradient descent (CD)");
+        manager.add<solver_cgd_ls_t>("conjugate gradient descent (LS+)");
+        manager.add<solver_cgd_dy_t>("conjugate gradient descent (DY)");
+        manager.add<solver_cgd_dycd_t>("conjugate gradient descent (DYCD)");
+        manager.add<solver_cgd_dyhs_t>("conjugate gradient descent (DYHS)");
+        manager.add<solver_cgd_frpr_t>("conjugate gradient descent (FRPR)");
+        manager.add<solver_osga_t>("optimal sub-gradient algorithm (OSGA)");
+        manager.add<solver_lbfgs_t>("limited-memory BFGS");
+        manager.add<solver_quasi_dfp_t>("quasi-newton method (DFP)");
+        manager.add<solver_quasi_sr1_t>("quasi-newton method (SR1)");
+        manager.add<solver_quasi_bfgs_t>("quasi-newton method (BFGS)");
+        manager.add<solver_quasi_hoshino_t>("quasi-newton method (Hoshino formula)");
+        manager.add<solver_quasi_fletcher_t>("quasi-newton method (Fletcher's switch)");
+        manager.add<solver_ellipsoid_t>("ellipsoid method");
     };
 
     static std::once_flag flag;

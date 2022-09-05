@@ -3,6 +3,7 @@
 using namespace nano;
 
 lsearch0_linear_t::lsearch0_linear_t()
+    : lsearch0_t("linear")
 {
     register_parameter(parameter_t::make_scalar("lsearch0::linear::beta", 1, LT, 10.0, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("lsearch0::linear::alpha", 1, LT, 1.01, LT, 1e+6));

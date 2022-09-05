@@ -7,15 +7,14 @@
 namespace nano
 {
     class lsearch0_t;
-    using lsearch0_factory_t = factory_t<lsearch0_t>;
-    using rlsearch0_t        = lsearch0_factory_t::trobject;
+    using rlsearch0_t = std::unique_ptr<lsearch0_t>;
 
     ///
     /// \brief estimate the initial step length of the line-search procedure.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
     ///     see "Practical methods of optimization", Fletcher, chapter 2
     ///
-    class NANO_PUBLIC lsearch0_t : public estimator_t
+    class NANO_PUBLIC lsearch0_t : public estimator_t, public clonable_t<lsearch0_t>
     {
     public:
         ///
@@ -26,17 +25,12 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        lsearch0_t();
+        explicit lsearch0_t(string_t id);
 
         ///
         /// \brief returns the available implementations
         ///
-        static lsearch0_factory_t& all();
-
-        ///
-        /// \brief clone the object, by keeping the parameters but with an internal "clean state"
-        ///
-        virtual rlsearch0_t clone() const = 0;
+        static factory_t<lsearch0_t>& all();
 
         ///
         /// \brief returns the initial step length given the current state

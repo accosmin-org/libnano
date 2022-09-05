@@ -69,6 +69,11 @@ linear_penalty_function_t::linear_penalty_function_t(const function_t& function)
     smooth(function.constraints().empty() ? ::smooth(function) : false);
 }
 
+rfunction_t linear_penalty_function_t::clone() const
+{
+    return std::make_unique<linear_penalty_function_t>(*this);
+}
+
 scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(x.size() == size());
@@ -90,6 +95,11 @@ quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& fun
 {
     convex(::convex(function));
     smooth(::smooth(function));
+}
+
+rfunction_t quadratic_penalty_function_t::clone() const
+{
+    return std::make_unique<quadratic_penalty_function_t>(*this);
 }
 
 scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
@@ -119,6 +129,11 @@ linear_quadratic_penalty_function_t& linear_quadratic_penalty_function_t::smooth
 {
     m_smoothing = smoothing;
     return *this;
+}
+
+rfunction_t linear_quadratic_penalty_function_t::clone() const
+{
+    return std::make_unique<linear_quadratic_penalty_function_t>(*this);
 }
 
 scalar_t linear_quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const

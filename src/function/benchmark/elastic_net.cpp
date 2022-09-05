@@ -7,11 +7,11 @@ static auto make_suffix(scalar_t alpha1, scalar_t alpha2)
 {
     if (alpha1 == 0.0)
     {
-        return "Ridge";
+        return "ridge";
     }
     else
     {
-        return alpha2 == 0.0 ? "Lasso" : "ElasticNet";
+        return alpha2 == 0.0 ? "lasso" : "elasticnet";
     }
 }
 
@@ -32,7 +32,7 @@ static auto make_outputs(tensor_size_t)
 
 template <typename tloss>
 function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands)
-    : benchmark_function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims))
+    : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims))
     , tloss(summands, make_outputs(dims), make_inputs(dims))
     , m_alpha1(alpha1)
     , m_alpha2(alpha2)
@@ -40,6 +40,12 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
     convex(tloss::convex);
     smooth(m_alpha1 == 0.0 && tloss::smooth);
     strong_convexity(m_alpha2);
+}
+
+template <typename tloss>
+rfunction_t function_enet_t<tloss>::clone() const
+{
+    return std::make_unique<function_enet_t<tloss>>(*this);
 }
 
 template <typename tloss>

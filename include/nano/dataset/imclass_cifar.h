@@ -13,7 +13,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        cifar_dataset_t(string_t dir, string_t name, feature_t target);
+        cifar_dataset_t(string_t id, string_t dir, string_t name, feature_t target);
 
     protected:
         void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
@@ -72,6 +72,11 @@ namespace nano
         /// \brief default constructor
         ///
         cifar10_dataset_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
     };
 
     ///
@@ -89,6 +94,11 @@ namespace nano
         /// \brief default constructor
         ///
         cifar100c_dataset_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
     };
 
     ///
@@ -106,5 +116,10 @@ namespace nano
         /// \brief default constructor
         ///
         cifar100f_dataset_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rdataset_t clone() const override;
     };
 } // namespace nano
