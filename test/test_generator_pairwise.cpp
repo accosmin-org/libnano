@@ -1,7 +1,6 @@
 #include "fixture/generator.h"
-#include "fixture/generator_dataset.h"
+#include "fixture/generator_datasource.h"
 #include <nano/generator/pairwise.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -178,9 +177,9 @@ UTEST_BEGIN_MODULE(test_generator_pairwise)
 
 UTEST_CASE(scalar_scalar)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_generator_t{dataset};
+    auto generator = dataset_t{dataset};
     add_generator<pairwise_generator_t<scalar_scalar_to_scalar_t>>(generator);
     add_generator<pairwise_generator_t<scalar_scalar_to_struct_t>>(generator, make_indices(6));
     add_generator<pairwise_generator_t<scalar_scalar_to_sclass_t>>(generator);
@@ -257,9 +256,9 @@ UTEST_CASE(scalar_scalar)
 
 UTEST_CASE(sclass_sclass)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_generator_t{dataset};
+    auto generator = dataset_t{dataset};
     add_generator<pairwise_generator_t<sclass_sclass_to_scalar_t>>(generator);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);

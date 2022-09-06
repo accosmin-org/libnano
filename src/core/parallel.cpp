@@ -85,7 +85,7 @@ size_t pool_t::max_size()
 pool_t::~pool_t()
 {
     {
-        const std::lock_guard<std::mutex> lock(m_queue.m_mutex);
+        const std::scoped_lock lock(m_queue.m_mutex);
         m_queue.m_stop = true;
     }
     m_queue.m_condition.notify_all();

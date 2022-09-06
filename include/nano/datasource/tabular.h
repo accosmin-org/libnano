@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/dataset.h>
-#include <nano/dataset/csv.h>
+#include <nano/datasource.h>
+#include <nano/datasource/csv.h>
 
 namespace nano
 {
@@ -13,23 +13,23 @@ namespace nano
     ///     - the inputs can be both categorical and continuous
     ///     - missing feature values are supported
     ///
-    class NANO_PUBLIC tabular_dataset_t : public dataset_t
+    class NANO_PUBLIC tabular_datasource_t : public datasource_t
     {
     public:
         ///
         /// \brief constructor, set the CSV files to load and the input features.
         ///
-        tabular_dataset_t(string_t id, csvs_t, features_t);
+        tabular_datasource_t(string_t id, csvs_t, features_t);
 
         ///
         /// \brief constructor, set the CSV files to load and the input and the target features.
         ///
-        tabular_dataset_t(string_t id, csvs_t, features_t, size_t target);
+        tabular_datasource_t(string_t id, csvs_t, features_t, size_t target);
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
 
     private:
         void do_load() override;

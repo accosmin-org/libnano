@@ -7,13 +7,13 @@ namespace nano
     ///
     /// \brief base class for the CIFAR-10 and CIFAR-100 datasets.
     ///
-    class NANO_PUBLIC cifar_dataset_t : public dataset_t
+    class NANO_PUBLIC cifar_datasource_t : public datasource_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        cifar_dataset_t(string_t id, string_t dir, string_t name, feature_t target);
+        cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target);
 
     protected:
         void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
@@ -65,18 +65,18 @@ namespace nano
     ///
     /// http://www.cs.toronto.edu/~kriz/cifar.html
     ///
-    class NANO_PUBLIC cifar10_dataset_t final : public cifar_dataset_t
+    class NANO_PUBLIC cifar10_datasource_t final : public cifar_datasource_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        cifar10_dataset_t();
+        cifar10_datasource_t();
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
     };
 
     ///
@@ -87,18 +87,18 @@ namespace nano
     ///
     /// http://www.cs.toronto.edu/~kriz/cifar.html
     ///
-    class NANO_PUBLIC cifar100c_dataset_t final : public cifar_dataset_t
+    class NANO_PUBLIC cifar100c_datasource_t final : public cifar_datasource_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        cifar100c_dataset_t();
+        cifar100c_datasource_t();
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
     };
 
     ///
@@ -109,17 +109,17 @@ namespace nano
     ///
     /// http://www.cs.toronto.edu/~kriz/cifar.html
     ///
-    class NANO_PUBLIC cifar100f_dataset_t final : public cifar_dataset_t
+    class NANO_PUBLIC cifar100f_datasource_t final : public cifar_datasource_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        cifar100f_dataset_t();
+        cifar100f_datasource_t();
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
     };
 } // namespace nano

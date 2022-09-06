@@ -1,8 +1,8 @@
 #pragma once
 
-#include <nano/dataset/feature.h>
-#include <nano/dataset/iterator.h>
-#include <nano/dataset/scaling.h>
+#include <nano/datasource/feature.h>
+#include <nano/datasource/iterator.h>
+#include <nano/datasource/scaling.h>
 #include <variant>
 
 namespace nano
@@ -58,7 +58,7 @@ namespace nano
         void upscale(scaling_type, tensor4d_map_t values) const;
 
         template <typename tscalar, size_t trank>
-        static auto make(const feature_t& feature, dataset_iterator_t<tscalar, trank> it)
+        static auto make(const feature_t& feature, datasource_iterator_t<tscalar, trank> it)
         {
             scalar_stats_t stats{::nano::size(feature.dims())};
             for (; it; ++it)
@@ -122,7 +122,7 @@ namespace nano
         sclass_stats_t& done();
 
         template <typename tscalar, size_t trank>
-        static auto make(const feature_t& feature, dataset_iterator_t<tscalar, trank> it)
+        static auto make(const feature_t& feature, datasource_iterator_t<tscalar, trank> it)
         {
             sclass_stats_t stats{feature.classes()};
             for (; it; ++it)
@@ -136,7 +136,7 @@ namespace nano
         }
 
         template <typename tscalar, size_t trank>
-        auto sample_weights(const feature_t& feature, dataset_iterator_t<tscalar, trank> it) const
+        auto sample_weights(const feature_t& feature, datasource_iterator_t<tscalar, trank> it) const
         {
             tensor1d_t weights(it.size());
             if (feature.classes() != m_class_counts.size())
@@ -160,7 +160,7 @@ namespace nano
                 }
                 if (samples > 0)
                 {
-                    const auto scale = samples / static_cast<scalar_t>(weights.sum());
+                    const auto scale = samples / weights.sum();
                     weights.array() *= scale;
                 }
             }
@@ -203,7 +203,7 @@ namespace nano
         mclass_stats_t& done();
 
         template <typename tscalar, size_t trank>
-        static auto make(const feature_t& feature, dataset_iterator_t<tscalar, trank> it)
+        static auto make(const feature_t& feature, datasource_iterator_t<tscalar, trank> it)
         {
             mclass_stats_t stats(feature.classes());
             for (; it; ++it)
@@ -217,7 +217,7 @@ namespace nano
         }
 
         template <typename tscalar, size_t trank>
-        auto sample_weights(const feature_t& feature, dataset_iterator_t<tscalar, trank> it) const
+        auto sample_weights(const feature_t& feature, datasource_iterator_t<tscalar, trank> it) const
         {
             tensor1d_t weights(it.size());
             if (feature.classes() * 2 != m_class_counts.size())
@@ -241,7 +241,7 @@ namespace nano
                 }
                 if (samples > 0)
                 {
-                    const auto scale = samples / static_cast<scalar_t>(weights.sum());
+                    const auto scale = samples / weights.sum();
                     weights.array() *= scale;
                 }
             }

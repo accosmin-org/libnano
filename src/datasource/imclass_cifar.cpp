@@ -1,25 +1,25 @@
 #include <fstream>
 #include <nano/core/logger.h>
-#include <nano/dataset/imclass_cifar.h>
-#include <nano/dataset/utils.h>
+#include <nano/datasource/imclass_cifar.h>
+#include <nano/datasource/utils.h>
 
 using namespace nano;
 
-cifar_dataset_t::cifar_dataset_t(string_t id, string_t dir, string_t name, feature_t target)
-    : dataset_t(std::move(id))
+cifar_datasource_t::cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target)
+    : datasource_t(std::move(id))
     , m_dir(std::move(dir))
     , m_name(std::move(name))
     , m_target(std::move(target))
 {
 }
 
-void cifar_dataset_t::file(string_t filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
-                           tensor_size_t label_index)
+void cifar_datasource_t::file(string_t filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
+                              tensor_size_t label_index)
 {
     m_files.emplace_back(std::move(filename), offset, expected, label_size, label_index);
 }
 
-void cifar_dataset_t::do_load()
+void cifar_datasource_t::do_load()
 {
     auto features =
         std::vector<feature_t>{feature_t("image").scalar(feature_type::uint8, make_dims(3, 32, 32)), m_target};
@@ -35,10 +35,10 @@ void cifar_dataset_t::do_load()
         log_info() << m_name << ": loaded " << sample << " samples.";
     }
 
-    dataset_t::testing({make_range(50000, 60000)});
+    datasource_t::testing({make_range(50000, 60000)});
 }
 
-bool cifar_dataset_t::iread(const file_t& file)
+bool cifar_datasource_t::iread(const file_t& file)
 {
     std::ifstream stream(m_dir + file.m_filename);
 
@@ -66,10 +66,10 @@ bool cifar_dataset_t::iread(const file_t& file)
     return expected == 0;
 }
 
-cifar10_dataset_t::cifar10_dataset_t()
-    : cifar_dataset_t("cifar10", scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
-                      feature_t("class").sclass(strings_t{"airplane", "automobile", "bird", "cat", "deer", "dog",
-                                                          "frog", "horse", "ship", "truck"}))
+cifar10_datasource_t::cifar10_datasource_t()
+    : cifar_datasource_t("cifar10", scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
+                         feature_t("class").sclass(strings_t{"airplane", "automobile", "bird", "cat", "deer", "dog",
+                                                             "frog", "horse", "ship", "truck"}))
 {
     file("cifar-10-batches-bin/data_batch_1.bin", 0, 10000, 1, 0);
     file("cifar-10-batches-bin/data_batch_2.bin", 10000, 10000, 1, 0);
@@ -79,45 +79,45 @@ cifar10_dataset_t::cifar10_dataset_t()
     file("cifar-10-batches-bin/test_batch.bin", 50000, 10000, 1, 0);
 }
 
-rdataset_t cifar10_dataset_t::clone() const
+rdatasource_t cifar10_datasource_t::clone() const
 {
-    return std::make_unique<cifar10_dataset_t>(*this);
+    return std::make_unique<cifar10_datasource_t>(*this);
 }
 
-cifar100c_dataset_t::cifar100c_dataset_t()
-    : cifar_dataset_t("cifar100c", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
-                      feature_t("class").sclass(strings_t{"aquatic mammals",
-                                                          "fish",
-                                                          "flowers",
-                                                          "food containers",
-                                                          "fruit and vegetables",
-                                                          "household electrical devices",
-                                                          "household furniture",
-                                                          "insects",
-                                                          "large carnivores",
-                                                          "large man-made outdoor things",
-                                                          "large natural outdoor scenes",
-                                                          "large omnivores and herbivores",
-                                                          "medium-sized mammals",
-                                                          "non-insect invertebrates",
-                                                          "people",
-                                                          "reptiles",
-                                                          "small mammals",
-                                                          "trees",
-                                                          "vehicles 1",
-                                                          "vehicles 2"}))
+cifar100c_datasource_t::cifar100c_datasource_t()
+    : cifar_datasource_t("cifar100c", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+                         feature_t("class").sclass(strings_t{"aquatic mammals",
+                                                             "fish",
+                                                             "flowers",
+                                                             "food containers",
+                                                             "fruit and vegetables",
+                                                             "household electrical devices",
+                                                             "household furniture",
+                                                             "insects",
+                                                             "large carnivores",
+                                                             "large man-made outdoor things",
+                                                             "large natural outdoor scenes",
+                                                             "large omnivores and herbivores",
+                                                             "medium-sized mammals",
+                                                             "non-insect invertebrates",
+                                                             "people",
+                                                             "reptiles",
+                                                             "small mammals",
+                                                             "trees",
+                                                             "vehicles 1",
+                                                             "vehicles 2"}))
 {
     file("cifar-100-binary/train.bin", 0, 50000, 2, 0);
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 0);
 }
 
-rdataset_t cifar100c_dataset_t::clone() const
+rdatasource_t cifar100c_datasource_t::clone() const
 {
-    return std::make_unique<cifar100c_dataset_t>(*this);
+    return std::make_unique<cifar100c_datasource_t>(*this);
 }
 
-cifar100f_dataset_t::cifar100f_dataset_t()
-    : cifar_dataset_t(
+cifar100f_datasource_t::cifar100f_datasource_t()
+    : cifar_datasource_t(
           "cifar100f", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
           feature_t("class").sclass(strings_t{
               "apple",      "aquarium_fish", "baby",         "bear",       "beaver",      "bed",         "bee",
@@ -140,7 +140,7 @@ cifar100f_dataset_t::cifar100f_dataset_t()
     file("cifar-100-binary/test.bin", 50000, 10000, 2, 1);
 }
 
-rdataset_t cifar100f_dataset_t::clone() const
+rdatasource_t cifar100f_datasource_t::clone() const
 {
-    return std::make_unique<cifar100f_dataset_t>(*this);
+    return std::make_unique<cifar100f_datasource_t>(*this);
 }

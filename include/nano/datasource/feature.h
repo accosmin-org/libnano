@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <nano/arch.h>
-#include <nano/dataset/task.h>
+#include <nano/datasource/task.h>
 #include <nano/tensor.h>
 
 namespace nano

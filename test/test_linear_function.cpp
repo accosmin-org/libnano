@@ -24,14 +24,14 @@ static auto make_threads(scaling_type scaling)
 
 static void check_vgrad(const linear::function_t& function, int trials = 100)
 {
-    const auto& loss      = function.loss();
-    const auto& iterator  = function.iterator();
-    const auto& generator = iterator.generator();
-    const auto  samples   = iterator.samples().size();
+    const auto& loss     = function.loss();
+    const auto& iterator = function.iterator();
+    const auto& dataset  = iterator.dataset();
+    const auto  samples  = iterator.samples().size();
 
-    tensor2d_t inputs(samples, generator.columns());
-    tensor4d_t outputs(cat_dims(samples, generator.target_dims()));
-    tensor4d_t targets(cat_dims(samples, generator.target_dims()));
+    tensor2d_t inputs(samples, dataset.columns());
+    tensor4d_t outputs(cat_dims(samples, dataset.target_dims()));
+    tensor4d_t targets(cat_dims(samples, dataset.target_dims()));
 
     iterator.loop(
         [&](tensor_range_t range, size_t, tensor2d_cmap_t input, tensor4d_cmap_t target)
@@ -73,8 +73,8 @@ UTEST_CASE(function)
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
 
-    const auto dataset   = make_dataset(samples, targets, features);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
 
     for (const auto scaling : enum_values<scaling_type>())
     {
@@ -82,7 +82,7 @@ UTEST_CASE(function)
         const auto batch   = make_batch(scaling);
         const auto threads = make_threads(scaling);
 
-        auto iterator = flatten_iterator_t{generator, arange(0, samples), threads};
+        auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
         iterator.batch(batch);
         iterator.scaling(scaling);
 
@@ -145,8 +145,8 @@ UTEST_CASE(minimize)
     const auto samples  = tensor_size_t{50};
     const auto features = tensor_size_t{4};
 
-    const auto dataset   = make_dataset(samples, targets, features);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
 
     for (const auto scaling : enum_values<scaling_type>())
     {
@@ -154,7 +154,7 @@ UTEST_CASE(minimize)
         const auto batch   = make_batch(scaling);
         const auto threads = make_threads(scaling);
 
-        auto iterator = flatten_iterator_t{generator, arange(0, samples), threads};
+        auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
         iterator.batch(batch);
         iterator.scaling(scaling);
         {
@@ -169,16 +169,16 @@ UTEST_CASE(minimize)
             ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling,
                             function.weights(state.x), function.bias(state.x));
 
-            UTEST_CHECK_CLOSE(dataset.bias(), function.bias(state.x), epsilon);
-            UTEST_CHECK_CLOSE(dataset.weights(), function.weights(state.x), epsilon);
+            UTEST_CHECK_CLOSE(datasource.bias(), function.bias(state.x), epsilon);
+            UTEST_CHECK_CLOSE(datasource.weights(), function.weights(state.x), epsilon);
 
-            const auto dataset_bias    = dataset.bias().vector();
-            const auto dataset_weights = dataset.weights().matrix();
-            check_linear(generator, dataset_weights, dataset_bias, 1e-15);
+            const auto datasource_bias    = datasource.bias().vector();
+            const auto datasource_weights = datasource.weights().matrix();
+            check_linear(dataset, datasource_weights, datasource_bias, 1e-15);
 
             const auto function_bias    = function.bias(state.x).vector();
             const auto function_weights = function.weights(state.x).matrix();
-            check_linear(generator, function_weights, function_bias, epsilon);
+            check_linear(dataset, function_weights, function_bias, epsilon);
         }
         {
             UTEST_NAMED_CASE(scat(scaling, "/l1reg"));

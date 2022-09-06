@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_dataset_iterator)
+UTEST_BEGIN_MODULE(test_datasource_iterator)
 
 UTEST_CASE(data1D)
 {
@@ -19,7 +19,7 @@ UTEST_CASE(data1D)
     }
 
     {
-        const auto it = dataset_iterator_t<int, 1>{};
+        const auto it = datasource_iterator_t<int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
@@ -146,7 +146,7 @@ UTEST_CASE(data4D)
     }
 
     {
-        const auto it = dataset_iterator_t<int, 1>{};
+        const auto it = datasource_iterator_t<int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
@@ -219,7 +219,7 @@ UTEST_CASE(pairwise)
     const auto samples = arange(0, 4);
 
     {
-        const auto it = dataset_pairwise_iterator_t<int, 4, int, 1>{};
+        const auto it = datasource_pairwise_iterator_t<int, 4, int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);

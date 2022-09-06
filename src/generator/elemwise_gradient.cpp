@@ -12,7 +12,7 @@ elemwise_gradient_t::elemwise_gradient_t(kernel3x3_type type, indices_t original
 
 feature_mapping_t elemwise_gradient_t::do_fit()
 {
-    const auto mapping = select_struct(dataset(), m_original_features);
+    const auto mapping = select_struct(datasource(), m_original_features);
 
     tensor_size_t count = 0;
     for (tensor_size_t i = 0; i < mapping.size<0>(); ++i)
@@ -52,7 +52,7 @@ feature_t elemwise_gradient_t::feature(tensor_size_t ifeature) const
     const auto original = mapped_original(ifeature);
     const auto dims     = mapped_dims(ifeature);
 
-    const auto& feature = dataset().feature(original);
+    const auto& feature = datasource().feature(original);
 
     auto suffix = scat(m_type);
     switch (mapped_mode(ifeature))

@@ -1,16 +1,16 @@
-#include <nano/generator.h>
-#include <nano/generator/iterator.h>
+#include <nano/dataset.h>
+#include <nano/dataset/iterator.h>
 
 using namespace nano;
 
-base_generator_iterator_t::base_generator_iterator_t(const dataset_generator_t& generator, size_t threads)
-    : m_generator(generator)
+base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset, size_t threads)
+    : m_dataset(dataset)
     , m_pool(threads)
 {
 }
 
-targets_iterator_t::targets_iterator_t(const dataset_generator_t& generator, indices_cmap_t samples, size_t threads)
-    : base_generator_iterator_t(generator, threads)
+targets_iterator_t::targets_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
+    : base_dataset_iterator_t(dataset, threads)
     , m_samples(samples)
     , m_targets_buffers(concurrency())
 {
@@ -19,14 +19,14 @@ targets_iterator_t::targets_iterator_t(const dataset_generator_t& generator, ind
 
 targets_stats_t targets_iterator_t::make_targets_stats() const
 {
-    const auto& dataset = generator().dataset();
-    if (dataset.type() == task_type::unsupervised)
+    const auto& datasource = dataset().datasource();
+    if (datasource.type() == task_type::unsupervised)
     {
         return targets_stats_t{};
     }
     else
     {
-        return dataset.visit_target(
+        return datasource.visit_target(
             [&](const auto& feature, const auto& data, const auto& mask)
             {
                 return loop_samples(
@@ -56,14 +56,14 @@ tensor4d_cmap_t targets_iterator_t::targets(size_t tnum, const tensor_range_t& r
     else
     {
         assert(tnum < m_targets_buffers.size());
-        return targets(generator().targets(m_samples.slice(range), m_targets_buffers[tnum]));
+        return targets(dataset().targets(m_samples.slice(range), m_targets_buffers[tnum]));
     }
 }
 
 bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
 {
     auto       cached = false;
-    const auto tdims  = generator().target_dims();
+    const auto tdims  = dataset().target_dims();
 
     if (static_cast<tensor_size_t>(sizeof(scalar_t)) * m_samples.size() * nano::size(tdims) <= max_bytes)
     {
@@ -76,7 +76,7 @@ bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
                     assert(tnum < m_targets_buffers.size());
                     const auto range       = make_range(begin, end);
                     const auto samples     = m_samples.slice(range);
-                    m_targets.slice(range) = targets(generator().targets(samples, m_targets_buffers[tnum]));
+                    m_targets.slice(range) = targets(dataset().targets(samples, m_targets_buffers[tnum]));
                 });
             cached = true;
         }
@@ -98,8 +98,8 @@ void targets_iterator_t::scaling(scaling_type scaling)
     m_scaling = scaling;
 }
 
-flatten_iterator_t::flatten_iterator_t(const dataset_generator_t& generator, indices_cmap_t samples, size_t threads)
-    : targets_iterator_t(generator, samples, threads)
+flatten_iterator_t::flatten_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
+    : targets_iterator_t(dataset, samples, threads)
     , m_flatten_buffers(concurrency())
 {
     m_flatten_stats = make_flatten_stats();
@@ -107,27 +107,27 @@ flatten_iterator_t::flatten_iterator_t(const dataset_generator_t& generator, ind
 
 flatten_stats_t flatten_iterator_t::make_flatten_stats()
 {
-    const auto& samples   = this->samples();
-    const auto& generator = this->generator();
+    const auto& samples = this->samples();
+    const auto& dataset = this->dataset();
 
-    std::vector<flatten_stats_t> stats(concurrency(), flatten_stats_t{generator.columns()});
+    std::vector<flatten_stats_t> stats(concurrency(), flatten_stats_t{dataset.columns()});
     map(samples.size(), batch(),
         [&](tensor_size_t begin, tensor_size_t end, size_t tnum)
         {
             assert(tnum < m_flatten_buffers.size());
             const auto range = make_range(begin, end);
-            const auto data  = generator.flatten(samples.slice(range), m_flatten_buffers[tnum]);
+            const auto data  = dataset.flatten(samples.slice(range), m_flatten_buffers[tnum]);
             for (tensor_size_t i = 0, size = range.size(); i < size; ++i)
             {
                 stats[tnum] += data.array(i);
             }
         });
 
-    auto enable_scaling = tensor_mem_t<uint8_t, 1>(generator.columns());
+    auto enable_scaling = tensor_mem_t<uint8_t, 1>(dataset.columns());
     for (tensor_size_t column = 0; column < enable_scaling.size(); ++column)
     {
-        const auto ifeature    = generator.column2feature(column);
-        const auto feature     = generator.feature(ifeature);
+        const auto ifeature    = dataset.column2feature(column);
+        const auto feature     = dataset.feature(ifeature);
         const auto isclass     = feature.type() == feature_type::sclass || feature.type() == feature_type::mclass;
         enable_scaling(column) = isclass ? 0x00 : 0x01;
     }
@@ -147,8 +147,8 @@ tensor2d_cmap_t flatten_iterator_t::flatten(tensor2d_map_t data) const
 
 tensor2d_cmap_t flatten_iterator_t::flatten(size_t tnum, const tensor_range_t& range) const
 {
-    const auto& samples   = this->samples();
-    const auto& generator = this->generator();
+    const auto& samples = this->samples();
+    const auto& dataset = this->dataset();
 
     if (m_flatten.size<0>() == samples.size())
     {
@@ -157,17 +157,17 @@ tensor2d_cmap_t flatten_iterator_t::flatten(size_t tnum, const tensor_range_t& r
     else
     {
         assert(tnum < m_flatten_buffers.size());
-        return flatten(generator.flatten(samples.slice(range), m_flatten_buffers[tnum]));
+        return flatten(dataset.flatten(samples.slice(range), m_flatten_buffers[tnum]));
     }
 }
 
 bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
 {
-    const auto& samples   = this->samples();
-    const auto& generator = this->generator();
+    const auto& samples = this->samples();
+    const auto& dataset = this->dataset();
 
     auto       cached = false;
-    const auto isize  = generator.columns();
+    const auto isize  = dataset.columns();
 
     if (static_cast<tensor_size_t>(sizeof(scalar_t)) * samples.size() * isize <= max_bytes)
     {
@@ -179,7 +179,7 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
                 {
                     assert(tnum < m_flatten_buffers.size());
                     const auto range       = make_range(begin, end);
-                    m_flatten.slice(range) = flatten(generator.flatten(samples.slice(range), m_flatten_buffers[tnum]));
+                    m_flatten.slice(range) = flatten(dataset.flatten(samples.slice(range), m_flatten_buffers[tnum]));
                 });
             cached = true;
         }
@@ -224,30 +224,30 @@ void targets_iterator_t::loop(const targets_callback_t& callback) const
         });
 }
 
-select_iterator_t::select_iterator_t(const dataset_generator_t& generator, size_t threads)
-    : base_generator_iterator_t(generator, threads)
+select_iterator_t::select_iterator_t(const dataset_t& dataset, size_t threads)
+    : base_dataset_iterator_t(dataset, threads)
     , m_buffers(concurrency())
 {
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const sclass_callback_t& callback) const
 {
-    return loop(samples, generator().sclass_features(), callback);
+    return loop(samples, dataset().sclass_features(), callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const mclass_callback_t& callback) const
 {
-    return loop(samples, generator().mclass_features(), callback);
+    return loop(samples, dataset().mclass_features(), callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const scalar_callback_t& callback) const
 {
-    return loop(samples, generator().scalar_features(), callback);
+    return loop(samples, dataset().scalar_features(), callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const struct_callback_t& callback) const
 {
-    return loop(samples, generator().struct_features(), callback);
+    return loop(samples, dataset().struct_features(), callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const sclass_callback_t& callback) const
@@ -257,7 +257,7 @@ void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, co
         {
             assert(tnum < m_buffers.size());
             const auto ifeature = features(index);
-            callback(ifeature, tnum, generator().select(samples, ifeature, m_buffers[tnum].m_sclass));
+            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_sclass));
         });
 }
 
@@ -268,7 +268,7 @@ void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, co
         {
             assert(tnum < m_buffers.size());
             const auto ifeature = features(index);
-            callback(ifeature, tnum, generator().select(samples, ifeature, m_buffers[tnum].m_mclass));
+            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_mclass));
         });
 }
 
@@ -279,7 +279,7 @@ void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, co
         {
             assert(tnum < m_buffers.size());
             const auto ifeature = features(index);
-            callback(ifeature, tnum, generator().select(samples, ifeature, m_buffers[tnum].m_scalar));
+            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_scalar));
         });
 }
 
@@ -290,6 +290,6 @@ void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, co
         {
             assert(tnum < m_buffers.size());
             const auto ifeature = features(index);
-            callback(ifeature, tnum, generator().select(samples, ifeature, m_buffers[tnum].m_struct));
+            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_struct));
         });
 }

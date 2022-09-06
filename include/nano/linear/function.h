@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/dataset/iterator.h>
 #include <nano/function.h>
-#include <nano/generator/iterator.h>
 #include <nano/linear/cache.h>
 #include <nano/loss.h>
 

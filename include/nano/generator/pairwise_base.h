@@ -14,7 +14,7 @@ namespace nano
         base_pairwise_generator_t(string_t id, indices_t original_features);
         base_pairwise_generator_t(string_t id, indices_t original_features1, indices_t original_features2);
 
-        void fit(const dataset_t& dataset) override;
+        void fit(const datasource_t&) override;
 
         tensor_size_t features() const override { return m_feature_mapping.size<0>(); }
 

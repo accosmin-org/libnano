@@ -1,4 +1,5 @@
 #include <nano/dataset.h>
+#include <nano/dataset/iterator.h>
 #include <nano/generator/elemwise_identity.h>
 #include <nano/linear/model.h>
 #include <utest/utest.h>
@@ -12,18 +13,18 @@ using namespace nano;
 /// NB: uniformly-distributed noise is added to targets if noise() > 0.
 /// NB: every column % modulo() is not taken into account.
 ///
-class fixture_dataset_t final : public dataset_t
+class fixture_datasource_t final : public datasource_t
 {
 public:
-    using dataset_t::features;
-    using dataset_t::samples;
+    using datasource_t::features;
+    using datasource_t::samples;
 
-    fixture_dataset_t()
-        : dataset_t("linear")
+    fixture_datasource_t()
+        : datasource_t("linear")
     {
     }
 
-    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
     void noise(scalar_t noise) { m_noise = noise; }
 
@@ -117,23 +118,23 @@ private:
         }
 
         // create samples: target = weights * input + bias + noise
-        auto generator = dataset_generator_t{*this};
-        generator.add<elemwise_generator_t<sclass_identity_t>>();
-        generator.add<elemwise_generator_t<mclass_identity_t>>();
-        generator.add<elemwise_generator_t<scalar_identity_t>>();
-        generator.add<elemwise_generator_t<struct_identity_t>>();
+        auto dataset = dataset_t{*this};
+        dataset.add<elemwise_generator_t<sclass_identity_t>>();
+        dataset.add<elemwise_generator_t<mclass_identity_t>>();
+        dataset.add<elemwise_generator_t<scalar_identity_t>>();
+        dataset.add<elemwise_generator_t<struct_identity_t>>();
 
         m_bias.resize(m_targets);
-        m_weights.resize(m_targets, generator.columns());
+        m_weights.resize(m_targets, dataset.columns());
 
         m_bias.random();
         m_weights.random();
-        for (tensor_size_t column = m_modulo, columns = generator.columns(); column < columns; column += m_modulo)
+        for (tensor_size_t column = m_modulo, columns = dataset.columns(); column < columns; column += m_modulo)
         {
             m_weights.matrix().row(column).setConstant(0.0);
         }
 
-        auto iterator = flatten_iterator_t{generator, arange(0, m_samples), 1U};
+        auto iterator = flatten_iterator_t{dataset, arange(0, m_samples), 1U};
         iterator.loop(
             [&](tensor_range_t range, size_t, tensor2d_cmap_t inputs)
             {
@@ -159,38 +160,37 @@ private:
     tensor1d_t    m_bias;          ///< 1D bias vector that offsets the output
 };
 
-[[maybe_unused]] static auto make_dataset(tensor_size_t samples, tensor_size_t targets, tensor_size_t features,
-                                          tensor_size_t modulo = 31, scalar_t noise = 0.0)
+[[maybe_unused]] static auto make_datasource(tensor_size_t samples, tensor_size_t targets, tensor_size_t features,
+                                             tensor_size_t modulo = 31, scalar_t noise = 0.0)
 {
-    auto dataset = fixture_dataset_t{};
-    dataset.noise(noise);
-    dataset.modulo(modulo);
-    dataset.samples(samples);
-    dataset.targets(targets);
-    dataset.features(features);
-    UTEST_REQUIRE_NOTHROW(dataset.load());
+    auto datasource = fixture_datasource_t{};
+    datasource.noise(noise);
+    datasource.modulo(modulo);
+    datasource.samples(samples);
+    datasource.targets(targets);
+    datasource.features(features);
+    UTEST_REQUIRE_NOTHROW(datasource.load());
+    return datasource;
+}
+
+[[maybe_unused]] static auto make_dataset(const datasource_t& datasource)
+{
+    auto dataset = dataset_t{datasource};
+    dataset.add<elemwise_generator_t<sclass_identity_t>>();
+    dataset.add<elemwise_generator_t<mclass_identity_t>>();
+    dataset.add<elemwise_generator_t<scalar_identity_t>>();
+    dataset.add<elemwise_generator_t<struct_identity_t>>();
     return dataset;
 }
 
-[[maybe_unused]] static auto make_generator(const dataset_t& dataset)
-{
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    return generator;
-}
-
 template <typename tweights, typename tbias>
-[[maybe_unused]] static void check_linear(const dataset_generator_t& generator, tweights weights, tbias bias,
-                                          scalar_t epsilon)
+[[maybe_unused]] static void check_linear(const dataset_t& dataset, tweights weights, tbias bias, scalar_t epsilon)
 {
-    const auto samples = generator.dataset().samples();
+    const auto samples = dataset.samples();
 
     auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
 
-    auto iterator = flatten_iterator_t{generator, arange(0, samples), 1U};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), 1U};
     iterator.batch(11);
     iterator.scaling(scaling_type::none);
     iterator.loop(

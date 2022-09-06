@@ -1,235 +1,225 @@
 #pragma once
 
-#include <nano/dataset/mask.h>
+#include <nano/core/parallel.h>
+#include <nano/datasource/stats.h>
+#include <nano/generator/storage.h>
 
 namespace nano
 {
+    class dataset_t;
+
     ///
-    /// \brief base iterator to iterate over the masked feature values of a given set of samples.
+    /// \brief callbacks useful for dense models with the following signature:
+    ///     (tensor_size_t sample_range, size_t thread_number, target_values)
+    ///     (tensor_size_t sample_range, size_t thread_number, flatten_feature_values, target_values)
     ///
-    class base_dataset_iterator_t
+    using targets_callback_t         = std::function<void(tensor_range_t, size_t, tensor4d_cmap_t)>;
+    using flatten_callback_t         = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t)>;
+    using flatten_targets_callback_t = std::function<void(tensor_range_t, size_t, tensor2d_cmap_t, tensor4d_cmap_t)>;
+
+    ///
+    /// \brief callbacks useful for feature selection-based models with the following signature:
+    ///     (tensor_size_t feature_index, size_t thread_number, feature_values)
+    ///
+    using sclass_callback_t = std::function<void(tensor_size_t, size_t, sclass_cmap_t)>;
+    using mclass_callback_t = std::function<void(tensor_size_t, size_t, mclass_cmap_t)>;
+    using scalar_callback_t = std::function<void(tensor_size_t, size_t, scalar_cmap_t)>;
+    using struct_callback_t = std::function<void(tensor_size_t, size_t, struct_cmap_t)>;
+
+    ///
+    /// \brief base iterator to loop through generated input and target feature values.
+    ///
+    class NANO_PUBLIC base_dataset_iterator_t
     {
     public:
-        base_dataset_iterator_t() = default;
+        ///
+        /// \brief constructor
+        ///
+        explicit base_dataset_iterator_t(const dataset_t&, size_t threads = parallel::pool_t::max_size());
 
-        explicit base_dataset_iterator_t(indices_cmap_t samples, tensor_size_t index = 0)
-            : m_index(index)
-            , m_samples(samples)
+        ///
+        /// \brief returns the maximum number of threads available for processing.
+        ///
+        auto concurrency() const { return m_pool.size(); }
+
+        ///
+        /// \brief returns the wrapped feature dataset.
+        ///
+        const auto& dataset() const { return m_dataset; }
+
+    protected:
+        template <typename toperator>
+        void map(tensor_size_t elements, const toperator& op) const
         {
-            assert(index >= 0 && index <= m_samples.size());
+            m_pool.map(elements, op);
         }
 
-        tensor_size_t size() const { return m_samples.size(); }
-
-        tensor_size_t index() const { return m_index; }
-
-        tensor_size_t sample() const
+        template <typename toperator>
+        void map(tensor_size_t elements, tensor_size_t chunksize, const toperator& op) const
         {
-            assert(m_index >= 0 && m_index < m_samples.size());
-            return m_samples(m_index);
-        }
-
-        base_dataset_iterator_t& operator++()
-        {
-            assert(m_index < m_samples.size());
-
-            ++m_index;
-            return *this;
-        }
-
-        base_dataset_iterator_t operator++(int) // NOLINT(cert-dcl21-cpp)
-        {
-            auto tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        explicit operator bool() const { return index() < size(); }
-
-    private:
-        // attributes
-        tensor_size_t  m_index{0}; ///<
-        indices_cmap_t m_samples;  ///<
-    };
-
-    ///
-    /// \brief utility to iterate over the masked feature values of a given set of samples.
-    ///
-    template <typename tscalar, size_t trank>
-    class dataset_iterator_t : public base_dataset_iterator_t
-    {
-    public:
-        using data_cmap_t = tensor_cmap_t<tscalar, trank>;
-
-        dataset_iterator_t() = default;
-
-        dataset_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples, tensor_size_t index = 0)
-            : base_dataset_iterator_t(samples, index)
-            , m_data(data)
-            , m_mask(mask)
-        {
-        }
-
-        auto operator*() const
-        {
-            const auto sample = this->sample();
-            const auto given  = getbit(m_mask, sample);
-
-            if constexpr (trank == 1)
-            {
-                return std::make_tuple(index(), given, m_data(sample));
-            }
-            else
-            {
-                return std::make_tuple(index(), given, m_data.tensor(sample));
-            }
+            m_pool.map(elements, chunksize, op);
         }
 
     private:
         // attributes
-        data_cmap_t m_data; ///<
-        mask_cmap_t m_mask; ///<
+        const dataset_t&         m_dataset; ///<
+        mutable parallel::pool_t m_pool;    ///< thread pool to speed-up feature generation
     };
 
     ///
-    /// \brief utility to iterate over the masked feature pair values of a given set of samples.
+    /// \brief iterator to loop through target values
+    ///     useful for training and evaluating dense models.
     ///
-    template <typename tscalar1, size_t trank1, typename tscalar2, size_t trank2>
-    class dataset_pairwise_iterator_t : public base_dataset_iterator_t
+    /// the feature and the target values can be:
+    ///     - cached to speed-up access (useful if slow to compute on the fly)
+    ///     - scaled to speed-up training by improving the convergence rate of the solver.
+    ///
+    class NANO_PUBLIC targets_iterator_t : public base_dataset_iterator_t
     {
     public:
-        using data1_cmap_t = tensor_cmap_t<tscalar1, trank1>;
-        using data2_cmap_t = tensor_cmap_t<tscalar2, trank2>;
+        ///
+        /// \brief constructor
+        ///
+        targets_iterator_t(const dataset_t&, indices_cmap_t samples, size_t threads = parallel::pool_t::max_size());
 
-        dataset_pairwise_iterator_t() = default;
+        ///
+        /// \brief returns true if the target values can be cached in memory in the given number of bytes.
+        ///
+        bool cache_targets(tensor_size_t max_bytes);
 
-        dataset_pairwise_iterator_t(data1_cmap_t data1, mask_cmap_t mask1, data2_cmap_t data2, mask_cmap_t mask2,
-                                    indices_cmap_t samples, tensor_size_t index = 0)
-            : base_dataset_iterator_t(samples, index)
-            , m_data1(data1)
-            , m_mask1(mask1)
-            , m_data2(data2)
-            , m_mask2(mask2)
-        {
-        }
+        ///
+        /// \brief loop through targets with the following callback:
+        ///     - op(tensor_range_t sample_range, size_t thread_number, tensor4d_cmap_t targets)
+        ///
+        void loop(const targets_callback_t&) const;
 
-        auto operator*() const
-        {
-            const auto sample = this->sample();
-            const auto given1 = getbit(m_mask1, sample);
-            const auto given2 = getbit(m_mask2, sample);
+        ///
+        /// \brief change parameters.
+        ///
+        void batch(tensor_size_t);
+        void scaling(scaling_type);
 
-            if constexpr (trank1 == 1)
-            {
-                if constexpr (trank2 == 1)
-                {
-                    return std::make_tuple(index(), given1, m_data1(sample), given2, m_data2(sample));
-                }
-                else
-                {
-                    return std::make_tuple(index(), given1, m_data1(sample), given2, m_data2.tensor(sample));
-                }
-            }
-            else
-            {
-                if constexpr (trank2 == 1)
-                {
-                    return std::make_tuple(index(), given1, m_data1.tensor(sample), given2, m_data2(sample));
-                }
-                else
-                {
-                    return std::make_tuple(index(), given1, m_data1.tensor(sample), given2, m_data2.tensor(sample));
-                }
-            }
-        }
+        ///
+        /// \brief access functions.
+        ///
+        auto batch() const { return m_batch; }
+
+        auto scaling() const { return m_scaling; }
+
+        const auto& samples() const { return m_samples; }
+
+        const auto& targets_stats() const { return m_targets_stats; }
+
+    protected:
+        tensor4d_cmap_t targets(tensor4d_map_t) const;
+        tensor4d_cmap_t targets(size_t tnum, const tensor_range_t& range) const;
 
     private:
+        targets_stats_t make_targets_stats() const;
+
+        using buffers_t = std::vector<tensor4d_t>;
+
         // attributes
-        data1_cmap_t m_data1; ///<
-        mask_cmap_t  m_mask1; ///<
-        data2_cmap_t m_data2; ///<
-        mask_cmap_t  m_mask2; ///<
+        indices_t         m_samples;                     ///<
+        tensor_size_t     m_batch{100};                  ///<
+        scaling_type      m_scaling{scaling_type::none}; ///< scaling method for flatten feature values & targets
+        tensor4d_t        m_targets;                     ///< cached targets values
+        targets_stats_t   m_targets_stats;               ///< statistics for targets
+        mutable buffers_t m_targets_buffers;             ///< per-thread buffer
     };
 
     ///
-    /// \brief return true if the two iterators are equivalent.
+    /// \brief iterator to loop through flatten feature values and target values
+    ///     useful for training and evaluating dense models.
     ///
-    inline bool operator!=(const base_dataset_iterator_t& lhs, const base_dataset_iterator_t& rhs)
+    class NANO_PUBLIC flatten_iterator_t : public targets_iterator_t
     {
-        assert(lhs.size() == rhs.size());
-        return lhs.index() != rhs.index();
-    }
+    public:
+        using targets_iterator_t::loop;
+
+        ///
+        /// \brief constructor
+        ///
+        flatten_iterator_t(const dataset_t&, indices_cmap_t samples, size_t threads = parallel::pool_t::max_size());
+
+        ///
+        /// \brief returns true if the flatten feature values can be cached in memory in the given number of bytes.
+        ///
+        bool cache_flatten(tensor_size_t max_bytes);
+
+        ///
+        /// \brief loop through flatten feature values with the following callback:
+        ///     - op(tensor_range_t sample_range, size_t thread_number, tensor2d_cmap_t flatten)
+        ///
+        void loop(const flatten_callback_t&) const;
+
+        ///
+        /// \brief loop through flatten feature values and the associated targets with the following callback:
+        ///     - op(tensor_range_t sample_range, size_t thread_number, tensor2d_cmap_t flatten, tensor4d_cmap_t
+        ///     targets)
+        ///
+        void loop(const flatten_targets_callback_t&) const;
+
+        ///
+        /// \brief access functions.
+        ///
+        const auto& flatten_stats() const { return m_flatten_stats; }
+
+    private:
+        flatten_stats_t make_flatten_stats();
+        tensor2d_cmap_t flatten(tensor2d_map_t) const;
+        tensor2d_cmap_t flatten(size_t tnum, const tensor_range_t& range) const;
+
+        using buffers_t = std::vector<tensor2d_t>;
+
+        // attributes
+        flatten_stats_t   m_flatten_stats;   ///< statistics for flatten feature values
+        mutable buffers_t m_flatten_buffers; ///< per-thread buffer
+        tensor2d_t        m_flatten;         ///< cached feature values
+    };
 
     ///
-    /// \brief construct an iterator from the given inputs.
+    /// \brief iterator to loop through features of a particular type
+    ///     useful for feature selection-based models.
     ///
-    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-    auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
+    class NANO_PUBLIC select_iterator_t : public base_dataset_iterator_t
     {
-        return dataset_iterator_t<tscalar, trank>{data, mask, samples, 0};
-    }
+    public:
+        ///
+        /// \brief constructor
+        ///
+        explicit select_iterator_t(const dataset_t&, size_t threads = parallel::pool_t::max_size());
 
-    template <template <typename, size_t> class tstorage1, typename tscalar1, size_t trank1,
-              template <typename, size_t> class tstorage2, typename tscalar2, size_t trank2>
-    auto make_iterator(const tensor_t<tstorage1, tscalar1, trank1>& data1, mask_cmap_t mask1,
-                       const tensor_t<tstorage2, tscalar2, trank2>& data2, mask_cmap_t mask2, indices_cmap_t samples)
-    {
-        return dataset_pairwise_iterator_t<tscalar1, trank1, tscalar2, trank2>{data1, mask1, data2, mask2, samples, 0};
-    }
+        ///
+        /// \brief loop through all features of the same type with the following callback:
+        ///     - op(tensor_size_t feature_index, size_t thread_number, ... feature_values)
+        ///
+        void loop(indices_cmap_t samples, const sclass_callback_t&) const;
+        void loop(indices_cmap_t samples, const mclass_callback_t&) const;
+        void loop(indices_cmap_t samples, const scalar_callback_t&) const;
+        void loop(indices_cmap_t samples, const struct_callback_t&) const;
 
-    ///
-    /// \brief construct an invalid (end) iterator from the given inputs.
-    ///
-    inline auto make_end_iterator(indices_cmap_t samples)
-    {
-        return base_dataset_iterator_t{samples, samples.size()};
-    }
+        ///
+        /// \brief loop through the given features of the same type with the following callback:
+        ///     - op(tensor_size_t feature_index, size_t thread_number, ... feature_values)
+        ///
+        void loop(indices_cmap_t samples, indices_cmap_t features, const sclass_callback_t&) const;
+        void loop(indices_cmap_t samples, indices_cmap_t features, const mclass_callback_t&) const;
+        void loop(indices_cmap_t samples, indices_cmap_t features, const scalar_callback_t&) const;
+        void loop(indices_cmap_t samples, indices_cmap_t features, const struct_callback_t&) const;
 
-    ///
-    /// \brief call the appropriate operator for the given data,
-    ///     distinguishing between single-label, multi-label and scalar/structured cases.
-    ///
-    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename toperator_sclass,
-              typename toperator_mclass, typename toperator_scalar>
-    auto loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask,
-                      const indices_cmap_t& samples, const toperator_sclass& op_sclass,
-                      const toperator_mclass& op_mclass, const toperator_scalar& op_scalar)
-    {
-        if constexpr (trank == 1)
+    private:
+        struct buffer_t
         {
-            return op_sclass(make_iterator(data, mask, samples));
-        }
-        else if constexpr (trank == 2)
-        {
-            return op_mclass(make_iterator(data, mask, samples));
-        }
-        else
-        {
-            return op_scalar(make_iterator(data, mask, samples));
-        }
-    }
+            sclass_mem_t m_sclass;
+            mclass_mem_t m_mclass;
+            scalar_mem_t m_scalar;
+            struct_mem_t m_struct;
+        };
 
-    template <size_t trank_expected, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
-              typename toperator_expected>
-    void loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask,
-                      const indices_cmap_t& samples, const toperator_expected& op_expected)
-    {
-        if constexpr (trank == trank_expected)
-        {
-            op_expected(make_iterator(data, mask, samples));
-        }
-    }
+        using buffers_t = std::vector<buffer_t>;
 
-    template <size_t trank_expected1, size_t trank_expected2, template <typename, size_t> class tstorage1,
-              typename tscalar1, size_t      trank1, template <typename, size_t> class tstorage2, typename tscalar2,
-              size_t trank2, typename toperator_expected>
-    void loop_samples(const tensor_t<tstorage1, tscalar1, trank1>& data1, const mask_cmap_t& mask1,
-                      const tensor_t<tstorage2, tscalar2, trank2>& data2, const mask_cmap_t& mask2,
-                      const indices_cmap_t& samples, const toperator_expected& op_expected)
-    {
-        if constexpr (trank1 == trank_expected1 && trank2 == trank_expected2)
-        {
-            op_expected(make_iterator(data1, mask1, data2, mask2, samples));
-        }
-    }
+        // attributes
+        mutable buffers_t m_buffers; ///< per-thread buffer
+    };
 } // namespace nano

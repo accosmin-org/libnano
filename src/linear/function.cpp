@@ -1,4 +1,4 @@
-#include <nano/generator.h>
+#include <nano/dataset.h>
 #include <nano/linear/function.h>
 #include <nano/linear/util.h>
 
@@ -6,12 +6,12 @@ using namespace nano;
 
 static auto isize(const flatten_iterator_t& iterator)
 {
-    return iterator.generator().columns();
+    return iterator.dataset().columns();
 }
 
 static auto tsize(const flatten_iterator_t& iterator)
 {
-    return ::nano::size(iterator.generator().target_dims());
+    return ::nano::size(iterator.dataset().target_dims());
 }
 
 linear::function_t::function_t(const flatten_iterator_t& iterator, const loss_t& loss, scalar_t l1reg, scalar_t l2reg,

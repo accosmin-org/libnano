@@ -130,8 +130,10 @@ namespace nano
                 return static_cast<int>(std::floor(log_value));
             };
 
-            int min_pos_exponent = std::numeric_limits<int>::max(), max_pos_exponent = std::numeric_limits<int>::min();
-            int min_neg_exponent = std::numeric_limits<int>::max(), max_neg_exponent = std::numeric_limits<int>::min();
+            int min_pos_exponent = std::numeric_limits<int>::max();
+            int max_pos_exponent = std::numeric_limits<int>::min();
+            int min_neg_exponent = std::numeric_limits<int>::max();
+            int max_neg_exponent = std::numeric_limits<int>::min();
 
             for (auto it = begin; it != end; ++it)
             {

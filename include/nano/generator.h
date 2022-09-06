@@ -1,151 +1,182 @@
 #pragma once
 
-#include <nano/generator/generator.h>
-#include <nano/generator/iterator.h>
+#include <nano/datasource.h>
+#include <nano/generator/storage.h>
 
 namespace nano
 {
+    class generator_t;
+    using rgenerator_t  = std::unique_ptr<generator_t>;
+    using rgenerators_t = std::vector<rgenerator_t>;
+
     ///
-    /// \brief wraps a collection of feature generators, potentially of different types.
+    /// \brief type of generated features.
     ///
-    class NANO_PUBLIC dataset_generator_t
+    enum class generator_type
+    {
+        mclass,
+        sclass,
+        scalar,
+        structured,
+    };
+
+    struct generated_sclass_t
+    {
+        static constexpr auto generated_type = generator_type::sclass;
+    };
+
+    struct generated_mclass_t
+    {
+        static constexpr auto generated_type = generator_type::mclass;
+    };
+
+    struct generated_scalar_t
+    {
+        static constexpr auto generated_type = generator_type::scalar;
+    };
+
+    struct generated_struct_t
+    {
+        static constexpr auto generated_type = generator_type::structured;
+    };
+
+    ///
+    /// \brief generate features from a given collection of samples of a dataset (e.g. the training samples).
+    ///
+    /// NB: optional inputs are supported.
+    /// NB: the targets cannot be optional if defined.
+    /// NB: the inputs can be continuous (scalar), structured (3D tensors) or categorical.
+    /// NB: the inputs and the targets are generated on the fly by default, but they can be cached if possible.
+    ///
+    /// NB: missing feature values are filled:
+    ///     - with NaN/-1 depending if continuous/categorical respectively,
+    ///         if accessing one feature at a time (e.g. feature selection models)
+    ///
+    ///     - with NaN,
+    ///         if accessing all features at once as flatten (e.g. linear models).
+    ///
+    class NANO_PUBLIC generator_t : public clonable_t<generator_t>
     {
     public:
         ///
-        /// \brief constructor
+        /// \brief constructor.
         ///
-        explicit dataset_generator_t(const dataset_t& dataset);
+        explicit generator_t(string_t id);
 
         ///
-        /// \brief register a new feature generator.
+        /// \brief returns the available implementations.
         ///
-        template <typename tgenerator, typename... tgenerator_args>
-        dataset_generator_t& add(tgenerator_args... args)
-        {
-            static_assert(std::is_base_of_v<generator_t, tgenerator>);
-            return this->add(std::make_unique<tgenerator>(args...));
-        }
+        static factory_t<generator_t>& all();
 
         ///
-        /// \brief register a new feature generator.
+        /// \brief process the whole dataset:
+        ///     - to decide which features to generate and
+        ///     - to generate features fast when needed (if needed).
         ///
-        dataset_generator_t& add(rgenerator_t&& generator)
-        {
-            generator->fit(m_dataset);
-            m_generators.emplace_back(std::move(generator));
-            update();
-            return *this;
-        }
+        virtual void fit(const datasource_t&);
 
         ///
-        /// \brief returns the total number of features.
+        /// \brief returns the total number of generated features.
         ///
-        tensor_size_t features() const;
+        virtual tensor_size_t features() const = 0;
 
         ///
-        /// \brief returns the feature at a given index.
+        /// \brief returns the description of the given feature index.
         ///
-        feature_t feature(tensor_size_t ifeature) const;
+        virtual feature_t feature(tensor_size_t feature) const = 0;
 
         ///
-        /// \brief returns the number of columns of flatten feature values.
+        /// \brief toggle dropping of features, useful for feature importance analysis.
         ///
-        tensor_size_t columns() const;
+        void undrop();
+        void drop(tensor_size_t feature);
 
         ///
-        /// \brief returns the feature index that produces the given column index.
+        /// \brief toggle sample permutation of features, useful for feature importance analysis.
         ///
-        tensor_size_t column2feature(tensor_size_t column) const;
-
-        ///
-        /// \brief returns the target feature.
-        ///
-        feature_t target() const;
-
-        ///
-        /// \brief returns the target dimensions.
-        ///
-        tensor3d_dims_t target_dims() const;
-
-        ///
-        /// \brief compute the sample weights from the given target statistics.
-        ///
-        /// NB: the targets statistics should be computed only on the training dataset,
-        ///     while the samples can vary (e.g. validation, testing).
-        ///
-        tensor1d_t sample_weights(indices_cmap_t samples, const targets_stats_t&) const;
-
-        ///
-        /// \brief support for feature importance estimation using drop-column like methods.
-        ///
-        void undrop() const;
-        void drop(tensor_size_t feature) const;
-
-        ///
-        /// \brief support for feature importance estimation using sample-permutation like methods.
-        ///
-        void      unshuffle() const;
-        void      shuffle(tensor_size_t feature) const;
+        void      unshuffle();
+        void      shuffle(tensor_size_t feature);
         indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
 
         ///
-        /// \brief returns the flatten feature values for all features on a given subset of samples.
+        /// \brief computes the values of the given feature and samples,
+        ///     useful for training and evaluating ML models that perform feature selection
+        ///     (e.g. gradient boosting).
         ///
-        tensor2d_map_t flatten(indices_cmap_t samples, tensor2d_t& buffer) const;
+        virtual void select(indices_cmap_t samples, tensor_size_t feature, sclass_map_t) const = 0;
+        virtual void select(indices_cmap_t samples, tensor_size_t feature, mclass_map_t) const = 0;
+        virtual void select(indices_cmap_t samples, tensor_size_t feature, scalar_map_t) const = 0;
+        virtual void select(indices_cmap_t samples, tensor_size_t feature, struct_map_t) const = 0;
 
         ///
-        /// \brief returns the targets on a given subset of samples.
+        /// \brief computes the values of all features for the given samples,
+        ///     useful for training and evaluating ML model that map densely continuous inputs to targets
+        ///     (e.g. linear models, MLPs).
         ///
-        tensor4d_map_t targets(indices_cmap_t samples, tensor4d_t& buffer) const;
+        virtual void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column) const = 0;
 
-        ///
-        /// \brief returns the values of a feature on a given subset of samples.
-        ///
-        sclass_cmap_t select(indices_cmap_t samples, tensor_size_t feature, sclass_mem_t& buffer) const;
-        mclass_cmap_t select(indices_cmap_t samples, tensor_size_t feature, mclass_mem_t& buffer) const;
-        scalar_cmap_t select(indices_cmap_t samples, tensor_size_t feature, scalar_mem_t& buffer) const;
-        struct_cmap_t select(indices_cmap_t samples, tensor_size_t feature, struct_mem_t& buffer) const;
+    protected:
+        const datasource_t& datasource() const;
 
-        // access functions
-        const dataset_t& dataset() const { return m_dataset; }
+        void allocate(tensor_size_t features);
+        bool should_drop(tensor_size_t feature) const;
+        bool should_shuffle(tensor_size_t feature) const;
 
-        const indices_t& sclass_features() const { return m_select_stats.m_sclass_features; }
+        static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
 
-        const indices_t& mclass_features() const { return m_select_stats.m_mclass_features; }
+        template <size_t input_rank1, typename toperator>
+        void iterate(indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal, const toperator& op) const
+        {
+            const auto visitor = [&](const auto&, const auto& data, const auto& mask)
+            {
+                if (should_shuffle(ifeature))
+                {
+                    loop_samples<input_rank1>(data, mask, shuffled(samples, ifeature), op);
+                }
+                else
+                {
+                    loop_samples<input_rank1>(data, mask, samples, op);
+                }
+            };
+            datasource().visit_inputs(ioriginal, visitor);
+        }
 
-        const indices_t& scalar_features() const { return m_select_stats.m_scalar_features; }
-
-        const indices_t& struct_features() const { return m_select_stats.m_struct_features; }
+        template <size_t input_rank1, size_t input_rank2, typename toperator>
+        void iterate(indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal1, tensor_size_t ioriginal2,
+                     const toperator& op) const
+        {
+            const auto visitor = [&](const auto& data1, const auto& mask1, const auto& data2, const auto& mask2)
+            {
+                if (should_shuffle(ifeature))
+                {
+                    loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, shuffled(samples, ifeature), op);
+                }
+                else
+                {
+                    loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, samples, op);
+                }
+            };
+            datasource().visit_inputs(ioriginal1,
+                                      [&](const auto&, const auto& data1, const auto& mask1)
+                                      {
+                                          datasource().visit_inputs(
+                                              ioriginal2, [&](const auto&, const auto& data2, const auto& mask2)
+                                              { visitor(data1, mask1, data2, mask2); });
+                                      });
+        }
 
     private:
-        void                update();
-        void                update_stats();
-        void                check(tensor_size_t feature) const;
-        void                check(indices_cmap_t samples) const;
-        const rgenerator_t& byfeature(tensor_size_t feature) const;
-
-        // per column:
-        //  - 0: generator index,
-        //  - 1: column index within generator,
-        //  - 2: offset n_features (up to the current generator)
-        using column_mapping_t = tensor_mem_t<tensor_size_t, 2>;
+        // per feature:
+        //  - 0: flags - 0 - default, 1 - to drop, 2 - to shuffle
+        using feature_infos_t = tensor_mem_t<uint8_t, 1>;
 
         // per feature:
-        //  - 0: generator index,
-        //  - 1: feature index within generator,
-        //  - 2-4: feature dimensions (dim1, dim2, dim3)
-        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        // per generator:
-        //  - 0: number of features
-        using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
+        //  - random number generator to use to shuffle the given samples
+        using feature_rands_t = std::vector<rng_t>;
 
         // attributes
-        const dataset_t&    m_dataset;           ///<
-        rgenerators_t       m_generators;        ///<
-        column_mapping_t    m_column_mapping;    ///<
-        feature_mapping_t   m_feature_mapping;   ///<
-        generator_mapping_t m_generator_mapping; ///<
-        select_stats_t      m_select_stats;      ///<
+        const datasource_t* m_datasource{nullptr}; ///<
+        feature_infos_t     m_feature_infos;       ///<
+        feature_rands_t     m_feature_rands;       ///<
     };
 } // namespace nano

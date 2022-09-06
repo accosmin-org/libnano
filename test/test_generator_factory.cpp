@@ -1,4 +1,4 @@
-#include <nano/generator/generator.h>
+#include <nano/generator.h>
 #include <utest/utest.h>
 
 using namespace nano;

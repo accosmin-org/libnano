@@ -1,310 +1,413 @@
-#include <mutex>
-#include <nano/dataset/imclass_cifar.h>
-#include <nano/dataset/imclass_mnist.h>
-#include <nano/dataset/tabular.h>
-#include <nano/dataset/utils.h>
+#include <nano/dataset.h>
 
 using namespace nano;
 
-dataset_t::dataset_t(string_t id)
-    : clonable_t(std::move(id))
+static void handle_sclass(tensor_size_t ifeature, const feature_t& feature)
 {
+    critical(feature.type() != feature_type::sclass, "generator_t: unhandled single-label feature <", ifeature, ":",
+             feature, ">!");
 }
 
-indices_t dataset_t::train_samples() const
+static void handle_mclass(tensor_size_t ifeature, const feature_t& feature)
 {
-    return filter(samples() - m_testing.vector().sum(), 0);
+    critical(feature.type() != feature_type::mclass, "generator_t: unhandled multi-label feature <", ifeature, ":",
+             feature, ">!");
 }
 
-indices_t dataset_t::test_samples() const
+static void handle_scalar(tensor_size_t ifeature, const feature_t& feature)
 {
-    return filter(m_testing.vector().sum(), 1);
+    critical(feature.type() == feature_type::sclass || feature.type() == feature_type::mclass ||
+                 size(feature.dims()) != 1,
+             "generator_t: unhandled scalar feature <", ifeature, ":", feature, ">!");
 }
 
-void dataset_t::no_testing()
+static void handle_struct(tensor_size_t ifeature, const feature_t& feature)
 {
-    m_testing.zero();
+    critical(feature.type() == feature_type::sclass || feature.type() == feature_type::mclass ||
+                 size(feature.dims()) == 1,
+             "generator_t: unhandled structured feature <", ifeature, ":", feature, ">!");
 }
 
-void dataset_t::testing(tensor_range_t sample_range)
+template <typename tscalar, size_t trank, typename... tindices>
+static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
 {
-    assert(sample_range.begin() >= 0 && sample_range.end() <= m_testing.size());
-    m_testing.vector().segment(sample_range.begin(), sample_range.size()).setConstant(1);
-}
-
-indices_t dataset_t::filter(tensor_size_t count, tensor_size_t condition) const
-{
-    indices_t indices(count);
-    for (tensor_size_t sample = 0, samples = this->samples(), index = 0; sample < samples; ++sample)
+    if (buffer.size() < ::nano::size(make_dims(dims...)))
     {
-        if (m_testing(sample) == condition)
+        buffer.resize(dims...);
+    }
+    return map_tensor(buffer.data(), dims...);
+}
+
+dataset_t::dataset_t(const datasource_t& datasource)
+    : m_datasource(datasource)
+{
+}
+
+dataset_t& dataset_t::add(rgenerator_t&& generator)
+{
+    generator->fit(m_datasource);
+    m_generators.emplace_back(std::move(generator));
+    update();
+    return *this;
+}
+
+void dataset_t::update()
+{
+    tensor_size_t total_columns = 0, features = 0, generators = 0;
+    for (const auto& generator : m_generators)
+    {
+        for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ifeature, ++features)
         {
-            assert(index < indices.size());
-            indices(index++) = sample;
+            switch (const auto feature = generator->feature(ifeature); feature.type())
+            {
+            case feature_type::sclass: total_columns += feature.classes() - 1; break;
+            case feature_type::mclass: total_columns += feature.classes(); break;
+            default: total_columns += size(feature.dims()); break;
+            }
+        }
+        ++generators;
+    }
+
+    m_column_mapping.resize(total_columns, 3);
+    m_feature_mapping.resize(features, 5);
+    m_generator_mapping.resize(generators, 1);
+
+    tensor_size_t offset_features = 0, offset_columns = 0, index = 0;
+    for (const auto& generator : m_generators)
+    {
+        const auto old_offset_columns = offset_columns;
+
+        for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ifeature, ++offset_features)
+        {
+            m_feature_mapping(offset_features, 0) = index;
+            m_feature_mapping(offset_features, 1) = ifeature;
+
+            tensor_size_t dim1 = 1, dim2 = 1, dim3 = 1, columns = 0;
+            switch (const auto feature = generator->feature(ifeature); feature.type())
+            {
+            case feature_type::sclass: columns = feature.classes() - 1; break;
+            case feature_type::mclass:
+                dim1    = feature.classes();
+                columns = feature.classes();
+                break;
+            default:
+                dim1    = feature.dims()[0];
+                dim2    = feature.dims()[1];
+                dim3    = feature.dims()[2];
+                columns = size(feature.dims());
+                break;
+            }
+            m_feature_mapping(offset_features, 2) = dim1;
+            m_feature_mapping(offset_features, 3) = dim2;
+            m_feature_mapping(offset_features, 4) = dim3;
+
+            for (tensor_size_t icolumn = 0; icolumn < columns; ++icolumn, ++offset_columns)
+            {
+                m_column_mapping(offset_columns, 0) = index;
+                m_column_mapping(offset_columns, 1) = icolumn;
+                m_column_mapping(offset_columns, 2) = offset_features;
+            }
+        }
+
+        m_generator_mapping(index++, 0) = offset_columns - old_offset_columns;
+    }
+
+    update_stats();
+}
+
+void dataset_t::update_stats()
+{
+    std::vector<tensor_size_t> sclasss, mclasss, scalars, structs;
+    for (tensor_size_t i = 0, size = features(); i < size; ++i)
+    {
+        switch (const auto& feature = this->feature(i); feature.type())
+        {
+        case feature_type::sclass: sclasss.push_back(i); break;
+
+        case feature_type::mclass: mclasss.push_back(i); break;
+
+        default: (::nano::size(feature.dims()) > 1 ? structs : scalars).push_back(i); break;
         }
     }
-    return indices;
+
+    m_select_stats.m_sclass_features =
+        map_tensor(sclasss.data(), make_dims(static_cast<tensor_size_t>(sclasss.size())));
+    m_select_stats.m_mclass_features =
+        map_tensor(mclasss.data(), make_dims(static_cast<tensor_size_t>(mclasss.size())));
+    m_select_stats.m_scalar_features =
+        map_tensor(scalars.data(), make_dims(static_cast<tensor_size_t>(scalars.size())));
+    m_select_stats.m_struct_features =
+        map_tensor(structs.data(), make_dims(static_cast<tensor_size_t>(structs.size())));
 }
 
-void dataset_t::resize(tensor_size_t samples, const features_t& features)
+tensor_size_t dataset_t::features() const
 {
-    this->resize(samples, features, string_t::npos);
+    return m_feature_mapping.size<0>();
 }
 
-void dataset_t::resize(tensor_size_t samples, const features_t& features, size_t target)
+feature_t dataset_t::feature(tensor_size_t feature) const
 {
-    std::map<feature_type, tensor_size_t> size_storage;
-    const auto                            update_size_storage = [&](feature_type type, auto size)
+    return byfeature(feature)->feature(m_feature_mapping(feature, 1));
+}
+
+tensor_size_t dataset_t::columns() const
+{
+    return m_column_mapping.size<0>();
+}
+
+tensor_size_t dataset_t::column2feature(tensor_size_t column) const
+{
+    return m_column_mapping(column, 2);
+}
+
+sclass_cmap_t dataset_t::select(indices_cmap_t samples, tensor_size_t feature, sclass_mem_t& buffer) const
+{
+    check(samples);
+    handle_sclass(feature, this->feature(feature));
+
+    auto storage = resize_and_map(buffer, samples.size());
+    byfeature(feature)->select(samples, m_feature_mapping(feature, 1), storage);
+    return storage;
+}
+
+mclass_cmap_t dataset_t::select(indices_cmap_t samples, tensor_size_t feature, mclass_mem_t& buffer) const
+{
+    check(samples);
+    handle_mclass(feature, this->feature(feature));
+
+    auto storage = resize_and_map(buffer, samples.size(), m_feature_mapping(feature, 2));
+    byfeature(feature)->select(samples, m_feature_mapping(feature, 1), storage);
+    return storage;
+}
+
+scalar_cmap_t dataset_t::select(indices_cmap_t samples, tensor_size_t feature, scalar_mem_t& buffer) const
+{
+    check(samples);
+    handle_scalar(feature, this->feature(feature));
+
+    auto storage = resize_and_map(buffer, samples.size());
+    byfeature(feature)->select(samples, m_feature_mapping(feature, 1), storage);
+    return storage;
+}
+
+struct_cmap_t dataset_t::select(indices_cmap_t samples, tensor_size_t feature, struct_mem_t& buffer) const
+{
+    check(samples);
+    handle_struct(feature, this->feature(feature));
+
+    auto storage = resize_and_map(buffer, samples.size(), m_feature_mapping(feature, 2), m_feature_mapping(feature, 3),
+                                  m_feature_mapping(feature, 4));
+    byfeature(feature)->select(samples, m_feature_mapping(feature, 1), storage);
+    return storage;
+}
+
+tensor2d_map_t dataset_t::flatten(indices_cmap_t samples, tensor2d_t& buffer) const
+{
+    check(samples);
+
+    const auto storage = resize_and_map(buffer, samples.size(), columns());
+
+    tensor_size_t offset = 0, index = 0;
+    for (const auto& generator : m_generators)
     {
-        const auto begin   = size_storage[type];
-        const auto end     = begin + static_cast<tensor_size_t>(size);
-        size_storage[type] = end;
-        return std::make_pair(begin, end);
-    };
+        generator->flatten(samples, storage, offset);
+        offset += m_generator_mapping(index++, 0);
+    }
+    return storage;
+}
 
-    m_storage_type.resize(features.size());
-    m_storage_range.resize(static_cast<tensor_size_t>(features.size()), 2);
-
-    for (size_t i = 0, size = features.size(); i < size; ++i)
+feature_t dataset_t::target() const
+{
+    switch (m_datasource.type())
     {
-        const auto& feature = features[i];
+    case task_type::unsupervised: return feature_t{};
 
-        feature_type                            type{};
-        std::pair<tensor_size_t, tensor_size_t> range;
-        switch (feature.type())
+    default:
+        return m_datasource.visit_target([](const feature_t& feature, const auto&, const auto&) { return feature; });
+    }
+}
+
+tensor3d_dims_t dataset_t::target_dims() const
+{
+    switch (m_datasource.type())
+    {
+    case task_type::unsupervised: return make_dims(0, 0, 0);
+
+    default:
+        return m_datasource.visit_target(
+            [](const feature_t& feature, const auto&, const auto&)
+            {
+                switch (feature.type())
+                {
+                case feature_type::sclass: return make_dims(feature.classes(), 1, 1); // NOLINT(bugprone-branch-clone)
+                case feature_type::mclass: return make_dims(feature.classes(), 1, 1);
+                default: return feature.dims();
+                }
+            });
+    }
+}
+
+tensor4d_map_t dataset_t::targets(indices_cmap_t samples, tensor4d_t& buffer) const
+{
+    check(samples);
+
+    if (m_datasource.type() == task_type::unsupervised)
+    {
+        critical0("dataset_t: targets are not available for unsupervised datasets!");
+    }
+
+    return m_datasource.visit_target(
+        [&](const feature_t& feature, const auto& data, const auto& mask)
         {
-        case feature_type::mclass:
-            type  = feature_type::uint8;
-            range = update_size_storage(type, feature.classes());
-            break;
-
-        case feature_type::sclass:
-            type  = (feature.classes() <= (tensor_size_t(1) << 8))  ? feature_type::uint8
-                  : (feature.classes() <= (tensor_size_t(1) << 16)) ? feature_type::uint16
-                  : (feature.classes() <= (tensor_size_t(1) << 32)) ? feature_type::uint32
-                                                                    : feature_type::uint64;
-            range = update_size_storage(type, 1);
-            break;
-
-        default:
-            type  = feature.type();
-            range = update_size_storage(type, ::nano::size(feature.dims()));
-            break;
-        }
-
-        m_storage_type[i] = type;
-
-        const auto [begin, end]                           = range;
-        m_storage_range(static_cast<tensor_size_t>(i), 0) = begin;
-        m_storage_range(static_cast<tensor_size_t>(i), 1) = end;
-    }
-
-    m_testing.resize(samples);
-    m_testing.zero();
-
-    m_features = features;
-    m_target   = (target < features.size()) ? static_cast<tensor_size_t>(target) : m_storage_range.size();
-
-    m_storage_f32.resize(size_storage[feature_type::float32], samples);
-    m_storage_f64.resize(size_storage[feature_type::float64], samples);
-    m_storage_i08.resize(size_storage[feature_type::int8], samples);
-    m_storage_i16.resize(size_storage[feature_type::int16], samples);
-    m_storage_i32.resize(size_storage[feature_type::int32], samples);
-    m_storage_i64.resize(size_storage[feature_type::int64], samples);
-    m_storage_u08.resize(size_storage[feature_type::uint8], samples);
-    m_storage_u16.resize(size_storage[feature_type::uint16], samples);
-    m_storage_u32.resize(size_storage[feature_type::uint32], samples);
-    m_storage_u64.resize(size_storage[feature_type::uint64], samples);
-
-    m_storage_f32.zero();
-    m_storage_f64.zero();
-    m_storage_i08.zero();
-    m_storage_i16.zero();
-    m_storage_i32.zero();
-    m_storage_i64.zero();
-    m_storage_u08.zero();
-    m_storage_u16.zero();
-    m_storage_u32.zero();
-    m_storage_u64.zero();
-
-    m_storage_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
-    m_storage_mask.zero();
+            return loop_samples(
+                data, mask, samples,
+                [&](auto it)
+                {
+                    const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, label] = *it; given)
+                        {
+                            storage.array(index).setConstant(-1.0);
+                            storage.array(index)(static_cast<tensor_size_t>(label)) = +1.0;
+                        }
+                        else
+                        {
+                            storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                    }
+                    return tensor4d_map_t{storage};
+                },
+                [&](auto it)
+                {
+                    const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, hits] = *it; given)
+                        {
+                            storage.array(index) = hits.array().template cast<scalar_t>() * 2.0 - 1.0;
+                        }
+                        else
+                        {
+                            storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                    }
+                    return tensor4d_map_t{storage};
+                },
+                [&](auto it)
+                {
+                    const auto [dim1, dim2, dim3] = feature.dims();
+                    const auto storage            = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, values] = *it; given)
+                        {
+                            storage.array(index) = values.array().template cast<scalar_t>();
+                        }
+                        else
+                        {
+                            storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                    }
+                    return tensor4d_map_t{storage};
+                });
+        });
 }
 
-task_type dataset_t::type() const
+tensor1d_t dataset_t::sample_weights(indices_cmap_t samples, const targets_stats_t& targets_stats) const
 {
-    return has_target() ? static_cast<task_type>(m_features[static_cast<size_t>(m_target)]) : task_type::unsupervised;
-}
+    check(samples);
 
-void dataset_t::load()
-{
-    do_load();
-
-    // NB: targets must be non-optional if a supervised task
-    if (has_target())
+    if (m_datasource.type() == task_type::unsupervised)
     {
-        visit_target([&](const feature_t&, const auto&, const auto& mask)
-                     { critical(::nano::optional(mask, samples()), "dataset: the target cannot be optional!"); });
+        tensor1d_t weights(samples.size());
+        weights.full(1.0);
+        return weights;
+    }
+    else
+    {
+        return m_datasource.visit_target(
+            [&](const feature_t& feature, const auto& data, const auto& mask)
+            {
+                return loop_samples(
+                    data, mask, samples,
+                    [&](auto it)
+                    {
+                        const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
+                        critical(pstats == nullptr || pstats->classes() != feature.classes(),
+                                 "dataset_t: mis-matching single-label targets statistics, expecting ",
+                                 feature.classes(), " classes, got ",
+                                 pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
+
+                        return pstats->sample_weights(feature, it);
+                    },
+                    [&](auto it)
+                    {
+                        const auto* pstats = std::get_if<mclass_stats_t>(&targets_stats);
+                        critical(pstats == nullptr || pstats->classes() != feature.classes(),
+                                 "dataset_t: mis-matching multi-label targets statistics, expecting ",
+                                 feature.classes(), " classes, got ",
+                                 pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
+
+                        return pstats->sample_weights(feature, it);
+                    },
+                    [&](auto)
+                    {
+                        tensor1d_t weights(samples.size());
+                        weights.full(1.0);
+                        return weights;
+                    });
+            });
     }
 }
 
-factory_t<dataset_t>& dataset_t::all()
+void dataset_t::undrop() const
 {
-    static auto manager = factory_t<dataset_t>{};
-    const auto  op      = []()
+    for (const auto& generator : m_generators)
     {
-        const auto dir = scat(nano::getenv("HOME"), "/libnano/datasets/");
+        generator->undrop();
+    }
+}
 
-        manager.add<tabular_dataset_t>(
-            "classify flowers from physical measurements of the sepal and petal (Fisher, 1936)", "iris",
-            csvs_t{csv_t{dir + "/iris/iris.data"}.delim(",").header(false).expected(150)},
-            features_t{
-                feature_t{"sepal_length_cm"},
-                feature_t{"sepal_width_cm"},
-                feature_t{"petal_length_cm"},
-                feature_t{"petal_width_cm"},
-                feature_t{"class"}.sclass(3),
-            },
-            4);
+void dataset_t::drop(tensor_size_t feature) const
+{
+    byfeature(feature)->drop(m_feature_mapping(feature, 1));
+}
 
-        manager.add<tabular_dataset_t>(
-            "predict the wine type from its constituents (Aeberhard, Coomans & de Vel, 1992)", "wine",
-            csvs_t{csv_t{dir + "/wine/wine.data"}.delim(",").header(false).expected(178)},
-            features_t{
-                feature_t{"class"}.sclass(3),
-                feature_t{"Alcohol"},
-                feature_t{"Malic acid"},
-                feature_t{"Ash"},
-                feature_t{"Alcalinity of ash"},
-                feature_t{"Magnesium"},
-                feature_t{"Total phenols"},
-                feature_t{"Flavanoids"},
-                feature_t{"Nonflavanoid phenols"},
-                feature_t{"Proanthocyanins"},
-                feature_t{"Color intensity"},
-                feature_t{"Hue"},
-                feature_t{"OD280/OD315 of diluted wines"},
-                feature_t{"Proline"},
-            },
-            0);
+void dataset_t::unshuffle() const
+{
+    for (const auto& generator : m_generators)
+    {
+        generator->unshuffle();
+    }
+}
 
-        manager.add<tabular_dataset_t>(
-            "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)", "adult",
-            csvs_t{
-                csv_t{dir + "/adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
-                csv_t{dir + "/adult/adult.test"}
-                    .skip('|')
-                    .delim(", .")
-                    .header(false)
-                    .expected(16281)
-                    .testing(make_range(0, 16281))
-                    .placeholder("?")},
-            features_t{
-                feature_t{"age"},
-                feature_t{"workclass"}.sclass(8),
-                feature_t{"fnlwgt"},
-                feature_t{"education"}.sclass(16),
-                feature_t{"education-num"},
-                feature_t{"marital-status"}.sclass(7),
-                feature_t{"occupation"}.sclass(14),
-                feature_t{"relationship"}.sclass(6),
-                feature_t{"race"}.sclass(5),
-                feature_t{"sex"}.sclass({"Female", "Male"}),
-                feature_t{"capital-gain"},
-                feature_t{"capital-loss"},
-                feature_t{"hours-per-week"},
-                feature_t{"native-country"}.sclass(41),
-                feature_t{"income"}.sclass(2),
-            },
-            14);
+void dataset_t::shuffle(tensor_size_t feature) const
+{
+    byfeature(feature)->shuffle(m_feature_mapping(feature, 1));
+}
 
-        manager.add<tabular_dataset_t>(
-            "predict the age of abalone from physical measurements (Waugh, 1995)", "abalone",
-            csvs_t{csv_t{dir + "/abalone/abalone.data"}.delim(",").header(false).expected(4177).testing(
-                make_range(3133, 4177))},
-            features_t{
-                feature_t{"sex"}.sclass(3),
-                feature_t{"length"},
-                feature_t{"diameter"},
-                feature_t{"height"},
-                feature_t{"whole_weight"},
-                feature_t{"shucked_weight"},
-                feature_t{"viscera_weight"},
-                feature_t{"shell_weight"},
-                feature_t{"rings"}.sclass(29),
-            },
-            8);
+indices_t dataset_t::shuffled(indices_cmap_t samples, tensor_size_t feature) const
+{
+    return byfeature(feature)->shuffled(samples, m_feature_mapping(feature, 1));
+}
 
-        manager.add<tabular_dataset_t>(
-            "predict the burned area of the forest (Cortez & Morais, 2007)", "forest-fires",
-            csvs_t{csv_t{dir + "/forest-fires/forestfires.csv"}.delim(",").header(true).expected(517)},
-            features_t{feature_t{"X"}.sclass(9), feature_t{"Y"}.sclass(8), feature_t{"month"}.sclass(12),
-                       feature_t{"day"}.sclass(7), feature_t{"FFMC"}, feature_t{"DMC"}, feature_t{"DC"},
-                       feature_t{"ISI"}, feature_t{"temp"}, feature_t{"RH"}, feature_t{"wind"}, feature_t{"rain"},
-                       feature_t{"area"}},
-            12);
+const rgenerator_t& dataset_t::byfeature(tensor_size_t feature) const
+{
+    check(feature);
 
-        manager.add<tabular_dataset_t>(
-            "diagnostic breast cancer using measurements of cell nucleai (Street, Wolberg & Mangasarian, 1992)",
-            "breast-cancer", csvs_t{csv_t{dir + "/breast-cancer/wdbc.data"}.delim(",").header(false).expected(569)},
-            features_t{feature_t{"ID"},          feature_t{"Diagnosis"}.sclass(2),
+    return m_generators[static_cast<size_t>(m_feature_mapping(feature, 0))];
+}
 
-                       feature_t{"radius1"},     feature_t{"texture1"},
-                       feature_t{"perimeter1"},  feature_t{"area1"},
-                       feature_t{"smoothness1"}, feature_t{"compactness1"},
-                       feature_t{"concavity1"},  feature_t{"concave_points1"},
-                       feature_t{"symmetry1"},   feature_t{"fractal_dimension1"},
+void dataset_t::check(tensor_size_t feature) const
+{
+    critical(feature < 0 || feature >= features(), "dataset_t: invalid feature index, expecting in [0, ", features(),
+             "), got ", feature, "!");
+}
 
-                       feature_t{"radius2"},     feature_t{"texture2"},
-                       feature_t{"perimeter2"},  feature_t{"area2"},
-                       feature_t{"smoothness2"}, feature_t{"compactness2"},
-                       feature_t{"concavity2"},  feature_t{"concave_points2"},
-                       feature_t{"symmetry2"},   feature_t{"fractal_dimension2"},
-
-                       feature_t{"radius3"},     feature_t{"texture3"},
-                       feature_t{"perimeter3"},  feature_t{"area3"},
-                       feature_t{"smoothness3"}, feature_t{"compactness3"},
-                       feature_t{"concavity3"},  feature_t{"concave_points3"},
-                       feature_t{"symmetry3"},   feature_t{"fractal_dimension3"}},
-            1);
-
-        manager.add<tabular_dataset_t>(
-            "predict if a client has subscribed a term deposit (Moro, Laureano & Cortez, 2011)", "bank-marketing",
-            csvs_t{csv_t{dir + "/bank-marketing/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)},
-            features_t{
-                feature_t{"age"},
-                feature_t{"job"}.sclass(12),
-                feature_t{"marital"}.sclass(4),
-                feature_t{"education"}.sclass(8),
-                feature_t{"default"}.sclass(3),
-                feature_t{"housing"}.sclass(3),
-                feature_t{"loan"}.sclass(3),
-                feature_t{"contact"}.sclass(2),
-                feature_t{"month"}.sclass(12),
-                feature_t{"day_of_week"}.sclass(5),
-                feature_t{"duration"},
-                feature_t{"campaign"},
-                feature_t{"pdays"},
-                feature_t{"previous"},
-                feature_t{"poutcome"}.sclass(3),
-                feature_t{"emp.var.rate"},
-                feature_t{"cons.price.idx"},
-                feature_t{"cons.conf.idx"},
-                feature_t{"euribor3m"},
-                feature_t{"nr.employed"},
-                feature_t{"y"}.sclass(2),
-            },
-            20);
-
-        manager.add<mnist_dataset_t>("classify 28x28 grayscale images of hand-written digits (MNIST)");
-        manager.add<cifar10_dataset_t>("classify 3x32x32 color images (CIFAR-10)");
-        manager.add<cifar100c_dataset_t>("classify 3x32x32 color images (CIFAR-100 with 20 coarse labels)");
-        manager.add<cifar100f_dataset_t>("classify 3x32x32 color images (CIFAR-100 with 100 fine labels)");
-        manager.add<fashion_mnist_dataset_t>("classify 28x28 grayscale images of fashion articles (Fashion-MNIST)");
-    };
-
-    static std::once_flag flag;
-    std::call_once(flag, op);
-
-    return manager;
+void dataset_t::check(indices_cmap_t samples) const
+{
+    critical(samples.min() < 0 || samples.max() > m_datasource.samples(),
+             "dataset_t: invalid sample range, expecting in [0, ", m_datasource.samples(), "), got ", "[",
+             samples.min(), ", ", samples.max(), ")!");
 }

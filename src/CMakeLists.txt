@@ -17,8 +17,6 @@ target_sources(nano PRIVATE
     core/estimator.cpp
     core/parameter.cpp
     generator.cpp
-    generator/iterator.cpp
-    generator/generator.cpp
     generator/pairwise_base.cpp
     generator/pairwise_input.cpp
     generator/elemwise_base.cpp
@@ -26,12 +24,14 @@ target_sources(nano PRIVATE
     generator/elemwise_gradient.cpp
     generator/elemwise_identity.cpp
     dataset.cpp
-    dataset/mask.cpp
-    dataset/stats.cpp
-    dataset/feature.cpp
-    dataset/tabular.cpp
-    dataset/imclass_cifar.cpp
-    dataset/imclass_mnist.cpp
+    dataset/iterator.cpp
+    datasource.cpp
+    datasource/mask.cpp
+    datasource/stats.cpp
+    datasource/feature.cpp
+    datasource/tabular.cpp
+    datasource/imclass_cifar.cpp
+    datasource/imclass_mnist.cpp
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp

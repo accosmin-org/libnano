@@ -1,5 +1,5 @@
-#include "fixture/dataset.h"
-#include <nano/dataset.h>
+#include "fixture/datasource.h"
+#include <nano/datasource.h>
 
 using namespace nano;
 
@@ -25,18 +25,18 @@ static auto make_features()
     };
 }
 
-class fixture_dataset_t final : public dataset_t
+class fixture_datasource_t final : public datasource_t
 {
 public:
-    fixture_dataset_t(tensor_size_t samples, features_t features, size_t target)
-        : dataset_t("fixture")
+    fixture_datasource_t(tensor_size_t samples, features_t features, size_t target)
+        : datasource_t("fixture")
         , m_samples(samples)
         , m_features(std::move(features))
         , m_target(target)
     {
     }
 
-    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
     void actually_do_load(bool do_load) { m_do_load = do_load; }
 
@@ -234,13 +234,13 @@ private:
 
 static auto make_dataset(tensor_size_t samples, const features_t& features, size_t target)
 {
-    auto dataset = fixture_dataset_t{samples, features, target};
+    auto dataset = fixture_datasource_t{samples, features, target};
     UTEST_CHECK_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.samples(), samples);
     return dataset;
 }
 
-UTEST_BEGIN_MODULE(test_dataset_memory)
+UTEST_BEGIN_MODULE(test_datasource_memory)
 
 UTEST_CASE(check_samples)
 {
@@ -281,7 +281,7 @@ UTEST_CASE(check_samples)
     }
 }
 
-UTEST_CASE(dataset_target_NA)
+UTEST_CASE(datasource_target_NA)
 {
     const auto features = make_features();
     const auto samples  = ::nano::arange(0, 25);
@@ -305,7 +305,7 @@ UTEST_CASE(dataset_target_NA)
     check_inputs(dataset, 12, features[12U], dataset.data12(), dataset.mask12());
 }
 
-UTEST_CASE(dataset_target_0U)
+UTEST_CASE(datasource_target_0U)
 {
     const auto features = make_features();
     const auto samples  = ::nano::arange(0, 25);
@@ -329,7 +329,7 @@ UTEST_CASE(dataset_target_0U)
     check_inputs(dataset, 11, features[12U], dataset.data12(), dataset.mask12());
 }
 
-UTEST_CASE(dataset_target_11U)
+UTEST_CASE(datasource_target_11U)
 {
     const auto features = make_features();
     const auto samples  = ::nano::arange(0, 25);
@@ -353,7 +353,7 @@ UTEST_CASE(dataset_target_11U)
     check_inputs(dataset, 11, features[12U], dataset.data12(), dataset.mask12());
 }
 
-UTEST_CASE(dataset_target_12U)
+UTEST_CASE(datasource_target_12U)
 {
     const auto features = make_features();
     const auto samples  = ::nano::arange(0, 25);
@@ -382,7 +382,7 @@ UTEST_CASE(invalid_feature_type)
     auto features = make_features();
     features[0].scalar(static_cast<feature_type>(-1));
 
-    auto dataset = fixture_dataset_t{100, features, string_t::npos};
+    auto dataset = fixture_datasource_t{100, features, string_t::npos};
     UTEST_CHECK_THROW(dataset.load(), std::runtime_error);
 
     dataset.actually_do_load(false);
@@ -395,7 +395,7 @@ UTEST_CASE(invalid_targets_type)
     auto features = make_features();
     features[0].scalar(static_cast<feature_type>(-1));
 
-    auto dataset = fixture_dataset_t{100, features, string_t::npos};
+    auto dataset = fixture_datasource_t{100, features, string_t::npos};
     UTEST_CHECK_THROW(dataset.load(), std::runtime_error);
 
     dataset.actually_do_load(false);

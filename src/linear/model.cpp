@@ -34,7 +34,7 @@ static auto decode_params(const tensor1d_t& params, regularization_type regulari
     return std::make_tuple(l1reg, l2reg, vAreg);
 }
 
-static auto evaluate(const estimator_t& estimator, const dataset_generator_t& dataset, const indices_t& samples,
+static auto evaluate(const estimator_t& estimator, const dataset_t& dataset, const indices_t& samples,
                      const loss_t& loss, const tensor2d_t& weights, const tensor1d_t& bias, size_t threads)
 {
     auto iterator = flatten_iterator_t{dataset, samples, threads};
@@ -55,9 +55,8 @@ static auto evaluate(const estimator_t& estimator, const dataset_generator_t& da
     return std::make_tuple(errors.mean(), values.mean());
 }
 
-static auto fit(const estimator_t& estimator, const dataset_generator_t& dataset, const indices_t& samples,
-                const loss_t& loss, const solver_t& solver, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg,
-                size_t threads)
+static auto fit(const estimator_t& estimator, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                const solver_t& solver, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg, size_t threads)
 {
     auto iterator = flatten_iterator_t{dataset, samples, threads};
     iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
@@ -112,7 +111,7 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     return stream;
 }
 
-fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss,
+fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
                                     const solver_t& solver)
 {
     const auto folds          = parameter("model::folds").value<tensor_size_t>();
@@ -232,7 +231,7 @@ fit_result_t linear_model_t::do_fit(const dataset_generator_t& dataset, const in
     return result;
 }
 
-tensor4d_t linear_model_t::do_predict(const dataset_generator_t& dataset, const indices_t& samples) const
+tensor4d_t linear_model_t::do_predict(const dataset_t& dataset, const indices_t& samples) const
 {
     // TODO: no need to allocate the sample indices one more time
     // TODO: determine at runtime if worth parallelizing

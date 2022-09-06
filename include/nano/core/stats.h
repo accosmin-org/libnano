@@ -42,7 +42,7 @@ namespace nano
     template <typename titerator>
     auto percentile(titerator begin, titerator end, double percentage) noexcept
     {
-        const auto from_position = [&](auto pos)
+        const auto from_position = [begin = begin, end = end](auto pos)
         {
             auto middle = begin;
             std::advance(middle, pos);
@@ -61,7 +61,7 @@ namespace nano
     {
         assert(std::is_sorted(begin, end));
 
-        const auto from_position = [&](auto pos)
+        const auto from_position = [begin = begin](auto pos)
         {
             auto middle = begin;
             std::advance(middle, pos);

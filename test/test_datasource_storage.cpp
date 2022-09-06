@@ -1,9 +1,9 @@
-#include <nano/dataset/storage.h>
+#include <nano/datasource/storage.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_dataset_storage)
+UTEST_BEGIN_MODULE(test_datasource_storage)
 
 UTEST_CASE(scalar)
 {

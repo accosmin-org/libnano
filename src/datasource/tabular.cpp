@@ -1,28 +1,28 @@
 #include <nano/core/logger.h>
 #include <nano/core/tokenizer.h>
-#include <nano/dataset/tabular.h>
+#include <nano/datasource/tabular.h>
 
 using namespace nano;
 
-tabular_dataset_t::tabular_dataset_t(string_t id, csvs_t csvs, features_t features)
-    : tabular_dataset_t(std::move(id), std::move(csvs), std::move(features), string_t::npos)
+tabular_datasource_t::tabular_datasource_t(string_t id, csvs_t csvs, features_t features)
+    : tabular_datasource_t(std::move(id), std::move(csvs), std::move(features), string_t::npos)
 {
 }
 
-tabular_dataset_t::tabular_dataset_t(string_t id, csvs_t csvs, features_t features, size_t target)
-    : dataset_t(std::move(id))
+tabular_datasource_t::tabular_datasource_t(string_t id, csvs_t csvs, features_t features, size_t target)
+    : datasource_t(std::move(id))
     , m_csvs(std::move(csvs))
     , m_features(std::move(features))
     , m_target(target)
 {
 }
 
-rdataset_t tabular_dataset_t::clone() const
+rdatasource_t tabular_datasource_t::clone() const
 {
-    return std::make_unique<tabular_dataset_t>(*this);
+    return std::make_unique<tabular_datasource_t>(*this);
 }
 
-void tabular_dataset_t::do_load()
+void tabular_datasource_t::do_load()
 {
     // check features
     critical(m_features.empty(), "tabular dataset: need to set at least one feature!");
@@ -73,7 +73,7 @@ void tabular_dataset_t::do_load()
         critical(csv.m_expected > 0 && samples_read != csv.m_expected, "tabular dataset: read ", samples_read,
                  ", expecting ", csv.m_expected, " samples!");
 
-        dataset_t::testing(make_range(old_sample + csv.m_testing.begin(), old_sample + csv.m_testing.end()));
+        datasource_t::testing(make_range(old_sample + csv.m_testing.begin(), old_sample + csv.m_testing.end()));
 
         log_info() << "tabular dataset: read " << sample << " samples!";
     }
@@ -81,7 +81,7 @@ void tabular_dataset_t::do_load()
     critical(sample != samples, "tabular dataset: read ", sample, " samples, expecting ", samples, "!");
 }
 
-void tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_size_t line_index, tensor_size_t sample)
+void tabular_datasource_t::parse(const csv_t& csv, const string_t& line, tensor_size_t line_index, tensor_size_t sample)
 {
     critical(sample >= samples(), "tabular dataset: too many samples, expecting ", samples(), "!");
 
@@ -100,7 +100,7 @@ void tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_siz
             {
                 set(sample, static_cast<tensor_size_t>(f), token);
             }
-            catch (std::exception& e)
+            catch (const std::exception& e)
             {
                 critical0("tabular dataset: invalid line [", line, "]@", csv.m_path, ":", line_index,
                           ", invalid token [", token, "] for feature (", feature, ")!");

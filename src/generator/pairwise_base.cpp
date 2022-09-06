@@ -22,9 +22,9 @@ base_pairwise_generator_t::base_pairwise_generator_t(string_t id, indices_t orig
 {
 }
 
-void base_pairwise_generator_t::fit(const dataset_t& dataset)
+void base_pairwise_generator_t::fit(const datasource_t& datasource)
 {
-    generator_t::fit(dataset);
+    generator_t::fit(datasource);
     m_feature_mapping = do_fit();
     allocate(features());
 }
@@ -113,8 +113,8 @@ feature_t base_pairwise_generator_t::make_scalar_feature(tensor_size_t ifeature,
     const auto original1 = mapped_original1(ifeature);
     const auto original2 = mapped_original2(ifeature);
 
-    const auto& feature1 = dataset().feature(original1);
-    const auto& feature2 = dataset().feature(original2);
+    const auto& feature1 = datasource().feature(original1);
+    const auto& feature2 = datasource().feature(original2);
 
     return feature_t{scat(name, "(", feature1.name(), ",", feature2.name(), ")")}.scalar(feature_type::float64);
 }
@@ -126,8 +126,8 @@ feature_t base_pairwise_generator_t::make_sclass_feature(tensor_size_t ifeature,
     const auto original1 = mapped_original1(ifeature);
     const auto original2 = mapped_original2(ifeature);
 
-    const auto& feature1 = dataset().feature(original1);
-    const auto& feature2 = dataset().feature(original2);
+    const auto& feature1 = datasource().feature(original1);
+    const auto& feature2 = datasource().feature(original2);
 
     return feature_t{scat(name, "(", feature1.name(), ",", feature2.name(), ")")}.sclass(std::move(labels));
 }
@@ -139,8 +139,8 @@ feature_t base_pairwise_generator_t::make_mclass_feature(tensor_size_t ifeature,
     const auto original1 = mapped_original1(ifeature);
     const auto original2 = mapped_original2(ifeature);
 
-    const auto& feature1 = dataset().feature(original1);
-    const auto& feature2 = dataset().feature(original2);
+    const auto& feature1 = datasource().feature(original1);
+    const auto& feature2 = datasource().feature(original2);
 
     return feature_t{scat(name, "(", feature1.name(), ",", feature2.name(), ")")}.mclass(std::move(labels));
 }
@@ -152,8 +152,8 @@ feature_t base_pairwise_generator_t::make_struct_feature(tensor_size_t ifeature,
     const auto original1 = mapped_original1(ifeature);
     const auto original2 = mapped_original2(ifeature);
 
-    const auto& feature1 = dataset().feature(original1);
-    const auto& feature2 = dataset().feature(original2);
+    const auto& feature1 = datasource().feature(original1);
+    const auto& feature2 = datasource().feature(original2);
 
     return feature_t{scat(name, "(", feature1.name(), ",", feature2.name(), ")")}.scalar(feature_type::float64, dims);
 }

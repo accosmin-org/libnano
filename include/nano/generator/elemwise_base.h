@@ -13,7 +13,7 @@ namespace nano
         explicit base_elemwise_generator_t(string_t id);
         base_elemwise_generator_t(string_t id, indices_t original_features);
 
-        void fit(const dataset_t& dataset) override;
+        void fit(const datasource_t&) override;
 
         tensor_size_t features() const override { return m_feature_mapping.size<0>(); }
 

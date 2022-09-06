@@ -110,13 +110,13 @@ namespace nano
     /// \brief wraps main function to catch and log all exceptions.
     ///
     template <typename toperator>
-    int main(const toperator& op, int argc, const char* argv[])
+    int safe_main(const toperator& op, int argc, const char* argv[])
     {
         try
         {
             return op(argc, argv);
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             log_error() << "caught exception (" << e.what() << ")!";
             return EXIT_FAILURE;

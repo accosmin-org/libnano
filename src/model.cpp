@@ -38,7 +38,7 @@ void model_t::log(const fit_result_t& result, const string_t& prefix) const
     }
 }
 
-void model_t::compatible(const dataset_generator_t& dataset) const
+void model_t::compatible(const dataset_t& dataset) const
 {
     const auto n_features = dataset.features();
 
@@ -76,7 +76,7 @@ std::ostream& model_t::write(std::ostream& stream) const
     return stream;
 }
 
-fit_result_t model_t::fit(const dataset_generator_t& dataset, const indices_t& samples, const loss_t& loss,
+fit_result_t model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
                           const solver_t& solver)
 {
     const auto n_features = dataset.features();
@@ -92,7 +92,7 @@ fit_result_t model_t::fit(const dataset_generator_t& dataset, const indices_t& s
     return do_fit(dataset, samples, loss, solver);
 }
 
-tensor4d_t model_t::predict(const dataset_generator_t& dataset, const indices_t& samples) const
+tensor4d_t model_t::predict(const dataset_t& dataset, const indices_t& samples) const
 {
     compatible(dataset);
 

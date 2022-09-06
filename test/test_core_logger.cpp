@@ -125,13 +125,13 @@ UTEST_CASE(main)
     const auto  argc   = 1;
     const char* argv[] = {"main"};
 
-    UTEST_CHECK_NOTHROW(nano::main(op_ok, argc, argv));
-    UTEST_CHECK_NOTHROW(nano::main(op_unknown, argc, argv));
-    UTEST_CHECK_NOTHROW(nano::main(op_exception, argc, argv));
+    UTEST_CHECK_NOTHROW(nano::safe_main(op_ok, argc, argv));
+    UTEST_CHECK_NOTHROW(nano::safe_main(op_unknown, argc, argv));
+    UTEST_CHECK_NOTHROW(nano::safe_main(op_exception, argc, argv));
 
-    UTEST_CHECK_EQUAL(nano::main(op_ok, argc, argv), EXIT_SUCCESS);
-    UTEST_CHECK_EQUAL(nano::main(op_unknown, argc, argv), EXIT_FAILURE);
-    UTEST_CHECK_EQUAL(nano::main(op_exception, argc, argv), EXIT_FAILURE);
+    UTEST_CHECK_EQUAL(nano::safe_main(op_ok, argc, argv), EXIT_SUCCESS);
+    UTEST_CHECK_EQUAL(nano::safe_main(op_unknown, argc, argv), EXIT_FAILURE);
+    UTEST_CHECK_EQUAL(nano::safe_main(op_exception, argc, argv), EXIT_FAILURE);
 }
 
 UTEST_END_MODULE()

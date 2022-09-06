@@ -1,6 +1,5 @@
 #include "fixture/generator.h"
 #include <nano/generator/elemwise_gradient.h>
-#include <utest/utest.h>
 
 using namespace std;
 using namespace nano;
@@ -43,19 +42,19 @@ static auto make_features(tensor_size_t channels = 2, tensor_size_t rows = 4, te
     };
 }
 
-class fixture_dataset_t final : public dataset_t
+class fixture_datasource_t final : public datasource_t
 {
 public:
-    fixture_dataset_t(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
-                      tensor_size_t cols = 4)
-        : dataset_t("fixture")
+    fixture_datasource_t(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
+                         tensor_size_t cols = 4)
+        : datasource_t("fixture")
         , m_samples(samples)
         , m_features(make_features(channels, rows, cols))
         , m_target(target)
     {
     }
 
-    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
 private:
     void do_load() override
@@ -78,20 +77,20 @@ private:
     size_t        m_target;
 };
 
-static auto make_dataset(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
-                         tensor_size_t cols = 4)
+static auto make_datasource(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
+                            tensor_size_t cols = 4)
 {
-    auto dataset = fixture_dataset_t{samples, target, channels, rows, cols};
-    UTEST_CHECK_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.samples(), samples);
-    return dataset;
+    auto datasource = fixture_datasource_t{samples, target, channels, rows, cols};
+    UTEST_CHECK_NOTHROW(datasource.load());
+    UTEST_CHECK_EQUAL(datasource.samples(), samples);
+    return datasource;
 }
 
-static auto make_generator(const dataset_t& dataset)
+static auto make_dataset(const datasource_t& datasource)
 {
-    auto generator = dataset_generator_t{dataset};
-    add_generator<elemwise_generator_t<elemwise_gradient_t>>(generator);
-    return generator;
+    auto dataset = dataset_t{datasource};
+    add_generator<elemwise_generator_t<elemwise_gradient_t>>(dataset);
+    return dataset;
 }
 
 UTEST_BEGIN_MODULE(test_generator_gradient)
@@ -175,47 +174,47 @@ UTEST_CASE(gradient)
 
 UTEST_CASE(unsupervised_gradient)
 {
-    const auto dataset   = make_dataset(4, string_t::npos);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(4, string_t::npos);
+    const auto dataset    = make_dataset(datasource);
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 8);
-    UTEST_CHECK_EQUAL(generator.feature(0),
+    UTEST_REQUIRE_EQUAL(dataset.features(), 8);
+    UTEST_CHECK_EQUAL(dataset.feature(0),
                       feature_t{"sobel::gx(u8s[channel::0])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(1),
+    UTEST_CHECK_EQUAL(dataset.feature(1),
                       feature_t{"sobel::gy(u8s[channel::0])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(2),
+    UTEST_CHECK_EQUAL(dataset.feature(2),
                       feature_t{"sobel::gg(u8s[channel::0])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(3),
+    UTEST_CHECK_EQUAL(dataset.feature(3),
                       feature_t{"sobel::theta(u8s[channel::0])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(4),
+    UTEST_CHECK_EQUAL(dataset.feature(4),
                       feature_t{"sobel::gx(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(5),
+    UTEST_CHECK_EQUAL(dataset.feature(5),
                       feature_t{"sobel::gy(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(6),
+    UTEST_CHECK_EQUAL(dataset.feature(6),
                       feature_t{"sobel::gg(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(7),
+    UTEST_CHECK_EQUAL(dataset.feature(7),
                       feature_t{"sobel::theta(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
 
-    check_select(generator, 0,
+    check_select(dataset, 0,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX0(1), NaN, NaN, NaN, NaN, GX0(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 1,
+    check_select(dataset, 1,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY0(1), NaN, NaN, NaN, NaN, GY0(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 2,
+    check_select(dataset, 2,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG0(1), NaN, NaN, NaN, NaN, GG0(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 3,
+    check_select(dataset, 3,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA0, NaN, NaN, NaN, NaN, THETA0, NaN, NaN, NaN, NaN));
-    check_select(generator, 4,
+    check_select(dataset, 4,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX1(1), NaN, NaN, NaN, NaN, GX1(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 5,
+    check_select(dataset, 5,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY1(1), NaN, NaN, NaN, NaN, GY1(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 6,
+    check_select(dataset, 6,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG1(1), NaN, NaN, NaN, NaN, GG1(3), NaN, NaN, NaN, NaN));
-    check_select(generator, 7,
+    check_select(dataset, 7,
                  make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA1, NaN, NaN, NaN, NaN, THETA1, NaN, NaN, NaN, NaN));
-    check_select_stats(generator, indices_t{}, indices_t{}, indices_t{}, make_indices(0, 1, 2, 3, 4, 5, 6, 7));
+    check_select_stats(dataset, indices_t{}, indices_t{}, indices_t{}, make_indices(0, 1, 2, 3, 4, 5, 6, 7));
 
     check_flatten(
-        generator,
+        dataset,
         make_tensor<scalar_t>(make_dims(4, 32), GX0(1), GY0(1), GG0(1), THETA0, GX1(1), GY1(1), GG1(1), THETA1, NaN,
                               NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,
                               NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,
@@ -228,26 +227,26 @@ UTEST_CASE(unsupervised_gradient)
 
 UTEST_CASE(unsupervised_too_small_rows)
 {
-    const auto dataset   = make_dataset(4, string_t::npos, 2, 2, 4);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(4, string_t::npos, 2, 2, 4);
+    const auto dataset    = make_dataset(datasource);
 
-    UTEST_CHECK_EQUAL(generator.features(), 0);
+    UTEST_CHECK_EQUAL(dataset.features(), 0);
 }
 
 UTEST_CASE(unsupervised_too_small_cols)
 {
-    const auto dataset   = make_dataset(4, string_t::npos, 2, 4, 2);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(4, string_t::npos, 2, 4, 2);
+    const auto dataset    = make_dataset(datasource);
 
-    UTEST_CHECK_EQUAL(generator.features(), 0);
+    UTEST_CHECK_EQUAL(dataset.features(), 0);
 }
 
 UTEST_CASE(unsupervised_too_small_rows_and_cols)
 {
-    const auto dataset   = make_dataset(4, string_t::npos, 2, 2, 2);
-    const auto generator = make_generator(dataset);
+    const auto datasource = make_datasource(4, string_t::npos, 2, 2, 2);
+    const auto dataset    = make_dataset(datasource);
 
-    UTEST_CHECK_EQUAL(generator.features(), 0);
+    UTEST_CHECK_EQUAL(dataset.features(), 0);
 }
 
 UTEST_END_MODULE()

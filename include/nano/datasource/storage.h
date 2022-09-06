@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nano/core/logger.h>
-#include <nano/dataset/feature.h>
-#include <nano/dataset/iterator.h>
+#include <nano/datasource/feature.h>
+#include <nano/datasource/iterator.h>
 
 namespace nano
 {
@@ -129,7 +129,7 @@ namespace nano
             {
                 scalar = ::nano::from_string<tscalar>(value);
             }
-            catch (std::exception& e)
+            catch (const std::exception& e)
             {
                 critical0("in-memory dataset: cannot set ", type, " feature <", name(), ">: caught exception <",
                           e.what(), ">!");

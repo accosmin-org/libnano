@@ -1,6 +1,6 @@
-#include "fixture/generator_dataset.h"
+#include "fixture/generator.h"
+#include "fixture/generator_datasource.h"
 #include <nano/generator/select.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -8,7 +8,7 @@ UTEST_BEGIN_MODULE(test_generator_select)
 
 UTEST_CASE(select_scalar)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
     {
         const auto mapping = select_scalar(dataset);
         const auto expected_mapping =
@@ -24,7 +24,7 @@ UTEST_CASE(select_scalar)
 
 UTEST_CASE(select_struct)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
     {
         const auto mapping = select_struct(dataset);
         const auto expected_mapping =
@@ -45,7 +45,7 @@ UTEST_CASE(select_struct)
 
 UTEST_CASE(select_sclass)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
     {
         const auto mapping = select_sclass(dataset);
         const auto expected_mapping =
@@ -61,7 +61,7 @@ UTEST_CASE(select_sclass)
 
 UTEST_CASE(select_mclass)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
     {
         const auto mapping          = select_mclass(dataset);
         const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(2, 5), 0, 3, 1, 1, 1, 1, 4, 1, 1, 1);

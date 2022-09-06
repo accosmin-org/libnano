@@ -7,13 +7,13 @@ namespace nano
     ///
     /// \brief common class for MNIST-like datasets.
     ///
-    class NANO_PUBLIC base_mnist_dataset_t : public dataset_t
+    class NANO_PUBLIC base_mnist_datasource_t : public datasource_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        base_mnist_dataset_t(string_t id, string_t dir, string_t name, feature_t target);
+        base_mnist_datasource_t(string_t id, string_t dir, string_t name, feature_t target);
 
     private:
         void do_load() override;
@@ -34,18 +34,18 @@ namespace nano
     ///
     /// http://yann.lecun.com/exdb/mnist/
     ///
-    class NANO_PUBLIC mnist_dataset_t final : public base_mnist_dataset_t
+    class NANO_PUBLIC mnist_datasource_t final : public base_mnist_datasource_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        mnist_dataset_t();
+        mnist_datasource_t();
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
     };
 
     ///
@@ -56,17 +56,17 @@ namespace nano
     ///
     /// https://github.com/zalandoresearch/fashion-mnist
     ///
-    class NANO_PUBLIC fashion_mnist_dataset_t final : public base_mnist_dataset_t
+    class NANO_PUBLIC fashion_mnist_datasource_t final : public base_mnist_datasource_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        fashion_mnist_dataset_t();
+        fashion_mnist_datasource_t();
 
         ///
         /// \brief @see clonable_t
         ///
-        rdataset_t clone() const override;
+        rdatasource_t clone() const override;
     };
 } // namespace nano

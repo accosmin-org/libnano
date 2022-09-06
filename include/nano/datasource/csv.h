@@ -54,7 +54,11 @@ namespace nano
             return *this;
         }
 
-        auto& testing(tensor_size_t begin, tensor_size_t end) { return testing(make_range(begin, end)); }
+        auto& testing(tensor_size_t begin, tensor_size_t end)
+        {
+            m_testing = make_range(begin, end);
+            return *this;
+        }
 
         auto& placeholder(string_t placeholder)
         {

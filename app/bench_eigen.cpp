@@ -415,5 +415,5 @@ static int unsafe_main(int argc, const char* argv[])
 
 int main(int argc, const char* argv[])
 {
-    return nano::main(unsafe_main, argc, argv);
+    return nano::safe_main(unsafe_main, argc, argv);
 }

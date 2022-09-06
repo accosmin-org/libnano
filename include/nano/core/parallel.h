@@ -34,7 +34,7 @@ namespace nano::parallel
             auto task   = task_t(std::forward<tfunction>(f));
             auto future = task.get_future();
             {
-                const std::lock_guard<std::mutex> lock(m_mutex);
+                const std::scoped_lock lock(m_mutex);
                 m_tasks.emplace_back(std::move(task));
             }
             m_condition.notify_one();

@@ -1,13 +1,13 @@
-#include <nano/dataset.h>
+#include <nano/datasource.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_dataset_factory)
+UTEST_BEGIN_MODULE(test_datasource_factory)
 
 UTEST_CASE(factory)
 {
-    const auto& datasets = dataset_t::all();
+    const auto& datasets = datasource_t::all();
     UTEST_CHECK_EQUAL(datasets.ids().size(), 12U);
     UTEST_CHECK(datasets.get("abalone") != nullptr);
     UTEST_CHECK(datasets.get("adult") != nullptr);

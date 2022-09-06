@@ -31,9 +31,12 @@ logger_t::logger_t(type ltype, std::ostream* cout, std::ostream* cerr)
     : m_stream(get_stream(ltype, cout, cerr))
     , m_precision(m_stream.precision())
 {
+    struct tm buf
+    {
+    };
+
     const std::time_t t = std::time(nullptr);
-    m_stream << get_header(ltype) << "[" << std::put_time(std::localtime(&t), "%F|%T")
-             << "]\033[0m: "; // NOLINT(concurrency-mt-unsafe)
+    m_stream << get_header(ltype) << "[" << std::put_time(localtime_r(&t, &buf), "%F|%T") << "]\033[0m: ";
     m_stream << std::fixed << std::setprecision(6);
 }
 

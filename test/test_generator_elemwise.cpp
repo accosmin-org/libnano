@@ -1,7 +1,6 @@
 #include "fixture/generator.h"
-#include "fixture/generator_dataset.h"
+#include "fixture/generator_datasource.h"
 #include <nano/generator/elemwise.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -235,9 +234,9 @@ UTEST_BEGIN_MODULE(test_generator_elemwise)
 
 UTEST_CASE(scalar)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_generator_t{dataset};
+    auto generator = dataset_t{dataset};
     add_generator<elemwise_generator_t<scalar_to_scalar_t>>(generator);
     add_generator<elemwise_generator_t<scalar_to_sclass_t>>(generator);
     add_generator<elemwise_generator_t<scalar_to_mclass_t>>(generator);
@@ -307,9 +306,9 @@ UTEST_CASE(scalar)
 
 UTEST_CASE(structured)
 {
-    const auto dataset = make_dataset(10, string_t::npos);
+    const auto dataset = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_generator_t{dataset};
+    auto generator = dataset_t{dataset};
     add_generator<elemwise_generator_t<struct_to_mclass_t>>(generator);
     add_generator<elemwise_generator_t<struct_to_struct_t>>(generator, make_indices(8, 9, 10));
     add_generator<elemwise_generator_t<struct_to_sclass_t>>(generator);

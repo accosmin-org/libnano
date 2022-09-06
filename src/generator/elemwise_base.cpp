@@ -13,9 +13,9 @@ base_elemwise_generator_t::base_elemwise_generator_t(string_t id, indices_t orig
 {
 }
 
-void base_elemwise_generator_t::fit(const dataset_t& dataset)
+void base_elemwise_generator_t::fit(const datasource_t& datasource)
 {
-    generator_t::fit(dataset);
+    generator_t::fit(datasource);
     m_feature_mapping = do_fit();
     allocate(features());
 }
@@ -43,7 +43,7 @@ feature_t base_elemwise_generator_t::make_scalar_feature(tensor_size_t ifeature,
     assert(ifeature >= 0 && ifeature < features());
     const auto original = mapped_original(ifeature);
 
-    const auto& feature = dataset().feature(original);
+    const auto& feature = datasource().feature(original);
     return feature_t{scat(name, "(", feature.name(), ")")}.scalar(feature_type::float64);
 }
 
@@ -53,7 +53,7 @@ feature_t base_elemwise_generator_t::make_sclass_feature(tensor_size_t ifeature,
     assert(ifeature >= 0 && ifeature < features());
     const auto original = mapped_original(ifeature);
 
-    const auto& feature = dataset().feature(original);
+    const auto& feature = datasource().feature(original);
     return feature_t{scat(name, "(", feature.name(), ")")}.sclass(std::move(labels));
 }
 
@@ -63,7 +63,7 @@ feature_t base_elemwise_generator_t::make_mclass_feature(tensor_size_t ifeature,
     assert(ifeature >= 0 && ifeature < features());
     const auto original = mapped_original(ifeature);
 
-    const auto& feature = dataset().feature(original);
+    const auto& feature = datasource().feature(original);
     return feature_t{scat(name, "(", feature.name(), ")")}.mclass(std::move(labels));
 }
 
@@ -73,6 +73,6 @@ feature_t base_elemwise_generator_t::make_struct_feature(tensor_size_t ifeature,
     assert(ifeature >= 0 && ifeature < features());
     const auto original = mapped_original(ifeature);
 
-    const auto& feature = dataset().feature(original);
+    const auto& feature = datasource().feature(original);
     return feature_t{scat(name, "(", feature.name(), ")")}.scalar(feature_type::float64, dims);
 }

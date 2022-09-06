@@ -1,9 +1,9 @@
-#include <nano/dataset/mask.h>
+#include <nano/datasource/mask.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_dataset_mask)
+UTEST_BEGIN_MODULE(test_datasource_mask)
 
 UTEST_CASE(mask)
 {

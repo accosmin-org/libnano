@@ -1,285 +1,149 @@
 #pragma once
 
-#include <nano/arch.h>
-#include <nano/core/factory.h>
-#include <nano/dataset/storage.h>
+#include <nano/datasource/stats.h>
+#include <nano/generator.h>
 
 namespace nano
 {
-    class dataset_t;
-    using rdataset_t = std::unique_ptr<dataset_t>;
-
     ///
-    /// \brief machine learning dataset consisting of a collection of iid samples.
+    /// \brief wraps a collection of feature generators, potentially of different types.
     ///
-    /// NB: each sample consists of:
-    ///     - a fixed number of (input) feature values and
-    ///     - optionally a target if a supervised ML task.
-    ///
-    /// NB: the input features and the target feature can be optional.
-    /// NB: the categorical features can be single-label or multi-label.
-    /// NB: the continuous features can be structured (multi-dimensional) if feature_t::dims() != (1, 1, 1).
-    ///
-    class NANO_PUBLIC dataset_t : public clonable_t<dataset_t>
+    class NANO_PUBLIC dataset_t
     {
     public:
         ///
-        /// \brief default constructor
+        /// \brief constructor
         ///
-        explicit dataset_t(string_t id);
+        explicit dataset_t(const datasource_t&);
 
         ///
-        /// \brief returns the available implementations.
+        /// \brief register a new feature generator.
         ///
-        static factory_t<dataset_t>& all();
+        template <typename tgenerator, typename... tgenerator_args>
+        dataset_t& add(tgenerator_args... args)
+        {
+            static_assert(std::is_base_of_v<generator_t, tgenerator>);
+            return this->add(std::make_unique<tgenerator>(args...));
+        }
 
         ///
-        /// \brief load dataset in memory.
+        /// \brief register a new feature generator.
         ///
-        /// NB: any error is considered critical and an exception will be triggered.
-        ///
-        void load();
-
-        ///
-        /// \brief returns the appropriate mathine learning task (by inspecting the target feature).
-        ///
-        task_type type() const;
-
-        ///
-        /// \brief returns the total number of samples.
-        ///
-        tensor_size_t samples() const { return m_testing.size(); }
-
-        ///
-        /// \brief returns the samples that can be used for training.
-        ///
-        indices_t train_samples() const;
-
-        ///
-        /// \brief returns the samples that should only be used for testing.
-        ///
-        /// NB: assumes a fixed set of test samples.
-        ///
-        indices_t test_samples() const;
-
-        ///
-        /// \brief set all the samples for training.
-        ///
-        void no_testing();
-
-        ///
-        /// \brief set the given range of samples for testing.
-        ///
-        /// NB: this accumulates the previous range of samples set for testing.
-        ///
-        void testing(tensor_range_t sample_range);
+        dataset_t& add(rgenerator_t&&);
 
         ///
         /// \brief returns the total number of features.
         ///
-        tensor_size_t features() const
-        {
-            const auto total = m_storage_range.size<0>();
-            return (m_target < total) ? (total - 1) : total;
-        }
+        tensor_size_t features() const;
 
         ///
-        /// \brief returns the feature at the given index.
+        /// \brief returns the feature at a given index.
         ///
-        const feature_t& feature(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_features[static_cast<size_t>(ifeature >= m_target ? ifeature + 1 : ifeature)];
-        }
+        feature_t feature(tensor_size_t ifeature) const;
 
         ///
-        /// \brief call and return the result of the given operator on the target feature.
+        /// \brief returns the number of columns of flatten feature values.
         ///
-        /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
-        ///
-        template <typename toperator>
-        auto visit_target(const toperator& op) const
-        {
-            assert(has_target());
-            return visit(m_target, op);
-        }
+        tensor_size_t columns() const;
 
         ///
-        /// \brief call and return the result of the given operator on the given feature index.
+        /// \brief returns the feature index that produces the given column index.
         ///
-        /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
-        ///
-        template <typename toperator>
-        auto visit_inputs(tensor_size_t ifeature, const toperator& op) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return visit(ifeature >= m_target ? ifeature + 1 : ifeature, op);
-        }
-
-    protected:
-        ///
-        /// \brief allocate the dataset to store the given number of samples and samples.
-        ///
-        /// NB: no target feature is given
-        ///     and as such the dataset represents an unsupervised ML task.
-        ///
-        void resize(tensor_size_t samples, const features_t& features);
+        tensor_size_t column2feature(tensor_size_t column) const;
 
         ///
-        /// \brief allocate the dataset to store the given number of samples and samples.
+        /// \brief returns the target feature.
         ///
-        /// NB: the target feature is given as an index in the list of features
-        ///     and as such the dataset represents a supervised ML task.
-        ///
-        void resize(tensor_size_t samples, const features_t& features, size_t target);
+        feature_t target() const;
 
         ///
-        /// \brief safely write a feature value for the given sample.
+        /// \brief returns the target dimensions.
         ///
-        template <typename tvalue>
-        void set(tensor_size_t sample, tensor_size_t ifeature, const tvalue& value)
-        {
-            assert(sample >= 0 && sample < samples());
-            assert(ifeature >= 0 && ifeature < m_storage_range.size<0>());
+        tensor3d_dims_t target_dims() const;
 
-            this->visit(ifeature,
-                        [&](const feature_t& feature, const auto& data, const auto& mask)
-                        {
-                            const auto setter = feature_storage_t{feature};
-                            setter.set(data, sample, value);
-                            setbit(mask, sample);
-                        });
-        }
+        ///
+        /// \brief compute the sample weights from the given target statistics.
+        ///
+        /// NB: the targets statistics should be computed only on the training dataset,
+        ///     while the samples can vary (e.g. validation, testing).
+        ///
+        tensor1d_t sample_weights(indices_cmap_t samples, const targets_stats_t&) const;
+
+        ///
+        /// \brief support for feature importance estimation using drop-column like methods.
+        ///
+        void undrop() const;
+        void drop(tensor_size_t feature) const;
+
+        ///
+        /// \brief support for feature importance estimation using sample-permutation like methods.
+        ///
+        void      unshuffle() const;
+        void      shuffle(tensor_size_t feature) const;
+        indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
+
+        ///
+        /// \brief returns the flatten feature values for all features on a given subset of samples.
+        ///
+        tensor2d_map_t flatten(indices_cmap_t samples, tensor2d_t& buffer) const;
+
+        ///
+        /// \brief returns the targets on a given subset of samples.
+        ///
+        tensor4d_map_t targets(indices_cmap_t samples, tensor4d_t& buffer) const;
+
+        ///
+        /// \brief returns the values of a feature on a given subset of samples.
+        ///
+        sclass_cmap_t select(indices_cmap_t samples, tensor_size_t feature, sclass_mem_t& buffer) const;
+        mclass_cmap_t select(indices_cmap_t samples, tensor_size_t feature, mclass_mem_t& buffer) const;
+        scalar_cmap_t select(indices_cmap_t samples, tensor_size_t feature, scalar_mem_t& buffer) const;
+        struct_cmap_t select(indices_cmap_t samples, tensor_size_t feature, struct_mem_t& buffer) const;
+
+        // access functions
+        auto type() const { return m_datasource.type(); }
+
+        auto samples() const { return m_datasource.samples(); }
+
+        const datasource_t& datasource() const { return m_datasource; }
+
+        const indices_t& sclass_features() const { return m_select_stats.m_sclass_features; }
+
+        const indices_t& mclass_features() const { return m_select_stats.m_mclass_features; }
+
+        const indices_t& scalar_features() const { return m_select_stats.m_scalar_features; }
+
+        const indices_t& struct_features() const { return m_select_stats.m_struct_features; }
 
     private:
-        virtual void do_load() = 0;
+        void                update();
+        void                update_stats();
+        void                check(tensor_size_t feature) const;
+        void                check(indices_cmap_t samples) const;
+        const rgenerator_t& byfeature(tensor_size_t feature) const;
 
-        bool has_target() const { return m_target < m_storage_range.size<0>(); }
+        // per column:
+        //  - 0: generator index,
+        //  - 1: column index within generator,
+        //  - 2: offset n_features (up to the current generator)
+        using column_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
-        mask_cmap_t tmask() const
-        {
-            assert(has_target());
-            return this->mask(m_target);
-        }
+        // per feature:
+        //  - 0: generator index,
+        //  - 1: feature index within generator,
+        //  - 2-4: feature dimensions (dim1, dim2, dim3)
+        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
-        mask_cmap_t imask(tensor_size_t feature) const
-        {
-            assert(feature >= 0 && feature < features());
-            return this->mask(feature >= m_target ? feature + 1 : feature);
-        }
-
-        mask_map_t mask(tensor_size_t index) { return m_storage_mask.tensor(index); }
-
-        mask_cmap_t mask(tensor_size_t index) const { return m_storage_mask.tensor(index); }
-
-        template <typename toperator>
-        auto visit(tensor_size_t ifeature, const toperator& op)
-        {
-            const auto& feature = m_features[static_cast<size_t>(ifeature)];
-
-            const auto samples      = this->samples();
-            const auto mask         = this->mask(ifeature);
-            const auto [d0, d1, d2] = feature.dims();
-            const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
-
-            static const auto maxu08 = tensor_size_t(1) << 8;
-            static const auto maxu16 = tensor_size_t(1) << 16;
-            static const auto maxu32 = tensor_size_t(1) << 32;
-
-            switch (feature.type())
-            {
-            case feature_type::sclass:
-                return (feature.classes() <= maxu08) ? op(feature, m_storage_u08.slice(range).reshape(-1), mask)
-                     : (feature.classes() <= maxu16) ? op(feature, m_storage_u16.slice(range).reshape(-1), mask)
-                     : (feature.classes() <= maxu32) ? op(feature, m_storage_u32.slice(range).reshape(-1), mask)
-                                                     : op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-            case feature_type::mclass: return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
-            case feature_type::float32:
-                return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::float64:
-                return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int8: return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int16: return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int32: return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int64: return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint8: return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint16:
-                return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint32:
-                return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint64:
-                return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
-            default: critical0("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
-            }
-            return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
-        }
-
-        template <typename toperator>
-        auto visit(tensor_size_t ifeature, const toperator& op) const
-        {
-            const auto& feature = m_features[static_cast<size_t>(ifeature)];
-
-            const auto samples      = this->samples();
-            const auto mask         = this->mask(ifeature);
-            const auto [d0, d1, d2] = feature.dims();
-            const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
-
-            static const auto maxu08 = tensor_size_t(1) << 8;
-            static const auto maxu16 = tensor_size_t(1) << 16;
-            static const auto maxu32 = tensor_size_t(1) << 32;
-
-            switch (feature.type())
-            {
-            case feature_type::sclass:
-                return (feature.classes() <= maxu08) ? op(feature, m_storage_u08.slice(range).reshape(-1), mask)
-                     : (feature.classes() <= maxu16) ? op(feature, m_storage_u16.slice(range).reshape(-1), mask)
-                     : (feature.classes() <= maxu32) ? op(feature, m_storage_u32.slice(range).reshape(-1), mask)
-                                                     : op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-            case feature_type::mclass: return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
-            case feature_type::float32:
-                return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::float64:
-                return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int8: return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int16: return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int32: return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::int64: return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint8: return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint16:
-                return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint32:
-                return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
-            case feature_type::uint64:
-                return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
-            default: critical0("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
-            }
-            return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
-        }
-
-        indices_t filter(tensor_size_t count, tensor_size_t condition) const;
-
-        template <typename tscalar>
-        using storage_t       = tensor_mem_t<tscalar, 2>;
-        using storage_mask_t  = tensor_mem_t<uint8_t, 2>;
-        using storage_type_t  = std::vector<feature_type>;
-        using storage_range_t = tensor_mem_t<tensor_size_t, 2>;
+        // per generator:
+        //  - 0: number of features
+        using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        indices_t           m_testing;       ///< (#samples,) - mark sample for testing, if != 0
-        features_t          m_features;      ///< input and target features
-        tensor_size_t       m_target{0};     ///< index of the target feature if it exists, otherwise string_t::npos
-        storage_t<float>    m_storage_f32;   ///<
-        storage_t<double>   m_storage_f64;   ///<
-        storage_t<int8_t>   m_storage_i08;   ///<
-        storage_t<int16_t>  m_storage_i16;   ///<
-        storage_t<int32_t>  m_storage_i32;   ///<
-        storage_t<int64_t>  m_storage_i64;   ///<
-        storage_t<uint8_t>  m_storage_u08;   ///<
-        storage_t<uint16_t> m_storage_u16;   ///<
-        storage_t<uint32_t> m_storage_u32;   ///<
-        storage_t<uint64_t> m_storage_u64;   ///<
-        storage_mask_t      m_storage_mask;  ///< feature value given if the bit (feature, sample) is 1
-        storage_type_t      m_storage_type;  ///<
-        storage_range_t     m_storage_range; ///<
+        const datasource_t& m_datasource;        ///<
+        rgenerators_t       m_generators;        ///<
+        column_mapping_t    m_column_mapping;    ///<
+        feature_mapping_t   m_feature_mapping;   ///<
+        generator_mapping_t m_generator_mapping; ///<
+        select_stats_t      m_select_stats;      ///<
     };
 } // namespace nano

@@ -30,10 +30,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        timer_t()
-            : m_start(now())
-        {
-        }
+        timer_t() = default;
 
         ///
         /// \brief reset the current time point.
@@ -75,7 +72,7 @@ namespace nano
         }
 
         // attributes
-        timepoint_t m_start; ///< starting time point
+        timepoint_t m_start{now()}; ///< starting time point
     };
 
     ///

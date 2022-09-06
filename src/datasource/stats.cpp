@@ -1,4 +1,4 @@
-#include <nano/dataset/stats.h>
+#include <nano/datasource/stats.h>
 
 using namespace nano;
 

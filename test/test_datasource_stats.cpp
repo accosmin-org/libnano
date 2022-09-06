@@ -1,4 +1,4 @@
-#include <nano/dataset/stats.h>
+#include <nano/datasource/stats.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -7,7 +7,7 @@ constexpr auto INF = std::numeric_limits<scalar_t>::infinity();
 constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
 template <typename tscalar, size_t trank>
-static void check_sclass_stats(const feature_t& feature, dataset_iterator_t<tscalar, trank> it,
+static void check_sclass_stats(const feature_t& feature, datasource_iterator_t<tscalar, trank> it,
                                tensor_size_t expected_samples, const indices_t& expected_class_counts,
                                tensor1d_t expected_weights, scalar_t epsilon = 1e-12)
 {
@@ -35,7 +35,7 @@ static void check_sclass_stats(const feature_t& feature, dataset_iterator_t<tsca
 }
 
 template <typename tscalar, size_t trank>
-static void check_mclass_stats(const feature_t& feature, dataset_iterator_t<tscalar, trank> it,
+static void check_mclass_stats(const feature_t& feature, datasource_iterator_t<tscalar, trank> it,
                                tensor_size_t expected_samples, const indices_t& expected_class_counts,
                                tensor1d_t expected_weights, scalar_t epsilon = 1e-12)
 {
@@ -63,7 +63,7 @@ static void check_mclass_stats(const feature_t& feature, dataset_iterator_t<tsca
 }
 
 template <typename tscalar, size_t trank>
-static auto check_scalar_stats(const feature_t& feature, dataset_iterator_t<tscalar, trank> it,
+static auto check_scalar_stats(const feature_t& feature, datasource_iterator_t<tscalar, trank> it,
                                tensor_size_t expected_samples, scalar_t expected_min, scalar_t expected_max,
                                scalar_t expected_mean, scalar_t expected_stdev, scalar_t epsilon = 1e-12)
 {
@@ -141,7 +141,7 @@ static void check_scaling(const scalar_stats_t& stats, scaling_type scaling, ten
     }
 }
 
-UTEST_BEGIN_MODULE(test_dataset_stats)
+UTEST_BEGIN_MODULE(test_datasource_stats)
 
 UTEST_CASE(scalar)
 {

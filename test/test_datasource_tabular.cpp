@@ -1,6 +1,6 @@
-#include "fixture/dataset.h"
+#include "fixture/datasource.h"
 #include <fstream>
-#include <nano/dataset/tabular.h>
+#include <nano/datasource/tabular.h>
 
 using namespace nano;
 
@@ -23,12 +23,12 @@ static auto feature_cate(bool with_labels = false)
     return feature;
 }
 
-class fixture_dataset_t final : public tabular_dataset_t
+class fixture_datasource_t final : public tabular_datasource_t
 {
 public:
-    static auto data_path() { return "test_dataset_tabular_data.csv"; }
+    static auto data_path() { return "test_datasource_tabular_data.csv"; }
 
-    static auto test_path() { return "test_dataset_tabular_test.csv"; }
+    static auto test_path() { return "test_datasource_tabular_test.csv"; }
 
     static auto csvs(int data_size = 20, int test_size = 10)
     {
@@ -42,42 +42,42 @@ public:
                            .placeholder("?")});
     }
 
-    fixture_dataset_t()
-        : fixture_dataset_t(fixture_dataset_t::csvs(), features_t{})
+    fixture_datasource_t()
+        : fixture_datasource_t(fixture_datasource_t::csvs(), features_t{})
     {
     }
 
-    explicit fixture_dataset_t(features_t features)
-        : fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features))
+    explicit fixture_datasource_t(features_t features)
+        : fixture_datasource_t(fixture_datasource_t::csvs(), std::move(features))
     {
     }
 
-    fixture_dataset_t(features_t features, size_t target)
-        : fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
+    fixture_datasource_t(features_t features, size_t target)
+        : fixture_datasource_t(fixture_datasource_t::csvs(), std::move(features), target)
     {
     }
 
-    fixture_dataset_t(csvs_t csvs, features_t features)
-        : tabular_dataset_t("fixture", std::move(csvs), std::move(features))
+    fixture_datasource_t(csvs_t csvs, features_t features)
+        : tabular_datasource_t("fixture", std::move(csvs), std::move(features))
     {
         std::remove(data_path()); // NOLINT(cert-err33-c)
         std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    fixture_dataset_t(csvs_t csvs, features_t features, size_t target)
-        : tabular_dataset_t("fixture", std::move(csvs), std::move(features), target)
+    fixture_datasource_t(csvs_t csvs, features_t features, size_t target)
+        : tabular_datasource_t("fixture", std::move(csvs), std::move(features), target)
         , m_target(target)
     {
         std::remove(data_path()); // NOLINT(cert-err33-c)
         std::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
-    fixture_dataset_t(fixture_dataset_t&&)                 = default;
-    fixture_dataset_t(const fixture_dataset_t&)            = default;
-    fixture_dataset_t& operator=(fixture_dataset_t&&)      = default;
-    fixture_dataset_t& operator=(const fixture_dataset_t&) = delete;
+    fixture_datasource_t(fixture_datasource_t&&)                 = default;
+    fixture_datasource_t(const fixture_datasource_t&)            = default;
+    fixture_datasource_t& operator=(fixture_datasource_t&&)      = default;
+    fixture_datasource_t& operator=(const fixture_datasource_t&) = delete;
 
-    ~fixture_dataset_t() override
+    ~fixture_datasource_t() override
     {
         std::remove(data_path()); // NOLINT(cert-err33-c)
         std::remove(test_path()); // NOLINT(cert-err33-c)
@@ -128,7 +128,7 @@ public:
                                          -1.6, -1.8, -2.0, -2.2, -2.4, -2.6, -2.8, -3.0);
     }
 
-    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
 private:
     bool optional_cont() const { return m_optional_target || m_target == 1U; }
@@ -180,11 +180,11 @@ private:
     bool   m_optional_target{true};  ///< optional
 };
 
-UTEST_BEGIN_MODULE(test_dataset_tabular)
+UTEST_BEGIN_MODULE(test_datasource_tabular)
 
 UTEST_CASE(empty)
 {
-    auto dataset = fixture_dataset_t{};
+    auto dataset = fixture_datasource_t{};
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
 
     UTEST_CHECK_EQUAL(dataset.samples(), 0);
@@ -196,7 +196,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(no_target_no_load)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -210,7 +210,7 @@ UTEST_CASE(no_target_no_load)
 
 UTEST_CASE(with_target_no_load)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()},
         0U
     };
@@ -226,7 +226,7 @@ UTEST_CASE(with_target_no_load)
 UTEST_CASE(cannot_load_no_data)
 {
     const auto csvs    = csvs_t{};
-    auto       dataset = fixture_dataset_t{
+    auto       dataset = fixture_datasource_t{
         csvs, {feature_cont(), feature_cate()},
          0U
     };
@@ -236,14 +236,14 @@ UTEST_CASE(cannot_load_no_data)
 
 UTEST_CASE(cannot_load_no_features)
 {
-    auto dataset = fixture_dataset_t{};
+    auto dataset = fixture_datasource_t{};
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(cannot_load_invalid_target)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()},
         2U
     };
@@ -254,7 +254,7 @@ UTEST_CASE(cannot_load_invalid_target)
 UTEST_CASE(cannot_load_unsupported_mclass)
 {
     const auto feature_mclass = feature_t{"feature"}.mclass(3);
-    auto       dataset        = fixture_dataset_t{
+    auto       dataset        = fixture_datasource_t{
         {feature_cont(), feature_cate(), feature_mclass}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -264,7 +264,7 @@ UTEST_CASE(cannot_load_unsupported_mclass)
 UTEST_CASE(cannot_load_unsupported_struct)
 {
     const auto feature_struct = feature_t{"feature"}.scalar(feature_type::uint8, make_dims(3, 32, 32));
-    auto       dataset        = fixture_dataset_t{
+    auto       dataset        = fixture_datasource_t{
         {feature_cont(), feature_cate(), feature_struct}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -273,8 +273,8 @@ UTEST_CASE(cannot_load_unsupported_struct)
 
 UTEST_CASE(cannot_load_wrong_expected_csv_length0)
 {
-    const auto csvs    = fixture_dataset_t::csvs(21, 10);
-    auto       dataset = fixture_dataset_t{
+    const auto csvs    = fixture_datasource_t::csvs(21, 10);
+    auto       dataset = fixture_datasource_t{
         csvs, {feature_cont(), feature_cate()}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -283,8 +283,8 @@ UTEST_CASE(cannot_load_wrong_expected_csv_length0)
 
 UTEST_CASE(cannot_load_wrong_expected_csv_length1)
 {
-    const auto csvs    = fixture_dataset_t::csvs(20, 9);
-    auto       dataset = fixture_dataset_t{
+    const auto csvs    = fixture_datasource_t::csvs(20, 9);
+    auto       dataset = fixture_datasource_t{
         csvs, {feature_cont(), feature_cate()}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -293,7 +293,7 @@ UTEST_CASE(cannot_load_wrong_expected_csv_length1)
 
 UTEST_CASE(cannot_load_too_many_labels)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()},
         string_t::npos
     };
@@ -304,7 +304,7 @@ UTEST_CASE(cannot_load_too_many_labels)
 
 UTEST_CASE(load_no_target)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()}
     };
     dataset.optional_target();
@@ -324,7 +324,7 @@ UTEST_CASE(load_no_target)
 
 UTEST_CASE(load_cate_target)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()},
         1U
     };
@@ -348,7 +348,7 @@ UTEST_CASE(load_cate_target)
 
 UTEST_CASE(load_cont_target)
 {
-    auto dataset = fixture_dataset_t{
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()},
         0U
     };

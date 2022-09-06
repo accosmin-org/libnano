@@ -11,8 +11,8 @@ namespace nano
     using rng_t = std::minstd_rand;
 
     template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-    using udist_t = typename std::conditional<std::is_integral_v<tscalar>, std::uniform_int_distribution<tscalar>,
-                                              std::uniform_real_distribution<tscalar>>::type;
+    using udist_t = typename std::conditional_t<std::is_integral_v<tscalar>, std::uniform_int_distribution<tscalar>,
+                                                std::uniform_real_distribution<tscalar>>;
 
     ///
     /// \brief create & initialize a random number generator.

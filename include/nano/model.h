@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/generator.h>
+#include <nano/dataset.h>
 #include <nano/loss.h>
 #include <nano/solver.h>
 
@@ -76,12 +76,12 @@ namespace nano
         /// \brief fit the model using the given samples and the current set of (hyper-)parameters
         ///     and returns the average error of the given samples.
         ///
-        fit_result_t fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&);
+        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&);
 
         ///
         /// \brief evaluate the trained model and returns the predictions for each of the given samples.
         ///
-        tensor4d_t predict(const dataset_generator_t&, const indices_t&) const;
+        tensor4d_t predict(const dataset_t&, const indices_t&) const;
 
         ///
         /// \brief set the logging callback
@@ -92,10 +92,10 @@ namespace nano
         void log(const fit_result_t&, const string_t& prefix) const;
 
     private:
-        void compatible(const dataset_generator_t&) const;
+        void compatible(const dataset_t&) const;
 
-        virtual fit_result_t do_fit(const dataset_generator_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
-        virtual tensor4d_t   do_predict(const dataset_generator_t&, const indices_t&) const                       = 0;
+        virtual fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&) = 0;
+        virtual tensor4d_t   do_predict(const dataset_t&, const indices_t&) const                       = 0;
 
         // attributes
         features_t m_inputs; ///< input features

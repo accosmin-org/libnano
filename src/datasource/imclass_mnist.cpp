@@ -1,19 +1,19 @@
 #include <fstream>
 #include <nano/core/logger.h>
-#include <nano/dataset/imclass_mnist.h>
-#include <nano/dataset/utils.h>
+#include <nano/datasource/imclass_mnist.h>
+#include <nano/datasource/utils.h>
 
 using namespace nano;
 
-base_mnist_dataset_t::base_mnist_dataset_t(string_t id, string_t dir, string_t name, feature_t target)
-    : dataset_t(std::move(id))
+base_mnist_datasource_t::base_mnist_datasource_t(string_t id, string_t dir, string_t name, feature_t target)
+    : datasource_t(std::move(id))
     , m_dir(std::move(dir))
     , m_name(std::move(name))
     , m_target(std::move(target))
 {
 }
 
-void base_mnist_dataset_t::do_load()
+void base_mnist_datasource_t::do_load()
 {
     const auto parts = {std::make_tuple(m_dir + "/train-images-idx3-ubyte", m_dir + "/train-labels-idx1-ubyte",
                                         tensor_size_t(0), tensor_size_t(60000)),
@@ -42,10 +42,10 @@ void base_mnist_dataset_t::do_load()
         log_info() << m_name << ": loaded " << sample << " samples.";
     }
 
-    dataset_t::testing({make_range(60000, 70000)});
+    datasource_t::testing({make_range(60000, 70000)});
 }
 
-bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
+bool base_mnist_datasource_t::iread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
     char                     buffer[16];
     tensor_mem_t<uint8_t, 3> image(1, 28, 28);
@@ -70,7 +70,7 @@ bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t sample, ten
     return expected == 0;
 }
 
-bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
+bool base_mnist_datasource_t::tread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
     std::ifstream stream(path);
 
@@ -94,27 +94,27 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t sample, ten
     return true;
 }
 
-mnist_dataset_t::mnist_dataset_t()
-    : base_mnist_dataset_t("mnist", scat(nano::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
-                           feature_t("digit").sclass(strings_t{"digit0", "digit1", "digit2", "digit3", "digit4",
-                                                               "digit5", "digit6", "digit7", "digit8", "digit9"}))
+mnist_datasource_t::mnist_datasource_t()
+    : base_mnist_datasource_t("mnist", scat(nano::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
+                              feature_t("digit").sclass(strings_t{"digit0", "digit1", "digit2", "digit3", "digit4",
+                                                                  "digit5", "digit6", "digit7", "digit8", "digit9"}))
 {
 }
 
-rdataset_t mnist_dataset_t::clone() const
+rdatasource_t mnist_datasource_t::clone() const
 {
-    return std::make_unique<mnist_dataset_t>(*this);
+    return std::make_unique<mnist_datasource_t>(*this);
 }
 
-fashion_mnist_dataset_t::fashion_mnist_dataset_t()
-    : base_mnist_dataset_t("fashion-mnist", scat(nano::getenv("HOME"), "/libnano/datasets/fashion-mnist"),
-                           "Fashion-MNIST",
-                           feature_t("article").sclass(strings_t{"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
-                                                                 "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"}))
+fashion_mnist_datasource_t::fashion_mnist_datasource_t()
+    : base_mnist_datasource_t(
+          "fashion-mnist", scat(nano::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST",
+          feature_t("article").sclass(strings_t{"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal",
+                                                "Shirt", "Sneaker", "Bag", "Ankle boot"}))
 {
 }
 
-rdataset_t fashion_mnist_dataset_t::clone() const
+rdatasource_t fashion_mnist_datasource_t::clone() const
 {
-    return std::make_unique<fashion_mnist_dataset_t>(*this);
+    return std::make_unique<fashion_mnist_datasource_t>(*this);
 }

@@ -1,4 +1,4 @@
-#include <nano/dataset.h>
+#include <nano/datasource.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -20,18 +20,18 @@ static auto make_features()
     };
 }
 
-class fixture_dataset_t final : public dataset_t
+class fixture_datasource_t final : public datasource_t
 {
 public:
-    explicit fixture_dataset_t(tensor_size_t samples, size_t target = string_t::npos)
-        : dataset_t("fixture")
+    explicit fixture_datasource_t(tensor_size_t samples, size_t target = string_t::npos)
+        : datasource_t("fixture")
         , m_samples(samples)
         , m_features(make_features())
         , m_target(target)
     {
     }
 
-    rdataset_t clone() const override { return std::make_unique<fixture_dataset_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
 private:
     void set_mclass(tensor_size_t ifeature, tensor_size_t classes, tensor_size_t modulo)
@@ -99,10 +99,10 @@ private:
     size_t        m_target;
 };
 
-static auto make_dataset(tensor_size_t samples, size_t target)
+static auto make_datasource(tensor_size_t samples, size_t target)
 {
-    auto dataset = fixture_dataset_t{samples, target};
-    UTEST_CHECK_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.samples(), samples);
-    return dataset;
+    auto datasource = fixture_datasource_t{samples, target};
+    UTEST_CHECK_NOTHROW(datasource.load());
+    UTEST_CHECK_EQUAL(datasource.samples(), samples);
+    return datasource;
 }
