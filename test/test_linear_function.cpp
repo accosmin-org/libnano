@@ -66,145 +66,228 @@ static auto check_minimize(const function_t& function)
 
 UTEST_BEGIN_MODULE(test_linear_function)
 
-UTEST_CASE(function)
+UTEST_CASE(function_noreg)
 {
     const auto trials   = 10;
     const auto targets  = tensor_size_t{1};
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::none;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    for (const auto scaling : enum_values<scaling_type>())
-    {
-        const auto loss    = make_loss(scaling);
-        const auto batch   = make_batch(scaling);
-        const auto threads = make_threads(scaling);
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
 
-        auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
-        iterator.batch(batch);
-        iterator.scaling(scaling);
+    const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
+    const auto function      = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
+    UTEST_CHECK_EQUAL(function.size(), expected_size);
+    UTEST_CHECK(function.convex() || !loss->convex());
+    UTEST_CHECK(function.smooth() || !loss->smooth());
+    UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
 
-        const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/noreg"));
-
-            const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
-            UTEST_CHECK_EQUAL(function.size(), expected_size);
-            UTEST_CHECK(function.convex() || !loss->convex());
-            UTEST_CHECK(function.smooth() || !loss->smooth());
-            UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
-
-            check_vgrad(function, trials);
-            check_gradient(function, trials);
-            check_convexity(function, trials);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/l1reg"));
-
-            const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
-            UTEST_CHECK_EQUAL(function.size(), expected_size);
-            UTEST_CHECK(function.convex() || !loss->convex());
-            UTEST_CHECK(!function.smooth());
-            UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
-
-            check_gradient(function, trials);
-            check_convexity(function, trials);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/l2reg"));
-
-            const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
-            UTEST_CHECK_EQUAL(function.size(), expected_size);
-            UTEST_CHECK(function.convex() || !loss->convex());
-            UTEST_CHECK(function.smooth() || !loss->smooth());
-            UTEST_CHECK_EQUAL(function.strong_convexity(), 1.0 / targets / 13.0);
-
-            check_gradient(function, trials);
-            check_convexity(function, trials);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/vAreg"));
-
-            const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
-            UTEST_CHECK_EQUAL(function.size(), expected_size);
-            UTEST_CHECK(!function.convex());
-            UTEST_CHECK(function.smooth() || !loss->smooth());
-            UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
-
-            check_gradient(function, trials);
-            check_convexity(function, trials);
-        }
-    }
+    check_vgrad(function, trials);
+    check_gradient(function, trials);
+    check_convexity(function, trials);
 }
 
-UTEST_CASE(minimize)
+UTEST_CASE(function_l1reg)
+{
+    const auto trials   = 10;
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{10};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::mean;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
+
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
+
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+
+    const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
+    const auto function      = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
+    UTEST_CHECK_EQUAL(function.size(), expected_size);
+    UTEST_CHECK(function.convex() || !loss->convex());
+    UTEST_CHECK(!function.smooth());
+    UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
+
+    check_gradient(function, trials);
+    check_convexity(function, trials);
+}
+
+UTEST_CASE(function_l2reg)
+{
+    const auto trials   = 10;
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{10};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::minmax;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
+
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
+
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+
+    const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
+    const auto function      = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
+    UTEST_CHECK_EQUAL(function.size(), expected_size);
+    UTEST_CHECK(function.convex() || !loss->convex());
+    UTEST_CHECK(function.smooth() || !loss->smooth());
+    UTEST_CHECK_EQUAL(function.strong_convexity(), 1.0 / targets / 13.0);
+
+    check_gradient(function, trials);
+    check_convexity(function, trials);
+}
+
+UTEST_CASE(function_vAreg)
+{
+    const auto trials   = 10;
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{10};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::standard;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
+
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
+
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+
+    const auto expected_size = targets * (1 + (1 + 2 + 4 + 6));
+    const auto function      = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
+    UTEST_CHECK_EQUAL(function.size(), expected_size);
+    UTEST_CHECK(!function.convex());
+    UTEST_CHECK(function.smooth() || !loss->smooth());
+    UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
+
+    check_gradient(function, trials);
+    check_convexity(function, trials);
+}
+
+UTEST_CASE(minimize_noreg)
 {
     const auto targets  = tensor_size_t{1};
     const auto samples  = tensor_size_t{50};
     const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::none;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    for (const auto scaling : enum_values<scaling_type>())
-    {
-        const auto loss    = make_loss(scaling);
-        const auto batch   = make_batch(scaling);
-        const auto threads = make_threads(scaling);
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
 
-        auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
-        iterator.batch(batch);
-        iterator.scaling(scaling);
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/noreg"));
+    const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
 
-            const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
+    auto [state, epsilon] = check_minimize(function);
+    UTEST_CHECK_CLOSE(state.f, 0.0, epsilon);
+    UTEST_CHECK_GREATER(state.inner_iters, 10);
 
-            auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_CLOSE(state.f, 0.0, epsilon);
-            UTEST_CHECK_GREATER(state.inner_iters, 10);
+    ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling, function.weights(state.x),
+                    function.bias(state.x));
 
-            ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling,
-                            function.weights(state.x), function.bias(state.x));
+    UTEST_CHECK_CLOSE(datasource.bias(), function.bias(state.x), epsilon);
+    UTEST_CHECK_CLOSE(datasource.weights(), function.weights(state.x), epsilon);
 
-            UTEST_CHECK_CLOSE(datasource.bias(), function.bias(state.x), epsilon);
-            UTEST_CHECK_CLOSE(datasource.weights(), function.weights(state.x), epsilon);
+    const auto datasource_bias    = datasource.bias().vector();
+    const auto datasource_weights = datasource.weights().matrix();
+    check_linear(dataset, datasource_weights, datasource_bias, 1e-15);
 
-            const auto datasource_bias    = datasource.bias().vector();
-            const auto datasource_weights = datasource.weights().matrix();
-            check_linear(dataset, datasource_weights, datasource_bias, 1e-15);
+    const auto function_bias    = function.bias(state.x).vector();
+    const auto function_weights = function.weights(state.x).matrix();
+    check_linear(dataset, function_weights, function_bias, epsilon);
+}
 
-            const auto function_bias    = function.bias(state.x).vector();
-            const auto function_weights = function.weights(state.x).matrix();
-            check_linear(dataset, function_weights, function_bias, epsilon);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/l1reg"));
+UTEST_CASE(minimize_l1reg)
+{
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{50};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::mean;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
 
-            const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
 
-            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.inner_iters, 10);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/l2reg"));
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
 
-            const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
+    const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
 
-            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.inner_iters, 10);
-        }
-        {
-            UTEST_NAMED_CASE(scat(scaling, "/vAreg"));
+    [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+    UTEST_CHECK_GREATER(state.inner_iters, 10);
+}
 
-            const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
+UTEST_CASE(minimize_l2reg)
+{
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{50};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::minmax;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
 
-            [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-            UTEST_CHECK_GREATER(state.inner_iters, 10);
-        }
-    }
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
+
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+
+    const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
+
+    [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+    UTEST_CHECK_GREATER(state.inner_iters, 10);
+}
+
+UTEST_CASE(minimize_vAreg)
+{
+    const auto targets  = tensor_size_t{1};
+    const auto samples  = tensor_size_t{50};
+    const auto features = tensor_size_t{4};
+    const auto scaling  = scaling_type::standard;
+    const auto loss     = make_loss(scaling);
+    const auto batch    = make_batch(scaling);
+    const auto threads  = make_threads(scaling);
+
+    const auto datasource = make_datasource(samples, targets, features);
+    const auto dataset    = make_dataset(datasource);
+
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    iterator.batch(batch);
+    iterator.scaling(scaling);
+
+    const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
+
+    [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
+    UTEST_CHECK_GREATER(state.inner_iters, 10);
 }
 
 UTEST_END_MODULE()
