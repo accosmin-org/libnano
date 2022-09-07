@@ -1,7 +1,7 @@
 #include <nano/core/cmdline.h>
 #include <nano/core/factory_util.h>
 #include <nano/core/logger.h>
-#include <nano/dataset.h>
+#include <nano/datasource.h>
 #include <nano/generator.h>
 #include <nano/loss.h>
 #include <nano/lsearch0.h>
@@ -19,21 +19,21 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearchk", "regex to select line-search strategies", ".+");
     cmdline.add("", "solver", "regex to select numerical optimization methods", ".+");
     cmdline.add("", "loss", "regex to select loss functions", ".+");
-    cmdline.add("", "dataset", "regex to select machine learning datasets", ".+");
+    cmdline.add("", "datasource", "regex to select machine learning datasets", ".+");
     cmdline.add("", "generator", "regex to select feature generation methods", ".+");
     cmdline.add("", "version", "library version");
     cmdline.add("", "git-hash", "git commit hash");
 
     const auto options = cmdline.process(argc, argv);
 
-    const auto has_lsearch0  = options.has("lsearch0");
-    const auto has_lsearchk  = options.has("lsearchk");
-    const auto has_loss      = options.has("loss");
-    const auto has_solver    = options.has("solver");
-    const auto has_dataset   = options.has("dataset");
-    const auto has_generator = options.has("generator");
-    const auto has_version   = options.has("version");
-    const auto has_git_hash  = options.has("git-hash");
+    const auto has_lsearch0   = options.has("lsearch0");
+    const auto has_lsearchk   = options.has("lsearchk");
+    const auto has_loss       = options.has("loss");
+    const auto has_solver     = options.has("solver");
+    const auto has_datasource = options.has("datasource");
+    const auto has_generator  = options.has("generator");
+    const auto has_version    = options.has("version");
+    const auto has_git_hash   = options.has("git-hash");
 
     if (options.has("help"))
     {
@@ -41,8 +41,8 @@ static int unsafe_main(int argc, const char* argv[])
         return EXIT_SUCCESS;
     }
 
-    if (!has_lsearch0 && !has_lsearchk && !has_solver && !has_loss && !has_dataset && !has_generator && !has_version &&
-        !has_git_hash)
+    if (!has_lsearch0 && !has_lsearchk && !has_solver && !has_loss && !has_datasource && !has_generator &&
+        !has_version && !has_git_hash)
     {
         cmdline.usage();
         return EXIT_FAILURE;
@@ -65,9 +65,9 @@ static int unsafe_main(int argc, const char* argv[])
     {
         std::cout << make_table("loss", loss_t::all(), options.get<string_t>("loss"));
     }
-    if (has_dataset)
+    if (has_datasource)
     {
-        std::cout << make_table("dataset", dataset_t::all(), options.get<string_t>("dataset"));
+        std::cout << make_table("datasource", datasource_t::all(), options.get<string_t>("datasource"));
     }
     if (has_generator)
     {
@@ -88,5 +88,5 @@ static int unsafe_main(int argc, const char* argv[])
 
 int main(int argc, const char* argv[])
 {
-    return nano::main(unsafe_main, argc, argv);
+    return nano::safe_main(unsafe_main, argc, argv);
 }
