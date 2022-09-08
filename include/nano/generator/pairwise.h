@@ -46,18 +46,7 @@ namespace nano
                         }
                         else
                         {
-                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
-                            for (; it; ++it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    storage(index) = op(values1, values2);
-                                }
-                                else
-                                {
-                                    storage(index) = NaN;
-                                }
-                            }
+                            this->select_scalar(ifeature, storage, it);
                         }
                     });
             }
@@ -81,18 +70,7 @@ namespace nano
                         }
                         else
                         {
-                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
-                            for (; it; ++it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    storage(index) = op(values1, values2);
-                                }
-                                else
-                                {
-                                    storage(index) = -1;
-                                }
-                            }
+                            this->select_sclass(ifeature, storage, it);
                         }
                     });
             }
@@ -116,18 +94,7 @@ namespace nano
                         }
                         else
                         {
-                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
-                            for (; it; ++it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    op(values1, values2, storage.vector(index));
-                                }
-                                else
-                                {
-                                    storage.vector(index).setConstant(-1);
-                                }
-                            }
+                            this->select_mclass(ifeature, storage, it);
                         }
                     });
             }
@@ -151,18 +118,7 @@ namespace nano
                         }
                         else
                         {
-                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
-                            for (; it; ++it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    op(values1, values2, storage.vector(index));
-                                }
-                                else
-                                {
-                                    storage.tensor(index).full(NaN);
-                                }
-                            }
+                            this->select_struct(ifeature, storage, it);
                         }
                     });
             }
@@ -189,53 +145,129 @@ namespace nano
                         }
                         else
                         {
-                            for (; it; ++it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    if constexpr (tcomputer::generated_type == generator_type::scalar)
-                                    {
-                                        storage(index, column) = op(values1, values2);
-                                    }
-                                    else
-                                    {
-                                        auto segment = storage.vector(index).segment(column, colsize);
-                                        if constexpr (tcomputer::generated_type == generator_type::sclass)
-                                        {
-                                            segment.setConstant(-1.0);
-                                            const auto class_index = op(values1, values2);
-                                            if (class_index < segment.size())
-                                            {
-                                                segment(class_index) = +1.0;
-                                            }
-                                        }
-                                        else if constexpr (tcomputer::generated_type == generator_type::mclass)
-                                        {
-                                            op(values1, values2, segment);
-                                            segment.array() = 2.0 * segment.array() - 1.0;
-                                        }
-                                        else
-                                        {
-                                            op(values1, values2, segment);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    if constexpr (tcomputer::generated_type == generator_type::scalar)
-                                    {
-                                        storage(index, column) = NaN;
-                                    }
-                                    else
-                                    {
-                                        auto segment = storage.array(index).segment(column, colsize);
-                                        segment.setConstant(NaN);
-                                    }
-                                }
-                            }
+                            this->flatten(storage, column, op, colsize, it);
                         }
                         column += colsize;
                     });
+            }
+        }
+
+    private:
+        template <typename titerator>
+        void select_scalar(const tensor_size_t ifeature, const scalar_map_t storage, titerator it) const
+        {
+            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+            for (; it; ++it)
+            {
+                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                {
+                    storage(index) = op(values1, values2);
+                }
+                else
+                {
+                    storage(index) = NaN;
+                }
+            }
+        }
+
+        template <typename titerator>
+        void select_sclass(const tensor_size_t ifeature, const sclass_map_t storage, titerator it) const
+        {
+            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+            for (; it; ++it)
+            {
+                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                {
+                    storage(index) = op(values1, values2);
+                }
+                else
+                {
+                    storage(index) = -1;
+                }
+            }
+        }
+
+        template <typename titerator>
+        void select_mclass(const tensor_size_t ifeature, const mclass_map_t storage, titerator it) const
+        {
+            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+            for (; it; ++it)
+            {
+                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                {
+                    op(values1, values2, storage.vector(index));
+                }
+                else
+                {
+                    storage.vector(index).setConstant(-1);
+                }
+            }
+        }
+
+        template <typename titerator>
+        void select_struct(const tensor_size_t ifeature, const struct_map_t storage, titerator it) const
+        {
+            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+            for (; it; ++it)
+            {
+                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                {
+                    op(values1, values2, storage.vector(index));
+                }
+                else
+                {
+                    storage.tensor(index).full(NaN);
+                }
+            }
+        }
+
+        template <typename toperator, typename titerator>
+        void flatten(const tensor2d_map_t storage, const tensor_size_t column, const toperator& op,
+                     const tensor_size_t colsize, titerator it) const
+        {
+            for (; it; ++it)
+            {
+                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                {
+                    if constexpr (tcomputer::generated_type == generator_type::scalar)
+                    {
+                        storage(index, column) = op(values1, values2);
+                    }
+                    else
+                    {
+                        auto segment = storage.vector(index).segment(column, colsize);
+                        if constexpr (tcomputer::generated_type == generator_type::sclass)
+                        {
+                            segment.setConstant(-1.0);
+                            const auto class_index = op(values1, values2);
+                            if (class_index < segment.size())
+                            {
+                                segment(class_index) = +1.0;
+                            }
+                        }
+                        else if constexpr (tcomputer::generated_type == generator_type::mclass)
+                        {
+                            op(values1, values2, segment);
+                            segment.array() = 2.0 * segment.array() - 1.0;
+                        }
+                        else
+                        {
+                            op(values1, values2, segment);
+                        }
+                    }
+                }
+                else
+                {
+                    if constexpr (tcomputer::generated_type == generator_type::scalar)
+                    {
+                        storage(index, column) = NaN;
+                    }
+                    else
+                    {
+                        auto segment = storage.array(index).segment(column, colsize);
+                        segment.setConstant(NaN);
+                    }
+                }
             }
         }
     };

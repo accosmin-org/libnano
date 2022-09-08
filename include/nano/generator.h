@@ -156,13 +156,14 @@ namespace nano
                     loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, samples, op);
                 }
             };
-            datasource().visit_inputs(ioriginal1,
-                                      [&](const auto&, const auto& data1, const auto& mask1)
-                                      {
-                                          datasource().visit_inputs(
-                                              ioriginal2, [&](const auto&, const auto& data2, const auto& mask2)
-                                              { visitor(data1, mask1, data2, mask2); });
-                                      });
+
+            const auto& ds = datasource();
+            ds.visit_inputs(ioriginal1,
+                            [&](const auto&, const auto& data1, const auto& mask1)
+                            {
+                                ds.visit_inputs(ioriginal2, [&](const auto&, const auto& data2, const auto& mask2)
+                                                { visitor(data1, mask1, data2, mask2); });
+                            });
         }
 
     private:
