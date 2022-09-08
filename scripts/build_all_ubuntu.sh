@@ -13,31 +13,6 @@ cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 CXX=clang++ bash scripts/build.sh --clang-format
 
 ###############################################################################################################
-# static analysis:
-#   - cppcheck
-#   - clang-tidy
-###############################################################################################################
-
-CXX=g++ bash scripts/build.sh --suffix cppcheck \
-    ${cmake_options} --config --cppcheck
-
-CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
-    ${cmake_options} --config --build --clang-tidy-all
-
-###############################################################################################################
-# code coverage:
-#   - lcov + genhtml
-#   - llvm-cov + sonar scanner
-###############################################################################################################
-
-CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --test --lcov
-
-CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov \
-    --sonar
-
-###############################################################################################################
 # standard debug/release/release+lto GCC builds
 ###############################################################################################################
 
@@ -64,6 +39,18 @@ CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Rele
 #    ${cmake_options} --config --build --test --install --build-example
 
 ###############################################################################################################
+# static analysis:
+#   - cppcheck
+#   - clang-tidy
+###############################################################################################################
+
+CXX=g++ bash scripts/build.sh --suffix cppcheck \
+    ${cmake_options} --config --cppcheck
+
+CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
+    ${cmake_options} --config --build --clang-tidy-all
+
+###############################################################################################################
 # dynamic analysis:
 #   - memcheck
 #   - sanitizers
@@ -83,3 +70,16 @@ CXX=clang++ bash scripts/build.sh --suffix clang-usan -DCMAKE_BUILD_TYPE=Debug -
 
 CXX=clang++ bash scripts/build.sh --suffix clang-tsan -DCMAKE_BUILD_TYPE=Debug --tsan \
     ${cmake_options} --config --build --test
+
+###############################################################################################################
+# code coverage:
+#   - lcov + genhtml
+#   - llvm-cov + sonar scanner
+###############################################################################################################
+
+CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --test --lcov
+
+CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov \
+    --sonar

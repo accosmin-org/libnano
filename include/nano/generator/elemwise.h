@@ -30,19 +30,18 @@ namespace nano
         {
             if constexpr (tcomputer::generated_type == generator_type::scalar)
             {
-                this->template iterate<tcomputer::input_rank>(
-                    samples, ifeature, this->mapped_original(ifeature),
-                    [&](auto it)
-                    {
-                        if (this->should_drop(ifeature))
-                        {
-                            storage.full(NaN);
-                        }
-                        else
-                        {
-                            this->select_scalar(ifeature, storage, it);
-                        }
-                    });
+                this->template iterate<tcomputer::input_rank>(samples, ifeature, this->mapped_original(ifeature),
+                                                              [&](auto it)
+                                                              {
+                                                                  if (this->should_drop(ifeature))
+                                                                  {
+                                                                      storage.full(NaN);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      this->select_scalar(ifeature, storage, it);
+                                                                  }
+                                                              });
             }
         }
 
@@ -54,19 +53,18 @@ namespace nano
         {
             if constexpr (tcomputer::generated_type == generator_type::sclass)
             {
-                this->template iterate<tcomputer::input_rank>(
-                    samples, ifeature, this->mapped_original(ifeature),
-                    [&](auto it)
-                    {
-                        if (this->should_drop(ifeature))
-                        {
-                            storage.full(-1);
-                        }
-                        else
-                        {
-                            this->select_sclass(ifeature, storage, it);
-                        }
-                    });
+                this->template iterate<tcomputer::input_rank>(samples, ifeature, this->mapped_original(ifeature),
+                                                              [&](auto it)
+                                                              {
+                                                                  if (this->should_drop(ifeature))
+                                                                  {
+                                                                      storage.full(-1);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      this->select_sclass(ifeature, storage, it);
+                                                                  }
+                                                              });
             }
         }
 
@@ -78,19 +76,18 @@ namespace nano
         {
             if constexpr (tcomputer::generated_type == generator_type::mclass)
             {
-                this->template iterate<tcomputer::input_rank>(
-                    samples, ifeature, this->mapped_original(ifeature),
-                    [&](auto it)
-                    {
-                        if (this->should_drop(ifeature))
-                        {
-                            storage.full(-1);
-                        }
-                        else
-                        {
-                            this->select_mclass(ifeature, storage, it);
-                        }
-                    });
+                this->template iterate<tcomputer::input_rank>(samples, ifeature, this->mapped_original(ifeature),
+                                                              [&](auto it)
+                                                              {
+                                                                  if (this->should_drop(ifeature))
+                                                                  {
+                                                                      storage.full(-1);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      this->select_mclass(ifeature, storage, it);
+                                                                  }
+                                                              });
             }
         }
 
@@ -102,19 +99,18 @@ namespace nano
         {
             if constexpr (tcomputer::generated_type == generator_type::structured)
             {
-                this->template iterate<tcomputer::input_rank>(
-                    samples, ifeature, this->mapped_original(ifeature),
-                    [&](auto it)
-                    {
-                        if (this->should_drop(ifeature))
-                        {
-                            storage.full(NaN);
-                        }
-                        else
-                        {
-                            this->select_struct(ifeature, storage, it);
-                        }
-                    });
+                this->template iterate<tcomputer::input_rank>(samples, ifeature, this->mapped_original(ifeature),
+                                                              [&](auto it)
+                                                              {
+                                                                  if (this->should_drop(ifeature))
+                                                                  {
+                                                                      storage.full(NaN);
+                                                                  }
+                                                                  else
+                                                                  {
+                                                                      this->select_struct(ifeature, storage, it);
+                                                                  }
+                                                              });
             }
         }
 
@@ -216,7 +212,7 @@ namespace nano
 
         template <typename toperator, typename titerator>
         void flatten(const tensor2d_map_t storage, const tensor_size_t column, const toperator& op,
-                     const tensor_size_t colsize, titerator it) const
+                     [[maybe_unused]] const tensor_size_t colsize, titerator it) const
         {
             for (; it; ++it)
             {

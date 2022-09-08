@@ -223,7 +223,7 @@ namespace nano
 
         template <typename toperator, typename titerator>
         void flatten(const tensor2d_map_t storage, const tensor_size_t column, const toperator& op,
-                     const tensor_size_t colsize, titerator it) const
+                     [[maybe_unused]] const tensor_size_t colsize, titerator it) const
         {
             for (; it; ++it)
             {
