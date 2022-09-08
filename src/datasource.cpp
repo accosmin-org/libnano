@@ -133,7 +133,7 @@ void datasource_t::resize(tensor_size_t samples, const features_t& features, siz
 
 task_type datasource_t::type() const
 {
-    return has_target() ? m_features[static_cast<size_t>(m_target)].task_type() : task_type::unsupervised;
+    return has_target() ? m_features[static_cast<size_t>(m_target)].task() : task_type::unsupervised;
 }
 
 void datasource_t::load()

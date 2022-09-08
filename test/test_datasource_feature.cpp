@@ -33,46 +33,46 @@ UTEST_CASE(_default)
 {
     feature_t feature;
     UTEST_CHECK_EQUAL(feature.valid(), false);
-    UTEST_CHECK_EQUAL(feature.task_type(), task_type::unsupervised);
+    UTEST_CHECK_EQUAL(feature.task(), task_type::unsupervised);
 
     feature = feature_t{"feature"};
     UTEST_CHECK_EQUAL(feature.valid(), true);
     UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 1));
     UTEST_CHECK_EQUAL(feature.type(), feature_type::float32);
-    UTEST_CHECK_EQUAL(feature.task_type(), task_type::regression);
+    UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
 }
 
 UTEST_CASE(task_type)
 {
     {
         auto feature = feature_t{};
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::unsupervised);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::unsupervised);
     }
     {
         auto feature = feature_t{"feature"}.sclass(7);
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::sclassification);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::sclassification);
     }
     {
         auto feature = feature_t{"feature"}.mclass(7);
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::mclassification);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::mclassification);
     }
     {
         auto feature = feature_t{"feature"};
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::regression);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
     }
     {
         auto feature = feature_t{"feature"}.scalar();
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::regression);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
     }
     {
         auto feature = feature_t{"feature"}.scalar(feature_type::float32, make_dims(1, 1, 2));
         UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 2));
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::regression);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
     }
     {
         auto feature = feature_t{"feature"}.scalar(feature_type::float64, make_dims(3, 2, 1));
         UTEST_CHECK_EQUAL(feature.dims(), make_dims(3, 2, 1));
-        UTEST_CHECK_EQUAL(feature.task_type(), task_type::regression);
+        UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
     }
 }
 

@@ -84,7 +84,7 @@ bool feature_t::valid() const
     return !m_name.empty();
 }
 
-task_type feature_t::task_type() const
+task_type feature_t::task() const
 {
     if (!valid())
     {

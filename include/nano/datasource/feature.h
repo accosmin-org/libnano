@@ -107,7 +107,7 @@ namespace nano
         ///
         /// \brief returns the associated machine learning task if this feature is the target.
         ///
-        task_type task_type() const;
+        task_type task() const;
 
         ///
         /// \brief serialize from the given binary stream.
