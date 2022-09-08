@@ -73,7 +73,7 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
     // line-search step length
     // NB: some line-search algorithms (see CGDESCENT) allow a small increase
     //     in the function value when close to numerical precision!
-    return get(state0, state) && state;
+    return get(state0, state) && state.valid();
 }
 
 void lsearchk_t::log(const solver_state_t& state0, const solver_state_t& state) const

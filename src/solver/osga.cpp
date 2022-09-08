@@ -109,7 +109,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         if (state.g.lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
         {
             const auto converged = true;
-            const auto iter_ok   = static_cast<bool>(state);
+            const auto iter_ok   = state.valid();
             if (solver_t::done(function, state, iter_ok, converged))
             {
                 break;
@@ -140,7 +140,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         // check convergence
         const auto converged = eta_hat <= eps0 || ::converged(prev_x, prev_f, x, f, epsilon);
-        const auto iter_ok   = static_cast<bool>(state);
+        const auto iter_ok   = state.valid();
         if (solver_t::done(function, state, iter_ok, converged))
         {
             break;

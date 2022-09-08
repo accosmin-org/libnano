@@ -102,15 +102,12 @@ namespace nano
         ///
         /// \brief returns true if the feature is valid (aka defined).
         ///
-        operator bool() const // NOLINT(hicpp-explicit-conversions)
-        {
-            return !m_name.empty();
-        }
+        bool valid() const;
 
         ///
         /// \brief returns the associated machine learning task if this feature is the target.
         ///
-        explicit operator task_type() const;
+        task_type task_type() const;
 
         ///
         /// \brief serialize from the given binary stream.

@@ -120,7 +120,7 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
         }
     }
 
-    return static_cast<bool>(cstate) ? cstate : pstate;
+    return cstate.valid() ? cstate : pstate;
 }
 
 solver_cgd_cd_t::solver_cgd_cd_t()

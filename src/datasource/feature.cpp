@@ -79,9 +79,14 @@ size_t feature_t::set_label(const string_t& label) const
     }
 }
 
-feature_t::operator task_type() const
+bool feature_t::valid() const
 {
-    if (!static_cast<bool>(*this))
+    return !m_name.empty();
+}
+
+task_type feature_t::task_type() const
+{
+    if (!valid())
     {
         return task_type::unsupervised;
     }

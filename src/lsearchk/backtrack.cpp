@@ -22,7 +22,7 @@ bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& sta
     const auto interpolation  = parameter("lsearchk::backtrack::interpolation").value<interpolation_type>();
     const auto safeguard      = parameter("lsearchk::backtrack::safeguard").value<scalar_t>();
 
-    for (int i = 0; i < max_iterations && state; ++i)
+    for (int i = 0; i < max_iterations && state.valid(); ++i)
     {
         if (state.has_armijo(state0, c1))
         {

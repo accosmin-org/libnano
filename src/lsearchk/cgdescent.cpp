@@ -36,7 +36,7 @@ bool lsearchk_cgdescent_t::done(const state_t& state, const scalar_t c1, const s
     assert(state.a.t <= state.b.t);
     assert(state.a.g < 0.0);
 
-    if ((bracketed && (state.a.f > state.state0.f + epsilonk || state.b.g < 0.0)) || !static_cast<bool>(state.c))
+    if ((bracketed && (state.a.f > state.state0.f + epsilonk || state.b.g < 0.0)) || !state.c.valid())
     {
         // bracketing failed or diverged
         return true;
@@ -71,7 +71,7 @@ void lsearchk_cgdescent_t::updateU(state_t& state, const scalar_t epsilonk, cons
         auto& d = state.c;
         move(state, (1 - theta) * state.a.t + theta * state.b.t);
 
-        if (!d)
+        if (!d.valid())
         {
             return;
         }
@@ -118,7 +118,7 @@ void lsearchk_cgdescent_t::bracket(state_t& state, const scalar_t ro, const scal
 {
     auto last_a = state.a;
 
-    for (int i = 0; i < max_iterations && static_cast<bool>(state.c); ++i)
+    for (int i = 0; i < max_iterations && state.c.valid(); ++i)
     {
         if (!state.c.has_descent())
         {
@@ -154,14 +154,14 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
     auto interval = state_t{state0, state};
     if (done(interval, c1, c2, epsilonk, false))
     {
-        return static_cast<bool>(state);
+        return state.valid();
     }
 
     // bracket the initial step size
     bracket(interval, ro, epsilonk, theta, max_iterations);
     if (done(interval, c1, c2, epsilonk))
     {
-        return static_cast<bool>(state);
+        return state.valid();
     }
 
     const auto move_update_and_check_done =
@@ -196,20 +196,20 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
 
         if (move_update_and_check_done(tc))
         {
-            return static_cast<bool>(state);
+            return state.valid();
         }
         else if (std::fabs(tc - a.t) < epsilon0<scalar_t>())
         {
             if (move_update_and_check_done(lsearch_step_t::secant(a0, a)))
             {
-                return static_cast<bool>(state);
+                return state.valid();
             }
         }
         else if (std::fabs(tc - b.t) < epsilon0<scalar_t>())
         {
             if (move_update_and_check_done(lsearch_step_t::secant(b0, b)))
             {
-                return static_cast<bool>(state);
+                return state.valid();
             }
         }
 
@@ -218,7 +218,7 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
         {
             if (move_update_and_check_done((a.t + b.t) / 2))
             {
-                return static_cast<bool>(state);
+                return state.valid();
             }
         }
     }

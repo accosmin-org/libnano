@@ -102,7 +102,7 @@ UTEST_CASE(state_valid)
 {
     const auto function = function_sphere_t{7};
     const auto state    = solver_state_t{function, make_random_x0(function)};
-    UTEST_CHECK(state);
+    UTEST_CHECK(state.valid());
 }
 
 UTEST_CASE(state_invalid_tINF)
@@ -110,7 +110,7 @@ UTEST_CASE(state_invalid_tINF)
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
     state.t             = INFINITY;
-    UTEST_CHECK(!state);
+    UTEST_CHECK(!state.valid());
 }
 
 UTEST_CASE(state_invalid_fNAN)
@@ -118,7 +118,7 @@ UTEST_CASE(state_invalid_fNAN)
     const auto function = function_sphere_t{7};
     auto       state    = solver_state_t{function, make_random_x0(function)};
     state.f             = NAN;
-    UTEST_CHECK(!state);
+    UTEST_CHECK(!state.valid());
 }
 
 UTEST_CASE(state_has_descent)

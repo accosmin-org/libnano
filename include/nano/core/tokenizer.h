@@ -40,7 +40,7 @@ namespace nano
         ~tokenizer_t() = default;
 
         ///
-        /// \brief returns true if parsing didn't finished
+        /// \brief returns true if parsing didn't finished.
         ///
         operator bool() const // NOLINT(hicpp-explicit-conversions)
         {
@@ -48,7 +48,7 @@ namespace nano
         }
 
         ///
-        /// \brief move to the next token
+        /// \brief move to the next token.
         ///
         tokenizer_t& operator++()
         {
@@ -57,7 +57,7 @@ namespace nano
         }
 
         ///
-        /// \brief move to the next token
+        /// \brief move to the next token.
         ///
         const tokenizer_t operator++(int) // NOLINT(readability-const-return-type)
         {
@@ -67,7 +67,7 @@ namespace nano
         }
 
         ///
-        /// \brief returns the current token
+        /// \brief returns the current token.
         ///
         auto get() const
         {
@@ -76,12 +76,12 @@ namespace nano
         }
 
         ///
-        /// \brief returns the begining of the current token
+        /// \brief returns the begining of the current token.
         ///
         auto pos() const { return m_pos; }
 
         ///
-        /// \brief returns the number of tokens found so far
+        /// \brief returns the number of tokens found so far.
         ///
         auto count() const { return m_count; }
 

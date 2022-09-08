@@ -110,7 +110,7 @@ bool solver_t::done(const function_t& function, solver_state_t& state, bool iter
     state.fcalls = function.fcalls();
     state.gcalls = function.gcalls();
 
-    const auto step_ok = iter_ok && state;
+    const auto step_ok = iter_ok && state.valid();
 
     if (converged || !step_ok)
     {

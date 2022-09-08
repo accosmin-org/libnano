@@ -113,5 +113,5 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
         }
     }
 
-    return static_cast<bool>(cstate) ? cstate : pstate;
+    return cstate.valid() ? cstate : pstate;
 }

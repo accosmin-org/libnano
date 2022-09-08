@@ -44,7 +44,7 @@ static void test(const rlsearchk_t& lsearch, const function_t& function, const v
     const auto old_n_failures = utest_n_failures.load();
 
     auto state0 = solver_state_t{function, x0};
-    UTEST_CHECK(state0);
+    UTEST_CHECK(state0.valid());
     state0.d = -state0.g;
     UTEST_CHECK(state0.has_descent());
 
@@ -60,7 +60,7 @@ static void test(const rlsearchk_t& lsearch, const function_t& function, const v
     // check the Armijo and the Wolfe-like conditions are valid after line-search
     auto state = state0;
     UTEST_CHECK(lsearch->get(state, t0));
-    UTEST_CHECK(state);
+    UTEST_CHECK(state.valid());
     UTEST_CHECK_GREATER(state.t, 0.0);
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
 
