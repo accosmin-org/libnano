@@ -18,11 +18,8 @@ static matrix_t make_X(tvalues... values)
     return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
 }
 
-template <typename tpenalty>
-static void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
+static void check_penalty(penalty_function_t& penalty_function, bool expected_convexity, bool expected_smoothness)
 {
-    auto penalty_function = tpenalty{function};
-
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
         const auto trials  = 100;
@@ -30,10 +27,32 @@ static void check_penalty(const function_t& function, bool expected_convexity, b
 
         penalty_function.penalty(penalty);
 
+        check_convexity(penalty_function);
         check_gradient(penalty_function, trials, epsilon);
         UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), 0.0);
         UTEST_CHECK_EQUAL(penalty_function.convex(), expected_convexity);
         UTEST_CHECK_EQUAL(penalty_function.smooth(), expected_smoothness);
+    }
+}
+
+template <typename tpenalty>
+static void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
+{
+    if constexpr (std::is_same_v<tpenalty, augmented_lagrangian_function_t>)
+    {
+        const auto n_equalities   = count_equalities(function);
+        const auto n_inequalities = count_inequalities(function);
+
+        const vector_t lambda = make_random_tensor<scalar_t>(make_dims(n_equalities), -1.0, +1.0).vector();
+        const vector_t miu    = make_random_tensor<scalar_t>(make_dims(n_inequalities), +0.0, +1.0).vector();
+
+        auto penalty_function = tpenalty{function, lambda, miu};
+        check_penalty(penalty_function, expected_convexity, expected_smoothness);
+    }
+    else
+    {
+        auto penalty_function = tpenalty{function};
+        check_penalty(penalty_function, expected_convexity, expected_smoothness);
     }
 }
 
@@ -43,6 +62,7 @@ static void check_penalties(const function_t& function, bool expected_convexity,
 
     check_penalty<linear_penalty_function_t>(function, expected_convexity, unconstrained ? expected_smoothness : false);
     check_penalty<quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
+    check_penalty<augmented_lagrangian_function_t>(function, expected_convexity, expected_smoothness);
 }
 
 template <typename tpenalty>
@@ -315,6 +335,7 @@ UTEST_CASE(minimum)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 1.0, 1e-15);
@@ -331,6 +352,7 @@ UTEST_CASE(maximum)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 0.0, 1e-15);
@@ -347,6 +369,7 @@ UTEST_CASE(constant)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
@@ -363,6 +386,7 @@ UTEST_CASE(euclidean_ball_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
@@ -379,6 +403,7 @@ UTEST_CASE(euclidean_ball_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
@@ -395,6 +420,7 @@ UTEST_CASE(linear_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
@@ -411,6 +437,7 @@ UTEST_CASE(linear_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
@@ -427,6 +454,7 @@ UTEST_CASE(quadratic_equality)
 
     UTEST_CHECK(!::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 5.0, 1e-15);
@@ -444,6 +472,7 @@ UTEST_CASE(quadratic_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0 - std::sqrt(2.0), 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 0.0, 1e-15);
@@ -462,6 +491,7 @@ UTEST_CASE(functional_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(!::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 1.0, 1e-15);
@@ -476,6 +506,7 @@ UTEST_CASE(functional_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(!::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
     UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 0.0, 1e-15);
@@ -489,6 +520,8 @@ UTEST_CASE(noconstraint_convex_smooth)
 {
     auto constrained = sum_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, true);
     for (auto trial = 0; trial < 100; ++trial)
@@ -501,6 +534,8 @@ UTEST_CASE(noconstraint_convex_nonsmooth)
 {
     auto constrained = sumabsm1_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, false);
     for (auto trial = 0; trial < 100; ++trial)
@@ -513,6 +548,8 @@ UTEST_CASE(noconstraint_nonconvex_smooth)
 {
     auto constrained = cauchy_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, false, true);
     for (auto trial = 0; trial < 100; ++trial)
@@ -529,6 +566,8 @@ UTEST_CASE(constrained_box_one)
     UTEST_CHECK(!constrained.constrain(+0.5, -0.5, +3));
     UTEST_CHECK(constrained.constrain(-0.5, +0.5, +2));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 2U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 2);
 
     check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(-0.1, -0.1, -0.1), true);
@@ -547,6 +586,8 @@ UTEST_CASE(constrained_box_all)
     UTEST_CHECK(!constrained.constrain(+0.5, -0.5));
     UTEST_CHECK(constrained.constrain(-0.5, +0.5));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
 
     check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
@@ -563,6 +604,8 @@ UTEST_CASE(constrained_box_vector)
     UTEST_CHECK(!constrained.constrain(make_x(+0.5, +0.5, +0.5), make_x(-0.5, -0.5, -0.5)));
     UTEST_CHECK(constrained.constrain(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
 
     check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
@@ -578,6 +621,8 @@ UTEST_CASE(constrained_constant)
     UTEST_CHECK(!constrained.constrain(constant_t{1.0, +3}));
     UTEST_CHECK(constrained.constrain(constant_t{1.0, 2}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
@@ -594,6 +639,8 @@ UTEST_CASE(constrained_euclidean_ball_inequality)
     UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_x(1.0, 1.0, 1.0), 0.0}));
     UTEST_CHECK(constrained.constrain(euclidean_ball_inequality_t{make_x(0.0, 0.0, 0.0), 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, true);
     check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
@@ -608,6 +655,8 @@ UTEST_CASE(constrained_affine_equality)
     UTEST_CHECK(!constrained.constrain(linear_equality_t{make_x(1.0, 1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK(constrained.constrain(linear_equality_t{make_x(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
@@ -623,6 +672,8 @@ UTEST_CASE(constrained_affine_inequality)
     UTEST_CHECK(!constrained.constrain(linear_inequality_t{make_x(1.0, 1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK(constrained.constrain(linear_inequality_t{make_x(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.1, 0.2, 0.3), true);
@@ -636,6 +687,8 @@ UTEST_CASE(constrained_cauchy_inequality)
     UTEST_CHECK(!constrained.constrain(functional_inequality_t{std::make_unique<cauchy_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_inequality_t{std::make_unique<cauchy_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, false, true);
     check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
@@ -652,6 +705,8 @@ UTEST_CASE(constrained_sumabsm1_equality)
     UTEST_CHECK(!constrained.constrain(functional_equality_t{std::make_unique<sumabsm1_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_equality_t{std::make_unique<sumabsm1_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, false, false);
     check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
@@ -667,6 +722,8 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     UTEST_CHECK(!constrained.constrain(functional_inequality_t{std::make_unique<sumabsm1_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_inequality_t{std::make_unique<sumabsm1_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, false);
     check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
@@ -691,6 +748,8 @@ UTEST_CASE(constrained_quadratic2x2_inequality)
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x2, q2, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P2x2, q2, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, false, true);
 }
@@ -710,6 +769,8 @@ UTEST_CASE(constrained_quadratic3x3_inequality)
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P4x3, q3, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P3x3, q3, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, true);
 }
@@ -729,6 +790,8 @@ UTEST_CASE(constrained_quadratic3x3_equality)
     UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P4x3, q3, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_equality_t{P3x3, q3, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
+    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, false, true);
 }

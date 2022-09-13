@@ -13,7 +13,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        explicit penalty_function_t(const function_t&);
+        explicit penalty_function_t(const function_t&, const char* prefix);
 
         ///
         /// \brief set the penalty term.
@@ -90,7 +90,7 @@ namespace nano
     /// see "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     ///
     /// NB: the penalty is not exact: the penalty term needs to be increased to infinity to obtain an exact solution.
-    /// NB: the penalty is continuous and differentiable, but the gradient can be discontinuous.
+    /// NB: the penalty is continuous and differentiable (not necessarily C^1), thus usable with line-search solvers.
     ///
     class NANO_PUBLIC quadratic_penalty_function_t final : public penalty_function_t
     {
@@ -109,5 +109,45 @@ namespace nano
         /// \brief @see function_t
         ///
         scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+    };
+
+    ///
+    /// \brief augmented lagrangian function:
+    ///     q(c, x) = f(x) + ro/2 * sum((h_j(x) + lambda_j/ro)^2, j) + ro/2 * sum(max(0, g_i(x) + miu_i/ro)^2, i),
+    ///
+    /// where:
+    ///     * f(x) is the objective function to minimize,
+    ///     * c > 0 is the penalty term - the higher the better the penalty function approximates
+    ///         the original constrained optimization problem,
+    ///     * lambda and miu are approximations of the Lagrange multipliers approximation associated to constraints,
+    ///     * {h_j(x) == 0} is the set of equality constraints and
+    ///     * {g_i(x) <= 0} is the set of inequality constraints.
+    ///
+    /// see "Practical Augmented Lagrangian Methods", by E. G. Birgin, J. M. Martinez, 2007.
+    ///
+    /// NB: the penalty is continuous and differentiable (not necessarily C^1), thus usable with line-search solvers.
+    ///
+    class NANO_PUBLIC augmented_lagrangian_function_t final : public penalty_function_t
+    {
+    public:
+        ///
+        /// \brief default constructor
+        ///
+        explicit augmented_lagrangian_function_t(const function_t&, const vector_t& lambda, const vector_t& miu);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
+
+        ///
+        /// \brief @see function_t
+        ///
+        scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override;
+
+    private:
+        // attributes
+        const vector_t& m_lambda; ///< approximations of the Lagrange multipliers for equality constraints
+        const vector_t& m_miu;    ///< approximations of the Lagrange multipliers for inequality constraints
     };
 } // namespace nano
