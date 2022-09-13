@@ -43,7 +43,6 @@ static void check_penalties(const function_t& function, bool expected_convexity,
 
     check_penalty<linear_penalty_function_t>(function, expected_convexity, unconstrained ? expected_smoothness : false);
     check_penalty<quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
-    check_penalty<linear_quadratic_penalty_function_t>(function, expected_convexity, expected_smoothness);
 }
 
 template <typename tpenalty>
@@ -56,30 +55,14 @@ static void check_penalty(const function_t& function, const vector_t& x, bool ex
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
         const auto fx = function.vgrad(x);
-        const auto op = [&]()
+        const auto qx = penalty_function.penalty(penalty).vgrad(x);
+        if (expected_valid)
         {
-            const auto qx = penalty_function.penalty(penalty).vgrad(x);
-            if (expected_valid)
-            {
-                UTEST_CHECK_CLOSE(fx, qx, 1e-16);
-            }
-            else
-            {
-                UTEST_CHECK_LESS(fx + 1e-8, qx);
-            }
-        };
-
-        if constexpr (std::is_same_v<tpenalty, linear_quadratic_penalty_function_t>)
-        {
-            for (const auto smoothing : {1e-2, 1e+0, 1e+2})
-            {
-                penalty_function.smoothing(smoothing);
-                op();
-            }
+            UTEST_CHECK_CLOSE(fx, qx, 1e-16);
         }
         else
         {
-            op();
+            UTEST_CHECK_LESS(fx + 1e-8, qx);
         }
     }
 }
@@ -88,7 +71,6 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
 {
     check_penalty<linear_penalty_function_t>(function, x, expected_valid);
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
-    check_penalty<linear_quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
 static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
