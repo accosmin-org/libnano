@@ -82,7 +82,8 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto miu  = function.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
-    const auto proxy = proxy_t{x0, eps0};
+    // FIXME: the proxy's offset is crucial to performance, double check!
+    const auto proxy = proxy_t{x0, std::sqrt(epsilon)};
 
     auto      state = solver_state_t{function, x0};
     vector_t& xb    = state.x; // store the best function point
