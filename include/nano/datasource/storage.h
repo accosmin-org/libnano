@@ -29,11 +29,11 @@ namespace nano
 
         auto classes() const { return m_feature.classes(); }
 
-        const auto& dims() const { return m_feature.dims(); }
+        auto dims() const { return m_feature.dims(); }
 
         const auto& name() const { return m_feature.name(); }
 
-        const feature_t& feature() const { return m_feature; }
+        const auto& feature() const { return m_feature; }
 
         ///
         /// \brief set the feature value of a sample for a single-label categorical feature.

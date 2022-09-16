@@ -128,7 +128,7 @@ namespace nano
         ///
         auto type() const { return m_type; }
 
-        const auto& dims() const { return m_dims; }
+        auto dims() const { return m_dims; }
 
         const auto& name() const { return m_name; }
 

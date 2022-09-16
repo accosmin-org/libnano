@@ -102,9 +102,4 @@ namespace nano
         feature_t  m_target; ///< optional target feature
         logger_t   m_logger; ///<
     };
-
-    /*
-    using imodel_t = identifiable_t<model_t>;
-    using imodels_t = std::vector<imodel_t>;
-    */
 } // namespace nano

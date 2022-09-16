@@ -89,10 +89,17 @@ namespace nano
         void next()
         {
             m_pos = m_str.find_first_not_of(m_delims, m_end);
-            if ((m_pos == std::string::npos) ||
-                ((m_end = m_str.find_first_of(m_delims, m_pos + 1)) == std::string::npos))
+            if (m_pos == std::string::npos)
             {
                 m_end = m_str.size();
+            }
+            else
+            {
+                m_end = m_str.find_first_of(m_delims, m_pos + 1);
+                if (m_end == std::string::npos)
+                {
+                    m_end = m_str.size();
+                }
             }
 
             if (this->operator bool())

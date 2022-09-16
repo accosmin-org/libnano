@@ -33,6 +33,11 @@ bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, sca
     }
 }
 
+bool solver_state_t::update_if_better(const vector_t& x, scalar_t fx)
+{
+    return update_if_better(x, g, fx);
+}
+
 void solver_state_t::update_penalties()
 {
     const auto& constraints = function->constraints();
