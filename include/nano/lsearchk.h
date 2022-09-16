@@ -21,6 +21,11 @@ namespace nano
         wolfe_approx_wolfe, ///< armijo + wolfe or approximated armijo + wolfe (see CG_DESCENT)
     };
 
+    template <>
+    NANO_PUBLIC enum_map_t<lsearch_type> enum_string<lsearch_type>();
+
+    NANO_PUBLIC std::ostream& operator<<(std::ostream&, lsearch_type);
+
     ///
     /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.
     ///
@@ -65,7 +70,7 @@ namespace nano
         static scalar_t stpmax();
 
         ///
-        /// \brief returns the objective optimized by the line-search implementation.
+        /// \brief returns the objective type optimized by the line-search implementation.
         ///
         lsearch_type type() const;
 

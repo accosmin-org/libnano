@@ -5,7 +5,7 @@ using namespace nano;
 solver_gd_t::solver_gd_t()
     : solver_t("gd")
 {
-    monotonic(true);
+    type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 }
 

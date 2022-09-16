@@ -59,7 +59,7 @@ static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, sca
 solver_osga_t::solver_osga_t()
     : solver_t("osga")
 {
-    monotonic(false);
+    type(solver_type::non_monotonic);
 
     register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.99, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
@@ -82,7 +82,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto miu  = function.strong_convexity() / 2.0;
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
-    const auto proxy = proxy_t{x0, epsilon};
+    const auto proxy = proxy_t{x0, eps0};
 
     auto      state = solver_state_t{function, x0};
     vector_t& xb    = state.x; // store the best function point

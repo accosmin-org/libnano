@@ -106,9 +106,9 @@ static auto relative_precision(const result_t& result, const result_t& best_resu
 
 static auto make_solver_name(const rsolver_t& solver)
 {
-    return solver->monotonic() ?
-        scat(solver->type_id(), " [", solver->lsearch0().type_id(), ",", solver->lsearchk().type_id(), "]") :
-        solver->type_id();
+    return solver->type() == solver_type::line_search
+             ? scat(solver->type_id(), " [", solver->lsearch0().type_id(), ",", solver->lsearchk().type_id(), "]")
+             : solver->type_id();
 }
 
 using points_t = std::vector<vector_t>;
@@ -118,11 +118,11 @@ using solvers_t = std::vector<rsolver_t>;
 static auto log_solver(const function_t& function, const rsolver_t& solver, const vector_t& x0)
 {
     std::cout << std::fixed << std::setprecision(10);
-    std::cout << function.name()
-        << " solver[" << solver->type_id()
-        << "],lsearch0[" << (solver->monotonic() ? solver->lsearch0().type_id() : string_t("N/A"))
-        << "],lsearchk[" << (solver->monotonic() ? solver->lsearchk().type_id() : string_t("N/A"))
-        << "]" << std::endl;
+    std::cout << function.name() << " solver[" << solver->type_id() << "],lsearch0["
+              << (solver->type() == solver_type::line_search ? solver->lsearch0().type_id() : string_t("N/A"))
+              << "],lsearchk["
+              << (solver->type() == solver_type::line_search ? solver->lsearchk().type_id() : string_t("N/A")) << "]"
+              << std::endl;
 
     solver->logger(
         [&](const solver_state_t& state)
@@ -454,7 +454,7 @@ static int unsafe_main(int argc, const char* argv[])
     for (const auto& solver_id : solver_ids)
     {
         auto solver = solver_t::all().get(solver_id);
-        if (solver->monotonic())
+        if (solver->type() == solver_type::line_search)
         {
             for (const auto& lsearch0_id : lsearch0_ids)
             {

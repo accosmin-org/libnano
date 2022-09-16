@@ -49,8 +49,8 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     const auto state0         = solver_state_t{function, x0};
 
     const auto solver_id   = solver.type_id();
-    const auto lsearch0_id = solver.monotonic() ? solver.lsearch0().type_id() : "N/A";
-    const auto lsearchk_id = solver.monotonic() ? solver.lsearchk().type_id() : "N/A";
+    const auto lsearch0_id = solver.type() == solver_type::line_search ? solver.lsearch0().type_id() : "N/A";
+    const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
@@ -71,7 +71,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
 
     // check convergence
-    if (function.smooth() && solver.monotonic())
+    if (function.smooth() && solver.type() == solver_type::line_search)
     {
         UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
     }

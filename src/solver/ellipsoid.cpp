@@ -5,7 +5,7 @@ using namespace nano;
 solver_ellipsoid_t::solver_ellipsoid_t()
     : solver_t("ellipsoid")
 {
-    monotonic(false);
+    type(solver_type::non_monotonic);
 
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 

@@ -27,8 +27,8 @@ static void check_consistency(const function_t& function, const std::vector<scal
 
 struct solver_description_t
 {
-    bool     m_monotonic{true};
-    scalar_t m_epsilon{1e-6};
+    solver_type m_type{solver_type::line_search};
+    scalar_t    m_epsilon{1e-6};
 };
 
 static solver_description_t make_description(const string_t& solver_id)
@@ -39,15 +39,15 @@ static solver_description_t make_description(const string_t& solver_id)
         solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" ||
         solver_id == "fletcher")
     {
-        return {true, 1e-6};
+        return {solver_type::line_search, 1e-6};
     }
     else if (solver_id == "ellipsoid")
     {
-        return {false, 1e-6};
+        return {solver_type::non_monotonic, 1e-6};
     }
     else if (solver_id == "osga")
     {
-        return {false, 1e-4};
+        return {solver_type::non_monotonic, 1e-4};
     }
     else
     {
@@ -192,7 +192,7 @@ UTEST_CASE(factory)
         UTEST_REQUIRE(solver);
 
         const auto desc = make_description(solver_id);
-        UTEST_CHECK_EQUAL(solver->monotonic(), desc.m_monotonic);
+        UTEST_CHECK_EQUAL(solver->type(), desc.m_type);
     }
 }
 

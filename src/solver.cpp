@@ -26,7 +26,7 @@ solver_t::solver_t(const solver_t& other)
     , m_logger(other.m_logger)
     , m_lsearch0(other.lsearch0().clone())
     , m_lsearchk(other.lsearchk().clone())
-    , m_monotonic(other.monotonic())
+    , m_type(other.type())
 {
 }
 
@@ -71,14 +71,14 @@ void solver_t::logger(const logger_t& logger)
     m_logger = logger;
 }
 
-void solver_t::monotonic(bool monotonic)
+void solver_t::type(const solver_type type)
 {
-    m_monotonic = monotonic;
+    m_type = type;
 }
 
-bool solver_t::monotonic() const
+solver_type solver_t::type() const
 {
-    return m_monotonic;
+    return m_type;
 }
 
 lsearch_t solver_t::make_lsearch() const
@@ -105,7 +105,7 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
     return do_minimize(function, x0);
 }
 
-bool solver_t::done(const function_t& function, solver_state_t& state, bool iter_ok, bool converged) const
+bool solver_t::done(const function_t& function, solver_state_t& state, const bool iter_ok, const bool converged) const
 {
     state.fcalls = function.fcalls();
     state.gcalls = function.gcalls();
@@ -168,4 +168,24 @@ factory_t<solver_t>& solver_t::all()
     std::call_once(flag, op);
 
     return manager;
+}
+
+solver_t::logger_t solver_t::logger() const
+{
+    return m_logger;
+}
+
+template <>
+enum_map_t<solver_type> nano::enum_string<solver_type>()
+{
+    return {
+        {  solver_type::line_search, "unconstrained with line-search"},
+        {solver_type::non_monotonic,    "unconstrained non-monotonic"},
+        {  solver_type::constrained,                    "constrained"},
+    };
+}
+
+std::ostream& nano::operator<<(std::ostream& stream, const solver_type type)
+{
+    return stream << scat(type);
 }

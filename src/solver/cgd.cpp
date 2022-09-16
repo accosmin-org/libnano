@@ -68,7 +68,7 @@ namespace
 solver_cgd_t::solver_cgd_t(string_t id)
     : solver_t(std::move(id))
 {
-    monotonic(true);
+    type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1);
 
     register_parameter(parameter_t::make_scalar("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));

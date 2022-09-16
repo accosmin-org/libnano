@@ -68,7 +68,7 @@ namespace
 solver_quasi_t::solver_quasi_t(string_t id)
     : solver_t(std::move(id))
 {
-    monotonic(true);
+    type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 
     register_parameter(parameter_t::make_enum("solver::quasi::initialization", initialization::identity));

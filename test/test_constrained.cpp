@@ -93,8 +93,8 @@ static void check_penalties(const function_t& function, const vector_t& x, bool 
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
-static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
-                           const vector_t& x0, const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
+static void check_minimize(solver_t& solver, const function_t& function, const vector_t& x0, const vector_t& xbest,
+                           const scalar_t fbest, const scalar_t epsilon)
 {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
@@ -103,21 +103,14 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
     tensor_size_t iterations = 0;
     ::setup_logger(solver, stream, iterations);
 
-    penalty_solver.logger(
-        [&](const auto& state)
-        {
-            stream << ">" << state << ",x=" << state.x.transpose() << "." << std::endl;
-            return true;
-        });
-
-    const auto state = penalty_solver.minimize(solver, function, x0);
+    const auto state = solver.minimize(function, x0);
 
     const auto old_n_failures = utest_n_failures.load();
 
     UTEST_CHECK_CLOSE(state.f, fbest, epsilon);
     UTEST_CHECK_CLOSE(state.x, xbest, epsilon);
     UTEST_CHECK_EQUAL(state.status, solver_status::converged);
-    UTEST_CHECK_LESS(state.p.sum(), penalty_solver.parameter("solver::penalty::epsilon").value<scalar_t>());
+    UTEST_CHECK_LESS(state.p.sum(), solver.parameter("solver::epsilon").value<scalar_t>());
 
     if (old_n_failures != utest_n_failures.load())
     {
@@ -125,46 +118,26 @@ static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, c
     }
 }
 
-static void check_minimize(solver_penalty_t& penalty_solver, solver_t& solver, const function_t& function,
-                           const vector_t& xbest, const scalar_t fbest, const scalar_t epsilon)
+static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
-    for (const auto& x0 : make_random_x0s(function, 5.0))
+    if (linear_penalty_function_t{function}.convex())
+    // NB: cannot solve non-convex non-smooth problems precisely!
     {
-        check_minimize(penalty_solver, solver, function, x0, xbest, fbest, epsilon);
-    }
-}
+        UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver"));
 
-static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
-                                 const int trials = 1)
-{
-    auto lsolver = solver_linear_penalty_t{};
-    auto qsolver = solver_quadratic_penalty_t{};
-
-    for (const auto* const solver_id : {"ellipsoid"})
-    {
-        if (!linear_penalty_function_t{function}.convex())
+        auto solver = solver_linear_penalty_t{};
+        for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            // NB: cannot solve non-convex non-smooth problems precisely!
-            continue;
-        }
-
-        UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver_", solver_id));
-
-        const auto ref_solver = make_solver(solver_id);
-        for (auto trial = 0; trial < trials; ++trial)
-        {
-            check_minimize(lsolver, *ref_solver, function, xbest, fbest, 1e-4);
+            check_minimize(solver, function, x0, xbest, fbest, 1e-4);
         }
     }
-
-    for (const auto* const solver_id : {"cgd-pr", "lbfgs", "bfgs"})
     {
-        UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver_", solver_id));
+        UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver"));
 
-        const auto ref_solver = make_solver(solver_id);
-        for (auto trial = 0; trial < trials; ++trial)
+        auto solver = solver_quadratic_penalty_t{};
+        for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(qsolver, *ref_solver, function, xbest, fbest, 1e-6);
+            check_minimize(solver, function, x0, xbest, fbest, 1e-6);
         }
     }
 }

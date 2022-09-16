@@ -8,10 +8,35 @@ namespace nano
     using rsolver_t = std::unique_ptr<solver_t>;
 
     ///
-    /// \brief unconstrained numerical optimization algorithm that uses line-search
-    ///     along a descent direction to iteratively minimize a smooth lower-bounded function.
+    /// \brief classifies numerical optimization algorithms (solvers).
     ///
-    /// NB: the resulting point (if enough iterations have been used) is either:
+    enum class solver_type
+    {
+        ///< descent is guaranteed at each step using line-search along a descent direction.
+        ///< the constraints (if any) are ignored.
+        ///< recommended for smooth unconstrained optimization problems.
+        line_search,
+
+        ///< descent is not guaranteed at each step.
+        ///< the constraints (if any) and the line-search utilities are ignored.
+        ///< recommended for non-smooth unconstrained optimization problems.
+        non_monotonic,
+
+        ///< handles the given constrains.
+        ///< typically consists of solving a related unconstrained optimization in a loop.
+        ///< recommended for constrained optimization problems.
+        constrained,
+    };
+
+    template <>
+    NANO_PUBLIC enum_map_t<solver_type> enum_string<solver_type>();
+
+    NANO_PUBLIC std::ostream& operator<<(std::ostream&, solver_type);
+
+    ///
+    /// \brief interface for numerical optimization algorithms.
+    ///
+    /// NB: the resulting point for the unconstrained case (if enough iterations have been used) is either:
     ///     - the global minimum if the function is convex or
     ///     - a critical point (not necessarily a local minimum) otherwise.
     ///
@@ -79,13 +104,9 @@ namespace nano
         void lsearchk(const string_t& id);
 
         ///
-        /// \brief return true if the solver is monotonic, which guarantees that at each iteration:
-        ///     - either the function value decreases
-        ///     - or the optimization stops (e.g. convergence reached, line-search failed, user requested termination).
+        /// \brief returns the type of the optimization method.
         ///
-        /// NB: the solver usually doesn't use line-search if not monotonic.
-        ///
-        bool monotonic() const;
+        solver_type type() const;
 
         ///
         /// \brief return the line-search initialization method.
@@ -98,18 +119,20 @@ namespace nano
         const auto& lsearchk() const { return *m_lsearchk; }
 
     protected:
-        void      monotonic(bool);
+        void type(solver_type);
+        bool log(solver_state_t&) const;
+        bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
+
+        logger_t  logger() const;
         lsearch_t make_lsearch() const;
-        bool      log(solver_state_t&) const;
-        bool      done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
 
         virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
 
     private:
         // attributes
-        logger_t    m_logger;          ///<
-        rlsearch0_t m_lsearch0;        ///<
-        rlsearchk_t m_lsearchk;        ///<
-        bool        m_monotonic{true}; ///<
+        logger_t    m_logger;                         ///<
+        rlsearch0_t m_lsearch0;                       ///<
+        rlsearchk_t m_lsearchk;                       ///<
+        solver_type m_type{solver_type::line_search}; ///<
     };
 } // namespace nano

@@ -1,38 +1,44 @@
+#include <nano/function/penalty.h>
+#include <nano/solver/ellipsoid.h>
+#include <nano/solver/lbfgs.h>
 #include <nano/solver/penalty.h>
 
 using namespace nano;
 
-static auto initial_params(const estimator_t& estimator)
+static void register_params(const char* const prefix, estimator_t& estimator)
 {
-    const auto eta        = estimator.parameter("solver::penalty::eta").template value<scalar_t>();
-    const auto epsilon    = estimator.parameter("solver::penalty::epsilon").template value<scalar_t>();
-    const auto penalty0   = estimator.parameter("solver::penalty::penalty0").template value<scalar_t>();
-    const auto max_outers = estimator.parameter("solver::penalty::max_outer_iters").template value<tensor_size_t>();
-
-    return std::make_tuple(eta, epsilon, penalty0, max_outers);
+    estimator.register_parameter(parameter_t::make_scalar(scat(prefix, "::eta"), 1.0, LT, 10.0, LE, 1e+3));
+    estimator.register_parameter(parameter_t::make_scalar(scat(prefix, "::penalty0"), 0.0, LT, 1.0, LE, 1e+3));
+    estimator.register_parameter(parameter_t::make_integer(scat(prefix, "::max_outer_iters"), 10, LE, 20, LE, 100));
 }
 
-template <typename tpenalty>
-static auto make_penalty_function(const function_t& function)
+static auto initial_params(const char* const prefix, const estimator_t& estimator)
 {
-    auto penalty_function = tpenalty{function};
-    return penalty_function;
+    const auto epsilon    = estimator.parameter("solver::epsilon").value<scalar_t>();
+    const auto max_evals  = estimator.parameter("solver::max_evals").value<tensor_size_t>();
+    const auto eta        = estimator.parameter(scat(prefix, "::eta")).value<scalar_t>();
+    const auto penalty0   = estimator.parameter(scat(prefix, "::penalty0")).value<scalar_t>();
+    const auto max_outers = estimator.parameter(scat(prefix, "::max_outer_iters")).value<tensor_size_t>();
+
+    return std::make_tuple(epsilon, max_evals, eta, penalty0, max_outers);
 }
 
-solver_penalty_t::solver_penalty_t()
+template <typename tsolver>
+static auto make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
 {
-    register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 10.0, LE, 1e+3));
-    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon", 0, LT, 1e-6, LE, 1e-1));
-    register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
-    register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
+    auto solver = tsolver{};
+    solver.logger(logger);
+    if (epsilon < 1e-7 && solver.type() == solver_type::line_search)
+    {
+        // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
+        solver.lsearchk("cgdescent");
+    }
+    solver.parameter("solver::epsilon")   = epsilon;
+    solver.parameter("solver::max_evals") = max_evals;
+    return solver;
 }
 
-void solver_penalty_t::logger(const solver_t::logger_t& logger)
-{
-    m_logger = logger;
-}
-
-bool solver_penalty_t::done(const solver_state_t& curr_state, solver_state_t& best_state, scalar_t epsilon) const
+static auto converged(const solver_state_t& curr_state, solver_state_t& best_state, const scalar_t epsilon)
 {
     const auto df = std::fabs(curr_state.f - best_state.f);
     const auto dx = (curr_state.x - best_state.x).lpNorm<Eigen::Infinity>();
@@ -45,44 +51,42 @@ bool solver_penalty_t::done(const solver_state_t& curr_state, solver_state_t& be
         best_state.g = curr_state.g;
         best_state.p = curr_state.p;
     }
-    best_state.fcalls += curr_state.fcalls;
-    best_state.gcalls += curr_state.gcalls;
     best_state.inner_iters += curr_state.inner_iters;
     best_state.outer_iters++;
 
-    auto done = false;
-    if (pimproved && df < epsilon && dx < epsilon)
-    {
-        done              = true;
-        best_state.status = solver_status::converged;
-    }
-
-    if (m_logger && !m_logger(best_state))
-    {
-        done = true;
-        if (best_state.status != solver_status::converged)
-        {
-            best_state.status = solver_status::stopped;
-        }
-    }
-
-    return done;
+    return pimproved && df < epsilon && dx < epsilon;
 }
 
-solver_state_t solver_penalty_t::minimize(const solver_t& solver, penalty_function_t& penalty_function,
-                                          const vector_t& x0) const
+solver_linear_penalty_t::solver_linear_penalty_t()
+    : solver_t("linear-penalty")
 {
-    const auto [eta, epsilon, penalty0, max_outers] = initial_params(*this);
+    type(solver_type::constrained);
+    register_params("solver::linear_penalty", *this);
+}
 
-    auto penalty    = penalty0;
-    auto best_state = solver_state_t{penalty_function.function(), x0};
+rsolver_t solver_linear_penalty_t::clone() const
+{
+    return std::make_unique<solver_linear_penalty_t>(*this);
+}
+
+solver_state_t solver_linear_penalty_t::do_minimize(const function_t& function, const vector_t& x0) const
+{
+    const auto [epsilon, max_evals, eta, penalty0, max_outers] = initial_params("solver::linear_penalty", *this);
+
+    auto penalty          = penalty0;
+    auto best_state       = solver_state_t{function, x0};
+    auto penalty_function = linear_penalty_function_t{function};
+    // TODO: find a more reliable non-smooth unconstrained solver
+    auto solver = make_solver<solver_ellipsoid_t>(epsilon, max_evals, logger());
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
         penalty_function.penalty(penalty);
 
         const auto curr_state = solver.minimize(penalty_function, best_state.x);
-        if (done(curr_state, best_state, epsilon))
+        const auto iter_ok    = curr_state.valid();
+        const auto converged  = iter_ok && ::converged(curr_state, best_state, epsilon);
+        if (done(function, best_state, iter_ok, converged))
         {
             break;
         }
@@ -93,16 +97,41 @@ solver_state_t solver_penalty_t::minimize(const solver_t& solver, penalty_functi
     return best_state;
 }
 
-solver_state_t solver_linear_penalty_t::minimize(const solver_t& solver, const function_t& function,
-                                                 const vector_t& x0) const
+solver_quadratic_penalty_t::solver_quadratic_penalty_t()
+    : solver_t("quadratic-penalty")
 {
-    auto penalty_function = linear_penalty_function_t{function};
-    return solver_penalty_t::minimize(solver, penalty_function, x0);
+    type(solver_type::constrained);
+    register_params("solver::quadratic_penalty", *this);
 }
 
-solver_state_t solver_quadratic_penalty_t::minimize(const solver_t& solver, const function_t& function,
-                                                    const vector_t& x0) const
+rsolver_t solver_quadratic_penalty_t::clone() const
 {
+    return std::make_unique<solver_quadratic_penalty_t>(*this);
+}
+
+solver_state_t solver_quadratic_penalty_t::do_minimize(const function_t& function, const vector_t& x0) const
+{
+    const auto [epsilon, max_evals, eta, penalty0, max_outers] = initial_params("solver::quadratic_penalty", *this);
+
+    auto penalty          = penalty0;
+    auto best_state       = solver_state_t{function, x0};
     auto penalty_function = quadratic_penalty_function_t{function};
-    return solver_penalty_t::minimize(solver, penalty_function, x0);
+    auto solver           = make_solver<solver_lbfgs_t>(epsilon, max_evals, logger());
+
+    for (tensor_size_t outer = 0; outer < max_outers; ++outer)
+    {
+        penalty_function.penalty(penalty);
+
+        const auto curr_state = solver.minimize(penalty_function, best_state.x);
+        const auto iter_ok    = curr_state.valid();
+        const auto converged  = iter_ok && ::converged(curr_state, best_state, epsilon);
+        if (done(function, best_state, iter_ok, converged))
+        {
+            break;
+        }
+
+        penalty *= eta;
+    }
+
+    return best_state;
 }
