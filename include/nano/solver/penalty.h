@@ -8,10 +8,16 @@ namespace nano
     //
     class penalty_function_t;
 
+    ///
+    /// \brief base class for exterior penalty methods.
+    ///
     class NANO_PUBLIC solver_penalty_t : public solver_t
     {
     public:
-        solver_penalty_t(string_t id);
+        ///
+        /// \brief constructor
+        ///
+        explicit solver_penalty_t(string_t id);
 
     protected:
         solver_state_t minimize(penalty_function_t&, const vector_t& x0, const char* prefix) const;
