@@ -4,7 +4,7 @@
 using namespace nano;
 
 function_geometric_optimization_t::function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands)
-    : function_t("geometric-optimziation, Geometric Optimization", dims)
+    : function_t("geometric-optimization", dims)
     , m_a(make_random_vector<scalar_t>(summands, -1.0, +1.0, seed_t{42}))
     , m_A(make_random_matrix<scalar_t>(summands, dims, -1.0 / static_cast<scalar_t>(dims),
                                        +1.0 / static_cast<scalar_t>(dims), seed_t{42}))
