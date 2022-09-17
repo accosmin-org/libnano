@@ -5,6 +5,18 @@
 namespace nano
 {
     // TODO: implement the penalty method from "A new exact penalty function", by W. Huyer and A. Neumaier, 2003.
+    //
+    class penalty_function_t;
+
+    class NANO_PUBLIC solver_penalty_t : public solver_t
+    {
+    public:
+        solver_penalty_t(string_t id);
+
+    protected:
+        solver_state_t minimize(penalty_function_t&, const vector_t& x0, const char* prefix) const;
+        rsolver_t      make_solver(const penalty_function_t&, scalar_t epsilon, tensor_size_t max_evals) const;
+    };
 
     ///
     /// \brief exterior penalty method using the linear penalty function.
@@ -17,7 +29,7 @@ namespace nano
     /// NB: the penalty function is exact,
     ///     but it is not smooth and thus the optimization is typically not very precise.
     ///
-    class NANO_PUBLIC solver_linear_penalty_t final : public solver_t
+    class NANO_PUBLIC solver_linear_penalty_t final : public solver_penalty_t
     {
     public:
         ///
@@ -47,7 +59,7 @@ namespace nano
     /// NB: the penalty function is not exact,
     ///     but it is smooth and thus the optimization is typically very precise.
     ///
-    class NANO_PUBLIC solver_quadratic_penalty_t final : public solver_t
+    class NANO_PUBLIC solver_quadratic_penalty_t final : public solver_penalty_t
     {
     public:
         ///
