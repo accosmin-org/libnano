@@ -110,24 +110,32 @@ bool solver_t::done(const function_t& function, solver_state_t& state, const boo
     state.fcalls = function.fcalls();
     state.gcalls = function.gcalls();
 
-    const auto step_ok = iter_ok && state.valid();
-
-    if (converged || !step_ok)
+    // stopping was requested (in an outer loop)
+    if (state.status == solver_status::stopped)
     {
-        // either converged or failed
-        state.status = converged ? solver_status::converged : solver_status::failed;
-        log(state);
         return true;
     }
-    else if (!log(state))
+    else
     {
-        // stopping was requested
-        state.status = solver_status::stopped;
-        return true;
-    }
+        const auto step_ok = iter_ok && state.valid();
 
-    // OK, go on with the optimization
-    return false;
+        if (converged || !step_ok)
+        {
+            // either converged or failed
+            state.status = converged ? solver_status::converged : solver_status::failed;
+            log(state);
+            return true;
+        }
+        else if (!log(state))
+        {
+            // stopping was requested
+            state.status = solver_status::stopped;
+            return true;
+        }
+
+        // OK, go on with the optimization
+        return false;
+    }
 }
 
 bool solver_t::log(solver_state_t& state) const

@@ -52,6 +52,7 @@ target_sources(nano PRIVATE
     solver/quasi.cpp
     solver/state.cpp
     solver/penalty.cpp
+    solver/augmented.cpp
     solver/ellipsoid.cpp
     function.cpp
     function/constraint.cpp

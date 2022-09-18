@@ -83,6 +83,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
 
     // FIXME: the proxy's offset is crucial to performance, double check!
+    // TODO: perform line-search to obtain xb_hat
     const auto proxy = proxy_t{x0, std::sqrt(epsilon)};
 
     auto      state = solver_state_t{function, x0};
