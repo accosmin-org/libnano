@@ -21,7 +21,6 @@ namespace nano
 
     protected:
         solver_state_t minimize(penalty_function_t&, const vector_t& x0) const;
-        rsolver_t      make_solver(const penalty_function_t&, scalar_t epsilon, tensor_size_t max_evals) const;
     };
 
     ///

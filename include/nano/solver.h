@@ -123,8 +123,8 @@ namespace nano
         bool log(solver_state_t&) const;
         bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
 
-        logger_t  logger() const;
         lsearch_t make_lsearch() const;
+        rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals) const;
 
         virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
 

@@ -5,21 +5,6 @@
 
 using namespace nano;
 
-template <typename tsolver>
-static rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
-{
-    auto solver = std::make_unique<tsolver>();
-    solver->logger(logger);
-    if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
-    {
-        // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
-        solver->lsearchk("cgdescent");
-    }
-    solver->parameter("solver::epsilon")   = epsilon;
-    solver->parameter("solver::max_evals") = max_evals;
-    return solver;
-}
-
 static auto converged(const solver_state_t& curr_state, solver_state_t& best_state, const scalar_t epsilon)
 {
     const auto df = std::fabs(curr_state.f - best_state.f);
@@ -47,14 +32,6 @@ solver_penalty_t::solver_penalty_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 10.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
-}
-
-rsolver_t solver_penalty_t::make_solver(const penalty_function_t& penalty_function, const scalar_t epsilon,
-                                        const tensor_size_t max_evals) const
-{
-    // TODO: find a more reliable non-smooth unconstrained solver
-    return penalty_function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals, logger())
-                                     : ::make_solver<solver_ellipsoid_t>(epsilon, max_evals, logger());
 }
 
 solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, const vector_t& x0) const

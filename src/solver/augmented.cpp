@@ -4,7 +4,7 @@
 using namespace nano;
 
 solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
-    : solver_penalty_t("augmented-lagrangian")
+    : solver_t("augmented-lagrangian")
 {
     type(solver_type::constrained);
 
@@ -14,8 +14,9 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, +1e+20, LT, fmax));
-    register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters"), 10, LE, 20, LE, 100);
-    register_parameter(parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, fmax));
+    register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters", 10, LE, 20, LE, 100));
+    register_parameter(
+        parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
 }
 
 rsolver_t solver_augmented_lagrangian_t::clone() const
@@ -36,8 +37,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     vector_t lambda = vector_t::Zero(::nano::count_equalities(function));
     vector_t miu    = vector_t::Zero(::nano::count_inequalities(function));
 
-    auto bstate = solver_state_t{function, x0};
-    auto solver = make_solver(penalty_function, epsilon, max_evals);
+    auto bstate             = solver_state_t{function, x0};
+    auto solver             = make_solver(augmented_function, epsilon, max_evals);
     auto augmented_function = augmented_function_t{function, lambda, miu};
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
@@ -48,7 +49,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto iter_ok   = cstate.valid();
         const auto converged = iter_ok && ::converged(cstate, bstate, epsilon);
 
-        if (done(penalty_function.function(), bstate, iter_ok, converged))
+        if (done(function, bstate, iter_ok, converged))
         {
             break;
         }

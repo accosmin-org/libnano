@@ -178,9 +178,26 @@ factory_t<solver_t>& solver_t::all()
     return manager;
 }
 
-solver_t::logger_t solver_t::logger() const
+template <typename tsolver>
+static rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
 {
-    return m_logger;
+    auto solver = std::make_unique<tsolver>();
+    solver->logger(logger);
+    if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
+    {
+        // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
+        solver->lsearchk("cgdescent");
+    }
+    solver->parameter("solver::epsilon")   = epsilon;
+    solver->parameter("solver::max_evals") = max_evals;
+    return solver;
+}
+
+rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals) const
+{
+    // TODO: find a more reliable non-smooth unconstrained solver
+    return function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals, m_logger)
+                             : ::make_solver<solver_ellipsoid_t>(epsilon, max_evals, m_logger);
 }
 
 template <>
