@@ -29,10 +29,12 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 1e-6, LE, 1e-3, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.3, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, +1e+20, LT, fmax));
-    register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters", 10, LE, 20, LE, 100));
+    register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters", 10, LE, 100, LE, 1000));
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
 }
@@ -46,6 +48,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
 {
     const auto epsilon                  = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals                = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto epsilon0                 = parameter("solver::augmented::epsilon0").value<scalar_t>();
+    const auto epsilonK                 = parameter("solver::augmented::epsilonK").value<scalar_t>();
     const auto tau                      = parameter("solver::augmented::tau").value<scalar_t>();
     const auto gamma                    = parameter("solver::augmented::gamma").value<scalar_t>();
     const auto miu_max                  = parameter("solver::augmented::miu_max").value<scalar_t>();
@@ -59,7 +63,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto miu           = vector_t{vector_t::Zero(bstate.cineq.size())};
 
     auto augmented_lagrangian_function = augmented_lagrangian_function_t{function, lambda, miu};
-    auto solver                        = make_solver(augmented_lagrangian_function, epsilon, max_evals);
+    auto solver                        = make_solver(augmented_lagrangian_function, epsilon0, max_evals);
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
@@ -91,6 +95,9 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
             ro = gamma * ro;
         }
         old_criterion = criterion;
+
+        // use a more precise solver next iteration
+        solver->parameter("solver::epsilon") = solver->parameter("solver::epsilon").value<scalar_t>() * epsilonK;
     }
 
     return bstate;
