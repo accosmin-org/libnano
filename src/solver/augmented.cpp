@@ -29,7 +29,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 1e-6, LE, 1e-3, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 1e-12, LE, 1e-3, LE, 1e-2));
     register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.3, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
@@ -75,10 +75,13 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto converged = iter_ok && criterion < epsilon;
 
         // NB: the original function value should be returned!
-        bstate.update(cstate.x);
-        bstate.status = cstate.status;
-        bstate.inner_iters += cstate.inner_iters;
-        bstate.outer_iters++;
+        if (iter_ok)
+        {
+            bstate.update(cstate.x);
+            bstate.status = cstate.status;
+            bstate.inner_iters += cstate.inner_iters;
+            bstate.outer_iters++;
+        }
 
         if (done(function, bstate, iter_ok, converged))
         {
