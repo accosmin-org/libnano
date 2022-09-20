@@ -1,6 +1,7 @@
 #include "fixture/function.h"
 #include "fixture/solver.h"
 #include <nano/function/penalty.h>
+#include <nano/solver/augmented.h>
 #include <nano/solver/penalty.h>
 
 using namespace nano;
@@ -109,8 +110,8 @@ static void check_minimize(solver_t& solver, const function_t& function, const v
 
     UTEST_CHECK_CLOSE(state.f, fbest, epsilon);
     UTEST_CHECK_CLOSE(state.x, xbest, epsilon);
+    UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, epsilon);
     UTEST_CHECK_EQUAL(state.status, solver_status::converged);
-    UTEST_CHECK_LESS(state.p.sum(), solver.parameter("solver::epsilon").value<scalar_t>());
 
     if (old_n_failures != utest_n_failures.load())
     {
@@ -135,6 +136,15 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver"));
 
         auto solver = solver_quadratic_penalty_t{};
+        for (const auto& x0 : make_random_x0s(function, 5.0))
+        {
+            check_minimize(solver, function, x0, xbest, fbest, 1e-6);
+        }
+    }
+    {
+        UTEST_NAMED_CASE(scat(function.name(), "_augmented_lagrangian_solver"));
+
+        auto solver = solver_augmented_lagrangian_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
             check_minimize(solver, function, x0, xbest, fbest, 1e-6);
@@ -775,9 +785,28 @@ UTEST_CASE(minimize_objective1)
     auto function = objective1_function_t{};
     function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
 
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-2.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 2.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(-1.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(-1.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
     const auto fbest = -2.0;
     const auto xbest = make_x(-1.0, -1.0);
-
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -787,9 +816,23 @@ UTEST_CASE(minimize_objective2)
     auto function = objective2_function_t{};
     function.constrain(constant_t{1.0, 0});
 
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 3.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(1.0, 3.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
     const auto fbest = -5.0;
     const auto xbest = make_x(1.0, 0.0);
-
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -799,9 +842,23 @@ UTEST_CASE(minimize_objective3)
     auto function = objective3_function_t{};
     function.constrain(minimum_t{1.0, 0});
 
+    {
+        const auto state = solver_state_t{function, make_x(0.0)};
+        UTEST_CHECK_CLOSE(state.cineq, make_x(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(1.0)};
+        UTEST_CHECK_CLOSE(state.cineq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(2.0)};
+        UTEST_CHECK_CLOSE(state.cineq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
     const auto fbest = +1.0;
     const auto xbest = make_x(1.0);
-
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -811,13 +868,26 @@ UTEST_CASE(minimize_objective4)
     auto function = objective4_function_t{};
     function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0});
 
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(0.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_x(1.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq, make_x(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
     const auto fbest = -1.0;
     const auto xbest = make_x(1.0, 0.0);
-
     check_penalty_solver(function, xbest, fbest);
 }
 
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
-// TODO: check that it works with various gamma {2.0, 5.0, 10.0}
 
 UTEST_END_MODULE()

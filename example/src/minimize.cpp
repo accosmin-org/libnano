@@ -87,8 +87,8 @@ int main(const int, char*[])
         solver.lsearch0_logger(
             [&](const nano::solver_state_t& state0, const nano::scalar_t t0)
             {
-                std::cout << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f
-                          << ",g=" << state0.convergence_criterion() << ",t0=" << t0 << ".\n";
+                std::cout << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.gradient_test()
+                          << ",t0=" << t0 << ".\n";
             });
 
         const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
@@ -96,9 +96,8 @@ int main(const int, char*[])
         solver.lsearchk_logger(
             [&, c1 = c1, c2 = c2](const nano::solver_state_t& state0, const nano::solver_state_t& state)
             {
-                std::cout << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f
-                          << ",g=" << state.convergence_criterion() << ",armijo=" << state.has_armijo(state0, c1)
-                          << ",wolfe=" << state.has_wolfe(state0, c2)
+                std::cout << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
+                          << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
                           << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
             });
 

@@ -28,7 +28,7 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
     lsearch.logger(
         [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
         {
-            stream << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            stream << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
                    << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
                    << ",swolfe=" << state.has_strong_wolfe(state0, c2)
                    << ",awolfe=" << state.has_approx_wolfe(state0, c1, c2) << ".\n";
@@ -50,8 +50,7 @@ static void test(const rlsearchk_t& lsearch, const function_t& function, const v
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
-           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << ",g0=" << state0.convergence_criterion()
-           << "\n";
+           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << ",g0=" << state0.gradient_test() << "\n";
     setup_logger(*lsearch, stream);
 
     const auto cgdescent_epsilon = [&]()

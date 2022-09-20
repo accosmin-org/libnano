@@ -10,13 +10,11 @@ static auto converged(const solver_state_t& curr_state, solver_state_t& best_sta
     const auto df = std::fabs(curr_state.f - best_state.f);
     const auto dx = (curr_state.x - best_state.x).lpNorm<Eigen::Infinity>();
 
-    const auto pimproved = curr_state.p.sum() <= best_state.p.sum() + epsilon;
+    const auto pimproved = curr_state.constraint_test() <= best_state.constraint_test() + epsilon;
     if (pimproved)
     {
-        best_state.f = curr_state.f;
-        best_state.x = curr_state.x;
-        best_state.g = curr_state.g;
-        best_state.p = curr_state.p;
+        // NB: the original function value should be returned!
+        best_state.update(curr_state.x);
     }
     best_state.status = curr_state.status;
     best_state.inner_iters += curr_state.inner_iters;

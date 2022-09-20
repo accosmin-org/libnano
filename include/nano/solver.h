@@ -30,7 +30,6 @@ namespace nano
 
     template <>
     NANO_PUBLIC enum_map_t<solver_type> enum_string<solver_type>();
-
     NANO_PUBLIC std::ostream& operator<<(std::ostream&, solver_type);
 
     ///

@@ -124,7 +124,7 @@ const auto& x = state.x;
 
 std::cout << std::fixed << std::setprecision(12)
     << "f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.f
-    << ", g=" << state.convergence_criterion()
+    << ", g=" << state.gradient_test()
     << ", x-x*=" << (state.x - objective.b()).lpNorm<Eigen::Infinity>()
     << ", iters=" << state.inner_iters
     << ", fcalls=" << state.fcalls

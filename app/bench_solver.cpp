@@ -14,9 +14,10 @@ using namespace nano;
 struct result_t
 {
     result_t() = default;
+
     result_t(const solver_state_t& state, int64_t milliseconds)
         : m_value(state.f)
-        , m_gnorm(state.convergence_criterion())
+        , m_gnorm(state.gradient_test())
         , m_status(state.status)
         , m_fcalls(state.fcalls)
         , m_gcalls(state.gcalls)
@@ -131,23 +132,22 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
             return true;
         });
 
-    solver->lsearch0_logger([&] (const solver_state_t& state0, const scalar_t t)
-    {
-        std::cout
-            << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
-            << ",t=" << t << "." << std::endl;
-    });
+    solver->lsearch0_logger(
+        [&](const solver_state_t& state0, const scalar_t t)
+        {
+            std::cout << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.gradient_test()
+                      << ",t=" << t << "." << std::endl;
+        });
 
     const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
 
-    solver->lsearchk_logger([&, c1=c1, c2=c2] (const solver_state_t& state0, const solver_state_t& state)
-    {
-        std::cout
-            << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
-            << ",armijo=" << state.has_armijo(state0, c1)
-            << ",wolfe=" << state.has_wolfe(state0, c2)
-            << ",swolfe=" << state.has_strong_wolfe(state0, c2) << "." << std::endl;
-    });
+    solver->lsearchk_logger(
+        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
+        {
+            std::cout << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
+                      << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
+                      << ",swolfe=" << state.has_strong_wolfe(state0, c2) << "." << std::endl;
+        });
 
     auto state = solver->minimize(function, x0);
     std::cout << std::flush;

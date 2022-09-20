@@ -19,14 +19,14 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
         [&](const solver_state_t& state)
         {
             ++iterations;
-            stream << "\tdescent: " << state << ".\n";
+            stream << "\tdescent: " << state << ",x=" << state.x.transpose() << ".\n ";
             return true;
         });
 
     solver.lsearch0_logger(
         [&](const solver_state_t& state0, const scalar_t t)
         {
-            stream << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.convergence_criterion()
+            stream << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.gradient_test()
                    << ",t=" << t << ".\n";
         });
 
@@ -35,7 +35,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     solver.lsearchk_logger(
         [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
         {
-            stream << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.convergence_criterion()
+            stream << "\t\tlsearch(t):t=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
                    << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
                    << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
         });
@@ -55,8 +55,11 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
            << lsearchk_id << "]\n"
-           << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f << ",g0=" << state0.convergence_criterion()
-           << "\n";
+           << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f << ",g0=" << state0.gradient_test();
+    if (state0.ceq.size() + state0.cineq.size() > 0)
+    {
+        stream << ",c0=" << state0.constraint_test() << "\n";
+    }
 
     tensor_size_t iterations = 0;
     setup_logger(solver, stream, iterations);
@@ -73,7 +76,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     // check convergence
     if (function.smooth() && solver.type() == solver_type::line_search)
     {
-        UTEST_CHECK_LESS(state.convergence_criterion(), epsilon);
+        UTEST_CHECK_LESS(state.gradient_test(), epsilon);
     }
     UTEST_CHECK_EQUAL(state.status, converges ? solver_status::converged : solver_status::max_iters);
     UTEST_CHECK_EQUAL(iterations, state.inner_iters);

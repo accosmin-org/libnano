@@ -170,18 +170,16 @@ UTEST_CASE(state_convergence0)
 {
     const auto function = function_sphere_t{7};
     const auto state    = solver_state_t{function, vector_t::Zero(function.size())};
-    UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
-    UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
-    UTEST_CHECK_LESS(state.convergence_criterion(), epsilon0<scalar_t>());
+    UTEST_CHECK_GREATER_EQUAL(state.gradient_test(), 0);
+    UTEST_CHECK_LESS(state.gradient_test(), epsilon0<scalar_t>());
 }
 
 UTEST_CASE(state_convergence1)
 {
     const auto function = function_sphere_t{7};
     const auto state    = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
-    UTEST_CHECK(state.converged(epsilon2<scalar_t>()));
-    UTEST_CHECK_GREATER_EQUAL(state.convergence_criterion(), 0);
-    UTEST_CHECK_LESS(state.convergence_criterion(), epsilon2<scalar_t>());
+    UTEST_CHECK_GREATER_EQUAL(state.gradient_test(), 0);
+    UTEST_CHECK_LESS(state.gradient_test(), epsilon2<scalar_t>());
 }
 
 UTEST_CASE(factory)

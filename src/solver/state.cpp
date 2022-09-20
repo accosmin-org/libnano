@@ -3,6 +3,11 @@
 
 using namespace nano;
 
+static auto fmax()
+{
+    return std::sqrt(std::numeric_limits<scalar_t>::max());
+}
+
 solver_state_t::solver_state_t() = default;
 
 solver_state_t::solver_state_t(const function_t& ffunction, vector_t x0)
@@ -10,11 +15,11 @@ solver_state_t::solver_state_t(const function_t& ffunction, vector_t x0)
     , x(std::move(x0))
     , g(vector_t::Zero(x.size()))
     , d(vector_t::Zero(x.size()))
-    , p(vector_t::Constant(static_cast<tensor_size_t>(function->constraints().size()),
-                           std::sqrt(std::numeric_limits<scalar_t>::max())))
     , f(function->vgrad(x, &g))
+    , ceq(vector_t::Constant(::nano::count_equalities(function->constraints()), fmax()))
+    , cineq(vector_t::Constant(::nano::count_inequalities(function->constraints()), fmax()))
 {
-    update_penalties();
+    update_constraints();
 }
 
 bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx)
@@ -24,7 +29,7 @@ bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, sca
         this->x = x;
         this->f = fx;
         this->g = gx;
-        update_penalties();
+        update_constraints();
         return true;
     }
     else
@@ -38,13 +43,56 @@ bool solver_state_t::update_if_better(const vector_t& x, scalar_t fx)
     return update_if_better(x, g, fx);
 }
 
-void solver_state_t::update_penalties()
+void solver_state_t::update_constraints()
 {
-    const auto& constraints = function->constraints();
-    for (size_t i = 0U, size = constraints.size(); i < size; ++i)
+    tensor_size_t ieq = 0, ineq = 0;
+    for (const auto& constraint : function->constraints())
     {
-        p(static_cast<tensor_size_t>(i)) = ::nano::valid(constraints[i], x);
+        if (::nano::is_equality(constraint))
+        {
+            this->ceq(ieq++) = ::vgrad(constraint, x);
+        }
+        else
+        {
+            this->cineq(ineq++) = ::vgrad(constraint, x);
+        }
     }
+}
+
+scalar_t solver_state_t::gradient_test() const
+{
+    return g.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(f));
+}
+
+scalar_t solver_state_t::constraint_test() const
+{
+    scalar_t test = 0;
+    if (ceq.size() > 0)
+    {
+        test += ceq.lpNorm<Eigen::Infinity>();
+    }
+    if (cineq.size() > 0)
+    {
+        test += cineq.array().max(0.0).matrix().lpNorm<Eigen::Infinity>();
+    }
+    return test;
+}
+
+bool solver_state_t::valid() const
+{
+    return std::isfinite(t) && std::isfinite(f) && g.array().isFinite().all() && ceq.array().isFinite().all() &&
+           cineq.array().isFinite().all();
+}
+
+template <>
+enum_map_t<solver_status> nano::enum_string<solver_status>()
+{
+    return {
+        {solver_status::converged, "converged"},
+        {solver_status::max_iters, "max_iters"},
+        {   solver_status::failed,    "failed"},
+        {  solver_status::stopped,   "stopped"}
+    };
 }
 
 bool nano::operator<(const solver_state_t& lhs, const solver_state_t& rhs)
@@ -53,14 +101,19 @@ bool nano::operator<(const solver_state_t& lhs, const solver_state_t& rhs)
            (std::isfinite(rhs.f) ? rhs.f : std::numeric_limits<scalar_t>::max());
 }
 
-std::ostream& nano::operator<<(std::ostream& os, solver_status status)
+std::ostream& nano::operator<<(std::ostream& stream, solver_status status)
 {
-    return os << scat(status);
+    return stream << scat(status);
 }
 
-std::ostream& nano::operator<<(std::ostream& os, const solver_state_t& state)
+std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state)
 {
-    return os << "i=" << state.outer_iters << "|" << state.inner_iters << ",calls=" << state.fcalls << "|"
-              << state.gcalls << ",f=" << state.f << ",g=" << state.convergence_criterion() << ",p=" << state.p.sum()
-              << "[" << state.status << "]";
+    stream << "i=" << state.outer_iters << "|" << state.inner_iters;
+    stream << ",calls=" << state.fcalls << "|" << state.gcalls;
+    stream << ",f=" << state.f << ",g=" << state.gradient_test();
+    if (state.ceq.size() + state.cineq.size() > 0)
+    {
+        stream << ",c=" << state.constraint_test();
+    }
+    return stream << "[" << state.status << "]";
 }

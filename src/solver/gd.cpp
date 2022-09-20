@@ -22,7 +22,7 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
     auto lsearch = make_lsearch();
 
     auto cstate = solver_state_t{function, x0};
-    if (solver_t::done(function, cstate, true, cstate.converged(epsilon)))
+    if (solver_t::done(function, cstate, true, cstate.gradient_test() < epsilon))
     {
         return cstate;
     }
@@ -34,7 +34,7 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
 
         // line-search
         const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.converged(epsilon)))
+        if (solver_t::done(function, cstate, iter_ok, cstate.gradient_test() < epsilon))
         {
             break;
         }

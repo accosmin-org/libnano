@@ -18,7 +18,8 @@ namespace nano
     ///     * current point (x),
     ///     * function value (f),
     ///     * function gradient (g),
-    ///     * penalties (p) - the constraint violations (if any constraint),
+    ///     * constraint equalities (ceq) - the value of equality constraints (if any),
+    ///     * constraint inequalities (cineq) - the value of inequality constraints (if any),
     ///     * descent direction (d) - if applicable,
     ///     * line-search step (t) - if applicable.
     ///
@@ -46,7 +47,7 @@ namespace nano
             assert(x.size() == function->size());
             x = xx;
             f = function->vgrad(x, &g);
-            update_penalties();
+            update_constraints();
             return valid();
         }
 
@@ -54,9 +55,9 @@ namespace nano
         /// \brief line-search step along the descent direction of state0.
         /// returns true if the update was successfully.
         ///
-        bool update(const solver_state_t& state0, scalar_t tt)
+        bool update(const solver_state_t& state0, scalar_t t)
         {
-            t = tt;
+            this->t = t;
             return update(state0.x + t * state0.d);
         }
 
@@ -68,22 +69,21 @@ namespace nano
         bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
 
         ///
-        /// \brief check convergence: the gradient is relatively small.
+        /// \brief convergence criterion of the function value: relative gradient magnitude.
         ///
-        bool converged(scalar_t epsilon) const { return convergence_criterion() < epsilon; }
+        /// NB: only appropriate for smooth problems.
+        ///
+        scalar_t gradient_test() const;
 
         ///
-        /// \brief convergence criterion: relative gradient.
+        /// \brief convergence criterion of the constraints (if any).
         ///
-        scalar_t convergence_criterion() const
-        {
-            return g.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(f));
-        }
+        scalar_t constraint_test() const;
 
         ///
         /// \brief check divergence.
         ///
-        bool valid() const { return std::isfinite(t) && std::isfinite(f) && std::isfinite(convergence_criterion()); }
+        bool valid() const;
 
         ///
         /// \brief compute the dot product between the gradient and the descent direction.
@@ -139,10 +139,12 @@ namespace nano
         }
 
         // attributes
-        const function_t* function{nullptr}; ///<
-        vector_t          x, g, d, p;        ///< parameter, gradient, descent direction, penalties (if constrained)
-        scalar_t          f{0};              ///< function value
-        scalar_t          t{0};              ///< step size (line-search solvers)
+        const function_t* function{nullptr};                ///<
+        vector_t          x, g, d;                          ///< parameter, gradient, descent direction
+        scalar_t          f{0};                             ///< function value
+        scalar_t          t{0};                             ///< step size (line-search solvers)
+        vector_t          ceq;                              ///< equality constraint values
+        vector_t          cineq;                            ///< inequality constraint values
         solver_status     status{solver_status::max_iters}; ///< optimization status
         tensor_size_t     fcalls{0};                        ///< number of function value evaluations so far
         tensor_size_t     gcalls{0};                        ///< number of function gradient evaluations so far
@@ -150,20 +152,11 @@ namespace nano
         tensor_size_t     outer_iters{0};                   ///< number of outer iterations so far (if constrained)
 
     private:
-        void update_penalties();
+        void update_constraints();
     };
 
     template <>
-    inline enum_map_t<solver_status> enum_string<solver_status>()
-    {
-        return {
-            {solver_status::converged, "converged"},
-            {solver_status::max_iters, "max_iters"},
-            {   solver_status::failed,    "failed"},
-            {  solver_status::stopped,   "stopped"}
-        };
-    }
-
+    NANO_PUBLIC enum_map_t<solver_status> enum_string<solver_status>();
     NANO_PUBLIC std::ostream& operator<<(std::ostream& os, solver_status);
     NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
     NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
