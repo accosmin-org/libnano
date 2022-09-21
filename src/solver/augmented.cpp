@@ -69,19 +69,18 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     {
         augmented_lagrangian_function.penalty(ro);
 
-        const auto cstate    = solver->minimize(augmented_lagrangian_function, x0);
-        const auto criterion = make_criterion(cstate, miu, ro);
+        const auto cstate    = solver->minimize(augmented_lagrangian_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && criterion < epsilon;
+        const auto converged = iter_ok && cstate.constraint_test() < epsilon;
 
         // NB: the original function value should be returned!
-        if (iter_ok)
+        if (iter_ok && cstate.constraint_test() <= bstate.constraint_test() + epsilon)
         {
             bstate.update(cstate.x);
             bstate.status = cstate.status;
-            bstate.inner_iters += cstate.inner_iters;
-            bstate.outer_iters++;
         }
+        bstate.inner_iters += cstate.inner_iters;
+        bstate.outer_iters++;
 
         if (done(function, bstate, iter_ok, converged))
         {
@@ -93,14 +92,15 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         miu.array()    = (miu.array() + ro * cstate.cineq.array()).max(0.0).min(miu_max);
 
         // update penalty parameter
+        const auto criterion = make_criterion(cstate, miu, ro);
         if (outer > 0 && criterion > tau * old_criterion)
         {
             ro = gamma * ro;
+
+            // use a more precise solver next iteration
+            solver->parameter("solver::epsilon") = solver->parameter("solver::epsilon").value<scalar_t>() * epsilonK;
         }
         old_criterion = criterion;
-
-        // use a more precise solver next iteration
-        solver->parameter("solver::epsilon") = solver->parameter("solver::epsilon").value<scalar_t>() * epsilonK;
     }
 
     return bstate;

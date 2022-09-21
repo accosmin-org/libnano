@@ -5,24 +5,6 @@
 
 using namespace nano;
 
-static auto converged(const solver_state_t& curr_state, solver_state_t& best_state, const scalar_t epsilon)
-{
-    const auto df = std::fabs(curr_state.f - best_state.f);
-    const auto dx = (curr_state.x - best_state.x).lpNorm<Eigen::Infinity>();
-
-    const auto pimproved = curr_state.constraint_test() <= best_state.constraint_test() + epsilon;
-    if (pimproved)
-    {
-        // NB: the original function value should be returned!
-        best_state.update(curr_state.x);
-    }
-    best_state.status = curr_state.status;
-    best_state.inner_iters += curr_state.inner_iters;
-    best_state.outer_iters++;
-
-    return pimproved && df < epsilon && dx < epsilon;
-}
-
 solver_penalty_t::solver_penalty_t(string_t id)
     : solver_t(std::move(id))
 {
@@ -50,7 +32,16 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
         const auto cstate    = solver->minimize(penalty_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && ::converged(cstate, bstate, epsilon);
+        const auto converged = iter_ok && cstate.constraint_test() < epsilon;
+
+        // NB: the original function value should be returned!
+        if (iter_ok && cstate.constraint_test() <= bstate.constraint_test() + epsilon)
+        {
+            bstate.update(cstate.x);
+            bstate.status = cstate.status;
+        }
+        bstate.inner_iters += cstate.inner_iters;
+        bstate.outer_iters++;
 
         if (done(penalty_function.function(), bstate, iter_ok, converged))
         {

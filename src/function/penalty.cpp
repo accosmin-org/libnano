@@ -145,7 +145,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(const vector_t& x, vector_t* 
         const auto eq = is_equality(constraint);
         const auto mu = eq ? m_lambda(ilambda++) : m_miu(imiu++);
 
-        if (eq || fc + mu / ro > 0.0)
+        if (eq || (fc + mu / ro > 0.0))
         {
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
             if (gx != nullptr)
