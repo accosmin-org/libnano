@@ -9,11 +9,11 @@ namespace nano
     ///
     /// see "Practical Augmented Lagrangian Methods", by E. G. Birgin, J. M. Martinez, 2007.
     ///
-    /// NB: the penalty method works by increasing the penalty term in the outer loop
-    ///     and using the given solver to minimize the penalty function (the inner loop).
+    /// NB: the penalty parameter and the estimated lagrangian multipliers are updated at the same time
+    ///     in a loop to solve a potentially smooth function - the augmented lagrangian
+    ///     (continuous and differentiable, but not necessarily with continuous gradients).
     ///
-    /// NB: the penalty function is exact,
-    ///     but it is not smooth and thus the optimization is typically not very precise.
+    /// NB: the augmented lagrangian is solved without any bounds constraints like in the original formulation.
     ///
     class NANO_PUBLIC solver_augmented_lagrangian_t final : public solver_t
     {

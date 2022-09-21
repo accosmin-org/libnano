@@ -45,7 +45,7 @@ penalty_function_t::penalty_function_t(const function_t& function, const char* c
     : function_t(scat(prefix, function.name()), function.size())
     , m_function(function)
 {
-    strong_convexity(0.0); // NB: cannot estimate the strong convexity coefficient in general!
+    strong_convexity(function.strong_convexity()); // NB: cannot estimate the strong convexity coefficient in general!
 }
 
 penalty_function_t& penalty_function_t::penalty(scalar_t penalty)

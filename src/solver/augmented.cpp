@@ -73,15 +73,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto iter_ok   = cstate.valid();
         const auto converged = iter_ok && cstate.constraint_test() < epsilon;
 
-        // NB: the original function value should be returned!
-        if (iter_ok && cstate.constraint_test() <= bstate.constraint_test() + epsilon)
-        {
-            bstate.update(cstate.x);
-            bstate.status = cstate.status;
-        }
-        bstate.inner_iters += cstate.inner_iters;
-        bstate.outer_iters++;
-
+        solver_t::update_outer(bstate, cstate, iter_ok, epsilon);
         if (done(function, bstate, iter_ok, converged))
         {
             break;

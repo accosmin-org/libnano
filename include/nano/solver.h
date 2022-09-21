@@ -121,6 +121,7 @@ namespace nano
         void type(solver_type);
         bool log(solver_state_t&) const;
         bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
+        void update_outer(solver_state_t& best, const solver_state_t& current, bool iter_ok, scalar_t epsilon) const;
 
         lsearch_t make_lsearch() const;
         rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals) const;
