@@ -201,7 +201,7 @@ rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsil
 }
 
 void solver_t::update_outer(solver_state_t& bstate, const solver_state_t& cstate, const bool iter_ok,
-                            const scalar_t epsilon) const
+                            const scalar_t epsilon)
 {
     if (iter_ok && cstate.constraint_test() <= bstate.constraint_test() + epsilon)
     {
