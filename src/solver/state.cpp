@@ -43,6 +43,24 @@ bool solver_state_t::update_if_better(const vector_t& x, scalar_t fx)
     return update_if_better(x, g, fx);
 }
 
+bool solver_state_t::update_if_better_constrained(const solver_state_t& cstate, const scalar_t epsilon)
+{
+    auto updated = false;
+
+    if (cstate.valid() && cstate.constraint_test() <= constraint_test() + epsilon)
+    {
+        updated = true;
+
+        // NB: the original function value should be returned!
+        update(cstate.x);
+        status = cstate.status;
+    }
+    inner_iters += cstate.inner_iters;
+    outer_iters++;
+
+    return updated;
+}
+
 void solver_state_t::update_constraints()
 {
     tensor_size_t ieq = 0, ineq = 0;

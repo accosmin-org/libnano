@@ -165,6 +165,8 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     }
 
     // NB: make sure the gradient is updated at the returned point.
-    state.f = function.vgrad(state.x, &state.g);
+    state.f      = function.vgrad(state.x, &state.g);
+    state.fcalls = function.fcalls();
+    state.gcalls = function.gcalls();
     return state;
 }

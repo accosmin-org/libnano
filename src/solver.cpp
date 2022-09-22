@@ -200,19 +200,6 @@ rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsil
                              : ::make_solver<solver_ellipsoid_t>(epsilon, max_evals, m_logger);
 }
 
-void solver_t::update_outer(solver_state_t& bstate, const solver_state_t& cstate, const bool iter_ok,
-                            const scalar_t epsilon)
-{
-    if (iter_ok && cstate.constraint_test() <= bstate.constraint_test() + epsilon)
-    {
-        // NB: the original function value should be returned!
-        bstate.update(cstate.x);
-        bstate.status = cstate.status;
-    }
-    bstate.inner_iters += cstate.inner_iters;
-    bstate.outer_iters++;
-}
-
 template <>
 enum_map_t<solver_type> nano::enum_string<solver_type>()
 {

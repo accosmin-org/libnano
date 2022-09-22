@@ -104,14 +104,19 @@ static void check_minimize(solver_t& solver, const function_t& function, const v
     tensor_size_t iterations = 0;
     ::setup_logger(solver, stream, iterations);
 
+    function.clear_statistics();
     const auto state = solver.minimize(function, x0);
 
     const auto old_n_failures = utest_n_failures.load();
 
+    UTEST_CHECK(state.valid());
     UTEST_CHECK_CLOSE(state.f, fbest, epsilon);
     UTEST_CHECK_CLOSE(state.x, xbest, epsilon);
-    UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, epsilon);
+    UTEST_CHECK_LESS_EQUAL(0.0, state.constraint_test());
+    UTEST_CHECK_LESS(state.constraint_test(), solver.parameter("solver::epsilon").value<scalar_t>());
     UTEST_CHECK_EQUAL(state.status, solver_status::converged);
+    UTEST_CHECK_EQUAL(state.fcalls, function.fcalls());
+    UTEST_CHECK_EQUAL(state.gcalls, function.gcalls());
 
     if (old_n_failures != utest_n_failures.load())
     {
@@ -138,7 +143,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         auto solver = solver_quadratic_penalty_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(solver, function, x0, xbest, fbest, 1e-6);
+            check_minimize(solver, function, x0, xbest, fbest, 1e-5);
         }
     }
     {
@@ -147,7 +152,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         auto solver = solver_augmented_lagrangian_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(solver, function, x0, xbest, fbest, 1e-6);
+            check_minimize(solver, function, x0, xbest, fbest, 1e-5);
         }
     }
 }

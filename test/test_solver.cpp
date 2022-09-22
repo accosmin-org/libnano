@@ -166,6 +166,34 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
 }
 
+UTEST_CASE(state_update_if_better_constrained)
+{
+    auto function = function_sphere_t{2};
+    function.constrain(constraint::euclidean_ball_inequality_t{vector_t::Zero(function.size()), 1.0});
+
+    solver_state_t state(function, vector_t::Constant(function.size(), 1.0));
+    {
+        auto cstate     = state;
+        cstate.cineq(0) = NAN;
+        UTEST_CHECK(!cstate.valid());
+        UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
+    }
+    {
+        auto cstate = solver_state_t{function, vector_t::Constant(function.size(), 0.0)};
+        UTEST_CHECK(cstate.valid());
+        UTEST_CHECK(state.update_if_better_constrained(cstate, 1e-6));
+        UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(cstate.f, 0.0, 1e-12);
+    }
+    {
+        auto cstate = solver_state_t{function, vector_t::Constant(function.size(), 2.0)};
+        UTEST_CHECK(cstate.valid());
+        UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
+        UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(cstate.f, 8.0, 1e-12);
+    }
+}
+
 UTEST_CASE(state_convergence0)
 {
     const auto function = function_sphere_t{7};

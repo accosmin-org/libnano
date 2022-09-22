@@ -67,19 +67,20 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     // minimize
     solver.parameter("solver::epsilon")   = epsilon;
     solver.parameter("solver::max_evals") = max_evals;
-    auto state                            = solver.minimize(function, x0);
+
+    function.clear_statistics();
+    const auto state = solver.minimize(function, x0);
+
     UTEST_CHECK(state.valid());
-
-    // check function value decrease
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
-
-    // check convergence
     if (function.smooth() && solver.type() == solver_type::line_search)
     {
         UTEST_CHECK_LESS(state.gradient_test(), epsilon);
     }
     UTEST_CHECK_EQUAL(state.status, converges ? solver_status::converged : solver_status::max_iters);
     UTEST_CHECK_EQUAL(iterations, state.inner_iters);
+    UTEST_CHECK_EQUAL(state.fcalls, function.fcalls());
+    UTEST_CHECK_EQUAL(state.gcalls, function.gcalls());
 
     if (old_n_failures != utest_n_failures.load())
     {

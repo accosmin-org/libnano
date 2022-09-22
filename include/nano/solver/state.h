@@ -69,6 +69,15 @@ namespace nano
         bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
 
         ///
+        /// \brief update the current state, if the constraints are approximatively improved.
+        /// returns true if the update was performed.
+        ///
+        /// NB: the function value is re-evaluated at the given point if updated, as the given state
+        ///     can be a modified function (e.g. penalty, augmented lagrangian).
+        ///
+        bool update_if_better_constrained(const solver_state_t&, scalar_t epsilon);
+
+        ///
         /// \brief convergence criterion of the function value: relative gradient magnitude.
         ///
         /// NB: only appropriate for smooth problems.

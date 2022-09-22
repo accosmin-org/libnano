@@ -1,5 +1,6 @@
 #include <nano/function/penalty.h>
 #include <nano/solver/augmented.h>
+#include <nano/solver/utils.h>
 
 using namespace nano;
 
@@ -29,7 +30,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 1e-12, LE, 1e-3, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 1e-12, LE, 1e-5, LE, 1e-2));
     register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.3, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
@@ -62,18 +63,18 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto lambda        = vector_t{vector_t::Zero(bstate.ceq.size())};
     auto miu           = vector_t{vector_t::Zero(bstate.cineq.size())};
 
-    auto augmented_lagrangian_function = augmented_lagrangian_function_t{function, lambda, miu};
-    auto solver                        = make_solver(augmented_lagrangian_function, epsilon0, max_evals);
+    auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
+    auto solver           = make_solver(penalty_function, epsilon0, max_evals);
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
-        augmented_lagrangian_function.penalty(ro);
+        penalty_function.penalty(ro);
 
-        const auto cstate    = solver->minimize(augmented_lagrangian_function, bstate.x);
+        const auto cstate    = solver->minimize(penalty_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && cstate.constraint_test() < epsilon;
+        const auto converged = iter_ok && constrained::converged(bstate, cstate, epsilon);
+        const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
-        solver_t::update_outer(bstate, cstate, iter_ok, epsilon);
         if (done(function, bstate, iter_ok, converged))
         {
             break;
@@ -88,11 +89,12 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         if (outer > 0 && criterion > tau * old_criterion)
         {
             ro = gamma * ro;
-
-            // use a more precise solver next iteration
-            solver->parameter("solver::epsilon") = solver->parameter("solver::epsilon").value<scalar_t>() * epsilonK;
         }
         old_criterion = criterion;
+        if (improved)
+        {
+            constrained::more_precise(solver, epsilonK);
+        }
     }
 
     return bstate;

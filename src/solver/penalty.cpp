@@ -2,6 +2,7 @@
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/penalty.h>
+#include <nano/solver/utils.h>
 
 using namespace nano;
 
@@ -9,6 +10,8 @@ solver_penalty_t::solver_penalty_t(string_t id)
     : solver_t(std::move(id))
 {
     type(solver_type::constrained);
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon0", 1e-12, LE, 1e-5, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilonK", 0.0, LT, 0.3, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 10.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
@@ -19,11 +22,13 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
     const auto epsilon    = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals  = parameter("solver::max_evals").value<tensor_size_t>();
     const auto eta        = parameter("solver::penalty::eta").value<scalar_t>();
+    const auto epsilon0   = parameter("solver::penalty::epsilon0").value<scalar_t>();
+    const auto epsilonK   = parameter("solver::penalty::epsilonK").value<scalar_t>();
     const auto penalty0   = parameter("solver::penalty::penalty0").value<scalar_t>();
     const auto max_outers = parameter("solver::penalty::max_outer_iters").value<tensor_size_t>();
 
     auto penalty = penalty0;
-    auto solver  = make_solver(penalty_function, epsilon, max_evals);
+    auto solver  = make_solver(penalty_function, epsilon0, max_evals);
     auto bstate  = solver_state_t{penalty_function.function(), x0};
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
@@ -32,15 +37,19 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
         const auto cstate    = solver->minimize(penalty_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && cstate.constraint_test() < epsilon;
+        const auto converged = iter_ok && constrained::converged(bstate, cstate, epsilon);
+        const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
-        solver_t::update_outer(bstate, cstate, iter_ok, epsilon);
         if (done(penalty_function.function(), bstate, iter_ok, converged))
         {
             break;
         }
 
         penalty *= eta;
+        if (improved)
+        {
+            constrained::more_precise(solver, epsilonK);
+        }
     }
 
     return bstate;
