@@ -101,6 +101,26 @@ namespace nano
     inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
     ///
+    /// \brief create a vector from an initializer list.
+    ///
+    template <typename tscalar, typename... tvalues>
+    auto make_vector(tvalues... values)
+    {
+        const auto list = {static_cast<tscalar>(values)...};
+
+        return tensor_vector_t<tscalar>{map_vector(list.begin(), static_cast<Eigen::Index>(list.size()))};
+    }
+
+    ///
+    /// \brief create a vector and fill it with the given value.
+    ///
+    template <typename tscalar, typename tscalar_value>
+    auto make_full_vector(const Eigen::Index rows, const tscalar_value value)
+    {
+        return tensor_vector_t<tscalar>{tensor_vector_t<tscalar>::Constant(rows, static_cast<tscalar>(value))};
+    }
+
+    ///
     /// \brief create a vector and fill it with random values uniformly distributed in the given range.
     ///
     template <typename tscalar, typename tscalar_value = tscalar>

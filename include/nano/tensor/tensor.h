@@ -688,10 +688,7 @@ namespace nano
         const auto list = {static_cast<tscalar>(values)...};
         assert(::nano::size(dims) == static_cast<tensor_size_t>(list.size()));
 
-        tensor_mem_t<tscalar, trank> tensor(dims);
-        std::transform(list.begin(), list.end(), tensor.begin(),
-                       [](auto value) { return static_cast<tscalar>(value); });
-        return tensor;
+        return tensor_mem_t<tscalar, trank>{map_tensor(list.begin(), dims)};
     }
 
     ///

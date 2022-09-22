@@ -4,10 +4,9 @@
 
 using namespace nano;
 
-[[maybe_unused]] static vector_t make_random_x0(const function_t& function, const scalar_t scale = 1.0)
+[[maybe_unused]] static auto make_random_x0(const function_t& function, const scalar_t scale = 1.0)
 {
-    const auto tensor = make_random_tensor<scalar_t>(make_dims(function.size()), -scale, +scale);
-    return tensor.vector();
+    return make_random_vector<scalar_t>(function.size(), -scale, +scale);
 }
 
 [[maybe_unused]] static std::vector<vector_t> make_random_x0s(const function_t& function, const scalar_t scale = 1.0)

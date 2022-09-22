@@ -148,9 +148,9 @@ UTEST_CASE(state_has_no_descent1)
 UTEST_CASE(state_update_if_better)
 {
     const auto function = function_sphere_t{2};
-    const auto x0       = vector_t::Constant(function.size(), 0.0);
-    const auto x1       = vector_t::Constant(function.size(), 1.0);
-    const auto x2       = vector_t::Constant(function.size(), 2.0);
+    const auto x0       = make_vector<scalar_t>(0.0, 0.0);
+    const auto x1       = make_vector<scalar_t>(1.0, 1.0);
+    const auto x2       = make_vector<scalar_t>(2.0, 2.0);
 
     solver_state_t state(function, x1);
     UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
@@ -169,9 +169,9 @@ UTEST_CASE(state_update_if_better)
 UTEST_CASE(state_update_if_better_constrained)
 {
     auto function = function_sphere_t{2};
-    function.constrain(constraint::euclidean_ball_inequality_t{vector_t::Zero(function.size()), 1.0});
+    function.constrain(constraint::euclidean_ball_inequality_t{make_vector<scalar_t>(0, 0), 1.0});
 
-    solver_state_t state(function, vector_t::Constant(function.size(), 1.0));
+    auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
     {
         auto cstate     = state;
         cstate.cineq(0) = NAN;
@@ -179,14 +179,14 @@ UTEST_CASE(state_update_if_better_constrained)
         UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
     }
     {
-        auto cstate = solver_state_t{function, vector_t::Constant(function.size(), 0.0)};
+        auto cstate = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK(cstate.valid());
         UTEST_CHECK(state.update_if_better_constrained(cstate, 1e-6));
         UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
         UTEST_CHECK_CLOSE(cstate.f, 0.0, 1e-12);
     }
     {
-        auto cstate = solver_state_t{function, vector_t::Constant(function.size(), 2.0)};
+        auto cstate = solver_state_t{function, make_vector<scalar_t>(2.0, 2.0)};
         UTEST_CHECK(cstate.valid());
         UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
         UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
@@ -197,7 +197,7 @@ UTEST_CASE(state_update_if_better_constrained)
 UTEST_CASE(state_convergence0)
 {
     const auto function = function_sphere_t{7};
-    const auto state    = solver_state_t{function, vector_t::Zero(function.size())};
+    const auto state    = solver_state_t{function, make_vector<scalar_t>(0, 0, 0, 0, 0, 0, 0)};
     UTEST_CHECK_GREATER_EQUAL(state.gradient_test(), 0);
     UTEST_CHECK_LESS(state.gradient_test(), epsilon0<scalar_t>());
 }

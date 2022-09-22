@@ -660,6 +660,18 @@ UTEST_CASE(make_full_tensor)
     UTEST_CHECK_EQUAL(tensor(1, 2), 42);
 }
 
+UTEST_CASE(make_full_vector)
+{
+    const auto vector = make_full_vector<int>(5, 42);
+
+    UTEST_CHECK_EQUAL(vector.size(), 5);
+    UTEST_CHECK_EQUAL(vector(0), 42);
+    UTEST_CHECK_EQUAL(vector(1), 42);
+    UTEST_CHECK_EQUAL(vector(2), 42);
+    UTEST_CHECK_EQUAL(vector(3), 42);
+    UTEST_CHECK_EQUAL(vector(4), 42);
+}
+
 UTEST_CASE(mem_from_map)
 {
     {
