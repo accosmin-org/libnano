@@ -28,7 +28,6 @@ void worker_t::operator()() const
             if (m_queue.m_stop)
             {
                 m_queue.m_tasks.clear();
-                lock.unlock();
                 m_queue.m_condition.notify_all();
                 break;
             }
