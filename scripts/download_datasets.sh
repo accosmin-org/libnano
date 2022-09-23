@@ -22,10 +22,20 @@ function download_mnist {
     local dir=${dir_data}/mnist/
     mkdir -p ${dir}
 
-    wget -N http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz -P ${dir} || return 1
-    wget -N http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz -P ${dir} || return 1
-    wget -N http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz -P ${dir} || return 1
-    wget -N http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -P ${dir} || return 1
+    files=(
+        "train-images.idx3-ubyte.gz"
+        "train-labels.idx1-ubyte.gz"
+        "t10k-images.idx3-ubyte.gz"
+        "t10k-labels.idx1-ubyte.gz"
+    )
+
+    for file in "${files[@]}"; do
+        wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/mnist-mld/${file} -P ${dir} || return 1
+    done
+
+    for file in `ls ${dir}/*.gz`; do
+        mv ${file} ${file/.idx/-idx}
+    done
 
     unzip_dir ${dir} || return 1
 }
