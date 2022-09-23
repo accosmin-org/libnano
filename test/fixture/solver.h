@@ -69,7 +69,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     solver.parameter("solver::max_evals") = max_evals;
 
     function.clear_statistics();
-    const auto state = solver.minimize(function, x0);
+    auto state = solver.minimize(function, x0);
 
     UTEST_CHECK(state.valid());
     UTEST_CHECK_LESS_EQUAL(state.f, state0.f + epsilon1<scalar_t>());
