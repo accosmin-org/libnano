@@ -121,11 +121,12 @@ fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& s
     parallel::pool_t pool{static_cast<size_t>(folds)};
 
     const auto cv = kfold_t{samples, folds, random_seed};
-    const auto th = (parallel::pool_t::max_size() + pool.size() - 1U) / pool.size();
+    const auto th = size_t{1}; //(parallel::pool_t::max_size() + pool.size() - 1U) / pool.size();
 
     fit_result_t result;
 
     // TODO: allocate the iterators once: (train, valid)xfolds + refit
+    // TODO: use a single thread pool for both folds and regularization parameters
 
     const auto tuner_callback = [&](const tensor1d_t& params)
     {
