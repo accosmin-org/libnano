@@ -108,7 +108,9 @@ namespace nano
     {
         const auto list = {static_cast<tscalar>(values)...};
 
-        return tensor_vector_t<tscalar>{map_vector(list.begin(), static_cast<Eigen::Index>(list.size()))};
+        tensor_vector_t<tscalar> vector{static_cast<Eigen::Index>(list.size())};
+        std::copy(list.begin(), list.end(), begin(vector));
+        return vector;
     }
 
     ///
