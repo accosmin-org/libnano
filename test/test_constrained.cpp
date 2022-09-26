@@ -231,6 +231,7 @@ public:
     {
         convex(true);
         smooth(true);
+        strong_convexity(0.0);
     }
 
     rfunction_t clone() const override { return std::make_unique<objective1_function_t>(*this); }
@@ -251,8 +252,9 @@ public:
     explicit objective2_function_t()
         : function_t("objective2", 2)
     {
-        convex(true);
+        convex(false);
         smooth(true);
+        strong_convexity(0.0);
     }
 
     rfunction_t clone() const override { return std::make_unique<objective2_function_t>(*this); }
@@ -276,6 +278,7 @@ public:
     {
         convex(true);
         smooth(true);
+        strong_convexity(0.0);
     }
 
     rfunction_t clone() const override { return std::make_unique<objective3_function_t>(*this); }
@@ -298,6 +301,7 @@ public:
     {
         convex(true);
         smooth(true);
+        strong_convexity(4.0);
     }
 
     rfunction_t clone() const override { return std::make_unique<objective4_function_t>(*this); }
@@ -790,6 +794,8 @@ UTEST_CASE(minimize_objective1)
     auto function = objective1_function_t{};
     function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
 
+    check_gradient(function);
+    check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq, make_x(-2.0), 1e-12);
@@ -821,6 +827,8 @@ UTEST_CASE(minimize_objective2)
     auto function = objective2_function_t{};
     function.constrain(constant_t{1.0, 0});
 
+    check_gradient(function);
+    check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
@@ -847,6 +855,8 @@ UTEST_CASE(minimize_objective3)
     auto function = objective3_function_t{};
     function.constrain(minimum_t{1.0, 0});
 
+    check_gradient(function);
+    check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0)};
         UTEST_CHECK_CLOSE(state.cineq, make_x(1.0), 1e-12);
@@ -873,6 +883,8 @@ UTEST_CASE(minimize_objective4)
     auto function = objective4_function_t{};
     function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0});
 
+    check_gradient(function);
+    check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
