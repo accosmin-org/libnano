@@ -45,9 +45,12 @@ static auto converged(const vector_t& xk, const scalar_t fxk, const vector_t& xk
                       const scalar_t epsilon)
 {
     const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
+    const auto df = std::fabs(fxk1 - fxk);
 
     return !std::isfinite(fxk) || !std::isfinite(fxk1) ||
-           (dx > std::numeric_limits<scalar_t>::epsilon() && dx < epsilon);
+           (dx > std::numeric_limits<scalar_t>::epsilon() &&
+            dx < epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
+            df < epsilon * std::max(1.0, std::fabs(fxk1)));
 }
 
 solver_osga_t::solver_osga_t()
