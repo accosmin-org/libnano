@@ -87,9 +87,9 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     vector_t u     = proxy.U(gamma - state.f, h);
     scalar_t eta   = proxy.E(gamma - state.f, h) - miu;
 
-    auto alpha   = alpha_max;
-    auto xb      = state.x;
-    auto fb      = state.f;
+    auto alpha = alpha_max;
+    auto xb    = state.x;
+    auto fb    = state.f;
 
     vector_t x, x_prime, h_hat, u_hat, u_prime;
 
