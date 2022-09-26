@@ -3,7 +3,7 @@
 using namespace nano;
 
 function_exponential_t::function_exponential_t(tensor_size_t dims)
-    : function_t("Exponential", dims)
+    : function_t("exponential", dims)
 {
     convex(true);
     smooth(true);

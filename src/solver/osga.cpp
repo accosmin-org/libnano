@@ -8,7 +8,7 @@ namespace
     class proxy_t
     {
     public:
-        explicit proxy_t(const vector_t& z0, scalar_t epsilon)
+        explicit proxy_t(const vector_t& z0, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon())
             : m_z0(z0)
             , m_Q0(0.5 * z0.lpNorm<2>() + epsilon)
         {
@@ -18,7 +18,7 @@ namespace
 
         auto gQ(const vector_t& z) const { return z - m_z0; }
 
-        auto E(scalar_t gamma, const vector_t& h) const
+        auto E(const scalar_t gamma, const vector_t& h) const
         {
             const auto beta = gamma + h.dot(m_z0);
             const auto sqrt = std::sqrt(beta * beta + 2.0 * m_Q0 * h.dot(h));
@@ -33,11 +33,7 @@ namespace
             }
         }
 
-        auto E(scalar_t gamma, const vector_t& h, scalar_t fx) const { return E(gamma - fx, h); }
-
-        auto U(scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
-
-        auto U(scalar_t gamma, const vector_t& h, scalar_t fx) const { return U(gamma - fx, h); }
+        auto U(const scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
 
     private:
         const vector_t& m_z0;      ///<
@@ -45,7 +41,8 @@ namespace
     };
 } // namespace
 
-static auto converged(const vector_t& xk, scalar_t fxk, const vector_t& xk1, scalar_t fxk1, scalar_t epsilon)
+static auto converged(const vector_t& xk, const scalar_t fxk, const vector_t& xk1, const scalar_t fxk1,
+                      const scalar_t epsilon)
 {
     const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
     const auto df = std::fabs(fxk1 - fxk);
@@ -61,9 +58,11 @@ solver_osga_t::solver_osga_t()
 {
     type(solver_type::non_monotonic);
 
-    register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.99, LT, 1));
+    static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
+
+    register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.9, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, 10.0));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, fmax));
 }
 
 rsolver_t solver_osga_t::clone() const
@@ -79,32 +78,23 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto alpha_max            = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
 
-    const auto miu  = function.strong_convexity() / 2.0;
-    const auto eps0 = std::numeric_limits<scalar_t>::epsilon();
+    const auto miu   = function.strong_convexity() / 2.0;
+    const auto proxy = proxy_t{x0};
 
-    // FIXME: the proxy's offset is crucial to performance, double check!
-    // TODO: perform line-search to obtain xb_hat
-    const auto proxy = proxy_t{x0, std::sqrt(epsilon)};
+    auto  state = solver_state_t{function, x0}; // NB: keeps track of the best state
+    auto& g     = state.g;                      // buffer to reuse
 
-    auto      state = solver_state_t{function, x0};
-    vector_t& xb    = state.x; // store the best function point
-    scalar_t& fb    = state.f; // store the best function value
-    vector_t& g     = state.g; // buffer to reuse
-    vector_t& h     = state.d; // buffer to reuse
+    // initialization
+    vector_t h     = state.g - miu * proxy.gQ(state.x);
+    scalar_t gamma = state.f - miu * proxy.Q(state.x) - h.dot(state.x);
+    vector_t u     = proxy.U(gamma - state.f, h);
+    scalar_t eta   = proxy.E(gamma - state.f, h) - miu;
 
-    // see the reference papers for the notation
+    auto alpha   = alpha_max;
+    auto xb      = state.x;
+    auto fb      = state.f;
+
     vector_t x, x_prime, h_hat, u_hat, u_prime;
-
-    h = state.g - miu * proxy.gQ(xb);
-
-    scalar_t alpha = alpha_max;
-    scalar_t gamma = fb - miu * proxy.Q(xb) - h.dot(xb);
-
-    vector_t u   = proxy.U(gamma, h, fb);
-    scalar_t eta = proxy.E(gamma, h, fb) - miu;
-
-    vector_t prev_x = state.x;
-    scalar_t prev_f = state.f;
 
     for (int i = 0; function.fcalls() < max_evals; ++i)
     {
@@ -127,7 +117,6 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         const auto& xb_prime = (f < fb) ? x : xb;
         const auto& fb_prime = (f < fb) ? f : fb;
-        state.update_if_better(xb_prime, fb_prime);
 
         u_prime            = proxy.U(gamma_hat - fb_prime, h_hat);
         x_prime            = xb + alpha * (u_prime - xb);
@@ -137,11 +126,11 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
         state.update_if_better(xb_hat, fb_hat);
 
-        u_hat              = proxy.U(gamma_hat, h_hat, fb_hat);
-        const auto eta_hat = proxy.E(gamma_hat, h_hat, fb_hat) - miu;
+        u_hat              = proxy.U(gamma_hat - fb_hat, h_hat);
+        const auto eta_hat = proxy.E(gamma_hat - fb_hat, h_hat) - miu;
 
         // check convergence
-        const auto converged = eta_hat <= eps0 || ::converged(prev_x, prev_f, x, f, epsilon);
+        const auto converged = eta_hat <= epsilon0<scalar_t>() || ::converged(xb, fb, xb_hat, fb_hat, epsilon);
         const auto iter_ok   = state.valid();
         if (solver_t::done(function, state, iter_ok, converged))
         {
@@ -160,8 +149,8 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
             gamma = gamma_hat;
         }
 
-        prev_x = x;
-        prev_f = f;
+        xb = xb_hat;
+        fb = fb_hat;
     }
 
     // NB: make sure the gradient is updated at the returned point.

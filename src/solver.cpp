@@ -195,9 +195,8 @@ static rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_eva
 
 rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals) const
 {
-    // TODO: find a more reliable non-smooth unconstrained solver
     return function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals, m_logger)
-                             : ::make_solver<solver_ellipsoid_t>(epsilon, max_evals, m_logger);
+                             : ::make_solver<solver_osga_t>(epsilon, max_evals, m_logger);
 }
 
 template <>

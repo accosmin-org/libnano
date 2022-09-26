@@ -5,7 +5,7 @@
 using namespace nano;
 
 function_kinks_t::function_kinks_t(tensor_size_t dims)
-    : function_t("Kinks", dims)
+    : function_t("kinks", dims)
     , m_kinks(make_random_matrix<scalar_t>(std::max(tensor_size_t(1), static_cast<tensor_size_t>(std::sqrt(dims))),
                                            dims, -1.0, +1.0, seed_t{42U}))
 {

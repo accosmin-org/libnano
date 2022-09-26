@@ -4,7 +4,7 @@
 using namespace nano;
 
 function_sargan_t::function_sargan_t(tensor_size_t dims)
-    : function_t("Sargan", dims)
+    : function_t("sargan", dims)
 {
     convex(true);
     smooth(true);
