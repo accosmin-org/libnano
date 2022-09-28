@@ -7,6 +7,7 @@ function_exponential_t::function_exponential_t(tensor_size_t dims)
 {
     convex(true);
     smooth(true);
+    strong_convexity(2.0 / static_cast<scalar_t>(size()));
 }
 
 rfunction_t function_exponential_t::clone() const
