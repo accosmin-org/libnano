@@ -135,3 +135,10 @@ std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state
     }
     return stream << "[" << state.status << "]";
 }
+
+bool nano::converged(const solver_state_t& bstate, const solver_state_t& cstate, const scalar_t epsilon)
+{
+    const auto dx = (cstate.x - bstate.x).lpNorm<Eigen::Infinity>();
+
+    return cstate.constraint_test() < epsilon && (dx < epsilon * std::max(1.0, bstate.x.lpNorm<Eigen::Infinity>()));
+}

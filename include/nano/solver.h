@@ -103,6 +103,11 @@ namespace nano
         void lsearchk(const string_t& id);
 
         ///
+        /// \brief change the solver to be more precise by the given factor in the range (0, 1).
+        ///
+        void more_precise(scalar_t epsilon_factor);
+
+        ///
         /// \brief returns the type of the optimization method.
         ///
         solver_type type() const;

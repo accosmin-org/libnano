@@ -53,7 +53,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream, tensor_siz
     const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
 
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(16) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
+    stream << std::fixed << std::setprecision(19) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
            << lsearchk_id << "]\n"
            << ":x0=[" << state0.x.transpose() << "],f0=" << state0.f << ",g0=" << state0.gradient_test();
     if (state0.ceq.size() + state0.cineq.size() > 0)

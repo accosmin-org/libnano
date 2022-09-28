@@ -78,7 +78,7 @@ namespace nano
         bool update_if_better_constrained(const solver_state_t&, scalar_t epsilon);
 
         ///
-        /// \brief convergence criterion of the function value: relative gradient magnitude.
+        /// \brief convergence criterion of the gradient: the gradient magnitude relative to the function value.
         ///
         /// NB: only appropriate for smooth problems.
         ///
@@ -163,6 +163,13 @@ namespace nano
     private:
         void update_constraints();
     };
+
+    ///
+    /// \brief convergence test that checks two consecutive (best) states are close enough.
+    ///
+    /// NB: appropriate for non-smooth or constrained problems.
+    ///
+    NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_t& current_state, scalar_t epsilon);
 
     template <>
     NANO_PUBLIC enum_map_t<solver_status> enum_string<solver_status>();

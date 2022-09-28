@@ -1,6 +1,5 @@
 #include <nano/function/penalty.h>
 #include <nano/solver/augmented.h>
-#include <nano/solver/utils.h>
 
 using namespace nano;
 
@@ -72,7 +71,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
 
         const auto cstate    = solver->minimize(penalty_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && constrained::converged(bstate, cstate, epsilon);
+        const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
         if (done(function, bstate, iter_ok, converged))
@@ -93,7 +92,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         old_criterion = criterion;
         if (improved)
         {
-            constrained::more_precise(solver, epsilonK);
+            solver->more_precise(epsilonK);
         }
     }
 

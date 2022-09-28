@@ -2,7 +2,6 @@
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/penalty.h>
-#include <nano/solver/utils.h>
 
 using namespace nano;
 
@@ -37,7 +36,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
         const auto cstate    = solver->minimize(penalty_function, bstate.x);
         const auto iter_ok   = cstate.valid();
-        const auto converged = iter_ok && constrained::converged(bstate, cstate, epsilon);
+        const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
         if (done(penalty_function.function(), bstate, iter_ok, converged))
@@ -48,7 +47,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
         penalty *= eta;
         if (improved)
         {
-            constrained::more_precise(solver, epsilonK);
+            solver->more_precise(epsilonK);
         }
     }
 

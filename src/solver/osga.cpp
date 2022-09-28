@@ -41,18 +41,6 @@ namespace
     };
 } // namespace
 
-static auto converged(const vector_t& xk, const scalar_t fxk, const vector_t& xk1, const scalar_t fxk1,
-                      const scalar_t epsilon)
-{
-    const auto dx = (xk1 - xk).lpNorm<Eigen::Infinity>();
-    const auto df = std::fabs(fxk1 - fxk);
-
-    return !std::isfinite(fxk) || !std::isfinite(fxk1) ||
-           (dx > std::numeric_limits<scalar_t>::epsilon() &&
-            dx < epsilon * std::max(1.0, xk1.lpNorm<Eigen::Infinity>()) &&
-            df < epsilon * std::max(1.0, std::fabs(fxk1)));
-}
-
 solver_osga_t::solver_osga_t()
     : solver_t("osga")
 {
@@ -124,14 +112,16 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
-        state.update_if_better(xb_hat, fb_hat);
+
+        const auto dx      = (state.x - xb_hat).lpNorm<Eigen::Infinity>();
+        const auto updated = state.update_if_better(xb_hat, fb_hat);
 
         u_hat              = proxy.U(gamma_hat - fb_hat, h_hat);
         const auto eta_hat = proxy.E(gamma_hat - fb_hat, h_hat) - miu;
 
         // check convergence
-        const auto converged = eta_hat <= epsilon0<scalar_t>() || ::converged(xb, fb, xb_hat, fb_hat, epsilon);
         const auto iter_ok   = state.valid();
+        const auto converged = eta_hat < epsilon || (updated && dx < epsilon);
         if (solver_t::done(function, state, iter_ok, converged))
         {
             break;

@@ -213,3 +213,10 @@ std::ostream& nano::operator<<(std::ostream& stream, const solver_type type)
 {
     return stream << scat(type);
 }
+
+void solver_t::more_precise(const scalar_t epsilon_factor)
+{
+    assert(0.0 < epsilon_factor && epsilon_factor < 1.0);
+
+    parameter("solver::epsilon") = parameter("solver::epsilon").value<scalar_t>() * epsilon_factor;
+}
