@@ -1,3 +1,4 @@
+#include <Eigen/Eigenvalues>
 #include <nano/core/numeric.h>
 #include <nano/function/util.h>
 
@@ -80,4 +81,21 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     }
 
     return true;
+}
+
+bool nano::convex(const matrix_t& P)
+{
+    const auto eigenvalues         = P.eigenvalues();
+    const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
+
+    return std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue);
+}
+
+scalar_t nano::strong_convexity(const matrix_t& P)
+{
+    const auto eigenvalues = P.eigenvalues();
+    const auto peigenvalue = [](const auto& lhs, const auto& rhs) { return lhs.real() < rhs.real(); };
+
+    const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
+    return std::max(0.0, it->real());
 }

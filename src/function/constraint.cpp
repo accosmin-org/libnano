@@ -1,7 +1,6 @@
-#include <Eigen/Eigenvalues>
 #include <nano/core/util.h>
-#include <nano/function.h>
 #include <nano/function/constraint.h>
+#include <nano/function/util.h>
 
 using namespace nano;
 using namespace nano::constraint;
@@ -72,11 +71,7 @@ static auto strong_convexity(const constant_t&)
 
 static auto strong_convexity(const quadratic_t& constraint)
 {
-    const auto eigenvalues = constraint.m_P.eigenvalues();
-    const auto peigenvalue = [](const auto& lhs, const auto& rhs) { return lhs.real() < rhs.real(); };
-
-    const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
-    return std::max(0.0, it->real());
+    return nano::strong_convexity(constraint.m_P);
 }
 
 static scalar_t strong_convexity(const functional_t& constraint)
@@ -185,10 +180,7 @@ static bool convex(const constant_t&)
 
 static bool convex(const quadratic_t& constraint)
 {
-    const auto eigenvalues         = constraint.m_P.eigenvalues();
-    const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
-
-    return std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue);
+    return nano::convex(constraint.m_P);
 }
 
 static bool convex(const functional_t& constraint)
