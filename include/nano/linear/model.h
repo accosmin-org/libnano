@@ -46,7 +46,8 @@ namespace nano
         ///
         /// \brief @see model_t
         ///
-        fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&) override;
+        fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&,
+                            const splitter_t&) override;
 
         ///
         /// \brief @see model_t

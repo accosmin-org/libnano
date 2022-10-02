@@ -81,11 +81,12 @@ target_sources(nano PRIVATE
     loss.cpp
     model.cpp
     model/util.cpp
-    model/kfold.cpp
     model/tuner.cpp
     model/cluster.cpp
     model/surrogate.cpp
     model/param_space.cpp
+    splitter.cpp
+    splitter/kfold.cpp
     #gboost/model.cpp
     #gboost/function.cpp
     #gboost/wlearner.cpp

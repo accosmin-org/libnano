@@ -4,7 +4,6 @@
 #include <nano/linear/model.h>
 #include <nano/linear/regularization.h>
 #include <nano/linear/util.h>
-#include <nano/model/kfold.h>
 #include <nano/model/tuner.h>
 #include <nano/tensor/stream.h>
 
@@ -112,15 +111,15 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
 }
 
 fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                    const solver_t& solver)
+                                    const solver_t& solver, const splitter_t& splitter)
 {
-    const auto folds          = parameter("model::folds").value<tensor_size_t>();
-    const auto random_seed    = parameter("model::random_seed").value<uint64_t>();
     const auto regularization = parameter("model::linear::regularization").value<regularization_type>();
 
-    parallel::pool_t pool{static_cast<size_t>(folds)};
+    const auto splits = splitter.split(samples);
+    const auto folds  = static_cast<tensor_size_t>(splits.size());
 
-    const auto cv = kfold_t{samples, folds, random_seed};
+    parallel::pool_t pool{splits.size()};
+
     const auto th = size_t{1}; //(parallel::pool_t::max_size() + pool.size() - 1U) / pool.size();
 
     fit_result_t result;
@@ -137,7 +136,7 @@ fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& s
         const auto fold_callback = [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](tensor_size_t fold, size_t)
         {
             assert(fold >= 0 && fold < folds);
-            const auto [train_samples, valid_samples] = cv.split(fold);
+            const auto& [train_samples, valid_samples] = splits[static_cast<size_t>(fold)];
 
             const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, th);
             const auto [train_error, train_value] = ::evaluate(*this, dataset, train_samples, loss, weights, bias, th);

@@ -20,9 +20,6 @@ fit_result_t::cv_result_t::cv_result_t(tensor1d_t params, tensor_size_t folds)
 model_t::model_t(string_t id)
     : clonable_t(std::move(id))
 {
-    register_parameter(parameter_t::make_integer("model::folds", 2, LE, 5, LE, 100));
-    register_parameter(
-        parameter_t::make_integer("model::random_seed", 0, LE, 42, LE, std::numeric_limits<int64_t>::max()));
 }
 
 void model_t::logger(const logger_t& logger)
@@ -77,7 +74,7 @@ std::ostream& model_t::write(std::ostream& stream) const
 }
 
 fit_result_t model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                          const solver_t& solver)
+                          const solver_t& solver, const splitter_t& splitter)
 {
     const auto n_features = dataset.features();
 
@@ -89,7 +86,7 @@ fit_result_t model_t::fit(const dataset_t& dataset, const indices_t& samples, co
         m_inputs.push_back(dataset.feature(i));
     }
 
-    return do_fit(dataset, samples, loss, solver);
+    return do_fit(dataset, samples, loss, solver, splitter);
 }
 
 tensor4d_t model_t::predict(const dataset_t& dataset, const indices_t& samples) const
