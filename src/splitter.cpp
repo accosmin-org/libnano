@@ -1,5 +1,6 @@
 #include <mutex>
 #include <nano/splitter/kfold.h>
+#include <nano/splitter/random.h>
 
 using namespace nano;
 
@@ -13,7 +14,11 @@ splitter_t::splitter_t(string_t id)
 factory_t<splitter_t>& splitter_t::all()
 {
     static auto manager = factory_t<splitter_t>{};
-    const auto  op      = []() { manager.add<kfold_splitter_t>("k-fold cross-validation"); };
+    const auto  op      = []()
+    {
+        manager.add<kfold_splitter_t>("k-fold cross-validation");
+        manager.add<random_splitter_t>("repeated random sub-sampling");
+    };
 
     static std::once_flag flag;
     std::call_once(flag, op);

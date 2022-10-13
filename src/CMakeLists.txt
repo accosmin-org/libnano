@@ -90,6 +90,7 @@ target_sources(nano PRIVATE
     tuner/surrogate.cpp
     splitter.cpp
     splitter/kfold.cpp
+    splitter/random.cpp
     #gboost/model.cpp
     #gboost/function.cpp
     #gboost/wlearner.cpp

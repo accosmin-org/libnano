@@ -7,6 +7,8 @@
 #include <nano/lsearch0.h>
 #include <nano/lsearchk.h>
 #include <nano/solver.h>
+#include <nano/splitter.h>
+#include <nano/tuner.h>
 #include <nano/version.h>
 
 using namespace nano;
@@ -21,6 +23,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "loss", "regex to select loss functions", ".+");
     cmdline.add("", "datasource", "regex to select machine learning datasets", ".+");
     cmdline.add("", "generator", "regex to select feature generation methods", ".+");
+    cmdline.add("", "splitter", "regex to select train-validation splitting methods", ".+");
+    cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", ".+");
     cmdline.add("", "version", "library version");
     cmdline.add("", "git-hash", "git commit hash");
 
@@ -32,6 +36,8 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_solver     = options.has("solver");
     const auto has_datasource = options.has("datasource");
     const auto has_generator  = options.has("generator");
+    const auto has_splitter   = options.has("splitter");
+    const auto has_tuner      = options.has("tuner");
     const auto has_version    = options.has("version");
     const auto has_git_hash   = options.has("git-hash");
 
@@ -72,6 +78,14 @@ static int unsafe_main(int argc, const char* argv[])
     if (has_generator)
     {
         std::cout << make_table("generator", generator_t::all(), options.get<string_t>("generator"));
+    }
+    if (has_splitter)
+    {
+        std::cout << make_table("splitter", splitter_t::all(), options.get<string_t>("splitter"));
+    }
+    if (has_tuner)
+    {
+        std::cout << make_table("tuner", tuner_t::all(), options.get<string_t>("tuner"));
     }
     if (has_version)
     {
