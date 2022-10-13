@@ -11,7 +11,7 @@ namespace nano
     using rsplitter_t = std::unique_ptr<splitter_t>;
 
     ///
-    /// \brief generates splits for k-fold cross-validation.
+    /// \brief generates (training, validation) splits for training, tuning and evaluating machine learning models.
     ///
     class NANO_PUBLIC splitter_t : public estimator_t, public clonable_t<splitter_t>
     {

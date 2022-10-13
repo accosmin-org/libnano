@@ -32,7 +32,8 @@ public:
 
     rmodel_t clone() const override { return std::make_unique<fixture_model_t>(*this); }
 
-    fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&) override
+    fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                        const tuner_t&) override
     {
         return fit_result_t{};
     }
@@ -61,10 +62,10 @@ static auto check_stream(const fixture_model_t& model)
 }
 
 static auto check_fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss, const solver_t& solver,
-                      const splitter_t& splitter)
+                      const splitter_t& splitter, const tuner_t& tuner)
 {
     auto model = fixture_model_t{};
-    UTEST_CHECK_NOTHROW(model.fit(dataset, samples, loss, solver, splitter));
+    UTEST_CHECK_NOTHROW(model.fit(dataset, samples, loss, solver, splitter, tuner));
     return model;
 }
 
@@ -86,6 +87,7 @@ UTEST_CASE(fit_predict)
     const auto rloss     = loss_t::all().get("squared");
     const auto rsolver   = solver_t::all().get("lbfgs");
     const auto rsplitter = splitter_t::all().get("k-fold");
+    const auto rtuner    = tuner_t::all().get("surrogate");
 
     const auto train_samples = arange(0, 80);
     const auto valid_samples = arange(80, 100);
@@ -106,7 +108,7 @@ UTEST_CASE(fit_predict)
         check_predict_fails(model, dataset3, train_samples);
     }
     {
-        const auto model = check_stream(check_fit(dataset1, train_samples, *rloss, *rsolver, *rsplitter));
+        const auto model = check_stream(check_fit(dataset1, train_samples, *rloss, *rsolver, *rsplitter, *rtuner));
 
         check_predict(model, dataset1, train_samples);
         check_predict(model, dataset1, valid_samples);
@@ -115,7 +117,7 @@ UTEST_CASE(fit_predict)
         check_predict_fails(model, dataset3, train_samples);
     }
     {
-        const auto model = check_stream(check_fit(dataset2, train_samples, *rloss, *rsolver, *rsplitter));
+        const auto model = check_stream(check_fit(dataset2, train_samples, *rloss, *rsolver, *rsplitter, *rtuner));
 
         check_predict(model, dataset2, train_samples);
         check_predict(model, dataset2, valid_samples);
@@ -124,7 +126,7 @@ UTEST_CASE(fit_predict)
         check_predict_fails(model, dataset3, train_samples);
     }
     {
-        const auto model = check_stream(check_fit(dataset3, train_samples, *rloss, *rsolver, *rsplitter));
+        const auto model = check_stream(check_fit(dataset3, train_samples, *rloss, *rsolver, *rsplitter, *rtuner));
 
         check_predict(model, dataset3, train_samples);
         check_predict(model, dataset3, valid_samples);

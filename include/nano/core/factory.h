@@ -41,7 +41,7 @@ namespace nano
         {
             const auto it = m_protos.find(type_id);
             return (it == m_protos.end()) ? nullptr : it->second.m_prototype->clone();
-        }
+        } // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
         ///
         /// \brief get the IDs of the registered objects matching the ID regex.

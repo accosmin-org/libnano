@@ -24,6 +24,66 @@ static std::size_t              utest_n_cases    = 0;
 static std::atomic<std::size_t> utest_n_checks   = {0};
 static std::atomic<std::size_t> utest_n_failures = {0};
 
+template <class T>
+struct is_pair : std::false_type
+{
+};
+
+template <class T1, class T2>
+struct is_pair<std::pair<T1, T2>> : std::true_type
+{
+};
+
+template <class T>
+inline constexpr bool is_pair_v = is_pair<T>::value;
+
+template <typename tvalue1, typename tvalue2>
+static std::ostream& operator<<(std::ostream& stream, const std::pair<tvalue1, tvalue2>& pair)
+{
+    return stream << "{" << pair.first << "," << pair.second << "}";
+}
+
+template <size_t tindex, typename... tvalues>
+static std::ostream& print_tuple(std::ostream& stream, const std::tuple<tvalues...>& tuple)
+{
+    stream << "{" << std::get<tindex>(tuple) << "}";
+    if constexpr (tindex + 1U < std::tuple_size_v<std::tuple<tvalues...>>)
+    {
+        print_tuple<tindex + 1U>(stream, tuple);
+    }
+    return stream;
+}
+
+template <typename... tvalues>
+static std::ostream& operator<<(std::ostream& stream, const std::tuple<tvalues...>& tuple)
+{
+    stream << "{";
+    print_tuple<0U>(stream, tuple);
+    return stream << "}";
+}
+
+template <typename tvalue>
+static std::ostream& operator<<(std::ostream& os, const std::vector<tvalue>& values)
+{
+    os << "{";
+    for (const auto& value : values)
+    {
+        if constexpr (std::is_arithmetic_v<tvalue> || std::is_same_v<tvalue, std::string>)
+        {
+            os << "{" << value << "}";
+        }
+        else if constexpr (is_pair_v<tvalue>)
+        {
+            os << "{" << value.first << "," << value.second << "}";
+        }
+        else
+        {
+            os << "{" << value << "}";
+        }
+    }
+    return os << "}";
+}
+
 struct utest_location_t
 {
 };
@@ -74,37 +134,6 @@ static exception_status check_throw(const toperator& op)
     {
         return exception_status::unexpected;
     }
-}
-
-template <class T>
-struct is_pair : std::false_type
-{
-};
-
-template <class T1, class T2>
-struct is_pair<std::pair<T1, T2>> : std::true_type
-{
-};
-
-template <class T>
-inline constexpr bool is_pair_v = is_pair<T>::value;
-
-template <typename tvalue>
-static std::ostream& operator<<(std::ostream& os, const std::vector<tvalue>& values)
-{
-    os << "{";
-    for (const auto& value : values)
-    {
-        if constexpr (std::is_arithmetic_v<tvalue> || std::is_same_v<tvalue, std::string>)
-        {
-            os << "{" << value << "}";
-        }
-        else if constexpr (is_pair_v<tvalue>)
-        {
-            os << "{" << value.first << "," << value.second << "}";
-        }
-    }
-    return os << "}";
 }
 
 #define UTEST_BEGIN_MODULE(name)                                                                                       \

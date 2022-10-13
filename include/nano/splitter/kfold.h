@@ -5,7 +5,7 @@
 namespace nano
 {
     ///
-    /// \brief generates splits for k-fold cross-validation.
+    /// \brief k-fold cross-validation.
     ///
     class NANO_PUBLIC kfold_splitter_t final : public splitter_t
     {

@@ -74,7 +74,7 @@ std::ostream& model_t::write(std::ostream& stream) const
 }
 
 fit_result_t model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                          const solver_t& solver, const splitter_t& splitter)
+                          const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
     const auto n_features = dataset.features();
 
@@ -86,7 +86,7 @@ fit_result_t model_t::fit(const dataset_t& dataset, const indices_t& samples, co
         m_inputs.push_back(dataset.feature(i));
     }
 
-    return do_fit(dataset, samples, loss, solver, splitter);
+    return do_fit(dataset, samples, loss, solver, splitter, tuner);
 }
 
 tensor4d_t model_t::predict(const dataset_t& dataset, const indices_t& samples) const

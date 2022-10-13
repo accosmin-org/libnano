@@ -19,7 +19,7 @@ static auto make_smooth_solver()
     auto solver = solver_t::all().get("lbfgs");
     UTEST_REQUIRE(solver);
     solver->parameter("solver::max_evals") = 1000;
-    solver->parameter("solver::epsilon")   = 1e-12;
+    solver->parameter("solver::epsilon")   = 1e-10;
     solver->lsearchk("cgdescent");
     return solver;
 }
@@ -42,7 +42,15 @@ static auto make_splitter()
 {
     auto splitter = splitter_t::all().get("k-fold");
     UTEST_REQUIRE(splitter);
+    splitter->parameter("splitter::folds") = 2;
     return splitter;
+}
+
+static auto make_tuner()
+{
+    auto tuner = tuner_t::all().get("surrogate");
+    UTEST_REQUIRE(tuner);
+    return tuner;
 }
 
 static auto make_model()
@@ -110,7 +118,7 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
     }
     if (!expected_param_names.empty())
     {
-        UTEST_CHECK_GREATER_EQUAL(hits, 0); // FIXME: this should be GREATER!
+        UTEST_CHECK_GREATER(hits, 0);
     }
     else
     {
@@ -159,7 +167,8 @@ UTEST_CASE(regularization_none)
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_solver(loss_id);
         const auto splitter = make_splitter();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter);
+        const auto tuner    = make_tuner();
+        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 0U, epsilon);
@@ -185,7 +194,8 @@ UTEST_CASE(regularization_lasso)
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_nonsmooth_solver();
         const auto splitter = make_splitter();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter);
+        const auto tuner    = make_tuner();
+        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;
 
         check_result(result, param_names, 6U, epsilon);
@@ -211,7 +221,8 @@ UTEST_CASE(regularization_ridge)
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_solver(loss_id);
         const auto splitter = make_splitter();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter);
+        const auto tuner    = make_tuner();
+        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 6U, epsilon);
@@ -237,7 +248,8 @@ UTEST_CASE(regularization_variance)
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_solver(loss_id);
         const auto splitter = make_splitter();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter);
+        const auto tuner    = make_tuner();
+        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
         check_result(result, param_names, 6U, epsilon);
@@ -263,7 +275,8 @@ UTEST_CASE(regularization_elasticnet)
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_nonsmooth_solver();
         const auto splitter = make_splitter();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter);
+        const auto tuner    = make_tuner();
+        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;
 
         check_result(result, param_names, 15U, epsilon);

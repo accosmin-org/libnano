@@ -4,6 +4,7 @@
 #include <nano/loss.h>
 #include <nano/solver.h>
 #include <nano/splitter.h>
+#include <nano/tuner.h>
 
 namespace nano
 {
@@ -77,7 +78,8 @@ namespace nano
         /// \brief fit the model using the given samples and the current set of (hyper-)parameters
         ///     and returns the average error of the given samples.
         ///
-        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&);
+        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                         const tuner_t&);
 
         ///
         /// \brief evaluate the trained model and returns the predictions for each of the given samples.
@@ -96,7 +98,7 @@ namespace nano
         void compatible(const dataset_t&) const;
 
         virtual fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&,
-                                    const splitter_t&)                            = 0;
+                                    const splitter_t&, const tuner_t&)            = 0;
         virtual tensor4d_t   do_predict(const dataset_t&, const indices_t&) const = 0;
 
         // attributes

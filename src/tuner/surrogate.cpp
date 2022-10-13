@@ -1,4 +1,7 @@
-#include <nano/model/surrogate.h>
+#include <nano/core/logger.h>
+#include <nano/solver.h>
+#include <nano/tuner/surrogate.h>
+#include <nano/tuner/util.h>
 
 using namespace nano;
 
@@ -110,4 +113,73 @@ scalar_t quadratic_surrogate_t::do_vgrad(const vector_t& x, vector_t* gx) const
         }
     }
     return fx;
+}
+
+surrogate_tuner_t::surrogate_tuner_t()
+    : tuner_t("surrogate")
+{
+}
+
+rtuner_t surrogate_tuner_t::clone() const
+{
+    return std::make_unique<surrogate_tuner_t>(*this);
+}
+
+void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_callback_t& callback,
+                                    tuner_steps_t& steps) const
+{
+    const auto max_evals = parameter("tuner::max_evals").value<size_t>();
+    const auto min_igrid = make_min_igrid(spaces);
+    const auto max_igrid = make_max_igrid(spaces);
+
+    // fit and optimize the surrogate model iteratively...
+    const auto loss = loss_t::all().get("mse");
+    assert(loss != nullptr);
+
+    const auto solver = solver_t::all().get("lbfgs");
+    assert(solver != nullptr);
+
+    const auto to_surrogate = [&](const auto& values)
+    {
+        tensor1d_t result(values.size());
+        for (tensor_size_t i = 0, size = values.size(); i < size; ++i)
+        {
+            result(i) = spaces[static_cast<size_t>(i)].to_surrogate(values(i));
+        }
+        return result;
+    };
+
+    for (; !steps.empty() && steps.size() < max_evals;)
+    {
+        tensor2d_t p(static_cast<tensor_size_t>(steps.size()), static_cast<tensor_size_t>(spaces.size()));
+        tensor1d_t y(static_cast<tensor_size_t>(steps.size()));
+
+        tensor_size_t k = 0;
+        for (const auto& step : steps)
+        {
+            p.tensor(k) = to_surrogate(step.m_param);
+            y(k++)      = step.m_value;
+        }
+
+        const auto surrogate_fit = quadratic_surrogate_fit_t{*loss, p, y};
+        auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::Zero(surrogate_fit.size()));
+        critical(!min_state_fit.valid(), "tuner: failed to fit the surrogate model <", min_state_fit, ">!");
+
+        const auto surrogate_opt = quadratic_surrogate_t{min_state_fit.x};
+        auto       min_state_opt = solver->minimize(surrogate_opt, to_surrogate(steps.begin()->m_param).vector());
+        critical(!min_state_opt.valid(), "tuner: failed to optimize the surrogate model <", min_state_opt, ">!");
+
+        indices_t src_igrid(min_state_opt.x.size());
+        for (tensor_size_t iparam = 0; iparam < min_state_opt.x.size(); ++iparam)
+        {
+            const auto& space = spaces[static_cast<size_t>(iparam)];
+            src_igrid(iparam) = space.closest_grid_point_from_surrogate(min_state_opt.x(iparam));
+        }
+
+        const auto igrids = local_search(min_igrid, max_igrid, src_igrid, 1);
+        if (!evaluate(spaces, callback, igrids, steps))
+        {
+            break;
+        }
+    }
 }

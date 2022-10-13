@@ -1,7 +1,5 @@
 #include <nano/core/logger.h>
-#include <nano/model/surrogate.h>
-#include <nano/model/tuner.h>
-#include <nano/solver.h>
+#include <nano/tuner/space.h>
 
 using namespace nano;
 
@@ -32,11 +30,11 @@ param_space_t::param_space_t(param_space_t::type type, tensor1d_t grid_values)
              "parameter space: the grid values must be distinct!");
 
     critical(m_type == type::log10 &&
-                 *std::min_element(begin(m_grid_values), end(m_grid_values)) < epsilon0<scalar_t>(),
+                 *std::min_element(begin(m_grid_values), end(m_grid_values)) < std::numeric_limits<scalar_t>::epsilon(),
              "parameter space: the grid values must be strictly positive if using the logarithmic scale!");
 }
 
-scalar_t param_space_t::to_surrogate(scalar_t value) const
+scalar_t param_space_t::to_surrogate(const scalar_t value) const
 {
     critical(value < m_min || value > m_max, "parameter space: cannot map value (", value,
              ") outside the parameter grid range [", m_min, ",", m_max, "]!");
@@ -49,7 +47,7 @@ scalar_t param_space_t::to_surrogate(scalar_t value) const
     }
 }
 
-scalar_t param_space_t::from_surrogate(scalar_t value) const
+scalar_t param_space_t::from_surrogate(const scalar_t value) const
 {
     switch (m_type)
     {
@@ -59,18 +57,25 @@ scalar_t param_space_t::from_surrogate(scalar_t value) const
     }
 }
 
-scalar_t param_space_t::closest_grid_value_from_surrogate(scalar_t value) const
+scalar_t param_space_t::closest_grid_value_from_surrogate(const scalar_t value) const
 {
-    scalar_t min_distance = std::numeric_limits<scalar_t>::max(), closest_grid_value = value;
-    for (const auto grid_value : m_grid_values)
+    return m_grid_values(closest_grid_point_from_surrogate(value));
+}
+
+tensor_size_t param_space_t::closest_grid_point_from_surrogate(const scalar_t value) const
+{
+    auto min_distance  = std::numeric_limits<scalar_t>::max();
+    auto closest_point = tensor_size_t{0};
+
+    for (tensor_size_t point = 0; point < m_grid_values.size(); ++point)
     {
-        const auto distance = std::fabs(to_surrogate(grid_value) - value);
+        const auto distance = std::fabs(value - to_surrogate(m_grid_values(point)));
         if (distance < min_distance)
         {
-            min_distance       = distance;
-            closest_grid_value = grid_value;
+            min_distance  = distance;
+            closest_point = point;
         }
     }
 
-    return closest_grid_value;
+    return closest_point;
 }

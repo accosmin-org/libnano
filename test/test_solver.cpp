@@ -7,12 +7,6 @@
 
 using namespace nano;
 
-template <typename tscalar>
-static auto& operator<<(std::ostream& stream, const std::tuple<tscalar, tscalar>& values)
-{
-    return stream << std::get<0>(values) << "," << std::get<1>(values);
-}
-
 static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues,
                               const std::vector<scalar_t>& epsilons, size_t reference = 0U)
 {

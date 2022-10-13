@@ -11,6 +11,7 @@ make_test(test_core_estimator NANO::nano)
 make_test(test_core_parameter NANO::nano)
 make_test(test_core_tokenizer NANO::nano)
 make_test(test_core_histogram NANO::nano)
+make_test(test_core_combinatorial NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)
@@ -24,6 +25,8 @@ make_test(test_lsearch NANO::nano)
 make_test(test_function NANO::nano)
 make_test(test_splitter NANO::nano)
 make_test(test_constrained NANO::nano)
+
+make_test(test_tuner NANO::nano)
 
 make_test(test_datasource_mask NANO::nano)
 make_test(test_datasource_stats NANO::nano)
@@ -49,10 +52,7 @@ make_test(test_linear_model NANO::nano)
 
 make_test(test_model NANO::nano)
 make_test(test_model_util NANO::nano)
-make_test(test_model_tuner NANO::nano)
 make_test(test_model_cluster NANO::nano)
-make_test(test_model_surrogate NANO::nano)
-make_test(test_model_param_space NANO::nano)
 
 #make_test(test_gboost_util NANO::nano)
 #make_test(test_gboost_model NANO::nano)

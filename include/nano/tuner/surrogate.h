@@ -2,6 +2,7 @@
 
 #include <nano/function.h>
 #include <nano/loss.h>
+#include <nano/tuner.h>
 
 namespace nano
 {
@@ -66,5 +67,28 @@ namespace nano
     private:
         // attributes
         vector_t m_model; ///< coefficients of the quadratic terms of hyper-parameter values p
+    };
+
+    ///
+    /// \brief optimizer hyper-parameters by iteratively building and minimizing a quadratic surrogate function
+    ///     that maps hyper-parameter values to a scalar value function (the lower, the better).
+    ///
+    class NANO_PUBLIC surrogate_tuner_t final : public tuner_t
+    {
+    public:
+        ///
+        /// \brief constructor
+        ///
+        surrogate_tuner_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rtuner_t clone() const override;
+
+        ///
+        /// \brief @see tuner_t
+        ///
+        void do_optimize(const param_spaces_t&, const tuner_callback_t&, tuner_steps_t&) const override;
     };
 } // namespace nano

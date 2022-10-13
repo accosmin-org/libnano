@@ -4,7 +4,6 @@
 #include <nano/linear/model.h>
 #include <nano/linear/regularization.h>
 #include <nano/linear/util.h>
-#include <nano/model/tuner.h>
 #include <nano/tensor/stream.h>
 
 using namespace nano;
@@ -18,7 +17,7 @@ static auto make_param_space()
                                                1e+3, 3e+3, 1e+4, 3e+4, 1e+5, 3e+5, 1e+6, 1e+7, 1e+8, 1e+9)};
 }
 
-static auto decode_params(const tensor1d_t& params, regularization_type regularization)
+static auto decode_params(const tensor1d_cmap_t& params, regularization_type regularization)
 {
     scalar_t l1reg = 0.0, l2reg = 0.0, vAreg = 0.0;
     switch (regularization)
@@ -34,7 +33,7 @@ static auto decode_params(const tensor1d_t& params, regularization_type regulari
 }
 
 static auto evaluate(const estimator_t& estimator, const dataset_t& dataset, const indices_t& samples,
-                     const loss_t& loss, const tensor2d_t& weights, const tensor1d_t& bias, size_t threads)
+                     const loss_t& loss, const tensor2d_t& weights, const tensor1d_t& bias, const size_t threads = 1U)
 {
     auto iterator = flatten_iterator_t{dataset, samples, threads};
     iterator.scaling(scaling_type::none);
@@ -55,7 +54,8 @@ static auto evaluate(const estimator_t& estimator, const dataset_t& dataset, con
 }
 
 static auto fit(const estimator_t& estimator, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                const solver_t& solver, scalar_t l1reg, scalar_t l2reg, scalar_t vAreg, size_t threads)
+                const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg,
+                const size_t threads = 1U)
 {
     auto iterator = flatten_iterator_t{dataset, samples, threads};
     iterator.batch(estimator.parameter("model::linear::batch").value<tensor_size_t>());
@@ -111,59 +111,70 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
 }
 
 fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                    const solver_t& solver, const splitter_t& splitter)
+                                    const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
+    // TODO: allocate the iterators once: (train, valid)xfolds + refit
+
     const auto regularization = parameter("model::linear::regularization").value<regularization_type>();
 
     const auto splits = splitter.split(samples);
     const auto folds  = static_cast<tensor_size_t>(splits.size());
 
-    parallel::pool_t pool{splits.size()};
+    auto pool   = parallel::pool_t{};
+    auto result = fit_result_t{};
 
-    const auto th = size_t{1}; //(parallel::pool_t::max_size() + pool.size() - 1U) / pool.size();
-
-    fit_result_t result;
-
-    // TODO: allocate the iterators once: (train, valid)xfolds + refit
-    // TODO: use a single thread pool for both folds and regularization parameters
-
-    const auto tuner_callback = [&](const tensor1d_t& params)
+    const auto tuner_callback = [&](const tensor2d_t& all_params)
     {
-        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
+        const auto trials = all_params.size<0>();
+        const auto orsize = result.m_cv_results.size();
 
-        fit_result_t::cv_result_t cv_result{params, folds};
-
-        const auto fold_callback = [&, l1reg = l1reg, l2reg = l2reg, vAreg = vAreg](tensor_size_t fold, size_t)
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
         {
+            result.m_cv_results.emplace_back(all_params.tensor(trial), folds);
+        }
+
+        const auto callback = [&](const tensor_size_t index, size_t)
+        {
+            const auto fold  = index % folds;
+            const auto trial = index / folds;
+
             assert(fold >= 0 && fold < folds);
+            assert(trial >= 0 && trial < trials);
+
+            const auto [l1reg, l2reg, vAreg] = decode_params(all_params.tensor(trial), regularization);
+
             const auto& [train_samples, valid_samples] = splits[static_cast<size_t>(fold)];
 
-            const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, th);
-            const auto [train_error, train_value] = ::evaluate(*this, dataset, train_samples, loss, weights, bias, th);
-            const auto [valid_error, valid_value] = ::evaluate(*this, dataset, valid_samples, loss, weights, bias, th);
+            const auto [weights, bias] = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg);
+            const auto [train_error, train_value] = ::evaluate(*this, dataset, train_samples, loss, weights, bias);
+            const auto [valid_error, valid_value] = ::evaluate(*this, dataset, valid_samples, loss, weights, bias);
 
+            auto& cv_result                = result.m_cv_results[orsize + static_cast<size_t>(trial)];
             cv_result.m_train_errors(fold) = train_error;
             cv_result.m_train_values(fold) = train_value;
             cv_result.m_valid_errors(fold) = valid_error;
             cv_result.m_valid_values(fold) = valid_value;
         };
-        pool.map(folds, fold_callback);
+        pool.map(folds * trials, callback);
 
-        const auto goodness = std::log(cv_result.m_train_errors.mean() + std::numeric_limits<scalar_t>::epsilon());
-
-        result.m_cv_results.emplace_back(std::move(cv_result));
+        tensor1d_t values{trials};
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
+        {
+            const auto& cv_result = result.m_cv_results[orsize + static_cast<size_t>(trial)];
+            values(trial) = std::log(cv_result.m_valid_errors.mean() + std::numeric_limits<scalar_t>::epsilon());
+        }
 
         this->log(result, "linear");
 
-        return goodness;
+        return values;
     };
 
     const auto refit = [&](const tensor1d_t& params)
     {
         const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
 
-        const auto [weights, bias]            = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg, th);
-        const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias, th);
+        const auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg, pool.size());
+        const auto [refit_error, refit_value] = ::evaluate(*this, dataset, samples, loss, weights, bias, pool.size());
 
         result.m_refit_params = params;
         result.m_refit_error  = refit_error;
@@ -175,58 +186,45 @@ fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& s
         m_bias    = bias;
     };
 
+    auto opt_params = tensor1d_t{};
     switch (parameter("model::linear::regularization").value<regularization_type>())
     {
-    case regularization_type::none: refit(tensor1d_t{}); break;
+    case regularization_type::none: break;
 
     case regularization_type::lasso:
         result.m_param_names = {"l1reg"};
         {
-            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, tuner_callback};
-            const auto steps =
-                tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1), 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
-
-            refit(steps.rbegin()->m_opt_param);
+            const auto steps = tuner.optimize({::make_param_space()}, tuner_callback);
+            opt_params       = steps.begin()->m_param;
         }
         break;
 
     case regularization_type::ridge:
         result.m_param_names = {"l2reg"};
         {
-            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, tuner_callback};
-            const auto steps =
-                tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1), 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
-
-            refit(steps.rbegin()->m_opt_param);
+            const auto steps = tuner.optimize({::make_param_space()}, tuner_callback);
+            opt_params       = steps.begin()->m_param;
         }
         break;
 
     case regularization_type::variance:
         result.m_param_names = {"vAreg"};
         {
-            const auto tuner = tuner_t{param_spaces_t{make_param_space()}, tuner_callback};
-            const auto steps =
-                tuner.optimize(make_tensor<scalar_t>(make_dims(6, 1), 1e-4, 1e-2, 1e+0, 1e+2, 1e+4, 1e+6));
-
-            refit(steps.rbegin()->m_opt_param);
+            const auto steps = tuner.optimize({::make_param_space()}, tuner_callback);
+            opt_params       = steps.begin()->m_param;
         }
         break;
 
     case regularization_type::elasticnet:
         result.m_param_names = {"l1reg", "l2reg"};
         {
-            const auto tuner = tuner_t{
-                param_spaces_t{make_param_space(), make_param_space()},
-                tuner_callback
-            };
-            const auto steps = tuner.optimize(make_tensor<scalar_t>(
-                make_dims(15, 2), 1e-2, 1e-2, 1e-2, 1e+0, 1e-2, 1e+2, 1e-2, 1e+4, 1e-2, 1e+6, 1e+1, 1e-2, 1e+1, 1e+0,
-                1e+1, 1e+2, 1e+1, 1e+4, 1e+1, 1e+6, 1e+4, 1e-2, 1e+4, 1e+0, 1e+4, 1e+2, 1e+4, 1e+4, 1e+4, 1e+6));
-
-            refit(steps.rbegin()->m_opt_param);
+            const auto steps = tuner.optimize({::make_param_space(), ::make_param_space()}, tuner_callback);
+            opt_params       = steps.begin()->m_param;
         }
         break;
     }
+
+    refit(opt_params);
 
     return result;
 }
