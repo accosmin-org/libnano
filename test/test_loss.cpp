@@ -4,7 +4,7 @@
 #include <nano/function.h>
 #include <nano/function/util.h>
 #include <nano/loss.h>
-#include <nano/model/class.h>
+#include <nano/loss/class.h>
 #include <utest/utest.h>
 
 using namespace nano;

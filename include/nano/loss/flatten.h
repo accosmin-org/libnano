@@ -2,7 +2,8 @@
 
 #include <cassert>
 #include <nano/loss.h>
-#include <nano/model/class.h>
+#include <nano/loss/class.h>
+#include <nano/loss/error.h>
 
 namespace nano
 {
@@ -86,63 +87,6 @@ namespace nano
 
     namespace detail
     {
-        ///
-        /// \brief generic (multivariate) regression loss that upper-bounds
-        ///     the L1-distance between target and output.
-        ///
-        struct absdiff_t
-        {
-            static constexpr auto prefix = "";
-
-            template <typename tarray>
-            static auto error(const tarray& target, const tarray& output)
-            {
-                return (target - output).abs().sum();
-            }
-        };
-
-        ///
-        /// \brief multi-class classification loss that predicts the labels with positive output.
-        ///
-        struct mclass_t
-        {
-            static constexpr auto prefix = "m-";
-
-            template <typename tarray>
-            static auto error(const tarray& target, const tarray& output)
-            {
-                const auto edges   = target * output;
-                const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
-                return static_cast<scalar_t>((edges < epsilon).count());
-            }
-        };
-
-        ///
-        /// \brief single-class classification loss that predicts the label with the highest score.
-        ///
-        struct sclass_t
-        {
-            static constexpr auto prefix = "s-";
-
-            template <typename tarray>
-            static auto error(const tarray& target, const tarray& output)
-            {
-                if (target.size() > 1)
-                {
-                    tensor_size_t idx = -1;
-                    output.array().maxCoeff(&idx);
-
-                    return static_cast<scalar_t>(is_pos_target(target(idx)) ? 0 : 1);
-                }
-                else
-                {
-                    const auto edges   = target.array() * output.array();
-                    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
-                    return static_cast<scalar_t>((edges < epsilon).count());
-                }
-            }
-        };
-
         ///
         /// \brief class negative log-likelihood loss (also called cross-entropy loss).
         ///
@@ -412,22 +356,22 @@ namespace nano
         };
     } // namespace detail
 
-    using mae_loss_t    = flatten_loss_t<detail::mae_t<detail::absdiff_t>>;
-    using mse_loss_t    = flatten_loss_t<detail::mse_t<detail::absdiff_t>>;
-    using cauchy_loss_t = flatten_loss_t<detail::cauchy_t<detail::absdiff_t>>;
+    using mae_loss_t    = flatten_loss_t<detail::mae_t<loss::detail::absdiff_t>>;
+    using mse_loss_t    = flatten_loss_t<detail::mse_t<loss::detail::absdiff_t>>;
+    using cauchy_loss_t = flatten_loss_t<detail::cauchy_t<loss::detail::absdiff_t>>;
 
-    using shinge_loss_t         = flatten_loss_t<detail::hinge_t<detail::sclass_t>>;
-    using ssavage_loss_t        = flatten_loss_t<detail::savage_t<detail::sclass_t>>;
-    using stangent_loss_t       = flatten_loss_t<detail::tangent_t<detail::sclass_t>>;
-    using sclassnll_loss_t      = flatten_loss_t<detail::classnll_t<detail::sclass_t>>;
-    using slogistic_loss_t      = flatten_loss_t<detail::logistic_t<detail::sclass_t>>;
-    using sexponential_loss_t   = flatten_loss_t<detail::exponential_t<detail::sclass_t>>;
-    using ssquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<detail::sclass_t>>;
+    using shinge_loss_t         = flatten_loss_t<detail::hinge_t<loss::detail::sclass_t>>;
+    using ssavage_loss_t        = flatten_loss_t<detail::savage_t<loss::detail::sclass_t>>;
+    using stangent_loss_t       = flatten_loss_t<detail::tangent_t<loss::detail::sclass_t>>;
+    using sclassnll_loss_t      = flatten_loss_t<detail::classnll_t<loss::detail::sclass_t>>;
+    using slogistic_loss_t      = flatten_loss_t<detail::logistic_t<loss::detail::sclass_t>>;
+    using sexponential_loss_t   = flatten_loss_t<detail::exponential_t<loss::detail::sclass_t>>;
+    using ssquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<loss::detail::sclass_t>>;
 
-    using mhinge_loss_t         = flatten_loss_t<detail::hinge_t<detail::mclass_t>>;
-    using msavage_loss_t        = flatten_loss_t<detail::savage_t<detail::mclass_t>>;
-    using mtangent_loss_t       = flatten_loss_t<detail::tangent_t<detail::mclass_t>>;
-    using mlogistic_loss_t      = flatten_loss_t<detail::logistic_t<detail::mclass_t>>;
-    using mexponential_loss_t   = flatten_loss_t<detail::exponential_t<detail::mclass_t>>;
-    using msquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<detail::mclass_t>>;
+    using mhinge_loss_t         = flatten_loss_t<detail::hinge_t<loss::detail::mclass_t>>;
+    using msavage_loss_t        = flatten_loss_t<detail::savage_t<loss::detail::mclass_t>>;
+    using mtangent_loss_t       = flatten_loss_t<detail::tangent_t<loss::detail::mclass_t>>;
+    using mlogistic_loss_t      = flatten_loss_t<detail::logistic_t<loss::detail::mclass_t>>;
+    using mexponential_loss_t   = flatten_loss_t<detail::exponential_t<loss::detail::mclass_t>>;
+    using msquared_hinge_loss_t = flatten_loss_t<detail::squared_hinge_t<loss::detail::mclass_t>>;
 } // namespace nano
