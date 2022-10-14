@@ -3,6 +3,11 @@
 
 using namespace nano;
 
+static auto make_samples(const tensor_size_t samples)
+{
+    return arange(samples, 2 * samples);
+}
+
 static auto make_splits(const tensor_size_t samples, const tensor_size_t folds, const uint64_t seed, const string_t& id)
 {
     auto splitter = splitter_t::all().get(id);
@@ -11,7 +16,7 @@ static auto make_splits(const tensor_size_t samples, const tensor_size_t folds, 
     splitter->parameter("splitter::seed")  = seed;
     splitter->parameter("splitter::folds") = folds;
 
-    return splitter->split(arange(samples, 2 * samples));
+    return splitter->split(make_samples(samples));
 }
 
 static void check_split(const indices_t& train, const indices_t& valid, const tensor_size_t samples)
@@ -29,7 +34,7 @@ static void check_split(const indices_t& train, const indices_t& valid, const te
     UTEST_CHECK(std::is_sorted(begin(train), end(train)));
     UTEST_CHECK(std::is_sorted(begin(valid), end(valid)));
 
-    // unique splits
+    // unique sample indices per split
     UTEST_CHECK(std::adjacent_find(begin(train), end(train)) == end(train));
     UTEST_CHECK(std::adjacent_find(begin(valid), end(valid)) == end(valid));
 
@@ -47,8 +52,8 @@ UTEST_BEGIN_MODULE(test_splitter)
 
 UTEST_CASE(kfold)
 {
-    const auto folds   = 5;
-    const auto samples = 21;
+    const auto folds   = tensor_size_t{5};
+    const auto samples = tensor_size_t{21};
 
     auto all_valids = indices_t{samples};
 
@@ -68,16 +73,16 @@ UTEST_CASE(kfold)
 
         UTEST_CHECK_EQUAL(fold, folds);
 
-        // validation splits should be disjoint!
+        // validation splits should be disjoint and concatenate to make the full samples
         std::sort(begin(all_valids), end(all_valids));
-        UTEST_CHECK_EQUAL(all_valids, arange(samples, 2 * samples));
+        UTEST_CHECK_EQUAL(all_valids, make_samples(samples));
     }
 }
 
 UTEST_CASE(random)
 {
-    const auto folds   = 5;
-    const auto samples = 30;
+    const auto folds   = tensor_size_t{5};
+    const auto samples = tensor_size_t{30};
 
     for (const auto seed : {42U, 11U, 122U})
     {
@@ -97,8 +102,8 @@ UTEST_CASE(random)
 
 UTEST_CASE(consistent)
 {
-    const auto folds   = 5;
-    const auto samples = 21;
+    const auto folds   = tensor_size_t{5};
+    const auto samples = tensor_size_t{21};
 
     for (const auto& id : splitter_t::all().ids())
     {
