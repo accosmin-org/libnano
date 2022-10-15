@@ -4,35 +4,38 @@
 #### Introduction
 
 Libnano implements machine learning models to address the following types of supervised machine learning (ML) problems:
-* supervised univariate and multivariate `regression` and
-* supervised single-label or multi-label multi-class `classification`.
+* supervised univariate and multivariate `regression`,
+* supervised `binary classification` and
+* single-label or multi-label `multi-class classification`. 
 
-The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [numerical optimization module](solver.md)) within a potentially specific algorithm to minimize such functions to yield the optimum parameters of the machine learning model of interest. 
-
-The most important concepts related to training and evaluating ML models are mapped to easy-to-use and extensible interfaces. The next sections explain how these interfaces work:
-* [dataset_t](../include/nano/dataset.h) - in-memory dataset of samples consisting of input features and optional targets.
-* [generator_t](../include/nano/generator/generator.h) - generate features on the fly from a given dataset.
+The most important concepts related to training and evaluating ML models are mapped to easy-to-use and extensible interfaces. The builtin implementations are available in the associated factories. The next sections explain how these interfaces work:
+* [datasource_t](../include/nano/datasource.h) - in-memory collection of samples consisting of input features and optional targets. 
+* [generator_t](../include/nano/generator.h) - generate features on the fly from a given dataset.
+* [dataset_t](../include/nano/dataset.h) - machine learning dataset consisting of samples and feature generators.
 * [model_t](../include/nano/model.h) - machine learning model to map the input features to the associated targets.
-* [loss_t](../include/nano/loss.h) - loss and associated error functions to measure how well a model's predictions match the target.
+* [loss_t](../include/nano/loss.h) - loss function measuring how well the model's predictions match the target.
+* [tuner_t](../include/nano/tuner.h) - strategy to optimize hyper-parameters of models.
+* [splitter_t](../include/nano/splitter.h) - strategy to split samples into training and validation (testing).
 
+The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [numerical optimization module](solver.md))  to minimize such functions and to yield the optimum parameters of the machine learning model of interest.
 
 
 #### Dataset
 
-A **dataset** is a collection of samples described by features (e.g. images, measurements, time series) useful for training and evaluating ML models. Libnano has built-in support for several flavors of well-known datasets. Use the following command to download and uncompress locally these datasets to ```${HOME}/libnano/datasets```:
+A **data source** is a collection of samples described by features (e.g. images, measurements, time series) useful for training and evaluating ML models. Libnano has built-in support for several flavors of well-known datasets. Use the following command to download and uncompress locally these datasets to ```${HOME}/libnano/datasets```:
 ```
 bash scripts/download_datasets.sh --all
 ```
 so that they are available to the library.
 
-The `dataset_t` object is used for storing efficiently in-memory this kind of samples. It supports categorical (single-class and multi-class), continuous (of various storage types, like int32, float, double) and structured (of various storage types to represent for example images) input features and targets. Missing input features are supported.
+The `datasource_t` object is used for storing efficiently in-memory many kinds of samples. It supports categorical (single-class and multi-class), continuous (of various storage types, like int32, float, double) and structured (of various storage types to represent for example images) input features and targets. Missing input features are supported.
 
-The builtin datasets are available from their associated factory with:
+The builtin standard ML data sources are available from their associated factory with:
 ```
-std::cout << make_table("dataset", dataset_t::all());
+std::cout << make_table("datasource", datasource_t::all());
 // prints something like...
 |----------------|---------------------------------------------------------------------------------------------------|
-| dataset        | description                                                                                       |
+| datasource     | description                                                                                       |
 |----------------|---------------------------------------------------------------------------------------------------|
 | abalone        | predict the age of abalone from physical measurements (Waugh, 1995)                               |
 | adult          | predict if a person makes more than 50K per year (Kohavi & Becker, 1994)                          |
@@ -54,8 +57,10 @@ std::cout << make_table("dataset", dataset_t::all());
 
 It is often useful to either represent the feature values of a dataset differently (e.g. flattening them for training and evaluating linear models) or to generate new feature values (e.g. quadratic terms of the original feature values). Libnano provides the `generator_t` interface to support these cases. The generated features can be categorical (single-class and multi-class), continuous or structured and take into account if the original feature values are missing.
 
-Multiple generators can be combined on a given dataset using a `dataset_generator_t` object. Then an iterator-like wrapper simplies the usage for particular ML models as following:
+Multiple generators can be combined on a given dataset using a `dataset_t` object. Then an iterator-like wrapper simplifies the usage for particular ML models as following:
+
 * `flatten_iterator_t` - useful for flattening the generated features to train and evaluate dense models like linear models or feed-forward neural networks. This iterator supports caching of the inputs and the targets, access by grouping samples in fixed-size batches and access in both the single-threaded and the multi-threaded cases. 
+
 * `select_iterator_t` - useful for train and evaluating models that perform explicit feature selection like gradient boosting. This iterator supports grouping features by type (e.g. categorical, continuous or categorical) and access in both the single-threaded and the multi-threaded cases. 
 
 The builtin feature generators are available from their associated factory with:
@@ -117,8 +122,20 @@ The predictions and the targets are represented as 3D tensors for greater flexib
 
 The `model_t` interface represents a ML model with the following most important functionalities:
 * training with a given dataset, loss function and solver.
+* automatic tuning of any hyper-parameters using the given tuning strategy (e.g. by fitting a quadratic surrogate function). 
+* customizable strategy for splitting samples into training (to optimize parameters) and validation (to evaluate and tune hyper-parameters, e.g. regularization parameters).
 * evaluation on a given dataset and loss function.
 * serialization to and from binary streams, e.g. file. 
+
+To properly train and evaluate ML models it is advised to divide samples using a nested cross-validation-like strategy in the following categories:
+
+* *training* samples - to fit the ML model's parameters (e.g. coefficients, selected features) with the regularization hyper-parameters kept fixed.
+* *validation* samples - to evaluate and tune the hyper-parameters (e.g. regularization strength).
+* *testing* samples - to evaluate the final ML model refited on the union of the training and validation samples with the optimum hyper-parameters.
+
+Note that this process should be repeated multiple times to get an estimation of the performance distribution as ML is a stochastic process.
+
+
 
 The following ML models are builtin: 
 * [linear models](../docs/linear.md)
