@@ -53,25 +53,26 @@ UTEST_BEGIN_MODULE(test_splitter)
 UTEST_CASE(kfold)
 {
     const auto folds   = tensor_size_t{5};
-    const auto samples = tensor_size_t{21};
+    const auto samples = tensor_size_t{25};
 
     auto all_valids = indices_t{samples};
 
     for (const auto seed : {42U, 11U, 122U})
     {
-        tensor_size_t fold = 0, size = 0;
-        for (const auto& [train, valid] : make_splits(samples, folds, seed, "k-fold"))
+        const auto splits = make_splits(samples, folds, seed, "k-fold");
+        UTEST_CHECK_EQUAL(splits.size(), static_cast<size_t>(folds));
+
+        tensor_size_t size = 0;
+        for (const auto& [train, valid] : splits)
         {
-            UTEST_CHECK_EQUAL(valid.size(), (fold + 1 == folds) ? 5 : 4);
+            UTEST_CHECK_EQUAL(train.size(), 20);
+            UTEST_CHECK_EQUAL(valid.size(), 5);
 
             check_split(train, valid, samples);
-            ++fold;
 
             all_valids.vector().segment(size, valid.size()) = valid.vector();
             size += valid.size();
         }
-
-        UTEST_CHECK_EQUAL(fold, folds);
 
         // validation splits should be disjoint and concatenate to make the full samples
         std::sort(begin(all_valids), end(all_valids));
@@ -86,17 +87,16 @@ UTEST_CASE(random)
 
     for (const auto seed : {42U, 11U, 122U})
     {
-        tensor_size_t fold = 0;
-        for (const auto& [train, valid] : make_splits(samples, folds, seed, "random"))
+        const auto splits = make_splits(samples, folds, seed, "random");
+        UTEST_CHECK_EQUAL(splits.size(), static_cast<size_t>(folds));
+
+        for (const auto& [train, valid] : splits)
         {
             UTEST_CHECK_EQUAL(train.size(), 24);
             UTEST_CHECK_EQUAL(valid.size(), 6);
 
             check_split(train, valid, samples);
-            ++fold;
         }
-
-        UTEST_CHECK_EQUAL(fold, folds);
     }
 }
 
