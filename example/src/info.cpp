@@ -19,25 +19,33 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline_t cmdline("display the registered objects");
     cmdline.add("", "lsearch0", "regex to select line-search initialization methods", ".+");
     cmdline.add("", "lsearchk", "regex to select line-search strategies", ".+");
-    cmdline.add("", "solver", "regex to select numerical optimization methods", ".+");
+    cmdline.add("", "solver", "regex to select solvers", ".+");
     cmdline.add("", "loss", "regex to select loss functions", ".+");
     cmdline.add("", "datasource", "regex to select machine learning datasets", ".+");
     cmdline.add("", "generator", "regex to select feature generation methods", ".+");
     cmdline.add("", "splitter", "regex to select train-validation splitting methods", ".+");
     cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", ".+");
+    cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
+    cmdline.add("", "list-lsearchk", "list the available line-search strategies");
+    cmdline.add("", "list-solver", "list the available solvers");
+    cmdline.add("", "list-loss", "list the available loss functions");
+    cmdline.add("", "list-datasource", "list the available machine learning datasets");
+    cmdline.add("", "list-generator", "list the available feature generation methods");
+    cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
+    cmdline.add("", "list-tuner", "list the available hyper-parameter tuning methods");
     cmdline.add("", "version", "library version");
     cmdline.add("", "git-hash", "git commit hash");
 
     const auto options = cmdline.process(argc, argv);
 
-    const auto has_lsearch0   = options.has("lsearch0");
-    const auto has_lsearchk   = options.has("lsearchk");
-    const auto has_loss       = options.has("loss");
-    const auto has_solver     = options.has("solver");
-    const auto has_datasource = options.has("datasource");
-    const auto has_generator  = options.has("generator");
-    const auto has_splitter   = options.has("splitter");
-    const auto has_tuner      = options.has("tuner");
+    const auto has_lsearch0   = options.has("list-lsearch0");
+    const auto has_lsearchk   = options.has("list-lsearchk");
+    const auto has_loss       = options.has("list-loss");
+    const auto has_solver     = options.has("list-solver");
+    const auto has_datasource = options.has("list-datasource");
+    const auto has_generator  = options.has("list-generator");
+    const auto has_splitter   = options.has("list-splitter");
+    const auto has_tuner      = options.has("list-tuner");
     const auto has_version    = options.has("version");
     const auto has_git_hash   = options.has("git-hash");
 
@@ -48,7 +56,7 @@ static int unsafe_main(int argc, const char* argv[])
     }
 
     if (!has_lsearch0 && !has_lsearchk && !has_solver && !has_loss && !has_datasource && !has_generator &&
-        !has_version && !has_git_hash)
+        !has_splitter && !has_tuner && !has_version && !has_git_hash)
     {
         cmdline.usage();
         return EXIT_FAILURE;

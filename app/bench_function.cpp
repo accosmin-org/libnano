@@ -67,7 +67,7 @@ static int unsafe_main(int argc, const char* argv[])
 
     if (options.has("list-function"))
     {
-        std::cout << make_table("function", function_t::all());
+        std::cout << make_table("function", function_t::all(), options.get<string_t>("function"));
         return EXIT_SUCCESS;
     }
 
