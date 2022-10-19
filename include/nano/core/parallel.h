@@ -167,7 +167,7 @@ namespace nano::parallel
         template <typename tsize, typename toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
         void map(tsize elements, const toperator& op, bool raise = true)
         {
-            if (size() == 1)
+            if (size() == 1 || elements <= 1)
             {
                 for (tsize index = 0; index < elements; ++index)
                 {
@@ -199,7 +199,7 @@ namespace nano::parallel
         {
             assert(chunksize >= tsize(1));
 
-            if (size() == 1)
+            if (size() == 1 || chunksize >= elements)
             {
                 for (tsize begin = 0; begin < elements; begin += chunksize)
                 {
