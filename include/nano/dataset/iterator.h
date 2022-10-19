@@ -100,14 +100,23 @@ namespace nano
         void scaling(scaling_type);
 
         ///
-        /// \brief access functions.
+        /// \brief returns the batch size in number of samples.
         ///
         auto batch() const { return m_batch; }
 
+        ///
+        /// \brief returns the feature value scaling method.
+        ///
         auto scaling() const { return m_scaling; }
 
+        ///
+        /// \brief returns the sample indices.
+        ///
         const auto& samples() const { return m_samples; }
 
+        ///
+        /// \brief returns statistics of the targets (e.g. useful for weighting samples if unbalanced classification).
+        ///
         const auto& targets_stats() const { return m_targets_stats; }
 
     protected:
@@ -161,7 +170,7 @@ namespace nano
         void loop(const flatten_targets_callback_t&) const;
 
         ///
-        /// \brief access functions.
+        /// \brief returns statistics of the flatten feature values.
         ///
         const auto& flatten_stats() const { return m_flatten_stats; }
 

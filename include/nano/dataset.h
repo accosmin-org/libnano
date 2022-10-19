@@ -100,19 +100,39 @@ namespace nano
         scalar_cmap_t select(indices_cmap_t samples, tensor_size_t feature, scalar_mem_t& buffer) const;
         struct_cmap_t select(indices_cmap_t samples, tensor_size_t feature, struct_mem_t& buffer) const;
 
-        // access functions
-        auto type() const { return m_datasource.type(); }
+        ///
+        /// \brief returns the appropriate mathine learning task (by inspecting the target feature).
+        ///
+        task_type type() const { return m_datasource.type(); }
 
-        auto samples() const { return m_datasource.samples(); }
+        ///
+        /// \brief returns the total number of samples.
+        ///
+        tensor_size_t samples() const { return m_datasource.samples(); }
 
+        ///
+        /// \brief returns the original data source.
+        ///
         const datasource_t& datasource() const { return m_datasource; }
 
+        ///
+        /// \brief returns the indices of the single-label categorical features (including the generated ones).
+        ///
         const indices_t& sclass_features() const { return m_select_stats.m_sclass_features; }
 
+        ///
+        /// \brief returns the indices of the multi-label categorical features (including the generated ones).
+        ///
         const indices_t& mclass_features() const { return m_select_stats.m_mclass_features; }
 
+        ///
+        /// \brief returns the indices of the scalar continuous features (including the generated ones).
+        ///
         const indices_t& scalar_features() const { return m_select_stats.m_scalar_features; }
 
+        ///
+        /// \brief returns the indices of the structured continuous features (including the generated ones).
+        ///
         const indices_t& struct_features() const { return m_select_stats.m_struct_features; }
 
     private:
