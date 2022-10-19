@@ -250,6 +250,30 @@ void select_iterator_t::loop(indices_cmap_t samples, const struct_callback_t& ca
     return loop(samples, dataset().struct_features(), callback);
 }
 
+void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const sclass_callback_t& callback) const
+{
+    const auto tnum = size_t{0U};
+    callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_sclass));
+}
+
+void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const mclass_callback_t& callback) const
+{
+    const auto tnum = size_t{0U};
+    callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_mclass));
+}
+
+void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const scalar_callback_t& callback) const
+{
+    const auto tnum = size_t{0U};
+    callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_scalar));
+}
+
+void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const struct_callback_t& callback) const
+{
+    const auto tnum = size_t{0U};
+    callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_struct));
+}
+
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const sclass_callback_t& callback) const
 {
     map(features.size(),

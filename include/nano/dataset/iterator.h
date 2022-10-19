@@ -191,7 +191,7 @@ namespace nano
         explicit select_iterator_t(const dataset_t&, size_t threads = parallel::pool_t::max_size());
 
         ///
-        /// \brief loop through all features of the same type with the following callback:
+        /// \brief loop through all features of the compatible type with the following callback:
         ///     - op(tensor_size_t feature_index, size_t thread_number, ... feature_values)
         ///
         void loop(indices_cmap_t samples, const sclass_callback_t&) const;
@@ -200,7 +200,16 @@ namespace nano
         void loop(indices_cmap_t samples, const struct_callback_t&) const;
 
         ///
-        /// \brief loop through the given features of the same type with the following callback:
+        /// \brief loop through the samples of the given feature compatible type with the following callback:
+        ///     - op(tensor_size_t feature_index, size_t thread_number, ... feature_values)
+        ///
+        void loop(indices_cmap_t samples, tensor_size_t feature, const sclass_callback_t&) const;
+        void loop(indices_cmap_t samples, tensor_size_t feature, const mclass_callback_t&) const;
+        void loop(indices_cmap_t samples, tensor_size_t feature, const scalar_callback_t&) const;
+        void loop(indices_cmap_t samples, tensor_size_t feature, const struct_callback_t&) const;
+
+        ///
+        /// \brief loop through the given features of the compatible type with the following callback:
         ///     - op(tensor_size_t feature_index, size_t thread_number, ... feature_values)
         ///
         void loop(indices_cmap_t samples, indices_cmap_t features, const sclass_callback_t&) const;
