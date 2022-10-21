@@ -1,7 +1,9 @@
+#include <nano/dataset.h>
 #include <nano/gboost/function.h>
-#include <nano/gboost/util.h>
+#include <nano/wlearner/reduce.h>
 
 using namespace nano;
+using namespace nano::gboost;
 
 class cache_t
 {
@@ -50,151 +52,158 @@ public:
     vector_t m_gb1{0}, m_gb2{0}; ///< first and second order momentum of the gradient wrt scale
 };
 
-gboost_function_t::gboost_function_t(tensor_size_t dims)
-    : function_t("gboost_function", dims, convexity::yes)
-{
-}
-
-void gboost_function_t::vAreg(scalar_t vAreg)
-{
-    m_vAreg.set(vAreg);
-}
-
-void gboost_function_t::batch(tensor_size_t batch)
-{
-    m_batch.set(batch);
-}
-
-gboost_scale_function_t::gboost_scale_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples,
-                                                 const cluster_t& cluster, const tensor4d_t& outputs,
-                                                 const tensor4d_t& woutputs)
-    : gboost_function_t(cluster.groups())
+scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg,
+                                   const cluster_t& cluster, const tensor4d_t& outputs, const tensor4d_t& woutputs)
+    : function_t("gboost-scale", cluster.groups())
+    , m_iterator(iterator)
     , m_loss(loss)
-    , m_dataset(dataset)
-    , m_samples(samples)
+    , m_vAreg(vAreg)
     , m_cluster(cluster)
     , m_outputs(outputs)
     , m_woutputs(woutputs)
 {
     assert(m_outputs.dims() == m_woutputs.dims());
-    assert(m_outputs.dims() == cat_dims(samples.size(), m_dataset.tdims()));
+    assert(m_outputs.dims() == cat_dims(iterator.samples().size(), iterator.dataset().target_dims()));
+
+    smooth(loss.smooth());
+    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
 }
 
-scalar_t gboost_scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+rfunction_t scale_function_t::clone() const
+{
+    return std::make_unique<scale_function_t>(*this);
+}
+
+scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
     assert(!gx || gx->size() == x.size());
     assert(x.size() == m_cluster.groups());
 
-    std::vector<cache_t> caches(tpool_t::size(), cache_t{x.size()});
-    loopr(m_samples.size(), batch(),
-          [&](tensor_size_t begin, tensor_size_t end, size_t tnum)
-          {
-              assert(tnum < caches.size());
-              auto& cache = caches[tnum];
+    const auto& samples = m_iterator.samples();
 
-              const auto range   = make_range(begin, end);
-              const auto targets = m_dataset.targets(m_samples.slice(range));
+    std::vector<cache_t> caches(m_iterator.concurrency(), cache_t{x.size()});
+    m_iterator.loop(
+        [&](const tensor_range_t& range, const size_t tnum, tensor4d_cmap_t targets)
+        {
+            assert(tnum < caches.size());
+            auto& cache = caches[tnum];
 
-              // output = output(strong learner) + scale * output(weak learner)
-              tensor4d_t outputs(targets.dims());
-              for (tensor_size_t i = begin; i < end; ++i)
-              {
-                  const auto group                  = m_cluster.group(m_samples(i));
-                  const auto scale                  = (group < 0) ? 0.0 : x(group);
-                  outputs.vector(i - range.begin()) = m_outputs.vector(i) + scale * m_woutputs.vector(i);
-              }
+            const auto begin = range.begin();
+            const auto end   = range.end();
 
-              tensor1d_t values;
-              m_loss.value(targets, outputs, values);
-              cache.update(values);
+            // output = output(strong learner) + scale * output(weak learner)
+            tensor4d_t outputs(targets.dims());
+            for (tensor_size_t i = begin; i < end; ++i)
+            {
+                const auto group          = m_cluster.group(samples(i));
+                const auto scale          = (group < 0) ? 0.0 : x(group);
+                outputs.vector(i - begin) = m_outputs.vector(i) + scale * m_woutputs.vector(i);
+            }
 
-              if (gx != nullptr)
-              {
-                  tensor4d_t vgrads;
-                  m_loss.vgrad(targets, outputs, vgrads);
+            tensor1d_t values;
+            m_loss.value(targets, outputs, values);
+            cache.update(values);
 
-                  for (tensor_size_t i = begin; i < end; ++i)
-                  {
-                      const auto group = m_cluster.group(m_samples(i));
-                      if (group < 0)
-                      {
-                          continue;
-                      }
-                      const auto gw = vgrads.vector(i - begin).dot(m_woutputs.vector(i));
+            if (gx != nullptr)
+            {
+                tensor4d_t vgrads;
+                m_loss.vgrad(targets, outputs, vgrads);
 
-                      cache.m_gb1(group) += gw;
-                      cache.m_gb2(group) += gw * values(i - begin);
-                  }
-              }
-          });
+                for (tensor_size_t i = begin; i < end; ++i)
+                {
+                    const auto group = m_cluster.group(samples(i));
+                    if (group < 0)
+                    {
+                        continue;
+                    }
+                    const auto gw = vgrads.vector(i - begin).dot(m_woutputs.vector(i));
+
+                    cache.m_gb1(group) += gw;
+                    cache.m_gb2(group) += gw * values(i - begin);
+                }
+            }
+        });
 
     // OK
-    const auto& cache0 = ::nano::gboost::sum_reduce(caches, m_samples.size());
-    return cache0.vgrad(vAreg(), gx);
+    const auto& cache0 = ::nano::wlearner::sum_reduce(caches, samples.size());
+    return cache0.vgrad(m_vAreg, gx);
 }
 
-gboost_bias_function_t::gboost_bias_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples)
-    : gboost_function_t(::nano::size(dataset.tdims()))
+bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)
+    : function_t("gboost-bias", ::nano::size(iterator.dataset().target_dims()))
+    , m_iterator(iterator)
     , m_loss(loss)
-    , m_dataset(dataset)
-    , m_samples(samples)
+    , m_vAreg(vAreg)
 {
+    smooth(loss.smooth());
+    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
 }
 
-scalar_t gboost_bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+rfunction_t bias_function_t::clone() const
 {
-    const auto tsize = nano::size(m_dataset.tdims());
+    return std::make_unique<bias_function_t>(*this);
+}
+
+scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+{
+    const auto& samples = m_iterator.samples();
+    const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
 
     assert(!gx || gx->size() == x.size());
     assert(x.size() == tsize);
 
-    std::vector<cache_t> caches(tpool_t::size(), cache_t{x.size()});
-    loopr(m_samples.size(), batch(),
-          [&](tensor_size_t begin, tensor_size_t end, size_t tnum)
-          {
-              assert(tnum < caches.size());
-              auto& cache = caches[tnum];
+    std::vector<cache_t> caches(m_iterator.concurrency(), cache_t{x.size()});
+    m_iterator.loop(
+        [&](const tensor_range_t& range, const size_t tnum, tensor4d_cmap_t targets)
+        {
+            assert(tnum < caches.size());
+            auto& cache = caches[tnum];
 
-              const auto range   = make_range(begin, end);
-              const auto targets = m_dataset.targets(m_samples.slice(range));
+            // output = bias (fixed vector)
+            tensor4d_t outputs(targets.dims());
+            outputs.reshape(range.size(), -1).matrix().rowwise() = x.transpose();
 
-              // output = bias (fixed vector)
-              tensor4d_t outputs(targets.dims());
-              outputs.reshape(range.size(), -1).matrix().rowwise() = x.transpose();
+            tensor1d_t values;
+            m_loss.value(targets, outputs, values);
+            cache.update(values);
 
-              tensor1d_t values;
-              m_loss.value(targets, outputs, values);
-              cache.update(values);
+            if (gx != nullptr)
+            {
+                tensor4d_t vgrads;
+                m_loss.vgrad(targets, outputs, vgrads);
+                const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
 
-              if (gx != nullptr)
-              {
-                  tensor4d_t vgrads;
-                  m_loss.vgrad(targets, outputs, vgrads);
-                  const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
-
-                  cache.m_gb1 += gmatrix.colwise().sum();
-                  cache.m_gb2 += gmatrix.transpose() * values.vector();
-              }
-          });
+                cache.m_gb1 += gmatrix.colwise().sum();
+                cache.m_gb2 += gmatrix.transpose() * values.vector();
+            }
+        });
 
     // OK
-    const auto& cache0 = ::nano::gboost::sum_reduce(caches, m_samples.size());
-    return cache0.vgrad(vAreg(), gx);
+    const auto& cache0 = ::nano::wlearner::sum_reduce(caches, samples.size());
+    return cache0.vgrad(m_vAreg, gx);
 }
 
-gboost_grads_function_t::gboost_grads_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples)
-    : gboost_function_t(samples.size() * nano::size(dataset.tdims()))
+grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)
+    : function_t("gboost-grads", iterator.samples().size() * nano::size(iterator.dataset().target_dims()))
+    , m_iterator(iterator)
     , m_loss(loss)
-    , m_dataset(dataset)
-    , m_samples(samples)
-    , m_values(samples.size())
-    , m_vgrads(cat_dims(samples.size(), dataset.tdims()))
+    , m_vAreg(vAreg)
+    , m_values(iterator.samples().size())
+    , m_vgrads(cat_dims(iterator.samples().size(), iterator.dataset().target_dims()))
 {
+    smooth(loss.smooth());
+    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
 }
 
-scalar_t gboost_grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+rfunction_t grads_function_t::clone() const
 {
-    const auto odims = cat_dims(m_samples.size(), m_dataset.tdims());
+    return std::make_unique<grads_function_t>(*this);
+}
+
+scalar_t grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+{
+    const auto& samples = m_iterator.samples();
+    const auto  odims   = cat_dims(samples.size(), m_iterator.dataset().target_dims());
 
     assert(!gx || gx->size() == x.size());
     assert(x.size() == nano::size(odims));
@@ -203,31 +212,32 @@ scalar_t gboost_grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) cons
     if (gx != nullptr)
     {
         *gx = grads.vector();
-        *gx /= static_cast<scalar_t>(m_samples.size());
+        *gx /= static_cast<scalar_t>(samples.size());
     }
 
     // OK
     const auto vm1 = m_values.vector().mean();
     const auto vm2 = m_values.array().square().mean();
-    return vm1 + vAreg() * (vm2 - vm1 * vm1);
+    return vm1 + m_vAreg * (vm2 - vm1 * vm1);
 }
 
-const tensor4d_t& gboost_grads_function_t::gradients(const tensor4d_cmap_t& outputs) const
+const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) const
 {
     assert(outputs.dims() == m_vgrads.dims());
 
-    loopr(m_samples.size(), batch(),
-          [&](tensor_size_t begin, tensor_size_t end, size_t)
-          {
-              const auto range   = make_range(begin, end);
-              const auto targets = m_dataset.targets(m_samples.slice(range));
-              m_loss.value(targets, outputs.slice(range), m_values.slice(range));
-              m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));
-          });
+    m_iterator.loop(
+        [&](const tensor_range_t& range, size_t, tensor4d_cmap_t targets)
+        {
+            m_loss.value(targets, outputs.slice(range), m_values.slice(range));
+            m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));
+        });
 
     const auto vm1 = m_values.vector().mean();
-    loopi(m_values.size(),
-          [&](tensor_size_t i, size_t) { m_vgrads.vector(i) *= 1.0 + 2.0 * vAreg() * (m_values(i) - vm1); });
+    // FIXME: rewrite this loop as a more efficient Eigen operation
+    for (tensor_size_t i = 0; i < m_vgrads.size<0>(); ++i)
+    {
+        m_vgrads.vector(i) *= 1.0 + 2.0 * m_vAreg * (m_values(i) - vm1);
+    }
 
     return m_vgrads;
 }

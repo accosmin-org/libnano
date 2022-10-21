@@ -1,47 +1,12 @@
 #pragma once
 
-#include <nano/dataset.h>
+#include <nano/dataset/iterator.h>
 #include <nano/function.h>
 #include <nano/loss.h>
-#include <nano/mlearn/cluster.h>
-#include <nano/parameter.h>
+#include <nano/model/cluster.h>
 
-namespace nano
+namespace nano::gboost
 {
-    ///
-    /// \brief base class for the optimization criteria of a Gradient Boosting model,
-    ///     using a given loss function.
-    ///
-    /// NB: the ERM loss can be optionally regularized by penalizing:
-    ///     - (1) the variance of the loss values - like in VadaBoost
-    ///
-    class NANO_PUBLIC gboost_function_t : public function_t
-    {
-    public:
-        ///
-        /// \brief constructor
-        ///
-        explicit gboost_function_t(tensor_size_t dims);
-
-        ///
-        /// \brief change parameters
-        ///
-        void vAreg(scalar_t vAreg);
-        void batch(tensor_size_t batch);
-
-        ///
-        /// \brief access functions
-        ///
-        auto vAreg() const { return m_vAreg.get(); }
-
-        auto batch() const { return m_batch.get(); }
-
-    private:
-        // attributes
-        sparam1_t m_vAreg{"gboost::VA", 0, LE, 0, LE, 1e+8};     ///< regularization factor - see (1)
-        iparam1_t m_batch{"gboost::batch", 1, LE, 32, LE, 4092}; ///< batch size in number of samples
-    };
-
     ///
     /// \brief the criterion used for computing the gradient wrt outputs of a Gradient Boosting model,
     ///     using a given loss function:
@@ -51,13 +16,21 @@ namespace nano
     /// NB: the function_t interface is used only for testing/debugging
     ///     as it computes more than needed when training a Gradient Boosting model.
     ///
-    class NANO_PUBLIC gboost_grads_function_t final : public gboost_function_t
+    /// NB: the ERM loss can be optionally regularized by penalizing:
+    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///
+    class NANO_PUBLIC grads_function_t final : public function_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        gboost_grads_function_t(const loss_t&, const dataset_t&, const indices_t&);
+        grads_function_t(const targets_iterator_t&, const loss_t&, scalar_t vAreg);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t
@@ -71,11 +44,11 @@ namespace nano
 
     private:
         // attributes
-        const loss_t&      m_loss;    ///<
-        const dataset_t&   m_dataset; ///<
-        const indices_t&   m_samples; ///<
-        mutable tensor1d_t m_values;  ///<
-        mutable tensor4d_t m_vgrads;  ///<
+        const targets_iterator_t& m_iterator;   ///<
+        const loss_t&             m_loss;       ///<
+        scalar_t                  m_vAreg{0.0}; ///<
+        mutable tensor1d_t        m_values;     ///<
+        mutable tensor4d_t        m_vgrads;     ///<
     };
 
     ///
@@ -84,13 +57,21 @@ namespace nano
     ///
     ///     f(x) = EXPECTATION[loss(target_i, x)] + vAreg * VARIANCE[loss(target_i, x)]
     ///
-    class NANO_PUBLIC gboost_bias_function_t final : public gboost_function_t
+    /// NB: the ERM loss can be optionally regularized by penalizing:
+    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///
+    class NANO_PUBLIC bias_function_t final : public function_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        gboost_bias_function_t(const loss_t&, const dataset_t&, const indices_t&);
+        bias_function_t(const targets_iterator_t&, const loss_t&, scalar_t vAreg);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t
@@ -99,9 +80,9 @@ namespace nano
 
     private:
         // attributes
-        const loss_t&    m_loss;    ///<
-        const dataset_t& m_dataset; ///<
-        const indices_t& m_samples; ///<
+        const targets_iterator_t& m_iterator;   ///<
+        const loss_t&             m_loss;       ///<
+        scalar_t                  m_vAreg{0.0}; ///<
     };
 
     ///
@@ -111,14 +92,22 @@ namespace nano
     ///     f(x) = EXPECTATION[loss(target_i, output_i + x[cluster_i] * woutput_i)] +
     ///            vAreg * VARIANCE[loss(target_i, output_i + x[cluster_i] * woutput_i)]
     ///
-    class NANO_PUBLIC gboost_scale_function_t final : public gboost_function_t
+    /// NB: the ERM loss can be optionally regularized by penalizing:
+    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///
+    class NANO_PUBLIC scale_function_t final : public function_t
     {
     public:
         ///
         /// \brief constructor
         ///
-        gboost_scale_function_t(const loss_t&, const dataset_t&, const indices_t&, const cluster_t&,
-                                const tensor4d_t& outputs, const tensor4d_t& woutputs);
+        scale_function_t(const targets_iterator_t&, const loss_t&, scalar_t vAreg, const cluster_t&,
+                         const tensor4d_t& outputs, const tensor4d_t& woutputs);
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rfunction_t clone() const override;
 
         ///
         /// \brief @see function_t
@@ -127,11 +116,11 @@ namespace nano
 
     private:
         // attributes
-        const loss_t&     m_loss;     ///<
-        const dataset_t&  m_dataset;  ///<
-        const indices_t&  m_samples;  ///<
-        const cluster_t&  m_cluster;  ///<
-        const tensor4d_t& m_outputs;  ///< predictions of the strong learner so far
-        const tensor4d_t& m_woutputs; ///< predictions of the current weak learner
+        const targets_iterator_t& m_iterator;   ///<
+        const loss_t&             m_loss;       ///<
+        scalar_t                  m_vAreg{0.0}; ///<
+        const cluster_t&          m_cluster;    ///<
+        const tensor4d_t&         m_outputs;    ///< predictions of the strong learner so far
+        const tensor4d_t&         m_woutputs;   ///< predictions of the current weak learner
     };
-} // namespace nano
+} // namespace nano::gboost

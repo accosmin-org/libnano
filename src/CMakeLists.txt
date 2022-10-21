@@ -92,15 +92,16 @@ target_sources(nano PRIVATE
     splitter/kfold.cpp
     splitter/random.cpp
     #gboost/model.cpp
-    #gboost/function.cpp
-    #gboost/wlearner.cpp
-    #gboost/wlearner_dstep.cpp
-    #gboost/wlearner_dtree.cpp
-    #gboost/wlearner_hinge.cpp
-    #gboost/wlearner_stump.cpp
-    #gboost/wlearner_table.cpp
-    #gboost/wlearner_affine.cpp
-    #gboost/wlearner_feature1.cpp
+    gboost/function.cpp
+    wlearner.cpp
+    wlearner/util.cpp
+    wlearner/single.cpp
+    wlearner/affine.cpp
+    wlearner/dstep.cpp
+    wlearner/dtree.cpp
+    wlearner/hinge.cpp
+    wlearner/stump.cpp
+    wlearner/table.cpp
     linear/util.cpp
     linear/cache.cpp
     linear/model.cpp

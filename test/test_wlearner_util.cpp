@@ -1,4 +1,6 @@
-#include <nano/gboost/util.h>
+#include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/reduce.h>
+#include <nano/wlearner/util.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -29,7 +31,29 @@ struct cache_t
     tensor_size_t m_index{0};
 };
 
-UTEST_BEGIN_MODULE(test_gboost_util)
+UTEST_BEGIN_MODULE(test_wlearner_util)
+
+UTEST_CASE(scale)
+{
+    const auto tables0 = make_tensor<scalar_t>(make_dims(4, 1, 1, 3), 1, 1, 1, 2, 3, 3, 3, 4, 5, 4, 4, 4);
+
+    {
+        const auto scale    = make_vector<scalar_t>(7.0);
+        const auto expected = make_tensor<scalar_t>(tables0.dims(), 7, 7, 7, 14, 21, 21, 21, 28, 35, 28, 28, 28);
+
+        auto tables = tables0;
+        UTEST_REQUIRE_NOTHROW(wlearner::scale(tables, scale));
+        UTEST_CHECK_CLOSE(tables, expected, 1e-15);
+    }
+    {
+        const auto scale    = make_vector<scalar_t>(5.0, 7.0, 3.0, 2.0);
+        const auto expected = make_tensor<scalar_t>(tables0.dims(), 5, 5, 5, 14, 21, 21, 9, 12, 15, 8, 8, 8);
+
+        auto tables = tables0;
+        UTEST_REQUIRE_NOTHROW(wlearner::scale(tables, scale));
+        UTEST_CHECK_CLOSE(tables, expected, 1e-15);
+    }
+}
 
 UTEST_CASE(reduce)
 {
@@ -39,11 +63,11 @@ UTEST_CASE(reduce)
     caches.emplace_back(2.0, tensor_size_t{2});
     caches.emplace_back(5.0, tensor_size_t{3});
 
-    const auto& min = gboost::min_reduce(caches);
+    const auto& min = wlearner::min_reduce(caches);
     UTEST_CHECK_EQUAL(min.m_index, 1);
     UTEST_CHECK_CLOSE(min.m_score, 0.0, 1e-12);
 
-    const auto& sum = gboost::sum_reduce(caches, 10);
+    const auto& sum = wlearner::sum_reduce(caches, 10);
     UTEST_CHECK_EQUAL(sum.m_index, 0);
     UTEST_CHECK_CLOSE(sum.m_score, 0.8, 1e-12);
 }
@@ -52,7 +76,7 @@ UTEST_CASE(accumulator)
 {
     const auto tdims = make_dims(3, 1, 1);
 
-    auto acc = gboost::accumulator_t(tdims);
+    auto acc = wlearner::accumulator_t(tdims);
     acc.clear(2);
 
     UTEST_CHECK_EQUAL(acc.fvalues(), 2);

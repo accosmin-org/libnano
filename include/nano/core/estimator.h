@@ -101,6 +101,6 @@ namespace nano
         parameters_t m_parameters;                           ///<
     };
 
-    NANO_PUBLIC std::istream& read(std::istream& stream, estimator_t&);
-    NANO_PUBLIC std::ostream& write(std::ostream& stream, const estimator_t&);
+    NANO_PUBLIC std::istream& read(std::istream&, estimator_t&);
+    NANO_PUBLIC std::ostream& write(std::ostream&, const estimator_t&);
 } // namespace nano

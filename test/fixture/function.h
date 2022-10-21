@@ -85,7 +85,7 @@ using namespace nano;
     }
 }
 
-[[maybe_unused]] static auto check_convexity(const function_t& function, int trials = 100)
+[[maybe_unused]] static auto check_convexity(const function_t& function, const int trials = 100)
 {
     for (auto trial = 0; trial < trials && function.convex(); ++trial)
     {

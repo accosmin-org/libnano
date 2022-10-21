@@ -1,11 +1,13 @@
 #include <iomanip>
-#include <nano/gboost/util.h>
-#include <nano/gboost/wlearner_hinge.h>
-#include <nano/logger.h>
-#include <nano/tensor/stream.h>
+#include <nano/core/logger.h>
+#include <nano/core/stream.h>
+#include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/hinge.h>
+#include <nano/wlearner/reduce.h>
+#include <nano/wlearner/util.h>
 
 using namespace nano;
-using namespace nano::gboost;
+using namespace nano::wlearner;
 
 namespace
 {
@@ -47,7 +49,7 @@ namespace
 
         auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
 
-        void clear(const tensor4d_t& gradients, const tensor1d_t& values, const indices_t& samples)
+        void clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
         {
             m_acc_sum.clear();
             m_acc_neg.clear();
@@ -56,7 +58,7 @@ namespace
             m_ivalues.reserve(static_cast<size_t>(values.size()));
             for (tensor_size_t i = 0; i < values.size(); ++i)
             {
-                if (!feature_t::missing(values(i)))
+                if (std::isfinite(values(i)))
                 {
                     m_ivalues.emplace_back(values(i), samples(i));
                     m_acc_sum.update(values(i), gradients.array(samples(i)));
@@ -115,88 +117,97 @@ namespace
         tensor4d_t    m_tables;                            ///<
         tensor_size_t m_feature{-1};                       ///<
         scalar_t      m_threshold{0};                      ///<
-        ::nano::hinge m_hinge{::nano::hinge::left};        ///<
+        hinge_type    m_hinge{hinge_type::left};           ///<
         scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
     };
 } // namespace
 
-wlearner_hinge_t::wlearner_hinge_t() = default;
-
-void wlearner_hinge_t::read(std::istream& stream)
+hinge_wlearner_t::hinge_wlearner_t()
+    : single_feature_wlearner_t("hinge")
 {
-    wlearner_feature1_t::read(stream);
+}
+
+std::istream& hinge_wlearner_t::read(std::istream& stream)
+{
+    single_feature_wlearner_t::read(stream);
 
     critical(!::nano::read(stream, m_threshold) || !::nano::read_cast<uint32_t>(stream, m_hinge),
              "hinge weak learner: failed to read from stream!");
+
+    return stream;
 }
 
-void wlearner_hinge_t::write(std::ostream& stream) const
+std::ostream& hinge_wlearner_t::write(std::ostream& stream) const
 {
-    wlearner_feature1_t::write(stream);
+    single_feature_wlearner_t::write(stream);
 
     critical(!::nano::write(stream, m_threshold) || !::nano::write(stream, static_cast<uint32_t>(m_hinge)),
              "hinge weak learner: failed to write to stream!");
+
+    return stream;
 }
 
-rwlearner_t wlearner_hinge_t::clone() const
+rwlearner_t hinge_wlearner_t::clone() const
 {
-    return std::make_unique<wlearner_hinge_t>(*this);
+    return std::make_unique<hinge_wlearner_t>(*this);
 }
 
-scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdims()));
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
 
-    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdims()});
-    wlearner_feature1_t::loopc(dataset, samples,
-                               [&](tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
-                               {
-                                   // update accumulators
-                                   auto& cache = caches[tnum];
-                                   cache.clear(gradients, fvalues, samples);
-                                   for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++iv)
-                                   {
-                                       const auto& ivalue1 = cache.m_ivalues[iv + 0];
-                                       const auto& ivalue2 = cache.m_ivalues[iv + 1];
+    select_iterator_t it{dataset};
 
-                                       cache.m_acc_neg.update(ivalue1.first, gradients.array(ivalue1.second));
+    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
+            {
+                // update accumulators
+                auto& cache = caches[tnum];
+                cache.clear(gradients, fvalues, samples);
+                for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++iv)
+                {
+                    const auto& ivalue1 = cache.m_ivalues[iv + 0];
+                    const auto& ivalue2 = cache.m_ivalues[iv + 1];
 
-                                       if (ivalue1.first < ivalue2.first)
-                                       {
-                                           // update the parameters if a better feature
-                                           const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
+                    cache.m_acc_neg.update(ivalue1.first, gradients.array(ivalue1.second));
 
-                                           // ... try the left hinge
-                                           const auto score_neg = cache.score_neg(threshold);
-                                           if (std::isfinite(score_neg) && score_neg < cache.m_score)
-                                           {
-                                               cache.m_score           = score_neg;
-                                               cache.m_feature         = feature;
-                                               cache.m_hinge           = hinge::left;
-                                               cache.m_threshold       = threshold;
-                                               cache.m_tables.array(0) = cache.beta_neg(threshold);
-                                               cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
-                                           }
+                    if (ivalue1.first < ivalue2.first)
+                    {
+                        // update the parameters if a better feature
+                        const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
 
-                                           // ... try the right hinge
-                                           const auto score_pos = cache.score_pos(threshold);
-                                           if (std::isfinite(score_pos) && score_pos < cache.m_score)
-                                           {
-                                               cache.m_score           = score_pos;
-                                               cache.m_feature         = feature;
-                                               cache.m_hinge           = hinge::right;
-                                               cache.m_threshold       = threshold;
-                                               cache.m_tables.array(0) = cache.beta_pos(threshold);
-                                               cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
-                                           }
-                                       }
-                                   }
-                               });
+                        // ... try the left hinge
+                        const auto score_neg = cache.score_neg(threshold);
+                        if (std::isfinite(score_neg) && score_neg < cache.m_score)
+                        {
+                            cache.m_score           = score_neg;
+                            cache.m_feature         = feature;
+                            cache.m_hinge           = hinge_type::left;
+                            cache.m_threshold       = threshold;
+                            cache.m_tables.array(0) = cache.beta_neg(threshold);
+                            cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
+                        }
+
+                        // ... try the right hinge
+                        const auto score_pos = cache.score_pos(threshold);
+                        if (std::isfinite(score_pos) && score_pos < cache.m_score)
+                        {
+                            cache.m_score           = score_pos;
+                            cache.m_feature         = feature;
+                            cache.m_hinge           = hinge_type::right;
+                            cache.m_threshold       = threshold;
+                            cache.m_tables.array(0) = cache.beta_pos(threshold);
+                            cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
+                        }
+                    }
+                }
+            });
 
     // OK, return and store the optimum feature across threads
-    const auto& best = ::nano::gboost::min_reduce(caches);
+    const auto& best = min_reduce(caches);
 
     log_info() << std::fixed << std::setprecision(8) << " === hinge(feature=" << best.m_feature << "|"
                << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
@@ -209,20 +220,46 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, const indices_t& sample
     return best.m_score;
 }
 
-void wlearner_hinge_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    wlearner_feature1_t::predict(dataset, samples, outputs,
-                                 [&](scalar_t x, tensor3d_map_t&& outputs)
-                                 {
-                                     if ((x < m_threshold && m_hinge == hinge::left) ||
-                                         (x >= m_threshold && m_hinge == hinge::right))
-                                     {
-                                         outputs.vector() += vector(0) * x + vector(1);
-                                     }
-                                 });
+    assert(tables().dims() == cat_dims(2, dataset.target_dims()));
+    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
+
+    const auto w = vector(0);
+    const auto b = vector(1);
+
+    switch (m_hinge)
+    {
+    case hinge_type::left:
+        loop_scalar(dataset, samples, feature(),
+                    [&](const tensor_size_t i, const scalar_t value)
+                    {
+                        if (value < m_threshold)
+                        {
+                            outputs.vector(i) += w * value + b;
+                        }
+                    });
+        break;
+    default:
+        loop_scalar(dataset, samples, feature(),
+                    [&](const tensor_size_t i, const scalar_t value)
+                    {
+                        if (value >= m_threshold && m_hinge == hinge_type::right)
+                        {
+                            outputs.vector(i) += w * value + b;
+                        }
+                    });
+        break;
+    }
 }
 
-cluster_t wlearner_hinge_t::split(const dataset_t& dataset, const indices_t& samples) const
+cluster_t hinge_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
-    return wlearner_feature1_t::split(dataset, samples, 1, [&](scalar_t) { return 0; });
+    cluster_t cluster(dataset.samples(), 2);
+
+    loop_scalar(dataset, samples, feature(),
+                [&](const tensor_size_t i, const scalar_t value)
+                { cluster.assign(samples(i), value < m_threshold ? 0 : 1); });
+
+    return cluster;
 }

@@ -1,25 +1,15 @@
 #pragma once
 
-#include <nano/gboost/wlearner_feature1.h>
+#include <nano/wlearner/single.h>
 
 namespace nano
 {
-    class wlearner_dstep_t;
-
-    template <>
-    struct factory_traits_t<wlearner_dstep_t>
-    {
-        static string_t id() { return "dstep"; }
-
-        static string_t description() { return "discrete step weak learner"; }
-    };
-
     ///
     /// \brief a discrete step weak learner that returns a constant for a chosen discrete feature value:
     ///     dstep(x) =
     ///     {
     ///         beta, if x(feature) is given and x(feature) == fvalue,
-    ///         beta, if x(feature) is given and x(feature) != fvalue,
+    ///         zero, if x(feature) is given and x(feature) != fvalue,
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
@@ -29,26 +19,26 @@ namespace nano
     /// NB: this weak learner is inspired by the MARS algorithm extend to handle discrete/categorical features:
     ///     see "Multivariate adaptive regression splines", by Jerome Friedman
     ///
-    class NANO_PUBLIC wlearner_dstep_t final : public wlearner_feature1_t
+    class NANO_PUBLIC dstep_wlearner_t final : public single_feature_wlearner_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        wlearner_dstep_t();
+        dstep_wlearner_t();
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see clonable_t
         ///
         rwlearner_t clone() const override;
 
@@ -68,11 +58,9 @@ namespace nano
         scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
-        /// \brief access functions
+        /// \brief returns the chosen feature value.
         ///
         auto fvalue() const { return m_fvalue; }
-
-        auto fvalues() const { return tables().size<0>(); }
 
     private:
         // attributes

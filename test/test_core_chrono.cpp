@@ -41,7 +41,7 @@ UTEST_CASE(measure)
         const auto min_trial_iterations = 1;
         const auto min_trial_duration   = nano::microseconds_t{100};
         const auto duration = nano::measure<nano::milliseconds_t>(op, trials, min_trial_iterations, min_trial_duration);
-        UTEST_CHECK_EQUAL(duration.count(), 0);
+        UTEST_CHECK_GREATER_EQUAL(duration.count(), 0);
     }
 }
 

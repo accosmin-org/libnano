@@ -1,37 +1,14 @@
 #pragma once
 
-#include <nano/gboost/wlearner.h>
+#include <nano/wlearner.h>
 
 namespace nano
 {
-    class wlearner_dtree_t;
-
-    template <>
-    struct factory_traits_t<wlearner_dtree_t>
-    {
-        static string_t id() { return "dtree"; }
-
-        static string_t description() { return "decision tree weak learner"; }
-    };
-
     ///
     /// \brief node in the decision tree.
     ///
-    class dtree_node_t
+    struct dtree_node_t
     {
-    public:
-        dtree_node_t() = default;
-
-        dtree_node_t(tensor_size_t feature, tensor_size_t classes, scalar_t threshold, size_t next, tensor_size_t table)
-            : m_feature(feature)
-            , m_classes(classes)
-            , m_threshold(threshold)
-            , m_next(next)
-            , m_table(table)
-        {
-        }
-
-        // attributes
         tensor_size_t m_feature{-1};  ///< feature to evaluate (if a decision node)
         tensor_size_t m_classes{-1};  ///< number of classes (distinct values), if a discrete feature
         scalar_t      m_threshold{0}; ///< feature value threshold, if a continuous feature
@@ -48,21 +25,11 @@ namespace nano
                lhs.m_table == rhs.m_table;
     }
 
-    inline std::ostream& operator<<(std::ostream& os, const dtree_node_t& node)
-    {
-        return os << "node: feature=" << node.m_feature << ",classes=" << node.m_classes
-                  << ",threshold=" << node.m_threshold << ",next=" << node.m_next << ",table=" << node.m_table;
-    }
+    NANO_PUBLIC std::ostream& operator<<(std::ostream&, const dtree_node_t&);
+    NANO_PUBLIC std::ostream& operator<<(std::ostream&, const dtree_nodes_t&);
 
-    inline std::ostream& operator<<(std::ostream& os, const dtree_nodes_t& nodes)
-    {
-        os << "nodes:{\n";
-        for (const auto& node : nodes)
-        {
-            os << "\t" << node << "\n";
-        }
-        return os << "}";
-    }
+    NANO_PUBLIC std::istream& read(std::istream&, dtree_node_t&);
+    NANO_PUBLIC std::ostream& write(std::ostream&, const dtree_node_t&);
 
     ///
     /// \brief a decision tree is a weak learner partitions the data using:
@@ -74,26 +41,26 @@ namespace nano
     ///     depending on how well the associated weak learner matches the residuals
     ///     (tables for discrete feature and stumps for continuous features).
     ///
-    class NANO_PUBLIC wlearner_dtree_t final : public wlearner_t
+    class NANO_PUBLIC dtree_wlearner_t final : public wlearner_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        wlearner_dtree_t();
+        dtree_wlearner_t();
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see clonable_t
         ///
         rwlearner_t clone() const override;
 
@@ -123,37 +90,20 @@ namespace nano
         indices_t features() const override;
 
         ///
-        /// \brief change the maximum depth of the tree.
-        ///
-        /// NB: the effective depth may be smaller, e.g. if not enough samples to further split.
-        ///
-        void max_depth(int max_depth);
-
-        ///
-        /// \brief change the minimum percentage of samples to consider for splitting.
-        ///
-        /// NB: this is useful to eliminate branches rarely hit.
-        ///
-        void min_split(int min_split);
-
-        ///
-        /// \brief access functions
+        /// \brief returns the flatten list of nodes (splitting and terminal ones).
         ///
         const auto& nodes() const { return m_nodes; }
 
+        ///
+        /// \brief returns the table of coefficients of the terminal nodes.
+        ///
         const auto& tables() const { return m_tables; }
-
-        auto max_depth() const { return m_max_depth.get(); }
-
-        auto min_split() const { return m_min_split.get(); }
 
     private:
         void compatible(const dataset_t&) const;
 
         // attributes
-        iparam1_t     m_max_depth{"dtree::max_depth", 1, LE, 3, LE, 10}; ///< maximum depth
-        iparam1_t     m_min_split{"dtree::min_split", 1, LE, 5, LE, 10}; ///< minimum ratio of samples to split
-        dtree_nodes_t m_nodes;                                           ///< nodes in the decision tree
+        dtree_nodes_t m_nodes;    ///< nodes in the decision tree
         tensor4d_t    m_tables;   ///< (#feature values, #outputs) - predictions at the leaves
         indices_t     m_features; ///< unique set of the selected features
     };

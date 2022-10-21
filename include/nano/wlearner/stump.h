@@ -1,19 +1,9 @@
 #pragma once
 
-#include <nano/gboost/wlearner_feature1.h>
+#include <nano/wlearner/single.h>
 
 namespace nano
 {
-    class wlearner_stump_t;
-
-    template <>
-    struct factory_traits_t<wlearner_stump_t>
-    {
-        static string_t id() { return "stump"; }
-
-        static string_t description() { return "decision stump weak learner"; }
-    };
-
     ///
     /// \brief a decision stump is a weak learner that compares the value of a selected feature with a threshold:
     ///     stump(x) =
@@ -28,33 +18,34 @@ namespace nano
     /// NB: the discrete features and the missing feature values are skipped during fiting.
     /// NB: the threshold is shared across outputs, but the predictions can be different.
     ///
-    class NANO_PUBLIC wlearner_stump_t final : public wlearner_feature1_t
+    class NANO_PUBLIC stump_wlearner_t final : public single_feature_wlearner_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        wlearner_stump_t();
+        stump_wlearner_t();
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see clonable_t
         ///
         rwlearner_t clone() const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        cluster_t split(const dataset_t&, const indices_t&) const override;
+        cluster_t        split(const dataset_t&, const indices_t&) const override;
+        static cluster_t split(const dataset_t&, const indices_t&, tensor_size_t feature, scalar_t threshold);
 
         ///
         /// \brief @see wlearner_t
@@ -67,7 +58,7 @@ namespace nano
         scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
-        /// \brief access functions
+        /// \brief returns the chosen feature value threshold.
         ///
         auto threshold() const { return m_threshold; }
 

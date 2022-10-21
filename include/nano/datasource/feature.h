@@ -144,12 +144,12 @@ namespace nano
         mutable strings_t m_labels;                      ///< possible labels (if the feature is discrete/categorical)
     };
 
-    NANO_PUBLIC bool operator==(const feature_t& f1, const feature_t& f2);
-    NANO_PUBLIC bool operator!=(const feature_t& f1, const feature_t& f2);
-    NANO_PUBLIC std::ostream& operator<<(std::ostream& stream, const feature_t& feature);
+    NANO_PUBLIC bool operator==(const feature_t& lhs, const feature_t& rhs);
+    NANO_PUBLIC bool operator!=(const feature_t& lhs, const feature_t& rhs);
+    NANO_PUBLIC std::ostream& operator<<(std::ostream&, const feature_t&);
 
-    NANO_PUBLIC std::istream& read(std::istream& stream, feature_t&);
-    NANO_PUBLIC std::ostream& write(std::ostream& stream, const feature_t&);
+    NANO_PUBLIC std::istream& read(std::istream&, feature_t&);
+    NANO_PUBLIC std::ostream& write(std::ostream&, const feature_t&);
 
     ///
     /// \brief describe a feature (e.g. as selected by a weak learner) in terms of

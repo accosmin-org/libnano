@@ -303,6 +303,6 @@ namespace nano
     NANO_PUBLIC std::ostream& operator<<(std::ostream&, const parameter_t::value_t&);
     NANO_PUBLIC std::ostream& operator<<(std::ostream&, const parameter_t::domain_t&);
 
-    NANO_PUBLIC std::istream& read(std::istream& stream, parameter_t&);
-    NANO_PUBLIC std::ostream& write(std::ostream& stream, const parameter_t&);
+    NANO_PUBLIC std::istream& read(std::istream&, parameter_t&);
+    NANO_PUBLIC std::ostream& write(std::ostream&, const parameter_t&);
 } // namespace nano

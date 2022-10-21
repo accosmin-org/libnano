@@ -1,18 +1,29 @@
 #pragma once
 
-#include <nano/gboost/wlearner_feature1.h>
+#include <nano/model/enums.h>
+#include <nano/wlearner/single.h>
 
 namespace nano
 {
-    class wlearner_hinge_t;
+    ///
+    /// \brief hinge type (see MARS).
+    ///
+    /// see "Multivariate adaptive regression splines", by Jerome Friedman
+    ///
+    enum class hinge_type : int32_t
+    {
+        left = 0, ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
+        right,    ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
+    };
 
     template <>
-    struct factory_traits_t<wlearner_hinge_t>
+    inline enum_map_t<hinge_type> enum_string<hinge_type>()
     {
-        static string_t id() { return "hinge"; }
-
-        static string_t description() { return "hinge weak learner"; }
-    };
+        return {
+            { hinge_type::left,  "left"},
+            {hinge_type::right, "right"},
+        };
+    }
 
     ///
     /// \brief a hinge is a weak learner that performs the following operation element-wise:
@@ -30,26 +41,26 @@ namespace nano
     /// NB: this weak learner is inspired by the MARS algorithm:
     ///     see "Multivariate adaptive regression splines", by Jerome Friedman
     ///
-    class NANO_PUBLIC wlearner_hinge_t final : public wlearner_feature1_t
+    class NANO_PUBLIC hinge_wlearner_t final : public single_feature_wlearner_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        wlearner_hinge_t();
+        hinge_wlearner_t();
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void read(std::istream&) override;
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see estimator_t
         ///
-        void write(std::ostream&) const override;
+        std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see wlearner_t
+        /// \brief @see clonable_t
         ///
         rwlearner_t clone() const override;
 
@@ -69,15 +80,18 @@ namespace nano
         scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
-        /// \brief access functions
+        /// \brief returns the chosen hinge type (left or right).
         ///
         auto hinge() const { return m_hinge; }
 
+        ///
+        /// \brief returns the chosen feature value threshold.
+        ///
         auto threshold() const { return m_threshold; }
 
     private:
         // attributes
-        scalar_t      m_threshold{0};               ///< threshold
-        ::nano::hinge m_hinge{::nano::hinge::left}; ///<
+        scalar_t   m_threshold{0};            ///< threshold
+        hinge_type m_hinge{hinge_type::left}; ///<
     };
 } // namespace nano
