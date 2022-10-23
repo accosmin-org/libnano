@@ -1,7 +1,7 @@
 #include "fixture/function.h"
 #include "fixture/loss.h"
 #include "fixture/solver.h"
-#include <nano/tuner.h>
+#include "fixture/tuner.h"
 #include <nano/tuner/surrogate.h>
 #include <nano/tuner/util.h>
 #include <utest/utest.h>
@@ -355,16 +355,14 @@ UTEST_CASE(quadratic_surrogate_fit2d)
 
 UTEST_CASE(local_search)
 {
-    const auto tuner = tuner_t::all().get("local-search");
-    UTEST_REQUIRE(tuner);
+    const auto tuner = make_tuner("local-search");
 
     check_optimize(*tuner, make_param_spaces(), evaluateLL);
 }
 
 UTEST_CASE(surrogate)
 {
-    const auto tuner = tuner_t::all().get("surrogate");
-    UTEST_REQUIRE(tuner);
+    const auto tuner = make_tuner("surrogate");
 
     check_optimize(*tuner, make_param_spaces(), evaluate10);
 }
@@ -376,7 +374,7 @@ UTEST_CASE(fails_empty_param_spaces)
 
     for (const auto& id : tuner_t::all().ids())
     {
-        const auto tuner = tuner_t::all().get(id);
+        const auto tuner = make_tuner(id);
         UTEST_CHECK_THROW(tuner->optimize(spaces, callback), std::runtime_error);
     }
 }
@@ -392,7 +390,7 @@ UTEST_CASE(fails_invalid_param_values)
 
     for (const auto& id : tuner_t::all().ids())
     {
-        const auto tuner = tuner_t::all().get(id);
+        const auto tuner = make_tuner(id);
         UTEST_CHECK_THROW(tuner->optimize(spaces, callback), std::runtime_error);
     }
 }

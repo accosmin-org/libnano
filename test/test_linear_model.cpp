@@ -1,5 +1,8 @@
 #include "fixture/linear.h"
 #include "fixture/loss.h"
+#include "fixture/solver.h"
+#include "fixture/splitter.h"
+#include "fixture/tuner.h"
 #include <nano/linear/regularization.h>
 
 using namespace nano;
@@ -16,8 +19,7 @@ static void check_outputs(const dataset_t& dataset, const indices_t& samples, co
 
 static auto make_smooth_solver()
 {
-    auto solver = solver_t::all().get("lbfgs");
-    UTEST_REQUIRE(solver);
+    auto solver                            = make_solver("lbfgs");
     solver->parameter("solver::max_evals") = 1000;
     solver->parameter("solver::epsilon")   = 1e-10;
     solver->lsearchk("cgdescent");
@@ -26,31 +28,10 @@ static auto make_smooth_solver()
 
 static auto make_nonsmooth_solver()
 {
-    auto solver = solver_t::all().get("osga");
-    UTEST_REQUIRE(solver);
+    auto solver                            = make_solver("osga");
     solver->parameter("solver::max_evals") = 2000;
     solver->parameter("solver::epsilon")   = 1e-6;
     return solver;
-}
-
-static auto make_solver(const string_t& loss_id)
-{
-    return loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-}
-
-static auto make_splitter()
-{
-    auto splitter = splitter_t::all().get("k-fold");
-    UTEST_REQUIRE(splitter);
-    splitter->parameter("splitter::folds") = 2;
-    return splitter;
-}
-
-static auto make_tuner()
-{
-    auto tuner = tuner_t::all().get("surrogate");
-    UTEST_REQUIRE(tuner);
-    return tuner;
 }
 
 static auto make_model()
@@ -165,7 +146,7 @@ UTEST_CASE(regularization_none)
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss     = make_loss(loss_id);
-        const auto solver   = make_solver(loss_id);
+        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto splitter = make_splitter();
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
@@ -219,7 +200,7 @@ UTEST_CASE(regularization_ridge)
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss     = make_loss(loss_id);
-        const auto solver   = make_solver(loss_id);
+        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto splitter = make_splitter();
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
@@ -246,7 +227,7 @@ UTEST_CASE(regularization_variance)
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss     = make_loss(loss_id);
-        const auto solver   = make_solver(loss_id);
+        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto splitter = make_splitter();
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);

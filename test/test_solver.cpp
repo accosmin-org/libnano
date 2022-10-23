@@ -1,4 +1,6 @@
 #include "fixture/function.h"
+#include "fixture/lsearch0.h"
+#include "fixture/lsearchk.h"
 #include "fixture/solver.h"
 #include <iomanip>
 #include <nano/core/logger.h>
@@ -217,8 +219,7 @@ UTEST_CASE(factory)
 {
     for (const auto& solver_id : solver_t::all().ids())
     {
-        const auto solver = solver_t::all().get(solver_id);
-        UTEST_REQUIRE(solver);
+        const auto solver = make_solver(solver_id);
 
         const auto desc = make_description(solver_id);
         UTEST_CHECK_EQUAL(solver->type(), desc.m_type);
@@ -229,8 +230,7 @@ UTEST_CASE(config_solvers)
 {
     for (const auto& solver_id : make_solver_ids())
     {
-        const auto solver = solver_t::all().get(solver_id);
-        UTEST_REQUIRE(solver);
+        const auto solver = make_solver(solver_id);
 
         // NB: 0 < c1 < c2 < 1
         UTEST_CHECK_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
@@ -250,10 +250,10 @@ UTEST_CASE(config_solvers)
         UTEST_CHECK_THROW(solver->lsearchk("invalid-lsearchk-id"), std::runtime_error);
 
         UTEST_CHECK_NOTHROW(solver->lsearch0("constant"));
-        UTEST_CHECK_NOTHROW(solver->lsearch0(*lsearch0_t::all().get("constant")));
+        UTEST_CHECK_NOTHROW(solver->lsearch0(*make_lsearch0("constant")));
 
         UTEST_CHECK_NOTHROW(solver->lsearchk("backtrack"));
-        UTEST_CHECK_NOTHROW(solver->lsearchk(*lsearchk_t::all().get("backtrack")));
+        UTEST_CHECK_NOTHROW(solver->lsearchk(*make_lsearchk("backtrack")));
     }
 }
 
@@ -268,8 +268,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_smooth_solver_ids())
             {
-                const auto solver = solver_t::all().get(solver_id);
-                UTEST_REQUIRE(solver);
+                const auto solver = make_solver(solver_id);
 
                 const auto descr = make_description(solver_id);
                 const auto state = check_minimize(*solver, *function, x0);
@@ -294,8 +293,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_nonsmooth_solver_ids())
             {
-                const auto solver = solver_t::all().get(solver_id);
-                UTEST_REQUIRE(solver);
+                const auto solver = make_solver(solver_id);
 
                 const auto descr = make_description(solver_id);
                 const auto state = check_minimize(*solver, *function, x0);
@@ -320,8 +318,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
-                const auto solver = solver_t::all().get(solver_id);
-                UTEST_REQUIRE(solver);
+                const auto solver = make_solver(solver_id);
 
                 for (const auto& lsearch0_id : make_lsearch0_ids())
                 {
@@ -367,8 +364,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
-                const auto solver = solver_t::all().get(solver_id);
-                UTEST_REQUIRE(solver);
+                const auto solver = make_solver(solver_id);
 
                 UTEST_REQUIRE_NOTHROW(solver->lsearch0("cgdescent"));
                 UTEST_REQUIRE_NOTHROW(solver->lsearchk("cgdescent"));
@@ -395,8 +391,7 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
         {
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
-                const auto solver = solver_t::all().get(solver_id);
-                UTEST_REQUIRE(solver);
+                const auto solver = make_solver(solver_id);
 
                 UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));
                 check_minimize(*solver, *function, x0);

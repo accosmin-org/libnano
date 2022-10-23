@@ -1,4 +1,5 @@
 #include "fixture/function.h"
+#include "fixture/loss.h"
 #include <nano/core/numeric.h>
 #include <nano/core/random.h>
 #include <nano/function.h>
@@ -63,7 +64,7 @@ UTEST_CASE(gradient)
 
         for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++cmd_dims)
         {
-            const auto loss     = loss_t::all().get(loss_id);
+            const auto loss     = make_loss(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
 
             UTEST_CHECK_EQUAL(loss->convex(), function.convex());
@@ -94,8 +95,7 @@ UTEST_CASE(single_class)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss = loss_t::all().get(loss_id);
-        UTEST_REQUIRE(loss);
+        const auto loss = make_loss(loss_id);
 
         const auto n_classes = 1;
 
@@ -127,8 +127,7 @@ UTEST_CASE(single_label_multi_class)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss = loss_t::all().get(loss_id);
-        UTEST_REQUIRE(loss);
+        const auto loss = make_loss(loss_id);
 
         const auto n_classes = 13;
 
@@ -161,8 +160,7 @@ UTEST_CASE(multi_label_multi_class)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss = loss_t::all().get(loss_id);
-        UTEST_REQUIRE(loss);
+        const auto loss = make_loss(loss_id);
 
         const auto n_classes = 13;
 
@@ -200,8 +198,7 @@ UTEST_CASE(regression)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss = loss_t::all().get(loss_id);
-        UTEST_REQUIRE(loss);
+        const auto loss = make_loss(loss_id);
 
         const auto target = make_random_tensor<scalar_t>(make_dims(3, 4, 1, 1));
 

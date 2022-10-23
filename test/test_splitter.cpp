@@ -1,4 +1,4 @@
-#include <nano/splitter.h>
+#include "fixture/splitter.h"
 #include <utest/utest.h>
 
 using namespace nano;
@@ -10,8 +10,7 @@ static auto make_samples(const tensor_size_t samples)
 
 static auto make_splits(const tensor_size_t samples, const tensor_size_t folds, const uint64_t seed, const string_t& id)
 {
-    auto splitter = splitter_t::all().get(id);
-    UTEST_REQUIRE(splitter);
+    auto splitter = make_splitter(id);
 
     splitter->parameter("splitter::seed")  = seed;
     splitter->parameter("splitter::folds") = folds;

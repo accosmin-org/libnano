@@ -1,5 +1,9 @@
 #include "fixture/generator.h"
 #include "fixture/generator_datasource.h"
+#include "fixture/loss.h"
+#include "fixture/solver.h"
+#include "fixture/splitter.h"
+#include "fixture/tuner.h"
 #include <nano/generator/elemwise_identity.h>
 #include <nano/model.h>
 #include <sstream>
@@ -84,15 +88,10 @@ UTEST_BEGIN_MODULE(test_model)
 
 UTEST_CASE(fit_predict)
 {
-    const auto rloss     = loss_t::all().get("mse");
-    const auto rsolver   = solver_t::all().get("lbfgs");
-    const auto rsplitter = splitter_t::all().get("k-fold");
-    const auto rtuner    = tuner_t::all().get("surrogate");
-
-    UTEST_REQUIRE(rloss);
-    UTEST_REQUIRE(rsolver);
-    UTEST_REQUIRE(rsplitter);
-    UTEST_REQUIRE(rtuner);
+    const auto rloss     = make_loss("mse");
+    const auto rsolver   = make_solver("lbfgs");
+    const auto rsplitter = make_splitter("k-fold");
+    const auto rtuner    = make_tuner("surrogate");
 
     const auto train_samples = arange(0, 80);
     const auto valid_samples = arange(80, 100);
