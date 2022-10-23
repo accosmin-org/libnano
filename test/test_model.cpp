@@ -84,10 +84,15 @@ UTEST_BEGIN_MODULE(test_model)
 
 UTEST_CASE(fit_predict)
 {
-    const auto rloss     = loss_t::all().get("squared");
+    const auto rloss     = loss_t::all().get("mse");
     const auto rsolver   = solver_t::all().get("lbfgs");
     const auto rsplitter = splitter_t::all().get("k-fold");
     const auto rtuner    = tuner_t::all().get("surrogate");
+
+    UTEST_REQUIRE(rloss);
+    UTEST_REQUIRE(rsolver);
+    UTEST_REQUIRE(rsplitter);
+    UTEST_REQUIRE(rtuner);
 
     const auto train_samples = arange(0, 80);
     const auto valid_samples = arange(80, 100);
