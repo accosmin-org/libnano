@@ -79,6 +79,8 @@ options:
         run cppcheck (static code analyzer)
     --lcov
         generate the code coverage report using lcov and genhtml
+    --lcov-init
+        generate the initial code coverage report using lcov and genhtml
     --llvm-cov
         generate the code coverage report usign llvm's source-based code coverage
     --memcheck

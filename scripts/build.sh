@@ -129,17 +129,36 @@ function call_cppcheck {
         --suppress=unmatchedSuppression
 }
 
-function lcov_coverage {
+function lcov_coverage_init {
     cd ${basedir}
 
-    local output=${basedir}/lcov.info
+    local base_output=${basedir}/lcov_base.info
 
     options=""
     options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
     options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
 
-    lcov ${options} --directory ${libnanodir} --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
-    lcov ${options} --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
+    lcov ${options} -d ${libnanodir} -i -c -o ${base_output} || return 1
+    lcov ${options} -r ${base_output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/app/*' '*/build/*' -o ${base_output} || return 1
+}
+
+function lcov_coverage {
+    cd ${basedir}
+
+    local output=${basedir}/lcov.info
+    local base_output=${basedir}/lcov_base.info
+    local test_output=${basedir}/lcov_test.info
+
+    options=""
+    options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
+    options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
+
+    lcov ${options} -d ${libnanodir} --gcov-tool ${GCOV} -c -o ${test_output} || return 1
+    lcov ${options} -r ${test_output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/app/*' '*/build/*' -o ${test_output} || return 1
+
+    lcov ${options} -a ${base_output} -a ${test_output} -o ${output} || return 1
+    rm -f ${base_output} ${test_output}
+
     lcov ${options} --list ${output} || return 1
     genhtml ${options} --output lcovhtml ${output} || return 1
 }
@@ -454,6 +473,8 @@ options:
         run cppcheck (static code analyzer)
     --lcov
         generate the code coverage report using lcov and genhtml
+    --lcov-init
+        generate the initial code coverage report using lcov and genhtml
     --llvm-cov
         generate the code coverage report usign llvm's source-based code coverage
     --memcheck
@@ -512,6 +533,7 @@ while [ "$1" != "" ]; do
         --install)                      install || exit 1;;
         --cppcheck)                     call_cppcheck || exit 1;;
         --lcov)                         lcov_coverage || exit 1;;
+        --lcov-init)                    lcov_coverage_init || exit 1;;
         --llvm-cov)                     llvm_cov_coverage || exit 1;;
         --memcheck)                     memcheck || exit 1;;
         --helgrind)                     helgrind || exit 1;;
