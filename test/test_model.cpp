@@ -36,14 +36,16 @@ public:
 
     rmodel_t clone() const override { return std::make_unique<fixture_model_t>(*this); }
 
-    fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
-                        const tuner_t&) override
+    fit_result_t fit(const dataset_t& dataset, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                     const tuner_t&) override
     {
+        learner_t::fit(dataset);
         return fit_result_t{};
     }
 
-    tensor4d_t do_predict(const dataset_t& dataset, const indices_t& samples) const override
+    tensor4d_t predict(const dataset_t& dataset, const indices_t& samples) const override
     {
+        learner_t::critical_compatible(dataset);
         return make_predictions(dataset, samples);
     }
 };

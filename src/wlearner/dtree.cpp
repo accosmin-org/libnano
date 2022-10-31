@@ -152,6 +152,8 @@ void dtree_wlearner_t::scale(const vector_t& scale)
 
 scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
+    learner_t::fit(dataset);
+
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -258,6 +260,8 @@ scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
 
 void dtree_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
+    learner_t::critical_compatible(dataset);
+
     assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
     const auto cluster = split(dataset, samples);
@@ -274,6 +278,8 @@ void dtree_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 
 cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
+    learner_t::critical_compatible(dataset);
+
     cluster_t cluster(dataset.samples(), m_tables.size());
 
     std::deque<std::pair<size_t, indices_t>> splits;

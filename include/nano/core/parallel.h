@@ -180,7 +180,7 @@ namespace nano::parallel
                 section.reserve(static_cast<size_t>(elements));
                 for (tsize index = 0; index < elements; ++index)
                 {
-                    section.emplace_back(enqueue([op = op, index = index](size_t tnum) { op(index, tnum); }));
+                    section.emplace_back(enqueue([op, index](size_t tnum) { op(index, tnum); }));
                 }
 
                 section.block(raise);
@@ -213,8 +213,7 @@ namespace nano::parallel
                 for (tsize begin = 0; begin < elements; begin += chunksize)
                 {
                     const auto end = std::min(begin + chunksize, elements);
-                    section.emplace_back(
-                        enqueue([op = op, begin = begin, end = end](size_t tnum) { op(begin, end, tnum); }));
+                    section.emplace_back(enqueue([op, begin, end](size_t tnum) { op(begin, end, tnum); }));
                 }
 
                 section.block(raise);

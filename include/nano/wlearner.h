@@ -1,7 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
-#include <nano/dataset.h>
+#include <nano/learner.h>
 #include <nano/model/cluster.h>
 
 namespace nano
@@ -15,7 +14,7 @@ namespace nano
     ///     - easy to fit to the given residuals (aka the solution can be found analytically),
     ///     - with rather low accuracy that can be boosted by assemblying many of them using e.g. GradientBoosting.
     ///
-    class NANO_PUBLIC wlearner_t : public estimator_t, public clonable_t<wlearner_t>
+    class NANO_PUBLIC wlearner_t : public learner_t, public clonable_t<wlearner_t>
     {
     public:
         ///

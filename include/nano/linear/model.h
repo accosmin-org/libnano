@@ -46,19 +46,22 @@ namespace nano
         ///
         /// \brief @see model_t
         ///
-        fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
-                            const tuner_t&) override;
+        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                         const tuner_t&) override;
 
         ///
         /// \brief @see model_t
         ///
-        tensor4d_t do_predict(const dataset_t&, const indices_t&) const override;
+        tensor4d_t predict(const dataset_t&, const indices_t&) const override;
 
         ///
-        /// \brief access functions
+        /// \brief returns the fitted bias vector (intercept).
         ///
         const auto& bias() const { return m_bias; }
 
+        ///
+        /// \brief returns the fitted weigths matrix (coefficients).
+        ///
         const auto& weights() const { return m_weights; }
 
     private:

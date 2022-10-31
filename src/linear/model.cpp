@@ -110,9 +110,11 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     return stream;
 }
 
-fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                    const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
+fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                 const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
+    learner_t::fit(dataset);
+
     // TODO: allocate the iterators once: (train, valid)xfolds + refit
 
     const auto regularization = parameter("model::linear::regularization").value<regularization_type>();
@@ -229,8 +231,10 @@ fit_result_t linear_model_t::do_fit(const dataset_t& dataset, const indices_t& s
     return result;
 }
 
-tensor4d_t linear_model_t::do_predict(const dataset_t& dataset, const indices_t& samples) const
+tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
 {
+    learner_t::critical_compatible(dataset);
+
     // TODO: no need to allocate the sample indices one more time
     // TODO: determine at runtime if worth parallelizing
     auto iterator = flatten_iterator_t(dataset, samples, 1U);

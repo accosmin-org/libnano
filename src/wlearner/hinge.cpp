@@ -154,6 +154,8 @@ rwlearner_t hinge_wlearner_t::clone() const
 
 scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
+    learner_t::fit(dataset);
+
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -222,6 +224,8 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
 
 void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
+    learner_t::critical_compatible(dataset);
+
     assert(tables().dims() == cat_dims(2, dataset.target_dims()));
     assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
@@ -255,6 +259,8 @@ void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 
 cluster_t hinge_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
+    learner_t::critical_compatible(dataset);
+
     cluster_t cluster(dataset.samples(), 2);
 
     loop_scalar(dataset, samples, feature(),

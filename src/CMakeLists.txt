@@ -79,6 +79,7 @@ target_sources(nano PRIVATE
     function/benchmark/trid.cpp
     function/benchmark/zakharov.cpp
     loss.cpp
+    learner.cpp
     model.cpp
     model/util.cpp
     model/cluster.cpp

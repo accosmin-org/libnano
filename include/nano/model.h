@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/dataset.h>
+#include <nano/learner.h>
 #include <nano/loss.h>
 #include <nano/solver.h>
 #include <nano/splitter.h>
@@ -46,7 +46,7 @@ namespace nano
     ///     - prediction (constant) which evaluates the trained model on the given dataset,
     ///     - saving/reading to/from binary streams.
     ///
-    class NANO_PUBLIC model_t : public estimator_t, public clonable_t<model_t>
+    class NANO_PUBLIC model_t : public learner_t, public clonable_t<model_t>
     {
     public:
         ///
@@ -65,26 +65,16 @@ namespace nano
         static factory_t<model_t>& all();
 
         ///
-        /// \brief @see estimator_t
-        ///
-        std::istream& read(std::istream&) override;
-
-        ///
-        /// \brief @see estimator_t
-        ///
-        std::ostream& write(std::ostream&) const override;
-
-        ///
         /// \brief fit the model using the given samples and the current set of (hyper-)parameters
         ///     and returns the average error of the given samples.
         ///
-        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
-                         const tuner_t&);
+        virtual fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                                 const tuner_t&) = 0;
 
         ///
         /// \brief evaluate the trained model and returns the predictions for each of the given samples.
         ///
-        tensor4d_t predict(const dataset_t&, const indices_t&) const;
+        virtual tensor4d_t predict(const dataset_t&, const indices_t&) const = 0;
 
         ///
         /// \brief set the logging callback
@@ -95,15 +85,7 @@ namespace nano
         void log(const fit_result_t&, const string_t& prefix) const;
 
     private:
-        void compatible(const dataset_t&) const;
-
-        virtual fit_result_t do_fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&,
-                                    const splitter_t&, const tuner_t&)            = 0;
-        virtual tensor4d_t   do_predict(const dataset_t&, const indices_t&) const = 0;
-
         // attributes
-        features_t m_inputs; ///< input features
-        feature_t  m_target; ///< optional target feature
-        logger_t   m_logger; ///<
+        logger_t m_logger; ///<
     };
 } // namespace nano
