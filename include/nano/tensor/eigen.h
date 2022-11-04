@@ -98,6 +98,11 @@ namespace nano
     };
 
     template <class T>
+    struct is_eigen<Eigen::ArrayWrapper<T>> : std::true_type
+    {
+    };
+
+    template <class T>
     inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
     ///

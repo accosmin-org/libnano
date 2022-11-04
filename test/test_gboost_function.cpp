@@ -1,5 +1,5 @@
+#include "fixture/dataset.h"
 #include "fixture/function.h"
-#include "fixture/generator.h"
 #include "fixture/loss.h"
 #include "fixture/solver.h"
 #include <nano/gboost/function.h>
@@ -105,16 +105,6 @@ static auto make_datasource(const tensor_size_t isize = 3, const tensor_size_t t
     UTEST_CHECK_NOTHROW(datasource.load());
     UTEST_CHECK_EQUAL(datasource.samples(), samples);
     return datasource;
-}
-
-static auto make_dataset(const datasource_t& datasource)
-{
-    auto dataset = dataset_t{datasource};
-    add_generator<elemwise_generator_t<sclass_identity_t>>(dataset);
-    add_generator<elemwise_generator_t<mclass_identity_t>>(dataset);
-    add_generator<elemwise_generator_t<scalar_identity_t>>(dataset);
-    add_generator<elemwise_generator_t<struct_identity_t>>(dataset);
-    return dataset;
 }
 
 static void check_optimum(const function_t& function, const vector_t& expected_optimum)

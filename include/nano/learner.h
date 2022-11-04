@@ -28,7 +28,7 @@ namespace nano
         std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief fit the given dataset and store its finger print.
+        /// \brief fit the given dataset and store its fingerprint.
         ///
         void fit(const dataset_t&);
 

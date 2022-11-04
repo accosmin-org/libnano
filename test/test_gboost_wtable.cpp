@@ -4,10 +4,10 @@
 
 using namespace nano;
 
-class wtable_dataset_t : public fixture_dataset_t
+class wtable_datasource_t : public fixture_datasource_t
 {
 public:
-    wtable_dataset_t() = default;
+    wtable_datasource_t() = default;
 
     tensor_size_t groups() const override { return 3; }
 
@@ -35,11 +35,11 @@ UTEST_BEGIN_MODULE(test_gboost_wtable)
 
 UTEST_CASE(fitting)
 {
-    const auto dataset   = make_dataset<wtable_dataset_t>();
-    const auto datasetx1 = make_dataset<wtable_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.gt_feature(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wtable_dataset_t>>();
-    const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wtable_dataset_t>>();
+    const auto dataset   = make_dataset<wtable_datasource_t>();
+    const auto datasetx1 = make_dataset<wtable_datasource_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wtable_datasource_t>(dataset.gt_feature(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wtable_datasource_t>>();
+    const auto datasetx4 = make_dataset<different_discrete_feature_datasource_t<wtable_datasource_t>>();
 
     auto wlearner = make_wlearner<wlearner_table_t>();
     check_no_fit(wlearner, datasetx3);

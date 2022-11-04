@@ -177,56 +177,56 @@ UTEST_BEGIN_MODULE(test_generator_pairwise)
 
 UTEST_CASE(scalar_scalar)
 {
-    const auto dataset = make_datasource(10, string_t::npos);
+    const auto datasource = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_t{dataset};
-    add_generator<pairwise_generator_t<scalar_scalar_to_scalar_t>>(generator);
-    add_generator<pairwise_generator_t<scalar_scalar_to_struct_t>>(generator, make_indices(6));
-    add_generator<pairwise_generator_t<scalar_scalar_to_sclass_t>>(generator);
-    add_generator<pairwise_generator_t<scalar_scalar_to_mclass_t>>(generator, make_indices(6), make_indices(6, 7));
+    auto dataset = dataset_t{datasource};
+    add_generator<pairwise_generator_t<scalar_scalar_to_scalar_t>>(dataset);
+    add_generator<pairwise_generator_t<scalar_scalar_to_struct_t>>(dataset, make_indices(6));
+    add_generator<pairwise_generator_t<scalar_scalar_to_sclass_t>>(dataset);
+    add_generator<pairwise_generator_t<scalar_scalar_to_mclass_t>>(dataset, make_indices(6), make_indices(6, 7));
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 15);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sum(scalar0,scalar0)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sum(scalar0,scalar1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sum(scalar0,scalar2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sum(scalar1,scalar1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sum(scalar1,scalar2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sum(scalar2,scalar2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(6),
+    UTEST_REQUIRE_EQUAL(dataset.features(), 15);
+    UTEST_CHECK_EQUAL(dataset.feature(0), feature_t{"sum(scalar0,scalar0)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(1), feature_t{"sum(scalar0,scalar1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(2), feature_t{"sum(scalar0,scalar2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(3), feature_t{"sum(scalar1,scalar1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(4), feature_t{"sum(scalar1,scalar2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(5), feature_t{"sum(scalar2,scalar2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(6),
                       feature_t{"pow(scalar1,scalar1)"}.scalar(feature_type::float64, make_dims(3, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"sign(scalar0,scalar0)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"sign(scalar0,scalar1)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(9), feature_t{"sign(scalar0,scalar2)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(10), feature_t{"sign(scalar1,scalar1)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(11), feature_t{"sign(scalar1,scalar2)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(12), feature_t{"sign(scalar2,scalar2)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(13), feature_t{"mod(scalar1,scalar1)"}.mclass(strings_t{"mod2", "mod3"}));
-    UTEST_CHECK_EQUAL(generator.feature(14), feature_t{"mod(scalar1,scalar2)"}.mclass(strings_t{"mod2", "mod3"}));
+    UTEST_CHECK_EQUAL(dataset.feature(7), feature_t{"sign(scalar0,scalar0)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(8), feature_t{"sign(scalar0,scalar1)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(9), feature_t{"sign(scalar0,scalar2)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(10), feature_t{"sign(scalar1,scalar1)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(11), feature_t{"sign(scalar1,scalar2)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(12), feature_t{"sign(scalar2,scalar2)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(13), feature_t{"mod(scalar1,scalar1)"}.mclass(strings_t{"mod2", "mod3"}));
+    UTEST_CHECK_EQUAL(dataset.feature(14), feature_t{"mod(scalar1,scalar2)"}.mclass(strings_t{"mod2", "mod3"}));
 
-    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), -2, 0, 2, 4, 6, 8, 10, 12, 14, 16));
-    check_select(generator, 1, make_tensor<scalar_t>(make_dims(10), -3, N, 1, N, 5, N, +9, Na, 13, Na));
-    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), -4, N, N, 2, N, N, +8, Na, Na, 14));
-    check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), -4, N, 0, N, 4, N, +8, Na, 12, Na));
-    check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), -5, N, N, N, N, N, +7, Na, Na, Na));
-    check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), -6, N, N, 0, N, N, +6, Na, Na, 12));
-    check_select(generator, 6,
+    check_select(dataset, 0, make_tensor<scalar_t>(make_dims(10), -2, 0, 2, 4, 6, 8, 10, 12, 14, 16));
+    check_select(dataset, 1, make_tensor<scalar_t>(make_dims(10), -3, N, 1, N, 5, N, +9, Na, 13, Na));
+    check_select(dataset, 2, make_tensor<scalar_t>(make_dims(10), -4, N, N, 2, N, N, +8, Na, Na, 14));
+    check_select(dataset, 3, make_tensor<scalar_t>(make_dims(10), -4, N, 0, N, 4, N, +8, Na, 12, Na));
+    check_select(dataset, 4, make_tensor<scalar_t>(make_dims(10), -5, N, N, N, N, N, +7, Na, Na, Na));
+    check_select(dataset, 5, make_tensor<scalar_t>(make_dims(10), -6, N, N, 0, N, N, +6, Na, Na, 12));
+    check_select(dataset, 6,
                  make_tensor<scalar_t>(make_dims(10, 3, 1, 1), 4, 4, 4, N, N, N, 0, 0, 0, N, N, N, 4, 4, 4, N, N, N, 16,
                                        16, 16, N, N, N, 36, 36, 36, N, N, N));
-    check_select(generator, 7, make_tensor<int32_t>(make_dims(10), +0, +1, +1, +1, +1, +1, +1, +1, +1, +1));
-    check_select(generator, 8, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
-    check_select(generator, 9, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
-    check_select(generator, 10, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
-    check_select(generator, 11, make_tensor<int32_t>(make_dims(10), +0, -1, -1, -1, -1, -1, +1, -1, -1, -1));
-    check_select(generator, 12, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
-    check_select(generator, 13,
+    check_select(dataset, 7, make_tensor<int32_t>(make_dims(10), +0, +1, +1, +1, +1, +1, +1, +1, +1, +1));
+    check_select(dataset, 8, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
+    check_select(dataset, 9, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
+    check_select(dataset, 10, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
+    check_select(dataset, 11, make_tensor<int32_t>(make_dims(10), +0, -1, -1, -1, -1, -1, +1, -1, -1, -1));
+    check_select(dataset, 12, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
+    check_select(dataset, 13,
                  make_tensor<int8_t>(make_dims(10, 2), +1, +0, -1, -1, +1, +1, -1, -1, +1, +0, -1, -1, +1, +0, -1, -1,
                                      +1, +1, -1, -1));
-    check_select(generator, 14,
+    check_select(dataset, 14,
                  make_tensor<int8_t>(make_dims(10, 2), +0, +0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, +0, +0, -1, -1,
                                      -1, -1, -1, -1));
 
-    generator.drop(0);
-    check_flatten(generator,
+    dataset.drop(0);
+    check_flatten(dataset,
                   make_tensor<scalar_t>(make_dims(10, 19), Na, -3, -4, -4, -5, -6, +4, +4, +4, +1, +1, +1, +1, +1, +1,
                                         +1, -1, -1, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na,
                                         Na, Na, Na, Na, +1, Na, +0, Na, Na, +0, +0, +0, -1, -1, Na, -1, Na, Na, +1, +1,
@@ -239,8 +239,8 @@ UTEST_CASE(scalar_scalar)
                                         Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
                   make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
 
-    generator.drop(6);
-    check_flatten(generator,
+    dataset.drop(6);
+    check_flatten(dataset,
                   make_tensor<scalar_t>(make_dims(10, 19), Na, -3, -4, -4, -5, -6, Na, Na, Na, +1, +1, +1, +1, +1, +1,
                                         +1, -1, -1, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na,
                                         Na, Na, Na, Na, +1, Na, +0, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1,
@@ -256,27 +256,27 @@ UTEST_CASE(scalar_scalar)
 
 UTEST_CASE(sclass_sclass)
 {
-    const auto dataset = make_datasource(10, string_t::npos);
+    const auto datasource = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_t{dataset};
-    add_generator<pairwise_generator_t<sclass_sclass_to_scalar_t>>(generator);
+    auto dataset = dataset_t{datasource};
+    add_generator<pairwise_generator_t<sclass_sclass_to_scalar_t>>(dataset);
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 6);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sum(sclass0,sclass0)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sum(sclass0,sclass1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sum(sclass0,sclass2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sum(sclass1,sclass1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sum(sclass1,sclass2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sum(sclass2,sclass2)"}.scalar(feature_type::float64));
+    UTEST_REQUIRE_EQUAL(dataset.features(), 6);
+    UTEST_CHECK_EQUAL(dataset.feature(0), feature_t{"sum(sclass0,sclass0)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(1), feature_t{"sum(sclass0,sclass1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(2), feature_t{"sum(sclass0,sclass2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(3), feature_t{"sum(sclass1,sclass1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(4), feature_t{"sum(sclass1,sclass2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(5), feature_t{"sum(sclass2,sclass2)"}.scalar(feature_type::float64));
 
-    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), 4, N, 2, N, 0, N, 4, N, 2, N));
-    check_select(generator, 1, make_tensor<scalar_t>(make_dims(10), 3, N, 2, N, 1, N, 3, N, 2, N));
-    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), 2, N, 1, N, 0, N, 2, N, 1, N));
-    check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), 2, 0, 2, 0, 2, 0, 2, 0, 2, 0));
-    check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 1, N, 1, N, 1, N, 1, N, 1, N));
-    check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 0, N, 0, N, 0, N, 0, N, 0, N));
+    check_select(dataset, 0, make_tensor<scalar_t>(make_dims(10), 4, N, 2, N, 0, N, 4, N, 2, N));
+    check_select(dataset, 1, make_tensor<scalar_t>(make_dims(10), 3, N, 2, N, 1, N, 3, N, 2, N));
+    check_select(dataset, 2, make_tensor<scalar_t>(make_dims(10), 2, N, 1, N, 0, N, 2, N, 1, N));
+    check_select(dataset, 3, make_tensor<scalar_t>(make_dims(10), 2, 0, 2, 0, 2, 0, 2, 0, 2, 0));
+    check_select(dataset, 4, make_tensor<scalar_t>(make_dims(10), 1, N, 1, N, 1, N, 1, N, 1, N));
+    check_select(dataset, 5, make_tensor<scalar_t>(make_dims(10), 0, N, 0, N, 0, N, 0, N, 0, N));
 
-    check_flatten(generator,
+    check_flatten(dataset,
                   make_tensor<scalar_t>(make_dims(10, 6), 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N, 2, 2, 1, 2, 1, 0, N, N, N,
                                         0, N, N, 0, 1, 0, 2, 1, 0, N, N, N, 0, N, N, 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N,
                                         2, 2, 1, 2, 1, 0, N, N, N, 0, N, N),

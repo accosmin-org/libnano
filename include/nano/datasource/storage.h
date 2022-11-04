@@ -44,11 +44,11 @@ namespace nano
             tensor_size_t label = 0;
             if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*>)
             {
-                label = static_cast<tensor_size_t>(m_feature.set_label(value));
+                label = safe_cast<tensor_size_t>(m_feature.set_label(value));
             }
             else if constexpr (std::is_arithmetic_v<tvalue>)
             {
-                label = static_cast<tensor_size_t>(value);
+                label = safe_cast<tensor_size_t>(value);
             }
             else
             {
@@ -58,7 +58,7 @@ namespace nano
             critical(label < 0 || label >= classes(), "in-memory dataset: cannot set single-label feature <", name(),
                      ">: invalid label ", label, " not in [0, ", classes(), ")!");
 
-            data(sample) = static_cast<tscalar>(label);
+            data(sample) = safe_cast<tscalar>(label);
         }
 
         ///
@@ -105,7 +105,7 @@ namespace nano
                 critical(::nano::size(dims()) != 1, "in-memory dataset: cannot set scalar feature <", name(),
                          ">: invalid tensor dimensions ", dims(), "!");
 
-                data(sample) = static_cast<tscalar>(value);
+                data(sample) = safe_cast<tscalar>(value);
             }
             else if constexpr (::nano::is_tensor_v<tvalue>)
             {

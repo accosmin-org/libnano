@@ -1,4 +1,3 @@
-#include <nano/core/parallel.h>
 #include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
 #include <utest/utest.h>
@@ -10,7 +9,7 @@ static constexpr auto N   = std::numeric_limits<scalar_t>::quiet_NaN();
 static constexpr auto Na  = std::numeric_limits<scalar_t>::quiet_NaN();
 static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
-static auto make_samples(const dataset_t& dataset)
+static auto make_sample_splits(const dataset_t& dataset)
 {
     const auto samples = dataset.samples();
 
@@ -20,19 +19,19 @@ static auto make_samples(const dataset_t& dataset)
 template <typename tgenerator>
 static void add_generator(dataset_t& dataset)
 {
-    UTEST_CHECK_NOTHROW(dataset.add<tgenerator>());
+    UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>());
 }
 
 template <typename tgenerator>
 static void add_generator(dataset_t& dataset, indices_t features)
 {
-    UTEST_CHECK_NOTHROW(dataset.add<tgenerator>(std::move(features)));
+    UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>(std::move(features)));
 }
 
 template <typename tgenerator>
 static void add_generator(dataset_t& dataset, indices_t features1, indices_t features2)
 {
-    UTEST_CHECK_NOTHROW(dataset.add<tgenerator>(std::move(features1), std::move(features2)));
+    UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>(std::move(features1), std::move(features2)));
 }
 
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
@@ -138,7 +137,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     auto iterator = select_iterator_t{dataset};
 
     const auto features = make_indices(feature);
-    for (const auto& samples : make_samples(dataset))
+    for (const auto& samples : make_sample_splits(dataset))
     {
         check_select(iterator, samples, features, expected);
     }
@@ -155,7 +154,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
         UTEST_CHECK_EQUAL(dataset.column2feature(column), expected_column2features(column));
     }
 
-    for (const auto& samples : make_samples(dataset))
+    for (const auto& samples : make_sample_splits(dataset))
     {
         auto iterator = flatten_iterator_t{dataset, samples};
 

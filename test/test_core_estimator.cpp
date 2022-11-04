@@ -1,8 +1,5 @@
 #include "fixture/enum.h"
-#include <fstream>
-#include <nano/core/estimator.h>
-#include <nano/core/stream.h>
-#include <utest/utest.h>
+#include "fixture/estimator.h"
 
 using namespace nano;
 
@@ -12,39 +9,6 @@ static auto to_string(const estimator_t& estimator)
     UTEST_REQUIRE_NOTHROW(estimator.write(stream));
     UTEST_REQUIRE(stream);
     return stream.str();
-}
-
-static auto check_stream(const estimator_t& estimator)
-{
-    {
-        std::ofstream stream;
-        UTEST_CHECK_THROW(estimator.write(stream), std::runtime_error);
-    }
-    string_t str;
-    {
-        std::ostringstream stream;
-        UTEST_CHECK_NOTHROW(estimator.write(stream));
-        str = stream.str();
-    }
-    {
-        estimator_t        xestimator;
-        std::istringstream stream(str);
-        UTEST_CHECK_NOTHROW(xestimator.read(stream));
-    }
-    {
-        estimator_t   xestimator;
-        std::ifstream stream;
-        UTEST_CHECK_THROW(xestimator.read(stream), std::runtime_error);
-    }
-    {
-        std::ostringstream ostream;
-        UTEST_CHECK_NOTHROW(::nano::write(ostream, estimator));
-
-        estimator_t        xestimator;
-        std::istringstream istream(ostream.str());
-        UTEST_CHECK_NOTHROW(::nano::read(istream, xestimator));
-        return xestimator;
-    }
 }
 
 UTEST_BEGIN_MODULE(test_core_estimator)

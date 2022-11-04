@@ -16,7 +16,7 @@ namespace nano
     ///
     /// NB: the discrete features and the missing feature values are skipped during fiting.
     ///
-    class affine_wlearner_t final : public single_feature_wlearner_t
+    class NANO_PUBLIC affine_wlearner_t final : public single_feature_wlearner_t
     {
     public:
         ///

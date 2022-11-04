@@ -55,6 +55,9 @@ make_test(test_model_util NANO::nano)
 make_test(test_model_cluster NANO::nano)
 
 make_test(test_wlearner_util NANO::nano)
+make_test(test_wlearner_affine NANO::nano)
+make_test(test_wlearner_factory NANO::nano)
+
 #make_test(test_gboost_wdstep NANO::nano)
 #make_test(test_gboost_wdtree NANO::nano)
 #make_test(test_gboost_whinge NANO::nano)

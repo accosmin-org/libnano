@@ -234,61 +234,61 @@ UTEST_BEGIN_MODULE(test_generator_elemwise)
 
 UTEST_CASE(scalar)
 {
-    const auto dataset = make_datasource(10, string_t::npos);
+    const auto datasource = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_t{dataset};
-    add_generator<elemwise_generator_t<scalar_to_scalar_t>>(generator);
-    add_generator<elemwise_generator_t<scalar_to_sclass_t>>(generator);
-    add_generator<elemwise_generator_t<scalar_to_mclass_t>>(generator);
-    add_generator<elemwise_generator_t<scalar_to_struct_t>>(generator);
+    auto dataset = dataset_t{datasource};
+    add_generator<elemwise_generator_t<scalar_to_scalar_t>>(dataset);
+    add_generator<elemwise_generator_t<scalar_to_sclass_t>>(dataset);
+    add_generator<elemwise_generator_t<scalar_to_mclass_t>>(dataset);
+    add_generator<elemwise_generator_t<scalar_to_struct_t>>(dataset);
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 12);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"feature(scalar0)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"feature(scalar1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"feature(scalar2)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"feature(scalar0)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"feature(scalar1)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"feature(scalar2)"}.sclass(strings_t{"neg", "pos"}));
-    UTEST_CHECK_EQUAL(generator.feature(6), feature_t{"feature(scalar0)"}.mclass(strings_t{"odd", "even", "div3"}));
-    UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"feature(scalar1)"}.mclass(strings_t{"odd", "even", "div3"}));
-    UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"feature(scalar2)"}.mclass(strings_t{"odd", "even", "div3"}));
-    UTEST_CHECK_EQUAL(generator.feature(9),
+    UTEST_REQUIRE_EQUAL(dataset.features(), 12);
+    UTEST_CHECK_EQUAL(dataset.feature(0), feature_t{"feature(scalar0)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(1), feature_t{"feature(scalar1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(2), feature_t{"feature(scalar2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(3), feature_t{"feature(scalar0)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(4), feature_t{"feature(scalar1)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(5), feature_t{"feature(scalar2)"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(dataset.feature(6), feature_t{"feature(scalar0)"}.mclass(strings_t{"odd", "even", "div3"}));
+    UTEST_CHECK_EQUAL(dataset.feature(7), feature_t{"feature(scalar1)"}.mclass(strings_t{"odd", "even", "div3"}));
+    UTEST_CHECK_EQUAL(dataset.feature(8), feature_t{"feature(scalar2)"}.mclass(strings_t{"odd", "even", "div3"}));
+    UTEST_CHECK_EQUAL(dataset.feature(9),
                       feature_t{"feature(scalar0)"}.scalar(feature_type::float64, make_dims(4, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(10),
+    UTEST_CHECK_EQUAL(dataset.feature(10),
                       feature_t{"feature(scalar1)"}.scalar(feature_type::float64, make_dims(4, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(11),
+    UTEST_CHECK_EQUAL(dataset.feature(11),
                       feature_t{"feature(scalar2)"}.scalar(feature_type::float64, make_dims(4, 1, 1)));
 
-    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), -1, +1, +1, +1, +1, +1, +1, +1, +1, +1));
-    check_select(generator, 1, make_tensor<scalar_t>(make_dims(10), -1, Na, +1, Na, +1, Na, +1, Na, +1, Na));
-    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), -1, Na, Na, +1, Na, Na, +1, Na, Na, +1));
-    check_select(generator, 3, make_tensor<int32_t>(make_dims(10), +0, +1, +1, +1, +1, +1, +1, +1, +1, +1));
-    check_select(generator, 4, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
-    check_select(generator, 5, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
-    check_select(generator, 6,
+    check_select(dataset, 0, make_tensor<scalar_t>(make_dims(10), -1, +1, +1, +1, +1, +1, +1, +1, +1, +1));
+    check_select(dataset, 1, make_tensor<scalar_t>(make_dims(10), -1, Na, +1, Na, +1, Na, +1, Na, +1, Na));
+    check_select(dataset, 2, make_tensor<scalar_t>(make_dims(10), -1, Na, Na, +1, Na, Na, +1, Na, Na, +1));
+    check_select(dataset, 3, make_tensor<int32_t>(make_dims(10), +0, +1, +1, +1, +1, +1, +1, +1, +1, +1));
+    check_select(dataset, 4, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
+    check_select(dataset, 5, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
+    check_select(dataset, 6,
                  make_tensor<int8_t>(make_dims(10, 3), +1, +0, +0, +0, +1, +1, +1, +0, +0, +0, +1, +0, +1, +0, +1, +0,
                                      +1, +0, +1, +0, +0, +0, +1, +1, +1, +0, +0, +0, +1, +0));
-    check_select(generator, 7,
+    check_select(dataset, 7,
                  make_tensor<int8_t>(make_dims(10, 3), +0, +1, +0, -1, -1, -1, +0, +1, +1, -1, -1, -1, +0, +1, +0, -1,
                                      -1, -1, +0, +1, +0, -1, -1, -1, +0, +1, +1, -1, -1, -1));
-    check_select(generator, 8,
+    check_select(dataset, 8,
                  make_tensor<int8_t>(make_dims(10, 3), +1, +0, +1, -1, -1, -1, -1, -1, -1, +0, +1, +1, -1, -1, -1, -1,
                                      -1, -1, +1, +0, +1, -1, -1, -1, -1, -1, -1, +0, +1, +1));
-    check_select(generator, 9,
+    check_select(dataset, 9,
                  make_tensor<scalar_t>(make_dims(10, 4, 1, 1), -1, +1, -1, +1, +0, +0, +0, +0, +1, +1, +1, +1, +2, +4,
                                        +8, +16, +3, +9, +27, +81, +4, +16, +64, +256, +5, +25, +125, +625, +6, +36,
                                        +216, 36 * 36, +7, +49, 49 * 7, 49 * 49, +8, +64, 64 * 8, 64 * 64));
-    check_select(generator, 10,
+    check_select(dataset, 10,
                  make_tensor<scalar_t>(make_dims(10, 4, 1, 1), -2, +4, -8, +16, Na, Na, Na, Na, +0, +0, +0, +0, Na, Na,
                                        Na, Na, +2, +4, +8, +16, Na, Na, Na, Na, +4, +16, +64, +256, Na, Na, Na, Na, +6,
                                        +36, +216, 36 * 36, Na, Na, Na, Na));
-    check_select(generator, 11,
+    check_select(dataset, 11,
                  make_tensor<scalar_t>(make_dims(10, 4, 1, 1), -3, +9, -27, +81, Na, Na, Na, Na, Na, Na, Na, Na, +0, +0,
                                        +0, +0, Na, Na, Na, Na, Na, Na, Na, Na, +3, +9, +27, +81, Na, Na, Na, Na, Na, Na,
                                        Na, Na, +6, +36, +216, 36 * 36));
 
     check_flatten(
-        generator,
+        dataset,
         make_tensor<scalar_t>(
             make_dims(10, 27), -1, -1, -1, +1, +1, +1, +1, -1, -1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -2, +4, -8,
             +16, -3, +9, -27, +81, +1, Na, Na, -1, Na, Na, -1, +1, +1, Na, Na, Na, Na, Na, Na, +0, +0, +0, +0, Na, Na,
@@ -306,57 +306,57 @@ UTEST_CASE(scalar)
 
 UTEST_CASE(structured)
 {
-    const auto dataset = make_datasource(10, string_t::npos);
+    const auto datasource = make_datasource(10, string_t::npos);
 
-    auto generator = dataset_t{dataset};
-    add_generator<elemwise_generator_t<struct_to_mclass_t>>(generator);
-    add_generator<elemwise_generator_t<struct_to_struct_t>>(generator, make_indices(8, 9, 10));
-    add_generator<elemwise_generator_t<struct_to_sclass_t>>(generator);
-    add_generator<elemwise_generator_t<struct_to_scalar_t>>(generator);
+    auto dataset = dataset_t{datasource};
+    add_generator<elemwise_generator_t<struct_to_mclass_t>>(dataset);
+    add_generator<elemwise_generator_t<struct_to_struct_t>>(dataset, make_indices(8, 9, 10));
+    add_generator<elemwise_generator_t<struct_to_sclass_t>>(dataset);
+    add_generator<elemwise_generator_t<struct_to_scalar_t>>(dataset);
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 12);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"feature(struct0)"}.mclass(strings_t{"<10", "<30", "<20"}));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"feature(struct1)"}.mclass(strings_t{"<10", "<30", "<20"}));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"feature(struct2)"}.mclass(strings_t{"<10", "<30", "<20"}));
-    UTEST_CHECK_EQUAL(generator.feature(3),
+    UTEST_REQUIRE_EQUAL(dataset.features(), 12);
+    UTEST_CHECK_EQUAL(dataset.feature(0), feature_t{"feature(struct0)"}.mclass(strings_t{"<10", "<30", "<20"}));
+    UTEST_CHECK_EQUAL(dataset.feature(1), feature_t{"feature(struct1)"}.mclass(strings_t{"<10", "<30", "<20"}));
+    UTEST_CHECK_EQUAL(dataset.feature(2), feature_t{"feature(struct2)"}.mclass(strings_t{"<10", "<30", "<20"}));
+    UTEST_CHECK_EQUAL(dataset.feature(3),
                       feature_t{"feature(struct0)"}.scalar(feature_type::float64, make_dims(2, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(4),
+    UTEST_CHECK_EQUAL(dataset.feature(4),
                       feature_t{"feature(struct1)"}.scalar(feature_type::float64, make_dims(2, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(5),
+    UTEST_CHECK_EQUAL(dataset.feature(5),
                       feature_t{"feature(struct2)"}.scalar(feature_type::float64, make_dims(2, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(6), feature_t{"feature(struct0)"}.sclass(strings_t{"<10", ">=10"}));
-    UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"feature(struct1)"}.sclass(strings_t{"<10", ">=10"}));
-    UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"feature(struct2)"}.sclass(strings_t{"<10", ">=10"}));
-    UTEST_CHECK_EQUAL(generator.feature(9), feature_t{"feature(struct0)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(10), feature_t{"feature(struct1)"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(11), feature_t{"feature(struct2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(6), feature_t{"feature(struct0)"}.sclass(strings_t{"<10", ">=10"}));
+    UTEST_CHECK_EQUAL(dataset.feature(7), feature_t{"feature(struct1)"}.sclass(strings_t{"<10", ">=10"}));
+    UTEST_CHECK_EQUAL(dataset.feature(8), feature_t{"feature(struct2)"}.sclass(strings_t{"<10", ">=10"}));
+    UTEST_CHECK_EQUAL(dataset.feature(9), feature_t{"feature(struct0)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(10), feature_t{"feature(struct1)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(11), feature_t{"feature(struct2)"}.scalar(feature_type::float64));
 
-    check_select(generator, 0,
+    check_select(dataset, 0,
                  make_tensor<int8_t>(make_dims(10, 3), +1, +1, +1, +1, +1, +1, +1, +1, +1, +0, +1, +1, +0, +1, +1, +0,
                                      +1, +0, +0, +1, +0, +0, +1, +0, +0, +0, +0, +0, +0, +0));
-    check_select(generator, 1,
+    check_select(dataset, 1,
                  make_tensor<int8_t>(make_dims(10, 3), +1, +1, +1, -1, -1, -1, +0, +1, +1, -1, -1, -1, +0, +1, +0, -1,
                                      -1, -1, +0, +0, +0, -1, -1, -1, +0, +0, +0, -1, -1, -1));
-    check_select(generator, 2,
+    check_select(dataset, 2,
                  make_tensor<int8_t>(make_dims(10, 3), +1, +1, +1, -1, -1, -1, -1, -1, -1, +0, +1, +1, -1, -1, -1, -1,
                                      -1, -1, +0, +1, +1, -1, -1, -1, -1, -1, -1, +0, +1, +0));
-    check_select(generator, 3,
+    check_select(dataset, 3,
                  make_tensor<scalar_t>(make_dims(10, 2, 1, 1), 1, 2, 5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26, 29,
                                        30, 33, 34, 37, 38));
-    check_select(generator, 4,
+    check_select(dataset, 4,
                  make_tensor<scalar_t>(make_dims(10, 2, 1, 1), 1, 2, N, N, 13, 14, N, Na, 25, 26, Na, Na, 37, 38, Na,
                                        Na, 49, 50, Na, Na));
-    check_select(generator, 5,
+    check_select(dataset, 5,
                  make_tensor<scalar_t>(make_dims(10, 2, 1, 1), 1, 2, N, N, N, Na, 10, 11, Na, Na, Na, Na, 19, 20, Na,
                                        Na, Na, Na, 28, 29));
-    check_select(generator, 6, make_tensor<int32_t>(make_dims(10), +0, +0, +0, +1, +1, +1, +1, +1, +1, +1));
-    check_select(generator, 7, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
-    check_select(generator, 8, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
-    check_select(generator, 9, make_tensor<scalar_t>(make_dims(10), 1, 5, +9, 13, 17, 21, 25, 29, 33, 37));
-    check_select(generator, 10, make_tensor<scalar_t>(make_dims(10), 1, N, 13, Na, 25, Na, 37, Na, 49, Na));
-    check_select(generator, 11, make_tensor<scalar_t>(make_dims(10), 1, N, Na, 10, Na, Na, 19, Na, Na, 28));
+    check_select(dataset, 6, make_tensor<int32_t>(make_dims(10), +0, +0, +0, +1, +1, +1, +1, +1, +1, +1));
+    check_select(dataset, 7, make_tensor<int32_t>(make_dims(10), +0, -1, +1, -1, +1, -1, +1, -1, +1, -1));
+    check_select(dataset, 8, make_tensor<int32_t>(make_dims(10), +0, -1, -1, +1, -1, -1, +1, -1, -1, +1));
+    check_select(dataset, 9, make_tensor<scalar_t>(make_dims(10), 1, 5, +9, 13, 17, 21, 25, 29, 33, 37));
+    check_select(dataset, 10, make_tensor<scalar_t>(make_dims(10), 1, N, 13, Na, 25, Na, 37, Na, 49, Na));
+    check_select(dataset, 11, make_tensor<scalar_t>(make_dims(10), 1, N, Na, 10, Na, Na, 19, Na, Na, 28));
 
-    check_flatten(generator,
+    check_flatten(dataset,
                   make_tensor<scalar_t>(
                       make_dims(10, 21), +1, +1, +1, +1, +1, +1, +1, +1, +1, +1, +2, +1, +2, +1, +2, +1, +1, +1, +1, +1,
                       +1, +1, +1, +1, +0, +0, +0, +0, +0, +0, +5, +6, Na, Na, Na, Na, +1, Na, Na, +5, Na, Na, +1, +1,

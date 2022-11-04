@@ -1,23 +1,20 @@
-#include "utils.h"
-#include <nano/dataset/memfixed.h>
-#include <nano/gboost/wlearner_affine.h>
-#include <nano/gboost/wlearner_dstep.h>
-#include <nano/gboost/wlearner_dtree.h>
-#include <nano/gboost/wlearner_hinge.h>
-#include <nano/gboost/wlearner_stump.h>
-#include <nano/gboost/wlearner_table.h>
+#include "fixture/dataset.h"
+#include "fixture/loss.h"
+#include <nano/dataset.h>
+#include <nano/generator/elemwise_identity.h>
+#include <nano/wlearner/affine.h>
+#include <nano/wlearner/dstep.h>
+#include <nano/wlearner/dtree.h>
+#include <nano/wlearner/hinge.h>
+#include <nano/wlearner/stump.h>
+#include <nano/wlearner/table.h>
 
 using namespace nano;
 
-class fixture_dataset_t : public memfixed_dataset_t<scalar_t>
+class fixture_datasource_t final : public datasource_t
 {
 public:
-    using memfixed_dataset_t::idims;
-    using memfixed_dataset_t::samples;
-    using memfixed_dataset_t::target;
-    using memfixed_dataset_t::tdims;
-
-    fixture_dataset_t() = default;
+    fixture_datasource_t(const) = default;
 
     virtual tensor_size_t groups() const = 0;
 
@@ -95,9 +92,11 @@ public:
                            });
     }
 
-    void load() override
+    void do_load() override
     {
-        resize(make_dims(m_samples, m_isize, 1, 1), make_dims(m_samples, m_tsize, 1, 1));
+        resize(
+
+            make_dims(m_samples, m_isize, 1, 1), make_dims(m_samples, m_tsize, 1, 1));
 
         auto rng    = make_rng();
         auto udistd = make_udist<tensor_size_t>(0, 2);

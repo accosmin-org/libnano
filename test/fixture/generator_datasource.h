@@ -1,5 +1,4 @@
-#include <nano/datasource.h>
-#include <utest/utest.h>
+#include "fixture/datasource.h"
 
 using namespace nano;
 
@@ -23,7 +22,7 @@ static auto make_features()
 class fixture_datasource_t final : public datasource_t
 {
 public:
-    explicit fixture_datasource_t(tensor_size_t samples, size_t target = string_t::npos)
+    explicit fixture_datasource_t(const tensor_size_t samples, const size_t target = string_t::npos)
         : datasource_t("fixture")
         , m_samples(samples)
         , m_features(make_features())
@@ -99,7 +98,7 @@ private:
     size_t        m_target;
 };
 
-static auto make_datasource(tensor_size_t samples, size_t target)
+static auto make_datasource(const tensor_size_t samples, const size_t target)
 {
     auto datasource = fixture_datasource_t{samples, target};
     UTEST_CHECK_NOTHROW(datasource.load());

@@ -124,17 +124,29 @@ namespace nano
         std::ostream& write(std::ostream&) const;
 
         ///
-        /// \brief access functions
+        /// \brief returns the feature type.
         ///
-        auto type() const { return m_type; }
+        feature_type type() const { return m_type; }
 
-        auto dims() const { return m_dims; }
+        ///
+        /// \brief returns the tensor dimensions (useful if a continuous feature).
+        ///
+        tensor3d_dims_t dims() const { return m_dims; }
 
-        const auto& name() const { return m_name; }
+        ///
+        /// \brief returns the feature name.
+        ///
+        const string_t& name() const { return m_name; }
 
+        ///
+        /// \brief returns the set of labels (useful if a categorical feature).
+        ///
         const auto& labels() const { return m_labels; }
 
-        auto classes() const { return static_cast<tensor_size_t>(m_labels.size()); }
+        ///
+        /// \brief returns the number of classes (useful if a categorical feature).
+        ///
+        tensor_size_t classes() const { return static_cast<tensor_size_t>(m_labels.size()); }
 
     private:
         // attributes
