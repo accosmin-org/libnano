@@ -325,36 +325,6 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
 /*class fixture_datasource_t final : public datasource_t
 {
 public:
-    fixture_datasource_t(const) = default;
-
-    virtual tensor_size_t groups() const = 0;
-
-    virtual void make_target(tensor_size_t) = 0;
-
-    template <typename toperator>
-    scalar_t make_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, const toperator& op)
-    {
-        auto input = this->input(sample);
-        if (!feature_t::missing(input(feature)))
-        {
-            return op(input(feature) = static_cast<scalar_t>(sample % modulo));
-        }
-        else
-        {
-            return 0.0;
-        }
-    }
-
-    scalar_t make_stump_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t
-threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster = 0)
-    {
-        return make_target(sample, feature, modulo,
-                           [&](const scalar_t x)
-                           {
-                               assign(sample, cluster + (x < threshold ? 0 : 1));
-                               return (x < threshold) ? pred0 : pred1;
-                           });
-    }
 
     scalar_t make_hinge_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t
 threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
@@ -391,56 +361,6 @@ threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
                            });
     }
 
-    template <typename tfun1>
-    scalar_t make_affine_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t weight,
-                                scalar_t bias, tensor_size_t cluster = 0)
-    {
-        return make_target(sample, feature, modulo,
-                           [&](const scalar_t x)
-                           {
-                               assign(sample, cluster);
-                               return weight * tfun1::get(x) + bias;
-                           });
-    }
-
-    void do_load() override
-    {
-        resize(
-
-            make_dims(m_samples, m_isize, 1, 1), make_dims(m_samples, m_tsize, 1, 1));
-
-        auto rng    = make_rng();
-        auto udistd = make_udist<tensor_size_t>(0, 2);
-        auto udistc = make_udist<scalar_t>(-1.0, +1.0);
-
-        m_cluster = cluster_t{m_samples, this->groups()};
-
-        for (tensor_size_t s = 0; s < m_samples; ++s)
-        {
-            auto input = this->input(s);
-            for (tensor_size_t f = 0; f < features(); ++f)
-            {
-                if (is_discrete(f))
-                {
-                    input(f) = is_optional(s, f) ? feature_t::placeholder_value() :
-static_cast<scalar_t>(udistd(rng));
-                }
-                else
-                {
-                    input(f) = is_optional(s, f) ? feature_t::placeholder_value() :
-static_cast<scalar_t>(udistc(rng));
-                }
-            }
-
-            auto target = this->target(s);
-            target.random(-100.0, +100.0);
-
-            make_target(s);
-        }
-    }
-
-    feature_t target() const override { return feature_t{"wlearner"}; }
-
     feature_t feature(const tensor_size_t index) const override
     {
         UTEST_REQUIRE_LESS_EQUAL(0, index);
@@ -465,53 +385,4 @@ static_cast<scalar_t>(udistc(rng));
 
         return feature;
     }
-
-    void isize(const tensor_size_t isize) { m_isize = isize; }
-
-    void tsize(const tensor_size_t tsize) { m_tsize = tsize; }
-
-    void samples(const tensor_size_t samples) { m_samples = samples; }
-
-    void assign(tensor_size_t sample, tensor_size_t group)
-    {
-        UTEST_REQUIRE_LESS_EQUAL(0, sample);
-        UTEST_REQUIRE_LESS(sample, m_samples);
-
-        m_cluster.assign(sample, group);
-    }
-
-    virtual bool is_discrete(tensor_size_t feature) const { return (feature % 2) == 0; }
-
-    virtual bool is_optional(tensor_size_t sample, tensor_size_t feature) const { return (sample + feature) % 23 ==
-0; }
-
-    tensor_size_t get_feature(bool discrete) const { return get_feature(isize(), discrete); }
-
-    tensor_size_t get_feature(tensor_size_t feature, bool discrete) const
-    {
-        --feature;
-        for (; feature >= 0; --feature)
-        {
-            if (is_discrete(feature) == discrete)
-            {
-                return feature;
-            }
-        }
-        assert(isize() > 0);
-        return 0;
-    }
-
-    tensor_size_t isize() const { return m_isize; }
-
-    tensor_size_t tsize() const { return m_tsize; }
-
-    const auto& cluster() const { return m_cluster; }
-
-private:
-    // attributes
-    tensor_size_t m_isize{10};    ///<
-    tensor_size_t m_tsize{1};     ///<
-    tensor_size_t m_samples{100}; ///< total number of samples to generate
-    cluster_t     m_cluster;      ///< split of the training samples using the ground truth feature
-};
 }*/

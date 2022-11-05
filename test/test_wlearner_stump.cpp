@@ -1,5 +1,5 @@
 #include "fixture/wlearner.h"
-#include <nano/wlearner/affine.h>
+#include <nano/wlearner/stump.h>
 
 using namespace nano;
 
@@ -8,7 +8,7 @@ class fixture_datasource_t final : public random_datasource_t
 public:
     explicit fixture_datasource_t(const tensor_size_t samples = 100)
         : random_datasource_t(samples, make_features(), 11U, make_random_hits(samples, 12, 11U))
-        , m_cluster(samples, 1)
+        , m_cluster(samples, 2)
     {
     }
 
@@ -16,42 +16,46 @@ public:
 
     static auto expected_feature() { return 6; }
 
-    static auto expected_weight() { return 1.42; }
+    static auto expected_threshold() { return 2.5; }
 
-    static auto expected_bias() { return -0.573; }
+    static auto expected_pred_lower() { return +3.0; }
+
+    static auto expected_pred_upper() { return -2.1; }
 
     static auto expected_tables()
     {
-        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_weight(), expected_bias());
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_pred_lower(), expected_pred_upper());
     }
 
     const auto& expected_cluster() const { return m_cluster; }
 
-    void set_affine_target(const tensor_size_t feature, const scalar_t weight, const scalar_t bias)
+    void set_stump_target(const tensor_size_t feature, const scalar_t threshold, const scalar_t pred_lower,
+                          const scalar_t pred_upper)
     {
         const auto hits    = this->hits();
         const auto samples = this->samples();
         const auto itarget = this->features();
-        const auto fvalues = make_random_tensor<scalar_t>(make_dims(samples), -1.0, +0.8);
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), -5, +4);
 
         for (tensor_size_t sample = 0; sample < samples; ++sample)
         {
             if (hits(sample, feature) != 0)
             {
                 const auto fvalue = fvalues(sample);
-                const auto target = weight * fvalue + bias;
+                const auto target = fvalue <= threshold ? pred_lower : pred_upper;
 
                 set(sample, feature, fvalue);
                 set(sample, itarget, target);
-                m_cluster.assign(sample, 0);
+                m_cluster.assign(sample, fvalue <= threshold ? 0 : 1);
             }
         }
     }
 
-    static void check_wlearner(const affine_wlearner_t& wlearner)
+    static void check_wlearner(const stump_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
         UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-8);
+        UTEST_CHECK_CLOSE(wlearner.threshold(), expected_threshold(), 1e-8);
     }
 
 private:
@@ -59,20 +63,20 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_affine_target(expected_feature(), expected_weight(), expected_bias());
+        set_stump_target(expected_feature(), expected_threshold(), expected_pred_lower(), expected_pred_upper());
     }
 
     cluster_t m_cluster;
 };
 
-UTEST_BEGIN_MODULE(test_wlearner_affine)
+UTEST_BEGIN_MODULE(test_wlearner_stump)
 
 UTEST_CASE(fit_predict)
 {
     const auto datasource0 = make_datasource<fixture_datasource_t>();
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
-    check_wlearner<affine_wlearner_t>(datasource0, datasourceX);
+    check_wlearner<stump_wlearner_t>(datasource0, datasourceX);
 }
 
 UTEST_END_MODULE()
