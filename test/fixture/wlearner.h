@@ -62,7 +62,7 @@ static auto make_features_invalid_target()
 }
 
 template <typename tdatasource>
-static auto make_datasource(const tensor_size_t samples = 100)
+static auto make_datasource(const tensor_size_t samples = 300)
 {
     auto datasource = tdatasource{samples};
     UTEST_REQUIRE_NOTHROW(datasource.load());
