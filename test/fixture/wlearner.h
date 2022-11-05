@@ -10,11 +10,11 @@ using namespace nano;
 static auto make_features()
 {
     return features_t{
+        feature_t{"sclass0"}.sclass(strings_t{"s10", "s11"}),
+        feature_t{"sclass1"}.sclass(strings_t{"s00", "s01", "s02"}),
+        feature_t{"sclass2"}.sclass(strings_t{"s20", "s21"}),
         feature_t{"mclass0"}.mclass(strings_t{"m00", "m01", "m02"}),
         feature_t{"mclass1"}.mclass(strings_t{"m10", "m11", "m12", "m13"}),
-        feature_t{"sclass0"}.sclass(strings_t{"s00", "s01", "s02"}),
-        feature_t{"sclass1"}.sclass(strings_t{"s10", "s11"}),
-        feature_t{"sclass2"}.sclass(strings_t{"s20", "s21"}),
         feature_t{"scalar0"}.scalar(feature_type::float32),
         feature_t{"scalar1"}.scalar(feature_type::float64),
         feature_t{"scalar2"}.scalar(feature_type::int16),
