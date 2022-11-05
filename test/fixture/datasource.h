@@ -126,8 +126,26 @@ protected:
                 set_fvalues(ifeature, make_random_tensor<int8_t>(make_dims(m_samples, feature.classes()), 0, 1));
                 break;
 
+            case feature_type::uint8:
+            case feature_type::uint16:
+            case feature_type::uint32:
+            case feature_type::uint64:
+                set_fvalues(ifeature, make_random_tensor<uint8_t>(cat_dims(m_samples, feature.dims()), 0, 13));
+                break;
+
+            case feature_type::int8:
+            case feature_type::int16:
+            case feature_type::int32:
+            case feature_type::int64:
+                set_fvalues(ifeature, make_random_tensor<int8_t>(cat_dims(m_samples, feature.dims()), -11, +17));
+                break;
+
+            case feature_type::float32:
+                set_fvalues(ifeature, make_random_tensor<float>(cat_dims(m_samples, feature.dims()), -3.0, +2.9));
+                break;
+
             default:
-                set_fvalues(ifeature, make_random_tensor<float>(cat_dims(m_samples, feature.dims()), -1.0, +0.9));
+                set_fvalues(ifeature, make_random_tensor<scalar_t>(cat_dims(m_samples, feature.dims()), -1.2, +1.3));
                 break;
             }
             ++ifeature;

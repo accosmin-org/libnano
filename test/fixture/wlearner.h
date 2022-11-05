@@ -15,12 +15,12 @@ static auto make_features()
         feature_t{"sclass0"}.sclass(strings_t{"s00", "s01", "s02"}),
         feature_t{"sclass1"}.sclass(strings_t{"s10", "s11"}),
         feature_t{"sclass2"}.sclass(strings_t{"s20", "s21"}),
-        feature_t{"scalar0"}.scalar(feature_type::float64),
+        feature_t{"scalar0"}.scalar(feature_type::float32),
         feature_t{"scalar1"}.scalar(feature_type::float64),
-        feature_t{"scalar2"}.scalar(feature_type::float64),
-        feature_t{"struct0"}.scalar(feature_type::float64, make_dims(1, 2, 2)),
-        feature_t{"struct1"}.scalar(feature_type::float64, make_dims(2, 1, 3)),
-        feature_t{"struct2"}.scalar(feature_type::float64, make_dims(3, 1, 1)),
+        feature_t{"scalar2"}.scalar(feature_type::int16),
+        feature_t{"struct0"}.scalar(feature_type::uint64, make_dims(1, 2, 2)),
+        feature_t{"struct1"}.scalar(feature_type::float32, make_dims(2, 1, 3)),
+        feature_t{"struct2"}.scalar(feature_type::int64, make_dims(3, 1, 1)),
         feature_t{"target"}.scalar(feature_type::float64),
     };
 }
