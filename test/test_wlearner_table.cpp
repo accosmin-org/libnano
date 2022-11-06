@@ -22,7 +22,10 @@ public:
         const auto hits    = this->hits();
         const auto samples = this->samples();
         const auto itarget = this->features();
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), tensor_size_t{0}, tables.size<0>() - 1);
+        const auto classes = this->feature(feature).classes();
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), tensor_size_t{0}, classes - 1);
+
+        assert(classes == tables.size<0>());
 
         for (tensor_size_t sample = 0; sample < samples; ++sample)
         {

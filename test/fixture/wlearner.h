@@ -339,31 +339,17 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     check_scale(wlearner, datasource0, expected_cluster);
 }
 
-/*class fixture_datasource_t final : public datasource_t
-{
-public:
-
-    scalar_t make_hinge_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t
+/*
+scalar_t make_hinge_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t
 threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
-    {
-        return make_target(sample, feature, modulo,
-                           [&](const scalar_t x)
-                           {
-                               assign(sample, cluster);
-                               return (type == ::nano::hinge::left)
-                                        ? ((x < threshold) ? (beta * (x - threshold)) : 0.0)
-                                        : ((x < threshold) ? 0.0 : (beta * (x - threshold)));
-                           });
-    }
-
-    scalar_t make_dstep_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t beta,
-                               tensor_size_t fvalue, tensor_size_t cluster = 0)
-    {
-        return make_target(sample, feature, modulo,
-                           [&](const scalar_t x)
-                           {
-                               assign(sample, cluster);
-                               return (static_cast<tensor_size_t>(x) == fvalue) ? beta : 0.0;
-                           });
-    }
-}*/
+{
+    return make_target(sample, feature, modulo,
+                       [&](const scalar_t x)
+                       {
+                           assign(sample, cluster);
+                           return (type == ::nano::hinge::left)
+                                    ? ((x < threshold) ? (beta * (x - threshold)) : 0.0)
+                                    : ((x < threshold) ? 0.0 : (beta * (x - threshold)));
+                       });
+}
+*/

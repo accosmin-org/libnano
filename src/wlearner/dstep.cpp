@@ -92,8 +92,6 @@ std::ostream& dstep_wlearner_t::write(std::ostream& stream) const
 
 scalar_t dstep_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    learner_t::fit(dataset);
-
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -154,8 +152,12 @@ scalar_t dstep_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                << "),samples=" << samples.size()
                << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
-    set(best.m_feature, best.m_tables);
-    m_fvalue = best.m_fvalue;
+    if (best.m_score != wlearner_t::no_fit_score())
+    {
+        learner_t::fit(dataset);
+        set(best.m_feature, best.m_tables);
+        m_fvalue = best.m_fvalue;
+    }
     return best.m_score;
 }
 
@@ -170,7 +172,7 @@ void dstep_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
     loop_sclass(dataset, samples, feature(),
                 [&](const tensor_size_t i, const int32_t value)
                 {
-                    assert(value >= 0 && value < this->tables().size<0>());
+                    assert(value >= 0);
                     if (value == m_fvalue)
                     {
                         outputs.vector(i) += output;
@@ -187,7 +189,7 @@ cluster_t dstep_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
     loop_sclass(dataset, samples, feature(),
                 [&](const tensor_size_t i, const int32_t value)
                 {
-                    assert(value >= 0 && value < this->tables().size<0>());
+                    assert(value >= 0);
                     cluster.assign(samples(i), value == m_fvalue ? 0 : 1);
                 });
 
