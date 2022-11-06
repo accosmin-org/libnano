@@ -3,12 +3,11 @@
 
 using namespace nano;
 
-class fixture_datasource_t final : public random_datasource_t
+class fixture_datasource_t final : public wlearner_datasource_t
 {
 public:
-    explicit fixture_datasource_t(const tensor_size_t samples = 100)
-        : random_datasource_t(samples, make_features(), 11U, make_random_hits(samples, 12, 11U))
-        , m_cluster(samples, 3)
+    explicit fixture_datasource_t(const tensor_size_t samples)
+        : wlearner_datasource_t(samples, 3)
     {
     }
 
@@ -17,8 +16,6 @@ public:
     static auto expected_feature() { return 1; }
 
     static auto expected_tables() { return make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1.42, +1.42, -0.42); }
-
-    const auto& expected_cluster() const { return m_cluster; }
 
     void set_table_target(const tensor_size_t feature, const tensor4d_t& tables)
     {
@@ -36,7 +33,7 @@ public:
 
                 set(sample, feature, fvalue);
                 set(sample, itarget, target);
-                m_cluster.assign(sample, fvalue);
+                assign(sample, fvalue);
             }
         }
     }
@@ -54,8 +51,6 @@ private:
 
         set_table_target(expected_feature(), expected_tables());
     }
-
-    cluster_t m_cluster;
 };
 
 UTEST_BEGIN_MODULE(test_wlearner_table)

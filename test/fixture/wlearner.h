@@ -25,6 +25,23 @@ static auto make_features()
     };
 }
 
+class wlearner_datasource_t : public random_datasource_t
+{
+public:
+    explicit wlearner_datasource_t(const tensor_size_t samples, const tensor_size_t groups)
+        : random_datasource_t(samples, make_features(), 11U, make_random_hits(samples, 12, 11U))
+        , m_cluster(samples, groups)
+    {
+    }
+
+    void assign(const tensor_size_t sample, const tensor_size_t group) { m_cluster.assign(sample, group); }
+
+    const auto& expected_cluster() const { return m_cluster; }
+
+private:
+    cluster_t m_cluster;
+};
+
 static auto make_features_too_few()
 {
     auto features = make_features();
@@ -339,17 +356,6 @@ threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
                            });
     }
 
-    scalar_t make_table_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t scale,
-                               tensor_size_t cluster = 0)
-    {
-        return make_target(sample, feature, modulo,
-                           [&](const scalar_t x)
-                           {
-                               assign(sample, cluster + (sample % modulo));
-                               return scale * (x - 1.0);
-                           });
-    }
-
     scalar_t make_dstep_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t beta,
                                tensor_size_t fvalue, tensor_size_t cluster = 0)
     {
@@ -359,30 +365,5 @@ threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
                                assign(sample, cluster);
                                return (static_cast<tensor_size_t>(x) == fvalue) ? beta : 0.0;
                            });
-    }
-
-    feature_t feature(const tensor_size_t index) const override
-    {
-        UTEST_REQUIRE_LESS_EQUAL(0, index);
-        UTEST_REQUIRE_LESS(index, features());
-
-        feature_t feature(scat("feature", index));
-        if (is_discrete(index))
-        {
-            // discrete, optional
-            feature.optional(true);
-            feature.sclass(strings_t{"cat1", "cat2", "cat3"});
-            UTEST_REQUIRE(feature.discrete());
-            UTEST_REQUIRE(feature.optional());
-        }
-        else
-        {
-            // continuous, optional
-            feature.optional(true);
-            UTEST_REQUIRE(!feature.discrete());
-            UTEST_REQUIRE(feature.optional());
-        }
-
-        return feature;
     }
 }*/
