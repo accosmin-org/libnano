@@ -71,8 +71,6 @@ rwlearner_t table_wlearner_t::clone() const
 
 scalar_t table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    learner_t::fit(dataset);
-
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -125,7 +123,11 @@ scalar_t table_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                << ",fvalues=" << best.m_tables.size<0>() << "),samples=" << samples.size()
                << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
-    set(best.m_feature, best.m_tables);
+    if (best.m_score != wlearner_t::no_fit_score())
+    {
+        learner_t::fit(dataset);
+        set(best.m_feature, best.m_tables);
+    }
     return best.m_score;
 }
 

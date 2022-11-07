@@ -154,8 +154,6 @@ rwlearner_t hinge_wlearner_t::clone() const
 
 scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    learner_t::fit(dataset);
-
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -216,9 +214,13 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                << ",threshold=" << best.m_threshold << "),samples=" << samples.size()
                << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
 
-    set(best.m_feature, best.m_tables);
-    m_threshold = best.m_threshold;
-    m_hinge     = best.m_hinge;
+    if (best.m_score != wlearner_t::no_fit_score())
+    {
+        learner_t::fit(dataset);
+        set(best.m_feature, best.m_tables);
+        m_threshold = best.m_threshold;
+        m_hinge     = best.m_hinge;
+    }
     return best.m_score;
 }
 
