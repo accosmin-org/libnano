@@ -138,7 +138,7 @@ namespace nano
         urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(vector), end(vector),
               make_rng(seed));
         return vector;
-    }
+    } // LCOV_EXCL_LINE
 
     ///
     /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
@@ -151,7 +151,7 @@ namespace nano
         urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(matrix), end(matrix),
               make_rng(seed));
         return matrix;
-    }
+    } // LCOV_EXCL_LINE
 
     ///
     /// \brief returns true if the two Eigen vectors or matrices are close.

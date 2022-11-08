@@ -78,10 +78,10 @@ static auto make_features_invalid_target()
     return features;
 }
 
-template <typename tdatasource>
-static auto make_datasource(const tensor_size_t samples = 300)
+template <typename tdatasource, typename... targs>
+static auto make_datasource(const tensor_size_t samples = 300, const targs... args)
 {
-    auto datasource = tdatasource{samples};
+    auto datasource = tdatasource{samples, args...};
     UTEST_REQUIRE_NOTHROW(datasource.load());
     UTEST_CHECK_EQUAL(datasource.samples(), samples);
     return datasource;
@@ -338,18 +338,3 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     // check scaling
     check_scale(wlearner, datasource0, expected_cluster);
 }
-
-/*
-scalar_t make_hinge_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, scalar_t
-threshold, scalar_t beta, ::nano::hinge type, tensor_size_t cluster = 0)
-{
-    return make_target(sample, feature, modulo,
-                       [&](const scalar_t x)
-                       {
-                           assign(sample, cluster);
-                           return (type == ::nano::hinge::left)
-                                    ? ((x < threshold) ? (beta * (x - threshold)) : 0.0)
-                                    : ((x < threshold) ? 0.0 : (beta * (x - threshold)));
-                       });
-}
-*/

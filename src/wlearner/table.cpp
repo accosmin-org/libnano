@@ -19,12 +19,6 @@ namespace
         {
         }
 
-        auto& x0(tensor_size_t fv) { return m_acc.x0(fv); }
-
-        auto r1(tensor_size_t fv) { return m_acc.r1(fv); }
-
-        auto r2(tensor_size_t fv) { return m_acc.r2(fv); }
-
         auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
 
         auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
@@ -165,4 +159,4 @@ cluster_t table_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
                 });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE

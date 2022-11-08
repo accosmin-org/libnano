@@ -15,6 +15,8 @@ public:
 
     static auto expected_feature() { return 6; }
 
+    static auto expected_features() { return make_indices(expected_feature()); }
+
     static auto expected_threshold() { return 2.5; }
 
     static auto expected_pred_lower() { return +3.0; }
@@ -39,11 +41,11 @@ public:
             if (hits(sample, feature) != 0)
             {
                 const auto fvalue = fvalues(sample);
-                const auto target = fvalue <= threshold ? pred_lower : pred_upper;
+                const auto target = fvalue < threshold ? pred_lower : pred_upper;
 
                 set(sample, feature, fvalue);
                 set(sample, itarget, target);
-                assign(sample, fvalue <= threshold ? 0 : 1);
+                assign(sample, fvalue < threshold ? 0 : 1);
             }
         }
     }
@@ -51,6 +53,7 @@ public:
     static void check_wlearner(const stump_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
+        UTEST_CHECK_EQUAL(wlearner.features(), expected_features());
         UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-8);
         UTEST_CHECK_CLOSE(wlearner.threshold(), expected_threshold(), 1e-8);
     }

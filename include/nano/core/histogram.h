@@ -191,7 +191,7 @@ namespace nano
         template <typename tvalue>
         tensor_size_t bin(tvalue value) const
         {
-            const auto svalue = cast_bin(value);
+            const auto svalue = safe_cast<tensor_size_t>(value);
 
             const auto* const begin = ::nano::begin(m_thresholds);
             const auto* const end   = ::nano::end(m_thresholds);
@@ -208,17 +208,6 @@ namespace nano
         }
 
     private:
-        template <typename tvalue>
-        static tensor_size_t cast_bin(tvalue value)
-        {
-            return static_cast<tensor_size_t>(value);
-        }
-
-        static tensor_size_t cast_bin(char value)
-        {
-            return static_cast<tensor_size_t>(static_cast<unsigned char>(value));
-        }
-
         template <typename titerator>
         void update(titerator begin, titerator end)
         {

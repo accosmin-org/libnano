@@ -122,6 +122,20 @@ namespace
     };
 } // namespace
 
+template <>
+enum_map_t<hinge_type> nano::enum_string<hinge_type>()
+{
+    return {
+        { hinge_type::left,  "left"},
+        {hinge_type::right, "right"},
+    };
+}
+
+std::ostream& nano::operator<<(std::ostream& stream, const hinge_type type)
+{
+    return stream << scat(type);
+}
+
 hinge_wlearner_t::hinge_wlearner_t()
     : single_feature_wlearner_t("hinge")
 {
@@ -246,11 +260,12 @@ void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
                         }
                     });
         break;
+
     default:
         loop_scalar(dataset, samples, feature(),
                     [&](const tensor_size_t i, const scalar_t value)
                     {
-                        if (value >= m_threshold && m_hinge == hinge_type::right)
+                        if (value >= m_threshold)
                         {
                             outputs.vector(i) += w * value + b;
                         }
@@ -263,11 +278,17 @@ cluster_t hinge_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 {
     learner_t::critical_compatible(dataset);
 
-    cluster_t cluster(dataset.samples(), 2);
+    cluster_t cluster(dataset.samples(), 1);
 
     loop_scalar(dataset, samples, feature(),
                 [&](const tensor_size_t i, const scalar_t value)
-                { cluster.assign(samples(i), value < m_threshold ? 0 : 1); });
+                {
+                    if ((m_hinge == hinge_type::left && value < m_threshold) ||
+                        (m_hinge == hinge_type::right && value >= m_threshold))
+                    {
+                        cluster.assign(samples(i), 0);
+                    }
+                });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE

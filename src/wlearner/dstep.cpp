@@ -23,12 +23,6 @@ namespace
             m_beta0.zero();
         }
 
-        auto& x0(tensor_size_t fv) { return m_accumulator.x0(fv); }
-
-        auto r1(tensor_size_t fv) { return m_accumulator.r1(fv); }
-
-        auto r2(tensor_size_t fv) { return m_accumulator.r2(fv); }
-
         auto x0(tensor_size_t fv) const { return m_accumulator.x0(fv); }
 
         auto r1(tensor_size_t fv) const { return m_accumulator.r1(fv); }
@@ -194,4 +188,4 @@ cluster_t dstep_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
                 });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE

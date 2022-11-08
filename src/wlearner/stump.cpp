@@ -196,4 +196,4 @@ cluster_t stump_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
                 { cluster.assign(samples(i), value < threshold ? 0 : 1); });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE

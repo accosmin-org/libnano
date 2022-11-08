@@ -139,4 +139,4 @@ cluster_t affine_wlearner_t::split(const dataset_t& dataset, const indices_t& sa
                 [&](const tensor_size_t i, const scalar_t) { cluster.assign(samples(i), 0); });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE
