@@ -28,23 +28,15 @@ public:
 
     void set_affine_target(const tensor_size_t feature, const scalar_t weight, const scalar_t bias)
     {
-        const auto hits    = this->hits();
-        const auto samples = this->samples();
-        const auto itarget = this->features();
-        const auto fvalues = make_random_tensor<scalar_t>(make_dims(samples), -1.0, +0.8);
+        const auto fvalues = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
 
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            if (hits(sample, feature) != 0)
-            {
-                const auto fvalue = fvalues(sample);
-                const auto target = weight * fvalue + bias;
-
-                set(sample, feature, fvalue);
-                set(sample, itarget, target);
-                assign(sample, 0);
-            }
-        }
+        set_targets(feature,
+                    [&](const tensor_size_t sample)
+                    {
+                        const auto fvalue = fvalues(sample);
+                        const auto target = weight * fvalue + bias;
+                        return std::make_tuple(fvalue, target, 0);
+                    });
     }
 
     static void check_wlearner(const affine_wlearner_t& wlearner)

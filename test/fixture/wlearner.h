@@ -34,7 +34,25 @@ public:
     {
     }
 
-    void assign(const tensor_size_t sample, const tensor_size_t group) { m_cluster.assign(sample, group); }
+    template <typename toperator>
+    void set_targets(const tensor_size_t feature, const toperator& op)
+    {
+        const auto hits    = this->hits();
+        const auto samples = this->samples();
+        const auto itarget = this->features(); // NB: the lasst feature is the target!
+
+        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        {
+            if (hits(sample, feature) != 0)
+            {
+                const auto [fvalue, target, cluster] = op(sample);
+
+                set(sample, feature, fvalue);
+                set(sample, itarget, target);
+                m_cluster.assign(sample, cluster);
+            }
+        }
+    }
 
     const auto& expected_cluster() const { return m_cluster; }
 

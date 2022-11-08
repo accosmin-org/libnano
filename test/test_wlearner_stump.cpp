@@ -31,23 +31,15 @@ public:
     void set_stump_target(const tensor_size_t feature, const scalar_t threshold, const scalar_t pred_lower,
                           const scalar_t pred_upper)
     {
-        const auto hits    = this->hits();
-        const auto samples = this->samples();
-        const auto itarget = this->features();
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), -5, +4);
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
 
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            if (hits(sample, feature) != 0)
-            {
-                const auto fvalue = fvalues(sample);
-                const auto target = fvalue < threshold ? pred_lower : pred_upper;
-
-                set(sample, feature, fvalue);
-                set(sample, itarget, target);
-                assign(sample, fvalue < threshold ? 0 : 1);
-            }
-        }
+        set_targets(feature,
+                    [&](const tensor_size_t sample)
+                    {
+                        const auto fvalue = fvalues(sample);
+                        const auto target = fvalue < threshold ? pred_lower : pred_upper;
+                        return std::make_tuple(fvalue, target, fvalue < threshold ? 0 : 1);
+                    });
     }
 
     static void check_wlearner(const stump_wlearner_t& wlearner)

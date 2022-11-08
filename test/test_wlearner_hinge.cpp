@@ -27,31 +27,22 @@ public:
         return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_beta(), -expected_threshold() * expected_beta());
     }
 
-    void set_hinge_target(const tensor_size_t feature, const scalar_t threshold, const scalar_t beta)
+    void set_hinge_target(const tensor_size_t feature, const hinge_type hinge, const scalar_t threshold,
+                          const scalar_t beta)
     {
-        const auto hits    = this->hits();
-        const auto samples = this->samples();
-        const auto itarget = this->features();
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), -5, +4);
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
 
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        const auto op = [&](const tensor_size_t sample)
         {
-            if (hits(sample, feature) != 0)
-            {
-                const auto fvalue = fvalues(sample);
-                const auto target = (m_hinge == hinge_type::left)
-                                      ? ((fvalue < threshold) ? (beta * (fvalue - threshold)) : 0.0)
-                                      : ((fvalue < threshold) ? 0.0 : (beta * (fvalue - threshold)));
+            const auto isleft = hinge == hinge_type::left;
+            const auto fvalue = fvalues(sample);
+            const auto target = isleft ? ((fvalue < threshold) ? (beta * (fvalue - threshold)) : 0.0)
+                                       : ((fvalue < threshold) ? 0.0 : (beta * (fvalue - threshold)));
+            const auto group  = ((isleft && fvalue < threshold) || (!isleft && fvalue >= threshold)) ? 0 : -1;
+            return std::make_tuple(fvalue, target, group);
+        };
 
-                set(sample, feature, fvalue);
-                set(sample, itarget, target);
-                if ((m_hinge == hinge_type::left && fvalue < threshold) ||
-                    (m_hinge == hinge_type::right && fvalue >= threshold))
-                {
-                    assign(sample, 0);
-                }
-            }
-        }
+        set_targets(feature, op);
     }
 
     void check_wlearner(const hinge_wlearner_t& wlearner) const
@@ -68,7 +59,7 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_hinge_target(expected_feature(), expected_threshold(), expected_beta());
+        set_hinge_target(expected_feature(), m_hinge, expected_threshold(), expected_beta());
     }
 
     hinge_type m_hinge{hinge_type::left};

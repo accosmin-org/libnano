@@ -23,27 +23,19 @@ public:
 
     void set_dstep_target(const tensor_size_t feature, const tensor_size_t fvalueX, const tensor4d_t& tables)
     {
-        const auto hits    = this->hits();
-        const auto samples = this->samples();
-        const auto itarget = this->features();
         const auto classes = this->feature(feature).classes();
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(samples), tensor_size_t{0}, classes - 1);
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes - 1);
 
         assert(2 == tables.size<0>());
         assert(fvalueX >= 0 && fvalueX < classes);
 
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            if (hits(sample, feature) != 0)
-            {
-                const auto fvalue = fvalues(sample);
-                const auto target = tables(fvalue == fvalueX ? 0 : 1);
-
-                set(sample, feature, fvalue);
-                set(sample, itarget, target);
-                assign(sample, fvalue == fvalueX ? 0 : 1);
-            }
-        }
+        set_targets(feature,
+                    [&](const tensor_size_t sample)
+                    {
+                        const auto fvalue = fvalues(sample);
+                        const auto target = tables(fvalue == fvalueX ? 0 : 1);
+                        return std::make_tuple(fvalue, target, fvalue == fvalueX ? 0 : 1);
+                    });
     }
 
     static void check_wlearner(const dstep_wlearner_t& wlearner)
