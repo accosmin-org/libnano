@@ -63,7 +63,7 @@ UTEST_BEGIN_MODULE(test_wlearner_table)
 
 UTEST_CASE(fit_predict)
 {
-    const auto datasource0 = make_datasource<fixture_datasource_t>();
+    const auto datasource0 = make_datasource<fixture_datasource_t>(300);
     const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
     check_wlearner<table_wlearner_t>(datasource0, datasourceX);
