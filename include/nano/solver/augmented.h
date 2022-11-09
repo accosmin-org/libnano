@@ -26,7 +26,7 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_t

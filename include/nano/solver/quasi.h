@@ -31,7 +31,7 @@ namespace nano
         ///
         /// \brief @see solver_t
         ///
-        solver_state_t do_minimize(const function_t&, const vector_t& x0) const final;
+        solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
 
     private:
         virtual void update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const = 0;
@@ -53,12 +53,12 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_quasi_t
         ///
-        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
     };
 
     ///
@@ -77,12 +77,12 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_quasi_t
         ///
-        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
     };
 
     ///
@@ -101,12 +101,12 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_quasi_t
         ///
-        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
     };
 
     ///
@@ -125,12 +125,12 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_quasi_t
         ///
-        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
     };
 
     ///
@@ -149,12 +149,12 @@ namespace nano
         ///
         /// \brief @see clonable_t
         ///
-        rsolver_t clone() const final;
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_quasi_t
         ///
-        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const final;
+        void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
     };
 
     template <>

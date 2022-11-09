@@ -18,11 +18,11 @@ namespace nano
         ///
         /// \brief @see lsearch0_t
         ///
-        rlsearch0_t clone() const final;
+        rlsearch0_t clone() const override;
 
         ///
         /// \brief @see lsearch0_t
         ///
-        scalar_t get(const solver_state_t&) final;
+        scalar_t get(const solver_state_t&) override;
     };
 } // namespace nano

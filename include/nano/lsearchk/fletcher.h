@@ -22,12 +22,12 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        rlsearchk_t clone() const final;
+        rlsearchk_t clone() const override;
 
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) const final;
+        bool get(const solver_state_t& state0, solver_state_t& state) const override;
 
     private:
         bool zoom(const solver_state_t&, lsearch_step_t lo, lsearch_step_t hi, solver_state_t&) const;

@@ -25,12 +25,12 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        rlsearchk_t clone() const final;
+        rlsearchk_t clone() const override;
 
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) const final;
+        bool get(const solver_state_t& state0, solver_state_t& state) const override;
 
     private:
         struct state_t
