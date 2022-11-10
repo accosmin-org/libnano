@@ -3,16 +3,24 @@
 
 using namespace nano;
 
-class wdtree_dataset_t : public fixture_dataset_t
+static auto make_wdtree(const int min_split, const int max_depth)
+{
+    auto wlearner                                    = wlearner_dtree_t{};
+    wlearner.parameter("wlearner::dtree::min_split") = min_split;
+    wlearner.parameter("wlearner::dtree::max_depth") = max_depth;
+    return wlearner;
+}
+
+class wdtree_datasource_t : public fixture_datasource_t
 {
 public:
-    wdtree_dataset_t() = default;
+    wdtree_datasource_t() = default;
 
     virtual int           min_split() const = 0;
     virtual int           max_depth() const = 0;
     virtual tensor4d_t    tables() const    = 0;
     virtual indices_t     features() const  = 0;
-    virtual dtree_nodes_t nodes() const     = 0;
+    virtual dtree_nodes_t expected_nodes() const = 0;
 
     void check_wlearner(const wlearner_dtree_t& wlearner) const
     {
@@ -25,10 +33,10 @@ public:
     }
 };
 
-class wdtree_stump1_dataset_t : public wdtree_dataset_t
+class wdtree_stump1_datasource_t : public wdtree_datasource_t
 {
 public:
-    wdtree_stump1_dataset_t() = default;
+    wdtree_stump1_datasource_t() = default;
 
     int min_split() const override { return 1; }
 
@@ -56,10 +64,10 @@ public:
     }
 };
 
-class wdtree_table1_dataset_t : public wdtree_dataset_t
+class wdtree_table1_datasource_t : public wdtree_datasource_t
 {
 public:
-    wdtree_table1_dataset_t() = default;
+    wdtree_table1_datasource_t() = default;
 
     int min_split() const override { return 1; }
 
@@ -90,10 +98,10 @@ public:
     }
 };
 
-class wdtree_depth2_dataset_t : public wdtree_dataset_t
+class wdtree_depth2_datasource_t : public wdtree_datasource_t
 {
 public:
-    wdtree_depth2_dataset_t() = default;
+    wdtree_depth2_datasource_t() = default;
 
     int min_split() const override { return 1; }
 
@@ -157,10 +165,10 @@ public:
     }
 };
 
-class wdtree_depth3_dataset_t : public wdtree_dataset_t
+class wdtree_depth3_datasource_t : public wdtree_datasource_t
 {
 public:
-    wdtree_depth3_dataset_t() = default;
+    wdtree_depth3_datasource_t() = default;
 
     int min_split() const override { return 1; }
 
@@ -279,14 +287,6 @@ public:
     }
 };
 
-static auto make_wdtree(const wdtree_dataset_t& dataset)
-{
-    auto wlearner = make_wlearner<wlearner_dtree_t>();
-    wlearner.min_split(dataset.min_split());
-    wlearner.max_depth(dataset.max_depth());
-    return wlearner;
-}
-
 UTEST_BEGIN_MODULE(test_gboost_wdtree)
 
 UTEST_CASE(print)
@@ -315,10 +315,10 @@ UTEST_CASE(print)
 
 UTEST_CASE(fitting_stump1)
 {
-    const auto dataset   = make_dataset<wdtree_stump1_dataset_t>();
-    const auto datasetx1 = make_dataset<wdtree_stump1_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_stump1_dataset_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<wdtree_stump1_dataset_t>>();
+    const auto dataset   = make_dataset<wdtree_stump1_datasource_t>();
+    const auto datasetx1 = make_dataset<wdtree_stump1_datasource_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_stump1_datasource_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_continuous_features_datasource_t<wdtree_stump1_datasource_t>>();
 
     auto wlearner = make_wdtree(dataset);
     check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3);
@@ -326,11 +326,11 @@ UTEST_CASE(fitting_stump1)
 
 UTEST_CASE(fitting_table1)
 {
-    const auto dataset   = make_dataset<wdtree_table1_dataset_t>();
-    const auto datasetx1 = make_dataset<wdtree_table1_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_table1_dataset_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_table1_dataset_t>>();
-    const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wdtree_table1_dataset_t>>();
+    const auto dataset   = make_dataset<wdtree_table1_datasource_t>();
+    const auto datasetx1 = make_dataset<wdtree_table1_datasource_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_table1_datasource_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wdtree_table1_datasource_t>>();
+    const auto datasetx4 = make_dataset<different_discrete_feature_datasource_t<wdtree_table1_datasource_t>>();
 
     auto wlearner = make_wdtree(dataset);
     check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4);
@@ -338,12 +338,12 @@ UTEST_CASE(fitting_table1)
 
 UTEST_CASE(fitting_depth2)
 {
-    const auto dataset   = make_dataset<wdtree_depth2_dataset_t>(10, 1, 400);
-    const auto datasetx1 = make_dataset<wdtree_depth2_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_depth2_dataset_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth2_dataset_t>>();
-    const auto datasetx4 = make_dataset<no_continuous_features_dataset_t<wdtree_depth2_dataset_t>>();
-    const auto datasetx5 = make_dataset<different_discrete_feature_dataset_t<wdtree_depth2_dataset_t>>();
+    const auto dataset   = make_dataset<wdtree_depth2_datasource_t>(10, 1, 400);
+    const auto datasetx1 = make_dataset<wdtree_depth2_datasource_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_depth2_datasource_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wdtree_depth2_datasource_t>>();
+    const auto datasetx4 = make_dataset<no_continuous_features_datasource_t<wdtree_depth2_datasource_t>>();
+    const auto datasetx5 = make_dataset<different_discrete_feature_datasource_t<wdtree_depth2_datasource_t>>();
 
     auto wlearner = make_wdtree(dataset);
     check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);
@@ -351,12 +351,12 @@ UTEST_CASE(fitting_depth2)
 
 UTEST_CASE(fitting_depth3)
 {
-    const auto dataset   = make_dataset<wdtree_depth3_dataset_t>(10, 1, 1600);
-    const auto datasetx1 = make_dataset<wdtree_depth3_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_depth3_dataset_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wdtree_depth3_dataset_t>>();
-    const auto datasetx4 = make_dataset<no_continuous_features_dataset_t<wdtree_depth3_dataset_t>>();
-    const auto datasetx5 = make_dataset<different_discrete_feature_dataset_t<wdtree_depth3_dataset_t>>();
+    const auto dataset   = make_dataset<wdtree_depth3_datasource_t>(10, 1, 1600);
+    const auto datasetx1 = make_dataset<wdtree_depth3_datasource_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wdtree_depth3_datasource_t>(dataset.features().max(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wdtree_depth3_datasource_t>>();
+    const auto datasetx4 = make_dataset<no_continuous_features_datasource_t<wdtree_depth3_datasource_t>>();
+    const auto datasetx5 = make_dataset<different_discrete_feature_datasource_t<wdtree_depth3_datasource_t>>();
 
     auto wlearner = make_wdtree(dataset);
     check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);

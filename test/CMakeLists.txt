@@ -55,7 +55,7 @@ make_test(test_model_util NANO::nano)
 make_test(test_model_cluster NANO::nano)
 
 make_test(test_wlearner_util NANO::nano)
-#make_test(test_wlearner_dtree NANO::nano)
+make_test(test_wlearner_dtree NANO::nano)
 make_test(test_wlearner_dstep NANO::nano)
 make_test(test_wlearner_hinge NANO::nano)
 make_test(test_wlearner_stump NANO::nano)
