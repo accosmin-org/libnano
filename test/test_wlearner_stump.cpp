@@ -28,20 +28,6 @@ public:
         return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_pred_lower(), expected_pred_upper());
     }
 
-    void set_stump_target(const tensor_size_t feature, const scalar_t threshold, const scalar_t pred_lower,
-                          const scalar_t pred_upper)
-    {
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
-
-        set_targets(feature,
-                    [&](const tensor_size_t sample)
-                    {
-                        const auto fvalue = fvalues(sample);
-                        const auto target = fvalue < threshold ? pred_lower : pred_upper;
-                        return std::make_tuple(fvalue, target, fvalue < threshold ? 0 : 1);
-                    });
-    }
-
     static void check_wlearner(const stump_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
@@ -55,7 +41,14 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_stump_target(expected_feature(), expected_threshold(), expected_pred_lower(), expected_pred_upper());
+        const auto feature    = expected_feature();
+        const auto threshold  = expected_threshold();
+        const auto pred_lower = expected_pred_lower();
+        const auto pred_upper = expected_pred_upper();
+        const auto fvalues    = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
+
+        set_targets(feature, [&](const tensor_size_t sample)
+                    { return make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper); });
     }
 };
 

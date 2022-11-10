@@ -27,24 +27,6 @@ public:
         return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_beta(), -expected_threshold() * expected_beta());
     }
 
-    void set_hinge_target(const tensor_size_t feature, const hinge_type hinge, const scalar_t threshold,
-                          const scalar_t beta)
-    {
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
-
-        const auto op = [&](const tensor_size_t sample)
-        {
-            const auto isleft = hinge == hinge_type::left;
-            const auto fvalue = fvalues(sample);
-            const auto target = isleft ? ((fvalue < threshold) ? (beta * (fvalue - threshold)) : 0.0)
-                                       : ((fvalue < threshold) ? 0.0 : (beta * (fvalue - threshold)));
-            const auto group  = ((isleft && fvalue < threshold) || (!isleft && fvalue >= threshold)) ? 0 : -1;
-            return std::make_tuple(fvalue, target, group);
-        };
-
-        set_targets(feature, op);
-    }
-
     void check_wlearner(const hinge_wlearner_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.hinge(), m_hinge);
@@ -59,7 +41,13 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_hinge_target(expected_feature(), m_hinge, expected_threshold(), expected_beta());
+        const auto feature   = expected_feature();
+        const auto threshold = expected_threshold();
+        const auto beta      = expected_beta();
+        const auto fvalues   = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
+
+        set_targets(feature, [&](const tensor_size_t sample)
+                    { return make_hinge_target(fvalues(sample), m_hinge, threshold, beta); });
     }
 
     hinge_type m_hinge{hinge_type::left};

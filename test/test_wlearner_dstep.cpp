@@ -21,23 +21,6 @@ public:
 
     static auto expected_tables() { return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -1.42, 0.0); }
 
-    void set_dstep_target(const tensor_size_t feature, const tensor_size_t fvalueX, const tensor4d_t& tables)
-    {
-        const auto classes = this->feature(feature).classes();
-        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes - 1);
-
-        assert(2 == tables.size<0>());
-        assert(fvalueX >= 0 && fvalueX < classes);
-
-        set_targets(feature,
-                    [&](const tensor_size_t sample)
-                    {
-                        const auto fvalue = fvalues(sample);
-                        const auto target = tables(fvalue == fvalueX ? 0 : 1);
-                        return std::make_tuple(fvalue, target, fvalue == fvalueX ? 0 : 1);
-                    });
-    }
-
     static void check_wlearner(const dstep_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.fvalue(), expected_fvalue());
@@ -51,7 +34,17 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_dstep_target(expected_feature(), expected_fvalue(), expected_tables());
+        const auto feature = expected_feature();
+        const auto fvalueX = expected_fvalue();
+        const auto tables  = expected_tables();
+        const auto classes = this->feature(feature).classes();
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes - 1);
+
+        assert(2 == tables.size<0>());
+        assert(fvalueX >= 0 && fvalueX < classes);
+
+        set_targets(feature,
+                    [&](const tensor_size_t sample) { return make_dstep_target(fvalues(sample), fvalueX, tables); });
     }
 };
 

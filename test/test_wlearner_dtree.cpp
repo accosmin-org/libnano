@@ -1,6 +1,5 @@
-#include "fixture/gboost.h"
-#include <nano/core/numeric.h>
-#include <utest/utest.h>
+#include "fixture/wlearner.h"
+#include <nano/wlearner/dtree.h>
 
 using namespace nano;
 

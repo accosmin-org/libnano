@@ -26,19 +26,6 @@ public:
         return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_weight(), expected_bias());
     }
 
-    void set_affine_target(const tensor_size_t feature, const scalar_t weight, const scalar_t bias)
-    {
-        const auto fvalues = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
-
-        set_targets(feature,
-                    [&](const tensor_size_t sample)
-                    {
-                        const auto fvalue = fvalues(sample);
-                        const auto target = weight * fvalue + bias;
-                        return std::make_tuple(fvalue, target, 0);
-                    });
-    }
-
     static void check_wlearner(const affine_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
@@ -51,7 +38,13 @@ private:
     {
         random_datasource_t::do_load();
 
-        set_affine_target(expected_feature(), expected_weight(), expected_bias());
+        const auto feature = expected_feature();
+        const auto weight  = expected_weight();
+        const auto bias    = expected_bias();
+        const auto fvalues = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
+
+        set_targets(feature,
+                    [&](const tensor_size_t sample) { return make_affine_target(fvalues(sample), weight, bias); });
     }
 };
 

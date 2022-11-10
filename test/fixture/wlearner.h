@@ -3,7 +3,7 @@
 #include "fixture/estimator.h"
 #include "fixture/loss.h"
 #include <nano/dataset/iterator.h>
-#include <nano/wlearner.h>
+#include <nano/wlearner/hinge.h>
 
 using namespace nano;
 
@@ -32,6 +32,41 @@ public:
         : random_datasource_t(samples, make_features(), 11U, make_random_hits(samples, 12, 11U))
         , m_cluster(samples, groups)
     {
+    }
+
+    static auto make_affine_target(const scalar_t fvalue, const scalar_t weight, const scalar_t bias)
+    {
+        const auto target = weight * fvalue + bias;
+        return std::make_tuple(fvalue, target, 0);
+    }
+
+    static auto make_stump_target(const scalar_t fvalue, const scalar_t threshold, const scalar_t pred_lower,
+                                  const scalar_t pred_upper)
+    {
+        const auto target = fvalue < threshold ? pred_lower : pred_upper;
+        return std::make_tuple(fvalue, target, fvalue < threshold ? 0 : 1);
+    }
+
+    static auto make_hinge_target(const scalar_t fvalue, const hinge_type hinge, const scalar_t threshold,
+                                  const scalar_t beta)
+    {
+        const auto isleft = hinge == hinge_type::left;
+        const auto target = isleft ? ((fvalue < threshold) ? (beta * (fvalue - threshold)) : 0.0)
+                                   : ((fvalue < threshold) ? 0.0 : (beta * (fvalue - threshold)));
+        const auto group  = ((isleft && fvalue < threshold) || (!isleft && fvalue >= threshold)) ? 0 : -1;
+        return std::make_tuple(fvalue, target, group);
+    }
+
+    static auto make_dstep_target(const tensor_size_t fvalue, const tensor_size_t fvalueX, const tensor4d_t& tables)
+    {
+        const auto target = tables(fvalue == fvalueX ? 0 : 1);
+        return std::make_tuple(fvalue, target, fvalue == fvalueX ? 0 : 1);
+    }
+
+    static auto make_table_target(const tensor_size_t fvalue, const tensor4d_t& tables)
+    {
+        const auto target = tables.tensor(fvalue);
+        return std::make_tuple(fvalue, target, fvalue);
     }
 
     template <typename toperator>
