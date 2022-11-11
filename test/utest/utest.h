@@ -192,7 +192,8 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (!(check))                                                                                                      \
     {                                                                                                                  \
-        UTEST_HANDLE_FAILURE() << "check {" << UTEST_STRINGIFY(check) << "} failed!" << RESET_COLOR << std::endl;      \
+        UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(check)            \
+                               << "} failed!" << RESET_COLOR << std::endl;                                             \
         UTEST_HANDLE_CRITICAL(critical)                                                                                \
     }
 #define UTEST_CHECK(check)   UTEST_EVALUATE(check, false);
@@ -235,7 +236,8 @@ static exception_status check_throw(const toperator& op)
         const auto res_right = (right); /* NOLINT */                                                                   \
         if (!(res_left op res_right))                                                                                  \
         {                                                                                                              \
-            UTEST_HANDLE_FAILURE() << "check {" << UTEST_STRINGIFY(left op right) << "} failed {" << res_left << " "   \
+            UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {"                                  \
+                                   << UTEST_STRINGIFY(left op right) << "} failed {" << res_left << " "                \
                                    << UTEST_STRINGIFY(op) << " " << res_right << "}!" << RESET_COLOR << std::endl;     \
             UTEST_HANDLE_CRITICAL(critical)                                                                            \
         }                                                                                                              \
@@ -270,8 +272,9 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (!::nano::close((left), (right), epsilon))                                                                      \
     {                                                                                                                  \
-        UTEST_HANDLE_FAILURE() << "check {" << UTEST_STRINGIFY(left<> right) << "} failed {" << (left) << " <"         \
-                               << (epsilon) << "> " << (right) << "}!" << RESET_COLOR << std::endl;                    \
+        UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left<> right)     \
+                               << "} failed {" << (left) << " <" << (epsilon) << "> " << (right) << "}!"               \
+                               << RESET_COLOR << std::endl;                                                            \
         UTEST_HANDLE_CRITICAL(critical);                                                                               \
     }
 

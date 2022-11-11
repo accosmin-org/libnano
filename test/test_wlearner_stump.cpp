@@ -43,14 +43,14 @@ private:
     {
         random_datasource_t::do_load();
 
-        const auto feature    = expected_feature();
-        const auto threshold  = expected_threshold();
-        const auto pred_lower = expected_pred_lower();
-        const auto pred_upper = expected_pred_upper();
-        const auto fvalues    = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
+        const auto feature = expected_feature();
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
 
-        set_targets(feature, [&](const tensor_size_t sample)
-                    { return make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper); });
+        set_targets(feature,
+                    [&](const tensor_size_t sample) {
+                        return make_stump_target(fvalues(sample), expected_threshold(), expected_pred_lower(),
+                                                 expected_pred_upper());
+                    });
     }
 };
 

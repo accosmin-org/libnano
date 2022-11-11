@@ -43,13 +43,11 @@ private:
     {
         random_datasource_t::do_load();
 
-        const auto feature   = expected_feature();
-        const auto threshold = expected_threshold();
-        const auto beta      = expected_beta();
-        const auto fvalues   = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
+        const auto feature = expected_feature();
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
 
         set_targets(feature, [&](const tensor_size_t sample)
-                    { return make_hinge_target(fvalues(sample), m_hinge, threshold, beta); });
+                    { return make_hinge_target(fvalues(sample), m_hinge, expected_threshold(), expected_beta()); });
     }
 
     hinge_type m_hinge{hinge_type::left};

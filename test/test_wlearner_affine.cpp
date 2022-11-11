@@ -41,12 +41,10 @@ private:
         random_datasource_t::do_load();
 
         const auto feature = expected_feature();
-        const auto weight  = expected_weight();
-        const auto bias    = expected_bias();
         const auto fvalues = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
 
-        set_targets(feature,
-                    [&](const tensor_size_t sample) { return make_affine_target(fvalues(sample), weight, bias); });
+        set_targets(feature, [&](const tensor_size_t sample)
+                    { return make_affine_target(fvalues(sample), expected_weight(), expected_bias()); });
     }
 };
 

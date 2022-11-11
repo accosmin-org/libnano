@@ -72,21 +72,21 @@ private:
     {
         random_datasource_t::do_load();
 
-        const auto feature    = expected_feature();
-        const auto threshold  = expected_threshold();
-        const auto pred_lower = expected_pred_lower();
-        const auto pred_upper = expected_pred_upper();
-        const auto fvalues    = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
+        const auto feature = expected_feature();
+        const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +4);
 
-        set_targets(feature, [&](const tensor_size_t sample)
-                    { return make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper); });
+        set_targets(feature,
+                    [&](const tensor_size_t sample) {
+                        return make_stump_target(fvalues(sample), expected_threshold(), expected_pred_lower(),
+                                                 expected_pred_upper());
+                    });
     }
 };
 
 class wdtree_table1_datasource_t final : public wdtree_datasource_t
 {
 public:
-    wdtree_table1_datasource_t(const tensor_size_t samples)
+    explicit wdtree_table1_datasource_t(const tensor_size_t samples)
         : wdtree_datasource_t(samples, 3)
     {
     }
@@ -129,74 +129,135 @@ private:
     }
 };
 
-/*class wdtree_depth2_datasource_t : public wdtree_datasource_t
+class wdtree_depth2_datasource_t final : public wdtree_datasource_t
 {
 public:
-    wdtree_depth2_datasource_t() = default;
-
-    int min_split() const override { return 1; }
-
-    int max_depth() const override { return 2; }
-
-    tensor_size_t groups() const override { return 6; }
-
-    tensor_size_t the_discrete_feature() const { return gt_feature0(); }
-
-    tensor_size_t gt_feature0(bool discrete = true) const { return get_feature(discrete); }
-
-    tensor_size_t gt_feature10(bool discrete = false) const { return get_feature(discrete); }
-
-    tensor_size_t gt_feature11(bool discrete = false) const { return get_feature(gt_feature10(), discrete); }
-
-    tensor_size_t gt_feature12(bool discrete = false) const { return get_feature(gt_feature11(), discrete); }
-
-    void make_target(const tensor_size_t sample) override
+    explicit wdtree_depth2_datasource_t(const tensor_size_t samples)
+        : wdtree_datasource_t(samples, 6)
     {
-        auto input = this->input(sample);
+    }
 
-        const auto tf0 = gt_feature0();
-        if (!feature_t::missing(input(tf0)))
+    static auto expected_feature0() { return 1; }
+
+    static auto expected_feature10() { return 5; }
+
+    static auto expected_feature11() { return 6; }
+
+    static auto expected_feature12() { return 5; }
+
+    static auto expected_threshold10() { return -1.5; }
+
+    static auto expected_threshold11() { return +2.5; }
+
+    static auto expected_threshold12() { return +1.5; }
+
+    static auto expected_pred_lower10() { return -1.1; }
+
+    static auto expected_pred_upper10() { return -2.7; }
+
+    static auto expected_pred_lower11() { return +0.1; }
+
+    static auto expected_pred_upper11() { return +0.7; }
+
+    static auto expected_pred_lower12() { return +3.2; }
+
+    static auto expected_pred_upper12() { return +3.7; }
+
+    rdatasource_t clone() const override { return std::make_unique<wdtree_depth2_datasource_t>(*this); }
+
+    dtree_wlearner_t make_wlearner() const override { return make_wdtree(1, 2); }
+
+    indices_t expected_features() const override
+    {
+        return make_indices(expected_feature0(), expected_feature10(), expected_feature11());
+    }
+
+    tensor4d_t expected_tables() const override
+    {
+        return make_tensor<scalar_t>(make_dims(6, 1, 1, 1), expected_pred_lower10(), expected_pred_upper10(),
+                                     expected_pred_lower11(), expected_pred_upper11(), expected_pred_lower12(),
+                                     expected_pred_upper12());
+    }
+
+    dtree_nodes_t expected_nodes() const override
+    {
+        return {
+            dtree_node_t{ expected_feature0(), +3,                    0.0, 3U, -1},
+            dtree_node_t{ expected_feature0(), +3,                    0.0, 5U, -1},
+            dtree_node_t{ expected_feature0(), +3,                    0.0, 7U, -1},
+            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +0},
+            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +1},
+            dtree_node_t{expected_feature11(), -1, expected_threshold11(), 0U, +2},
+            dtree_node_t{expected_feature11(), -1, expected_threshold11(), 0U, +3},
+            dtree_node_t{expected_feature12(), -1, expected_threshold12(), 0U, +4},
+            dtree_node_t{expected_feature12(), -1, expected_threshold12(), 0U, +5}
+        };
+    }
+
+private:
+    void do_load() override
+    {
+        random_datasource_t::do_load();
+
+        const auto feature0  = expected_feature0();
+        const auto feature10 = expected_feature10();
+        const auto feature11 = expected_feature11();
+        const auto feature12 = expected_feature12();
+
+        const auto classes0 = this->feature(feature0).classes();
+        const auto fvalues0 = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes0 - 1);
+
+        const auto fvalues10 = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +7);
+        const auto fvalues11 = make_random_tensor<int32_t>(make_dims(this->samples()), -7, +5);
+        const auto fvalues12 = make_random_tensor<int32_t>(make_dims(this->samples()), -3, +9);
+
+        const auto hits    = this->hits();
+        const auto samples = this->samples();
+        const auto itarget = this->features(); // NB: the last feature is the target!
+
+        const auto stump_split = [&](const auto sample, const auto feature, const auto& fvalues, const auto threshold,
+                                     const auto pred_lower, const auto pred_upper, const auto cluster_offset)
         {
-            input(tf0) = static_cast<scalar_t>(sample % 3);
-            switch (sample % 3)
+            if (hits(sample, feature) != 0)
             {
-            case 0: target(sample).full(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0)); break;
+                const auto [fvalue, target, cluster] =
+                    make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper);
+                set(sample, feature, fvalue);
+                set(sample, itarget, target);
+                assign(sample, cluster + cluster_offset);
+            }
+        };
 
-            case 1: target(sample).full(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2)); break;
+        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        {
+            if (hits(sample, feature0) != 0)
+            {
+                const auto fvalue0 = fvalues0(sample);
+                set(sample, feature0, fvalue0);
 
-            default: target(sample).full(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4)); break;
+                switch (fvalue0)
+                {
+                case 0:
+                    stump_split(sample, feature10, fvalues10, expected_threshold10(), expected_pred_lower10(),
+                                expected_pred_upper10(), 0);
+                    break;
+
+                case 1:
+                    stump_split(sample, feature11, fvalues11, expected_threshold11(), expected_pred_lower11(),
+                                expected_pred_upper11(), 2);
+                    break;
+
+                default:
+                    stump_split(sample, feature12, fvalues12, expected_threshold12(), expected_pred_lower12(),
+                                expected_pred_upper12(), 4);
+                    break;
+                }
             }
         }
     }
-
-    indices_t features() const override
-    {
-        return make_tensor<tensor_size_t>(make_dims(4), gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10());
-    }
-
-    tensor4d_t tables() const override
-    {
-        return make_tensor<scalar_t>(make_dims(6, 1, 1, 1), -1.2, +3.4, -1.3, +3.5, -1.4, +3.6);
-    }
-
-    dtree_nodes_t nodes() const override
-    {
-        // NB: features = {5, 7, 8, 9} aka {stump12, stump11, table0, stump10}
-        return {
-            dtree_node_t{+2, +3, 0.0, 3U, -1},
-            dtree_node_t{+2, +3, 0.0, 5U, -1},
-            dtree_node_t{+2, +3, 0.0, 7U, -1},
-            dtree_node_t{+3, -1, 3.5, 0U, +0},
-            dtree_node_t{+3, -1, 3.5, 0U, +1},
-            dtree_node_t{+1, -1, 4.5, 0U, +2},
-            dtree_node_t{+1, -1, 4.5, 0U, +3},
-            dtree_node_t{+0, -1, 5.5, 0U, +4},
-            dtree_node_t{+0, -1, 5.5, 0U, +5}
-        };
-    }
 };
 
-class wdtree_depth3_datasource_t : public wdtree_datasource_t
+/*class wdtree_depth3_datasource_t : public wdtree_datasource_t
 {
 public:
     wdtree_depth3_datasource_t() = default;
@@ -358,30 +419,25 @@ UTEST_CASE(fit_predict_table1)
     check_wlearner(datasource0);
 }
 
-/*UTEST_CASE(fit_predict_depth2)
+UTEST_CASE(fit_predict_depth2)
 {
-    const auto dataset   = make_dataset<wdtree_depth2_datasource_t>(10, 1, 400);
-    const auto datasetx1 = make_dataset<wdtree_depth2_datasource_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_depth2_datasource_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wdtree_depth2_datasource_t>>();
-    const auto datasetx4 = make_dataset<no_continuous_features_datasource_t<wdtree_depth2_datasource_t>>();
-    const auto datasetx5 = make_dataset<different_discrete_feature_datasource_t<wdtree_depth2_datasource_t>>();
+    const auto datasource0 = make_datasource<wdtree_depth2_datasource_t>(400);
 
-    auto wlearner = make_wdtree(dataset);
-    check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);
+    check_wlearner(datasource0);
 }
 
-UTEST_CASE(fit_predict_depth3)
+/*UTEST_CASE(fit_predict_depth3)
 {
-    const auto dataset   = make_dataset<wdtree_depth3_datasource_t>(10, 1, 1600);
-    const auto datasetx1 = make_dataset<wdtree_depth3_datasource_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wdtree_depth3_datasource_t>(dataset.features().max(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_datasource_t<wdtree_depth3_datasource_t>>();
-    const auto datasetx4 = make_dataset<no_continuous_features_datasource_t<wdtree_depth3_datasource_t>>();
-    const auto datasetx5 = make_dataset<different_discrete_feature_datasource_t<wdtree_depth3_datasource_t>>();
+    const auto datasource   = make_datasource<wdtree_depth3_datasource_t>(10, 1, 1600);
+    const auto datasourcex1 = make_datasource<wdtree_depth3_datasource_t>(datasource.isize(), datasource.tsize() + 1);
+    const auto datasourcex2 = make_datasource<wdtree_depth3_datasource_t>(datasource.features().max(),
+datasource.tsize()); const auto datasourcex3 =
+make_datasource<no_discrete_features_datasource_t<wdtree_depth3_datasource_t>>(); const auto datasourcex4 =
+make_datasource<no_continuous_features_datasource_t<wdtree_depth3_datasource_t>>(); const auto datasourcex5 =
+make_datasource<different_discrete_feature_datasource_t<wdtree_depth3_datasource_t>>();
 
-    auto wlearner = make_wdtree(dataset);
-    check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4, datasetx5);
+    auto wlearner = make_wdtree(datasource);
+    check_wlearner(wlearner, datasource, datasourcex1, datasourcex2, datasourcex3, datasourcex4, datasourcex5);
 }*/
 
 UTEST_END_MODULE()

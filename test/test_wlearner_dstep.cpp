@@ -37,16 +37,15 @@ private:
         random_datasource_t::do_load();
 
         const auto feature = expected_feature();
-        const auto fvalueX = expected_fvalue();
         const auto tables  = expected_tables();
         const auto classes = this->feature(feature).classes();
         const auto fvalues = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes - 1);
 
         assert(2 == tables.size<0>());
-        assert(fvalueX >= 0 && fvalueX < classes);
+        assert(expected_fvalue() >= 0 && expected_fvalue() < classes);
 
-        set_targets(feature,
-                    [&](const tensor_size_t sample) { return make_dstep_target(fvalues(sample), fvalueX, tables); });
+        set_targets(feature, [&](const tensor_size_t sample)
+                    { return make_dstep_target(fvalues(sample), expected_fvalue(), tables); });
     }
 };
 

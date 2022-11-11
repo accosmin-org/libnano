@@ -74,7 +74,7 @@ public:
     {
         const auto hits    = this->hits();
         const auto samples = this->samples();
-        const auto itarget = this->features(); // NB: the lasst feature is the target!
+        const auto itarget = this->features(); // NB: the last feature is the target!
 
         for (tensor_size_t sample = 0; sample < samples; ++sample)
         {
@@ -88,6 +88,8 @@ public:
             }
         }
     }
+
+    void assign(const tensor_size_t sample, const tensor_size_t cluster) { m_cluster.assign(sample, cluster); }
 
     const auto& expected_cluster() const { return m_cluster; }
 
