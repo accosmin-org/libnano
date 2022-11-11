@@ -181,7 +181,7 @@ static exception_status check_throw(const toperator& op)
 #define UTEST_HANDLE_CRITICAL(critical)                                                                                \
     if (critical)                                                                                                      \
     {                                                                                                                  \
-        exit(EXIT_FAILURE);                                                                                            \
+        throw std::runtime_error("critical condition failed!");                                                        \
     }
 #define UTEST_HANDLE_FAILURE()                                                                                         \
     ++utest_n_failures;                                                                                                \

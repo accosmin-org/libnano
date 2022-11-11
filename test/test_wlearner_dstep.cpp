@@ -21,6 +21,8 @@ public:
 
     static auto expected_tables() { return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -1.42, 0.0); }
 
+    static auto make_wlearner() { return dstep_wlearner_t{}; }
+
     static void check_wlearner(const dstep_wlearner_t& wlearner)
     {
         UTEST_CHECK_EQUAL(wlearner.fvalue(), expected_fvalue());
@@ -55,7 +57,7 @@ UTEST_CASE(fit_predict)
     const auto datasource0 = make_datasource<fixture_datasource_t>(300);
     const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
-    check_wlearner<dstep_wlearner_t>(datasource0, datasourceX);
+    check_wlearner(datasource0, datasourceX);
 }
 
 UTEST_END_MODULE()

@@ -27,6 +27,8 @@ public:
         return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), expected_beta(), -expected_threshold() * expected_beta());
     }
 
+    static auto make_wlearner() { return hinge_wlearner_t{}; }
+
     void check_wlearner(const hinge_wlearner_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.hinge(), m_hinge);
@@ -74,7 +76,7 @@ UTEST_CASE(fit_predict_left)
     const auto datasource0 = make_datasource<fixture_datasource_t>(300, hinge_type::left);
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
-    check_wlearner<hinge_wlearner_t>(datasource0, datasourceX);
+    check_wlearner(datasource0, datasourceX);
 }
 
 UTEST_CASE(fit_predict_right)
@@ -82,7 +84,7 @@ UTEST_CASE(fit_predict_right)
     const auto datasource0 = make_datasource<fixture_datasource_t>(300, hinge_type::right);
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
-    check_wlearner<hinge_wlearner_t>(datasource0, datasourceX);
+    check_wlearner(datasource0, datasourceX);
 }
 
 UTEST_END_MODULE()

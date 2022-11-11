@@ -201,6 +201,10 @@ inline auto check_fit(wlearner_t& wlearner, const datasource_t& datasource)
     return check_fit(wlearner, make_dataset(datasource));
 }
 
+inline void check_no_fit(wlearner_t&)
+{
+}
+
 inline void check_no_fit(wlearner_t& wlearner, const dataset_t& dataset)
 {
     const auto loss      = make_loss();
@@ -354,7 +358,7 @@ inline void check_scale(wlearner_t& wlearner, const datasource_t& datasource, co
     check_scale(wlearner, make_dataset(datasource), expected_cluster);
 }
 
-template <typename twlearner, typename tdatasource, typename... tinvalid_datasources>
+template <typename tdatasource, typename... tinvalid_datasources>
 void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&... datasourceXs)
 {
     const auto datasourceX1 = make_random_datasource(make_features_too_few());
@@ -364,7 +368,7 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     const auto& expected_cluster = datasource0.expected_cluster();
 
     // no compatible features, so fitting will not work
-    auto wlearner = twlearner{};
+    auto wlearner = datasource0.make_wlearner();
     check_no_fit(wlearner, datasourceXs...);
 
     // not fitting yet, so the weak learner should not be usable before fitting

@@ -43,7 +43,7 @@ static void append(tensor4d_t& tables, const tensor3d_cmap_t& table)
     tables.tensor(count) = table;
 }
 
-static void update(dtree_nodes_t& nodes, indices_t& features)
+static auto unique_features(const dtree_nodes_t& nodes)
 {
     // gather the unique set of selected features
     std::set<tensor_size_t> ufeatures;
@@ -55,7 +55,7 @@ static void update(dtree_nodes_t& nodes, indices_t& features)
         }
     }
 
-    features.resize(static_cast<tensor_size_t>(ufeatures.size()));
+    auto features = indices_t{static_cast<tensor_size_t>(ufeatures.size())};
 
     auto it = ufeatures.begin();
     for (tensor_size_t i = 0; i < features.size(); ++i)
@@ -63,15 +63,7 @@ static void update(dtree_nodes_t& nodes, indices_t& features)
         features(i) = *(it++);
     }
 
-    // map nodes to the unique set of selected features
-    for (auto& node : nodes)
-    {
-        if (node.m_feature >= 0)
-        {
-            const auto pos = ufeatures.find(node.m_feature);
-            node.m_feature = static_cast<tensor_size_t>(std::distance(ufeatures.begin(), pos));
-        }
-    }
+    return features;
 }
 
 std::istream& nano::read(std::istream& stream, dtree_node_t& node)
@@ -250,7 +242,7 @@ scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     }
 
     // OK, compact the selected features
-    ::update(m_nodes, m_features);
+    m_features = unique_features(m_nodes);
 
     log_info() << std::fixed << std::setprecision(8) << " === tree(features=" << m_features.size()
                << ",nodes=" << m_nodes.size() << "), score=" << score << ".";
@@ -265,9 +257,10 @@ void dtree_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
     assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
     const auto cluster = split(dataset, samples);
-    for (tensor_size_t i = 0, size = cluster.samples(); i < size; ++i)
+    for (tensor_size_t i = 0, size = samples.size(); i < size; ++i)
     {
-        const auto group = cluster.group(i);
+        const auto sample = samples(i);
+        const auto group  = cluster.group(sample);
         if (group >= 0)
         {
             assert(group < m_tables.size<0>());
@@ -279,6 +272,17 @@ void dtree_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
     learner_t::critical_compatible(dataset);
+
+    const auto node_split = [&](const auto& node, const auto& node_samples)
+    {
+        return (node.m_classes > 0) ? table_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_classes)
+                                    : stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
+    };
+
+    if (m_nodes[0].m_table >= 0)
+    {
+        return node_split(m_nodes[0], samples);
+    }
 
     cluster_t cluster(dataset.samples(), m_tables.size());
 
@@ -295,6 +299,8 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 
         splits.pop_front();
 
+        std::cout << "split: node index=" << split.first << ", indices=" << node_samples.size() << std::endl;
+
         // terminal node
         if (node.m_table >= 0)
         {
@@ -307,10 +313,7 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
         // split node
         else
         {
-            const auto node_cluster =
-                (node.m_classes > 0) ? table_wlearner_t::split(dataset, samples, node.m_feature, node.m_classes)
-                                     : stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
-
+            const auto node_cluster = node_split(node, node_samples);
             for (tensor_size_t group = 0; group < node_cluster.groups(); ++group)
             {
                 splits.emplace_back(node.m_next + static_cast<size_t>(group), node_cluster.indices(group));
