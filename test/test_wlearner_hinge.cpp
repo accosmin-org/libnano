@@ -71,7 +71,7 @@ UTEST_CASE(str_enum)
 
 UTEST_CASE(fit_predict_left)
 {
-    const auto datasource0 = make_datasource<fixture_datasource_t>(300, hinge_type::left);
+    const auto datasource0 = make_datasource<fixture_datasource_t>(200, hinge_type::left);
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
     check_wlearner(datasource0, datasourceX);
@@ -79,7 +79,7 @@ UTEST_CASE(fit_predict_left)
 
 UTEST_CASE(fit_predict_right)
 {
-    const auto datasource0 = make_datasource<fixture_datasource_t>(300, hinge_type::right);
+    const auto datasource0 = make_datasource<fixture_datasource_t>(200, hinge_type::right);
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
     check_wlearner(datasource0, datasourceX);

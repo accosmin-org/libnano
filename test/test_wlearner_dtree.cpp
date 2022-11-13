@@ -151,17 +151,17 @@ public:
 
     static auto expected_threshold12() { return +1.5; }
 
-    static auto expected_pred_lower10() { return -1.1; }
+    static auto expected_pred_lower10() { return -0.1; }
 
-    static auto expected_pred_upper10() { return -2.7; }
+    static auto expected_pred_upper10() { return +0.2; }
 
-    static auto expected_pred_lower11() { return +0.1; }
+    static auto expected_pred_lower11() { return +3.2; }
 
-    static auto expected_pred_upper11() { return +0.7; }
+    static auto expected_pred_upper11() { return +3.3; }
 
-    static auto expected_pred_lower12() { return +3.2; }
+    static auto expected_pred_lower12() { return +6.1; }
 
-    static auto expected_pred_upper12() { return +3.7; }
+    static auto expected_pred_upper12() { return +6.4; }
 
     rdatasource_t clone() const override { return std::make_unique<wdtree_depth2_datasource_t>(*this); }
 
@@ -218,14 +218,11 @@ private:
         const auto stump_split = [&](const auto sample, const auto feature, const auto& fvalues, const auto threshold,
                                      const auto pred_lower, const auto pred_upper, const auto cluster_offset)
         {
-            if (hits(sample, feature) != 0)
-            {
-                const auto [fvalue, target, cluster] =
-                    make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper);
-                set(sample, feature, fvalue);
-                set(sample, itarget, target);
-                assign(sample, cluster + cluster_offset);
-            }
+            const auto [fvalue, target, cluster] =
+                make_stump_target(fvalues(sample), threshold, pred_lower, pred_upper);
+            set(sample, feature, fvalue);
+            set(sample, itarget, target);
+            assign(sample, cluster + cluster_offset);
         };
 
         for (tensor_size_t sample = 0; sample < samples; ++sample)
@@ -407,21 +404,21 @@ UTEST_CASE(print)
 
 UTEST_CASE(fit_predict_stump1)
 {
-    const auto datasource0 = make_datasource<wdtree_stump1_datasource_t>(300);
+    const auto datasource0 = make_datasource<wdtree_stump1_datasource_t>(200);
 
     check_wlearner(datasource0);
 }
 
 UTEST_CASE(fit_predict_table1)
 {
-    const auto datasource0 = make_datasource<wdtree_table1_datasource_t>(300);
+    const auto datasource0 = make_datasource<wdtree_table1_datasource_t>(200);
 
     check_wlearner(datasource0);
 }
 
 UTEST_CASE(fit_predict_depth2)
 {
-    const auto datasource0 = make_datasource<wdtree_depth2_datasource_t>(400);
+    const auto datasource0 = make_datasource<wdtree_depth2_datasource_t>(500);
 
     check_wlearner(datasource0);
 }

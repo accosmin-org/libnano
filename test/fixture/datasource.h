@@ -48,7 +48,7 @@ static auto check_target(const datasource_t& datasource, const feature_t& gt_fea
 [[maybe_unused]] static auto make_random_hits(const tensor_size_t samples, const tensor_size_t features,
                                               const size_t target)
 {
-    auto hits = make_random_tensor<int8_t>(make_dims(samples, features), 0, 1);
+    auto hits = make_random_tensor<int8_t>(make_dims(samples, features), 0, 10);
 
     if (target != string_t::npos)
     {

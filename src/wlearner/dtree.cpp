@@ -273,17 +273,6 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 {
     learner_t::critical_compatible(dataset);
 
-    const auto node_split = [&](const auto& node, const auto& node_samples)
-    {
-        return (node.m_classes > 0) ? table_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_classes)
-                                    : stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
-    };
-
-    if (m_nodes[0].m_table >= 0)
-    {
-        return node_split(m_nodes[0], samples);
-    }
-
     cluster_t cluster(dataset.samples(), m_tables.size());
 
     std::deque<std::pair<size_t, indices_t>> splits;
@@ -295,30 +284,36 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
         assert(split.first < m_nodes.size());
 
         const auto& node         = m_nodes[split.first];
-        const auto  node_samples = split.second;
+        const auto& node_samples = split.second;
 
-        splits.pop_front();
-
-        std::cout << "split: node index=" << split.first << ", indices=" << node_samples.size() << std::endl;
+        const auto node_cluster = (node.m_classes > 0)
+                                    ? table_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_classes)
+                                    : stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
 
         // terminal node
-        if (node.m_table >= 0)
+        if (node.m_next == 0U)
         {
-            for (const auto i : node_samples)
+            for (tensor_size_t sample = 0; sample < node_cluster.samples(); ++sample)
             {
-                cluster.assign(i, node.m_table);
+                const auto group = node_cluster.group(sample);
+                if (group >= 0)
+                {
+                    cluster.assign(sample, node.m_table + group);
+                }
             }
         }
 
         // split node
         else
         {
-            const auto node_cluster = node_split(node, node_samples);
             for (tensor_size_t group = 0; group < node_cluster.groups(); ++group)
             {
-                splits.emplace_back(node.m_next + static_cast<size_t>(group), node_cluster.indices(group));
+                splits.emplace_back(m_nodes[split.first + static_cast<size_t>(group)].m_next,
+                                    node_cluster.indices(group));
             }
         }
+
+        splits.pop_front();
     }
 
     return cluster;
