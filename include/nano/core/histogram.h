@@ -191,7 +191,7 @@ namespace nano
         template <typename tvalue>
         tensor_size_t bin(tvalue value) const
         {
-            const auto svalue = safe_cast<tensor_size_t>(value);
+            const auto svalue = static_cast<tensor_size_t>(value); // NOLINT(cert-str34-c)
 
             const auto* const begin = ::nano::begin(m_thresholds);
             const auto* const end   = ::nano::end(m_thresholds);

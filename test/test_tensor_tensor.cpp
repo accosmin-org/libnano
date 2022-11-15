@@ -114,6 +114,7 @@ UTEST_CASE(tensor3d)
     UTEST_CHECK_EQUAL(tensor.sum(), 0);
     UTEST_CHECK_EQUAL(tensor.mean(), 0);
 
+    UTEST_CHECK_EQUAL(tensor.rank(), 3);
     UTEST_CHECK_EQUAL(tensor.size<0>(), dims);
     UTEST_CHECK_EQUAL(tensor.size<1>(), rows);
     UTEST_CHECK_EQUAL(tensor.size<2>(), cols);
@@ -171,6 +172,7 @@ UTEST_CASE(tensor3d_map)
     }
 
     auto tmap = ::nano::map_tensor(v.data(), dims, rows, cols);
+    UTEST_CHECK_EQUAL(tmap.rank(), 3);
     UTEST_CHECK_EQUAL(tmap.size<0>(), dims);
     UTEST_CHECK_EQUAL(tmap.size<1>(), rows);
     UTEST_CHECK_EQUAL(tmap.size<2>(), cols);
@@ -241,6 +243,7 @@ UTEST_CASE(tensor4d)
     UTEST_CHECK_EQUAL(tensor.min(), 0);
     UTEST_CHECK_EQUAL(tensor.max(), 0);
 
+    UTEST_CHECK_EQUAL(tensor.rank(), 4);
     UTEST_CHECK_EQUAL(tensor.size<0>(), dim1);
     UTEST_CHECK_EQUAL(tensor.size<1>(), dim2);
     UTEST_CHECK_EQUAL(tensor.size<2>(), rows);
@@ -297,6 +300,7 @@ UTEST_CASE(tensor4d_map)
     }
 
     const auto tmap = ::nano::map_tensor(v.data(), dim1, dim2, rows, cols);
+    UTEST_CHECK_EQUAL(tmap.rank(), 4);
     UTEST_CHECK_EQUAL(tmap.size<0>(), dim1);
     UTEST_CHECK_EQUAL(tmap.size<1>(), dim2);
     UTEST_CHECK_EQUAL(tmap.size<2>(), rows);
@@ -602,18 +606,30 @@ UTEST_CASE(tensor_close)
     constexpr auto epsilon = 1e-12;
     constexpr auto nan     = std::numeric_limits<double>::quiet_NaN();
 
+    tensor_mem_t<double, 2> tensor0{};
     tensor_mem_t<double, 2> tensor1(10, 2);
     tensor_mem_t<double, 2> tensor2(10, 3);
 
+    UTEST_CHECK(close(tensor0, tensor0, epsilon));
+    UTEST_CHECK(!close(tensor0, tensor1, epsilon));
+    UTEST_CHECK(!close(tensor0, tensor2, epsilon));
+
+    UTEST_CHECK(close(tensor0.vector(), tensor0.vector(), epsilon));
+    UTEST_CHECK(!close(tensor0.vector(), tensor1.vector(), epsilon));
+    UTEST_CHECK(!close(tensor0.vector(), tensor2.vector(), epsilon));
+
     UTEST_CHECK(!close(tensor1, tensor2, epsilon));
+    UTEST_CHECK(!close(tensor1.vector(), tensor2.vector(), epsilon));
     tensor2.resize(tensor1.dims());
 
     tensor1.zero();
     tensor2.zero();
     UTEST_CHECK(close(tensor1, tensor2, epsilon));
+    UTEST_CHECK(close(tensor1.vector(), tensor2.vector(), epsilon));
 
     tensor1(11) = 11.0;
     UTEST_CHECK(!close(tensor1, tensor2, epsilon));
+    UTEST_CHECK(!close(tensor1.vector(), tensor2.vector(), epsilon));
 
     tensor1(11) = nan;
     UTEST_CHECK(!close(tensor1, tensor2, epsilon));

@@ -56,17 +56,4 @@ namespace nano
         detail::class_target(target, indices...);
         return target;
     }
-
-    ///
-    /// \brief target vector for multi-label classification problems based on the sign of the predictions.
-    ///
-    inline tensor3d_t class_target(const tensor3d_t& outputs)
-    {
-        tensor3d_t target(outputs.dims());
-        for (tensor_size_t i = 0; i < outputs.size(); ++i)
-        {
-            target(i) = is_pos_target(outputs(i)) ? pos_target() : neg_target();
-        }
-        return target;
-    }
 } // namespace nano

@@ -106,21 +106,4 @@ namespace nano
     {
         return roundpow10(std::cbrt(epsilon<tscalar>()));
     }
-
-    ///
-    /// \brief numerically safe cast of scalars, see [cert-str34-c].
-    ///
-    template <typename tresult, typename tvalue, std::enable_if_t<std::is_arithmetic_v<tresult>, bool> = true,
-              std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
-    tresult safe_cast(const tvalue value)
-    {
-        if constexpr (std::is_same_v<tvalue, char>)
-        {
-            return static_cast<tresult>(static_cast<unsigned char>(value));
-        }
-        else
-        {
-            return static_cast<tresult>(value);
-        }
-    }
 } // namespace nano
