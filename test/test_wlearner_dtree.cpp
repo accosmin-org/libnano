@@ -234,7 +234,7 @@ private:
         const auto fvalues0 = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes0 - 1);
 
         const auto fvalues10 = make_random_tensor<int32_t>(make_dims(this->samples()), -7, +5);
-        const auto fvalues11 = make_random_tensor<int32_t>(make_dims(this->samples()), -3, +7);
+        const auto fvalues11 = make_random_tensor<int32_t>(make_dims(this->samples()), -3, +8);
         const auto fvalues12 = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +7);
 
         const auto hits    = this->hits();
@@ -405,7 +405,7 @@ public:
 
     static auto expected_threshold10() { return -1.5; }
 
-    static auto expected_threshold11() { return +3.5; }
+    static auto expected_threshold11() { return +2.5; }
 
     static auto expected_threshold21() { return -2.5; }
 
@@ -596,7 +596,7 @@ UTEST_CASE(fit_predict_table1)
 
 UTEST_CASE(fit_predict_depth2)
 {
-    const auto datasource0 = make_datasource<wdtree_depth2_datasource_t>(500);
+    const auto datasource0 = make_datasource<wdtree_depth2_datasource_t>(600);
 
     check_wlearner(datasource0);
 }
@@ -610,7 +610,7 @@ UTEST_CASE(fit_predict_depth2x)
 
 UTEST_CASE(fit_predict_depth3)
 {
-    const auto datasource0 = make_datasource<wdtree_depth3_datasource_t>(1000);
+    const auto datasource0 = make_datasource<wdtree_depth3_datasource_t>(1200);
 
     check_wlearner(datasource0);
 }
