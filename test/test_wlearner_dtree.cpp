@@ -244,7 +244,7 @@ private:
         {
             if (hits(sample, feature0) != 0)
             {
-                const auto fvalue0 = fvalues0(sample);
+                const auto fvalue0  = fvalues0(sample);
                 const auto fvalue10 = fvalues10(sample);
                 const auto fvalue11 = fvalues11(sample);
                 const auto fvalue12 = fvalues12(sample);
@@ -357,7 +357,7 @@ private:
         {
             if (hits(sample, feature0) != 0)
             {
-                const auto fvalue0 = fvalues0(sample);
+                const auto fvalue0  = fvalues0(sample);
                 const auto fvalue10 = fvalues10(sample);
                 const auto fvalue11 = fvalues11(sample);
 
