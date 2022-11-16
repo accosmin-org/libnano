@@ -205,7 +205,7 @@ factory_t<function_t>& function_t::all()
     return manager;
 }
 
-rfunctions_t function_t::make(function_t::config_t config, const std::regex& id_regex)
+rfunctions_t function_t::make(const function_t::config_t& config, const std::regex& id_regex)
 {
     const auto convexity  = config.m_convexity;
     const auto smoothness = config.m_smoothness;

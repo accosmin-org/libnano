@@ -83,7 +83,7 @@ scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 
     std::vector<cache_t> caches(m_iterator.concurrency(), cache_t{x.size()});
     m_iterator.loop(
-        [&](const tensor_range_t& range, const size_t tnum, tensor4d_cmap_t targets)
+        [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
         {
             assert(tnum < caches.size());
             auto& cache = caches[tnum];
@@ -154,7 +154,7 @@ scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 
     std::vector<cache_t> caches(m_iterator.concurrency(), cache_t{x.size()});
     m_iterator.loop(
-        [&](const tensor_range_t& range, const size_t tnum, tensor4d_cmap_t targets)
+        [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
         {
             assert(tnum < caches.size());
             auto& cache = caches[tnum];
@@ -226,7 +226,7 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
     assert(outputs.dims() == m_vgrads.dims());
 
     m_iterator.loop(
-        [&](const tensor_range_t& range, size_t, tensor4d_cmap_t targets)
+        [&](const tensor_range_t& range, size_t, const tensor4d_cmap_t& targets)
         {
             m_loss.value(targets, outputs.slice(range), m_values.slice(range));
             m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));

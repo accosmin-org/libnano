@@ -156,7 +156,7 @@ namespace nano
             tensor_size_t m_summands{1000};                 ///<
         };
 
-        static rfunctions_t make(config_t, const std::regex& id_regex = std::regex(".+"));
+        static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
         ///
         /// \brief construct a test function with the given number of free dimensions and summands (if possible).

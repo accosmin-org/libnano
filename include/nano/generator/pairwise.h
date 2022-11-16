@@ -154,7 +154,7 @@ namespace nano
 
     private:
         template <typename titerator>
-        void select_scalar(const tensor_size_t ifeature, const scalar_map_t storage, titerator it) const
+        void select_scalar(const tensor_size_t ifeature, const scalar_map_t& storage, titerator it) const
         {
             [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
             for (; it; ++it)
@@ -171,7 +171,7 @@ namespace nano
         }
 
         template <typename titerator>
-        void select_sclass(const tensor_size_t ifeature, const sclass_map_t storage, titerator it) const
+        void select_sclass(const tensor_size_t ifeature, const sclass_map_t& storage, titerator it) const
         {
             [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
             for (; it; ++it)
@@ -188,7 +188,7 @@ namespace nano
         }
 
         template <typename titerator>
-        void select_mclass(const tensor_size_t ifeature, const mclass_map_t storage, titerator it) const
+        void select_mclass(const tensor_size_t ifeature, const mclass_map_t& storage, titerator it) const
         {
             [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
             for (; it; ++it)
@@ -205,7 +205,7 @@ namespace nano
         }
 
         template <typename titerator>
-        void select_struct(const tensor_size_t ifeature, const struct_map_t storage, titerator it) const
+        void select_struct(const tensor_size_t ifeature, const struct_map_t& storage, titerator it) const
         {
             [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
             for (; it; ++it)
@@ -222,7 +222,7 @@ namespace nano
         }
 
         template <typename toperator, typename titerator>
-        void flatten(const tensor2d_map_t storage, const tensor_size_t column, const toperator& op,
+        void flatten(const tensor2d_map_t& storage, const tensor_size_t column, const toperator& op,
                      [[maybe_unused]] const tensor_size_t colsize, titerator it) const
         {
             for (; it; ++it)

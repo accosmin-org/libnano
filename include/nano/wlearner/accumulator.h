@@ -12,10 +12,7 @@ namespace nano::wlearner
     {
     public:
         explicit accumulator_t(const tensor3d_dims_t& tdims = make_dims(0, 0, 0))
-            : m_x0(1)
-            , m_x1(1)
-            , m_x2(1)
-            , m_r1(cat_dims(1, tdims))
+            : m_r1(cat_dims(1, tdims))
             , m_rx(cat_dims(1, tdims))
             , m_r2(cat_dims(1, tdims))
         {
@@ -91,7 +88,7 @@ namespace nano::wlearner
 
     private:
         // attributes
-        tensor1d_t m_x0, m_x1, m_x2; ///<
-        tensor4d_t m_r1, m_rx, m_r2; ///<
+        tensor1d_t m_x0{1}, m_x1{1}, m_x2{1}; ///<
+        tensor4d_t m_r1, m_rx, m_r2;          ///<
     };
 } // namespace nano::wlearner

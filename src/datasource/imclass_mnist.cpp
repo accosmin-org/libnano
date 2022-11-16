@@ -25,13 +25,8 @@ void base_mnist_datasource_t::do_load()
     resize(70000, features, 1U);
 
     tensor_size_t sample = 0;
-    for (const auto& part : parts)
+    for (const auto& [ifile, tfile, offset, expected] : parts)
     {
-        const auto& ifile    = std::get<0>(part);
-        const auto& tfile    = std::get<1>(part);
-        const auto  offset   = std::get<2>(part);
-        const auto  expected = std::get<3>(part);
-
         log_info() << m_name << ": loading file <" << ifile << ">...";
         critical(!iread(ifile, offset, expected), m_name, ": failed to load file <", ifile, ">!");
 

@@ -18,7 +18,9 @@ lsearch_step_t::lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg)
 
 lsearch_step_t& lsearch_step_t::operator=(const solver_state_t& state)
 {
-    t = state.t, f = state.f, g = state.dg();
+    t = state.t;
+    f = state.f;
+    g = state.dg();
     return *this;
 }
 
@@ -58,7 +60,7 @@ scalar_t lsearch_step_t::interpolate(const lsearch_step_t& u, const lsearch_step
 
     switch (method)
     {
-    case interpolation_type::cubic: return std::isfinite(tc) ? tc : std::isfinite(tq) ? tq : tb;
+    case interpolation_type::cubic: return std::isfinite(tc) ? tc : (std::isfinite(tq) ? tq : tb);
 
     case interpolation_type::quadratic: return std::isfinite(tq) ? tq : tb;
 
