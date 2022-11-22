@@ -56,6 +56,18 @@ protected:
         set(sample, itarget, target);
         assign(sample, cluster + cluster_offset);
     }
+
+    template <typename tfvalues>
+    void set_table_target(const tensor_size_t sample, const tensor_size_t feature, const tfvalues& fvalues,
+                          const tensor4d_t& tables, const mhashes_t& mhashes, const tensor_size_t cluster_offset)
+    {
+        const auto itarget                   = this->features(); // NB: the last feature is the target!
+        const auto [fvalue, target, cluster] = make_table_target(fvalues.tensor(sample), tables, mhashes);
+
+        set(sample, feature, fvalue);
+        set(sample, itarget, target);
+        assign(sample, cluster + cluster_offset);
+    }
 };
 
 class wdtree_stump1_datasource_t final : public wdtree_datasource_t
@@ -280,7 +292,7 @@ class wdtree_depth2x_datasource_t final : public wdtree_datasource_t
 {
 public:
     explicit wdtree_depth2x_datasource_t(const tensor_size_t samples)
-        : wdtree_datasource_t(samples, 5)
+        : wdtree_datasource_t(samples, 10)
     {
     }
 
@@ -288,7 +300,7 @@ public:
 
     static auto expected_feature10() { return 6; }
 
-    static auto expected_feature11() { return 1; }
+    static auto expected_feature11() { return 3; }
 
     static auto expected_threshold0() { return -1.5; }
 
@@ -304,6 +316,16 @@ public:
 
     static auto expected_table11_2() { return +3.3; }
 
+    static auto expected_table11_3() { return +3.2; }
+
+    static auto expected_table11_4() { return +3.1; }
+
+    static auto expected_table11_5() { return +3.0; }
+
+    static auto expected_table11_6() { return +3.3; }
+
+    static auto expected_table11_7() { return +3.1; }
+
     rdatasource_t clone() const override { return std::make_unique<wdtree_depth2x_datasource_t>(*this); }
 
     dtree_wlearner_t make_wlearner() const override { return make_wdtree(1, 2); }
@@ -315,20 +337,27 @@ public:
 
     tensor4d_t expected_tables() const override
     {
-        return make_tensor<scalar_t>(make_dims(5, 1, 1, 1), expected_pred_lower10(), expected_pred_upper10(),
-                                     expected_table11_0(), expected_table11_1(), expected_table11_2());
+        return make_tensor<scalar_t>(make_dims(10, 1, 1, 1), expected_pred_lower10(), expected_pred_upper10(),
+                                     expected_table11_0(), expected_table11_1(), expected_table11_2(),
+                                     expected_table11_3(), expected_table11_4(), expected_table11_5(),
+                                     expected_table11_6(), expected_table11_7());
     }
 
     dtree_nodes_t expected_nodes() const override
     {
         return {
-            dtree_node_t{ expected_feature0(), -1,  expected_threshold0(), 2U, -1},
-            dtree_node_t{ expected_feature0(), -1,  expected_threshold0(), 4U, -1},
-            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +0},
-            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +1},
-            dtree_node_t{expected_feature11(), +3,                    0.0, 0U, +2},
-            dtree_node_t{expected_feature11(), +3,                    0.0, 0U, +3},
-            dtree_node_t{expected_feature11(), +3,                    0.0, 0U, +4}
+            dtree_node_t{ expected_feature0(), -1,  expected_threshold0(), 2U, -1, -1},
+            dtree_node_t{ expected_feature0(), -1,  expected_threshold0(), 4U, -1, -1},
+            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +0, -1},
+            dtree_node_t{expected_feature10(), -1, expected_threshold10(), 0U, +1, -1},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +2, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +3, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +4, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +5, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +6, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +7, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +8, +0},
+            dtree_node_t{expected_feature11(), +8,                    0.0, 0U, +9, +0}
         };
     }
 
@@ -342,13 +371,16 @@ private:
         const auto feature11 = expected_feature11();
 
         const auto classes11 = this->feature(feature11).classes();
-        const auto fvalues11 = make_random_tensor<int32_t>(make_dims(this->samples()), tensor_size_t{0}, classes11 - 1);
+        const auto fvalues11 = make_random_tensor<int8_t>(make_dims(this->samples(), classes11), 0, 1);
+        const auto mhashes11 = make_mhashes(make_tensor<int8_t, 2>(make_dims(8, 3), 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1,
+                                                                   1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1));
 
         const auto fvalues0  = make_random_tensor<int32_t>(make_dims(this->samples()), -7, +5);
         const auto fvalues10 = make_random_tensor<int32_t>(make_dims(this->samples()), -5, +8);
 
-        const auto tables11 = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), expected_table11_0(), expected_table11_1(),
-                                                    expected_table11_2());
+        const auto tables11 = make_tensor<scalar_t>(make_dims(8, 1, 1, 1), expected_table11_0(), expected_table11_1(),
+                                                    expected_table11_2(), expected_table11_3(), expected_table11_4(),
+                                                    expected_table11_5(), expected_table11_6(), expected_table11_7());
 
         const auto hits    = this->hits();
         const auto samples = this->samples();
@@ -359,7 +391,7 @@ private:
             {
                 const auto fvalue0  = fvalues0(sample);
                 const auto fvalue10 = fvalues10(sample);
-                const auto fvalue11 = fvalues11(sample);
+                const auto fvalue11 = fvalues11.tensor(sample);
 
                 set(sample, feature0, fvalue0);
                 set(sample, feature10, fvalue10);
@@ -372,7 +404,7 @@ private:
                 }
                 else
                 {
-                    set_table_target(sample, feature11, fvalues11, tables11, 2);
+                    set_table_target(sample, feature11, fvalues11, tables11, mhashes11, 2);
                 }
             }
         }
@@ -559,24 +591,24 @@ UTEST_BEGIN_MODULE(test_wlearner_dtree)
 UTEST_CASE(print)
 {
     const auto nodes = dtree_nodes_t{
-        dtree_node_t{+5, +3, 0.0, 0U, +2},
-        dtree_node_t{+0, -1, 3.5, 0U, -1},
+        dtree_node_t{+5, +3, 0.0, 0U, +2, -1},
+        dtree_node_t{+0, -1, 3.5, 0U, -1, +0},
     };
 
     {
         std::stringstream stream;
         stream << nodes[0];
-        UTEST_CHECK_EQUAL(stream.str(),
-                          scat("node: feature=5,classes=3,threshold=", nodes[0].m_threshold, ",next=0,table=2"));
+        UTEST_CHECK_EQUAL(stream.str(), scat("node: feature=5,classes=3,threshold=", nodes[0].m_threshold,
+                                             ",next=0,table=2,mhash=-1"));
     }
     {
         std::stringstream stream;
         stream << nodes;
-        UTEST_CHECK_EQUAL(stream.str(),
-                          scat("nodes:{\n", "\tnode: feature=5,classes=3,threshold=", nodes[0].m_threshold,
-                               ",next=0,table=2\n", "\tnode: feature=0,classes=-1,threshold=", nodes[1].m_threshold,
-                               ",next=0,table=-1\n"
-                               "}"));
+        UTEST_CHECK_EQUAL(stream.str(), scat("nodes:{\n", "\tnode: feature=5,classes=3,threshold=",
+                                             nodes[0].m_threshold, ",next=0,table=2,mhash=-1\n",
+                                             "\tnode: feature=0,classes=-1,threshold=", nodes[1].m_threshold,
+                                             ",next=0,table=-1,mhash=0\n"
+                                             "}"));
     }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/wlearner.h>
+#include <nano/wlearner/mhash.h>
 
 namespace nano
 {
@@ -13,7 +14,8 @@ namespace nano
         tensor_size_t m_classes{-1};  ///< number of classes (distinct values), if a discrete feature
         scalar_t      m_threshold{0}; ///< feature value threshold, if a continuous feature
         size_t        m_next{0};      ///< offset to the next node
-        tensor_size_t m_table{-1};    ///< index in the tables at the leaves
+        tensor_size_t m_table{-1};    ///< index in the prediction tables (if a leave)
+        tensor_size_t m_mhash{-1};    ///< index in the multi-label unique labeling (if a leave)
     };
 
     using dtree_nodes_t = std::vector<dtree_node_t>;
@@ -22,7 +24,7 @@ namespace nano
     {
         return lhs.m_feature == rhs.m_feature && lhs.m_classes == rhs.m_classes &&
                std::fabs(lhs.m_threshold - rhs.m_threshold) < 1e-8 && lhs.m_next == rhs.m_next &&
-               lhs.m_table == rhs.m_table;
+               lhs.m_table == rhs.m_table && lhs.m_mhash == rhs.m_mhash;
     }
 
     NANO_PUBLIC std::ostream& operator<<(std::ostream&, const dtree_node_t&);
@@ -92,12 +94,17 @@ namespace nano
         ///
         /// \brief returns the flatten list of nodes (splitting and terminal ones).
         ///
-        const auto& nodes() const { return m_nodes; }
+        const dtree_nodes_t& nodes() const { return m_nodes; }
 
         ///
         /// \brief returns the table of coefficients of the terminal nodes.
         ///
-        const auto& tables() const { return m_tables; }
+        const tensor4d_t& tables() const { return m_tables; }
+
+        ///
+        /// \brief returns the hashes of the distinct multi-class labeling of the terminal nodes.
+        ///
+        const mhashes_t& mhashes() const { return m_mhashes; }
 
     private:
         void compatible(const dataset_t&) const;
@@ -105,6 +112,7 @@ namespace nano
         // attributes
         dtree_nodes_t m_nodes;    ///< nodes in the decision tree
         tensor4d_t    m_tables;   ///< (#feature values, #outputs) - predictions at the leaves
+        mhashes_t     m_mhashes;  ///< unique multi-class labeling at the leaves
         indices_t     m_features; ///< unique set of the selected features
     };
 } // namespace nano

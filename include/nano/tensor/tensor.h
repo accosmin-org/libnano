@@ -339,9 +339,9 @@ namespace nano
         /// \brief access a part of the tensor as a (sub-)tensor
         ///     (by taking the [begin, end) range of the first dimension)
         ///
-        auto slice(tensor_size_t begin, tensor_size_t end) { return tslice(data(), begin, end); }
+        auto slice(const tensor_size_t begin, const tensor_size_t end) { return tslice(data(), begin, end); }
 
-        auto slice(tensor_size_t begin, tensor_size_t end) const { return tslice(data(), begin, end); }
+        auto slice(const tensor_size_t begin, const tensor_size_t end) const { return tslice(data(), begin, end); }
 
         auto slice(const tensor_range_t& range) { return tslice(data(), range.begin(), range.end()); }
 

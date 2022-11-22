@@ -4,6 +4,7 @@
 #include "fixture/loss.h"
 #include <nano/dataset/iterator.h>
 #include <nano/wlearner/hinge.h>
+#include <nano/wlearner/mhash.h>
 
 using namespace nano;
 
@@ -65,8 +66,20 @@ public:
 
     static auto make_table_target(const tensor_size_t fvalue, const tensor4d_t& tables)
     {
+        UTEST_REQUIRE_GREATER_EQUAL(fvalue, 0);
+        UTEST_REQUIRE_LESS(fvalue, tables.size<0>());
         const auto target = tables.tensor(fvalue);
         return std::make_tuple(fvalue, target, fvalue);
+    }
+
+    template <typename tfvalues>
+    static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const mhashes_t& mhashes)
+    {
+        const auto fvalue = find(mhashes, fvalues);
+        UTEST_REQUIRE_GREATER_EQUAL(fvalue, 0);
+        UTEST_REQUIRE_LESS(fvalue, tables.size<0>());
+        const auto target = tables.tensor(fvalue);
+        return std::make_tuple(fvalues, target, fvalue);
     }
 
     template <typename toperator>

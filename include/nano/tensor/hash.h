@@ -10,9 +10,9 @@ namespace nano::detail
         return 0;
     }
 
-    inline uint64_t hash_combine(const uint64_t h1, const uint64_t h2)
+    inline uint64_t hash_combine(const uint64_t seed, const uint64_t hash)
     {
-        return h1 ^ (h2 << 1U);
+        return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
     }
 
     template <typename tscalar>

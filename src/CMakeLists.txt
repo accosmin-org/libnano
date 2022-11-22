@@ -103,6 +103,7 @@ target_sources(nano PRIVATE
     wlearner/hinge.cpp
     wlearner/stump.cpp
     wlearner/table.cpp
+    wlearner/mhash.cpp
     linear/util.cpp
     linear/cache.cpp
     linear/model.cpp
