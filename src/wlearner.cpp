@@ -1,6 +1,5 @@
 #include <mutex>
 #include <nano/wlearner/affine.h>
-#include <nano/wlearner/dstep.h>
 #include <nano/wlearner/dtree.h>
 #include <nano/wlearner/hinge.h>
 #include <nano/wlearner/stump.h>
@@ -28,15 +27,20 @@ factory_t<wlearner_t>& wlearner_t::all()
     const auto  op      = []()
     {
         manager.add<affine_wlearner_t>("affine mapping (scalar features): h(x|feature) = weight * x[feature] + bias");
+
         manager.add<stump_wlearner_t>(
             "decision stump (scalar features): h(x|feature,threshold) = high, if x[feature] >= threshold, else low");
+
         manager.add<hinge_wlearner_t>(
             "hinge (scalar features): h(x|feature,threshold,sign) = beta * {sign * (x[feature] - threshold)}+");
-        manager.add<table_wlearner_t>("look-up-table (categorical features): h(x|feature) = table[x[feature]]");
+
+        manager.add<dense_table_wlearner_t>("dense look-up-table (categorical features)");
+        manager.add<kbest_table_wlearner_t>("k-best look-up-table (categorical features)");
+        manager.add<ksplit_table_wlearner_t>("k-split look-up-table (categorical features)");
+        manager.add<dstep_table_wlearner_t>("discrete step look-up-table (categorical features)");
+
         manager.add<dtree_wlearner_t>(
             "decision tree (any features): recursively split samples using decision stumps and look-up tables");
-        manager.add<dstep_wlearner_t>(
-            "single-output look-up-table (categorical features): h(x|feature,fv) = pred * (x[feature] == fv)");
     };
 
     static std::once_flag flag;

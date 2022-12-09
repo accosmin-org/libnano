@@ -95,15 +95,15 @@ target_sources(nano PRIVATE
     #gboost/model.cpp
     gboost/function.cpp
     wlearner.cpp
+    wlearner/hash.cpp
     wlearner/util.cpp
     wlearner/single.cpp
     wlearner/affine.cpp
-    wlearner/dstep.cpp
     wlearner/dtree.cpp
     wlearner/hinge.cpp
     wlearner/stump.cpp
     wlearner/table.cpp
-    wlearner/mhash.cpp
+    wlearner/accumulator.cpp
     linear/util.cpp
     linear/cache.cpp
     linear/model.cpp

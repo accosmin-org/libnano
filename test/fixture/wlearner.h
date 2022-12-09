@@ -3,8 +3,8 @@
 #include "fixture/estimator.h"
 #include "fixture/loss.h"
 #include <nano/dataset/iterator.h>
+#include <nano/wlearner/hash.h>
 #include <nano/wlearner/hinge.h>
-#include <nano/wlearner/mhash.h>
 
 using namespace nano;
 
@@ -58,12 +58,6 @@ public:
         return std::make_tuple(fvalue, target, group);
     }
 
-    static auto make_dstep_target(const tensor_size_t fvalue, const tensor_size_t fvalueX, const tensor4d_t& tables)
-    {
-        const auto target = tables(fvalue == fvalueX ? 0 : 1);
-        return std::make_tuple(fvalue, target, fvalue == fvalueX ? 0 : 1);
-    }
-
     static auto make_table_target(const tensor_size_t fvalue, const tensor4d_t& tables)
     {
         UTEST_REQUIRE_GREATER_EQUAL(fvalue, 0);
@@ -73,9 +67,9 @@ public:
     }
 
     template <typename tfvalues>
-    static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const mhashes_t& mhashes)
+    static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const wlearner::hashes_t& hashes)
     {
-        const auto fvalue = find(mhashes, fvalues);
+        const auto fvalue = wlearner::find(hashes, fvalues);
         UTEST_REQUIRE_GREATER_EQUAL(fvalue, 0);
         UTEST_REQUIRE_LESS(fvalue, tables.size<0>());
         const auto target = tables.tensor(fvalue);
@@ -147,7 +141,7 @@ static auto make_features_invalid_target()
 }
 
 template <typename tdatasource, typename... targs>
-static auto make_datasource(const tensor_size_t samples, const targs... args)
+static auto make_datasource(const tensor_size_t samples, const targs&... args)
 {
     auto datasource = tdatasource{samples, args...};
     UTEST_REQUIRE_NOTHROW(datasource.load());
@@ -392,7 +386,7 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
 
     // check fitting
     const auto score = check_fit(wlearner, datasource0);
-    UTEST_CHECK_CLOSE(score, 0.0, 1e-8);
+    UTEST_CHECK_CLOSE(score, 0.0, 1e-7);
     datasource0.check_wlearner(wlearner);
 
     // check prediction

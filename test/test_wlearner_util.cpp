@@ -1,5 +1,5 @@
 #include <nano/wlearner/accumulator.h>
-#include <nano/wlearner/mhash.h>
+#include <nano/wlearner/hash.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
 #include <utest/utest.h>
@@ -31,6 +31,48 @@ struct cache_t
     scalar_t      m_score{0};
     tensor_size_t m_index{0};
 };
+
+static auto make_accumulator()
+{
+    const auto tdims = make_dims(1, 1, 1);
+
+    auto acc0 = wlearner::accumulator_t(tdims);
+    acc0.clear(5);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.10).array(), 0);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.11).array(), 0);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.12).array(), 0);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.09).array(), 0);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.08).array(), 0);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.20).array(), 1);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.30).array(), 1);
+    acc0.update(make_tensor<scalar_t>(tdims, -0.40).array(), 1);
+    acc0.update(make_tensor<scalar_t>(tdims, -1.00).array(), 2);
+    acc0.update(make_tensor<scalar_t>(tdims, -1.00).array(), 2);
+    acc0.update(make_tensor<scalar_t>(tdims, -1.01).array(), 3);
+    acc0.update(make_tensor<scalar_t>(tdims, -1.01).array(), 3);
+    acc0.update(make_tensor<scalar_t>(tdims, -1.02).array(), 3);
+    acc0.update(make_tensor<scalar_t>(tdims, -2.00).array(), 4);
+
+    UTEST_CHECK_CLOSE(acc0.x0(0), 5.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.x0(1), 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.x0(2), 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.x0(3), 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.x0(4), 1.0, 1e-12);
+
+    UTEST_CHECK_CLOSE(acc0.r1(0)(0), 0.5, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r1(1)(0), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r1(2)(0), 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r1(3)(0), 3.04, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r1(4)(0), 2.0, 1e-12);
+
+    UTEST_CHECK_CLOSE(acc0.r2(0)(0), 0.0510, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r2(1)(0), 0.29, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r2(2)(0), 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r2(3)(0), 3.0806, 1e-12);
+    UTEST_CHECK_CLOSE(acc0.r2(4)(0), 4.0, 1e-12);
+
+    return acc0;
+}
 
 UTEST_BEGIN_MODULE(test_wlearner_util)
 
@@ -133,21 +175,133 @@ UTEST_CASE(accumulator)
     UTEST_CHECK_CLOSE(acc.r2(1).maxCoeff(), +46.0, 1e-12);
 }
 
-UTEST_CASE(mhash_hash)
+UTEST_CASE(accumulator_kbest)
+{
+    const auto acc0 = make_accumulator();
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(1);
+        UTEST_CHECK_CLOSE(score, 5.4216, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(2);
+        UTEST_CHECK_CLOSE(score, 2.34106666666666666667, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(3);
+        UTEST_CHECK_CLOSE(score, 0.34106666666666666667, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(4);
+        UTEST_CHECK_CLOSE(score, 0.07106666666666666667, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(5);
+        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.kbest(6);
+        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
+    }
+}
+
+UTEST_CASE(accumulator_ksplit)
+{
+    const auto acc0 = make_accumulator();
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(1);
+        UTEST_CHECK_CLOSE(score, 4.33348571428571428571, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 0, 0, 0));
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.60285714285714285714, 1e-12);
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(2);
+        UTEST_CHECK_CLOSE(score, 2.23132307692307692308, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 0, 0, 1));
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.49538461538461538462, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(1)(0), 2.0, 1e-12);
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(3);
+        UTEST_CHECK_CLOSE(score, 0.09628, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 1, 1, 2));
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.175, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(1)(0), 1.008, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(2)(0), 2.0, 1e-12);
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(4);
+        UTEST_CHECK_CLOSE(score, 0.02128, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 2, 3));
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.008, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(3)(0), 2.000, 1e-12);
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(5);
+        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.000, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(3)(0), 1.013333333333, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(4)(0), 2.000, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 3, 4));
+    }
+    {
+        auto acc                    = acc0;
+        const auto [score, mapping] = acc.ksplit(6);
+        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.000, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(3)(0), 1.013333333333, 1e-12);
+        UTEST_CHECK_CLOSE(acc.rx(4)(0), 2.000, 1e-12);
+        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 3, 4));
+    }
+}
+
+UTEST_CASE(hash_sclass)
+{
+    const auto fvalues = make_tensor<int32_t, 1>(make_dims(4), 0, 1, 2, 3);
+
+    UTEST_CHECK_EQUAL(::nano::wlearner::hash(fvalues(0)), 0U);
+    UTEST_CHECK_EQUAL(::nano::wlearner::hash(fvalues(1)), 1U);
+    UTEST_CHECK_EQUAL(::nano::wlearner::hash(fvalues(2)), 2U);
+    UTEST_CHECK_EQUAL(::nano::wlearner::hash(fvalues(3)), 3U);
+}
+
+UTEST_CASE(hash_mclass)
 {
     const auto fvalues = make_tensor<int8_t, 2>(make_dims(10, 3), 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
                                                 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1);
 
-    const auto hash0 = ::nano::mhash(fvalues.array(0));
-    const auto hash1 = ::nano::mhash(fvalues.array(1));
-    const auto hash2 = ::nano::mhash(fvalues.array(2));
-    const auto hash3 = ::nano::mhash(fvalues.array(3));
-    const auto hash4 = ::nano::mhash(fvalues.array(4));
-    const auto hash5 = ::nano::mhash(fvalues.array(5));
-    const auto hash6 = ::nano::mhash(fvalues.array(6));
-    const auto hash7 = ::nano::mhash(fvalues.array(7));
-    const auto hash8 = ::nano::mhash(fvalues.array(8));
-    const auto hash9 = ::nano::mhash(fvalues.array(9));
+    const auto hash0 = ::nano::wlearner::hash(fvalues.array(0));
+    const auto hash1 = ::nano::wlearner::hash(fvalues.array(1));
+    const auto hash2 = ::nano::wlearner::hash(fvalues.array(2));
+    const auto hash3 = ::nano::wlearner::hash(fvalues.array(3));
+    const auto hash4 = ::nano::wlearner::hash(fvalues.array(4));
+    const auto hash5 = ::nano::wlearner::hash(fvalues.array(5));
+    const auto hash6 = ::nano::wlearner::hash(fvalues.array(6));
+    const auto hash7 = ::nano::wlearner::hash(fvalues.array(7));
+    const auto hash8 = ::nano::wlearner::hash(fvalues.array(8));
+    const auto hash9 = ::nano::wlearner::hash(fvalues.array(9));
 
     UTEST_CHECK_EQUAL(hash4, hash0);
     UTEST_CHECK_EQUAL(hash5, hash6);
@@ -204,24 +358,50 @@ UTEST_CASE(mhash_hash)
     UTEST_CHECK_NOT_EQUAL(hash8, hash9);
 }
 
-UTEST_CASE(mhash_make)
+UTEST_CASE(hash_sclass_make_and_find)
+{
+    const auto fvalues = make_tensor<int32_t, 1>(make_dims(12), 0, 1, 2, 0, 1, 0, 2, 1, 1, 2, 2, 0);
+
+    const auto hashes = ::nano::wlearner::make_hashes(fvalues);
+    UTEST_CHECK_EQUAL(hashes.size(), 3);
+
+    const auto fvalues_test = make_tensor<int32_t, 1>(make_dims(7), 0, 1, 3, 2, 1, -1, 4);
+
+    const auto index0 = ::nano::wlearner::find(hashes, fvalues_test(0));
+    const auto index1 = ::nano::wlearner::find(hashes, fvalues_test(1));
+    const auto index2 = ::nano::wlearner::find(hashes, fvalues_test(2));
+    const auto index3 = ::nano::wlearner::find(hashes, fvalues_test(3));
+    const auto index4 = ::nano::wlearner::find(hashes, fvalues_test(4));
+    const auto index5 = ::nano::wlearner::find(hashes, fvalues_test(5));
+    const auto index6 = ::nano::wlearner::find(hashes, fvalues_test(6));
+
+    UTEST_CHECK_EQUAL(index0, +0);
+    UTEST_CHECK_EQUAL(index1, +1);
+    UTEST_CHECK_EQUAL(index2, -1);
+    UTEST_CHECK_EQUAL(index3, +2);
+    UTEST_CHECK_EQUAL(index4, +1);
+    UTEST_CHECK_EQUAL(index5, -1);
+    UTEST_CHECK_EQUAL(index6, -1);
+}
+
+UTEST_CASE(hash_mclass_make_and_find)
 {
     const auto fvalues = make_tensor<int8_t, 2>(make_dims(12, 3), 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
                                                 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, -1, -1, -1, 0, 0, 0);
 
-    const auto mhashes = make_mhashes(fvalues);
-    UTEST_CHECK_EQUAL(mhashes.size(), 6);
+    const auto hashes = ::nano::wlearner::make_hashes(fvalues);
+    UTEST_CHECK_EQUAL(hashes.size(), 6);
 
     const auto fvalues_test =
         make_tensor<int8_t, 2>(make_dims(7, 3), -1, -1, -1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1);
 
-    const auto index0 = ::nano::find(mhashes, fvalues_test.array(0));
-    const auto index1 = ::nano::find(mhashes, fvalues_test.array(1));
-    const auto index2 = ::nano::find(mhashes, fvalues_test.array(2));
-    const auto index3 = ::nano::find(mhashes, fvalues_test.array(3));
-    const auto index4 = ::nano::find(mhashes, fvalues_test.array(4));
-    const auto index5 = ::nano::find(mhashes, fvalues_test.array(5));
-    const auto index6 = ::nano::find(mhashes, fvalues_test.array(6));
+    const auto index0 = ::nano::wlearner::find(hashes, fvalues_test.array(0));
+    const auto index1 = ::nano::wlearner::find(hashes, fvalues_test.array(1));
+    const auto index2 = ::nano::wlearner::find(hashes, fvalues_test.array(2));
+    const auto index3 = ::nano::wlearner::find(hashes, fvalues_test.array(3));
+    const auto index4 = ::nano::wlearner::find(hashes, fvalues_test.array(4));
+    const auto index5 = ::nano::wlearner::find(hashes, fvalues_test.array(5));
+    const auto index6 = ::nano::wlearner::find(hashes, fvalues_test.array(6));
 
     UTEST_CHECK_EQUAL(index0, -1);
     UTEST_CHECK_EQUAL(index1, +0);

@@ -8,9 +8,17 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+static void assert_fit([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
+                       [[maybe_unused]] const tensor4d_t& gradients)
+{
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+}
+
 template <typename toperator>
 static void process(const dataset_t& dataset, const indices_cmap_t& samples, const tensor_size_t feature,
-                    const tensor_size_t classes, const mhashes_t& mhashes, const toperator& op)
+                    const hashes_t& hashes, const indices_t& hash2tables, const toperator& op)
 {
     switch (dataset.feature(feature).type())
     {
@@ -18,8 +26,12 @@ static void process(const dataset_t& dataset, const indices_cmap_t& samples, con
         loop_sclass(dataset, samples, feature,
                     [&](const tensor_size_t i, const int32_t value)
                     {
-                        assert(value >= 0 && value < classes);
-                        op(i, value);
+                        const auto index = ::nano::wlearner::find(hashes, value);
+                        if (index >= 0)
+                        {
+                            assert(index < hash2tables.size());
+                            op(i, hash2tables(index));
+                        }
                     });
         break;
 
@@ -27,103 +39,174 @@ static void process(const dataset_t& dataset, const indices_cmap_t& samples, con
         loop_mclass(dataset, samples, feature,
                     [&](const tensor_size_t i, const auto& values)
                     {
-                        const auto value = ::find(mhashes, values);
-                        if (value >= 0 && value < classes)
+                        const auto index = ::nano::wlearner::find(hashes, values);
+                        if (index >= 0)
                         {
-                            op(i, value);
+                            assert(index < hash2tables.size());
+                            op(i, hash2tables(index));
                         }
                     });
         break;
     }
 }
 
-namespace
+class table_wlearner_t::cache_t : public accumulator_t
 {
-    class cache_t
+public:
+    explicit cache_t(const tensor3d_dims_t& tdims = {0, 0, 0})
+        : accumulator_t(tdims)
     {
-    public:
-        explicit cache_t(const tensor3d_dims_t& tdims = {0, 0, 0})
-            : m_acc(tdims)
+    }
+
+    auto score(const tensor_size_t fv) const { return (r2(fv) - r1(fv).square() / x0(fv)).sum(); }
+
+    template <typename toutput>
+    void output(const tensor_size_t fv, toutput&& output) const
+    {
+        output = r1(fv) / x0(fv);
+    }
+
+    void score_dense(const tensor_size_t feature, const hashes_t& hashes)
+    {
+        const auto fvsize = fvalues();
+
+        scalar_t score = 0;
+        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
         {
+            score += this->score(fv);
         }
 
-        auto x0(tensor_size_t fv) const { return m_acc.x0(fv); }
-
-        auto r1(tensor_size_t fv) const { return m_acc.r1(fv); }
-
-        auto r2(tensor_size_t fv) const { return m_acc.r2(fv); }
-
-        void clear(const tensor_size_t classes) { m_acc.clear(classes); }
-
-        auto output(const tensor_size_t fv) const { return r1(fv) / x0(fv); }
-
-        template <typename toutputs>
-        scalar_t score(const tensor_size_t fv, const toutputs& outputs) const
+        if (std::isfinite(score) && score < m_score)
         {
-            return (r2(fv) + outputs.square() * x0(fv) - 2 * outputs * r1(fv)).sum();
-        }
+            m_score   = score;
+            m_hashes  = hashes;
+            m_feature = feature;
 
-        auto score() const
-        {
-            scalar_t score = 0;
-            for (tensor_size_t fv = 0, n_fvalues = m_acc.fvalues(); fv < n_fvalues; ++fv)
+            m_hash2tables.resize(fvsize);
+            m_tables.resize(cat_dims(fvsize, tdims()));
+
+            for (tensor_size_t fv = 0; fv < fvsize; ++fv)
             {
-                score += this->score(fv, output(fv));
+                m_hash2tables(fv) = fv;
+                output(fv, m_tables.array(fv));
             }
-            return score;
         }
+    }
 
-        bool store_if_better(const dataset_t& dataset, const tensor_size_t feature, const tensor_size_t classes)
+    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t kbest)
+    {
+        const auto fvsize = fvalues();
+        if (kbest >= fvsize)
         {
-            const auto score = this->score();
-            if (std::isfinite(score) && score < m_score)
-            {
-                m_score   = score;
-                m_feature = feature;
-                m_tables.resize(cat_dims(classes, dataset.target_dims()));
-                for (tensor_size_t value = 0; value < classes; ++value)
-                {
-                    m_tables.array(value) = output(value);
-                }
-                return true;
-            }
-            return false;
+            score_dense(feature, hashes);
+            return;
         }
 
-        bool store_if_better(const dataset_t& dataset, const tensor_size_t feature, const mhashes_t& mhashes)
+        const auto [score, mapping] = this->kbest(kbest);
+        if (std::isfinite(score) && score < m_score)
         {
-            if (store_if_better(dataset, feature, mhashes.size()))
+            m_score       = score;
+            m_feature     = feature;
+            m_hash2tables = arange(0, kbest);
+
+            m_hashes.resize(kbest);
+            m_tables.resize(cat_dims(kbest, tdims()));
+
+            for (tensor_size_t fv = 0; fv < kbest; ++fv)
             {
-                m_mhashes = mhashes;
-                return true;
+                m_hashes(fv) = hashes(mapping(fv));
+                output(mapping(fv), m_tables.array(fv));
             }
-            return false;
+        }
+    }
+
+    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t ksplit)
+    {
+        const auto fvsize = fvalues();
+        if (ksplit >= fvsize)
+        {
+            score_dense(feature, hashes);
+            return;
         }
 
-        // attributes
-        accumulator_t m_acc;                               ///<
-        tensor4d_t    m_tables;                            ///<
-        tensor_size_t m_feature{-1};                       ///<
-        scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
-        mhashes_t     m_mhashes;                           ///<
-    };
-} // namespace
+        const auto [score, mapping] = this->ksplit(ksplit);
+        if (std::isfinite(score) && score < m_score)
+        {
+            m_score       = score;
+            m_hashes      = hashes;
+            m_feature     = feature;
+            m_hash2tables = mapping;
 
-table_wlearner_t::table_wlearner_t()
-    : single_feature_wlearner_t("table")
+            const auto clusters = std::min(fvsize, ksplit);
+
+            m_tables.resize(cat_dims(clusters, tdims()));
+            for (tensor_size_t cluster = 0; cluster < clusters; ++cluster)
+            {
+                m_tables.array(cluster) = rx(cluster);
+            }
+        }
+    }
+
+    template <typename tfvalues, typename tvalidator>
+    auto update(const indices_t& samples, const tensor4d_t& gradients, const tfvalues& fvalues,
+                const tvalidator& validator)
+    {
+        auto       hashes  = make_hashes(fvalues);
+        const auto classes = hashes.size();
+
+        clear(classes);
+        for (tensor_size_t i = 0, size = fvalues.template size<0>(); i < size; ++i)
+        {
+            if (const auto& [valid, value] = validator(i); valid)
+            {
+                const auto bin = find(hashes, value);
+                assert(bin >= 0 && bin < classes);
+                accumulator_t::update(gradients.array(samples(i)), bin);
+            }
+        }
+
+        return hashes;
+    }
+
+    auto update(const indices_t& samples, const tensor4d_t& gradients, const sclass_cmap_t& fvalues)
+    {
+        return update(samples, gradients, fvalues,
+                      [&](const tensor_size_t i)
+                      {
+                          const auto value = fvalues(i);
+                          return std::make_pair(value >= 0, value);
+                      });
+    }
+
+    auto update(const indices_t& samples, const tensor4d_t& gradients, const mclass_cmap_t& fvalues)
+    {
+        return update(samples, gradients, fvalues,
+                      [&](const tensor_size_t i)
+                      {
+                          const auto value = fvalues.array(i);
+                          return std::make_pair(value(0) >= 0, value);
+                      });
+    }
+
+    // attributes
+    tensor4d_t    m_tables;                            ///<
+    tensor_size_t m_feature{-1};                       ///<
+    scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
+    hashes_t      m_hashes;                            ///<
+    indices_t     m_hash2tables;                       ///<
+};
+
+table_wlearner_t::table_wlearner_t(string_t id)
+    : single_feature_wlearner_t(std::move(id))
 {
-}
-
-rwlearner_t table_wlearner_t::clone() const
-{
-    return std::make_unique<table_wlearner_t>(*this);
 }
 
 std::istream& table_wlearner_t::read(std::istream& stream)
 {
     single_feature_wlearner_t::read(stream);
 
-    critical(!::nano::read(stream, m_mhashes), "table weak learner: failed to read from stream!");
+    critical(!::nano::read(stream, m_hashes) || !::nano::read(stream, m_hash2tables),
+             "table weak learner: failed to read from stream!");
 
     return stream;
 }
@@ -132,91 +215,10 @@ std::ostream& table_wlearner_t::write(std::ostream& stream) const
 {
     single_feature_wlearner_t::write(stream);
 
-    critical(!::nano::write(stream, m_mhashes), "table weak learner: failed to write to stream!");
+    critical(!::nano::write(stream, m_hashes) || !::nano::write(stream, m_hash2tables),
+             "table weak learner: failed to write to stream!");
 
     return stream;
-}
-
-scalar_t table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
-{
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
-
-    select_iterator_t it{dataset};
-
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
-            {
-                const auto& ff = dataset.feature(feature);
-                assert(ff.type() == feature_type::sclass);
-
-                const auto classes = ff.classes();
-
-                // update accumulators
-                auto& cache = caches[tnum];
-                cache.clear(classes);
-                for (tensor_size_t i = 0; i < fvalues.size(); ++i)
-                {
-                    const auto value = fvalues(i);
-                    if (value < 0)
-                    {
-                        continue;
-                    }
-
-                    assert(value < classes);
-                    cache.m_acc.update(gradients.array(samples(i)), value);
-                }
-
-                // update the parameters if a better feature
-                cache.store_if_better(dataset, feature, classes);
-            });
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
-            {
-                const auto mhashes = make_mhashes(fvalues);
-                const auto classes = mhashes.size();
-
-                // update accumulators
-                auto& cache = caches[tnum];
-                cache.clear(classes);
-                for (tensor_size_t i = 0, size = fvalues.size<0>(); i < size; ++i)
-                {
-                    const auto values = fvalues.array(i);
-                    if (values(0) < 0)
-                    {
-                        continue;
-                    }
-
-                    const auto value = find(mhashes, values);
-                    assert(value >= 0 && value < classes);
-                    cache.m_acc.update(gradients.array(samples(i)), value);
-                }
-
-                // update the parameters if a better feature
-                cache.store_if_better(dataset, feature, mhashes);
-            });
-
-    // OK, return and store the optimum feature across threads
-    const auto& best = min_reduce(caches);
-
-    const auto best_feature = best.m_feature >= 0 ? dataset.feature(best.m_feature) : feature_t{};
-
-    log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << best.m_feature << "|"
-               << (best_feature.valid() ? best_feature.name() : string_t("N/A"))
-               << ",classes=" << (best_feature.valid() ? scat(best_feature.classes()) : string_t("N/A"))
-               << ",tables=" << best.m_tables.size<0>() << ",mhashes=" << best.m_mhashes.size()
-               << "),samples=" << samples.size()
-               << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
-
-    if (best.m_score != wlearner_t::no_fit_score())
-    {
-        learner_t::fit(dataset);
-        m_mhashes = best.m_mhashes;
-        set(best.m_feature, best.m_tables);
-    }
-    return best.m_score;
 }
 
 void table_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
@@ -225,25 +227,195 @@ void table_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
 
     assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
-    const auto classes = tables().size<0>();
-    process(dataset, samples, feature(), classes, m_mhashes,
-            [&](const tensor_size_t i, const tensor_size_t value) { outputs.vector(i) += vector(value); });
+    process(dataset, samples, feature(), m_hashes, m_hash2tables,
+            [&](const tensor_size_t i, const tensor_size_t table) { outputs.vector(i) += vector(table); });
 }
 
 cluster_t table_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
     learner_t::critical_compatible(dataset);
 
-    return split(dataset, samples, feature(), tables().size<0>(), m_mhashes);
-}
+    const auto& tables  = this->tables();
+    const auto  classes = tables.size<0>();
 
-cluster_t table_wlearner_t::split(const dataset_t& dataset, const indices_t& samples, const tensor_size_t feature,
-                                  const tensor_size_t classes, const mhashes_cmap_t& mhashes)
-{
     cluster_t cluster(dataset.samples(), classes);
 
-    process(dataset, samples, feature, classes, mhashes,
-            [&](const tensor_size_t i, const tensor_size_t value) { cluster.assign(samples(i), value); });
+    process(dataset, samples, feature(), m_hashes, m_hash2tables,
+            [&](const tensor_size_t i, const tensor_size_t table) { cluster.assign(samples(i), table); });
 
     return cluster;
-} // LCOV_EXCL_LINE
+}
+
+scalar_t table_wlearner_t::set(const dataset_t& dataset, const indices_t& samples, const cache_t& cache)
+{
+    const auto feature = cache.m_feature >= 0 ? dataset.feature(cache.m_feature) : feature_t{};
+
+    log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << cache.m_feature << "|"
+               << (feature.valid() ? feature.name() : string_t("N/A"))
+               << ",classes=" << (feature.valid() ? scat(feature.classes()) : string_t("N/A"))
+               << ",tables=" << cache.m_tables.size<0>() << ",hashes=" << cache.m_hashes.size()
+               << "),samples=" << samples.size()
+               << ",score=" << (cache.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(cache.m_score)) << ".";
+
+    if (cache.m_score != wlearner_t::no_fit_score())
+    {
+        learner_t::fit(dataset);
+
+        single_feature_wlearner_t::set(cache.m_feature, cache.m_tables);
+
+        m_hashes      = cache.m_hashes;
+        m_hash2tables = cache.m_hash2tables;
+    }
+
+    return cache.m_score;
+}
+
+dense_table_wlearner_t::dense_table_wlearner_t()
+    : table_wlearner_t("dense-table")
+{
+}
+
+rwlearner_t dense_table_wlearner_t::clone() const
+{
+    return std::make_unique<dense_table_wlearner_t>(*this);
+}
+
+scalar_t dense_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+{
+    assert_fit(dataset, samples, gradients);
+
+    select_iterator_t it{dataset};
+
+    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_dense(feature, hashes);
+            });
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_dense(feature, hashes);
+            });
+
+    // OK, return and store the optimum feature across threads
+    return table_wlearner_t::set(dataset, samples, min_reduce(caches));
+}
+
+kbest_table_wlearner_t::kbest_table_wlearner_t()
+    : table_wlearner_t("kbest-table")
+{
+    register_parameter(parameter_t::make_integer("wlearner::table::kbest", 1, LE, 3, LE, 100));
+}
+
+rwlearner_t kbest_table_wlearner_t::clone() const
+{
+    return std::make_unique<kbest_table_wlearner_t>(*this);
+}
+
+scalar_t kbest_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+{
+    assert_fit(dataset, samples, gradients);
+
+    const auto kbest = parameter("wlearner::table::kbest").value<tensor_size_t>();
+
+    select_iterator_t it{dataset};
+
+    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_kbest(feature, hashes, kbest);
+            });
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_kbest(feature, hashes, kbest);
+            });
+
+    // OK, return and store the optimum feature across threads
+    return table_wlearner_t::set(dataset, samples, min_reduce(caches));
+}
+
+ksplit_table_wlearner_t::ksplit_table_wlearner_t()
+    : table_wlearner_t("ksplit-table")
+{
+    register_parameter(parameter_t::make_integer("wlearner::table::ksplit", 1, LE, 3, LE, 100));
+}
+
+rwlearner_t ksplit_table_wlearner_t::clone() const
+{
+    return std::make_unique<ksplit_table_wlearner_t>(*this);
+}
+
+scalar_t ksplit_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+{
+    assert_fit(dataset, samples, gradients);
+
+    const auto ksplit = parameter("wlearner::table::ksplit").value<tensor_size_t>();
+
+    select_iterator_t it{dataset};
+
+    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_ksplit(feature, hashes, ksplit);
+            });
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_ksplit(feature, hashes, ksplit);
+            });
+
+    // OK, return and store the optimum feature across threads
+    return table_wlearner_t::set(dataset, samples, min_reduce(caches));
+}
+
+dstep_table_wlearner_t::dstep_table_wlearner_t()
+    : table_wlearner_t("dstep-table")
+{
+}
+
+rwlearner_t dstep_table_wlearner_t::clone() const
+{
+    return std::make_unique<dstep_table_wlearner_t>(*this);
+}
+
+scalar_t dstep_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+{
+    assert_fit(dataset, samples, gradients);
+
+    select_iterator_t it{dataset};
+
+    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_kbest(feature, hashes, 1);
+            });
+    it.loop(samples,
+            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+            {
+                auto&      cache  = caches[tnum];
+                const auto hashes = cache.update(samples, gradients, fvalues);
+                cache.score_kbest(feature, hashes, 1);
+            });
+
+    // OK, return and store the optimum feature across threads
+    return table_wlearner_t::set(dataset, samples, min_reduce(caches));
+}

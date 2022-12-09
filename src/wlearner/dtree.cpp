@@ -4,7 +4,6 @@
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/dtree.h>
 #include <nano/wlearner/stump.h>
-#include <nano/wlearner/table.h>
 #include <nano/wlearner/util.h>
 #include <set>
 
@@ -29,19 +28,6 @@ namespace
         size_t        m_parent{0}; ///<
     };
 } // namespace
-
-static void append(mhashes_t& all_hashes, const mhashes_t& hashes)
-{
-    // NB: This conservative resize is not very efficient!
-    const auto copy  = all_hashes;
-    const auto count = copy.size<0>();
-    all_hashes.resize(count + hashes.size());
-    if (count > 0)
-    {
-        all_hashes.slice(0, count) = copy;
-    }
-    all_hashes.slice(count, all_hashes.size()) = hashes;
-}
 
 static void append(tensor4d_t& tables, const tensor3d_cmap_t& table)
 {
@@ -81,9 +67,8 @@ static auto unique_features(const dtree_nodes_t& nodes)
 
 std::istream& nano::read(std::istream& stream, dtree_node_t& node)
 {
-    if (!::nano::read_cast<int32_t>(stream, node.m_feature) || !::nano::read_cast<int32_t>(stream, node.m_classes) ||
-        !::nano::read(stream, node.m_threshold) || !::nano::read_cast<uint32_t>(stream, node.m_next) ||
-        !::nano::read_cast<int32_t>(stream, node.m_table) || !::nano::read_cast<int32_t>(stream, node.m_mhash))
+    if (!::nano::read_cast<int32_t>(stream, node.m_feature) || !::nano::read(stream, node.m_threshold) ||
+        !::nano::read_cast<uint32_t>(stream, node.m_next) || !::nano::read_cast<int32_t>(stream, node.m_table))
     {
         stream.setstate(std::ios_base::failbit);
     }
@@ -92,11 +77,9 @@ std::istream& nano::read(std::istream& stream, dtree_node_t& node)
 
 std::ostream& nano::write(std::ostream& stream, const dtree_node_t& node)
 {
-    if (!::nano::write(stream, static_cast<int32_t>(node.m_feature)) ||
-        !::nano::write(stream, static_cast<int32_t>(node.m_classes)) || !::nano::write(stream, node.m_threshold) ||
+    if (!::nano::write(stream, static_cast<int32_t>(node.m_feature)) || !::nano::write(stream, node.m_threshold) ||
         !::nano::write(stream, static_cast<uint32_t>(node.m_next)) ||
-        !::nano::write(stream, static_cast<int32_t>(node.m_table)) ||
-        !::nano::write(stream, static_cast<int32_t>(node.m_mhash)))
+        !::nano::write(stream, static_cast<int32_t>(node.m_table)))
     {
         stream.setstate(std::ios_base::failbit);
     }
@@ -105,9 +88,8 @@ std::ostream& nano::write(std::ostream& stream, const dtree_node_t& node)
 
 std::ostream& nano::operator<<(std::ostream& stream, const dtree_node_t& node)
 {
-    return stream << "node: feature=" << node.m_feature << ",classes=" << node.m_classes
-                  << ",threshold=" << node.m_threshold << ",next=" << node.m_next << ",table=" << node.m_table
-                  << ",mhash=" << node.m_mhash;
+    return stream << "node: feature=" << node.m_feature << ",threshold=" << node.m_threshold << ",next=" << node.m_next
+                  << ",table=" << node.m_table;
 }
 
 std::ostream& nano::operator<<(std::ostream& stream, const dtree_nodes_t& nodes)
@@ -131,8 +113,7 @@ std::istream& dtree_wlearner_t::read(std::istream& stream)
 {
     wlearner_t::read(stream);
 
-    critical(!::nano::read(stream, m_nodes) || !::nano::read(stream, m_features) || !::nano::read(stream, m_tables) ||
-                 !::nano::read(stream, m_mhashes),
+    critical(!::nano::read(stream, m_nodes) || !::nano::read(stream, m_features) || !::nano::read(stream, m_tables),
              "dtree weak learner: failed to read from stream!");
 
     return stream;
@@ -142,8 +123,7 @@ std::ostream& dtree_wlearner_t::write(std::ostream& stream) const
 {
     wlearner_t::write(stream);
 
-    critical(!::nano::write(stream, m_nodes) || !::nano::write(stream, m_features) ||
-                 !::nano::write(stream, m_tables) || !::nano::write(stream, m_mhashes),
+    critical(!::nano::write(stream, m_nodes) || !::nano::write(stream, m_features) || !::nano::write(stream, m_tables),
              "dtree weak learner: failed to write to stream!");
 
     return stream;
@@ -161,8 +141,6 @@ void dtree_wlearner_t::scale(const vector_t& scale)
 
 scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    learner_t::fit(dataset);
-
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
     assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
@@ -170,16 +148,12 @@ scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     const auto max_depth = parameter("wlearner::dtree::max_depth").value<tensor_size_t>();
     const auto min_split = parameter("wlearner::dtree::min_split").value<tensor_size_t>();
 
-    scalar_t score = 0;
-
-    m_nodes.clear();
-    m_tables.resize(cat_dims(0, dataset.target_dims()));
-    m_mhashes.resize(0);
-
-    auto stump = stump_wlearner_t{};
-    auto table = table_wlearner_t{};
-
     const auto min_samples_size = std::min<tensor_size_t>(10, dataset.samples() * min_split / 100);
+
+    auto score  = scalar_t{0};
+    auto nodes  = dtree_nodes_t{};
+    auto stump  = stump_wlearner_t{};
+    auto tables = tensor4d_t{cat_dims(0, dataset.target_dims())};
 
     std::deque<cache_t> caches;
     caches.emplace_back(samples);
@@ -187,78 +161,61 @@ scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     {
         const auto cache = caches.front();
 
-        // split the node using both discrete and continuous features...
+        // split the node using decision stumps...
         log_info() << std::fixed << std::setprecision(8) << " +++ depth=" << cache.m_depth
                    << ",samples=" << cache.m_samples.size()
                    << ",score=" << (score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score)) << "...";
         const auto score_stump = stump.fit(dataset, cache.m_samples, gradients);
-        const auto score_table = table.fit(dataset, cache.m_samples, gradients);
-
-        cluster_t    cluster;
-        tensor4d_t   tables;
-        mhashes_t    mhashes;
-        dtree_node_t node;
+        if (score_stump == wlearner_t::no_fit_score())
+        {
+            score = wlearner_t::no_fit_score();
+            break;
+        }
 
         cache_t ncache;
         ncache.m_depth = cache.m_depth + 1;
 
-        if (score_stump < score_table)
-        {
-            tables  = stump.tables();
-            cluster = stump.split(dataset, cache.m_samples);
+        dtree_node_t node;
+        node.m_feature   = stump.feature();
+        node.m_threshold = stump.threshold();
 
-            node.m_feature   = stump.feature();
-            node.m_threshold = stump.threshold();
-        }
-        else
-        {
-            tables  = table.tables();
-            mhashes = table.mhashes();
-            cluster = table.split(dataset, cache.m_samples);
-
-            node.m_feature = table.feature();
-            node.m_classes = tables.size<0>();
-        }
-        assert(cluster.groups() == tables.size<0>());
+        const auto& tables_stump = stump.tables();
+        const auto  cluster      = stump.split(dataset, cache.m_samples);
+        assert(cluster.groups() == tables_stump.size<0>());
 
         // have the parent node point to the current terminal node (to be added)
-        if (cache.m_parent < m_nodes.size())
+        if (cache.m_parent < nodes.size())
         {
-            m_nodes[cache.m_parent].m_next = m_nodes.size();
+            nodes[cache.m_parent].m_next = nodes.size();
         }
 
         // terminal nodes...
         if (cache.m_samples.size() < min_samples_size || (cache.m_depth + 1) >= max_depth)
         {
-            for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++i)
+            for (tensor_size_t i = 0, size = tables_stump.size<0>(); i < size; ++i)
             {
-                ncache.m_parent  = m_nodes.size();
+                ncache.m_parent  = nodes.size();
                 ncache.m_samples = cluster.indices(i);
 
-                node.m_table = m_tables.size<0>();
-                node.m_mhash = mhashes.size() > 0 ? m_mhashes.size<0>() : tensor_size_t{-1};
-                m_nodes.emplace_back(node);
-                append(m_tables, tables.tensor(i));
-            }
-            if (mhashes.size() > 0)
-            {
-                append(m_mhashes, mhashes);
+                node.m_table = tables.size<0>();
+                nodes.emplace_back(node);
+                append(tables, tables_stump.tensor(i));
             }
 
             // also, update the total score
-            score += std::min(score_table, score_stump);
+            score += score_stump;
         }
 
         // can still split the samples
         else
         {
-            for (tensor_size_t i = 0, size = tables.size<0>(); i < size; ++i)
+            for (tensor_size_t i = 0, size = tables_stump.size<0>(); i < size; ++i)
             {
-                ncache.m_parent  = m_nodes.size();
+                ncache.m_parent  = nodes.size();
                 ncache.m_samples = cluster.indices(i);
 
                 node.m_table = -1;
-                m_nodes.push_back(node);
+                nodes.push_back(node);
                 caches.push_back(ncache);
             }
         }
@@ -267,10 +224,20 @@ scalar_t dtree_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     }
 
     // OK, compact the selected features
-    m_features = unique_features(m_nodes);
+    auto features = unique_features(nodes);
 
-    log_info() << std::fixed << std::setprecision(8) << " === tree(features=" << m_features.size()
-               << ",nodes=" << m_nodes.size() << "), score=" << score << ".";
+    log_info() << std::fixed << std::setprecision(8) << " === tree(features=" << features.size()
+               << ",nodes=" << nodes.size() << ",leafs=" << tables.size<0>() << ")"
+               << ",score=" << (score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score)) << ".";
+
+    if (score != wlearner_t::no_fit_score())
+    {
+        m_nodes    = std::move(nodes);
+        m_tables   = std::move(tables);
+        m_features = std::move(features);
+
+        learner_t::fit(dataset);
+    }
 
     return score;
 }
@@ -298,8 +265,6 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 {
     learner_t::critical_compatible(dataset);
 
-    const auto no_mhashes = mhashes_t{};
-
     cluster_t cluster(dataset.samples(), m_tables.size());
 
     std::deque<std::pair<size_t, indices_t>> splits;
@@ -312,14 +277,7 @@ cluster_t dtree_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 
         const auto& node         = m_nodes[split.first];
         const auto& node_samples = split.second;
-
-        const auto node_mhashes =
-            (node.m_mhash >= 0) ? m_mhashes.slice(node.m_mhash, node.m_classes) : no_mhashes.tensor();
-
-        const auto node_cluster =
-            (node.m_classes > 0)
-                ? table_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_classes, node_mhashes)
-                : stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
+        const auto  node_cluster = stump_wlearner_t::split(dataset, node_samples, node.m_feature, node.m_threshold);
 
         // terminal node
         if (node.m_next == 0U)
