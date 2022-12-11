@@ -53,6 +53,29 @@ struct loss_function_t final : public function_t
 
 UTEST_BEGIN_MODULE(test_loss)
 
+UTEST_CASE(factory)
+{
+    const auto& losses = loss_t::all();
+    UTEST_CHECK_EQUAL(losses.ids().size(), 17U);
+    UTEST_CHECK(losses.get("mae") != nullptr);
+    UTEST_CHECK(losses.get("mse") != nullptr);
+    UTEST_CHECK(losses.get("cauchy") != nullptr);
+    UTEST_CHECK(losses.get("pinball") != nullptr);
+    UTEST_CHECK(losses.get("m-hinge") != nullptr);
+    UTEST_CHECK(losses.get("s-hinge") != nullptr);
+    UTEST_CHECK(losses.get("s-classnll") != nullptr);
+    UTEST_CHECK(losses.get("m-savage") != nullptr);
+    UTEST_CHECK(losses.get("s-savage") != nullptr);
+    UTEST_CHECK(losses.get("m-tangent") != nullptr);
+    UTEST_CHECK(losses.get("s-tangent") != nullptr);
+    UTEST_CHECK(losses.get("m-logistic") != nullptr);
+    UTEST_CHECK(losses.get("s-logistic") != nullptr);
+    UTEST_CHECK(losses.get("m-exponential") != nullptr);
+    UTEST_CHECK(losses.get("s-exponential") != nullptr);
+    UTEST_CHECK(losses.get("m-squared-hinge") != nullptr);
+    UTEST_CHECK(losses.get("s-squared-hinge") != nullptr);
+}
+
 UTEST_CASE(gradient)
 {
     const tensor_size_t cmd_min_dims = 2;
@@ -70,13 +93,19 @@ UTEST_CASE(gradient)
             UTEST_CHECK_EQUAL(loss->convex(), function.convex());
             UTEST_CHECK_EQUAL(loss->smooth(), function.smooth());
 
-            vector_t x(function.size());
+            if (loss_id == "pinball")
+            {
+                loss->parameter("loss::pinball::alpha") = static_cast<scalar_t>(cmd_dims - cmd_min_dims + 1) /
+                                                          static_cast<scalar_t>(cmd_max_dims - cmd_min_dims + 2);
+            }
 
             const auto max_power = (loss_id == "m-exponential" || loss_id == "s-exponential") ? 5 : 20;
             for (int power = 0; power <= max_power; ++power)
             {
-                x.setRandom();
-                x.array() *= std::pow(std::exp(1.0), power);
+                auto tx = make_random_tensor<scalar_t>(make_dims(function.size()), -1.0, +1.0);
+                tx.array() *= std::pow(std::exp(1.0), power);
+
+                const vector_t x = tx.vector();
 
                 const auto f = function.vgrad(x);
                 UTEST_CHECK_EQUAL(std::isfinite(f), true);
@@ -207,6 +236,44 @@ UTEST_CASE(regression)
         tensor1d_t errors(3);
         loss->error(target, output, errors.tensor());
         UTEST_CHECK_LESS(errors.array().abs().maxCoeff(), epsilon0<scalar_t>());
+    }
+}
+
+UTEST_CASE(quantile_regression)
+{
+    const auto loss = make_loss("pinball");
+
+    const auto targets = make_tensor<scalar_t>(make_dims(5, 2, 1, 1), 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9);
+    const auto outputs = make_tensor<scalar_t>(make_dims(5, 2, 1, 1), 0.1, 0.0, 0.2, 0.4, 0.2, 0.3, 0.7, 0.9, 0.9, 0.6);
+
+    auto values = tensor1d_t{5};
+    auto errors = tensor1d_t{5};
+    {
+        loss->parameter("loss::pinball::alpha") = 0.5;
+        loss->value(targets, outputs, values);
+        loss->error(targets, outputs, errors);
+
+        const auto expected = make_tensor<scalar_t>(make_dims(5), 0.10, 0.05, 0.20, 0.15, 0.20);
+        UTEST_CHECK_CLOSE(values, expected, 1e-12);
+        UTEST_CHECK_CLOSE(errors, expected, 1e-12);
+    }
+    {
+        loss->parameter("loss::pinball::alpha") = 0.2;
+        loss->value(targets, outputs, values);
+        loss->error(targets, outputs, errors);
+
+        const auto expected = make_tensor<scalar_t>(make_dims(5), 0.10, 0.08, 0.08, 0.24, 0.14);
+        UTEST_CHECK_CLOSE(values, expected, 1e-12);
+        UTEST_CHECK_CLOSE(errors, expected, 1e-12);
+    }
+    {
+        loss->parameter("loss::pinball::alpha") = 0.8;
+        loss->value(targets, outputs, values);
+        loss->error(targets, outputs, errors);
+
+        const auto expected = make_tensor<scalar_t>(make_dims(5), 0.10, 0.02, 0.32, 0.06, 0.26);
+        UTEST_CHECK_CLOSE(values, expected, 1e-12);
+        UTEST_CHECK_CLOSE(errors, expected, 1e-12);
     }
 }
 

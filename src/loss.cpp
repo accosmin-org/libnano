@@ -1,5 +1,6 @@
 #include <mutex>
 #include <nano/loss/flatten.h>
+#include <nano/loss/pinball.h>
 
 using namespace nano;
 
@@ -46,6 +47,8 @@ factory_t<loss_t>& loss_t::all()
 
         manager.add<sexponential_loss_t>("exponential loss (single-label classification)");
         manager.add<mexponential_loss_t>("exponential loss (multi-label classification)");
+
+        manager.add<pinball_loss_t>("pinball loss (quantile regression)");
     };
 
     static std::once_flag flag;
