@@ -1,4 +1,5 @@
 #include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/hash.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
@@ -410,6 +411,18 @@ UTEST_CASE(hash_mclass_make_and_find)
     UTEST_CHECK_EQUAL(index4, +5);
     UTEST_CHECK_EQUAL(index5, +3);
     UTEST_CHECK_EQUAL(index6, +1);
+}
+
+UTEST_CASE(criterion)
+{
+    const auto rss = std::exp(1.0);
+    const auto n   = 100;
+    const auto k   = 3;
+
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::rss, rss, k, n), rss, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::aic, rss, k, n), -354.517018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::aicc, rss, k, n), -354.267018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::bic, rss, k, n), -346.70150804084486269988, 1e-12);
 }
 
 UTEST_END_MODULE()

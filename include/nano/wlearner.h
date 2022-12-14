@@ -78,5 +78,8 @@ namespace nano
         /// \brief score that indicates fitting failed (e.g. unsupported feature types).
         ///
         static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }
+
+    protected:
+        static void assert_fit(const dataset_t&, const indices_t& samples, const tensor4d_t& gradients);
     };
 } // namespace nano

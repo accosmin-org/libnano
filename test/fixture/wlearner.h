@@ -386,7 +386,7 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
 
     // check fitting
     const auto score = check_fit(wlearner, datasource0);
-    UTEST_CHECK_CLOSE(score, 0.0, 1e-7);
+    UTEST_CHECK_LESS(score, -100.0);
     datasource0.check_wlearner(wlearner);
 
     // check prediction

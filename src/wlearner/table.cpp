@@ -1,20 +1,13 @@
 #include <iomanip>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/table.h>
 #include <nano/wlearner/util.h>
 
 using namespace nano;
 using namespace nano::wlearner;
-
-static void assert_fit([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
-                       [[maybe_unused]] const tensor4d_t& gradients)
-{
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
-}
 
 template <typename toperator>
 static void process(const dataset_t& dataset, const indices_cmap_t& samples, const tensor_size_t feature,
@@ -66,16 +59,19 @@ public:
         output = r1(fv) / x0(fv);
     }
 
-    void score_dense(const tensor_size_t feature, const hashes_t& hashes)
+    void score_dense(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
     {
         const auto fvsize = fvalues();
 
-        scalar_t score = 0;
+        scalar_t rss = 0;
         for (tensor_size_t fv = 0; fv < fvsize; ++fv)
         {
-            score += this->score(fv);
+            rss += this->score(fv);
         }
+        const auto k = fvsize * ::nano::size(tdims());
+        const auto n = m_samples;
 
+        const auto score = make_score(criterion, rss, k, n);
         if (std::isfinite(score) && score < m_score)
         {
             m_score   = score;
@@ -93,16 +89,21 @@ public:
         }
     }
 
-    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t kbest)
+    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t kbest,
+                     const criterion_type criterion)
     {
         const auto fvsize = fvalues();
         if (kbest >= fvsize)
         {
-            score_dense(feature, hashes);
+            score_dense(feature, hashes, criterion);
             return;
         }
 
-        const auto [score, mapping] = this->kbest(kbest);
+        const auto [rss, mapping] = this->kbest(kbest);
+        const auto k              = kbest * ::nano::size(tdims());
+        const auto n              = m_samples;
+
+        const auto score = make_score(criterion, rss, k, n);
         if (std::isfinite(score) && score < m_score)
         {
             m_score       = score;
@@ -120,16 +121,21 @@ public:
         }
     }
 
-    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t ksplit)
+    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t ksplit,
+                      const criterion_type criterion)
     {
         const auto fvsize = fvalues();
         if (ksplit >= fvsize)
         {
-            score_dense(feature, hashes);
+            score_dense(feature, hashes, criterion);
             return;
         }
 
-        const auto [score, mapping] = this->ksplit(ksplit);
+        const auto [rss, mapping] = this->ksplit(ksplit);
+        const auto k              = ksplit * ::nano::size(tdims());
+        const auto n              = m_samples;
+
+        const auto score = make_score(criterion, rss, k, n);
         if (std::isfinite(score) && score < m_score)
         {
             m_score       = score;
@@ -155,12 +161,14 @@ public:
         const auto classes = hashes.size();
 
         clear(classes);
+        m_samples = 0;
         for (tensor_size_t i = 0, size = fvalues.template size<0>(); i < size; ++i)
         {
             if (const auto& [valid, value] = validator(i); valid)
             {
                 const auto bin = find(hashes, value);
                 assert(bin >= 0 && bin < classes);
+                ++m_samples;
                 accumulator_t::update(gradients.array(samples(i)), bin);
             }
         }
@@ -189,6 +197,7 @@ public:
     }
 
     // attributes
+    tensor_size_t m_samples{0};                        ///<
     tensor4d_t    m_tables;                            ///<
     tensor_size_t m_feature{-1};                       ///<
     scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
@@ -284,6 +293,8 @@ scalar_t dense_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
 {
     assert_fit(dataset, samples, gradients);
 
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+
     select_iterator_t it{dataset};
 
     std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
@@ -292,14 +303,14 @@ scalar_t dense_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_dense(feature, hashes);
+                cache.score_dense(feature, hashes, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_dense(feature, hashes);
+                cache.score_dense(feature, hashes, criterion);
             });
 
     // OK, return and store the optimum feature across threads
@@ -321,7 +332,8 @@ scalar_t kbest_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
 {
     assert_fit(dataset, samples, gradients);
 
-    const auto kbest = parameter("wlearner::table::kbest").value<tensor_size_t>();
+    const auto kbest     = parameter("wlearner::table::kbest").value<tensor_size_t>();
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
 
@@ -331,14 +343,14 @@ scalar_t kbest_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, kbest);
+                cache.score_kbest(feature, hashes, kbest, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, kbest);
+                cache.score_kbest(feature, hashes, kbest, criterion);
             });
 
     // OK, return and store the optimum feature across threads
@@ -360,7 +372,8 @@ scalar_t ksplit_table_wlearner_t::fit(const dataset_t& dataset, const indices_t&
 {
     assert_fit(dataset, samples, gradients);
 
-    const auto ksplit = parameter("wlearner::table::ksplit").value<tensor_size_t>();
+    const auto ksplit    = parameter("wlearner::table::ksplit").value<tensor_size_t>();
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
 
@@ -370,14 +383,14 @@ scalar_t ksplit_table_wlearner_t::fit(const dataset_t& dataset, const indices_t&
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, ksplit);
+                cache.score_ksplit(feature, hashes, ksplit, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, ksplit);
+                cache.score_ksplit(feature, hashes, ksplit, criterion);
             });
 
     // OK, return and store the optimum feature across threads
@@ -398,6 +411,8 @@ scalar_t dstep_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
 {
     assert_fit(dataset, samples, gradients);
 
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+
     select_iterator_t it{dataset};
 
     std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
@@ -406,14 +421,14 @@ scalar_t dstep_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& 
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, 1);
+                cache.score_kbest(feature, hashes, 1, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, 1);
+                cache.score_kbest(feature, hashes, 1, criterion);
             });
 
     // OK, return and store the optimum feature across threads

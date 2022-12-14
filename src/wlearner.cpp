@@ -1,15 +1,18 @@
 #include <mutex>
 #include <nano/wlearner/affine.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/dtree.h>
 #include <nano/wlearner/hinge.h>
 #include <nano/wlearner/stump.h>
 #include <nano/wlearner/table.h>
 
 using namespace nano;
+using namespace nano::wlearner;
 
 wlearner_t::wlearner_t(string_t id)
     : clonable_t(std::move(id))
 {
+    register_parameter(parameter_t::make_enum("wlearner::criterion", criterion_type::aicc));
 }
 
 tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples) const
@@ -19,6 +22,14 @@ tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
     predict(dataset, samples, outputs);
 
     return outputs;
+}
+
+void wlearner_t::assert_fit([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
+                            [[maybe_unused]] const tensor4d_t& gradients)
+{
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
 }
 
 factory_t<wlearner_t>& wlearner_t::all()

@@ -222,7 +222,7 @@ UTEST_CASE(fit_predict_mclass_dense)
     const auto noise       = make_full_tensor<scalar_t>(make_dims(8), 1e-12);
     const auto maker       = make_dense_wlearner;
 
-    const auto datasource0 = make_datasource<fixture_t>(200, 3, tables, tables, hashes, hash2tables, noise, maker);
+    const auto datasource0 = make_datasource<fixture_t>(120, 3, tables, tables, hashes, hash2tables, noise, maker);
     const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
     check_wlearner(datasource0, datasourceX);
@@ -264,7 +264,7 @@ UTEST_CASE(fit_predict_mclass_dstep)
         const auto hashes = dense_hashes.slice(fv, fv + 1);
         const auto noise  = make_dstep_noise(8, fv);
 
-        const auto datasource0 = make_datasource<fixture_t>(200, 3, tablex, tables, hashes, hash2tables, noise, maker);
+        const auto datasource0 = make_datasource<fixture_t>(120, 3, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
         check_wlearner(datasource0, datasourceX);

@@ -2,6 +2,7 @@
 #include <nano/core/logger.h>
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/affine.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
 
@@ -10,44 +11,33 @@ using namespace nano::wlearner;
 
 namespace
 {
-    class cache_t
+    class cache_t : public accumulator_t
     {
     public:
-        cache_t() = default;
-
-        explicit cache_t(const tensor3d_dims_t& tdims)
-            : m_accumulator(tdims)
+        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
+            : accumulator_t(tdims)
             , m_tables(cat_dims(2, tdims))
         {
         }
-
-        auto x0() const { return m_accumulator.x0(); }
-
-        auto x1() const { return m_accumulator.x1(); }
-
-        auto x2() const { return m_accumulator.x2(); }
-
-        auto r1() const { return m_accumulator.r1(); }
-
-        auto rx() const { return m_accumulator.rx(); }
-
-        auto r2() const { return m_accumulator.r2(); }
-
-        void clear() { m_accumulator.clear(); }
 
         auto a() const { return (rx() * x0() - r1() * x1()) / (x2() * x0() - x1() * x1()); }
 
         auto b() const { return (r1() * x2() - rx() * x1()) / (x2() * x0() - x1() * x1()); }
 
-        auto score() const
+        auto score(const criterion_type criterion) const
         {
-            return (r2() + a().square() * x2() + b().square() * x0() - 2 * a() * rx() - 2 * b() * r1() +
-                    2 * a() * b() * x1())
-                .sum();
+            const auto a   = this->a();
+            const auto b   = this->b();
+            const auto a2  = a.square();
+            const auto b2  = b.square();
+            const auto rss = (r2() + a2 * x2() + b2 * x0() - 2 * a * rx() - 2 * b * r1() + 2 * a * b * x1()).sum();
+            const auto k   = 2 * ::nano::size(tdims());
+            const auto n   = static_cast<tensor_size_t>(x0());
+
+            return make_score(criterion, rss, k, n);
         }
 
         // attributes
-        accumulator_t m_accumulator;                       ///<
         tensor4d_t    m_tables;                            ///<
         tensor_size_t m_feature{0};                        ///<
         scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
@@ -66,9 +56,9 @@ rwlearner_t affine_wlearner_t::clone() const
 
 scalar_t affine_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+    assert_fit(dataset, samples, gradients);
+
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it(dataset);
 
@@ -84,12 +74,12 @@ scalar_t affine_wlearner_t::fit(const dataset_t& dataset, const indices_t& sampl
                     const auto value = fvalues(i);
                     if (std::isfinite(value))
                     {
-                        cache.m_accumulator.update(value, gradients.array(samples(i)));
+                        cache.update(value, gradients.array(samples(i)));
                     }
                 }
 
                 // update the parameters if a better feature
-                const auto score = cache.score();
+                const auto score = cache.score(criterion);
                 if (std::isfinite(score) && score < cache.m_score)
                 {
                     cache.m_score           = score;

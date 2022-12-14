@@ -2,6 +2,7 @@
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
 #include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/stump.h>
 #include <nano/wlearner/util.h>
@@ -9,14 +10,18 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+template <typename tarray, typename toutputs>
+static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
+{
+    return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
+}
+
 namespace
 {
     class cache_t
     {
     public:
-        cache_t() = default;
-
-        explicit cache_t(const tensor3d_dims_t& tdims)
+        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
             : m_acc_sum(tdims)
             , m_acc_neg(tdims)
             , m_tables(cat_dims(2, tdims))
@@ -57,16 +62,14 @@ namespace
 
         auto output_pos() const { return r1_pos() / x0_pos(); }
 
-        template <typename tarray, typename toutputs>
-        static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
+        auto score(const criterion_type criterion) const
         {
-            return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
-        }
+            const auto rss = ::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
+                             ::score(x0_pos(), r1_pos(), r2_pos(), output_pos());
+            const auto k = 2 * ::nano::size(m_acc_sum.tdims()) + 1;
+            const auto n = static_cast<tensor_size_t>(m_acc_sum.x0());
 
-        auto score() const
-        {
-            return cache_t::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
-                   cache_t::score(x0_pos(), r1_pos(), r2_pos(), output_pos());
+            return make_score(criterion, rss, k, n);
         }
 
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
@@ -111,9 +114,9 @@ rwlearner_t stump_wlearner_t::clone() const
 
 scalar_t stump_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+    assert_fit(dataset, samples, gradients);
+
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it(dataset);
 
@@ -134,7 +137,7 @@ scalar_t stump_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                     if (ivalue1.first < ivalue2.first)
                     {
                         // update the parameters if a better feature
-                        const auto score = cache.score();
+                        const auto score = cache.score(criterion);
                         if (std::isfinite(score) && score < cache.m_score)
                         {
                             cache.m_score           = score;

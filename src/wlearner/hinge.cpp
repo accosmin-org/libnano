@@ -2,6 +2,7 @@
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
 #include <nano/wlearner/accumulator.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/hinge.h>
 #include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
@@ -9,14 +10,29 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+template <typename tarray>
+static auto beta(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
+                 const scalar_t threshold)
+{
+    return (rx - r1 * threshold) / (x2 + x0 * threshold * threshold - 2 * x1 * threshold);
+}
+
+template <typename tarray, typename tbarray>
+static auto score(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
+                  const tarray& r2, const scalar_t threshold, const tbarray& beta)
+{
+    const auto beta2      = beta.square();
+    const auto threshold2 = threshold * threshold;
+
+    return (r2 + beta2 * (x2 + x0 * threshold2 - 2 * x1 * threshold) - 2 * beta * (rx - r1 * threshold)).sum();
+}
+
 namespace
 {
     class cache_t
     {
     public:
-        cache_t() = default;
-
-        explicit cache_t(const tensor3d_dims_t& tdims)
+        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
             : m_beta0(tdims)
             , m_acc_sum(tdims)
             , m_acc_neg(tdims)
@@ -67,45 +83,46 @@ namespace
             std::sort(m_ivalues.begin(), m_ivalues.end());
         }
 
-        template <typename tarray>
-        static auto beta(scalar_t x0, scalar_t x1, scalar_t x2, const tarray& r1, const tarray& rx, scalar_t threshold)
-        {
-            return (rx - r1 * threshold) / (x2 + x0 * threshold * threshold - 2 * x1 * threshold);
-        }
-
-        template <typename tarray, typename tbarray>
-        static auto score(scalar_t x0, scalar_t x1, scalar_t x2, const tarray& r1, const tarray& rx, const tarray& r2,
-                          scalar_t threshold, const tbarray& beta)
-        {
-            return (r2 + beta.square() * (x2 + x0 * threshold * threshold - 2 * x1 * threshold) -
-                    2 * beta * (rx - r1 * threshold))
-                .sum();
-        }
-
         auto beta0() const { return m_beta0.array(); }
 
-        auto beta_neg(scalar_t threshold) const
+        auto beta_neg(const scalar_t threshold) const
         {
-            return cache_t::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
+            return ::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
         }
 
-        auto beta_pos(scalar_t threshold) const
+        auto beta_pos(const scalar_t threshold) const
         {
-            return cache_t::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
+            return ::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
         }
 
-        auto score_neg(scalar_t threshold) const
+        auto score_neg(const scalar_t threshold) const
         {
-            return cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold,
-                                  beta_neg(threshold)) +
-                   cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta0());
+            return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)) +
+                   ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta0());
         }
 
-        auto score_pos(scalar_t threshold) const
+        auto score_pos(const scalar_t threshold) const
         {
-            return cache_t::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta0()) +
-                   cache_t::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold,
-                                  beta_pos(threshold));
+            return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta0()) +
+                   ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
+        }
+
+        auto score_neg(const scalar_t threshold, const criterion_type criterion) const
+        {
+            const auto rss = score_neg(threshold);
+            const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
+            const auto n   = static_cast<tensor_size_t>(x0_neg());
+
+            return make_score(criterion, rss, k, n);
+        }
+
+        auto score_pos(const scalar_t threshold, const criterion_type criterion) const
+        {
+            const auto rss = score_pos(threshold);
+            const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
+            const auto n   = static_cast<tensor_size_t>(x0_pos());
+
+            return make_score(criterion, rss, k, n);
         }
 
         using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
@@ -168,9 +185,9 @@ rwlearner_t hinge_wlearner_t::clone() const
 
 scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+    assert_fit(dataset, samples, gradients);
+
+    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
 
@@ -194,7 +211,7 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                         const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
 
                         // ... try the left hinge
-                        const auto score_neg = cache.score_neg(threshold);
+                        const auto score_neg = cache.score_neg(threshold, criterion);
                         if (std::isfinite(score_neg) && score_neg < cache.m_score)
                         {
                             cache.m_score           = score_neg;
@@ -206,7 +223,7 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
                         }
 
                         // ... try the right hinge
-                        const auto score_pos = cache.score_pos(threshold);
+                        const auto score_pos = cache.score_pos(threshold, criterion);
                         if (std::isfinite(score_pos) && score_pos < cache.m_score)
                         {
                             cache.m_score           = score_pos;

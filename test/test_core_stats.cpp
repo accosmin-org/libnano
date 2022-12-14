@@ -8,6 +8,17 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_core_stats)
 
+UTEST_CASE(IC)
+{
+    const auto rss = std::exp(1.0);
+    const auto n   = 100;
+    const auto k   = 3;
+
+    UTEST_CHECK_CLOSE(AIC(rss, k, n), -354.517018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(AICc(rss, k, n), -354.267018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(BIC(rss, k, n), -346.70150804084486269988, 1e-12);
+}
+
 UTEST_CASE(empty)
 {
     using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
