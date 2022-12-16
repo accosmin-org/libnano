@@ -39,12 +39,12 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        cluster_t split(const dataset_t&, const indices_t&) const override;
+        cluster_t do_split(const dataset_t&, const indices_t&) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
+        void do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
         /// \brief returns the hashes of the distinct single-class or multi-class labeling.
@@ -87,7 +87,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
     };
 
     ///
@@ -112,7 +112,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
     };
 
     ///
@@ -137,7 +137,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
     };
 
     ///
@@ -164,6 +164,6 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
     };
 } // namespace nano

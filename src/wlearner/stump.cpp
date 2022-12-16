@@ -112,10 +112,8 @@ rwlearner_t stump_wlearner_t::clone() const
     return std::make_unique<stump_wlearner_t>(*this);
 }
 
-scalar_t stump_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it(dataset);
@@ -167,12 +165,9 @@ scalar_t stump_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     return best.m_score;
 }
 
-void stump_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void stump_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    learner_t::critical_compatible(dataset);
-
     assert(tables().dims() == cat_dims(2, dataset.target_dims()));
-    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
     const auto lo = vector(0);
     const auto hi = vector(1);
@@ -182,10 +177,8 @@ void stump_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
                 { outputs.vector(i) += value < m_threshold ? lo : hi; });
 }
 
-cluster_t stump_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
+cluster_t stump_wlearner_t::do_split(const dataset_t& dataset, const indices_t& samples) const
 {
-    learner_t::critical_compatible(dataset);
-
     return split(dataset, samples, feature(), m_threshold);
 }
 

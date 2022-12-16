@@ -66,17 +66,17 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        cluster_t split(const dataset_t&, const indices_t&) const override;
+        cluster_t do_split(const dataset_t&, const indices_t&) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
+        void do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief @see wlearner_t
@@ -94,8 +94,6 @@ namespace nano
         const tensor4d_t& tables() const { return m_tables; }
 
     private:
-        void compatible(const dataset_t&) const;
-
         // attributes
         dtree_nodes_t m_nodes;    ///< nodes in the decision tree
         tensor4d_t    m_tables;   ///< (#feature values, #outputs) - predictions at the leaves

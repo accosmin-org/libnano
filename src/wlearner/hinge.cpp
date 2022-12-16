@@ -183,10 +183,8 @@ rwlearner_t hinge_wlearner_t::clone() const
     return std::make_unique<hinge_wlearner_t>(*this);
 }
 
-scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t hinge_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
@@ -247,7 +245,6 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
 
     if (best.m_score != wlearner_t::no_fit_score())
     {
-        learner_t::fit(dataset);
         set(best.m_feature, best.m_tables);
         m_threshold = best.m_threshold;
         m_hinge     = best.m_hinge;
@@ -255,12 +252,9 @@ scalar_t hinge_wlearner_t::fit(const dataset_t& dataset, const indices_t& sample
     return best.m_score;
 }
 
-void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void hinge_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    learner_t::critical_compatible(dataset);
-
     assert(tables().dims() == cat_dims(2, dataset.target_dims()));
-    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
     const auto w = vector(0);
     const auto b = vector(1);
@@ -291,10 +285,8 @@ void hinge_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
     }
 }
 
-cluster_t hinge_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
+cluster_t hinge_wlearner_t::do_split(const dataset_t& dataset, const indices_t& samples) const
 {
-    learner_t::critical_compatible(dataset);
-
     cluster_t cluster(dataset.samples(), 1);
 
     loop_scalar(dataset, samples, feature(),

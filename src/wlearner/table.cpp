@@ -230,20 +230,14 @@ std::ostream& table_wlearner_t::write(std::ostream& stream) const
     return stream;
 }
 
-void table_wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void table_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    learner_t::critical_compatible(dataset);
-
-    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
-
     process(dataset, samples, feature(), m_hashes, m_hash2tables,
             [&](const tensor_size_t i, const tensor_size_t table) { outputs.vector(i) += vector(table); });
 }
 
-cluster_t table_wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
+cluster_t table_wlearner_t::do_split(const dataset_t& dataset, const indices_t& samples) const
 {
-    learner_t::critical_compatible(dataset);
-
     const auto& tables  = this->tables();
     const auto  classes = tables.size<0>();
 
@@ -268,8 +262,6 @@ scalar_t table_wlearner_t::set(const dataset_t& dataset, const indices_t& sample
 
     if (cache.m_score != wlearner_t::no_fit_score())
     {
-        learner_t::fit(dataset);
-
         single_feature_wlearner_t::set(cache.m_feature, cache.m_tables);
 
         m_hashes      = cache.m_hashes;
@@ -289,10 +281,8 @@ rwlearner_t dense_table_wlearner_t::clone() const
     return std::make_unique<dense_table_wlearner_t>(*this);
 }
 
-scalar_t dense_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t dense_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
@@ -328,10 +318,8 @@ rwlearner_t kbest_table_wlearner_t::clone() const
     return std::make_unique<kbest_table_wlearner_t>(*this);
 }
 
-scalar_t kbest_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto kbest     = parameter("wlearner::table::kbest").value<tensor_size_t>();
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
@@ -368,10 +356,9 @@ rwlearner_t ksplit_table_wlearner_t::clone() const
     return std::make_unique<ksplit_table_wlearner_t>(*this);
 }
 
-scalar_t ksplit_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t ksplit_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples,
+                                         const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto ksplit    = parameter("wlearner::table::ksplit").value<tensor_size_t>();
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
@@ -407,10 +394,8 @@ rwlearner_t dstep_table_wlearner_t::clone() const
     return std::make_unique<dstep_table_wlearner_t>(*this);
 }
 
-scalar_t dstep_table_wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+scalar_t dstep_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    assert_fit(dataset, samples, gradients);
-
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};

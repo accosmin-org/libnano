@@ -21,6 +21,8 @@ namespace nano
     class NANO_PUBLIC stump_wlearner_t final : public single_feature_wlearner_t
     {
     public:
+        using wlearner_t::split;
+
         ///
         /// \brief default constructor
         ///
@@ -44,18 +46,18 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        cluster_t        split(const dataset_t&, const indices_t&) const override;
+        cluster_t        do_split(const dataset_t&, const indices_t&) const override;
         static cluster_t split(const dataset_t&, const indices_t&, tensor_size_t feature, scalar_t threshold);
 
         ///
         /// \brief @see wlearner_t
         ///
-        void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
+        void do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
         /// \brief @see wlearner_t
         ///
-        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+        scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief returns the chosen feature value threshold.

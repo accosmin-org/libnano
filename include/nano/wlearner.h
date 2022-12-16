@@ -33,7 +33,7 @@ namespace nano
         /// NB: the given sample indices and the returned (cluster) splits
         ///     are relative to the whole dataset in the range [0, dataset.samples()).
         ///
-        virtual cluster_t split(const dataset_t&, const indices_t&) const = 0;
+        cluster_t split(const dataset_t&, const indices_t&) const;
 
         ///
         /// \brief compute the predictions for the given samples and add them to the given output buffer.
@@ -41,8 +41,8 @@ namespace nano
         /// NB: the given sample indices
         ///     are relative to the whole dataset in the range [0, dataset.samples()).
         ///
-        tensor4d_t   predict(const dataset_t&, const indices_cmap_t&) const;
-        virtual void predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const = 0;
+        tensor4d_t predict(const dataset_t&, const indices_cmap_t&) const;
+        void       predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const;
 
         ///
         /// \brief select the feature or the features and estimate their associated parameters
@@ -58,7 +58,7 @@ namespace nano
         /// NB: the given sample indices and gradients
         ///     are relative to the whole dataset in the range [0, dataset.samples()).
         ///
-        virtual scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t& gradients) = 0;
+        scalar_t fit(const dataset_t&, const indices_t&, const tensor4d_t& gradients);
 
         ///
         /// \brief adjust the weak learner's parameters to obtain linearly scaled predictions.
@@ -80,6 +80,8 @@ namespace nano
         static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }
 
     protected:
-        static void assert_fit(const dataset_t&, const indices_t& samples, const tensor4d_t& gradients);
+        virtual scalar_t  do_fit(const dataset_t&, const indices_t&, const tensor4d_t&)             = 0;
+        virtual cluster_t do_split(const dataset_t&, const indices_t&) const                        = 0;
+        virtual void      do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const = 0;
     };
 } // namespace nano

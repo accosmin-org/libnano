@@ -15,6 +15,20 @@ wlearner_t::wlearner_t(string_t id)
     register_parameter(parameter_t::make_enum("wlearner::criterion", criterion_type::aicc));
 }
 
+scalar_t wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
+{
+    assert(samples.min() >= 0);
+    assert(samples.max() < dataset.samples());
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+
+    const auto score = do_fit(dataset, samples, gradients);
+    if (score != wlearner_t::no_fit_score())
+    {
+        learner_t::fit(dataset);
+    }
+    return score;
+}
+
 tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples) const
 {
     tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
@@ -24,12 +38,20 @@ tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& s
     return outputs;
 }
 
-void wlearner_t::assert_fit([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
-                            [[maybe_unused]] const tensor4d_t& gradients)
+void wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
 {
-    assert(samples.min() >= 0);
-    assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.target_dims()));
+    learner_t::critical_compatible(dataset);
+
+    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
+
+    do_predict(dataset, samples, outputs);
+}
+
+cluster_t wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
+{
+    learner_t::critical_compatible(dataset);
+
+    return do_split(dataset, samples);
 }
 
 factory_t<wlearner_t>& wlearner_t::all()
