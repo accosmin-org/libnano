@@ -1,9 +1,11 @@
 #include "fixture/dataset.h"
-#include "fixture/datasource.h"
+#include "fixture/datasource/hits.h"
+#include "fixture/datasource/random.h"
 #include "fixture/estimator.h"
 #include "fixture/loss.h"
+#include <nano/dataset/hash.h>
 #include <nano/dataset/iterator.h>
-#include <nano/wlearner/hash.h>
+#include <nano/wlearner/criterion.h>
 #include <nano/wlearner/hinge.h>
 
 using namespace nano;
@@ -67,9 +69,9 @@ public:
     }
 
     template <typename tfvalues>
-    static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const wlearner::hashes_t& hashes)
+    static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const hashes_t& hashes)
     {
-        const auto fvalue = wlearner::find(hashes, fvalues);
+        const auto fvalue = ::nano::find(hashes, fvalues);
         UTEST_REQUIRE_GREATER_EQUAL(fvalue, 0);
         UTEST_REQUIRE_LESS(fvalue, tables.size<0>());
         const auto target = tables.tensor(fvalue);
@@ -385,9 +387,20 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     check_split_throws(wlearner, datasource0, datasourceX1, datasourceX2, datasourceX3, datasourceXs...);
 
     // check fitting
-    const auto score = check_fit(wlearner, datasource0);
-    UTEST_CHECK_LESS(score, -100.0);
-    datasource0.check_wlearner(wlearner);
+    for (const auto criterion : enum_values<wlearner::criterion_type>())
+    {
+        wlearner.parameter("wlearner::criterion") = criterion;
+        const auto score                          = check_fit(wlearner, datasource0);
+        if (criterion == wlearner::criterion_type::rss)
+        {
+            UTEST_CHECK_CLOSE(score, 0.0, 1e-7);
+        }
+        else
+        {
+            UTEST_CHECK_LESS(score, -100.0);
+        }
+        datasource0.check_wlearner(wlearner);
+    }
 
     // check prediction
     check_predict(wlearner, datasource0, expected_cluster);

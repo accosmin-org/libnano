@@ -10,7 +10,7 @@ UTEST_CASE(dataset)
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     UTEST_CHECK_EQUAL(dataset.target(), feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));

@@ -148,6 +148,32 @@ namespace nano
         ///
         tensor_size_t classes() const { return static_cast<tensor_size_t>(m_labels.size()); }
 
+        ///
+        /// \brief returns true if a single-label categorical feature.
+        ///
+        bool is_sclass() const { return valid() && m_type == feature_type::sclass; }
+
+        ///
+        /// \brief returns true if a multi-label categorical feature.
+        ///
+        bool is_mclass() const { return valid() && m_type == feature_type::mclass; }
+
+        ///
+        /// \brief returns true if a scalar continuous feature.
+        ///
+        bool is_scalar() const
+        {
+            return valid() && (m_type != feature_type::sclass && m_type != feature_type::mclass) && size(m_dims) == 1;
+        }
+
+        ///
+        /// \brief returns true if a structured continuous feature.
+        ///
+        bool is_struct() const
+        {
+            return valid() && (m_type != feature_type::sclass && m_type != feature_type::mclass) && size(m_dims) > 1;
+        }
+
     private:
         // attributes
         feature_type      m_type{feature_type::float32}; ///<

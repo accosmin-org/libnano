@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/core/parallel.h>
-#include <nano/datasource/stats.h>
+#include <nano/dataset/stats.h>
 #include <nano/generator/storage.h>
 
 namespace nano
@@ -67,7 +67,7 @@ namespace nano
     };
 
     ///
-    /// \brief iterator to loop through target values
+    /// \brief iterator to loop through flatten target values
     ///     useful for training and evaluating dense models.
     ///
     /// the feature and the target values can be:
@@ -115,7 +115,7 @@ namespace nano
         const auto& samples() const { return m_samples; }
 
         ///
-        /// \brief returns statistics of the targets (e.g. useful for weighting samples if unbalanced classification).
+        /// \brief returns statistics of the flatten targets.
         ///
         const auto& targets_stats() const { return m_targets_stats; }
 
@@ -124,8 +124,6 @@ namespace nano
         tensor4d_cmap_t targets(size_t tnum, const tensor_range_t& range) const;
 
     private:
-        targets_stats_t make_targets_stats() const;
-
         using buffers_t = std::vector<tensor4d_t>;
 
         // attributes
@@ -133,7 +131,7 @@ namespace nano
         tensor_size_t     m_batch{100};                  ///<
         scaling_type      m_scaling{scaling_type::none}; ///< scaling method for flatten feature values & targets
         tensor4d_t        m_targets;                     ///< cached targets values
-        targets_stats_t   m_targets_stats;               ///< statistics for targets
+        scalar_stats_t    m_targets_stats;               ///< statistics for targets
         mutable buffers_t m_targets_buffers;             ///< per-thread buffer
     };
 
@@ -175,14 +173,13 @@ namespace nano
         const auto& flatten_stats() const { return m_flatten_stats; }
 
     private:
-        flatten_stats_t make_flatten_stats();
         tensor2d_cmap_t flatten(tensor2d_map_t) const;
         tensor2d_cmap_t flatten(size_t tnum, const tensor_range_t& range) const;
 
         using buffers_t = std::vector<tensor2d_t>;
 
         // attributes
-        flatten_stats_t   m_flatten_stats;   ///< statistics for flatten feature values
+        scalar_stats_t    m_flatten_stats;   ///< statistics for flatten feature values
         mutable buffers_t m_flatten_buffers; ///< per-thread buffer
         tensor2d_t        m_flatten;         ///< cached feature values
     };
@@ -238,6 +235,10 @@ namespace nano
         using buffers_t = std::vector<buffer_t>;
 
         // attributes
-        mutable buffers_t m_buffers; ///< per-thread buffer
+        mutable buffers_t m_buffers;         ///< per-thread buffer
+        indices_t         m_sclass_features; ///< indices of the single-label features
+        indices_t         m_mclass_features; ///< indices of the multi-label features
+        indices_t         m_scalar_features; ///< indices of the scalar features
+        indices_t         m_struct_features; ///< indices of structured features
     };
 } // namespace nano

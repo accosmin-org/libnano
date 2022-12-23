@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/datasource/stats.h>
 #include <nano/generator.h>
 
 namespace nano
@@ -54,20 +53,12 @@ namespace nano
         ///
         /// \brief returns the target feature.
         ///
-        feature_t target() const;
+        const feature_t& target() const { return m_target; }
 
         ///
         /// \brief returns the target dimensions.
         ///
         tensor3d_dims_t target_dims() const;
-
-        ///
-        /// \brief compute the sample weights from the given target statistics.
-        ///
-        /// NB: the targets statistics should be computed only on the training dataset,
-        ///     while the samples can vary (e.g. validation, testing).
-        ///
-        tensor1d_t sample_weights(indices_cmap_t samples, const targets_stats_t&) const;
 
         ///
         /// \brief support for feature importance estimation using drop-column like methods.
@@ -88,9 +79,17 @@ namespace nano
         tensor2d_map_t flatten(indices_cmap_t samples, tensor2d_t& buffer) const;
 
         ///
-        /// \brief returns the targets on a given subset of samples.
+        /// \brief returns the flatten targets on a given subset of samples.
         ///
         tensor4d_map_t targets(indices_cmap_t samples, tensor4d_t& buffer) const;
+
+        ///
+        /// \brief returns the values of the target on a given subset of samples.
+        ///
+        sclass_cmap_t select(indices_cmap_t samples, sclass_mem_t& buffer) const;
+        mclass_cmap_t select(indices_cmap_t samples, mclass_mem_t& buffer) const;
+        scalar_cmap_t select(indices_cmap_t samples, scalar_mem_t& buffer) const;
+        struct_cmap_t select(indices_cmap_t samples, struct_mem_t& buffer) const;
 
         ///
         /// \brief returns the values of a feature on a given subset of samples.
@@ -115,29 +114,8 @@ namespace nano
         ///
         const datasource_t& datasource() const { return m_datasource; }
 
-        ///
-        /// \brief returns the indices of the single-label categorical features (including the generated ones).
-        ///
-        const indices_t& sclass_features() const { return m_select_stats.m_sclass_features; }
-
-        ///
-        /// \brief returns the indices of the multi-label categorical features (including the generated ones).
-        ///
-        const indices_t& mclass_features() const { return m_select_stats.m_mclass_features; }
-
-        ///
-        /// \brief returns the indices of the scalar continuous features (including the generated ones).
-        ///
-        const indices_t& scalar_features() const { return m_select_stats.m_scalar_features; }
-
-        ///
-        /// \brief returns the indices of the structured continuous features (including the generated ones).
-        ///
-        const indices_t& struct_features() const { return m_select_stats.m_struct_features; }
-
     private:
         void                update();
-        void                update_stats();
         void                check(tensor_size_t feature) const;
         void                check(indices_cmap_t samples) const;
         const rgenerator_t& byfeature(tensor_size_t feature) const;
@@ -164,6 +142,6 @@ namespace nano
         column_mapping_t    m_column_mapping;    ///<
         feature_mapping_t   m_feature_mapping;   ///<
         generator_mapping_t m_generator_mapping; ///<
-        select_stats_t      m_select_stats;      ///<
+        feature_t           m_target;            ///<
     };
 } // namespace nano

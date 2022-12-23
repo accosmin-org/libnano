@@ -2,30 +2,44 @@
 
 using namespace nano;
 
-static void handle_sclass(tensor_size_t ifeature, const feature_t& feature)
+static void handle_sclass(const feature_t& feature)
 {
-    critical(feature.type() != feature_type::sclass, "generator_t: unhandled single-label feature <", ifeature, ":",
-             feature, ">!");
+    critical(!feature.is_sclass(), "dataset_t: unhandled single-label target <", feature, ">!");
 }
 
-static void handle_mclass(tensor_size_t ifeature, const feature_t& feature)
+static void handle_mclass(const feature_t& feature)
 {
-    critical(feature.type() != feature_type::mclass, "generator_t: unhandled multi-label feature <", ifeature, ":",
-             feature, ">!");
+    critical(!feature.is_mclass(), "dataset_t: unhandled multi-label target <", feature, ">!");
 }
 
-static void handle_scalar(tensor_size_t ifeature, const feature_t& feature)
+static void handle_scalar(const feature_t& feature)
 {
-    critical(feature.type() == feature_type::sclass || feature.type() == feature_type::mclass ||
-                 size(feature.dims()) != 1,
-             "generator_t: unhandled scalar feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_scalar(), "dataset_t: unhandled scalar target <", feature, ">!");
 }
 
-static void handle_struct(tensor_size_t ifeature, const feature_t& feature)
+static void handle_struct(const feature_t& feature)
 {
-    critical(feature.type() == feature_type::sclass || feature.type() == feature_type::mclass ||
-                 size(feature.dims()) == 1,
-             "generator_t: unhandled structured feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_struct(), "dataset_t: unhandled structured target <", feature, ">!");
+}
+
+static void handle_sclass(const tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(!feature.is_sclass(), "dataset_t: unhandled single-label feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_mclass(const tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(!feature.is_mclass(), "dataset_t: unhandled multi-label feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_scalar(const tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(!feature.is_scalar(), "dataset_t: unhandled scalar feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_struct(const tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(!feature.is_struct(), "dataset_t: unhandled structured feature <", ifeature, ":", feature, ">!");
 }
 
 template <typename tscalar, size_t trank, typename... tindices>
@@ -41,6 +55,11 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
 dataset_t::dataset_t(const datasource_t& datasource)
     : m_datasource(datasource)
 {
+    if (m_datasource.type() != task_type::unsupervised)
+    {
+        m_target =
+            m_datasource.visit_target([](const feature_t& feature, const auto&, const auto&) { return feature; });
+    }
 }
 
 dataset_t& dataset_t::add(rgenerator_t&& generator)
@@ -111,33 +130,6 @@ void dataset_t::update()
 
         m_generator_mapping(index++, 0) = offset_columns - old_offset_columns;
     }
-
-    update_stats();
-}
-
-void dataset_t::update_stats()
-{
-    std::vector<tensor_size_t> sclasss, mclasss, scalars, structs;
-    for (tensor_size_t i = 0, size = features(); i < size; ++i)
-    {
-        switch (const auto& feature = this->feature(i); feature.type())
-        {
-        case feature_type::sclass: sclasss.push_back(i); break;
-
-        case feature_type::mclass: mclasss.push_back(i); break;
-
-        default: (::nano::size(feature.dims()) > 1 ? structs : scalars).push_back(i); break;
-        }
-    }
-
-    m_select_stats.m_sclass_features =
-        map_tensor(sclasss.data(), make_dims(static_cast<tensor_size_t>(sclasss.size())));
-    m_select_stats.m_mclass_features =
-        map_tensor(mclasss.data(), make_dims(static_cast<tensor_size_t>(mclasss.size())));
-    m_select_stats.m_scalar_features =
-        map_tensor(scalars.data(), make_dims(static_cast<tensor_size_t>(scalars.size())));
-    m_select_stats.m_struct_features =
-        map_tensor(structs.data(), make_dims(static_cast<tensor_size_t>(structs.size())));
 }
 
 tensor_size_t dataset_t::features() const
@@ -158,6 +150,126 @@ tensor_size_t dataset_t::columns() const
 tensor_size_t dataset_t::column2feature(tensor_size_t column) const
 {
     return m_column_mapping(column, 2);
+}
+
+sclass_cmap_t dataset_t::select(indices_cmap_t samples, sclass_mem_t& buffer) const
+{
+    check(samples);
+    handle_sclass(m_target);
+
+    return m_datasource.visit_target(
+        [&](const feature_t&, const auto& data, const auto& mask)
+        {
+            auto storage = resize_and_map(buffer, samples.size());
+            loop_samples(
+                data, mask, samples,
+                [&](auto it)
+                {
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, label] = *it; given)
+                        {
+                            storage(index) = static_cast<int32_t>(label);
+                        }
+                        else
+                        {
+                            storage(index) = -1;
+                        }
+                    }
+                },
+                [&](auto) {}, [&](auto) {});
+            return storage;
+        });
+}
+
+mclass_cmap_t dataset_t::select(indices_cmap_t samples, mclass_mem_t& buffer) const
+{
+    check(samples);
+    handle_mclass(m_target);
+
+    return m_datasource.visit_target(
+        [&](const feature_t& feature, const auto& data, const auto& mask)
+        {
+            auto storage = resize_and_map(buffer, samples.size(), static_cast<tensor_size_t>(feature.classes()));
+            loop_samples(
+                data, mask, samples, [&](auto) {},
+                [&](auto it)
+                {
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, hits] = *it; given)
+                        {
+                            storage.array(index) = hits.array().template cast<int8_t>();
+                        }
+                        else
+                        {
+                            storage.array(index) = -1;
+                        }
+                    }
+                },
+                [&](auto) {});
+            return storage;
+        });
+}
+
+scalar_cmap_t dataset_t::select(indices_cmap_t samples, scalar_mem_t& buffer) const
+{
+    check(samples);
+    handle_scalar(m_target);
+
+    return m_datasource.visit_target(
+        [&](const feature_t&, const auto& data, const auto& mask)
+        {
+            auto storage = resize_and_map(buffer, samples.size());
+            loop_samples(
+                data, mask, samples, [&](auto) {}, [&](auto) {},
+                [&](auto it)
+                {
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, values] = *it; given)
+                        {
+                            storage(index) = static_cast<scalar_t>(values(0));
+                        }
+                        else
+                        {
+                            storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                        }
+                    }
+                });
+            return storage;
+        });
+}
+
+struct_cmap_t dataset_t::select(indices_cmap_t samples, struct_mem_t& buffer) const
+{
+    check(samples);
+    handle_struct(m_target);
+
+    return m_datasource.visit_target(
+        [&](const feature_t& feature, const auto& data, const auto& mask)
+        {
+            const auto [dim1, dim2, dim3] = feature.dims();
+
+            auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
+            loop_samples(
+                data, mask, samples, [&](auto) {}, [&](auto) {},
+                [&](auto it)
+                {
+                    for (; it; ++it)
+                    {
+                        if (const auto [index, given, values] = *it; given)
+                        {
+                            storage.array(index) = values.array().template cast<scalar_t>();
+                        }
+                        else
+                        {
+                            storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                    }
+                });
+            return storage;
+        });
 }
 
 sclass_cmap_t dataset_t::select(indices_cmap_t samples, tensor_size_t feature, sclass_mem_t& buffer) const
@@ -214,17 +326,6 @@ tensor2d_map_t dataset_t::flatten(indices_cmap_t samples, tensor2d_t& buffer) co
         offset += m_generator_mapping(index++, 0);
     }
     return storage;
-}
-
-feature_t dataset_t::target() const
-{
-    switch (m_datasource.type())
-    {
-    case task_type::unsupervised: return feature_t{};
-
-    default:
-        return m_datasource.visit_target([](const feature_t& feature, const auto&, const auto&) { return feature; });
-    }
 }
 
 tensor3d_dims_t dataset_t::target_dims() const
@@ -312,53 +413,6 @@ tensor4d_map_t dataset_t::targets(indices_cmap_t samples, tensor4d_t& buffer) co
                     return tensor4d_map_t{storage};
                 });
         });
-}
-
-tensor1d_t dataset_t::sample_weights(indices_cmap_t samples, const targets_stats_t& targets_stats) const
-{
-    check(samples);
-
-    if (m_datasource.type() == task_type::unsupervised)
-    {
-        tensor1d_t weights(samples.size());
-        weights.full(1.0);
-        return weights;
-    }
-    else
-    {
-        return m_datasource.visit_target(
-            [&](const feature_t& feature, const auto& data, const auto& mask)
-            {
-                return loop_samples(
-                    data, mask, samples,
-                    [&](auto it)
-                    {
-                        const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
-                        critical(pstats == nullptr || pstats->classes() != feature.classes(),
-                                 "dataset_t: mis-matching single-label targets statistics, expecting ",
-                                 feature.classes(), " classes, got ",
-                                 pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
-
-                        return pstats->sample_weights(feature, it);
-                    },
-                    [&](auto it)
-                    {
-                        const auto* pstats = std::get_if<mclass_stats_t>(&targets_stats);
-                        critical(pstats == nullptr || pstats->classes() != feature.classes(),
-                                 "dataset_t: mis-matching multi-label targets statistics, expecting ",
-                                 feature.classes(), " classes, got ",
-                                 pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
-
-                        return pstats->sample_weights(feature, it);
-                    },
-                    [&](auto)
-                    {
-                        tensor1d_t weights(samples.size());
-                        weights.full(1.0);
-                        return weights;
-                    });
-            });
-    }
 }
 
 void dataset_t::undrop() const

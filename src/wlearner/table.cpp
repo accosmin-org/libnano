@@ -19,7 +19,7 @@ static void process(const dataset_t& dataset, const indices_cmap_t& samples, con
         loop_sclass(dataset, samples, feature,
                     [&](const tensor_size_t i, const int32_t value)
                     {
-                        const auto index = ::nano::wlearner::find(hashes, value);
+                        const auto index = ::nano::find(hashes, value);
                         if (index >= 0)
                         {
                             assert(index < hash2tables.size());
@@ -32,7 +32,7 @@ static void process(const dataset_t& dataset, const indices_cmap_t& samples, con
         loop_mclass(dataset, samples, feature,
                     [&](const tensor_size_t i, const auto& values)
                     {
-                        const auto index = ::nano::wlearner::find(hashes, values);
+                        const auto index = ::nano::find(hashes, values);
                         if (index >= 0)
                         {
                             assert(index < hash2tables.size());

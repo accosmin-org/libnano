@@ -132,7 +132,7 @@ UTEST_BEGIN_MODULE(test_linear_model)
 
 UTEST_CASE(regularization_none)
 {
-    const auto datasource = make_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -159,7 +159,7 @@ UTEST_CASE(regularization_none)
 
 UTEST_CASE(regularization_lasso)
 {
-    const auto datasource = make_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -186,7 +186,7 @@ UTEST_CASE(regularization_lasso)
 
 UTEST_CASE(regularization_ridge)
 {
-    const auto datasource = make_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -213,7 +213,7 @@ UTEST_CASE(regularization_ridge)
 
 UTEST_CASE(regularization_variance)
 {
-    const auto datasource = make_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -240,7 +240,7 @@ UTEST_CASE(regularization_variance)
 
 UTEST_CASE(regularization_elasticnet)
 {
-    const auto datasource = make_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 

@@ -2,7 +2,7 @@
 
 #include <nano/core/logger.h>
 #include <nano/datasource/feature.h>
-#include <nano/datasource/iterator.h>
+#include <nano/datasource/mask.h>
 
 namespace nano
 {
@@ -27,13 +27,13 @@ namespace nano
         {
         }
 
-        auto classes() const { return m_feature.classes(); }
+        const feature_t& feature() const { return m_feature; }
 
-        auto dims() const { return m_feature.dims(); }
+        tensor3d_dims_t dims() const { return m_feature.dims(); }
 
-        const auto& name() const { return m_feature.name(); }
+        const string_t& name() const { return m_feature.name(); }
 
-        const auto& feature() const { return m_feature; }
+        tensor_size_t classes() const { return m_feature.classes(); }
 
         ///
         /// \brief set the feature value of a sample for a single-label categorical feature.

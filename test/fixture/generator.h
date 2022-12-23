@@ -1,3 +1,5 @@
+#pragma once
+
 #include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
 #include <utest/utest.h>
@@ -8,6 +10,7 @@ using namespace nano::parallel;
 static constexpr auto N   = std::numeric_limits<scalar_t>::quiet_NaN();
 static constexpr auto Na  = std::numeric_limits<scalar_t>::quiet_NaN();
 static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
+static constexpr auto INF = std::numeric_limits<scalar_t>::infinity();
 
 static auto make_sample_splits(const dataset_t& dataset)
 {
@@ -203,10 +206,10 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                                                 const indices_t& expected_scalar_features,
                                                 const indices_t& expected_struct_features)
 {
-    UTEST_CHECK_EQUAL(dataset.sclass_features(), expected_sclass_features);
-    UTEST_CHECK_EQUAL(dataset.mclass_features(), expected_mclass_features);
-    UTEST_CHECK_EQUAL(dataset.scalar_features(), expected_scalar_features);
-    UTEST_CHECK_EQUAL(dataset.struct_features(), expected_struct_features);
+    UTEST_CHECK_EQUAL(make_sclass_features(dataset), expected_sclass_features);
+    UTEST_CHECK_EQUAL(make_mclass_features(dataset), expected_mclass_features);
+    UTEST_CHECK_EQUAL(make_scalar_features(dataset), expected_scalar_features);
+    UTEST_CHECK_EQUAL(make_struct_features(dataset), expected_struct_features);
 
     const auto samples = arange(0, dataset.samples());
 
@@ -241,7 +244,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 [[maybe_unused]] static void check_flatten_stats0(const dataset_t& dataset, const indices_t& expected_samples,
                                                   const tensor1d_t& expected_min, const tensor1d_t& expected_max,
                                                   const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev,
-                                                  scalar_t eps = 1e-12)
+                                                  const scalar_t epsilon = 1e-12)
 {
     const auto samples = arange(0, dataset.samples());
 
@@ -253,11 +256,11 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
         UTEST_CHECK_EQUAL(iterator.scaling(), scaling);
 
         const auto& stats = iterator.flatten_stats();
-        UTEST_CHECK_EQUAL(stats.samples(), expected_samples);
-        UTEST_CHECK_CLOSE(stats.min(), expected_min, eps);
-        UTEST_CHECK_CLOSE(stats.max(), expected_max, eps);
-        UTEST_CHECK_CLOSE(stats.mean(), expected_mean, eps);
-        UTEST_CHECK_CLOSE(stats.stdev(), expected_stdev, eps);
+        UTEST_CHECK_EQUAL(stats.m_samples, expected_samples);
+        UTEST_CHECK_CLOSE(stats.m_min, expected_min, epsilon);
+        UTEST_CHECK_CLOSE(stats.m_max, expected_max, epsilon);
+        UTEST_CHECK_CLOSE(stats.m_mean, expected_mean, epsilon);
+        UTEST_CHECK_CLOSE(stats.m_stdev, expected_stdev, epsilon);
     }
 }
 
@@ -279,7 +282,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
 [[maybe_unused]] static void check_targets(const dataset_t& dataset, const feature_t& expected_target,
                                            tensor3d_dims_t expected_target_dims, const tensor4d_t& expected_targets,
-                                           scalar_t eps = 1e-12)
+                                           const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_EQUAL(dataset.target(), expected_target);
     UTEST_CHECK_EQUAL(dataset.target_dims(), expected_target_dims);
@@ -307,10 +310,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
             const auto& stats                   = iterator.targets_stats();
             auto        expected_scaled_targets = expected_targets;
-            if (std::holds_alternative<scalar_stats_t>(stats))
-            {
-                UTEST_REQUIRE_NOTHROW(std::get<scalar_stats_t>(stats).scale(scaling, expected_scaled_targets));
-            }
+            UTEST_REQUIRE_NOTHROW(stats.scale(scaling, expected_scaled_targets));
 
             auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
             UTEST_CHECK_NOTHROW(iterator.loop(
@@ -322,101 +322,25 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                     UTEST_CHECK_LESS_EQUAL(range.size(), batch);
                     UTEST_CHECK_GREATER_EQUAL(range.begin(), 0);
                     UTEST_CHECK_LESS_EQUAL(range.end(), samples.size());
-                    UTEST_CHECK_CLOSE(targets, expected_scaled_targets.indexed(samples.slice(range)), eps);
+                    UTEST_CHECK_CLOSE(targets, expected_scaled_targets.indexed(samples.slice(range)), epsilon);
                 }));
             UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
         }
     }
 }
 
-[[maybe_unused]] static void check_targets_sclass_stats(const dataset_t&  dataset,
-                                                        const indices_t&  expected_class_counts,
-                                                        const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
+[[maybe_unused]] static void check_targets_stats(const dataset_t& dataset, const indices_t& expected_samples,
+                                                 const tensor1d_t& expected_min, const tensor1d_t& expected_max,
+                                                 const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev,
+                                                 const scalar_t epsilon = 1e-12)
 {
-    const auto samples = arange(0, dataset.samples());
+    const auto  samples  = arange(0, dataset.samples());
+    const auto  iterator = targets_iterator_t{dataset, samples};
+    const auto& stats    = iterator.targets_stats();
 
-    auto iterator = targets_iterator_t{dataset, samples};
-    for (const auto batch : {1, 3, 8})
-    {
-        iterator.batch(batch);
-
-        for (const auto scaling : enum_values<scaling_type>())
-        {
-            iterator.scaling(scaling);
-            UTEST_CHECK_EQUAL(iterator.scaling(), scaling);
-
-            auto stats = iterator.targets_stats();
-            UTEST_REQUIRE_NOTHROW(std::get<sclass_stats_t>(stats));
-            UTEST_CHECK_EQUAL(std::get<sclass_stats_t>(stats).class_counts(), expected_class_counts);
-            UTEST_CHECK_CLOSE(dataset.sample_weights(samples, stats), expected_sample_weights, eps);
-
-            stats = sclass_stats_t{42};
-            UTEST_CHECK_THROW(dataset.sample_weights(samples, stats), std::runtime_error);
-
-            stats = mclass_stats_t{expected_class_counts.size()};
-            UTEST_CHECK_THROW(dataset.sample_weights(samples, stats), std::runtime_error);
-        }
-    }
-}
-
-[[maybe_unused]] static void check_targets_mclass_stats(const dataset_t&  dataset,
-                                                        const indices_t&  expected_class_counts,
-                                                        const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
-{
-    const auto samples = arange(0, dataset.samples());
-
-    auto iterator = targets_iterator_t{dataset, samples};
-    for (const auto batch : {1, 3, 8})
-    {
-        iterator.batch(batch);
-
-        for (const auto scaling : enum_values<scaling_type>())
-        {
-            iterator.scaling(scaling);
-            UTEST_CHECK_EQUAL(iterator.scaling(), scaling);
-
-            auto stats = iterator.targets_stats();
-            UTEST_REQUIRE_NOTHROW(std::get<mclass_stats_t>(stats));
-            UTEST_CHECK_EQUAL(std::get<mclass_stats_t>(stats).class_counts(), expected_class_counts);
-            UTEST_CHECK_CLOSE(dataset.sample_weights(samples, stats), expected_sample_weights, eps);
-
-            stats = mclass_stats_t{42};
-            UTEST_CHECK_THROW(dataset.sample_weights(samples, stats), std::runtime_error);
-
-            stats = sclass_stats_t{expected_class_counts.size() / 2};
-            UTEST_CHECK_THROW(dataset.sample_weights(samples, stats), std::runtime_error);
-        }
-    }
-}
-
-[[maybe_unused]] static void check_targets_scalar_stats(const dataset_t& dataset, const indices_t& expected_samples,
-                                                        const tensor1d_t& expected_min, const tensor1d_t& expected_max,
-                                                        const tensor1d_t& expected_mean,
-                                                        const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
-{
-    tensor1d_t expected_sample_weights = tensor1d_t{dataset.samples()};
-    expected_sample_weights.full(1.0);
-
-    const auto samples = arange(0, dataset.samples());
-
-    auto iterator = targets_iterator_t{dataset, samples};
-    for (const auto batch : {1, 3, 8})
-    {
-        iterator.batch(batch);
-
-        for (const auto scaling : enum_values<scaling_type>())
-        {
-            iterator.scaling(scaling);
-            UTEST_CHECK_EQUAL(iterator.scaling(), scaling);
-
-            const auto& stats = iterator.targets_stats();
-            UTEST_REQUIRE_NOTHROW(std::get<scalar_stats_t>(stats));
-            UTEST_CHECK_EQUAL(std::get<scalar_stats_t>(stats).samples(), expected_samples);
-            UTEST_CHECK_CLOSE(std::get<scalar_stats_t>(stats).min(), expected_min, eps);
-            UTEST_CHECK_CLOSE(std::get<scalar_stats_t>(stats).max(), expected_max, eps);
-            UTEST_CHECK_CLOSE(std::get<scalar_stats_t>(stats).mean(), expected_mean, eps);
-            UTEST_CHECK_CLOSE(std::get<scalar_stats_t>(stats).stdev(), expected_stdev, eps);
-            UTEST_CHECK_CLOSE(dataset.sample_weights(samples, stats), expected_sample_weights, eps);
-        }
-    }
+    UTEST_CHECK_EQUAL(stats.m_samples, expected_samples);
+    UTEST_CHECK_CLOSE(stats.m_min, expected_min, epsilon);
+    UTEST_CHECK_CLOSE(stats.m_max, expected_max, epsilon);
+    UTEST_CHECK_CLOSE(stats.m_mean, expected_mean, epsilon);
+    UTEST_CHECK_CLOSE(stats.m_stdev, expected_stdev, epsilon);
 }

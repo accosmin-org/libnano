@@ -77,7 +77,7 @@ UTEST_CASE(function_noreg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -107,7 +107,7 @@ UTEST_CASE(function_l1reg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -136,7 +136,7 @@ UTEST_CASE(function_l2reg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -165,7 +165,7 @@ UTEST_CASE(function_vAreg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -193,7 +193,7 @@ UTEST_CASE(minimize_noreg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -231,7 +231,7 @@ UTEST_CASE(minimize_l1reg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -254,7 +254,7 @@ UTEST_CASE(minimize_l2reg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
@@ -277,7 +277,7 @@ UTEST_CASE(minimize_vAreg)
     const auto batch    = make_batch(scaling);
     const auto threads  = make_threads(scaling);
 
-    const auto datasource = make_datasource(samples, targets, features);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};

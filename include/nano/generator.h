@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/datasource.h>
+#include <nano/datasource/iterator.h>
 #include <nano/generator/storage.h>
 
 namespace nano

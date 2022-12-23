@@ -12,38 +12,15 @@ base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset, size_
 targets_iterator_t::targets_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
     : base_dataset_iterator_t(dataset, threads)
     , m_samples(samples)
+    , m_targets_stats(dataset.target().valid() ? scalar_stats_t::make_targets_stats(dataset, samples)
+                                               : scalar_stats_t{})
     , m_targets_buffers(concurrency())
 {
-    m_targets_stats = make_targets_stats();
-}
-
-targets_stats_t targets_iterator_t::make_targets_stats() const
-{
-    const auto& datasource = dataset().datasource();
-    if (datasource.type() == task_type::unsupervised)
-    {
-        return targets_stats_t{};
-    }
-    else
-    {
-        return datasource.visit_target(
-            [&](const auto& feature, const auto& data, const auto& mask)
-            {
-                return loop_samples(
-                    data, mask, m_samples,
-                    [&](auto it) -> targets_stats_t { return sclass_stats_t::make(feature, it); },
-                    [&](auto it) -> targets_stats_t { return mclass_stats_t::make(feature, it); },
-                    [&](auto it) -> targets_stats_t { return scalar_stats_t::make(feature, it); });
-            });
-    }
 }
 
 tensor4d_cmap_t targets_iterator_t::targets(tensor4d_map_t data) const
 {
-    if (std::holds_alternative<scalar_stats_t>(m_targets_stats))
-    {
-        std::get<scalar_stats_t>(m_targets_stats).scale(m_scaling, data);
-    }
+    m_targets_stats.scale(m_scaling, data);
     return data;
 }
 
@@ -100,43 +77,9 @@ void targets_iterator_t::scaling(scaling_type scaling)
 
 flatten_iterator_t::flatten_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
     : targets_iterator_t(dataset, samples, threads)
+    , m_flatten_stats(scalar_stats_t::make_flatten_stats(dataset, samples))
     , m_flatten_buffers(concurrency())
 {
-    m_flatten_stats = make_flatten_stats();
-}
-
-flatten_stats_t flatten_iterator_t::make_flatten_stats()
-{
-    const auto& samples = this->samples();
-    const auto& dataset = this->dataset();
-
-    std::vector<flatten_stats_t> stats(concurrency(), flatten_stats_t{dataset.columns()});
-    map(samples.size(), batch(),
-        [&](tensor_size_t begin, tensor_size_t end, size_t tnum)
-        {
-            assert(tnum < m_flatten_buffers.size());
-            const auto range = make_range(begin, end);
-            const auto data  = dataset.flatten(samples.slice(range), m_flatten_buffers[tnum]);
-            for (tensor_size_t i = 0, size = range.size(); i < size; ++i)
-            {
-                stats[tnum] += data.array(i);
-            }
-        });
-
-    auto enable_scaling = tensor_mem_t<uint8_t, 1>(dataset.columns());
-    for (tensor_size_t column = 0; column < enable_scaling.size(); ++column)
-    {
-        const auto ifeature    = dataset.column2feature(column);
-        const auto feature     = dataset.feature(ifeature);
-        const auto isclass     = feature.type() == feature_type::sclass || feature.type() == feature_type::mclass;
-        enable_scaling(column) = isclass ? 0x00 : 0x01;
-    }
-
-    for (size_t i = 1; i < stats.size(); ++i)
-    {
-        stats[0] += stats[i];
-    }
-    return stats[0].done(enable_scaling);
 }
 
 tensor2d_cmap_t flatten_iterator_t::flatten(tensor2d_map_t data) const
@@ -227,27 +170,31 @@ void targets_iterator_t::loop(const targets_callback_t& callback) const
 select_iterator_t::select_iterator_t(const dataset_t& dataset, size_t threads)
     : base_dataset_iterator_t(dataset, threads)
     , m_buffers(concurrency())
+    , m_sclass_features(make_sclass_features(dataset))
+    , m_mclass_features(make_mclass_features(dataset))
+    , m_scalar_features(make_scalar_features(dataset))
+    , m_struct_features(make_struct_features(dataset))
 {
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const sclass_callback_t& callback) const
 {
-    return loop(samples, dataset().sclass_features(), callback);
+    return loop(samples, m_sclass_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const mclass_callback_t& callback) const
 {
-    return loop(samples, dataset().mclass_features(), callback);
+    return loop(samples, m_mclass_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const scalar_callback_t& callback) const
 {
-    return loop(samples, dataset().scalar_features(), callback);
+    return loop(samples, m_scalar_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const struct_callback_t& callback) const
 {
-    return loop(samples, dataset().struct_features(), callback);
+    return loop(samples, m_struct_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const sclass_callback_t& callback) const

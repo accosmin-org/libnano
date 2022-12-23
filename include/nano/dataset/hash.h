@@ -3,7 +3,7 @@
 #include <nano/generator/storage.h>
 #include <nano/tensor/hash.h>
 
-namespace nano::wlearner
+namespace nano
 {
     using hashes_t      = tensor_mem_t<uint64_t, 1>;
     using hashes_cmap_t = tensor_cmap_t<uint64_t, 1>;
@@ -29,7 +29,7 @@ namespace nano::wlearner
     template <typename tfvalues>
     tensor_size_t find(const hashes_t& hashes, const tfvalues& values)
     {
-        const auto hash = ::nano::wlearner::hash(values);
+        const auto hash = ::nano::hash(values);
 
         const auto* const begin = hashes.begin();
         const auto* const end   = hashes.end();
@@ -37,4 +37,4 @@ namespace nano::wlearner
         const auto it = std::lower_bound(begin, end, hash);
         return (it == end || *it != hash) ? tensor_size_t{-1} : static_cast<tensor_size_t>(std::distance(begin, it));
     }
-} // namespace nano::wlearner
+} // namespace nano

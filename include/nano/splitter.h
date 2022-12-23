@@ -10,6 +10,9 @@ namespace nano
     class splitter_t;
     using rsplitter_t = std::unique_ptr<splitter_t>;
 
+    // TODO: have the splitter use the dataset, so that more complicated strategies can be implemented
+    // (e.g. stratified cross-validation, oversampling/undersampling to achieve class balance).
+
     ///
     /// \brief generates (training, validation) splits for training, tuning and evaluating machine learning models.
     ///

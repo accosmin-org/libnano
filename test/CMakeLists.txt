@@ -29,13 +29,15 @@ make_test(test_constrained NANO::nano)
 make_test(test_tuner NANO::nano)
 
 make_test(test_datasource_mask NANO::nano)
-make_test(test_datasource_stats NANO::nano)
 make_test(test_datasource_memory NANO::nano)
 make_test(test_datasource_factory NANO::nano)
 make_test(test_datasource_feature NANO::nano)
 make_test(test_datasource_tabular NANO::nano)
 make_test(test_datasource_storage NANO::nano)
 make_test(test_datasource_iterator NANO::nano)
+
+make_test(test_dataset_hash NANO::nano)
+make_test(test_dataset_stats NANO::nano)
 
 make_test(test_generator_select NANO::nano)
 make_test(test_generator_factory NANO::nano)

@@ -29,8 +29,8 @@ static auto make_ksplit_wlearner(const int ksplit)
 
 static auto make_hashes_mclass3()
 {
-    return wlearner::make_hashes(make_tensor<int8_t, 2>(make_dims(8, 3), 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1,
-                                                        0, 1, 1, 1, 0, 1, 1, 1));
+    return ::nano::make_hashes(make_tensor<int8_t, 2>(make_dims(8, 3), 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1,
+                                                      0, 1, 1, 1, 0, 1, 1, 1));
 }
 
 static auto make_dstep_tables(const tensor_size_t classes, const tensor_size_t fv)
@@ -54,7 +54,7 @@ public:
     using maker_t = std::function<twlearner()>;
 
     fixture_datasource_t(const tensor_size_t samples, const tensor_size_t feature, tensor4d_t tables,
-                         tensor4d_t dense_tables, wlearner::hashes_t hashes, indices_t hash2tables, tensor1d_t noise,
+                         tensor4d_t dense_tables, hashes_t hashes, indices_t hash2tables, tensor1d_t noise,
                          maker_t maker)
         : wlearner_datasource_t(samples, tables.size<0>())
         , m_feature(feature)
@@ -112,7 +112,7 @@ private:
     auto make_cluster(const tfvalue& fvalue) const
     {
         // map labeling to the right cluster
-        auto cluster = wlearner::find(m_hashes, fvalue);
+        auto cluster = find(m_hashes, fvalue);
         if (cluster >= 0)
         {
             cluster = m_hash2tables(cluster);
@@ -162,7 +162,7 @@ private:
 
                         cluster = make_cluster(fvalue);
 
-                        add_noise(wlearner::find(dense_hashes, fvalue), target, noisy_target);
+                        add_noise(find(dense_hashes, fvalue), target, noisy_target);
 
                         return std::make_tuple(fvalue, noisy_target, cluster);
                     });
@@ -185,13 +185,13 @@ private:
         }
     }
 
-    tensor_size_t      m_feature{0};
-    tensor4d_t         m_tables;
-    tensor4d_t         m_dense_tables;
-    wlearner::hashes_t m_hashes;
-    indices_t          m_hash2tables;
-    tensor1d_t         m_noise;
-    maker_t            m_maker;
+    tensor_size_t m_feature{0};
+    tensor4d_t    m_tables;
+    tensor4d_t    m_dense_tables;
+    hashes_t      m_hashes;
+    indices_t     m_hash2tables;
+    tensor1d_t    m_noise;
+    maker_t       m_maker;
 };
 
 UTEST_BEGIN_MODULE(test_wlearner_table)
@@ -201,7 +201,7 @@ UTEST_CASE(fit_predict_sclass_dense)
     using fixture_t = fixture_datasource_t<dense_table_wlearner_t>;
 
     const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1.42, +1.42, -0.42);
-    const auto hashes      = wlearner::make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
+    const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
     const auto hash2tables = make_indices(0, 1, 2);
     const auto noise       = make_full_tensor<scalar_t>(make_dims(3), 1e-12);
     const auto maker       = make_dense_wlearner;
@@ -239,7 +239,7 @@ UTEST_CASE(fit_predict_sclass_dstep)
     {
         const auto tables = make_dstep_tables(3, fv);
         const auto tablex = tables.slice(fv, fv + 1);
-        const auto hashes = wlearner::make_hashes(make_tensor<int32_t>(make_dims(1), fv));
+        const auto hashes = make_hashes(make_tensor<int32_t>(make_dims(1), fv));
         const auto noise  = make_dstep_noise(3, fv);
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
@@ -280,7 +280,7 @@ UTEST_CASE(fit_predict_sclass_kbest)
         const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-5, 1e-5, 1e-12);
         const auto hash2tables = make_indices(0);
         const auto tablex      = tables.slice(2, 3);
-        const auto hashes      = wlearner::make_hashes(make_tensor<int32_t>(make_dims(1), 2));
+        const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(1), 2));
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
@@ -293,7 +293,7 @@ UTEST_CASE(fit_predict_sclass_kbest)
         const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-8, 1e-5, 1e-8);
         const auto hash2tables = make_indices(0, 1);
         const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +1.42, -0.42);
-        const auto hashes      = wlearner::make_hashes(make_tensor<int32_t>(make_dims(2), 0, 2));
+        const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(2), 0, 2));
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
@@ -307,7 +307,7 @@ UTEST_CASE(fit_predict_sclass_kbest)
         const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-8, 1e-8, 1e-8);
         const auto hash2tables = make_indices(0, 1, 2);
         const auto tablex      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1.42, +1.02, -0.42);
-        const auto hashes      = wlearner::make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
+        const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
@@ -321,7 +321,7 @@ UTEST_CASE(fit_predict_sclass_ksplit)
     using fixture_t = fixture_datasource_t<ksplit_table_wlearner_t>;
 
     const auto noise  = make_tensor<scalar_t>(make_dims(3), 1e-12, 1e-12, 1e-12);
-    const auto hashes = wlearner::make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
+    const auto hashes = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
     {
         const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-2, +1e-2, -1e-2);
         const auto maker       = [ksplit = 2]() { return make_ksplit_wlearner(ksplit); };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/wlearner/hash.h>
+#include <nano/dataset/hash.h>
 #include <nano/wlearner/single.h>
 
 namespace nano
@@ -49,7 +49,7 @@ namespace nano
         ///
         /// \brief returns the hashes of the distinct single-class or multi-class labeling.
         ///
-        const wlearner::hashes_t& hashes() const { return m_hashes; }
+        const hashes_t& hashes() const { return m_hashes; }
 
         ///
         /// \brief returns the mapping of label hashes to tables of coefficients.
@@ -63,8 +63,8 @@ namespace nano
 
     private:
         // attributes
-        wlearner::hashes_t m_hashes;      ///< hashes of the distinct multi-class labeling (during fitting)
-        indices_t          m_hash2tables; ///< map label hashes to tables of coefficients
+        hashes_t  m_hashes;      ///< hashes of the distinct multi-class labeling (during fitting)
+        indices_t m_hash2tables; ///< map label hashes to tables of coefficients
     };
 
     ///

@@ -260,6 +260,8 @@ UTEST_CASE(unsupervised)
                               3.162277660168, 3.162277660168, 3.162277660168, 3.162277660168, 3.162277660168,
                               3.162277660168, 3.872983346207, 3.872983346207, 3.872983346207));
 
+    check_targets_stats(dataset, indices_t{}, tensor1d_t{}, tensor1d_t{}, tensor1d_t{}, tensor1d_t{});
+
     UTEST_CHECK_EQUAL(dataset.target(), feature_t{});
     UTEST_CHECK_EQUAL(dataset.target_dims(), make_dims(0, 0, 0));
 
@@ -267,13 +269,7 @@ UTEST_CASE(unsupervised)
 
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(128);
-
     UTEST_CHECK_THROW(iterator.loop([&](tensor_range_t, size_t, tensor4d_cmap_t) {}), std::runtime_error);
-
-    const auto& stats = iterator.targets_stats();
-    UTEST_CHECK_EQUAL(std::holds_alternative<scalar_stats_t>(stats), false);
-    UTEST_CHECK_EQUAL(std::holds_alternative<sclass_stats_t>(stats), false);
-    UTEST_CHECK_EQUAL(std::holds_alternative<mclass_stats_t>(stats), false);
 }
 
 UTEST_CASE(sclassification)
@@ -328,8 +324,9 @@ UTEST_CASE(sclassification)
     check_targets(dataset, expected_sclass1(), make_dims(2, 1, 1),
                   make_tensor<scalar_t>(make_dims(10, 2, 1, 1), -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1,
                                         +1, -1, -1, +1, +1, -1));
-    check_targets_sclass_stats(dataset, make_indices(5, 5),
-                               make_tensor<scalar_t>(make_dims(10), 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0));
+    check_targets_stats(dataset, make_indices(10, 10), make_tensor<scalar_t>(make_dims(2), 0.0, 0.0),
+                        make_tensor<scalar_t>(make_dims(2), 0.0, 0.0), make_tensor<scalar_t>(make_dims(2), 0.0, 0.0),
+                        make_tensor<scalar_t>(make_dims(2), 0.0, 0.0));
 }
 
 UTEST_CASE(mclassification)
@@ -382,10 +379,10 @@ UTEST_CASE(mclassification)
 
     check_targets(dataset, expected_mclass0(), make_dims(3, 1, 1),
                   keep(::expected_flatten(), make_indices(4, 5, 6)).reshape(10, 3, 1, 1));
-    check_targets_mclass_stats(dataset, make_indices(0, 5, 3, 0, 2, 0),
-                               make_tensor<scalar_t>(make_dims(10), 1.666666666667, 0.666666666667, 1.111111111111,
-                                                     0.666666666667, 1.111111111111, 0.666666666667, 1.666666666667,
-                                                     0.666666666667, 1.111111111111, 0.666666666667));
+    check_targets_stats(dataset, make_indices(10, 10, 10), make_tensor<scalar_t>(make_dims(3), 0.0, 0.0, 0.0),
+                        make_tensor<scalar_t>(make_dims(3), 0.0, 0.0, 0.0),
+                        make_tensor<scalar_t>(make_dims(3), 0.0, 0.0, 0.0),
+                        make_tensor<scalar_t>(make_dims(3), 0.0, 0.0, 0.0));
 }
 
 UTEST_CASE(regression)
@@ -439,9 +436,9 @@ UTEST_CASE(regression)
 
     check_targets(dataset, expected_scalar0(), make_dims(1, 1, 1),
                   keep(::expected_flatten(), make_indices(11)).reshape(10, 1, 1, 1));
-    check_targets_scalar_stats(dataset, make_indices(10), make_tensor<scalar_t>(make_dims(1), -1),
-                               make_tensor<scalar_t>(make_dims(1), 8), make_tensor<scalar_t>(make_dims(1), 3.5),
-                               make_tensor<scalar_t>(make_dims(1), 3.027650354097));
+    check_targets_stats(dataset, make_indices(10), make_tensor<scalar_t>(make_dims(1), -1),
+                        make_tensor<scalar_t>(make_dims(1), 8), make_tensor<scalar_t>(make_dims(1), 3.5),
+                        make_tensor<scalar_t>(make_dims(1), 3.027650354097));
 }
 
 UTEST_CASE(mvregression)
@@ -493,7 +490,7 @@ UTEST_CASE(mvregression)
 
     check_targets(dataset, expected_struct0(), make_dims(1, 2, 2),
                   keep(::expected_flatten(), make_indices(14, 15, 16, 17)).reshape(10, 1, 2, 2));
-    check_targets_scalar_stats(
+    check_targets_stats(
         dataset, make_indices(10, 10, 10, 10), make_tensor<scalar_t>(make_dims(4), 1, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(4), 10, 9, 9, 9), make_tensor<scalar_t>(make_dims(4), 5.5, 4.5, 4.5, 4.5),
         make_tensor<scalar_t>(make_dims(4), 3.027650354097, 3.027650354097, 3.027650354097, 3.027650354097));

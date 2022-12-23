@@ -1,8 +1,7 @@
-#include <nano/wlearner/hash.h>
+#include <nano/dataset/hash.h>
 #include <set>
 
 using namespace nano;
-using namespace nano::wlearner;
 
 static hashes_t make_hashes(const std::set<uint64_t>& fhashes)
 {
@@ -11,7 +10,7 @@ static hashes_t make_hashes(const std::set<uint64_t>& fhashes)
     return hashes;
 }
 
-hashes_t nano::wlearner::make_hashes(const sclass_cmap_t& fvalues)
+hashes_t nano::make_hashes(const sclass_cmap_t& fvalues)
 {
     std::set<uint64_t> fhashes;
     for (tensor_size_t i = 0, size = fvalues.size(); i < size; ++i)
@@ -19,14 +18,14 @@ hashes_t nano::wlearner::make_hashes(const sclass_cmap_t& fvalues)
         const auto value = fvalues(i);
         if (value >= 0)
         {
-            fhashes.insert(::nano::wlearner::hash(value));
+            fhashes.insert(::nano::hash(value));
         }
     }
 
     return ::make_hashes(fhashes);
 }
 
-hashes_t nano::wlearner::make_hashes(const mclass_cmap_t& fvalues)
+hashes_t nano::make_hashes(const mclass_cmap_t& fvalues)
 {
     std::set<uint64_t> fhashes;
     for (tensor_size_t i = 0, size = fvalues.size<0>(); i < size; ++i)
@@ -34,7 +33,7 @@ hashes_t nano::wlearner::make_hashes(const mclass_cmap_t& fvalues)
         const auto values = fvalues.array(i);
         if (values(0) >= 0)
         {
-            fhashes.insert(::nano::wlearner::hash(values));
+            fhashes.insert(::nano::hash(values));
         }
     }
 

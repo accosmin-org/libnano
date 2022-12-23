@@ -24,10 +24,11 @@ target_sources(nano PRIVATE
     generator/elemwise_gradient.cpp
     generator/elemwise_identity.cpp
     dataset.cpp
+    dataset/hash.cpp
+    dataset/stats.cpp
     dataset/iterator.cpp
     datasource.cpp
     datasource/mask.cpp
-    datasource/stats.cpp
     datasource/feature.cpp
     datasource/tabular.cpp
     datasource/imclass_cifar.cpp
@@ -96,7 +97,6 @@ target_sources(nano PRIVATE
     #gboost/model.cpp
     gboost/function.cpp
     wlearner.cpp
-    wlearner/hash.cpp
     wlearner/util.cpp
     wlearner/single.cpp
     wlearner/affine.cpp
