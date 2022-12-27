@@ -13,18 +13,14 @@ static auto make_dstep_wlearner()
     return dstep_table_wlearner_t{};
 }
 
-static auto make_kbest_wlearner(const int kbest)
+static auto make_kbest_wlearner()
 {
-    auto wlearner                                = kbest_table_wlearner_t{};
-    wlearner.parameter("wlearner::table::kbest") = kbest;
-    return wlearner;
+    return kbest_table_wlearner_t{};
 }
 
-static auto make_ksplit_wlearner(const int ksplit)
+static auto make_ksplit_wlearner()
 {
-    auto wlearner                                 = ksplit_table_wlearner_t{};
-    wlearner.parameter("wlearner::table::ksplit") = ksplit;
-    return wlearner;
+    return ksplit_table_wlearner_t{};
 }
 
 static auto make_hashes_mclass3()
@@ -222,7 +218,7 @@ UTEST_CASE(fit_predict_mclass_dense)
     const auto noise       = make_full_tensor<scalar_t>(make_dims(8), 1e-12);
     const auto maker       = make_dense_wlearner;
 
-    const auto datasource0 = make_datasource<fixture_t>(120, 3, tables, tables, hashes, hash2tables, noise, maker);
+    const auto datasource0 = make_datasource<fixture_t>(150, 3, tables, tables, hashes, hash2tables, noise, maker);
     const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
     check_wlearner(datasource0, datasourceX);
@@ -264,7 +260,7 @@ UTEST_CASE(fit_predict_mclass_dstep)
         const auto hashes = dense_hashes.slice(fv, fv + 1);
         const auto noise  = make_dstep_noise(8, fv);
 
-        const auto datasource0 = make_datasource<fixture_t>(120, 3, tablex, tables, hashes, hash2tables, noise, maker);
+        const auto datasource0 = make_datasource<fixture_t>(150, 3, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
         check_wlearner(datasource0, datasourceX);
@@ -274,10 +270,11 @@ UTEST_CASE(fit_predict_mclass_dstep)
 UTEST_CASE(fit_predict_sclass_kbest)
 {
     using fixture_t = fixture_datasource_t<kbest_table_wlearner_t>;
+
+    const auto maker = make_kbest_wlearner;
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-5, +1e-5, -0.42);
-        const auto maker       = [kbest = 1]() { return make_kbest_wlearner(kbest); };
-        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-5, 1e-5, 1e-12);
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), 0.0, 0.0, -0.42);
+        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-10, 1e-10, 1e-10);
         const auto hash2tables = make_indices(0);
         const auto tablex      = tables.slice(2, 3);
         const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(1), 2));
@@ -288,9 +285,8 @@ UTEST_CASE(fit_predict_sclass_kbest)
         check_wlearner(datasource0, datasourceX);
     }
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), +1.42, -1e-5, -0.42);
-        const auto maker       = [kbest = 2]() { return make_kbest_wlearner(kbest); };
-        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-8, 1e-5, 1e-8);
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), +1.42, 0.0, -0.42);
+        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-10, 1e-10, 1e-10);
         const auto hash2tables = make_indices(0, 1);
         const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +1.42, -0.42);
         const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(2), 0, 2));
@@ -300,13 +296,11 @@ UTEST_CASE(fit_predict_sclass_kbest)
 
         check_wlearner(datasource0, datasourceX);
     }
-    for (const auto kbest : {3, 4})
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1.42, +1.02, -0.42);
-        const auto maker       = [kbest = kbest]() { return make_kbest_wlearner(kbest); };
-        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-8, 1e-8, 1e-8);
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -3.42, +2.02, -0.42);
+        const auto noise       = make_tensor<scalar_t>(make_dims(3), 1e-10, 1e-10, 1e-10);
         const auto hash2tables = make_indices(0, 1, 2);
-        const auto tablex      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1.42, +1.02, -0.42);
+        const auto tablex      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -3.42, +2.02, -0.42);
         const auto hashes      = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
@@ -320,23 +314,31 @@ UTEST_CASE(fit_predict_sclass_ksplit)
 {
     using fixture_t = fixture_datasource_t<ksplit_table_wlearner_t>;
 
-    const auto noise  = make_tensor<scalar_t>(make_dims(3), 1e-12, 1e-12, 1e-12);
+    const auto maker  = make_ksplit_wlearner;
+    const auto noise  = make_tensor<scalar_t>(make_dims(3), 1e-10, 1e-10, 1e-10);
     const auto hashes = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-2, +1e-2, -1e-2);
-        const auto maker       = [ksplit = 2]() { return make_ksplit_wlearner(ksplit); };
-        const auto hash2tables = make_indices(0, 1, 0);
-        const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -1e-2, +1e-2);
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-1, -1e-1, -1e-1);
+        const auto hash2tables = make_indices(0, 0, 0);
+        const auto tablex      = make_tensor<scalar_t>(make_dims(1, 1, 1, 1), -1e-1);
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
 
         check_wlearner(datasource0, datasourceX);
     }
-    for (const auto ksplit : {3, 4})
+    {
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-1, +1e-1, -1e-1);
+        const auto hash2tables = make_indices(0, 1, 0);
+        const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -1e-1, +1e-1);
+
+        const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
+        const auto datasourceX = make_random_datasource(make_features_all_continuous());
+
+        check_wlearner(datasource0, datasourceX);
+    }
     {
         const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1, +2, -3);
-        const auto maker       = [ksplit = ksplit]() { return make_ksplit_wlearner(ksplit); };
         const auto hash2tables = make_indices(0, 1, 2);
         const auto tablex      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1, +2, -3);
 

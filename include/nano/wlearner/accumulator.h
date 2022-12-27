@@ -80,20 +80,9 @@ namespace nano::wlearner
             rx(fv) -= vgrad * value;
         }
 
-        ///
-        /// \brief returns the (score, bin mapping) by selecting the k-best bins.
-        ///
-        /// NB: the x1 buffer is used to store score variations.
-        ///
-        std::tuple<scalar_t, indices_t> kbest(tensor_size_t kbest);
+        std::vector<std::pair<scalar_t, tensor_size_t>> sort() const;
 
-        ///
-        /// \brief returns the (score, bin mapping) by clustering the bins in k-split parts.
-        ///
-        /// NB: the x0, r1, rx, r2 buffers are used to store the cluster statistics:
-        ///     (count, first-order momentum, output, second-order momentum)!
-        ///
-        std::tuple<scalar_t, indices_t> ksplit(tensor_size_t ksplit);
+        std::tuple<tensor2d_t, tensor5d_t, tensor5d_t, tensor5d_t, tensor_mem_t<tensor_size_t, 2>> cluster() const;
 
     private:
         // attributes

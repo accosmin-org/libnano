@@ -175,106 +175,53 @@ UTEST_CASE(accumulator)
     UTEST_CHECK_CLOSE(acc.r2(1).maxCoeff(), +46.0, 1e-12);
 }
 
-UTEST_CASE(accumulator_kbest)
+UTEST_CASE(accumulator_order)
 {
-    const auto acc0 = make_accumulator();
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(1);
-        UTEST_CHECK_CLOSE(score, 5.4216, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(2);
-        UTEST_CHECK_CLOSE(score, 2.34106666666666666667, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(3);
-        UTEST_CHECK_CLOSE(score, 0.34106666666666666667, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(4);
-        UTEST_CHECK_CLOSE(score, 0.07106666666666666667, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(5);
-        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.kbest(6);
-        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(4, 3, 2, 1, 0));
-    }
+    const auto acc = make_accumulator();
+    const auto map = acc.sort();
+
+    UTEST_REQUIRE_EQUAL(map.size(), 5U);
+
+    UTEST_CHECK_CLOSE(map[0U].first, -square(2.0) / 1.0, 1e-12);
+    UTEST_CHECK_CLOSE(map[1U].first, -square(1.01 + 1.01 + 1.02) / 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(map[2U].first, -square(1.00 + 1.00) / 2.00, 1e-12);
+    UTEST_CHECK_CLOSE(map[3U].first, -square(0.20 + 0.30 + 0.40) / 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(map[4U].first, -square(0.08 + 0.09 + 0.10 + 0.11 + 0.12) / 5.0, 1e-12);
+
+    UTEST_CHECK_EQUAL(map[0U].second, 4);
+    UTEST_CHECK_EQUAL(map[1U].second, 3);
+    UTEST_CHECK_EQUAL(map[2U].second, 2);
+    UTEST_CHECK_EQUAL(map[3U].second, 1);
+    UTEST_CHECK_EQUAL(map[4U].second, 0);
 }
 
-UTEST_CASE(accumulator_ksplit)
+UTEST_CASE(accumulator_cluster)
 {
-    const auto acc0 = make_accumulator();
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(1);
-        UTEST_CHECK_CLOSE(score, 4.33348571428571428571, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 0, 0, 0));
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.60285714285714285714, 1e-12);
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(2);
-        UTEST_CHECK_CLOSE(score, 2.23132307692307692308, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 0, 0, 1));
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.49538461538461538462, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(1)(0), 2.0, 1e-12);
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(3);
-        UTEST_CHECK_CLOSE(score, 0.09628, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 0, 1, 1, 2));
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.175, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(1)(0), 1.008, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(2)(0), 2.0, 1e-12);
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(4);
-        UTEST_CHECK_CLOSE(score, 0.02128, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 2, 3));
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.008, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(3)(0), 2.000, 1e-12);
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(5);
-        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.000, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(3)(0), 1.013333333333, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(4)(0), 2.000, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 3, 4));
-    }
-    {
-        auto acc                    = acc0;
-        const auto [score, mapping] = acc.ksplit(6);
-        UTEST_CHECK_CLOSE(score, 0.02106666666666666667, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(0)(0), 0.100, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(1)(0), 0.300, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(2)(0), 1.000, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(3)(0), 1.013333333333, 1e-12);
-        UTEST_CHECK_CLOSE(acc.rx(4)(0), 2.000, 1e-12);
-        UTEST_CHECK_EQUAL(mapping, make_indices(0, 1, 2, 3, 4));
-    }
+    const auto acc                                                          = make_accumulator();
+    const auto [cluster_x0, cluster_r1, cluster_r2, cluster_rx, cluster_id] = acc.cluster();
+
+    UTEST_CHECK_CLOSE(cluster_x0,
+                      make_tensor<scalar_t>(make_dims(5, 5), 5, 3, 2, 3, 1, 5, 3, 5, 1, 1, 8, 5, 1, 1, 1, 13, 1, 1, 1,
+                                            1, 14, 1, 1, 1, 1),
+                      1e-12);
+
+    UTEST_CHECK_CLOSE(cluster_r1,
+                      make_tensor<scalar_t>(make_dims(5, 5, 1, 1, 1), 0.5, 0.9, 2, 3.04, 2, 0.5, 0.9, 5.04, 2, 2, 1.4,
+                                            5.04, 2, 2, 2, 6.44, 2, 2, 2, 2, 8.44, 2, 2, 2, 2),
+                      1e-12);
+
+    UTEST_CHECK_CLOSE(cluster_r2,
+                      make_tensor<scalar_t>(make_dims(5, 5, 1, 1, 1), 0.051, 0.29, 2, 3.0806, 4, 0.051, 0.29, 5.0806, 4,
+                                            4, 0.341, 5.0806, 4, 4, 4, 5.4216, 4, 4, 4, 4, 9.4216, 4, 4, 4, 4),
+                      1e-12);
+
+    UTEST_CHECK_CLOSE(cluster_rx,
+                      make_tensor<scalar_t>(make_dims(5, 5, 1, 1, 1), 0.1, 0.3, 1.0, 3.04 / 3.0, 2, 0.1, 0.3, 1.008, 2,
+                                            2, 0.175, 1.008, 2, 2, 2, 6.44 / 13.0, 2, 2, 2, 2, 8.44 / 14.0, 2, 2, 2, 2),
+                      1e-12);
+
+    UTEST_CHECK_EQUAL(cluster_id, make_tensor<tensor_size_t>(make_dims(5, 5), 0, 1, 2, 3, 4, 0, 1, 2, 2, 3, 0, 0, 1, 1,
+                                                             2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0));
 }
 
 UTEST_CASE(criterion)

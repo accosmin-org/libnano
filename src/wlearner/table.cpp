@@ -53,12 +53,6 @@ public:
 
     auto score(const tensor_size_t fv) const { return (r2(fv) - r1(fv).square() / x0(fv)).sum(); }
 
-    template <typename toutput>
-    void output(const tensor_size_t fv, toutput&& output) const
-    {
-        output = r1(fv) / x0(fv);
-    }
-
     void score_dense(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
     {
         const auto fvsize = fvalues();
@@ -83,72 +77,85 @@ public:
 
             for (tensor_size_t fv = 0; fv < fvsize; ++fv)
             {
-                m_hash2tables(fv) = fv;
-                output(fv, m_tables.array(fv));
+                m_hash2tables(fv)  = fv;
+                m_tables.array(fv) = r1(fv) / x0(fv);
             }
         }
     }
 
-    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t kbest,
-                     const criterion_type criterion)
+    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion,
+                     tensor_size_t max_kbest = -1)
     {
-        const auto fvsize = fvalues();
-        if (kbest >= fvsize)
+        const auto fvsize  = fvalues();
+        const auto mapping = this->sort();
+
+        auto rss = 0.0;
+        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
         {
-            score_dense(feature, hashes, criterion);
-            return;
+            rss += r2(fv).sum();
         }
 
-        const auto [rss, mapping] = this->kbest(kbest);
-        const auto k              = kbest * ::nano::size(tdims());
-        const auto n              = m_samples;
-
-        const auto score = make_score(criterion, rss, k, n);
-        if (std::isfinite(score) && score < m_score)
+        max_kbest = max_kbest < 1 ? fvsize : max_kbest;
+        for (tensor_size_t kbest = 1; kbest <= max_kbest; ++kbest)
         {
-            m_score       = score;
-            m_feature     = feature;
-            m_hash2tables = arange(0, kbest);
+            rss += mapping[static_cast<size_t>(kbest - 1)].first;
 
-            m_hashes.resize(kbest);
-            m_tables.resize(cat_dims(kbest, tdims()));
+            const auto k = kbest * ::nano::size(tdims());
+            const auto n = m_samples;
 
-            for (tensor_size_t fv = 0; fv < kbest; ++fv)
+            const auto score = make_score(criterion, rss, k, n);
+            if (std::isfinite(score) && score < m_score)
             {
-                m_hashes(fv) = hashes(mapping(fv));
-                output(mapping(fv), m_tables.array(fv));
+                m_score       = score;
+                m_feature     = feature;
+                m_hash2tables = arange(0, kbest);
+
+                m_hashes.resize(kbest);
+                m_tables.resize(cat_dims(kbest, tdims()));
+
+                for (tensor_size_t fv = 0; fv < kbest; ++fv)
+                {
+                    const auto bin     = mapping[static_cast<size_t>(fv)].second;
+                    m_hashes(fv)       = hashes(bin);
+                    m_tables.array(fv) = r1(bin) / x0(bin);
+                }
             }
         }
     }
 
-    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const tensor_size_t ksplit,
-                      const criterion_type criterion)
+    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
     {
         const auto fvsize = fvalues();
-        if (ksplit >= fvsize)
+
+        const auto [cluster_x0, cluster_r1, cluster_r2, cluster_rx, cluster_id] = this->cluster();
+
+        for (tensor_size_t ic = 0; ic < fvsize; ++ic)
         {
-            score_dense(feature, hashes, criterion);
-            return;
-        }
+            const auto ksplit = fvsize - ic;
 
-        const auto [rss, mapping] = this->ksplit(ksplit);
-        const auto k              = ksplit * ::nano::size(tdims());
-        const auto n              = m_samples;
+            const auto x0 = cluster_x0.tensor(ic);
+            const auto r1 = cluster_r1.tensor(ic);
+            const auto r2 = cluster_r2.tensor(ic);
+            const auto rx = cluster_rx.tensor(ic);
+            const auto id = cluster_id.tensor(ic);
 
-        const auto score = make_score(criterion, rss, k, n);
-        if (std::isfinite(score) && score < m_score)
-        {
-            m_score       = score;
-            m_hashes      = hashes;
-            m_feature     = feature;
-            m_hash2tables = mapping;
-
-            const auto clusters = std::min(fvsize, ksplit);
-
-            m_tables.resize(cat_dims(clusters, tdims()));
-            for (tensor_size_t cluster = 0; cluster < clusters; ++cluster)
+            auto rss = 0.0;
+            for (tensor_size_t fv = 0; fv < ksplit; ++fv)
             {
-                m_tables.array(cluster) = rx(cluster);
+                rss += (r2.array(fv) - r1.array(fv).square() / x0(fv)).sum();
+            }
+
+            const auto k = ksplit * ::nano::size(tdims());
+            const auto n = m_samples;
+
+            const auto score = make_score(criterion, rss, k, n);
+            if (std::isfinite(score) && score < m_score)
+            {
+                m_score       = score;
+                m_hashes      = hashes;
+                m_feature     = feature;
+                m_hash2tables = id;
+                m_tables      = rx.slice(0, ksplit);
             }
         }
     }
@@ -310,7 +317,6 @@ scalar_t dense_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_
 kbest_table_wlearner_t::kbest_table_wlearner_t()
     : table_wlearner_t("kbest-table")
 {
-    register_parameter(parameter_t::make_integer("wlearner::table::kbest", 1, LE, 3, LE, 100));
 }
 
 rwlearner_t kbest_table_wlearner_t::clone() const
@@ -320,7 +326,6 @@ rwlearner_t kbest_table_wlearner_t::clone() const
 
 scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto kbest     = parameter("wlearner::table::kbest").value<tensor_size_t>();
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
@@ -331,14 +336,14 @@ scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, kbest, criterion);
+                cache.score_kbest(feature, hashes, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, kbest, criterion);
+                cache.score_kbest(feature, hashes, criterion);
             });
 
     // OK, return and store the optimum feature across threads
@@ -348,7 +353,6 @@ scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_
 ksplit_table_wlearner_t::ksplit_table_wlearner_t()
     : table_wlearner_t("ksplit-table")
 {
-    register_parameter(parameter_t::make_integer("wlearner::table::ksplit", 1, LE, 3, LE, 100));
 }
 
 rwlearner_t ksplit_table_wlearner_t::clone() const
@@ -359,7 +363,6 @@ rwlearner_t ksplit_table_wlearner_t::clone() const
 scalar_t ksplit_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples,
                                          const tensor4d_t& gradients)
 {
-    const auto ksplit    = parameter("wlearner::table::ksplit").value<tensor_size_t>();
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
 
     select_iterator_t it{dataset};
@@ -370,14 +373,14 @@ scalar_t ksplit_table_wlearner_t::do_fit(const dataset_t& dataset, const indices
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, ksplit, criterion);
+                cache.score_ksplit(feature, hashes, criterion);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, ksplit, criterion);
+                cache.score_ksplit(feature, hashes, criterion);
             });
 
     // OK, return and store the optimum feature across threads
@@ -406,14 +409,14 @@ scalar_t dstep_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, 1, criterion);
+                cache.score_kbest(feature, hashes, criterion, 1);
             });
     it.loop(samples,
             [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
             {
                 auto&      cache  = caches[tnum];
                 const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, 1, criterion);
+                cache.score_kbest(feature, hashes, criterion, 1);
             });
 
     // OK, return and store the optimum feature across threads

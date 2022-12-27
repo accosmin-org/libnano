@@ -14,7 +14,7 @@ namespace nano
     ///     - elastic net (the L1-norm and the L2-norm of the weights) or
     ///     - variance (of the loss values across samples).
     ///
-    /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::feature_scaling).
+    /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::scaling_type).
     ///
     /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
     /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara

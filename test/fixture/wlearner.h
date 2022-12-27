@@ -398,8 +398,8 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
         else
         {
             UTEST_CHECK_LESS(score, -100.0);
+            datasource0.check_wlearner(wlearner);
         }
-        datasource0.check_wlearner(wlearner);
     }
 
     // check prediction

@@ -10,69 +10,62 @@ wlearner::accumulator_t::accumulator_t(const tensor3d_dims_t& tdims)
     clear();
 }
 
-std::tuple<scalar_t, indices_t> wlearner::accumulator_t::kbest(const tensor_size_t kbest)
+std::vector<std::pair<scalar_t, tensor_size_t>> wlearner::accumulator_t::sort() const
 {
     const auto fvsize = fvalues();
 
-    // NB: use x1 buffer to store score variations!
-    scalar_t score = 0;
+    std::vector<std::pair<scalar_t, tensor_size_t>> deltas;
+    deltas.reserve(static_cast<size_t>(fvsize));
     for (tensor_size_t fv = 0; fv < fvsize; ++fv)
     {
-        score += r2(fv).sum();
-        x1(fv) = -r1(fv).square().sum() / x0(fv);
+        deltas.emplace_back(-r1(fv).square().sum() / x0(fv), fv);
     }
 
-    // sort bins by score variations and keep the mapping to the original bins
-    auto mapping = arange(0, fvsize);
-    for (tensor_size_t fv1 = 0; fv1 + 1 < fvsize; ++fv1)
-    {
-        for (tensor_size_t fv2 = fv1 + 1; fv2 < fvsize; ++fv2)
-        {
-            if (x1(fv1) > x1(fv2))
-            {
-                const auto xx = x1(fv1);
-                x1(fv1)       = x1(fv2);
-                x1(fv2)       = xx;
+    std::sort(deltas.begin(), deltas.end());
 
-                const auto mmindex = mapping(fv1);
-                mapping(fv1)       = mapping(fv2);
-                mapping(fv2)       = mmindex;
-            }
-        }
-    }
-
-    for (tensor_size_t fv = 0; fv < std::min(kbest, fvsize); ++fv)
-    {
-        score += x1(fv);
-    }
-
-    return std::make_tuple(score, mapping);
+    return deltas;
 }
 
-std::tuple<scalar_t, indices_t> wlearner::accumulator_t::ksplit(const tensor_size_t ksplit)
+std::tuple<tensor2d_t, tensor5d_t, tensor5d_t, tensor5d_t, tensor_mem_t<tensor_size_t, 2>>
+wlearner::accumulator_t::cluster() const
 {
-    const auto fvsize = fvalues();
+    const auto [fvsize, dim1, dim2, dim3] = m_r1.dims();
 
-    // NB: use x0, r1, rx, r2 buffers to store the cluster statistics:
-    //  (count, first-order momentum, output, second-order momentum)!
+    auto cluster_x0 = tensor2d_t{fvsize, fvsize};
+    auto cluster_r1 = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
+    auto cluster_r2 = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
+    auto cluster_rx = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
+    auto cluster_id = tensor_mem_t<tensor_size_t, 2>{fvsize, fvsize};
+
+    // initially each bin is a separate cluster
+    cluster_x0.array(0) = m_x0.array();
+    cluster_r1.array(0) = m_r1.array();
+    cluster_r2.array(0) = m_r2.array();
+
     for (tensor_size_t fv = 0; fv < fvsize; ++fv)
     {
-        rx(fv) = r1(fv) / x0(fv);
+        cluster_id(0, fv)       = fv;
+        cluster_rx.array(0, fv) = cluster_r1.array(0, fv) / cluster_x0(0, fv);
     }
 
-    auto clusters        = fvsize;
-    auto cluster_mapping = arange(0, fvsize);
-    while (clusters > ksplit)
+    // merge clusters until only one remaining
+    for (tensor_size_t trial = 1, n_clusters = fvsize - trial + 1; trial < fvsize; ++trial, --n_clusters)
     {
+        cluster_x0.array(trial) = cluster_x0.array(trial - 1);
+        cluster_r1.array(trial) = cluster_r1.array(trial - 1);
+        cluster_r2.array(trial) = cluster_r2.array(trial - 1);
+        cluster_rx.array(trial) = cluster_rx.array(trial - 1);
+        cluster_id.array(trial) = cluster_id.array(trial - 1);
+
         // find the closest two clusters (output-wise) to merge
         scalar_t      distance = std::numeric_limits<scalar_t>::max();
         tensor_size_t cluster1 = 0, cluster2 = 1;
-        for (tensor_size_t icluster1 = 0; icluster1 + 1 < clusters; ++icluster1)
+        for (tensor_size_t icluster1 = 0; icluster1 + 1 < n_clusters; ++icluster1)
         {
-            for (tensor_size_t icluster2 = icluster1 + 1; icluster2 < clusters; ++icluster2)
+            for (tensor_size_t icluster2 = icluster1 + 1; icluster2 < n_clusters; ++icluster2)
             {
-                const auto output1 = rx(icluster1);
-                const auto output2 = rx(icluster2);
+                const auto output1 = cluster_rx.array(trial, icluster1);
+                const auto output2 = cluster_rx.array(trial, icluster2);
 
                 const auto idistance = (output1 - output2).square().sum();
                 if (idistance < distance)
@@ -86,42 +79,35 @@ std::tuple<scalar_t, indices_t> wlearner::accumulator_t::ksplit(const tensor_siz
 
         // merge the two clusters
         assert(cluster1 < cluster2);
-        x0(cluster1) += x0(cluster2);
-        r1(cluster1) += r1(cluster2);
-        r2(cluster1) += r2(cluster2);
-        rx(cluster1) = r1(cluster1) / x0(cluster1);
+        cluster_x0(trial, cluster1) += cluster_x0(trial, cluster2);
+        cluster_r1.array(trial, cluster1) += cluster_r1.array(trial, cluster2);
+        cluster_r2.array(trial, cluster1) += cluster_r2.array(trial, cluster2);
+        cluster_rx.array(trial, cluster1) = cluster_r1.array(trial, cluster1) / cluster_x0(trial, cluster1);
 
-        for (tensor_size_t cluster = cluster2; cluster + 1 < clusters; ++cluster)
+        for (tensor_size_t cluster = cluster2; cluster + 1 < n_clusters; ++cluster)
         {
-            x0(cluster) = x0(cluster + 1);
-            r1(cluster) = r1(cluster + 1);
-            r2(cluster) = r2(cluster + 1);
-            rx(cluster) = rx(cluster + 1);
+            cluster_x0(trial, cluster)       = cluster_x0(trial, cluster + 1);
+            cluster_r1.array(trial, cluster) = cluster_r1.array(trial, cluster + 1);
+            cluster_r2.array(trial, cluster) = cluster_r2.array(trial, cluster + 1);
+            cluster_rx.array(trial, cluster) = cluster_rx.array(trial, cluster + 1);
         }
 
         for (tensor_size_t fv = 0; fv < fvsize; ++fv)
         {
-            if (cluster_mapping(fv) == cluster2)
+            if (cluster_id(trial, fv) == cluster2)
             {
-                cluster_mapping(fv) = cluster1;
+                cluster_id(trial, fv) = cluster1;
             }
         }
         for (tensor_size_t fv = 0; fv < fvsize; ++fv)
         {
-            if (cluster_mapping(fv) > cluster2)
+            if (cluster_id(trial, fv) > cluster2)
             {
-                cluster_mapping(fv) -= 1;
+                cluster_id(trial, fv) -= 1;
             }
         }
-
-        --clusters;
     }
 
-    scalar_t score = 0;
-    for (tensor_size_t cluster = 0; cluster < clusters; ++cluster)
-    {
-        score += (r2(cluster) - r1(cluster).square() / x0(cluster)).sum();
-    }
-
-    return std::make_tuple(score, cluster_mapping);
+    return std::make_tuple(std::move(cluster_x0), std::move(cluster_r1), std::move(cluster_r2), std::move(cluster_rx),
+                           std::move(cluster_id));
 }

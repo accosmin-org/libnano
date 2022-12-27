@@ -1,23 +1,10 @@
 #pragma once
 
-#include <nano/gboost/wlearner.h>
 #include <nano/model.h>
+#include <nano/wlearner.h>
 
 namespace nano
 {
-    class gboost_model_t;
-
-    template <>
-    struct factory_traits_t<gboost_model_t>
-    {
-        static string_t id() { return "gboost"; }
-
-        static string_t description() { return "GradientBoosting model (and variants: VadaBoost)"; }
-    };
-
-    using iwlearner_t  = identifiable_t<wlearner_t>;
-    using iwlearners_t = std::vector<iwlearner_t>;
-
     ///
     /// \brief (Stochastic) Gradient Boosting model.
     ///
@@ -49,40 +36,25 @@ namespace nano
         gboost_model_t();
 
         ///
-        /// \brief register a prototype weak learner to choose from by its ID in the associated factory.
+        /// \brief @see estimator_t
         ///
-        void add(const string_t& id);
+        std::istream& read(std::istream&) override;
 
         ///
-        /// \brief register a prototype weak learner to choose from.
+        /// \brief @see estimator_t
         ///
-        template <typename twlearner, std::enable_if_t<std::is_base_of_v<wlearner_t, twlearner>, bool> = true>
-        void add(const twlearner& wlearner)
-        {
-            const auto id        = factory_traits_t<twlearner>::id();
-            auto       rwlearner = std::make_unique<twlearner>(wlearner);
-            add(id, std::move(rwlearner));
-        }
+        std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief @see serializable_t
-        ///
-        void read(std::istream&) override;
-
-        ///
-        /// \brief @see serializable_t
-        ///
-        void write(std::ostream&) const override;
-
-        ///
-        /// \brief @see model_t
+        /// \brief @see clone_t
         ///
         rmodel_t clone() const override;
 
         ///
         /// \brief @see model_t
         ///
-        scalar_t fit(const loss_t&, const dataset_t&, const indices_t&, const solver_t&) override;
+        fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
+                         const tuner_t&) override;
 
         ///
         /// \brief @see model_t
@@ -95,40 +67,6 @@ namespace nano
         feature_infos_t features() const;
         feature_infos_t features(const loss_t&, const dataset_t&, const indices_t&, const solver_t&,
                                  importance = importance::shuffle, tensor_size_t trials = 10) const;
-
-        ///
-        /// \brief configure the model.
-        ///
-        void batch(int64_t batch) { set("gboost::batch", batch); }
-
-        void vAreg(scalar_t vAreg) { set("gboost::vAreg", vAreg); }
-
-        void rounds(int64_t rounds) { set("gboost::rounds", rounds); }
-
-        void epsilon(scalar_t epsilon) { set("gboost::epsilon", epsilon); }
-
-        void wscale(::nano::wscale wscale) { set("gboost::wscale", wscale); }
-
-        void subsample(scalar_t subsample) { set("gboost::subsample", subsample); }
-
-        void shrinkage(scalar_t shrinkage) { set("gboost::shrinkage", shrinkage); }
-
-        ///
-        /// \brief access functions.
-        ///
-        auto batch() const { return ivalue("gboost::batch"); }
-
-        auto vAreg() const { return svalue("gboost::vAreg"); }
-
-        auto rounds() const { return ivalue("gboost::rounds"); }
-
-        auto epsilon() const { return svalue("gboost::epsilon"); }
-
-        auto shrinkage() const { return svalue("gboost::shrinkage"); }
-
-        auto subsample() const { return svalue("gboost::subsample"); }
-
-        auto wscale() const { return evalue<::nano::wscale>("gboost::wscale"); }
 
     private:
         void add(string_t id, rwlearner_t&&);

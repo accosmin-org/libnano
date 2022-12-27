@@ -1,15 +1,11 @@
 #include <iomanip>
-#include <nano/dataset/dropcol.h>
-#include <nano/dataset/shuffle.h>
 #include <nano/gboost/function.h>
 #include <nano/gboost/model.h>
-#include <nano/gboost/util.h>
-#include <nano/mlearn/util.h>
 #include <nano/tensor/stream.h>
 
 using namespace nano;
 
-gboost_model_t::gboost_model_t()
+/*gboost_model_t::gboost_model_t()
 {
     model_t::register_param(sparam1_t{"gboost::vAreg", 0, LE, 0, LE, 1e+10});
     model_t::register_param(iparam1_t{"gboost::batch", 1, LE, 32, LE, 4096});
@@ -369,7 +365,7 @@ feature_infos_t gboost_model_t::features(const loss_t& loss, const dataset_t& da
 
     feature_info_t::sort_by_importance(infos);
     return infos;
-}
+}*/
 
 /*
 // setup the stacking ensemble
