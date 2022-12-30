@@ -27,7 +27,24 @@ namespace nano
     /// \brief maps all possible values of an enum to string.
     ///
     template <typename tenum>
-    enum_map_t<tenum> enum_string();
+    enum_map_t<tenum> enum_string(); // FIXME: make it constexpr!
+
+    ///
+    /// \brief stream enum using its associated string representation.
+    ///
+    template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
+    std::ostream& operator<<(std::ostream& stream, const tenum value)
+    {
+        static const auto enum_strings = enum_string<tenum>();
+        for (const auto& elem : enum_strings)
+        {
+            if (elem.first == value)
+            {
+                stream << elem.second;
+            }
+        }
+        return stream;
+    }
 
     ///
     /// \brief collect all the values of an enum type, optionally filtered by the given regular expression.
@@ -56,7 +73,9 @@ namespace nano
         {
             if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
             {
-                for (const auto& elem : enum_string<tvalue>())
+                // FIXME: make it constexpr!
+                static const auto enum_strings = enum_string<tvalue>();
+                for (const auto& elem : enum_strings)
                 {
                     if (elem.first == value)
                     { // cppcheck-suppress useStlAlgorithm

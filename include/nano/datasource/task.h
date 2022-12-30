@@ -25,9 +25,4 @@ namespace nano
             {   task_type::unsupervised,     "unsupervised"},
         };
     }
-
-    inline std::ostream& operator<<(std::ostream& stream, task_type value)
-    {
-        return stream << scat(value);
-    }
 } // namespace nano

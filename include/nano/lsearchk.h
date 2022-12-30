@@ -23,7 +23,6 @@ namespace nano
 
     template <>
     NANO_PUBLIC enum_map_t<lsearch_type> enum_string<lsearch_type>();
-    NANO_PUBLIC std::ostream& operator<<(std::ostream&, lsearch_type);
 
     ///
     /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.

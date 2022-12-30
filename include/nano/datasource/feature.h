@@ -51,11 +51,6 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, feature_type value)
-    {
-        return stream << scat(value);
-    }
-
     ///
     /// \brief input feature (e.g. describes a column in a csv file)
     ///     that can be either discrete/categorical or scalar/continuous

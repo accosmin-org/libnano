@@ -20,9 +20,4 @@ namespace nano
             {enum_type::type3, "type3"}
         };
     }
-
-    inline std::ostream& operator<<(std::ostream& os, enum_type type)
-    {
-        return os << scat(type);
-    }
 } // namespace nano

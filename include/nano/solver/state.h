@@ -173,7 +173,6 @@ namespace nano
 
     template <>
     NANO_PUBLIC enum_map_t<solver_status> enum_string<solver_status>();
-    NANO_PUBLIC std::ostream& operator<<(std::ostream& os, solver_status);
     NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
     NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano

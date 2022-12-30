@@ -19,8 +19,6 @@ namespace nano
     template <>
     NANO_PUBLIC enum_map_t<hinge_type> enum_string<hinge_type>();
 
-    NANO_PUBLIC std::ostream& operator<<(std::ostream&, hinge_type);
-
     ///
     /// \brief a hinge is a weak learner that performs the following operation element-wise:
     ///     hinge(x) =

@@ -19,11 +19,6 @@ namespace nano
             {enum_type::type3, "type3"}
         };
     }
-
-    std::ostream& operator<<(std::ostream& stream, const std::vector<nano::enum_type>& enums)
-    {
-        return stream << scat(enums);
-    }
 } // namespace nano
 
 UTEST_BEGIN_MODULE(test_core_strutil)

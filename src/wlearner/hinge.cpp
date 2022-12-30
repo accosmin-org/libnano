@@ -148,11 +148,6 @@ enum_map_t<hinge_type> nano::enum_string<hinge_type>()
     };
 }
 
-std::ostream& nano::operator<<(std::ostream& stream, const hinge_type type)
-{
-    return stream << scat(type);
-}
-
 hinge_wlearner_t::hinge_wlearner_t()
     : single_feature_wlearner_t("hinge")
 {

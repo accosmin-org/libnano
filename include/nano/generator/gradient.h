@@ -25,11 +25,6 @@ namespace nano
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& stream, kernel3x3_type value)
-    {
-        return stream << scat(value);
-    }
-
     ///
     /// \brief construct symmetric 3x3 kernels for computing image gradients.
     ///

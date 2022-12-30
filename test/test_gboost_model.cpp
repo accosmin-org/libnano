@@ -6,16 +6,6 @@
 
 using namespace nano;
 
-inline std::ostream& operator<<(std::ostream& stream, wscale type)
-{
-    return stream << scat(type);
-}
-
-inline std::ostream& operator<<(std::ostream& stream, importance type)
-{
-    return stream << scat(type);
-}
-
 class gboost_dataset_t : public fixture_dataset_t
 {
 public:

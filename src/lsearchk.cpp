@@ -120,8 +120,3 @@ enum_map_t<lsearch_type> nano::enum_string<lsearch_type>()
         {lsearch_type::wolfe_approx_wolfe, "Wolfe or approximative Wolfe"},
     };
 }
-
-std::ostream& nano::operator<<(std::ostream& stream, const lsearch_type type)
-{
-    return stream << scat(type);
-}

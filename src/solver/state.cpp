@@ -119,11 +119,6 @@ bool nano::operator<(const solver_state_t& lhs, const solver_state_t& rhs)
            (std::isfinite(rhs.f) ? rhs.f : std::numeric_limits<scalar_t>::max());
 }
 
-std::ostream& nano::operator<<(std::ostream& stream, solver_status status)
-{
-    return stream << scat(status);
-}
-
 std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state)
 {
     stream << "i=" << state.outer_iters << "|" << state.inner_iters;
