@@ -1,8 +1,8 @@
 #include <iomanip>
 #include <nano/core/parallel.h>
+#include <nano/linear/enums.h>
 #include <nano/linear/function.h>
 #include <nano/linear/model.h>
-#include <nano/linear/regularization.h>
 #include <nano/linear/util.h>
 #include <nano/tensor/stream.h>
 

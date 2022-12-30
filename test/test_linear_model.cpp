@@ -3,7 +3,7 @@
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
-#include <nano/linear/regularization.h>
+#include <nano/linear/enums.h>
 
 using namespace nano;
 
