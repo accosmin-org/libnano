@@ -146,16 +146,6 @@ std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
     return stream << "]";
 }
 
-std::istream& ::nano::read(std::istream& stream, feature_t& feature)
-{
-    return feature.read(stream);
-}
-
-std::ostream& ::nano::write(std::ostream& stream, const feature_t& feature)
-{
-    return feature.write(stream);
-}
-
 feature_info_t::feature_info_t() = default;
 
 feature_info_t::feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance)

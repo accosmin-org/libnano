@@ -102,13 +102,3 @@ std::ostream& estimator_t::write(std::ostream& stream) const
 
     return stream;
 }
-
-std::istream& nano::read(std::istream& stream, estimator_t& estimator)
-{
-    return estimator.read(stream);
-}
-
-std::ostream& nano::write(std::ostream& stream, const estimator_t& estimator)
-{
-    return estimator.write(stream);
-}

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <nano/core/stream.h>
 #include <nano/datasource/feature.h>
 #include <utest/utest.h>
 

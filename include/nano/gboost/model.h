@@ -62,11 +62,9 @@ namespace nano
         tensor4d_t predict(const dataset_t&, const indices_t&) const override;
 
         ///
-        /// \brief returns the selected features, optionally with their associated importance.
+        /// \brief returns the selected features.
         ///
-        feature_infos_t features() const;
-        feature_infos_t features(const loss_t&, const dataset_t&, const indices_t&, const solver_t&,
-                                 importance = importance::shuffle, tensor_size_t trials = 10) const;
+        features_t features() const;
 
     private:
         void add(string_t id, rwlearner_t&&);

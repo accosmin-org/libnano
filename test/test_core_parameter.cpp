@@ -1,6 +1,7 @@
 #include "fixture/enum.h"
 #include <fstream>
 #include <nano/core/parameter.h>
+#include <nano/core/stream.h>
 #include <utest/utest.h>
 
 using namespace nano;

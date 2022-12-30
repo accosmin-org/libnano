@@ -100,7 +100,4 @@ namespace nano
         int32_t      m_patch_version{::nano::patch_version}; ///<
         parameters_t m_parameters;                           ///<
     };
-
-    NANO_PUBLIC std::istream& read(std::istream&, estimator_t&);
-    NANO_PUBLIC std::ostream& write(std::ostream&, const estimator_t&);
 } // namespace nano

@@ -6,7 +6,8 @@
 namespace nano
 {
     class wlearner_t;
-    using rwlearner_t = std::unique_ptr<wlearner_t>;
+    using rwlearner_t  = std::unique_ptr<wlearner_t>;
+    using rwlearners_t = std::vector<rwlearner_t>;
 
     ///
     /// \brief a weak learner is a machine learning model:

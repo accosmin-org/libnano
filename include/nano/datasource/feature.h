@@ -186,9 +186,6 @@ namespace nano
     NANO_PUBLIC bool operator!=(const feature_t& lhs, const feature_t& rhs);
     NANO_PUBLIC std::ostream& operator<<(std::ostream&, const feature_t&);
 
-    NANO_PUBLIC std::istream& read(std::istream&, feature_t&);
-    NANO_PUBLIC std::ostream& write(std::ostream&, const feature_t&);
-
     ///
     /// \brief describe a feature (e.g. as selected by a weak learner) in terms of
     ///     e.g. importance (impact on error rate).

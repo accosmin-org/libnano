@@ -45,6 +45,13 @@ namespace nano
         return write(stream, string.data(), string.size());
     }
 
+    template <typename tobject,
+              std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::write)>, bool> = true>
+    inline std::ostream& write(std::ostream& stream, const tobject& object)
+    {
+        return object.write(stream);
+    }
+
     template <typename tvalue>
     std::ostream& write(std::ostream& stream, const std::vector<tvalue>& values)
     {
@@ -135,5 +142,12 @@ namespace nano
             }
         }
         return stream;
+    }
+
+    template <typename tobject,
+              std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::read)>, bool> = true>
+    inline std::istream& read(std::istream& stream, tobject& object)
+    {
+        return object.read(stream);
     }
 } // namespace nano

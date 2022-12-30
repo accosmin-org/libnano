@@ -3,6 +3,7 @@
 #include "fixture/datasource/random.h"
 #include "fixture/estimator.h"
 #include "fixture/loss.h"
+#include <nano/core/factory_stream.h>
 #include <nano/dataset/hash.h>
 #include <nano/dataset/iterator.h>
 #include <nano/wlearner/criterion.h>
@@ -413,6 +414,29 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     // check model loading and saving from and to binary streams
     const auto iwlearner = check_stream(wlearner);
     datasource0.check_wlearner(iwlearner);
+
+    // TODO: have this check generic for all factory types!
+    string_t bstr;
+    {
+        auto wlearners = rwlearners_t{};
+        wlearners.emplace_back(iwlearner.clone());
+        wlearners.emplace_back(iwlearner.clone());
+
+        std::ostringstream stream;
+        UTEST_REQUIRE(::nano::write(stream, wlearners));
+        bstr = stream.str();
+    }
+    {
+        rwlearners_t wlearners;
+
+        std::istringstream stream(bstr);
+        UTEST_REQUIRE(::nano::read(stream, wlearners));
+        UTEST_REQUIRE_EQUAL(wlearners.size(), 2U);
+        UTEST_REQUIRE(dynamic_cast<decltype(wlearner)*>(wlearners[0U].get()));
+        UTEST_REQUIRE(dynamic_cast<decltype(wlearner)*>(wlearners[1U].get()));
+        datasource0.check_wlearner(*dynamic_cast<decltype(wlearner)*>(wlearners[0U].get()));
+        datasource0.check_wlearner(*dynamic_cast<decltype(wlearner)*>(wlearners[1U].get()));
+    }
 
     // check scaling
     check_scale(wlearner, datasource0, expected_cluster);

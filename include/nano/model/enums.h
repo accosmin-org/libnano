@@ -5,24 +5,6 @@
 namespace nano
 {
     ///
-    /// \brief method to scale weak learners.
-    ///
-    enum class wscale_type : int32_t
-    {
-        gboost = 0, ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
-        tboost,     ///< use a potentially different scaling factor for each split (e.g. see TreeBoost variation)
-    };
-
-    template <>
-    inline enum_map_t<wscale_type> enum_string<wscale_type>()
-    {
-        return {
-            {wscale_type::gboost, "gboost"},
-            {wscale_type::tboost, "tboost"}
-        };
-    }
-
-    ///
     /// \brief method to estimate the importance of a feature.
     ///
     enum class importance_type : int32_t

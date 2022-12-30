@@ -420,13 +420,3 @@ std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::domain_t
                domain.m_parameter.storage());
     return stream;
 }
-
-std::istream& nano::read(std::istream& stream, parameter_t& parameter)
-{
-    return parameter.read(stream);
-}
-
-std::ostream& nano::write(std::ostream& stream, const parameter_t& parameter)
-{
-    return parameter.write(stream);
-}
