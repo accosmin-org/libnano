@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <istream>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <type_traits>
@@ -45,13 +46,32 @@ namespace nano
         return write(stream, string.data(), string.size());
     }
 
+    ///
+    /// \brief serialize objects with a write method to binary stream.
+    ///
     template <typename tobject,
               std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::write)>, bool> = true>
-    inline std::ostream& write(std::ostream& stream, const tobject& object)
+    std::ostream& write(std::ostream& stream, const tobject& object)
     {
         return object.write(stream);
     }
 
+    ///
+    /// \brief serialize factory objects to binary stream.
+    ///
+    template <typename tobject>
+    std::ostream& write(std::ostream& stream, const std::unique_ptr<tobject>& object)
+    {
+        if (!::nano::write(stream, object->type_id()) || !::nano::write(stream, *object))
+        {
+            stream.setstate(std::ios_base::failbit);
+        }
+        return stream;
+    }
+
+    ///
+    /// \brief serialize a vector of values to binary stream.
+    ///
     template <typename tvalue>
     std::ostream& write(std::ostream& stream, const std::vector<tvalue>& values)
     {
@@ -124,6 +144,41 @@ namespace nano
         return stream;
     }
 
+    ///
+    /// \brief serialize objects with a read method from binary stream.
+    ///
+    template <typename tobject,
+              std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::read)>, bool> = true>
+    std::istream& read(std::istream& stream, tobject& object)
+    {
+        return object.read(stream);
+    }
+
+    ///
+    /// \brief serialize factory objects from binary stream.
+    ///
+    template <typename tobject>
+    std::istream& read(std::istream& stream, std::unique_ptr<tobject>& object)
+    {
+        std::string type_id;
+        if (!::nano::read(stream, type_id))
+        {
+            stream.setstate(std::ios_base::failbit);
+        }
+
+        object = tobject::all().get(type_id);
+        if (!object)
+        {
+            stream.setstate(std::ios_base::failbit);
+            return stream;
+        }
+
+        return ::nano::read(stream, *object);
+    }
+
+    ///
+    /// \brief serialize a vector of values from binary stream.
+    ///
     template <typename tvalue>
     std::istream& read(std::istream& stream, std::vector<tvalue>& values)
     {
@@ -142,12 +197,5 @@ namespace nano
             }
         }
         return stream;
-    }
-
-    template <typename tobject,
-              std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::read)>, bool> = true>
-    inline std::istream& read(std::istream& stream, tobject& object)
-    {
-        return object.read(stream);
     }
 } // namespace nano

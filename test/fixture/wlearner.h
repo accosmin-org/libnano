@@ -3,7 +3,6 @@
 #include "fixture/datasource/random.h"
 #include "fixture/estimator.h"
 #include "fixture/loss.h"
-#include <nano/core/factory_stream.h>
 #include <nano/dataset/hash.h>
 #include <nano/dataset/iterator.h>
 #include <nano/wlearner/criterion.h>
