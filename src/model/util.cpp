@@ -3,26 +3,46 @@
 
 using namespace nano;
 
-indices_t nano::sample_with_replacement(tensor_size_t samples, tensor_size_t count)
+template <typename toperator>
+static auto sample_with_replacement(const tensor_size_t samples, const tensor_size_t count, const seed_t seed,
+                                    const toperator& op)
 {
-    auto rng   = make_rng();
+    auto rng   = make_rng(seed);
     auto udist = make_udist<tensor_size_t>(0, samples - 1);
 
-    indices_t set(count);
-    std::generate(begin(set), end(set), [&]() { return udist(rng); });
-    std::sort(begin(set), end(set));
-
-    return set;
+    auto selection = indices_t{count};
+    std::generate(begin(selection), end(selection), [&]() { return op(udist(rng)); });
+    std::sort(begin(selection), end(selection));
+    return selection;
 }
 
-indices_t nano::sample_without_replacement(tensor_size_t samples, tensor_size_t count)
+static auto sample_without_replacement(indices_t samples, const tensor_size_t count, const seed_t seed)
 {
-    assert(0 <= samples && count <= samples);
+    assert(count <= samples.size());
 
-    auto all = arange(0, samples);
-    std::shuffle(begin(all), end(all), make_rng());
+    std::shuffle(begin(samples), end(samples), make_rng(seed));
 
-    indices_t set = all.slice(0, count);
-    std::sort(begin(set), end(set));
-    return set;
+    auto selection = samples.slice(0, count);
+    std::sort(begin(selection), end(selection));
+    return selection;
+}
+
+indices_t nano::sample_with_replacement(const indices_t& samples, const tensor_size_t count, const seed_t seed)
+{
+    return ::sample_with_replacement(samples.size(), count, seed, [&](const auto index) { return samples(index); });
+}
+
+indices_t nano::sample_with_replacement(const tensor_size_t samples, const tensor_size_t count, const seed_t seed)
+{
+    return ::sample_with_replacement(samples, count, seed, [](const auto index) { return index; });
+}
+
+indices_t nano::sample_without_replacement(const tensor_size_t samples, const tensor_size_t count, const seed_t seed)
+{
+    return ::sample_without_replacement(arange(0, samples), count, seed);
+}
+
+indices_t nano::sample_without_replacement(const indices_t& samples, const tensor_size_t count, const seed_t seed)
+{
+    return ::sample_without_replacement(samples, count, seed);
 }
