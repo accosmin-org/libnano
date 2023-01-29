@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
+#include <nano/core/configurable.h>
 #include <nano/core/factory.h>
 #include <nano/solver/lstep.h>
 
@@ -29,7 +29,7 @@ namespace nano
     ///
     /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
     ///
-    class NANO_PUBLIC lsearchk_t : public estimator_t, public clonable_t<lsearchk_t>
+    class NANO_PUBLIC lsearchk_t : public configurable_t, public clonable_t<lsearchk_t>
     {
     public:
         ///

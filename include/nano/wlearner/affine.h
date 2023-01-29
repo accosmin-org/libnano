@@ -6,15 +6,15 @@ namespace nano
 {
     ///
     /// \brief this weak learner is performing an element-wise transformation of the form:
-    ///     affine1(x) =
+    ///     affine(x) =
     ///     {
-    ///         weights[0] * x(feature) + weights[1], if x(feature) is given
+    ///         weights * x(feature) + bias, if x(feature) is given
     ///         zero, otherwise (if the feature is missing)
     ///     }
     ///
     ///     where `feature` is the selected continuous feature.
     ///
-    /// NB: the discrete features and the missing feature values are skipped during fiting.
+    /// NB: the discrete and the structured features are skipped during fiting.
     ///
     class NANO_PUBLIC affine_wlearner_t final : public single_feature_wlearner_t
     {

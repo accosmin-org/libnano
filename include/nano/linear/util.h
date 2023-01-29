@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/arch.h>
-#include <nano/tensor.h>
+#include <nano/dataset.h>
+#include <nano/loss.h>
 
 namespace nano::linear
 {
@@ -16,4 +16,12 @@ namespace nano::linear
     ///
     NANO_PUBLIC void predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
                              tensor4d_t& outputs);
+
+    ///
+    /// \brief evaluate the predictions of the linear model with the given weights and bias
+    ///     against the ground truth and returns the errors and loss values.
+    ///
+    NANO_PUBLIC tensor2d_t evaluate(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                    const tensor2d_t& weights, const tensor1d_t& bias, tensor_size_t batch,
+                                    size_t threads = 1U);
 } // namespace nano::linear

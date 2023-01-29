@@ -1,10 +1,10 @@
-#include <nano/linear/cache.h>
+#include <nano/linear/accumulator.h>
 
 using namespace nano::linear;
 
-cache_t::cache_t() = default;
+accumulator_t::accumulator_t() = default;
 
-cache_t::cache_t(tensor_size_t isize, tensor_size_t tsize, bool g1, bool g2)
+accumulator_t::accumulator_t(const tensor_size_t isize, const tensor_size_t tsize, const bool g1, const bool g2)
 {
     if (g1)
     {
@@ -20,7 +20,7 @@ cache_t::cache_t(tensor_size_t isize, tensor_size_t tsize, bool g1, bool g2)
     clear();
 }
 
-void cache_t::clear()
+void accumulator_t::clear()
 {
     m_vm1 = 0.0;
     m_vm2 = 0.0;
@@ -30,7 +30,7 @@ void cache_t::clear()
     m_gW2.zero();
 }
 
-cache_t& cache_t::operator+=(const cache_t& other)
+accumulator_t& accumulator_t::operator+=(const accumulator_t& other)
 {
     m_vm1 += other.m_vm1;
     m_vm2 += other.m_vm2;
@@ -41,7 +41,7 @@ cache_t& cache_t::operator+=(const cache_t& other)
     return *this;
 }
 
-cache_t& cache_t::operator/=(tensor_size_t samples)
+accumulator_t& accumulator_t::operator/=(const tensor_size_t samples)
 {
     m_vm1 /= static_cast<scalar_t>(samples);
     m_vm2 /= static_cast<scalar_t>(samples);
@@ -50,14 +50,4 @@ cache_t& cache_t::operator/=(tensor_size_t samples)
     m_gb2.vector() /= static_cast<scalar_t>(samples);
     m_gW2.vector() /= static_cast<scalar_t>(samples);
     return *this;
-}
-
-const cache_t& cache_t::reduce(std::vector<cache_t>& caches, tensor_size_t samples)
-{
-    auto& cache0 = caches[0];
-    for (size_t i = 1; i < caches.size(); ++i)
-    {
-        cache0 += caches[i];
-    }
-    return (cache0 /= samples);
 }

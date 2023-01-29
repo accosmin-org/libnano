@@ -10,12 +10,12 @@ using namespace nano;
 
 static auto make_param_space1()
 {
-    return make_param_space(param_space_t::type::linear, 0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
+    return param_space_t{param_space_t::type::linear, 0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 }
 
 static auto make_param_space2()
 {
-    return make_param_space(param_space_t::type::log10, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3);
+    return param_space_t{param_space_t::type::log10, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3};
 }
 
 static auto make_param_spaces()
@@ -110,6 +110,14 @@ static void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const 
 }
 
 UTEST_BEGIN_MODULE(test_tuner)
+
+UTEST_CASE(factory)
+{
+    const auto& tuners = tuner_t::all();
+    UTEST_CHECK_EQUAL(tuners.ids().size(), 2U);
+    UTEST_CHECK(tuners.get("surrogate") != nullptr);
+    UTEST_CHECK(tuners.get("local-search") != nullptr);
+}
 
 UTEST_CASE(param_space_empty)
 {

@@ -6,35 +6,35 @@
 namespace nano
 {
     ///
-    /// \brief interface for numeric estimators with support for:
+    /// \brief interface for configurable objects with support for:
     ///     - versioning with automatic checks.
     ///     - constrained parameters addressable by name.
     ///     - serialization to and from binary streams.
     ///
-    class NANO_PUBLIC estimator_t
+    class NANO_PUBLIC configurable_t
     {
     public:
         ///
         /// \brief default constructor
         ///
-        estimator_t() = default;
+        configurable_t() = default;
 
         ///
         /// \brief enable copying
         ///
-        estimator_t(const estimator_t&)            = default;
-        estimator_t& operator=(const estimator_t&) = default;
+        configurable_t(const configurable_t&)            = default;
+        configurable_t& operator=(const configurable_t&) = default;
 
         ///
         /// \brief enable moving
         ///
-        estimator_t(estimator_t&&) noexcept            = default;
-        estimator_t& operator=(estimator_t&&) noexcept = default;
+        configurable_t(configurable_t&&) noexcept            = default;
+        configurable_t& operator=(configurable_t&&) noexcept = default;
 
         ///
         /// \brief default destructor
         ///
-        virtual ~estimator_t() = default;
+        virtual ~configurable_t() = default;
 
         ///
         /// \brief serialize from the given binary stream.

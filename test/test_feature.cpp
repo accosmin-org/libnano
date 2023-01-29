@@ -1,6 +1,6 @@
 #include <fstream>
 #include <nano/core/stream.h>
-#include <nano/datasource/feature.h>
+#include <nano/feature.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -28,7 +28,7 @@ static void check_stream(const feature_t& feature)
     }
 }
 
-UTEST_BEGIN_MODULE(test_datasource_feature)
+UTEST_BEGIN_MODULE(test_feature)
 
 UTEST_CASE(_default)
 {

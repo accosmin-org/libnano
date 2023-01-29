@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/core/hash.h>
 #include <nano/core/stream.h>
-#include <nano/tensor/hash.h>
 #include <nano/tensor/tensor.h>
 
 namespace nano
@@ -12,7 +12,7 @@ namespace nano
     template <template <typename tscalar, size_t> class tstorage, typename tscalar, size_t trank>
     std::ostream& write(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor)
     {
-        if (!::nano::write(stream, detail::tensor_version()) ||                   // version
+        if (!::nano::write(stream, detail::hash_version()) ||                     // version
             !::nano::write(stream, static_cast<uint32_t>(trank)) ||               // rank
             !::nano::write_cast<int32_t>(stream, tensor.dims().data(), trank) ||  // dimensions
             !::nano::write(stream, static_cast<uint32_t>(sizeof(tscalar))) ||     // sizeof(scalar)
@@ -39,7 +39,7 @@ namespace nano
             !::nano::read_cast<int32_t>(stream, dims.data(), trank) || // dimensions
             !::nano::read(stream, iscalar) ||                          // sizeof(scalar)
             !::nano::read(stream, ihash) ||                            // hash(content)
-            iversion != detail::tensor_version() || static_cast<size_t>(irank) != trank ||
+            iversion != detail::hash_version() || static_cast<size_t>(irank) != trank ||
             static_cast<size_t>(iscalar) != sizeof(tscalar))
         {
             stream.setstate(std::ios_base::failbit);

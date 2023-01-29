@@ -21,7 +21,7 @@ solver_t::solver_t(string_t id)
 }
 
 solver_t::solver_t(const solver_t& other)
-    : estimator_t(other)
+    : configurable_t(other)
     , clonable_t(other)
     , m_logger(other.m_logger)
     , m_lsearch0(other.lsearch0().clone())

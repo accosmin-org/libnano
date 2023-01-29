@@ -1,8 +1,8 @@
 #include <iomanip>
+#include <nano/core/reduce.h>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/criterion.h>
-#include <nano/wlearner/reduce.h>
 #include <nano/wlearner/table.h>
 #include <nano/wlearner/util.h>
 
@@ -51,18 +51,18 @@ public:
     {
     }
 
-    auto score(const tensor_size_t fv) const { return (r2(fv) - r1(fv).square() / x0(fv)).sum(); }
+    auto score(const tensor_size_t bin) const { return (r2(bin) - r1(bin).square() / x0(bin)).sum(); }
 
     void score_dense(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
     {
-        const auto fvsize = fvalues();
+        const auto bins = this->bins();
 
         scalar_t rss = 0;
-        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+        for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
-            rss += this->score(fv);
+            rss += this->score(bin);
         }
-        const auto k = fvsize * ::nano::size(tdims());
+        const auto k = bins * ::nano::size(tdims());
         const auto n = m_samples;
 
         const auto score = make_score(criterion, rss, k, n);
@@ -72,13 +72,13 @@ public:
             m_hashes  = hashes;
             m_feature = feature;
 
-            m_hash2tables.resize(fvsize);
-            m_tables.resize(cat_dims(fvsize, tdims()));
+            m_hash2tables.resize(bins);
+            m_tables.resize(cat_dims(bins, tdims()));
 
-            for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+            for (tensor_size_t bin = 0; bin < bins; ++bin)
             {
-                m_hash2tables(fv)  = fv;
-                m_tables.array(fv) = r1(fv) / x0(fv);
+                m_hash2tables(bin)  = bin;
+                m_tables.array(bin) = r1(bin) / x0(bin);
             }
         }
     }
@@ -86,16 +86,16 @@ public:
     void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion,
                      tensor_size_t max_kbest = -1)
     {
-        const auto fvsize  = fvalues();
+        const auto bins    = this->bins();
         const auto mapping = this->sort();
 
         auto rss = 0.0;
-        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+        for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
-            rss += r2(fv).sum();
+            rss += r2(bin).sum();
         }
 
-        max_kbest = max_kbest < 1 ? fvsize : max_kbest;
+        max_kbest = max_kbest < 1 ? bins : max_kbest;
         for (tensor_size_t kbest = 1; kbest <= max_kbest; ++kbest)
         {
             rss += mapping[static_cast<size_t>(kbest - 1)].first;
@@ -125,13 +125,13 @@ public:
 
     void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
     {
-        const auto fvsize = fvalues();
+        const auto bins = this->bins();
 
         const auto [cluster_x0, cluster_r1, cluster_r2, cluster_rx, cluster_id] = this->cluster();
 
-        for (tensor_size_t ic = 0; ic < fvsize; ++ic)
+        for (tensor_size_t ic = 0; ic < bins; ++ic)
         {
-            const auto ksplit = fvsize - ic;
+            const auto ksplit = bins - ic;
 
             const auto x0 = cluster_x0.tensor(ic);
             const auto r1 = cluster_r1.tensor(ic);

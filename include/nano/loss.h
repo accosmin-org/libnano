@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
+#include <nano/core/configurable.h>
 #include <nano/core/factory.h>
 #include <nano/tensor.h>
 
@@ -17,7 +17,7 @@ namespace nano
     /// NB: usually the loss function upper-bounds or
     ///     approximates the true (usually non-smooth) error function to minimize.
     ///
-    class NANO_PUBLIC loss_t : public estimator_t, public clonable_t<loss_t>
+    class NANO_PUBLIC loss_t : public configurable_t, public clonable_t<loss_t>
     {
     public:
         ///

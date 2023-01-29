@@ -21,7 +21,7 @@ namespace nano::wlearner
                     {
                         if (const auto value = fvalues(i); std::isfinite(value))
                         {
-                            op(i, value);
+                            op(i, fvalues(i));
                         }
                     }
                 });

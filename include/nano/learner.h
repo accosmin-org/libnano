@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
+#include <nano/core/configurable.h>
 #include <nano/dataset.h>
 
 namespace nano
@@ -9,7 +9,7 @@ namespace nano
     /// \brief base class for machine learning models (e.g. strong and weak learners) useful
     ///     for fingerprinting the fitted dataset and checking its compatibility with the evaluation dataset.
     ///
-    class NANO_PUBLIC learner_t : public estimator_t
+    class NANO_PUBLIC learner_t : public configurable_t
     {
     public:
         ///
@@ -18,12 +18,12 @@ namespace nano
         learner_t();
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::ostream& write(std::ostream&) const override;
 

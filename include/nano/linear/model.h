@@ -29,12 +29,12 @@ namespace nano
         linear_model_t();
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::ostream& write(std::ostream&) const override;
 
@@ -44,7 +44,7 @@ namespace nano
         rmodel_t clone() const override;
 
         ///
-        /// \brief @see model_t
+        /// \brief @see model_
         ///
         fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
                          const tuner_t&) override;
@@ -57,12 +57,12 @@ namespace nano
         ///
         /// \brief returns the fitted bias vector (intercept).
         ///
-        const auto& bias() const { return m_bias; }
+        const tensor1d_t& bias() const { return m_bias; }
 
         ///
         /// \brief returns the fitted weigths matrix (coefficients).
         ///
-        const auto& weights() const { return m_weights; }
+        const tensor2d_t& weights() const { return m_weights; }
 
     private:
         // attributes

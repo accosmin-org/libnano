@@ -22,12 +22,11 @@ static auto make_threads(scaling_type scaling)
     return (scaling == scaling_type::minmax) ? parallel::pool_t::max_size() : size_t{1U};
 }
 
-static void check_vgrad(const linear::function_t& function, int trials = 100)
+static void check_vgrad(const linear::function_t& function, const flatten_iterator_t& iterator, const loss_t& loss,
+                        const int trials = 100)
 {
-    const auto& loss     = function.loss();
-    const auto& iterator = function.iterator();
-    const auto& dataset  = iterator.dataset();
-    const auto  samples  = iterator.samples().size();
+    const auto& dataset = iterator.dataset();
+    const auto  samples = iterator.samples().size();
 
     tensor2d_t inputs(samples, dataset.columns());
     tensor4d_t outputs(cat_dims(samples, dataset.target_dims()));
@@ -91,7 +90,7 @@ UTEST_CASE(function_noreg)
     UTEST_CHECK(function.smooth() || !loss->smooth());
     UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
 
-    check_vgrad(function, trials);
+    check_vgrad(function, iterator, *loss, trials);
     check_gradient(function, trials);
     check_convexity(function, trials);
 }

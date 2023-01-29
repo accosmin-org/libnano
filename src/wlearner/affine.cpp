@@ -1,13 +1,16 @@
 #include <iomanip>
 #include <nano/core/logger.h>
+#include <nano/core/reduce.h>
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/affine.h>
 #include <nano/wlearner/criterion.h>
-#include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
 
 using namespace nano;
 using namespace nano::wlearner;
+
+static constexpr auto bin_affine = 0;
+static constexpr auto bin_missed = 1;
 
 namespace
 {
@@ -20,20 +23,32 @@ namespace
         {
         }
 
-        auto a() const { return (rx() * x0() - r1() * x1()) / (x2() * x0() - x1() * x1()); }
+        auto w() const
+        {
+            return (rx(bin_affine) * x0(bin_affine) - r1(bin_affine) * x1(bin_affine)) /
+                   (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
+        }
 
-        auto b() const { return (r1() * x2() - rx() * x1()) / (x2() * x0() - x1() * x1()); }
+        auto b() const
+        {
+            return (r1(bin_affine) * x2(bin_affine) - rx(bin_affine) * x1(bin_affine)) /
+                   (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
+        }
+
+        auto rss_affine() const
+        {
+            const auto w = this->w();
+            const auto b = this->b();
+            return (r2(bin_affine) + w.square() * x2(bin_affine) + b.square() * x0(bin_affine) -
+                    2 * w * rx(bin_affine) - 2 * b * r1(bin_affine) + 2 * w * b * x1(bin_affine))
+                .sum();
+        }
 
         auto score(const criterion_type criterion) const
         {
-            const auto a   = this->a();
-            const auto b   = this->b();
-            const auto a2  = a.square();
-            const auto b2  = b.square();
-            const auto rss = (r2() + a2 * x2() + b2 * x0() - 2 * a * rx() - 2 * b * r1() + 2 * a * b * x1()).sum();
+            const auto rss = rss_affine() + rss_zero(bin_missed);
             const auto k   = 2 * ::nano::size(tdims());
-            const auto n   = static_cast<tensor_size_t>(x0());
-
+            const auto n   = static_cast<tensor_size_t>(x0(bin_affine) + x0(bin_missed));
             return make_score(criterion, rss, k, n);
         }
 
@@ -66,13 +81,17 @@ scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sa
             {
                 // update accumulators
                 auto& cache = caches[tnum];
-                cache.clear();
+                cache.clear(2);
                 for (tensor_size_t i = 0; i < samples.size(); ++i)
                 {
                     const auto value = fvalues(i);
                     if (std::isfinite(value))
                     {
-                        cache.update(value, gradients.array(samples(i)));
+                        cache.update(value, gradients.array(samples(i)), bin_affine);
+                    }
+                    else
+                    {
+                        cache.update(gradients.array(samples(i)), bin_missed);
                     }
                 }
 
@@ -82,7 +101,7 @@ scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sa
                 {
                     cache.m_score           = score;
                     cache.m_feature         = feature;
-                    cache.m_tables.array(0) = cache.a();
+                    cache.m_tables.array(0) = cache.w();
                     cache.m_tables.array(1) = cache.b();
                 }
             });

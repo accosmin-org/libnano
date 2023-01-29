@@ -13,7 +13,8 @@ namespace nano
     namespace detail
     {
         template <typename titerator, typename toperator>
-        auto percentile(titerator begin, titerator end, double percentage, const toperator& from_position) noexcept
+        auto percentile(titerator begin, titerator end, const double percentage,
+                        const toperator& from_position) noexcept
         {
             assert(percentage >= 0.0 && percentage <= 100.0);
 
@@ -40,7 +41,7 @@ namespace nano
     /// \brief returns the percentile value from a potentially not sorted list of values.
     ///
     template <typename titerator>
-    auto percentile(titerator begin, titerator end, double percentage) noexcept
+    auto percentile(titerator begin, titerator end, const double percentage) noexcept
     {
         const auto from_position = [begin = begin, end = end](auto pos)
         {
@@ -57,7 +58,7 @@ namespace nano
     /// \brief returns the percentile value from a sorted list of values.
     ///
     template <typename titerator>
-    auto percentile_sorted(titerator begin, titerator end, double percentage) noexcept
+    auto percentile_sorted(titerator begin, titerator end, const double percentage) noexcept
     {
         assert(std::is_sorted(begin, end));
 

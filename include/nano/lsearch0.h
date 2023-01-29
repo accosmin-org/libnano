@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
+#include <nano/core/configurable.h>
 #include <nano/core/factory.h>
 #include <nano/solver/lstep.h>
 
@@ -14,7 +14,7 @@ namespace nano
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
     ///     see "Practical methods of optimization", Fletcher, chapter 2
     ///
-    class NANO_PUBLIC lsearch0_t : public estimator_t, public clonable_t<lsearch0_t>
+    class NANO_PUBLIC lsearch0_t : public configurable_t, public clonable_t<lsearch0_t>
     {
     public:
         ///

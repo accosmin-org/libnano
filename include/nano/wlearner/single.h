@@ -19,12 +19,12 @@ namespace nano
         explicit single_feature_wlearner_t(string_t id);
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::ostream& write(std::ostream&) const override;
 

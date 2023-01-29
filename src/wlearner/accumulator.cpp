@@ -10,15 +10,37 @@ wlearner::accumulator_t::accumulator_t(const tensor3d_dims_t& tdims)
     clear();
 }
 
+void wlearner::accumulator_t::clear()
+{
+    m_x0.zero();
+    m_x1.zero();
+    m_x2.zero();
+    m_r1.zero();
+    m_rx.zero();
+    m_r2.zero();
+}
+
+void wlearner::accumulator_t::clear(const tensor_size_t bins)
+{
+    m_x0.resize(bins);
+    m_x1.resize(bins);
+    m_x2.resize(bins);
+    m_r1.resize(cat_dims(bins, tdims()));
+    m_rx.resize(cat_dims(bins, tdims()));
+    m_r2.resize(cat_dims(bins, tdims()));
+
+    clear();
+}
+
 std::vector<std::pair<scalar_t, tensor_size_t>> wlearner::accumulator_t::sort() const
 {
-    const auto fvsize = fvalues();
+    const auto bins = this->bins();
 
     std::vector<std::pair<scalar_t, tensor_size_t>> deltas;
-    deltas.reserve(static_cast<size_t>(fvsize));
-    for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+    deltas.reserve(static_cast<size_t>(bins));
+    for (tensor_size_t bin = 0; bin < bins; ++bin)
     {
-        deltas.emplace_back(-r1(fv).square().sum() / x0(fv), fv);
+        deltas.emplace_back(-r1(bin).square().sum() / x0(bin), bin);
     }
 
     std::sort(deltas.begin(), deltas.end());
@@ -29,27 +51,27 @@ std::vector<std::pair<scalar_t, tensor_size_t>> wlearner::accumulator_t::sort() 
 std::tuple<tensor2d_t, tensor5d_t, tensor5d_t, tensor5d_t, tensor_mem_t<tensor_size_t, 2>>
 wlearner::accumulator_t::cluster() const
 {
-    const auto [fvsize, dim1, dim2, dim3] = m_r1.dims();
+    const auto [bins, dim1, dim2, dim3] = m_r1.dims();
 
-    auto cluster_x0 = tensor2d_t{fvsize, fvsize};
-    auto cluster_r1 = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
-    auto cluster_r2 = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
-    auto cluster_rx = tensor5d_t{fvsize, fvsize, dim1, dim2, dim3};
-    auto cluster_id = tensor_mem_t<tensor_size_t, 2>{fvsize, fvsize};
+    auto cluster_x0 = tensor2d_t{bins, bins};
+    auto cluster_r1 = tensor5d_t{bins, bins, dim1, dim2, dim3};
+    auto cluster_r2 = tensor5d_t{bins, bins, dim1, dim2, dim3};
+    auto cluster_rx = tensor5d_t{bins, bins, dim1, dim2, dim3};
+    auto cluster_id = tensor_mem_t<tensor_size_t, 2>{bins, bins};
 
     // initially each bin is a separate cluster
     cluster_x0.array(0) = m_x0.array();
     cluster_r1.array(0) = m_r1.array();
     cluster_r2.array(0) = m_r2.array();
 
-    for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+    for (tensor_size_t bin = 0; bin < bins; ++bin)
     {
-        cluster_id(0, fv)       = fv;
-        cluster_rx.array(0, fv) = cluster_r1.array(0, fv) / cluster_x0(0, fv);
+        cluster_id(0, bin)       = bin;
+        cluster_rx.array(0, bin) = cluster_r1.array(0, bin) / cluster_x0(0, bin);
     }
 
     // merge clusters until only one remaining
-    for (tensor_size_t trial = 1, n_clusters = fvsize - trial + 1; trial < fvsize; ++trial, --n_clusters)
+    for (tensor_size_t trial = 1, n_clusters = bins - trial + 1; trial < bins; ++trial, --n_clusters)
     {
         cluster_x0.array(trial) = cluster_x0.array(trial - 1);
         cluster_r1.array(trial) = cluster_r1.array(trial - 1);
@@ -92,18 +114,18 @@ wlearner::accumulator_t::cluster() const
             cluster_rx.array(trial, cluster) = cluster_rx.array(trial, cluster + 1);
         }
 
-        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+        for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
-            if (cluster_id(trial, fv) == cluster2)
+            if (cluster_id(trial, bin) == cluster2)
             {
-                cluster_id(trial, fv) = cluster1;
+                cluster_id(trial, bin) = cluster1;
             }
         }
-        for (tensor_size_t fv = 0; fv < fvsize; ++fv)
+        for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
-            if (cluster_id(trial, fv) > cluster2)
+            if (cluster_id(trial, bin) > cluster2)
             {
-                cluster_id(trial, fv) -= 1;
+                cluster_id(trial, bin) -= 1;
             }
         }
     }

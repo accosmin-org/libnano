@@ -354,12 +354,22 @@ namespace nano
         template <typename tscalar_return = tscalar>
         void indexed(indices_cmap_t indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
         {
+            auto dims = this->dims();
+            dims[0]   = indices.size();
+            subtensor.resize(dims);
+
+            indexed(indices, subtensor.tensor());
+        }
+
+        template <typename tscalar_return = tscalar>
+        void indexed(indices_cmap_t indices, tensor_map_t<tscalar_return, trank> subtensor) const
+        {
             assert(indices.min() >= 0 && indices.max() < this->template size<0>());
 
             auto dims = this->dims();
             dims[0]   = indices.size();
+            assert(subtensor.dims() == dims);
 
-            subtensor.resize(dims);
             if constexpr (trank > 1)
             {
                 for (tensor_size_t i = 0, indices_size = indices.size(); i < indices_size; ++i)
@@ -625,7 +635,7 @@ namespace nano
     ///
     /// \brief construct consecutive tensor indices in the range [min, max).
     ///
-    inline auto arange(tensor_size_t min, tensor_size_t max)
+    inline auto arange(const tensor_size_t min, const tensor_size_t max)
     {
         assert(min <= max);
 

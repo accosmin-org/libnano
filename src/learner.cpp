@@ -27,7 +27,7 @@ void learner_t::critical_compatible(const dataset_t& dataset) const
 
 std::istream& learner_t::read(std::istream& stream)
 {
-    estimator_t::read(stream);
+    configurable_t::read(stream);
 
     critical(!::nano::read(stream, m_inputs) || !::nano::read(stream, m_target),
              "learner: failed to read from stream!");
@@ -37,7 +37,7 @@ std::istream& learner_t::read(std::istream& stream)
 
 std::ostream& learner_t::write(std::ostream& stream) const
 {
-    estimator_t::write(stream);
+    configurable_t::write(stream);
 
     critical(!::nano::write(stream, m_inputs) || !::nano::write(stream, m_target),
              "learner: failed to write to stream!");

@@ -38,7 +38,7 @@ namespace nano
     ///     - the global minimum if the function is convex or
     ///     - a critical point (not necessarily a local minimum) otherwise.
     ///
-    class NANO_PUBLIC solver_t : public estimator_t, public clonable_t<solver_t>
+    class NANO_PUBLIC solver_t : public configurable_t, public clonable_t<solver_t>
     {
     public:
         ///

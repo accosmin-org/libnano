@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/estimator.h>
+#include <nano/core/configurable.h>
 #include <nano/core/factory.h>
 #include <nano/core/seed.h>
 #include <nano/tensor/tensor.h>
@@ -16,7 +16,7 @@ namespace nano
     ///
     /// \brief generates (training, validation) splits for training, tuning and evaluating machine learning models.
     ///
-    class NANO_PUBLIC splitter_t : public estimator_t, public clonable_t<splitter_t>
+    class NANO_PUBLIC splitter_t : public configurable_t, public clonable_t<splitter_t>
     {
     public:
         ///< split with (training, validation) sample indices

@@ -10,11 +10,7 @@ static auto make_samples(const tensor_size_t samples)
 
 static auto make_splits(const tensor_size_t samples, const tensor_size_t folds, const uint64_t seed, const string_t& id)
 {
-    auto splitter = make_splitter(id);
-
-    splitter->parameter("splitter::seed")  = seed;
-    splitter->parameter("splitter::folds") = folds;
-
+    auto splitter = make_splitter(id, folds, seed);
     return splitter->split(make_samples(samples));
 }
 
@@ -48,6 +44,14 @@ static void check_split(const indices_t& train, const indices_t& valid, const te
 }
 
 UTEST_BEGIN_MODULE(test_splitter)
+
+UTEST_CASE(factory)
+{
+    const auto& splitters = splitter_t::all();
+    UTEST_CHECK_EQUAL(splitters.ids().size(), 2U);
+    UTEST_CHECK(splitters.get("k-fold") != nullptr);
+    UTEST_CHECK(splitters.get("random") != nullptr);
+}
 
 UTEST_CASE(kfold)
 {

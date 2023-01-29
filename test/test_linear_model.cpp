@@ -7,6 +7,9 @@
 
 using namespace nano;
 
+using split_type = fit_result_t::split_type;
+using value_type = fit_result_t::value_type;
+
 static void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
                           scalar_t epsilon)
 {
@@ -38,77 +41,65 @@ static auto make_model()
 {
     auto model                              = linear_model_t{};
     model.parameter("model::linear::batch") = 10;
-
-    model.logger(
-        [](const fit_result_t& result, const string_t& prefix)
-        {
-            auto&& logger = log_info();
-            logger << std::fixed << std::setprecision(9) << std::fixed << prefix << ": ";
-
-            const auto print_params = [&](const tensor1d_t& param_values)
-            {
-                assert(result.m_param_names.size() == static_cast<size_t>(param_values.size()));
-                for (size_t i = 0U, size = result.m_param_names.size(); i < size; ++i)
-                {
-                    logger << result.m_param_names[i] << "=" << param_values(static_cast<tensor_size_t>(i)) << ",";
-                }
-            };
-
-            if (std::isfinite(result.m_refit_error))
-            {
-                print_params(result.m_refit_params);
-                logger << "refit=" << result.m_refit_value << "/" << result.m_refit_error << ".";
-            }
-            else if (!result.m_cv_results.empty())
-            {
-                const auto& cv_result = *result.m_cv_results.rbegin();
-                print_params(cv_result.m_params);
-                logger << "train=" << cv_result.m_train_values.mean() << "/" << cv_result.m_train_errors.mean() << ",";
-                logger << "valid=" << cv_result.m_valid_values.mean() << "/" << cv_result.m_valid_errors.mean() << ".";
-            }
-        });
-
+    model.logger(model_t::make_logger_stdio());
     return model;
 }
 
-static void check_result(const fit_result_t& result, const strings_t& expected_param_names, size_t min_cv_results_size,
-                         const scalar_t epsilon)
+static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+                         const size_t min_param_results_size, const scalar_t epsilon)
 {
-    UTEST_CHECK_CLOSE(result.m_refit_value, 0.0, epsilon);
-    UTEST_CHECK_CLOSE(result.m_refit_error, 0.0, epsilon);
-    UTEST_CHECK_EQUAL(result.m_param_names, expected_param_names);
+    const auto& param_names        = result.param_names();
+    const auto& param_results      = result.param_results();
+    const auto  optim_errors_stats = result.stats(value_type::errors);
+    const auto  optim_losses_stats = result.stats(value_type::losses);
 
-    UTEST_REQUIRE_GREATER_EQUAL(result.m_cv_results.size(), min_cv_results_size);
+    UTEST_CHECK_EQUAL(param_names, expected_param_names);
+    UTEST_CHECK_CLOSE(optim_errors_stats.m_mean, 0.0, epsilon);
+    UTEST_CHECK_CLOSE(optim_losses_stats.m_mean, 0.0, epsilon);
 
-    const auto opt_values = make_full_tensor<scalar_t>(make_dims(2), 0.0);
+    UTEST_REQUIRE_GREATER_EQUAL(param_results.size(), min_param_results_size);
+
+    const auto opt_losses = make_full_tensor<scalar_t>(make_dims(2), 0.0);
     const auto opt_errors = make_full_tensor<scalar_t>(make_dims(2), 0.0);
 
     tensor_size_t hits = 0;
-    for (const auto& cv_result : result.m_cv_results)
+    for (const auto& param_result : param_results)
     {
-        UTEST_CHECK_GREATER(cv_result.m_params.min(), 0.0);
-        UTEST_CHECK_EQUAL(cv_result.m_params.size(), static_cast<tensor_size_t>(expected_param_names.size()));
-        if (close(cv_result.m_train_errors, opt_errors, epsilon))
+        const auto& params = param_result.params();
+        UTEST_CHECK_EQUAL(params.size(), static_cast<tensor_size_t>(expected_param_names.size()));
+        if (params.size() > 0)
+        {
+            UTEST_CHECK_GREATER(params.min(), 0.0);
+        }
+
+        const auto folds = param_result.folds();
+
+        tensor1d_t train_losses(folds), train_errors(folds);
+        tensor1d_t valid_losses(folds), valid_errors(folds);
+
+        for (tensor_size_t fold = 0; fold < folds; ++fold)
+        {
+            train_losses(fold) = param_result.stats(fold, split_type::train, value_type::losses).m_mean;
+            train_errors(fold) = param_result.stats(fold, split_type::train, value_type::errors).m_mean;
+            valid_losses(fold) = param_result.stats(fold, split_type::valid, value_type::losses).m_mean;
+            valid_errors(fold) = param_result.stats(fold, split_type::valid, value_type::errors).m_mean;
+        }
+
+        if (close(train_errors, opt_errors, epsilon))
         {
             ++hits;
-            UTEST_CHECK_CLOSE(cv_result.m_train_values, opt_values, 1.0 * epsilon);
-            UTEST_CHECK_CLOSE(cv_result.m_train_errors, opt_errors, 1.0 * epsilon);
-            UTEST_CHECK_CLOSE(cv_result.m_valid_values, opt_values, 5.0 * epsilon);
-            UTEST_CHECK_CLOSE(cv_result.m_valid_errors, opt_errors, 5.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_losses, opt_losses, 1.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_errors, opt_errors, 1.0 * epsilon);
+            UTEST_CHECK_CLOSE(valid_losses, opt_losses, 5.0 * epsilon);
+            UTEST_CHECK_CLOSE(valid_errors, opt_errors, 5.0 * epsilon);
         }
     }
-    if (!expected_param_names.empty())
-    {
-        UTEST_CHECK_GREATER(hits, 0);
-    }
-    else
-    {
-        UTEST_CHECK(result.m_cv_results.empty());
-    }
+
+    UTEST_CHECK_GREATER(hits, 0);
 }
 
 static void check_model(const linear_model_t& model, const dataset_t& dataset, const indices_t& samples,
-                        scalar_t epsilon)
+                        const scalar_t epsilon)
 {
     const auto outputs = model.predict(dataset, samples);
     check_outputs(dataset, samples, outputs, epsilon);
@@ -147,7 +138,7 @@ UTEST_CASE(regularization_none)
 
         const auto loss     = make_loss(loss_id);
         const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter();
+        const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
@@ -174,7 +165,7 @@ UTEST_CASE(regularization_lasso)
 
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_nonsmooth_solver();
-        const auto splitter = make_splitter();
+        const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;
@@ -201,7 +192,7 @@ UTEST_CASE(regularization_ridge)
 
         const auto loss     = make_loss(loss_id);
         const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter();
+        const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
@@ -228,7 +219,7 @@ UTEST_CASE(regularization_variance)
 
         const auto loss     = make_loss(loss_id);
         const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter();
+        const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
@@ -255,7 +246,7 @@ UTEST_CASE(regularization_elasticnet)
 
         const auto loss     = make_loss(loss_id);
         const auto solver   = make_nonsmooth_solver();
-        const auto splitter = make_splitter();
+        const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;

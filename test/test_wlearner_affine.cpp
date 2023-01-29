@@ -13,7 +13,7 @@ public:
 
     rdatasource_t clone() const override { return std::make_unique<fixture_datasource_t>(*this); }
 
-    static auto expected_feature() { return 6; }
+    static auto expected_feature() { return 5; }
 
     static auto expected_features() { return make_indices(expected_feature()); }
 
@@ -41,7 +41,7 @@ private:
         random_datasource_t::do_load();
 
         const auto feature = expected_feature();
-        const auto fvalues = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
+        const auto fvalues = make_random_tensor<scalar_t>(make_dims(samples()), -1.0, +0.8);
 
         set_targets(feature, [&](const tensor_size_t sample)
                     { return make_affine_target(fvalues(sample), expected_weight(), expected_bias()); });
@@ -52,7 +52,7 @@ UTEST_BEGIN_MODULE(test_wlearner_affine)
 
 UTEST_CASE(fit_predict)
 {
-    const auto datasource0 = make_datasource<fixture_datasource_t>(200);
+    const auto datasource0 = make_datasource<fixture_datasource_t>(100);
     const auto datasourceX = make_random_datasource(make_features_all_discrete());
 
     check_wlearner(datasource0, datasourceX);

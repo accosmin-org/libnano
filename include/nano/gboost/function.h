@@ -2,6 +2,7 @@
 
 #include <nano/dataset/iterator.h>
 #include <nano/function.h>
+#include <nano/gboost/accumulator.h>
 #include <nano/loss.h>
 #include <nano/model/cluster.h>
 
@@ -80,17 +81,21 @@ namespace nano::gboost
 
     private:
         // attributes
-        const targets_iterator_t& m_iterator;   ///<
-        const loss_t&             m_loss;       ///<
-        scalar_t                  m_vAreg{0.0}; ///<
+        const targets_iterator_t& m_iterator;     ///<
+        const loss_t&             m_loss;         ///<
+        scalar_t                  m_vAreg{0.0};   ///<
+        mutable tensor1d_t        m_values;       ///<
+        mutable tensor4d_t        m_vgrads;       ///<
+        mutable tensor4d_t        m_outputs;      ///<
+        mutable accumulators_t    m_accumulators; ///<
     };
 
     ///
     /// \brief the criterion used for optimizing the scale (aka the line-search like step) of a Gradient Boosting model,
     ///     using a given loss function.
     ///
-    ///     f(x) = EXPECTATION[loss(target_i, output_i + x[cluster_i] * woutput_i)] +
-    ///            vAreg * VARIANCE[loss(target_i, output_i + x[cluster_i] * woutput_i)]
+    ///     f(x) = EXPECTATION[loss(target_i, soutput_i + x[cluster_i] * woutput_i)] +
+    ///            vAreg * VARIANCE[loss(target_i, soutput_i + x[cluster_i] * woutput_i)]
     ///
     /// NB: the ERM loss can be optionally regularized by penalizing:
     ///     - (1) the variance of the loss values - like in VadaBoost
@@ -102,7 +107,7 @@ namespace nano::gboost
         /// \brief constructor
         ///
         scale_function_t(const targets_iterator_t&, const loss_t&, scalar_t vAreg, const cluster_t&,
-                         const tensor4d_t& outputs, const tensor4d_t& woutputs);
+                         const tensor4d_t& soutputs, const tensor4d_t& woutputs);
 
         ///
         /// \brief @see clonable_t
@@ -116,11 +121,15 @@ namespace nano::gboost
 
     private:
         // attributes
-        const targets_iterator_t& m_iterator;   ///<
-        const loss_t&             m_loss;       ///<
-        scalar_t                  m_vAreg{0.0}; ///<
-        const cluster_t&          m_cluster;    ///<
-        const tensor4d_t&         m_outputs;    ///< predictions of the strong learner so far
-        const tensor4d_t&         m_woutputs;   ///< predictions of the current weak learner
+        const targets_iterator_t& m_iterator;     ///<
+        const loss_t&             m_loss;         ///<
+        scalar_t                  m_vAreg{0.0};   ///<
+        const cluster_t&          m_cluster;      ///<
+        const tensor4d_t&         m_soutputs;     ///< predictions of the strong learner so far
+        const tensor4d_t&         m_woutputs;     ///< predictions of the current weak learner
+        mutable tensor1d_t        m_values;       ///<
+        mutable tensor4d_t        m_vgrads;       ///<
+        mutable tensor4d_t        m_outputs;      ///<
+        mutable accumulators_t    m_accumulators; ///<
     };
 } // namespace nano::gboost

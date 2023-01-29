@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nano/core/logger.h>
-#include <nano/datasource/feature.h>
 #include <nano/datasource/mask.h>
+#include <nano/feature.h>
 
 namespace nano
 {

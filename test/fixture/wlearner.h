@@ -1,7 +1,7 @@
+#include "fixture/configurable.h"
 #include "fixture/dataset.h"
 #include "fixture/datasource/hits.h"
 #include "fixture/datasource/random.h"
-#include "fixture/estimator.h"
 #include "fixture/loss.h"
 #include <nano/dataset/hash.h>
 #include <nano/dataset/iterator.h>
@@ -18,9 +18,9 @@ static auto make_features()
         feature_t{"sclass2"}.sclass(strings_t{"s20", "s21"}),
         feature_t{"mclass0"}.mclass(strings_t{"m00", "m01", "m02"}),
         feature_t{"mclass1"}.mclass(strings_t{"m10", "m11", "m12", "m13"}),
-        feature_t{"scalar0"}.scalar(feature_type::float32),
-        feature_t{"scalar1"}.scalar(feature_type::float64),
-        feature_t{"scalar2"}.scalar(feature_type::int16),
+        feature_t{"scalar0"}.scalar(feature_type::float64),
+        feature_t{"scalar1"}.scalar(feature_type::float32),
+        feature_t{"scalar2"}.scalar(feature_type::float64),
         feature_t{"struct0"}.scalar(feature_type::uint64, make_dims(1, 2, 2)),
         feature_t{"struct1"}.scalar(feature_type::float32, make_dims(2, 1, 3)),
         feature_t{"struct2"}.scalar(feature_type::int64, make_dims(3, 1, 1)),
@@ -93,7 +93,11 @@ public:
 
                 set(sample, feature, fvalue);
                 set(sample, itarget, target);
-                m_cluster.assign(sample, cluster);
+                assign(sample, cluster);
+            }
+            else
+            {
+                set(sample, itarget, 0.0);
             }
         }
     }
@@ -277,7 +281,8 @@ inline void check_split_throws(const wlearner_t& wlearner, const datasource_t& d
     check_split_throws(wlearner, datasources...);
 }
 
-inline void check_predict(const wlearner_t& wlearner, const dataset_t& dataset, const cluster_t& expected_cluster)
+inline void check_predict(const wlearner_t& wlearner, const dataset_t& dataset, const cluster_t& expected_cluster,
+                          const scalar_t epsilon = 1e-8)
 {
     const auto all_targets = make_targets(dataset);
 
@@ -298,7 +303,7 @@ inline void check_predict(const wlearner_t& wlearner, const dataset_t& dataset, 
             }
             else
             {
-                UTEST_CHECK_CLOSE(outputs.tensor(i), targets.tensor(i), 1e-8);
+                UTEST_CHECK_CLOSE(outputs.tensor(i), targets.tensor(i), epsilon);
             }
         }
     }
@@ -386,7 +391,7 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     check_predict_throws(wlearner, datasource0, datasourceX1, datasourceX2, datasourceX3, datasourceXs...);
     check_split_throws(wlearner, datasource0, datasourceX1, datasourceX2, datasourceX3, datasourceXs...);
 
-    // check fitting
+    // check fitting with various criteria
     for (const auto criterion : enum_values<wlearner::criterion_type>())
     {
         wlearner.parameter("wlearner::criterion") = criterion;

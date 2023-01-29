@@ -36,12 +36,35 @@ namespace nano
         gboost_model_t();
 
         ///
-        /// \brief @see estimator_t
+        /// \brief enable moving
+        ///
+        gboost_model_t(gboost_model_t&&) noexcept;
+        gboost_model_t& operator=(gboost_model_t&&) noexcept;
+
+        ///
+        /// \brief enable copying
+        ///
+        gboost_model_t(const gboost_model_t&);
+        gboost_model_t& operator=(const gboost_model_t&);
+
+        ///
+        /// \brief destructor
+        ///
+        ~gboost_model_t() override;
+
+        ///
+        /// \brief register a weak learner as a prototype.
+        ///
+        void add(const wlearner_t&);
+        void add(const string_t& wlearner_id);
+
+        ///
+        /// \brief @see configurable_t
         ///
         std::istream& read(std::istream&) override;
 
         ///
-        /// \brief @see estimator_t
+        /// \brief @see configurable_t
         ///
         std::ostream& write(std::ostream&) const override;
 
@@ -51,7 +74,7 @@ namespace nano
         rmodel_t clone() const override;
 
         ///
-        /// \brief @see model_t
+        /// \brief @see model_
         ///
         fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
                          const tuner_t&) override;
@@ -64,20 +87,22 @@ namespace nano
         ///
         /// \brief returns the selected features.
         ///
-        features_t features() const;
+        indices_t features() const;
+
+        ///
+        /// \brief returns the fitted bias.
+        ///
+        const tensor1d_t& bias() const { return m_bias; }
+
+        ///
+        /// \brief returns the fitted weak learners.
+        ///
+        const rwlearners_t& wlearners() const { return m_wlearners; }
 
     private:
-        void add(string_t id, rwlearner_t&&);
-        void scale(const cluster_t&, const indices_t&, const vector_t&, tensor4d_t&) const;
-        bool done(tensor_size_t round, const tensor1d_t&, const solver_state_t&, const indices_t&) const;
-
-        indices_t  make_indices(const indices_t&) const;
-        cluster_t  make_cluster(const dataset_t&, const indices_t&, const wlearner_t&) const;
-        tensor1d_t evaluate(const dataset_t&, const indices_t&, const loss_t&, const tensor4d_t&) const;
-
         // attributes
-        tensor1d_t   m_bias;       ///< fitted bias
-        iwlearners_t m_protos;     ///< weak learners to choose from (prototypes)
-        iwlearners_t m_iwlearners; ///< fitted weak learners chosen from the prototypes
+        tensor1d_t   m_bias;      ///< fitted bias
+        rwlearners_t m_protos;    ///< weak learners to choose from (prototypes)
+        rwlearners_t m_wlearners; ///< fitted weak learners chosen from the prototypes
     };
 } // namespace nano

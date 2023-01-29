@@ -235,15 +235,24 @@ namespace nano
         std::ostream& write(std::ostream&) const;
 
         ///
-        /// \brief access functions.
+        /// \brief return the parameter's name.
         ///
-        const auto& name() const { return m_name; }
+        const string_t& name() const { return m_name; }
 
-        const auto& storage() const { return m_storage; }
+        ///
+        /// \brief return the storage container of the parameter's value.
+        ///
+        const storage_t& storage() const { return m_storage; }
 
-        auto value() const { return value_t{*this}; }
+        ///
+        /// \brief return a typed object representing the parameter's value.
+        ///
+        value_t value() const { return value_t{*this}; }
 
-        auto domain() const { return domain_t{*this}; }
+        ///
+        /// \brief return a typed object representing the parameter's domain.
+        ///
+        domain_t domain() const { return domain_t{*this}; }
 
     private:
         parameter_t& seti(int64_t);

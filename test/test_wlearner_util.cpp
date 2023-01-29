@@ -1,6 +1,6 @@
+#include <nano/core/reduce.h>
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/criterion.h>
-#include <nano/wlearner/reduce.h>
 #include <nano/wlearner/util.h>
 #include <utest/utest.h>
 
@@ -106,11 +106,11 @@ UTEST_CASE(reduce)
     caches.emplace_back(2.0, tensor_size_t{2});
     caches.emplace_back(5.0, tensor_size_t{3});
 
-    const auto& min = wlearner::min_reduce(caches);
+    const auto& min = min_reduce(caches);
     UTEST_CHECK_EQUAL(min.m_index, 1);
     UTEST_CHECK_CLOSE(min.m_score, 0.0, 1e-12);
 
-    const auto& sum = wlearner::sum_reduce(caches, 10);
+    const auto& sum = sum_reduce(caches, 10);
     UTEST_CHECK_EQUAL(sum.m_index, 0);
     UTEST_CHECK_CLOSE(sum.m_score, 0.8, 1e-12);
 }
@@ -122,8 +122,18 @@ UTEST_CASE(accumulator)
     auto acc = wlearner::accumulator_t(tdims);
     acc.clear(2);
 
-    UTEST_CHECK_EQUAL(acc.fvalues(), 2);
+    UTEST_CHECK_EQUAL(acc.bins(), 2);
     UTEST_CHECK_EQUAL(acc.tdims(), tdims);
+
+    {
+        const auto expected = make_full_tensor<scalar_t>(tdims, 0.0);
+        UTEST_CHECK_CLOSE(acc.fit_constant(0), expected.array(), 1e-12);
+        UTEST_CHECK_CLOSE(acc.fit_constant(1), expected.array(), 1e-12);
+    }
+    UTEST_CHECK_CLOSE(acc.rss_zero(0), 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_zero(1), 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_constant(0), 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_constant(1), 0.0, 1e-12);
 
     tensor4d_t vgrads(cat_dims(5, tdims));
     vgrads.tensor(0).full(+0.0);
@@ -173,6 +183,17 @@ UTEST_CASE(accumulator)
 
     UTEST_CHECK_CLOSE(acc.r2(1).minCoeff(), +46.0, 1e-12);
     UTEST_CHECK_CLOSE(acc.r2(1).maxCoeff(), +46.0, 1e-12);
+
+    {
+        const auto expected0 = make_full_tensor<scalar_t>(tdims, -6.0 / 4.0);
+        const auto expected1 = make_full_tensor<scalar_t>(tdims, -14.0 / 6.0);
+        UTEST_CHECK_CLOSE(acc.fit_constant(0), expected0.array(), 1e-12);
+        UTEST_CHECK_CLOSE(acc.fit_constant(1), expected1.array(), 1e-12);
+    }
+    UTEST_CHECK_CLOSE(acc.rss_zero(0), 42.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_zero(1), 138.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_constant(0), 15.0, 1e-12);
+    UTEST_CHECK_CLOSE(acc.rss_constant(1), 40.0, 1e-12);
 }
 
 UTEST_CASE(accumulator_order)

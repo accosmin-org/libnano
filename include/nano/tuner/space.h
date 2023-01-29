@@ -29,6 +29,15 @@ namespace nano
         param_space_t(type, tensor1d_t grid_values);
 
         ///
+        /// \brief constructor
+        ///
+        template <typename... tscalars>
+        explicit param_space_t(type type_, const tscalars... scalars)
+            : param_space_t(type_, make_grid_values(scalars...))
+        {
+        }
+
+        ///
         /// \brief map a hyper-parameter value to the surrogate space [0, 1].
         ///
         scalar_t to_surrogate(scalar_t value) const;
@@ -56,6 +65,13 @@ namespace nano
     private:
         static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
+        template <typename... tscalars>
+        static auto make_grid_values(const tscalars... scalars)
+        {
+            const auto size = static_cast<tensor_size_t>(sizeof...(scalars));
+            return make_tensor<scalar_t>(make_dims(size), scalars...);
+        }
+
         // attributes
         type       m_type{type::linear};   ///<
         tensor1d_t m_grid_values;          ///<
@@ -63,9 +79,8 @@ namespace nano
     };
 
     template <typename... tscalars>
-    auto make_param_space(param_space_t::type type, tscalars... scalars)
+    auto make_param_space(const param_space_t::type type, const tscalars... scalars)
     {
-        const auto size = static_cast<tensor_size_t>(sizeof...(scalars));
-        return param_space_t{type, make_tensor<scalar_t>(make_dims(size), scalars...)};
+        return param_space_t{type, scalars...};
     }
 } // namespace nano

@@ -3,14 +3,14 @@
 
 using namespace nano;
 
-static auto initial_params(const estimator_t& estimator)
+static auto initial_params(const configurable_t& configurable)
 {
-    const auto [c1, c2]       = estimator.parameter("lsearchk::tolerance").value_pair<scalar_t>();
-    const auto max_iterations = estimator.parameter("lsearchk::max_iterations").value<int>();
-    const auto theta          = estimator.parameter("lsearchk::cgdescent::theta").value<scalar_t>();
-    const auto epsilon        = estimator.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
-    const auto ro             = estimator.parameter("lsearchk::cgdescent::ro").value<scalar_t>();
-    const auto gamma          = estimator.parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
+    const auto [c1, c2]       = configurable.parameter("lsearchk::tolerance").value_pair<scalar_t>();
+    const auto max_iterations = configurable.parameter("lsearchk::max_iterations").value<int>();
+    const auto theta          = configurable.parameter("lsearchk::cgdescent::theta").value<scalar_t>();
+    const auto epsilon        = configurable.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
+    const auto ro             = configurable.parameter("lsearchk::cgdescent::ro").value<scalar_t>();
+    const auto gamma          = configurable.parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
 
     return std::make_tuple(c1, c2, max_iterations, theta, epsilon, ro, gamma);
 }

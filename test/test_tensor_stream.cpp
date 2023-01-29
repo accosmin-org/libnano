@@ -57,7 +57,7 @@ UTEST_CASE(read_fail_version)
     const auto tensor      = make_tensor();
 
     auto str                                                      = tensor2str(tensor);
-    reinterpret_cast<uint32_t*>(const_cast<char*>(str.data()))[0] = detail::tensor_version() + 1U; // NOLINT
+    reinterpret_cast<uint32_t*>(const_cast<char*>(str.data()))[0] = detail::hash_version() + 1U; // NOLINT
 
     std::istringstream stream(str);
     UTEST_CHECK(!nano::read(stream, read_tensor));

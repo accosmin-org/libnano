@@ -13,9 +13,11 @@ target_sources(nano PRIVATE
     core/random.cpp
     core/cmdline.cpp
     core/parallel.cpp
+    core/sampling.cpp
     core/histogram.cpp
-    core/estimator.cpp
     core/parameter.cpp
+    core/configurable.cpp
+    feature.cpp
     generator.cpp
     generator/pairwise_base.cpp
     generator/pairwise_input.cpp
@@ -29,7 +31,6 @@ target_sources(nano PRIVATE
     dataset/iterator.cpp
     datasource.cpp
     datasource/mask.cpp
-    datasource/feature.cpp
     datasource/tabular.cpp
     datasource/imclass_cifar.cpp
     datasource/imclass_mnist.cpp
@@ -84,6 +85,7 @@ target_sources(nano PRIVATE
     learner.cpp
     model.cpp
     model/util.cpp
+    model/result.cpp
     model/cluster.cpp
     tuner.cpp
     tuner/step.cpp
@@ -94,8 +96,10 @@ target_sources(nano PRIVATE
     splitter.cpp
     splitter/kfold.cpp
     splitter/random.cpp
-    # gboost/model.cpp
+    gboost/util.cpp
+    gboost/model.cpp
     gboost/function.cpp
+    gboost/accumulator.cpp
     wlearner.cpp
     wlearner/util.cpp
     wlearner/single.cpp
@@ -107,9 +111,9 @@ target_sources(nano PRIVATE
     wlearner/criterion.cpp
     wlearner/accumulator.cpp
     linear/util.cpp
-    linear/cache.cpp
     linear/model.cpp
     linear/function.cpp
+    linear/accumulator.cpp
 )
 
 add_library(NANO::nano ALIAS nano)

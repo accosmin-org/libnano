@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <nano/core/logger.h>
+#include <nano/core/reduce.h>
 #include <nano/core/stream.h>
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/criterion.h>
-#include <nano/wlearner/reduce.h>
 #include <nano/wlearner/stump.h>
 #include <nano/wlearner/util.h>
 

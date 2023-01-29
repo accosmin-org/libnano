@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/core/hash.h>
 #include <nano/generator/storage.h>
-#include <nano/tensor/hash.h>
 
 namespace nano
 {

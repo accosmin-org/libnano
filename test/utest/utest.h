@@ -272,7 +272,7 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (!::nano::close((left), (right), epsilon))                                                                      \
     {                                                                                                                  \
-        UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left<> right)     \
+        UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left ~right)      \
                                << "} failed {" << (left) << " <" << (epsilon) << "> " << (right) << "}!"               \
                                << RESET_COLOR << std::endl;                                                            \
         UTEST_HANDLE_CRITICAL(critical);                                                                               \
@@ -280,3 +280,16 @@ static exception_status check_throw(const toperator& op)
 
 #define UTEST_CHECK_CLOSE(left, right, epsilon)   UTEST_EVALUATE_CLOSE(left, right, epsilon, false);
 #define UTEST_REQUIRE_CLOSE(left, right, epsilon) UTEST_EVALUATE_CLOSE(left, right, epsilon, true);
+
+#define UTEST_EVALUATE_NOT_CLOSE(left, right, epsilon, critical)                                                       \
+    ++utest_n_checks;                                                                                                  \
+    if (::nano::close((left), (right), epsilon))                                                                       \
+    {                                                                                                                  \
+        UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left !~right)     \
+                               << "} failed {" << (left) << " <" << (epsilon) << "> " << (right) << "}!"               \
+                               << RESET_COLOR << std::endl;                                                            \
+        UTEST_HANDLE_CRITICAL(critical);                                                                               \
+    }
+
+#define UTEST_CHECK_NOT_CLOSE(left, right, epsilon)   UTEST_EVALUATE_NOT_CLOSE(left, right, epsilon, false);
+#define UTEST_REQUIRE_NOT_CLOSE(left, right, epsilon) UTEST_EVALUATE_NOT_CLOSE(left, right, epsilon, true);

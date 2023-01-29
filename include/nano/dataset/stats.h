@@ -2,7 +2,7 @@
 
 #include <nano/dataset/hash.h>
 #include <nano/dataset/scaling.h>
-#include <nano/datasource/feature.h>
+#include <nano/feature.h>
 #include <nano/generator/storage.h>
 #include <nano/tensor.h>
 

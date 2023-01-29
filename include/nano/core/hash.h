@@ -1,11 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
-#include <nano/tensor/index.h>
 
 namespace nano::detail
 {
-    inline constexpr uint32_t tensor_version()
+    inline constexpr uint32_t hash_version()
     {
         return 0;
     }
@@ -15,13 +15,13 @@ namespace nano::detail
         return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
     }
 
-    template <typename tscalar>
-    uint64_t hash(const tscalar* data, const tensor_size_t size)
+    template <typename tscalar, typename tsize>
+    uint64_t hash(const tscalar* data, const tsize size)
     {
         const auto hasher = std::hash<tscalar>{};
 
         uint64_t hash = 0;
-        for (tensor_size_t i = 0; i < size; ++i)
+        for (tsize i = 0; i < size; ++i)
         {
             hash = hash_combine(hash, hasher(data[i]));
         }

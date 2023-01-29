@@ -38,7 +38,7 @@ public:
         cluster_t cluster(this->samples(), m_groups);
         for (const auto sample : samples)
         {
-            if (sample % 7 > 0)
+            if (sample % 2 > 0)
             {
                 cluster.assign(sample, sample % m_groups);
             }
@@ -50,17 +50,19 @@ public:
 
     const auto& scale() const { return m_scale; }
 
-    auto outputs(const indices_t& samples) const { return m_outputs.indexed<scalar_t>(samples); }
+    const auto& outputs() const { return m_outputs; }
 
-    auto woutputs(const indices_t& samples) const { return m_woutputs.indexed<scalar_t>(samples); }
+    const auto& targets() const { return m_targets; }
+
+    const auto& woutputs() const { return m_woutputs; }
 
 private:
     void do_load() override
     {
-        auto features = features_t{feature_t{"inputs"}.scalar(feature_type::float32, m_idims),
-                                   feature_t{"target"}.scalar(feature_type::float64, m_tdims)};
+        const auto features = features_t{feature_t{"inputs"}.scalar(feature_type::float32, m_idims),
+                                         feature_t{"target"}.scalar(feature_type::float64, m_tdims)};
 
-        resize(m_samples, features, features.size() - 1U);
+        resize(m_samples, features, 1U);
 
         m_scale = vector_t::Random(m_groups);
         m_scale.array() += 1.1;
@@ -93,13 +95,8 @@ private:
     tensor4d_t      m_targets;      ///<
 };
 
-static auto make_samples(const tensor_size_t samples)
-{
-    return ::nano::arange(0, samples);
-}
-
-static auto make_datasource(const tensor_size_t isize = 3, const tensor_size_t tsize = 2,
-                            const tensor_size_t groups = 3, const tensor_size_t samples = 100)
+static auto make_datasource(const tensor_size_t samples = 100, const tensor_size_t isize = 3,
+                            const tensor_size_t tsize = 2, const tensor_size_t groups = 3)
 {
     auto datasource = fixture_datasource_t{samples, isize, tsize, groups};
     UTEST_CHECK_NOTHROW(datasource.load());
@@ -131,27 +128,29 @@ UTEST_BEGIN_MODULE(test_gboost_function)
 UTEST_CASE(bias)
 {
     const auto loss       = make_loss();
-    const auto datasource = make_datasource();
+    const auto datasource = make_datasource(100);
     const auto dataset    = make_dataset(datasource);
-    const auto samples    = make_samples(60);
-    const auto iterator   = targets_iterator_t{dataset, samples, 1U};
 
-    const auto bias    = datasource.bias(samples);
-    const auto targets = datasource.targets(samples);
-    const auto tmatrix = targets.reshape(targets.size<0>(), -1).matrix();
-    const auto omatrix = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
-
-    for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
+    for (const auto& samples : {arange(0, 100), arange(10, 60), arange(0, 50), arange(10, 100)})
     {
-        const auto function = bias_function_t{iterator, *loss, vAreg};
+        const auto iterator = targets_iterator_t{dataset, samples, 1U};
+        const auto bias     = datasource.bias(samples);
+        const auto targets  = datasource.targets(samples);
+        const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
+        const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-        UTEST_CHECK_EQUAL(function.size(), 2);
-        check_gradient(function, 10);
-        check_convexity(function, 10);
-        check_value(function, tmatrix, omatrix, vAreg);
-        if (vAreg < std::numeric_limits<scalar_t>::epsilon())
+        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
         {
-            check_optimum(function, bias);
+            const auto function = bias_function_t{iterator, *loss, vAreg};
+
+            UTEST_CHECK_EQUAL(function.size(), 2);
+            check_gradient(function, 10);
+            check_convexity(function, 10);
+            check_value(function, tmatrix, omatrix, vAreg);
+            if (vAreg < std::numeric_limits<scalar_t>::epsilon())
+            {
+                check_optimum(function, bias);
+            }
         }
     }
 }
@@ -159,30 +158,39 @@ UTEST_CASE(bias)
 UTEST_CASE(scale)
 {
     const auto loss       = make_loss();
-    const auto datasource = make_datasource();
+    const auto datasource = make_datasource(50);
     const auto dataset    = make_dataset(datasource);
-    const auto samples    = make_samples(50);
-    const auto iterator   = targets_iterator_t{dataset, samples, 1U};
 
-    const auto& scale    = datasource.scale();
-    const auto  cluster  = datasource.cluster(samples);
-    const auto  outputs  = datasource.outputs(samples);
-    const auto  woutputs = datasource.woutputs(samples);
-    const auto  targets  = datasource.targets(samples);
-    const auto  tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
-    const auto  omatrix  = outputs.reshape(tmatrix.rows(), tmatrix.cols()).matrix();
+    // NB: the outputs are provided for all available samples
+    const auto  all_samples = arange(0, datasource.samples());
+    const auto& scale       = datasource.scale();
+    const auto  cluster     = datasource.cluster(all_samples);
+    const auto& outputs     = datasource.outputs();
+    const auto& woutputs    = datasource.woutputs();
+    const auto& targets     = datasource.targets();
+    const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
+    const auto  omatrix     = outputs.reshape(tmatrix.rows(), tmatrix.cols()).matrix();
 
-    for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
+    // ... but the scaling is only computed for the training samples
+    for (const auto& samples : {arange(0, 50), arange(10, 40), arange(0, 40), arange(10, 50)})
     {
-        const auto function = scale_function_t{iterator, *loss, vAreg, cluster, outputs, woutputs};
+        const auto iterator = targets_iterator_t{dataset, samples, 1U};
 
-        UTEST_CHECK_EQUAL(function.size(), datasource.groups());
-        check_gradient(function, 10);
-        check_convexity(function, 10);
-        check_value(function, tmatrix, omatrix, vAreg);
-        if (vAreg < std::numeric_limits<scalar_t>::epsilon())
+        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
         {
-            check_optimum(function, scale);
+            const auto function = scale_function_t{iterator, *loss, vAreg, cluster, outputs, woutputs};
+
+            UTEST_CHECK_EQUAL(function.size(), datasource.groups());
+            check_gradient(function, 10);
+            check_convexity(function, 10);
+            if (samples.size() == datasource.samples())
+            {
+                check_value(function, tmatrix, omatrix, vAreg);
+            }
+            if (vAreg < std::numeric_limits<scalar_t>::epsilon())
+            {
+                check_optimum(function, scale);
+            }
         }
     }
 }
@@ -190,21 +198,20 @@ UTEST_CASE(scale)
 UTEST_CASE(grads)
 {
     const auto loss       = make_loss();
-    const auto datasource = make_datasource();
+    const auto datasource = make_datasource(10);
     const auto dataset    = make_dataset(datasource);
-    const auto samples    = make_samples(10);
-    const auto iterator   = targets_iterator_t{dataset, samples, 1U};
 
-    const auto outputs = datasource.outputs(samples);
-    const auto targets = datasource.targets(samples);
-    const auto tmatrix = targets.reshape(targets.size<0>(), -1).matrix();
-    const auto omatrix = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
+    const auto  all_samples = arange(0, datasource.samples());
+    const auto  iterator    = targets_iterator_t{dataset, all_samples, 1U};
+    const auto& targets     = datasource.targets();
+    const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
+    const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
     for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
     {
         const auto function = grads_function_t{iterator, *loss, vAreg};
 
-        UTEST_CHECK_EQUAL(function.size(), samples.size() * 2);
+        UTEST_CHECK_EQUAL(function.size(), all_samples.size() * 2);
         check_gradient(function, 10);
         check_convexity(function, 10);
         check_value(function, tmatrix, omatrix, vAreg);

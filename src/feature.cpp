@@ -1,6 +1,6 @@
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
-#include <nano/datasource/feature.h>
+#include <nano/feature.h>
 
 using namespace nano;
 
