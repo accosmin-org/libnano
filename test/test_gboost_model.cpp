@@ -1,17 +1,18 @@
 #include "fixture/gboost.h"
 #include <nano/wlearner/affine.h>
+#include <nano/wlearner/table.h>
 
 using namespace nano;
 
-class fixture_linear_datasource_t final : public wlearner_datasource_t
+class fixture_affine_datasource_t final : public wlearner_datasource_t
 {
 public:
-    explicit fixture_linear_datasource_t(const tensor_size_t samples)
+    explicit fixture_affine_datasource_t(const tensor_size_t samples)
         : wlearner_datasource_t(samples, 1)
     {
     }
 
-    rdatasource_t clone() const override { return std::make_unique<fixture_linear_datasource_t>(*this); }
+    rdatasource_t clone() const override { return std::make_unique<fixture_affine_datasource_t>(*this); }
 
     static auto expected_weight1() { return +0.5; }
 
@@ -60,15 +61,13 @@ private:
     {
         random_datasource_t::do_load();
 
+        const auto samples  = this->samples();
         const auto feature1 = expected_feature1();
         const auto feature2 = expected_feature2();
+        const auto itarget  = this->features(); // NB: the last feature is the target!
 
-        const auto fvalues1 = make_random_tensor<scalar_t>(make_dims(this->samples()), -1.0, +0.8);
-        const auto fvalues2 = make_random_tensor<scalar_t>(make_dims(this->samples()), +1.1, +2.4);
-
-        const auto hits    = this->hits();
-        const auto samples = this->samples();
-        const auto itarget = this->features(); // NB: the last feature is the target!
+        const auto fvalues1 = make_random_tensor<scalar_t>(make_dims(samples), -1.0, +0.8);
+        const auto fvalues2 = make_random_tensor<scalar_t>(make_dims(samples), +1.1, +2.4);
 
         for (tensor_size_t sample = 0; sample < samples; ++sample)
         {
@@ -81,12 +80,73 @@ private:
             set(sample, feature1, fvalue1);
             set(sample, feature2, fvalue2);
             set(sample, itarget, target1 + target2);
-            assign(sample, cluster1);
         }
     }
 };
 
-// TODO: check with linear and table weak learners
+class fixture_tables_datasource_t final : public wlearner_datasource_t
+{
+public:
+    explicit fixture_tables_datasource_t(const tensor_size_t samples)
+        : wlearner_datasource_t(samples, 1)
+    {
+    }
+
+    rdatasource_t clone() const override { return std::make_unique<fixture_tables_datasource_t>(*this); }
+
+    static auto expected_tables1() { return make_tensor<scalar_t>(make_dims(3, 1, 1, 1), +0.5, -0.3, +0.9); }
+
+    static auto expected_tables2() { return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +2.5, -1.2); }
+
+    static auto expected_feature1() { return 1; }
+
+    static auto expected_feature2() { return 0; }
+
+    static void check_gbooster(const gboost_model_t& model)
+    {
+        UTEST_CHECK_EQUAL(model.features(), make_indices(expected_feature2(), expected_feature1()));
+
+        for (const auto& wlearner : model.wlearners())
+        {
+            UTEST_CHECK_EQUAL(wlearner->type_id(), "dense-table");
+        }
+    }
+
+private:
+    void do_load() override
+    {
+        random_datasource_t::do_load();
+
+        const auto samples  = this->samples();
+        const auto feature1 = expected_feature1();
+        const auto feature2 = expected_feature2();
+        const auto itarget  = this->features(); // NB: the last feature is the target!
+
+        const auto classes1 = this->feature(feature1).classes();
+        const auto fvalues1 = make_random_tensor<int32_t>(make_dims(samples), tensor_size_t{0}, classes1 - 1);
+
+        const auto classes2 = this->feature(feature2).classes();
+        const auto fvalues2 = make_random_tensor<int32_t>(make_dims(samples), tensor_size_t{0}, classes2 - 1);
+
+        const auto tables1 = expected_tables1();
+        const auto tables2 = expected_tables2();
+
+        assert(classes1 == tables1.size<0>());
+        assert(classes2 == tables2.size<0>());
+
+        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        {
+            const auto [fvalue1, target1, cluster1] = make_table_target(fvalues1(sample), tables1);
+            const auto [fvalue2, target2, cluster2] = make_table_target(fvalues2(sample), tables2);
+
+            set(sample, feature1, fvalue1);
+            set(sample, feature2, fvalue2);
+            set(sample, itarget, target1(0) + target2(0));
+        }
+    }
+};
+
+// TODO: check with affine and table weak learners
 // TODO: check fit results have the expected structure for various regularization methods
 
 UTEST_BEGIN_MODULE(test_gboost_model)
@@ -113,9 +173,9 @@ UTEST_CASE(add_protos)
     check_predict_throws(model);
 }
 
-UTEST_CASE(fit_predict_linear)
+UTEST_CASE(fit_predict_affine)
 {
-    const auto datasource = make_datasource<fixture_linear_datasource_t>(100);
+    const auto datasource = make_datasource<fixture_affine_datasource_t>(100);
 
     auto model = make_gbooster();
     model.add("affine");
@@ -125,28 +185,16 @@ UTEST_CASE(fit_predict_linear)
     // TODO check fit results - expecting perfect fitting!
 }
 
-/*UTEST_CASE(train_mixed)
+UTEST_CASE(fit_predict_tables)
 {
-    const auto loss    = make_loss();
-    const auto solver  = make_solver();
-    const auto dataset = make_dataset<gboost_mixed_dataset_t>(10, 1, 100);
-    const auto samples = make_samples(dataset);
+    const auto datasource = make_datasource<fixture_tables_datasource_t>(100);
 
-    auto wstump  = wlearner_stump_t{};
-    auto wlinear = wlearner_lin1_t{};
+    auto model = make_gbooster();
+    model.add("affine");
+    model.add("dense-table");
 
-    auto model = gboost_model_t{};
-    UTEST_REQUIRE_NOTHROW(model.rounds(10));
-    UTEST_REQUIRE_NOTHROW(model.epsilon(1e-8));
-    UTEST_REQUIRE_NOTHROW(model.shrinkage(1.0));
-    UTEST_REQUIRE_NOTHROW(model.subsample(1.0));
-    UTEST_REQUIRE_NOTHROW(model.wscale(::nano::wscale::tboost));
-    UTEST_REQUIRE_NOTHROW(model.add(wstump));
-    UTEST_REQUIRE_NOTHROW(model.add(wlinear));
-
-    UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));
-    ::check_predict(dataset, model);
-    ::check_features(dataset, *loss, model);
-}*/
+    const auto fit_result = check_gbooster(std::move(model), datasource);
+    // TODO check fit results - expecting perfect fitting!
+}
 
 UTEST_END_MODULE()
