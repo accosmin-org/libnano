@@ -146,7 +146,6 @@ private:
     }
 };
 
-// TODO: check with affine and table weak learners
 // TODO: check fit results have the expected structure for various regularization methods
 
 UTEST_BEGIN_MODULE(test_gboost_model)

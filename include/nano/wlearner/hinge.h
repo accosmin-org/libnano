@@ -30,8 +30,8 @@ namespace nano
     ///
     ///     where feature is the selected continuous feature.
     ///
-    /// NB: the discrete features and the missing feature values are skipped during fiting.
-    /// NB: the threshold is shared across outputs, but the predictions and the hinge directions can be different.
+    /// NB: the discrete and the structured features are skipped during fiting.
+    /// NB: the threshold and the hinge direction is shared across outputs, but the predictions can be different.
     /// NB: this weak learner is inspired by the MARS algorithm:
     ///     see "Multivariate adaptive regression splines", by Jerome Friedman
     ///

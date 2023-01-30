@@ -33,7 +33,7 @@ namespace nano
     /// \brief a decision tree is a weak learner that partitions the data using
     ///     decision stumps (for continuous scalar features only).
     ///
-    /// NB: structured and discrete features and missing feature values are skipped during fiting.
+    /// NB: structured and discrete features are skipped during fiting.
     ///
     class NANO_PUBLIC dtree_wlearner_t final : public wlearner_t
     {

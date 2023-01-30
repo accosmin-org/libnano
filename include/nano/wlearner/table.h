@@ -16,7 +16,7 @@ namespace nano
     ///     where feature is the selected discrete feature.
     ///
     /// NB: both single-label and multi-label discrete features are supported.
-    /// NB: continuous features and missing feature values are skipped during fiting.
+    /// NB: the continuous and the structured features are skipped during fiting.
     ///
     class NANO_PUBLIC table_wlearner_t : public single_feature_wlearner_t
     {

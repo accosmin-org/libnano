@@ -40,10 +40,13 @@ namespace
 
         auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
 
-        void clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
+        auto clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
         {
             m_acc_sum.clear();
             m_acc_neg.clear();
+
+            auto missing_rss = 0.0;
+            auto missing_cnt = 0.0;
 
             m_ivalues.clear();
             m_ivalues.reserve(static_cast<size_t>(values.size()));
@@ -54,20 +57,27 @@ namespace
                     m_ivalues.emplace_back(values(i), samples(i));
                     m_acc_sum.update(gradients.array(samples(i)));
                 }
+                else
+                {
+                    missing_rss += gradients.array(samples(i)).square().sum();
+                    missing_cnt += 1.0;
+                }
             }
             std::sort(m_ivalues.begin(), m_ivalues.end());
+
+            return std::make_tuple(missing_rss, missing_cnt);
         }
 
         auto output_neg() const { return r1_neg() / x0_neg(); }
 
         auto output_pos() const { return r1_pos() / x0_pos(); }
 
-        auto score(const criterion_type criterion) const
+        auto score(const criterion_type criterion, const scalar_t missing_rss, const scalar_t missing_cnt) const
         {
             const auto rss = ::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
-                             ::score(x0_pos(), r1_pos(), r2_pos(), output_pos());
+                             ::score(x0_pos(), r1_pos(), r2_pos(), output_pos()) + missing_rss;
             const auto k = 2 * ::nano::size(m_acc_sum.tdims()) + 1;
-            const auto n = static_cast<tensor_size_t>(m_acc_sum.x0());
+            const auto n = static_cast<tensor_size_t>(m_acc_sum.x0() + missing_cnt);
 
             return make_score(criterion, rss, k, n);
         }
@@ -123,8 +133,8 @@ scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
             [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
             {
                 // update accumulators
-                auto& cache = caches[tnum];
-                cache.clear(gradients, fvalues, samples);
+                auto& cache                           = caches[tnum];
+                const auto [missing_rss, missing_cnt] = cache.clear(gradients, fvalues, samples);
                 for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++iv)
                 {
                     const auto& ivalue1 = cache.m_ivalues[iv + 0];
@@ -135,7 +145,7 @@ scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
                     if (ivalue1.first < ivalue2.first)
                     {
                         // update the parameters if a better feature
-                        const auto score = cache.score(criterion);
+                        const auto score = cache.score(criterion, missing_rss, missing_cnt);
                         if (std::isfinite(score) && score < cache.m_score)
                         {
                             cache.m_score           = score;

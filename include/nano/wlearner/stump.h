@@ -15,7 +15,7 @@ namespace nano
     ///
     ///     where feature is the selected continuous feature.
     ///
-    /// NB: the discrete features and the missing feature values are skipped during fiting.
+    /// NB: the discrete and the structured features are skipped during fiting.
     /// NB: the threshold is shared across outputs, but the predictions can be different.
     ///
     class NANO_PUBLIC stump_wlearner_t final : public single_feature_wlearner_t

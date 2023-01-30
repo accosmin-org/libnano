@@ -57,7 +57,7 @@ public:
     {
         const auto bins = this->bins();
 
-        scalar_t rss = 0;
+        auto rss = m_missing_rss;
         for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
             rss += this->score(bin);
@@ -89,7 +89,7 @@ public:
         const auto bins    = this->bins();
         const auto mapping = this->sort();
 
-        auto rss = 0.0;
+        auto rss = m_missing_rss;
         for (tensor_size_t bin = 0; bin < bins; ++bin)
         {
             rss += r2(bin).sum();
@@ -139,7 +139,7 @@ public:
             const auto rx = cluster_rx.tensor(ic);
             const auto id = cluster_id.tensor(ic);
 
-            auto rss = 0.0;
+            auto rss = m_missing_rss;
             for (tensor_size_t fv = 0; fv < ksplit; ++fv)
             {
                 rss += (r2.array(fv) - r1.array(fv).square() / x0(fv)).sum();
@@ -168,16 +168,21 @@ public:
         const auto classes = hashes.size();
 
         clear(classes);
-        m_samples = 0;
+        m_samples     = 0;
+        m_missing_rss = 0.0;
         for (tensor_size_t i = 0, size = fvalues.template size<0>(); i < size; ++i)
         {
             if (const auto& [valid, value] = validator(i); valid)
             {
                 const auto bin = find(hashes, value);
                 assert(bin >= 0 && bin < classes);
-                ++m_samples;
                 accumulator_t::update(gradients.array(samples(i)), bin);
             }
+            else
+            {
+                m_missing_rss += gradients.array(samples(i)).square().sum();
+            }
+            ++m_samples;
         }
 
         return hashes;
@@ -207,6 +212,7 @@ public:
     tensor_size_t m_samples{0};                        ///<
     tensor4d_t    m_tables;                            ///<
     tensor_size_t m_feature{-1};                       ///<
+    scalar_t      m_missing_rss{0.0};                  ///<
     scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
     hashes_t      m_hashes;                            ///<
     indices_t     m_hash2tables;                       ///<
