@@ -17,7 +17,7 @@ namespace nano::ml
         const auto splits = splitter.split(samples);
         const auto folds  = static_cast<tensor_size_t>(splits.size());
 
-        auto thread_pool = parallel::pool_t{1U};
+        auto thread_pool = parallel::pool_t{};
         auto fit_result  = fit_result_t{std::move(param_names)};
 
         // tune hyper-parameters (if any) in parallel by hyper-parameter trials and folds
