@@ -23,7 +23,7 @@ template <typename tweights, typename tbias>
 
     auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), 1U};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(11);
     iterator.scaling(scaling_type::none);
     iterator.loop(

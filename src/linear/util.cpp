@@ -28,10 +28,9 @@ void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weigh
 }
 
 tensor2d_t linear::evaluate(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                            const tensor2d_t& weights, const tensor1d_t& bias, const tensor_size_t batch,
-                            const size_t threads)
+                            const tensor2d_t& weights, const tensor1d_t& bias, const tensor_size_t batch)
 {
-    auto iterator = flatten_iterator_t{dataset, samples, threads};
+    auto iterator = flatten_iterator_t{dataset, samples};
     iterator.scaling(scaling_type::none);
     iterator.batch(batch);
 

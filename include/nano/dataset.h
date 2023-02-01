@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/core/parallel.h>
 #include <nano/generator.h>
 
 namespace nano
@@ -13,7 +14,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit dataset_t(const datasource_t&);
+        explicit dataset_t(const datasource_t&, size_t threads = parallel::pool_t::max_size());
 
         ///
         /// \brief register a new feature generator.
@@ -110,6 +111,16 @@ namespace nano
         tensor_size_t samples() const { return m_datasource.samples(); }
 
         ///
+        /// \brief returns the maximum number of threads available for processing.
+        ///
+        size_t concurrency() const { return m_pool->size(); }
+
+        ///
+        /// \brief returns the builtin thread pool.
+        ///
+        parallel::pool_t& thread_pool() const { return *m_pool; }
+
+        ///
         /// \brief returns the original data source.
         ///
         const datasource_t& datasource() const { return m_datasource; }
@@ -136,6 +147,8 @@ namespace nano
         //  - 0: number of features
         using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
+        using rtpool_t = std::unique_ptr<parallel::pool_t>;
+
         // attributes
         const datasource_t& m_datasource;        ///<
         rgenerators_t       m_generators;        ///<
@@ -143,5 +156,6 @@ namespace nano
         feature_mapping_t   m_feature_mapping;   ///<
         generator_mapping_t m_generator_mapping; ///<
         feature_t           m_target;            ///<
+        rtpool_t            m_pool;              ///< thread pool to speed-up feature generation
     };
 } // namespace nano

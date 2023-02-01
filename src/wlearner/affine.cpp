@@ -109,10 +109,11 @@ scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sa
     // OK, return and store the optimum feature across threads
     const auto& best = min_reduce(caches);
 
-    log_info() << std::fixed << std::setprecision(8) << " === affine(feature=" << best.m_feature << "|"
-               << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
-               << "),samples=" << samples.size()
-               << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) << ".";
+    // log_info() << std::fixed << std::setprecision(8) << " === affine(feature=" << best.m_feature << "|"
+    //            << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
+    //            << "),samples=" << samples.size()
+    //            << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) <<
+    //            ".";
 
     if (best.m_score != wlearner_t::no_fit_score())
     {

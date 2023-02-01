@@ -10,13 +10,6 @@
 using namespace nano;
 using namespace nano::gboost;
 
-static auto make_error(const tensor2d_t& values, const indices_t& samples)
-{
-    const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + values(0, sample); };
-    const auto denom = static_cast<scalar_t>(std::max(samples.size(), tensor_size_t{1}));
-    return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
-}
-
 static auto make_params(const configurable_t& configurable)
 {
     const auto regularization = configurable.parameter("model::gboost::regularization").value<regularization_type>();
@@ -148,8 +141,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     // NB: use the given number of optimum rounds (if given) as the maximum number of rounds!
     max_rounds = (max_rounds < 0) ? max_rounds_ : max_rounds;
-    log_info() << "max_rounds=" << max_rounds << ",train_samples=" << train_samples.size()
-               << ",valid_samples=" << valid_samples.size();
 
     const auto [vAreg, subsample_ratio, shrinkage_ratio] = decode_params(params, regularization, subsample, shrinkage);
 
@@ -159,11 +150,11 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     const auto samples = arange(0, dataset.samples());
 
-    auto targets_iterator = targets_iterator_t{dataset, samples, 1U};
+    auto targets_iterator = targets_iterator_t{dataset, samples};
     targets_iterator.batch(batch);
     targets_iterator.scaling(scaling_type::none);
 
-    auto train_targets_iterator = targets_iterator_t{dataset, train_samples, 1U};
+    auto train_targets_iterator = targets_iterator_t{dataset, train_samples};
     train_targets_iterator.batch(batch);
     train_targets_iterator.scaling(scaling_type::none);
 
@@ -178,7 +169,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     // estimate bias
     const auto bstate = solver.minimize(bfunction, vector_t::Zero(bfunction.size()));
-    log_info() << "gboost: bstate=" << bstate;
 
     outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x.transpose();
     evaluate(targets_iterator, loss, outputs, values);
@@ -187,10 +177,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     auto optimum_round  = size_t{0};
     auto optimum_value  = std::numeric_limits<scalar_t>::max();
     auto optimum_values = values;
-
-    log_warning() << "gboost: bias: b=" << bstate.x.array() << ",tr=" << make_error(values, train_samples) << "/"
-                  << make_error(optimum_values, train_samples) << ", vd=" << make_error(values, valid_samples) << "/"
-                  << make_error(optimum_values, valid_samples);
 
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < max_rounds; ++round)
@@ -214,7 +200,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
         if (!best_wlearner)
         {
-            log_warning() << "gboost: cannot fit any new weak learner, stopping.";
+            // log_warning() << "gboost: cannot fit any new weak learner, stopping.";
             break;
         }
 
@@ -226,11 +212,10 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         const auto function = scale_function_t{train_targets_iterator, loss, vAreg, cluster, outputs, woutputs};
 
         auto gstate = solver.minimize(function, vector_t::Zero(function.size()));
-        log_info() << std::fixed << "gboost: gstate=" << gstate;
         if (gstate.x.minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
-            log_warning() << std::fixed << "gboost: invalid scale factor(s): [" << gstate.x.transpose()
-                          << "], stopping.";
+            // log_warning() << std::fixed << "gboost: invalid scale factor(s): [" << gstate.x.transpose()
+            //               << "], stopping.";
             break;
         }
         gstate.x *= shrinkage_ratio;
@@ -245,12 +230,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
         // update model
         wlearners.emplace_back(std::move(best_wlearner));
-
-        log_warning() << std::fixed << "round=" << round << "/" << max_rounds << "/" << optimum_round
-                      << "*, scale=" << gstate.x << ", shrinkage=" << shrinkage_ratio
-                      << ", tr=" << make_error(values, train_samples) << "/"
-                      << make_error(optimum_values, train_samples) << ", vd=" << make_error(values, valid_samples)
-                      << "/" << make_error(optimum_values, valid_samples);
 
         // early stopping
         if (done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value, optimum_values))
@@ -360,7 +339,6 @@ fit_result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
 
     const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
-        // TODO: this should be single threaded
         [[maybe_unused]] auto [bias, wlearners, train_errors_losses, valid_errors_losses, optimum_round] =
             ::fit(*this, dataset, train_samples, valid_samples, loss, solver, m_protos, params);
 

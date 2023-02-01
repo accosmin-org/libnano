@@ -73,19 +73,16 @@ UTEST_CASE(evaluate)
 
     for (const auto batch : {1, 2, 3, 4})
     {
-        for (const auto threads : {1U, 2U, 3U})
-        {
-            auto iterator = targets_iterator_t{dataset, samples, threads};
-            iterator.batch(batch);
+        auto iterator = targets_iterator_t{dataset, samples};
+        iterator.batch(batch);
 
-            tensor4d_t outputs{cat_dims(samples.size(), dataset.target_dims())};
-            iterator.loop([&](const auto& range, size_t, tensor4d_cmap_t targets) { outputs.slice(range) = targets; });
+        tensor4d_t outputs{cat_dims(samples.size(), dataset.target_dims())};
+        iterator.loop([&](const auto& range, size_t, tensor4d_cmap_t targets) { outputs.slice(range) = targets; });
 
-            tensor2d_t values{2, samples.size()};
-            gboost::evaluate(iterator, *loss, outputs, values);
+        tensor2d_t values{2, samples.size()};
+        gboost::evaluate(iterator, *loss, outputs, values);
 
-            UTEST_CHECK_CLOSE(values, expected_values, 1e-12);
-        }
+        UTEST_CHECK_CLOSE(values, expected_values, 1e-12);
     }
 }
 

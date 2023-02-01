@@ -1,16 +1,19 @@
-#include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
 
 using namespace nano;
 
-base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset, size_t threads)
+base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset)
     : m_dataset(dataset)
-    , m_pool(threads)
 {
 }
 
-targets_iterator_t::targets_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
-    : base_dataset_iterator_t(dataset, threads)
+size_t base_dataset_iterator_t::concurrency() const
+{
+    return m_dataset.concurrency();
+}
+
+targets_iterator_t::targets_iterator_t(const dataset_t& dataset, indices_cmap_t samples)
+    : base_dataset_iterator_t(dataset)
     , m_samples(samples)
     , m_targets_stats(dataset.target().valid() ? scalar_stats_t::make_targets_stats(dataset, samples)
                                                : scalar_stats_t{})
@@ -75,8 +78,8 @@ void targets_iterator_t::scaling(scaling_type scaling)
     m_scaling = scaling;
 }
 
-flatten_iterator_t::flatten_iterator_t(const dataset_t& dataset, indices_cmap_t samples, size_t threads)
-    : targets_iterator_t(dataset, samples, threads)
+flatten_iterator_t::flatten_iterator_t(const dataset_t& dataset, indices_cmap_t samples)
+    : targets_iterator_t(dataset, samples)
     , m_flatten_stats(scalar_stats_t::make_flatten_stats(dataset, samples))
     , m_flatten_buffers(concurrency())
 {
@@ -167,8 +170,8 @@ void targets_iterator_t::loop(const targets_callback_t& callback) const
         });
 }
 
-select_iterator_t::select_iterator_t(const dataset_t& dataset, size_t threads)
-    : base_dataset_iterator_t(dataset, threads)
+select_iterator_t::select_iterator_t(const dataset_t& dataset)
+    : base_dataset_iterator_t(dataset)
     , m_buffers(concurrency())
     , m_sclass_features(make_sclass_features(dataset))
     , m_mclass_features(make_mclass_features(dataset))

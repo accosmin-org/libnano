@@ -1,13 +1,11 @@
 #pragma once
 
-#include <nano/core/parallel.h>
+#include <nano/dataset.h>
 #include <nano/dataset/stats.h>
 #include <nano/generator/storage.h>
 
 namespace nano
 {
-    class dataset_t;
-
     ///
     /// \brief callbacks useful for dense models with the following signature:
     ///     (tensor_size_t sample_range, size_t thread_number, target_values)
@@ -35,35 +33,34 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit base_dataset_iterator_t(const dataset_t&, size_t threads = parallel::pool_t::max_size());
+        explicit base_dataset_iterator_t(const dataset_t&);
 
         ///
         /// \brief returns the maximum number of threads available for processing.
         ///
-        auto concurrency() const { return m_pool.size(); }
+        size_t concurrency() const;
 
         ///
         /// \brief returns the wrapped feature dataset.
         ///
-        const auto& dataset() const { return m_dataset; }
+        const dataset_t& dataset() const { return m_dataset; }
 
     protected:
         template <typename toperator>
         void map(tensor_size_t elements, const toperator& op) const
         {
-            m_pool.map(elements, op);
+            m_dataset.thread_pool().map(elements, op);
         }
 
         template <typename toperator>
         void map(tensor_size_t elements, tensor_size_t chunksize, const toperator& op) const
         {
-            m_pool.map(elements, chunksize, op);
+            m_dataset.thread_pool().map(elements, chunksize, op);
         }
 
     private:
         // attributes
-        const dataset_t&         m_dataset; ///<
-        mutable parallel::pool_t m_pool;    ///< thread pool to speed-up feature generation
+        const dataset_t& m_dataset; ///<
     };
 
     ///
@@ -80,7 +77,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        targets_iterator_t(const dataset_t&, indices_cmap_t samples, size_t threads = parallel::pool_t::max_size());
+        targets_iterator_t(const dataset_t&, indices_cmap_t samples);
 
         ///
         /// \brief returns true if the target values can be cached in memory in the given number of bytes.
@@ -147,7 +144,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        flatten_iterator_t(const dataset_t&, indices_cmap_t samples, size_t threads = parallel::pool_t::max_size());
+        flatten_iterator_t(const dataset_t&, indices_cmap_t samples);
 
         ///
         /// \brief returns true if the flatten feature values can be cached in memory in the given number of bytes.
@@ -194,7 +191,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit select_iterator_t(const dataset_t&, size_t threads = parallel::pool_t::max_size());
+        explicit select_iterator_t(const dataset_t&);
 
         ///
         /// \brief loop through all features of the compatible type with the following callback:

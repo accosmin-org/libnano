@@ -182,7 +182,7 @@ inline auto make_targets(const dataset_t& dataset)
 
     tensor4d_t targets(cat_dims(dataset.samples(), dataset.target_dims()));
 
-    targets_iterator_t it(dataset, samples, 1U);
+    targets_iterator_t it(dataset, samples);
     it.loop([&](const tensor_range_t range, size_t, tensor4d_cmap_t _targets) { targets.slice(range) = _targets; });
 
     return targets;

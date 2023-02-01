@@ -22,6 +22,5 @@ namespace nano::linear
     ///     against the ground truth and returns the errors and loss values.
     ///
     NANO_PUBLIC tensor2d_t evaluate(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                    const tensor2d_t& weights, const tensor1d_t& bias, tensor_size_t batch,
-                                    size_t threads = 1U);
+                                    const tensor2d_t& weights, const tensor1d_t& bias, tensor_size_t batch);
 } // namespace nano::linear

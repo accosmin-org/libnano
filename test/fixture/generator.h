@@ -213,30 +213,41 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
     const auto samples = arange(0, dataset.samples());
 
-    auto features = std::vector<tensor_size_t>{};
-    auto iterator = select_iterator_t{dataset, 1U};
+    auto features = indices_t{dataset.features()};
+    auto iterator = select_iterator_t{dataset};
 
-    const auto op_sclass = [&](tensor_size_t feature, size_t, sclass_cmap_t) { features.push_back(feature); };
-    const auto op_mclass = [&](tensor_size_t feature, size_t, mclass_cmap_t) { features.push_back(feature); };
-    const auto op_scalar = [&](tensor_size_t feature, size_t, scalar_cmap_t) { features.push_back(feature); };
-    const auto op_struct = [&](tensor_size_t feature, size_t, struct_cmap_t) { features.push_back(feature); };
+    const auto op_sclass = [&](tensor_size_t feature, size_t, sclass_cmap_t) { features(feature) = +1; };
+    const auto op_mclass = [&](tensor_size_t feature, size_t, mclass_cmap_t) { features(feature) = +1; };
+    const auto op_scalar = [&](tensor_size_t feature, size_t, scalar_cmap_t) { features(feature) = +1; };
+    const auto op_struct = [&](tensor_size_t feature, size_t, struct_cmap_t) { features(feature) = +1; };
 
     const auto make_features = [&]()
-    { return map_tensor(features.data(), static_cast<tensor_size_t>(features.size())); };
+    {
+        indices_t indices(features.sum());
+        for (tensor_size_t i = 0, k = 0; i < features.size(); ++i)
+        {
+            if (features(i) == +1)
+            {
+                indices(k) = i;
+                ++k;
+            }
+        }
+        return indices;
+    };
 
-    features.clear();
+    features.array() = 0;
     UTEST_CHECK_NOTHROW(iterator.loop(samples, op_sclass));
     UTEST_CHECK_EQUAL(expected_sclass_features, make_features());
 
-    features.clear();
+    features.array() = 0;
     UTEST_CHECK_NOTHROW(iterator.loop(samples, op_mclass));
     UTEST_CHECK_EQUAL(expected_mclass_features, make_features());
 
-    features.clear();
+    features.array() = 0;
     UTEST_CHECK_NOTHROW(iterator.loop(samples, op_scalar));
     UTEST_CHECK_EQUAL(expected_scalar_features, make_features());
 
-    features.clear();
+    features.array() = 0;
     UTEST_CHECK_NOTHROW(iterator.loop(samples, op_struct));
     UTEST_CHECK_EQUAL(expected_struct_features, make_features());
 }

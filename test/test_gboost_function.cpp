@@ -133,7 +133,7 @@ UTEST_CASE(bias)
 
     for (const auto& samples : {arange(0, 100), arange(10, 60), arange(0, 50), arange(10, 100)})
     {
-        const auto iterator = targets_iterator_t{dataset, samples, 1U};
+        const auto iterator = targets_iterator_t{dataset, samples};
         const auto bias     = datasource.bias(samples);
         const auto targets  = datasource.targets(samples);
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
@@ -174,7 +174,7 @@ UTEST_CASE(scale)
     // ... but the scaling is only computed for the training samples
     for (const auto& samples : {arange(0, 50), arange(10, 40), arange(0, 40), arange(10, 50)})
     {
-        const auto iterator = targets_iterator_t{dataset, samples, 1U};
+        const auto iterator = targets_iterator_t{dataset, samples};
 
         for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
         {
@@ -202,7 +202,7 @@ UTEST_CASE(grads)
     const auto dataset    = make_dataset(datasource);
 
     const auto  all_samples = arange(0, datasource.samples());
-    const auto  iterator    = targets_iterator_t{dataset, all_samples, 1U};
+    const auto  iterator    = targets_iterator_t{dataset, all_samples};
     const auto& targets     = datasource.targets();
     const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
     const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());

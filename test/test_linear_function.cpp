@@ -17,11 +17,6 @@ static auto make_batch(scaling_type scaling)
     return (scaling == scaling_type::standard) ? 20 : 15;
 }
 
-static auto make_threads(scaling_type scaling)
-{
-    return (scaling == scaling_type::minmax) ? parallel::pool_t::max_size() : size_t{1U};
-}
-
 static void check_vgrad(const linear::function_t& function, const flatten_iterator_t& iterator, const loss_t& loss,
                         const int trials = 100)
 {
@@ -74,12 +69,11 @@ UTEST_CASE(function_noreg)
     const auto scaling  = scaling_type::none;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -104,12 +98,11 @@ UTEST_CASE(function_l1reg)
     const auto scaling  = scaling_type::mean;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -133,12 +126,11 @@ UTEST_CASE(function_l2reg)
     const auto scaling  = scaling_type::minmax;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -162,12 +154,11 @@ UTEST_CASE(function_vAreg)
     const auto scaling  = scaling_type::standard;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -190,12 +181,11 @@ UTEST_CASE(minimize_noreg)
     const auto scaling  = scaling_type::none;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -228,12 +218,11 @@ UTEST_CASE(minimize_l1reg)
     const auto scaling  = scaling_type::mean;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -251,12 +240,11 @@ UTEST_CASE(minimize_l2reg)
     const auto scaling  = scaling_type::minmax;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 
@@ -274,12 +262,11 @@ UTEST_CASE(minimize_vAreg)
     const auto scaling  = scaling_type::standard;
     const auto loss     = make_loss(scaling);
     const auto batch    = make_batch(scaling);
-    const auto threads  = make_threads(scaling);
 
     const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
-    auto iterator = flatten_iterator_t{dataset, arange(0, samples), threads};
+    auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(batch);
     iterator.scaling(scaling);
 

@@ -72,7 +72,7 @@ private:
             m_weights.matrix().row(column).setConstant(0.0);
         }
 
-        auto iterator = flatten_iterator_t{dataset, arange(0, samples), 1U};
+        auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
         iterator.loop(
             [&](tensor_range_t range, size_t, tensor2d_cmap_t inputs)
             {

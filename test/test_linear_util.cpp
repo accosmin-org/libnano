@@ -106,14 +106,11 @@ UTEST_CASE(evaluate)
 
     for (const auto batch : {1, 2, 3, 4})
     {
-        for (const auto threads : {1U, 2U, 3U})
-        {
-            const auto& bias    = datasource.bias();
-            const auto& weights = datasource.weights();
-            const auto  values  = linear::evaluate(dataset, samples, *loss, weights, bias, batch, threads);
+        const auto& bias    = datasource.bias();
+        const auto& weights = datasource.weights();
+        const auto  values  = linear::evaluate(dataset, samples, *loss, weights, bias, batch);
 
-            UTEST_CHECK_CLOSE(values, expected_values, 1e-12);
-        }
+        UTEST_CHECK_CLOSE(values, expected_values, 1e-12);
     }
 }
 

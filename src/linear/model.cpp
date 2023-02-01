@@ -79,9 +79,9 @@ static auto make_x0(const ::nano::linear::function_t& function, const std::any& 
 
 static auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples,
                 const loss_t& loss, const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg,
-                const scalar_t vAreg, const size_t threads = 1U, const std::any& extra = std::any{})
+                const scalar_t vAreg, const std::any& extra = std::any{})
 {
-    auto iterator = flatten_iterator_t{dataset, samples, threads};
+    auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(configurable.parameter("model::linear::batch").value<tensor_size_t>());
     iterator.scaling(configurable.parameter("model::linear::scaling").value<scaling_type>());
     iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
@@ -147,13 +147,11 @@ fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto evaluator =
         [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto& extra)
     {
-        const auto concurrency           = 1U;
         const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
 
-        auto [weights, bias] =
-            ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, concurrency, extra);
-        auto train_errors_losses = evaluate(dataset, train_samples, loss, weights, bias, batch, concurrency);
-        auto valid_errors_losses = evaluate(dataset, valid_samples, loss, weights, bias, batch, concurrency);
+        auto [weights, bias]     = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, extra);
+        auto train_errors_losses = evaluate(dataset, train_samples, loss, weights, bias, batch);
+        auto valid_errors_losses = evaluate(dataset, valid_samples, loss, weights, bias, batch);
 
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses),
                                std::make_tuple(std::move(weights), std::move(bias)));
@@ -164,11 +162,10 @@ fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
 
     // refit with the optimum hyper-parameters (if any) on all given samples
     {
-        const auto concurrency           = parallel::pool_t::max_size();
         const auto [l1reg, l2reg, vAreg] = decode_params(fit_result.optimum().params(), regularization);
 
-        auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg, concurrency);
-        auto errors_losses   = evaluate(dataset, samples, loss, weights, bias, batch, concurrency);
+        auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
+        auto errors_losses   = evaluate(dataset, samples, loss, weights, bias, batch);
 
         fit_result.evaluate(std::move(errors_losses));
 
@@ -186,7 +183,7 @@ tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& sa
 
     // TODO: no need to allocate the sample indices one more time
     // TODO: determine at runtime if worth parallelizing
-    auto iterator = flatten_iterator_t(dataset, samples, 1U);
+    auto iterator = flatten_iterator_t(dataset, samples);
     iterator.scaling(scaling_type::none);
     iterator.batch(parameter("model::linear::batch").value<tensor_size_t>());
 

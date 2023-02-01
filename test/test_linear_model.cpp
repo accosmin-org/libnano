@@ -13,7 +13,7 @@ using value_type = fit_result_t::value_type;
 static void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
                           scalar_t epsilon)
 {
-    auto iterator = flatten_iterator_t{dataset, samples, 1U};
+    auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(7);
     iterator.scaling(scaling_type::none);
     iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets)

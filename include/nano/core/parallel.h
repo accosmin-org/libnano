@@ -150,7 +150,7 @@ namespace nano::parallel
         ///
         /// \brief returns the number of available worker threads.
         ///
-        auto size() const { return m_threads.size(); }
+        size_t size() const { return m_threads.size(); }
 
         ///
         /// \brief returns the maximum number of available threads (typically the number of logical cores).

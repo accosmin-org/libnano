@@ -52,8 +52,9 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
     return map_tensor(buffer.data(), dims...);
 }
 
-dataset_t::dataset_t(const datasource_t& datasource)
+dataset_t::dataset_t(const datasource_t& datasource, const size_t threads)
     : m_datasource(datasource)
+    , m_pool(std::make_unique<parallel::pool_t>(threads))
 {
     if (m_datasource.type() != task_type::unsupervised)
     {
