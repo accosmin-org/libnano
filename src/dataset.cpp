@@ -4,42 +4,42 @@ using namespace nano;
 
 static void handle_sclass(const feature_t& feature)
 {
-    critical(!feature.is_sclass(), "dataset_t: unhandled single-label target <", feature, ">!");
+    critical(!feature.is_sclass(), "dataset: unhandled single-label target <", feature, ">!");
 }
 
 static void handle_mclass(const feature_t& feature)
 {
-    critical(!feature.is_mclass(), "dataset_t: unhandled multi-label target <", feature, ">!");
+    critical(!feature.is_mclass(), "dataset: unhandled multi-label target <", feature, ">!");
 }
 
 static void handle_scalar(const feature_t& feature)
 {
-    critical(!feature.is_scalar(), "dataset_t: unhandled scalar target <", feature, ">!");
+    critical(!feature.is_scalar(), "dataset: unhandled scalar target <", feature, ">!");
 }
 
 static void handle_struct(const feature_t& feature)
 {
-    critical(!feature.is_struct(), "dataset_t: unhandled structured target <", feature, ">!");
+    critical(!feature.is_struct(), "dataset: unhandled structured target <", feature, ">!");
 }
 
 static void handle_sclass(const tensor_size_t ifeature, const feature_t& feature)
 {
-    critical(!feature.is_sclass(), "dataset_t: unhandled single-label feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_sclass(), "dataset: unhandled single-label feature <", ifeature, ":", feature, ">!");
 }
 
 static void handle_mclass(const tensor_size_t ifeature, const feature_t& feature)
 {
-    critical(!feature.is_mclass(), "dataset_t: unhandled multi-label feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_mclass(), "dataset: unhandled multi-label feature <", ifeature, ":", feature, ">!");
 }
 
 static void handle_scalar(const tensor_size_t ifeature, const feature_t& feature)
 {
-    critical(!feature.is_scalar(), "dataset_t: unhandled scalar feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_scalar(), "dataset: unhandled scalar feature <", ifeature, ":", feature, ">!");
 }
 
 static void handle_struct(const tensor_size_t ifeature, const feature_t& feature)
 {
-    critical(!feature.is_struct(), "dataset_t: unhandled structured feature <", ifeature, ":", feature, ">!");
+    critical(!feature.is_struct(), "dataset: unhandled structured feature <", ifeature, ":", feature, ">!");
 }
 
 template <typename tscalar, size_t trank, typename... tindices>
@@ -355,7 +355,7 @@ tensor4d_map_t dataset_t::targets(indices_cmap_t samples, tensor4d_t& buffer) co
 
     if (m_datasource.type() == task_type::unsupervised)
     {
-        critical0("dataset_t: targets are not available for unsupervised datasets!");
+        critical0("dataset: targets are not available for unsupervised datasets!");
     }
 
     return m_datasource.visit_target(
@@ -456,13 +456,13 @@ const rgenerator_t& dataset_t::byfeature(tensor_size_t feature) const
 
 void dataset_t::check(tensor_size_t feature) const
 {
-    critical(feature < 0 || feature >= features(), "dataset_t: invalid feature index, expecting in [0, ", features(),
+    critical(feature < 0 || feature >= features(), "dataset: invalid feature index, expecting in [0, ", features(),
              "), got ", feature, "!");
 }
 
 void dataset_t::check(indices_cmap_t samples) const
 {
     critical(samples.min() < 0 || samples.max() > m_datasource.samples(),
-             "dataset_t: invalid sample range, expecting in [0, ", m_datasource.samples(), "), got ", "[",
-             samples.min(), ", ", samples.max(), ")!");
+             "dataset: invalid sample range, expecting in [0, ", m_datasource.samples(), "), got ", "[", samples.min(),
+             ", ", samples.max(), ")!");
 }

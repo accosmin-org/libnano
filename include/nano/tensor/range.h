@@ -5,29 +5,44 @@
 namespace nano
 {
     ///
-    /// \brief continuous range of dimensions [begin, end).
+    /// \brief continuous range [begin, end) of indices.
     ///
     class tensor_range_t
     {
     public:
+        ///
+        /// \brief constructor
+        ///
         tensor_range_t() = default;
 
-        tensor_range_t(tensor_size_t begin, tensor_size_t end)
+        ///
+        /// \brief constructor
+        ///
+        tensor_range_t(const tensor_size_t begin, const tensor_size_t end)
             : m_begin(begin)
             , m_end(end)
         {
         }
 
-        auto begin() const { return m_begin; }
+        ///
+        /// \brief returns the begining of the range.
+        ///
+        tensor_size_t begin() const { return m_begin; }
 
-        auto end() const { return m_end; }
+        ///
+        /// \brief returns the end of the range.
+        ///
+        tensor_size_t end() const { return m_end; }
 
-        auto size() const { return end() - begin(); }
+        ///
+        /// \brief returns the size of the range.
+        ///
+        tensor_size_t size() const { return m_end - m_begin; }
 
         ///
         /// \brief check if a range is valid, so that [begin, end) is included in [0, size).
         ///
-        auto valid(tensor_size_t size) const { return 0 <= m_begin && m_begin < m_end && m_end <= size; }
+        bool valid(const tensor_size_t size) const { return 0 <= m_begin && m_begin < m_end && m_end <= size; }
 
     private:
         // attributes

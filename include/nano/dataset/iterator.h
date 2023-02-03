@@ -47,13 +47,13 @@ namespace nano
 
     protected:
         template <typename toperator>
-        void map(tensor_size_t elements, const toperator& op) const
+        void map(const tensor_size_t elements, const toperator& op) const
         {
             m_dataset.thread_pool().map(elements, op);
         }
 
         template <typename toperator>
-        void map(tensor_size_t elements, tensor_size_t chunksize, const toperator& op) const
+        void map(const tensor_size_t elements, const tensor_size_t chunksize, const toperator& op) const
         {
             m_dataset.thread_pool().map(elements, chunksize, op);
         }

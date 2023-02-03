@@ -88,7 +88,7 @@ void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, 
 
 const datasource_t& generator_t::datasource() const
 {
-    critical(m_datasource == nullptr, "generator_t: cannot access the dataset before fitting!");
+    critical(m_datasource == nullptr, "generator: cannot access the dataset before fitting!");
 
     return *m_datasource;
 }

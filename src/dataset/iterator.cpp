@@ -2,6 +2,11 @@
 
 using namespace nano;
 
+static auto features_per_thread(const indices_cmap_t& features, const size_t concurrency)
+{
+    return std::max(tensor_size_t{1}, idiv(features.size(), concurrency));
+}
+
 base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset)
     : m_dataset(dataset)
 {
@@ -226,44 +231,56 @@ void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, con
 
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const sclass_callback_t& callback) const
 {
-    map(features.size(),
-        [&](tensor_size_t index, size_t tnum)
+    map(features.size(), features_per_thread(features, concurrency()),
+        [&](const tensor_size_t begin, const tensor_size_t end, const size_t tnum)
         {
             assert(tnum < m_buffers.size());
-            const auto ifeature = features(index);
-            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_sclass));
+            for (tensor_size_t index = begin; index < end; ++index)
+            {
+                const auto ifeature = features(index);
+                callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_sclass));
+            }
         });
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const mclass_callback_t& callback) const
 {
-    map(features.size(),
-        [&](tensor_size_t index, size_t tnum)
+    map(features.size(), features_per_thread(features, concurrency()),
+        [&](const tensor_size_t begin, const tensor_size_t end, const size_t tnum)
         {
             assert(tnum < m_buffers.size());
-            const auto ifeature = features(index);
-            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_mclass));
+            for (tensor_size_t index = begin; index < end; ++index)
+            {
+                const auto ifeature = features(index);
+                callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_mclass));
+            }
         });
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const scalar_callback_t& callback) const
 {
-    map(features.size(),
-        [&](tensor_size_t index, size_t tnum)
+    map(features.size(), features_per_thread(features, concurrency()),
+        [&](const tensor_size_t begin, const tensor_size_t end, const size_t tnum)
         {
             assert(tnum < m_buffers.size());
-            const auto ifeature = features(index);
-            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_scalar));
+            for (tensor_size_t index = begin; index < end; ++index)
+            {
+                const auto ifeature = features(index);
+                callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_scalar));
+            }
         });
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, indices_cmap_t features, const struct_callback_t& callback) const
 {
-    map(features.size(),
-        [&](tensor_size_t index, size_t tnum)
+    map(features.size(), features_per_thread(features, concurrency()),
+        [&](const tensor_size_t begin, const tensor_size_t end, const size_t tnum)
         {
             assert(tnum < m_buffers.size());
-            const auto ifeature = features(index);
-            callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_struct));
+            for (tensor_size_t index = begin; index < end; ++index)
+            {
+                const auto ifeature = features(index);
+                callback(ifeature, tnum, dataset().select(samples, ifeature, m_buffers[tnum].m_struct));
+            }
         });
 }

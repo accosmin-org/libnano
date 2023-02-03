@@ -262,10 +262,10 @@ cluster_t table_wlearner_t::do_split(const dataset_t& dataset, const indices_t& 
     return cluster;
 }
 
-scalar_t table_wlearner_t::set(const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
+scalar_t table_wlearner_t::set([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
                                const cache_t& cache)
 {
-    const auto feature = cache.m_feature >= 0 ? dataset.feature(cache.m_feature) : feature_t{};
+    // const auto feature = cache.m_feature >= 0 ? dataset.feature(cache.m_feature) : feature_t{};
 
     // log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << cache.m_feature << "|"
     //            << (feature.valid() ? feature.name() : string_t("N/A"))
