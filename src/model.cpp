@@ -29,7 +29,7 @@ void model_t::log(const fit_result_t& fit_result) const
 
 model_t::logger_t model_t::make_logger_stdio(const int precision)
 {
-    return [=](const fit_result_t& result, const string_t& prefix)
+    return [=, last_trial = size_t{0U}](const fit_result_t& result, const string_t& prefix) mutable
     {
         const auto& param_names        = result.param_names();
         const auto& param_results      = result.param_results();
@@ -49,7 +49,6 @@ model_t::logger_t model_t::make_logger_stdio(const int precision)
             (logger << ... << tokens) << ".";
         };
 
-        static auto last_trial = size_t{0U};
         for (size_t trial = last_trial; trial < param_results.size(); ++trial)
         {
             const auto& param_result = param_results[trial];
