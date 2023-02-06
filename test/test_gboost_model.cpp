@@ -1,4 +1,5 @@
 #include "fixture/gboost.h"
+#include "fixture/model.h"
 #include <nano/wlearner/affine.h>
 #include <nano/wlearner/table.h>
 
@@ -147,6 +148,7 @@ private:
 };
 
 // TODO: check fit results have the expected structure for various regularization methods
+// TODO: check that the exact results are obtained if fit twice
 
 UTEST_BEGIN_MODULE(test_gboost_model)
 
@@ -174,26 +176,30 @@ UTEST_CASE(add_protos)
 
 UTEST_CASE(fit_predict_affine)
 {
-    const auto datasource = make_datasource<fixture_affine_datasource_t>(100);
-
     auto model = make_gbooster();
     model.add("affine");
     model.add("dense-table");
 
-    const auto fit_result = check_gbooster(std::move(model), datasource);
-    // TODO check fit results - expecting perfect fitting!
+    const auto epsilon     = 1e-6;
+    const auto param_names = strings_t{};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
 }
 
 UTEST_CASE(fit_predict_tables)
 {
-    const auto datasource = make_datasource<fixture_tables_datasource_t>(100);
-
     auto model = make_gbooster();
     model.add("affine");
     model.add("dense-table");
 
-    const auto fit_result = check_gbooster(std::move(model), datasource);
-    // TODO check fit results - expecting perfect fitting!
+    const auto epsilon     = 1e-6;
+    const auto param_names = strings_t{};
+    const auto datasource  = make_datasource<fixture_tables_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
 }
 
 UTEST_END_MODULE()

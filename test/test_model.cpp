@@ -2,16 +2,13 @@
 #include "fixture/dataset.h"
 #include "fixture/datasource/hits.h"
 #include "fixture/datasource/random.h"
-#include "fixture/learner.h"
 #include "fixture/loss.h"
+#include "fixture/model.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
 
 using namespace nano;
-
-using split_type = fit_result_t::split_type;
-using value_type = fit_result_t::value_type;
 
 static void check_stats(const fit_result_t::stats_t& stats, const scalar_t expected_mean, const scalar_t expected_stdev,
                         const scalar_t expected_count, const scalar_t expected_per01, const scalar_t expected_per05,
