@@ -41,8 +41,8 @@ template <typename tmodel, typename... tfit_args>
 
     UTEST_REQUIRE_GREATER_EQUAL(param_results.size(), min_param_results_size);
 
-    const auto opt_losses = make_full_tensor<scalar_t>(make_dims(2), 0.0);
-    const auto opt_errors = make_full_tensor<scalar_t>(make_dims(2), 0.0);
+    const auto optim_losses = make_full_tensor<scalar_t>(make_dims(expected_folds), 0.0);
+    const auto optim_errors = make_full_tensor<scalar_t>(make_dims(expected_folds), 0.0);
 
     tensor_size_t hits = 0;
     for (const auto& param_result : param_results)
@@ -68,13 +68,13 @@ template <typename tmodel, typename... tfit_args>
             valid_errors(fold) = param_result.stats(fold, split_type::valid, value_type::errors).m_mean;
         }
 
-        if (close(train_errors, opt_errors, epsilon))
+        if (close(train_errors, optim_errors, epsilon))
         {
             ++hits;
-            UTEST_CHECK_CLOSE(train_losses, opt_losses, 1.0 * epsilon);
-            UTEST_CHECK_CLOSE(train_errors, opt_errors, 1.0 * epsilon);
-            UTEST_CHECK_CLOSE(valid_losses, opt_losses, 5.0 * epsilon);
-            UTEST_CHECK_CLOSE(valid_errors, opt_errors, 5.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_losses, optim_losses, 1.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_errors, optim_errors, 1.0 * epsilon);
+            UTEST_CHECK_CLOSE(valid_losses, optim_losses, 5.0 * epsilon);
+            UTEST_CHECK_CLOSE(valid_errors, optim_errors, 5.0 * epsilon);
         }
     }
 

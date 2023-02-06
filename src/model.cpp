@@ -59,10 +59,18 @@ model_t::logger_t model_t::make_logger_stdio(const int precision)
             auto sum_valid_losses = 0.0, sum_valid_errors = 0.0;
             for (tensor_size_t fold = 0; fold < folds; ++fold)
             {
-                sum_train_losses += param_result.stats(fold, split_type::train, value_type::losses).m_mean;
-                sum_train_errors += param_result.stats(fold, split_type::train, value_type::errors).m_mean;
-                sum_valid_losses += param_result.stats(fold, split_type::valid, value_type::losses).m_mean;
-                sum_valid_errors += param_result.stats(fold, split_type::valid, value_type::errors).m_mean;
+                const auto fold_train_value = param_result.stats(fold, split_type::train, value_type::losses).m_mean;
+                const auto fold_train_error = param_result.stats(fold, split_type::train, value_type::errors).m_mean;
+                const auto fold_valid_value = param_result.stats(fold, split_type::valid, value_type::losses).m_mean;
+                const auto fold_valid_error = param_result.stats(fold, split_type::valid, value_type::errors).m_mean;
+
+                print_params(param_result.params(), "train=", fold_train_value, "/", fold_train_error, ",",
+                             "valid=", fold_valid_value, "/", fold_valid_error, ",fold=", (fold + 1), "/", folds);
+
+                sum_train_losses += fold_train_value;
+                sum_train_errors += fold_train_error;
+                sum_valid_losses += fold_valid_value;
+                sum_valid_errors += fold_valid_error;
             }
 
             print_params(param_result.params(), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
