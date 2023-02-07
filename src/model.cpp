@@ -74,7 +74,7 @@ model_t::logger_t model_t::make_logger_stdio(const int precision)
             }
 
             print_params(param_result.params(), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
-                         "valid=", sum_valid_losses / norm, "/", sum_valid_errors / norm);
+                         "valid=", sum_valid_losses / norm, "/", sum_valid_errors / norm, "(average)");
         }
         last_trial = param_results.size();
 

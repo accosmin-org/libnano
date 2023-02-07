@@ -14,9 +14,10 @@ namespace nano::gboost
 
     ///
     /// \brief returns true if early stopping is detected
-    ///     (the validation error doesn't decrease significantly in the recent boosting rounds).
+    ///     (the validation error doesn't decrease significantly in the recent boosting rounds) or
+    ///     the training error is too small.
     ///
-    NANO_PUBLIC bool done(const tensor2d_t& values, const indices_t& valid_samples, const rwlearners_t& wlearners,
-                          scalar_t epsilon, size_t patience, size_t& optimum_round, scalar_t& optimum_value,
-                          tensor2d_t& optimum_values);
+    NANO_PUBLIC bool done(const tensor2d_t& values, const indices_t& train_samples, const indices_t& valid_samples,
+                          const rwlearners_t& wlearners, scalar_t epsilon, size_t patience, size_t& optimum_round,
+                          scalar_t& optimum_value, tensor2d_t& optimum_values);
 } // namespace nano::gboost

@@ -178,6 +178,12 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     auto optimum_value  = std::numeric_limits<scalar_t>::max();
     auto optimum_values = values;
 
+    if (done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
+             optimum_values))
+    {
+        max_rounds = 0;
+    }
+
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < max_rounds; ++round)
     {
@@ -211,7 +217,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         const auto cluster  = make_cluster(dataset, samples, *best_wlearner, wscale);
         const auto function = scale_function_t{train_targets_iterator, loss, vAreg, cluster, outputs, woutputs};
 
-        auto gstate = solver.minimize(function, vector_t::Zero(function.size()));
+        auto gstate = solver.minimize(function, vector_t::Ones(function.size()));
         if (gstate.x.minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
             // log_warning() << std::fixed << "gboost: invalid scale factor(s): [" << gstate.x.transpose()
@@ -232,7 +238,8 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         wlearners.emplace_back(std::move(best_wlearner));
 
         // early stopping
-        if (done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value, optimum_values))
+        if (done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
+                 optimum_values))
         {
             break;
         }

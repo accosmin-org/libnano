@@ -90,6 +90,7 @@ UTEST_CASE(early_stopping)
 {
     const auto epsilon       = 1.0;
     const auto patience      = 3;
+    const auto train_samples = make_indices(0, 1, 2);
     const auto valid_samples = make_indices(1, 3, 4);
 
     auto optimum_round  = size_t{0U};
@@ -99,8 +100,8 @@ UTEST_CASE(early_stopping)
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 9, 9, 9, 9, 9, 9, 9, 9, 9, 9);
         const auto wlearners = rwlearners_t{};
 
-        UTEST_CHECK(!gboost::done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
-                                  optimum_values));
+        UTEST_CHECK(!gboost::done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round,
+                                  optimum_value, optimum_values));
         UTEST_CHECK_EQUAL(optimum_round, 0U);
         UTEST_CHECK_CLOSE(optimum_value, 9.0, 1e-12);
         UTEST_CHECK_CLOSE(optimum_values, values, 1e-12);
@@ -109,8 +110,8 @@ UTEST_CASE(early_stopping)
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 8, 8, 7, 6, 8, 8, 8, 8, 8);
         const auto wlearners = rwlearners_t{1U};
 
-        UTEST_CHECK(!gboost::done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
-                                  optimum_values));
+        UTEST_CHECK(!gboost::done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round,
+                                  optimum_value, optimum_values));
         UTEST_CHECK_EQUAL(optimum_round, 1U);
         UTEST_CHECK_CLOSE(optimum_value, 7.0, 1e-12);
         UTEST_CHECK_CLOSE(optimum_values, values, 1e-12);
@@ -119,8 +120,8 @@ UTEST_CASE(early_stopping)
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 7, 8, 7, 6, 8, 8, 8, 8, 8);
         const auto wlearners = rwlearners_t{2U};
 
-        UTEST_CHECK(!gboost::done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
-                                  optimum_values));
+        UTEST_CHECK(!gboost::done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round,
+                                  optimum_value, optimum_values));
         UTEST_CHECK_EQUAL(optimum_round, 1U);
         UTEST_CHECK_CLOSE(optimum_value, 7.0, 1e-12);
         UTEST_CHECK_NOT_CLOSE(optimum_values, values, 1e-12);
@@ -130,8 +131,8 @@ UTEST_CASE(early_stopping)
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 7, 8, 7, 6, 8, 8, 8, 8, 8);
         const auto wlearners = rwlearners_t{rounds};
 
-        UTEST_CHECK(gboost::done(values, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
-                                 optimum_values));
+        UTEST_CHECK(gboost::done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round,
+                                 optimum_value, optimum_values));
         UTEST_CHECK_EQUAL(optimum_round, 1U);
         UTEST_CHECK_CLOSE(optimum_value, 7.0, 1e-12);
         UTEST_CHECK_NOT_CLOSE(optimum_values, values, 1e-12);
@@ -140,10 +141,20 @@ UTEST_CASE(early_stopping)
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 8, 8, 8, 8, 8, 8, 8, 8, 8);
         const auto wlearners = rwlearners_t{6U};
 
-        UTEST_CHECK(!gboost::done(values, indices_t{}, wlearners, epsilon, patience, optimum_round, optimum_value,
-                                  optimum_values));
+        UTEST_CHECK(!gboost::done(values, train_samples, indices_t{}, wlearners, epsilon, patience, optimum_round,
+                                  optimum_value, optimum_values));
         UTEST_CHECK_EQUAL(optimum_round, 6U);
         UTEST_CHECK_CLOSE(optimum_value, 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(optimum_values, values, 1e-12);
+    }
+    {
+        const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 0, 0, 1, 1, 2, 2, 0, 0, 4, 4);
+        const auto wlearners = rwlearners_t{3U};
+
+        UTEST_CHECK(gboost::done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round,
+                                 optimum_value, optimum_values));
+        UTEST_CHECK_EQUAL(optimum_round, 3U);
+        UTEST_CHECK_CLOSE(optimum_value, 1.0, 1e-12);
         UTEST_CHECK_CLOSE(optimum_values, values, 1e-12);
     }
 }

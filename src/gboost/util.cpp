@@ -19,19 +19,32 @@ void gboost::evaluate(const targets_iterator_t& iterator, const loss_t& loss, co
         });
 }
 
-bool gboost::done(const tensor2d_t& values, const indices_t& valid_samples, const rwlearners_t& wlearners,
-                  const scalar_t epsilon, const size_t patience, size_t& optimum_round, scalar_t& optimum_value,
-                  tensor2d_t& optimum_values)
+bool gboost::done(const tensor2d_t& values, const indices_t& train_samples, const indices_t& valid_samples,
+                  const rwlearners_t& wlearners, const scalar_t epsilon, const size_t patience, size_t& optimum_round,
+                  scalar_t& optimum_value, tensor2d_t& optimum_values)
 {
     const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + values(0, sample); };
-    const auto denom = static_cast<scalar_t>(std::max(valid_samples.size(), tensor_size_t{1}));
-    const auto value = std::accumulate(begin(valid_samples), end(valid_samples), 0.0, opsum) / denom;
+
+    const auto train_denom = static_cast<scalar_t>(std::max(train_samples.size(), tensor_size_t{1}));
+    const auto valid_denom = static_cast<scalar_t>(std::max(valid_samples.size(), tensor_size_t{1}));
+
+    const auto train_value = std::accumulate(begin(train_samples), end(train_samples), 0.0, opsum) / train_denom;
+    const auto valid_value = std::accumulate(begin(valid_samples), end(valid_samples), 0.0, opsum) / valid_denom;
+
+    // training error is too small, stop
+    if (train_value < epsilon)
+    {
+        optimum_value  = valid_value;
+        optimum_round  = wlearners.size();
+        optimum_values = values;
+        return true;
+    }
 
     // significant improvement, continue
     // OR refitting step when no validation samples are given, so don't stop until the optimum number of boosting rounds
-    if (value < optimum_value - epsilon || valid_samples.size() == 0)
+    else if (train_value < epsilon || valid_value < optimum_value - epsilon || valid_samples.size() == 0)
     {
-        optimum_value  = value;
+        optimum_value  = valid_value;
         optimum_round  = wlearners.size();
         optimum_values = values;
         return false;

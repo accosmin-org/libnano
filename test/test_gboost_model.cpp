@@ -219,7 +219,7 @@ UTEST_CASE(fit_predict_bias)
 
     const auto epsilon     = 1e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_bias_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_bias_datasource_t>(200);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);
@@ -231,9 +231,9 @@ UTEST_CASE(fit_predict_affine)
     model.add("affine");
     model.add("dense-table");
 
-    const auto epsilon     = 1e-6;
+    const auto epsilon     = 2e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(200);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);
@@ -247,7 +247,7 @@ UTEST_CASE(fit_predict_tables)
 
     const auto epsilon     = 1e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_tables_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_tables_datasource_t>(200);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);
