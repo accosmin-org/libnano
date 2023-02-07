@@ -10,8 +10,8 @@ static auto make_gbooster()
 {
     auto model = gboost_model_t{};
     model.logger(model_t::make_logger_stdio());
-    model.parameter("model::gboost::epsilon")  = 1e-8;
-    model.parameter("model::gboost::patience") = 3;
+    model.parameter("model::gboost::epsilon")  = 1e-6;
+    model.parameter("model::gboost::patience") = 2;
     return model;
 }
 

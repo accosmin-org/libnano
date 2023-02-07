@@ -5,6 +5,41 @@
 
 using namespace nano;
 
+class fixture_bias_datasource_t final : public wlearner_datasource_t
+{
+public:
+    explicit fixture_bias_datasource_t(const tensor_size_t samples)
+        : wlearner_datasource_t(samples, 1)
+    {
+    }
+
+    rdatasource_t clone() const override { return std::make_unique<fixture_bias_datasource_t>(*this); }
+
+    static auto expected_bias() { return -0.3; }
+
+    static void check_gbooster(const gboost_model_t& model)
+    {
+        UTEST_CHECK_EQUAL(model.wlearners().size(), 0U);
+        UTEST_CHECK_EQUAL(model.features(), indices_t{});
+        UTEST_CHECK_CLOSE(model.bias()(0), expected_bias(), 1e-6);
+    }
+
+private:
+    void do_load() override
+    {
+        random_datasource_t::do_load();
+
+        const auto bias    = expected_bias();
+        const auto samples = this->samples();
+        const auto itarget = this->features(); // NB: the last feature is the target!
+
+        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        {
+            set(sample, itarget, bias);
+        }
+    }
+};
+
 class fixture_affine_datasource_t final : public wlearner_datasource_t
 {
 public:
@@ -29,6 +64,7 @@ public:
 
     static void check_gbooster(const gboost_model_t& model)
     {
+        UTEST_CHECK_GREATER_EQUAL(model.wlearners().size(), 2U);
         UTEST_CHECK_EQUAL(model.features(), make_indices(expected_feature1(), expected_feature2()));
 
         scalar_t weight1 = 0.0, bias = model.bias()(0);
@@ -105,6 +141,7 @@ public:
 
     static void check_gbooster(const gboost_model_t& model)
     {
+        UTEST_CHECK_GREATER_EQUAL(model.wlearners().size(), 2U);
         UTEST_CHECK_EQUAL(model.features(), make_indices(expected_feature2(), expected_feature1()));
 
         for (const auto& wlearner : model.wlearners())
@@ -172,6 +209,20 @@ UTEST_CASE(add_protos)
     UTEST_CHECK_THROW(model.add("invalid"), std::runtime_error);
 
     check_predict_throws(model);
+}
+
+UTEST_CASE(fit_predict_bias)
+{
+    auto model = make_gbooster();
+    model.add("affine");
+    model.add("dense-table");
+
+    const auto epsilon     = 1e-6;
+    const auto param_names = strings_t{};
+    const auto datasource  = make_datasource<fixture_bias_datasource_t>(300);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
 }
 
 UTEST_CASE(fit_predict_affine)
