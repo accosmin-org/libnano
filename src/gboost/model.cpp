@@ -65,19 +65,6 @@ static auto decode_params(const tensor1d_cmap_t& params, const regularization_ty
     return std::make_tuple(vAreg, subsample_ratio, shrinkage_ratio);
 }
 
-static auto clone(const rwlearners_t& wlearners)
-{
-    auto clones = rwlearners_t{};
-    clones.reserve(wlearners.size());
-    for (const auto& wlearner : wlearners)
-    {
-        assert(wlearner.get() != nullptr);
-        clones.emplace_back(wlearner->clone());
-    }
-
-    return clones;
-}
-
 static auto selected(const tensor2d_t& values, const indices_t& samples)
 {
     auto selected = tensor2d_t{2, samples.size()};
@@ -250,32 +237,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         wlearners.pop_back();
     }
 
-    for (size_t i = 0U; i < wlearners.size(); ++i)
-    {
-        if (!wlearners[i])
-        {
-            continue;
-        }
-
-        auto merged = false;
-        for (size_t j = i + 1U; j < wlearners.size(); ++j)
-        {
-            if (wlearners[i]->try_merge(wlearners[j]))
-            {
-                wlearners[j] = nullptr;
-                merged       = true;
-            }
-        }
-
-        if (!merged)
-        {
-            break;
-        }
-    }
-
-    wlearners.erase(std::remove_if(wlearners.begin(), wlearners.end(),
-                                   [](const auto& wlearner) { return !static_cast<bool>(wlearner); }),
-                    wlearners.end());
+    ::nano::gboost::merge(wlearners);
 
     auto bias = tensor1d_t{map_tensor(bstate.x.data(), make_dims(bstate.x.size()))};
 
@@ -306,8 +268,8 @@ gboost_model_t& gboost_model_t::operator=(gboost_model_t&&) noexcept = default;
 
 gboost_model_t::gboost_model_t(const gboost_model_t& other)
     : model_t(other)
-    , m_protos(::clone(other.m_protos))
-    , m_wlearners(::clone(other.m_wlearners))
+    , m_protos(gboost::clone(other.m_protos))
+    , m_wlearners(gboost::clone(other.m_wlearners))
 {
 }
 
@@ -316,8 +278,8 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
     if (this != &other)
     {
         model_t::operator=(other);
-        m_protos    = ::clone(other.m_protos);
-        m_wlearners = ::clone(other.m_wlearners);
+        m_protos    = gboost::clone(other.m_protos);
+        m_wlearners = gboost::clone(other.m_wlearners);
     }
     return *this;
 }
