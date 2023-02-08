@@ -143,3 +143,12 @@ cluster_t affine_wlearner_t::do_split(const dataset_t& dataset, const indices_t&
 
     return cluster;
 } // LCOV_EXCL_LINE
+
+bool affine_wlearner_t::try_merge(const rwlearner_t& other)
+{
+    if (const auto* const pother = dynamic_cast<const affine_wlearner_t*>(other.get()); pother != nullptr)
+    {
+        return single_feature_wlearner_t::do_try_merge(pother->feature(), pother->tables());
+    }
+    return false;
+}

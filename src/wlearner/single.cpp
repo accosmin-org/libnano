@@ -45,3 +45,13 @@ indices_t single_feature_wlearner_t::features() const
 {
     return make_tensor<tensor_size_t>(make_dims(1), m_feature);
 }
+
+bool single_feature_wlearner_t::do_try_merge(const tensor_size_t feature, const tensor4d_t& tables)
+{
+    if (m_feature == feature && m_tables.dims() == tables.dims())
+    {
+        m_tables.vector() += tables.vector();
+        return true;
+    }
+    return false;
+}

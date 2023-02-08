@@ -64,7 +64,7 @@ public:
 
     static void check_gbooster(const gboost_model_t& model)
     {
-        UTEST_CHECK_GREATER_EQUAL(model.wlearners().size(), 2U);
+        UTEST_CHECK_EQUAL(model.wlearners().size(), 2U);
         UTEST_CHECK_EQUAL(model.features(), make_indices(expected_feature1(), expected_feature2()));
 
         scalar_t weight1 = 0.0, bias = model.bias()(0);
@@ -141,7 +141,7 @@ public:
 
     static void check_gbooster(const gboost_model_t& model)
     {
-        UTEST_CHECK_GREATER_EQUAL(model.wlearners().size(), 2U);
+        UTEST_CHECK_EQUAL(model.wlearners().size(), 2U);
         UTEST_CHECK_EQUAL(model.features(), make_indices(expected_feature2(), expected_feature1()));
 
         for (const auto& wlearner : model.wlearners())

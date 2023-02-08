@@ -43,5 +43,10 @@ namespace nano
         /// \brief @see wlearner_t
         ///
         scalar_t do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) override;
+
+        ///
+        /// \brief @see wlearner_t
+        ///
+        bool try_merge(const rwlearner_t&) override;
     };
 } // namespace nano

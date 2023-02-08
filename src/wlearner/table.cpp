@@ -430,3 +430,15 @@ scalar_t dstep_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_
     // OK, return and store the optimum feature across threads
     return table_wlearner_t::set(dataset, samples, min_reduce(caches));
 }
+
+bool table_wlearner_t::try_merge(const rwlearner_t& other)
+{
+    if (const auto* const pother = dynamic_cast<const table_wlearner_t*>(other.get()); pother != nullptr)
+    {
+        if (hashes() == pother->hashes() && hash2tables() == pother->hash2tables())
+        {
+            return single_feature_wlearner_t::do_try_merge(pother->feature(), pother->tables());
+        }
+    }
+    return false;
+}

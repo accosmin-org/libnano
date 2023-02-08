@@ -47,6 +47,11 @@ namespace nano
         void do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
 
         ///
+        /// \brief @see wlearner_t
+        ///
+        bool try_merge(const rwlearner_t&) override;
+
+        ///
         /// \brief returns the hashes of the distinct single-class or multi-class labeling.
         ///
         const hashes_t& hashes() const { return m_hashes; }

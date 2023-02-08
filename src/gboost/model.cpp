@@ -250,6 +250,33 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         wlearners.pop_back();
     }
 
+    for (size_t i = 0U; i < wlearners.size(); ++i)
+    {
+        if (!wlearners[i])
+        {
+            continue;
+        }
+
+        auto merged = false;
+        for (size_t j = i + 1U; j < wlearners.size(); ++j)
+        {
+            if (wlearners[i]->try_merge(wlearners[j]))
+            {
+                wlearners[j] = nullptr;
+                merged       = true;
+            }
+        }
+
+        if (!merged)
+        {
+            break;
+        }
+    }
+
+    wlearners.erase(std::remove_if(wlearners.begin(), wlearners.end(),
+                                   [](const auto& wlearner) { return !static_cast<bool>(wlearner); }),
+                    wlearners.end());
+
     auto bias = tensor1d_t{map_tensor(bstate.x.data(), make_dims(bstate.x.size()))};
 
     return std::make_tuple(std::move(bias), std::move(wlearners), selected(optimum_values, train_samples),

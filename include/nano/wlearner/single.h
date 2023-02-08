@@ -41,20 +41,21 @@ namespace nano
         ///
         /// \brief returns the index of the selected feature.
         ///
-        auto feature() const { return m_feature; }
+        tensor_size_t feature() const { return m_feature; }
 
         ///
         /// \brief returns the table of coefficients.
         ///
-        const auto& tables() const { return m_tables; }
+        const tensor4d_t& tables() const { return m_tables; }
 
         ///
         /// \brief returns the coefficients at the given index.
         ///
-        auto vector(tensor_size_t i) const { return m_tables.vector(i); }
+        auto vector(const tensor_size_t i) const { return m_tables.vector(i); }
 
     protected:
         void set(tensor_size_t feature, const tensor4d_t& tables);
+        bool do_try_merge(tensor_size_t feature, const tensor4d_t& tables);
 
     private:
         // attributes

@@ -76,6 +76,12 @@ namespace nano
         virtual indices_t features() const = 0;
 
         ///
+        /// \brief returns true if it is possible to merge in-place with the given weak learner
+        ///     so that the merged weak learner is equivalent with the sum of the two initial weak learners.
+        ///
+        virtual bool try_merge(const rwlearner_t&);
+
+        ///
         /// \brief score that indicates fitting failed (e.g. unsupported feature types).
         ///
         static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }

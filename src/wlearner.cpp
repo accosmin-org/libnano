@@ -54,6 +54,11 @@ cluster_t wlearner_t::split(const dataset_t& dataset, const indices_t& samples) 
     return do_split(dataset, samples);
 }
 
+bool wlearner_t::try_merge(const rwlearner_t&)
+{
+    return false;
+}
+
 factory_t<wlearner_t>& wlearner_t::all()
 {
     static auto manager = factory_t<wlearner_t>{};
