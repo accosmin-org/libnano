@@ -1,5 +1,7 @@
 #include "fixture/wlearner.h"
+#include <nano/wlearner/affine.h>
 #include <nano/wlearner/dtree.h>
+#include <nano/wlearner/table.h>
 
 using namespace nano;
 
@@ -24,11 +26,26 @@ public:
     virtual tensor4d_t       expected_tables() const   = 0;
     virtual indices_t        expected_features() const = 0;
 
+    static auto make_compatible_wlearners()
+    {
+        auto wlearners = rwlearners_t{};
+        return wlearners;
+    }
+
+    auto make_incompatible_wlearners() const
+    {
+        auto wlearners = rwlearners_t{};
+        wlearners.emplace_back(affine_wlearner_t{}.clone());
+        wlearners.emplace_back(dense_table_wlearner_t{}.clone());
+        wlearners.emplace_back(make_wlearner().clone());
+        return wlearners;
+    }
+
     void check_wlearner(const dtree_wlearner_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.nodes(), expected_nodes());
         UTEST_CHECK_EQUAL(wlearner.features(), expected_features());
-        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-8);
+        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-13);
     }
 
 protected:

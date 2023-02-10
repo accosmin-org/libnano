@@ -1,4 +1,6 @@
 #include "fixture/wlearner.h"
+#include <nano/wlearner/affine.h>
+#include <nano/wlearner/dtree.h>
 #include <nano/wlearner/table.h>
 
 using namespace nano;
@@ -67,6 +69,49 @@ public:
 
     auto make_wlearner() const { return m_maker(); }
 
+    auto make_compatible_wlearners() const
+    {
+        auto wlearner = make_wlearner();
+
+        auto wlearners = rwlearners_t{};
+        wlearners.emplace_back(wlearner.clone());
+        return wlearners;
+    }
+
+    auto make_incompatible_wlearners() const
+    {
+        auto wlearner = make_wlearner();
+
+        auto wlearners = rwlearners_t{};
+        wlearners.emplace_back(affine_wlearner_t{}.clone());
+        wlearners.emplace_back(dtree_wlearner_t{}.clone());
+        if (wlearner.type_id() == "dense-table")
+        {
+            wlearners.emplace_back(dstep_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(kbest_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(ksplit_table_wlearner_t{}.clone());
+        }
+        else if (wlearner.type_id() == "dstep-table")
+        {
+            wlearners.emplace_back(dense_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(kbest_table_wlearner_t{}.clone());
+            wlearners.emplace_back(ksplit_table_wlearner_t{}.clone());
+        }
+        else if (wlearner.type_id() == "kbest-table")
+        {
+            // wlearners.emplace_back(dense_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(dstep_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(ksplit_table_wlearner_t{}.clone());
+        }
+        else if (wlearner.type_id() == "kbest-table")
+        {
+            // wlearners.emplace_back(dense_table_wlearner_t{}.clone());
+            wlearners.emplace_back(dstep_table_wlearner_t{}.clone());
+            // wlearners.emplace_back(kbest_table_wlearner_t{}.clone());
+        }
+        return wlearners;
+    }
+
     auto expected_feature() const { return m_feature; }
 
     auto expected_features() const { return make_indices(expected_feature()); }
@@ -83,7 +128,7 @@ public:
     {
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
         UTEST_CHECK_EQUAL(wlearner.features(), expected_features());
-        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-8);
+        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-10);
         UTEST_CHECK_EQUAL(wlearner.hashes(), expected_hashes());
         UTEST_CHECK_EQUAL(wlearner.hash2tables(), expected_hash2tables());
     }

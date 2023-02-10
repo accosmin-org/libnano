@@ -374,6 +374,43 @@ inline void check_scale(wlearner_t& wlearner, const datasource_t& datasource, co
     check_scale(wlearner, make_dataset(datasource), expected_cluster);
 }
 
+inline void check_merge(wlearner_t& wlearner, const datasource_t& datasource, const rwlearners_t& compatible_rwlearners,
+                        const rwlearners_t& incompatible_rwlearners)
+{
+    // cannot merge with not-fitted weak learners
+    for (const auto& compatible_rwlearner : compatible_rwlearners)
+    {
+        UTEST_CHECK(!wlearner.try_merge(compatible_rwlearner));
+    }
+    for (const auto& incompatible_rwlearner : incompatible_rwlearners)
+    {
+        UTEST_CHECK(!wlearner.try_merge(incompatible_rwlearner));
+    }
+
+    // cannot merge with fitted incompatible weak learners
+    for (const auto& incompatible_rwlearner : incompatible_rwlearners)
+    {
+        check_fit(*incompatible_rwlearner, datasource);
+    }
+    for (const auto& incompatible_rwlearner : incompatible_rwlearners)
+    {
+        UTEST_CHECK(!wlearner.try_merge(incompatible_rwlearner));
+    }
+
+    // can merge with fitted compatible weak learners
+    for (const auto& compatible_rwlearner : compatible_rwlearners)
+    {
+        check_fit(*compatible_rwlearner, datasource);
+    }
+    for (const auto& compatible_rwlearner : compatible_rwlearners)
+    {
+        UTEST_CHECK(wlearner.try_merge(compatible_rwlearner));
+    }
+
+    const auto scale = make_vector<scalar_t>(1.0 / static_cast<scalar_t>(1U + compatible_rwlearners.size()));
+    wlearner.scale(scale);
+}
+
 template <typename tdatasource, typename... tinvalid_datasources>
 void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&... datasourceXs)
 {
@@ -444,4 +481,10 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
 
     // check scaling
     check_scale(wlearner, datasource0, expected_cluster);
+
+    // check merging
+    const auto compatible_wlearners   = datasource0.make_compatible_wlearners();
+    const auto incompatible_wlearners = datasource0.make_incompatible_wlearners();
+    check_merge(wlearner, datasource0, compatible_wlearners, incompatible_wlearners);
+    datasource0.check_wlearner(iwlearner);
 }

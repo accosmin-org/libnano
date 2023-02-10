@@ -1,5 +1,7 @@
 #include "fixture/wlearner.h"
+#include <nano/wlearner/affine.h>
 #include <nano/wlearner/hinge.h>
+#include <nano/wlearner/table.h>
 
 using namespace nano;
 
@@ -29,13 +31,28 @@ public:
 
     static auto make_wlearner() { return hinge_wlearner_t{}; }
 
+    static auto make_compatible_wlearners()
+    {
+        auto wlearners = rwlearners_t{};
+        return wlearners;
+    }
+
+    static auto make_incompatible_wlearners()
+    {
+        auto wlearners = rwlearners_t{};
+        wlearners.emplace_back(affine_wlearner_t{}.clone());
+        wlearners.emplace_back(dense_table_wlearner_t{}.clone());
+        wlearners.emplace_back(make_wlearner().clone());
+        return wlearners;
+    }
+
     void check_wlearner(const hinge_wlearner_t& wlearner) const
     {
         UTEST_CHECK_EQUAL(wlearner.hinge(), m_hinge);
         UTEST_CHECK_EQUAL(wlearner.feature(), expected_feature());
         UTEST_CHECK_EQUAL(wlearner.features(), expected_features());
-        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-8);
-        UTEST_CHECK_CLOSE(wlearner.threshold(), expected_threshold(), 1e-8);
+        UTEST_CHECK_CLOSE(wlearner.tables(), expected_tables(), 1e-13);
+        UTEST_CHECK_CLOSE(wlearner.threshold(), expected_threshold(), 1e-13);
     }
 
 private:
