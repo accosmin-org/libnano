@@ -97,7 +97,7 @@ public:
             // wlearners.emplace_back(kbest_table_wlearner_t{}.clone());
             wlearners.emplace_back(ksplit_table_wlearner_t{}.clone());
         }
-        else if (wlearner.type_id() == "kbest-table")
+        /*else if (wlearner.type_id() == "kbest-table")
         {
             // wlearners.emplace_back(dense_table_wlearner_t{}.clone());
             // wlearners.emplace_back(dstep_table_wlearner_t{}.clone());
@@ -108,7 +108,7 @@ public:
             // wlearners.emplace_back(dense_table_wlearner_t{}.clone());
             wlearners.emplace_back(dstep_table_wlearner_t{}.clone());
             // wlearners.emplace_back(kbest_table_wlearner_t{}.clone());
-        }
+        }*/
         return wlearners;
     }
 
