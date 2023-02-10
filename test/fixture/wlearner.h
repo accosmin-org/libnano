@@ -7,6 +7,7 @@
 #include <nano/dataset/iterator.h>
 #include <nano/wlearner/criterion.h>
 #include <nano/wlearner/hinge.h>
+#include <nano/wlearner/util.h>
 
 using namespace nano;
 
@@ -374,9 +375,12 @@ inline void check_scale(wlearner_t& wlearner, const datasource_t& datasource, co
     check_scale(wlearner, make_dataset(datasource), expected_cluster);
 }
 
-inline void check_merge(wlearner_t& wlearner, const datasource_t& datasource, const rwlearners_t& compatible_rwlearners,
-                        const rwlearners_t& incompatible_rwlearners)
+template <typename twlearner>
+auto check_merge(const twlearner& _wlearner, const datasource_t& datasource, const rwlearners_t& compatible_rwlearners,
+                 const rwlearners_t& incompatible_rwlearners)
 {
+    auto wlearner = _wlearner;
+
     // cannot merge with not-fitted weak learners
     for (const auto& compatible_rwlearner : compatible_rwlearners)
     {
@@ -409,6 +413,23 @@ inline void check_merge(wlearner_t& wlearner, const datasource_t& datasource, co
 
     const auto scale = make_vector<scalar_t>(1.0 / static_cast<scalar_t>(1U + compatible_rwlearners.size()));
     wlearner.scale(scale);
+    return wlearner;
+}
+
+template <typename twlearner>
+auto check_merge(const twlearner& wlearner, const rwlearners_t& rwlearners, const size_t compatibles)
+{
+    auto cloned_rwlearners = ::nano::wlearner::clone(rwlearners);
+    cloned_rwlearners.emplace(cloned_rwlearners.begin(), wlearner.clone());
+
+    ::nano::wlearner::merge(cloned_rwlearners);
+    UTEST_REQUIRE_GREATER_EQUAL(cloned_rwlearners.size(), 1U);
+
+    const auto scale = make_vector<scalar_t>(1.0 / static_cast<scalar_t>(1U + compatibles));
+
+    twlearner& merged_wlearner = dynamic_cast<twlearner&>(**cloned_rwlearners.begin());
+    merged_wlearner.scale(scale);
+    return merged_wlearner;
 }
 
 template <typename tdatasource, typename... tinvalid_datasources>
@@ -485,6 +506,8 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     // check merging
     const auto compatible_wlearners   = datasource0.make_compatible_wlearners();
     const auto incompatible_wlearners = datasource0.make_incompatible_wlearners();
-    check_merge(wlearner, datasource0, compatible_wlearners, incompatible_wlearners);
-    datasource0.check_wlearner(iwlearner);
+
+    datasource0.check_wlearner(check_merge(iwlearner, datasource0, compatible_wlearners, incompatible_wlearners));
+    datasource0.check_wlearner(check_merge(iwlearner, compatible_wlearners, compatible_wlearners.size()));
+    datasource0.check_wlearner(check_merge(iwlearner, incompatible_wlearners, 0U));
 }

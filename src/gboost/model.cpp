@@ -5,6 +5,7 @@
 #include <nano/gboost/util.h>
 #include <nano/model/util.h>
 #include <nano/tensor/stream.h>
+#include <nano/wlearner/util.h>
 #include <set>
 
 using namespace nano;
@@ -237,7 +238,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         wlearners.pop_back();
     }
 
-    ::nano::gboost::merge(wlearners);
+    ::nano::wlearner::merge(wlearners);
 
     auto bias = tensor1d_t{map_tensor(bstate.x.data(), make_dims(bstate.x.size()))};
 
@@ -268,8 +269,8 @@ gboost_model_t& gboost_model_t::operator=(gboost_model_t&&) noexcept = default;
 
 gboost_model_t::gboost_model_t(const gboost_model_t& other)
     : model_t(other)
-    , m_protos(gboost::clone(other.m_protos))
-    , m_wlearners(gboost::clone(other.m_wlearners))
+    , m_protos(wlearner::clone(other.m_protos))
+    , m_wlearners(wlearner::clone(other.m_wlearners))
 {
 }
 
@@ -278,8 +279,8 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
     if (this != &other)
     {
         model_t::operator=(other);
-        m_protos    = gboost::clone(other.m_protos);
-        m_wlearners = gboost::clone(other.m_wlearners);
+        m_protos    = wlearner::clone(other.m_protos);
+        m_wlearners = wlearner::clone(other.m_wlearners);
     }
     return *this;
 }

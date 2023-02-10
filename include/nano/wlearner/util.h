@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/dataset/iterator.h>
+#include <nano/wlearner.h>
 
 namespace nano::wlearner
 {
@@ -8,6 +9,16 @@ namespace nano::wlearner
     /// \brief scale the given tables of coefficients.
     ///
     NANO_PUBLIC void scale(tensor4d_t& tables, const vector_t& scale);
+
+    ///
+    /// \brief merge in-place if possible the given weak learners.
+    ///
+    NANO_PUBLIC void merge(rwlearners_t&);
+
+    ///
+    /// \brief clone the given weak learners.
+    ///
+    NANO_PUBLIC rwlearners_t clone(const rwlearners_t&);
 
     ///
     /// \brief loop over the feature values of the given scalar feature and samples.

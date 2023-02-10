@@ -20,14 +20,4 @@ namespace nano::gboost
     NANO_PUBLIC bool done(const tensor2d_t& values, const indices_t& train_samples, const indices_t& valid_samples,
                           const rwlearners_t& wlearners, scalar_t epsilon, size_t patience, size_t& optimum_round,
                           scalar_t& optimum_value, tensor2d_t& optimum_values);
-
-    ///
-    /// \brief merge in-place if possible the given weak learners.
-    ///
-    NANO_PUBLIC void merge(rwlearners_t&);
-
-    ///
-    /// \brief clone the given weak learners.
-    ///
-    NANO_PUBLIC rwlearners_t clone(const rwlearners_t&);
 } // namespace nano::gboost
