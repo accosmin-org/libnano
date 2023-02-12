@@ -49,7 +49,7 @@ UTEST_BEGIN_MODULE(test_core_cmdline)
 
 UTEST_CASE(empty)
 {
-    nano::cmdline_t cmdline("unit testing");
+    const auto cmdline = nano::cmdline_t{"unit testing"};
 
     std::stringstream os;
     cmdline.usage(os);

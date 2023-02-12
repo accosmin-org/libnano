@@ -193,54 +193,53 @@ rwlearner_t hinge_wlearner_t::clone() const
 scalar_t hinge_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t{dataset};
 
-    select_iterator_t it{dataset};
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
+                  {
+                      // update accumulators
+                      auto& cache                           = caches[tnum];
+                      const auto [missing_rss, missing_cnt] = cache.clear(gradients, fvalues, samples);
+                      for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++iv)
+                      {
+                          const auto& ivalue1 = cache.m_ivalues[iv + 0];
+                          const auto& ivalue2 = cache.m_ivalues[iv + 1];
 
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
-            {
-                // update accumulators
-                auto& cache                           = caches[tnum];
-                const auto [missing_rss, missing_cnt] = cache.clear(gradients, fvalues, samples);
-                for (size_t iv = 0, sv = cache.m_ivalues.size(); iv + 1 < sv; ++iv)
-                {
-                    const auto& ivalue1 = cache.m_ivalues[iv + 0];
-                    const auto& ivalue2 = cache.m_ivalues[iv + 1];
+                          cache.m_acc_neg.update(ivalue1.first, gradients.array(ivalue1.second));
 
-                    cache.m_acc_neg.update(ivalue1.first, gradients.array(ivalue1.second));
+                          if (ivalue1.first < ivalue2.first)
+                          {
+                              // update the parameters if a better feature
+                              const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
 
-                    if (ivalue1.first < ivalue2.first)
-                    {
-                        // update the parameters if a better feature
-                        const auto threshold = 0.5 * (ivalue1.first + ivalue2.first);
+                              // ... try the left hinge
+                              const auto score_neg = cache.score_neg(threshold, criterion, missing_rss, missing_cnt);
+                              if (std::isfinite(score_neg) && score_neg < cache.m_score)
+                              {
+                                  cache.m_score           = score_neg;
+                                  cache.m_feature         = feature;
+                                  cache.m_hinge           = hinge_type::left;
+                                  cache.m_threshold       = threshold;
+                                  cache.m_tables.array(0) = cache.beta_neg(threshold);
+                                  cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
+                              }
 
-                        // ... try the left hinge
-                        const auto score_neg = cache.score_neg(threshold, criterion, missing_rss, missing_cnt);
-                        if (std::isfinite(score_neg) && score_neg < cache.m_score)
-                        {
-                            cache.m_score           = score_neg;
-                            cache.m_feature         = feature;
-                            cache.m_hinge           = hinge_type::left;
-                            cache.m_threshold       = threshold;
-                            cache.m_tables.array(0) = cache.beta_neg(threshold);
-                            cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
-                        }
-
-                        // ... try the right hinge
-                        const auto score_pos = cache.score_pos(threshold, criterion, missing_rss, missing_cnt);
-                        if (std::isfinite(score_pos) && score_pos < cache.m_score)
-                        {
-                            cache.m_score           = score_pos;
-                            cache.m_feature         = feature;
-                            cache.m_hinge           = hinge_type::right;
-                            cache.m_threshold       = threshold;
-                            cache.m_tables.array(0) = cache.beta_pos(threshold);
-                            cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
-                        }
-                    }
-                }
-            });
+                              // ... try the right hinge
+                              const auto score_pos = cache.score_pos(threshold, criterion, missing_rss, missing_cnt);
+                              if (std::isfinite(score_pos) && score_pos < cache.m_score)
+                              {
+                                  cache.m_score           = score_pos;
+                                  cache.m_feature         = feature;
+                                  cache.m_hinge           = hinge_type::right;
+                                  cache.m_threshold       = threshold;
+                                  cache.m_tables.array(0) = cache.beta_pos(threshold);
+                                  cache.m_tables.array(1) = -threshold * cache.m_tables.array(0);
+                              }
+                          }
+                      }
+                  });
 
     // OK, return and store the optimum feature across threads
     const auto& best = min_reduce(caches);

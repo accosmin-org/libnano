@@ -41,7 +41,7 @@ splitter_t::splits_t random_splitter_t::split(indices_t samples) const
     }
 
     return splits;
-}
+} // LCOV_EXCL_LINE
 
 rsplitter_t random_splitter_t::clone() const
 {

@@ -43,11 +43,10 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
     }
     else
     {
-        lsearch_step_t step0{0, state.f, state.dg()};
-
-        lsearch_step_t stepx{state.t * phi1,
-                             // NB: the line-search length is from the previous iteration!
-                             state.function->vgrad(state.x + state.t * phi1 * state.d), 0};
+        const auto step0 = lsearch_step_t{0, state.f, state.dg()};
+        const auto stepx = lsearch_step_t{state.t * phi1,
+                                          // NB: the line-search length is from the previous iteration!
+                                          state.function->vgrad(state.x + state.t * phi1 * state.d), 0};
 
         bool       convexity = false;
         const auto tq        = lsearch_step_t::quadratic(step0, stepx, &convexity);

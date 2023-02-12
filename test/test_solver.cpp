@@ -84,6 +84,13 @@ static auto make_best_smooth_solver_ids()
 
 UTEST_BEGIN_MODULE(test_solver_lsearch)
 
+UTEST_CASE(solver_type_str)
+{
+    UTEST_CHECK_EQUAL(scat(solver_type::line_search), "unconstrained with line-search");
+    UTEST_CHECK_EQUAL(scat(solver_type::non_monotonic), "unconstrained non-monotonic");
+    UTEST_CHECK_EQUAL(scat(solver_type::constrained), "constrained");
+}
+
 UTEST_CASE(state_str)
 {
     for (const auto status : enum_values<solver_status>())

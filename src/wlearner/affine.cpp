@@ -72,39 +72,38 @@ rwlearner_t affine_wlearner_t::clone() const
 scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t(dataset);
 
-    select_iterator_t it(dataset);
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
+                  {
+                      // update accumulators
+                      auto& cache = caches[tnum];
+                      cache.clear(2);
+                      for (tensor_size_t i = 0; i < samples.size(); ++i)
+                      {
+                          const auto value = fvalues(i);
+                          if (std::isfinite(value))
+                          {
+                              cache.update(value, gradients.array(samples(i)), bin_affine);
+                          }
+                          else
+                          {
+                              cache.update(gradients.array(samples(i)), bin_missed);
+                          }
+                      }
 
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, scalar_cmap_t fvalues)
-            {
-                // update accumulators
-                auto& cache = caches[tnum];
-                cache.clear(2);
-                for (tensor_size_t i = 0; i < samples.size(); ++i)
-                {
-                    const auto value = fvalues(i);
-                    if (std::isfinite(value))
-                    {
-                        cache.update(value, gradients.array(samples(i)), bin_affine);
-                    }
-                    else
-                    {
-                        cache.update(gradients.array(samples(i)), bin_missed);
-                    }
-                }
-
-                // update the parameters if a better feature
-                const auto score = cache.score(criterion);
-                if (std::isfinite(score) && score < cache.m_score)
-                {
-                    cache.m_score           = score;
-                    cache.m_feature         = feature;
-                    cache.m_tables.array(0) = cache.w();
-                    cache.m_tables.array(1) = cache.b();
-                }
-            });
+                      // update the parameters if a better feature
+                      const auto score = cache.score(criterion);
+                      if (std::isfinite(score) && score < cache.m_score)
+                      {
+                          cache.m_score           = score;
+                          cache.m_feature         = feature;
+                          cache.m_tables.array(0) = cache.w();
+                          cache.m_tables.array(1) = cache.b();
+                      }
+                  });
 
     // OK, return and store the optimum feature across threads
     const auto& best = min_reduce(caches);

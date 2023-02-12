@@ -23,4 +23,4 @@ fit_result_t::params_t ml::make_param_results(const tensor2d_t& all_params, cons
     }
 
     return param_results;
-}
+} // LCOV_EXCL_LINE

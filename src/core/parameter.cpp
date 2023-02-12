@@ -347,13 +347,13 @@ std::ostream& parameter_t::write(std::ostream& stream) const
 {
     std::visit(overloaded{[&](const std::monostate&)
                           {
-                              int32_t type = -1;
+                              const int32_t type = -1;
                               critical(!::nano::write(stream, type) || !::nano::write(stream, m_name), "parameter (",
                                        m_name, "): failed to write to stream!");
                           },
                           [&](const enum_t& param)
                           {
-                              int32_t type = 0;
+                              const int32_t type = 0;
                               critical(!::nano::write(stream, type) || !::nano::write(stream, m_name) ||
                                            !::nano::write(stream, param.m_value) || // LCOV_EXCL_LINE
                                            !::nano::write(stream, param.m_domain),  // LCOV_EXCL_LINE

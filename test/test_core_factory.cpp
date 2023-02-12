@@ -40,7 +40,7 @@ UTEST_BEGIN_MODULE(test_core_factory)
 
 UTEST_CASE(empty)
 {
-    factory_t<object_t> manager;
+    const auto manager = factory_t<object_t>{};
 
     UTEST_CHECK(manager.ids().empty());
 

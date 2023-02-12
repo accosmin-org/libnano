@@ -23,7 +23,7 @@ UTEST_CASE(empty)
 {
     using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
 
-    tensor3d_t tensor;
+    const auto tensor = tensor3d_t{};
 
     UTEST_CHECK_CLOSE(tensor.stdev(), 0.0, 1e-16);
     UTEST_CHECK_CLOSE(tensor.variance(), 0.0, 1e-16);

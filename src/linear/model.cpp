@@ -75,7 +75,7 @@ static auto make_x0(const ::nano::linear::function_t& function, const std::any& 
         x0.segment(weights.size(), bias.size()) = bias.array();
     }
     return x0;
-}
+} // LCOV_EXCL_LINE
 
 static auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples,
                 const loss_t& loss, const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg,

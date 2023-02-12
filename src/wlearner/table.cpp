@@ -186,7 +186,7 @@ public:
         }
 
         return hashes;
-    }
+    } // LCOV_EXCL_LINE
 
     auto update(const indices_t& samples, const tensor4d_t& gradients, const sclass_cmap_t& fvalues)
     {
@@ -260,7 +260,7 @@ cluster_t table_wlearner_t::do_split(const dataset_t& dataset, const indices_t& 
             [&](const tensor_size_t i, const tensor_size_t table) { cluster.assign(samples(i), table); });
 
     return cluster;
-}
+} // LCOV_EXCL_LINE
 
 scalar_t table_wlearner_t::set([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
                                const cache_t& cache)
@@ -299,24 +299,23 @@ rwlearner_t dense_table_wlearner_t::clone() const
 scalar_t dense_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t{dataset};
 
-    select_iterator_t it{dataset};
-
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_dense(feature, hashes, criterion);
-            });
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_dense(feature, hashes, criterion);
-            });
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_dense(feature, hashes, criterion);
+                  });
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_dense(feature, hashes, criterion);
+                  });
 
     // OK, return and store the optimum feature across threads
     return table_wlearner_t::set(dataset, samples, min_reduce(caches));
@@ -335,24 +334,23 @@ rwlearner_t kbest_table_wlearner_t::clone() const
 scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t{dataset};
 
-    select_iterator_t it{dataset};
-
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, criterion);
-            });
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, criterion);
-            });
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_kbest(feature, hashes, criterion);
+                  });
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_kbest(feature, hashes, criterion);
+                  });
 
     // OK, return and store the optimum feature across threads
     return table_wlearner_t::set(dataset, samples, min_reduce(caches));
@@ -372,24 +370,23 @@ scalar_t ksplit_table_wlearner_t::do_fit(const dataset_t& dataset, const indices
                                          const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t{dataset};
 
-    select_iterator_t it{dataset};
-
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, criterion);
-            });
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_ksplit(feature, hashes, criterion);
-            });
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_ksplit(feature, hashes, criterion);
+                  });
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_ksplit(feature, hashes, criterion);
+                  });
 
     // OK, return and store the optimum feature across threads
     return table_wlearner_t::set(dataset, samples, min_reduce(caches));
@@ -408,24 +405,23 @@ rwlearner_t dstep_table_wlearner_t::clone() const
 scalar_t dstep_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
     const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto iterator  = select_iterator_t{dataset};
 
-    select_iterator_t it{dataset};
-
-    std::vector<cache_t> caches(it.concurrency(), cache_t{dataset.target_dims()});
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, criterion, 1);
-            });
-    it.loop(samples,
-            [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
-            {
-                auto&      cache  = caches[tnum];
-                const auto hashes = cache.update(samples, gradients, fvalues);
-                cache.score_kbest(feature, hashes, criterion, 1);
-            });
+    std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, sclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_kbest(feature, hashes, criterion, 1);
+                  });
+    iterator.loop(samples,
+                  [&](const tensor_size_t feature, const size_t tnum, mclass_cmap_t fvalues)
+                  {
+                      auto&      cache  = caches[tnum];
+                      const auto hashes = cache.update(samples, gradients, fvalues);
+                      cache.score_kbest(feature, hashes, criterion, 1);
+                  });
 
     // OK, return and store the optimum feature across threads
     return table_wlearner_t::set(dataset, samples, min_reduce(caches));

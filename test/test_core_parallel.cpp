@@ -134,7 +134,7 @@ UTEST_CASE(enqueue)
 {
     auto pool = parallel::pool_t{};
 
-    size_t     max_tasks = 1024;
+    const auto max_tasks = size_t{1024};
     const auto tasks     = urand<size_t>(1U, max_tasks, make_rng());
 
     std::mutex          mutex;

@@ -52,10 +52,7 @@ UTEST_CASE(table_rows)
 
     nano::table_t table;
     table.header() << "head" << colspan(2) << "colx" << colspan(1) << "col3";
-    table.append() << "row1"
-                   << "1000"
-                   << "9000"
-                   << "4000";
+    table.append() << "row1" << 1000 << 9000 << 4000;
     table.append() << "row2"
                    << "3200" << colspan(2) << "2000";
     table.append() << "row3" << colspan(3) << "2500";

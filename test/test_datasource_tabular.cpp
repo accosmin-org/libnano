@@ -254,7 +254,8 @@ UTEST_CASE(cannot_load_invalid_target)
 UTEST_CASE(cannot_load_unsupported_mclass)
 {
     const auto feature_mclass = feature_t{"feature"}.mclass(3);
-    auto       dataset        = fixture_datasource_t{
+
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate(), feature_mclass}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
@@ -264,7 +265,8 @@ UTEST_CASE(cannot_load_unsupported_mclass)
 UTEST_CASE(cannot_load_unsupported_struct)
 {
     const auto feature_struct = feature_t{"feature"}.scalar(feature_type::uint8, make_dims(3, 32, 32));
-    auto       dataset        = fixture_datasource_t{
+
+    auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate(), feature_struct}
     };
     UTEST_REQUIRE_NOTHROW(dataset.prepare());

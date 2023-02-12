@@ -17,10 +17,10 @@ static auto make_gbooster()
 
 static void check_predict(const gboost_model_t& model, const dataset_t& dataset, const scalar_t epsilon = 1e-12)
 {
-    const auto samples = arange(0, dataset.samples());
-    const auto outputs = model.predict(dataset, samples);
+    const auto samples  = arange(0, dataset.samples());
+    const auto outputs  = model.predict(dataset, samples);
+    const auto iterator = targets_iterator_t{dataset, samples};
 
-    targets_iterator_t iterator(dataset, samples);
     iterator.loop([&](const tensor_range_t& range, size_t, tensor4d_cmap_t targets)
                   { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
 }

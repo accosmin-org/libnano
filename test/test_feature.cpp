@@ -52,6 +52,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::unsupervised);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "unsupervised");
     }
     {
         const auto feature = feature_t{"feature"}.sclass(7);
@@ -60,6 +61,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::sclassification);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "s-classification");
     }
     {
         const auto feature = feature_t{"feature"}.mclass(7);
@@ -68,6 +70,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::mclassification);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "m-classification");
     }
     {
         const auto feature = feature_t{"feature"};
@@ -76,6 +79,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "regression");
     }
     {
         const auto feature = feature_t{"feature"}.scalar();
@@ -84,6 +88,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "regression");
     }
     {
         const auto feature = feature_t{"feature"}.scalar(feature_type::float32, make_dims(1, 1, 2));
@@ -93,6 +98,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(feature.is_struct());
         UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 2));
         UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "regression");
     }
     {
         const auto feature = feature_t{"feature"}.scalar(feature_type::float64, make_dims(3, 2, 1));
@@ -102,6 +108,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(feature.is_struct());
         UTEST_CHECK_EQUAL(feature.dims(), make_dims(3, 2, 1));
         UTEST_CHECK_EQUAL(feature.task(), task_type::regression);
+        UTEST_CHECK_EQUAL(scat(feature.task()), "regression");
     }
 }
 

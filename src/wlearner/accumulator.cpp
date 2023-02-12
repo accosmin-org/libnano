@@ -46,7 +46,7 @@ std::vector<std::pair<scalar_t, tensor_size_t>> wlearner::accumulator_t::sort() 
     std::sort(deltas.begin(), deltas.end());
 
     return deltas;
-}
+} // LCOV_EXCL_LINE
 
 std::tuple<tensor2d_t, tensor5d_t, tensor5d_t, tensor5d_t, tensor_mem_t<tensor_size_t, 2>>
 wlearner::accumulator_t::cluster() const

@@ -179,12 +179,13 @@ inline auto make_all_samples(const dataset_t& dataset)
 
 inline auto make_targets(const dataset_t& dataset)
 {
-    const auto samples = make_all_samples(dataset);
+    const auto samples  = make_all_samples(dataset);
+    const auto iterator = targets_iterator_t{dataset, samples};
 
     tensor4d_t targets(cat_dims(dataset.samples(), dataset.target_dims()));
 
-    targets_iterator_t it(dataset, samples);
-    it.loop([&](const tensor_range_t range, size_t, tensor4d_cmap_t _targets) { targets.slice(range) = _targets; });
+    iterator.loop([&](const tensor_range_t range, size_t, tensor4d_cmap_t _targets)
+                  { targets.slice(range) = _targets; });
 
     return targets;
 }

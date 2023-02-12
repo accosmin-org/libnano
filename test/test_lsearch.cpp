@@ -106,6 +106,15 @@ static void test(const rlsearchk_t& lsearch, const function_t& function)
 
 UTEST_BEGIN_MODULE(test_lsearch)
 
+UTEST_CASE(lsearch_type_str)
+{
+    UTEST_CHECK_EQUAL(scat(lsearch_type::none), "N/A");
+    UTEST_CHECK_EQUAL(scat(lsearch_type::armijo), "Armijo");
+    UTEST_CHECK_EQUAL(scat(lsearch_type::wolfe), "Wolfe");
+    UTEST_CHECK_EQUAL(scat(lsearch_type::strong_wolfe), "strong Wolfe");
+    UTEST_CHECK_EQUAL(scat(lsearch_type::wolfe_approx_wolfe), "Wolfe or approximative Wolfe");
+}
+
 UTEST_CASE(interpolate)
 {
     const auto u = lsearch_step_t{4.2, 1.0, 0.5};

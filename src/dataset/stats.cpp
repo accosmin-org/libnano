@@ -41,7 +41,7 @@ static auto make_features(const dataset_t& dataset, const toperator& op)
     }
 
     return features;
-}
+} // LCOV_EXCL_LINE
 
 static auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling)
 {
@@ -152,7 +152,7 @@ static auto alloc_xclass_stats(const tvalues& values)
     stats.m_sample_classes.resize(values.template size<0>());
     stats.m_sample_weights.resize(values.template size<0>());
     return stats;
-}
+} // LCOV_EXCL_LINE
 
 template <typename tvalues>
 static void update(xclass_stats_t& stats, const tensor_size_t sample, const tvalues& values)
