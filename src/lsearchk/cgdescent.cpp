@@ -68,7 +68,7 @@ void lsearchk_cgdescent_t::updateU(state_t& state, const scalar_t epsilonk, cons
 {
     for (int i = 0; i < max_iterations && (state.b.t - state.a.t) > stpmin(); ++i)
     {
-        auto& d = state.c;
+        const auto& d = state.c;
         move(state, (1 - theta) * state.a.t + theta * state.b.t);
 
         if (!d.valid())
@@ -186,8 +186,8 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
     // iteratively update the search interval [a, b]
     for (int i = 0; i < max_iterations && (interval.b.t - interval.a.t) > stpmin(); ++i)
     {
-        auto& a = interval.a;
-        auto& b = interval.b;
+        const auto& a = interval.a;
+        const auto& b = interval.b;
 
         // secant interpolation
         const auto prev_width = b.t - a.t;

@@ -122,11 +122,11 @@ static exception_status check_throw(const toperator& op)
         op();
         return exception_status::none;
     }
-    catch (texception& e)
+    catch (const texception& e)
     {
         return exception_status::expected;
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         return exception_status::unexpected;
     }

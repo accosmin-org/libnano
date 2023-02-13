@@ -172,9 +172,6 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
             break;
         }
 
-        cache_t ncache;
-        ncache.m_depth = cache.m_depth + 1;
-
         dtree_node_t node;
         node.m_feature   = stump.feature();
         node.m_threshold = stump.threshold();
@@ -194,9 +191,6 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
         {
             for (tensor_size_t i = 0, size = tables_stump.size<0>(); i < size; ++i)
             {
-                ncache.m_parent  = nodes.size();
-                ncache.m_samples = cluster.indices(i);
-
                 node.m_table = tables.size<0>();
                 nodes.emplace_back(node);
                 append(tables, tables_stump.tensor(i));
@@ -209,6 +203,9 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
         // can still split the samples
         else
         {
+            cache_t ncache;
+            ncache.m_depth = cache.m_depth + 1;
+
             for (tensor_size_t i = 0, size = tables_stump.size<0>(); i < size; ++i)
             {
                 ncache.m_parent  = nodes.size();
