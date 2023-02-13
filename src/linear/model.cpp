@@ -10,7 +10,7 @@ using namespace nano::linear;
 
 static auto make_params(const configurable_t& configurable)
 {
-    const auto regularization = configurable.parameter("model::linear::regularization").value<regularization_type>();
+    const auto regularization = configurable.parameter("linear::regularization").value<regularization_type>();
 
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
@@ -82,8 +82,8 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
                 const scalar_t vAreg, const std::any& extra = std::any{})
 {
     auto iterator = flatten_iterator_t{dataset, samples};
-    iterator.batch(configurable.parameter("model::linear::batch").value<tensor_size_t>());
-    iterator.scaling(configurable.parameter("model::linear::scaling").value<scaling_type>());
+    iterator.batch(configurable.parameter("linear::batch").value<tensor_size_t>());
+    iterator.scaling(configurable.parameter("linear::scaling").value<scaling_type>());
     iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
     iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
 
@@ -101,9 +101,9 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 linear_model_t::linear_model_t()
     : model_t("linear")
 {
-    register_parameter(parameter_t::make_integer("model::linear::batch", 10, LE, 100, LE, 10000));
-    register_parameter(parameter_t::make_enum("model::linear::scaling", scaling_type::standard));
-    register_parameter(parameter_t::make_enum("model::linear::regularization", regularization_type::lasso));
+    register_parameter(parameter_t::make_integer("linear::batch", 10, LE, 100, LE, 10000));
+    register_parameter(parameter_t::make_enum("linear::scaling", scaling_type::standard));
+    register_parameter(parameter_t::make_enum("linear::regularization", regularization_type::lasso));
 }
 
 rmodel_t linear_model_t::clone() const
@@ -138,8 +138,8 @@ fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
 {
     learner_t::fit(dataset);
 
-    const auto batch          = parameter("model::linear::batch").value<tensor_size_t>();
-    const auto regularization = parameter("model::linear::regularization").value<regularization_type>();
+    const auto batch          = parameter("linear::batch").value<tensor_size_t>();
+    const auto regularization = parameter("linear::regularization").value<regularization_type>();
 
     // tune hyper-parameters
     auto [param_names, param_spaces] = ::make_params(*this);
@@ -185,7 +185,7 @@ tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& sa
     // TODO: determine at runtime if worth parallelizing
     auto iterator = flatten_iterator_t(dataset, samples);
     iterator.scaling(scaling_type::none);
-    iterator.batch(parameter("model::linear::batch").value<tensor_size_t>());
+    iterator.batch(parameter("linear::batch").value<tensor_size_t>());
 
     tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
     iterator.loop([&](tensor_range_t range, size_t, tensor2d_cmap_t inputs)

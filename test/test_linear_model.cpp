@@ -27,8 +27,8 @@ static auto make_nonsmooth_solver()
 
 static auto make_model()
 {
-    auto model                              = linear_model_t{};
-    model.parameter("model::linear::batch") = 10;
+    auto model                       = linear_model_t{};
+    model.parameter("linear::batch") = 10;
     model.logger(model_t::make_logger_stdio());
     return model;
 }
@@ -72,9 +72,9 @@ UTEST_CASE(regularization_none)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                       = make_model();
-    model.parameter("model::linear::scaling")        = scaling_type::none;
-    model.parameter("model::linear::regularization") = linear::regularization_type::none;
+    auto model                                = make_model();
+    model.parameter("linear::scaling")        = scaling_type::none;
+    model.parameter("linear::regularization") = linear::regularization_type::none;
 
     const auto param_names = strings_t{};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -99,9 +99,9 @@ UTEST_CASE(regularization_lasso)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                       = make_model();
-    model.parameter("model::linear::scaling")        = scaling_type::standard;
-    model.parameter("model::linear::regularization") = linear::regularization_type::lasso;
+    auto model                                = make_model();
+    model.parameter("linear::scaling")        = scaling_type::standard;
+    model.parameter("linear::regularization") = linear::regularization_type::lasso;
 
     const auto param_names = strings_t{"l1reg"};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -126,9 +126,9 @@ UTEST_CASE(regularization_ridge)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                       = make_model();
-    model.parameter("model::linear::scaling")        = scaling_type::mean;
-    model.parameter("model::linear::regularization") = linear::regularization_type::ridge;
+    auto model                                = make_model();
+    model.parameter("linear::scaling")        = scaling_type::mean;
+    model.parameter("linear::regularization") = linear::regularization_type::ridge;
 
     const auto param_names = strings_t{"l2reg"};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -153,9 +153,9 @@ UTEST_CASE(regularization_variance)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                       = make_model();
-    model.parameter("model::linear::scaling")        = scaling_type::minmax;
-    model.parameter("model::linear::regularization") = linear::regularization_type::variance;
+    auto model                                = make_model();
+    model.parameter("linear::scaling")        = scaling_type::minmax;
+    model.parameter("linear::regularization") = linear::regularization_type::variance;
 
     const auto param_names = strings_t{"vAreg"};
     for (const auto* const loss_id : {"mse"}) //, "mae"}) FIXME: enable MAE with a better non-smooth solver!
@@ -180,9 +180,9 @@ UTEST_CASE(regularization_elasticnet)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                       = make_model();
-    model.parameter("model::linear::scaling")        = scaling_type::minmax;
-    model.parameter("model::linear::regularization") = linear::regularization_type::elasticnet;
+    auto model                                = make_model();
+    model.parameter("linear::scaling")        = scaling_type::minmax;
+    model.parameter("linear::regularization") = linear::regularization_type::elasticnet;
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
     for (const auto* const loss_id : {"mse"}) //, "mae"}) FIXME: enable MAE with a better non-smooth solver!

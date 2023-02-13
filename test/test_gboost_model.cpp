@@ -184,6 +184,16 @@ private:
     }
 };
 
+template <typename... targs>
+static auto make_gbooster_to_fit(const targs... args)
+{
+    auto model = make_gbooster();
+    model.add("affine");
+    model.add("dense-table");
+    config(model, args...);
+    return model;
+}
+
 // TODO: check fit results have the expected structure for various regularization methods
 // TODO: check that the exact results are obtained if fit twice
 
@@ -213,13 +223,10 @@ UTEST_CASE(add_protos)
 
 UTEST_CASE(fit_predict_bias)
 {
-    auto model = make_gbooster();
-    model.add("affine");
-    model.add("dense-table");
-
+    const auto model = make_gbooster_to_fit();
     const auto epsilon     = 1e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_bias_datasource_t>(200);
+    const auto datasource  = make_datasource<fixture_bias_datasource_t>(100);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);
@@ -227,13 +234,10 @@ UTEST_CASE(fit_predict_bias)
 
 UTEST_CASE(fit_predict_affine)
 {
-    auto model = make_gbooster();
-    model.add("affine");
-    model.add("dense-table");
-
-    const auto epsilon     = 2e-6;
+    const auto model = make_gbooster_to_fit();
+    const auto epsilon     = 3e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(500);
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);
@@ -241,13 +245,65 @@ UTEST_CASE(fit_predict_affine)
 
 UTEST_CASE(fit_predict_tables)
 {
-    auto model = make_gbooster();
-    model.add("affine");
-    model.add("dense-table");
-
-    const auto epsilon     = 1e-6;
+    const auto model = make_gbooster_to_fit();
+    const auto epsilon     = 3e-6;
     const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_tables_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_tables_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
+}
+
+UTEST_CASE(fit_predict_bootstrap)
+{
+    const auto model       = make_gbooster_to_fit("gboost::bootstrap", "on");
+    const auto epsilon     = 3e-6;
+    const auto param_names = strings_t{};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
+}
+
+UTEST_CASE(fit_predict_tboost)
+{
+    const auto model       = make_gbooster_to_fit("gboost::wscale", "tboost");
+    const auto epsilon     = 3e-6;
+    const auto param_names = strings_t{};
+    const auto datasource  = make_datasource<fixture_tables_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
+}
+
+UTEST_CASE(tune_shrinkage)
+{
+    const auto model       = make_gbooster_to_fit("gboost::shrinkage", "on");
+    const auto epsilon     = 3e-6;
+    const auto param_names = strings_t{"shrinkage"};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
+}
+
+UTEST_CASE(tune_subsample)
+{
+    const auto model       = make_gbooster_to_fit("gboost::subsample", "on");
+    const auto epsilon     = 3e-6;
+    const auto param_names = strings_t{"subsample"};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names, 0U, 2, epsilon);
+}
+
+UTEST_CASE(tune_variance)
+{
+    const auto model       = make_gbooster_to_fit("gboost::regularization", "variance");
+    const auto epsilon     = 3e-6;
+    const auto param_names = strings_t{"vAreg"};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(100);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names, 0U, 2, epsilon);

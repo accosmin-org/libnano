@@ -6,7 +6,7 @@
 using namespace nano;
 
 template <typename tconfigurable>
-static auto check_stream(const tconfigurable& configurable)
+[[maybe_unused]] static auto check_stream(const tconfigurable& configurable)
 {
     // fails to serialize to closed files
     {
@@ -44,4 +44,16 @@ static auto check_stream(const tconfigurable& configurable)
         UTEST_CHECK_EQUAL(xconfigurable.parameters(), configurable.parameters());
         return xconfigurable;
     }
+}
+
+[[maybe_unused]] static void config(configurable_t&)
+{
+}
+
+template <typename targ, typename... targs>
+[[maybe_unused]] static void config(configurable_t& configurable, const char* const param_name, const targ value,
+                                    const targs... args)
+{
+    configurable.parameter(param_name) = value;
+    config(configurable, args...);
 }

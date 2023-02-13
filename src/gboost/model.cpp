@@ -13,9 +13,9 @@ using namespace nano::gboost;
 
 static auto make_params(const configurable_t& configurable)
 {
-    const auto regularization = configurable.parameter("model::gboost::regularization").value<regularization_type>();
-    const auto subsample      = configurable.parameter("model::gboost::subsample").value<subsample_type>();
-    const auto shrinkage      = configurable.parameter("model::gboost::shrinkage").value<shrinkage_type>();
+    const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
+    const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
+    const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
 
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
@@ -116,16 +116,16 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
                 const indices_t& valid_samples, const loss_t& loss, const solver_t& solver,
                 const rwlearners_t& prototypes, const tensor1d_t& params, tensor_size_t max_rounds = -1)
 {
-    const auto seed           = configurable.parameter("model::gboost::seed").value<uint64_t>();
-    const auto batch          = configurable.parameter("model::gboost::batch").value<tensor_size_t>();
-    const auto epsilon        = configurable.parameter("model::gboost::epsilon").value<scalar_t>();
-    const auto patience       = configurable.parameter("model::gboost::patience").value<size_t>();
-    const auto max_rounds_    = configurable.parameter("model::gboost::max_rounds").value<tensor_size_t>();
-    const auto wscale         = configurable.parameter("model::gboost::wscale").value<wscale_type>();
-    const auto bootstrap      = configurable.parameter("model::gboost::bootstrap").value<bootstrap_type>();
-    const auto regularization = configurable.parameter("model::gboost::regularization").value<regularization_type>();
-    const auto subsample      = configurable.parameter("model::gboost::subsample").value<subsample_type>();
-    const auto shrinkage      = configurable.parameter("model::gboost::shrinkage").value<shrinkage_type>();
+    const auto seed           = configurable.parameter("gboost::seed").value<uint64_t>();
+    const auto batch          = configurable.parameter("gboost::batch").value<tensor_size_t>();
+    const auto epsilon        = configurable.parameter("gboost::epsilon").value<scalar_t>();
+    const auto patience       = configurable.parameter("gboost::patience").value<size_t>();
+    const auto max_rounds_    = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
+    const auto wscale         = configurable.parameter("gboost::wscale").value<wscale_type>();
+    const auto bootstrap      = configurable.parameter("gboost::bootstrap").value<bootstrap_type>();
+    const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
+    const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
+    const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
 
     // NB: use the given number of optimum rounds (if given) as the maximum number of rounds!
     max_rounds = (max_rounds < 0) ? max_rounds_ : max_rounds;
@@ -249,18 +249,18 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 gboost_model_t::gboost_model_t()
     : model_t("gboost")
 {
-    register_parameter(parameter_t::make_scalar("model::gboost::epsilon", 1e-12, LE, 1e-6, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("gboost::epsilon", 1e-12, LE, 1e-6, LE, 1.0));
 
-    register_parameter(parameter_t::make_integer("model::gboost::seed", 0, LE, 42, LE, 1024));
-    register_parameter(parameter_t::make_integer("model::gboost::batch", 10, LE, 100, LE, 10000));
-    register_parameter(parameter_t::make_integer("model::gboost::patience", 1, LE, 10, LE, 1'000));
-    register_parameter(parameter_t::make_integer("model::gboost::max_rounds", 10, LE, 10'000, LE, 1'000'000));
+    register_parameter(parameter_t::make_integer("gboost::seed", 0, LE, 42, LE, 1024));
+    register_parameter(parameter_t::make_integer("gboost::batch", 10, LE, 100, LE, 10000));
+    register_parameter(parameter_t::make_integer("gboost::patience", 1, LE, 10, LE, 1'000));
+    register_parameter(parameter_t::make_integer("gboost::max_rounds", 10, LE, 10'000, LE, 1'000'000));
 
-    register_parameter(parameter_t::make_enum("model::gboost::wscale", wscale_type::gboost));
-    register_parameter(parameter_t::make_enum("model::gboost::shrinkage", shrinkage_type::off));
-    register_parameter(parameter_t::make_enum("model::gboost::subsample", subsample_type::off));
-    register_parameter(parameter_t::make_enum("model::gboost::bootstrap", bootstrap_type::off));
-    register_parameter(parameter_t::make_enum("model::gboost::regularization", regularization_type::none));
+    register_parameter(parameter_t::make_enum("gboost::wscale", wscale_type::gboost));
+    register_parameter(parameter_t::make_enum("gboost::shrinkage", shrinkage_type::off));
+    register_parameter(parameter_t::make_enum("gboost::subsample", subsample_type::off));
+    register_parameter(parameter_t::make_enum("gboost::bootstrap", bootstrap_type::off));
+    register_parameter(parameter_t::make_enum("gboost::regularization", regularization_type::none));
 }
 
 gboost_model_t::gboost_model_t(gboost_model_t&&) noexcept = default;
