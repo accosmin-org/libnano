@@ -10,9 +10,9 @@ fit_result_t::fit_result_t(const tensor_size_t max_rounds)
 {
 }
 
-fit_result_t::fit_result_t(fit_result_t&&) = default;
+fit_result_t::fit_result_t(fit_result_t&&) noexcept = default;
 
-fit_result_t& fit_result_t::operator=(fit_result_t&&) = default;
+fit_result_t& fit_result_t::operator=(fit_result_t&&) noexcept = default;
 
 fit_result_t::fit_result_t(const fit_result_t& other)
     : m_bias(other.m_bias)
@@ -31,6 +31,8 @@ fit_result_t& fit_result_t::operator=(const fit_result_t& other)
     }
     return *this;
 }
+
+fit_result_t::~fit_result_t() = default;
 
 void fit_result_t::update(const tensor_size_t round, const tensor2d_t& errors_values, const indices_t& train_samples,
                           const indices_t& valid_samples, const solver_state_t& state)

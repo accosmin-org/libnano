@@ -1,8 +1,10 @@
+#include "fixture/model.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
 #include "fixture/wlearner.h"
 #include <nano/gboost/model.h>
+#include <nano/gboost/result.h>
 
 using namespace nano;
 
@@ -44,7 +46,7 @@ template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0)
 {
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("lbfgs", 1e-14);
+    const auto solver   = make_solver("cgd-n", 1e-8);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", 2, 42U);
     const auto tuner    = make_tuner("surrogate");
@@ -69,4 +71,50 @@ auto check_gbooster(gboost_model_t model, const tdatasource& datasource0)
     check_predict_throws(imodel);
 
     return fit_result;
+}
+
+static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+                         const tensor_size_t expected_folds = 2, const scalar_t epsilon = 1e-5)
+{
+    ::check_result(result, expected_param_names, expected_param_names.empty() ? 1U : 4U, expected_folds, epsilon);
+
+    if (expected_param_names.empty())
+    {
+        UTEST_CHECK_EQUAL(result.param_results().size(), 1U);
+    }
+
+    for (const auto& param_result : result.param_results())
+    {
+        for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
+        {
+            const auto& result = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
+
+            const auto [rounds, nstats] = result.m_statistics.dims();
+
+            UTEST_REQUIRE_EQUAL(nstats, 7);
+            for (tensor_size_t round = 0; round < rounds; ++round)
+            {
+                const auto train_error = result.m_statistics(round, 0);
+                const auto train_loss  = result.m_statistics(round, 1);
+                const auto valid_error = result.m_statistics(round, 2);
+                const auto valid_loss  = result.m_statistics(round, 3);
+                const auto fcalls      = result.m_statistics(round, 4);
+                const auto gcalls      = result.m_statistics(round, 5);
+                const auto status      = result.m_statistics(round, 6);
+
+                UTEST_CHECK_GREATER_EQUAL(train_error, 0.0);
+                UTEST_CHECK_GREATER_EQUAL(train_loss, 0.0);
+                UTEST_CHECK_GREATER_EQUAL(valid_error, 0.0);
+                UTEST_CHECK_GREATER_EQUAL(valid_loss, 0.0);
+
+                UTEST_CHECK_LESS_EQUAL(fcalls, 100);
+                UTEST_CHECK_LESS_EQUAL(gcalls, 100);
+
+                UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
+                UTEST_CHECK_GREATER_EQUAL(gcalls, 1);
+
+                UTEST_CHECK_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::converged);
+            }
+        }
+    }
 }

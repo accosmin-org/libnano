@@ -24,19 +24,24 @@ namespace nano::gboost
         ///
         /// \brief constructor
         ///
-        fit_result_t(tensor_size_t max_rounds = 0);
+        explicit fit_result_t(tensor_size_t max_rounds = 0);
 
         ///
         /// \brief enable moving.
         ///
-        fit_result_t(fit_result_t&&);
+        fit_result_t(fit_result_t&&) noexcept;
         fit_result_t(const fit_result_t&);
 
         ///
         /// \brief enable copying.
         ///
         fit_result_t& operator=(const fit_result_t&);
-        fit_result_t& operator=(fit_result_t&&);
+        fit_result_t& operator=(fit_result_t&&) noexcept;
+
+        ///
+        /// \brief destructor
+        ///
+        ~fit_result_t();
 
         ///
         /// \brief update statistics for the given boosting round.
