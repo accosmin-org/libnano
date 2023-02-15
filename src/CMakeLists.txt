@@ -98,6 +98,7 @@ target_sources(nano PRIVATE
     splitter/random.cpp
     gboost/util.cpp
     gboost/model.cpp
+    gboost/result.cpp
     gboost/function.cpp
     gboost/accumulator.cpp
     wlearner.cpp

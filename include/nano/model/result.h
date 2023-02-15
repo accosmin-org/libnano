@@ -42,6 +42,9 @@ namespace nano
             scalar_t m_per99{0.0};
         };
 
+        ///
+        /// \brief statistics collected while evaluating a set of hyper-parameter values for all folds.
+        ///
         class param_t
         {
         public:

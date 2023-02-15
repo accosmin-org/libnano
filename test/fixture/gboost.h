@@ -44,7 +44,7 @@ template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0)
 {
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("lbfgs", 1e-12);
+    const auto solver   = make_solver("lbfgs", 1e-14);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", 2, 42U);
     const auto tuner    = make_tuner("surrogate");

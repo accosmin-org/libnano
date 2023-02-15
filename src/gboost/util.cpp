@@ -19,24 +19,33 @@ void gboost::evaluate(const targets_iterator_t& iterator, const loss_t& loss, co
         });
 }
 
-bool gboost::done(const tensor2d_t& values, const indices_t& train_samples, const indices_t& valid_samples,
+scalar_t gboost::mean_loss(const tensor2d_t& errors_losses, const indices_t& samples)
+{
+    const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + errors_losses(1, sample); };
+    const auto denom = static_cast<scalar_t>(std::max(samples.size(), tensor_size_t{1}));
+    return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
+}
+
+scalar_t gboost::mean_error(const tensor2d_t& errors_losses, const indices_t& samples)
+{
+    const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + errors_losses(0, sample); };
+    const auto denom = static_cast<scalar_t>(std::max(samples.size(), tensor_size_t{1}));
+    return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
+}
+
+bool gboost::done(const tensor2d_t& errors_values, const indices_t& train_samples, const indices_t& valid_samples,
                   const rwlearners_t& wlearners, const scalar_t epsilon, const size_t patience, size_t& optimum_round,
                   scalar_t& optimum_value, tensor2d_t& optimum_values)
 {
-    const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + values(0, sample); };
-
-    const auto train_denom = static_cast<scalar_t>(std::max(train_samples.size(), tensor_size_t{1}));
-    const auto valid_denom = static_cast<scalar_t>(std::max(valid_samples.size(), tensor_size_t{1}));
-
-    const auto train_value = std::accumulate(begin(train_samples), end(train_samples), 0.0, opsum) / train_denom;
-    const auto valid_value = std::accumulate(begin(valid_samples), end(valid_samples), 0.0, opsum) / valid_denom;
+    const auto train_value = mean_error(errors_values, train_samples);
+    const auto valid_value = mean_error(errors_values, valid_samples);
 
     // training error is too small, stop
     if (train_value < epsilon)
     {
         optimum_value  = valid_value;
         optimum_round  = wlearners.size();
-        optimum_values = values;
+        optimum_values = errors_values;
         return true;
     }
 
@@ -46,7 +55,7 @@ bool gboost::done(const tensor2d_t& values, const indices_t& train_samples, cons
     {
         optimum_value  = valid_value;
         optimum_round  = wlearners.size();
-        optimum_values = values;
+        optimum_values = errors_values;
         return false;
     }
 

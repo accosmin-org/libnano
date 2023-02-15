@@ -2,6 +2,7 @@
 #include <nano/gboost/enums.h>
 #include <nano/gboost/function.h>
 #include <nano/gboost/model.h>
+#include <nano/gboost/result.h>
 #include <nano/gboost/util.h>
 #include <nano/model/util.h>
 #include <nano/tensor/stream.h>
@@ -69,11 +70,8 @@ static auto decode_params(const tensor1d_cmap_t& params, const regularization_ty
 static auto selected(const tensor2d_t& values, const indices_t& samples)
 {
     auto selected = tensor2d_t{2, samples.size()};
-    if (samples.size() > 0)
-    {
-        values.tensor(0).indexed(samples, selected.tensor(0));
-        values.tensor(1).indexed(samples, selected.tensor(1));
-    }
+    values.tensor(0).indexed(samples, selected.tensor(0));
+    values.tensor(1).indexed(samples, selected.tensor(1));
     return selected;
 }
 
@@ -114,21 +112,18 @@ static auto make_samples(indices_t samples, const scalar_t subsample_ratio, cons
 
 static auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& train_samples,
                 const indices_t& valid_samples, const loss_t& loss, const solver_t& solver,
-                const rwlearners_t& prototypes, const tensor1d_t& params, tensor_size_t max_rounds = -1)
+                const rwlearners_t& prototypes, const tensor1d_t& params)
 {
     const auto seed           = configurable.parameter("gboost::seed").value<uint64_t>();
     const auto batch          = configurable.parameter("gboost::batch").value<tensor_size_t>();
     const auto epsilon        = configurable.parameter("gboost::epsilon").value<scalar_t>();
     const auto patience       = configurable.parameter("gboost::patience").value<size_t>();
-    const auto max_rounds_    = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
+    auto       max_rounds     = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
     const auto wscale         = configurable.parameter("gboost::wscale").value<wscale_type>();
     const auto bootstrap      = configurable.parameter("gboost::bootstrap").value<bootstrap_type>();
     const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
     const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
     const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
-
-    // NB: use the given number of optimum rounds (if given) as the maximum number of rounds!
-    max_rounds = (max_rounds < 0) ? max_rounds_ : max_rounds;
 
     const auto [vAreg, subsample_ratio, shrinkage_ratio] = decode_params(params, regularization, subsample, shrinkage);
 
@@ -147,7 +142,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     train_targets_iterator.scaling(scaling_type::none);
 
     auto rng       = make_rng(seed);
-    auto wlearners = rwlearners_t{};
     auto values    = tensor2d_t{2, samples.size()};
     auto outputs   = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
     auto woutputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
@@ -161,12 +155,16 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x.transpose();
     evaluate(targets_iterator, loss, outputs, values);
 
+    auto result   = gboost::fit_result_t{max_rounds + 1};
+    result.m_bias = map_tensor(bstate.x.data(), make_dims(bstate.x.size()));
+    result.update(0, values, train_samples, valid_samples, bstate);
+
     // keep track of the optimum boosting round using the validation error
     auto optimum_round  = size_t{0};
     auto optimum_value  = std::numeric_limits<scalar_t>::max();
     auto optimum_values = values;
 
-    if (done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
+    if (done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience, optimum_round, optimum_value,
              optimum_values))
     {
         max_rounds = 0;
@@ -191,10 +189,8 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
                 best_wlearner = std::move(wlearner);
             }
         }
-
         if (!best_wlearner)
         {
-            // log_warning() << "gboost: cannot fit any new weak learner, stopping.";
             break;
         }
 
@@ -208,10 +204,11 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         auto gstate = solver.minimize(function, vector_t::Ones(function.size()));
         if (gstate.x.minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
-            // log_warning() << std::fixed << "gboost: invalid scale factor(s): [" << gstate.x.transpose()
-            //               << "], stopping.";
+            // NB: scaling fails (optimization fails or convergence on training loss)
+            result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
             break;
         }
+
         gstate.x *= shrinkage_ratio;
         best_wlearner->scale(gstate.x);
 
@@ -221,29 +218,20 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
         outputs.vector() += woutputs.vector();
         evaluate(targets_iterator, loss, outputs, values);
-
-        // update model
-        wlearners.emplace_back(std::move(best_wlearner));
+        result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
 
         // early stopping
-        if (done(values, train_samples, valid_samples, wlearners, epsilon, patience, optimum_round, optimum_value,
-                 optimum_values))
+        if (done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience, optimum_round,
+                 optimum_value, optimum_values))
         {
             break;
         }
     }
 
-    while (wlearners.size() > optimum_round)
-    {
-        wlearners.pop_back();
-    }
+    result.done(static_cast<tensor_size_t>(optimum_round));
 
-    ::nano::wlearner::merge(wlearners);
-
-    auto bias = tensor1d_t{map_tensor(bstate.x.data(), make_dims(bstate.x.size()))};
-
-    return std::make_tuple(std::move(bias), std::move(wlearners), selected(optimum_values, train_samples),
-                           selected(optimum_values, valid_samples), static_cast<tensor_size_t>(optimum_round));
+    return std::make_tuple(std::move(result), selected(optimum_values, train_samples),
+                           selected(optimum_values, valid_samples));
 }
 
 gboost_model_t::gboost_model_t()
@@ -326,8 +314,8 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
     return stream;
 }
 
-fit_result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                 const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
+::nano::fit_result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                         const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
     critical(m_protos.empty(), "gboost: cannot fit without any weak learner!");
 
@@ -336,38 +324,59 @@ fit_result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
 
     const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
-        [[maybe_unused]] auto [bias, wlearners, train_errors_losses, valid_errors_losses, optimum_round] =
+        auto [gboost, train_errors_losses, valid_errors_losses] =
             ::fit(*this, dataset, train_samples, valid_samples, loss, solver, m_protos, params);
 
-        return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), optimum_round);
+        return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };
 
     auto fit_result =
         ml::tune(samples, splitter, tuner, std::move(param_names), param_spaces, make_logger_lambda(), evaluator);
 
-    // refit with the optimum hyper-parameters (if any) on all given samples
+    // choose the optimum hyper-parameters and merge the boosters fitted for each fold
     {
-        // ... and with the optimum boosting rounds as the average of the optimum boosting rounds across folds
         const auto& optimum_params = fit_result.optimum();
+        const auto  folds          = optimum_params.folds();
 
-        auto optimum_rounds = tensor_size_t{0};
-        for (tensor_size_t fold = 0; fold < optimum_params.folds(); ++fold)
+        m_bias = make_full_tensor<scalar_t>(make_dims(::nano::size(dataset.target_dims())), 0.0);
+        m_wlearners.clear();
+
+        for (tensor_size_t fold = 0; fold < folds; ++fold)
         {
-            optimum_rounds += std::any_cast<tensor_size_t>(optimum_params.extra(fold));
+            const auto* const pgboost = std::any_cast<gboost::fit_result_t>(&optimum_params.extra(fold));
+            assert(pgboost != nullptr);
+            m_bias.vector() += pgboost->m_bias.vector();
+            for (const auto& wlearner : pgboost->m_wlearners)
+            {
+                m_wlearners.emplace_back(wlearner->clone());
+            }
         }
-        optimum_rounds = idiv(optimum_rounds, optimum_params.folds());
 
-        [[maybe_unused]] auto [bias, wlearners, train_errors_losses, valid_errors_losses, optimum_round] = ::fit(
-            *this, dataset, samples, indices_t{}, loss, solver, m_protos, optimum_params.params(), optimum_rounds);
+        ::nano::wlearner::merge(m_wlearners);
 
-        fit_result.evaluate(std::move(train_errors_losses));
+        const auto denom = 1.0 / static_cast<scalar_t>(folds);
+        const auto vdenom = make_vector<scalar_t>(denom);
+        m_bias.vector() *= denom;
+        for (const auto& wlearner : m_wlearners)
+        {
+            wlearner->scale(vdenom);
+        }
 
-        m_bias      = std::move(bias);
-        m_wlearners = std::move(wlearners);
+        learner_t::fit(dataset);
+
+        const auto all_samples = arange(0, dataset.samples());
+        const auto outputs     = predict(dataset, all_samples);
+        auto       values      = tensor2d_t{2, all_samples.size()};
+        const auto batch       = parameter("gboost::batch").value<tensor_size_t>();
+
+        auto targets_iterator = targets_iterator_t{dataset, all_samples};
+        targets_iterator.batch(batch);
+        targets_iterator.scaling(scaling_type::none);
+        evaluate(targets_iterator, loss, outputs, values);
+
+        fit_result.evaluate(::selected(values, samples));
     }
     this->log(fit_result);
-
-    learner_t::fit(dataset);
 
     return fit_result;
 }
@@ -379,7 +388,6 @@ tensor4d_t gboost_model_t::predict(const dataset_t& dataset, const indices_t& sa
     tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
     outputs.reshape(samples.size(), -1).matrix().rowwise() = m_bias.vector().transpose();
 
-    // TODO: determine at runtime if worth parallelizing
     for (const auto& wlearner : m_wlearners)
     {
         wlearner->predict(dataset, samples, outputs.tensor());

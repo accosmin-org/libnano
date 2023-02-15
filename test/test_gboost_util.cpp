@@ -86,6 +86,19 @@ UTEST_CASE(evaluate)
     }
 }
 
+UTEST_CASE(mean)
+{
+    const auto errors_values = make_tensor<scalar_t>(make_dims(2, 5), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    const auto train_samples = make_indices(0, 1, 2);
+    const auto valid_samples = make_indices(1, 3, 4);
+
+    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, train_samples), 6.0, 1e-12);
+    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, valid_samples), 23.0 / 3.0, 1e-12);
+
+    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, train_samples), 1.0, 1e-12);
+    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, valid_samples), 8.0 / 3.0, 1e-12);
+}
+
 UTEST_CASE(early_stopping)
 {
     const auto epsilon       = 1.0;
