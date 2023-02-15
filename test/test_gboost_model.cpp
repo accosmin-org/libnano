@@ -223,7 +223,7 @@ UTEST_CASE(add_protos)
 
 UTEST_CASE(fit_predict_bias)
 {
-    const auto model = make_gbooster_to_fit();
+    const auto model       = make_gbooster_to_fit();
     const auto epsilon     = 1e-6;
     const auto param_names = strings_t{};
     const auto datasource  = make_datasource<fixture_bias_datasource_t>(100);
@@ -234,7 +234,7 @@ UTEST_CASE(fit_predict_bias)
 
 UTEST_CASE(fit_predict_affine)
 {
-    const auto model = make_gbooster_to_fit();
+    const auto model       = make_gbooster_to_fit();
     const auto epsilon     = 1e-5;
     const auto param_names = strings_t{};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(200);
@@ -245,7 +245,7 @@ UTEST_CASE(fit_predict_affine)
 
 UTEST_CASE(fit_predict_tables)
 {
-    const auto model = make_gbooster_to_fit();
+    const auto model       = make_gbooster_to_fit();
     const auto epsilon     = 1e-5;
     const auto param_names = strings_t{};
     const auto datasource  = make_datasource<fixture_tables_datasource_t>(300);

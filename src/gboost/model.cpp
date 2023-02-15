@@ -141,10 +141,10 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     train_targets_iterator.batch(batch);
     train_targets_iterator.scaling(scaling_type::none);
 
-    auto rng       = make_rng(seed);
-    auto values    = tensor2d_t{2, samples.size()};
-    auto outputs   = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
-    auto woutputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
+    auto rng      = make_rng(seed);
+    auto values   = tensor2d_t{2, samples.size()};
+    auto outputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
+    auto woutputs = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
 
     const auto gfunction = grads_function_t{targets_iterator, loss, vAreg};
     const auto bfunction = bias_function_t{train_targets_iterator, loss, vAreg};
@@ -354,7 +354,7 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
 
         ::nano::wlearner::merge(m_wlearners);
 
-        const auto denom = 1.0 / static_cast<scalar_t>(folds);
+        const auto denom  = 1.0 / static_cast<scalar_t>(folds);
         const auto vdenom = make_vector<scalar_t>(denom);
         m_bias.vector() *= denom;
         for (const auto& wlearner : m_wlearners)

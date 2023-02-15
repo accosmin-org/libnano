@@ -60,4 +60,4 @@ namespace nano::gboost
         rwlearners_t m_wlearners;
         tensor2d_t   m_statistics; ///< (boosting round, statistics indexed by the associated enumeration)
     };
-}
+} // namespace nano::gboost
