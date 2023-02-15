@@ -42,37 +42,6 @@ static void check_predict_throws(const gboost_model_t& model)
     UTEST_CHECK_THROW(model.predict(dataset3, arange(0, dataset3.samples())), std::runtime_error);
 }
 
-template <typename tdatasource>
-auto check_gbooster(gboost_model_t model, const tdatasource& datasource0)
-{
-    const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-8);
-    const auto dataset  = make_dataset(datasource0);
-    const auto splitter = make_splitter("k-fold", 2, 42U);
-    const auto tuner    = make_tuner("surrogate");
-    const auto samples  = arange(0, dataset.samples());
-
-    // fitting should fail if no weak learner to chose from
-    UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, *solver, *splitter, *tuner), std::runtime_error);
-
-    // fitting should work when properly setup
-    auto fit_result = fit_result_t{};
-    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner));
-
-    // check model
-    datasource0.check_gbooster(model);
-    check_predict(model, dataset, 1e-5);
-    check_predict_throws(model);
-
-    // check model loading and saving from and to binary streams
-    const auto imodel = check_stream(model);
-    datasource0.check_gbooster(model);
-    check_predict(imodel, dataset, 1e-5);
-    check_predict_throws(imodel);
-
-    return fit_result;
-}
-
 static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
                          const tensor_size_t expected_folds = 2, const scalar_t epsilon = 1e-5)
 {
@@ -117,4 +86,35 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
             }
         }
     }
+}
+
+template <typename tdatasource>
+auto check_gbooster(gboost_model_t model, const tdatasource& datasource0)
+{
+    const auto loss     = make_loss("mse");
+    const auto solver   = make_solver("cgd-n", 1e-7, 1000);
+    const auto dataset  = make_dataset(datasource0);
+    const auto splitter = make_splitter("k-fold", 2, 42U);
+    const auto tuner    = make_tuner("surrogate");
+    const auto samples  = arange(0, dataset.samples());
+
+    // fitting should fail if no weak learner to chose from
+    UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, *solver, *splitter, *tuner), std::runtime_error);
+
+    // fitting should work when properly setup
+    auto fit_result = fit_result_t{};
+    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner));
+
+    // check model
+    datasource0.check_gbooster(model);
+    check_predict(model, dataset, 1e-5);
+    check_predict_throws(model);
+
+    // check model loading and saving from and to binary streams
+    const auto imodel = check_stream(model);
+    datasource0.check_gbooster(model);
+    check_predict(imodel, dataset, 1e-5);
+    check_predict_throws(imodel);
+
+    return fit_result;
 }

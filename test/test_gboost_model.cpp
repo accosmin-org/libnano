@@ -291,7 +291,7 @@ UTEST_CASE(tune_subsample)
 
 UTEST_CASE(tune_variance)
 {
-    auto model       = make_gbooster_to_fit("gboost::regularization", "variance");
+    auto       model       = make_gbooster_to_fit("gboost::regularization", "variance");
     const auto param_names = strings_t{"vAreg"};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
