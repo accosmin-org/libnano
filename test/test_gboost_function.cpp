@@ -180,6 +180,8 @@ UTEST_CASE(bias)
 
         for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
         {
+            UTEST_NAMED_CASE(scat("vAreg=", vAreg));
+
             const auto function = scale_function_t{iterator, *loss, vAreg, cluster, outputs, woutputs};
 
             UTEST_CHECK_EQUAL(function.size(), datasource.groups());
@@ -211,6 +213,8 @@ UTEST_CASE(grads)
 
     for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
     {
+        UTEST_NAMED_CASE(scat("vAreg=", vAreg));
+
         const auto function = grads_function_t{iterator, *loss, vAreg};
 
         UTEST_CHECK_EQUAL(function.size(), all_samples.size() * 2);
