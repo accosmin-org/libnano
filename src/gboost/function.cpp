@@ -91,8 +91,8 @@ scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
         });
 
     // OK
-    const auto& accumulator0 = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator0.vgrad(m_vAreg, gx);
+    const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
+    return accumulator.vgrad(m_vAreg, gx);
 }
 
 bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)
@@ -150,8 +150,8 @@ scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
         });
 
     // OK
-    const auto& accumulator0 = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator0.vgrad(m_vAreg, gx);
+    const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
+    return accumulator.vgrad(m_vAreg, gx);
 }
 
 grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)

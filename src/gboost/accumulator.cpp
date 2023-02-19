@@ -41,11 +41,22 @@ void accumulator_t::update(const tensor1d_cmap_t& values)
     m_vm2 += values.array().square().sum();
 }
 
-scalar_t accumulator_t::vgrad(scalar_t vAreg, vector_t* gx) const
+scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
 {
-    if (gx != nullptr)
+    if (vAreg < std::numeric_limits<scalar_t>::epsilon())
     {
-        *gx = m_gb1 + vAreg * (m_gb2 - m_vm1 * m_gb1) * 2;
+        if (gx != nullptr)
+        {
+            *gx = m_gb1;
+        }
+        return m_vm1;
     }
-    return m_vm1 + vAreg * (m_vm2 - m_vm1 * m_vm1);
+    else
+    {
+        if (gx != nullptr)
+        {
+            *gx = 2.0 * (1.0 - vAreg) * m_vm1 * m_gb1 + 2.0 * vAreg * m_gb2;
+        }
+        return (1.0 - vAreg) * m_vm1 * m_vm1 + vAreg * m_vm2;
+    }
 }

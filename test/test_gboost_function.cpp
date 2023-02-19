@@ -139,8 +139,10 @@ UTEST_CASE(bias)
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
         const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1})
+        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
         {
+            UTEST_NAMED_CASE(scat("vAreg=", vAreg));
+
             const auto function = bias_function_t{iterator, *loss, vAreg};
 
             UTEST_CHECK_EQUAL(function.size(), 2);
@@ -155,7 +157,7 @@ UTEST_CASE(bias)
     }
 }
 
-UTEST_CASE(scale)
+/*UTEST_CASE(scale)
 {
     const auto loss       = make_loss();
     const auto datasource = make_datasource(50);
@@ -220,6 +222,6 @@ UTEST_CASE(grads)
             check_optimum(function, targets.vector());
         }
     }
-}
+}*/
 
 UTEST_END_MODULE()

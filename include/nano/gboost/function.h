@@ -12,13 +12,15 @@ namespace nano::gboost
     /// \brief the criterion used for computing the gradient wrt outputs of a Gradient Boosting model,
     ///     using a given loss function:
     ///
-    ///     f(outputs) = EXPECTATION[loss(target_i, output_i)] + vAreg * VARIANCE[loss(target_i, output_i)]
+    ///     f(outputs) = EXPECTATION[loss(target_i, output_i)], if no regularization or
+    ///
+    ///     f(outputs) = EXPECTATION^2[loss(target_i, output_i) + vAreg * VARIANCE[loss(target_i, output_i)].
     ///
     /// NB: the function_t interface is used only for testing/debugging
     ///     as it computes more than needed when training a Gradient Boosting model.
     ///
     /// NB: the ERM loss can be optionally regularized by penalizing:
-    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///     - (1) the variance of the loss values - like in EBBoost or VadaBoost.
     ///
     class NANO_PUBLIC grads_function_t final : public function_t
     {
@@ -53,13 +55,15 @@ namespace nano::gboost
     };
 
     ///
-    /// \brief the criterion used for optimizing the bias of a Gradient Boosting model,
+    /// \brief the criterion used for computing the bias of a Gradient Boosting model,
     ///     using a given loss function:
     ///
-    ///     f(x) = EXPECTATION[loss(target_i, x)] + vAreg * VARIANCE[loss(target_i, x)]
+    ///     f(x) = EXPECTATION[loss(target_i, x)], if no regularization or
+    ///
+    ///     f(x) = EXPECTATION^2[loss(target_i, x)] + vAreg * VARIANCE[loss(target_i, x)].
     ///
     /// NB: the ERM loss can be optionally regularized by penalizing:
-    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///     - (1) the variance of the loss values - like in EBBoost or VadaBoost.
     ///
     class NANO_PUBLIC bias_function_t final : public function_t
     {
@@ -94,11 +98,13 @@ namespace nano::gboost
     /// \brief the criterion used for optimizing the scale (aka the line-search like step) of a Gradient Boosting model,
     ///     using a given loss function.
     ///
-    ///     f(x) = EXPECTATION[loss(target_i, soutput_i + x[cluster_i] * woutput_i)] +
-    ///            vAreg * VARIANCE[loss(target_i, soutput_i + x[cluster_i] * woutput_i)]
+    ///     f(x) = EXPECTATION[loss(target_i, soutput_i + x[cluster_i] * woutput_i)], if no regularization or
+    ///
+    ///     f(x) = EXPECTATION^2[loss(target_i, soutput_i + x[cluster_i] * woutput_i)] +
+    ///            vAreg * VARIANCE[loss(target_i, soutput_i + x[cluster_i] * woutput_i)].
     ///
     /// NB: the ERM loss can be optionally regularized by penalizing:
-    ///     - (1) the variance of the loss values - like in VadaBoost
+    ///     - (1) the variance of the loss values - like in EBBoost or VadaBoost.
     ///
     class NANO_PUBLIC scale_function_t final : public function_t
     {

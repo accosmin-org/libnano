@@ -6,19 +6,19 @@
 namespace nano::gboost
 {
     ///
-    /// \brief boosting model and per boosting round statistics with support for early stopping.
+    /// \brief boosting model and per boosting round statistics.
     ///
     struct NANO_PUBLIC fit_result_t
     {
         enum class stats
         {
-            train_error = 0,
-            train_loss,
-            valid_error,
-            valid_loss,
-            solver_fcalls,
-            solver_gcalls,
-            solver_status_,
+            train_error = 0, ///< mean training error
+            train_loss,      ///< mean training loss value
+            valid_error,     ///< mean validation error
+            valid_loss,      ///< mean validation loss value
+            solver_fcalls,   ///< number of function value calls by the solver
+            solver_gcalls,   ///< number of function gradient calls by the solver
+            solver_status_,  ///< solver_status enumeration produced by the solver
         };
 
         ///
@@ -56,7 +56,7 @@ namespace nano::gboost
                     const indices_t& valid_samples, const solver_state_t&, rwlearner_t&&);
 
         ///
-        /// \brief trim the resuupdate statistics for the given boosting round.
+        /// \brief trim the statistics at the given boosting round (selected by early stopping).
         ///
         void done(tensor_size_t optimum_round);
 

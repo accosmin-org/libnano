@@ -26,7 +26,7 @@ namespace nano::gboost
         void update(const tensor1d_cmap_t& values);
 
         ///
-        /// \brief returns the function value and its optional gradient.
+        /// \brief returns the function value and optionally its gradient.
         ///
         scalar_t vgrad(scalar_t vAreg, vector_t* gx) const;
 
