@@ -47,7 +47,7 @@ scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
     {
         if (gx != nullptr)
         {
-            *gx = m_gb1;
+            gx->noalias() = m_gb1;
         }
         return m_vm1;
     }
@@ -55,7 +55,7 @@ scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
     {
         if (gx != nullptr)
         {
-            *gx = 2.0 * (1.0 - vAreg) * m_vm1 * m_gb1 + 2.0 * vAreg * m_gb2;
+            gx->noalias() = 2.0 * (1.0 - vAreg) * m_vm1 * m_gb1 + 2.0 * vAreg * m_gb2;
         }
         return (1.0 - vAreg) * m_vm1 * m_vm1 + vAreg * m_vm2;
     }

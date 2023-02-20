@@ -144,8 +144,8 @@ scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
                 m_loss.vgrad(targets, outputs, vgrads);
                 const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
 
-                accumulator.m_gb1 += gmatrix.colwise().sum();
-                accumulator.m_gb2 += gmatrix.transpose() * values.vector();
+                accumulator.m_gb1.noalias() += gmatrix.colwise().sum();
+                accumulator.m_gb2.noalias() += gmatrix.transpose() * values.vector();
             }
         });
 
@@ -188,8 +188,15 @@ scalar_t grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 
     // OK
     const auto vm1 = m_values.vector().mean();
-    const auto vm2 = m_values.array().square().mean();
-    return vm1 + m_vAreg * (vm2 - vm1 * vm1);
+    if (m_vAreg < std::numeric_limits<scalar_t>::epsilon())
+    {
+        return vm1;
+    }
+    else
+    {
+        const auto vm2 = m_values.array().square().mean();
+        return (1.0 - m_vAreg) * vm1 * vm1 + m_vAreg * vm2;
+    }
 }
 
 const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) const
@@ -203,14 +210,12 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
             m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));
         });
 
-    if (m_vAreg > 0.0)
+    if (m_vAreg >= std::numeric_limits<scalar_t>::epsilon())
     {
         const auto vm1 = m_values.vector().mean();
-        // FIXME: rewrite this loop as a more efficient Eigen operation
-        for (tensor_size_t i = 0; i < m_vgrads.size<0>(); ++i)
-        {
-            m_vgrads.vector(i) *= 1.0 + 2.0 * m_vAreg * (m_values(i) - vm1);
-        }
+        const auto ct1 = 2.0 * (1.0 - m_vAreg) * vm1;
+
+        m_vgrads.reshape(m_values.size(), -1).matrix().array().colwise() *= ct1 + 2.0 * m_vAreg * m_values.array();
     }
 
     return m_vgrads;

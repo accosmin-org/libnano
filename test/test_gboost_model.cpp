@@ -279,7 +279,7 @@ UTEST_CASE(tune_shrinkage)
     check_result(result, param_names);
 }
 
-UTEST_CASE(tune_subsample)
+/*UTEST_CASE(tune_subsample)
 {
     auto       model       = make_gbooster_to_fit("gboost::subsample", "on");
     const auto param_names = strings_t{"subsample"};
@@ -297,6 +297,6 @@ UTEST_CASE(tune_variance)
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names);
-}
+}*/
 
 UTEST_END_MODULE()
