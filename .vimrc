@@ -71,10 +71,10 @@ autocmd BufWritePre     * :call StripTrailingWhitespaces()
 
 function! Formatonsave()
   let l:formatdiff = 10
-  if exists("/usr/share/clang/clang-format.py")
+  if filereadable("/usr/share/clang/clang-format.py")
       py3f /usr/share/clang/clang-format.py
   endif
-  if exists("/usr/share/clang/clang-format-14/clang-format.py")
+  if filereadable("/usr/share/clang/clang-format-14/clang-format.py")
       py3f /usr/share/clang/clang-format-14/clang-format.py
   endif
 endfunction
