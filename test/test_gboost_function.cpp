@@ -64,9 +64,7 @@ private:
 
         resize(m_samples, features, 1U);
 
-        m_scale = vector_t::Random(m_groups);
-        m_scale.array() += 1.1;
-
+        m_scale    = make_random_vector<scalar_t>(m_groups, 1.1, 2.2);
         m_outputs  = make_random_tensor<scalar_t>(cat_dims(m_samples, m_tdims));
         m_woutputs = make_random_tensor<scalar_t>(cat_dims(m_samples, m_tdims));
 
@@ -120,7 +118,7 @@ static void check_value(const function_t& function, const ttmatrix& tmatrix, con
     const auto minimum = std::numeric_limits<scalar_t>::epsilon();
 
     const auto f0 = values1.mean();
-    const auto fV = (vAreg < minimum) ? f0 : ((1.0 - vAreg) * f0 * f0 + vAreg * values2.mean());
+    const auto fV = (vAreg < minimum) ? f0 : (f0 + vAreg * std::sqrt(std::max(values2.mean() - f0 * f0, 0.0)));
     UTEST_CHECK_CLOSE(function.vgrad(vector_t::Zero(function.size())), fV, epsilon);
 }
 

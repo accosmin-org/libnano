@@ -283,20 +283,20 @@ UTEST_CASE(tune_shrinkage)
 {
     auto       model       = make_gbooster_to_fit("gboost::subsample", "on");
     const auto param_names = strings_t{"subsample"};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(500);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names);
-}
+}*/
 
 UTEST_CASE(tune_variance)
 {
     auto       model       = make_gbooster_to_fit("gboost::regularization", "variance");
     const auto param_names = strings_t{"vAreg"};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(200);
 
     const auto result = check_gbooster(std::move(model), datasource);
     check_result(result, param_names);
-}*/
+}
 
 UTEST_END_MODULE()

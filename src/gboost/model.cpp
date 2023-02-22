@@ -230,6 +230,8 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     result.done(static_cast<tensor_size_t>(optimum_round));
 
+    std::cout << "vAreg=" << vAreg << ", optimum_round=" << optimum_round << std::endl;
+
     return std::make_tuple(std::move(result), selected(optimum_values, train_samples),
                            selected(optimum_values, valid_samples));
 }

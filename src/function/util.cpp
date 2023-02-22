@@ -21,7 +21,8 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
     // finite-difference approximated gradient
     //      see "Numerical optimization", Nocedal & Wright, 2nd edition, p.197
     auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto dx : {1e-8, 2e-8, 3e-8, 5e-8, 7e-8, 8e-8, 1e-7, 2e-7, 3e-7, 5e-7, 7e-7, 8e-7, 1e-6, 2e-6, 3e-6})
+    for (const auto dx : {1e-9, 3e-9,  1e-8,  3e-8,  5e-8,  8e-8,  1e-7,  3e-7,  5e-7,  8e-7,  1e-6,
+                          3e-6, 1e-12, 3e-12, 1e-11, 3e-11, 1e-10, 3e-10, 1e-11, 3e-11, 1e-12, 3e-12})
     {
         xp = x;
         xn = x;
