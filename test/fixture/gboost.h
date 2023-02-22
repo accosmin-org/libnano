@@ -12,6 +12,7 @@ static auto make_gbooster()
 {
     auto model = gboost_model_t{};
     model.logger(model_t::make_logger_stdio());
+    model.parameter("gboost::max_rounds") = 100;
     model.parameter("gboost::epsilon")  = 1e-6;
     model.parameter("gboost::patience") = 2;
     return model;

@@ -55,8 +55,8 @@ scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
     {
         if (gx != nullptr)
         {
-            *gx = m_gb1 + 0.5 * vAreg * (m_gb2 - 2 * m_vm1 * m_gb1) / std::sqrt(std::max(m_vm2 - m_vm1 * m_vm1, 1e-40));
+            *gx = 2.0 * (1.0 - vAreg) * m_vm1 * m_gb1 + 2.0 * vAreg * m_gb2;
         }
-        return m_vm1 + vAreg * std::sqrt(std::max(m_vm2 - m_vm1 * m_vm1, 0.0));
+        return (1.0 - vAreg) * m_vm1 * m_vm1 + vAreg * m_vm2;
     }
 }

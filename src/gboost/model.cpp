@@ -9,6 +9,8 @@
 #include <nano/wlearner/util.h>
 #include <set>
 
+#include <iomanip>
+
 using namespace nano;
 using namespace nano::gboost;
 
@@ -208,6 +210,11 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
             result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
             break;
         }
+
+        std::cout << std::fixed << std::setprecision(12) << "round=" << round << ", grads=[" << gradients.min() << ","
+                  << gradients.max() << "], gstate.x=" << gstate.x.transpose()
+                  << ", train=" << result.m_statistics(round, 1) << "/" << result.m_statistics(round, 0)
+                  << ", valid=" << result.m_statistics(round, 3) << "/" << result.m_statistics(round, 2) << std::endl;
 
         gstate.x *= shrinkage_ratio;
         best_wlearner->scale(gstate.x);
