@@ -9,8 +9,6 @@
 #include <nano/wlearner/util.h>
 #include <set>
 
-#include <iomanip>
-
 using namespace nano;
 using namespace nano::gboost;
 
@@ -203,18 +201,13 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         const auto cluster  = make_cluster(dataset, samples, *best_wlearner, wscale);
         const auto function = scale_function_t{train_targets_iterator, loss, vAreg, cluster, outputs, woutputs};
 
-        auto gstate = solver.minimize(function, vector_t::Ones(function.size()));
+        auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0));
         if (gstate.x.minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
             // NB: scaling fails (optimization fails or convergence on training loss)
             result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
             break;
         }
-
-        std::cout << std::fixed << std::setprecision(12) << "round=" << round << ", grads=[" << gradients.min() << ","
-                  << gradients.max() << "], gstate.x=" << gstate.x.transpose()
-                  << ", train=" << result.m_statistics(round, 1) << "/" << result.m_statistics(round, 0)
-                  << ", valid=" << result.m_statistics(round, 3) << "/" << result.m_statistics(round, 2) << std::endl;
 
         gstate.x *= shrinkage_ratio;
         best_wlearner->scale(gstate.x);
@@ -237,8 +230,6 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     result.done(static_cast<tensor_size_t>(optimum_round));
 
-    std::cout << "vAreg=" << vAreg << ", optimum_round=" << optimum_round << std::endl;
-
     return std::make_tuple(std::move(result), selected(optimum_values, train_samples),
                            selected(optimum_values, valid_samples));
 }
@@ -251,7 +242,7 @@ gboost_model_t::gboost_model_t()
     register_parameter(parameter_t::make_integer("gboost::seed", 0, LE, 42, LE, 1024));
     register_parameter(parameter_t::make_integer("gboost::batch", 10, LE, 100, LE, 10000));
     register_parameter(parameter_t::make_integer("gboost::patience", 1, LE, 10, LE, 1'000));
-    register_parameter(parameter_t::make_integer("gboost::max_rounds", 10, LE, 10'000, LE, 1'000'000));
+    register_parameter(parameter_t::make_integer("gboost::max_rounds", 10, LE, 1'000, LE, 1'000'000));
 
     register_parameter(parameter_t::make_enum("gboost::wscale", wscale_type::gboost));
     register_parameter(parameter_t::make_enum("gboost::shrinkage", shrinkage_type::off));

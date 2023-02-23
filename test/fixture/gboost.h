@@ -13,8 +13,8 @@ static auto make_gbooster()
     auto model = gboost_model_t{};
     model.logger(model_t::make_logger_stdio());
     model.parameter("gboost::max_rounds") = 100;
-    model.parameter("gboost::epsilon")  = 1e-6;
-    model.parameter("gboost::patience") = 2;
+    model.parameter("gboost::epsilon")    = 1e-6;
+    model.parameter("gboost::patience")   = 2;
     return model;
 }
 
@@ -93,7 +93,7 @@ template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-7, 1000);
+    const auto solver   = make_solver("cgd-n", 1e-8, 1000);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", folds, 42U);
     const auto tuner    = make_tuner("surrogate");
