@@ -1,7 +1,5 @@
 # function to setup compilation flags for various targets
 function(target_compile_configure target)
-    target_compile_options(${target}
-        PRIVATE -DEIGEN_MPL2_ONLY -DEIGEN_DONT_PARALLELIZE)
     target_compile_features(${target}
         PUBLIC cxx_std_17
         PRIVATE cxx_std_17)
