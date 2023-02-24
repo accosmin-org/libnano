@@ -58,6 +58,6 @@ scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
             *gx = 2.0 * m_vm1 * m_gb1 / (1.0 + m_vm1 * m_vm1) +
                   2.0 * vAreg * (m_gb2 - m_vm1 * m_gb1) / (1.0 + m_vm2 - m_vm1 * m_vm1);
         }
-        return std::log(1.0 + m_vm1 * m_vm1) + vAreg * std::log(1.0 + m_vm2 - m_vm1 * m_vm1);
+        return std::log1p(m_vm1 * m_vm1) + vAreg * std::log1p(m_vm2 - m_vm1 * m_vm1);
     }
 }
