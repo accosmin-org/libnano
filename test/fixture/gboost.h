@@ -3,6 +3,7 @@
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
 #include "fixture/wlearner.h"
+#include <nano/gboost/enums.h>
 #include <nano/gboost/model.h>
 #include <nano/gboost/result.h>
 
@@ -77,9 +78,6 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
                 UTEST_CHECK_GREATER_EQUAL(valid_error, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_loss, 0.0);
 
-                UTEST_CHECK_LESS_EQUAL(fcalls, 100);
-                UTEST_CHECK_LESS_EQUAL(gcalls, 100);
-
                 UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
                 UTEST_CHECK_GREATER_EQUAL(gcalls, 1);
 
@@ -92,12 +90,19 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
 template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
+    // NB: need much more precise solvers for the variance-penalized loss!
+    const auto regularization = model.parameter("gboost::regularization").value<gboost::regularization_type>();
+    const auto solver_epsilon = regularization == gboost::regularization_type::variance ? 1e-12 : 1e-7;
+    const auto solver_maxiter = regularization == gboost::regularization_type::variance ? 10000 : 200;
+
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-8, 1000);
+    const auto solver   = make_solver("cgd-n", solver_epsilon, solver_maxiter);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", folds, 42U);
     const auto tuner    = make_tuner("surrogate");
     const auto samples  = arange(0, dataset.samples());
+
+    solver->lsearchk("cgdescent");
 
     // fitting should fail if no weak learner to chose from
     UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, *solver, *splitter, *tuner), std::runtime_error);

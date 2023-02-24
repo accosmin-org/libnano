@@ -82,7 +82,7 @@ private:
                 for (tensor_size_t i = 0, size = range.size(); i < size; ++i)
                 {
                     target.vector() = weights * inputs.vector(i) + m_bias.vector();
-                    target.vector() += m_noise * vector_t::Random(m_bias.size());
+                    target.vector() += m_noise * make_random_vector<scalar_t>(m_bias.size());
                     set(i + range.begin(), static_cast<tensor_size_t>(itarget), target);
                 }
             });

@@ -113,13 +113,14 @@ template <typename ttmatrix, typename tomatrix>
 static void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix,
                         const scalar_t vAreg, const scalar_t epsilon = 1e-12)
 {
-    const auto values1 = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
-    const auto values2 = values1.square();
-    const auto minimum = std::numeric_limits<scalar_t>::epsilon();
+    const auto values = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
 
-    const auto f0 = values1.mean();
-    const auto fV = (vAreg < minimum) ? f0 : ((1.0 - vAreg) * f0 * f0 + vAreg * values2.mean());
-    UTEST_CHECK_CLOSE(function.vgrad(vector_t::Zero(function.size())), fV, epsilon);
+    const auto vm1 = values.mean();
+    const auto vm2 = values.array().square().mean();
+    const auto eps = std::numeric_limits<scalar_t>::epsilon();
+    const auto fun = (vAreg < eps) ? vm1 : (std::log(1.0 + vm1 * vm1) + vAreg * std::log(1.0 + vm2 - vm1 * vm1));
+
+    UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), fun, epsilon);
 }
 
 UTEST_BEGIN_MODULE(test_gboost_function)
@@ -138,7 +139,7 @@ UTEST_CASE(bias)
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
         const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
+        for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
         {
             UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 
@@ -177,7 +178,7 @@ UTEST_CASE(scale)
     {
         const auto iterator = targets_iterator_t{dataset, samples};
 
-        for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
+        for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
         {
             UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 
@@ -210,7 +211,7 @@ UTEST_CASE(grads)
     const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
     const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-    for (const auto vAreg : {0e-1, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
+    for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
     {
         UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 

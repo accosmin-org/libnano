@@ -36,7 +36,7 @@ static void check_vgrad(const linear::function_t& function, const flatten_iterat
 
     for (auto trial = 0; trial < trials; ++trial)
     {
-        const vector_t x = vector_t::Random(function.size());
+        const auto x = make_random_vector<scalar_t>(function.size());
         linear::predict(inputs, function.weights(x), function.bias(x), outputs);
 
         tensor1d_t values(samples);

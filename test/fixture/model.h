@@ -51,7 +51,7 @@ template <typename tmodel, typename... tfit_args>
         UTEST_CHECK_EQUAL(params.size(), static_cast<tensor_size_t>(expected_param_names.size()));
         if (params.size() > 0)
         {
-            UTEST_CHECK_GREATER(params.min(), 0.0);
+            UTEST_CHECK_GREATER_EQUAL(params.min(), 0.0);
         }
 
         const auto folds = param_result.folds();
