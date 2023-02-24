@@ -195,7 +195,9 @@ scalar_t grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
     else
     {
         const auto vm2 = m_values.array().square().mean();
-        return std::log1p(vm1 * vm1) + m_vAreg * std::log1p(vm2 - vm1 * vm1);
+        const auto eps = std::numeric_limits<scalar_t>::epsilon();
+
+        return std::log(eps + vm1 * vm1) + m_vAreg * std::log(eps + vm2 - vm1 * vm1);
     }
 }
 
@@ -214,9 +216,10 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
     {
         const auto vm1 = m_values.vector().mean();
         const auto vm2 = m_values.array().square().mean();
+        const auto eps = std::numeric_limits<scalar_t>::epsilon();
 
-        const auto a = 2.0 * vm1 / (1.0 + vm1 * vm1) - 2.0 * m_vAreg * vm1 / (1.0 + vm2 - vm1 * vm1);
-        const auto b = 2.0 * m_vAreg / (1.0 + vm2 - vm1 * vm1);
+        const auto a = 2.0 * vm1 / (eps + vm1 * vm1) - 2.0 * m_vAreg * vm1 / (eps + vm2 - vm1 * vm1);
+        const auto b = 2.0 * m_vAreg / (eps + vm2 - vm1 * vm1);
 
         m_vgrads.reshape(m_values.size(), -1).matrix().array().colwise() *= a + b * m_values.array();
     }

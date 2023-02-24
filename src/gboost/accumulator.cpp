@@ -53,11 +53,12 @@ scalar_t accumulator_t::vgrad(const scalar_t vAreg, vector_t* gx) const
     }
     else
     {
+        const auto eps = std::numeric_limits<scalar_t>::epsilon();
         if (gx != nullptr)
         {
-            *gx = 2.0 * m_vm1 * m_gb1 / (1.0 + m_vm1 * m_vm1) +
-                  2.0 * vAreg * (m_gb2 - m_vm1 * m_gb1) / (1.0 + m_vm2 - m_vm1 * m_vm1);
+            *gx = 2.0 * m_vm1 * m_gb1 / (eps + m_vm1 * m_vm1) +
+                  2.0 * vAreg * (m_gb2 - m_vm1 * m_gb1) / (eps + m_vm2 - m_vm1 * m_vm1);
         }
-        return std::log1p(m_vm1 * m_vm1) + vAreg * std::log1p(m_vm2 - m_vm1 * m_vm1);
+        return std::log(eps + m_vm1 * m_vm1) + vAreg * std::log(eps + m_vm2 - m_vm1 * m_vm1);
     }
 }
