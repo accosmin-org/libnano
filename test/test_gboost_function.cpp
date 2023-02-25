@@ -117,8 +117,7 @@ static void check_value(const function_t& function, const ttmatrix& tmatrix, con
 
     const auto vm1 = values.mean();
     const auto vm2 = values.array().square().mean();
-    const auto eps = std::numeric_limits<scalar_t>::epsilon();
-    const auto fun = vm1 + vAreg * std::sqrt(eps + vm2 - vm1 * vm1);
+    const auto fun = vm1 + vAreg * std::sqrt(vm2 - vm1 * vm1);
 
     UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), fun, epsilon);
 }

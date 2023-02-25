@@ -24,9 +24,8 @@ static auto make_params(const configurable_t& configurable)
     if (regularization == regularization_type::variance)
     {
         param_names.emplace_back("vAreg");
-        param_spaces.emplace_back(param_space_t::type::log10, 1e-9, 1e-8, 1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4,
-                                  3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3,
-                                  3e+3, 1e+4, 3e+4, 1e+5, 3e+5, 1e+6, 3e+6, 1e+7, 3e+7, 1e+8, 1e+9);
+        param_spaces.emplace_back(param_space_t::type::log10, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1e+0,
+                                  3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4);
     }
     if (subsample == subsample_type::on)
     {

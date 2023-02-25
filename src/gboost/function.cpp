@@ -218,8 +218,8 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
         const auto vm2 = m_values.array().square().mean();
         const auto eps = std::numeric_limits<scalar_t>::epsilon();
 
-        const auto a = 1.0 - m_vAreg * vm1 / std::sqrt(eps + vm2 - vm1 * vm1);
-        const auto b = m_vAreg / std::sqrt(eps + vm2 - vm1 * vm1);
+        const auto a = (vm2 - vm1 * vm1 < eps) ? 1.0 : (1.0 - m_vAreg * vm1 / std::sqrt(vm2 - vm1 * vm1));
+        const auto b = (vm2 - vm1 * vm1 < eps) ? 0.0 : (m_vAreg / std::sqrt(vm2 - vm1 * vm1));
 
         m_vgrads.reshape(m_values.size(), -1).matrix().array().colwise() *= a + b * m_values.array();
     }

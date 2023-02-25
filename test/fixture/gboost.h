@@ -54,7 +54,8 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
         UTEST_CHECK_EQUAL(result.param_results().size(), 1U);
     }
 
-    const auto delta_train_loss = (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? 1e-3 : 0;
+    const auto delta_train_loss =
+        (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? epsilon : 0.0;
 
     for (const auto& param_result : result.param_results())
     {
@@ -62,12 +63,14 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
         {
             const auto& result          = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
             const auto [rounds, nstats] = result.m_statistics.dims();
+            const auto optimum_round    = static_cast<tensor_size_t>(result.m_wlearners.size());
 
             auto last_train_loss = std::numeric_limits<scalar_t>::max();
 
             UTEST_CHECK_LESS(rounds, 200);
             UTEST_REQUIRE_EQUAL(nstats, 7);
-            for (tensor_size_t round = 0; round < rounds; ++round)
+            UTEST_CHECK_GREATER_EQUAL(rounds, optimum_round);
+            for (tensor_size_t round = 0; round < optimum_round + 1; ++round)
             {
                 const auto train_error = result.m_statistics(round, 0);
                 const auto train_loss  = result.m_statistics(round, 1);
