@@ -54,14 +54,18 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
         UTEST_CHECK_EQUAL(result.param_results().size(), 1U);
     }
 
+    const auto delta_train_loss = (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? 1e-3 : 0;
+
     for (const auto& param_result : result.param_results())
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& result = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
-
+            const auto& result          = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
             const auto [rounds, nstats] = result.m_statistics.dims();
 
+            auto last_train_loss = std::numeric_limits<scalar_t>::max();
+
+            UTEST_CHECK_LESS(rounds, 200);
             UTEST_REQUIRE_EQUAL(nstats, 7);
             for (tensor_size_t round = 0; round < rounds; ++round)
             {
@@ -73,10 +77,18 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
                 const auto gcalls      = result.m_statistics(round, 5);
                 const auto status      = result.m_statistics(round, 6);
 
+                UTEST_CHECK(std::isfinite(train_error));
+                UTEST_CHECK(std::isfinite(train_loss));
+                UTEST_CHECK(std::isfinite(valid_error));
+                UTEST_CHECK(std::isfinite(valid_loss));
+
                 UTEST_CHECK_GREATER_EQUAL(train_error, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(train_loss, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_error, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_loss, 0.0);
+
+                UTEST_CHECK_GREATER(last_train_loss + delta_train_loss, train_loss);
+                last_train_loss = train_loss;
 
                 UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
                 UTEST_CHECK_GREATER_EQUAL(gcalls, 1);
@@ -90,19 +102,12 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
 template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
-    // NB: need much more precise solvers for the variance-penalized loss!
-    const auto regularization = model.parameter("gboost::regularization").value<gboost::regularization_type>();
-    const auto solver_epsilon = regularization == gboost::regularization_type::variance ? 1e-6 : 1e-6;
-    const auto solver_maxiter = regularization == gboost::regularization_type::variance ? 10000 : 10000;
-
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("lbfgs", solver_epsilon, solver_maxiter);
+    const auto solver   = make_solver("cgd-n", 1e-3, 100);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", folds, 42U);
     const auto tuner    = make_tuner("surrogate");
     const auto samples  = arange(0, dataset.samples());
-
-    //    solver->lsearchk("cgdescent");
 
     // fitting should fail if no weak learner to chose from
     UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, *solver, *splitter, *tuner), std::runtime_error);

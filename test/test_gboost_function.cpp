@@ -118,7 +118,7 @@ static void check_value(const function_t& function, const ttmatrix& tmatrix, con
     const auto vm1 = values.mean();
     const auto vm2 = values.array().square().mean();
     const auto eps = std::numeric_limits<scalar_t>::epsilon();
-    const auto fun = (vAreg < eps) ? vm1 : (std::log(eps + vm1 * vm1) + vAreg * std::log(eps + vm2 - vm1 * vm1));
+    const auto fun = vm1 + vAreg * std::sqrt(eps + vm2 - vm1 * vm1);
 
     UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), fun, epsilon);
 }
@@ -139,7 +139,7 @@ UTEST_CASE(bias)
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
         const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-        for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
+        for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
         {
             UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 
@@ -178,7 +178,7 @@ UTEST_CASE(scale)
     {
         const auto iterator = targets_iterator_t{dataset, samples};
 
-        for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
+        for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
         {
             UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 
@@ -211,7 +211,7 @@ UTEST_CASE(grads)
     const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
     const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-    for (const auto vAreg : {0.0, 0.1, 0.2, 0.5, 1.0})
+    for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
     {
         UTEST_NAMED_CASE(scat("vAreg=", vAreg));
 

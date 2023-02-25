@@ -12,12 +12,7 @@ namespace nano::gboost
     /// \brief the criterion used for computing the gradient wrt outputs of a Gradient Boosting model,
     ///     using a given loss function:
     ///
-    ///     f(outputs) =
-    ///     {
-    ///         EXPECTATION[loss(target_i, output_i)], if no regularization
-    ///
-    ///         EXPECTATION^2[loss(target_i, output_i) + vAreg * VARIANCE[loss(target_i, output_i)], otherwise.
-    ///     }
+    ///     f(outputs) = EXPECTATION[loss(target_i, output_i)] + vAreg * VARIANCE^0.5[loss(target_i, output_i)].
     ///
     /// NB: the function_t interface is used only for testing/debugging
     ///     as it computes more than needed when training a Gradient Boosting model.
@@ -58,12 +53,7 @@ namespace nano::gboost
     /// \brief the criterion used for computing the bias of a Gradient Boosting model,
     ///     using a given loss function:
     ///
-    ///     f(x) =
-    ///     {
-    ///         EXPECTATION[loss(target_i, x)], if no regularization
-    ///
-    ///         EXPECTATION^2[loss(target_i, x)] + vAreg * VARIANCE[loss(target_i, x)], otherwise.
-    ///     }
+    ///     f(x) = EXPECTATION[loss(target_i, x)] + vAreg * VARIANCE^0.5[loss(target_i, x)].
     ///
     class NANO_PUBLIC bias_function_t final : public function_t
     {
@@ -100,10 +90,8 @@ namespace nano::gboost
     ///
     ///     f(x) =
     ///     {
-    ///         EXPECTATION[loss(target_i, soutput_i + x[cluster_i] * woutput_i)], if no regularization
-    ///
-    ///         EXPECTATION^2[loss(target_i, soutput_i + x[cluster_i] * woutput_i)]
-    ///         + vAreg * VARIANCE[loss(target_i, soutput_i + x[cluster_i] * woutput_i)], otherwise.
+    ///         EXPECTATION[loss(target_i, soutput_i + x[cluster_i] * woutput_i)]
+    ///         + vAreg * VARIANCE^0.5[loss(target_i, soutput_i + x[cluster_i] * woutput_i)].
     ///     }
     ///
     class NANO_PUBLIC scale_function_t final : public function_t
