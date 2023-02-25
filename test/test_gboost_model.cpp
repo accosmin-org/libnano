@@ -193,8 +193,6 @@ static auto make_gbooster_to_fit(const targs... args)
     return model;
 }
 
-// TODO: check that fitting twice with the same seed works as expected
-
 UTEST_BEGIN_MODULE(test_gboost_model)
 
 UTEST_CASE(empty)
@@ -255,8 +253,11 @@ UTEST_CASE(fit_predict_bootstrap)
     const auto param_names = strings_t{};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
-    const auto result = check_gbooster(std::move(model), datasource);
+    const auto result = check_gbooster(model, datasource);
     check_result(result, param_names);
+
+    const auto resultx = check_gbooster(std::move(model), datasource);
+    check_equal(result, resultx);
 }
 
 UTEST_CASE(fit_predict_tboost)
@@ -285,8 +286,11 @@ UTEST_CASE(tune_subsample)
     const auto param_names = strings_t{"subsample"};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(800);
 
-    const auto result = check_gbooster(std::move(model), datasource);
+    const auto result = check_gbooster(model, datasource);
     check_result(result, param_names);
+
+    const auto resultx = check_gbooster(std::move(model), datasource);
+    check_equal(result, resultx);
 }
 
 UTEST_CASE(tune_variance)

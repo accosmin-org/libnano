@@ -55,6 +55,8 @@ namespace nano
 
             const tensor1d_t& params() const { return m_params; }
 
+            const tensor4d_t& values() const { return m_values; }
+
             tensor_size_t folds() const { return m_values.size<0>(); }
 
             stats_t stats(tensor_size_t fold, split_type, value_type) const;

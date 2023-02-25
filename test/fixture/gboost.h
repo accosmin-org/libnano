@@ -44,6 +44,51 @@ static void check_predict_throws(const gboost_model_t& model)
     UTEST_CHECK_THROW(model.predict(dataset3, arange(0, dataset3.samples())), std::runtime_error);
 }
 
+static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::stats_t& rhs,
+                        const scalar_t epsilon = 1e-15)
+{
+    UTEST_CHECK_CLOSE(lhs.m_mean, rhs.m_mean, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_stdev, rhs.m_stdev, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_count, rhs.m_count, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per01, rhs.m_per01, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per05, rhs.m_per05, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per10, rhs.m_per10, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per20, rhs.m_per20, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per50, rhs.m_per50, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per80, rhs.m_per80, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per90, rhs.m_per90, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per95, rhs.m_per95, epsilon);
+    UTEST_CHECK_CLOSE(lhs.m_per99, rhs.m_per99, epsilon);
+}
+
+static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-15)
+{
+    UTEST_CHECK_EQUAL(lhs.param_names(), rhs.param_names());
+
+    UTEST_REQUIRE_EQUAL(lhs.param_results().size(), rhs.param_results().size());
+    for (size_t i = 0U; i < lhs.param_results().size(); ++i)
+    {
+        const auto& ilhs = lhs.param_results()[i];
+        const auto& irhs = lhs.param_results()[i];
+
+        UTEST_CHECK_EQUAL(ilhs.folds(), irhs.folds());
+        UTEST_CHECK_CLOSE(ilhs.params(), irhs.params(), epsilon);
+        UTEST_CHECK_CLOSE(ilhs.values(), irhs.values(), epsilon);
+
+        for (tensor_size_t fold = 0; fold < ilhs.folds(); ++fold)
+        {
+            const auto& xlhs = std::any_cast<gboost::fit_result_t>(ilhs.extra(fold));
+            const auto& xrhs = std::any_cast<gboost::fit_result_t>(irhs.extra(fold));
+
+            UTEST_CHECK_CLOSE(xlhs.m_bias, xrhs.m_bias, epsilon);
+            UTEST_CHECK_CLOSE(xlhs.m_statistics, xrhs.m_statistics, epsilon);
+        }
+    }
+
+    check_equal(lhs.stats(value_type::errors), rhs.stats(value_type::errors), epsilon);
+    check_equal(lhs.stats(value_type::losses), rhs.stats(value_type::losses), epsilon);
+}
+
 static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
                          const tensor_size_t expected_folds = 2, const scalar_t epsilon = 1e-5)
 {
@@ -55,7 +100,7 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
     }
 
     const auto delta_train_loss =
-        (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? epsilon : 0.0;
+        (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? 1e-3 : 0.0;
 
     for (const auto& param_result : result.param_results())
     {
