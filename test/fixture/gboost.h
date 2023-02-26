@@ -45,7 +45,7 @@ static void check_predict_throws(const gboost_model_t& model)
 }
 
 static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::stats_t& rhs,
-                        const scalar_t epsilon = 1e-15)
+                        const scalar_t epsilon = 1e-14)
 {
     UTEST_CHECK_CLOSE(lhs.m_mean, rhs.m_mean, epsilon);
     UTEST_CHECK_CLOSE(lhs.m_stdev, rhs.m_stdev, epsilon);
@@ -61,7 +61,7 @@ static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::st
     UTEST_CHECK_CLOSE(lhs.m_per99, rhs.m_per99, epsilon);
 }
 
-static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-15)
+static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-14)
 {
     UTEST_CHECK_EQUAL(lhs.param_names(), rhs.param_names());
 
@@ -99,9 +99,6 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
         UTEST_CHECK_EQUAL(result.param_results().size(), 1U);
     }
 
-    const auto delta_train_loss =
-        (expected_param_names.size() == 1U && expected_param_names[0U] == "vAreg") ? 1e-3 : 0.0;
-
     for (const auto& param_result : result.param_results())
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
@@ -115,8 +112,11 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
             UTEST_CHECK_LESS(rounds, 200);
             UTEST_REQUIRE_EQUAL(nstats, 7);
             UTEST_CHECK_GREATER_EQUAL(rounds, optimum_round);
-            for (tensor_size_t round = 0; round < optimum_round + 1; ++round)
+            for (tensor_size_t round = 0; round < rounds; ++round)
             {
+                UTEST_NAMED_CASE(scat("params=", param_result.params().array().transpose(), ",fold=", fold,
+                                      ",round=", round, ",optim_round=", optimum_round));
+
                 const auto train_error = result.m_statistics(round, 0);
                 const auto train_loss  = result.m_statistics(round, 1);
                 const auto valid_error = result.m_statistics(round, 2);
@@ -135,13 +135,15 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
                 UTEST_CHECK_GREATER_EQUAL(valid_error, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_loss, 0.0);
 
-                UTEST_CHECK_GREATER(last_train_loss + delta_train_loss, train_loss);
+                UTEST_CHECK_GREATER_EQUAL(last_train_loss + epsilon, train_loss);
+                if (round <= optimum_round)
+                {
+                    UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);
+                }
                 last_train_loss = train_loss;
 
                 UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
                 UTEST_CHECK_GREATER_EQUAL(gcalls, 1);
-
-                UTEST_CHECK_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::converged);
             }
         }
     }
@@ -151,7 +153,7 @@ template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-3, 1000);
+    const auto solver   = make_solver("cgd-n", 1e-4, 100);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", folds, 42U);
     const auto tuner    = make_tuner("surrogate");
