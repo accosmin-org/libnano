@@ -363,9 +363,10 @@ UTEST_CASE(fit_predict_sclass_ksplit)
     const auto noise  = make_tensor<scalar_t>(make_dims(3), 1e-10, 1e-10, 1e-10);
     const auto hashes = make_hashes(make_tensor<int32_t>(make_dims(3), 0, 1, 2));
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-1, -1e-1, -1e-1);
+        UTEST_NAMED_CASE("ksplit=1");
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -0.6, -0.6, -0.6);
         const auto hash2tables = make_indices(0, 0, 0);
-        const auto tablex      = make_tensor<scalar_t>(make_dims(1, 1, 1, 1), -1e-1);
+        const auto tablex      = make_tensor<scalar_t>(make_dims(1, 1, 1, 1), -0.6);
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
@@ -373,9 +374,10 @@ UTEST_CASE(fit_predict_sclass_ksplit)
         check_wlearner(datasource0, datasourceX);
     }
     {
-        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1e-1, +1e-1, -1e-1);
+        UTEST_NAMED_CASE("ksplit=2");
+        const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -0.5, +1.0, -0.5);
         const auto hash2tables = make_indices(0, 1, 0);
-        const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -1e-1, +1e-1);
+        const auto tablex      = make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -0.5, +1.0);
 
         const auto datasource0 = make_datasource<fixture_t>(90, 1, tablex, tables, hashes, hash2tables, noise, maker);
         const auto datasourceX = make_random_datasource(make_features_all_continuous());
@@ -383,6 +385,7 @@ UTEST_CASE(fit_predict_sclass_ksplit)
         check_wlearner(datasource0, datasourceX);
     }
     {
+        UTEST_NAMED_CASE("ksplit=3");
         const auto tables      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1, +2, -3);
         const auto hash2tables = make_indices(0, 1, 2);
         const auto tablex      = make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -1, +2, -3);

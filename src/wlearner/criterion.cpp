@@ -5,7 +5,7 @@ using namespace nano;
 
 double nano::wlearner::make_score(const criterion_type criterion, double rss, const int64_t k, const int64_t n)
 {
-    rss = std::max(rss, std::numeric_limits<double>::epsilon());
+    rss = std::max(rss, std::numeric_limits<double>::epsilon() * 100.0);
 
     switch (criterion)
     {
