@@ -89,16 +89,19 @@ scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
             }
         });
 
-    const auto& accumulator0 = ::nano::sum_reduce(m_accumulators, m_iterator.samples().size());
+    const auto& accumulator = ::nano::sum_reduce(m_accumulators, m_iterator.samples().size());
 
     // OK, normalize and add the regularization terms
+    const auto eps       = std::numeric_limits<scalar_t>::epsilon();
+    const auto has_vAreg = m_vAreg > 0.0 && (accumulator.m_vm2 - accumulator.m_vm1 * accumulator.m_vm1) >= eps;
+
     if (gx != nullptr)
     {
         auto gb = bias(*gx);
         auto gW = weights(*gx);
 
-        gb = accumulator0.m_gb1;
-        gW = accumulator0.m_gW1;
+        gb = accumulator.m_gb1;
+        gW = accumulator.m_gW1;
 
         if (m_l1reg > 0.0)
         {
@@ -108,14 +111,26 @@ scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
         {
             gW.array() += m_l2reg * W.array() * 2 / W.size();
         }
-        if (m_vAreg > 0.0)
+        if (has_vAreg)
         {
-            gb.array() += m_vAreg * (accumulator0.m_gb2.array() - accumulator0.m_vm1 * accumulator0.m_gb1.array()) * 2;
-            gW.array() += m_vAreg * (accumulator0.m_gW2.array() - accumulator0.m_vm1 * accumulator0.m_gW1.array()) * 2;
+            const auto div = 1.0 / std::sqrt(accumulator.m_vm2 - accumulator.m_vm1 * accumulator.m_vm1);
+            gb.array() += m_vAreg * (accumulator.m_gb2.array() - accumulator.m_vm1 * accumulator.m_gb1.array()) * div;
+            gW.array() += m_vAreg * (accumulator.m_gW2.array() - accumulator.m_vm1 * accumulator.m_gW1.array()) * div;
         }
     }
 
-    return accumulator0.m_vm1 + ((m_l1reg > 0.0) ? (m_l1reg * W.array().abs().mean()) : 0.0) +
-           ((m_l2reg > 0.0) ? (m_l2reg * W.array().square().mean()) : 0.0) +
-           ((m_vAreg > 0.0) ? (m_vAreg * (accumulator0.m_vm2 - accumulator0.m_vm1 * accumulator0.m_vm1)) : 0.0);
+    auto fx = accumulator.m_vm1;
+    if (m_l1reg > 0.0)
+    {
+        fx += m_l1reg * W.array().abs().mean();
+    }
+    if (m_l2reg > 0.0)
+    {
+        fx += m_l2reg * W.array().square().mean();
+    }
+    if (has_vAreg)
+    {
+        fx += m_vAreg * std::sqrt(accumulator.m_vm2 - accumulator.m_vm1 * accumulator.m_vm1);
+    }
+    return fx;
 }

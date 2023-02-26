@@ -151,7 +151,7 @@ template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
     const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-3, 100);
+    const auto solver   = make_solver("cgd-n", 1e-3, 1000);
     const auto dataset  = make_dataset(datasource0);
     const auto splitter = make_splitter("k-fold", folds, 42U);
     const auto tuner    = make_tuner("surrogate");
