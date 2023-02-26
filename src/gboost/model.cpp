@@ -345,10 +345,8 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
             const auto* const pgboost = std::any_cast<gboost::fit_result_t>(&optimum_params.extra(fold));
             assert(pgboost != nullptr);
             m_bias.vector() += pgboost->m_bias.vector();
-            for (const auto& wlearner : pgboost->m_wlearners)
-            {
-                m_wlearners.emplace_back(wlearner->clone());
-            }
+            std::for_each(pgboost->m_wlearners.begin(), pgboost->m_wlearners.end(),
+                          [&](const auto& wlearner) { m_wlearners.emplace_back(wlearner->clone()); });
         }
 
         ::nano::wlearner::merge(m_wlearners);

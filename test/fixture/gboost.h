@@ -69,7 +69,7 @@ static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const 
     for (size_t i = 0U; i < lhs.param_results().size(); ++i)
     {
         const auto& ilhs = lhs.param_results()[i];
-        const auto& irhs = lhs.param_results()[i];
+        const auto& irhs = rhs.param_results()[i];
 
         UTEST_CHECK_EQUAL(ilhs.folds(), irhs.folds());
         UTEST_CHECK_CLOSE(ilhs.params(), irhs.params(), epsilon);

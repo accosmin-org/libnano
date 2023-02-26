@@ -284,7 +284,7 @@ UTEST_CASE(tune_subsample)
 {
     auto       model       = make_gbooster_to_fit("gboost::subsample", "on");
     const auto param_names = strings_t{"subsample"};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(800);
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
     const auto result = check_gbooster(model, datasource);
     check_result(result, param_names);

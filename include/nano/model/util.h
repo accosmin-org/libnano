@@ -13,7 +13,6 @@ namespace nano::ml
     auto tune(const indices_t& samples, const splitter_t& splitter, const tuner_t& tuner, strings_t param_names,
               const param_spaces_t& param_spaces, const tlogger& logger, const tevaluator& evaluator)
     {
-        // TODO: allocate the iterators once: (train, valid)xfolds + refit
         const auto splits = splitter.split(samples);
         const auto folds  = static_cast<tensor_size_t>(splits.size());
 
