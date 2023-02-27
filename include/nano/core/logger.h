@@ -110,7 +110,7 @@ namespace nano
     /// \brief wraps main function to catch and log all exceptions.
     ///
     template <typename toperator>
-    int safe_main(const toperator& op, int argc, const char* argv[])
+    int safe_main(const toperator& op, const int argc, const char* argv[])
     {
         try
         {

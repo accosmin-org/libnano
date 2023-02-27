@@ -1,6 +1,5 @@
 #include "fixture/linear.h"
 #include "fixture/loss.h"
-#include "fixture/model.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
@@ -88,7 +87,7 @@ UTEST_CASE(regularization_none)
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
-        check_result(result, param_names, 0U, 2, epsilon);
+        check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }
@@ -115,7 +114,7 @@ UTEST_CASE(regularization_lasso)
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;
 
-        check_result(result, param_names, 6U, 2, epsilon);
+        check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }
@@ -142,7 +141,7 @@ UTEST_CASE(regularization_ridge)
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
-        check_result(result, param_names, 6U, 2, epsilon);
+        check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }
@@ -169,7 +168,7 @@ UTEST_CASE(regularization_variance)
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
 
-        check_result(result, param_names, 6U, 2, epsilon);
+        check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }
@@ -196,7 +195,7 @@ UTEST_CASE(regularization_elasticnet)
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
         const auto epsilon  = 1e-3;
 
-        check_result(result, param_names, 15U, 2, epsilon);
+        check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }

@@ -182,9 +182,9 @@ namespace nano
             const auto [d0, d1, d2] = feature.dims();
             const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
 
-            static const auto maxu08 = tensor_size_t(1) << 8;
-            static const auto maxu16 = tensor_size_t(1) << 16;
-            static const auto maxu32 = tensor_size_t(1) << 32;
+            static constexpr auto maxu08 = tensor_size_t(1) << 8;
+            static constexpr auto maxu16 = tensor_size_t(1) << 16;
+            static constexpr auto maxu32 = tensor_size_t(1) << 32;
 
             switch (feature.type())
             {
@@ -224,9 +224,9 @@ namespace nano
             const auto [d0, d1, d2] = feature.dims();
             const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
 
-            static const auto maxu08 = tensor_size_t(1) << 8;
-            static const auto maxu16 = tensor_size_t(1) << 16;
-            static const auto maxu32 = tensor_size_t(1) << 32;
+            static constexpr auto maxu08 = tensor_size_t(1) << 8;
+            static constexpr auto maxu16 = tensor_size_t(1) << 16;
+            static constexpr auto maxu32 = tensor_size_t(1) << 32;
 
             switch (feature.type())
             {

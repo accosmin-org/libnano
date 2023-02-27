@@ -1,6 +1,7 @@
 #include <nano/linear/enums.h>
 #include <nano/linear/function.h>
 #include <nano/linear/model.h>
+#include <nano/linear/result.h>
 #include <nano/linear/util.h>
 #include <nano/model/util.h>
 #include <nano/tensor/stream.h>
@@ -69,7 +70,9 @@ static auto make_x0(const ::nano::linear::function_t& function, const std::any& 
     vector_t x0 = vector_t::Zero(function.size());
     if (extra.has_value())
     {
-        const auto& [weights, bias]             = std::any_cast<std::tuple<tensor2d_t, tensor1d_t>>(extra);
+        const auto& result                      = std::any_cast<linear::fit_result_t>(extra);
+        const auto& bias                        = result.m_bias;
+        const auto& weights                     = result.m_weights;
         x0.segment(0, weights.size())           = weights.array();
         x0.segment(weights.size(), bias.size()) = bias.array();
     }
@@ -94,7 +97,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     ::upscale(iterator.flatten_stats(), iterator.scaling(), iterator.targets_stats(), iterator.scaling(), weights,
               bias);
 
-    return std::make_tuple(std::move(weights), std::move(bias));
+    return linear::fit_result_t{std::move(bias), std::move(weights), state};
 }
 
 linear_model_t::linear_model_t()
@@ -132,8 +135,8 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     return stream;
 }
 
-fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                 const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
+::nano::fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                         const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
     learner_t::fit(dataset);
 
@@ -148,12 +151,11 @@ fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     {
         const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
 
-        auto [weights, bias]     = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, extra);
-        auto train_errors_losses = evaluate(dataset, train_samples, loss, weights, bias, batch);
-        auto valid_errors_losses = evaluate(dataset, valid_samples, loss, weights, bias, batch);
+        auto result              = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, extra);
+        auto train_errors_losses = evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
+        auto valid_errors_losses = evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
 
-        return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses),
-                               std::make_tuple(std::move(weights), std::move(bias)));
+        return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(result));
     };
 
     auto fit_result =
@@ -163,13 +165,13 @@ fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     {
         const auto [l1reg, l2reg, vAreg] = decode_params(fit_result.optimum().params(), regularization);
 
-        auto [weights, bias] = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
-        auto errors_losses   = evaluate(dataset, samples, loss, weights, bias, batch);
+        auto result        = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
+        auto errors_losses = evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
         fit_result.evaluate(std::move(errors_losses));
 
-        m_weights = std::move(weights);
-        m_bias    = std::move(bias);
+        m_bias    = std::move(result.m_bias);
+        m_weights = std::move(result.m_weights);
     }
     this->log(fit_result);
 

@@ -113,6 +113,7 @@ target_sources(nano PRIVATE
     wlearner/accumulator.cpp
     linear/util.cpp
     linear/model.cpp
+    linear/result.cpp
     linear/function.cpp
     linear/accumulator.cpp
 )

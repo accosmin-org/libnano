@@ -1,7 +1,9 @@
 #include "fixture/dataset.h"
 #include "fixture/datasource/linear.h"
+#include "fixture/model.h"
 #include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
+#include <nano/linear/result.h>
 
 using namespace nano;
 
@@ -37,4 +39,33 @@ template <typename tweights, typename tbias>
         });
 
     UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
+}
+
+[[maybe_unused]] static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+                                          const tensor_size_t expected_folds, const scalar_t epsilon)
+{
+    ::check_result(result, expected_param_names,
+                   expected_param_names.empty()        ? 1U
+                   : expected_param_names.size() == 1U ? 6U
+                                                       : 15U,
+                   expected_folds, epsilon);
+
+    for (const auto& param_result : result.param_results())
+    {
+        for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
+        {
+            const auto& result = std::any_cast<linear::fit_result_t>(param_result.extra(fold));
+
+            UTEST_REQUIRE_EQUAL(result.m_statistics.size(), 3);
+
+            const auto fcalls = result.m_statistics(0);
+            const auto gcalls = result.m_statistics(1);
+            const auto status = result.m_statistics(2);
+
+            UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);
+
+            UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
+            UTEST_CHECK_GREATER_EQUAL(gcalls, 1);
+        }
+    }
 }

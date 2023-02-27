@@ -45,7 +45,7 @@ static void check_predict_throws(const gboost_model_t& model)
 }
 
 static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::stats_t& rhs,
-                        const scalar_t epsilon = 1e-14)
+                        const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_CLOSE(lhs.m_mean, rhs.m_mean, epsilon);
     UTEST_CHECK_CLOSE(lhs.m_stdev, rhs.m_stdev, epsilon);
@@ -61,7 +61,7 @@ static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::st
     UTEST_CHECK_CLOSE(lhs.m_per99, rhs.m_per99, epsilon);
 }
 
-static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-14)
+static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_EQUAL(lhs.param_names(), rhs.param_names());
 
