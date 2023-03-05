@@ -1,0 +1,64 @@
+name: ubuntu-builds
+
+on: [push]
+
+jobs:
+  build-libstdcpp:
+    name: build-libstdcpp
+
+    strategy:
+      max-parallel: 8
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+        compiler: [g++, clang++]
+        build_type: [Release, Debug]
+        build_shared_libs: [OFF, ON]
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: |
+        if [[ "${{matrix.os}}" == "ubuntu-20.04" ]]; then
+          bash scripts/setup_ubuntu2004.sh --default
+        else
+          bash scripts/setup_ubuntu2204.sh --default
+        fi
+    - name: build-test-install-example
+      run: |
+         CXX=${{matrix.compiler}} bash scripts/build.sh \
+           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+           -DBUILD_SHARED_LIBS=${{matrix.build_shared_libs}} \
+           --config --build --test --install --build-example
+
+  build-libcpp:
+    name: build-libcpp
+
+    strategy:
+      max-parallel: 8
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+        compiler: [clang++]
+        build_type: [Release, Debug]
+        build_shared_libs: [OFF, ON]
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: |
+        if [[ "${{matrix.os}}" == "ubuntu-20.04" ]]; then
+          bash scripts/setup_ubuntu2004.sh --default
+        else
+          bash scripts/setup_ubuntu2204.sh --default
+        fi
+    - name: build-test-install-example
+      run: |
+         CXX=${{matrix.compiler}} bash scripts/build.sh \
+           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+           -DBUILD_SHARED_LIBS=${{matrix.build_shared_libs}} \
+           --libcpp --config --build --test --install --build-example

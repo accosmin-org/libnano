@@ -1,0 +1,28 @@
+name: macos-builds
+
+on: [push]
+
+jobs:
+  build:
+    name: build
+
+    strategy:
+      max-parallel: 8
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+        build_type: [Release, Debug]
+        build_shared_libs: [OFF, ON]
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_osxbrew.sh
+    - name: build-test-install-example
+      run: |
+         bash scripts/build.sh \
+           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+           -DBUILD_SHARED_LIBS=${{matrix.build_shared_libs}} \
+           --config --build --test --install --build-example
