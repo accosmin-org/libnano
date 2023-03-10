@@ -11,7 +11,7 @@
 
 namespace nano::parallel
 {
-    using future_t = std::future<void>;
+    using future_t = std::shared_future<void>;
     using task_t   = std::packaged_task<void(size_t)>;
 
     ///

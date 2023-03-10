@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-class scalar_to_scalar_t : public elemwise_input_scalar_t, public generated_scalar_t
+class NANO_PUBLIC scalar_to_scalar_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
     scalar_to_scalar_t()
@@ -27,7 +27,7 @@ public:
     }
 };
 
-class scalar_to_sclass_t : public elemwise_input_scalar_t, public generated_sclass_t
+class NANO_PUBLIC scalar_to_sclass_t : public elemwise_input_scalar_t, public generated_sclass_t
 {
 public:
     scalar_to_sclass_t()
@@ -53,7 +53,7 @@ public:
     }
 };
 
-class scalar_to_mclass_t : public elemwise_input_scalar_t, public generated_mclass_t
+class NANO_PUBLIC scalar_to_mclass_t : public elemwise_input_scalar_t, public generated_mclass_t
 {
 public:
     scalar_to_mclass_t()
@@ -84,7 +84,7 @@ public:
     }
 };
 
-class scalar_to_struct_t : public elemwise_input_scalar_t, public generated_struct_t
+class NANO_PUBLIC scalar_to_struct_t : public elemwise_input_scalar_t, public generated_struct_t
 {
 public:
     scalar_to_struct_t()
@@ -117,7 +117,7 @@ public:
     }
 };
 
-class struct_to_scalar_t : public elemwise_input_struct_t, public generated_scalar_t
+class NANO_PUBLIC struct_to_scalar_t : public elemwise_input_struct_t, public generated_scalar_t
 {
 public:
     struct_to_scalar_t()
@@ -140,7 +140,7 @@ public:
     }
 };
 
-class struct_to_sclass_t : public elemwise_input_struct_t, public generated_sclass_t
+class NANO_PUBLIC struct_to_sclass_t : public elemwise_input_struct_t, public generated_sclass_t
 {
 public:
     struct_to_sclass_t()
@@ -167,7 +167,7 @@ public:
     }
 };
 
-class struct_to_mclass_t : public elemwise_input_struct_t, public generated_mclass_t
+class NANO_PUBLIC struct_to_mclass_t : public elemwise_input_struct_t, public generated_mclass_t
 {
 public:
     struct_to_mclass_t()
@@ -199,7 +199,7 @@ public:
     }
 };
 
-class struct_to_struct_t : public elemwise_input_struct_t, public generated_struct_t
+class NANO_PUBLIC struct_to_struct_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
     struct_to_struct_t()

@@ -103,9 +103,9 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& result          = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
-            const auto [rounds, nstats] = result.m_statistics.dims();
-            const auto optimum_round    = static_cast<tensor_size_t>(result.m_wlearners.size());
+            const auto& pfresult        = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
+            const auto [rounds, nstats] = pfresult.m_statistics.dims();
+            const auto optimum_round    = static_cast<tensor_size_t>(pfresult.m_wlearners.size());
 
             auto last_train_loss = std::numeric_limits<scalar_t>::max();
 
@@ -117,13 +117,13 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
                 UTEST_NAMED_CASE(scat("params=", param_result.params().array().transpose(), ",fold=", fold,
                                       ",round=", round, ",optim_round=", optimum_round));
 
-                const auto train_error = result.m_statistics(round, 0);
-                const auto train_loss  = result.m_statistics(round, 1);
-                const auto valid_error = result.m_statistics(round, 2);
-                const auto valid_loss  = result.m_statistics(round, 3);
-                const auto fcalls      = result.m_statistics(round, 4);
-                const auto gcalls      = result.m_statistics(round, 5);
-                const auto status      = result.m_statistics(round, 6);
+                const auto train_error = pfresult.m_statistics(round, 0);
+                const auto train_loss  = pfresult.m_statistics(round, 1);
+                const auto valid_error = pfresult.m_statistics(round, 2);
+                const auto valid_loss  = pfresult.m_statistics(round, 3);
+                const auto fcalls      = pfresult.m_statistics(round, 4);
+                const auto gcalls      = pfresult.m_statistics(round, 5);
+                const auto status      = pfresult.m_statistics(round, 6);
 
                 UTEST_CHECK(std::isfinite(train_error));
                 UTEST_CHECK(std::isfinite(train_loss));

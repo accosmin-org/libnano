@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/tensor.h>
+#include <numeric>
 
 namespace nano
 {

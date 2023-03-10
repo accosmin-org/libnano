@@ -7,7 +7,7 @@ namespace nano
     ///
     /// \brief pairwise product of scalar features.
     ///
-    class pairwise_product_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
+    class NANO_PUBLIC pairwise_product_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
     {
     public:
         pairwise_product_t()

@@ -187,7 +187,7 @@ UTEST_CASE(fit_result_optimum)
         param.evaluate(2, make_errors_losses(2, 102), make_errors_losses(1003, 1403), 3.14);
 
         UTEST_CHECK_EQUAL(std::any_cast<int>(param.extra(0)), 1);
-        UTEST_CHECK_EQUAL(std::any_cast<const char*>(param.extra(1)), "2");
+        UTEST_CHECK_EQUAL(std::any_cast<const char*>(param.extra(1)), string_t{"2"});
         UTEST_CHECK_EQUAL(std::any_cast<double>(param.extra(2)), 3.14);
 
         check_stats(param.stats(0, split_type::train, value_type::errors), 1e-3 * 50, 0.002915475947, 101.0, 1e-3, 5e-3,

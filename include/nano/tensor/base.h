@@ -74,7 +74,7 @@ namespace nano
         ///
         /// \brief total number of elements.
         ///
-        auto size() const { return nano::size(m_dims); }
+        auto size() const { return ::nano::size(m_dims); }
 
         ///
         /// \brief number of elements for the given dimension.
@@ -109,7 +109,7 @@ namespace nano
         auto offset(const tindices... indices) const
         {
             static_assert(sizeof...(indices) == trank, "invalid number of tensor dimensions");
-            return nano::index(dims(), indices...);
+            return ::nano::index(dims(), indices...);
         }
 
         ///
@@ -120,7 +120,7 @@ namespace nano
         auto offset0(const tindices... indices) const
         {
             static_assert(sizeof...(indices) <= trank, "invalid number of tensor dimensions");
-            return nano::index0(dims(), indices...);
+            return ::nano::index0(dims(), indices...);
         }
 
         ///

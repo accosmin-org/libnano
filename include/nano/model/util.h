@@ -24,7 +24,7 @@ namespace nano::ml
         {
             auto param_results = make_param_results(all_params, folds);
 
-            const auto callback = [&](const tensor_size_t index, size_t)
+            const auto thread_callback = [&](const tensor_size_t index, size_t)
             {
                 const auto fold  = index % folds;
                 const auto trial = index / folds;
@@ -42,7 +42,7 @@ namespace nano::ml
             };
 
             const auto trials = all_params.size<0>();
-            thread_pool.map(folds * trials, callback);
+            thread_pool.map(folds * trials, thread_callback);
 
             tensor1d_t values{trials};
             for (tensor_size_t trial = 0; trial < trials; ++trial)

@@ -106,4 +106,21 @@ namespace nano
     {
         return roundpow10(std::cbrt(epsilon<tscalar>()));
     }
+
+    ///
+    ///  \brief check if the given scalar is finite.
+    /// NB: handles explicitly integer values as MSVC doesn't cast it to the appropriate floating point types.
+    ///
+    template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
+    bool isfinite([[maybe_unused]] const tscalar value) noexcept
+    {
+        if constexpr (std::is_floating_point_v<tscalar>)
+        {
+            return std::isfinite(value);
+        }
+        else
+        {
+            return true;
+        }
+    }
 } // namespace nano

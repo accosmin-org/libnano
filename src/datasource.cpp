@@ -2,7 +2,7 @@
 #include <nano/datasource/imclass_cifar.h>
 #include <nano/datasource/imclass_mnist.h>
 #include <nano/datasource/tabular.h>
-#include <nano/datasource/utils.h>
+#include <nano/datasource/util.h>
 
 using namespace nano;
 

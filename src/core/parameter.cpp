@@ -1,5 +1,6 @@
 #include <cmath>
 #include <nano/core/logger.h>
+#include <nano/core/numeric.h>
 #include <nano/core/parameter.h>
 #include <nano/core/stream.h>
 #include <nano/core/tokenizer.h>
@@ -42,7 +43,7 @@ static auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, 
 {
     const auto value = static_cast<tscalar>(value_);
 
-    critical(!std::isfinite(value) || !::check(param.m_mincomp, param.m_min, value) ||
+    critical(!::nano::isfinite(value) || !::check(param.m_mincomp, param.m_min, value) ||
                  !::check(param.m_maxcomp, value, param.m_max),
              "parameter (", name, "): out of domain scalar value, !(", param.m_min, ::name(param.m_mincomp), value_,
              ::name(param.m_maxcomp), param.m_max, ")");
@@ -57,7 +58,7 @@ static auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& pa
     const auto value1 = static_cast<tscalar>(value1_);
     const auto value2 = static_cast<tscalar>(value2_);
 
-    critical(!std::isfinite(value1) || !std::isfinite(value2) || !::check(param.m_mincomp, param.m_min, value1) ||
+    critical(!::nano::isfinite(value1) || !::nano::isfinite(value2) || !::check(param.m_mincomp, param.m_min, value1) ||
                  !::check(param.m_valcomp, value1, value2) || !::check(param.m_maxcomp, value2, param.m_max),
              "parameter (", name, "): out of domain pair of scalar values, !(", param.m_min, ::name(param.m_mincomp),
              value1_, ::name(param.m_valcomp), value2_, ::name(param.m_maxcomp), param.m_max, ")");

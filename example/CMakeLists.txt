@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include("${CMAKE_SOURCE_DIR}/../cmake/utils.cmake")
+
 add_executable(info src/info.cpp)
 add_executable(tensor src/tensor.cpp)
 add_executable(minimize src/minimize.cpp)
@@ -20,3 +22,7 @@ enable_testing()
 
 add_test(tensor tensor)
 add_test(minimize minimize)
+
+copy_runtime_dlls(info)
+copy_runtime_dlls(tensor)
+copy_runtime_dlls(minimize)

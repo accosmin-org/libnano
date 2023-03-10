@@ -10,7 +10,7 @@ namespace nano
     ///
     /// NB: the targets can be configured to be correlated only to some inputs (features) modulo a fixed constant.
     ///
-    class synthetic_linear_t
+    class NANO_PUBLIC synthetic_linear_t
     {
     public:
         synthetic_linear_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
@@ -50,7 +50,7 @@ namespace nano
     ///
     /// \brief synthetic binary classification with a linear model.
     ///
-    class synthetic_sclass_t : public synthetic_linear_t
+    class NANO_PUBLIC synthetic_sclass_t : public synthetic_linear_t
     {
     public:
         synthetic_sclass_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
@@ -65,7 +65,7 @@ namespace nano
     ///
     /// \brief synthetic univariate regression with a linear model.
     ///
-    class synthetic_scalar_t : public synthetic_linear_t
+    class NANO_PUBLIC synthetic_scalar_t : public synthetic_linear_t
     {
     public:
         synthetic_scalar_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,

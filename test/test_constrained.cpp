@@ -10,13 +10,15 @@ using namespace nano::constraint;
 template <typename... tvalues>
 static vector_t make_x(tvalues... values)
 {
-    return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).vector();
+    return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...).vector();
 }
 
 template <tensor_size_t trows, typename... tvalues>
 static matrix_t make_X(tvalues... values)
 {
-    return make_tensor<scalar_t, 1>(make_dims(sizeof...(values)), values...).reshape(trows, -1).matrix();
+    return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...)
+        .reshape(trows, -1)
+        .matrix();
 }
 
 static void check_penalty(penalty_function_t& penalty_function, bool expected_convexity, bool expected_smoothness)

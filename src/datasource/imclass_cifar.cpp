@@ -1,7 +1,7 @@
 #include <fstream>
 #include <nano/core/logger.h>
 #include <nano/datasource/imclass_cifar.h>
-#include <nano/datasource/utils.h>
+#include <nano/datasource/util.h>
 
 using namespace nano;
 

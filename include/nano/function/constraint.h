@@ -7,7 +7,7 @@
 
 namespace nano
 {
-    class function_t;
+    class NANO_PUBLIC function_t;
     using rfunction_t  = std::unique_ptr<function_t>;
     using rfunctions_t = std::vector<rfunction_t>;
 

@@ -100,7 +100,7 @@ UTEST_CASE(init)
 
 UTEST_CASE(future)
 {
-    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return static_cast<int>(std::pow(a, b)); });
 
     auto future = task.get_future();
     task(2, 9);
@@ -110,7 +110,7 @@ UTEST_CASE(future)
 
 UTEST_CASE(future_join)
 {
-    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return static_cast<int>(std::pow(a, b)); });
 
     auto future = task.get_future();
     auto thread = std::thread{std::move(task), 2, 10};
@@ -121,7 +121,7 @@ UTEST_CASE(future_join)
 
 UTEST_CASE(future_detach)
 {
-    std::packaged_task<int(int, int)> task([](int a, int b) { return std::pow(a, b); });
+    std::packaged_task<int(int, int)> task([](int a, int b) { return static_cast<int>(std::pow(a, b)); });
 
     auto future = task.get_future();
     auto thread = std::thread{std::move(task), 2, 11};

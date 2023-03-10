@@ -55,10 +55,10 @@ namespace nano
         /// \brief line-search step along the descent direction of state0.
         /// returns true if the update was successfully.
         ///
-        bool update(const solver_state_t& state0, scalar_t t)
+        bool update(const solver_state_t& state0, const scalar_t t_)
         {
-            this->t = t;
-            return update(state0.x + t * state0.d);
+            this->t = t_;
+            return update(state0.x + t_ * state0.d);
         }
 
         ///

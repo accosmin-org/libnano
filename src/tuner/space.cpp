@@ -15,8 +15,8 @@ static auto make_max(const tensor1d_t& grid_values)
                                     : *std::max_element(begin(grid_values), end(grid_values));
 }
 
-param_space_t::param_space_t(param_space_t::type type, tensor1d_t grid_values)
-    : m_type(type)
+param_space_t::param_space_t(param_space_t::type type_, tensor1d_t grid_values)
+    : m_type(type_)
     , m_grid_values(std::move(grid_values))
     , m_min(make_min(m_grid_values))
     , m_max(make_max(m_grid_values))

@@ -31,12 +31,16 @@ logger_t::logger_t(type ltype, std::ostream* cout, std::ostream* cerr)
     : m_stream(get_stream(ltype, cout, cerr))
     , m_precision(m_stream.precision())
 {
-    struct tm buf
-    {
-    };
-
     const std::time_t t = std::time(nullptr);
-    m_stream << get_header(ltype) << "[" << std::put_time(localtime_r(&t, &buf), "%F|%T") << "]\033[0m: ";
+
+    // FIXME: Use the portable thread safe version in C++20!
+    std::tm buff{};
+#ifdef _WIN32
+    ::localtime_s(&buff, &t);
+#else // POSIX
+    ::localtime_r(&t, &buff);
+#endif
+    m_stream << get_header(ltype) << "[" << std::put_time(&buff, "%F|%T") << "]\033[0m: ";
     m_stream << std::fixed << std::setprecision(6);
 }
 

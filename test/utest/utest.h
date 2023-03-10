@@ -122,13 +122,10 @@ static exception_status check_throw(const toperator& op)
         op();
         return exception_status::none;
     }
-    catch (const texception& e)
-    {
-        return exception_status::expected;
-    }
     catch (const std::exception& e)
     {
-        return exception_status::unexpected;
+        return dynamic_cast<const texception*>(&e) != nullptr ? exception_status::expected
+                                                              : exception_status::unexpected;
     }
     catch (...)
     {
@@ -206,12 +203,14 @@ static exception_status check_throw(const toperator& op)
     case exception_status::none:                                                                                       \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} does not throw!" << RESET_COLOR              \
                                << std::endl;                                                                           \
-        UTEST_HANDLE_CRITICAL(critical)                                                                                \
+        UTEST_HANDLE_CRITICAL(critical);                                                                               \
+        break;                                                                                                         \
     case exception_status::expected: break;                                                                            \
     case exception_status::unexpected:                                                                                 \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} does not throw {"                            \
                                << UTEST_STRINGIFY(exception) << "}!" << RESET_COLOR << std::endl;                      \
-        UTEST_HANDLE_CRITICAL(critical)                                                                                \
+        UTEST_HANDLE_CRITICAL(critical);                                                                               \
+        break;                                                                                                         \
     }
 #define UTEST_CHECK_THROW(call, exception)   UTEST_THROW(call, exception, false)
 #define UTEST_REQUIRE_THROW(call, exception) UTEST_THROW(call, exception, true)
@@ -234,7 +233,8 @@ static exception_status check_throw(const toperator& op)
         ++utest_n_checks;                                                                                              \
         const auto res_left  = (left);  /* NOLINT */                                                                   \
         const auto res_right = (right); /* NOLINT */                                                                   \
-        if (!(res_left op res_right))                                                                                  \
+        const auto res_check = (res_left op res_right);                                                                \
+        if (!res_check)                                                                                                \
         {                                                                                                              \
             UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {"                                  \
                                    << UTEST_STRINGIFY(left op right) << "} failed {" << res_left << " "                \
@@ -244,9 +244,8 @@ static exception_status check_throw(const toperator& op)
     }
 
 #define UTEST_EVALUATE_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP((left), (right), ==, critical);
-
-#define UTEST_CHECK_EQUAL(left, right)   UTEST_EVALUATE_EQUAL(left, right, false);
-#define UTEST_REQUIRE_EQUAL(left, right) UTEST_EVALUATE_EQUAL(left, right, true);
+#define UTEST_CHECK_EQUAL(left, right)              UTEST_EVALUATE_EQUAL(left, right, false);
+#define UTEST_REQUIRE_EQUAL(left, right)            UTEST_EVALUATE_EQUAL(left, right, true);
 
 #define UTEST_EVALUATE_NOT_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, !=, critical)
 #define UTEST_CHECK_NOT_EQUAL(left, right)              UTEST_EVALUATE_NOT_EQUAL(left, right, false)

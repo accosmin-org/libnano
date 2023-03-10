@@ -45,7 +45,7 @@ namespace nano
         ///
         /// \brief statistics collected while evaluating a set of hyper-parameter values for all folds.
         ///
-        class param_t
+        class NANO_PUBLIC param_t
         {
         public:
             explicit param_t(tensor1d_t params = tensor1d_t{}, tensor_size_t folds = 0);

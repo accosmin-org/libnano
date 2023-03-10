@@ -14,7 +14,7 @@ cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || ech
 threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
-export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic -pthread"
+export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"
 
 function lto {
     export CXXFLAGS="${CXXFLAGS} -flto"

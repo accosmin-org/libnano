@@ -21,12 +21,12 @@ System:
 * [CMake](https://cmake.org)
 * [Eigen3](https://eigen.tuxfamily.org) - high-performance linear-algebra C++ library
 
-Libnano is tested on Linux (Ubuntu, ArchLinux) using both gcc and clang and on OSX using AppleClang. It may work with minor changes on other platforms as well or using other compiler versions.
+Libnano is tested on Linux (Ubuntu, Fedora) using both gcc and clang, on MacOS using AppleClang and on Windows using Visual Studio. It may work with minor changes on other platforms as well or using other compiler versions.
 
 
 #### How to build
 
-The easiest way to build, test and install the library on Linux and OSX is to call [scripts/build.sh](../scripts/build.sh) with the appropriate command line arguments. This script is invoked to run various tests on continuous integrations plaforms like [Semaphore](https://accosmin.semaphoreci.com/projects/libnano). See [semaphore.yml](../.semaphore/semaphore.yml) for examples.
+The easiest way to build, test and install the library on Linux, MacOS or Windows is to call either [scripts/build.sh](../scripts/build.sh) or [scripts/build.bat](../scripts/build.bat) with the appropriate command line arguments. These scripts are invoked to run various tests on continuous integrations plaforms like [github workflows](https://github.com/accosmin-org/libnano/actions). See [.github/workflows](../.github/workflows) for examples.
 
 
 Otherwise, users can also invoke the main CMake script directly for other platforms or for custom builds.

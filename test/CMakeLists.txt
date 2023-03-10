@@ -67,3 +67,5 @@ make_test(test_wlearner_factory NANO::nano)
 make_test(test_gboost_util NANO::nano)
 make_test(test_gboost_model NANO::nano)
 make_test(test_gboost_function NANO::nano)
+
+copy_runtime_dlls(test_core_table)

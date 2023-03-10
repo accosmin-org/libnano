@@ -52,3 +52,5 @@ llvmcovhtml
 #
 datasets
 doxygen
+
+.vs

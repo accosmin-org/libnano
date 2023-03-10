@@ -195,13 +195,13 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         tscalar value() const
         {
-            if (const auto* param = std::get_if<irange_t>(&m_storage))
+            if (const auto* iparam = std::get_if<irange_t>(&m_storage))
             {
-                return static_cast<tscalar>(param->m_value);
+                return static_cast<tscalar>(iparam->m_value);
             }
-            else if (const auto* param = std::get_if<frange_t>(&m_storage))
+            else if (const auto* fparam = std::get_if<frange_t>(&m_storage))
             {
-                return static_cast<tscalar>(param->m_value);
+                return static_cast<tscalar>(fparam->m_value);
             }
             logical_error();
         }
@@ -209,13 +209,13 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         std::tuple<tscalar, tscalar> value_pair() const
         {
-            if (const auto* param = std::get_if<iprange_t>(&m_storage))
+            if (const auto* iparam = std::get_if<iprange_t>(&m_storage))
             {
-                return std::make_tuple(static_cast<tscalar>(param->m_value1), static_cast<tscalar>(param->m_value2));
+                return std::make_tuple(static_cast<tscalar>(iparam->m_value1), static_cast<tscalar>(iparam->m_value2));
             }
-            else if (const auto* param = std::get_if<fprange_t>(&m_storage))
+            else if (const auto* fparam = std::get_if<fprange_t>(&m_storage))
             {
-                return std::make_tuple(static_cast<tscalar>(param->m_value1), static_cast<tscalar>(param->m_value2));
+                return std::make_tuple(static_cast<tscalar>(fparam->m_value1), static_cast<tscalar>(fparam->m_value2));
             }
             logical_error();
         }

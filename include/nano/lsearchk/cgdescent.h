@@ -35,8 +35,8 @@ namespace nano
     private:
         struct state_t
         {
-            state_t(const solver_state_t& state0, solver_state_t& state)
-                : state0(state0)
+            state_t(const solver_state_t& state0_, solver_state_t& state)
+                : state0(state0_)
                 , c(state)
                 , a(state0)
                 , b(state)

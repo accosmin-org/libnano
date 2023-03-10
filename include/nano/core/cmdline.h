@@ -26,7 +26,7 @@ namespace nano
         ///
         /// \brief command line option.
         ///
-        struct option_t
+        struct NANO_PUBLIC option_t
         {
             option_t();
             option_t(string_t short_name, string_t name, string_t description, string_t default_value);
@@ -45,7 +45,7 @@ namespace nano
         ///
         /// \brief result of parsing the command line.
         ///
-        struct result_t
+        struct NANO_PUBLIC result_t
         {
             using storage_t = std::unordered_map<string_t, string_t>;
 

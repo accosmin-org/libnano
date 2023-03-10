@@ -13,3 +13,5 @@ if(OPENMP_FOUND)
 else()
     message(WARNING "Cannot find OpenMP")
 endif()
+
+copy_runtime_dlls(bench_eigen)

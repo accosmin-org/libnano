@@ -38,6 +38,10 @@ namespace nano
         ///
         /// \brief set the feature value of a sample for a single-label categorical feature.
         ///
+#ifdef _WIN32
+    #pragma warning(push)
+    #pragma warning(disable : 4702) // NB: unreachable code for the default switch label below!
+#endif
         template <typename tscalar, typename tvalue>
         void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
         {
@@ -60,6 +64,9 @@ namespace nano
 
             data(sample) = static_cast<tscalar>(label); // NOLINT(cert-str34-c)
         }
+#ifdef _WIN32
+    #pragma warning(pop)
+#endif
 
         ///
         /// \brief set the feature value of a sample for a multi-label categorical feature.

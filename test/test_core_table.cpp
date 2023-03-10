@@ -201,7 +201,7 @@ UTEST_CASE(table_sort)
 
     {
         auto tablex = table;
-        tablex.sort([](const string_t& lhs, const string_t& rhs) { return lhs < rhs; }, {0});
+        tablex.sort(nano::make_less_from_string<int>(), {1});
 
         UTEST_CHECK_EQUAL(tablex.row(0).data(0), "name");
         UTEST_CHECK_EQUAL(tablex.row(0).data(1), "col1");
@@ -209,19 +209,19 @@ UTEST_CASE(table_sort)
         UTEST_CHECK_EQUAL(tablex.row(0).data(3), "col3");
 
         UTEST_CHECK_EQUAL(tablex.row(1).data(0), "name");
-        UTEST_CHECK_EQUAL(tablex.row(1).data(1), "1500");
-        UTEST_CHECK_EQUAL(tablex.row(1).data(2), "2000");
-        UTEST_CHECK_EQUAL(tablex.row(1).data(3), "5000");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(1), "1000");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(2), "9000");
+        UTEST_CHECK_EQUAL(tablex.row(1).data(3), "4000");
 
         UTEST_CHECK_EQUAL(tablex.row(2).data(0), "name");
-        UTEST_CHECK_EQUAL(tablex.row(2).data(1), "3200");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(1), "1500");
         UTEST_CHECK_EQUAL(tablex.row(2).data(2), "2000");
-        UTEST_CHECK_EQUAL(tablex.row(2).data(3), "6000");
+        UTEST_CHECK_EQUAL(tablex.row(2).data(3), "5000");
 
         UTEST_CHECK_EQUAL(tablex.row(3).data(0), "name");
-        UTEST_CHECK_EQUAL(tablex.row(3).data(1), "1000");
-        UTEST_CHECK_EQUAL(tablex.row(3).data(2), "9000");
-        UTEST_CHECK_EQUAL(tablex.row(3).data(3), "4000");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(1), "3200");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(2), "2000");
+        UTEST_CHECK_EQUAL(tablex.row(3).data(3), "6000");
     }
     {
         auto tablex = table;

@@ -23,10 +23,21 @@ namespace nano
     /// \brief create an uniform distribution for the [min, max] range.
     ///
     template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-    inline auto make_udist(tscalar min, tscalar max)
+    inline auto make_udist(const tscalar min, const tscalar max)
     {
         assert(min <= max);
-        return udist_t<tscalar>(min, max);
+        if constexpr (std::is_floating_point_v<tscalar>)
+        {
+            return udist_t<tscalar>(min, max);
+        }
+        else if constexpr (std::is_unsigned_v<tscalar>)
+        {
+            return udist_t<uint64_t>(min, max);
+        }
+        else
+        {
+            return udist_t<int64_t>(min, max);
+        }
     }
 
     ///
@@ -34,10 +45,10 @@ namespace nano
     ///
     template <typename tscalar, typename trng,
               std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-    tscalar urand(tscalar min, tscalar max, trng&& rng)
+    tscalar urand(const tscalar min, const tscalar max, trng&& rng)
     {
         auto udist = make_udist<tscalar>(min, max);
-        return udist(rng);
+        return static_cast<tscalar>(udist(rng));
     }
 
     ///
@@ -46,12 +57,12 @@ namespace nano
     ///
     template <typename tscalar, typename titerator, typename trng,
               std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-    void urand(tscalar min, tscalar max, titerator begin, const titerator end, trng&& rng)
+    void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
     {
         auto udist = make_udist<tscalar>(min, max);
         for (; begin != end; ++begin)
         {
-            *begin = udist(rng);
+            *begin = static_cast<tscalar>(udist(rng));
         }
     }
 } // namespace nano

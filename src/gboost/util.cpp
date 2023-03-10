@@ -1,5 +1,6 @@
 #include <nano/dataset.h>
 #include <nano/gboost/util.h>
+#include <numeric>
 
 using namespace nano;
 

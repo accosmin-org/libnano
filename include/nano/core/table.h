@@ -74,9 +74,9 @@ namespace nano
     public:
         enum class mode
         {
-            data,   ///<
-            delim,  ///< delimiting row
-            header, ///< header (not considered for operations like sorting or marking)
+            header = 0, ///< header (not considered for operations like sorting or marking)
+            data,       ///< data row
+            delim,      ///< delimiting row
         };
 
         ///
@@ -251,11 +251,11 @@ namespace nano
                             return false;
                         }
                     }
-                    return true;
+                    return false;
                 }
                 else
                 {
-                    return false;
+                    return static_cast<int>(row1.type()) < static_cast<int>(row2.type());
                 }
             };
 

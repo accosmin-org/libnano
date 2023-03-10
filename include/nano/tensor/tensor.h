@@ -103,29 +103,29 @@ namespace nano
         /// \brief construct to match the given size.
         ///
         template <typename... tsizes>
-        explicit tensor_t(tsizes... dims)
-            : tbase(make_dims(dims...))
+        explicit tensor_t(tsizes... dimensions)
+            : tbase(make_dims(dimensions...))
         {
         }
 
-        explicit tensor_t(tdims dims)
-            : tbase(std::move(dims))
+        explicit tensor_t(tdims dimensions)
+            : tbase(std::move(dimensions))
         {
         }
 
         ///
         /// \brief map non-ownning mutable C-arrays.
         ///
-        explicit tensor_t(tscalar* ptr, tdims dims)
-            : tbase(ptr, std::move(dims))
+        explicit tensor_t(tscalar* ptr, tdims dimensions)
+            : tbase(ptr, std::move(dimensions))
         {
         }
 
         ///
         /// \brief map non-ownning constant C-arrays.
         ///
-        explicit tensor_t(const tscalar* ptr, tdims dims)
-            : tbase(ptr, std::move(dims))
+        explicit tensor_t(const tscalar* ptr, tdims dimensions)
+            : tbase(ptr, std::move(dimensions))
         {
         }
 
@@ -180,12 +180,12 @@ namespace nano
         /// \brief resize to new dimensions.
         ///
         template <typename... tsizes>
-        void resize(tsizes... dims)
+        void resize(tsizes... dimensions)
         {
-            tbase::resize(make_dims(dims...));
+            tbase::resize(make_dims(dimensions...));
         }
 
-        void resize(const tdims& dims) { tbase::resize(dims); }
+        void resize(const tdims& dimensions) { tbase::resize(dimensions); }
 
         ///
         /// \brief set all elements to zero.
@@ -244,7 +244,7 @@ namespace nano
         }
 
         ///
-        /// \brief returns the sample standard deviation.
+        /// \brief returns the safe_isfinitemple standard deviation.
         ///
         auto stdev() const
         {
@@ -354,9 +354,9 @@ namespace nano
         template <typename tscalar_return = tscalar>
         void indexed(indices_cmap_t indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
         {
-            auto dims = this->dims();
-            dims[0]   = indices.size();
-            subtensor.resize(dims);
+            auto dimensions = dims();
+            dimensions[0]   = indices.size();
+            subtensor.resize(dimensions);
 
             indexed(indices, subtensor.tensor());
         }
@@ -366,9 +366,9 @@ namespace nano
         {
             assert(indices.min() >= 0 && indices.max() < this->template size<0>());
 
-            auto dims = this->dims();
-            dims[0]   = indices.size();
-            assert(subtensor.dims() == dims);
+            auto dimensions = dims();
+            dimensions[0]   = indices.size();
+            assert(subtensor.dims() == dimensions);
 
             if constexpr (trank > 1)
             {
@@ -457,8 +457,8 @@ namespace nano
         ///
         /// \brief pretty-print the tensor.
         ///
-        std::ostream& print(std::ostream& stream, tensor_size_t prefix_space = 0, tensor_size_t prefix_delim = 0,
-                            tensor_size_t suffix = 0) const
+        std::ostream& print(std::ostream& stream, const tensor_size_t prefix_space = 0,
+                            const tensor_size_t prefix_delim = 0, const tensor_size_t suffix = 0) const
         {
             [[maybe_unused]] const auto sprint = [&](const char c, const tensor_size_t count) -> std::ostream&
             {
@@ -494,7 +494,7 @@ namespace nano
             else if constexpr (trank == 2)
             {
                 const auto matrix = this->matrix();
-                for (tensor_size_t row = 0, rows = matrix.rows(); row < rows; ++row)
+                for (tensor_size_t row = 0, nrows = matrix.rows(); row < nrows; ++row)
                 {
                     if (row == 0)
                     {
@@ -520,7 +520,7 @@ namespace nano
                         stream << matrix.row(row);
                     }
 
-                    if (row + 1 < rows)
+                    if (row + 1 < nrows)
                     {
                         stream << "]\n";
                     }
@@ -532,12 +532,12 @@ namespace nano
             }
             else
             {
-                for (tensor_size_t row = 0, rows = this->template size<0>(); row < rows; ++row)
+                for (tensor_size_t row = 0, nrows = this->template size<0>(); row < nrows; ++row)
                 {
                     tensor(row).print(stream, (row == 0) ? prefix_space : (prefix_space + prefix_delim + 1),
                                       (row == 0) ? (prefix_delim + 1) : 0, suffix);
 
-                    if (row + 1 < rows)
+                    if (row + 1 < nrows)
                     {
                         stream << "\n";
                     }
@@ -562,7 +562,7 @@ namespace nano
         auto tvector(tdata ptr, tindices... indices) const
         {
             static_assert(sizeof...(indices) < trank, "invalid number of tensor dimensions");
-            return map_vector(ptr + offset0(indices...), nano::size(nano::dims0(dims(), indices...)));
+            return map_vector(ptr + offset0(indices...), ::nano::size(::nano::dims0(dims(), indices...)));
         }
 
         template <typename tdata, typename... tindices>
@@ -576,32 +576,32 @@ namespace nano
         auto ttensor(tdata ptr, tindices... indices) const
         {
             static_assert(sizeof...(indices) < trank, "invalid number of tensor dimensions");
-            return map_tensor(ptr + offset0(indices...), nano::dims0(dims(), indices...));
+            return map_tensor(ptr + offset0(indices...), ::nano::dims0(dims(), indices...));
         }
 
         template <typename tdata, typename... tsizes>
         auto treshape(tdata ptr, tsizes... sizes) const
         {
-            auto dims = nano::make_dims(sizes...);
-            for (auto& dim : dims)
+            auto dimensions = ::nano::make_dims(sizes...);
+            for (auto& dim : dimensions)
             {
                 assert(dim == -1 || dim >= 0);
                 if (dim == -1)
                 {
-                    dim = -size() / nano::size(dims);
+                    dim = -size() / ::nano::size(dimensions);
                 }
             }
-            assert(nano::size(dims) == size());
-            return map_tensor(ptr, dims);
+            assert(::nano::size(dimensions) == size());
+            return map_tensor(ptr, dimensions);
         }
 
         template <typename tdata>
         auto tslice(tdata ptr, tensor_size_t begin, tensor_size_t end) const
         {
             assert(begin >= 0 && begin < end && end <= this->template size<0>());
-            auto dims = this->dims();
-            dims[0]   = end - begin;
-            return map_tensor(ptr + offset0(begin), dims);
+            auto dimensions = dims();
+            dimensions[0]   = end - begin;
+            return map_tensor(ptr + offset0(begin), dimensions);
         }
     };
 
@@ -747,10 +747,10 @@ namespace nano
         {
             return false;
         }
-        for (nano::tensor_size_t i = 0, size = lhs.size(); i < size; ++i)
+        for (tensor_size_t i = 0, size = lhs.size(); i < size; ++i)
         {
-            const auto lhs_finite = std::isfinite(lhs(i));
-            const auto rhs_finite = std::isfinite(rhs(i));
+            const auto lhs_finite = ::nano::isfinite(lhs(i));
+            const auto rhs_finite = ::nano::isfinite(rhs(i));
             if ((lhs_finite != rhs_finite) ||
                 (lhs_finite && !close(static_cast<double>(lhs(i)), static_cast<double>(rhs(i)), epsilon)))
             {

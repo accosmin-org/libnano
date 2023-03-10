@@ -54,13 +54,13 @@ template <typename tweights, typename tbias>
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& result = std::any_cast<linear::fit_result_t>(param_result.extra(fold));
+            const auto& pfresult = std::any_cast<linear::fit_result_t>(param_result.extra(fold));
 
-            UTEST_REQUIRE_EQUAL(result.m_statistics.size(), 3);
+            UTEST_REQUIRE_EQUAL(pfresult.m_statistics.size(), 3);
 
-            const auto fcalls = result.m_statistics(0);
-            const auto gcalls = result.m_statistics(1);
-            // const auto status = result.m_statistics(2);
+            const auto fcalls = pfresult.m_statistics(0);
+            const auto gcalls = pfresult.m_statistics(1);
+            // const auto status = pfresult.m_statistics(2);
 
             // FIXME: activate the check when a more robust solver for non-smooth problems is available!
             // UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);

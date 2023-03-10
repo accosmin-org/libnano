@@ -22,11 +22,11 @@ solver_state_t::solver_state_t(const function_t& ffunction, vector_t x0)
     update_constraints();
 }
 
-bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx)
+bool solver_state_t::update_if_better(const vector_t& x_, const vector_t& gx, const scalar_t fx)
 {
     if (std::isfinite(fx) && fx < f)
     {
-        this->x = x;
+        this->x = x_;
         this->f = fx;
         this->g = gx;
         update_constraints();
@@ -38,9 +38,9 @@ bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, sca
     }
 }
 
-bool solver_state_t::update_if_better(const vector_t& x, scalar_t fx)
+bool solver_state_t::update_if_better(const vector_t& x_, const scalar_t fx)
 {
-    return update_if_better(x, g, fx);
+    return update_if_better(x_, g, fx);
 }
 
 bool solver_state_t::update_if_better_constrained(const solver_state_t& cstate, const scalar_t epsilon)

@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-class scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
+class NANO_PUBLIC scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
 {
 public:
     scalar_scalar_to_scalar_t()
@@ -33,7 +33,7 @@ public:
     }
 };
 
-class scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
+class NANO_PUBLIC scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
 {
 public:
     scalar_scalar_to_struct_t()
@@ -71,7 +71,7 @@ public:
     }
 };
 
-class scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
+class NANO_PUBLIC scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
 {
 public:
     scalar_scalar_to_sclass_t()
@@ -107,7 +107,7 @@ public:
     }
 };
 
-class scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
+class NANO_PUBLIC scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
 {
 public:
     scalar_scalar_to_mclass_t()
@@ -144,7 +144,7 @@ public:
     }
 };
 
-class sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
+class NANO_PUBLIC sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
 {
 public:
     sclass_sclass_to_scalar_t()

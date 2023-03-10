@@ -223,7 +223,7 @@ UTEST_CASE(parse_config_file)
     UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
-    const std::string path = std::filesystem::temp_directory_path() / "libnano.config.tmp";
+    const auto path = (std::filesystem::temp_directory_path() / "libnano.config.tmp").string();
     {
         std::ofstream out(path.c_str());
         out << "-v\n";
