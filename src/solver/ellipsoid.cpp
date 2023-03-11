@@ -23,7 +23,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<int64_t>();
 
-    auto state = solver_state_t{function, x0};
+    auto state = solver_state_t{function, x0}; // best state
 
     auto f = state.f;
     auto x = state.x, g = state.g;
@@ -31,7 +31,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
     const auto n = static_cast<scalar_t>(function.size());
 
     matrix_t H = matrix_t::Identity(function.size(), function.size());
-    H.array() *= R * R;
+    H.array() *= function.size() == 1 ? R : (R * R);
 
     while (function.fcalls() < max_evals)
     {
@@ -47,7 +47,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
         if (function.size() == 1)
         {
             // NB: the ellipsoid method becomes bisection for the 1D case.
-            x.array() += H(0, 0) * (g(0) < 0.0 ? +1.0 : -1.0);
+            x.array() += H(0) * (g(0) < 0.0 ? +1.0 : -1.0);
             H /= 2.0;
         }
         else

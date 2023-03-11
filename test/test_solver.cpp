@@ -266,7 +266,7 @@ UTEST_CASE(config_solvers)
 
 UTEST_CASE(default_solvers_on_smooth_convex)
 {
-    for (const auto& function : function_t::make({4, 4, convexity::yes, smoothness::yes, 100}))
+    for (const auto& function : function_t::make({1, 4, convexity::yes, smoothness::yes, 100}))
     {
         UTEST_REQUIRE(function);
 
