@@ -45,23 +45,6 @@ namespace nano
         function_t(string_t id, tensor_size_t size);
 
         ///
-        /// \brief enable copying
-        ///
-        function_t(const function_t&);
-        function_t& operator=(const function_t&);
-
-        ///
-        /// \brief enable moving
-        ///
-        function_t(function_t&&) noexcept            = default;
-        function_t& operator=(function_t&&) noexcept = default;
-
-        ///
-        /// \brief destructor
-        ///
-        ~function_t() override = default;
-
-        ///
         /// \brief returns the available implementations for benchmarking numerical optimization methods.
         ///
         static factory_t<function_t>& all();

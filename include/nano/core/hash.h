@@ -5,7 +5,7 @@
 
 namespace nano::detail
 {
-    inline constexpr uint32_t hash_version()
+    constexpr uint32_t hash_version()
     {
         return 0;
     }

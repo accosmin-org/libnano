@@ -29,10 +29,6 @@ function_t::function_t(string_t id, tensor_size_t size)
 {
 }
 
-function_t::function_t(const function_t&) = default;
-
-function_t& function_t::operator=(const function_t&) = default;
-
 void function_t::convex(bool convex)
 {
     m_convex = convex;

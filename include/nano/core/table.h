@@ -410,7 +410,7 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_epsilon_cols(const tscalar epsilon)
     {
-        return [=](const row_t& row)
+        return [epsilon = epsilon](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
             const auto it     = detail::max_element(values);
@@ -424,7 +424,7 @@ namespace nano
     template <typename tscalar>
     auto make_marker_minimum_epsilon_cols(const tscalar epsilon)
     {
-        return [=](const row_t& row)
+        return [epsilon = epsilon](const row_t& row)
         {
             const auto values = row.collect<tscalar>();
             const auto it     = detail::min_element(values);
@@ -438,7 +438,7 @@ namespace nano
     template <typename tscalar>
     auto make_marker_maximum_percentage_cols(const tscalar percentage)
     {
-        return [=](const row_t& row)
+        return [percentage = percentage](const row_t& row)
         {
             assert(percentage >= tscalar(1));
             assert(percentage <= tscalar(99));
@@ -458,7 +458,7 @@ namespace nano
     template <typename tscalar>
     auto make_marker_minimum_percentage_cols(const tscalar percentage)
     {
-        return [=](const row_t& row)
+        return [percentage = percentage](const row_t& row)
         {
             assert(percentage >= tscalar(1));
             assert(percentage <= tscalar(99));
