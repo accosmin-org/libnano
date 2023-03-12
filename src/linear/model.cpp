@@ -138,7 +138,7 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
 ::nano::fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
                                          const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
 {
-    learner_t::fit(dataset);
+    learner_t::fit_dataset(dataset);
 
     const auto batch          = parameter("linear::batch").value<tensor_size_t>();
     const auto regularization = parameter("linear::regularization").value<regularization_type>();

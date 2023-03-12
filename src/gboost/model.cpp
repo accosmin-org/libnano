@@ -360,7 +360,7 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
             wlearner->scale(vdenom);
         }
 
-        learner_t::fit(dataset);
+        learner_t::fit_dataset(dataset);
 
         const auto all_samples = arange(0, dataset.samples());
         const auto outputs     = predict(dataset, all_samples);

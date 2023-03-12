@@ -75,7 +75,7 @@ public:
     fit_result_t fit(const dataset_t& dataset, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
                      const tuner_t&) override
     {
-        learner_t::fit(dataset);
+        learner_t::fit_dataset(dataset);
         return fit_result_t{};
     }
 };

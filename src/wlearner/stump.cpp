@@ -168,7 +168,6 @@ scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
 
     if (best.m_score != wlearner_t::no_fit_score())
     {
-        learner_t::fit(dataset);
         set(best.m_feature, best.m_tables);
         m_threshold = best.m_threshold;
     }

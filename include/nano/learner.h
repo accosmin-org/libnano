@@ -28,14 +28,15 @@ namespace nano
         std::ostream& write(std::ostream&) const override;
 
         ///
-        /// \brief fit the given dataset and store its fingerprint.
-        ///
-        void fit(const dataset_t&);
-
-        ///
         /// \brief check if the fitted dataset is compatible with the given one and throws an exception if not the case.
         ///
         void critical_compatible(const dataset_t&) const;
+
+    protected:
+        ///
+        /// \brief fit the given dataset and store its fingerprint.
+        ///
+        void fit_dataset(const dataset_t&);
 
     private:
         // attributes

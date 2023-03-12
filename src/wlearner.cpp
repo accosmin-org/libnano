@@ -24,7 +24,7 @@ scalar_t wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, con
     const auto score = do_fit(dataset, samples, gradients);
     if (score != wlearner_t::no_fit_score())
     {
-        learner_t::fit(dataset);
+        learner_t::fit_dataset(dataset);
     }
     return score;
 }

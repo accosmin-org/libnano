@@ -45,7 +45,7 @@ std::ostream& learner_t::write(std::ostream& stream) const
     return stream;
 }
 
-void learner_t::fit(const dataset_t& dataset)
+void learner_t::fit_dataset(const dataset_t& dataset)
 {
     const auto n_features = dataset.features();
 
