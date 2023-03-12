@@ -20,7 +20,7 @@ namespace nano
         static auto process(tensor_size_t)
         {
             const auto colsize = tensor_size_t{1};
-            const auto process = [=](const auto& values1, const auto& values2)
+            const auto process = [](const auto& values1, const auto& values2)
             { return static_cast<scalar_t>(values1(0)) * static_cast<scalar_t>(values2(0)); };
 
             return std::make_tuple(process, colsize);

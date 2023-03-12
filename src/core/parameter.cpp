@@ -377,13 +377,13 @@ bool nano::operator==(const parameter_t& lhs, const parameter_t& rhs)
 {
     using ::operator==;
     return lhs.name() == rhs.name() &&
-           std::visit(overloaded{[&](const std::monostate&)
+           std::visit(overloaded{[&rhs](const std::monostate&)
                                  { return std::get_if<std::monostate>(&rhs.storage()) != nullptr; },
-                                 [&](const parameter_t::enum_t& lparam) { return lparam == rhs.storage(); },
-                                 [&](const parameter_t::irange_t& lparam) { return lparam == rhs.storage(); },
-                                 [&](const parameter_t::frange_t& lparam) { return lparam == rhs.storage(); },
-                                 [&](const parameter_t::iprange_t& lparam) { return lparam == rhs.storage(); },
-                                 [&](const parameter_t::fprange_t& lparam) { return lparam == rhs.storage(); }},
+                                 [&rhs](const parameter_t::enum_t& lparam) { return lparam == rhs.storage(); },
+                                 [&rhs](const parameter_t::irange_t& lparam) { return lparam == rhs.storage(); },
+                                 [&rhs](const parameter_t::frange_t& lparam) { return lparam == rhs.storage(); },
+                                 [&rhs](const parameter_t::iprange_t& lparam) { return lparam == rhs.storage(); },
+                                 [&rhs](const parameter_t::fprange_t& lparam) { return lparam == rhs.storage(); }},
                       lhs.storage());
 }
 
@@ -399,24 +399,24 @@ std::ostream& nano::operator<<(std::ostream& stream, const parameter_t& paramete
 
 std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::value_t& value)
 {
-    std::visit(overloaded{[&](const std::monostate&) { stream << "N/A"; },
-                          [&](const parameter_t::enum_t& param) { ::value(stream, param); },
-                          [&](const parameter_t::irange_t& param) { ::value(stream, param); },
-                          [&](const parameter_t::frange_t& param) { ::value(stream, param); },
-                          [&](const parameter_t::iprange_t& param) { ::value(stream, param); },
-                          [&](const parameter_t::fprange_t& param) { ::value(stream, param); }},
+    std::visit(overloaded{[&stream](const std::monostate&) { stream << "N/A"; },
+                          [&stream](const parameter_t::enum_t& param) { ::value(stream, param); },
+                          [&stream](const parameter_t::irange_t& param) { ::value(stream, param); },
+                          [&stream](const parameter_t::frange_t& param) { ::value(stream, param); },
+                          [&stream](const parameter_t::iprange_t& param) { ::value(stream, param); },
+                          [&stream](const parameter_t::fprange_t& param) { ::value(stream, param); }},
                value.m_parameter.storage());
     return stream;
 }
 
 std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::domain_t& domain)
 {
-    std::visit(overloaded{[&](const std::monostate&) { stream << "N/A"; },
-                          [&](const parameter_t::enum_t& param) { ::domain(stream, param); },
-                          [&](const parameter_t::irange_t& param) { ::domain(stream, param); },
-                          [&](const parameter_t::frange_t& param) { ::domain(stream, param); },
-                          [&](const parameter_t::iprange_t& param) { ::domain(stream, param); },
-                          [&](const parameter_t::fprange_t& param) { ::domain(stream, param); }},
+    std::visit(overloaded{[&stream](const std::monostate&) { stream << "N/A"; },
+                          [&stream](const parameter_t::enum_t& param) { ::domain(stream, param); },
+                          [&stream](const parameter_t::irange_t& param) { ::domain(stream, param); },
+                          [&stream](const parameter_t::frange_t& param) { ::domain(stream, param); },
+                          [&stream](const parameter_t::iprange_t& param) { ::domain(stream, param); },
+                          [&stream](const parameter_t::fprange_t& param) { ::domain(stream, param); }},
                domain.m_parameter.storage());
     return stream;
 }

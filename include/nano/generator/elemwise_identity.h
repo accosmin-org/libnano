@@ -20,7 +20,7 @@ namespace nano
         auto process(tensor_size_t ifeature) const
         {
             const auto colsize = mapped_classes(ifeature) - 1;
-            const auto process = [=](const auto& label) { return static_cast<int32_t>(label); };
+            const auto process = [](const auto& label) { return static_cast<int32_t>(label); };
 
             return std::make_tuple(process, colsize);
         }
@@ -42,7 +42,7 @@ namespace nano
         auto process(tensor_size_t ifeature) const
         {
             const auto colsize = mapped_classes(ifeature);
-            const auto process = [=](const auto& hits, auto&& storage) { this->copy(hits, storage); };
+            const auto process = [this](const auto& hits, auto&& storage) { this->copy(hits, storage); };
 
             return std::make_tuple(process, colsize);
         }
@@ -71,7 +71,7 @@ namespace nano
         static auto process(tensor_size_t)
         {
             const auto colsize = tensor_size_t{1};
-            const auto process = [=](const auto& values) { return static_cast<scalar_t>(values(0)); };
+            const auto process = [](const auto& values) { return static_cast<scalar_t>(values(0)); };
 
             return std::make_tuple(process, colsize);
         }
@@ -93,7 +93,7 @@ namespace nano
         auto process(tensor_size_t ifeature) const
         {
             const auto colsize = size(mapped_dims(ifeature));
-            const auto process = [=](const auto& values, auto&& storage)
+            const auto process = [](const auto& values, auto&& storage)
             { storage = values.array().template cast<scalar_t>(); };
 
             return std::make_tuple(process, colsize);

@@ -214,9 +214,9 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         tscalar value() const
         {
-            return std::visit(overloaded{[&](const irange_t& param) { return param.value<tscalar>(); },
-                                         [&](const frange_t& param) { return param.value<tscalar>(); },
-                                         [&](const auto&)
+            return std::visit(overloaded{[](const irange_t& param) { return param.value<tscalar>(); },
+                                         [](const frange_t& param) { return param.value<tscalar>(); },
+                                         [this](const auto&)
                                          {
                                              logical_error();
                                              return tscalar{};
@@ -227,9 +227,9 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         std::tuple<tscalar, tscalar> value_pair() const
         {
-            return std::visit(overloaded{[&](const iprange_t& param) { return param.value<tscalar>(); },
-                                         [&](const fprange_t& param) { return param.value<tscalar>(); },
-                                         [&](const auto&)
+            return std::visit(overloaded{[](const iprange_t& param) { return param.value<tscalar>(); },
+                                         [](const fprange_t& param) { return param.value<tscalar>(); },
+                                         [this](const auto&)
                                          {
                                              logical_error();
                                              return std::tuple<tscalar, tscalar>{};

@@ -65,7 +65,7 @@ namespace nano
 
         auto make_logger_lambda() const
         {
-            return [&](const auto& result) { log(result); };
+            return [this](const auto& result) { log(result); };
         }
 
     private:
