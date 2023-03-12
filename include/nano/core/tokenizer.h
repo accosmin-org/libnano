@@ -42,10 +42,7 @@ namespace nano
         ///
         /// \brief returns true if parsing didn't finished.
         ///
-        operator bool() const // NOLINT(hicpp-explicit-conversions)
-        {
-            return m_pos != std::string::npos;
-        }
+        explicit operator bool() const { return m_pos != std::string::npos; }
 
         ///
         /// \brief move to the next token.
@@ -59,7 +56,7 @@ namespace nano
         ///
         /// \brief move to the next token.
         ///
-        const tokenizer_t operator++(int) // NOLINT(readability-const-return-type)
+        tokenizer_t operator++(int) // NOLINT(cert-dcl21-cpp)
         {
             tokenizer_t tmp(*this);
             next();
