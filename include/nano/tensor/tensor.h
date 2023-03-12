@@ -73,6 +73,22 @@ namespace nano
     }
 
     ///
+    /// \brief return the default minimum range for random sampling of tensor values.
+    ///
+    template <typename tscalar>
+    static constexpr auto default_min_random()
+    {
+        if constexpr (std::is_unsigned_v<tscalar>)
+        {
+            return tscalar{0};
+        }
+        else
+        {
+            return tscalar{-1};
+        }
+    }
+
+    ///
     /// \brief tensor w/o owning the allocated continuous memory.
     ///
     /// NB: all access operations (e.g. Eigen arrays, vectors or matrices or sub-tensors) are performed
@@ -200,19 +216,8 @@ namespace nano
         ///
         /// \brief set all elements to random values in the [min, max] range.
         ///
-        static constexpr auto min_random()
-        {
-            if constexpr (std::is_unsigned_v<tscalar>)
-            {
-                return tscalar{0};
-            }
-            else
-            {
-                return tscalar{-1};
-            }
-        }
-
-        void random(const tscalar min = min_random(), const tscalar max = +1, const seed_t seed = seed_t{})
+        void random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1,
+                    const seed_t seed = seed_t{})
         {
             random(array(), min, max, seed);
         }

@@ -18,7 +18,7 @@ template <typename tscalar>
 static auto make_tensor()
 {
     tensor_mem_t<tscalar, 3> tensor(5, 3, 1);
-    tensor.random(std::numeric_limits<tscalar>::lowest(), std::numeric_limits<tscalar>::max());
+    tensor.random(default_min_random<tscalar>() * tscalar{100}, tscalar{100});
     return tensor;
 }
 
