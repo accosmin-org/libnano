@@ -2,6 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/core/strutil.h>
+#include <nano/core/util.h>
 #include <nano/scalar.h>
 #include <variant>
 
@@ -53,17 +54,35 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         struct range_t
         {
-            tscalar m_value{0};           ///< the stored value
-            tscalar m_min{0}, m_max{0};   ///< the allowed [min, max] range
-            LEorLT  m_mincomp, m_maxcomp; ///<
+            template <typename tvalue>
+            auto value() const
+            {
+                return static_cast<tvalue>(m_value);
+            }
+
+            tscalar m_value{0}; ///< the stored value
+            tscalar m_min{0};   ///< the allowed [min, max] range
+            tscalar m_max{0};   ///< the allowed [min, max] range
+            LEorLT  m_mincomp;  ///<
+            LEorLT  m_maxcomp;  ///<
         };
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         struct pair_range_t
         {
-            tscalar m_value1{0}, m_value2{0};        ///< the stored values
-            tscalar m_min{0}, m_max{0};              ///< the allowed [min, max] range
-            LEorLT  m_mincomp, m_valcomp, m_maxcomp; ///<
+            template <typename tvalue>
+            auto value() const
+            {
+                return std::make_tuple(static_cast<tvalue>(m_value1), static_cast<tvalue>(m_value2));
+            }
+
+            tscalar m_value1{0}; ///< the stored values
+            tscalar m_value2{0}; ///< the stored values
+            tscalar m_min{0};    ///< the allowed [min, max] range
+            tscalar m_max{0};    ///< the allowed [min, max] range
+            LEorLT  m_mincomp;   ///<
+            LEorLT  m_valcomp;   ///<
+            LEorLT  m_maxcomp;   ///<
         };
 
         using irange_t  = range_t<int64_t>;
@@ -195,29 +214,27 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         tscalar value() const
         {
-            if (const auto* iparam = std::get_if<irange_t>(&m_storage))
-            {
-                return static_cast<tscalar>(iparam->m_value);
-            }
-            else if (const auto* fparam = std::get_if<frange_t>(&m_storage))
-            {
-                return static_cast<tscalar>(fparam->m_value);
-            }
-            logical_error();
+            return std::visit(overloaded{[&](const irange_t& param) { return param.value<tscalar>(); },
+                                         [&](const frange_t& param) { return param.value<tscalar>(); },
+                                         [&](const auto&)
+                                         {
+                                             logical_error();
+                                             return tscalar{};
+                                         }},
+                              m_storage);
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         std::tuple<tscalar, tscalar> value_pair() const
         {
-            if (const auto* iparam = std::get_if<iprange_t>(&m_storage))
-            {
-                return std::make_tuple(static_cast<tscalar>(iparam->m_value1), static_cast<tscalar>(iparam->m_value2));
-            }
-            else if (const auto* fparam = std::get_if<fprange_t>(&m_storage))
-            {
-                return std::make_tuple(static_cast<tscalar>(fparam->m_value1), static_cast<tscalar>(fparam->m_value2));
-            }
-            logical_error();
+            return std::visit(overloaded{[&](const iprange_t& param) { return param.value<tscalar>(); },
+                                         [&](const fprange_t& param) { return param.value<tscalar>(); },
+                                         [&](const auto&)
+                                         {
+                                             logical_error();
+                                             return std::tuple<tscalar, tscalar>{};
+                                         }},
+                              m_storage);
         }
 
         ///

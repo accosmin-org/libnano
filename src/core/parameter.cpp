@@ -4,7 +4,6 @@
 #include <nano/core/parameter.h>
 #include <nano/core/stream.h>
 #include <nano/core/tokenizer.h>
-#include <nano/core/util.h>
 
 using namespace nano;
 

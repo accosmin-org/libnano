@@ -41,8 +41,10 @@ namespace nano::gboost
         accumulator_t& operator/=(tensor_size_t samples);
 
         // attributes
-        scalar_t m_vm1{0}, m_vm2{0}; ///< first and second order momentum of the loss values
-        vector_t m_gb1{0}, m_gb2{0}; ///< first and second order momentum of the gradient wrt scale
+        scalar_t m_vm1{0}; ///< first order momentum of the loss values
+        scalar_t m_vm2{0}; ///< second order momentum of the loss values
+        vector_t m_gb1{0}; ///< first order momentum of the gradient wrt scale
+        vector_t m_gb2{0}; ///< second order momentum of the gradient wrt scale
     };
 
     using accumulators_t = std::vector<accumulator_t>;

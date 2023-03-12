@@ -191,7 +191,7 @@ namespace nano
     ///
     /// \brief check if a string starts with a token (case sensitive).
     ///
-    inline bool starts_with(const string_t& str, const string_t& token)
+    inline bool starts_with(const std::string_view& str, const std::string_view& token)
     {
         return str.size() >= token.size() && std::equal(token.begin(), token.end(), str.begin());
     }
@@ -199,7 +199,7 @@ namespace nano
     ///
     /// \brief check if a string ends with a token (case sensitive).
     ///
-    inline bool ends_with(const string_t& str, const string_t& token) noexcept
+    inline bool ends_with(const std::string_view& str, const std::string_view& token) noexcept
     {
         return str.size() >= token.size() && std::equal(token.rbegin(), token.rend(), str.rbegin());
     }
@@ -207,10 +207,10 @@ namespace nano
     ///
     /// \brief align a string to fill the given size (if possible).
     ///
-    inline string_t align(const string_t& str, const size_t str_size, const alignment mode = alignment::left,
+    inline string_t align(const std::string_view& str, const size_t str_size, const alignment mode = alignment::left,
                           const char fill_char = ' ')
     {
-        const auto fill_size = (str.size() > str_size) ? (0) : (str_size - str.size());
+        const auto fill_size = (str.size() > str_size) ? size_t{0U} : (str_size - str.size());
 
         string_t ret;
         switch (mode)
@@ -226,7 +226,6 @@ namespace nano
             ret.append(str);
             break;
 
-        case alignment::left:
         default:
             ret.append(str);
             ret.append(fill_size, fill_char);

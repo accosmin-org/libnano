@@ -72,10 +72,15 @@ namespace nano
         void upscale(scaling_type, tensor4d_map_t values) const;
 
         // attributes
-        indices_t  m_samples;                     ///< number of valid samples per component
-        tensor1d_t m_min, m_max, m_mean, m_stdev; ///< (minimum, maximum, average, standard deviation) per component
-        tensor1d_t m_div_range, m_mul_range;      ///< first order numerically stable denominator per component
-        tensor1d_t m_div_stdev, m_mul_stdev;      ///< second order numerically stable denominator per component
+        indices_t  m_samples;   ///< number of valid samples per component
+        tensor1d_t m_min;       ///< minimum per component
+        tensor1d_t m_max;       ///< maximum per component
+        tensor1d_t m_mean;      ///< average per component
+        tensor1d_t m_stdev;     ///< standard deviation per component
+        tensor1d_t m_div_range; ///< first order numerically stable denominator per component
+        tensor1d_t m_mul_range; ///< first order numerically stable denominator per component
+        tensor1d_t m_div_stdev; ///< second order numerically stable denominator per component
+        tensor1d_t m_mul_stdev; ///< second order numerically stable denominator per component
     };
 
     ///

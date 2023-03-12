@@ -123,12 +123,7 @@ namespace nano
         ///
         struct minimum_t : constant_t
         {
-            minimum_t() = default;
-
-            minimum_t(scalar_t value, tensor_size_t dimension)
-                : constant_t(value, dimension)
-            {
-            }
+            using constant_t::constant_t;
         };
 
         ///
@@ -136,12 +131,7 @@ namespace nano
         ///
         struct maximum_t : constant_t
         {
-            maximum_t() = default;
-
-            maximum_t(scalar_t value, tensor_size_t dimension)
-                : constant_t(value, dimension)
-            {
-            }
+            using constant_t::constant_t;
         };
 
         ///
@@ -149,12 +139,7 @@ namespace nano
         ///
         struct linear_equality_t : linear_t
         {
-            linear_equality_t() = default;
-
-            linear_equality_t(vector_t q, scalar_t r)
-                : linear_t(std::move(q), r)
-            {
-            }
+            using linear_t::linear_t;
         };
 
         ///
@@ -162,12 +147,7 @@ namespace nano
         ///
         struct linear_inequality_t : linear_t
         {
-            linear_inequality_t() = default;
-
-            linear_inequality_t(vector_t q, scalar_t r)
-                : linear_t(std::move(q), r)
-            {
-            }
+            using linear_t::linear_t;
         };
 
         ///
@@ -175,12 +155,7 @@ namespace nano
         ///
         struct quadratic_equality_t : quadratic_t
         {
-            quadratic_equality_t() = default;
-
-            quadratic_equality_t(matrix_t P, vector_t q, scalar_t r)
-                : quadratic_t(std::move(P), std::move(q), r)
-            {
-            }
+            using quadratic_t::quadratic_t;
         };
 
         ///
@@ -188,12 +163,7 @@ namespace nano
         ///
         struct quadratic_inequality_t : quadratic_t
         {
-            quadratic_inequality_t() = default;
-
-            quadratic_inequality_t(matrix_t P, vector_t q, scalar_t r)
-                : quadratic_t(std::move(P), std::move(q), r)
-            {
-            }
+            using quadratic_t::quadratic_t;
         };
 
         ///
@@ -201,12 +171,7 @@ namespace nano
         ///
         struct functional_equality_t : functional_t
         {
-            functional_equality_t() = default;
-
-            explicit functional_equality_t(rfunction_t&& function)
-                : functional_t(std::move(function))
-            {
-            }
+            using functional_t::functional_t;
         };
 
         ///
@@ -214,12 +179,7 @@ namespace nano
         ///
         struct functional_inequality_t : functional_t
         {
-            functional_inequality_t() = default;
-
-            explicit functional_inequality_t(rfunction_t&& function)
-                : functional_t(std::move(function))
-            {
-            }
+            using functional_t::functional_t;
         };
     } // namespace constraint
 
