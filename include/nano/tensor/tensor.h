@@ -195,17 +195,35 @@ namespace nano
         ///
         /// \brief set all elements to the given constant value.
         ///
-        void full(tscalar value) { array() = value; }
+        void full(const tscalar value) { array() = value; }
 
         ///
         /// \brief set all elements to random values in the [min, max] range.
         ///
-        void random(tscalar min = -1, tscalar max = +1, seed_t seed = seed_t{}) { random(array(), min, max, seed); }
+        static constexpr auto min_random()
+        {
+            if constexpr (std::is_unsigned_v<tscalar>)
+            {
+                return tscalar{0};
+            }
+            else
+            {
+                return tscalar{-1};
+            }
+        }
+
+        void random(const tscalar min = min_random(), const tscalar max = +1, const seed_t seed = seed_t{})
+        {
+            random(array(), min, max, seed);
+        }
 
         ///
         /// \brief set all elements in an arithmetic progression from min to max.
         ///
-        void lin_spaced(tscalar min, tscalar max) { array() = tensor_vector_t<tscalar>::LinSpaced(size(), min, max); }
+        void lin_spaced(const tscalar min, const tscalar max)
+        {
+            array() = tensor_vector_t<tscalar>::LinSpaced(size(), min, max);
+        }
 
         ///
         /// \brief returns the minimum value.

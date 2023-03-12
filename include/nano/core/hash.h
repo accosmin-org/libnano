@@ -31,12 +31,12 @@ namespace nano::detail
                 if constexpr (sizeof(tscalar) == 4)
                 {
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                    hash = hash_combine(hash, *reinterpret_cast<const uint32_t*>(&data[i]));
+                    hash = hash_combine(hash, reinterpret_cast<const uint32_t&>(data[i]));
                 }
                 else
                 {
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                    hash = hash_combine(hash, *reinterpret_cast<const uint64_t*>(&data[i]));
+                    hash = hash_combine(hash, reinterpret_cast<const uint64_t&>(data[i]));
                 }
             }
             else
