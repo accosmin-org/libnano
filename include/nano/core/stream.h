@@ -40,7 +40,7 @@ namespace nano
         return stream;
     }
 
-    inline std::ostream& write(std::ostream& stream, const std::string& string)
+    inline std::ostream& write(std::ostream& stream, const std::string_view& string)
     {
         write(stream, static_cast<uint32_t>(string.size()));
         return write(stream, string.data(), string.size());

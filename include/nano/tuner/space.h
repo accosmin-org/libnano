@@ -73,9 +73,10 @@ namespace nano
         }
 
         // attributes
-        type       m_type{type::linear};   ///<
-        tensor1d_t m_grid_values;          ///<
-        scalar_t   m_min{NaN}, m_max{NaN}; ///<
+        type       m_type{type::linear}; ///<
+        tensor1d_t m_grid_values;        ///<
+        scalar_t   m_min{NaN};           ///<
+        scalar_t   m_max{NaN};           ///<
     };
 
     template <typename... tscalars>

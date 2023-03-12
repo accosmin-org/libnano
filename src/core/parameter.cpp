@@ -20,7 +20,8 @@ static auto check(const LEorLT& lelt, tscalar value1, tscalar value2)
 
 static auto split_pair(const string_t& value)
 {
-    string_t value1, value2;
+    string_t value1;
+    string_t value2;
     for (auto tokenizer = tokenizer_t{value, ";,:|/ "}; tokenizer; ++tokenizer)
     {
         (value1.empty() ? value1 : value2) = tokenizer.get();
@@ -102,8 +103,11 @@ static auto make_flag(LEorLT comp)
 template <typename tscalar>
 static auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
 {
-    tscalar  value = 0, min = 0, max = 0;
-    uint32_t minLE = 0U, maxLE = 0U;
+    tscalar  value = 0;
+    tscalar  min   = 0;
+    tscalar  max   = 0;
+    uint32_t minLE = 0U;
+    uint32_t maxLE = 0U;
 
     critical(!::nano::read(stream, value) ||     // LCOV_EXCL_LINE
                  !::nano::read(stream, min) ||   // LCOV_EXCL_LINE
@@ -118,8 +122,13 @@ static auto read(const string_t& name, std::istream& stream, parameter_t::range_
 template <typename tscalar>
 static auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
 {
-    tscalar  value1 = 0, value2 = 0, min = 0, max = 0;
-    uint32_t minLE = 0U, maxLE = 0U, valueLE = 0U;
+    tscalar  value1  = 0;
+    tscalar  value2  = 0;
+    tscalar  min     = 0;
+    tscalar  max     = 0;
+    uint32_t minLE   = 0U;
+    uint32_t maxLE   = 0U;
+    uint32_t valueLE = 0U;
 
     critical(!::nano::read(stream, value1) ||     // LCOV_EXCL_LINE
                  !::nano::read(stream, value2) || // LCOV_EXCL_LINE

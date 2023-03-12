@@ -93,9 +93,8 @@ std::istream& configurable_t::read(std::istream& stream)
 
 std::ostream& configurable_t::write(std::ostream& stream) const
 {
-    critical(!::nano::write(stream, static_cast<int32_t>(nano::major_version)) ||
-                 !::nano::write(stream, static_cast<int32_t>(nano::minor_version)) ||
-                 !::nano::write(stream, static_cast<int32_t>(nano::patch_version)),
+    critical(!::nano::write(stream, nano::major_version) || !::nano::write(stream, nano::minor_version) ||
+                 !::nano::write(stream, nano::patch_version),
              "configurable: failed to write to stream");
 
     critical(!::nano::write(stream, m_parameters), "configurable: failed to write to stream!");

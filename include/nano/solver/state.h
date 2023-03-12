@@ -149,7 +149,9 @@ namespace nano
 
         // attributes
         const function_t* function{nullptr};                ///<
-        vector_t          x, g, d;                          ///< parameter, gradient, descent direction
+        vector_t          x;                                ///< parameter
+        vector_t          g;                                ///< gradient
+        vector_t          d;                                ///< descent direction
         scalar_t          f{0};                             ///< function value
         scalar_t          t{0};                             ///< step size (line-search solvers)
         vector_t          ceq;                              ///< equality constraint values

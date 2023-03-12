@@ -45,7 +45,8 @@ namespace nano
 
             const solver_state_t& state0; ///< original point
             solver_state_t&       c;      ///< tentative point
-            lsearch_step_t        a, b;   ///< lower/upper bounds of the bracketing interval
+            lsearch_step_t        a;      ///< lower bounds of the bracketing interval
+            lsearch_step_t        b;      ///< upper bounds of the bracketing interval
         };
 
         static bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true);

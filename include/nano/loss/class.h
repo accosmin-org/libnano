@@ -33,7 +33,7 @@ namespace nano
     ///
     namespace detail
     {
-        inline void class_target(tensor3d_t&)
+        inline void class_target(const tensor3d_t&)
         {
         }
 

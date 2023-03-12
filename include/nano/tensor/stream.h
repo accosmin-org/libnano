@@ -31,8 +31,10 @@ namespace nano
     std::istream& read(std::istream& stream, tensor_t<tstorage, tscalar, trank>& tensor)
     {
         typename tensor_t<tstorage, tscalar, trank>::tdims dims;
-        uint32_t                                           iversion = 0xFFFFFFFF, irank = 0, iscalar = 0;
-        uint64_t                                           ihash = 0;
+        uint32_t                                           iversion = 0xFFFFFFFF;
+        uint32_t                                           irank    = 0U;
+        uint32_t                                           iscalar  = 0U;
+        uint64_t                                           ihash    = 0U;
 
         if (!::nano::read(stream, iversion) ||                         // version
             !::nano::read(stream, irank) ||                            // rank

@@ -21,7 +21,7 @@ void worker_t::operator()() const
 
         // wait for a new task to be available in the queue
         {
-            std::unique_lock<std::mutex> lock(m_queue.m_mutex);
+            std::unique_lock lock(m_queue.m_mutex);
 
             m_queue.m_condition.wait(lock, [&] { return m_queue.m_stop || !m_queue.m_tasks.empty(); });
 
@@ -41,9 +41,9 @@ void worker_t::operator()() const
     }
 }
 
-void section_t::block(bool raise)
+void section_t::block(const bool raise)
 {
-    for (auto& future : *this)
+    for (const auto& future : *this)
     {
         if (future.valid())
         {
@@ -62,7 +62,7 @@ pool_t::pool_t()
 {
 }
 
-pool_t::pool_t(size_t threads)
+pool_t::pool_t(const size_t threads)
 {
     const auto n_workers = std::clamp(threads, size_t(1), max_size());
 

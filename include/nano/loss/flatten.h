@@ -103,7 +103,8 @@ namespace nano
                 tensor_size_t imax = 0;
                 const auto    omax = output.maxCoeff(&imax);
 
-                scalar_t value = std::numeric_limits<scalar_t>::epsilon(), posum = 0;
+                scalar_t value = std::numeric_limits<scalar_t>::epsilon();
+                scalar_t posum = 0;
                 for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
                 {
                     value += std::exp(output(i) - omax);
