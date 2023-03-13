@@ -47,10 +47,9 @@ tensor4d_cmap_t targets_iterator_t::targets(size_t tnum, const tensor_range_t& r
 
 bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
 {
-    auto       cached = false;
-    const auto tdims  = dataset().target_dims();
-
-    if (static_cast<tensor_size_t>(sizeof(scalar_t)) * m_samples.size() * nano::size(tdims) <= max_bytes)
+    auto cached = false;
+    if (const auto tdims = dataset().target_dims();
+        static_cast<tensor_size_t>(sizeof(scalar_t)) * m_samples.size() * nano::size(tdims) <= max_bytes)
     {
         try
         {
@@ -117,10 +116,9 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
     const auto& samples = this->samples();
     const auto& dataset = this->dataset();
 
-    auto       cached = false;
-    const auto isize  = dataset.columns();
-
-    if (static_cast<tensor_size_t>(sizeof(scalar_t)) * samples.size() * isize <= max_bytes)
+    auto cached = false;
+    if (const auto isize = dataset.columns();
+        static_cast<tensor_size_t>(sizeof(scalar_t)) * samples.size() * isize <= max_bytes)
     {
         try
         {

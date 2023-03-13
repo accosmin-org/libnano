@@ -213,11 +213,12 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
     for (const auto& row : table.content())
     {
         auto it = colsizes.begin();
-        switch (row.type())
+        if (row.type() == row_t::mode::delim)
         {
-        case row_t::mode::delim: print_row_delim(); break;
-
-        default:
+            print_row_delim();
+        }
+        else
+        {
             for (const auto& cell : row.cells())
             {
                 const auto colspan = static_cast<std::ptrdiff_t>(cell.m_span);
@@ -228,7 +229,6 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
                 std::advance(it, colspan);
             }
             os << "|" << std::endl;
-            break;
         }
     }
     print_row_delim();

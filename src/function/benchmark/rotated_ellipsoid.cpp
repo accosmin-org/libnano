@@ -17,7 +17,8 @@ rfunction_t function_rotated_ellipsoid_t::clone() const
 
 scalar_t function_rotated_ellipsoid_t::do_vgrad(const vector_t& x, vector_t* gx) const
 {
-    scalar_t fx = 0, fi = 0;
+    scalar_t fi = 0;
+    scalar_t fx = 0;
     for (tensor_size_t i = 0; i < size(); i++)
     {
         fi += x(i);

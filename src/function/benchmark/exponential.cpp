@@ -24,7 +24,7 @@ scalar_t function_exponential_t::do_vgrad(const vector_t& x, vector_t* gx) const
     if (gx != nullptr)
     {
         gx->noalias() = (2 * fx * alpha) * x;
-    };
+    }
 
     return fx;
 }

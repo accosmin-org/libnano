@@ -117,9 +117,7 @@ bool solver_t::done(const function_t& function, solver_state_t& state, const boo
     }
     else
     {
-        const auto step_ok = iter_ok && state.valid();
-
-        if (converged || !step_ok)
+        if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
         {
             // either converged or failed
             state.status = converged ? solver_status::converged : solver_status::failed;

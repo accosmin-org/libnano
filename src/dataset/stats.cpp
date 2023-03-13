@@ -102,8 +102,7 @@ static void done(scalar_stats_t& stats, const tensor_mem_t<uint8_t, 1>& enable_s
 
     for (tensor_size_t i = 0, size = stats.m_samples.size(); i < size; ++i)
     {
-        const auto N = stats.m_samples(i);
-        if (N > 1)
+        if (const auto N = stats.m_samples(i); N > 1)
         {
             const auto dN    = static_cast<scalar_t>(N);
             stats.m_stdev(i) = std::sqrt((stats.m_stdev(i) - stats.m_mean(i) * stats.m_mean(i) / dN) / (dN - 1.0));

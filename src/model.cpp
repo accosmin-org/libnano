@@ -55,8 +55,10 @@ model_t::logger_t model_t::make_logger_stdio(const int precision)
             const auto  folds        = param_result.folds();
             const auto  norm         = static_cast<scalar_t>(folds);
 
-            auto sum_train_losses = 0.0, sum_train_errors = 0.0;
-            auto sum_valid_losses = 0.0, sum_valid_errors = 0.0;
+            auto sum_train_losses = 0.0;
+            auto sum_train_errors = 0.0;
+            auto sum_valid_losses = 0.0;
+            auto sum_valid_errors = 0.0;
             for (tensor_size_t fold = 0; fold < folds; ++fold)
             {
                 const auto fold_train_value = param_result.stats(fold, split_type::train, value_type::losses).m_mean;

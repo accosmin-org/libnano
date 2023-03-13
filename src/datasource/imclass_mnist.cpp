@@ -69,8 +69,7 @@ bool base_mnist_datasource_t::tread(const string_t& path, tensor_size_t sample, 
 {
     std::ifstream stream(path);
 
-    char buffer[8];
-    if (!stream.read(buffer, 8))
+    if (char buffer[8]; !stream.read(buffer, 8))
     {
         return false;
     }

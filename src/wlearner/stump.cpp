@@ -86,7 +86,8 @@ namespace
 
         // attributes
         ivalues_t     m_ivalues;                           ///<
-        accumulator_t m_acc_sum, m_acc_neg;                ///<
+        accumulator_t m_acc_sum;                           ///<
+        accumulator_t m_acc_neg;                           ///<
         tensor4d_t    m_tables;                            ///<
         tensor_size_t m_feature{-1};                       ///<
         scalar_t      m_threshold{0};                      ///<

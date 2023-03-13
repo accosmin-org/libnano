@@ -35,6 +35,8 @@ namespace nano
         alignment m_alignment{alignment::left}; ///< text alignment within the cell
     };
 
+    using cells_t = std::vector<cell_t>;
+
     inline bool operator==(const cell_t& c1, const cell_t& c2)
     {
         return c1.m_data == c2.m_data && c1.m_span == c2.m_span && c1.m_alignment == c2.m_alignment;
@@ -133,7 +135,7 @@ namespace nano
         void mark(size_t col, const string_t& str);
 
         ///
-        /// \brief collect the columns as scalar values using nano::from_string<tscalar>
+        /// \brief collect the columns as scalar values using nano::from_string<tscalar>.
         ///
         template <typename tscalar>
         auto collect() const
@@ -180,25 +182,38 @@ namespace nano
         } // LCOV_EXCL_LINE
 
         ///
-        /// \brief access functions
+        /// \brief returns the number of columns.
         ///
-        auto cols() const { return m_cols; }
+        size_t cols() const { return m_cols; }
 
-        auto type() const { return m_type; }
+        ///
+        /// \brief returns the row type.
+        ///
+        mode type() const { return m_type; }
 
-        const auto& cells() const { return m_cells; }
+        ///
+        /// \brief returns the stored cells.
+        ///
+        const cells_t& cells() const { return m_cells; }
 
+        ///
+        /// \brief returns the data string associated to the given column index.
+        ///
         const string_t& data(size_t col) const;
+
+        ///
+        /// \brief returns the mark string associated to the given column index.
+        ///
         const string_t& mark(size_t col) const;
 
     private:
         // attributes
-        mode                m_type{mode::data}; ///< row type
-        size_t              m_cols{0};          ///< current number of columns taking into account column spanning
-        char                m_colfill{' '};     ///< current cell fill character
-        size_t              m_colspan{1};       ///< current cell column span
-        alignment           m_alignment{alignment::left}; ///< current cell alignment
-        std::vector<cell_t> m_cells;                      ///<
+        mode      m_type{mode::data};           ///< row type
+        size_t    m_cols{0};                    ///< current number of columns taking into account column spanning
+        char      m_colfill{' '};               ///< current cell fill character
+        size_t    m_colspan{1};                 ///< current cell column span
+        alignment m_alignment{alignment::left}; ///< current cell alignment
+        cells_t   m_cells;                      ///<
     };
 
     inline bool operator==(const row_t& r1, const row_t& r2)

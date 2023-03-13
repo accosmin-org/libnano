@@ -45,7 +45,9 @@ static auto make_params(const configurable_t& configurable)
 static auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization,
                           const subsample_type subsample, const shrinkage_type shrinkage)
 {
-    scalar_t vAreg = 0.0, subsample_ratio = 1.0, shrinkage_ratio = 1.0;
+    scalar_t vAreg           = 0.0;
+    scalar_t subsample_ratio = 1.0;
+    scalar_t shrinkage_ratio = 1.0;
 
     tensor_size_t index = 0;
     if (regularization == regularization_type::variance)
@@ -78,11 +80,11 @@ static auto selected(const tensor2d_t& values, const indices_t& samples)
 static auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlearner_t& wlearner,
                          const wscale_type wscale)
 {
-    switch (wscale)
+    if (wscale == wscale_type::tboost)
     {
-    case wscale_type::tboost: return wlearner.split(dataset, samples);
-
-    default:
+        return wlearner.split(dataset, samples);
+    }
+    else
     {
         cluster_t cluster{dataset.samples(), 1};
         for (tensor_size_t i = 0; i < samples.size(); ++i)
@@ -90,7 +92,6 @@ static auto make_cluster(const dataset_t& dataset, const indices_t& samples, con
             cluster.assign(samples(i), 0);
         }
         return cluster;
-    }
     }
 }
 

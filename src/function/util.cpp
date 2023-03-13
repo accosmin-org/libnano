@@ -10,9 +10,10 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
 
     const auto n = function.size();
 
+    vector_t xp(n);
+    vector_t xn(n);
     vector_t gx(n);
     vector_t gx_approx(n);
-    vector_t xp(n), xn(n);
 
     // analytical gradient
     const auto fx = function.vgrad(x, &gx);

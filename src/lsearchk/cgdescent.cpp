@@ -190,11 +190,11 @@ bool lsearchk_cgdescent_t::get(const solver_state_t& state0, solver_state_t& sta
         const auto& b = interval.b;
 
         // secant interpolation
+        const auto a0         = a;
+        const auto b0         = b;
         const auto prev_width = b.t - a.t;
-        const auto a0 = a, b0 = b;
-        const auto tc = lsearch_step_t::secant(a0, b0);
 
-        if (move_update_and_check_done(tc))
+        if (const auto tc = lsearch_step_t::secant(a0, b0); move_update_and_check_done(tc))
         {
             return state.valid();
         }

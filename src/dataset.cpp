@@ -73,7 +73,9 @@ dataset_t& dataset_t::add(rgenerator_t&& generator)
 
 void dataset_t::update()
 {
-    tensor_size_t total_columns = 0, features = 0, generators = 0;
+    tensor_size_t features      = 0;
+    tensor_size_t generators    = 0;
+    tensor_size_t total_columns = 0;
     for (const auto& generator : m_generators)
     {
         for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ifeature, ++features)
@@ -92,7 +94,9 @@ void dataset_t::update()
     m_feature_mapping.resize(features, 5);
     m_generator_mapping.resize(generators, 1);
 
-    tensor_size_t offset_features = 0, offset_columns = 0, index = 0;
+    tensor_size_t index           = 0;
+    tensor_size_t offset_columns  = 0;
+    tensor_size_t offset_features = 0;
     for (const auto& generator : m_generators)
     {
         const auto old_offset_columns = offset_columns;
@@ -102,7 +106,10 @@ void dataset_t::update()
             m_feature_mapping(offset_features, 0) = index;
             m_feature_mapping(offset_features, 1) = ifeature;
 
-            tensor_size_t dim1 = 1, dim2 = 1, dim3 = 1, columns = 0;
+            tensor_size_t dim1    = 1;
+            tensor_size_t dim2    = 1;
+            tensor_size_t dim3    = 1;
+            tensor_size_t columns = 0;
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
             case feature_type::sclass: columns = feature.classes() - 1; break;
@@ -191,7 +198,7 @@ mclass_cmap_t dataset_t::select(indices_cmap_t samples, mclass_mem_t& buffer) co
     return m_datasource.visit_target(
         [&](const feature_t& feature, const auto& data, const auto& mask)
         {
-            auto storage = resize_and_map(buffer, samples.size(), static_cast<tensor_size_t>(feature.classes()));
+            auto storage = resize_and_map(buffer, samples.size(), feature.classes());
             loop_samples(
                 data, mask, samples, [&](auto) {},
                 [&](auto it)
@@ -320,7 +327,8 @@ tensor2d_map_t dataset_t::flatten(indices_cmap_t samples, tensor2d_t& buffer) co
 
     const auto storage = resize_and_map(buffer, samples.size(), columns());
 
-    tensor_size_t offset = 0, index = 0;
+    tensor_size_t index  = 0;
+    tensor_size_t offset = 0;
     for (const auto& generator : m_generators)
     {
         generator->flatten(samples, storage, offset);

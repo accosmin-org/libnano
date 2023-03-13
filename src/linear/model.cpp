@@ -52,7 +52,9 @@ static auto make_params(const configurable_t& configurable)
 
 static auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization)
 {
-    scalar_t l1reg = 0.0, l2reg = 0.0, vAreg = 0.0;
+    scalar_t l1reg = 0.0;
+    scalar_t l2reg = 0.0;
+    scalar_t vAreg = 0.0;
     switch (regularization)
     {
     case regularization_type::lasso: l1reg = params(0); break;

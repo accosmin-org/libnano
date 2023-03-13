@@ -31,7 +31,8 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
     bool R_updated = false;
     for (int i = 1; i < max_iterations; ++i)
     {
-        scalar_t tmin = 0, tmax = 0;
+        scalar_t tmin = 0;
+        scalar_t tmax = 0;
         if (state.has_armijo(state0, c1))
         {
             if (state.has_wolfe(state0, c2))
