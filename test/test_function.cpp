@@ -1,8 +1,39 @@
 #include "fixture/function.h"
+#include <nano/function/benchmark/sphere.h>
+#include <nano/function/lambda.h>
 
 using namespace nano;
 
 UTEST_BEGIN_MODULE(test_function)
+
+UTEST_CASE(lambda)
+{
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            gx->noalias() = 2 * x;
+        }
+        return x.dot(x);
+    };
+
+    for (tensor_size_t dims = 1; dims < 5; ++dims)
+    {
+        const auto sphere_function = function_sphere_t{dims};
+        const auto lambda_function = make_function(dims, true, true, 2.0, lambda);
+
+        for (auto trial = 0; trial < 10; ++trial)
+        {
+            const auto x = make_random_vector<scalar_t>(dims);
+            UTEST_CHECK_CLOSE(sphere_function.vgrad(x), lambda_function.vgrad(x), 1e-14);
+
+            auto g1 = make_random_vector<scalar_t>(dims);
+            auto g2 = make_random_vector<scalar_t>(dims);
+            UTEST_CHECK_CLOSE(sphere_function.vgrad(x, &g1), lambda_function.vgrad(x, &g2), 1e-14);
+            UTEST_CHECK_CLOSE(g1, g2, 1e-14);
+        }
+    }
+}
 
 UTEST_CASE(stats)
 {
