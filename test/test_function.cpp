@@ -29,7 +29,7 @@ UTEST_CASE(lambda)
 
             auto g1 = make_random_vector<scalar_t>(dims);
             auto g2 = make_random_vector<scalar_t>(dims);
-            UTEST_CHECK_CLOSE(sphere_function.vgrad(x, &g1), lambda_function.vgrad(x, &g2), 1e-14);
+            UTEST_CHECK_CLOSE(sphere_function.vgrad(x, &g1), lambda_function.clone()->vgrad(x, &g2), 1e-14);
             UTEST_CHECK_CLOSE(g1, g2, 1e-14);
         }
     }
