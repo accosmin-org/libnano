@@ -6,6 +6,13 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_function)
 
+UTEST_CASE(name)
+{
+    const auto function = function_sphere_t{3};
+    UTEST_CHECK_EQUAL(function.name(false), "sphere");
+    UTEST_CHECK_EQUAL(function.name(true), "sphere[3D]");
+}
+
 UTEST_CASE(lambda)
 {
     const auto lambda = [](const vector_t& x, vector_t* gx)
@@ -21,6 +28,8 @@ UTEST_CASE(lambda)
     {
         const auto sphere_function = function_sphere_t{dims};
         const auto lambda_function = make_function(dims, true, true, 2.0, lambda);
+
+        UTEST_CHECK(lambda_function.make(0, 0) == nullptr);
 
         for (auto trial = 0; trial < 10; ++trial)
         {

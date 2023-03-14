@@ -138,7 +138,6 @@ void function_t::clear_statistics() const
 
 rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
 {
-    assert(false);
     return rfunction_t{};
 }
 
