@@ -26,7 +26,8 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
     auto state = solver_state_t{function, x0}; // best state
 
     auto f = state.f;
-    auto x = state.x, g = state.g;
+    auto x = state.x;
+    auto g = state.g;
 
     const auto n = static_cast<scalar_t>(function.size());
 

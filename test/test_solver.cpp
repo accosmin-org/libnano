@@ -37,6 +37,10 @@ static solver_description_t make_description(const string_t& solver_id)
     {
         return {solver_type::line_search, 1e-6};
     }
+    else if (solver_id == "sgm")
+    {
+        return {solver_type::non_monotonic, 1e-3};
+    }
     else if (solver_id == "ellipsoid")
     {
         return {solver_type::non_monotonic, 1e-6};
