@@ -1,4 +1,5 @@
 #include <nano/core/numeric.h>
+#include <nano/solver/nonsmooth_state.h>
 #include <nano/solver/osga.h>
 
 using namespace nano;
@@ -50,7 +51,8 @@ solver_osga_t::solver_osga_t()
 
     register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.9, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.5, LE, 0.5, LE, fmax));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.1, LE, 0.9, LE, fmax));
+    register_parameter(parameter_t::make_integer("solver::osga::patience", 10, LE, 100, LE, 1e+6));
 }
 
 rsolver_t solver_osga_t::clone() const
@@ -65,12 +67,14 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto lambda               = parameter("solver::osga::lambda").value<scalar_t>();
     const auto alpha_max            = parameter("solver::osga::alpha_max").value<scalar_t>();
     const auto [kappa_prime, kappa] = parameter("solver::osga::kappas").value_pair<scalar_t>();
+    const auto patience             = parameter("solver::osga::patience").value<tensor_size_t>();
 
     const auto miu   = function.strong_convexity() / 2.0;
     const auto proxy = proxy_t{x0};
 
     auto  state = solver_state_t{function, x0}; // NB: keeps track of the best state
     auto& g     = state.g;                      // buffer to reuse
+    auto  track = nonsmooth_solver_state_t{state, patience};
 
     // initialization
     vector_t h     = state.g - miu * proxy.gQ(state.x);
@@ -113,15 +117,14 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
-        const auto dx      = (state.x - xb_hat).lpNorm<Eigen::Infinity>();
-        const auto updated = state.update_if_better(xb_hat, fb_hat);
+        track.update_if_better(xb_hat, fb_hat);
 
         u_hat              = proxy.U(gamma_hat - fb_hat, h_hat);
         const auto eta_hat = proxy.E(gamma_hat - fb_hat, h_hat) - miu;
 
         // check convergence
         const auto iter_ok   = state.valid();
-        const auto converged = eta_hat < epsilon || (updated && dx < epsilon);
+        const auto converged = eta_hat < epsilon || track.converged(epsilon);
         if (solver_t::done(function, state, iter_ok, converged))
         {
             break;

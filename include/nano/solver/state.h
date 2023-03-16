@@ -65,6 +65,8 @@ namespace nano
         /// \brief update the current state, if the given function value is smaller than the current one.
         /// returns true if the update was performed.
         ///
+        /// NB: this is usually called by non-monotonic solvers (e.g. for non-smooth optimization problems).
+        ///
         bool update_if_better(const vector_t& x, scalar_t fx);
         bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
 
