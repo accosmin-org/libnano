@@ -160,6 +160,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: setup
       run: bash scripts/setup_ubuntu2204.sh --default
     - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
