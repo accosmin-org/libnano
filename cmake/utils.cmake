@@ -14,7 +14,7 @@ function(copy_runtime_dlls TARGET)
     if (MSVC AND BUILD_SHARED_LIBS AND NOT already_applied)
         add_custom_command(
             TARGET "${TARGET}" POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy
+            COMMAND "${CMAKE_COMMAND}" -v -E copy
                 "$<TARGET_RUNTIME_DLLS:${TARGET}>" "$<TARGET_FILE_DIR:${TARGET}>"
             COMMAND_EXPAND_LISTS
         )
