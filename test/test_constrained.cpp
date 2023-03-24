@@ -103,8 +103,7 @@ static void check_minimize(solver_t& solver, const function_t& function, const v
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
            << ":x0=[" << x0.transpose() << "]\n";
 
-    tensor_size_t iterations = 0;
-    ::setup_logger(solver, stream, iterations);
+    ::setup_logger(solver, stream);
 
     function.clear_statistics();
     const auto state = solver.minimize(function, x0);
@@ -112,13 +111,13 @@ static void check_minimize(solver_t& solver, const function_t& function, const v
     const auto old_n_failures = utest_n_failures.load();
 
     UTEST_CHECK(state.valid());
-    UTEST_CHECK_CLOSE(state.f, fbest, epsilon);
-    UTEST_CHECK_CLOSE(state.x, xbest, epsilon);
+    UTEST_CHECK_CLOSE(state.x(), xbest, epsilon);
+    UTEST_CHECK_CLOSE(state.fx(), fbest, epsilon);
     UTEST_CHECK_LESS_EQUAL(0.0, state.constraint_test());
     UTEST_CHECK_LESS(state.constraint_test(), solver.parameter("solver::epsilon").value<scalar_t>());
-    UTEST_CHECK_EQUAL(state.status, solver_status::converged);
-    UTEST_CHECK_EQUAL(state.fcalls, function.fcalls());
-    UTEST_CHECK_EQUAL(state.gcalls, function.gcalls());
+    UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
+    UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
+    UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
 
     if (old_n_failures != utest_n_failures.load())
     {
@@ -800,22 +799,22 @@ UTEST_CASE(minimize_objective1)
     check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-2.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-2.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 2.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(-1.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(-1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = -2.0;
@@ -833,17 +832,17 @@ UTEST_CASE(minimize_objective2)
     check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(0.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(1.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = -5.0;
@@ -861,17 +860,17 @@ UTEST_CASE(minimize_objective3)
     check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0)};
-        UTEST_CHECK_CLOSE(state.cineq, make_x(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.cineq(), make_x(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(1.0)};
-        UTEST_CHECK_CLOSE(state.cineq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.cineq(), make_x(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(2.0)};
-        UTEST_CHECK_CLOSE(state.cineq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.cineq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = +1.0;
@@ -889,17 +888,17 @@ UTEST_CASE(minimize_objective4)
     check_convexity(function);
     {
         const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_x(1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq, make_x(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.ceq(), make_x(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     const auto fbest = -1.0;

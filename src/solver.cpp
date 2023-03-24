@@ -106,13 +106,10 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
     return do_minimize(function, x0);
 }
 
-bool solver_t::done(const function_t& function, solver_state_t& state, const bool iter_ok, const bool converged) const
+bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool converged) const
 {
-    state.fcalls = function.fcalls();
-    state.gcalls = function.gcalls();
-
     // stopping was requested (in an outer loop)
-    if (state.status == solver_status::stopped)
+    if (state.status() == solver_status::stopped)
     {
         return true;
     }
@@ -121,14 +118,14 @@ bool solver_t::done(const function_t& function, solver_state_t& state, const boo
         if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
         {
             // either converged or failed
-            state.status = converged ? solver_status::converged : solver_status::failed;
+            state.status(converged ? solver_status::converged : solver_status::failed);
             log(state);
             return true;
         }
         else if (!log(state))
         {
             // stopping was requested
-            state.status = solver_status::stopped;
+            state.status(solver_status::stopped);
             return true;
         }
 
@@ -137,11 +134,9 @@ bool solver_t::done(const function_t& function, solver_state_t& state, const boo
     }
 }
 
-bool solver_t::log(solver_state_t& state) const
+bool solver_t::log(const solver_state_t& state) const
 {
-    const auto status = !m_logger ? true : m_logger(state);
-    state.inner_iters++;
-    return status;
+    return !m_logger ? true : m_logger(state);
 }
 
 factory_t<solver_t>& solver_t::all()

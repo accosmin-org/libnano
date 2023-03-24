@@ -5,7 +5,7 @@
 namespace nano
 {
     ///
-    /// \brief use linear interpolation of the previous line-search step lengths.
+    /// \brief use linear interpolation of the previous line-search step sizes.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
     ///     see "Practical methods of optimization", Fletcher, p.38-39
     ///
@@ -25,7 +25,7 @@ namespace nano
         ///
         /// \brief @see lsearch0_t
         ///
-        scalar_t get(const solver_state_t&) override;
+        scalar_t get(const solver_state_t&, const vector_t&, scalar_t) override;
 
     private:
         // attributes

@@ -146,7 +146,8 @@ rlsearchk_t lsearchk_morethuente_t::clone() const
     return std::make_unique<lsearchk_morethuente_t>(*this);
 }
 
-bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& state) const
+lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0, const vector_t& descent,
+                                                    scalar_t step_size, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -156,19 +157,28 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
     const auto gtol = c2;
     const auto xtol = epsilon0<scalar_t>();
 
+    const auto finit = state0.fx();
+    const auto ginit = state0.dg(descent);
+    const auto gtest = ftol * ginit;
+
     int  stage  = 1;
     bool brackt = false;
 
-    scalar_t stp = state.t, f = state.f, g = state.dg();
-    scalar_t stmin = 0, stmax = stp + stp * 4;
+    scalar_t stp   = step_size;
+    scalar_t f     = state.fx();
+    scalar_t g     = state.dg(descent);
+    scalar_t stmin = 0;
+    scalar_t stmax = stp + stp * 4;
 
     scalar_t width  = stpmax() - stpmin();
     scalar_t width1 = 2 * width;
 
-    const scalar_t finit = state0.f, ginit = state0.dg(), gtest = ftol * ginit;
-
-    scalar_t stx = 0, fx = finit, gx = ginit;
-    scalar_t sty = 0, fy = finit, gy = ginit;
+    scalar_t stx = 0;
+    scalar_t fx  = finit;
+    scalar_t gx  = ginit;
+    scalar_t sty = 0;
+    scalar_t fy  = finit;
+    scalar_t gy  = ginit;
 
     for (int i = 0; i < max_iterations; ++i)
     {
@@ -181,25 +191,25 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         // Check if further progress can be made
         if (brackt && (stp <= stmin || stp >= stmax))
         {
-            return true;
+            return {true, stp};
         }
         if (brackt && (stmax - stmin) <= xtol * stmax)
         {
-            return true;
+            return {true, stp};
         }
         if (stp >= stpmax() && f <= ftest && g <= gtest)
         {
-            return true;
+            return {true, stp};
         }
         if (stp <= stpmin() && (f > ftest || g >= gtest))
         {
-            return true;
+            return {true, stp};
         }
 
         // Check convergence
         if (f <= ftest && std::fabs(g) <= gtol * (-ginit))
         {
-            return true;
+            return {true, stp};
         }
 
         // Interpolate the next point to evaluate
@@ -255,11 +265,13 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         }
 
         // Obtain another function and derivative
-        state.update(state0, stp);
-        log(state0, state);
-        f = state.f;
-        g = state.dg();
+        if (!update(state, state0, descent, stp))
+        {
+            return {false, stp};
+        }
+        f = state.fx();
+        g = state.dg(descent);
     }
 
-    return false;
+    return {false, stp};
 }

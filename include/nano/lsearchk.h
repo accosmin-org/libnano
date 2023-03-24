@@ -33,9 +33,15 @@ namespace nano
     {
     public:
         ///
-        /// logging operator: op(solver_state_at_0, solver_state_at_t), called for each trial of the line-search length.
+        /// logging operator called for each trial of the line-search step size:
+        ///     op(solver_state_at_0, solver_state_at_t, descent direction, step_size).
         ///
-        using logger_t = std::function<void(const solver_state_t&, const solver_state_t&)>;
+        using logger_t = std::function<void(const solver_state_t&, const solver_state_t&, const vector_t&, scalar_t)>;
+
+        ///
+        /// line-search result: <success flag, step size>.
+        ///
+        using result_t = std::tuple<bool, scalar_t>;
 
         ///
         /// \brief constructor
@@ -50,7 +56,7 @@ namespace nano
         ///
         /// \brief compute the step size starting from the given state and the initial estimate of the step size.
         ///
-        virtual bool get(solver_state_t& state, scalar_t t) const;
+        result_t get(solver_state_t&, const vector_t& descent, scalar_t initial_step_size) const;
 
         ///
         /// \brief set the logging operator.
@@ -74,9 +80,9 @@ namespace nano
 
     protected:
         void type(lsearch_type);
-        void log(const solver_state_t& state0, const solver_state_t& state) const;
+        bool update(solver_state_t&, const solver_state_t&, const vector_t&, scalar_t) const;
 
-        virtual bool get(const solver_state_t& state0, solver_state_t&) const = 0;
+        virtual result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&) const = 0;
 
     private:
         // attributes

@@ -17,10 +17,10 @@ factory_t<lsearch0_t>& lsearch0_t::all()
     static auto manager = factory_t<lsearch0_t>{};
     const auto  op      = []()
     {
-        manager.add<lsearch0_linear_t>("linearly interpolate the previous line-search step length");
-        manager.add<lsearch0_constant_t>("constant line-search step length");
-        manager.add<lsearch0_quadratic_t>("quadratically interpolate the previous line-search step length");
-        manager.add<lsearch0_cgdescent_t>("the initial line-search step length described in CG-DESCENT");
+        manager.add<lsearch0_linear_t>("linearly interpolate the previous line-search step size");
+        manager.add<lsearch0_constant_t>("constant line-search step size");
+        manager.add<lsearch0_quadratic_t>("quadratically interpolate the previous line-search step size");
+        manager.add<lsearch0_cgdescent_t>("the initial line-search step size described in CG-DESCENT");
     };
 
     static std::once_flag flag;

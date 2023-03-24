@@ -123,8 +123,8 @@ namespace nano
 
     protected:
         void type(solver_type);
-        bool log(solver_state_t&) const;
-        bool done(const function_t&, solver_state_t&, bool iter_ok, bool converged) const;
+        bool log(const solver_state_t&) const;
+        bool done(solver_state_t&, bool iter_ok, bool converged) const;
 
         lsearch_t make_lsearch() const;
         rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals) const;

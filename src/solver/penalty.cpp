@@ -34,12 +34,12 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
     {
         penalty_function.penalty(penalty);
 
-        const auto cstate    = solver->minimize(penalty_function, bstate.x);
+        const auto cstate    = solver->minimize(penalty_function, bstate.x());
         const auto iter_ok   = cstate.valid();
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
-        if (done(penalty_function.function(), bstate, iter_ok, converged))
+        if (done(bstate, iter_ok, converged))
         {
             break;
         }

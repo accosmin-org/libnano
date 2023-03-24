@@ -77,8 +77,8 @@ namespace nano
         enum class mode
         {
             header = 0, ///< header (not considered for operations like sorting or marking)
-            data,       ///< data row
             delim,      ///< delimiting row
+            data,       ///< data row
         };
 
         ///
@@ -293,16 +293,28 @@ namespace nano
         }
 
         ///
-        /// \brief access functions
+        /// \brief returns the number of columns.
         ///
         size_t cols() const;
 
-        auto rows() const { return m_rows.size(); }
+        ///
+        /// \brief returns the number of rows.
+        ///
+        size_t rows() const { return m_rows.size(); }
 
-        const auto& content() const { return m_rows; }
+        ///
+        /// \brief returns the list of all available rows.
+        ///
+        const std::vector<row_t>& content() const { return m_rows; }
 
+        ///
+        /// \brief returns the given row by index.
+        ///
         row_t& row(size_t row_index);
 
+        ///
+        /// \brief returns the given row by index.
+        ///
         const row_t& row(size_t row_index) const;
 
     private:

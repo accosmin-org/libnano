@@ -107,20 +107,17 @@ table_t::table_t() = default;
 
 row_t& table_t::delim()
 {
-    m_rows.emplace_back(row_t::mode::delim);
-    return *m_rows.rbegin();
+    return m_rows.emplace_back(row_t::mode::delim);
 }
 
 row_t& table_t::header()
 {
-    m_rows.emplace_back(row_t::mode::header);
-    return *m_rows.rbegin();
+    return m_rows.emplace_back(row_t::mode::header);
 }
 
 row_t& table_t::append()
 {
-    m_rows.emplace_back(row_t::mode::data);
-    return *m_rows.rbegin();
+    return m_rows.emplace_back(row_t::mode::data);
 }
 
 size_t table_t::cols() const
@@ -198,7 +195,6 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
         }
     }
 
-    //
     const auto print_row_delim = [&]()
     {
         for (const auto colsize : colsizes)

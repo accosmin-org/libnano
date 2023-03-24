@@ -14,26 +14,24 @@ rlsearch0_t lsearch0_quadratic_t::clone() const
     return std::make_unique<lsearch0_quadratic_t>(*this);
 }
 
-scalar_t lsearch0_quadratic_t::get(const solver_state_t& state)
+scalar_t lsearch0_quadratic_t::get(const solver_state_t& state, const vector_t& descent, const scalar_t last_step_size)
 {
     const auto beta    = parameter("lsearch0::quadratic::beta").value<scalar_t>();
     const auto alpha   = parameter("lsearch0::quadratic::alpha").value<scalar_t>();
     const auto epsilon = parameter("lsearch0::epsilon").value<scalar_t>();
 
     scalar_t t0 = 0;
-
-    if (state.inner_iters <= 1)
+    if (last_step_size < 0)
     {
         t0 = 1;
     }
     else
     {
-        t0 = std::min(scalar_t(1), -alpha * 2 * std::max(m_prevf - state.f, beta * epsilon) / m_prevdg);
+        t0 = std::min(scalar_t(1), -alpha * 2 * std::max(m_prevf - state.fx(), beta * epsilon) / m_prevdg);
     }
 
-    m_prevf  = state.f;
-    m_prevdg = state.dg();
-
+    m_prevf  = state.fx();
+    m_prevdg = state.dg(descent);
     log(state, t0);
     return t0;
 }

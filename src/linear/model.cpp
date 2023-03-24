@@ -94,8 +94,8 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg, vAreg};
     const auto state    = solver.minimize(function, make_x0(function, extra));
 
-    tensor1d_t bias    = function.bias(state.x);
-    tensor2d_t weights = function.weights(state.x);
+    tensor1d_t bias    = function.bias(state.x());
+    tensor2d_t weights = function.weights(state.x());
     ::upscale(iterator.flatten_stats(), iterator.scaling(), iterator.targets_stats(), iterator.scaling(), weights,
               bias);
 

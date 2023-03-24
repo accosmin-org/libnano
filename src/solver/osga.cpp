@@ -1,5 +1,4 @@
 #include <nano/core/numeric.h>
-#include <nano/solver/nonsmooth_state.h>
 #include <nano/solver/osga.h>
 
 using namespace nano;
@@ -72,29 +71,28 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto miu   = function.strong_convexity() / 2.0;
     const auto proxy = proxy_t{x0};
 
-    auto  state = solver_state_t{function, x0}; // NB: keeps track of the best state
-    auto& g     = state.g;                      // buffer to reuse
-    auto  track = nonsmooth_solver_state_t{state, patience};
+    auto state = solver_state_t{function, x0, patience}; // NB: keeps track of the best state
 
     // initialization
-    vector_t h     = state.g - miu * proxy.gQ(state.x);
-    scalar_t gamma = state.f - miu * proxy.Q(state.x) - h.dot(state.x);
-    vector_t u     = proxy.U(gamma - state.f, h);
-    scalar_t eta   = proxy.E(gamma - state.f, h) - miu;
+    vector_t h     = state.gx() - miu * proxy.gQ(state.x());
+    scalar_t gamma = state.fx() - miu * proxy.Q(state.x()) - h.dot(state.x());
+    vector_t u     = proxy.U(gamma - state.fx(), h);
+    scalar_t eta   = proxy.E(gamma - state.fx(), h) - miu;
 
     auto alpha = alpha_max;
-    auto xb    = state.x;
-    auto fb    = state.f;
+    auto xb    = state.x();
+    auto fb    = state.fx();
+    auto g     = state.gx();
 
     vector_t x, x_prime, h_hat, u_hat, u_prime;
 
     while (function.fcalls() < max_evals)
     {
-        if (state.g.lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
+        if (state.gx().lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
         {
             const auto converged = true;
             const auto iter_ok   = state.valid();
-            if (solver_t::done(function, state, iter_ok, converged))
+            if (solver_t::done(state, iter_ok, converged))
             {
                 break;
             }
@@ -117,15 +115,15 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
 
-        track.update_if_better(xb_hat, fb_hat);
+        state.update_if_better(xb_hat, fb_hat);
 
         u_hat              = proxy.U(gamma_hat - fb_hat, h_hat);
         const auto eta_hat = proxy.E(gamma_hat - fb_hat, h_hat) - miu;
 
         // check convergence
         const auto iter_ok   = state.valid();
-        const auto converged = eta_hat < epsilon || track.converged(epsilon);
-        if (solver_t::done(function, state, iter_ok, converged))
+        const auto converged = eta_hat < epsilon || state.value_test() < epsilon;
+        if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }
@@ -147,8 +145,6 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     }
 
     // NB: make sure the gradient is updated at the returned point.
-    state.f      = function.vgrad(state.x, &state.g);
-    state.fcalls = function.fcalls();
-    state.gcalls = function.gcalls();
+    state.update(state.x());
     return state;
 }

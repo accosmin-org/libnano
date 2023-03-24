@@ -10,7 +10,7 @@ namespace nano
     using rlsearch0_t = std::unique_ptr<lsearch0_t>;
 
     ///
-    /// \brief estimate the initial step length of the line-search procedure.
+    /// \brief estimate the initial step size of the line-search procedure.
     ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
     ///     see "Practical methods of optimization", Fletcher, chapter 2
     ///
@@ -18,7 +18,7 @@ namespace nano
     {
     public:
         ///
-        /// logging operator: op(solver_state, proposed_line_search_step_length_length).
+        /// logging operator: op(solver_state, proposed_line_search_step_size).
         ///
         using logger_t = std::function<void(const solver_state_t&, const scalar_t)>;
 
@@ -28,15 +28,16 @@ namespace nano
         explicit lsearch0_t(string_t id);
 
         ///
-        /// \brief returns the available implementations
+        /// \brief returns the available implementations.
         ///
         static factory_t<lsearch0_t>& all();
 
         ///
-        /// \brief returns the initial step length given the current state
-        /// NB: may keep track of the previous states
+        /// \brief returns the initial step size given the current state.
         ///
-        virtual scalar_t get(const solver_state_t& state) = 0;
+        /// NB: may keep track of the initial step sizes computed for previous calls.
+        ///
+        virtual scalar_t get(const solver_state_t& state, const vector_t& descent, scalar_t last_step_size) = 0;
 
         ///
         /// \brief set the logging operator.
@@ -44,14 +45,11 @@ namespace nano
         void logger(const logger_t& logger) { m_logger = logger; }
 
     protected:
-        ///
-        /// \brief log the current line-search trial length (if the logger is provided)
-        ///
-        void log(const solver_state_t& state, const scalar_t t) const
+        void log(const solver_state_t& state, const scalar_t step_size) const
         {
             if (m_logger)
             {
-                m_logger(state, t);
+                m_logger(state, step_size);
             }
         }
 

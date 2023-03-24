@@ -19,28 +19,26 @@ rsolver_t solver_lbfgs_t::clone() const
 
 solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
-    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto history   = parameter("solver::lbfgs::history").value<size_t>();
 
-    auto lsearch = make_lsearch();
-
-    auto cstate = solver_state_t{function, x0};
-
-    if (solver_t::done(function, cstate, true, cstate.gradient_test() < epsilon))
+    auto cstate = solver_state_t{function, x0}; // current state
+    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon))
     {
         return cstate;
     }
 
-    vector_t             q, r;
-    solver_state_t       pstate;
-    std::deque<vector_t> ss, ys;
+    auto lsearch = make_lsearch();
+    auto pstate  = cstate; // previous state
 
+    vector_t             q, r;
+    std::deque<vector_t> ss, ys;
     while (function.fcalls() < max_evals)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)
-        q = cstate.g;
+        q = cstate.gx();
 
         const auto hsize = ss.size();
 
@@ -77,19 +75,20 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
             r.noalias() += s * (alpha - beta);
         }
 
-        cstate.d               = -r;
-        const auto has_descent = cstate.has_descent();
+        auto& descent = r;
+        descent       = -r;
 
-        // Force descent direction
+        // force descent direction
+        const auto has_descent = cstate.has_descent(descent);
         if (!has_descent)
         {
-            cstate.d = -cstate.g;
+            descent = -cstate.gx();
         }
 
         // line-search
         pstate             = cstate;
-        const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.gradient_test() < epsilon))
+        const auto iter_ok = lsearch.get(cstate, descent);
+        if (solver_t::done(cstate, iter_ok, cstate.gradient_test() < epsilon))
         {
             break;
         }
@@ -98,8 +97,8 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
         //      "A Multi-Batch L-BFGS Method for Machine Learning", page 6 - the non-convex case
         if (has_descent)
         {
-            ss.emplace_back(cstate.x - pstate.x);
-            ys.emplace_back(cstate.g - pstate.g);
+            ss.emplace_back(cstate.x() - pstate.x());
+            ys.emplace_back(cstate.gx() - pstate.gx());
             if (ss.size() > history)
             {
                 ss.pop_front();

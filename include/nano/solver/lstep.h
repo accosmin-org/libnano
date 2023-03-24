@@ -23,28 +23,10 @@ namespace nano
     {
     public:
         ///
-        /// \brief constructors
+        /// \brief constructor
         ///
-        lsearch_step_t()                          = default;
-        lsearch_step_t(lsearch_step_t&&) noexcept = default;
-        lsearch_step_t(const lsearch_step_t&)     = default;
-
-        // cppcheck-suppress noExplicitConstructor
-        lsearch_step_t(const solver_state_t&); // NOLINT(hicpp-explicit-conversions)
-
-        lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg);
-
-        ///
-        /// \brief assignment
-        ///
-        lsearch_step_t& operator=(lsearch_step_t&&) noexcept = default;
-        lsearch_step_t& operator=(const lsearch_step_t&)     = default;
-        lsearch_step_t& operator=(const solver_state_t& state);
-
-        ///
-        /// \brief destructor
-        ///
-        ~lsearch_step_t() = default;
+        lsearch_step_t(scalar_t t, scalar_t f, scalar_t dg);
+        lsearch_step_t(const solver_state_t&, const vector_t& descent, scalar_t step_size);
 
         ///
         /// \brief cubic interpolation of two line-search steps.
@@ -89,7 +71,7 @@ namespace nano
         // attributes
         scalar_t t{0}; ///< line-search step
         scalar_t f{0}; ///< line-search function value
-        scalar_t g{0}; ///< line-search gradient
+        scalar_t g{0}; ///< line-search dot product gradient and descent direction
     };
 
     template <>

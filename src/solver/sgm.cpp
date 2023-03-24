@@ -1,4 +1,3 @@
-#include <nano/solver/nonsmooth_state.h>
 #include <nano/solver/sgm.h>
 
 using namespace nano;
@@ -24,11 +23,10 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     const auto power     = parameter("solver::sgm::power").value<scalar_t>();
     const auto patience  = parameter("solver::sgm::patience").value<tensor_size_t>();
 
-    auto state = solver_state_t{function, x0}; // best state
-    auto track = nonsmooth_solver_state_t{state, patience};
+    auto state = solver_state_t{function, x0, patience}; // best state
 
-    auto x = state.x;
-    auto g = state.g;
+    auto x = state.x();
+    auto g = state.gx();
 
     auto iteration = 0;
     while (function.fcalls() < max_evals)
@@ -38,7 +36,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
         {
             const auto iter_ok   = true;
             const auto converged = true;
-            solver_t::done(function, state, iter_ok, converged);
+            solver_t::done(state, iter_ok, converged);
             break;
         }
 
@@ -46,11 +44,11 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
         x -= lambda * g / gnorm;
 
         const auto f = function.vgrad(x, &g);
-        track.update_if_better(x, g, f);
+        state.update_if_better(x, g, f);
 
         const auto iter_ok   = std::isfinite(f);
-        const auto converged = track.converged(epsilon);
-        if (solver_t::done(function, state, iter_ok, converged))
+        const auto converged = state.value_test() < epsilon;
+        if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }

@@ -16,29 +16,28 @@ rsolver_t solver_gd_t::clone() const
 
 solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
-    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
 
-    auto lsearch = make_lsearch();
-
-    auto cstate = solver_state_t{function, x0};
-    if (solver_t::done(function, cstate, true, cstate.gradient_test() < epsilon))
+    auto state = solver_state_t{function, x0};
+    if (solver_t::done(state, true, state.gradient_test() < epsilon))
     {
-        return cstate;
+        return state;
     }
 
+    auto lsearch = make_lsearch();
+    auto descent = vector_t{function.size()};
     while (function.fcalls() < max_evals)
     {
-        // descent direction
-        cstate.d = -cstate.g;
+        descent = -state.gx();
 
         // line-search
-        const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.gradient_test() < epsilon))
+        const auto iter_ok = lsearch.get(state, descent);
+        if (solver_t::done(state, iter_ok, state.gradient_test() < epsilon))
         {
             break;
         }
     }
 
-    return cstate;
+    return state;
 } // LCOV_EXCL_LINE

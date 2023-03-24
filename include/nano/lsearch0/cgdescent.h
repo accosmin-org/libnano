@@ -5,7 +5,7 @@
 namespace nano
 {
     ///
-    /// \brief CG_DESCENT initial step length strategy.
+    /// \brief CG_DESCENT initial step size strategy.
     ///
     class NANO_PUBLIC lsearch0_cgdescent_t final : public lsearch0_t
     {
@@ -23,6 +23,6 @@ namespace nano
         ///
         /// \brief @see lsearch0_t
         ///
-        scalar_t get(const solver_state_t&) override;
+        scalar_t get(const solver_state_t&, const vector_t&, scalar_t) override;
     };
 } // namespace nano

@@ -76,51 +76,53 @@ solver_quasi_t::solver_quasi_t(string_t id)
 
 solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
-    const auto max_evals = parameter("solver::max_evals").value<int64_t>();
+    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto init      = parameter("solver::quasi::initialization").value<initialization>();
 
-    auto lsearch = make_lsearch();
-
-    auto cstate = solver_state_t{function, x0};
-    if (solver_t::done(function, cstate, true, cstate.gradient_test() < epsilon))
+    auto cstate = solver_state_t{function, x0}; // current state
+    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon))
     {
         return cstate;
     }
 
-    solver_state_t pstate;
+    auto lsearch = make_lsearch();
+    auto pstate  = solver_state_t{}; // previous state
+    auto descent = vector_t{};       // descent direction
 
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
-    for (int64_t i = 0; function.fcalls() < max_evals; ++i)
+    bool first_iteration = false;
+    while (function.fcalls() < max_evals)
     {
         // descent direction
-        cstate.d = -H * cstate.g;
+        descent = -H * cstate.gx();
 
         // restart:
         //  - if not a descent direction
-        if (!cstate.has_descent())
+        if (!cstate.has_descent(descent))
         {
-            cstate.d = -cstate.g;
+            descent = -cstate.gx();
             H.setIdentity();
         }
 
         // line-search
         pstate             = cstate;
-        const auto iter_ok = lsearch.get(cstate);
-        if (solver_t::done(function, cstate, iter_ok, cstate.gradient_test() < epsilon))
+        const auto iter_ok = lsearch.get(cstate, descent);
+        if (solver_t::done(cstate, iter_ok, cstate.gradient_test() < epsilon))
         {
             break;
         }
 
         // initialize the Hessian's inverse
-        if (i == 0 && init == initialization::scaled)
+        if (first_iteration && init == initialization::scaled)
         {
-            const auto dx = cstate.x - pstate.x;
-            const auto dg = cstate.g - pstate.g;
+            const auto dx = cstate.x() - pstate.x();
+            const auto dg = cstate.gx() - pstate.gx();
             H             = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
         }
+        first_iteration = false;
 
         // update approximation of the Hessian
         update(pstate, cstate, H);
@@ -184,25 +186,25 @@ void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t
 {
     const auto r = parameter("solver::quasi::sr1::r").value<scalar_t>();
 
-    ::SR1(H, curr.x - prev.x, curr.g - prev.g, r);
+    ::SR1(H, curr.x() - prev.x(), curr.gx() - prev.gx(), r);
 }
 
 void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::DFP(H, curr.x - prev.x, curr.g - prev.g);
+    H = ::DFP(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_bfgs_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::BFGS(H, curr.x - prev.x, curr.g - prev.g);
+    H = ::BFGS(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_hoshino_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::HOSHINO(H, curr.x - prev.x, curr.g - prev.g);
+    H = ::HOSHINO(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_fletcher_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    ::FLETCHER(H, curr.x - prev.x, curr.g - prev.g);
+    ::FLETCHER(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }

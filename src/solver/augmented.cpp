@@ -5,9 +5,9 @@ using namespace nano;
 
 static auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const scalar_t ro_max = 10.0)
 {
-    const auto& f = state.f;
-    const auto& h = state.ceq;
-    const auto& g = state.cineq;
+    const auto  f = state.fx();
+    const auto& h = state.ceq();
+    const auto& g = state.cineq();
     const auto  G = g.array().max(0.0).matrix();
 
     const auto ro = 2.0 * std::fabs(f) / std::max(h.dot(h) + G.dot(G), 1e-6);
@@ -16,8 +16,8 @@ static auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, 
 
 static auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
 {
-    const auto hinf = state.ceq.lpNorm<Eigen::Infinity>();
-    const auto Vinf = state.cineq.array().max(-miu.array() / ro).matrix().lpNorm<Eigen::Infinity>();
+    const auto hinf = state.ceq().lpNorm<Eigen::Infinity>();
+    const auto Vinf = state.cineq().array().max(-miu.array() / ro).matrix().lpNorm<Eigen::Infinity>();
     return std::max(hinf, Vinf);
 }
 
@@ -59,8 +59,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto bstate        = solver_state_t{function, x0};
     auto ro            = make_ro1(bstate);
     auto old_criterion = scalar_t{0.0};
-    auto lambda        = vector_t{vector_t::Zero(bstate.ceq.size())};
-    auto miu           = vector_t{vector_t::Zero(bstate.cineq.size())};
+    auto lambda        = vector_t{vector_t::Zero(bstate.ceq().size())};
+    auto miu           = vector_t{vector_t::Zero(bstate.cineq().size())};
 
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
     auto solver           = make_solver(penalty_function, epsilon0, max_evals);
@@ -69,19 +69,19 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     {
         penalty_function.penalty(ro);
 
-        const auto cstate    = solver->minimize(penalty_function, bstate.x);
+        const auto cstate    = solver->minimize(penalty_function, bstate.x());
         const auto iter_ok   = cstate.valid();
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
 
-        if (done(function, bstate, iter_ok, converged))
+        if (done(bstate, iter_ok, converged))
         {
             break;
         }
 
         // update lagrange multipliers
-        lambda.array() = (lambda.array() + ro * cstate.ceq.array()).max(lambda_min).min(lambda_max);
-        miu.array()    = (miu.array() + ro * cstate.cineq.array()).max(0.0).min(miu_max);
+        lambda.array() = (lambda.array() + ro * cstate.ceq().array()).max(lambda_min).min(lambda_max);
+        miu.array()    = (miu.array() + ro * cstate.cineq().array()).max(0.0).min(miu_max);
 
         // update penalty parameter
         const auto criterion = make_criterion(cstate, miu, ro);

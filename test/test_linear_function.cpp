@@ -191,22 +191,23 @@ UTEST_CASE(minimize_noreg)
 
     const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 0.0};
 
-    auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_CLOSE(state.f, 0.0, epsilon);
-    UTEST_CHECK_GREATER(state.inner_iters, 10);
+    const auto [state, epsilon] = check_minimize(function);
+    UTEST_CHECK_CLOSE(state.fx(), 0.0, epsilon);
+    UTEST_CHECK_GREATER(state.fcalls(), 10);
 
-    ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling, function.weights(state.x),
-                    function.bias(state.x));
+    auto x = state.x();
+    ::nano::upscale(iterator.flatten_stats(), scaling, iterator.targets_stats(), scaling, function.weights(x),
+                    function.bias(x));
 
-    UTEST_CHECK_CLOSE(datasource.bias(), function.bias(state.x), epsilon);
-    UTEST_CHECK_CLOSE(datasource.weights(), function.weights(state.x), epsilon);
+    UTEST_CHECK_CLOSE(datasource.bias(), function.bias(x), epsilon);
+    UTEST_CHECK_CLOSE(datasource.weights(), function.weights(x), epsilon);
 
     const auto datasource_bias    = datasource.bias().vector();
     const auto datasource_weights = datasource.weights().matrix();
     check_linear(dataset, datasource_weights, datasource_bias, 1e-15);
 
-    const auto function_bias    = function.bias(state.x).vector();
-    const auto function_weights = function.weights(state.x).matrix();
+    const auto function_bias    = function.bias(x).vector();
+    const auto function_weights = function.weights(x).matrix();
     check_linear(dataset, function_weights, function_bias, epsilon);
 }
 
@@ -229,7 +230,7 @@ UTEST_CASE(minimize_l1reg)
     const auto function = linear::function_t{iterator, *loss, 1.0, 0.0, 0.0};
 
     [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_GREATER(state.inner_iters, 10);
+    UTEST_CHECK_GREATER(state.fcalls(), 10);
 }
 
 UTEST_CASE(minimize_l2reg)
@@ -251,7 +252,7 @@ UTEST_CASE(minimize_l2reg)
     const auto function = linear::function_t{iterator, *loss, 0.0, 1.0, 0.0};
 
     [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_GREATER(state.inner_iters, 10);
+    UTEST_CHECK_GREATER(state.fcalls(), 10);
 }
 
 UTEST_CASE(minimize_vAreg)
@@ -273,7 +274,7 @@ UTEST_CASE(minimize_vAreg)
     const auto function = linear::function_t{iterator, *loss, 0.0, 0.0, 1.0};
 
     [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_GREATER(state.inner_iters, 10);
+    UTEST_CHECK_GREATER(state.fcalls(), 10);
 }
 
 UTEST_END_MODULE()

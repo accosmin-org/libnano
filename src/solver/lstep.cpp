@@ -2,26 +2,16 @@
 
 using namespace nano;
 
-lsearch_step_t::lsearch_step_t(const solver_state_t& state) // NOLINT(hicpp-explicit-conversions)
-    : t(state.t)
-    , f(state.f)
-    , g(state.dg())
-{
-}
-
-lsearch_step_t::lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t gg)
+lsearch_step_t::lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t dg)
     : t(tt)
     , f(ff)
-    , g(gg)
+    , g(dg)
 {
 }
 
-lsearch_step_t& lsearch_step_t::operator=(const solver_state_t& state)
+lsearch_step_t::lsearch_step_t(const solver_state_t& state, const vector_t& descent, const scalar_t step_size)
+    : lsearch_step_t(step_size, state.fx(), state.dg(descent))
 {
-    t = state.t;
-    f = state.f;
-    g = state.dg();
-    return *this;
 }
 
 scalar_t lsearch_step_t::cubic(const lsearch_step_t& u, const lsearch_step_t& v)

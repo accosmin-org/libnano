@@ -17,7 +17,8 @@ rlsearchk_t lsearchk_lemarechal_t::clone() const
     return std::make_unique<lsearchk_lemarechal_t>(*this);
 }
 
-bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& state) const
+lsearchk_t::result_t lsearchk_lemarechal_t::do_get(const solver_state_t& state0, const vector_t& descent,
+                                                   scalar_t step_size, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -25,23 +26,23 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
     const auto interpolation  = parameter("lsearchk::lemarechal::interpolation").value<interpolation_type>();
     const auto safeguard      = parameter("lsearchk::lemarechal::safeguard").value<scalar_t>();
 
-    lsearch_step_t L = state0;
-    lsearch_step_t R = L;
+    auto L = lsearch_step_t{state0, descent, 0.0};
+    auto R = L;
 
     bool R_updated = false;
     for (int i = 1; i < max_iterations; ++i)
     {
         scalar_t tmin = 0;
         scalar_t tmax = 0;
-        if (state.has_armijo(state0, c1))
+        if (state.has_armijo(state0, descent, step_size, c1))
         {
-            if (state.has_wolfe(state0, c2))
+            if (state.has_wolfe(state0, descent, c2))
             {
-                return true;
+                return {true, step_size};
             }
             else
             {
-                L = state;
+                L = {state, descent, step_size};
                 if (!R_updated)
                 {
                     tmin = std::max(L.t, R.t) + 2 * std::fabs(L.t - R.t);
@@ -56,7 +57,7 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
         }
         else
         {
-            R         = state;
+            R         = {state, descent, step_size};
             R_updated = true;
             tmin      = std::min(L.t, R.t);
             tmax      = std::max(L.t, R.t);
@@ -65,15 +66,14 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
         // next trial
         const auto interp_min = tmin + safeguard * (tmax - tmin);
         const auto interp_max = tmax - safeguard * (tmax - tmin);
-        const auto next       = lsearch_step_t::interpolate(L, R, interpolation);
-        const auto ok         = state.update(state0, std::clamp(next, interp_min, interp_max));
-        log(state0, state);
 
-        if (!ok)
+        step_size = lsearch_step_t::interpolate(L, R, interpolation);
+        step_size = std::clamp(step_size, interp_min, interp_max);
+        if (!update(state, state0, descent, step_size))
         {
-            return false;
+            return {false, step_size};
         }
     }
 
-    return false;
+    return {false, step_size};
 }

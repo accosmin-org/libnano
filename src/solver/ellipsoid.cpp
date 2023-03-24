@@ -25,9 +25,9 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
 
     auto state = solver_state_t{function, x0}; // best state
 
-    auto f = state.f;
-    auto x = state.x;
-    auto g = state.g;
+    auto x = state.x();
+    auto f = state.fx();
+    auto g = state.gx();
 
     const auto n = static_cast<scalar_t>(function.size());
 
@@ -41,7 +41,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
         {
             const auto iter_ok   = true;
             const auto converged = true;
-            solver_t::done(function, state, iter_ok, converged);
+            solver_t::done(state, iter_ok, converged);
             break;
         }
 
@@ -54,7 +54,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
         else
         {
             // NB: deep-cut variation
-            const auto alpha = (f - state.f) / std::sqrt(gHg);
+            const auto alpha = (f - state.fx()) / std::sqrt(gHg);
 
             x.noalias() = x - (1 + n * alpha) / (n + 1) * (H * g) / std::sqrt(gHg);
             H.noalias() = (n * n) / (n * n - 1) * (1 - alpha * alpha) *
@@ -66,7 +66,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
 
         const auto iter_ok   = std::isfinite(f);
         const auto converged = std::sqrt(gHg) < epsilon;
-        if (solver_t::done(function, state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }

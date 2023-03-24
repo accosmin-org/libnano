@@ -106,7 +106,7 @@ static void check_optimum(const function_t& function, const vector_t& expected_o
 {
     const auto solver = make_solver();
     const auto state  = check_minimize(*solver, function, vector_t::Zero(function.size()));
-    UTEST_CHECK_CLOSE(state.x, expected_optimum, 1e+2 * solver->parameter("solver::epsilon").value<scalar_t>());
+    UTEST_CHECK_CLOSE(state.x(), expected_optimum, 1e+2 * solver->parameter("solver::epsilon").value<scalar_t>());
 }
 
 template <typename ttmatrix, typename tomatrix>

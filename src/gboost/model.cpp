@@ -153,11 +153,11 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     // estimate bias
     const auto bstate = solver.minimize(bfunction, make_full_vector<scalar_t>(bfunction.size(), 0.0));
 
-    outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x.transpose();
+    outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x().transpose();
     evaluate(targets_iterator, loss, outputs, values);
 
     auto result   = gboost::fit_result_t{max_rounds + 1};
-    result.m_bias = map_tensor(bstate.x.data(), make_dims(bstate.x.size()));
+    result.m_bias = map_tensor(bstate.x().data(), make_dims(bstate.x().size()));
     result.update(0, values, train_samples, valid_samples, bstate);
 
     // keep track of the optimum boosting round using the validation error
@@ -203,15 +203,13 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
         const auto function = scale_function_t{train_targets_iterator, loss, vAreg, cluster, outputs, woutputs};
 
         auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0));
-        if (gstate.x.minCoeff() < std::numeric_limits<scalar_t>::epsilon())
+        if (gstate.x().minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
             // NB: scaling fails (optimization fails or convergence on training loss)
             result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
             break;
         }
-
-        gstate.x *= shrinkage_ratio;
-        best_wlearner->scale(gstate.x);
+        best_wlearner->scale(gstate.x() * shrinkage_ratio);
 
         // update predictions
         woutputs.zero();

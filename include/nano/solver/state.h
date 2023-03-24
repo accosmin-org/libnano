@@ -14,14 +14,9 @@ namespace nano
     };
 
     ///
-    /// \brief models a state (step) in an unconstrained numerical optimization method:
-    ///     * current point (x),
-    ///     * function value (f),
-    ///     * function gradient (g),
-    ///     * constraint equalities (ceq) - the value of equality constraints (if any),
-    ///     * constraint inequalities (cineq) - the value of inequality constraints (if any),
-    ///     * descent direction (d) - if applicable,
-    ///     * line-search step (t) - if applicable.
+    /// \brief models a state (step) in a numerical optimization method.
+    ///
+    /// NB: it handles both smooth and non-smooth with or without constraints.
     ///
     class NANO_PUBLIC solver_state_t
     {
@@ -34,36 +29,27 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_state_t(const function_t&, vector_t x0);
+        solver_state_t(const function_t&, vector_t x0, tensor_size_t patience = 10);
 
         ///
-        /// \brief move to another point.
+        /// \brief move to another point and returns true if the new point is valid.
         ///
         template <typename tvector>
-        bool update(const tvector& xx)
+        bool update(const tvector& x)
         {
-            assert(function);
-            assert(x.size() == xx.size());
-            assert(x.size() == function->size());
-            x = xx;
-            f = function->vgrad(x, &g);
+            assert(m_function);
+            assert(x.size() == m_x.size());
+            assert(x.size() == m_function->size());
+            m_x  = x;
+            m_fx = m_function->vgrad(m_x, &m_gx);
+            update_calls();
             update_constraints();
             return valid();
         }
 
         ///
-        /// \brief line-search step along the descent direction of state0.
-        /// returns true if the update was successfully.
-        ///
-        bool update(const solver_state_t& state0, const scalar_t t_)
-        {
-            this->t = t_;
-            return update(state0.x + t_ * state0.d);
-        }
-
-        ///
-        /// \brief update the current state, if the given function value is smaller than the current one.
-        /// returns true if the update was performed.
+        /// \brief try to update the current state and
+        ///     returns true if the given function value is smaller than the current one.
         ///
         /// NB: this is usually called by non-monotonic solvers (e.g. for non-smooth optimization problems).
         ///
@@ -71,13 +57,21 @@ namespace nano
         bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
 
         ///
-        /// \brief update the current state, if the constraints are approximatively improved.
-        /// returns true if the update was performed.
+        /// \brief try to update the current state and
+        ///     returns true if the constraints are approximatively improved.
         ///
         /// NB: the function value is re-evaluated at the given point if updated, as the given state
         ///     can be a modified function (e.g. penalty, augmented lagrangian).
         ///
         bool update_if_better_constrained(const solver_state_t&, scalar_t epsilon);
+
+        ///
+        /// \brief convergence criterion of the function value: change in function value and parameter in the
+        ///     most recent updates.
+        ///
+        /// NB: appropriate for non-monotonic solvers (usually non-smooth problems).
+        ///
+        scalar_t value_test() const;
 
         ///
         /// \brief convergence criterion of the gradient: the gradient magnitude relative to the function value.
@@ -92,80 +86,132 @@ namespace nano
         scalar_t constraint_test() const;
 
         ///
-        /// \brief check divergence.
+        /// \brief returns true if the current state is valid (e.g. no divergence is detected).
         ///
         bool valid() const;
 
         ///
-        /// \brief compute the dot product between the gradient and the descent direction.
+        /// \brief returns the dot product between the gradient and the descent direction.
         ///
-        auto dg() const { return g.dot(d); }
+        /// NB: only appropriate for smooth problems.
+        ///
+        scalar_t dg(const vector_t& descent) const { return m_gx.dot(descent); }
 
         ///
-        /// \brief check if the chosen direction is a descent direction.
+        /// \brief returns true if the chosen direction is a descent direction.
         ///
-        auto has_descent() const { return dg() < 0; }
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_descent(const vector_t& descent) const { return dg(descent) < 0.0; }
 
         ///
         /// \brief check if the current step satisfies the Armijo condition (sufficient decrease).
         ///
-        bool has_armijo(const solver_state_t& state0, scalar_t c1) const
-        {
-            assert(c1 > 0 && c1 < 1);
-            return f <= state0.f + t * c1 * state0.dg();
-        }
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_armijo(const solver_state_t& origin, const vector_t& descent, scalar_t step_size, scalar_t c1) const;
 
         ///
         /// \brief check if the current step satisfies the approximate Armijo condition (sufficient decrease).
         ///     see CG_DESCENT
         ///
-        bool has_approx_armijo(const solver_state_t& state0, scalar_t epsilon) const { return f <= state0.f + epsilon; }
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_approx_armijo(const solver_state_t& origin, scalar_t epsilon) const;
 
         ///
         /// \brief check if the current step satisfies the Wolfe condition (sufficient curvature).
         ///
-        bool has_wolfe(const solver_state_t& state0, scalar_t c2) const
-        {
-            assert(c2 > 0 && c2 < 1);
-            return dg() >= c2 * state0.dg();
-        }
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c2) const;
 
         ///
         /// \brief check if the current step satisfies the strong Wolfe condition (sufficient curvature).
         ///
-        bool has_strong_wolfe(const solver_state_t& state0, scalar_t c2) const
-        {
-            assert(c2 > 0 && c2 < 1);
-            return std::fabs(dg()) <= c2 * std::fabs(state0.dg());
-        }
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_strong_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c2) const;
 
         ///
         /// \brief check if the current step satisfies the approximate Wolfe condition (sufficient curvature).
         ///     see CG_DESCENT
         ///
-        bool has_approx_wolfe(const solver_state_t& state0, scalar_t c1, scalar_t c2) const
+        /// NB: only appropriate for smooth problems.
+        ///
+        bool has_approx_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c1, scalar_t c2) const;
+
+        ///
+        /// \brief set the optimization status.
+        ///
+        void status(solver_status);
+
+        ///
+        /// \brief returns the (sub-)gradient.
+        ///
+        scalar_t fx() const { return m_fx; }
+
+        ///
+        /// \brief returns the current optimum parameter value.
+        ///
+        const vector_t& x() const { return m_x; }
+
+        ///
+        /// \brief returns the (sub-)gradient.
+        ///
+        const vector_t& gx() const { return m_gx; }
+
+        ///
+        /// \brief returns the number of function evaluation calls registered so far.
+        ///
+        tensor_size_t fcalls() const { return m_fcalls; }
+
+        ///
+        /// \brief returns the number of function gradient calls registered so far.
+        ///
+        tensor_size_t gcalls() const { return m_gcalls; }
+
+        ///
+        /// \brief returns the optimization status.
+        ///
+        solver_status status() const { return m_status; }
+
+        ///
+        /// \brief returns the function to minimize.
+        ///
+        const function_t& function() const
         {
-            assert(0 < c1 && c1 < scalar_t(0.5) && c1 < c2 && c2 < 1);
-            return (2.0 * c1 - 1.0) * state0.dg() >= dg() && dg() >= c2 * state0.dg();
+            assert(m_function != nullptr);
+            return *m_function;
         }
 
-        // attributes
-        const function_t* function{nullptr};                ///<
-        vector_t          x;                                ///< parameter
-        vector_t          g;                                ///< gradient
-        vector_t          d;                                ///< descent direction
-        scalar_t          f{0};                             ///< function value
-        scalar_t          t{0};                             ///< step size (line-search solvers)
-        vector_t          ceq;                              ///< equality constraint values
-        vector_t          cineq;                            ///< inequality constraint values
-        solver_status     status{solver_status::max_iters}; ///< optimization status
-        tensor_size_t     fcalls{0};                        ///< number of function value evaluations so far
-        tensor_size_t     gcalls{0};                        ///< number of function gradient evaluations so far
-        tensor_size_t     inner_iters{0};                   ///< number of inner iterations so far
-        tensor_size_t     outer_iters{0};                   ///< number of outer iterations so far (if constrained)
+        ///
+        /// \brief returns the values of the equality constraints.
+        ///
+        const vector_t& ceq() const { return m_ceq; }
+
+        ///
+        /// \brief returns the values of the inequality constraints.
+        ///
+        const vector_t& cineq() const { return m_cineq; }
 
     private:
+        void update_calls();
         void update_constraints();
+
+        // attributes
+        const function_t* m_function{nullptr};                ///<
+        vector_t          m_x;                                ///< parameter
+        vector_t          m_gx;                               ///< gradient
+        scalar_t          m_fx{0};                            ///< function value
+        vector_t          m_ceq;                              ///< equality constraint values
+        vector_t          m_cineq;                            ///< inequality constraint values
+        solver_status     m_status{solver_status::max_iters}; ///< optimization status
+        tensor_size_t     m_fcalls{0};                        ///< number of function value evaluations so far
+        tensor_size_t     m_gcalls{0};                        ///< number of function gradient evaluations so far
+        tensor_size_t     m_history_iteration{0};             ///< iteration index (for non-monotonic solvers)
+        vector_t          m_history_df;                       ///< recent improvements of the function value
+        vector_t          m_history_dx;                       ///< recent improvements of the parameter
     };
 
     ///

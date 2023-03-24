@@ -165,15 +165,17 @@ void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_ca
         auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::Zero(surrogate_fit.size()));
         critical(!min_state_fit.valid(), "tuner: failed to fit the surrogate model <", min_state_fit, ">!");
 
-        const auto surrogate_opt = quadratic_surrogate_t{min_state_fit.x};
+        const auto surrogate_opt = quadratic_surrogate_t{min_state_fit.x()};
         auto       min_state_opt = solver->minimize(surrogate_opt, to_surrogate(steps.begin()->m_param).vector());
         critical(!min_state_opt.valid(), "tuner: failed to optimize the surrogate model <", min_state_opt, ">!");
 
-        indices_t src_igrid(min_state_opt.x.size());
-        for (tensor_size_t iparam = 0; iparam < min_state_opt.x.size(); ++iparam)
+        const auto& min_state_opt_x = min_state_opt.x();
+
+        indices_t src_igrid(min_state_opt_x.size());
+        for (tensor_size_t iparam = 0; iparam < min_state_opt_x.size(); ++iparam)
         {
             const auto& space = spaces[static_cast<size_t>(iparam)];
-            src_igrid(iparam) = space.closest_grid_point_from_surrogate(min_state_opt.x(iparam));
+            src_igrid(iparam) = space.closest_grid_point_from_surrogate(min_state_opt_x(iparam));
         }
 
         const auto igrids = local_search(min_igrid, max_igrid, src_igrid, 1);

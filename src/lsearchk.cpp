@@ -33,36 +33,25 @@ factory_t<lsearchk_t>& lsearchk_t::all()
     return manager;
 }
 
-static auto make_state0(const solver_state_t& state)
-{
-    auto state0 = state;
-    state0.t    = 0;
-    return state0;
-}
-
-bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
+lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& descent, scalar_t step_size) const
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
     // check descent direction
-    if (!state.has_descent())
+    if (!state.has_descent(descent))
     {
-        return false;
+        return {false, step_size};
     }
 
-    // adjust the initial step length if it produces an invalid state
-    const auto state0 = make_state0(state);
-    assert(state0.t < epsilon0<scalar_t>());
+    // adjust the initial step size if it produces an invalid state
+    const auto state0 = state;
 
-    t = std::isfinite(t) ? std::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
+    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), scalar_t(1)) : scalar_t(1);
     for (int i = 0; i < max_iterations; ++i)
     {
-        const auto ok = state.update(state0, t);
-        log(state0, state);
-
-        if (!ok)
+        if (!update(state, state0, descent, step_size))
         {
-            t *= 0.5;
+            step_size *= 0.5;
         }
         else
         {
@@ -70,18 +59,10 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t) const
         }
     }
 
-    // line-search step length
+    // line-search step size
     // NB: some line-search algorithms (see CGDESCENT) allow a small increase
     //     in the function value when close to numerical precision!
-    return get(state0, state) && state.valid();
-}
-
-void lsearchk_t::log(const solver_state_t& state0, const solver_state_t& state) const
-{
-    if (m_logger)
-    {
-        m_logger(state0, state);
-    }
+    return do_get(state0, descent, step_size, state);
 }
 
 void lsearchk_t::logger(const lsearchk_t::logger_t& logger)
@@ -89,7 +70,18 @@ void lsearchk_t::logger(const lsearchk_t::logger_t& logger)
     m_logger = logger;
 }
 
-void lsearchk_t::type(lsearch_type type)
+bool lsearchk_t::update(solver_state_t& state, const solver_state_t& state0, const vector_t& descent,
+                        const scalar_t step_size) const
+{
+    const auto ok = state.update(state0.x() + step_size * descent);
+    if (m_logger)
+    {
+        m_logger(state0, state, descent, step_size);
+    }
+    return ok;
+}
+
+void lsearchk_t::type(const lsearch_type type)
 {
     m_type = type;
 }

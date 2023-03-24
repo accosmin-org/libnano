@@ -112,44 +112,32 @@ UTEST_CASE(state_valid)
     UTEST_CHECK(state.valid());
 }
 
-UTEST_CASE(state_invalid_tINF)
-{
-    const auto function = function_sphere_t{7};
-    auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.t             = INFINITY;
-    UTEST_CHECK(!state.valid());
-}
-
 UTEST_CASE(state_invalid_fNAN)
 {
-    const auto function = function_sphere_t{7};
-    auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.f             = NAN;
+    const auto function = function_sphere_t{3};
+    const auto state    = solver_state_t{function, make_vector<scalar_t>(NAN, 1.0, 0.0)};
     UTEST_CHECK(!state.valid());
 }
 
 UTEST_CASE(state_has_descent)
 {
-    const auto function = function_sphere_t{7};
-    auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.d             = -state.g;
-    UTEST_CHECK(state.has_descent());
+    const auto function = function_sphere_t{5};
+    const auto state    = solver_state_t{function, make_random_x0(function)};
+    UTEST_CHECK(state.has_descent(-state.gx()));
 }
 
 UTEST_CASE(state_has_no_descent0)
 {
-    const auto function = function_sphere_t{7};
-    auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.d.setZero();
-    UTEST_CHECK(!state.has_descent());
+    const auto function = function_sphere_t{2};
+    const auto state    = solver_state_t{function, make_random_x0(function)};
+    UTEST_CHECK(!state.has_descent(make_vector<scalar_t>(.0, 0.0)));
 }
 
 UTEST_CASE(state_has_no_descent1)
 {
     const auto function = function_sphere_t{7};
-    auto       state    = solver_state_t{function, make_random_x0(function)};
-    state.d             = state.g;
-    UTEST_CHECK(!state.has_descent());
+    const auto state    = solver_state_t{function, make_random_x0(function)};
+    UTEST_CHECK(!state.has_descent(state.gx()));
 }
 
 UTEST_CASE(state_update_if_better)
@@ -160,17 +148,17 @@ UTEST_CASE(state_update_if_better)
     const auto x2       = make_vector<scalar_t>(2.0, 2.0);
 
     solver_state_t state(function, x1);
-    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 2.0, 1e-12);
     UTEST_CHECK(!state.update_if_better(x2, 8.0));
-    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 2.0, 1e-12);
     UTEST_CHECK(!state.update_if_better(x2, std::numeric_limits<scalar_t>::quiet_NaN()));
-    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 2.0, 1e-12);
     UTEST_CHECK(!state.update_if_better(x1, 2.0));
-    UTEST_CHECK_CLOSE(state.f, 2.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 2.0, 1e-12);
     UTEST_CHECK(state.update_if_better(x0, 0.0));
-    UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-12);
     UTEST_CHECK(!state.update_if_better(x2, 8.0));
-    UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-12);
 }
 
 UTEST_CASE(state_update_if_better_constrained)
@@ -180,8 +168,7 @@ UTEST_CASE(state_update_if_better_constrained)
 
     auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
     {
-        auto cstate     = state;
-        cstate.cineq(0) = NAN;
+        auto cstate = solver_state_t{function, make_vector<scalar_t>(NAN, NAN)};
         UTEST_CHECK(!cstate.valid());
         UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
     }
@@ -189,15 +176,15 @@ UTEST_CASE(state_update_if_better_constrained)
         auto cstate = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK(cstate.valid());
         UTEST_CHECK(state.update_if_better_constrained(cstate, 1e-6));
-        UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
-        UTEST_CHECK_CLOSE(cstate.f, 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(cstate.fx(), 0.0, 1e-12);
     }
     {
         auto cstate = solver_state_t{function, make_vector<scalar_t>(2.0, 2.0)};
         UTEST_CHECK(cstate.valid());
         UTEST_CHECK(!state.update_if_better_constrained(cstate, 1e-6));
-        UTEST_CHECK_CLOSE(state.f, 0.0, 1e-12);
-        UTEST_CHECK_CLOSE(cstate.f, 8.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(cstate.fx(), 8.0, 1e-12);
     }
 }
 
@@ -279,13 +266,15 @@ UTEST_CASE(default_solvers_on_smooth_convex)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_smooth_solver_ids())
             {
+                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+
                 const auto solver = make_solver(solver_id);
 
                 const auto descr = make_description(solver_id);
                 const auto state = check_minimize(*solver, *function, x0);
-                fvalues.push_back(state.f);
+                fvalues.push_back(state.fx());
                 epsilons.push_back(descr.m_epsilon);
-                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.fx() << ".";
             }
 
             check_consistency(*function, fvalues, epsilons);
@@ -304,13 +293,15 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_nonsmooth_solver_ids())
             {
+                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+
                 const auto solver = make_solver(solver_id);
 
                 const auto descr = make_description(solver_id);
                 const auto state = check_minimize(*solver, *function, x0);
-                fvalues.push_back(state.f);
+                fvalues.push_back(state.fx());
                 epsilons.push_back(descr.m_epsilon);
-                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.f << ".";
+                log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.fx() << ".";
             }
 
             check_consistency(*function, fvalues, epsilons);
@@ -347,14 +338,16 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                             continue;
                         }
 
+                        UTEST_NAMED_CASE(scat(function->name(), "/", solver_id, "/", lsearch0_id, "/", lsearchk_id));
+
                         UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
                         UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
                         const auto state = check_minimize(*solver, *function, x0);
-                        fvalues.push_back(state.f);
+                        fvalues.push_back(state.fx());
                         epsilons.push_back(1e-6);
                         log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=" << lsearch0_id
-                                   << ", lsearchk=" << lsearchk_id << ", f=" << state.f << ".";
+                                   << ", lsearchk=" << lsearchk_id << ", f=" << state.fx() << ".";
                     }
                 }
             }
@@ -375,16 +368,18 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
             std::vector<scalar_t> fvalues, epsilons;
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
+                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+
                 const auto solver = make_solver(solver_id);
 
                 UTEST_REQUIRE_NOTHROW(solver->lsearch0("cgdescent"));
                 UTEST_REQUIRE_NOTHROW(solver->lsearchk("cgdescent"));
 
                 const auto state = check_minimize(*solver, *function, x0, 10000, 1e-10);
-                fvalues.push_back(state.f);
+                fvalues.push_back(state.fx());
                 epsilons.push_back(1e-9);
                 log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=cgdescent"
-                           << ", lsearchk=cgdescent, f=" << state.f << ".";
+                           << ", lsearchk=cgdescent, f=" << state.fx() << ".";
             }
 
             check_consistency(*function, fvalues, epsilons);
@@ -402,6 +397,8 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
         {
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
+                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+
                 const auto solver = make_solver(solver_id);
 
                 UTEST_REQUIRE_NOTHROW(solver->parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1));

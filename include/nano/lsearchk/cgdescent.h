@@ -17,6 +17,24 @@ namespace nano
     class NANO_PUBLIC lsearchk_cgdescent_t final : public lsearchk_t
     {
     public:
+        struct interval_t
+        {
+            interval_t(const solver_state_t& state0, const vector_t& descent, scalar_t step_size, solver_state_t&);
+
+            void updateA() { a = {c, descent, step_size}; }
+
+            void updateB() { b = {c, descent, step_size}; }
+
+            bool done(scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true) const;
+
+            const solver_state_t& state0;    ///< original point
+            const vector_t&       descent;   ///< descent direction
+            scalar_t              step_size; ///< step size of the tentative point
+            solver_state_t&       c;         ///< tentative point
+            lsearch_step_t        a;         ///< lower bounds of the bracketing interval
+            lsearch_step_t        b;         ///< upper bounds of the bracketing interval
+        };
+
         ///
         /// \brief constructor
         ///
@@ -30,30 +48,12 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) const override;
+        result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&) const override;
 
     private:
-        struct state_t
-        {
-            state_t(const solver_state_t& state0_, solver_state_t& state)
-                : state0(state0_)
-                , c(state)
-                , a(state0)
-                , b(state)
-            {
-            }
-
-            const solver_state_t& state0; ///< original point
-            solver_state_t&       c;      ///< tentative point
-            lsearch_step_t        a;      ///< lower bounds of the bracketing interval
-            lsearch_step_t        b;      ///< upper bounds of the bracketing interval
-        };
-
-        static bool done(const state_t&, scalar_t c1, scalar_t c2, scalar_t epsilonk, bool bracketed = true);
-
-        void move(state_t&, scalar_t t) const;
-        void update(state_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
-        void updateU(state_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
-        void bracket(state_t&, scalar_t ro, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
+        void move(interval_t&, scalar_t step_size) const;
+        void update(interval_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
+        void updateU(interval_t&, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
+        void bracket(interval_t&, scalar_t ro, scalar_t epsilonk, scalar_t theta, int max_iterations) const;
     };
 } // namespace nano

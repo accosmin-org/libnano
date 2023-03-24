@@ -20,12 +20,14 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
 
     // log the line-search trials
     lsearch.logger(
-        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
+        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+                              const scalar_t step_size)
         {
-            stream << "\tt=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
-                   << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
-                   << ",swolfe=" << state.has_strong_wolfe(state0, c2)
-                   << ",awolfe=" << state.has_approx_wolfe(state0, c1, c2) << ".\n";
+            stream << "\tt=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
+                   << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
+                   << ",wolfe=" << state.has_wolfe(state0, descent, c2)
+                   << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2)
+                   << ",awolfe=" << state.has_approx_wolfe(state0, descent, c1, c2) << ".\n";
         });
 }
 
@@ -36,45 +38,47 @@ static void test(const rlsearchk_t& lsearch, const function_t& function, const v
 
     const auto [c1, c2]       = c12;
     const auto old_n_failures = utest_n_failures.load();
+    const auto state0         = solver_state_t{function, x0};
+    const auto descent        = vector_t{-state0.gx()};
 
-    auto state0 = solver_state_t{function, x0};
     UTEST_CHECK(state0.valid());
-    state0.d = -state0.g;
-    UTEST_CHECK(state0.has_descent());
+    UTEST_CHECK(state0.has_descent(descent));
 
     std::stringstream stream;
     stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
-           << state0.x.transpose() << "],t0=" << t0 << ",f0=" << state0.f << ",g0=" << state0.gradient_test() << "\n";
+           << state0.x().transpose() << "],t0=" << t0 << ",f0=" << state0.fx() << ",g0=" << state0.gradient_test()
+           << "\n";
     setup_logger(*lsearch, stream);
 
     const auto cgdescent_epsilon = [&]()
     { return lsearch->parameter("lsearchk::cgdescent::epsilon").value<scalar_t>(); };
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
-    auto state = state0;
-    UTEST_CHECK(lsearch->get(state, t0));
+    auto state                 = state0;
+    const auto [ok, step_size] = lsearch->get(state, descent, t0);
+    UTEST_CHECK(ok);
     UTEST_CHECK(state.valid());
-    UTEST_CHECK_GREATER(state.t, 0.0);
-    UTEST_CHECK_LESS_EQUAL(state.f, state0.f);
+    UTEST_CHECK_GREATER(step_size, 0.0);
+    UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx());
 
     switch (lsearch->type())
     {
-    case lsearch_type::armijo: UTEST_CHECK(state.has_armijo(state0, c1)); break;
+    case lsearch_type::armijo: UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1)); break;
 
     case lsearch_type::wolfe:
-        UTEST_CHECK(state.has_armijo(state0, c1));
-        UTEST_CHECK(state.has_wolfe(state0, c2));
+        UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1));
+        UTEST_CHECK(state.has_wolfe(state0, descent, c2));
         break;
 
     case lsearch_type::strong_wolfe:
-        UTEST_CHECK(state.has_armijo(state0, c1));
-        UTEST_CHECK(state.has_strong_wolfe(state0, c2));
+        UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1));
+        UTEST_CHECK(state.has_strong_wolfe(state0, descent, c2));
         break;
 
     case lsearch_type::wolfe_approx_wolfe:
-        UTEST_CHECK((state.has_armijo(state0, c1) && state.has_wolfe(state0, c2)) ||
-                    (state.has_approx_armijo(state0, cgdescent_epsilon() * std::fabs(state0.f)) &&
-                     state.has_approx_wolfe(state0, c1, c2)));
+        UTEST_CHECK((state.has_armijo(state0, descent, step_size, c1) && state.has_wolfe(state0, descent, c2)) ||
+                    (state.has_approx_armijo(state0, cgdescent_epsilon() * std::fabs(state0.fx())) &&
+                     state.has_approx_wolfe(state0, descent, c1, c2)));
         break;
 
     default: break;

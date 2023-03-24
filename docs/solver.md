@@ -16,7 +16,7 @@ The builtin solvers are **non-parametric** in the sense that their convergence p
 
 * **monotonic** solvers which decrease the current function value at each iteration using a *descent direction* and a *line-search* along this direction. These solvers are appropriate only for smooth functions, not necessarily convex, which can be solved with very high precision. Examples: conjugate gradient descent (CGD), LBFGS, quasi-Newton methods.
 
-* **non-monotonic** solvers which are not guaranteed to decrease the current function value at each iteration. These solvers should be used only for non-smooth convex problems, which can be solved with high precision. They can work well for smooth convex problems as well, but they are not as efficient (iteration-wise) as the monotonic solvers. Examples: optimal sub-gradient algorithm (OSGA), adaptive sub-gradient method (ASGM).
+* **non-monotonic** solvers which are not guaranteed to decrease the current function value at each iteration. These solvers should be used only for non-smooth convex problems, which can be solved with high precision. They can work well for smooth convex problems as well, but they are not as efficient (iteration-wise) as the monotonic solvers. Examples: optimal sub-gradient algorithm (OSGA), sub-gradient method (SGM) or the ellipsoid method.
 
 
 Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using their associated factory.
@@ -123,13 +123,12 @@ const auto state = solver.minimize(objective, x0);
 const auto& x = state.x;
 
 std::cout << std::fixed << std::setprecision(12)
-    << "f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.f
+    << "f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.fx()
     << ", g=" << state.gradient_test()
-    << ", x-x*=" << (state.x - objective.b()).lpNorm<Eigen::Infinity>()
-    << ", iters=" << state.inner_iters
-    << ", fcalls=" << state.fcalls
-    << ", gcalls=" << state.gcalls
-    << ", status=" << nano::scat(state.status) << std::endl;
+    << ", x-x*=" << (state.x() - objective.b()).lpNorm<Eigen::Infinity>()
+    << ", fcalls=" << state.fcalls()
+    << ", gcalls=" << state.gcalls()
+    << ", status=" << nano::scat(state.status()) << std::endl;
 ```
 
 
@@ -179,20 +178,14 @@ The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful f
 The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are close while being much faster. The steepest gradient descent method needs as expected many more iterations to converge.
 
 
-However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like ASGM provide a more precise solution in fewer iterations:
+However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like SGM provide a more precise solution in fewer iterations:
 ```
-./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|asgm" --min-dims 100 --max-dims 100 --trials 1000 --solver::max_evals 1000 --solver::epsilon 1e-6 --convex | tail -n 7
+./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|sgm" --min-dims 100 --max-dims 100 --trials 1000 --solver::max_evals 1000 --solver::epsilon 1e-6 --convex | tail -n 7
 |------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
 | solver                       | lsearch0  | lsearchk    | value    | gnorm    | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | [ms]  |
 |------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
-| asgm                         | N/A       | N/A         | 0.429912 | 0.644132 | 0      | 157    | 0       | 0       | 158     | 158     | 3504  |
+| sgm                          | N/A       | N/A         | 0.429912 | 0.644132 | 0      | 157    | 0       | 0       | 158     | 158     | 3504  |
 | osga                         | N/A       | N/A         | 0.431203 | 0.643963 | 5108   | 299    | 0       | 5108    | 600     | 300     | 10114 |
 | lbfgs                        | quadratic | morethuente | 0.435947 | 0.644576 | 8000   | 140    | 7995    | 5       | 189     | 189     | 4468  |
 |------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
 ```
-
-
-#### Future work
-
-* Implement stochastic gradient (descent) methods
-* Implement methods using second-order oracle (e.g. Newton method)

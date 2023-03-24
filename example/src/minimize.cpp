@@ -49,7 +49,7 @@ int main(const int, char*[])
     const auto trials = 10;
     for (auto trial = 0; trial < 10; ++trial)
     {
-        const vector_t x0 = nano::vector_t::Random(objective.size());
+        const vector_t x0 = vector_t::Random(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "check_grad[" << (trial + 1) << "/" << trials
                   << "]: dg=" << grad_accuracy(objective, x0) << std::endl;
@@ -59,7 +59,7 @@ int main(const int, char*[])
     // construct a solver_t object to minimize the objective function
     // NB: this may be not needed as the default configuration will minimize the objective as well!
     // NB: can also use the factory to get a default solver!
-    auto solver                                = nano::solver_lbfgs_t{};
+    auto solver                                = solver_lbfgs_t{};
     solver.parameter("solver::lbfgs::history") = 6;
     solver.parameter("solver::epsilon")        = 1e-6;
     solver.parameter("solver::max_evals")      = 100;
@@ -70,14 +70,14 @@ int main(const int, char*[])
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++trial)
     {
-        const vector_t x0 = nano::vector_t::Random(objective.size());
+        const vector_t x0 = vector_t::Random(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
                   << "]: f0=" << objective.vgrad(x0, nullptr) << "...\n";
 
         // log the optimization steps
         solver.logger(
-            [&](const nano::solver_state_t& state)
+            [&](const solver_state_t& state)
             {
                 std::cout << "\tdescent: " << state << ".\n";
                 return true;
@@ -85,27 +85,28 @@ int main(const int, char*[])
 
         // log the line-search steps
         solver.lsearch0_logger(
-            [&](const nano::solver_state_t& state0, const nano::scalar_t t0)
-            {
-                std::cout << "\t\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.gradient_test()
-                          << ",t0=" << t0 << ".\n";
+            [&](const solver_state_t& state0, const scalar_t t0) {
+                std::cout << "\t\tlsearch(0): t=" << t0 << ",f=" << state0.fx() << ",g=" << state0.gradient_test()
+                          << ".\n";
             });
 
         const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
 
         solver.lsearchk_logger(
-            [&, c1 = c1, c2 = c2](const nano::solver_state_t& state0, const nano::solver_state_t& state)
+            [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+                                  const scalar_t step_size)
             {
-                std::cout << "\t\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
-                          << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
-                          << ",swolfe=" << state.has_strong_wolfe(state0, c2) << ".\n";
+                std::cout << "\t\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
+                          << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
+                          << ",wolfe=" << state.has_wolfe(state0, descent, c2)
+                          << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << ".\n";
             });
 
         const auto state = solver.minimize(objective, x0);
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
                   << "]: f0=" << objective.vgrad(x0, nullptr)
-                  << ",x-x*=" << (state.x - objective.b()).lpNorm<Eigen::Infinity>() << "," << state << ".\n";
+                  << ",x-x*=" << (state.x() - objective.b()).lpNorm<Eigen::Infinity>() << "," << state << ".\n";
     }
 
     return EXIT_SUCCESS;

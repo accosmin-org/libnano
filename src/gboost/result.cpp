@@ -41,9 +41,9 @@ void fit_result_t::update(const tensor_size_t round, const tensor2d_t& errors_va
     m_statistics(round, 1) = mean_loss(errors_values, train_samples);
     m_statistics(round, 2) = mean_error(errors_values, valid_samples);
     m_statistics(round, 3) = mean_loss(errors_values, valid_samples);
-    m_statistics(round, 4) = static_cast<scalar_t>(state.fcalls);
-    m_statistics(round, 5) = static_cast<scalar_t>(state.gcalls);
-    m_statistics(round, 6) = static_cast<scalar_t>(state.status);
+    m_statistics(round, 4) = static_cast<scalar_t>(state.fcalls());
+    m_statistics(round, 5) = static_cast<scalar_t>(state.gcalls());
+    m_statistics(round, 6) = static_cast<scalar_t>(state.status());
 }
 
 void fit_result_t::update(const tensor_size_t round, const tensor2d_t& errors_values, const indices_t& train_samples,

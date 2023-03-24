@@ -15,7 +15,8 @@ rlsearchk_t lsearchk_backtrack_t::clone() const
     return std::make_unique<lsearchk_backtrack_t>(*this);
 }
 
-bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& state) const
+lsearchk_t::result_t lsearchk_backtrack_t::do_get(const solver_state_t& state0, const vector_t& descent,
+                                                  scalar_t step_size, solver_state_t& state) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -24,25 +25,28 @@ bool lsearchk_backtrack_t::get(const solver_state_t& state0, solver_state_t& sta
 
     for (int i = 0; i < max_iterations && state.valid(); ++i)
     {
-        if (state.has_armijo(state0, c1))
+        if (state.has_armijo(state0, descent, step_size, c1))
         {
-            return true;
+            return {true, step_size};
         }
 
         // next trial
-        const auto tmin       = std::min(state0.t, state.t);
-        const auto tmax       = std::max(state0.t, state.t);
+        const auto tmin       = std::min(0.0, step_size);
+        const auto tmax       = std::max(0.0, step_size);
         const auto interp_min = tmin + safeguard * (tmax - tmin);
         const auto interp_max = tmax - safeguard * (tmax - tmin);
-        const auto next       = lsearch_step_t::interpolate(state0, state, interpolation);
-        const auto ok         = state.update(state0, std::clamp(next, interp_min, interp_max));
-        log(state0, state);
 
-        if (!ok)
+        const auto step0 = lsearch_step_t{state0, descent, 0.0};
+        const auto step  = lsearch_step_t{state, descent, step_size};
+
+        step_size = lsearch_step_t::interpolate(step0, step, interpolation);
+        step_size = std::clamp(step_size, interp_min, interp_max);
+
+        if (!update(state, state0, descent, step_size))
         {
-            return false;
+            return {false, step_size};
         }
     }
 
-    return false;
+    return {false, step_size};
 }

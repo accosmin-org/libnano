@@ -24,6 +24,6 @@ namespace nano
         ///
         /// \brief @see lsearchk_t
         ///
-        bool get(const solver_state_t& state0, solver_state_t& state) const override;
+        result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&) const override;
     };
 } // namespace nano

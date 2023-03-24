@@ -16,11 +16,11 @@ struct result_t
     result_t() = default;
 
     result_t(const solver_state_t& state, int64_t milliseconds)
-        : m_value(state.f)
+        : m_value(state.fx())
         , m_gnorm(state.gradient_test())
-        , m_status(state.status)
-        , m_fcalls(state.fcalls)
-        , m_gcalls(state.gcalls)
+        , m_status(state.status())
+        , m_fcalls(state.fcalls())
+        , m_gcalls(state.gcalls())
         , m_milliseconds(milliseconds)
     {
     }
@@ -66,12 +66,12 @@ struct solver_stats_t
     {
         const auto itrial    = static_cast<tensor_size_t>(trial);
         m_values(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
-        m_gnorms(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
+        m_gnorms(itrial)     = stats.m_gnorms.mean();
         m_errors(itrial)     = stats.m_errors.sum();
         m_maxits(itrial)     = stats.m_maxits.sum();
-        m_fcalls(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
-        m_gcalls(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
-        m_millis(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
+        m_fcalls(itrial)     = stats.m_fcalls.mean();
+        m_gcalls(itrial)     = stats.m_gcalls.mean();
+        m_millis(itrial)     = stats.m_millis.mean();
         m_ranks(itrial)      = stats.m_ranks.mean();
         m_precisions(itrial) = stats.m_precisions.mean();
     }
@@ -127,20 +127,22 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
         });
 
     solver->lsearch0_logger(
-        [&](const solver_state_t& state0, const scalar_t t)
+        [&](const solver_state_t& state0, const scalar_t step_size)
         {
-            std::cout << "\tlsearch(0): t=" << state0.t << ",f=" << state0.f << ",g=" << state0.gradient_test()
-                      << ",t=" << t << "." << std::endl;
+            std::cout << "\tlsearch(0): t=" << step_size << ",f=" << state0.fx() << ",g=" << state0.gradient_test()
+                      << "." << std::endl;
         });
 
     const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
 
     solver->lsearchk_logger(
-        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state)
+        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+                              const scalar_t step_size)
         {
-            std::cout << "\tlsearch(t): t=" << state.t << ",f=" << state.f << ",g=" << state.gradient_test()
-                      << ",armijo=" << state.has_armijo(state0, c1) << ",wolfe=" << state.has_wolfe(state0, c2)
-                      << ",swolfe=" << state.has_strong_wolfe(state0, c2) << "." << std::endl;
+            std::cout << "\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
+                      << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
+                      << ",wolfe=" << state.has_wolfe(state0, descent, c2)
+                      << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << "." << std::endl;
         });
 
     auto state = solver->minimize(function, x0);
@@ -184,7 +186,6 @@ static void print_table(const string_t& table_name, const solvers_t& solvers, co
         const auto  solver_name = make_solver_name(solvers[isolver]);
 
         auto& row = table.append();
-
         row << solver_name << scat(std::fixed, std::setprecision(4), stat.m_precisions.mean())
             << scat(std::fixed, std::setprecision(2), stat.m_ranks.mean());
         print_scalar(row, stat.m_values.mean());
@@ -195,6 +196,8 @@ static void print_table(const string_t& table_name, const solvers_t& solvers, co
         print_integer(row, stat.m_gcalls.mean());
         print_integer(row, stat.m_millis.mean());
     }
+
+    assert(table.rows() == solvers.size() + 2U);
 
     table.sort(nano::make_less_from_string<scalar_t>(), {1}); // NB: sort solvers by the average precision!
     std::cout << table;
@@ -227,7 +230,7 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
             const auto& x0     = x0s[i / solvers.size()];
             const auto& solver = solvers[i % solvers.size()];
             const auto  state  = log_solver(function, solver, x0);
-            assert(state.status == results[i].m_status);
+            assert(state.status() == results[i].m_status);
         }
     }
 

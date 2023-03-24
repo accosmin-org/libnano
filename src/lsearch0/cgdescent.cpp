@@ -15,26 +15,25 @@ rlsearch0_t lsearch0_cgdescent_t::clone() const
     return std::make_unique<lsearch0_cgdescent_t>(*this);
 }
 
-scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
+scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state, const vector_t& descent, const scalar_t last_step_size)
 {
     const auto phi0 = parameter("lsearch0::cgdescent::phi0").value<scalar_t>();
     const auto phi1 = parameter("lsearch0::cgdescent::phi1").value<scalar_t>();
     const auto phi2 = parameter("lsearch0::cgdescent::phi2").value<scalar_t>();
 
     scalar_t t0 = 0;
-
-    if (state.inner_iters <= 1)
+    if (last_step_size < 0.0)
     {
-        const auto xnorm = state.x.lpNorm<Eigen::Infinity>();
-        const auto fnorm = std::fabs(state.f);
+        const auto xnorm = state.x().lpNorm<Eigen::Infinity>();
+        const auto fnorm = std::fabs(state.fx());
 
         if (xnorm > 0)
         {
-            t0 = phi0 * xnorm / state.g.lpNorm<Eigen::Infinity>();
+            t0 = phi0 * xnorm / state.gx().lpNorm<Eigen::Infinity>();
         }
         else if (fnorm > 0)
         {
-            t0 = phi0 * fnorm / state.g.squaredNorm();
+            t0 = phi0 * fnorm / state.gx().squaredNorm();
         }
         else
         {
@@ -43,10 +42,10 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
     }
     else
     {
-        const auto step0 = lsearch_step_t{0, state.f, state.dg()};
-        const auto stepx = lsearch_step_t{state.t * phi1,
-                                          // NB: the line-search length is from the previous iteration!
-                                          state.function->vgrad(state.x + state.t * phi1 * state.d), 0};
+        const auto& funct = state.function();
+        const auto  prevt = last_step_size;
+        const auto  step0 = lsearch_step_t{0, state.fx(), state.dg(descent)};
+        const auto  stepx = lsearch_step_t{prevt * phi1, funct.vgrad(state.x() + prevt * phi1 * descent), 0};
 
         bool       convexity = false;
         const auto tq        = lsearch_step_t::quadratic(step0, stepx, &convexity);
@@ -56,7 +55,7 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state)
         }
         else
         {
-            t0 = state.t * phi2;
+            t0 = last_step_size * phi2;
         }
     }
 

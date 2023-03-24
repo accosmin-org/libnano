@@ -28,8 +28,9 @@ namespace nano
     private:
         ///
         /// \brief compute the adjustment factor for the descent direction
+        ///     from the previous gradient, previous descent direction and current gradient.
         ///
-        virtual scalar_t beta(const solver_state_t& prev, const solver_state_t& curr) const = 0;
+        virtual scalar_t beta(const vector_t& pg, const vector_t& pd, const vector_t& cg) const = 0;
     };
 
     ///
@@ -53,7 +54,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -77,7 +78,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -101,7 +102,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -125,7 +126,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -149,7 +150,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -173,7 +174,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -197,7 +198,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -221,7 +222,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -245,7 +246,7 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 
     ///
@@ -269,6 +270,6 @@ namespace nano
         ///
         /// \brief @see solver_cgd_t
         ///
-        scalar_t beta(const solver_state_t&, const solver_state_t&) const override;
+        scalar_t beta(const vector_t&, const vector_t&, const vector_t&) const override;
     };
 } // namespace nano

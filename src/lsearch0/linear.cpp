@@ -14,7 +14,7 @@ rlsearch0_t lsearch0_linear_t::clone() const
     return std::make_unique<lsearch0_linear_t>(*this);
 }
 
-scalar_t lsearch0_linear_t::get(const solver_state_t& state)
+scalar_t lsearch0_linear_t::get(const solver_state_t& state, const vector_t& descent, const scalar_t last_step_size)
 {
     const auto beta    = parameter("lsearch0::linear::beta").value<scalar_t>();
     const auto alpha   = parameter("lsearch0::linear::alpha").value<scalar_t>();
@@ -22,18 +22,17 @@ scalar_t lsearch0_linear_t::get(const solver_state_t& state)
 
     scalar_t t0 = 0;
 
-    const auto dg = state.dg();
-    if (state.inner_iters <= 1)
+    const auto dg = state.dg(descent);
+    if (last_step_size < 0)
     {
         t0 = 1;
     }
     else
     {
-        t0 = std::min(scalar_t(1), -alpha * std::max(-state.t * m_prevdg, beta * epsilon) / dg);
+        t0 = std::min(scalar_t(1), -alpha * std::max(-last_step_size * m_prevdg, beta * epsilon) / dg);
     }
 
     m_prevdg = dg;
-
     log(state, t0);
     return t0;
 }
