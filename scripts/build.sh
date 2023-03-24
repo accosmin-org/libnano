@@ -96,7 +96,7 @@ function tests {
 
 function install {
     cd ${libnanodir}
-    cmake --build ${libnanodir} --target install || return 1
+    cmake --install ${libnanodir} --strip || return 1
 }
 
 function build_example {

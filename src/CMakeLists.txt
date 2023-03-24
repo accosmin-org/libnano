@@ -1,5 +1,3 @@
-# create library
-
 if(NOT APPLE)
     set(CMAKE_INSTALL_RPATH $ORIGIN)
 endif()
@@ -140,10 +138,6 @@ if(NOT WIN32)
         PRIVATE Threads::Threads)
 endif()
 
-install(TARGETS nano
-    EXPORT nano-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS nano EXPORT nano-targets)
 
 set_target_properties(nano PROPERTIES EXPORT_NAME NANO)

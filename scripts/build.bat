@@ -111,7 +111,7 @@ REM ----------------------------------------------------------------------------
 :install
 REM ---------------------------------------------------------------------------------
 cd %libnanodir%
-cmake --build %libnanodir% --config %build_type% --target install || exit /B 1
+cmake --install %libnanodir% --config %build_type% --strip || exit /B 1
 exit /B 0
 
 REM ---------------------------------------------------------------------------------
