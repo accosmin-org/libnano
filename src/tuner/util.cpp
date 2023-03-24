@@ -103,7 +103,7 @@ bool nano::evaluate(const param_spaces_t& spaces, const tuner_callback_t& callba
         critical(!std::isfinite(values(itrial)), "tuner: invalid value (", values(itrial),
                  ") detected for parameters (", params.vector(itrial).transpose(), ")!");
 
-        steps.emplace_back(igrid, params.tensor(itrial), values(itrial));
+        steps.emplace_back(tuner_step_t{igrid, params.tensor(itrial), values(itrial)});
     }
 
     // NB: the evaluated steps are always sorted so that the first one is the optimum!

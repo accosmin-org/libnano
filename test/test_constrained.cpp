@@ -135,7 +135,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         auto solver = solver_linear_penalty_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(solver, function, x0, xbest, fbest, 1e-4);
+            check_minimize(*solver.clone(), function, x0, xbest, fbest, 1e-4);
         }
     }
     {
@@ -144,7 +144,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         auto solver = solver_quadratic_penalty_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(solver, function, x0, xbest, fbest, 1e-5);
+            check_minimize(*solver.clone(), function, x0, xbest, fbest, 1e-5);
         }
     }
     {
@@ -153,7 +153,7 @@ static void check_penalty_solver(const function_t& function, const vector_t& xbe
         auto solver = solver_augmented_lagrangian_t{};
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(solver, function, x0, xbest, fbest, 1e-5);
+            check_minimize(*solver.clone(), function, x0, xbest, fbest, 1e-5);
         }
     }
 }

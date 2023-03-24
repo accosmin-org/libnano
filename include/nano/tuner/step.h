@@ -7,11 +7,8 @@ namespace nano
     ///
     /// \brief models a step (trial) computed when tuning hyper-parameters of a machine learning model.
     ///
-    struct NANO_PUBLIC tuner_step_t
+    struct tuner_step_t
     {
-        tuner_step_t();
-        tuner_step_t(indices_t igrid, tensor1d_t param, scalar_t value);
-
         static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
         indices_t  m_igrid;      ///< grid indices of the hyper-parameter values

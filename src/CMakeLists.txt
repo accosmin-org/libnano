@@ -88,7 +88,6 @@ target_sources(nano PRIVATE
     model/result.cpp
     model/cluster.cpp
     tuner.cpp
-    tuner/step.cpp
     tuner/util.cpp
     tuner/local.cpp
     tuner/space.cpp
