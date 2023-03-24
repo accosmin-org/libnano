@@ -212,7 +212,7 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
         const auto& solver = solvers[i % solvers.size()];
 
         const auto timer = nano::timer_t{};
-        const auto state = solver->minimize(function, x0);
+        const auto state = solver->minimize(*function.clone(), x0);
         const auto milli = timer.milliseconds().count();
 
         return result_t{state, milli};
