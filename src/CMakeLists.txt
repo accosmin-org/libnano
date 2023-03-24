@@ -138,7 +138,6 @@ if(NOT WIN32)
         PRIVATE Threads::Threads)
 endif()
 
-include(GNUInstallDirs)
 install(TARGETS nano EXPORT nano-targets)
 
 set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
