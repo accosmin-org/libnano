@@ -77,10 +77,11 @@ static void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, c
 static void check_minimizer(const function_t& function, const vector_t& optimum)
 {
     const auto* const solver_id = function.smooth() ? "lbfgs" : "ellipsoid";
-    const auto        epsilon   = 1e-7;
 
-    const auto solver = make_solver(solver_id, epsilon);
-    const auto state  = check_minimize(*solver, function, make_random_x0(function), 20000, epsilon);
+    const auto epsilon = 1e-7;
+    const auto config  = minimize_config_t{}.max_evals(20000).epsilon(epsilon);
+    const auto solver  = make_solver(solver_id, epsilon);
+    const auto state   = check_minimize(*solver, function, make_random_x0(function), config);
     UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-6);
     UTEST_CHECK_CLOSE(state.x(), optimum, 1e-7);
 }

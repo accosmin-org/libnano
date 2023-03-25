@@ -53,8 +53,9 @@ static auto check_minimize(const function_t& function)
     const auto        solver         = make_solver(solver_id);
     solver->lsearchk("cgdescent");
 
-    const auto x0    = vector_t{vector_t::Zero(function.size())};
-    const auto state = check_minimize(*solver, function, x0, 20000, epsilon_solver);
+    const auto x0     = vector_t{vector_t::Zero(function.size())};
+    const auto config = minimize_config_t{}.max_evals(20000).epsilon(epsilon_solver);
+    const auto state  = check_minimize(*solver, function, x0, config);
     return std::make_pair(state, epsilon_linear);
 }
 

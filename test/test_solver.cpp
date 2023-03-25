@@ -9,18 +9,6 @@
 
 using namespace nano;
 
-static void check_consistency(const function_t& function, const std::vector<scalar_t>& fvalues,
-                              const std::vector<scalar_t>& epsilons, size_t reference = 0U)
-{
-    if (function.convex())
-    {
-        for (size_t i = 0U; i < fvalues.size(); ++i)
-        {
-            UTEST_CHECK_CLOSE(fvalues[reference], fvalues[i], epsilons[i]);
-        }
-    }
-}
-
 struct solver_description_t
 {
     solver_type m_type{solver_type::line_search};
@@ -263,21 +251,20 @@ UTEST_CASE(default_solvers_on_smooth_convex)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            std::vector<scalar_t> fvalues, epsilons;
+            auto config = minimize_config_t{};
             for (const auto& solver_id : make_smooth_solver_ids())
             {
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
-                const auto solver = make_solver(solver_id);
-
                 const auto descr = make_description(solver_id);
-                const auto state = check_minimize(*solver, *function, x0);
-                fvalues.push_back(state.fx());
-                epsilons.push_back(descr.m_epsilon);
+                config.expected_maximum_deviation(descr.m_epsilon);
+
+                const auto solver = make_solver(solver_id);
+                const auto state  = check_minimize(*solver, *function, x0, config);
+                config.expected_minimum(state.fx());
+
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.fx() << ".";
             }
-
-            check_consistency(*function, fvalues, epsilons);
         }
     }
 }
@@ -290,21 +277,20 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            std::vector<scalar_t> fvalues, epsilons;
+            auto config = minimize_config_t{};
             for (const auto& solver_id : make_nonsmooth_solver_ids())
             {
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
-                const auto solver = make_solver(solver_id);
-
                 const auto descr = make_description(solver_id);
-                const auto state = check_minimize(*solver, *function, x0);
-                fvalues.push_back(state.fx());
-                epsilons.push_back(descr.m_epsilon);
+                config.expected_maximum_deviation(descr.m_epsilon);
+
+                const auto solver = make_solver(solver_id);
+                const auto state  = check_minimize(*solver, *function, x0, config);
+                config.expected_minimum(state.fx());
+
                 log_info() << function->name() << ": solver=" << solver_id << ", f=" << state.fx() << ".";
             }
-
-            check_consistency(*function, fvalues, epsilons);
         }
     }
 }
@@ -317,11 +303,10 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            std::vector<scalar_t> fvalues, epsilons;
+            auto config = minimize_config_t{};
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
                 const auto solver = make_solver(solver_id);
-
                 for (const auto& lsearch0_id : make_lsearch0_ids())
                 {
                     for (const auto& lsearchk_id : make_lsearchk_ids())
@@ -339,20 +324,17 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         }
 
                         UTEST_NAMED_CASE(scat(function->name(), "/", solver_id, "/", lsearch0_id, "/", lsearchk_id));
-
                         UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
                         UTEST_REQUIRE_NOTHROW(solver->lsearchk(lsearchk_id));
 
-                        const auto state = check_minimize(*solver, *function, x0);
-                        fvalues.push_back(state.fx());
-                        epsilons.push_back(1e-6);
+                        const auto state = check_minimize(*solver, *function, x0, config);
+                        config.expected_minimum(state.fx());
+
                         log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=" << lsearch0_id
                                    << ", lsearchk=" << lsearchk_id << ", f=" << state.fx() << ".";
                     }
                 }
             }
-
-            check_consistency(*function, fvalues, epsilons);
         }
     }
 }
@@ -365,24 +347,21 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            std::vector<scalar_t> fvalues, epsilons;
+            auto config = minimize_config_t{}.max_evals(1000).epsilon(1e-10).expected_maximum_deviation(1e-9);
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto solver = make_solver(solver_id);
-
                 UTEST_REQUIRE_NOTHROW(solver->lsearch0("cgdescent"));
                 UTEST_REQUIRE_NOTHROW(solver->lsearchk("cgdescent"));
 
-                const auto state = check_minimize(*solver, *function, x0, 10000, 1e-10);
-                fvalues.push_back(state.fx());
-                epsilons.push_back(1e-9);
+                const auto state = check_minimize(*solver, *function, x0, config);
+                config.expected_minimum(state.fx());
+
                 log_info() << function->name() << ": solver=" << solver_id << ", lsearch0=cgdescent"
                            << ", lsearchk=cgdescent, f=" << state.fx() << ".";
             }
-
-            check_consistency(*function, fvalues, epsilons);
         }
     }
 }
