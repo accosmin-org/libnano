@@ -8,7 +8,7 @@ solver_sgm_t::solver_sgm_t()
     type(solver_type::non_monotonic);
 
     register_parameter(parameter_t::make_scalar("solver::sgm::power", 0.5, LE, 0.75, LT, 1.0));
-    register_parameter(parameter_t::make_integer("solver::sgm::patience", 10, LE, 100, LE, 1e+6));
+    register_parameter(parameter_t::make_integer("solver::sgm::patience", 10, LE, 200, LE, 1e+6));
 }
 
 rsolver_t solver_sgm_t::clone() const
