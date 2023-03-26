@@ -20,7 +20,7 @@ static auto make_nonsmooth_solver()
 {
     auto solver                            = make_solver("osga");
     solver->parameter("solver::max_evals") = 1500;
-    solver->parameter("solver::epsilon")   = 1e-5;
+    solver->parameter("solver::epsilon")   = 1e-6;
     return solver;
 }
 

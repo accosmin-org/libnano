@@ -72,7 +72,7 @@ struct minimize_config_t
     }
 
     scalar_t      m_epsilon{1e-6};
-    tensor_size_t m_max_evals{50000};
+    tensor_size_t m_max_evals{10000};
     bool          m_expected_convergence{true};
     scalar_t      m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
     scalar_t      m_expected_maximum_deviation{1e-6};

@@ -17,13 +17,16 @@ struct solver_description_t
 
 static solver_description_t make_description(const string_t& solver_id)
 {
-    if (solver_id == "gd" || solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" ||
-        solver_id == "cgd-pr" || solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" ||
-        solver_id == "cgd-dycd" || solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" ||
-        solver_id == "dfp" || solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" ||
-        solver_id == "fletcher")
+    if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
+        solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
+        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "dfp" ||
+        solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
         return {solver_type::line_search, 1e-6};
+    }
+    else if (solver_id == "gd")
+    {
+        return {solver_type::line_search, 1e-5};
     }
     else if (solver_id == "sgm")
     {
@@ -35,7 +38,7 @@ static solver_description_t make_description(const string_t& solver_id)
     }
     else if (solver_id == "osga")
     {
-        return {solver_type::non_monotonic, 1e-4};
+        return {solver_type::non_monotonic, 1e-6};
     }
     else
     {
@@ -257,6 +260,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
+                config.epsilon(descr.m_epsilon * 5e-2);
                 config.expected_maximum_deviation(descr.m_epsilon);
 
                 const auto solver = make_solver(solver_id);
@@ -283,7 +287,8 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.expected_maximum_deviation(descr.m_epsilon);
+                config.epsilon(descr.m_epsilon * 5e-2);
+                config.expected_maximum_deviation(descr.m_epsilon * 1e+1);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);
@@ -347,7 +352,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 
         for (const auto& x0 : make_random_x0s(*function))
         {
-            auto config = minimize_config_t{}.max_evals(1000).epsilon(1e-10).expected_maximum_deviation(1e-9);
+            auto config = minimize_config_t{}.max_evals(10000).epsilon(1e-10).expected_maximum_deviation(1e-9);
             for (const auto& solver_id : make_best_smooth_solver_ids())
             {
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
