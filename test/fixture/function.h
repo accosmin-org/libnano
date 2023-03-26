@@ -72,6 +72,12 @@ using namespace nano;
         append(1.8100507324793256);
     }
 
+    // bug: SGM solver fails here
+    if (function.name() == "zakharov[3D]")
+    {
+        append(-0.9375375300338142370, 0.0251082578562809022, 0.3489610979792818757);
+    }
+
     return vectors;
 }
 
