@@ -1,5 +1,6 @@
 #include <mutex>
 #include <nano/core/logger.h>
+#include <nano/solver/asga.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
@@ -165,6 +166,8 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_quasi_hoshino_t>("quasi-newton method (Hoshino formula)");
         manager.add<solver_quasi_fletcher_t>("quasi-newton method (Fletcher's switch)");
         manager.add<solver_ellipsoid_t>("ellipsoid method");
+        manager.add<solver_asga2_t>("accelerated sub-gradient algorithm 2 (ASGA)");
+        manager.add<solver_asga4_t>("accelerated sub-gradient algorithm 4 (ASGA)");
     };
 
     static std::once_flag flag;

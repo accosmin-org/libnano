@@ -66,8 +66,8 @@ namespace nano
         bool update_if_better_constrained(const solver_state_t&, scalar_t epsilon);
 
         ///
-        /// \brief convergence criterion of the function value: change in function value and parameter in the
-        ///     most recent updates.
+        /// \brief convergence criterion of the function value:
+        ///     improvements of function value and parameter in the most recent updates.
         ///
         /// NB: appropriate for non-monotonic solvers (usually non-smooth problems).
         ///

@@ -48,6 +48,7 @@ target_sources(nano PRIVATE
     solver/gd.cpp
     solver/cgd.cpp
     solver/sgm.cpp
+    solver/asga.cpp
     solver/osga.cpp
     solver/lstep.cpp
     solver/lbfgs.cpp
