@@ -50,7 +50,7 @@ solver_osga_t::solver_osga_t()
 
     register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.9, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.1, LE, 0.9, LE, fmax));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.1, LE, 1.1, LE, fmax));
     register_parameter(parameter_t::make_integer("solver::osga::patience", 10, LE, 200, LE, 1e+6));
 }
 
@@ -71,7 +71,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     const auto miu   = function.strong_convexity() / 2.0;
     const auto proxy = proxy_t{x0};
 
-    auto state = solver_state_t{function, x0, patience}; // NB: keeps track of the best state
+    auto state = solver_state_t{function, x0}; // NB: keeps track of the best state
 
     // initialization
     vector_t h     = state.gx() - miu * proxy.gQ(state.x());
@@ -122,7 +122,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         // check convergence
         const auto iter_ok   = state.valid();
-        const auto converged = eta_hat < epsilon || state.value_test() < epsilon;
+        const auto converged = eta_hat < epsilon || state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;

@@ -10,19 +10,14 @@ static auto fmax()
 
 solver_state_t::solver_state_t() = default;
 
-solver_state_t::solver_state_t(const function_t& function, vector_t x0, const tensor_size_t patience)
+solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     : m_function(&function)
     , m_x(std::move(x0))
     , m_gx(vector_t::Zero(m_x.size()))
     , m_fx(m_function->vgrad(m_x, &m_gx))
     , m_ceq(vector_t::Constant(::nano::count_equalities(m_function->constraints()), fmax()))
     , m_cineq(vector_t::Constant(::nano::count_inequalities(m_function->constraints()), fmax()))
-    , m_history_df(patience)
-    , m_history_dx(patience)
 {
-    m_history_df.array() = std::sqrt(std::numeric_limits<scalar_t>::max());
-    m_history_dx.array() = std::sqrt(std::numeric_limits<scalar_t>::max());
-
     update_calls();
     update_constraints();
 }
@@ -45,14 +40,15 @@ bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, con
             update_constraints();
         }
 
-        m_history_df(m_history_iteration % m_history_df.size()) = better ? df : 0.0;
-        m_history_dx(m_history_iteration % m_history_dx.size()) = better ? dx : 0.0;
-        ++m_history_iteration;
+        m_history_df.push_back(df);
+        m_history_dx.push_back(dx);
 
         return better;
     }
     else
     {
+        m_history_df.push_back(std::numeric_limits<scalar_t>::lowest());
+        m_history_dx.push_back(std::numeric_limits<scalar_t>::lowest());
         return false;
     }
 }
@@ -99,9 +95,42 @@ void solver_state_t::update_constraints()
     }
 }
 
-scalar_t solver_state_t::value_test() const
+scalar_t solver_state_t::value_test(const tensor_size_t patience) const
 {
-    return std::max(m_history_df.sum(), m_history_dx.sum());
+    assert(m_history_df.size() == m_history_dx.size());
+
+    auto ii = m_history_df.size();
+    auto dd = std::numeric_limits<scalar_t>::max();
+    for (size_t it = m_history_df.size(); it > 0U; --it)
+    {
+        const auto df = m_history_df[it - 1U];
+        const auto dx = m_history_dx[it - 1U];
+
+        if (df > 0.0)
+        {
+            dd = std::max(df, dx);
+            ii = it - 1U;
+            break;
+        }
+    }
+
+    // no improvement ever recorded, stop if enough iterations have passed
+    if (ii == m_history_df.size())
+    {
+        return m_history_df.size() >= static_cast<size_t>(patience) ? 0.0 : dd;
+    }
+
+    // convergence criterion is the improvement in the recent iterations
+    else if (ii + static_cast<size_t>(patience) >= m_history_df.size())
+    {
+        return dd;
+    }
+
+    // no improvement in the recent iterations, stop with potential convergence status
+    else
+    {
+        return 0.0;
+    }
 }
 
 scalar_t solver_state_t::gradient_test() const
