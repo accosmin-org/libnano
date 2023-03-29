@@ -42,6 +42,11 @@ namespace nano
         solver_asga2_t();
 
         ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const override;
+
+        ///
         /// \brief @see solver_t
         ///
         solver_state_t do_minimize(const function_t&, const vector_t& x0) const final;
@@ -58,6 +63,11 @@ namespace nano
         /// \brief default constructor
         ///
         solver_asga4_t();
+
+        ///
+        /// \brief @see clonable_t
+        ///
+        rsolver_t clone() const override;
 
         ///
         /// \brief @see solver_t
