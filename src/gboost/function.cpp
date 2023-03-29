@@ -30,8 +30,9 @@ scale_function_t::scale_function_t(const targets_iterator_t& iterator, const los
     assert(m_soutputs.dims() == m_woutputs.dims());
     assert(m_soutputs.dims() == cat_dims(iterator.dataset().samples(), iterator.dataset().target_dims()));
 
-    smooth(loss.smooth());
-    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
+    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
+    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
+                                                                                         : convexity::no);
 }
 
 rfunction_t scale_function_t::clone() const
@@ -105,8 +106,9 @@ bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_
     , m_outputs(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
     , m_accumulators(m_iterator.concurrency(), accumulator_t{this->size()})
 {
-    smooth(loss.smooth());
-    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
+    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
+    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
+                                                                                         : convexity::no);
 }
 
 rfunction_t bias_function_t::clone() const
@@ -162,8 +164,9 @@ grads_function_t::grads_function_t(const targets_iterator_t& iterator, const los
     , m_values(iterator.samples().size())
     , m_vgrads(cat_dims(iterator.samples().size(), iterator.dataset().target_dims()))
 {
-    smooth(loss.smooth());
-    convex(std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex());
+    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
+    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
+                                                                                         : convexity::no);
 }
 
 rfunction_t grads_function_t::clone() const

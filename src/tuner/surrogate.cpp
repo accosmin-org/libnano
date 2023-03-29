@@ -14,8 +14,8 @@ quadratic_surrogate_fit_t::quadratic_surrogate_fit_t(const loss_t& loss, tensor2
     , m_loss_values(p.size<0>())
     , m_loss_vgrads(p.size<0>(), 1, 1, 1)
 {
-    convex(loss.convex());
-    smooth(loss.smooth());
+    convex(loss.convex() ? convexity::yes : convexity::no);
+    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
 
     assert(m_p2.size<0>() == m_y.size<0>());
 
@@ -64,8 +64,8 @@ quadratic_surrogate_t::quadratic_surrogate_t(vector_t model)
     : function_t("quadratic surrogate function", static_cast<tensor_size_t>(std::sqrt(2 * model.size())) - 1)
     , m_model(std::move(model))
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 
     assert(size() > 0);
     assert(m_model.size() == (size() + 1) * (size() + 2) / 2);

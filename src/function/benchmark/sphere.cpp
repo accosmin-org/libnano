@@ -5,8 +5,8 @@ using namespace nano;
 function_sphere_t::function_sphere_t(tensor_size_t dims)
     : function_t("sphere", dims)
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
     strong_convexity(2.0);
 }
 

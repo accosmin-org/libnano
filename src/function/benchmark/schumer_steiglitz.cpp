@@ -5,8 +5,8 @@ using namespace nano;
 function_schumer_steiglitz_t::function_schumer_steiglitz_t(tensor_size_t dims)
     : function_t("schumer-steiglitz", dims)
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_schumer_steiglitz_t::clone() const

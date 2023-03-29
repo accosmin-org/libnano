@@ -14,7 +14,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit lambda_function_t(const tensor_size_t dims, const bool convex, const bool smooth,
+        explicit lambda_function_t(const tensor_size_t dims, const convexity convex, const smoothness smooth,
                                    const scalar_t strong_convexity, tlambda lambda)
             : function_t(typeid(tlambda).name(), dims)
             , m_lambda(std::move(lambda))
@@ -49,8 +49,8 @@ namespace nano
     /// \brief create a compatible function_t from the given lambda.
     ///
     template <typename tlambda>
-    auto make_function(const tensor_size_t dims, const bool convex, const bool smooth, const scalar_t strong_convexity,
-                       tlambda lambda)
+    auto make_function(const tensor_size_t dims, const convexity convex, const smoothness smooth,
+                       const scalar_t strong_convexity, tlambda lambda)
     {
         return lambda_function_t{dims, convex, smooth, strong_convexity, std::move(lambda)};
     }

@@ -39,8 +39,8 @@ public:
         function_t("objective's name", size),
         m_b(vector_t::Random(size))
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
     }
 
     rfunction_t clone() const override

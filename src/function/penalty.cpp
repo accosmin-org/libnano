@@ -12,13 +12,17 @@ static auto is_linear_equality(const constraint_t& constraint)
 static auto convex(const function_t& function)
 {
     const auto op = [](const auto& ct) { return ::nano::convex(ct) && (!is_equality(ct) || is_linear_equality(ct)); };
-    return function.convex() && std::all_of(function.constraints().begin(), function.constraints().end(), op);
+    return (function.convex() && std::all_of(function.constraints().begin(), function.constraints().end(), op))
+             ? convexity::yes
+             : convexity::no;
 }
 
 static auto smooth(const function_t& function)
 {
     const auto op = [](const auto& constraint) { return ::nano::smooth(constraint); };
-    return function.smooth() && std::all_of(function.constraints().begin(), function.constraints().end(), op);
+    return (function.smooth() && std::all_of(function.constraints().begin(), function.constraints().end(), op))
+             ? smoothness::yes
+             : smoothness::no;
 }
 
 template <typename toperator>
@@ -58,7 +62,7 @@ linear_penalty_function_t::linear_penalty_function_t(const function_t& function)
     : penalty_function_t(function, "linear-penalty::")
 {
     convex(::convex(function));
-    smooth(function.constraints().empty() ? ::smooth(function) : false);
+    smooth(function.constraints().empty() ? ::smooth(function) : smoothness::no);
 }
 
 rfunction_t linear_penalty_function_t::clone() const

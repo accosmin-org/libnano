@@ -5,8 +5,8 @@ using namespace nano;
 function_exponential_t::function_exponential_t(tensor_size_t dims)
     : function_t("exponential", dims)
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
     strong_convexity(2.0 / static_cast<scalar_t>(size()));
 }
 

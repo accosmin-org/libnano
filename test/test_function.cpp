@@ -27,7 +27,7 @@ UTEST_CASE(lambda)
     for (tensor_size_t dims = 1; dims < 5; ++dims)
     {
         const auto sphere_function = function_sphere_t{dims};
-        const auto lambda_function = make_function(dims, true, true, 2.0, lambda);
+        const auto lambda_function = make_function(dims, convexity::yes, smoothness::yes, 2.0, lambda);
 
         UTEST_CHECK(lambda_function.make(0, 0) == nullptr);
 

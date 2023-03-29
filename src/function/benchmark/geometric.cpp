@@ -10,8 +10,8 @@ function_geometric_optimization_t::function_geometric_optimization_t(tensor_size
                                        +1.0 / static_cast<scalar_t>(dims), seed_t{42}))
 {
     assert(summands > 0);
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_geometric_optimization_t::clone() const

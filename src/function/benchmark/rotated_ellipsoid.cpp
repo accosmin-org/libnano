@@ -6,8 +6,8 @@ using namespace nano;
 function_rotated_ellipsoid_t::function_rotated_ellipsoid_t(tensor_size_t dims)
     : function_t("rotated-ellipsoid", dims)
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_rotated_ellipsoid_t::clone() const
