@@ -23,7 +23,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     const auto power     = parameter("solver::sgm::power").value<scalar_t>();
     const auto patience  = parameter("solver::sgm::patience").value<tensor_size_t>();
 
-    auto state = solver_state_t{function, x0, patience}; // best state
+    auto state = solver_state_t{function, x0}; // best state
 
     auto x = state.x();
     auto g = state.gx();
@@ -47,7 +47,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
         state.update_if_better(x, g, f);
 
         const auto iter_ok   = std::isfinite(f);
-        const auto converged = state.value_test() < epsilon;
+        const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;

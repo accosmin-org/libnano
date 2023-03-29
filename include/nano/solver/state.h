@@ -29,7 +29,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        solver_state_t(const function_t&, vector_t x0, tensor_size_t patience = 10);
+        solver_state_t(const function_t&, vector_t x0);
 
         ///
         /// \brief move to another point and returns true if the new point is valid.
@@ -67,11 +67,11 @@ namespace nano
 
         ///
         /// \brief convergence criterion of the function value:
-        ///     improvements of function value and parameter in the most recent updates.
+        ///     improvement in function value and parameter in the most recent updates.
         ///
-        /// NB: appropriate for non-monotonic solvers (usually non-smooth problems).
+        /// NB: appropriate for non-monotonic solvers (usually non-smooth problems) that call `update_if_better`.
         ///
-        scalar_t value_test() const;
+        scalar_t value_test(tensor_size_t patience) const;
 
         ///
         /// \brief convergence criterion of the gradient: the gradient magnitude relative to the function value.
@@ -199,6 +199,8 @@ namespace nano
         void update_calls();
         void update_constraints();
 
+        using scalars_t = std::vector<scalar_t>;
+
         // attributes
         const function_t* m_function{nullptr};                ///<
         vector_t          m_x;                                ///< parameter
@@ -209,9 +211,8 @@ namespace nano
         solver_status     m_status{solver_status::max_iters}; ///< optimization status
         tensor_size_t     m_fcalls{0};                        ///< number of function value evaluations so far
         tensor_size_t     m_gcalls{0};                        ///< number of function gradient evaluations so far
-        tensor_size_t     m_history_iteration{0};             ///< iteration index (for non-monotonic solvers)
-        vector_t          m_history_df;                       ///< recent improvements of the function value
-        vector_t          m_history_dx;                       ///< recent improvements of the parameter
+        scalars_t         m_history_df;                       ///< recent improvements of the function value
+        scalars_t         m_history_dx;                       ///< recent improvements of the parameter
     };
 
     ///
