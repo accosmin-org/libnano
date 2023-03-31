@@ -65,12 +65,12 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("ellipsoid|osga|asga2|asga4"));
+    return strings_t{"ellipsoid", "osga", "asga2", "asga4"};
 }
 
 static auto make_best_smooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("cgd-pr|lbfgs|bfgs"));
+    return strings_t{"cgd-pr", "lbfgs", "bfgs"};
 }
 
 UTEST_BEGIN_MODULE(test_solver)

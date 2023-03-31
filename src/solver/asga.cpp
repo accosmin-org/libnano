@@ -10,7 +10,7 @@ static auto parameter_values(const configurable_t& configurable)
                            configurable.parameter("solver::asga::gamma1").value<scalar_t>(),
                            configurable.parameter("solver::asga::gamma2").value<scalar_t>(),
                            configurable.parameter("solver::asga::patience").value<int64_t>(),
-                           configurable.parameter("solver::asga::lsearch_max_iters").value<int64_t>());
+                           configurable.parameter("solver::asga::lsearch_max_iters").value<int>());
 }
 
 static auto solve_sk1(const scalar_t miu, const scalar_t Sk, const scalar_t Lk1)
@@ -70,8 +70,8 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
     {
         auto iter_ok = false;
         auto Lk1 = Lk / gamma1, fxk1 = fxk, fyk = fxk, Sk1 = Sk, sk1 = 0.0;
-        for (int64_t p = 0;
-             p < lsearch_max_iters && !iter_ok && std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk); ++p)
+        auto p = 0;
+        do
         {
             Lk1 *= gamma1;
             sk1 = solve_sk1(miu, Sk, Lk1);
@@ -90,7 +90,8 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
 
             iter_ok = std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk) &&
                       lsearch_done(xk1, fxk1, yk, fyk, gyk, Lk1, alphak, epsilon);
-        }
+            ++p;
+        } while (p < lsearch_max_iters && !iter_ok && std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk));
 
         const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
@@ -139,8 +140,8 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
     {
         auto iter_ok = false;
         auto Lk1 = Lk / gamma1, fyk1 = fyk, fxk1 = fyk, Sk1 = Sk, sk1 = 0.0;
-        for (int64_t p = 0;
-             p < lsearch_max_iters && !iter_ok && std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk1); ++p)
+        auto p = 0;
+        do
         {
             Lk1 *= gamma1;
             sk1 = solve_sk1(miu, Sk, Lk1);
@@ -159,7 +160,9 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
 
             iter_ok = std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk1) &&
                       lsearch_done(yk1, fyk1, xk1, fxk1, gxk1, Lk1, alphak, epsilon);
-        }
+
+            ++p;
+        } while (p < lsearch_max_iters && !iter_ok && std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk1));
 
         const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
