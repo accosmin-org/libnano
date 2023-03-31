@@ -32,7 +32,7 @@ static solver_description_t make_description(const string_t& solver_id)
     {
         return {solver_type::non_monotonic, 1e-3};
     }
-    else if (solver_id == "ellipsoid" || solver_id == "osga")
+    else if (solver_id == "ellipsoid" || solver_id == "osga" || solver_id == "asga2" || solver_id == "asga4")
     {
         return {solver_type::non_monotonic, 1e-6};
     }
@@ -65,7 +65,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return solver_t::all().ids(std::regex("ellipsoid|osga"));
+    return solver_t::all().ids(std::regex("ellipsoid|osga|asga2|asga4"));
 }
 
 static auto make_best_smooth_solver_ids()
@@ -73,7 +73,7 @@ static auto make_best_smooth_solver_ids()
     return solver_t::all().ids(std::regex("cgd-pr|lbfgs|bfgs"));
 }
 
-UTEST_BEGIN_MODULE(test_solver_lsearch)
+UTEST_BEGIN_MODULE(test_solver)
 
 UTEST_CASE(solver_type_str)
 {

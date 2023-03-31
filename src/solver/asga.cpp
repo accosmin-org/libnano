@@ -9,6 +9,7 @@ static auto parameter_values(const configurable_t& configurable)
                            configurable.parameter("solver::asga::L0").value<scalar_t>(),
                            configurable.parameter("solver::asga::gamma1").value<scalar_t>(),
                            configurable.parameter("solver::asga::gamma2").value<scalar_t>(),
+                           configurable.parameter("solver::asga::patience").value<int64_t>(),
                            configurable.parameter("solver::asga::lsearch_max_iters").value<int64_t>());
 }
 
@@ -24,12 +25,6 @@ static auto lsearch_done(const vector_t& y, scalar_t fy, const vector_t& x, cons
     return fy <= fx + gx.dot(y - x) + 0.5 * Lk * (y - x).squaredNorm() + 0.5 * alphak * epsilon;
 }
 
-static auto converged(const vector_t& xk, const scalar_t fxk, const vector_t& xk1, const scalar_t fxk1,
-                      const scalar_t epsilon)
-{
-    return ((xk1 - xk).lpNorm<Eigen::Infinity>() < epsilon && std::fabs(fxk1 - fxk) < epsilon);
-}
-
 solver_asga_t::solver_asga_t(string_t id)
     : solver_t(std::move(id))
 {
@@ -40,7 +35,7 @@ solver_asga_t::solver_asga_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::asga::L0", 0.0, LT, 1.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::asga::gamma1", 1.0, LT, 4.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::asga::gamma2", 0.0, LT, 0.9, LT, 1.0));
-    // register_parameter(parameter_t::make_integer("solver::asga::patience", 10, LE, 200, LE, 1e+6)); ???
+    register_parameter(parameter_t::make_integer("solver::asga::patience", 10, LE, 200, LE, 1e+6));
     register_parameter(parameter_t::make_integer("solver::asga::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
 
@@ -56,7 +51,7 @@ rsolver_t solver_asga2_t::clone() const
 
 solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
-    const auto [epsilon, max_evals, L0, gamma1, gamma2, lsearch_max_iters] = parameter_values(*this);
+    const auto [epsilon, max_evals, L0, gamma1, gamma2, patience, lsearch_max_iters] = parameter_values(*this);
 
     auto state = solver_state_t{function, x0};
 
@@ -97,7 +92,7 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
                       lsearch_done(xk1, fxk1, yk, fyk, gyk, Lk1, alphak, epsilon);
         }
 
-        const auto converged = ::converged(xk, fxk, xk1, fxk1, epsilon);
+        const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
@@ -126,7 +121,7 @@ rsolver_t solver_asga4_t::clone() const
 
 solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
-    const auto [epsilon, max_evals, L0, gamma1, gamma2, lsearch_max_iters] = parameter_values(*this);
+    const auto [epsilon, max_evals, L0, gamma1, gamma2, patience, lsearch_max_iters] = parameter_values(*this);
 
     auto state = solver_state_t{function, x0};
 
@@ -166,7 +161,7 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
                       lsearch_done(yk1, fyk1, xk1, fxk1, gxk1, Lk1, alphak, epsilon);
         }
 
-        const auto converged = ::converged(yk, fyk, yk1, fyk1, epsilon);
+        const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
