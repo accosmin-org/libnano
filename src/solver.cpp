@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/core/logger.h>
 #include <nano/solver/cgd.h>
+#include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/lbfgs.h>
@@ -165,6 +166,7 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_quasi_hoshino_t>("quasi-newton method (Hoshino formula)");
         manager.add<solver_quasi_fletcher_t>("quasi-newton method (Fletcher's switch)");
         manager.add<solver_ellipsoid_t>("ellipsoid method");
+        manager.add<solver_cocob_t>("continuous coin betting (COCOB)");
     };
 
     static std::once_flag flag;

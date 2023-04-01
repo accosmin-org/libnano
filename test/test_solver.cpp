@@ -28,9 +28,9 @@ static solver_description_t make_description(const string_t& solver_id)
     {
         return {solver_type::line_search, 1e-5};
     }
-    else if (solver_id == "sgm")
+    else if (solver_id == "sgm" || solver_id == "cocob")
     {
-        return {solver_type::non_monotonic, 1e-3};
+        return {solver_type::non_monotonic, 1e-4};
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
@@ -65,7 +65,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga"};
+    return strings_t{"ellipsoid", "osga"}; //, "cocob"}; // FIXME: also evaluate SGM!
 }
 
 static auto make_best_smooth_solver_ids()
