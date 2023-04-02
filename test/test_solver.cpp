@@ -11,35 +11,77 @@ using namespace nano;
 
 struct solver_description_t
 {
+    solver_description_t() = default;
+
+    explicit solver_description_t(const solver_type type)
+        : m_type(type)
+    {
+    }
+
+    auto& epsilon_smooth(const scalar_t value)
+    {
+        m_epsilon_smooth = value;
+        return *this;
+    }
+
+    auto& epsilon_nonsmooth(const scalar_t value)
+    {
+        m_epsilon_nonsmooth = value;
+        return *this;
+    }
+
+    auto& deviation_smooth(const scalar_t value)
+    {
+        m_deviation_smooth = value;
+        return *this;
+    }
+
+    auto& deviation_nonsmooth(const scalar_t value)
+    {
+        m_deviation_nonsmooth = value;
+        return *this;
+    }
+
     solver_type m_type{solver_type::line_search};
-    scalar_t    m_epsilon{1e-6};
+    scalar_t    m_epsilon_smooth{5e-8};
+    scalar_t    m_deviation_smooth{1e-6};
+    scalar_t    m_epsilon_nonsmooth{5e-7};
+    scalar_t    m_deviation_nonsmooth{1e-5};
 };
 
-static solver_description_t make_description(const string_t& solver_id)
+static auto make_description(const string_t& solver_id)
 {
     if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
         solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
         solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "dfp" ||
         solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return {solver_type::line_search, 1e-6};
+        return solver_description_t{solver_type::line_search};
     }
     else if (solver_id == "gd")
     {
-        return {solver_type::line_search, 1e-5};
+        return solver_description_t{solver_type::line_search}.epsilon_smooth(5e-7).deviation_smooth(1e-5);
     }
     else if (solver_id == "sgm" || solver_id == "cocob")
     {
-        return {solver_type::non_monotonic, 1e-4};
+        return solver_description_t{solver_type::non_monotonic}
+            .epsilon_smooth(5e-6)
+            .deviation_smooth(1e-4)
+            .epsilon_nonsmooth(5e-5)
+            .deviation_nonsmooth(1e-3);
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
-        return {solver_type::non_monotonic, 1e-6};
+        return solver_description_t{solver_type::non_monotonic}
+            .epsilon_smooth(5e-8)
+            .deviation_smooth(1e-6)
+            .epsilon_nonsmooth(5e-7)
+            .deviation_nonsmooth(1e-5);
     }
     else
     {
         assert(false);
-        return {};
+        return solver_description_t{};
     }
 }
 
@@ -316,8 +358,8 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon * 5e-2);
-                config.expected_maximum_deviation(descr.m_epsilon);
+                config.epsilon(descr.m_epsilon_smooth);
+                config.expected_maximum_deviation(descr.m_deviation_smooth);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);
@@ -343,8 +385,8 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon * 5e-2);
-                config.expected_maximum_deviation(descr.m_epsilon * 1e+1);
+                config.epsilon(descr.m_epsilon_nonsmooth);
+                config.expected_maximum_deviation(descr.m_deviation_nonsmooth);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);
