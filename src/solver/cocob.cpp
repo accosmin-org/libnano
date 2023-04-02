@@ -36,7 +36,7 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         const auto fx = function.vgrad(x, &gx);
         state.update_if_better(x, fx);
 
-        const auto iter_ok   = true;
+        const auto iter_ok   = std::isfinite(fx);
         const auto converged = state.value_test(patience) < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
@@ -44,15 +44,16 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         }
 
         // NB: update the estimation of the Lipschitz constant
-        // const auto restart = (gx.array().abs() - L.array()).minCoeff() > 0;
-        L.array() = L.array().max(gx.array().abs());
+        const auto restart = (gx.array().abs() - L.array()).minCoeff() > 0;
+        L.array()          = L.array().max(gx.array().abs());
 
-        /*if (restart)
+        if (restart)
         {
+            // reset state when a gradient with a larger magnitude is found
             G      = L;
             theta.array()  = 0;
             reward.array() = 0;
-        }*/
+        }
 
         // compute parameter update
         theta -= gx;
@@ -61,6 +62,14 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
 
         const auto beta = (theta.array() / (G + L).array()).tanh() / L.array();
         x               = x0.array() + beta * (L + reward).array();
+
+        /*if (function.name() == "trid[3D]" || function.name() == "trid[4D]")
+        {
+            std::cout << std::fixed << std::setprecision(10) << "iter=" << iter << ",x=" << x.transpose()
+                      << ",fx=" << fx << "\n\tbeta=" << beta.transpose() << "\n\ttheta=" << theta.transpose()
+                      << "\n\treward=" << reward.transpose() << "\n\tL=" << L.transpose() //<< ",restart=" << restart
+                      << std::endl;
+        }*/
     }
 
     // NB: make sure the gradient is updated at the returned point.
