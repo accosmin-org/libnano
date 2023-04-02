@@ -5,7 +5,7 @@ using namespace nano;
 function_trid_t::function_trid_t(tensor_size_t dims)
     : function_t("trid", dims)
 {
-    convex(convexity::no);
+    convex(convexity::yes);
     smooth(smoothness::yes);
 }
 
