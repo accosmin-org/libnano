@@ -45,7 +45,7 @@ struct solver_description_t
     solver_type m_type{solver_type::line_search};
     scalar_t    m_epsilon_smooth{5e-8};
     scalar_t    m_deviation_smooth{1e-6};
-    scalar_t    m_epsilon_nonsmooth{5e-7};
+    scalar_t    m_epsilon_nonsmooth{1e-7};
     scalar_t    m_deviation_nonsmooth{1e-5};
 };
 
@@ -65,9 +65,9 @@ static auto make_description(const string_t& solver_id)
     else if (solver_id == "sgm" || solver_id == "cocob")
     {
         return solver_description_t{solver_type::non_monotonic}
-            .epsilon_smooth(5e-6)
+            .epsilon_smooth(1e-6)
             .deviation_smooth(1e-4)
-            .epsilon_nonsmooth(5e-5)
+            .epsilon_nonsmooth(1e-5)
             .deviation_nonsmooth(1e-3);
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
@@ -75,7 +75,7 @@ static auto make_description(const string_t& solver_id)
         return solver_description_t{solver_type::non_monotonic}
             .epsilon_smooth(5e-8)
             .deviation_smooth(1e-6)
-            .epsilon_nonsmooth(5e-7)
+            .epsilon_nonsmooth(5e-8)
             .deviation_nonsmooth(1e-5);
     }
     else
@@ -107,7 +107,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga"}; //, "cocob"}; // FIXME: also evaluate SGM!
+    return strings_t{"ellipsoid", "osga"}; // FIXME: have all methods converge -, "sgm", "cocob"};
 }
 
 static auto make_best_smooth_solver_ids()

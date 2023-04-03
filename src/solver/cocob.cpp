@@ -7,6 +7,7 @@ solver_cocob_t::solver_cocob_t()
 {
     type(solver_type::non_monotonic);
 
+    register_parameter(parameter_t::make_scalar("solver::cocob::L0", 1e-6, LE, 5e+0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::cocob::patience", 10, LE, 100, LE, 1e+6));
 }
 
@@ -19,14 +20,16 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
 {
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<int>();
+    const auto L0        = parameter("solver::cocob::L0").value<scalar_t>();
     const auto patience  = parameter("solver::cocob::patience").value<tensor_size_t>();
 
     auto state = solver_state_t{function, x0}; // NB: keeps track of the best state
 
-    auto L  = vector_t{state.gx().array().abs() + 1e-12};
+    auto L  = vector_t{state.gx().array().abs() + L0};
     auto x  = state.x();
     auto gx = state.gx();
 
+    auto xref   = x0;
     auto G      = L;
     auto theta  = make_full_vector<scalar_t>(x0.size(), 0.0);
     auto reward = make_full_vector<scalar_t>(x0.size(), 0.0);
@@ -50,7 +53,8 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         if (restart)
         {
             // reset state when a gradient with a larger magnitude is found
-            G      = L;
+            xref           = x;
+            G              = L;
             theta.array()  = 0;
             reward.array() = 0;
         }
@@ -58,18 +62,10 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         // compute parameter update
         theta -= gx;
         G.array() += gx.array().abs();
-        reward.array() -= (x - x0).array() * gx.array();
+        reward.array() -= (x - xref).array() * gx.array();
 
         const auto beta = (theta.array() / (G + L).array()).tanh() / L.array();
-        x               = x0.array() + beta * (L + reward).array();
-
-        /*if (function.name() == "trid[3D]" || function.name() == "trid[4D]")
-        {
-            std::cout << std::fixed << std::setprecision(10) << "iter=" << iter << ",x=" << x.transpose()
-                      << ",fx=" << fx << "\n\tbeta=" << beta.transpose() << "\n\ttheta=" << theta.transpose()
-                      << "\n\treward=" << reward.transpose() << "\n\tL=" << L.transpose() //<< ",restart=" << restart
-                      << std::endl;
-        }*/
+        x               = xref.array() + beta * (L + reward).array();
     }
 
     // NB: make sure the gradient is updated at the returned point.
