@@ -7,7 +7,7 @@ solver_cocob_t::solver_cocob_t()
 {
     type(solver_type::non_monotonic);
 
-    register_parameter(parameter_t::make_scalar("solver::cocob::L0", 1e-6, LE, 5e+0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::cocob::L0", 0.0, LT, 1e-6, LE, 1e+0));
     register_parameter(parameter_t::make_integer("solver::cocob::patience", 10, LE, 100, LE, 1e+6));
 }
 
@@ -47,16 +47,25 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         }
 
         // NB: update the estimation of the Lipschitz constant
-        const auto restart = (gx.array().abs() - L.array()).minCoeff() > 0;
-        L.array()          = L.array().max(gx.array().abs());
-
-        if (restart)
+        // NB: reset state when a gradient with a larger magnitude is found
+        for (tensor_size_t i = 0, size = gx.size(); i < size; ++i)
         {
-            // reset state when a gradient with a larger magnitude is found
-            xref           = x;
-            G              = L;
-            theta.array()  = 0;
-            reward.array() = 0;
+            if (gx(i) < -L(i))
+            {
+                xref(i)   = x(i);
+                L(i)      = -gx(i) + L0;
+                G(i)      = L(i);
+                theta(i)  = 0.0;
+                reward(i) = 0.0;
+            }
+            else if (gx(i) > L(i))
+            {
+                xref(i)   = x(i);
+                L(i)      = gx(i) + L0;
+                G(i)      = L(i);
+                theta(i)  = 0.0;
+                reward(i) = 0.0;
+            }
         }
 
         // compute parameter update
