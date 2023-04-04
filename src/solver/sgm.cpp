@@ -7,8 +7,8 @@ solver_sgm_t::solver_sgm_t()
 {
     type(solver_type::non_monotonic);
 
-    register_parameter(parameter_t::make_scalar("solver::sgm::power", 0.5, LE, 0.9, LT, 1.0));
-    register_parameter(parameter_t::make_integer("solver::sgm::patience", 10, LE, 300, LE, 1e+6));
+    register_parameter(parameter_t::make_scalar("solver::sgm::power", 0.5, LE, 0.9, LE, 1.0));
+    register_parameter(parameter_t::make_integer("solver::sgm::patience", 10, LE, 100, LE, 1e+6));
 }
 
 rsolver_t solver_sgm_t::clone() const
@@ -31,8 +31,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     auto iteration = 0;
     while (function.fcalls() < max_evals)
     {
-        const auto gnorm = g.lpNorm<Eigen::Infinity>();
-        if (gnorm < std::numeric_limits<scalar_t>::epsilon())
+        if (g.lpNorm<Eigen::Infinity>() < std::numeric_limits<scalar_t>::epsilon())
         {
             const auto iter_ok   = true;
             const auto converged = true;
@@ -41,7 +40,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
         }
 
         const auto lambda = 1.0 / std::pow(iteration + 1, power);
-        x -= lambda * g / gnorm;
+        x -= lambda * g / g.lpNorm<2>();
 
         const auto f = function.vgrad(x, &g);
         state.update_if_better(x, g, f);

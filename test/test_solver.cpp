@@ -67,8 +67,8 @@ static auto make_description(const string_t& solver_id)
         return solver_description_t{solver_type::non_monotonic}
             .epsilon_smooth(1e-6)
             .deviation_smooth(1e-4)
-            .epsilon_nonsmooth(1e-5)
-            .deviation_nonsmooth(1e-3);
+            .epsilon_nonsmooth(1e-4)
+            .deviation_nonsmooth(1e-2);
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
@@ -107,7 +107,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga"}; // FIXME: have all methods converge -, "sgm", "cocob"};
+    return strings_t{"ellipsoid", "osga", "sgm"}; // FIXME: have all methods converge!!!, "cocob"};
 }
 
 static auto make_best_smooth_solver_ids()
