@@ -9,7 +9,7 @@ namespace nano
     ///     see "Training Deep Networks without Learning Rates through Coin Betting", by F. Orabona, T. Tommasi, 2017
     ///
     /// NB: the functional constraints (if any) are all ignored.
-    /// NB: the convergence criterion is that the difference of two consecutive best updates is smaller than epsilon.
+    /// NB: the iterations are stopped when no significant decrease in the function value in the recent iterations.
     ///
     class NANO_PUBLIC solver_cocob_t final : public solver_t
     {

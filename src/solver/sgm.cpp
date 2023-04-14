@@ -29,7 +29,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     auto g = state.gx();
 
     auto iteration = 0;
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         if (g.lpNorm<Eigen::Infinity>() < std::numeric_limits<scalar_t>::epsilon())
         {

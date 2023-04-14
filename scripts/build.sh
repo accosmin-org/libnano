@@ -11,7 +11,7 @@ clang_suffix=""
 cmake_options="-GNinja -DBUILD_SHARED_LIBS=ON"
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
-threads=$((cores+1))
+threads=$((cores/2+2))
 
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"

@@ -18,65 +18,64 @@ struct solver_description_t
     {
     }
 
-    auto& epsilon_smooth(const scalar_t value)
+    auto& smooth_config(const minimize_config_t& config)
     {
-        m_epsilon_smooth = value;
+        m_smooth_config = config;
         return *this;
     }
 
-    auto& epsilon_nonsmooth(const scalar_t value)
+    auto& nonsmooth_config(const minimize_config_t& config)
     {
-        m_epsilon_nonsmooth = value;
+        m_nonsmooth_config = config;
         return *this;
     }
 
-    auto& deviation_smooth(const scalar_t value)
-    {
-        m_deviation_smooth = value;
-        return *this;
-    }
-
-    auto& deviation_nonsmooth(const scalar_t value)
-    {
-        m_deviation_nonsmooth = value;
-        return *this;
-    }
-
-    solver_type m_type{solver_type::line_search};
-    scalar_t    m_epsilon_smooth{5e-8};
-    scalar_t    m_deviation_smooth{1e-6};
-    scalar_t    m_epsilon_nonsmooth{1e-7};
-    scalar_t    m_deviation_nonsmooth{1e-5};
+    solver_type       m_type{solver_type::line_search};
+    minimize_config_t m_smooth_config{};
+    minimize_config_t m_nonsmooth_config{};
 };
 
 static auto make_description(const string_t& solver_id)
 {
     if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
         solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
-        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "dfp" ||
-        solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
+        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
+        solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return solver_description_t{solver_type::line_search};
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(1000).expected_maximum_deviation(1e-6));
+    }
+    else if (solver_id == "dfp")
+    {
+        // NB: DFP needs many more iterations to reach the solution!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(10000).expected_maximum_deviation(1e-6));
     }
     else if (solver_id == "gd")
     {
-        return solver_description_t{solver_type::line_search}.epsilon_smooth(5e-7).deviation_smooth(1e-5);
+        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
     else if (solver_id == "sgm" || solver_id == "cocob")
     {
         return solver_description_t{solver_type::non_monotonic}
-            .epsilon_smooth(1e-6)
-            .deviation_smooth(1e-4)
-            .epsilon_nonsmooth(1e-5)
-            .deviation_nonsmooth(1e-2);
+            .smooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-3))
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-2));
+    }
+    else if (solver_id == "sda" || solver_id == "wda")
+    {
+        // NB: SDA/WDA can take way too many iterations to converge reliably to the solution!
+        // NB: also the distance to the optimum `D` is not usually known and it impacts the convergence and its speed!
+        return solver_description_t{solver_type::non_monotonic}.smooth_config(
+            minimize_config_t{}.epsilon(1e-3).max_evals(1000).expected_convergence(false).expected_maximum_deviation(
+                1e+1));
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
         return solver_description_t{solver_type::non_monotonic}
-            .epsilon_smooth(5e-8)
-            .deviation_smooth(1e-6)
-            .epsilon_nonsmooth(5e-8)
-            .deviation_nonsmooth(1e-5);
+            .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
     }
     else
     {
@@ -358,8 +357,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon_smooth);
-                config.expected_maximum_deviation(descr.m_deviation_smooth);
+                config.config(descr.m_smooth_config);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);
@@ -385,8 +383,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon_nonsmooth);
-                config.expected_maximum_deviation(descr.m_deviation_nonsmooth);
+                config.config(descr.m_nonsmooth_config);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);

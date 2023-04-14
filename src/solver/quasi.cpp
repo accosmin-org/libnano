@@ -94,7 +94,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     matrix_t H = matrix_t::Identity(function.size(), function.size());
 
     bool first_iteration = false;
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
         descent = -H * cstate.gx();

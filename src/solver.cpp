@@ -6,6 +6,7 @@
 #include <nano/solver/gd.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
+#include <nano/solver/pdsgm.h>
 #include <nano/solver/quasi.h>
 #include <nano/solver/sgm.h>
 
@@ -167,6 +168,8 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_quasi_fletcher_t>("quasi-newton method (Fletcher's switch)");
         manager.add<solver_ellipsoid_t>("ellipsoid method");
         manager.add<solver_cocob_t>("continuous coin betting (COCOB)");
+        manager.add<solver_sda_t>("simple dual averages (variant of primal-dual subgradient methods)");
+        manager.add<solver_wda_t>("weighted dual averages (variant of primal-dual subgradient methods)");
     };
 
     static std::once_flag flag;

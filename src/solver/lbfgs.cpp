@@ -34,7 +34,7 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
 
     vector_t             q, r;
     std::deque<vector_t> ss, ys;
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
         //      (see "Numerical optimization", Nocedal & Wright, 2nd edition, p.178)

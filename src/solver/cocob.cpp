@@ -34,10 +34,10 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
     auto theta  = make_full_vector<scalar_t>(x0.size(), 0.0);
     auto reward = make_full_vector<scalar_t>(x0.size(), 0.0);
 
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto fx = function.vgrad(x, &gx);
-        state.update_if_better(x, fx);
+        state.update_if_better(x, gx, fx);
 
         const auto iter_ok   = std::isfinite(fx);
         const auto converged = state.value_test(patience) < epsilon;
@@ -77,7 +77,5 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         x               = xref.array() + beta * (L + reward).array();
     }
 
-    // NB: make sure the gradient is updated at the returned point.
-    state.update(state.x());
     return state;
 }

@@ -16,8 +16,8 @@ namespace nano
     ///
     /// NB: the implementation follows the notation from (1).
     /// NB: the functional constraints (if any) are all ignored.
-    /// NB: the convergence criterion is either that eta is smaller than epsilon0 or that the
-    ///     the difference of two consecutive best updates is smaller than epsilon.
+    /// NB: the iterations are stopped when either eta is smaller than epsilon or
+    ///     no significant decrease in the function value in the recent iterations.
     ///
     class NANO_PUBLIC solver_osga_t final : public solver_t
     {

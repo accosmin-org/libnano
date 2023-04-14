@@ -90,7 +90,7 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
     auto pstate   = cstate;     // previous state
     auto cdescent = vector_t{}; // current descent direction
     auto pdescent = vector_t{}; // previous descent direction
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
         if (cdescent.size() == 0)
