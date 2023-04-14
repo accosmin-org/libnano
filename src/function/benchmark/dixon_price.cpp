@@ -7,8 +7,8 @@ function_dixon_price_t::function_dixon_price_t(tensor_size_t dims)
     : function_t("dixon-price", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_dixon_price_t::clone() const

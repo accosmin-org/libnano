@@ -164,8 +164,8 @@ public:
     explicit sum_function_t(tensor_size_t size)
         : function_t("sum", size)
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
     }
 
     rfunction_t clone() const override { return std::make_unique<sum_function_t>(*this); }
@@ -186,8 +186,8 @@ public:
     explicit cauchy_function_t(tensor_size_t size)
         : function_t("cauchy", size)
     {
-        convex(false);
-        smooth(true);
+        convex(convexity::no);
+        smooth(smoothness::yes);
     }
 
     rfunction_t clone() const override { return std::make_unique<cauchy_function_t>(*this); }
@@ -208,8 +208,8 @@ public:
     explicit sumabsm1_function_t(tensor_size_t size)
         : function_t("sumabsm1", size)
     {
-        convex(true);
-        smooth(false);
+        convex(convexity::yes);
+        smooth(smoothness::no);
     }
 
     rfunction_t clone() const override { return std::make_unique<sumabsm1_function_t>(*this); }
@@ -230,8 +230,8 @@ public:
     explicit objective1_function_t()
         : function_t("objective1", 2)
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
         strong_convexity(0.0);
     }
 
@@ -253,8 +253,8 @@ public:
     explicit objective2_function_t()
         : function_t("objective2", 2)
     {
-        convex(false);
-        smooth(true);
+        convex(convexity::no);
+        smooth(smoothness::yes);
         strong_convexity(0.0);
     }
 
@@ -277,8 +277,8 @@ public:
     explicit objective3_function_t()
         : function_t("objective3", 1)
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
         strong_convexity(0.0);
     }
 
@@ -300,8 +300,8 @@ public:
     explicit objective4_function_t()
         : function_t("objective4", 2)
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
         strong_convexity(4.0);
     }
 

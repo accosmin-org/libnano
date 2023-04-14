@@ -6,8 +6,8 @@ function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
     : function_t("axis-ellipsoid", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
     strong_convexity(2.0);
 }
 

@@ -14,14 +14,9 @@ namespace nano
     ///     see (4) "An optimal subgradient algorithm for large-scale convex optimization in simple domains",
     ///         by M. Ahookhosh, A. Neumaier, 2015
     ///
-    /// NB: the implementation follows the notation from (1).
-    ///
     /// NB: the functional constraints (if any) are all ignored.
-    ///
-    /// NB: the convergence criterion is either that eta is smaller than epsilon0 or that no significant
-    ///     improvement has been done in the past `patience` past iterations.
-    ///
-    /// NB: the default parameters are different from (1).
+    /// NB: the iterations are stopped when either eta is smaller than epsilon or
+    ///     no significant decrease in the function value in the recent iterations.
     ///
     class NANO_PUBLIC solver_osga_t final : public solver_t
     {

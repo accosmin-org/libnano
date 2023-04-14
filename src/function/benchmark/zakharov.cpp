@@ -7,8 +7,8 @@ function_zakharov_t::function_zakharov_t(tensor_size_t dims)
     : function_t("zakharov", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_zakharov_t::clone() const

@@ -30,8 +30,8 @@ linear::function_t::function_t(const flatten_iterator_t& iterator, const loss_t&
     assert(m_isize > 0);
     assert(m_tsize > 0);
 
-    convex(m_loss.convex() && m_vAreg <= 0.0);
-    smooth(m_loss.smooth() && m_l1reg <= 0.0);
+    convex((m_loss.convex() && m_vAreg <= 0.0) ? convexity::yes : convexity::no);
+    smooth((m_loss.smooth() && m_l1reg <= 0.0) ? smoothness::yes : smoothness::no);
     strong_convexity(m_l2reg / static_cast<scalar_t>(m_isize * m_tsize));
 }
 

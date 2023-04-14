@@ -6,8 +6,8 @@ using namespace nano;
 function_rosenbrock_t::function_rosenbrock_t(tensor_size_t dims)
     : function_t("rosenbrock", std::max(dims, tensor_size_t(2)))
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_rosenbrock_t::clone() const

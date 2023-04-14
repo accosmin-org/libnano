@@ -11,35 +11,76 @@ using namespace nano;
 
 struct solver_description_t
 {
-    solver_type m_type{solver_type::line_search};
-    scalar_t    m_epsilon{1e-6};
+    solver_description_t() = default;
+
+    explicit solver_description_t(const solver_type type)
+        : m_type(type)
+    {
+    }
+
+    auto& smooth_config(const minimize_config_t& config)
+    {
+        m_smooth_config = config;
+        return *this;
+    }
+
+    auto& nonsmooth_config(const minimize_config_t& config)
+    {
+        m_nonsmooth_config = config;
+        return *this;
+    }
+
+    solver_type       m_type{solver_type::line_search};
+    minimize_config_t m_smooth_config{};
+    minimize_config_t m_nonsmooth_config{};
 };
 
-static solver_description_t make_description(const string_t& solver_id)
+static auto make_description(const string_t& solver_id)
 {
     if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
         solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
-        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "dfp" ||
-        solver_id == "sr1" || solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
+        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
+        solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return {solver_type::line_search, 1e-6};
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(1000).expected_maximum_deviation(1e-6));
+    }
+    else if (solver_id == "dfp")
+    {
+        // NB: DFP needs many more iterations to reach the solution!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(10000).expected_maximum_deviation(1e-6));
     }
     else if (solver_id == "gd")
     {
-        return {solver_type::line_search, 1e-5};
+        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
-    else if (solver_id == "sgm")
+    else if (solver_id == "sgm" || solver_id == "cocob")
     {
-        return {solver_type::non_monotonic, 1e-3};
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-3))
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-2));
+    }
+    else if (solver_id == "sda" || solver_id == "wda")
+    {
+        // NB: SDA/WDA can take way too many iterations to converge reliably to the solution!
+        // NB: also the distance to the optimum `D` is not usually known and it impacts the convergence and its speed!
+        return solver_description_t{solver_type::non_monotonic}.smooth_config(
+            minimize_config_t{}.epsilon(1e-3).max_evals(1000).expected_convergence(false).expected_maximum_deviation(
+                1e+1));
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga" || solver_id == "asga2" || solver_id == "asga4")
     {
-        return {solver_type::non_monotonic, 1e-6};
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
     }
     else
     {
         assert(false);
-        return {};
+        return solver_description_t{};
     }
 }
 
@@ -65,7 +106,8 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga", "asga2", "asga4"};
+    return strings_t{"ellipsoid", "osga", "sgm", "asga2",
+                     "asga4"}; // FIXME: have all methods converge!!!, "cocob", "sda", "wda"};
 }
 
 static auto make_best_smooth_solver_ids()
@@ -316,8 +358,7 @@ UTEST_CASE(default_solvers_on_smooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon * 5e-2);
-                config.expected_maximum_deviation(descr.m_epsilon);
+                config.config(descr.m_smooth_config);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);
@@ -343,8 +384,7 @@ UTEST_CASE(default_solvers_on_nonsmooth_convex)
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
-                config.epsilon(descr.m_epsilon * 5e-2);
-                config.expected_maximum_deviation(descr.m_epsilon * 1e+1);
+                config.config(descr.m_nonsmooth_config);
 
                 const auto solver = make_solver(solver_id);
                 const auto state  = check_minimize(*solver, *function, x0, config);

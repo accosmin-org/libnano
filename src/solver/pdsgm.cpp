@@ -1,0 +1,151 @@
+#include <nano/solver/pdsgm.h>
+
+using namespace nano;
+
+struct solver_pdsgm_t::model_t
+{
+    explicit model_t(const vector_t& x0, const scalar_t D)
+        : m_x0(x0)
+        , m_D(D)
+        , m_sk1(x0.size())
+        , m_xk1h(x0.size())
+    {
+        m_sk1.array()  = 0.0;
+        m_xk1h.array() = 0.0;
+    }
+
+    void reset(const scalar_t D)
+    {
+        m_D = D;
+        m_L = 0.0;
+    }
+
+    void updateL(const vector_t& gxk)
+    {
+        // NB: update the estimation of the Lipschitz constant.
+        // NB: reset state when a gradient with a larger magnitude is found.
+        const auto gnorm = gxk.lpNorm<2>();
+        if (gnorm > m_L)
+        {
+            m_L            = gnorm;
+            m_sk1.array()  = 0.0;
+            m_xk1h.array() = 0.0;
+            m_lgx          = 0.0;
+            m_Sk           = 0.0;
+            m_beta         = 1.0;
+        }
+    }
+
+    void update(const scalar_t lambdak, const vector_t& xk, const vector_t& gxk)
+    {
+        m_beta = m_beta + 1.0 / m_beta;
+        m_Sk += lambdak;
+        m_xk1h += lambdak * xk;
+        m_sk1 += lambdak * gxk;
+        m_lgx += lambdak * gxk.dot(xk - m_x0);
+    }
+
+    auto gap() const { return (m_lgx + std::sqrt(2.0 * m_D * m_sk1.dot(m_sk1))) / m_Sk; }
+
+    auto xk1(const scalar_t beta) const { return m_x0 - m_sk1 / beta; }
+
+    auto dual_xk1() const { return m_xk1h / m_Sk; }
+
+    const vector_t& m_x0;
+    scalar_t        m_D{1.0};
+    scalar_t        m_L{0.0};
+    vector_t        m_sk1;
+    vector_t        m_xk1h;
+    scalar_t        m_Sk{0.0};
+    scalar_t        m_lgx{0.0};
+    scalar_t        m_beta{1.0};
+};
+
+solver_pdsgm_t::solver_pdsgm_t(string_t id)
+    : solver_t(std::move(id))
+{
+    type(solver_type::non_monotonic);
+
+    register_parameter(parameter_t::make_scalar("solver::pdsgm::D", 0.0, LT, 1e+0, LE, 1e+20));
+    register_parameter(parameter_t::make_integer("solver::pdsgm::patience", 10, LE, 100, LE, 1e+6));
+}
+
+solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vector_t& x0) const
+{
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
+    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
+    auto       D         = parameter("solver::pdsgm::D").value<scalar_t>();
+    // const auto patience  = parameter("solver::pdsgm::patience").value<tensor_size_t>();
+
+    auto state = solver_state_t{function, x0}; // NB: keeps track of the best state (primal)
+
+    auto x     = state.x();
+    auto gx    = state.gx();
+    auto model = model_t{x0, D};
+
+    while (function.fcalls() + function.gcalls() < max_evals)
+    {
+        model.updateL(gx);
+        const auto [lambda, betah] = update(model, gx);
+        model.update(lambda, x, gx);
+
+        x             = model.xk1(betah);
+        const auto fx = function.vgrad(x, &gx);
+        state.update_if_better(x, gx, fx); // FIXME: option to obtain only the gradient without the function value!
+
+        // NB: the dual gap has become negative, so the solution is outside the current D.
+        // NB: search then within a larger diameter!
+        if (model.gap() < 0.0)
+        {
+            D *= 3.0;
+            model.reset(D);
+            continue;
+        }
+
+        // NB: the gap `model.gap()` is not useful in practice as it converges very slowly.
+        // NB: the dual estimation `model.dual_sk1()` converges very slowly to be useful in practice.
+
+        const auto iter_ok   = std::isfinite(fx);
+        const auto converged = model.gap() < epsilon; // state.value_test(patience) < epsilon;
+        if (solver_t::done(state, iter_ok, converged))
+        {
+            break;
+        }
+    }
+
+    return state;
+}
+
+solver_sda_t::solver_sda_t()
+    : solver_pdsgm_t("sda")
+{
+}
+
+rsolver_t solver_sda_t::clone() const
+{
+    return std::make_unique<solver_sda_t>(*this);
+}
+
+std::tuple<scalar_t, scalar_t> solver_sda_t::update(const model_t& model, const vector_t&) const
+{
+    const auto gamma = model.m_L / std::sqrt(2.0 * model.m_D);
+
+    return std::make_tuple(1.0, gamma * model.m_beta);
+}
+
+solver_wda_t::solver_wda_t()
+    : solver_pdsgm_t("wda")
+{
+}
+
+rsolver_t solver_wda_t::clone() const
+{
+    return std::make_unique<solver_wda_t>(*this);
+}
+
+std::tuple<scalar_t, scalar_t> solver_wda_t::update(const model_t& model, const vector_t& gx) const
+{
+    const auto ro = std::sqrt(2.0 * model.m_D);
+
+    return std::make_tuple(1.0 / gx.lpNorm<2>(), model.m_beta / ro);
+}

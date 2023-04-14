@@ -5,7 +5,7 @@
 using namespace nano;
 
 [[maybe_unused]] inline auto make_solver(const string_t& name = "cgd-n", const scalar_t epsilon = 1e-8,
-                                         const int max_evals = 10000)
+                                         const int max_evals = 20000)
 {
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);
@@ -44,6 +44,15 @@ static void setup_logger(solver_t& solver, std::stringstream& stream)
 
 struct minimize_config_t
 {
+    auto& config(const minimize_config_t& value)
+    {
+        m_epsilon                    = value.m_epsilon;
+        m_max_evals                  = value.m_max_evals;
+        m_expected_convergence       = value.m_expected_convergence;
+        m_expected_maximum_deviation = value.m_expected_maximum_deviation;
+        return *this;
+    }
+
     auto& epsilon(const scalar_t value)
     {
         m_epsilon = value;
@@ -53,6 +62,12 @@ struct minimize_config_t
     auto& max_evals(const tensor_size_t value)
     {
         m_max_evals = value;
+        return *this;
+    }
+
+    auto& expected_convergence(const bool value)
+    {
+        m_expected_convergence = value;
         return *this;
     }
 
@@ -72,7 +87,7 @@ struct minimize_config_t
     }
 
     scalar_t      m_epsilon{1e-6};
-    tensor_size_t m_max_evals{10000};
+    tensor_size_t m_max_evals{20000};
     bool          m_expected_convergence{true};
     scalar_t      m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
     scalar_t      m_expected_maximum_deviation{1e-6};
@@ -112,8 +127,14 @@ struct minimize_config_t
     {
         UTEST_CHECK_LESS(state.gradient_test(), config.m_epsilon);
     }
-    UTEST_CHECK_EQUAL(state.status(),
-                      config.m_expected_convergence ? solver_status::converged : solver_status::max_iters);
+    if (config.m_expected_convergence)
+    {
+        UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
+    }
+    else
+    {
+        UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
+    }
     UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
     UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
     if (function.convex() && std::isfinite(config.m_expected_minimum))

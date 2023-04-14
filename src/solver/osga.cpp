@@ -86,7 +86,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
     vector_t x, x_prime, h_hat, u_hat, u_prime;
 
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         if (state.gx().lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
         {

@@ -6,8 +6,8 @@ using namespace nano;
 function_sargan_t::function_sargan_t(tensor_size_t dims)
     : function_t("sargan", dims)
 {
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_sargan_t::clone() const

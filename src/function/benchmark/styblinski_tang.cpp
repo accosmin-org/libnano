@@ -5,8 +5,8 @@ using namespace nano;
 function_styblinski_tang_t::function_styblinski_tang_t(tensor_size_t dims)
     : function_t("styblinski-tang", dims)
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_styblinski_tang_t::clone() const

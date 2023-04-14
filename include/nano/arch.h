@@ -17,7 +17,7 @@
     #define NANO_PRIVATE
 #else
     #if __GNUC__ >= 4
-        #define NANO_PUBLIC  __attribute__((visibility("default")))
+        #define NANO_PUBLIC __attribute__((visibility("default")))
     #else
         #define NANO_PUBLIC
     #endif

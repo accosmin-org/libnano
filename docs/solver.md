@@ -39,8 +39,8 @@ public:
         function_t("objective's name", size),
         m_b(vector_t::Random(size))
     {
-        convex(true);
-        smooth(true);
+        convex(convexity::yes);
+        smooth(smoothness::yes);
     }
 
     rfunction_t clone() const override
@@ -87,20 +87,33 @@ Another possibility is to print a tabular representation with the ID and a short
 ```
 std::cout << make_table("solver", solver_t::all());
 // prints something like...
-|----------|--------------------------------------------------|
-| solver   | description                                      |
-|----------|--------------------------------------------------|
-| bfgs     | quasi-newton method (BFGS)                       |
-| cgd      | conjugate gradient descent (default)             |
-| ........ | ................................................ |
-| dfp      | quasi-newton method (DFP)                        |
-| fletcher | quasi-newton method (Fletcher's switch)          |
-| gd       | gradient descent                                 |
-| hoshino  | quasi-newton method (Hoshino formula)            |
-| lbfgs    | limited-memory BFGS                              |
-| osga     | optimal sub-gradient algorithm (OSGA)            |
-| sr1      | quasi-newton method (SR1)                        |
-|----------|--------------------------------------------------|
+|-----------|---------------------------------------------------------------------|
+| solver    | description                                                         |
+|-----------|---------------------------------------------------------------------|
+| bfgs      | quasi-newton method (BFGS)                                          |
+| cgd-cd    | conjugate gradient descent (CD)                                     |
+| cgd-dy    | conjugate gradient descent (DY)                                     |
+| cgd-dycd  | conjugate gradient descent (DYCD)                                   |
+| cgd-dyhs  | conjugate gradient descent (DYHS)                                   |
+| cgd-fr    | conjugate gradient descent (FR)                                     |
+| cgd-frpr  | conjugate gradient descent (FRPR)                                   |
+| cgd-hs    | conjugate gradient descent (HS+)                                    |
+| cgd-ls    | conjugate gradient descent (LS+)                                    |
+| cgd-n     | conjugate gradient descent (N+)                                     |
+| cgd-pr    | conjugate gradient descent (default)                                |
+| cocob     | continuous coin betting (COCOB)                                     |
+| dfp       | quasi-newton method (DFP)                                           |
+| ellipsoid | ellipsoid method                                                    |
+| fletcher  | quasi-newton method (Fletcher's switch)                             |
+| gd        | gradient descent                                                    |
+| hoshino   | quasi-newton method (Hoshino formula)                               |
+| lbfgs     | limited-memory BFGS                                                 |
+| osga      | optimal sub-gradient algorithm (OSGA)                               |
+| sda       | simple dual averages (variant of primal-dual subgradient methods)   |
+| sgm       | sub-gradient method                                                 |
+| sr1       | quasi-newton method (SR1)                                           |
+| wda       | weighted dual averages (variant of primal-dual subgradient methods) |
+|-----------|---------------------------------------------------------------------
 ```
 
 The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/minimize.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
@@ -171,10 +184,10 @@ The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful f
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| cgd-pr [quadratic,morethuente]   | -14.3279  | 1.97 | N/A          | 2.79667e-08  | 0      | 0      | 35     | 35     | 0     |
-| bfgs [quadratic,morethuente]     | -14.0469  | 2.00 | N/A          | 3.18755e-08  | 0      | 0      | 23     | 23     | 0     |
-| lbfgs [quadratic,morethuente]    | -13.4830  | 2.31 | N/A          | 3.89545e-08  | 0      | 0      | 34     | 34     | 0     |
-| gd [quadratic,morethuente]       | -10.7078  | 3.72 | N/A          | 0.0180886    | 0      | 4994   | 292    | 292    | 0     |
+| cgd-pr [quadratic,morethuente]   | -14.3196  | 1.99 | N/A          | 2.80721e-08  | 0      | 0      | 35     | 35     | 0     |
+| bfgs [quadratic,morethuente]     | -14.0487  | 1.98 | N/A          | 3.18801e-08  | 0      | 0      | 23     | 23     | 0     |
+| lbfgs [quadratic,morethuente]    | -13.4852  | 2.28 | N/A          | 3.90123e-08  | 0      | 0      | 34     | 34     | 0     |
+| gd [quadratic,morethuente]       | -10.3358  | 3.74 | N/A          | 0.0472287    | 0      | 5862   | 194    | 194    | 0     |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are close while being much faster. The steepest gradient descent method needs as expected many more iterations to converge.
@@ -201,14 +214,19 @@ The builtin line-search methods can be also evaluated as shown below:
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 
-However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like SGM provide a more precise solution in fewer iterations:
+However if the function is not smooth, then monotonic solvers like L-BFGS may not converge. In this case the non-monotonic solvers like OSGA provide a more precise solution in fewer iterations:
 ```
-./build/libnano/gcc-release/app/bench_solver --function ".+\+.+" --solver "osga|lbfgs|sgm" --min-dims 100 --max-dims 100 --trials 1000 --solver::max_evals 1000 --solver::epsilon 1e-6 --convex | tail -n 7
-|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
-| solver                       | lsearch0  | lsearchk    | value    | gnorm    | #fails | #iters | #errors | #maxits | #fcalls | #gcalls | [ms]  |
-|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
-| sgm                          | N/A       | N/A         | 0.429912 | 0.644132 | 0      | 157    | 0       | 0       | 158     | 158     | 3504  |
-| osga                         | N/A       | N/A         | 0.431203 | 0.643963 | 5108   | 299    | 0       | 5108    | 600     | 300     | 10114 |
-| lbfgs                        | quadratic | morethuente | 0.435947 | 0.644576 | 8000   | 140    | 7995    | 5       | 189     | 189     | 4468  |
-|------------------------------|-----------|-------------|----------|----------|--------|--------|---------|---------|---------|---------|-------|
+./build/libnano/gcc-release/app/bench_solver --min-dims 16 --max-dims 32 --convex --non-smooth \
+    --solver "osga|ellipsoid|sgm|cocob|sda|wda" \
+    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 1000 | tail -n 10
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| osga                             | -15.4593  | 1.18 | N/A          | 0.74854      | 0      | 16421  | 538    | 270    | 9     |
+| sgm                              | -4.9952   | 2.14 | N/A          | 0.747939     | 0      | 17080  | 414    | 414    | 9     |
+| cocob                            | -3.7597   | 4.78 | N/A          | 0.719707     | 0      | 4592   | 261    | 261    | 5     |
+| wda                              | -2.6192   | 4.23 | N/A          | 0.765013     | 1000   | 20999  | 481    | 481    | 10    |
+| ellipsoid                        | -1.8898   | 4.57 | N/A          | 0.752764     | 0      | 21000  | 481    | 481    | 12    |
+| sda                              | -1.7855   | 4.10 | N/A          | 0.740253     | 53     | 21946  | 499    | 499    | 10    |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```

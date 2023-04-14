@@ -50,8 +50,10 @@ target_sources(nano PRIVATE
     solver/sgm.cpp
     solver/asga.cpp
     solver/osga.cpp
+    solver/cocob.cpp
     solver/lstep.cpp
     solver/lbfgs.cpp
+    solver/pdsgm.cpp
     solver/quasi.cpp
     solver/state.cpp
     solver/penalty.cpp

@@ -27,7 +27,7 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
 
     auto lsearch = make_lsearch();
     auto descent = vector_t{function.size()};
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         descent = -state.gx();
 

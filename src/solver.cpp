@@ -2,10 +2,12 @@
 #include <nano/core/logger.h>
 #include <nano/solver/asga.h>
 #include <nano/solver/cgd.h>
+#include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
+#include <nano/solver/pdsgm.h>
 #include <nano/solver/quasi.h>
 #include <nano/solver/sgm.h>
 
@@ -168,6 +170,9 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_ellipsoid_t>("ellipsoid method");
         manager.add<solver_asga2_t>("accelerated sub-gradient algorithm (ASGA-2)");
         manager.add<solver_asga4_t>("accelerated sub-gradient algorithm (ASGA-4)");
+        manager.add<solver_cocob_t>("continuous coin betting (COCOB)");
+        manager.add<solver_sda_t>("simple dual averages (variant of primal-dual subgradient methods)");
+        manager.add<solver_wda_t>("weighted dual averages (variant of primal-dual subgradient methods)");
     };
 
     static std::once_flag flag;

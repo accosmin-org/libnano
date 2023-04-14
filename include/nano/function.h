@@ -62,7 +62,7 @@ namespace nano
         ///
         /// \brief returns whether the function is convex.
         ///
-        bool convex() const { return m_convex; }
+        bool convex() const { return m_convexity == convexity::yes; }
 
         ///
         /// \brief returns whether the function is smooth.
@@ -73,7 +73,7 @@ namespace nano
         /// of the gradients are not continuous.
         ///
         ///
-        bool smooth() const { return m_smooth; }
+        bool smooth() const { return m_smoothness == smoothness::yes; }
 
         ///
         /// \brief returns the strong convexity coefficient.
@@ -81,7 +81,7 @@ namespace nano
         /// NB: if not convex, then the coefficient is zero.
         /// NB: it can be used to speed-up some numerical optimization algorithms if greater than zero.
         ///
-        scalar_t strong_convexity() const { return m_sconvexity; }
+        scalar_t strong_convexity() const { return m_strong_convexity; }
 
         ///
         /// \brief returns true if the given point satisfies all the stored constraints.
@@ -147,20 +147,20 @@ namespace nano
         virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
 
     protected:
-        void convex(bool);
-        void smooth(bool);
+        void convex(convexity);
+        void smooth(smoothness);
         void strong_convexity(scalar_t);
 
         virtual scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
 
     private:
         // attributes
-        tensor_size_t m_size{0};           ///< #free dimensions to optimize for
-        bool          m_convex{false};     ///< whether the function is convex
-        bool          m_smooth{false};     ///< whether the function is smooth (otherwise subgradients should be used)
-        scalar_t      m_sconvexity{0};     ///< strong-convexity coefficient
-        constraints_t m_constraints;       ///< optional equality and inequality constraints
-        mutable tensor_size_t m_fcalls{0}; ///< #function value evaluations
-        mutable tensor_size_t m_gcalls{0}; ///< #function gradient evaluations
+        tensor_size_t         m_size{0};                    ///< #free dimensions to optimize for
+        convexity             m_convexity{convexity::no};   ///< whether the function is convex
+        smoothness            m_smoothness{smoothness::no}; ///< whether the function is smooth
+        scalar_t              m_strong_convexity{0};        ///< strong-convexity coefficient
+        constraints_t         m_constraints;                ///< optional equality and inequality constraints
+        mutable tensor_size_t m_fcalls{0};                  ///< number of function value evaluations
+        mutable tensor_size_t m_gcalls{0};                  ///< number of function gradient evaluations
     };
 } // namespace nano

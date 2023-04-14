@@ -22,8 +22,8 @@ struct loss_function_t final : public function_t
         m_target.tensor(1) = class_target(xmaps, 12 % xmaps);
         m_target.tensor(2) = class_target(xmaps, 13 % xmaps);
 
-        convex(m_loss->convex());
-        smooth(m_loss->smooth());
+        convex(m_loss->convex() ? convexity::yes : convexity::no);
+        smooth(m_loss->smooth() ? smoothness::yes : smoothness::no);
     }
 
     rfunction_t clone() const override { return std::make_unique<loss_function_t>(*this); }

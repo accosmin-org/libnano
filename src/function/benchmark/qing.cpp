@@ -6,8 +6,8 @@ function_qing_t::function_qing_t(tensor_size_t dims)
     : function_t("qing", dims)
     , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_qing_t::clone() const

@@ -11,7 +11,7 @@ clang_suffix=""
 cmake_options="-GNinja -DBUILD_SHARED_LIBS=ON"
 
 cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
-threads=$((cores+1))
+threads=$((cores/2+2))
 
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"
@@ -208,7 +208,7 @@ function helgrind {
     cd ${libnanodir}
 
     returncode=0
-    utests="test/test_tpool"
+    utests="test/test_core_parallel"
     for utest in ${utests}
     do
         printf "Running helgrind@%s ...\n" ${utest}
@@ -217,7 +217,7 @@ function helgrind {
             --error-exitcode=1 \
             --log-file=${log} ${utest}
 
-        if [[ $? -gt 0 ]]
+        if [[ $? -ne 0 ]]
         then
             cat ${log}
             # NB: ignore for now the warnings reported by helgrind!

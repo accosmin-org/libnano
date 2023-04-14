@@ -11,8 +11,8 @@ function_quadratic_t::function_quadratic_t(tensor_size_t dims)
     matrix_t A = make_random_matrix<scalar_t>(dims, dims, -1.0, +1.0, seed_t{42});
     m_A        = matrix_t::Identity(dims, dims) + A * A.transpose();
 
-    convex(true);
-    smooth(true);
+    convex(convexity::yes);
+    smooth(smoothness::yes);
     strong_convexity(nano::strong_convexity(m_A));
 }
 

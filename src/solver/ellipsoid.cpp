@@ -34,7 +34,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
     matrix_t H = matrix_t::Identity(function.size(), function.size());
     H.array() *= function.size() == 1 ? R : (R * R);
 
-    while (function.fcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto gHg = g.dot(H * g);
         if (gHg < std::numeric_limits<scalar_t>::epsilon())

@@ -5,8 +5,8 @@ using namespace nano;
 function_cauchy_t::function_cauchy_t(tensor_size_t dims)
     : function_t("cauchy", dims)
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_cauchy_t::clone() const

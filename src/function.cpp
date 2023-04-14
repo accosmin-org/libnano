@@ -29,19 +29,19 @@ function_t::function_t(string_t id, tensor_size_t size)
 {
 }
 
-void function_t::convex(bool convex)
+void function_t::convex(const convexity c)
 {
-    m_convex = convex;
+    m_convexity = c;
 }
 
-void function_t::smooth(bool smooth)
+void function_t::smooth(const smoothness s)
 {
-    m_smooth = smooth;
+    m_smoothness = s;
 }
 
-void function_t::strong_convexity(scalar_t sconvexity)
+void function_t::strong_convexity(const scalar_t strong_convexity)
 {
-    m_sconvexity = sconvexity;
+    m_strong_convexity = strong_convexity;
 }
 
 string_t function_t::name(bool with_size) const

@@ -6,8 +6,8 @@ using namespace nano;
 function_powell_t::function_powell_t(tensor_size_t dims)
     : function_t("powell", std::max(tensor_size_t(4), dims - dims % 4))
 {
-    convex(false);
-    smooth(true);
+    convex(convexity::no);
+    smooth(smoothness::yes);
 }
 
 rfunction_t function_powell_t::clone() const

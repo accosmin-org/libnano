@@ -37,8 +37,8 @@ function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, sca
     , m_alpha1(alpha1)
     , m_alpha2(alpha2)
 {
-    function_t::convex(tloss::convex);
-    function_t::smooth(m_alpha1 == 0.0 && tloss::smooth);
+    function_t::convex(tloss::convex ? convexity::yes : convexity::no);
+    function_t::smooth((m_alpha1 == 0.0 && tloss::smooth) ? smoothness::yes : smoothness::no);
     strong_convexity(m_alpha2);
 }
 
