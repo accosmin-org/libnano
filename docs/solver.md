@@ -184,13 +184,13 @@ The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful f
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| cgd-pr [quadratic,morethuente]   | -14.3196  | 1.99 | N/A          | 2.80721e-08  | 0      | 0      | 35     | 35     | 0     |
-| bfgs [quadratic,morethuente]     | -14.0487  | 1.98 | N/A          | 3.18801e-08  | 0      | 0      | 23     | 23     | 0     |
-| lbfgs [quadratic,morethuente]    | -13.4852  | 2.28 | N/A          | 3.90123e-08  | 0      | 0      | 34     | 34     | 0     |
-| gd [quadratic,morethuente]       | -10.3358  | 3.74 | N/A          | 0.0472287    | 0      | 5862   | 194    | 194    | 0     |
+| bfgs [quadratic,morethuente]     | -6.9932   | 1.99 | N/A          | 3.18908e-08  | 0      | 0      | 23     | 23     | 0     |
+| cgd-pr [quadratic,morethuente]   | -6.9425   | 1.98 | N/A          | 2.80827e-08  | 0      | 0      | 35     | 35     | 0     |
+| lbfgs [quadratic,morethuente]    | -6.9397   | 2.30 | N/A          | 3.90229e-08  | 0      | 0      | 34     | 34     | 0     |
+| gd [quadratic,morethuente]       | -5.8361   | 3.73 | N/A          | 0.0472287    | 0      | 5862   | 194    | 194    | 0     |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
-The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are close while being much faster. The steepest gradient descent method needs as expected many more iterations to converge.
+The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are fairly close. The steepest gradient descent method needs as expected many more iterations to converge. Note that BFGS scales quadratically with the problem size, while CGD and L-BFGS scale linearly and are thus recommended for very large problems.
 
 The builtin line-search methods can be also evaluated as shown below:
 ```
@@ -201,16 +201,16 @@ The builtin line-search methods can be also evaluated as shown below:
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -14.3874  | 4.21 | N/A          | 3.15695e-08  | 0      | 0      | 22     | 22     | 0     |
-| bfgs [quadratic,fletcher]        | -14.3755  | 4.54 | N/A          | 3.15887e-08  | 0      | 0      | 23     | 23     | 0     |
-| bfgs [quadratic,backtrack]       | -14.3450  | 3.66 | N/A          | 3.12323e-08  | 0      | 0      | 24     | 24     | 0     |
-| bfgs [quadratic,morethuente]     | -14.3311  | 6.12 | N/A          | 3.19087e-08  | 0      | 0      | 23     | 23     | 0     |
-| bfgs [quadratic,lemarechal]      | -14.3003  | 5.44 | N/A          | 3.15796e-08  | 0      | 0      | 23     | 23     | 0     |
-| lbfgs [quadratic,fletcher]       | -13.8213  | 5.92 | N/A          | 3.92311e-08  | 0      | 0      | 35     | 35     | 0     |
-| lbfgs [quadratic,backtrack]      | -13.7638  | 5.42 | N/A          | 3.98804e-08  | 0      | 0      | 38     | 38     | 0     |
-| lbfgs [quadratic,morethuente]    | -13.7435  | 7.11 | N/A          | 3.89877e-08  | 0      | 0      | 34     | 34     | 0     |
-| lbfgs [quadratic,lemarechal]     | -13.7424  | 6.69 | N/A          | 3.90744e-08  | 0      | 0      | 35     | 35     | 0     |
-| lbfgs [quadratic,cgdescent]      | -13.7397  | 5.88 | N/A          | 3.92858e-08  | 0      | 0      | 35     | 35     | 0     |
+| bfgs [quadratic,backtrack]       | -6.9934   | 3.72 | N/A          | 3.12804e-08  | 0      | 0      | 24     | 24     | 0     |
+| bfgs [quadratic,cgdescent]       | -6.9934   | 4.25 | N/A          | 3.15355e-08  | 0      | 0      | 22     | 22     | 0     |
+| bfgs [quadratic,fletcher]        | -6.9934   | 4.60 | N/A          | 3.15593e-08  | 0      | 0      | 23     | 23     | 0     |
+| bfgs [quadratic,lemarechal]      | -6.9934   | 5.49 | N/A          | 3.15648e-08  | 0      | 0      | 23     | 23     | 0     |
+| bfgs [quadratic,morethuente]     | -6.9934   | 6.17 | N/A          | 3.18677e-08  | 0      | 0      | 23     | 23     | 0     |
+| lbfgs [quadratic,fletcher]       | -6.9396   | 5.86 | N/A          | 3.92132e-08  | 0      | 0      | 35     | 35     | 0     |
+| lbfgs [quadratic,backtrack]      | -6.9391   | 5.38 | N/A          | 3.98418e-08  | 0      | 0      | 38     | 38     | 0     |
+| lbfgs [quadratic,cgdescent]      | -6.9391   | 5.84 | N/A          | 3.92965e-08  | 0      | 0      | 35     | 35     | 0     |
+| lbfgs [quadratic,lemarechal]     | -6.9391   | 6.63 | N/A          | 3.91197e-08  | 0      | 0      | 35     | 35     | 0     |
+| lbfgs [quadratic,morethuente]    | -6.9390   | 7.07 | N/A          | 3.89998e-08  | 0      | 0      | 34     | 34     | 0     |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 
@@ -222,11 +222,11 @@ However if the function is not smooth, then monotonic solvers like L-BFGS may no
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| osga                             | -15.4593  | 1.18 | N/A          | 0.74854      | 0      | 16421  | 538    | 270    | 9     |
-| sgm                              | -4.9952   | 2.14 | N/A          | 0.747939     | 0      | 17080  | 414    | 414    | 9     |
-| cocob                            | -3.7597   | 4.78 | N/A          | 0.719707     | 0      | 4592   | 261    | 261    | 5     |
-| wda                              | -2.6192   | 4.23 | N/A          | 0.765013     | 1000   | 20999  | 481    | 481    | 10    |
-| ellipsoid                        | -1.8898   | 4.57 | N/A          | 0.752764     | 0      | 21000  | 481    | 481    | 12    |
-| sda                              | -1.7855   | 4.10 | N/A          | 0.740253     | 53     | 21946  | 499    | 499    | 10    |
+| osga                             | -6.9953   | 1.18 | N/A          | 0.768003     | 0      | 16393  | 537    | 269    | 9     |
+| sgm                              | -3.2967   | 2.14 | N/A          | 0.7681       | 0      | 17079  | 414    | 414    | 9     |
+| wda                              | -2.1415   | 4.23 | N/A          | 0.798891     | 1000   | 20999  | 481    | 481    | 10    |
+| cocob                            | -1.9532   | 4.78 | N/A          | 0.745976     | 0      | 4583   | 261    | 261    | 5     |
+| ellipsoid                        | -1.5582   | 4.57 | N/A          | 0.776832     | 0      | 21000  | 481    | 481    | 12    |
+| sda                              | -1.3959   | 4.10 | N/A          | 0.773196     | 53     | 21946  | 499    | 499    | 10    |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```

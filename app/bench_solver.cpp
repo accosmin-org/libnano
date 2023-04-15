@@ -88,15 +88,15 @@ struct solver_stats_t
     tensor1d_t m_precisions; ///< relative precision to the best solver
 };
 
-static auto relative_precision(scalar_t value, scalar_t best_value)
+static auto relative_precision(const scalar_t value, const scalar_t best_value, const scalar_t epsilon)
 {
     assert(value >= best_value);
-    return std::log10(std::max(value - best_value, std::numeric_limits<scalar_t>::epsilon()));
+    return std::log10(std::max(value - best_value, epsilon));
 }
 
-static auto relative_precision(const result_t& result, const result_t& best_result)
+static auto relative_precision(const result_t& result, const result_t& best_result, const scalar_t epsilon)
 {
-    return relative_precision(result.m_value, best_result.m_value);
+    return relative_precision(result.m_value, best_result.m_value, epsilon);
 }
 
 static auto make_solver_name(const rsolver_t& solver)
@@ -237,8 +237,8 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
     return results;
 }
 
-static auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, size_t trials,
-                      bool log_failures, bool log_maxits)
+static auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
+                      const bool log_failures, const bool log_maxits)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
@@ -272,7 +272,8 @@ static auto benchmark(parallel::pool_t& pool, const function_t& function, const 
             assert(std::isfinite(result.m_value));
             assert(std::isfinite(result.m_gnorm));
 
-            const auto precision = relative_precision(result, best_result);
+            const auto epsilon   = solvers[isolver]->parameter("solver::epsilon").value<scalar_t>();
+            const auto precision = relative_precision(result, best_result, epsilon);
 
             const auto find = [&](const auto& v) { return v.second == isolver; };
             const auto rank = (std::find_if(ranks.begin(), ranks.end(), find) - ranks.begin()) + 1;
