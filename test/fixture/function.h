@@ -78,6 +78,12 @@ using namespace nano;
         append(-0.9375375300338142370, 0.0251082578562809022, 0.3489610979792818757);
     }
 
+    // bug: COCOB solver fails here
+    if (function.name() == "zakharov[4D]")
+    {
+        append(0.3868415764286028402, 0.1853343726137635095, -0.6836331300864706417, 0.5105581322527970034);
+    }
+
     return vectors;
 }
 

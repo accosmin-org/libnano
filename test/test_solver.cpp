@@ -49,7 +49,7 @@ static auto make_description(const string_t& solver_id)
     {
         // NB: DFP needs many more iterations to reach the solution!
         return solver_description_t{solver_type::line_search}.smooth_config(
-            minimize_config_t{}.epsilon(5e-8).max_evals(10000).expected_maximum_deviation(1e-6));
+            minimize_config_t{}.epsilon(5e-8).max_evals(20000).expected_maximum_deviation(1e-6));
     }
     else if (solver_id == "gd")
     {
@@ -57,11 +57,18 @@ static auto make_description(const string_t& solver_id)
         return solver_description_t{solver_type::line_search}.smooth_config(
             minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
-    else if (solver_id == "sgm" || solver_id == "cocob")
+    else if (solver_id == "sgm")
     {
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-3))
-            .nonsmooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(20000).expected_maximum_deviation(1e-2));
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-7).max_evals(100000).expected_maximum_deviation(1e-3));
+    }
+    else if (solver_id == "cocob")
+    {
+        // NB: COCOB is not very precise for non-smooth problems!
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(1e-5).max_evals(10000).expected_maximum_deviation(1e-3))
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-7).max_evals(100000).expected_maximum_deviation(1e-1));
     }
     else if (solver_id == "sda" || solver_id == "wda")
     {
@@ -106,7 +113,7 @@ static auto make_smooth_solver_ids()
 
 static auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga", "sgm"}; // FIXME: have all methods converge!!!, "cocob"};
+    return strings_t{"ellipsoid", "osga", "sgm", "cocob"}; // FIXME: have all methods converge!!!, "sda", "wda"};
 }
 
 static auto make_best_smooth_solver_ids()
