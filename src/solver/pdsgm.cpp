@@ -99,6 +99,7 @@ solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vec
         {
             D *= 3.0;
             model.reset(D);
+            state = solver_state_t{function, x0};
             continue;
         }
 
