@@ -29,7 +29,8 @@ make_test(test_splitter NANO::nano)
 make_test(test_constrained NANO::nano)
 
 make_test(test_solver NANO::nano)
-make_test(test_solver_state NANO::nano)
+make_test(test_solver_smooth NANO::nano)
+make_test(test_solver_nonsmooth NANO::nano)
 
 make_test(test_datasource_mask NANO::nano)
 make_test(test_datasource_memory NANO::nano)

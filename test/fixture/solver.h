@@ -87,11 +87,86 @@ struct minimize_config_t
     }
 
     scalar_t      m_epsilon{1e-6};
-    tensor_size_t m_max_evals{20000};
+    tensor_size_t m_max_evals{50000};
     bool          m_expected_convergence{true};
     scalar_t      m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
     scalar_t      m_expected_maximum_deviation{1e-6};
 };
+
+struct solver_description_t
+{
+    solver_description_t() = default;
+
+    explicit solver_description_t(const solver_type type)
+        : m_type(type)
+    {
+    }
+
+    auto& smooth_config(const minimize_config_t& config)
+    {
+        m_smooth_config = config;
+        return *this;
+    }
+
+    auto& nonsmooth_config(const minimize_config_t& config)
+    {
+        m_nonsmooth_config = config;
+        return *this;
+    }
+
+    solver_type       m_type{solver_type::line_search};
+    minimize_config_t m_smooth_config{};
+    minimize_config_t m_nonsmooth_config{};
+};
+
+[[maybe_unused]] static auto make_description(const string_t& solver_id)
+{
+    if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
+        solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
+        solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
+        solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
+    {
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(1000).expected_maximum_deviation(1e-6));
+    }
+    else if (solver_id == "dfp")
+    {
+        // NB: DFP needs many more iterations to reach the solution!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(20000).expected_maximum_deviation(1e-6));
+    }
+    else if (solver_id == "gd")
+    {
+        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems!
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
+    }
+    else if (solver_id == "sgm" || solver_id == "cocob")
+    {
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(1e-6).expected_maximum_deviation(1e-3))
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-6).max_evals(200000).expected_maximum_deviation(5e-3));
+    }
+    else if (solver_id == "sda" || solver_id == "wda")
+    {
+        // NB: SDA/WDA can take way too many iterations to converge reliably to the solution!
+        // NB: also the distance to the optimum `D` is not usually known and it impacts the convergence and its speed!
+        return solver_description_t{solver_type::non_monotonic}.smooth_config(
+            minimize_config_t{}.epsilon(1e-3).max_evals(1000).expected_convergence(false).expected_maximum_deviation(
+                1e+1));
+    }
+    else if (solver_id == "ellipsoid" || solver_id == "osga")
+    {
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
+    }
+    else
+    {
+        assert(false);
+        return solver_description_t{};
+    }
+}
 
 [[maybe_unused]] static auto check_minimize(solver_t& solver, const function_t& function, const vector_t& x0,
                                             const minimize_config_t& config = minimize_config_t{})

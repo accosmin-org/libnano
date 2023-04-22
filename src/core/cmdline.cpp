@@ -15,7 +15,7 @@ static auto find(const cmdline_t::options_t& options, const string_t& name_or_sh
 static const auto str_dash      = string_t{"-"};  // NOLINT(cert-err58-cpp)
 static const auto str_dash_dash = string_t{"--"}; // NOLINT(cert-err58-cpp)
 
-cmdline_t::option_t::option_t() = default; // LCOV_EXCL_LINE
+cmdline_t::option_t::option_t() = default;
 
 cmdline_t::option_t::option_t(string_t short_name, string_t name, string_t description, string_t default_value)
     : m_short_name(std::move(short_name))
