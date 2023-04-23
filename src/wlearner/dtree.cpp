@@ -64,7 +64,7 @@ auto unique_features(const dtree_nodes_t& nodes)
 
     return features;
 }
-}
+} // namespace
 
 std::istream& nano::read(std::istream& stream, dtree_node_t& node)
 {
