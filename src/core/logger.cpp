@@ -5,7 +5,9 @@
 
 using namespace nano;
 
-static std::ostream& get_stream(logger_t::type type, std::ostream* cout, std::ostream* cerr)
+namespace
+{
+std::ostream& get_stream(logger_t::type type, std::ostream* cout, std::ostream* cerr)
 {
     switch (type)
     {
@@ -16,7 +18,7 @@ static std::ostream& get_stream(logger_t::type type, std::ostream* cout, std::os
     }
 }
 
-static const char* get_header(logger_t::type type)
+const char* get_header(logger_t::type type)
 {
     switch (type)
     {
@@ -26,6 +28,7 @@ static const char* get_header(logger_t::type type)
     default: return "\033[91m";
     }
 }
+} // namespace
 
 logger_t::logger_t(type ltype, std::ostream* cout, std::ostream* cerr)
     : m_stream(get_stream(ltype, cout, cerr))

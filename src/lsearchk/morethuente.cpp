@@ -3,9 +3,11 @@
 
 using namespace nano;
 
-static void dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, scalar_t& fy, scalar_t& dy, scalar_t& stp,
-                   const scalar_t& fp, const scalar_t& dp, bool& brackt, const scalar_t stpmin, const scalar_t stpmax,
-                   const scalar_t delta)
+namespace
+{
+void dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, scalar_t& fy, scalar_t& dy, scalar_t& stp,
+            const scalar_t& fp, const scalar_t& dp, bool& brackt, const scalar_t stpmin, const scalar_t stpmax,
+            const scalar_t delta)
 {
     scalar_t stpc = 0, stpq = 0, stpf = 0;
 
@@ -133,6 +135,7 @@ static void dcstep(scalar_t& stx, scalar_t& fx, scalar_t& dx, scalar_t& sty, sca
 
     stp = stpf;
 }
+} // namespace
 
 lsearchk_morethuente_t::lsearchk_morethuente_t()
     : lsearchk_t("morethuente")

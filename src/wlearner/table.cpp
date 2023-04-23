@@ -9,9 +9,11 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+namespace
+{
 template <typename toperator>
-static void process(const dataset_t& dataset, const indices_cmap_t& samples, const tensor_size_t feature,
-                    const hashes_t& hashes, const indices_t& hash2tables, const toperator& op)
+void process(const dataset_t& dataset, const indices_cmap_t& samples, const tensor_size_t feature,
+             const hashes_t& hashes, const indices_t& hash2tables, const toperator& op)
 {
     switch (dataset.feature(feature).type())
     {
@@ -42,6 +44,7 @@ static void process(const dataset_t& dataset, const indices_cmap_t& samples, con
         break;
     }
 }
+} // namespace
 
 class table_wlearner_t::cache_t : public accumulator_t
 {

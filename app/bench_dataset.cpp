@@ -7,7 +7,9 @@
 
 using namespace nano;
 
-static auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
+namespace
+{
+auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
 {
     const auto samples = arange(0, dataset.samples());
 
@@ -33,7 +35,7 @@ static auto benchmark_select(const string_t& generator_id, const dataset_t& data
     log_info() << "generator_t [" << generator_id << "] feature selection in <" << timer.elapsed() << ">.";
 }
 
-static auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
+auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 {
     const auto samples = arange(0, dataset.samples());
 
@@ -56,7 +58,7 @@ static auto benchmark_flatten(const string_t& generator_id, const dataset_t& dat
     log_info() << "generator [" << generator_id << "] targets in <" << timer.elapsed() << ">.";
 }
 
-static auto benchmark(const string_t& generator_id, const dataset_t& dataset)
+auto benchmark(const string_t& generator_id, const dataset_t& dataset)
 {
     log_info() << "generator [" << generator_id << "]:";
     log_info() << "  target=[" << dataset.target() << "]";
@@ -67,7 +69,7 @@ static auto benchmark(const string_t& generator_id, const dataset_t& dataset)
     benchmark_flatten(generator_id, dataset);
 }
 
-static auto benchmark(const string_t& datasource_id, const strings_t& generator_ids)
+auto benchmark(const string_t& datasource_id, const strings_t& generator_ids)
 {
     const auto rdatasource = datasource_t::all().get(datasource_id);
     critical(!rdatasource, "invalid data source (", datasource_id, ")!");
@@ -92,7 +94,7 @@ static auto benchmark(const string_t& datasource_id, const strings_t& generator_
     }
 }
 
-static int unsafe_main(int argc, const char* argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     using namespace nano;
 
@@ -136,6 +138,7 @@ static int unsafe_main(int argc, const char* argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

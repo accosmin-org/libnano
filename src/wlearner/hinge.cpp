@@ -10,16 +10,18 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+namespace
+{
 template <typename tarray>
-static auto beta(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
-                 const scalar_t threshold)
+auto beta(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
+          const scalar_t threshold)
 {
     return (rx - r1 * threshold) / (x2 + x0 * threshold * threshold - 2 * x1 * threshold);
 }
 
 template <typename tarray, typename tbarray>
-static auto score(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
-                  const tarray& r2, const scalar_t threshold, const tbarray& beta)
+auto score(const scalar_t x0, const scalar_t x1, const scalar_t x2, const tarray& r1, const tarray& rx,
+           const tarray& r2, const scalar_t threshold, const tbarray& beta)
 {
     const auto beta2      = beta.square();
     const auto threshold2 = threshold * threshold;
@@ -27,8 +29,6 @@ static auto score(const scalar_t x0, const scalar_t x1, const scalar_t x2, const
     return (r2 + beta2 * (x2 + x0 * threshold2 - 2 * x1 * threshold) - 2 * beta * (rx - r1 * threshold)).sum();
 }
 
-namespace
-{
 class cache_t
 {
 public:

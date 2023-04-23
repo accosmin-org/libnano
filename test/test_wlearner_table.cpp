@@ -5,45 +5,48 @@
 
 using namespace nano;
 
-static auto make_dense_wlearner()
+namespace
+{
+auto make_dense_wlearner()
 {
     return dense_table_wlearner_t{};
 }
 
-static auto make_dstep_wlearner()
+auto make_dstep_wlearner()
 {
     return dstep_table_wlearner_t{};
 }
 
-static auto make_kbest_wlearner()
+auto make_kbest_wlearner()
 {
     return kbest_table_wlearner_t{};
 }
 
-static auto make_ksplit_wlearner()
+auto make_ksplit_wlearner()
 {
     return ksplit_table_wlearner_t{};
 }
 
-static auto make_hashes_mclass3()
+auto make_hashes_mclass3()
 {
     return ::nano::make_hashes(make_tensor<int8_t, 2>(make_dims(8, 3), 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1,
                                                       0, 1, 1, 1, 0, 1, 1, 1));
 }
 
-static auto make_dstep_tables(const tensor_size_t classes, const tensor_size_t fv)
+auto make_dstep_tables(const tensor_size_t classes, const tensor_size_t fv)
 {
     auto tables = make_random_tensor<scalar_t>(make_dims(classes, 1, 1, 1), -1e-5, +1e-5);
     tables(fv)  = -0.42 + 0.37 * static_cast<scalar_t>(fv);
     return tables;
 }
 
-static auto make_dstep_noise(const tensor_size_t classes, const tensor_size_t fv)
+auto make_dstep_noise(const tensor_size_t classes, const tensor_size_t fv)
 {
     auto noise = make_full_tensor<scalar_t>(make_dims(classes), 1e-6);
     noise(fv)  = 1e-10;
     return noise;
 }
+} // namespace
 
 template <typename twlearner>
 class fixture_datasource_t final : public wlearner_datasource_t

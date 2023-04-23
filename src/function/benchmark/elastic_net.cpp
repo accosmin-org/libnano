@@ -3,7 +3,9 @@
 
 using namespace nano;
 
-static auto make_suffix(scalar_t alpha1, scalar_t alpha2)
+namespace
+{
+auto make_suffix(scalar_t alpha1, scalar_t alpha2)
 {
     if (alpha1 == 0.0)
     {
@@ -15,20 +17,21 @@ static auto make_suffix(scalar_t alpha1, scalar_t alpha2)
     }
 }
 
-static auto make_size(tensor_size_t dims)
+auto make_size(tensor_size_t dims)
 {
     return std::max(dims, tensor_size_t{2});
 }
 
-static auto make_inputs(tensor_size_t dims)
+auto make_inputs(tensor_size_t dims)
 {
     return std::max(dims, tensor_size_t{2});
 }
 
-static auto make_outputs(tensor_size_t)
+auto make_outputs(tensor_size_t)
 {
     return tensor_size_t{1};
 }
+} // namespace
 
 template <typename tloss>
 function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands)

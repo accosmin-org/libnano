@@ -3,10 +3,13 @@
 
 using namespace nano;
 
-static auto fmax()
+namespace
+{
+auto fmax()
 {
     return std::sqrt(std::numeric_limits<scalar_t>::max());
 }
+} // namespace
 
 solver_state_t::solver_state_t() = default;
 

@@ -28,9 +28,8 @@ public:
     tensor3d_t    m_table;     ///<
     size_t        m_parent{0}; ///<
 };
-} // namespace
 
-static void append(tensor4d_t& tables, const tensor3d_cmap_t& table)
+void append(tensor4d_t& tables, const tensor3d_cmap_t& table)
 {
     // NB: This conservative resize is not very efficient!
     const auto copy  = tables;
@@ -43,7 +42,7 @@ static void append(tensor4d_t& tables, const tensor3d_cmap_t& table)
     tables.tensor(count) = table;
 }
 
-static auto unique_features(const dtree_nodes_t& nodes)
+auto unique_features(const dtree_nodes_t& nodes)
 {
     // gather the unique set of selected features
     std::set<tensor_size_t> ufeatures;
@@ -64,6 +63,7 @@ static auto unique_features(const dtree_nodes_t& nodes)
     }
 
     return features;
+}
 }
 
 std::istream& nano::read(std::istream& stream, dtree_node_t& node)

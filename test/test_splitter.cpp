@@ -3,18 +3,20 @@
 
 using namespace nano;
 
-static auto make_samples(const tensor_size_t samples)
+namespace
+{
+auto make_samples(const tensor_size_t samples)
 {
     return arange(samples, 2 * samples);
 }
 
-static auto make_splits(const tensor_size_t samples, const tensor_size_t folds, const uint64_t seed, const string_t& id)
+auto make_splits(const tensor_size_t samples, const tensor_size_t folds, const uint64_t seed, const string_t& id)
 {
     auto splitter = make_splitter(id, folds, seed);
     return splitter->split(make_samples(samples));
 }
 
-static void check_split(const indices_t& train, const indices_t& valid, const tensor_size_t samples)
+void check_split(const indices_t& train, const indices_t& valid, const tensor_size_t samples)
 {
     UTEST_CHECK_EQUAL(train.size() + valid.size(), samples);
 
@@ -42,6 +44,7 @@ static void check_split(const indices_t& train, const indices_t& valid, const te
         UTEST_CHECK((it == end(train) && iv != end(valid)) || (it != end(train) && iv == end(valid)));
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_splitter)
 

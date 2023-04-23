@@ -3,12 +3,15 @@
 
 using namespace nano;
 
-static hashes_t make_hashes(const std::set<uint64_t>& fhashes)
+namespace
+{
+hashes_t make_hashes(const std::set<uint64_t>& fhashes)
 {
     auto hashes = hashes_t{static_cast<tensor_size_t>(fhashes.size())};
     std::copy(fhashes.begin(), fhashes.end(), hashes.begin());
     return hashes;
 }
+} // namespace
 
 hashes_t nano::make_hashes(const sclass_cmap_t& fvalues)
 {

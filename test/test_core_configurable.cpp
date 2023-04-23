@@ -3,13 +3,16 @@
 
 using namespace nano;
 
-static auto to_string(const configurable_t& configurable)
+namespace
+{
+auto to_string(const configurable_t& configurable)
 {
     std::ostringstream stream;
     UTEST_REQUIRE_NOTHROW(configurable.write(stream));
     UTEST_REQUIRE(stream);
     return stream.str();
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_configurable)
 

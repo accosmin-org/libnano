@@ -12,6 +12,24 @@
 
 using namespace nano;
 
+namespace
+{
+template <typename tsolver>
+rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
+{
+    auto solver = std::make_unique<tsolver>();
+    solver->logger(logger);
+    if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
+    {
+        // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
+        solver->lsearchk("cgdescent");
+    }
+    solver->parameter("solver::epsilon")   = epsilon;
+    solver->parameter("solver::max_evals") = max_evals;
+    return solver;
+}
+} // namespace
+
 solver_t::solver_t(string_t id)
     : clonable_t(std::move(id))
 {
@@ -176,21 +194,6 @@ factory_t<solver_t>& solver_t::all()
     std::call_once(flag, op);
 
     return manager;
-}
-
-template <typename tsolver>
-static rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
-{
-    auto solver = std::make_unique<tsolver>();
-    solver->logger(logger);
-    if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
-    {
-        // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
-        solver->lsearchk("cgdescent");
-    }
-    solver->parameter("solver::epsilon")   = epsilon;
-    solver->parameter("solver::max_evals") = max_evals;
-    return solver;
 }
 
 rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals) const

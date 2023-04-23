@@ -3,7 +3,9 @@
 
 using namespace nano;
 
-static auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const scalar_t ro_max = 10.0)
+namespace
+{
+auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const scalar_t ro_max = 10.0)
 {
     const auto  f = state.fx();
     const auto& h = state.ceq();
@@ -14,12 +16,13 @@ static auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, 
     return std::clamp(ro, ro_min, ro_max);
 }
 
-static auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
+auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
 {
     const auto hinf = state.ceq().lpNorm<Eigen::Infinity>();
     const auto Vinf = state.cineq().array().max(-miu.array() / ro).matrix().lpNorm<Eigen::Infinity>();
     return std::max(hinf, Vinf);
 }
+} // namespace
 
 solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     : solver_t("augmented-lagrangian")

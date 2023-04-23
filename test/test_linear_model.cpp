@@ -7,7 +7,9 @@
 
 using namespace nano;
 
-static auto make_smooth_solver()
+namespace
+{
+auto make_smooth_solver()
 {
     auto solver                            = make_solver("lbfgs");
     solver->parameter("solver::max_evals") = 1000;
@@ -16,7 +18,7 @@ static auto make_smooth_solver()
     return solver;
 }
 
-static auto make_nonsmooth_solver()
+auto make_nonsmooth_solver()
 {
     auto solver                            = make_solver("osga");
     solver->parameter("solver::max_evals") = 1500;
@@ -24,7 +26,7 @@ static auto make_nonsmooth_solver()
     return solver;
 }
 
-static auto make_model()
+auto make_model()
 {
     auto model                       = linear_model_t{};
     model.parameter("linear::batch") = 10;
@@ -32,8 +34,8 @@ static auto make_model()
     return model;
 }
 
-static void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
-                          const scalar_t epsilon)
+void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
+                   const scalar_t epsilon)
 {
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(7);
@@ -42,8 +44,8 @@ static void check_outputs(const dataset_t& dataset, const indices_t& samples, co
                   { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
 }
 
-static void check_model(const linear_model_t& model, const dataset_t& dataset, const indices_t& samples,
-                        const scalar_t epsilon)
+void check_model(const linear_model_t& model, const dataset_t& dataset, const indices_t& samples,
+                 const scalar_t epsilon)
 {
     const auto outputs = model.predict(dataset, samples);
     check_outputs(dataset, samples, outputs, epsilon);
@@ -62,6 +64,7 @@ static void check_model(const linear_model_t& model, const dataset_t& dataset, c
         UTEST_CHECK_CLOSE(outputs, new_outputs, epsilon0<scalar_t>());
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_linear_model)
 

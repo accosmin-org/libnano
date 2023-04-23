@@ -3,12 +3,14 @@
 
 using namespace nano;
 
-static auto percentile(tensor1d_map_t values, const double percentage)
+namespace
+{
+auto percentile(tensor1d_map_t values, const double percentage)
 {
     return ::nano::percentile(begin(values), end(values), percentage);
 }
 
-static auto make_stats(const tensor1d_cmap_t& values)
+auto make_stats(const tensor1d_cmap_t& values)
 {
     assert(values.size() == 12);
 
@@ -18,7 +20,7 @@ static auto make_stats(const tensor1d_cmap_t& values)
     };
 }
 
-static void store_stats(const tensor1d_map_t& values, const tensor1d_map_t& stats)
+void store_stats(const tensor1d_map_t& values, const tensor1d_map_t& stats)
 {
     stats(0)  = values.mean();
     stats(1)  = values.stdev();
@@ -33,6 +35,7 @@ static void store_stats(const tensor1d_map_t& values, const tensor1d_map_t& stat
     stats(10) = ::percentile(values, 95.0);
     stats(11) = ::percentile(values, 99.0);
 }
+} // namespace
 
 fit_result_t::param_t::param_t(tensor1d_t params, const tensor_size_t folds)
     : m_params(std::move(params))

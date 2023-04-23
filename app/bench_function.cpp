@@ -9,7 +9,9 @@
 
 using namespace nano;
 
-static void eval_func(const function_t& function, table_t& table)
+namespace
+{
+void eval_func(const function_t& function, table_t& table)
 {
     const auto dims = function.size();
     const vector_t x = vector_t::Zero(dims);
@@ -48,7 +50,7 @@ static void eval_func(const function_t& function, table_t& table)
         << scat(std::setprecision(12), std::fixed, grad_accuracy / static_cast<scalar_t>(trials));
 }
 
-static int unsafe_main(int argc, const char* argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark optimization test functions");
@@ -97,6 +99,7 @@ static int unsafe_main(int argc, const char* argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

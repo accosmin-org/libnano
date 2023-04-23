@@ -4,8 +4,10 @@
 using namespace std;
 using namespace nano;
 
+namespace
+{
 template <typename tscalar>
-static auto make_input_data()
+auto make_input_data()
 {
     return make_tensor<tscalar>(make_dims(2, 4, 4), 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6, 4, 4, 4, 5, 0, 1, 1, 1, 0, 0, 1,
                                 1, 0, 0, 1, 1, 1, 0, 0, 0);
@@ -31,7 +33,7 @@ static auto make_input_data()
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define THETA1 atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75)
 
-static auto make_features(tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4)
+auto make_features(tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4)
 {
     return features_t{
         feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}),
@@ -77,8 +79,8 @@ private:
     size_t        m_target;
 };
 
-static auto make_datasource(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
-                            tensor_size_t cols = 4)
+auto make_datasource(tensor_size_t samples, size_t target, tensor_size_t channels = 2, tensor_size_t rows = 4,
+                     tensor_size_t cols = 4)
 {
     auto datasource = fixture_datasource_t{samples, target, channels, rows, cols};
     UTEST_CHECK_NOTHROW(datasource.load());
@@ -86,12 +88,13 @@ static auto make_datasource(tensor_size_t samples, size_t target, tensor_size_t 
     return datasource;
 }
 
-static auto make_dataset(const datasource_t& datasource)
+auto make_dataset(const datasource_t& datasource)
 {
     auto dataset = dataset_t{datasource};
     add_generator<elemwise_generator_t<elemwise_gradient_t>>(dataset);
     return dataset;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_generator_gradient)
 

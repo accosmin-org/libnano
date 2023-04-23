@@ -5,15 +5,18 @@
 
 using namespace nano;
 
-static auto isize(const flatten_iterator_t& iterator)
+namespace
+{
+auto isize(const flatten_iterator_t& iterator)
 {
     return iterator.dataset().columns();
 }
 
-static auto tsize(const flatten_iterator_t& iterator)
+auto tsize(const flatten_iterator_t& iterator)
 {
     return ::nano::size(iterator.dataset().target_dims());
 }
+} // namespace
 
 linear::function_t::function_t(const flatten_iterator_t& iterator, const loss_t& loss, scalar_t l1reg, scalar_t l2reg,
                                scalar_t vAreg)

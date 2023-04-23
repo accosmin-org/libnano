@@ -11,6 +11,8 @@
 
 using namespace nano;
 
+namespace
+{
 struct result_t
 {
     result_t() = default;
@@ -88,18 +90,18 @@ struct solver_stats_t
     tensor1d_t m_precisions; ///< relative precision to the best solver
 };
 
-static auto relative_precision(const scalar_t value, const scalar_t best_value, const scalar_t epsilon)
+auto relative_precision(const scalar_t value, const scalar_t best_value, const scalar_t epsilon)
 {
     assert(value >= best_value);
     return std::log10(std::max(value - best_value, epsilon));
 }
 
-static auto relative_precision(const result_t& result, const result_t& best_result, const scalar_t epsilon)
+auto relative_precision(const result_t& result, const result_t& best_result, const scalar_t epsilon)
 {
     return relative_precision(result.m_value, best_result.m_value, epsilon);
 }
 
-static auto make_solver_name(const rsolver_t& solver)
+auto make_solver_name(const rsolver_t& solver)
 {
     return solver->type() == solver_type::line_search
              ? scat(solver->type_id(), " [", solver->lsearch0().type_id(), ",", solver->lsearchk().type_id(), "]")
@@ -110,7 +112,7 @@ using points_t = std::vector<vector_t>;
 using results_t = std::vector<result_t>;
 using solvers_t = std::vector<rsolver_t>;
 
-static auto log_solver(const function_t& function, const rsolver_t& solver, const vector_t& x0)
+auto log_solver(const function_t& function, const rsolver_t& solver, const vector_t& x0)
 {
     std::cout << std::fixed << std::setprecision(10);
     std::cout << function.name() << " solver[" << solver->type_id() << "],lsearch0["
@@ -156,17 +158,17 @@ static auto log_solver(const function_t& function, const rsolver_t& solver, cons
     return state;
 }
 
-static auto& print_scalar(row_t& row, const scalar_t value)
+auto& print_scalar(row_t& row, const scalar_t value)
 {
     return std::isfinite(value) ? (row << value) : (row << "N/A");
 }
 
-static auto& print_integer(row_t& row, const scalar_t value)
+auto& print_integer(row_t& row, const scalar_t value)
 {
     return std::isfinite(value) ? (row << static_cast<size_t>(value)) : (row << "N/A");
 }
 
-static void print_table(const string_t& table_name, const solvers_t& solvers, const std::vector<solver_stats_t>& stats)
+void print_table(const string_t& table_name, const solvers_t& solvers, const std::vector<solver_stats_t>& stats)
 {
     // gather statistics per solver
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
@@ -203,8 +205,8 @@ static void print_table(const string_t& table_name, const solvers_t& solvers, co
     std::cout << table;
 }
 
-static auto minimize_all(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers,
-                         const points_t& x0s, const bool log_failures, const bool log_maxits)
+auto minimize_all(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const points_t& x0s,
+                  const bool log_failures, const bool log_maxits)
 {
     const auto minimize_one = [&](const size_t i)
     {
@@ -237,8 +239,8 @@ static auto minimize_all(parallel::pool_t& pool, const function_t& function, con
     return results;
 }
 
-static auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
-                      const bool log_failures, const bool log_maxits)
+auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
+               const bool log_failures, const bool log_maxits)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
@@ -288,7 +290,7 @@ static auto benchmark(parallel::pool_t& pool, const function_t& function, const 
     return stats;
 }
 
-static int unsafe_main(int argc, const char* argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     using namespace nano;
 
@@ -526,6 +528,7 @@ static int unsafe_main(int argc, const char* argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

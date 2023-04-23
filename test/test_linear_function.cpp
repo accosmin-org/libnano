@@ -7,18 +7,20 @@
 
 using namespace nano;
 
-static auto make_loss(scaling_type scaling)
+namespace
 {
-    return make_loss(scaling == scaling_type::mean ? "mae" : "mse");
+auto make_loss(const scaling_type scaling)
+{
+    return ::make_loss(scaling == scaling_type::mean ? "mae" : "mse");
 }
 
-static auto make_batch(scaling_type scaling)
+auto make_batch(const scaling_type scaling)
 {
     return (scaling == scaling_type::standard) ? 20 : 15;
 }
 
-static void check_vgrad(const linear::function_t& function, const flatten_iterator_t& iterator, const loss_t& loss,
-                        const int trials = 100)
+void check_vgrad(const linear::function_t& function, const flatten_iterator_t& iterator, const loss_t& loss,
+                 const int trials = 100)
 {
     const auto& dataset = iterator.dataset();
     const auto  samples = iterator.samples().size();
@@ -45,7 +47,7 @@ static void check_vgrad(const linear::function_t& function, const flatten_iterat
     }
 }
 
-static auto check_minimize(const function_t& function)
+auto check_minimize(const function_t& function)
 {
     const auto* const solver_id      = function.smooth() ? "lbfgs" : "ellipsoid";
     const auto        epsilon_linear = function.smooth() ? 1e-7 : (function.strong_convexity() > 0.0 ? 1e-4 : 1e-2);
@@ -58,6 +60,7 @@ static auto check_minimize(const function_t& function)
     const auto state  = check_minimize(*solver, function, x0, config);
     return std::make_pair(state, epsilon_linear);
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_linear_function)
 

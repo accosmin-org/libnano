@@ -3,7 +3,9 @@
 
 using namespace nano;
 
-static auto make_features()
+namespace
+{
+auto make_features()
 {
     return features_t{
         feature_t{"i8"}.scalar(feature_type::int8),
@@ -232,13 +234,14 @@ private:
     bool          m_do_load{true};
 };
 
-static auto make_dataset(tensor_size_t samples, const features_t& features, size_t target)
+auto make_dataset(tensor_size_t samples, const features_t& features, size_t target)
 {
     auto dataset = fixture_datasource_t{samples, features, target};
     UTEST_CHECK_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.samples(), samples);
     return dataset;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_datasource_memory)
 

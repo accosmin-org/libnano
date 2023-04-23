@@ -5,13 +5,16 @@
 
 using namespace nano;
 
-static auto make_wdtree(const int min_split, const int max_depth)
+namespace
+{
+auto make_wdtree(const int min_split, const int max_depth)
 {
     auto wlearner                                    = dtree_wlearner_t{};
     wlearner.parameter("wlearner::dtree::min_split") = min_split;
     wlearner.parameter("wlearner::dtree::max_depth") = max_depth;
     return wlearner;
 }
+} // namespace
 
 class wdtree_datasource_t : public wlearner_datasource_t
 {

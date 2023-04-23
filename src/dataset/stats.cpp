@@ -4,8 +4,10 @@
 
 using namespace nano;
 
+namespace
+{
 template <typename tvalues>
-static void nan2zero(tvalues& values)
+void nan2zero(tvalues& values)
 {
     // NB: replace missing scalar values (represented as NaN) with zeros,
     // to train and evaluate dense ML models (e.g. linear models).
@@ -20,7 +22,7 @@ static void nan2zero(tvalues& values)
 }
 
 template <typename toperator>
-static auto make_features(const dataset_t& dataset, const toperator& op)
+auto make_features(const dataset_t& dataset, const toperator& op)
 {
     tensor_size_t count = 0;
     for (tensor_size_t i = 0, size = dataset.features(); i < size; ++i)
@@ -43,7 +45,7 @@ static auto make_features(const dataset_t& dataset, const toperator& op)
     return features;
 } // LCOV_EXCL_LINE
 
-static auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling)
+auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling)
 {
     auto w = make_full_tensor<scalar_t>(make_dims(stats.m_min.size()), 1.0);
     auto b = make_full_tensor<scalar_t>(make_dims(stats.m_min.size()), 0.0);
@@ -75,7 +77,7 @@ static auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling
     return std::make_pair(w, b);
 }
 
-static void update(scalar_stats_t& stats, const tensor2d_cmap_t& values)
+void update(scalar_stats_t& stats, const tensor2d_cmap_t& values)
 {
     assert(values.size<1>() == stats.m_min.size());
 
@@ -96,7 +98,7 @@ static void update(scalar_stats_t& stats, const tensor2d_cmap_t& values)
     }
 }
 
-static void done(scalar_stats_t& stats, const tensor_mem_t<uint8_t, 1>& enable_scaling = {})
+void done(scalar_stats_t& stats, const tensor_mem_t<uint8_t, 1>& enable_scaling = {})
 {
     const auto epsilon = epsilon2<scalar_t>();
 
@@ -143,7 +145,7 @@ static void done(scalar_stats_t& stats, const tensor_mem_t<uint8_t, 1>& enable_s
 }
 
 template <typename tvalues>
-static auto alloc_xclass_stats(const tvalues& values)
+auto alloc_xclass_stats(const tvalues& values)
 {
     xclass_stats_t stats;
     stats.m_class_hashes  = ::nano::make_hashes(values);
@@ -154,7 +156,7 @@ static auto alloc_xclass_stats(const tvalues& values)
 } // LCOV_EXCL_LINE
 
 template <typename tvalues>
-static void update(xclass_stats_t& stats, const tensor_size_t sample, const tvalues& values)
+void update(xclass_stats_t& stats, const tensor_size_t sample, const tvalues& values)
 {
     const auto iclass = ::nano::find(stats.m_class_hashes, values);
     if (iclass >= 0)
@@ -164,7 +166,7 @@ static void update(xclass_stats_t& stats, const tensor_size_t sample, const tval
     stats.m_sample_classes(sample) = iclass;
 }
 
-static void done(xclass_stats_t& stats)
+void done(xclass_stats_t& stats)
 {
     const auto norm = 1.0 / (1.0 / stats.m_class_samples.array().cast<scalar_t>()).sum();
 
@@ -182,7 +184,7 @@ static void done(xclass_stats_t& stats)
     }
 }
 
-static auto make_xclass_stats(const sclass_cmap_t& values)
+auto make_xclass_stats(const sclass_cmap_t& values)
 {
     auto stats = ::alloc_xclass_stats(values);
     for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
@@ -193,7 +195,7 @@ static auto make_xclass_stats(const sclass_cmap_t& values)
     return stats;
 }
 
-static auto make_xclass_stats(const mclass_cmap_t& values)
+auto make_xclass_stats(const mclass_cmap_t& values)
 {
     auto stats = ::alloc_xclass_stats(values);
     for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
@@ -203,6 +205,7 @@ static auto make_xclass_stats(const mclass_cmap_t& values)
     ::done(stats);
     return stats;
 }
+} // namespace
 
 void nano::upscale(const scalar_stats_t& flatten_stats, scaling_type flatten_scaling,
                    const scalar_stats_t& targets_stats, scaling_type targets_scaling, tensor2d_map_t weights,

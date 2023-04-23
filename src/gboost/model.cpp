@@ -12,7 +12,9 @@
 using namespace nano;
 using namespace nano::gboost;
 
-static auto make_params(const configurable_t& configurable)
+namespace
+{
+auto make_params(const configurable_t& configurable)
 {
     const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
     const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
@@ -42,8 +44,8 @@ static auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-static auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization,
-                          const subsample_type subsample, const shrinkage_type shrinkage)
+auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization,
+                   const subsample_type subsample, const shrinkage_type shrinkage)
 {
     scalar_t vAreg           = 0.0;
     scalar_t subsample_ratio = 1.0;
@@ -69,7 +71,7 @@ static auto decode_params(const tensor1d_cmap_t& params, const regularization_ty
     return std::make_tuple(vAreg, subsample_ratio, shrinkage_ratio);
 }
 
-static auto selected(const tensor2d_t& values, const indices_t& samples)
+auto selected(const tensor2d_t& values, const indices_t& samples)
 {
     auto selected = tensor2d_t{2, samples.size()};
     values.tensor(0).indexed(samples, selected.tensor(0));
@@ -77,8 +79,8 @@ static auto selected(const tensor2d_t& values, const indices_t& samples)
     return selected;
 }
 
-static auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlearner_t& wlearner,
-                         const wscale_type wscale)
+auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlearner_t& wlearner,
+                  const wscale_type wscale)
 {
     if (wscale == wscale_type::tboost)
     {
@@ -95,7 +97,7 @@ static auto make_cluster(const dataset_t& dataset, const indices_t& samples, con
     }
 }
 
-static auto make_samples(indices_t samples, const scalar_t subsample_ratio, const bootstrap_type bootstrap, rng_t& rng)
+auto make_samples(indices_t samples, const scalar_t subsample_ratio, const bootstrap_type bootstrap, rng_t& rng)
 {
     if (subsample_ratio < 1.0)
     {
@@ -111,9 +113,9 @@ static auto make_samples(indices_t samples, const scalar_t subsample_ratio, cons
     return samples;
 }
 
-static auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& train_samples,
-                const indices_t& valid_samples, const loss_t& loss, const solver_t& solver,
-                const rwlearners_t& prototypes, const tensor1d_t& params)
+auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& train_samples,
+         const indices_t& valid_samples, const loss_t& loss, const solver_t& solver, const rwlearners_t& prototypes,
+         const tensor1d_t& params)
 {
     const auto seed           = configurable.parameter("gboost::seed").value<uint64_t>();
     const auto batch          = configurable.parameter("gboost::batch").value<tensor_size_t>();
@@ -232,6 +234,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
     return std::make_tuple(std::move(result), selected(optimum_values, train_samples),
                            selected(optimum_values, valid_samples));
 }
+} // namespace
 
 gboost_model_t::gboost_model_t()
     : model_t("gboost")

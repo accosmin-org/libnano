@@ -9,7 +9,9 @@
 using namespace nano;
 using namespace nano::linear;
 
-static auto make_params(const configurable_t& configurable)
+namespace
+{
+auto make_params(const configurable_t& configurable)
 {
     const auto regularization = configurable.parameter("linear::regularization").value<regularization_type>();
 
@@ -50,7 +52,7 @@ static auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-static auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization)
+auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization)
 {
     scalar_t l1reg = 0.0;
     scalar_t l2reg = 0.0;
@@ -67,7 +69,7 @@ static auto decode_params(const tensor1d_cmap_t& params, const regularization_ty
     return std::make_tuple(l1reg, l2reg, vAreg);
 }
 
-static auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
+auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
 {
     vector_t x0 = vector_t::Zero(function.size());
     if (extra.has_value())
@@ -81,9 +83,9 @@ static auto make_x0(const ::nano::linear::function_t& function, const std::any& 
     return x0;
 } // LCOV_EXCL_LINE
 
-static auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples,
-                const loss_t& loss, const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg,
-                const scalar_t vAreg, const std::any& extra = std::any{})
+auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg,
+         const std::any& extra = std::any{})
 {
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(configurable.parameter("linear::batch").value<tensor_size_t>());
@@ -101,6 +103,7 @@ static auto fit(const configurable_t& configurable, const dataset_t& dataset, co
 
     return linear::fit_result_t{std::move(bias), std::move(weights), state};
 }
+} // namespace
 
 linear_model_t::linear_model_t()
     : model_t("linear")

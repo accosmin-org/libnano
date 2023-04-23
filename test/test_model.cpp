@@ -10,11 +10,13 @@
 
 using namespace nano;
 
-static void check_stats(const fit_result_t::stats_t& stats, const scalar_t expected_mean, const scalar_t expected_stdev,
-                        const scalar_t expected_count, const scalar_t expected_per01, const scalar_t expected_per05,
-                        const scalar_t expected_per10, const scalar_t expected_per20, const scalar_t expected_per50,
-                        const scalar_t expected_per80, const scalar_t expected_per90, const scalar_t expected_per95,
-                        const scalar_t expected_per99, const scalar_t epsilon = 1e-12)
+namespace
+{
+void check_stats(const fit_result_t::stats_t& stats, const scalar_t expected_mean, const scalar_t expected_stdev,
+                 const scalar_t expected_count, const scalar_t expected_per01, const scalar_t expected_per05,
+                 const scalar_t expected_per10, const scalar_t expected_per20, const scalar_t expected_per50,
+                 const scalar_t expected_per80, const scalar_t expected_per90, const scalar_t expected_per95,
+                 const scalar_t expected_per99, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_CLOSE(stats.m_mean, expected_mean, epsilon);
     UTEST_CHECK_CLOSE(stats.m_stdev, expected_stdev, epsilon);
@@ -30,12 +32,12 @@ static void check_stats(const fit_result_t::stats_t& stats, const scalar_t expec
     UTEST_CHECK_CLOSE(stats.m_per99, expected_per99, epsilon);
 }
 
-static auto make_predictions(const dataset_t& dataset, const indices_t& samples)
+auto make_predictions(const dataset_t& dataset, const indices_t& samples)
 {
     return make_full_tensor<scalar_t>(cat_dims(samples.size(), dataset.target_dims()), samples.mean());
 }
 
-static auto make_features()
+auto make_features()
 {
     return features_t{
         feature_t{"mclass"}.mclass(strings_t{"m00", "m01", "m02"}),
@@ -45,7 +47,7 @@ static auto make_features()
     };
 }
 
-static auto make_datasource(const tensor_size_t samples, const size_t target)
+auto make_datasource(const tensor_size_t samples, const size_t target)
 {
     const auto features = make_features();
     const auto hits     = make_random_hits(samples, static_cast<tensor_size_t>(features.size()), target);
@@ -79,6 +81,7 @@ public:
         return fit_result_t{};
     }
 };
+} // namespace
 
 UTEST_BEGIN_MODULE(test_model)
 

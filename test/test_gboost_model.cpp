@@ -4,6 +4,8 @@
 
 using namespace nano;
 
+namespace
+{
 class fixture_bias_datasource_t final : public wlearner_datasource_t
 {
 public:
@@ -184,7 +186,7 @@ private:
 };
 
 template <typename... targs>
-static auto make_gbooster_to_fit(const targs... args)
+auto make_gbooster_to_fit(const targs... args)
 {
     auto model = make_gbooster();
     model.add("affine");
@@ -192,6 +194,7 @@ static auto make_gbooster_to_fit(const targs... args)
     config(model, args...);
     return model;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_gboost_model)
 

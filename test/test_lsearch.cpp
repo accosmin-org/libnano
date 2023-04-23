@@ -9,12 +9,14 @@
 
 using namespace nano;
 
-static auto make_functions()
+namespace
+{
+auto make_functions()
 {
     return function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
 }
 
-static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
+void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
 {
     const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
 
@@ -31,8 +33,8 @@ static void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
         });
 }
 
-static void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,
-                 const std::tuple<scalar_t, scalar_t>& c12)
+void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,
+          const std::tuple<scalar_t, scalar_t>& c12)
 {
     UTEST_REQUIRE_NOTHROW(lsearch->parameter("lsearchk::tolerance") = c12);
 
@@ -90,7 +92,7 @@ static void test(const rlsearchk_t& lsearch, const function_t& function, const v
     }
 }
 
-static void test(const rlsearchk_t& lsearch, const function_t& function)
+void test(const rlsearchk_t& lsearch, const function_t& function)
 {
     for (const auto& x0 : make_random_x0s(function))
     {
@@ -107,6 +109,7 @@ static void test(const rlsearchk_t& lsearch, const function_t& function)
         }
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_lsearch)
 

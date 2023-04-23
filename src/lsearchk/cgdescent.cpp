@@ -3,18 +3,6 @@
 
 using namespace nano;
 
-static auto initial_params(const configurable_t& configurable)
-{
-    const auto [c1, c2]       = configurable.parameter("lsearchk::tolerance").value_pair<scalar_t>();
-    const auto max_iterations = configurable.parameter("lsearchk::max_iterations").value<int>();
-    const auto theta          = configurable.parameter("lsearchk::cgdescent::theta").value<scalar_t>();
-    const auto epsilon        = configurable.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
-    const auto ro             = configurable.parameter("lsearchk::cgdescent::ro").value<scalar_t>();
-    const auto gamma          = configurable.parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
-
-    return std::make_tuple(c1, c2, max_iterations, theta, epsilon, ro, gamma);
-}
-
 lsearchk_cgdescent_t::interval_t::interval_t(const solver_state_t& state0_, const vector_t& descent_,
                                              const scalar_t step_size_, solver_state_t& state)
     : state0(state0_)
@@ -154,8 +142,13 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
 {
     assert(state0.has_descent(descent));
 
-    const auto [c1, c2, max_iterations, theta, epsilon, ro, gamma] = initial_params(*this);
-    const auto epsilonk                                            = epsilon * std::fabs(state0.fx());
+    const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
+    const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
+    const auto theta          = parameter("lsearchk::cgdescent::theta").value<scalar_t>();
+    const auto epsilon        = parameter("lsearchk::cgdescent::epsilon").value<scalar_t>();
+    const auto ro             = parameter("lsearchk::cgdescent::ro").value<scalar_t>();
+    const auto gamma          = parameter("lsearchk::cgdescent::gamma").value<scalar_t>();
+    const auto epsilonk       = epsilon * std::fabs(state0.fx());
 
     // current bracketing interval
     auto interval = interval_t{state0, descent, step_size, state};

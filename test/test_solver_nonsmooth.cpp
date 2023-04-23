@@ -5,10 +5,13 @@
 
 using namespace nano;
 
-static auto make_nonsmooth_solver_ids()
+namespace
+{
+auto make_nonsmooth_solver_ids()
 {
     return strings_t{"ellipsoid", "osga", "sgm", "cocob"}; // FIXME: have all methods converge!!!, "sda", "wda"};
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_solver_nonsmooth)
 

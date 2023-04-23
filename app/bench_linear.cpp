@@ -8,8 +8,10 @@
 
 using namespace nano;
 
+namespace
+{
 /*
-static auto get_imclass(const string_t& id)
+auto get_imclass(const string_t& id)
 {
     const auto start = nano::timer_t{};
 
@@ -21,14 +23,14 @@ static auto get_imclass(const string_t& id)
     return dataset;
 }
 
-static auto get_loss(const string_t& id)
+auto get_loss(const string_t& id)
 {
     auto loss = loss_t::all().get(id);
     critical(!loss, scat("invalid loss '", id, "'"));
     return loss;
 }
 
-static auto get_solver(const string_t& id, const scalar_t epsilon, const int max_iterations)
+auto get_solver(const string_t& id, const scalar_t epsilon, const int max_iterations)
 {
     auto solver = solver_t::all().get(id);
     critical(!solver, scat("invalid solver '", id, "'"));
@@ -42,7 +44,7 @@ static auto get_solver(const string_t& id, const scalar_t epsilon, const int max
     return solver;
 }
 
-static auto tune_batch(const dataset_t& dataset)
+auto tune_batch(const dataset_t& dataset)
 {
     const auto min_batch = 8;
     const auto max_batch = 1024;
@@ -71,7 +73,8 @@ static auto tune_batch(const dataset_t& dataset)
     const auto samples = dataset.train_samples();
     auto function = linear_function_t{*loss, dataset, samples};
 
-    const auto op_bench = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg, const auto& op)
+    const auto op_bench = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg, const auto&
+op)
     {
         for (tensor_size_t batch = min_batch, ibatch = 0; batch <= max_batch; batch *= 2, ++ ibatch)
         {
@@ -127,11 +130,12 @@ static auto tune_batch(const dataset_t& dataset)
     std::cout << table;
 
     const auto minimum = std::min_element(batch_millis.begin(), batch_millis.end());
-    return min_batch * static_cast<tensor_size_t>(1U << static_cast<uint32_t>(std::distance(batch_millis.begin(), minimum)));
+    return min_batch * static_cast<tensor_size_t>(1U << static_cast<uint32_t>(std::distance(batch_millis.begin(),
+minimum)));
 }
 */
 
-static int unsafe_main(int argc, const char* argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("report statistics on training linear models on image classification datasets");
@@ -237,6 +241,7 @@ static int unsafe_main(int argc, const char* argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

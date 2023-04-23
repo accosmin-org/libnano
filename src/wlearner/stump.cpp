@@ -10,14 +10,14 @@
 using namespace nano;
 using namespace nano::wlearner;
 
+namespace
+{
 template <typename tarray, typename toutputs>
-static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
+auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
 {
     return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
 }
 
-namespace
-{
 class cache_t
 {
 public:

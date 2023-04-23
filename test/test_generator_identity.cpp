@@ -4,7 +4,9 @@
 
 using namespace nano;
 
-static auto make_dataset(const datasource_t& datasource)
+namespace
+{
+auto make_dataset(const datasource_t& datasource)
 {
     auto dataset = dataset_t{datasource};
     add_generator<elemwise_generator_t<sclass_identity_t>>(dataset);
@@ -14,7 +16,7 @@ static auto make_dataset(const datasource_t& datasource)
     return dataset;
 }
 
-static auto keep(const tensor2d_t& flatten, const indices_t& columns_to_keep)
+auto keep(const tensor2d_t& flatten, const indices_t& columns_to_keep)
 {
     const auto [samples, columns] = flatten.dims();
 
@@ -27,7 +29,7 @@ static auto keep(const tensor2d_t& flatten, const indices_t& columns_to_keep)
     return tensor;
 }
 
-static auto remove(const tensor2d_t& flatten, const indices_t& columns_to_remove)
+auto remove(const tensor2d_t& flatten, const indices_t& columns_to_remove)
 {
     const auto [samples, columns] = flatten.dims();
 
@@ -45,7 +47,7 @@ static auto remove(const tensor2d_t& flatten, const indices_t& columns_to_remove
     return tensor;
 }
 
-static auto drop(const tensor2d_t& flatten, const indices_t& columns)
+auto drop(const tensor2d_t& flatten, const indices_t& columns)
 {
     tensor2d_t tensor = flatten;
     for (const auto column : columns)
@@ -55,111 +57,111 @@ static auto drop(const tensor2d_t& flatten, const indices_t& columns)
     return tensor;
 }
 
-static auto expected_sclass0()
+auto expected_sclass0()
 {
     return make_features()[2];
 }
 
-static auto expected_sclass1()
+auto expected_sclass1()
 {
     return make_features()[3];
 }
 
-static auto expected_sclass2()
+auto expected_sclass2()
 {
     return make_features()[4];
 }
 
-static auto expected_mclass0()
+auto expected_mclass0()
 {
     return make_features()[0];
 }
 
-static auto expected_mclass1()
+auto expected_mclass1()
 {
     return make_features()[1];
 }
 
-static auto expected_scalar0()
+auto expected_scalar0()
 {
     return make_features()[5];
 }
 
-static auto expected_scalar1()
+auto expected_scalar1()
 {
     return make_features()[6];
 }
 
-static auto expected_scalar2()
+auto expected_scalar2()
 {
     return make_features()[7];
 }
 
-static auto expected_struct0()
+auto expected_struct0()
 {
     return make_features()[8];
 }
 
-static auto expected_struct1()
+auto expected_struct1()
 {
     return make_features()[9];
 }
 
-static auto expected_struct2()
+auto expected_struct2()
 {
     return make_features()[10];
 }
 
-static auto expected_select_sclass0()
+auto expected_select_sclass0()
 {
     return make_tensor<int32_t>(make_dims(10), +2, -1, +1, -1, +0, -1, +2, -1, +1, -1);
 }
 
-static auto expected_select_sclass1()
+auto expected_select_sclass1()
 {
     return make_tensor<int32_t>(make_dims(10), +1, +0, +1, +0, +1, +0, +1, +0, +1, +0);
 }
 
-static auto expected_select_sclass2()
+auto expected_select_sclass2()
 {
     return make_tensor<int32_t>(make_dims(10), +0, -1, +0, -1, +0, -1, +0, -1, +0, -1);
 }
 
-static auto expected_select_mclass0()
+auto expected_select_mclass0()
 {
     return make_tensor<int8_t>(make_dims(10, 3), +0, +1, +1, +1, +0, +0, +0, +1, +0, +1, +0, +0, +0, +1, +0, +1, +0, +0,
                                +0, +1, +1, +1, +0, +0, +0, +1, +0, +1, +0, +0);
 }
 
-static auto expected_select_mclass1()
+auto expected_select_mclass1()
 {
     return make_tensor<int8_t>(make_dims(10, 4), +0, +1, +1, +0, -1, -1, -1, -1, +0, +1, +0, +0, -1, -1, -1, -1, +0, +1,
                                +0, +0, -1, -1, -1, -1, +0, +1, +1, +0, -1, -1, -1, -1, +0, +1, +0, +0, -1, -1, -1, -1);
 }
 
-static auto expected_select_scalar0()
+auto expected_select_scalar0()
 {
     return make_tensor<scalar_t>(make_dims(10), -1, +0, +1, +2, +3, +4, +5, +6, +7, +8);
 }
 
-static auto expected_select_scalar1()
+auto expected_select_scalar1()
 {
     return make_tensor<scalar_t>(make_dims(10), -2, Na, +0, Na, +2, Na, +4, Na, +6, Na);
 }
 
-static auto expected_select_scalar2()
+auto expected_select_scalar2()
 {
     return make_tensor<scalar_t>(make_dims(10), -3, Na, Na, +0, Na, Na, +3, Na, Na, +6);
 }
 
-static auto expected_select_struct0()
+auto expected_select_struct0()
 {
     return make_tensor<scalar_t>(make_dims(10, 1, 2, 2), +1, +0, +0, +0, +2, +1, +1, +1, +3, +2, +2, +2, +4, +3, +3, +3,
                                  +5, +4, +4, +4, +6, +5, +5, +5, +7, +6, +6, +6, +8, +7, +7, +7, +9, +8, +8, +8, +10,
                                  +9, +9, +9);
 }
 
-static auto expected_select_struct1()
+auto expected_select_struct1()
 {
     return make_tensor<scalar_t>(make_dims(10, 2, 1, 3), +1, +0, +0, +0, +0, +0, Na, Na, Na, Na, Na, Na, +3, +2, +2, +2,
                                  +2, +2, Na, Na, Na, Na, Na, Na, +5, +4, +4, +4, +4, +4, Na, Na, Na, Na, Na, Na, +7, +6,
@@ -167,13 +169,13 @@ static auto expected_select_struct1()
                                  Na);
 }
 
-static auto expected_select_struct2()
+auto expected_select_struct2()
 {
     return make_tensor<scalar_t>(make_dims(10, 3, 1, 1), +1, +0, +0, Na, Na, Na, Na, Na, Na, +4, +3, +3, Na, Na, Na, Na,
                                  Na, Na, +7, +6, +6, Na, Na, Na, Na, Na, Na, +10, +9, +9);
 }
 
-static auto expected_flatten()
+auto expected_flatten()
 {
     return make_tensor<scalar_t>(
         make_dims(10, 27), -1, -1, -1, +1, -1, +1, +1, -1, +1, +1, -1, -1, -2, -3, +1, +0, +0, +0, +1, +0, +0, +0, +0,
@@ -187,6 +189,7 @@ static auto expected_flatten()
         +1, -1, +1, -1, -1, +1, -1, -1, +7, +6, Na, +9, +8, +8, +8, +9, +8, +8, +8, +8, +8, Na, Na, Na, Na, Na, +1, Na,
         +1, -1, -1, Na, Na, Na, Na, +8, Na, +6, 10, +9, +9, +9, Na, Na, Na, Na, Na, Na, 10, +9, +9);
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_generator_identity)
 

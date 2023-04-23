@@ -5,13 +5,16 @@
 using namespace nano;
 using namespace nano::gboost;
 
-static void clear(accumulators_t& accumulators)
+namespace
+{
+void clear(accumulators_t& accumulators)
 {
     for (auto& accumulator : accumulators)
     {
         accumulator.clear();
     }
 }
+} // namespace
 
 scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg,
                                    const cluster_t& cluster, const tensor4d_t& soutputs, const tensor4d_t& woutputs)

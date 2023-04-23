@@ -6,7 +6,9 @@
 
 using namespace nano;
 
-static void check_stream(const parameter_t& param)
+namespace
+{
+void check_stream(const parameter_t& param)
 {
     {
         std::ofstream stream;
@@ -47,7 +49,7 @@ static void check_stream(const parameter_t& param)
 }
 
 template <bool valid, typename tvalue>
-static void check_value(parameter_t param, tvalue value)
+void check_value(parameter_t param, tvalue value)
 {
     UTEST_CHECK_THROW(param = "", std::invalid_argument);
     UTEST_CHECK_THROW(param = "what", std::invalid_argument);
@@ -75,7 +77,7 @@ static void check_value(parameter_t param, tvalue value)
 }
 
 template <bool valid, typename tvalue>
-static void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
+void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
 {
     const auto i32pair = std::make_tuple(static_cast<int32_t>(value1), static_cast<int32_t>(value2));
     const auto i64pair = std::make_tuple(static_cast<int64_t>(value1), static_cast<int64_t>(value2));
@@ -110,6 +112,7 @@ static void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
         UTEST_CHECK_THROW(param = scat(value1, ",", value2), std::runtime_error);
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_parameter)
 

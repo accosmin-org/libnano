@@ -4,7 +4,9 @@
 
 using namespace nano;
 
-static auto make_features()
+namespace
+{
+auto make_features()
 {
     return features_t{
         feature_t{"sclass0"}.sclass(strings_t{"s10", "s11"}),
@@ -15,35 +17,35 @@ static auto make_features()
 }
 
 template <typename... tvalues>
-static auto make_scalars(const tvalues... values)
+auto make_scalars(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<scalar_t>(make_dims(samples), values...);
 }
 
 template <typename... tvalues>
-static auto make_sclass_data(const tvalues... values)
+auto make_sclass_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<int32_t>(make_dims(samples), values...);
 }
 
 template <typename... tvalues>
-static auto make_mclass_data(const tvalues... values)
+auto make_mclass_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values)) / 3;
     return make_tensor<int8_t>(make_dims(samples, 3), values...);
 }
 
 template <typename... tvalues>
-static auto make_scalar_data(const tvalues... values)
+auto make_scalar_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<scalar_t>(make_dims(samples), values...);
 }
 
 template <typename... tvalues>
-static auto make_struct_data(const tvalues... values)
+auto make_struct_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values)) / 4;
     return make_tensor<scalar_t>(make_dims(samples, 1, 2, 2), values...);
@@ -123,9 +125,9 @@ private:
     size_t       m_target{0U};
 };
 
-static void check_xclass_stats(const xclass_stats_t& stats, const hashes_t& expected_class_hashes,
-                               const indices_t& expected_class_samples, const indices_t& expected_sample_classes,
-                               const tensor1d_t& expected_sample_weights, const scalar_t epsilon = 1e-12)
+void check_xclass_stats(const xclass_stats_t& stats, const hashes_t& expected_class_hashes,
+                        const indices_t& expected_class_samples, const indices_t& expected_sample_classes,
+                        const tensor1d_t& expected_sample_weights, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_EQUAL(stats.m_class_hashes, expected_class_hashes);
     UTEST_CHECK_EQUAL(stats.m_class_samples, expected_class_samples);
@@ -133,12 +135,11 @@ static void check_xclass_stats(const xclass_stats_t& stats, const hashes_t& expe
     UTEST_CHECK_CLOSE(stats.m_sample_weights, expected_sample_weights, epsilon);
 }
 
-static void check_scalar_stats(const scalar_stats_t& stats, const indices_t& expected_samples,
-                               const tensor1d_t& expected_min, const tensor1d_t& expected_max,
-                               const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev,
-                               const tensor1d_t& expected_div_range, const tensor1d_t& expected_mul_range,
-                               const tensor1d_t& expected_div_stdev, const tensor1d_t& expected_mul_stdev,
-                               const scalar_t epsilon = 1e-12)
+void check_scalar_stats(const scalar_stats_t& stats, const indices_t& expected_samples, const tensor1d_t& expected_min,
+                        const tensor1d_t& expected_max, const tensor1d_t& expected_mean,
+                        const tensor1d_t& expected_stdev, const tensor1d_t& expected_div_range,
+                        const tensor1d_t& expected_mul_range, const tensor1d_t& expected_div_stdev,
+                        const tensor1d_t& expected_mul_stdev, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_EQUAL(stats.m_samples, expected_samples);
     UTEST_CHECK_CLOSE(stats.m_min, expected_min, epsilon);
@@ -151,7 +152,7 @@ static void check_scalar_stats(const scalar_stats_t& stats, const indices_t& exp
     UTEST_CHECK_CLOSE(stats.m_mul_stdev, expected_mul_stdev, epsilon);
 }
 
-static auto make_stats_datasource(const size_t target)
+auto make_stats_datasource(const size_t target)
 {
     auto sclass_data = make_sclass_data(0, 1, -1, 0, 0, 1);
     auto mclass_data = make_mclass_data(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1);
@@ -177,19 +178,20 @@ static auto make_stats_datasource(const size_t target)
     return datasource;
 }
 
-static auto make_flatten(const dataset_t& dataset, const indices_t& samples)
+auto make_flatten(const dataset_t& dataset, const indices_t& samples)
 {
     tensor2d_t buffer;
     dataset.flatten(samples, buffer);
     return buffer;
 }
 
-static auto make_targets(const dataset_t& dataset, const indices_t& samples)
+auto make_targets(const dataset_t& dataset, const indices_t& samples)
 {
     tensor4d_t buffer;
     dataset.targets(samples, buffer);
     return buffer;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_dataset_stats)
 

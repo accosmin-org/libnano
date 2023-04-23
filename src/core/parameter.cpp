@@ -7,18 +7,20 @@
 
 using namespace nano;
 
-static auto name(const LEorLT& lelt)
+namespace
+{
+auto name(const LEorLT& lelt)
 {
     return std::holds_alternative<LE_t>(lelt) ? "<=" : "<";
 }
 
 template <typename tscalar>
-static auto check(const LEorLT& lelt, tscalar value1, tscalar value2)
+auto check(const LEorLT& lelt, tscalar value1, tscalar value2)
 {
     return std::holds_alternative<LE_t>(lelt) ? (value1 <= value2) : (value1 < value2);
 }
 
-static auto split_pair(const string_t& value)
+auto split_pair(const string_t& value)
 {
     string_t value1;
     string_t value2;
@@ -29,7 +31,7 @@ static auto split_pair(const string_t& value)
     return std::make_tuple(value1, value2);
 }
 
-static auto& update(const string_t& name, parameter_t::enum_t& param, string_t&& value)
+auto& update(const string_t& name, parameter_t::enum_t& param, string_t&& value)
 {
     critical(std::find(param.m_domain.begin(), param.m_domain.end(), value) == param.m_domain.end(), "parameter (",
              name, "): out of domain enumeration value, !('", value, "' in [", scat(param.m_domain), "])");
@@ -39,7 +41,7 @@ static auto& update(const string_t& name, parameter_t::enum_t& param, string_t&&
 }
 
 template <typename tscalar, typename tvalue>
-static auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, tvalue value_)
+auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, tvalue value_)
 {
     const auto value = static_cast<tscalar>(value_);
 
@@ -53,7 +55,7 @@ static auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, 
 }
 
 template <typename tscalar, typename tvalue1, typename tvalue2>
-static auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& param, tvalue1 value1_, tvalue2 value2_)
+auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& param, tvalue1 value1_, tvalue2 value2_)
 {
     const auto value1 = static_cast<tscalar>(value1_);
     const auto value2 = static_cast<tscalar>(value2_);
@@ -69,7 +71,7 @@ static auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& pa
 }
 
 template <typename tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
-static void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
+void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
 {
     std::visit(overloaded{[&](parameter_t::irange_t& param) { ::update(name, param, value); },
                           [&](parameter_t::frange_t& param) { ::update(name, param, value); },
@@ -78,7 +80,7 @@ static void update(const string_t& name, parameter_t::storage_t& storage, tvalue
 }
 
 template <typename tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
-static void update(const string_t& name, parameter_t::storage_t& storage, std::tuple<tvalue, tvalue> value)
+void update(const string_t& name, parameter_t::storage_t& storage, std::tuple<tvalue, tvalue> value)
 {
     const auto value1 = std::get<0>(value);
     const auto value2 = std::get<1>(value);
@@ -90,18 +92,18 @@ static void update(const string_t& name, parameter_t::storage_t& storage, std::t
                storage);
 }
 
-static auto make_comp(uint32_t flag)
+auto make_comp(uint32_t flag)
 {
     return (flag != 0U) ? LEorLT{LE} : LEorLT{LT};
 }
 
-static auto make_flag(LEorLT comp)
+auto make_flag(LEorLT comp)
 {
     return std::get_if<LE_t>(&comp) != nullptr ? 1U : 0U;
 }
 
 template <typename tscalar>
-static auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
+auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
 {
     tscalar  value = 0;
     tscalar  min   = 0;
@@ -120,7 +122,7 @@ static auto read(const string_t& name, std::istream& stream, parameter_t::range_
 }
 
 template <typename tscalar>
-static auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
+auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
 {
     tscalar  value1  = 0;
     tscalar  value2  = 0;
@@ -144,7 +146,7 @@ static auto read(const string_t& name, std::istream& stream, parameter_t::pair_r
 }
 
 template <typename tscalar>
-static void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
+void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
 {
     critical(!::nano::write(stream, type) || !::nano::write(stream, name) ||
                  !::nano::write(stream, param.m_value) ||              // LCOV_EXCL_LINE
@@ -156,8 +158,7 @@ static void write(const string_t& name, std::ostream& stream, int32_t type, cons
 }
 
 template <typename tscalar>
-static void write(const string_t& name, std::ostream& stream, int32_t type,
-                  const parameter_t::pair_range_t<tscalar>& param)
+void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::pair_range_t<tscalar>& param)
 {
     critical(!::nano::write(stream, type) || !::nano::write(stream, name) ||
                  !::nano::write(stream, param.m_value1) ||             // LCOV_EXCL_LINE
@@ -170,13 +171,13 @@ static void write(const string_t& name, std::ostream& stream, int32_t type,
              "parameter (", name, "): failed to write to stream!");
 }
 
-static bool operator==(const parameter_t::enum_t& lhs, const parameter_t::enum_t& rhs)
+bool operator==(const parameter_t::enum_t& lhs, const parameter_t::enum_t& rhs)
 {
     return lhs.m_value == rhs.m_value && lhs.m_domain == rhs.m_domain;
 }
 
 template <typename tscalar>
-static bool operator==(const parameter_t::range_t<tscalar>& lhs, const parameter_t::range_t<tscalar>& rhs)
+bool operator==(const parameter_t::range_t<tscalar>& lhs, const parameter_t::range_t<tscalar>& rhs)
 {
     return lhs.m_value == rhs.m_value && lhs.m_min == rhs.m_min &&
            make_flag(lhs.m_mincomp) == make_flag(rhs.m_mincomp) && lhs.m_max == rhs.m_max &&
@@ -184,7 +185,7 @@ static bool operator==(const parameter_t::range_t<tscalar>& lhs, const parameter
 }
 
 template <typename tscalar>
-static bool operator==(const parameter_t::pair_range_t<tscalar>& lhs, const parameter_t::pair_range_t<tscalar>& rhs)
+bool operator==(const parameter_t::pair_range_t<tscalar>& lhs, const parameter_t::pair_range_t<tscalar>& rhs)
 {
     return lhs.m_value1 == rhs.m_value1 && lhs.m_value2 == rhs.m_value2 &&
            make_flag(lhs.m_valcomp) == make_flag(rhs.m_valcomp) && lhs.m_min == rhs.m_min &&
@@ -193,48 +194,49 @@ static bool operator==(const parameter_t::pair_range_t<tscalar>& lhs, const para
 }
 
 template <typename tparam>
-static bool operator==(const tparam& lparam, const parameter_t::storage_t& rstorage)
+bool operator==(const tparam& lparam, const parameter_t::storage_t& rstorage)
 {
     const auto* rparam = std::get_if<tparam>(&rstorage);
     return rparam != nullptr && lparam == *rparam;
 }
 
-static std::ostream& value(std::ostream& stream, const parameter_t::enum_t& param)
+std::ostream& value(std::ostream& stream, const parameter_t::enum_t& param)
 {
     return stream << param.m_value;
 }
 
-static std::ostream& domain(std::ostream& stream, const parameter_t::enum_t& param)
+std::ostream& domain(std::ostream& stream, const parameter_t::enum_t& param)
 {
     return stream << scat(param.m_domain);
 }
 
 template <typename tscalar>
-static std::ostream& value(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
+std::ostream& value(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
 {
     return stream << param.m_value;
 }
 
 template <typename tscalar>
-static std::ostream& domain(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
+std::ostream& domain(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
 {
     return stream << param.m_min << " " << ::name(param.m_mincomp) << " " << param.m_value << " "
                   << ::name(param.m_maxcomp) << " " << param.m_max;
 }
 
 template <typename tscalar>
-static std::ostream& value(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
+std::ostream& value(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
 {
     return stream << "(" << param.m_value1 << "," << param.m_value2 << ")";
 }
 
 template <typename tscalar>
-static std::ostream& domain(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
+std::ostream& domain(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
 {
     return stream << param.m_min << " " << ::name(param.m_mincomp) << " " << param.m_value1 << " "
                   << ::name(param.m_valcomp) << " " << param.m_value2 << " " << ::name(param.m_maxcomp) << " "
                   << param.m_max;
 }
+} // namespace
 
 parameter_t::parameter_t() = default;
 

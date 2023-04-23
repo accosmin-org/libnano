@@ -2,48 +2,50 @@
 
 using namespace nano;
 
-static void handle_sclass(const feature_t& feature)
+namespace
+{
+void handle_sclass(const feature_t& feature)
 {
     critical(!feature.is_sclass(), "dataset: unhandled single-label target <", feature, ">!");
 }
 
-static void handle_mclass(const feature_t& feature)
+void handle_mclass(const feature_t& feature)
 {
     critical(!feature.is_mclass(), "dataset: unhandled multi-label target <", feature, ">!");
 }
 
-static void handle_scalar(const feature_t& feature)
+void handle_scalar(const feature_t& feature)
 {
     critical(!feature.is_scalar(), "dataset: unhandled scalar target <", feature, ">!");
 }
 
-static void handle_struct(const feature_t& feature)
+void handle_struct(const feature_t& feature)
 {
     critical(!feature.is_struct(), "dataset: unhandled structured target <", feature, ">!");
 }
 
-static void handle_sclass(const tensor_size_t ifeature, const feature_t& feature)
+void handle_sclass(const tensor_size_t ifeature, const feature_t& feature)
 {
     critical(!feature.is_sclass(), "dataset: unhandled single-label feature <", ifeature, ":", feature, ">!");
 }
 
-static void handle_mclass(const tensor_size_t ifeature, const feature_t& feature)
+void handle_mclass(const tensor_size_t ifeature, const feature_t& feature)
 {
     critical(!feature.is_mclass(), "dataset: unhandled multi-label feature <", ifeature, ":", feature, ">!");
 }
 
-static void handle_scalar(const tensor_size_t ifeature, const feature_t& feature)
+void handle_scalar(const tensor_size_t ifeature, const feature_t& feature)
 {
     critical(!feature.is_scalar(), "dataset: unhandled scalar feature <", ifeature, ":", feature, ">!");
 }
 
-static void handle_struct(const tensor_size_t ifeature, const feature_t& feature)
+void handle_struct(const tensor_size_t ifeature, const feature_t& feature)
 {
     critical(!feature.is_struct(), "dataset: unhandled structured feature <", ifeature, ":", feature, ">!");
 }
 
 template <typename tscalar, size_t trank, typename... tindices>
-static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
+auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
 {
     if (buffer.size() < ::nano::size(make_dims(dims...)))
     {
@@ -51,6 +53,7 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
     }
     return map_tensor(buffer.data(), dims...);
 }
+} // namespace
 
 dataset_t::dataset_t(const datasource_t& datasource, const size_t threads)
     : m_datasource(datasource)

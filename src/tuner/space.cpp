@@ -3,17 +3,20 @@
 
 using namespace nano;
 
-static auto make_min(const tensor1d_t& grid_values)
+namespace
+{
+auto make_min(const tensor1d_t& grid_values)
 {
     return (grid_values.size() < 1) ? std::numeric_limits<scalar_t>::quiet_NaN()
                                     : *std::min_element(begin(grid_values), end(grid_values));
 }
 
-static auto make_max(const tensor1d_t& grid_values)
+auto make_max(const tensor1d_t& grid_values)
 {
     return (grid_values.size() < 1) ? std::numeric_limits<scalar_t>::quiet_NaN()
                                     : *std::max_element(begin(grid_values), end(grid_values));
 }
+} // namespace
 
 param_space_t::param_space_t(param_space_t::type type_, tensor1d_t grid_values)
     : m_type(type_)

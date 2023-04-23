@@ -8,33 +8,35 @@
 
 using namespace nano;
 
-static auto make_param_space1()
+namespace
+{
+auto make_param_space1()
 {
     return param_space_t{param_space_t::type::linear, 0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 }
 
-static auto make_param_space2()
+auto make_param_space2()
 {
     return param_space_t{param_space_t::type::log10, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3};
 }
 
-static auto make_param_spaces()
+auto make_param_spaces()
 {
     return param_spaces_t{make_param_space1(), make_param_space2()};
 }
 
-static auto evaluateLL(const scalar_t x, const scalar_t y, const scalar_t x0, const scalar_t y0)
+auto evaluateLL(const scalar_t x, const scalar_t y, const scalar_t x0, const scalar_t y0)
 {
     return square(x - x0) + square(y - y0) + 0.5;
 }
 
-static auto evaluate10(const scalar_t x, const scalar_t y, const scalar_t x0, const scalar_t y0)
+auto evaluate10(const scalar_t x, const scalar_t y, const scalar_t x0, const scalar_t y0)
 {
     return square(x - x0) + square(std::log10(y) - std::log10(y0) - (1.0 + x) / (1.0 + x0) + 1.0) + 0.5;
 }
 
 template <typename tevaluator>
-static void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, const tevaluator& evaluator)
+void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, const tevaluator& evaluator)
 {
     const auto& params0 = spaces[0].values();
     const auto& params1 = spaces[1].values();
@@ -74,7 +76,7 @@ static void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, c
     }
 }
 
-static void check_minimizer(const function_t& function, const vector_t& optimum)
+void check_minimizer(const function_t& function, const vector_t& optimum)
 {
     const auto* const solver_id = function.smooth() ? "lbfgs" : "ellipsoid";
 
@@ -86,7 +88,7 @@ static void check_minimizer(const function_t& function, const vector_t& optimum)
     UTEST_CHECK_CLOSE(state.x(), optimum, 1e-7);
 }
 
-static void check_surrogate(const tensor1d_t& p, const tensor1d_t& q)
+void check_surrogate(const tensor1d_t& p, const tensor1d_t& q)
 {
     const auto function = quadratic_surrogate_t(q.vector());
     check_gradient(function);
@@ -95,7 +97,7 @@ static void check_surrogate(const tensor1d_t& p, const tensor1d_t& q)
     UTEST_CHECK_EQUAL(function.size(), p.size());
 }
 
-static void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const tensor1d_t& y)
+void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const tensor1d_t& y)
 {
     for (const auto* const loss_id : {"mse", "mae"})
     {
@@ -109,6 +111,7 @@ static void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const 
         UTEST_CHECK_EQUAL(function.size(), q.size());
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_tuner)
 

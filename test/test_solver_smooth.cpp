@@ -8,25 +8,28 @@
 
 using namespace nano;
 
-static auto make_lsearch0_ids()
+namespace
+{
+auto make_lsearch0_ids()
 {
     return lsearch0_t::all().ids();
 }
 
-static auto make_lsearchk_ids()
+auto make_lsearchk_ids()
 {
     return lsearchk_t::all().ids();
 }
 
-static auto make_smooth_solver_ids()
+auto make_smooth_solver_ids()
 {
     return solver_t::all().ids(std::regex(".+"));
 }
 
-static auto make_best_smooth_solver_ids()
+auto make_best_smooth_solver_ids()
 {
     return strings_t{"cgd-pr", "lbfgs", "bfgs"};
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_solver_smooth)
 

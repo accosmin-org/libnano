@@ -8,8 +8,10 @@ using vector_storage_t = tensor_vector_storage_t<double, 1U>;
 using carray_storage_t = tensor_carray_storage_t<double, 1U>;
 using marray_storage_t = tensor_marray_storage_t<double, 1U>;
 
+namespace
+{
 template <typename tlhs, typename trhs>
-static void storage_must_match(const tlhs& lhs, const trhs& rhs)
+void storage_must_match(const tlhs& lhs, const trhs& rhs)
 {
     UTEST_CHECK_EQUAL(lhs.size(), rhs.size());
 
@@ -18,7 +20,7 @@ static void storage_must_match(const tlhs& lhs, const trhs& rhs)
     UTEST_CHECK_CLOSE(map_lhs, map_rhs, 1e-12);
 }
 
-static auto make_vector_storage(const vector_t& data)
+auto make_vector_storage(const vector_t& data)
 {
     vector_storage_t vector(data.size());
     UTEST_CHECK_EQUAL(vector.size(), data.size());
@@ -26,6 +28,7 @@ static auto make_vector_storage(const vector_t& data)
     storage_must_match(vector, data);
     return vector;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_tensor_storage)
 

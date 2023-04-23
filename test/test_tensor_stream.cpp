@@ -5,8 +5,10 @@
 
 using namespace nano;
 
+namespace
+{
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-static auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
+auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
 {
     std::ostringstream stream;
     UTEST_REQUIRE_NOTHROW(nano::write(stream, tensor));
@@ -15,7 +17,7 @@ static auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
 }
 
 template <typename tscalar>
-static auto make_tensor()
+auto make_tensor()
 {
     tensor_mem_t<tscalar, 3> tensor(5, 3, 1);
     tensor.random(default_min_random<tscalar>() * tscalar{100}, tscalar{100});
@@ -23,7 +25,7 @@ static auto make_tensor()
 }
 
 template <typename tscalar>
-static auto check_read_tensor(const std::string& str)
+auto check_read_tensor(const std::string& str)
 {
     tensor_mem_t<tscalar, 3> tensor;
     tensor.random();
@@ -35,6 +37,7 @@ static auto check_read_tensor(const std::string& str)
     }
     return tensor;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_tensor_stream)
 

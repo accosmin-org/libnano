@@ -5,12 +5,15 @@
 
 using namespace nano;
 
-static auto find(const cmdline_t::options_t& options, const string_t& name_or_short_name)
+namespace
+{
+auto find(const cmdline_t::options_t& options, const string_t& name_or_short_name)
 {
     return std::find_if(options.begin(), options.end(),
                         [&](const cmdline_t::option_t& option)
                         { return option.m_short_name == name_or_short_name || option.m_name == name_or_short_name; });
 }
+} // namespace
 
 static const auto str_dash      = string_t{"-"};  // NOLINT(cert-err58-cpp)
 static const auto str_dash_dash = string_t{"--"}; // NOLINT(cert-err58-cpp)

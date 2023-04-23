@@ -7,21 +7,23 @@
 using namespace nano;
 using namespace nano::constraint;
 
+namespace
+{
 template <typename... tvalues>
-static vector_t make_x(tvalues... values)
+vector_t make_x(tvalues... values)
 {
     return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...).vector();
 }
 
 template <tensor_size_t trows, typename... tvalues>
-static matrix_t make_X(tvalues... values)
+matrix_t make_X(tvalues... values)
 {
     return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...)
         .reshape(trows, -1)
         .matrix();
 }
 
-static void check_penalty(penalty_function_t& penalty_function, bool expected_convexity, bool expected_smoothness)
+void check_penalty(penalty_function_t& penalty_function, bool expected_convexity, bool expected_smoothness)
 {
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
@@ -39,7 +41,7 @@ static void check_penalty(penalty_function_t& penalty_function, bool expected_co
 }
 
 template <typename tpenalty>
-static void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
+void check_penalty(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
     if constexpr (std::is_same_v<tpenalty, augmented_lagrangian_function_t>)
     {
@@ -59,7 +61,7 @@ static void check_penalty(const function_t& function, bool expected_convexity, b
     }
 }
 
-static void check_penalties(const function_t& function, bool expected_convexity, bool expected_smoothness)
+void check_penalties(const function_t& function, bool expected_convexity, bool expected_smoothness)
 {
     const auto unconstrained = function.constraints().empty();
 
@@ -69,7 +71,7 @@ static void check_penalties(const function_t& function, bool expected_convexity,
 }
 
 template <typename tpenalty>
-static void check_penalty(const function_t& function, const vector_t& x, bool expected_valid)
+void check_penalty(const function_t& function, const vector_t& x, bool expected_valid)
 {
     UTEST_CHECK_EQUAL(function.valid(x), expected_valid);
 
@@ -90,14 +92,14 @@ static void check_penalty(const function_t& function, const vector_t& x, bool ex
     }
 }
 
-static void check_penalties(const function_t& function, const vector_t& x, bool expected_valid)
+void check_penalties(const function_t& function, const vector_t& x, bool expected_valid)
 {
     check_penalty<linear_penalty_function_t>(function, x, expected_valid);
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
-static void check_minimize(solver_t& solver, const function_t& function, const vector_t& x0, const vector_t& xbest,
-                           const scalar_t fbest, const scalar_t epsilon)
+void check_minimize(solver_t& solver, const function_t& function, const vector_t& x0, const vector_t& xbest,
+                    const scalar_t fbest, const scalar_t epsilon)
 {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
@@ -125,7 +127,7 @@ static void check_minimize(solver_t& solver, const function_t& function, const v
     }
 }
 
-static void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
+void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest)
 {
     if (linear_penalty_function_t{function}.convex())
     // NB: cannot solve non-convex non-smooth problems precisely!
@@ -317,6 +319,7 @@ public:
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     }
 };
+} // namespace
 
 UTEST_BEGIN_MODULE(test_constrained)
 

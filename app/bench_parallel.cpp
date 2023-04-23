@@ -12,6 +12,8 @@
 
 using namespace nano;
 
+namespace
+{
 struct exp_t
 {
     static const char* name() { return "exp"; }
@@ -46,7 +48,7 @@ struct mse_t
 };
 
 template <typename toperator>
-static scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& outputs)
+scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& outputs)
 {
     assert(targets.rows() == outputs.rows());
     assert(targets.cols() == outputs.cols());
@@ -56,7 +58,7 @@ static scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix
 }
 
 template <typename toperator>
-static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
+scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 {
     scalar_t value = 0;
     for (tensor_size_t i = 0, size = targets.rows(); i < size; ++ i)
@@ -67,7 +69,7 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 }
 
 template <typename toperator>
-static scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix_t& outputs)
+scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix_t& outputs)
 {
     vector_t values = vector_t::Zero(static_cast<tensor_size_t>(pool.size()));
     pool.map(targets.rows(), [&](tensor_size_t i, size_t t)
@@ -78,7 +80,7 @@ static scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const
 
 #if defined(_OPENMP)
 template <typename toperator>
-static scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
+scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
 {
     vector_t values = vector_t::Zero(omp_get_max_threads());
     const auto size = targets.rows();
@@ -94,7 +96,7 @@ static scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
 }
 #endif
 
-static bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_t epsilon)
+bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_t epsilon)
 {
     if (std::fabs(v1 - v2) > epsilon)
     {
@@ -108,7 +110,7 @@ static bool close(const scalar_t v1, const scalar_t v2, const char* name, const 
 }
 
 template <typename toperator>
-static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_t& table)
+bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_t& table)
 {
     parallel::pool_t pool;
 
@@ -178,7 +180,7 @@ static bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size,
     return true;
 }
 
-static int unsafe_main(int argc, const char *argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark thread pool");
@@ -220,6 +222,7 @@ static int unsafe_main(int argc, const char *argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

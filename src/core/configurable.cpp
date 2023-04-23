@@ -4,8 +4,10 @@
 
 using namespace nano;
 
+namespace
+{
 template <typename tname>
-static parameter_t* find_param(parameters_t& parameters, const tname& name, bool mandatory)
+parameter_t* find_param(parameters_t& parameters, const tname& name, bool mandatory)
 {
     const auto it = std::find_if(parameters.begin(), parameters.end(),
                                  [&](const parameter_t& param) { return param.name() == name; });
@@ -16,7 +18,7 @@ static parameter_t* find_param(parameters_t& parameters, const tname& name, bool
 }
 
 template <typename tname>
-static const parameter_t* find_param(const parameters_t& parameters, const tname& name, bool mandatory)
+const parameter_t* find_param(const parameters_t& parameters, const tname& name, bool mandatory)
 {
     const auto it = std::find_if(parameters.begin(), parameters.end(),
                                  [&](const parameter_t& param) { return param.name() == name; });
@@ -25,6 +27,7 @@ static const parameter_t* find_param(const parameters_t& parameters, const tname
 
     return (it == parameters.end()) ? nullptr : (&*it);
 }
+} // namespace
 
 void configurable_t::register_parameter(parameter_t parameter)
 {

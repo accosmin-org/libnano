@@ -3,8 +3,10 @@
 
 using namespace nano;
 
+namespace
+{
 template <typename tindex, std::enable_if_t<std::is_integral_v<tindex>, bool> = true>
-static tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
+tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 {
     auto iter = combinatorial_iterator_t{counts};
 
@@ -19,6 +21,7 @@ static tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 
     return product;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_combinatorial)
 

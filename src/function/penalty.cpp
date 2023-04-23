@@ -3,13 +3,15 @@
 
 using namespace nano;
 
-static auto is_linear_equality(const constraint_t& constraint)
+namespace
+{
+auto is_linear_equality(const constraint_t& constraint)
 {
     return std::get_if<constraint::constant_t>(&constraint) != nullptr ||
            std::get_if<constraint::linear_equality_t>(&constraint) != nullptr;
 }
 
-static auto convex(const function_t& function)
+auto convex(const function_t& function)
 {
     const auto op = [](const auto& ct) { return ::nano::convex(ct) && (!is_equality(ct) || is_linear_equality(ct)); };
     return (function.convex() && std::all_of(function.constraints().begin(), function.constraints().end(), op))
@@ -17,7 +19,7 @@ static auto convex(const function_t& function)
              : convexity::no;
 }
 
-static auto smooth(const function_t& function)
+auto smooth(const function_t& function)
 {
     const auto op = [](const auto& constraint) { return ::nano::smooth(constraint); };
     return (function.smooth() && std::all_of(function.constraints().begin(), function.constraints().end(), op))
@@ -26,7 +28,7 @@ static auto smooth(const function_t& function)
 }
 
 template <typename toperator>
-static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
+auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
 {
     scalar_t fx = function.vgrad(x, gx);
     vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
@@ -44,6 +46,7 @@ static auto penalty_vgrad(const function_t& function, const vector_t& x, vector_
 
     return fx;
 }
+} // namespace
 
 penalty_function_t::penalty_function_t(const function_t& function, const char* const prefix)
     : function_t(scat(prefix, function.name()), function.size())

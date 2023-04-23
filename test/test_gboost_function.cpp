@@ -8,6 +8,8 @@
 using namespace nano;
 using namespace nano::gboost;
 
+namespace
+{
 class fixture_datasource_t final : public datasource_t
 {
 public:
@@ -93,8 +95,8 @@ private:
     tensor4d_t      m_targets;      ///<
 };
 
-static auto make_datasource(const tensor_size_t samples = 100, const tensor_size_t isize = 3,
-                            const tensor_size_t tsize = 2, const tensor_size_t groups = 3)
+auto make_datasource(const tensor_size_t samples = 100, const tensor_size_t isize = 3, const tensor_size_t tsize = 2,
+                     const tensor_size_t groups = 3)
 {
     auto datasource = fixture_datasource_t{samples, isize, tsize, groups};
     UTEST_CHECK_NOTHROW(datasource.load());
@@ -102,7 +104,7 @@ static auto make_datasource(const tensor_size_t samples = 100, const tensor_size
     return datasource;
 }
 
-static void check_optimum(const function_t& function, const vector_t& expected_optimum)
+void check_optimum(const function_t& function, const vector_t& expected_optimum)
 {
     const auto solver = make_solver();
     const auto state  = check_minimize(*solver, function, vector_t::Zero(function.size()));
@@ -110,8 +112,8 @@ static void check_optimum(const function_t& function, const vector_t& expected_o
 }
 
 template <typename ttmatrix, typename tomatrix>
-static void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix,
-                        const scalar_t vAreg, const scalar_t epsilon = 1e-12)
+void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix, const scalar_t vAreg,
+                 const scalar_t epsilon = 1e-12)
 {
     const auto values = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
 
@@ -121,6 +123,7 @@ static void check_value(const function_t& function, const ttmatrix& tmatrix, con
 
     UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), fun, epsilon);
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_gboost_function)
 

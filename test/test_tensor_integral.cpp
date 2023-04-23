@@ -3,8 +3,10 @@
 
 using namespace nano;
 
+namespace
+{
 template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
-static auto check(const tensor_t<tstorage, tscalar, 1>& tensor, tensor_size_t index0)
+auto check(const tensor_t<tstorage, tscalar, 1>& tensor, tensor_size_t index0)
 {
     tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++i0)
@@ -16,7 +18,7 @@ static auto check(const tensor_t<tstorage, tscalar, 1>& tensor, tensor_size_t in
 }
 
 template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
-static auto check(const tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t index0, tensor_size_t index1)
+auto check(const tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t index0, tensor_size_t index1)
 {
     tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++i0)
@@ -31,8 +33,8 @@ static auto check(const tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t in
 }
 
 template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
-static auto check(const tensor_t<tstorage, tscalar, 3>& tensor, tensor_size_t index0, tensor_size_t index1,
-                  tensor_size_t index2)
+auto check(const tensor_t<tstorage, tscalar, 3>& tensor, tensor_size_t index0, tensor_size_t index1,
+           tensor_size_t index2)
 {
     tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++i0)
@@ -50,8 +52,8 @@ static auto check(const tensor_t<tstorage, tscalar, 3>& tensor, tensor_size_t in
 }
 
 template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
-static auto check(const tensor_t<tstorage, tscalar, 4>& tensor, tensor_size_t index0, tensor_size_t index1,
-                  tensor_size_t index2, tensor_size_t index3)
+auto check(const tensor_t<tstorage, tscalar, 4>& tensor, tensor_size_t index0, tensor_size_t index1,
+           tensor_size_t index2, tensor_size_t index3)
 {
     tsum sum = 0;
     for (tensor_size_t i0 = 0; i0 <= index0; ++i0)
@@ -70,6 +72,7 @@ static auto check(const tensor_t<tstorage, tscalar, 4>& tensor, tensor_size_t in
 
     return sum;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_tensor_integral)
 

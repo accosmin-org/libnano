@@ -8,9 +8,11 @@
 
 using namespace nano;
 
+namespace
+{
 // single-threaded
 template <typename toperator>
-static auto test_single(size_t size, const toperator op)
+auto test_single(size_t size, const toperator op)
 {
     std::vector<double> results(size);
     for (size_t i = 0; i < results.size(); ++i)
@@ -23,7 +25,7 @@ static auto test_single(size_t size, const toperator op)
 
 // multi-threaded (by index)
 template <typename toperator>
-static auto test_loopi(parallel::pool_t& pool, size_t size, const toperator op)
+auto test_loopi(parallel::pool_t& pool, size_t size, const toperator op)
 {
     std::vector<double> results(size, -1);
     pool.map(size,
@@ -60,7 +62,7 @@ auto test_loopr(parallel::pool_t& pool, size_t size, size_t chunk, const toperat
     return std::accumulate(results.begin(), results.end(), 0.0);
 }
 
-static auto thread_counts()
+auto thread_counts()
 {
     std::set<size_t> threads;
     threads.insert(1U);
@@ -69,6 +71,7 @@ static auto thread_counts()
     threads.insert(std::thread::hardware_concurrency());
     return threads;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_parallel)
 

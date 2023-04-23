@@ -4,12 +4,14 @@
 
 using namespace nano;
 
-static auto feature_cont()
+namespace
+{
+auto feature_cont()
 {
     return feature_t{"cont"}.scalar(feature_type::float64);
 }
 
-static auto feature_cate(bool with_labels = false)
+auto feature_cate(bool with_labels = false)
 {
     auto feature = feature_t{"cate"};
     if (with_labels)
@@ -179,6 +181,7 @@ private:
     bool   m_too_many_labels{false}; ///< toggle whether to write an invalid number of labels for categorical features
     bool   m_optional_target{true};  ///< optional
 };
+} // namespace
 
 UTEST_BEGIN_MODULE(test_datasource_tabular)
 

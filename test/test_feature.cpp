@@ -5,7 +5,9 @@
 
 using namespace nano;
 
-static void check_stream(const feature_t& feature)
+namespace
+{
+void check_stream(const feature_t& feature)
 {
     {
         std::ofstream stream;
@@ -27,6 +29,7 @@ static void check_stream(const feature_t& feature)
         UTEST_CHECK_EQUAL(feature, xfeature);
     }
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_feature)
 

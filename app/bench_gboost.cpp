@@ -12,6 +12,8 @@
 
 using namespace nano;
 
+namespace
+{
 template <typename tobject>
 void info_factory(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
 {
@@ -25,7 +27,7 @@ void info_factory(const string_t& name, const factory_t<tobject>& factory, const
     std::cout << table;
 }
 
-static void info_dataset(const rdataset_t& dataset, tensor_size_t max_features = 7)
+void info_dataset(const rdataset_t& dataset, tensor_size_t max_features = 7)
 {
     const auto op_append = [&] (table_t& table, const char* type, const feature_t& feature)
     {
@@ -61,7 +63,7 @@ static void info_dataset(const rdataset_t& dataset, tensor_size_t max_features =
     std::cout << table;
 }
 
-static auto make_loss_id(const dataset_t& dataset, const cmdline_t& cmdline)
+auto make_loss_id(const dataset_t& dataset, const cmdline_t& cmdline)
 {
     string_t id;
 
@@ -95,14 +97,14 @@ static auto make_loss_id(const dataset_t& dataset, const cmdline_t& cmdline)
     return id;
 }
 
-static auto make_loss(const string_t& id)
+auto make_loss(const string_t& id)
 {
     auto loss = loss_t::all().get(id);
     critical(!loss, scat("invalid loss '", id, "'"));
     return loss;
 }
 
-static auto make_dataset(const string_t& id)
+auto make_dataset(const string_t& id)
 {
     const auto start = nano::timer_t{};
 
@@ -114,7 +116,7 @@ static auto make_dataset(const string_t& id)
     return dataset;
 }
 
-static auto make_solver(const cmdline_t& cmdline)
+auto make_solver(const cmdline_t& cmdline)
 {
     const auto id = cmdline.get<string_t>("solver");
     const auto epsilon = cmdline.get<scalar_t>("solver-epsilon");
@@ -151,7 +153,7 @@ rmodel_t make_gridsearch(const gboost_model_t& model, const cmdline_t& cmdline, 
     return gs.clone();
 }
 
-static auto make_boosters(const cmdline_t& cmdline)
+auto make_boosters(const cmdline_t& cmdline)
 {
     const auto wtable = wlearner_table_t{};
     const auto wstump = wlearner_stump_t{};
@@ -316,6 +318,7 @@ static int unsafe_main(int argc, const char* argv[])
     // OK
     return EXIT_SUCCESS;
 }
+} // namespace
 
 int main(int argc, const char* argv[])
 {

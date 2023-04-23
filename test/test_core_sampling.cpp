@@ -3,12 +3,14 @@
 
 using namespace nano;
 
-static auto make_rngs(const uint64_t seed1 = 42U, const uint64_t seed2 = 42U, const uint64_t seed3 = 43U)
+namespace
+{
+auto make_rngs(const uint64_t seed1 = 42U, const uint64_t seed2 = 42U, const uint64_t seed3 = 43U)
 {
     return std::make_tuple(make_rng(seed1), make_rng(seed2), make_rng(seed3));
 }
 
-static void check_sample_with_replacement(const indices_t& indices)
+void check_sample_with_replacement(const indices_t& indices)
 {
     UTEST_CHECK_EQUAL(indices.size(), 50);
     UTEST_CHECK_LESS(indices.max(), 120);
@@ -16,7 +18,7 @@ static void check_sample_with_replacement(const indices_t& indices)
     UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
 }
 
-static void check_sample_without_replacement(const indices_t& indices)
+void check_sample_without_replacement(const indices_t& indices)
 {
     UTEST_CHECK_EQUAL(indices.size(), 60);
     UTEST_CHECK_LESS(indices.max(), 140);
@@ -24,6 +26,7 @@ static void check_sample_without_replacement(const indices_t& indices)
     UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
     UTEST_CHECK(std::adjacent_find(begin(indices), end(indices)) == end(indices));
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_sampling)
 

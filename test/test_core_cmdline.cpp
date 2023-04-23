@@ -3,8 +3,10 @@
 #include <nano/core/cmdline.h>
 #include <utest/utest.h>
 
-static void check(const nano::cmdline_t::result_t& result, const nano::cmdline_t::result_t::storage_t& expected_ovalues,
-                  const nano::cmdline_t::result_t::storage_t& expected_xvalues)
+namespace
+{
+void check(const nano::cmdline_t::result_t& result, const nano::cmdline_t::result_t::storage_t& expected_ovalues,
+           const nano::cmdline_t::result_t::storage_t& expected_xvalues)
 {
     UTEST_CHECK_EQUAL(result.m_ovalues.size(), expected_ovalues.size());
     UTEST_CHECK_EQUAL(result.m_xvalues.size(), expected_xvalues.size());
@@ -44,6 +46,7 @@ static void check(const nano::cmdline_t::result_t& result, const nano::cmdline_t
     UTEST_CHECK_THROW(result.get<int>("what?!"), std::runtime_error);
     UTEST_CHECK_THROW(result.get<std::string>("what?!"), std::runtime_error);
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_core_cmdline)
 

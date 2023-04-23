@@ -2,10 +2,13 @@
 
 using namespace nano;
 
-static auto features_per_thread(const indices_cmap_t& features, const size_t concurrency)
+namespace
+{
+auto features_per_thread(const indices_cmap_t& features, const size_t concurrency)
 {
     return std::max(tensor_size_t{1}, idiv(features.size(), concurrency));
 }
+} // namespace
 
 base_dataset_iterator_t::base_dataset_iterator_t(const dataset_t& dataset)
     : m_dataset(dataset)

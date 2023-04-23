@@ -32,7 +32,9 @@ struct cache_t
     tensor_size_t m_index{0};
 };
 
-static auto make_accumulator()
+namespace
+{
+auto make_accumulator()
 {
     const auto tdims = make_dims(1, 1, 1);
 
@@ -73,6 +75,7 @@ static auto make_accumulator()
 
     return acc0;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_wlearner_util)
 
