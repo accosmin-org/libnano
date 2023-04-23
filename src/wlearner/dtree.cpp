@@ -12,22 +12,22 @@ using namespace nano;
 
 namespace
 {
-    class cache_t
+class cache_t
+{
+public:
+    cache_t() = default;
+
+    explicit cache_t(indices_t samples)
+        : m_samples(std::move(samples))
     {
-    public:
-        cache_t() = default;
+    }
 
-        explicit cache_t(indices_t samples)
-            : m_samples(std::move(samples))
-        {
-        }
-
-        // attributes
-        indices_t     m_samples;   ///<
-        tensor_size_t m_depth{0};  ///<
-        tensor3d_t    m_table;     ///<
-        size_t        m_parent{0}; ///<
-    };
+    // attributes
+    indices_t     m_samples;   ///<
+    tensor_size_t m_depth{0};  ///<
+    tensor3d_t    m_table;     ///<
+    size_t        m_parent{0}; ///<
+};
 } // namespace
 
 static void append(tensor4d_t& tables, const tensor3d_cmap_t& table)

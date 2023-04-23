@@ -2,5 +2,5 @@
 
 namespace nano
 {
-    using scalar_t = double;
+using scalar_t = double;
 }

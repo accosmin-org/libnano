@@ -5,40 +5,40 @@ using namespace nano;
 
 namespace
 {
-    class proxy_t
+class proxy_t
+{
+public:
+    explicit proxy_t(const vector_t& z0, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon())
+        : m_z0(z0)
+        , m_Q0(0.5 * std::sqrt(z0.lpNorm<2>() + epsilon))
     {
-    public:
-        explicit proxy_t(const vector_t& z0, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon())
-            : m_z0(z0)
-            , m_Q0(0.5 * std::sqrt(z0.lpNorm<2>() + epsilon))
+    }
+
+    auto Q(const vector_t& z) const { return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0); }
+
+    auto gQ(const vector_t& z) const { return z - m_z0; }
+
+    auto E(const scalar_t gamma, const vector_t& h) const
+    {
+        const auto beta = gamma + h.dot(m_z0);
+        const auto sqrt = std::sqrt(beta * beta + 2.0 * m_Q0 * h.dot(h));
+
+        if (beta <= 0.0)
         {
+            return (-beta + sqrt) / (2.0 * m_Q0);
         }
-
-        auto Q(const vector_t& z) const { return m_Q0 + 0.5 * (z - m_z0).dot(z - m_z0); }
-
-        auto gQ(const vector_t& z) const { return z - m_z0; }
-
-        auto E(const scalar_t gamma, const vector_t& h) const
+        else
         {
-            const auto beta = gamma + h.dot(m_z0);
-            const auto sqrt = std::sqrt(beta * beta + 2.0 * m_Q0 * h.dot(h));
-
-            if (beta <= 0.0)
-            {
-                return (-beta + sqrt) / (2.0 * m_Q0);
-            }
-            else
-            {
-                return h.dot(h) / (beta + sqrt);
-            }
+            return h.dot(h) / (beta + sqrt);
         }
+    }
 
-        auto U(const scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
+    auto U(const scalar_t gamma, const vector_t& h) const { return m_z0 - h / E(gamma, h); }
 
-    private:
-        const vector_t& m_z0;      ///<
-        scalar_t        m_Q0{0.0}; ///<
-    };
+private:
+    const vector_t& m_z0;      ///<
+    scalar_t        m_Q0{0.0}; ///<
+};
 } // namespace
 
 solver_osga_t::solver_osga_t()

@@ -4,65 +4,65 @@ using namespace nano;
 
 namespace
 {
-    template <typename tvector>
-    auto SR1(const matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+auto SR1(const matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    return H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
+}
+
+template <typename tvector>
+void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
+{
+    const auto denom = (dx - H * dg).dot(dg);
+    const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
+
+    if (apply)
     {
-        return H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
+        H = SR1(H, dx, dg);
     }
+}
 
-    template <typename tvector>
-    void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
+template <typename tvector>
+auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    return H + (dx * dx.transpose()) / dx.dot(dg) - (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
+}
+
+template <typename tvector>
+auto BFGS(const matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    const auto I = matrix_t::Identity(H.rows(), H.cols());
+
+    return (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
+           dx * dx.transpose() / dx.dot(dg);
+}
+
+template <typename tvector>
+auto HOSHINO(const matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
+
+    return (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
+}
+
+template <typename tvector>
+void FLETCHER(matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    const auto phi = dx.dot(dg) / (dx.dot(dg) - dg.transpose() * H * dg);
+
+    if (phi < scalar_t(0))
     {
-        const auto denom = (dx - H * dg).dot(dg);
-        const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
-
-        if (apply)
-        {
-            H = SR1(H, dx, dg);
-        }
+        H = DFP(H, dx, dg);
     }
-
-    template <typename tvector>
-    auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
+    else if (phi > scalar_t(1))
     {
-        return H + (dx * dx.transpose()) / dx.dot(dg) - (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
+        H = BFGS(H, dx, dg);
     }
-
-    template <typename tvector>
-    auto BFGS(const matrix_t& H, const tvector& dx, const tvector& dg)
+    else
     {
-        const auto I = matrix_t::Identity(H.rows(), H.cols());
-
-        return (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
-               dx * dx.transpose() / dx.dot(dg);
+        H = SR1(H, dx, dg);
     }
-
-    template <typename tvector>
-    auto HOSHINO(const matrix_t& H, const tvector& dx, const tvector& dg)
-    {
-        const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
-
-        return (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
-    }
-
-    template <typename tvector>
-    void FLETCHER(matrix_t& H, const tvector& dx, const tvector& dg)
-    {
-        const auto phi = dx.dot(dg) / (dx.dot(dg) - dg.transpose() * H * dg);
-
-        if (phi < scalar_t(0))
-        {
-            H = DFP(H, dx, dg);
-        }
-        else if (phi > scalar_t(1))
-        {
-            H = BFGS(H, dx, dg);
-        }
-        else
-        {
-            H = SR1(H, dx, dg);
-        }
-    }
+}
 } // namespace
 
 solver_quasi_t::solver_quasi_t(string_t id)

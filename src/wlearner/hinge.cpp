@@ -29,126 +29,126 @@ static auto score(const scalar_t x0, const scalar_t x1, const scalar_t x2, const
 
 namespace
 {
-    class cache_t
+class cache_t
+{
+public:
+    explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
+        : m_beta0(tdims)
+        , m_acc_sum(tdims)
+        , m_acc_neg(tdims)
+        , m_tables(cat_dims(2, tdims))
     {
-    public:
-        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
-            : m_beta0(tdims)
-            , m_acc_sum(tdims)
-            , m_acc_neg(tdims)
-            , m_tables(cat_dims(2, tdims))
+        m_beta0.zero();
+    }
+
+    auto x0_neg() const { return m_acc_neg.x0(); }
+
+    auto x1_neg() const { return m_acc_neg.x1(); }
+
+    auto x2_neg() const { return m_acc_neg.x2(); }
+
+    auto r1_neg() const { return m_acc_neg.r1(); }
+
+    auto rx_neg() const { return m_acc_neg.rx(); }
+
+    auto r2_neg() const { return m_acc_neg.r2(); }
+
+    auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
+
+    auto x1_pos() const { return m_acc_sum.x1() - m_acc_neg.x1(); }
+
+    auto x2_pos() const { return m_acc_sum.x2() - m_acc_neg.x2(); }
+
+    auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
+
+    auto rx_pos() const { return m_acc_sum.rx() - m_acc_neg.rx(); }
+
+    auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
+
+    auto clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
+    {
+        m_acc_sum.clear();
+        m_acc_neg.clear();
+
+        auto missing_rss = 0.0;
+        auto missing_cnt = 0.0;
+
+        m_ivalues.clear();
+        m_ivalues.reserve(static_cast<size_t>(values.size()));
+        for (tensor_size_t i = 0; i < values.size(); ++i)
         {
-            m_beta0.zero();
-        }
-
-        auto x0_neg() const { return m_acc_neg.x0(); }
-
-        auto x1_neg() const { return m_acc_neg.x1(); }
-
-        auto x2_neg() const { return m_acc_neg.x2(); }
-
-        auto r1_neg() const { return m_acc_neg.r1(); }
-
-        auto rx_neg() const { return m_acc_neg.rx(); }
-
-        auto r2_neg() const { return m_acc_neg.r2(); }
-
-        auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
-
-        auto x1_pos() const { return m_acc_sum.x1() - m_acc_neg.x1(); }
-
-        auto x2_pos() const { return m_acc_sum.x2() - m_acc_neg.x2(); }
-
-        auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
-
-        auto rx_pos() const { return m_acc_sum.rx() - m_acc_neg.rx(); }
-
-        auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
-
-        auto clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
-        {
-            m_acc_sum.clear();
-            m_acc_neg.clear();
-
-            auto missing_rss = 0.0;
-            auto missing_cnt = 0.0;
-
-            m_ivalues.clear();
-            m_ivalues.reserve(static_cast<size_t>(values.size()));
-            for (tensor_size_t i = 0; i < values.size(); ++i)
+            if (std::isfinite(values(i)))
             {
-                if (std::isfinite(values(i)))
-                {
-                    m_ivalues.emplace_back(values(i), samples(i));
-                    m_acc_sum.update(values(i), gradients.array(samples(i)));
-                }
-                else
-                {
-                    missing_rss += gradients.array(samples(i)).square().sum();
-                    missing_cnt += 1.0;
-                }
+                m_ivalues.emplace_back(values(i), samples(i));
+                m_acc_sum.update(values(i), gradients.array(samples(i)));
             }
-            std::sort(m_ivalues.begin(), m_ivalues.end());
-
-            return std::make_tuple(missing_rss, missing_cnt);
+            else
+            {
+                missing_rss += gradients.array(samples(i)).square().sum();
+                missing_cnt += 1.0;
+            }
         }
+        std::sort(m_ivalues.begin(), m_ivalues.end());
 
-        auto beta0() const { return m_beta0.array(); }
+        return std::make_tuple(missing_rss, missing_cnt);
+    }
 
-        auto beta_neg(const scalar_t threshold) const
-        {
-            return ::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
-        }
+    auto beta0() const { return m_beta0.array(); }
 
-        auto beta_pos(const scalar_t threshold) const
-        {
-            return ::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
-        }
+    auto beta_neg(const scalar_t threshold) const
+    {
+        return ::beta(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), threshold);
+    }
 
-        auto score_neg(const scalar_t threshold) const
-        {
-            return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)) +
-                   ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta0());
-        }
+    auto beta_pos(const scalar_t threshold) const
+    {
+        return ::beta(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), threshold);
+    }
 
-        auto score_pos(const scalar_t threshold) const
-        {
-            return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta0()) +
-                   ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
-        }
+    auto score_neg(const scalar_t threshold) const
+    {
+        return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta_neg(threshold)) +
+               ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta0());
+    }
 
-        auto score_neg(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
-                       const scalar_t missing_cnt) const
-        {
-            const auto rss = score_neg(threshold) + missing_rss;
-            const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
-            const auto n   = static_cast<tensor_size_t>(x0_neg() + missing_cnt);
+    auto score_pos(const scalar_t threshold) const
+    {
+        return ::score(x0_neg(), x1_neg(), x2_neg(), r1_neg(), rx_neg(), r2_neg(), threshold, beta0()) +
+               ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
+    }
 
-            return make_score(criterion, rss, k, n);
-        }
+    auto score_neg(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
+                   const scalar_t missing_cnt) const
+    {
+        const auto rss = score_neg(threshold) + missing_rss;
+        const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
+        const auto n   = static_cast<tensor_size_t>(x0_neg() + missing_cnt);
 
-        auto score_pos(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
-                       const scalar_t missing_cnt) const
-        {
-            const auto rss = score_pos(threshold) + missing_rss;
-            const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
-            const auto n   = static_cast<tensor_size_t>(x0_pos() + missing_cnt);
+        return make_score(criterion, rss, k, n);
+    }
 
-            return make_score(criterion, rss, k, n);
-        }
+    auto score_pos(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
+                   const scalar_t missing_cnt) const
+    {
+        const auto rss = score_pos(threshold) + missing_rss;
+        const auto k   = ::nano::size(m_acc_sum.tdims()) + 1;
+        const auto n   = static_cast<tensor_size_t>(x0_pos() + missing_cnt);
 
-        using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
+        return make_score(criterion, rss, k, n);
+    }
 
-        // attributes
-        ivalues_t     m_ivalues;                           ///<
-        tensor3d_t    m_beta0;                             ///<
-        accumulator_t m_acc_sum, m_acc_neg;                ///<
-        tensor4d_t    m_tables;                            ///<
-        tensor_size_t m_feature{-1};                       ///<
-        scalar_t      m_threshold{0};                      ///<
-        hinge_type    m_hinge{hinge_type::left};           ///<
-        scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
-    };
+    using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
+
+    // attributes
+    ivalues_t     m_ivalues;                           ///<
+    tensor3d_t    m_beta0;                             ///<
+    accumulator_t m_acc_sum, m_acc_neg;                ///<
+    tensor4d_t    m_tables;                            ///<
+    tensor_size_t m_feature{-1};                       ///<
+    scalar_t      m_threshold{0};                      ///<
+    hinge_type    m_hinge{hinge_type::left};           ///<
+    scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
+};
 } // namespace
 
 template <>

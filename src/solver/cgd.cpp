@@ -4,65 +4,65 @@ using namespace nano;
 
 namespace
 {
-    scalar_t HS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return cg.dot(cg - pg) / pd.dot(cg - pg);
-    }
+scalar_t HS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return cg.dot(cg - pg) / pd.dot(cg - pg);
+}
 
-    scalar_t FR(const vector_t& pg, const vector_t&, const vector_t& cg)
-    {
-        return cg.squaredNorm() / pg.squaredNorm();
-    }
+scalar_t FR(const vector_t& pg, const vector_t&, const vector_t& cg)
+{
+    return cg.squaredNorm() / pg.squaredNorm();
+}
 
-    scalar_t PR(const vector_t& pg, const vector_t&, const vector_t& cg)
-    {
-        return cg.dot(cg - pg) / pg.squaredNorm();
-    }
+scalar_t PR(const vector_t& pg, const vector_t&, const vector_t& cg)
+{
+    return cg.dot(cg - pg) / pg.squaredNorm();
+}
 
-    scalar_t CD(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return -cg.squaredNorm() / pd.dot(pg);
-    }
+scalar_t CD(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return -cg.squaredNorm() / pd.dot(pg);
+}
 
-    scalar_t LS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return -cg.dot(cg - pg) / pd.dot(pg);
-    }
+scalar_t LS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return -cg.dot(cg - pg) / pd.dot(pg);
+}
 
-    scalar_t DY(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return cg.squaredNorm() / pd.dot(cg - pg);
-    }
+scalar_t DY(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return cg.squaredNorm() / pd.dot(cg - pg);
+}
 
-    scalar_t N(const vector_t& pg, const vector_t& pd, const vector_t& cg, scalar_t eta) // N(+) - see (3)
-    {
-        const auto y   = cg - pg;
-        const auto div = +1 / pd.dot(y);
+scalar_t N(const vector_t& pg, const vector_t& pd, const vector_t& cg, scalar_t eta) // N(+) - see (3)
+{
+    const auto y   = cg - pg;
+    const auto div = +1 / pd.dot(y);
 
-        const auto pd2 = pd.lpNorm<2>();
-        const auto pg2 = pg.lpNorm<2>();
-        eta            = -1 / (pd2 * std::min(eta, pg2));
+    const auto pd2 = pd.lpNorm<2>();
+    const auto pg2 = pg.lpNorm<2>();
+    eta            = -1 / (pd2 * std::min(eta, pg2));
 
-        return std::max(eta, div * (y - 2 * pd * y.squaredNorm() * div).dot(cg));
-    }
+    return std::max(eta, div * (y - 2 * pd * y.squaredNorm() * div).dot(cg));
+}
 
-    scalar_t DYHS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return std::max(scalar_t(0), std::min(DY(pg, pd, cg), HS(pg, pd, cg)));
-    }
+scalar_t DYHS(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return std::max(scalar_t(0), std::min(DY(pg, pd, cg), HS(pg, pd, cg)));
+}
 
-    scalar_t DYCD(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        return cg.squaredNorm() / std::max(pd.dot(cg - pg), -pd.dot(pg));
-    }
+scalar_t DYCD(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    return cg.squaredNorm() / std::max(pd.dot(cg - pg), -pd.dot(pg));
+}
 
-    scalar_t FRPR(const vector_t& pg, const vector_t& pd, const vector_t& cg)
-    {
-        const auto fr = ::FR(pg, pd, cg);
-        const auto pr = ::PR(pg, pd, cg);
+scalar_t FRPR(const vector_t& pg, const vector_t& pd, const vector_t& cg)
+{
+    const auto fr = ::FR(pg, pd, cg);
+    const auto pr = ::PR(pg, pd, cg);
 
-        return (pr < -fr) ? -fr : (std::fabs(pr) <= fr) ? pr : fr;
-    }
+    return (pr < -fr) ? -fr : (std::fabs(pr) <= fr) ? pr : fr;
+}
 } // namespace
 
 solver_cgd_t::solver_cgd_t(string_t id)

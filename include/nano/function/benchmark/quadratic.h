@@ -4,35 +4,35 @@
 
 namespace nano
 {
+///
+/// \brief random quadratic function: f(x) = x.dot(a) + x * A * x, where A is PD.
+///
+class NANO_PUBLIC function_quadratic_t final : public function_t
+{
+public:
     ///
-    /// \brief random quadratic function: f(x) = x.dot(a) + x * A * x, where A is PD.
+    /// \brief constructor
     ///
-    class NANO_PUBLIC function_quadratic_t final : public function_t
-    {
-    public:
-        ///
-        /// \brief constructor
-        ///
-        explicit function_quadratic_t(tensor_size_t dims = 10);
+    explicit function_quadratic_t(tensor_size_t dims = 10);
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rfunction_t clone() const override;
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
-    private:
-        // attributes
-        vector_t m_a;
-        matrix_t m_A;
-    };
+private:
+    // attributes
+    vector_t m_a;
+    matrix_t m_A;
+};
 } // namespace nano

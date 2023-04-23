@@ -18,81 +18,81 @@ static auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const t
 
 namespace
 {
-    class cache_t
+class cache_t
+{
+public:
+    explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
+        : m_acc_sum(tdims)
+        , m_acc_neg(tdims)
+        , m_tables(cat_dims(2, tdims))
     {
-    public:
-        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
-            : m_acc_sum(tdims)
-            , m_acc_neg(tdims)
-            , m_tables(cat_dims(2, tdims))
+    }
+
+    auto x0_neg() const { return m_acc_neg.x0(); }
+
+    auto r1_neg() const { return m_acc_neg.r1(); }
+
+    auto r2_neg() const { return m_acc_neg.r2(); }
+
+    auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
+
+    auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
+
+    auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
+
+    auto clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
+    {
+        m_acc_sum.clear();
+        m_acc_neg.clear();
+
+        auto missing_rss = 0.0;
+        auto missing_cnt = 0.0;
+
+        m_ivalues.clear();
+        m_ivalues.reserve(static_cast<size_t>(values.size()));
+        for (tensor_size_t i = 0; i < values.size(); ++i)
         {
-        }
-
-        auto x0_neg() const { return m_acc_neg.x0(); }
-
-        auto r1_neg() const { return m_acc_neg.r1(); }
-
-        auto r2_neg() const { return m_acc_neg.r2(); }
-
-        auto x0_pos() const { return m_acc_sum.x0() - m_acc_neg.x0(); }
-
-        auto r1_pos() const { return m_acc_sum.r1() - m_acc_neg.r1(); }
-
-        auto r2_pos() const { return m_acc_sum.r2() - m_acc_neg.r2(); }
-
-        auto clear(const tensor4d_t& gradients, const scalar_cmap_t& values, const indices_t& samples)
-        {
-            m_acc_sum.clear();
-            m_acc_neg.clear();
-
-            auto missing_rss = 0.0;
-            auto missing_cnt = 0.0;
-
-            m_ivalues.clear();
-            m_ivalues.reserve(static_cast<size_t>(values.size()));
-            for (tensor_size_t i = 0; i < values.size(); ++i)
+            if (std::isfinite(values(i)))
             {
-                if (std::isfinite(values(i)))
-                {
-                    m_ivalues.emplace_back(values(i), samples(i));
-                    m_acc_sum.update(gradients.array(samples(i)));
-                }
-                else
-                {
-                    missing_rss += gradients.array(samples(i)).square().sum();
-                    missing_cnt += 1.0;
-                }
+                m_ivalues.emplace_back(values(i), samples(i));
+                m_acc_sum.update(gradients.array(samples(i)));
             }
-            std::sort(m_ivalues.begin(), m_ivalues.end());
-
-            return std::make_tuple(missing_rss, missing_cnt);
+            else
+            {
+                missing_rss += gradients.array(samples(i)).square().sum();
+                missing_cnt += 1.0;
+            }
         }
+        std::sort(m_ivalues.begin(), m_ivalues.end());
 
-        auto output_neg() const { return r1_neg() / x0_neg(); }
+        return std::make_tuple(missing_rss, missing_cnt);
+    }
 
-        auto output_pos() const { return r1_pos() / x0_pos(); }
+    auto output_neg() const { return r1_neg() / x0_neg(); }
 
-        auto score(const criterion_type criterion, const scalar_t missing_rss, const scalar_t missing_cnt) const
-        {
-            const auto rss = ::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
-                             ::score(x0_pos(), r1_pos(), r2_pos(), output_pos()) + missing_rss;
-            const auto k = 2 * ::nano::size(m_acc_sum.tdims()) + 1;
-            const auto n = static_cast<tensor_size_t>(m_acc_sum.x0() + missing_cnt);
+    auto output_pos() const { return r1_pos() / x0_pos(); }
 
-            return make_score(criterion, rss, k, n);
-        }
+    auto score(const criterion_type criterion, const scalar_t missing_rss, const scalar_t missing_cnt) const
+    {
+        const auto rss = ::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
+                         ::score(x0_pos(), r1_pos(), r2_pos(), output_pos()) + missing_rss;
+        const auto k = 2 * ::nano::size(m_acc_sum.tdims()) + 1;
+        const auto n = static_cast<tensor_size_t>(m_acc_sum.x0() + missing_cnt);
 
-        using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
+        return make_score(criterion, rss, k, n);
+    }
 
-        // attributes
-        ivalues_t     m_ivalues;                           ///<
-        accumulator_t m_acc_sum;                           ///<
-        accumulator_t m_acc_neg;                           ///<
-        tensor4d_t    m_tables;                            ///<
-        tensor_size_t m_feature{-1};                       ///<
-        scalar_t      m_threshold{0};                      ///<
-        scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
-    };
+    using ivalues_t = std::vector<std::pair<scalar_t, tensor_size_t>>;
+
+    // attributes
+    ivalues_t     m_ivalues;                           ///<
+    accumulator_t m_acc_sum;                           ///<
+    accumulator_t m_acc_neg;                           ///<
+    tensor4d_t    m_tables;                            ///<
+    tensor_size_t m_feature{-1};                       ///<
+    scalar_t      m_threshold{0};                      ///<
+    scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
+};
 } // namespace
 
 stump_wlearner_t::stump_wlearner_t()

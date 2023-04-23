@@ -4,34 +4,34 @@
 
 namespace nano
 {
+///
+/// \brief Dixon-Price function: see https://www.sfu.ca/~ssurjano/dixonpr.html.
+///
+class NANO_PUBLIC function_dixon_price_t final : public function_t
+{
+public:
     ///
-    /// \brief Dixon-Price function: see https://www.sfu.ca/~ssurjano/dixonpr.html.
+    /// \brief constructor
     ///
-    class NANO_PUBLIC function_dixon_price_t final : public function_t
-    {
-    public:
-        ///
-        /// \brief constructor
-        ///
-        explicit function_dixon_price_t(tensor_size_t dims = 10);
+    explicit function_dixon_price_t(tensor_size_t dims = 10);
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rfunction_t clone() const override;
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
-    private:
-        // attributes
-        vector_t m_bias; ///<
-    };
+private:
+    // attributes
+    vector_t m_bias; ///<
+};
 } // namespace nano

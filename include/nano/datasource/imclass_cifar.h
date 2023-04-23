@@ -4,122 +4,122 @@
 
 namespace nano
 {
+///
+/// \brief base class for the CIFAR-10 and CIFAR-100 datasets.
+///
+class NANO_PUBLIC cifar_datasource_t : public datasource_t
+{
+public:
     ///
-    /// \brief base class for the CIFAR-10 and CIFAR-100 datasets.
+    /// \brief constructor
     ///
-    class NANO_PUBLIC cifar_datasource_t : public datasource_t
+    cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target);
+
+protected:
+    void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
+
+private:
+    ///
+    /// \brief describes how to load a file in the CIFAR-10/100 archives.
+    ///
+    struct file_t
     {
-    public:
-        ///
-        /// \brief constructor
-        ///
-        cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target);
+        file_t() = default;
 
-    protected:
-        void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
-
-    private:
-        ///
-        /// \brief describes how to load a file in the CIFAR-10/100 archives.
-        ///
-        struct file_t
+        file_t(string_t&& filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
+               tensor_size_t label_index)
+            : m_filename(filename)
+            , m_offset(offset)
+            , m_expected(expected)
+            , m_label_size(label_size)
+            , m_label_index(label_index)
         {
-            file_t() = default;
-
-            file_t(string_t&& filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
-                   tensor_size_t label_index)
-                : m_filename(filename)
-                , m_offset(offset)
-                , m_expected(expected)
-                , m_label_size(label_size)
-                , m_label_index(label_index)
-            {
-            }
-
-            // attributes
-            string_t      m_filename;       ///<
-            tensor_size_t m_offset{0};      ///<
-            tensor_size_t m_expected{0};    ///<
-            tensor_size_t m_label_size{1};  ///<
-            tensor_size_t m_label_index{0}; ///<
-        };
-
-        using files_t = std::vector<file_t>;
-
-        void do_load() override;
-        bool iread(const file_t& file);
+        }
 
         // attributes
-        string_t  m_dir;    ///< directory where to load the data from
-        string_t  m_path;   ///< path to the archive where to load the data from
-        string_t  m_name;   ///< dataset name
-        feature_t m_target; ///< target feature
-        files_t   m_files;  ///<
+        string_t      m_filename;       ///<
+        tensor_size_t m_offset{0};      ///<
+        tensor_size_t m_expected{0};    ///<
+        tensor_size_t m_label_size{1};  ///<
+        tensor_size_t m_label_index{0}; ///<
     };
 
-    ///
-    /// CIFAR-10 task:
-    ///      - image classification
-    ///      - 32x32 color images as inputs
-    ///      - 10 outputs (10 labels)
-    ///
-    /// http://www.cs.toronto.edu/~kriz/cifar.html
-    ///
-    class NANO_PUBLIC cifar10_datasource_t final : public cifar_datasource_t
-    {
-    public:
-        ///
-        /// \brief default constructor
-        ///
-        cifar10_datasource_t();
+    using files_t = std::vector<file_t>;
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rdatasource_t clone() const override;
-    };
+    void do_load() override;
+    bool iread(const file_t& file);
 
-    ///
-    /// CIFAR-100 task:
-    ///      - image classification
-    ///      - 32x32 color images as inputs
-    ///      - 20 outputs (20 coarse labels)
-    ///
-    /// http://www.cs.toronto.edu/~kriz/cifar.html
-    ///
-    class NANO_PUBLIC cifar100c_datasource_t final : public cifar_datasource_t
-    {
-    public:
-        ///
-        /// \brief default constructor
-        ///
-        cifar100c_datasource_t();
+    // attributes
+    string_t  m_dir;    ///< directory where to load the data from
+    string_t  m_path;   ///< path to the archive where to load the data from
+    string_t  m_name;   ///< dataset name
+    feature_t m_target; ///< target feature
+    files_t   m_files;  ///<
+};
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rdatasource_t clone() const override;
-    };
+///
+/// CIFAR-10 task:
+///      - image classification
+///      - 32x32 color images as inputs
+///      - 10 outputs (10 labels)
+///
+/// http://www.cs.toronto.edu/~kriz/cifar.html
+///
+class NANO_PUBLIC cifar10_datasource_t final : public cifar_datasource_t
+{
+public:
+    ///
+    /// \brief default constructor
+    ///
+    cifar10_datasource_t();
 
     ///
-    /// CIFAR-100 task:
-    ///      - image classification
-    ///      - 32x32 color images as inputs
-    ///      - 100 outputs (100 fine labels)
+    /// \brief @see clonable_t
     ///
-    /// http://www.cs.toronto.edu/~kriz/cifar.html
-    ///
-    class NANO_PUBLIC cifar100f_datasource_t final : public cifar_datasource_t
-    {
-    public:
-        ///
-        /// \brief default constructor
-        ///
-        cifar100f_datasource_t();
+    rdatasource_t clone() const override;
+};
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rdatasource_t clone() const override;
-    };
+///
+/// CIFAR-100 task:
+///      - image classification
+///      - 32x32 color images as inputs
+///      - 20 outputs (20 coarse labels)
+///
+/// http://www.cs.toronto.edu/~kriz/cifar.html
+///
+class NANO_PUBLIC cifar100c_datasource_t final : public cifar_datasource_t
+{
+public:
+    ///
+    /// \brief default constructor
+    ///
+    cifar100c_datasource_t();
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rdatasource_t clone() const override;
+};
+
+///
+/// CIFAR-100 task:
+///      - image classification
+///      - 32x32 color images as inputs
+///      - 100 outputs (100 fine labels)
+///
+/// http://www.cs.toronto.edu/~kriz/cifar.html
+///
+class NANO_PUBLIC cifar100f_datasource_t final : public cifar_datasource_t
+{
+public:
+    ///
+    /// \brief default constructor
+    ///
+    cifar100f_datasource_t();
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rdatasource_t clone() const override;
+};
 } // namespace nano

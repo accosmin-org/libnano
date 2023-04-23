@@ -4,34 +4,34 @@
 
 namespace nano
 {
+///
+/// \brief Zakharov function: see https://www.sfu.ca/~ssurjano/zakharov.html.
+///
+class NANO_PUBLIC function_zakharov_t final : public function_t
+{
+public:
     ///
-    /// \brief Zakharov function: see https://www.sfu.ca/~ssurjano/zakharov.html.
+    /// \brief constructor
     ///
-    class NANO_PUBLIC function_zakharov_t final : public function_t
-    {
-    public:
-        ///
-        /// \brief constructor
-        ///
-        explicit function_zakharov_t(tensor_size_t dims = 10);
+    explicit function_zakharov_t(tensor_size_t dims = 10);
 
-        ///
-        /// \brief @see clonable_t
-        ///
-        rfunction_t clone() const override;
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
 
-        ///
-        /// \brief @see function_t
-        ///
-        rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
 
-    private:
-        // attributes
-        vector_t m_bias; ///<
-    };
+private:
+    // attributes
+    vector_t m_bias; ///<
+};
 } // namespace nano

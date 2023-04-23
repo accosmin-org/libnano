@@ -4,5 +4,5 @@
 
 namespace nano
 {
-    using tensor_size_t = Eigen::Index;
+using tensor_size_t = Eigen::Index;
 }

@@ -4,21 +4,21 @@
 
 namespace nano
 {
-    enum class enum_type
-    {
-        type1,
-        type2,
-        type3
-    };
+enum class enum_type
+{
+    type1,
+    type2,
+    type3
+};
 
-    template <>
-    enum_map_t<nano::enum_type> enum_string<nano::enum_type>() // cppcheck-suppress unusedFunction
-    {
-        return {
-            {enum_type::type1, "type1"},
-            {enum_type::type3, "type3"}
-        };
-    }
+template <>
+enum_map_t<nano::enum_type> enum_string<nano::enum_type>() // cppcheck-suppress unusedFunction
+{
+    return {
+        {enum_type::type1, "type1"},
+        {enum_type::type3, "type3"}
+    };
+}
 } // namespace nano
 
 UTEST_BEGIN_MODULE(test_core_strutil)

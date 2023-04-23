@@ -14,49 +14,49 @@ static constexpr auto bin_missed = 1;
 
 namespace
 {
-    class cache_t : public accumulator_t
+class cache_t : public accumulator_t
+{
+public:
+    explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
+        : accumulator_t(tdims)
+        , m_tables(cat_dims(2, tdims))
     {
-    public:
-        explicit cache_t(const tensor3d_dims_t& tdims = tensor3d_dims_t{0, 0, 0})
-            : accumulator_t(tdims)
-            , m_tables(cat_dims(2, tdims))
-        {
-        }
+    }
 
-        auto w() const
-        {
-            return (rx(bin_affine) * x0(bin_affine) - r1(bin_affine) * x1(bin_affine)) /
-                   (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
-        }
+    auto w() const
+    {
+        return (rx(bin_affine) * x0(bin_affine) - r1(bin_affine) * x1(bin_affine)) /
+               (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
+    }
 
-        auto b() const
-        {
-            return (r1(bin_affine) * x2(bin_affine) - rx(bin_affine) * x1(bin_affine)) /
-                   (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
-        }
+    auto b() const
+    {
+        return (r1(bin_affine) * x2(bin_affine) - rx(bin_affine) * x1(bin_affine)) /
+               (x2(bin_affine) * x0(bin_affine) - x1(bin_affine) * x1(bin_affine));
+    }
 
-        auto rss_affine() const
-        {
-            const auto w = this->w();
-            const auto b = this->b();
-            return (r2(bin_affine) + w.square() * x2(bin_affine) + b.square() * x0(bin_affine) -
-                    2 * w * rx(bin_affine) - 2 * b * r1(bin_affine) + 2 * w * b * x1(bin_affine))
-                .sum();
-        }
+    auto rss_affine() const
+    {
+        const auto w = this->w();
+        const auto b = this->b();
+        return (r2(bin_affine) + w.square() * x2(bin_affine) + b.square() * x0(bin_affine) - 2 * w * rx(bin_affine) -
+                2 * b * r1(bin_affine) + 2 * w * b * x1(bin_affine))
+            .sum();
+    }
 
-        auto score(const criterion_type criterion) const
-        {
-            const auto rss = rss_affine() + rss_zero(bin_missed);
-            const auto k   = 2 * ::nano::size(tdims());
-            const auto n   = static_cast<tensor_size_t>(x0(bin_affine) + x0(bin_missed));
-            return make_score(criterion, rss, k, n);
-        }
+    auto score(const criterion_type criterion) const
+    {
+        const auto rss = rss_affine() + rss_zero(bin_missed);
+        const auto k   = 2 * ::nano::size(tdims());
+        const auto n   = static_cast<tensor_size_t>(x0(bin_affine) + x0(bin_missed));
+        return make_score(criterion, rss, k, n);
+    }
 
-        // attributes
-        tensor4d_t    m_tables;                            ///<
-        tensor_size_t m_feature{0};                        ///<
-        scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
-    };
+    // attributes
+    tensor4d_t    m_tables;                            ///<
+    tensor_size_t m_feature{0};                        ///<
+    scalar_t      m_score{wlearner_t::no_fit_score()}; ///<
+};
 } // namespace
 
 affine_wlearner_t::affine_wlearner_t()
