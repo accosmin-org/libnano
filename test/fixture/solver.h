@@ -141,25 +141,27 @@ struct solver_description_t
         return solver_description_t{solver_type::line_search}.smooth_config(
             minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
-    else if (solver_id == "sgm" || solver_id == "cocob")
-    {
-        return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.epsilon(1e-6).expected_maximum_deviation(1e-3))
-            .nonsmooth_config(minimize_config_t{}.epsilon(1e-6).max_evals(200000).expected_maximum_deviation(5e-3));
-    }
-    else if (solver_id == "sda" || solver_id == "wda")
-    {
-        // NB: SDA/WDA can take way too many iterations to converge reliably to the solution!
-        // NB: also the distance to the optimum `D` is not usually known and it impacts the convergence and its speed!
-        return solver_description_t{solver_type::non_monotonic}.smooth_config(
-            minimize_config_t{}.epsilon(1e-3).max_evals(1000).expected_convergence(false).expected_maximum_deviation(
-                1e+1));
-    }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
+        // NB: very precise for both smooth and non-smooth problems.
+        // NB: the ellipsoid method is reasonably fast only for very low-dimensional problems.
+        // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
             .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
+    }
+    else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
+             solver_id == "wda" ||                                           // primal-dual subgradient method
+             solver_id == "pgm" || solver_id == "dgm" || solver_id == "fgm") // universal gradient methods
+    {
+        // NB: unreliable methods:
+        // - either no theoretical or practical stopping criterion
+        // - very slow convergence rate for both non-smooth and hard smooth problems
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(
+                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1))
+            .nonsmooth_config(
+                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1));
     }
     else
     {

@@ -9,7 +9,7 @@ namespace
 {
 auto make_nonsmooth_solver_ids()
 {
-    return strings_t{"ellipsoid", "osga", "sgm", "cocob"}; // FIXME: have all methods converge!!!, "sda", "wda"};
+    return strings_t{"ellipsoid", "osga", "sgm", "cocob", "sda", "wda", "pgm", "dgm", "fgm"};
 }
 } // namespace
 

@@ -9,6 +9,7 @@
 #include <nano/solver/pdsgm.h>
 #include <nano/solver/quasi.h>
 #include <nano/solver/sgm.h>
+#include <nano/solver/universal.h>
 
 using namespace nano;
 
@@ -188,6 +189,9 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_cocob_t>("continuous coin betting (COCOB)");
         manager.add<solver_sda_t>("simple dual averages (variant of primal-dual subgradient methods)");
         manager.add<solver_wda_t>("weighted dual averages (variant of primal-dual subgradient methods)");
+        manager.add<solver_pgm_t>("universal primal gradient method (PGM)");
+        manager.add<solver_dgm_t>("universal dual gradient method (DGM)");
+        manager.add<solver_fgm_t>("universal fast gradient method (FGM)");
     };
 
     static std::once_flag flag;
