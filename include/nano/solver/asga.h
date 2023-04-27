@@ -20,7 +20,7 @@ namespace nano
 /// NB: the algorithm is quite sensitive to the optimum parameter values so that an accurate solution
 ///     cannot be obtain in all cases even after a large number of iterations.
 ///
-class solver_asga_t : public solver_t
+class NANO_PUBLIC solver_asga_t : public solver_t
 {
 public:
     ///

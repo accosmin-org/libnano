@@ -1,0 +1,13 @@
+name: memcheck
+
+on: [push]
+
+jobs:
+  memcheck:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: memcheck
+      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck

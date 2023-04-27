@@ -1,53 +1,8 @@
-name: devel
+name: clang-tidy
 
 on: [push]
 
 jobs:
-  clang-format:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: clang-format
-      run: bash scripts/build.sh --clang-format
-
-  asan-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: ASAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
-
-  lsan-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: LSAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
-
-  usan-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: USAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
-
-  tsan-gcc:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: TSAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
-
   clang-tidy-cert:
     runs-on: ubuntu-22.04
     steps:
@@ -137,36 +92,3 @@ jobs:
       run: bash scripts/setup_ubuntu2204.sh --default
     - name: clang-tidy-cppcoreguidelines
       run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-cppcoreguidelines
-
-  cppcheck:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: cppcheck
-      run: CXX=g++ bash scripts/build.sh --config --cppcheck
-
-  memcheck:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: memcheck
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck
-
-  coverage-and-sonar:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
-    - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov --sonar
