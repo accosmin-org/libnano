@@ -151,8 +151,9 @@ struct solver_description_t
             .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
-             solver_id == "wda" ||                                           // primal-dual subgradient method
-             solver_id == "pgm" || solver_id == "dgm" || solver_id == "fgm") // universal gradient methods
+             solver_id == "wda" ||                                             // primal-dual subgradient method
+             solver_id == "pgm" || solver_id == "dgm" || solver_id == "fgm" || // universal gradient methods
+             solver_id == "asga2" || solver_id == "asga4")                     // accelerated sub-gradient methods
     {
         // NB: unreliable methods:
         // - either no theoretical or practical stopping criterion

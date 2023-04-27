@@ -90,6 +90,8 @@ std::cout << make_table("solver", solver_t::all());
 |-----------|---------------------------------------------------------------------|
 | solver    | description                                                         |
 |-----------|---------------------------------------------------------------------|
+| asga2     | accelerated sub-gradient algorithm (ASGA-2)                         |
+| asga4     | accelerated sub-gradient algorithm (ASGA-4)                         |
 | bfgs      | quasi-newton method (BFGS)                                          |
 | cgd-cd    | conjugate gradient descent (CD)                                     |
 | cgd-dy    | conjugate gradient descent (DY)                                     |
@@ -246,23 +248,26 @@ Notice that the CG-descent line-search method is the only one that doesn't fail 
 However if the function is not smooth, then monotonic solvers like L-BFGS are not guaranteed to converge:
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --non-smooth \
-    --solver "gd|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm" \
-    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 16
+    --solver "gd|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm|asga2|asga4" \
+    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 18
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank  | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,morethuente]     | -7.0000   | 1.69  | N/A          | 0.710155     | 0      | 8000   | 1834   | 1834   | 363   |
-| lbfgs [quadratic,morethuente]    | -6.6044   | 3.13  | N/A          | 0.710196     | 748    | 7252   | 1721   | 1721   | 118   |
-| osga                             | -5.0198   | 3.77  | N/A          | 0.710154     | 0      | 3176   | 1912   | 957    | 93    |
-| cgd-pr [quadratic,morethuente]   | -3.7104   | 4.85  | N/A          | 0.708688     | 5      | 7995   | 1830   | 1830   | 122   |
-| sgm                              | -3.3518   | 5.67  | N/A          | 0.717901     | 0      | 8118   | 1936   | 1936   | 126   |
-| gd [quadratic,morethuente]       | -3.3208   | 6.30  | N/A          | 0.709155     | 0      | 8000   | 1823   | 1823   | 122   |
-| fgm                              | -3.0087   | 5.96  | N/A          | 0.711256     | 0      | 582    | 1605   | 1605   | 93    |
-| wda                              | -2.3325   | 9.45  | N/A          | 0.827981     | 0      | 8253   | 2294   | 2294   | 139   |
-| cocob                            | -1.8192   | 7.38  | N/A          | 0.739145     | 0      | 9996   | 2422   | 2422   | 158   |
-| pgm                              | -1.5560   | 10.19 | N/A          | 0.261627     | 0      | 1904   | 709    | 709    | 39    |
-| dgm                              | -1.3553   | 10.24 | N/A          | 0.291631     | 0      | 5203   | 2043   | 1022   | 94    |
-| sda                              | -1.2985   | 9.37  | N/A          | 0.896372     | 0      | 10409  | 2466   | 2466   | 148   |
+| bfgs [quadratic,morethuente]     | -7.0000   | 1.91  | N/A          | 0.727723     | 0      | 8000   | 1834   | 1834   | 364   |
+| lbfgs [quadratic,morethuente]    | -6.6235   | 3.37  | N/A          | 0.727749     | 734    | 7266   | 1727   | 1727   | 117   |
+| osga                             | -5.0875   | 3.80  | N/A          | 0.727625     | 0      | 4451   | 2263   | 1132   | 102   |
+| cgd-n [quadratic,morethuente]    | -3.7141   | 5.49  | N/A          | 0.723966     | 1      | 8000   | 1831   | 1831   | 120   |
+| cgd-pr [quadratic,morethuente]   | -3.7098   | 5.58  | N/A          | 0.724364     | 7      | 7993   | 1830   | 1830   | 120   |
+| sgm                              | -3.3507   | 6.32  | N/A          | 0.735928     | 0      | 8118   | 1936   | 1936   | 123   |
+| fgm                              | -3.0088   | 6.48  | N/A          | 0.727774     | 0      | 585    | 1609   | 1609   | 91    |
+| asga2                            | -2.5772   | 9.59  | N/A          | 0.717997     | 0      | 0      | 300    | 300    | 17    |
+| wda                              | -2.3298   | 10.80 | N/A          | 0.842533     | 0      | 8252   | 2292   | 2292   | 135   |
+| asga4                            | -2.1598   | 10.62 | N/A          | 0.622059     | 0      | 0      | 258    | 258    | 14    |
+| ellipsoid                        | -2.1173   | 11.33 | N/A          | 0.704525     | 0      | 10000  | 2422   | 2422   | 541   |
+| cocob                            | -1.8192   | 8.46  | N/A          | 0.757621     | 0      | 9995   | 2422   | 2422   | 155   |
+| pgm                              | -1.5560   | 12.68 | N/A          | 0.266426     | 0      | 1925   | 712    | 712    | 38    |
+| dgm                              | -1.3552   | 12.85 | N/A          | 0.295025     | 0      | 5124   | 2025   | 1013   | 92    |
+| sda                              | -1.2997   | 10.73 | N/A          | 0.909399     | 0      | 10429  | 2467   | 2467   | 144   |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 Indeed the monotonic solvers are not converging, but surprisingly they produce the most accurate solutions by at least an order of magnitude in the worst case. Out of the non-monotonic solvers only OSGA produces reasonable accurate solutions. The rest of non-monotonic solvers don't seem capable of converging fast enough for practical applications. Note that it is very difficult to have a practical and reliable stopping criterion for general convex non-smooth problems.
