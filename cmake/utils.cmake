@@ -1,11 +1,3 @@
-# function to setup compilation flags for various targets
-function(target_compile_configure target)
-    target_compile_features(${target}
-        PUBLIC cxx_std_17
-        PRIVATE cxx_std_17
-    )
-endfunction()
-
 # function to copy runtime DLLs for the given target (needed for shared library dependencies on MSVC)
 # NB: from https://stackoverflow.com/questions/14089284
 function(copy_runtime_dlls TARGET)
@@ -26,7 +18,6 @@ endfunction()
 # function to create a unit test application
 function(make_test test libs)
     add_executable(${test} ${test}.cpp)
-    target_compile_configure(${test})
     target_include_directories(${test}
         SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>
     )
@@ -50,7 +41,6 @@ endfunction()
 # function to create an executable
 function(make_app app libs)
     add_executable(${app} ${app}.cpp)
-    target_compile_configure(${app})
     target_include_directories(${app}
         PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
     target_link_libraries(${app}

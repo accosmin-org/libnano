@@ -122,7 +122,6 @@ target_sources(nano PRIVATE
 )
 
 add_library(NANO::nano ALIAS nano)
-target_compile_configure(nano)
 
 target_include_directories(nano
     PUBLIC
