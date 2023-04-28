@@ -6,6 +6,7 @@ using namespace nano;
 solver_lbfgs_t::solver_lbfgs_t()
     : solver_t("lbfgs")
 {
+    lsearchk("cgdescent");
     type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 

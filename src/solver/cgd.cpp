@@ -68,6 +68,7 @@ scalar_t FRPR(const vector_t& pg, const vector_t& pd, const vector_t& cg)
 solver_cgd_t::solver_cgd_t(string_t id)
     : solver_t(std::move(id))
 {
+    lsearchk("cgdescent");
     type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 1e-1);
 
