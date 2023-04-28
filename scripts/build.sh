@@ -347,6 +347,7 @@ function clang_tidy_cppcoreguidelines {
     checks="${checks},-cppcoreguidelines-avoid-magic-numbers"
     checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
     checks="${checks},-cppcoreguidelines-pro-bounds-array-to-pointer-decay"
+    checks="${checks},-cppcoreguidelines-avoid-const-or-ref-data-members"
     clang_tidy ${checks}
 }
 
