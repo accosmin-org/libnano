@@ -8,9 +8,9 @@ using namespace nano;
 class objective_t final : public function_t
 {
 public:
-    objective_t(tensor_size_t size)
+    objective_t(const tensor_size_t size)
         : function_t("objective's name", size)
-        , m_b(vector_t::Random(size))
+        , m_b(make_random_vector<scalar_t>(size))
     {
         convex(convexity::yes);
         smooth(smoothness::yes);
@@ -49,7 +49,7 @@ int main(const int, char*[])
     const auto trials = 10;
     for (auto trial = 0; trial < 10; ++trial)
     {
-        const vector_t x0 = vector_t::Random(objective.size());
+        const auto x0 = make_random_vector<scalar_t>(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "check_grad[" << (trial + 1) << "/" << trials
                   << "]: dg=" << grad_accuracy(objective, x0) << std::endl;
@@ -70,7 +70,7 @@ int main(const int, char*[])
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++trial)
     {
-        const vector_t x0 = vector_t::Random(objective.size());
+        const auto x0 = make_random_vector<scalar_t>(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
                   << "]: f0=" << objective.vgrad(x0, nullptr) << "...\n";
