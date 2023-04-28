@@ -10,7 +10,7 @@ solver_lbfgs_t::solver_lbfgs_t()
     type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 
-    register_parameter(parameter_t::make_integer("solver::lbfgs::history", 1, LE, 6, LE, 1000));
+    register_parameter(parameter_t::make_integer("solver::lbfgs::history", 1, LE, 20, LE, 1000));
 }
 
 rsolver_t solver_lbfgs_t::clone() const

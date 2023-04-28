@@ -181,45 +181,47 @@ A working example for constructing and minimizing an objective function can be f
 * retrieve the optimization result.
 
 
-The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard test functions.
+#### Benchmarks
+
+The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard numerical optimization test problems and typical machine learning problems.
 
 
-The following run compares 4 solvers on all convex smooth builtin functions with 100 dimensions:
+##### Compare solvers on convex smooth problems
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
     --solver "gd|cgd-pr|lbfgs|bfgs" \
-    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 8
+    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 8
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,morethuente]     | -6.9631   | 1.84 | N/A          | 4.28363e-08  | 0      | 0      | 46     | 46     | 11    |
-| cgd-pr [quadratic,morethuente]   | -6.5655   | 2.14 | N/A          | 3.50958e-08  | 0      | 0      | 99     | 99     | 0     |
-| lbfgs [quadratic,morethuente]    | -6.5625   | 2.15 | N/A          | 4.0622e-08   | 0      | 0      | 106    | 106    | 0     |
-| gd [quadratic,morethuente]       | -5.0437   | 3.86 | N/A          | 0.0523154    | 0      | 3000   | 821    | 821    | 1     |
+| bfgs [quadratic,morethuente]     | -6.9386   | 1.84 | N/A          | 4.31366e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.6258   | 2.08 | N/A          | 4.17281e-08  | 0      | 0      | 68     | 68     | 0     |
+| cgd-pr [quadratic,morethuente]   | -6.5633   | 2.20 | N/A          | 3.49864e-08  | 0      | 0      | 99     | 99     | 0     |
+| gd [quadratic,morethuente]       | -5.0477   | 3.87 | N/A          | 0.0583651    | 0      | 384    | 821    | 821    | 1     |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are fairly close. The steepest gradient descent method needs as expected many more iterations to converge. Note that BFGS scales quadratically with the problem size, while CGD and L-BFGS scale linearly and are thus recommended for very large problems.
 
 
-The builtin line-search methods can be compared for the same problem like:
+##### Compare line-search methods on convex smooth problems
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
     --solver "lbfgs|bfgs" \
     --lsearchk ".+" \
-    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 14
+    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 14
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,lemarechal]      | -6.9298   | 5.19 | N/A          | 4.07585e-08  | 0      | 0      | 49     | 49     | 12    |
-| bfgs [quadratic,fletcher]        | -6.9291   | 4.33 | N/A          | 4.11342e-08  | 0      | 0      | 49     | 49     | 11    |
-| bfgs [quadratic,morethuente]     | -6.9233   | 6.06 | N/A          | 4.28211e-08  | 0      | 0      | 46     | 46     | 11    |
-| bfgs [quadratic,backtrack]       | -6.9173   | 3.96 | N/A          | 4.33536e-08  | 0      | 0      | 51     | 51     | 13    |
-| bfgs [quadratic,cgdescent]       | -6.9156   | 4.49 | N/A          | 4.22531e-08  | 0      | 0      | 44     | 44     | 11    |
-| lbfgs [quadratic,cgdescent]      | -6.5560   | 5.84 | N/A          | 4.22903e-08  | 0      | 0      | 107    | 107    | 0     |
-| lbfgs [quadratic,backtrack]      | -6.5390   | 5.47 | N/A          | 4.26358e-08  | 0      | 0      | 112    | 112    | 0     |
-| lbfgs [quadratic,morethuente]    | -6.5367   | 6.94 | N/A          | 4.06069e-08  | 0      | 0      | 106    | 106    | 0     |
-| lbfgs [quadratic,lemarechal]     | -6.5036   | 6.69 | N/A          | 4.28758e-08  | 0      | 0      | 107    | 107    | 0     |
-| lbfgs [quadratic,fletcher]       | -6.5002   | 6.04 | N/A          | 0.0252848    | 19     | 0      | 106    | 106    | 0     |
+| bfgs [quadratic,lemarechal]      | -6.8104   | 5.21 | N/A          | 4.10553e-08  | 0      | 0      | 49     | 49     | 12    |
+| bfgs [quadratic,fletcher]        | -6.8088   | 4.41 | N/A          | 4.17745e-08  | 0      | 0      | 49     | 49     | 12    |
+| bfgs [quadratic,morethuente]     | -6.8056   | 6.09 | N/A          | 4.30813e-08  | 0      | 0      | 46     | 46     | 12    |
+| bfgs [quadratic,backtrack]       | -6.8014   | 3.95 | N/A          | 4.3236e-08   | 0      | 0      | 51     | 51     | 13    |
+| bfgs [quadratic,cgdescent]       | -6.8003   | 4.51 | N/A          | 4.23293e-08  | 0      | 0      | 44     | 44     | 11    |
+| lbfgs [quadratic,cgdescent]      | -6.6298   | 5.70 | N/A          | 4.00705e-08  | 0      | 0      | 67     | 67     | 0     |
+| lbfgs [quadratic,backtrack]      | -6.6022   | 5.58 | N/A          | 4.21418e-08  | 0      | 0      | 75     | 75     | 0     |
+| lbfgs [quadratic,lemarechal]     | -6.5767   | 6.70 | N/A          | 4.25925e-08  | 0      | 0      | 69     | 69     | 0     |
+| lbfgs [quadratic,morethuente]    | -6.5758   | 6.75 | N/A          | 4.16728e-08  | 0      | 0      | 68     | 68     | 0     |
+| lbfgs [quadratic,fletcher]       | -6.5538   | 6.09 | N/A          | 0.0282253    | 2      | 0      | 68     | 68     | 0     |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 
@@ -227,47 +229,101 @@ The builtin line-search methods can be compared for the same problem like:
 Very precise solutions can be obtained efficiently using the CG-descent line-search method:
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
-    --solver "lbfgs|bfgs" \
+    --solver "cgd-pr|lbfgs|bfgs" \
     --lsearch0 "cgdescent" \
     --lsearchk "morethuente|cgdescent" \
-    --trials 1000 --solver::epsilon 1e-14 --solver::max_evals 5000 | tail -n 10
+    --trials 128 --solver::epsilon 1e-14 --solver::max_evals 5000 | tail -n 10
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [cgdescent,morethuente]     | -13.8571  | 2.99 | N/A          | 3.45099e-09  | 0      | 3362   | 791    | 693    | 52    |
-| cgd-pr [cgdescent,cgdescent]     | -13.4696  | 3.47 | N/A          | 5.62854e-14  | 0      | 234    | 370    | 234    | 1     |
-| bfgs [cgdescent,cgdescent]       | -13.4648  | 3.20 | N/A          | 3.96616e-15  | 0      | 0      | 152    | 80     | 23    |
-| lbfgs [cgdescent,cgdescent]      | -13.4603  | 4.07 | N/A          | 4.52791e-15  | 0      | 0      | 367    | 188    | 0     |
-| lbfgs [cgdescent,morethuente]    | -13.3660  | 4.13 | N/A          | 3.89321e-09  | 0      | 3391   | 922    | 753    | 21    |
-| cgd-pr [cgdescent,morethuente]   | -13.2651  | 3.13 | N/A          | 3.89886e-09  | 0      | 3129   | 701    | 623    | 18    |
+| bfgs [cgdescent,morethuente]     | -13.8490  | 2.82 | N/A          | 3.33163e-09  | 0      | 492    | 886    | 784    | 63    |
+| cgd-pr [cgdescent,cgdescent]     | -13.4563  | 3.56 | N/A          | 6.08133e-14  | 0      | 35     | 369    | 234    | 1     |
+| bfgs [cgdescent,cgdescent]       | -13.4529  | 3.32 | N/A          | 3.97131e-15  | 0      | 0      | 152    | 80     | 24    |
+| lbfgs [cgdescent,cgdescent]      | -13.4412  | 4.16 | N/A          | 4.69193e-15  | 0      | 0      | 248    | 128    | 0     |
+| lbfgs [cgdescent,morethuente]    | -13.3946  | 4.05 | N/A          | 3.67177e-09  | 0      | 482    | 903    | 784    | 30    |
+| cgd-pr [cgdescent,morethuente]   | -13.2778  | 3.09 | N/A          | 3.79544e-09  | 0      | 503    | 859    | 772    | 32    |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 Notice that the CG-descent line-search method is the only one that doesn't fail to reach such a precision and also with 2-3 times fewer function calls.
 
 
-However if the function is not smooth, then monotonic solvers like L-BFGS are not guaranteed to converge:
+##### Compare solvers on convex non-smooth problems
+
+The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge for non-smooth problems. As such non-monotonic solvers may be more appropriate in this case.
+
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --non-smooth \
     --solver "gd|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm|asga2|asga4" \
-    --trials 1000 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 18
+    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 18
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank  | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,morethuente]     | -7.0000   | 1.91  | N/A          | 0.727723     | 0      | 8000   | 1834   | 1834   | 364   |
-| lbfgs [quadratic,morethuente]    | -6.6235   | 3.37  | N/A          | 0.727749     | 734    | 7266   | 1727   | 1727   | 117   |
-| osga                             | -5.0875   | 3.80  | N/A          | 0.727625     | 0      | 4451   | 2263   | 1132   | 102   |
-| cgd-n [quadratic,morethuente]    | -3.7141   | 5.49  | N/A          | 0.723966     | 1      | 8000   | 1831   | 1831   | 120   |
-| cgd-pr [quadratic,morethuente]   | -3.7098   | 5.58  | N/A          | 0.724364     | 7      | 7993   | 1830   | 1830   | 120   |
-| sgm                              | -3.3507   | 6.32  | N/A          | 0.735928     | 0      | 8118   | 1936   | 1936   | 123   |
-| fgm                              | -3.0088   | 6.48  | N/A          | 0.727774     | 0      | 585    | 1609   | 1609   | 91    |
-| asga2                            | -2.5772   | 9.59  | N/A          | 0.717997     | 0      | 0      | 300    | 300    | 17    |
-| wda                              | -2.3298   | 10.80 | N/A          | 0.842533     | 0      | 8252   | 2292   | 2292   | 135   |
-| asga4                            | -2.1598   | 10.62 | N/A          | 0.622059     | 0      | 0      | 258    | 258    | 14    |
-| ellipsoid                        | -2.1173   | 11.33 | N/A          | 0.704525     | 0      | 10000  | 2422   | 2422   | 541   |
-| cocob                            | -1.8192   | 8.46  | N/A          | 0.757621     | 0      | 9995   | 2422   | 2422   | 155   |
-| pgm                              | -1.5560   | 12.68 | N/A          | 0.266426     | 0      | 1925   | 712    | 712    | 38    |
-| dgm                              | -1.3552   | 12.85 | N/A          | 0.295025     | 0      | 5124   | 2025   | 1013   | 92    |
-| sda                              | -1.2997   | 10.73 | N/A          | 0.909399     | 0      | 10429  | 2467   | 2467   | 144   |
+| bfgs [quadratic,morethuente]     | -7.0000   | 1.83  | N/A          | 0.727718     | 0      | 1024   | 1833   | 1833   | 361   |
+| lbfgs [quadratic,morethuente]    | -6.6116   | 3.25  | N/A          | 0.727699     | 235    | 789    | 1574   | 1574   | 110   |
+| osga                             | -5.1023   | 4.24  | N/A          | 0.7276       | 0      | 593    | 2289   | 1145   | 104   |
+| cgd-pr [quadratic,morethuente]   | -3.6776   | 5.11  | N/A          | 0.72298      | 0      | 1024   | 1831   | 1831   | 123   |
+| gd [quadratic,morethuente]       | -3.3640   | 6.72  | N/A          | 0.727799     | 0      | 1024   | 1823   | 1823   | 122   |
+| sgm                              | -3.3548   | 6.19  | N/A          | 0.733261     | 0      | 1036   | 1935   | 1935   | 125   |
+| fgm                              | -3.0119   | 6.18  | N/A          | 0.727322     | 0      | 73     | 1609   | 1609   | 93    |
+| asga2                            | -2.5801   | 8.77  | N/A          | 0.714641     | 0      | 125    | 1489   | 1489   | 85    |
+| wda                              | -2.3653   | 10.39 | N/A          | 0.831858     | 0      | 1039   | 2292   | 2292   | 139   |
+| asga4                            | -2.1634   | 10.16 | N/A          | 0.627735     | 0      | 111    | 1672   | 1672   | 97    |
+| cocob                            | -1.8201   | 7.92  | N/A          | 0.762904     | 0      | 1280   | 2421   | 2421   | 159   |
+| pgm                              | -1.5533   | 11.93 | N/A          | 0.266456     | 0      | 256    | 737    | 737    | 40    |
+| dgm                              | -1.3563   | 12.12 | N/A          | 0.2893       | 0      | 655    | 2117   | 1059   | 98    |
+| sda                              | -1.3026   | 10.18 | N/A          | 0.909667     | 0      | 1349   | 2479   | 2479   | 149   |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 Indeed the monotonic solvers are not converging, but surprisingly they produce the most accurate solutions by at least an order of magnitude in the worst case. Out of the non-monotonic solvers only OSGA produces reasonable accurate solutions. The rest of non-monotonic solvers don't seem capable of converging fast enough for practical applications. Note that it is very difficult to have a practical and reliable stopping criterion for general convex non-smooth problems.
+
+
+##### Tune the L-BFGS history size on convex smooth problems
+
+The limited-memory quasi-Newton (L-BFGS) method uses a small number of last known gradients to build a low-rank inverse of the Hessian matrix. This results in much more efficient iterations than quasi-Newton methods, but at a lower convergence rate and potential larger number of iterations. However it is not clear from the literature what is the optimum number of last gradients to use. The benchmark program allows to measure the impact of this parameter on nthe number of iterations until convergence.
+
+```
+./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
+    --solver "lbfgs|bfgs" \
+    --solver::lbfgs::history 5 \
+    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 6
+for hsize in 10 20 50 100 150 200
+do
+    ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
+        --solver "lbfgs|bfgs" \
+        --solver::lbfgs::history ${hsize} \
+        --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 3
+done
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.9823   | 1.41 | N/A          | 4.30812e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.5600   | 1.59 | N/A          | 4.06911e-08  | 0      | 0      | 112    | 112    | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.9730   | 1.40 | N/A          | 4.31333e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.5787   | 1.60 | N/A          | 4.31472e-08  | 0      | 0      | 89     | 89     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.9507   | 1.46 | N/A          | 4.31375e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.6301   | 1.54 | N/A          | 4.1729e-08   | 0      | 0      | 68     | 68     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.8646   | 1.51 | N/A          | 4.30813e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.7874   | 1.49 | N/A          | 4.04148e-08  | 0      | 0      | 44     | 44     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.8626   | 1.50 | N/A          | 4.30813e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.7882   | 1.50 | N/A          | 3.98891e-08  | 0      | 0      | 39     | 39     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.8626   | 1.50 | N/A          | 4.30813e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.7882   | 1.50 | N/A          | 3.98375e-08  | 0      | 0      | 39     | 39     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| bfgs [quadratic,morethuente]     | -6.8626   | 1.49 | N/A          | 4.31338e-08  | 0      | 0      | 46     | 46     | 12    |
+| lbfgs [quadratic,morethuente]    | -6.7882   | 1.51 | N/A          | 3.98813e-08  | 0      | 0      | 39     | 39     | 0     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+```
+
+L-BFGS is catching up to BFGS in terms of both accuracy and number of iterations by increasing the number of past gradients to use at very little additional computation cost.
+
+
+#### Future work
+
+* Linear programming solver
+* Quadratic programming solver
+* Solvers for constrained optimization
