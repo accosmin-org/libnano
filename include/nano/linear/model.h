@@ -11,14 +11,12 @@ namespace nano
 /// NB: the model can be regularized using the following methods:
 ///     - lasso (the L1-norm of the weights),
 ///     - ridge (the L2-norm of the weights),
-///     - elastic net (the L1-norm and the L2-norm of the weights) or
-///     - variance (of the loss values across samples).
+///     - elastic net (the L1-norm and the L2-norm of the weights).
 ///
 /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::scaling_type).
 ///
 /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
-/// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
-/// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
+/// see "Regularization and variable selection via the elastic net", by H. Zou, T. Hastie
 ///
 class NANO_PUBLIC linear_model_t final : public model_t
 {

@@ -41,11 +41,6 @@ auto make_params(const configurable_t& configurable)
         param_spaces.emplace_back(param_space);
         break;
 
-    case regularization_type::variance:
-        param_names.emplace_back("vAreg");
-        param_spaces.emplace_back(param_space);
-        break;
-
     default: break;
     }
 
@@ -56,17 +51,15 @@ auto decode_params(const tensor1d_cmap_t& params, const regularization_type regu
 {
     scalar_t l1reg = 0.0;
     scalar_t l2reg = 0.0;
-    scalar_t vAreg = 0.0;
     switch (regularization)
     {
     case regularization_type::lasso: l1reg = params(0); break;
     case regularization_type::ridge: l2reg = params(0); break;
-    case regularization_type::variance: vAreg = params(0); break;
     case regularization_type::elasticnet: l1reg = params(0), l2reg = params(1); break;
     default: break;
     }
 
-    return std::make_tuple(l1reg, l2reg, vAreg);
+    return std::make_tuple(l1reg, l2reg);
 }
 
 auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
@@ -84,8 +77,7 @@ auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
 } // LCOV_EXCL_LINE
 
 auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg,
-         const std::any& extra = std::any{})
+         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const std::any& extra = std::any{})
 {
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(configurable.parameter("linear::batch").value<tensor_size_t>());
@@ -93,7 +85,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     iterator.cache_flatten(std::numeric_limits<tensor_size_t>::max());
     iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
 
-    const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg, vAreg};
+    const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg};
     const auto state    = solver.minimize(function, make_x0(function, extra));
 
     tensor1d_t bias    = function.bias(state.x());
@@ -154,9 +146,9 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     const auto evaluator =
         [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto& extra)
     {
-        const auto [l1reg, l2reg, vAreg] = decode_params(params, regularization);
+        const auto [l1reg, l2reg] = decode_params(params, regularization);
 
-        auto result              = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, vAreg, extra);
+        auto result              = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, extra);
         auto train_errors_losses = evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
         auto valid_errors_losses = evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
 
@@ -168,9 +160,9 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
 
     // refit with the optimum hyper-parameters (if any) on all given samples
     {
-        const auto [l1reg, l2reg, vAreg] = decode_params(fit_result.optimum().params(), regularization);
+        const auto [l1reg, l2reg] = decode_params(fit_result.optimum().params(), regularization);
 
-        auto result        = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg, vAreg);
+        auto result        = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg);
         auto errors_losses = evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
         fit_result.evaluate(std::move(errors_losses));

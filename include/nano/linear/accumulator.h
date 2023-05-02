@@ -19,7 +19,7 @@ public:
     ///
     /// \brief constructor
     ///
-    accumulator_t(tensor_size_t isize, tensor_size_t tsize, bool g1, bool g2);
+    accumulator_t(tensor_size_t isize, tensor_size_t tsize);
 
     ///
     /// \brief reset the accumulator.
@@ -41,11 +41,8 @@ public:
     tensor4d_t m_vgrads;  ///< buffer: gradients wrt predictions
     tensor1d_t m_values;  ///< buffer: loss values
     scalar_t   m_vm1{0};  ///< first order momentum of the loss values
-    scalar_t   m_vm2{0};  ///< second order momentum of the loss values
     tensor1d_t m_gb1;     ///< first order momentum of the gradient wrt bias
-    tensor1d_t m_gb2;     ///< second order momentum of the gradient wrt bias
     tensor2d_t m_gW1;     ///< first order momentum of the gradient wrt weights
-    tensor2d_t m_gW2;     ///< second order momentum of the gradient wrt weights
 };
 
 using accumulators_t = std::vector<accumulator_t>;

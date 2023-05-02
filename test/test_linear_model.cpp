@@ -149,33 +149,6 @@ UTEST_CASE(regularization_ridge)
     }
 }
 
-/*UTEST_CASE(regularization_variance)
-{
-    const auto datasource = make_linear_datasource(100, 1, 4);
-    const auto dataset    = make_dataset(datasource);
-    const auto samples    = arange(0, dataset.samples());
-
-    auto model                                = make_model();
-    model.parameter("linear::scaling")        = scaling_type::minmax;
-    model.parameter("linear::regularization") = linear::regularization_type::variance;
-
-    const auto param_names = strings_t{"vAreg"};
-    for (const auto* const loss_id : {"mse", "mae"})
-    {
-        UTEST_NAMED_CASE(loss_id);
-
-        const auto loss     = make_loss(loss_id);
-        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter("k-fold", 2);
-        const auto tuner    = make_tuner();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
-
-        check_result(result, param_names, 2, epsilon);
-        check_model(model, dataset, samples, epsilon);
-    }
-}*/
-
 UTEST_CASE(regularization_elasticnet)
 {
     const auto datasource = make_linear_datasource(100, 1, 4);

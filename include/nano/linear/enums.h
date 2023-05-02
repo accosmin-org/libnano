@@ -8,8 +8,7 @@ namespace nano::linear
 /// \brief regularization methods for linear models.
 ///
 /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
-/// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
-/// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
+/// see "Regularization and variable selection via the elastic net", by H. Zou, T. Hastie
 ///
 enum class regularization_type
 {
@@ -17,7 +16,6 @@ enum class regularization_type
     lasso,      ///< lasso
     ridge,      ///< ridge
     elasticnet, ///< elastic net
-    variance    ///< variance of the loss values, like in VadaBoost
 };
 } // namespace nano::linear
 
@@ -30,8 +28,7 @@ inline enum_map_t<linear::regularization_type> enum_string<linear::regularizatio
         {      linear::regularization_type::none,       "none"},
         {     linear::regularization_type::lasso,      "lasso"},
         {     linear::regularization_type::ridge,      "ridge"},
-        {linear::regularization_type::elasticnet, "elasticnet"},
-        {  linear::regularization_type::variance,   "variance"}
+        {linear::regularization_type::elasticnet, "elasticnet"}
     };
 }
 } // namespace nano

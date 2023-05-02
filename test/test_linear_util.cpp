@@ -10,19 +10,16 @@ UTEST_BEGIN_MODULE(test_linear_util)
 
 UTEST_CASE(accumulator)
 {
-    const auto fill_accumulator = [](linear::accumulator_t& accumulator, scalar_t value)
+    const auto fill_accumulator = [](linear::accumulator_t& accumulator, const scalar_t value)
     {
         accumulator.m_vm1 = value;
-        accumulator.m_vm2 = value * value;
         accumulator.m_gb1.full(value);
-        accumulator.m_gb2.full(value * value);
         accumulator.m_gW1.full(value);
-        accumulator.m_gW2.full(value * value);
     };
 
-    const auto make_accumulators = [&](bool g1, bool g2)
+    const auto make_accumulators = [&]()
     {
-        auto accumulators = std::vector<linear::accumulator_t>(3U, linear::accumulator_t{3, 2, g1, g2});
+        auto accumulators = std::vector<linear::accumulator_t>(3U, linear::accumulator_t{3, 2});
         fill_accumulator(accumulators[0], 1);
         fill_accumulator(accumulators[1], 2);
         fill_accumulator(accumulators[2], 3);
@@ -30,48 +27,12 @@ UTEST_CASE(accumulator)
     };
 
     {
-        auto accumulators = make_accumulators(false, false);
+        auto accumulators = make_accumulators();
 
         const auto& accumulator0 = sum_reduce(accumulators, 6);
         UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm2, 14.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_full_tensor<scalar_t>(make_dims(0), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW1, make_full_tensor<scalar_t>(make_dims(0, 0), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0 / 6.0), 1e-12);
-    }
-    {
-        auto accumulators = make_accumulators(false, true);
-
-        const auto& accumulator0 = sum_reduce(accumulators, 6);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm2, 14.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_full_tensor<scalar_t>(make_dims(0), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW1, make_full_tensor<scalar_t>(make_dims(0, 0), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0 / 6.0), 1e-12);
-    }
-    {
-        auto accumulators = make_accumulators(true, false);
-
-        const auto& accumulator0 = sum_reduce(accumulators, 6);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm2, 14.0 / 6.0, 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_full_tensor<scalar_t>(make_dims(2), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb2, make_full_tensor<scalar_t>(make_dims(0), 14.0 / 6.0), 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gW1, make_full_tensor<scalar_t>(make_dims(2, 3), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW2, make_full_tensor<scalar_t>(make_dims(0, 0), 14.0 / 6.0), 1e-12);
-    }
-    {
-        auto accumulators = make_accumulators(true, true);
-
-        const auto& accumulator0 = sum_reduce(accumulators, 6);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_vm2, 14.0 / 6.0, 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_full_tensor<scalar_t>(make_dims(2), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gb2, make_full_tensor<scalar_t>(make_dims(2), 14.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW1, make_full_tensor<scalar_t>(make_dims(2, 3), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_gW2, make_full_tensor<scalar_t>(make_dims(2, 3), 14.0 / 6.0), 1e-12);
     }
 }
 
