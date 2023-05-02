@@ -60,10 +60,9 @@ template <typename tweights, typename tbias>
 
             const auto fcalls = pfresult.m_statistics(0);
             const auto gcalls = pfresult.m_statistics(1);
-            // const auto status = pfresult.m_statistics(2);
+            const auto status = pfresult.m_statistics(2);
 
-            // FIXME: activate the check when a more robust solver for non-smooth problems is available!
-            // UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);
+            UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);
 
             UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
             UTEST_CHECK_GREATER_EQUAL(gcalls, 1);

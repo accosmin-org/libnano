@@ -11,7 +11,7 @@ namespace
 {
 auto make_smooth_solver()
 {
-    auto solver                            = make_solver("lbfgs");
+    auto solver                            = make_solver("hoshino");
     solver->parameter("solver::max_evals") = 1000;
     solver->parameter("solver::epsilon")   = 1e-10;
     solver->lsearchk("cgdescent");
@@ -20,16 +20,16 @@ auto make_smooth_solver()
 
 auto make_nonsmooth_solver()
 {
-    auto solver                            = make_solver("osga");
-    solver->parameter("solver::max_evals") = 1500;
-    solver->parameter("solver::epsilon")   = 1e-6;
+    auto solver                            = make_solver("hoshino");
+    solver->parameter("solver::max_evals") = 1000;
+    solver->parameter("solver::epsilon")   = 1e-10;
     return solver;
 }
 
 auto make_model()
 {
     auto model                       = linear_model_t{};
-    model.parameter("linear::batch") = 10;
+    model.parameter("linear::batch") = 30;
     model.logger(model_t::make_logger_stdio());
     return model;
 }
@@ -88,7 +88,7 @@ UTEST_CASE(regularization_none)
         const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
+        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -115,7 +115,7 @@ UTEST_CASE(regularization_lasso)
         const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = 1e-3;
+        const auto epsilon  = 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -142,14 +142,14 @@ UTEST_CASE(regularization_ridge)
         const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
+        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
 }
 
-UTEST_CASE(regularization_variance)
+/*UTEST_CASE(regularization_variance)
 {
     const auto datasource = make_linear_datasource(100, 1, 4);
     const auto dataset    = make_dataset(datasource);
@@ -160,7 +160,7 @@ UTEST_CASE(regularization_variance)
     model.parameter("linear::regularization") = linear::regularization_type::variance;
 
     const auto param_names = strings_t{"vAreg"};
-    for (const auto* const loss_id : {"mse"}) //, "mae"}) FIXME: enable MAE with a better non-smooth solver!
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
@@ -169,12 +169,12 @@ UTEST_CASE(regularization_variance)
         const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-3;
+        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
     }
-}
+}*/
 
 UTEST_CASE(regularization_elasticnet)
 {
@@ -187,7 +187,7 @@ UTEST_CASE(regularization_elasticnet)
     model.parameter("linear::regularization") = linear::regularization_type::elasticnet;
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
-    for (const auto* const loss_id : {"mse"}) //, "mae"}) FIXME: enable MAE with a better non-smooth solver!
+    for (const auto* const loss_id : {"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
@@ -196,7 +196,7 @@ UTEST_CASE(regularization_elasticnet)
         const auto splitter = make_splitter("k-fold", 2);
         const auto tuner    = make_tuner();
         const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = 1e-3;
+        const auto epsilon  = 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);

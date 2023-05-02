@@ -12,7 +12,7 @@ lsearchk_t::lsearchk_t(string_t id)
     : clonable_t(std::move(id))
 {
     register_parameter(parameter_t::make_scalar_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
-    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 100, LE, 1000));
+    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 1000, LE, 10000));
 }
 
 factory_t<lsearchk_t>& lsearchk_t::all()
