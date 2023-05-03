@@ -11,7 +11,6 @@ namespace nano
 /// some important features:
 ///     - weak learners are selected from a configurable pool of prototypes and thus the final model
 ///         can mix different types of weak learners (e.g. like stumps with look-up-tables).
-///     - support for variance-based regularization (like EBBoost or VadaBoost).
 ///     - builtin early stopping if the validation error doesn't decrease
 ///         in a configurable number of boosting rounds.
 ///     - support for serialization of its parameters and the selected weak learners.

@@ -5,18 +5,6 @@
 namespace nano::gboost
 {
 ///
-/// \brief regularization methods for gradient boosting-based models.
-///
-/// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
-/// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
-///
-enum class regularization_type
-{
-    none,    ///< no regularization
-    variance ///< variance of the loss values, like in VadaBoost
-};
-
-///
 /// \brief method to scale weak learners.
 ///
 /// see "Greedy Function Approximation: A Gradient Boosting Machine", by Jerome Friedman
@@ -28,64 +16,39 @@ enum class wscale_type : int32_t
 };
 
 ///
-/// \brief toggle subsampling of the training samples at each boosting round.
-///
-/// see "Stochastic Gradient Boosting", by Jerome Friedman
-///
-///
-enum class subsample_type : int32_t
-{
-    on,
-    off
-};
-
-///
 /// \brief toggle shrinkage of the fitted weak learners at each boosting round.
 ///
 /// see "Stochastic Gradient Boosting", by Jerome Friedman
 ///
 enum class shrinkage_type : int32_t
 {
-    on,
-    off
+    off,      ///< no shrinkage
+    global,   ///< same value for all boosting rounds (see reference)
+    adaptive, ///< different values per boosting round
 };
 
 ///
-/// \brief toggle bootstraping of the training samples at each boosting round (as an alternative to subsampling).
+/// \brief toggle subsampling of the training samples at each boosting round.
 ///
-enum class bootstrap_type : int32_t
+/// see "Stochastic Gradient Boosting", by Jerome Friedman
+///
+enum class subsample_type : int32_t
 {
-    on,
-    off
+    off,                ///< always use all available training samples
+    bootstrap,          ///< bootstrap the training samples
+    wei_loss_bootstrap, ///< weighted (by the loss value) boostrapping of the training samples
+    wei_grad_bootstrap, ///< weighted (by the loss gradient magnitudevalue) boostrapping of the training samples
 };
 } // namespace nano::gboost
 
 namespace nano
 {
 template <>
-inline enum_map_t<gboost::regularization_type> enum_string<gboost::regularization_type>()
-{
-    return {
-        {    gboost::regularization_type::none,     "none"},
-        {gboost::regularization_type::variance, "variance"}
-    };
-}
-
-template <>
 inline enum_map_t<gboost::wscale_type> enum_string<gboost::wscale_type>()
 {
     return {
         {gboost::wscale_type::gboost, "gboost"},
-        {gboost::wscale_type::tboost, "tboost"}
-    };
-}
-
-template <>
-inline enum_map_t<gboost::subsample_type> enum_string<gboost::subsample_type>()
-{
-    return {
-        { gboost::subsample_type::on,  "on"},
-        {gboost::subsample_type::off, "off"}
+        {gboost::wscale_type::tboost, "tboost"},
     };
 }
 
@@ -93,17 +56,20 @@ template <>
 inline enum_map_t<gboost::shrinkage_type> enum_string<gboost::shrinkage_type>()
 {
     return {
-        { gboost::shrinkage_type::on,  "on"},
-        {gboost::shrinkage_type::off, "off"}
+        {     gboost::shrinkage_type::off,      "off"},
+        {  gboost::shrinkage_type::global,   "global"},
+        {gboost::shrinkage_type::adaptive, "adaptive"},
     };
 }
 
 template <>
-inline enum_map_t<gboost::bootstrap_type> enum_string<gboost::bootstrap_type>()
+inline enum_map_t<gboost::subsample_type> enum_string<gboost::subsample_type>()
 {
     return {
-        { gboost::bootstrap_type::on,  "on"},
-        {gboost::bootstrap_type::off, "off"}
+        {               gboost::subsample_type::off,                "off"},
+        {         gboost::subsample_type::bootstrap,          "bootstrap"},
+        {gboost::subsample_type::wei_loss_bootstrap, "wei_loss_bootstrap"},
+        {gboost::subsample_type::wei_grad_bootstrap, "wei_grad_bootstrap"},
     };
 }
 } // namespace nano

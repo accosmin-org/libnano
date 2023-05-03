@@ -34,9 +34,38 @@ scalar_t gboost::mean_error(const tensor2d_t& errors_losses, const indices_t& sa
     return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
 }
 
-bool gboost::done(const tensor2d_t& errors_values, const indices_t& train_samples, const indices_t& valid_samples,
-                  const rwlearners_t& wlearners, const scalar_t epsilon, const size_t patience, size_t& optimum_round,
-                  scalar_t& optimum_value, tensor2d_t& optimum_values)
+gboost::sampler_t::sampler_t(const indices_t& samples, const uint64_t seed)
+    : m_samples(samples)
+    , m_rng(make_rng(seed))
+{
+}
+
+indices_t gboost::sampler_t::sample(const tensor2d_t& errors_losses, const tensor4d_t& gradients,
+                                    const subsample_type subsample)
+{
+    if (subsample_ratio < 1.0)
+    {
+        const auto ssize = static_cast<scalar_t>(samples.size());
+        const auto count = static_cast<tensor_size_t>(std::lround(subsample_ratio * ssize));
+        samples          = sample_without_replacement(samples, count, rng);
+    }
+    if (bootstrap == bootstrap_type::on)
+    {
+        const auto count = samples.size();
+        samples          = sample_with_replacement(samples, count, rng);
+    }
+    return samples;
+}
+
+gboost::optimum_t::optimum_t(const tensor2d_t& values)
+    : m_value(std::numeric_limits<scalar_t>::max())
+    , m_values(values)
+{
+}
+
+bool gboost::optimum_t::done(const tensor2d_t& errors_values, const indices_t& train_samples,
+                             const indices_t& valid_samples, const rwlearners_t& wlearners, const scalar_t epsilon,
+                             const size_t patience)
 {
     const auto train_value = mean_error(errors_values, train_samples);
     const auto valid_value = mean_error(errors_values, valid_samples);

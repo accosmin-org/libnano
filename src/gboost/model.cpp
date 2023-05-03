@@ -16,26 +16,12 @@ namespace
 {
 auto make_params(const configurable_t& configurable)
 {
-    const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
-    const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
-    const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto shrinkage = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
 
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
 
-    if (regularization == regularization_type::variance)
-    {
-        param_names.emplace_back("vAreg");
-        param_spaces.emplace_back(param_space_t::type::log10, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2,
-                                  3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4, 3e+4, 1e+5,
-                                  3e+5, 1e+6);
-    }
-    if (subsample == subsample_type::on)
-    {
-        param_names.emplace_back("subsample");
-        param_spaces.emplace_back(param_space_t::type::linear, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
-    }
-    if (shrinkage == shrinkage_type::on)
+    if (shrinkage == shrinkage_type::global)
     {
         param_names.emplace_back("shrinkage");
         param_spaces.emplace_back(param_space_t::type::linear, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
@@ -44,31 +30,18 @@ auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization,
-                   const subsample_type subsample, const shrinkage_type shrinkage)
+auto decode_params(const tensor1d_cmap_t& params, const shrinkage_type shrinkage)
 {
-    scalar_t vAreg           = 0.0;
-    scalar_t subsample_ratio = 1.0;
     scalar_t shrinkage_ratio = 1.0;
 
     tensor_size_t index = 0;
-    if (regularization == regularization_type::variance)
-    {
-        vAreg = params(index);
-        index++;
-    }
-    if (subsample == subsample_type::on)
-    {
-        subsample_ratio = params(index);
-        index++;
-    }
-    if (shrinkage == shrinkage_type::on)
+    if (shrinkage == shrinkage_type::global)
     {
         shrinkage_ratio = params(index);
         index++;
     }
 
-    return std::make_tuple(vAreg, subsample_ratio, shrinkage_ratio);
+    return std::make_tuple(shrinkage_ratio);
 }
 
 auto selected(const tensor2d_t& values, const indices_t& samples)
@@ -97,22 +70,6 @@ auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlea
     }
 }
 
-auto make_samples(indices_t samples, const scalar_t subsample_ratio, const bootstrap_type bootstrap, rng_t& rng)
-{
-    if (subsample_ratio < 1.0)
-    {
-        const auto ssize = static_cast<scalar_t>(samples.size());
-        const auto count = static_cast<tensor_size_t>(std::lround(subsample_ratio * ssize));
-        samples          = sample_without_replacement(samples, count, rng);
-    }
-    if (bootstrap == bootstrap_type::on)
-    {
-        const auto count = samples.size();
-        samples          = sample_with_replacement(samples, count, rng);
-    }
-    return samples;
-}
-
 auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& train_samples,
          const indices_t& valid_samples, const loss_t& loss, const solver_t& solver, const rwlearners_t& prototypes,
          const tensor1d_t& params)
@@ -123,12 +80,10 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     const auto patience       = configurable.parameter("gboost::patience").value<size_t>();
     auto       max_rounds     = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
     const auto wscale         = configurable.parameter("gboost::wscale").value<wscale_type>();
-    const auto bootstrap      = configurable.parameter("gboost::bootstrap").value<bootstrap_type>();
-    const auto regularization = configurable.parameter("gboost::regularization").value<regularization_type>();
     const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
     const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
 
-    const auto [vAreg, subsample_ratio, shrinkage_ratio] = decode_params(params, regularization, subsample, shrinkage);
+    const auto [shrinkage_ratio] = decode_params(params, shrinkage);
 
     assert(vAreg >= 0.0);
     assert(subsample_ratio > 0.0 && subsample_ratio <= 1.0);
@@ -144,7 +99,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     train_targets_iterator.batch(batch);
     train_targets_iterator.scaling(scaling_type::none);
 
-    auto rng      = make_rng(seed);
+    auto sampler  = sampler_t{train_samples, seed};
     auto values   = tensor2d_t{2, samples.size()};
     auto outputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
     auto woutputs = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
@@ -163,12 +118,8 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     result.update(0, values, train_samples, valid_samples, bstate);
 
     // keep track of the optimum boosting round using the validation error
-    auto optimum_round  = size_t{0};
-    auto optimum_value  = std::numeric_limits<scalar_t>::max();
-    auto optimum_values = values;
-
-    if (done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience, optimum_round, optimum_value,
-             optimum_values))
+    auto optimum = optimum_t{values};
+    if (optimum.done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience))
     {
         max_rounds = 0;
     }
@@ -177,7 +128,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     for (tensor_size_t round = 0; round < max_rounds; ++round)
     {
         const auto& gradients   = gfunction.gradients(outputs);
-        const auto  fit_samples = make_samples(train_samples, subsample_ratio, bootstrap, rng);
+        const auto  fit_samples = sampler.sample(values, gradients, subsample);
 
         // choose the weak learner that aligns the best with the current residuals
         auto best_score    = wlearner_t::no_fit_score();
@@ -222,17 +173,16 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
 
         // early stopping
-        if (done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience, optimum_round,
-                 optimum_value, optimum_values))
+        if (optimum.done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience))
         {
             break;
         }
     }
 
-    result.done(static_cast<tensor_size_t>(optimum_round));
+    result.done(static_cast<tensor_size_t>(optimum.round()));
 
-    return std::make_tuple(std::move(result), selected(optimum_values, train_samples),
-                           selected(optimum_values, valid_samples));
+    return std::make_tuple(std::move(result), selected(optimum.values(), train_samples),
+                           selected(optimum.values(), valid_samples));
 }
 } // namespace
 
@@ -249,8 +199,6 @@ gboost_model_t::gboost_model_t()
     register_parameter(parameter_t::make_enum("gboost::wscale", wscale_type::gboost));
     register_parameter(parameter_t::make_enum("gboost::shrinkage", shrinkage_type::off));
     register_parameter(parameter_t::make_enum("gboost::subsample", subsample_type::off));
-    register_parameter(parameter_t::make_enum("gboost::bootstrap", bootstrap_type::off));
-    register_parameter(parameter_t::make_enum("gboost::regularization", regularization_type::none));
 }
 
 gboost_model_t::gboost_model_t(gboost_model_t&&) noexcept = default;

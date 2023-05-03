@@ -16,12 +16,11 @@ void clear(accumulators_t& accumulators)
 }
 } // namespace
 
-scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg,
-                                   const cluster_t& cluster, const tensor4d_t& soutputs, const tensor4d_t& woutputs)
+scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const cluster_t& cluster,
+                                   const tensor4d_t& soutputs, const tensor4d_t& woutputs)
     : function_t("gboost-scale", cluster.groups())
     , m_iterator(iterator)
     , m_loss(loss)
-    , m_vAreg(vAreg)
     , m_cluster(cluster)
     , m_soutputs(soutputs)
     , m_woutputs(woutputs)
@@ -34,8 +33,7 @@ scale_function_t::scale_function_t(const targets_iterator_t& iterator, const los
     assert(m_soutputs.dims() == cat_dims(iterator.dataset().samples(), iterator.dataset().target_dims()));
 
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);
-    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
-                                                                                         : convexity::no);
+    convex(loss.convex() ? convexity::yes : convexity::no);
 }
 
 rfunction_t scale_function_t::clone() const
@@ -89,29 +87,26 @@ scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
                     const auto gw = vgrads.vector(i - begin).dot(m_woutputs.vector(samples(i)));
 
                     accumulator.m_gb1(group) += gw;
-                    accumulator.m_gb2(group) += gw * values(i - begin);
                 }
             }
         });
 
     // OK
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(m_vAreg, gx);
+    return accumulator.vgrad(gx);
 }
 
-bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)
+bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss)
     : function_t("gboost-bias", ::nano::size(iterator.dataset().target_dims()))
     , m_iterator(iterator)
     , m_loss(loss)
-    , m_vAreg(vAreg)
     , m_values(m_iterator.samples().size())
     , m_vgrads(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
     , m_outputs(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
     , m_accumulators(m_iterator.concurrency(), accumulator_t{this->size()})
 {
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);
-    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
-                                                                                         : convexity::no);
+    convex(loss.convex() ? convexity::yes : convexity::no);
 }
 
 rfunction_t bias_function_t::clone() const
@@ -150,26 +145,23 @@ scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
                 const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
 
                 accumulator.m_gb1.noalias() += gmatrix.colwise().sum();
-                accumulator.m_gb2.noalias() += gmatrix.transpose() * values.vector();
             }
         });
 
     // OK
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(m_vAreg, gx);
+    return accumulator.vgrad(gx);
 }
 
-grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss, const scalar_t vAreg)
+grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss)
     : function_t("gboost-grads", iterator.samples().size() * nano::size(iterator.dataset().target_dims()))
     , m_iterator(iterator)
     , m_loss(loss)
-    , m_vAreg(vAreg)
     , m_values(iterator.samples().size())
     , m_vgrads(cat_dims(iterator.samples().size(), iterator.dataset().target_dims()))
 {
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);
-    convex((std::abs(vAreg) < std::numeric_limits<scalar_t>::epsilon() && loss.convex()) ? convexity::yes
-                                                                                         : convexity::no);
+    convex(loss.convex() ? convexity::yes : convexity::no);
 }
 
 rfunction_t grads_function_t::clone() const
@@ -193,18 +185,7 @@ scalar_t grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
     }
 
     // OK
-    const auto vm1 = m_values.vector().mean();
-    if (m_vAreg < std::numeric_limits<scalar_t>::epsilon())
-    {
-        return vm1;
-    }
-    else
-    {
-        const auto vm2 = m_values.array().square().mean();
-        const auto eps = std::numeric_limits<scalar_t>::epsilon();
-
-        return vm1 + m_vAreg * std::sqrt(eps + vm2 - vm1 * vm1);
-    }
+    return m_values.vector().mean();
 }
 
 const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) const
@@ -217,18 +198,6 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
             m_loss.value(targets, outputs.slice(range), m_values.slice(range));
             m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));
         });
-
-    if (m_vAreg >= std::numeric_limits<scalar_t>::epsilon())
-    {
-        const auto vm1 = m_values.vector().mean();
-        const auto vm2 = m_values.array().square().mean();
-        const auto eps = std::numeric_limits<scalar_t>::epsilon();
-
-        const auto a = (vm2 - vm1 * vm1 < eps) ? 1.0 : (1.0 - m_vAreg * vm1 / std::sqrt(vm2 - vm1 * vm1));
-        const auto b = (vm2 - vm1 * vm1 < eps) ? 0.0 : (m_vAreg / std::sqrt(vm2 - vm1 * vm1));
-
-        m_vgrads.reshape(m_values.size(), -1).matrix().array().colwise() *= a + b * m_values.array();
-    }
 
     return m_vgrads;
 }
