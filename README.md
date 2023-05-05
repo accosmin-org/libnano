@@ -24,15 +24,20 @@ In particular:
 
 * **tensors of arbitrary rank and scalar type** designed for machine learning applications. The implementation is using [Eigen3](https://eigen.tuxfamily.org) and as such fast and easy-to-use linear algebra operations are readily available.
 
-* **efficient in-memory machine learning dataset containing potentially optional arbitrary features** - categorical, continuous, structured (images, time series). This data can be easily used to engineer arbitrary features on the fly as well. The generated features are compatible with all provided machine learning algorithms.
+* **efficient in-memory storage of machine learning datasets of mixed features** (e.g. categorical. continuous, structured like images or time series). The feature values can be optional and of different storage (e.g. signed or unsigned integers of various sizes, single or double precision floating point numbers). Additional features can be constructed on the fly to be used for training and evaluating machine learning models.
 
-* **parameter-free machine learning algorithms** - all hyper-parameters are tuned automatically following principled approaches and the numerical optimization is performed precisely using parameter-free state-of-the-art methods. Additionally the following aspects are modeled with interfaces and can be customized by the user: the loss function, the numerical optimization method, the splitting strategy (e.g. cross-validation) and the tuning strategy (e.g. local search, surrogate minimization).
+* **linear models with arbitrary loss functions**. Standard regularization methods (e.g. like in lasso, ridge, elastic net) are builtin.
 
-* **linear models** with standard regularization methods (e.g. lasso, ridge, elastic net). 
+* **gradient boosting models with arbitray loss functions and arbitrary weak learners**. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin.
 
-* **gradient boosting models** with arbitrary weak learners (e.g. decision trees, look-up-tables, linear learners).
+* all machine learning models work with any feature type (e.g. categorical, continuous or structures) and potentially missing feature values.
 
-* **statistical analysis tools** to evaluate and compare models - TODO.
+* the regularization hyper-parameters are automatically tuned using standard model evaluation (e.g. cross-validation).
+
+* the machine learning concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, splitting strategy, feature generation) are modelled using appropriate interfaces. As such the library is highly customizable to particular machine learning applications.
+
+
+The implementation is **cross-platform** (Linux, macOS, Windows) with **minimal dependencies** (standard library and [Eigen3](https://eigen.tuxfamily.org) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
 
 
 ## Documentation
