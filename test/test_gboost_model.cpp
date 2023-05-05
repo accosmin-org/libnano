@@ -250,17 +250,21 @@ UTEST_CASE(fit_predict_tables)
     check_result(result, param_names);
 }
 
-UTEST_CASE(fit_predict_bootstrap)
+UTEST_CASE(fit_predict_subsample)
 {
-    auto       model       = make_gbooster_to_fit("gboost::bootstrap", "on");
-    const auto param_names = strings_t{};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
+    for (const auto subsample : {gboost::subsample_type::bootstrap, gboost::subsample_type::wei_loss_bootstrap,
+                                 gboost::subsample_type::wei_grad_bootstrap})
+    {
+        auto       model       = make_gbooster_to_fit("gboost::subsample", subsample);
+        const auto param_names = strings_t{};
+        const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
-    const auto result = check_gbooster(model, datasource);
-    check_result(result, param_names);
+        const auto result = check_gbooster(model, datasource);
+        check_result(result, param_names);
 
-    const auto resultx = check_gbooster(std::move(model), datasource);
-    check_equal(result, resultx);
+        const auto resultx = check_gbooster(std::move(model), datasource);
+        check_equal(result, resultx);
+    }
 }
 
 UTEST_CASE(fit_predict_tboost)
@@ -275,31 +279,8 @@ UTEST_CASE(fit_predict_tboost)
 
 UTEST_CASE(tune_shrinkage)
 {
-    auto       model       = make_gbooster_to_fit("gboost::shrinkage", "on");
+    auto       model       = make_gbooster_to_fit("gboost::shrinkage", "global");
     const auto param_names = strings_t{"shrinkage"};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
-
-    const auto result = check_gbooster(std::move(model), datasource);
-    check_result(result, param_names);
-}
-
-UTEST_CASE(tune_subsample)
-{
-    auto       model       = make_gbooster_to_fit("gboost::subsample", "on");
-    const auto param_names = strings_t{"subsample"};
-    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
-
-    const auto result = check_gbooster(model, datasource);
-    check_result(result, param_names);
-
-    const auto resultx = check_gbooster(std::move(model), datasource);
-    check_equal(result, resultx);
-}
-
-UTEST_CASE(tune_variance)
-{
-    auto       model       = make_gbooster_to_fit("gboost::regularization", "variance");
-    const auto param_names = strings_t{"vAreg"};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
     const auto result = check_gbooster(std::move(model), datasource);
