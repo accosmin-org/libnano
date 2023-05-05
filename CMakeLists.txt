@@ -60,7 +60,7 @@ endif()
 
 if(NANO_BUILD_TESTS)
     set(MEMORYCHECK_COMMAND_OPTIONS
-        "--tool=memcheck --leak-check=full --show-reachable=yes --num-callers=50 --error-exitcode=1")
+        "--tool=memcheck --leak-check=full --show-leak-kinds=all -s --error-exitcode=1")
     include(CTest)
     enable_testing()
     add_subdirectory(test)
