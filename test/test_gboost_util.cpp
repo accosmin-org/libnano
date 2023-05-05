@@ -18,7 +18,7 @@ void check_samples(const indices_t& selected_samples, const indices_t& train_sam
         UTEST_CHECK(std::find(train_samples.begin(), train_samples.end(), sample) != train_samples.end());
     }
 }
-}
+} // namespace
 
 UTEST_BEGIN_MODULE(test_gboost_util)
 

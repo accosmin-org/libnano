@@ -42,10 +42,10 @@ public:
 
 private:
     // attributes
-    const targets_iterator_t& m_iterator;   ///<
-    const loss_t&             m_loss;       ///<
-    mutable tensor1d_t        m_values;     ///<
-    mutable tensor4d_t        m_vgrads;     ///<
+    const targets_iterator_t& m_iterator; ///<
+    const loss_t&             m_loss;     ///<
+    mutable tensor1d_t        m_values;   ///<
+    mutable tensor4d_t        m_vgrads;   ///<
 };
 
 ///

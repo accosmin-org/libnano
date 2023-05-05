@@ -24,9 +24,9 @@ public:
 
 private:
     // attributes
-    const indices_t& m_samples; ///< training samples to select from
+    const indices_t& m_samples;                   ///< training samples to select from
     subsample_type   m_type{subsample_type::off}; ///<
-    rng_t            m_rng;     ///<
-    tensor1d_t       m_weights; ///< per-sample weight
+    rng_t            m_rng;                       ///<
+    tensor1d_t       m_weights;                   ///< per-sample weight
 };
 } // namespace nano::gboost

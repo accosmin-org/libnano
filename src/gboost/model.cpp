@@ -75,14 +75,14 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
          const indices_t& valid_samples, const loss_t& loss, const solver_t& solver, const rwlearners_t& prototypes,
          const tensor1d_t& params)
 {
-    const auto seed           = configurable.parameter("gboost::seed").value<uint64_t>();
-    const auto batch          = configurable.parameter("gboost::batch").value<tensor_size_t>();
-    const auto epsilon        = configurable.parameter("gboost::epsilon").value<scalar_t>();
-    const auto patience       = configurable.parameter("gboost::patience").value<size_t>();
-    auto       max_rounds     = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
-    const auto wscale         = configurable.parameter("gboost::wscale").value<wscale_type>();
-    const auto subsample      = configurable.parameter("gboost::subsample").value<subsample_type>();
-    const auto shrinkage      = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto seed       = configurable.parameter("gboost::seed").value<uint64_t>();
+    const auto batch      = configurable.parameter("gboost::batch").value<tensor_size_t>();
+    const auto epsilon    = configurable.parameter("gboost::epsilon").value<scalar_t>();
+    const auto patience   = configurable.parameter("gboost::patience").value<size_t>();
+    auto       max_rounds = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
+    const auto wscale     = configurable.parameter("gboost::wscale").value<wscale_type>();
+    const auto subsample  = configurable.parameter("gboost::subsample").value<subsample_type>();
+    const auto shrinkage  = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
 
     const auto [shrinkage_ratio] = decode_params(params, shrinkage);
 
