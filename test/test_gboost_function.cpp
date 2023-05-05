@@ -112,16 +112,12 @@ void check_optimum(const function_t& function, const vector_t& expected_optimum)
 }
 
 template <typename ttmatrix, typename tomatrix>
-void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix, const scalar_t vAreg,
+void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix,
                  const scalar_t epsilon = 1e-12)
 {
     const auto values = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
 
-    const auto vm1 = values.mean();
-    const auto vm2 = values.array().square().mean();
-    const auto fun = vm1 + vAreg * std::sqrt(vm2 - vm1 * vm1);
-
-    UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), fun, epsilon);
+    UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), values.mean(), epsilon);
 }
 } // namespace
 
@@ -141,21 +137,13 @@ UTEST_CASE(bias)
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
         const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-        for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
-        {
-            UTEST_NAMED_CASE(scat("vAreg=", vAreg));
+        const auto function = bias_function_t{iterator, *loss};
 
-            const auto function = bias_function_t{iterator, *loss, vAreg};
-
-            UTEST_CHECK_EQUAL(function.size(), 2);
-            check_gradient(function, 10);
-            check_convexity(function, 10);
-            check_value(function, tmatrix, omatrix, vAreg);
-            if (vAreg < std::numeric_limits<scalar_t>::epsilon())
-            {
-                check_optimum(function, bias);
-            }
-        }
+        UTEST_CHECK_EQUAL(function.size(), 2);
+        check_gradient(function, 10);
+        check_convexity(function, 10);
+        check_value(function, tmatrix, omatrix);
+        check_optimum(function, bias);
     }
 }
 
@@ -180,24 +168,16 @@ UTEST_CASE(scale)
     {
         const auto iterator = targets_iterator_t{dataset, samples};
 
-        for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
+        const auto function = scale_function_t{iterator, *loss, cluster, outputs, woutputs};
+
+        UTEST_CHECK_EQUAL(function.size(), datasource.groups());
+        check_gradient(function, 10);
+        check_convexity(function, 10);
+        if (samples.size() == datasource.samples())
         {
-            UTEST_NAMED_CASE(scat("vAreg=", vAreg));
-
-            const auto function = scale_function_t{iterator, *loss, vAreg, cluster, outputs, woutputs};
-
-            UTEST_CHECK_EQUAL(function.size(), datasource.groups());
-            check_gradient(function, 10);
-            check_convexity(function, 10);
-            if (samples.size() == datasource.samples())
-            {
-                check_value(function, tmatrix, omatrix, vAreg);
-            }
-            if (vAreg < std::numeric_limits<scalar_t>::epsilon())
-            {
-                check_optimum(function, scale);
-            }
+            check_value(function, tmatrix, omatrix);
         }
+        check_optimum(function, scale);
     }
 }
 
@@ -213,21 +193,13 @@ UTEST_CASE(grads)
     const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
     const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
 
-    for (const auto vAreg : {0.0, 1e-1, 1e+0, 1e+1})
-    {
-        UTEST_NAMED_CASE(scat("vAreg=", vAreg));
+    const auto function = grads_function_t{iterator, *loss};
 
-        const auto function = grads_function_t{iterator, *loss, vAreg};
-
-        UTEST_CHECK_EQUAL(function.size(), all_samples.size() * 2);
-        check_gradient(function, 10);
-        check_convexity(function, 10);
-        check_value(function, tmatrix, omatrix, vAreg);
-        if (vAreg < std::numeric_limits<scalar_t>::epsilon())
-        {
-            check_optimum(function, targets.vector());
-        }
-    }
+    UTEST_CHECK_EQUAL(function.size(), all_samples.size() * 2);
+    check_gradient(function, 10);
+    check_convexity(function, 10);
+    check_value(function, tmatrix, omatrix);
+    check_optimum(function, targets.vector());
 }
 
 UTEST_END_MODULE()

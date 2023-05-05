@@ -18,22 +18,24 @@ indices_t nano::sample_with_replacement(sample_indices_t samples, const tensor_s
     return sample_with_replacement(samples, count, rng);
 }
 
-indices_t nano::sample_with_replacement(sample_weights_t weights, const tensor_size_t count, rng_t& rng)
+indices_t nano::sample_with_replacement(sample_indices_t samples, sample_weights_t weights, const tensor_size_t count,
+                                        rng_t& rng)
 {
     assert(weights.min() >= 0.0);
+    assert(samples.size() == weights.size());
 
     auto wdist = std::discrete_distribution<tensor_size_t>(begin(weights), end(weights));
 
     auto selection = indices_t{count};
-    std::generate(begin(selection), end(selection), [&]() { return wdist(rng); });
+    std::generate(begin(selection), end(selection), [&]() { return samples(wdist(rng)); });
     std::sort(begin(selection), end(selection));
     return selection;
 }
 
-indices_t nano::sample_with_replacement(sample_weights_t weights, const tensor_size_t count)
+indices_t nano::sample_with_replacement(sample_indices_t samples, sample_weights_t weights, const tensor_size_t count)
 {
     auto rng = make_rng();
-    return sample_with_replacement(weights, count, rng);
+    return sample_with_replacement(samples, weights, count, rng);
 }
 
 indices_t nano::sample_without_replacement(sample_indices_t samples_, const tensor_size_t count, rng_t& rng)

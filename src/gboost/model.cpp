@@ -1,8 +1,9 @@
-#include <nano/core/sampling.h>
+#include <nano/gboost/early_stopping.h>
 #include <nano/gboost/enums.h>
 #include <nano/gboost/function.h>
 #include <nano/gboost/model.h>
 #include <nano/gboost/result.h>
+#include <nano/gboost/sampler.h>
 #include <nano/gboost/util.h>
 #include <nano/model/util.h>
 #include <nano/tensor/stream.h>
@@ -85,10 +86,6 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
 
     const auto [shrinkage_ratio] = decode_params(params, shrinkage);
 
-    assert(vAreg >= 0.0);
-    assert(subsample_ratio > 0.0 && subsample_ratio <= 1.0);
-    assert(shrinkage_ratio > 0.0 && shrinkage_ratio <= 1.0);
-
     const auto samples = arange(0, dataset.samples());
 
     auto targets_iterator = targets_iterator_t{dataset, samples};
@@ -99,13 +96,13 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     train_targets_iterator.batch(batch);
     train_targets_iterator.scaling(scaling_type::none);
 
-    auto sampler  = sampler_t{train_samples, seed};
+    auto sampler  = sampler_t{train_samples, subsample, seed};
     auto values   = tensor2d_t{2, samples.size()};
     auto outputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
     auto woutputs = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
 
-    const auto gfunction = grads_function_t{targets_iterator, loss, vAreg};
-    const auto bfunction = bias_function_t{train_targets_iterator, loss, vAreg};
+    const auto gfunction = grads_function_t{targets_iterator, loss};
+    const auto bfunction = bias_function_t{train_targets_iterator, loss};
 
     // estimate bias
     const auto bstate = solver.minimize(bfunction, make_full_vector<scalar_t>(bfunction.size(), 0.0));
@@ -118,7 +115,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     result.update(0, values, train_samples, valid_samples, bstate);
 
     // keep track of the optimum boosting round using the validation error
-    auto optimum = optimum_t{values};
+    auto optimum = early_stopping_t{values};
     if (optimum.done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience))
     {
         max_rounds = 0;
@@ -128,7 +125,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     for (tensor_size_t round = 0; round < max_rounds; ++round)
     {
         const auto& gradients   = gfunction.gradients(outputs);
-        const auto  fit_samples = sampler.sample(values, gradients, subsample);
+        const auto  fit_samples = sampler.sample(values, gradients);
 
         // choose the weak learner that aligns the best with the current residuals
         auto best_score    = wlearner_t::no_fit_score();
@@ -153,7 +150,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         best_wlearner->predict(dataset, samples, woutputs.tensor());
 
         const auto cluster  = make_cluster(dataset, samples, *best_wlearner, wscale);
-        const auto function = scale_function_t{train_targets_iterator, loss, vAreg, cluster, outputs, woutputs};
+        const auto function = scale_function_t{train_targets_iterator, loss, cluster, outputs, woutputs};
 
         auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0));
         if (gstate.x().minCoeff() < std::numeric_limits<scalar_t>::epsilon())

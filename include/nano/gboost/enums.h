@@ -28,7 +28,7 @@ enum class shrinkage_type : int32_t
 };
 
 ///
-/// \brief toggle subsampling of the training samples at each boosting round.
+/// \brief toggle sub-sampling of the training samples at each boosting round.
 ///
 /// see "Stochastic Gradient Boosting", by Jerome Friedman
 ///

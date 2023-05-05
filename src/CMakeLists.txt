@@ -102,8 +102,10 @@ target_sources(nano PRIVATE
     gboost/util.cpp
     gboost/model.cpp
     gboost/result.cpp
+    gboost/sampler.cpp
     gboost/function.cpp
     gboost/accumulator.cpp
+    gboost/early_stopping.cpp
     wlearner.cpp
     wlearner/util.cpp
     wlearner/single.cpp

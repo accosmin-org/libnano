@@ -25,8 +25,8 @@ NANO_PUBLIC indices_t sample_with_replacement(sample_indices_t, tensor_size_t co
 /// NB: there may be duplicates in the returned indices.
 /// NB: the returned indices are sorted to potentially improve speed.
 ///
-NANO_PUBLIC indices_t sample_with_replacement(sample_weights_t, tensor_size_t count);
-NANO_PUBLIC indices_t sample_with_replacement(sample_weights_t, tensor_size_t count, rng_t&);
+NANO_PUBLIC indices_t sample_with_replacement(sample_indices_t, sample_weights_t, tensor_size_t count);
+NANO_PUBLIC indices_t sample_with_replacement(sample_indices_t, sample_weights_t, tensor_size_t count, rng_t&);
 
 ///
 /// \brief randomly sample without replacement `count` elements.

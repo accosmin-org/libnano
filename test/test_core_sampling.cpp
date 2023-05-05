@@ -63,14 +63,15 @@ UTEST_CASE(sample_with_replacement_weights)
     auto old_indices        = indices_t{};
     auto [rng1, rng2, rng3] = make_rngs();
 
+    const auto samples = arange(0, 5);
     const auto weights = make_tensor<scalar_t>(make_dims(5), 3, 1, 1, 2, 3);
     for (auto trial = 0; trial < 100; ++trial)
     {
         const auto count    = 2000;
-        const auto indices  = nano::sample_with_replacement(weights, count);
-        const auto indices1 = nano::sample_with_replacement(weights, count, rng1);
-        const auto indices2 = nano::sample_with_replacement(weights, count, rng2);
-        const auto indices3 = nano::sample_with_replacement(weights, count, rng3);
+        const auto indices  = nano::sample_with_replacement(samples, weights, count);
+        const auto indices1 = nano::sample_with_replacement(samples, weights, count, rng1);
+        const auto indices2 = nano::sample_with_replacement(samples, weights, count, rng2);
+        const auto indices3 = nano::sample_with_replacement(samples, weights, count, rng3);
 
         check_sample_with_replacement(indices, count, weights.size());
         check_sample_with_replacement(indices1, count, weights.size());
