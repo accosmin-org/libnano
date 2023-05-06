@@ -96,6 +96,10 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     train_targets_iterator.batch(batch);
     train_targets_iterator.scaling(scaling_type::none);
 
+    auto valid_targets_iterator = targets_iterator_t{dataset, valid_samples};
+    valid_targets_iterator.batch(batch);
+    valid_targets_iterator.scaling(scaling_type::none);
+
     auto sampler  = sampler_t{train_samples, subsample, seed};
     auto values   = tensor2d_t{2, samples.size()};
     auto outputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
@@ -159,12 +163,20 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
             result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
             break;
         }
-        best_wlearner->scale(gstate.x() * shrinkage_ratio);
 
-        // update predictions
+        // apply shrinkage
+        best_wlearner->scale(gstate.x() * shrinkage_ratio);
         woutputs.zero();
         best_wlearner->predict(dataset, samples, woutputs.tensor());
 
+        if (shrinkage == shrinkage_type::local)
+        {
+            const auto scale = tune_shrinkage(valid_targets_iterator, loss, outputs, woutputs);
+            best_wlearner->scale(make_full_vector<scalar_t>(1, scale));
+            woutputs.array() *= scale;
+        }
+
+        // update predictions
         outputs.vector() += woutputs.vector();
         evaluate(targets_iterator, loss, outputs, values);
         result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
