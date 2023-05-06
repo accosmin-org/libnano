@@ -22,9 +22,9 @@ enum class wscale_type : int32_t
 ///
 enum class shrinkage_type : int32_t
 {
-    off,      ///< no shrinkage
-    global,   ///< same value for all boosting rounds (see reference)
-    adaptive, ///< different values per boosting round
+    off,    ///< no shrinkage
+    global, ///< same value for all boosting rounds (see reference)
+    local,  ///< different values per boosting round
 };
 
 ///
@@ -56,9 +56,9 @@ template <>
 inline enum_map_t<gboost::shrinkage_type> enum_string<gboost::shrinkage_type>()
 {
     return {
-        {     gboost::shrinkage_type::off,      "off"},
-        {  gboost::shrinkage_type::global,   "global"},
-        {gboost::shrinkage_type::adaptive, "adaptive"},
+        {   gboost::shrinkage_type::off,    "off"},
+        {gboost::shrinkage_type::global, "global"},
+        { gboost::shrinkage_type::local,  "local"},
     };
 }
 

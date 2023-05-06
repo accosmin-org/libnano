@@ -277,10 +277,20 @@ UTEST_CASE(fit_predict_tboost)
     check_result(result, param_names);
 }
 
-UTEST_CASE(tune_shrinkage)
+UTEST_CASE(tune_shrinkage_global)
 {
     auto       model       = make_gbooster_to_fit("gboost::shrinkage", "global");
     const auto param_names = strings_t{"shrinkage"};
+    const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
+
+    const auto result = check_gbooster(std::move(model), datasource);
+    check_result(result, param_names);
+}
+
+UTEST_CASE(tune_shrinkage_local)
+{
+    auto       model       = make_gbooster_to_fit("gboost::shrinkage", "local");
+    const auto param_names = strings_t{};
     const auto datasource  = make_datasource<fixture_affine_datasource_t>(300);
 
     const auto result = check_gbooster(std::move(model), datasource);

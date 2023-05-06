@@ -13,7 +13,7 @@ public:
     ///
     /// \brief constructor
     ///
-    early_stopping_t(const tensor2d_t& values);
+    explicit early_stopping_t(tensor2d_t values);
 
     ///
     /// \brief returns true if early stopping is detected

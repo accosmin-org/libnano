@@ -13,6 +13,13 @@ NANO_PUBLIC void evaluate(const targets_iterator_t& iterator, const loss_t& loss
                           tensor2d_t& values);
 
 ///
+/// \brief locally tune the shrinkage ratio so that the evaluate the predictions (at a given boosting round) against the
+/// targets.
+///
+NANO_PUBLIC scalar_t tune_shrinkage(const targets_iterator_t& iterator, const loss_t& loss, const tensor4d_t& outputs,
+                                    const tensor4d_t& woutputs);
+
+///
 /// \brief returns the mean loss value for the given samples.
 ///
 NANO_PUBLIC scalar_t mean_loss(const tensor2d_t& errors_losses, const indices_t& samples);

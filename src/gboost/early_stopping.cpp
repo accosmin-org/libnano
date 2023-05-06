@@ -4,25 +4,25 @@
 using namespace nano;
 using namespace nano::gboost;
 
-early_stopping_t::early_stopping_t(const tensor2d_t& values)
+early_stopping_t::early_stopping_t(tensor2d_t values)
     : m_value(std::numeric_limits<scalar_t>::max())
-    , m_values(values)
+    , m_values(std::move(values))
 {
 }
 
-bool early_stopping_t::done(const tensor2d_t& errors_values, const indices_t& train_samples,
+bool early_stopping_t::done(const tensor2d_t& errors_losses, const indices_t& train_samples,
                             const indices_t& valid_samples, const rwlearners_t& wlearners, const scalar_t epsilon,
                             const size_t patience)
 {
-    const auto train_value = mean_error(errors_values, train_samples);
-    const auto valid_value = mean_error(errors_values, valid_samples);
+    const auto train_value = mean_error(errors_losses, train_samples);
+    const auto valid_value = mean_error(errors_losses, valid_samples);
 
     // training error is too small, stop
     if (train_value < epsilon)
     {
         m_value  = valid_value;
         m_round  = wlearners.size();
-        m_values = errors_values;
+        m_values = errors_losses;
         return true;
     }
 
@@ -32,7 +32,7 @@ bool early_stopping_t::done(const tensor2d_t& errors_values, const indices_t& tr
     {
         m_value  = valid_value;
         m_round  = wlearners.size();
-        m_values = errors_values;
+        m_values = errors_losses;
         return false;
     }
 
