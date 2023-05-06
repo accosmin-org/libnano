@@ -9,14 +9,12 @@ namespace nano::gboost
 ///
 /// \brief evaluate the predictions (at a given boosting round) against the targets.
 ///
-NANO_PUBLIC void evaluate(const targets_iterator_t& iterator, const loss_t& loss, const tensor4d_t& outputs,
-                          tensor2d_t& values);
+NANO_PUBLIC void evaluate(const targets_iterator_t&, const loss_t&, const tensor4d_t& outputs, tensor2d_t& values);
 
 ///
-/// \brief locally tune the shrinkage ratio so that the evaluate the predictions (at a given boosting round) against the
-/// targets.
+/// \brief tune the shrinkage ratio to optimize the predictions on the given (validation) samples.
 ///
-NANO_PUBLIC scalar_t tune_shrinkage(const targets_iterator_t& iterator, const loss_t& loss, const tensor4d_t& outputs,
+NANO_PUBLIC scalar_t tune_shrinkage(const targets_iterator_t&, const loss_t&, const tensor4d_t& outputs,
                                     const tensor4d_t& woutputs);
 
 ///

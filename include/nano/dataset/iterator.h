@@ -99,22 +99,22 @@ public:
     ///
     /// \brief returns the batch size in number of samples.
     ///
-    auto batch() const { return m_batch; }
+    tensor_size_t batch() const { return m_batch; }
 
     ///
     /// \brief returns the feature value scaling method.
     ///
-    auto scaling() const { return m_scaling; }
+    scaling_type scaling() const { return m_scaling; }
 
     ///
     /// \brief returns the sample indices.
     ///
-    const auto& samples() const { return m_samples; }
+    const indices_t& samples() const { return m_samples; }
 
     ///
     /// \brief returns statistics of the flatten targets.
     ///
-    const auto& targets_stats() const { return m_targets_stats; }
+    const scalar_stats_t& targets_stats() const { return m_targets_stats; }
 
 protected:
     tensor4d_cmap_t targets(tensor4d_map_t) const;
@@ -167,7 +167,7 @@ public:
     ///
     /// \brief returns statistics of the flatten feature values.
     ///
-    const auto& flatten_stats() const { return m_flatten_stats; }
+    const scalar_stats_t& flatten_stats() const { return m_flatten_stats; }
 
 private:
     tensor2d_cmap_t flatten(tensor2d_map_t) const;

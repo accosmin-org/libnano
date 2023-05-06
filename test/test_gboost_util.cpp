@@ -82,7 +82,7 @@ UTEST_CASE(evaluate)
         tensor2d_t values{2, samples.size()};
         gboost::evaluate(iterator, *loss, outputs, values);
 
-        UTEST_CHECK_CLOSE(values, expected_values, 1e-12);
+        UTEST_CHECK_CLOSE(values, expected_values, 1e-15);
     }
 }
 
@@ -92,11 +92,11 @@ UTEST_CASE(mean)
     const auto train_samples = make_indices(0, 1, 2);
     const auto valid_samples = make_indices(1, 3, 4);
 
-    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, train_samples), 6.0, 1e-12);
-    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, valid_samples), 23.0 / 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, train_samples), 6.0, 1e-15);
+    UTEST_CHECK_CLOSE(gboost::mean_loss(errors_values, valid_samples), 23.0 / 3.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, train_samples), 1.0, 1e-12);
-    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, valid_samples), 8.0 / 3.0, 1e-12);
+    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, train_samples), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(gboost::mean_error(errors_values, valid_samples), 8.0 / 3.0, 1e-15);
 }
 
 UTEST_CASE(sampler)
@@ -151,8 +151,8 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(!optimum.done(values, train_samples, valid_samples, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 0U);
-        UTEST_CHECK_CLOSE(optimum.value(), 9.0, 1e-12);
-        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 9.0, 1e-15);
+        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-15);
     }
     {
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 8, 8, 7, 6, 8, 8, 8, 8, 8);
@@ -160,8 +160,8 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(!optimum.done(values, train_samples, valid_samples, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 1U);
-        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-12);
-        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-15);
+        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-15);
     }
     {
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 7, 8, 7, 6, 8, 8, 8, 8, 8);
@@ -169,8 +169,8 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(!optimum.done(values, train_samples, valid_samples, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 1U);
-        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-12);
-        UTEST_CHECK_NOT_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-15);
+        UTEST_CHECK_NOT_CLOSE(optimum.values(), values, 1e-15);
     }
     for (const auto rounds : {size_t{4U}, size_t{5U}})
     {
@@ -179,8 +179,8 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(optimum.done(values, train_samples, valid_samples, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 1U);
-        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-12);
-        UTEST_CHECK_NOT_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 7.0, 1e-15);
+        UTEST_CHECK_NOT_CLOSE(optimum.values(), values, 1e-15);
     }
     {
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 8, 8, 8, 8, 8, 8, 8, 8, 8, 8);
@@ -188,8 +188,8 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(!optimum.done(values, train_samples, indices_t{}, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 6U);
-        UTEST_CHECK_CLOSE(optimum.value(), 0.0, 1e-12);
-        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 0.0, 1e-15);
+        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-15);
     }
     {
         const auto values    = make_tensor<scalar_t>(make_dims(2, 5), 0, 0, 1, 1, 2, 2, 0, 0, 4, 4);
@@ -197,8 +197,39 @@ UTEST_CASE(early_stopping)
 
         UTEST_CHECK(optimum.done(values, train_samples, valid_samples, wlearners, epsilon, patience));
         UTEST_CHECK_EQUAL(optimum.round(), 3U);
-        UTEST_CHECK_CLOSE(optimum.value(), 1.0, 1e-12);
-        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-12);
+        UTEST_CHECK_CLOSE(optimum.value(), 1.0, 1e-15);
+        UTEST_CHECK_CLOSE(optimum.values(), values, 1e-15);
+    }
+}
+
+UTEST_CASE(tune_shrinkage)
+{
+    const auto datasource = make_linear_datasource(20, 3, 4);
+    const auto dataset    = make_dataset(datasource);
+    const auto loss       = make_loss("mse");
+
+    const auto samples = make_indices(0, 3, 4, 5, 11, 17);
+
+    auto outputs  = make_random_tensor<scalar_t>(cat_dims(dataset.samples(), dataset.target_dims()));
+    auto woutputs = make_random_tensor<scalar_t>(cat_dims(dataset.samples(), dataset.target_dims()));
+
+    for (const auto expected_shrinkage : {0.4, 0.1, 1.0, 0.6})
+    {
+        const auto iterator = targets_iterator_t{dataset, samples};
+
+        iterator.loop(
+            [&](const auto& range, size_t, tensor4d_cmap_t targets)
+            {
+                for (auto i = range.begin(); i < range.end(); ++i)
+                {
+                    const auto sample      = samples(i);
+                    const auto offset      = i - range.begin();
+                    outputs.vector(sample) = targets.vector(offset) - expected_shrinkage * woutputs.vector(sample);
+                }
+            });
+
+        const auto shrinkage = gboost::tune_shrinkage(iterator, *loss, outputs, woutputs);
+        UTEST_CHECK_CLOSE(shrinkage, expected_shrinkage, 1e-15);
     }
 }
 

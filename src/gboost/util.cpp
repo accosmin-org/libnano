@@ -20,6 +20,39 @@ void gboost::evaluate(const targets_iterator_t& iterator, const loss_t& loss, co
         });
 }
 
+scalar_t gboost::tune_shrinkage(const targets_iterator_t& iterator, const loss_t& loss, const tensor4d_t& outputs,
+                                const tensor4d_t& woutputs)
+{
+    assert(outputs.dims() == woutputs.dims());
+    assert(outputs.dims() == cat_dims(iterator.dataset().samples(), iterator.dataset().target_dims()));
+
+    auto values            = tensor1d_t{iterator.samples().size()};
+    auto selected_outputs  = outputs.indexed(iterator.samples());
+    auto selected_woutputs = woutputs.indexed(iterator.samples());
+
+    auto best_shrinkage = 0.0;
+    auto best_value     = std::numeric_limits<scalar_t>::max();
+
+    for (const auto shrinkage : {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0})
+    {
+        selected_outputs.array() += shrinkage * selected_woutputs.array();
+
+        iterator.loop([&](const auto range, const auto, const tensor4d_cmap_t targets)
+                      { loss.value(targets, selected_outputs.slice(range), values.slice(range)); });
+
+        const auto value = values.mean();
+        if (value < best_value)
+        {
+            best_value     = value;
+            best_shrinkage = shrinkage;
+        }
+
+        selected_outputs.array() -= shrinkage * selected_woutputs.array();
+    }
+
+    return best_shrinkage;
+}
+
 scalar_t gboost::mean_loss(const tensor2d_t& errors_losses, const indices_t& samples)
 {
     const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + errors_losses(1, sample); };
