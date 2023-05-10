@@ -107,7 +107,7 @@ UTEST_CASE(sampler)
 
     for (const auto seed : {1U, 7U, 42U, 1000U})
     {
-        auto sampler = gboost::sampler_t{train_samples, gboost::subsample_type::off, seed};
+        auto sampler = gboost::sampler_t{train_samples, gboost::subsample_type::off, seed, 1.0};
         UTEST_CHECK_EQUAL(sampler.sample(errors_losses, gradients), train_samples);
     }
 }
@@ -124,7 +124,7 @@ UTEST_CASE(bootstrap_sampler)
         auto prev_samples = indices_t{};
         for (const auto seed : {1U, 7U, 42U, 1000U})
         {
-            auto sampler = gboost::sampler_t{train_samples, subsample, seed};
+            auto sampler = gboost::sampler_t{train_samples, subsample, seed, 1.0};
 
             const auto samples = sampler.sample(errors_losses, gradients);
             check_samples(samples, train_samples);

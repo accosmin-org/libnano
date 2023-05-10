@@ -75,14 +75,15 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
          const indices_t& valid_samples, const loss_t& loss, const solver_t& solver, const rwlearners_t& prototypes,
          const tensor1d_t& params)
 {
-    const auto seed       = configurable.parameter("gboost::seed").value<uint64_t>();
-    const auto batch      = configurable.parameter("gboost::batch").value<tensor_size_t>();
-    const auto epsilon    = configurable.parameter("gboost::epsilon").value<scalar_t>();
-    const auto patience   = configurable.parameter("gboost::patience").value<size_t>();
-    auto       max_rounds = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
-    const auto wscale     = configurable.parameter("gboost::wscale").value<wscale_type>();
-    const auto subsample  = configurable.parameter("gboost::subsample").value<subsample_type>();
-    const auto shrinkage  = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto seed            = configurable.parameter("gboost::seed").value<uint64_t>();
+    const auto batch           = configurable.parameter("gboost::batch").value<tensor_size_t>();
+    const auto epsilon         = configurable.parameter("gboost::epsilon").value<scalar_t>();
+    const auto patience        = configurable.parameter("gboost::patience").value<size_t>();
+    auto       max_rounds      = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
+    const auto wscale          = configurable.parameter("gboost::wscale").value<wscale_type>();
+    const auto subsample       = configurable.parameter("gboost::subsample").value<subsample_type>();
+    const auto shrinkage       = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto subsample_ratio = configurable.parameter("gboost::subsample_ratio").value<scalar_t>();
 
     const auto [shrinkage_ratio] = decode_params(params, shrinkage);
 
@@ -100,7 +101,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     valid_targets_iterator.batch(batch);
     valid_targets_iterator.scaling(scaling_type::none);
 
-    auto sampler  = sampler_t{train_samples, subsample, seed};
+    auto sampler  = sampler_t{train_samples, subsample, seed, subsample_ratio};
     auto values   = tensor2d_t{2, samples.size()};
     auto outputs  = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
     auto woutputs = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
@@ -208,6 +209,7 @@ gboost_model_t::gboost_model_t()
     register_parameter(parameter_t::make_enum("gboost::wscale", wscale_type::gboost));
     register_parameter(parameter_t::make_enum("gboost::shrinkage", shrinkage_type::off));
     register_parameter(parameter_t::make_enum("gboost::subsample", subsample_type::off));
+    register_parameter(parameter_t::make_scalar("gboost::subsample_ratio", 0.0, LT, 1.0, LE, 1.0));
 }
 
 gboost_model_t::gboost_model_t(gboost_model_t&&) noexcept = default;

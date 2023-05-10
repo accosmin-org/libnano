@@ -33,6 +33,7 @@
 
 # Vim
 *.swp
+*.swo
 
 # CMake-generated files and folders
 build

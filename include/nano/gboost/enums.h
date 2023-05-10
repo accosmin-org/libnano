@@ -35,7 +35,8 @@ enum class shrinkage_type : int32_t
 enum class subsample_type : int32_t
 {
     off,                ///< always use all available training samples
-    bootstrap,          ///< bootstrap the training samples
+    subsample,          ///< (uniform) subsample the training samples (withput replacement)
+    bootstrap,          ///< bootstrap the training samples (with replacement)
     wei_loss_bootstrap, ///< weighted (by the loss value) boostrapping of the training samples
     wei_grad_bootstrap, ///< weighted (by the loss gradient magnitudevalue) boostrapping of the training samples
 };
@@ -67,6 +68,7 @@ inline enum_map_t<gboost::subsample_type> enum_string<gboost::subsample_type>()
 {
     return {
         {               gboost::subsample_type::off,                "off"},
+        {         gboost::subsample_type::subsample,          "subsample"},
         {         gboost::subsample_type::bootstrap,          "bootstrap"},
         {gboost::subsample_type::wei_loss_bootstrap, "wei_loss_bootstrap"},
         {gboost::subsample_type::wei_grad_bootstrap, "wei_grad_bootstrap"},
