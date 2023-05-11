@@ -16,9 +16,6 @@ enum class hinge_type : int32_t
     right,    ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
 };
 
-template <>
-NANO_PUBLIC enum_map_t<hinge_type> enum_string<hinge_type>();
-
 ///
 /// \brief a hinge is a weak learner that performs the following operation element-wise:
 ///     hinge(x) =
@@ -89,3 +86,5 @@ private:
     hinge_type m_hinge{hinge_type::left}; ///<
 };
 } // namespace nano
+
+NANO_MAKE_ENUM2(hinge_type, left, right)

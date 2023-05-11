@@ -14,15 +14,6 @@ enum class task_type : int32_t
     mclassification, ///< multi-label classification
     unsupervised,    ///< unsupervised
 };
-
-template <>
-inline enum_map_t<task_type> enum_string<task_type>()
-{
-    return {
-        {     task_type::regression,       "regression"},
-        {task_type::sclassification, "s-classification"},
-        {task_type::mclassification, "m-classification"},
-        {   task_type::unsupervised,     "unsupervised"},
-    };
-}
 } // namespace nano
+
+NANO_MAKE_ENUM4(task_type, regression, sclassification, mclassification, unsupervised)

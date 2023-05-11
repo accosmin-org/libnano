@@ -13,15 +13,6 @@ enum class importance_type : int32_t
     dropcol,     ///< impact on the error rate by dropping the feature (aka column) and retraining without it
 };
 
-template <>
-inline enum_map_t<importance_type> enum_string<importance_type>()
-{
-    return {
-        {importance_type::shuffle, "shuffle"},
-        {importance_type::dropcol, "dropcol"},
-    };
-}
-
 ///
 /// \brief methods to combine the predictions of different models trained on different folds.
 ///
@@ -37,15 +28,7 @@ enum class ensemble_type : int32_t
     bagging,     ///< see bagging
     median,      ///< see bagging, but output the median per sample of the models' predictions
 };
-
-template <>
-inline enum_map_t<ensemble_type> enum_string<ensemble_type>()
-{
-    return {
-        { ensemble_type::bumping,  "bumping"},
-        {ensemble_type::stacking, "stacking"},
-        { ensemble_type::bagging,  "average"},
-        {  ensemble_type::median,   "median"},
-    };
-}
 } // namespace nano
+
+NANO_MAKE_ENUM2(importance_type, shuffle, dropcol)
+NANO_MAKE_ENUM4(ensemble_type, bumping, stacking, bagging, median)

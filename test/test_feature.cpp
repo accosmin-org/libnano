@@ -64,7 +64,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::sclassification);
-        UTEST_CHECK_EQUAL(scat(feature.task()), "s-classification");
+        UTEST_CHECK_EQUAL(scat(feature.task()), "sclassification");
     }
     {
         const auto feature = feature_t{"feature"}.mclass(7);
@@ -73,7 +73,7 @@ UTEST_CASE(task_type)
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::mclassification);
-        UTEST_CHECK_EQUAL(scat(feature.task()), "m-classification");
+        UTEST_CHECK_EQUAL(scat(feature.task()), "mclassification");
     }
     {
         const auto feature = feature_t{"feature"};

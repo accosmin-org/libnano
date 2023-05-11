@@ -209,16 +209,6 @@ rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsil
                              : ::make_solver<solver_osga_t>(epsilon, max_evals, m_logger);
 }
 
-template <>
-enum_map_t<solver_type> nano::enum_string<solver_type>()
-{
-    return {
-        {  solver_type::line_search, "unconstrained with line-search"},
-        {solver_type::non_monotonic,    "unconstrained non-monotonic"},
-        {  solver_type::constrained,                    "constrained"},
-    };
-}
-
 void solver_t::more_precise(const scalar_t epsilon_factor)
 {
     assert(0.0 < epsilon_factor && epsilon_factor < 1.0);

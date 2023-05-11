@@ -222,8 +222,8 @@ private:
 ///
 NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_t& current_state, scalar_t epsilon);
 
-template <>
-NANO_PUBLIC enum_map_t<solver_status> enum_string<solver_status>();
 NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
 NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano
+
+NANO_MAKE_ENUM4(solver_status, max_iters, converged, failed, stopped)

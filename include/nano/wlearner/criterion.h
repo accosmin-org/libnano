@@ -19,16 +19,4 @@ enum class criterion_type
 NANO_PUBLIC double make_score(criterion_type, double rss, int64_t k, int64_t n);
 } // namespace nano::wlearner
 
-namespace nano
-{
-template <>
-inline enum_map_t<wlearner::criterion_type> enum_string<wlearner::criterion_type>()
-{
-    return {
-        { wlearner::criterion_type::rss,  "rss"},
-        { wlearner::criterion_type::aic,  "aic"},
-        {wlearner::criterion_type::aicc, "aicc"},
-        { wlearner::criterion_type::bic,  "bic"},
-    };
-}
-} // namespace nano
+NANO_MAKE_ENUM4(wlearner::criterion_type, rss, aic, aicc, bic)

@@ -15,16 +15,6 @@ enum class kernel3x3_type
     prewitt,
 };
 
-template <>
-inline enum_map_t<kernel3x3_type> enum_string<kernel3x3_type>()
-{
-    return {
-        {  kernel3x3_type::sobel,   "sobel"},
-        { kernel3x3_type::scharr,  "scharr"},
-        {kernel3x3_type::prewitt, "prewitt"},
-    };
-}
-
 ///
 /// \brief construct symmetric 3x3 kernels for computing image gradients.
 ///
@@ -153,3 +143,5 @@ void gradient3x3(gradient3x3_mode mode, tensor_cmap_t<tscalar_input, 2> input,
     }
 }
 } // namespace nano
+
+NANO_MAKE_ENUM3(kernel3x3_type, sobel, scharr, prewitt)

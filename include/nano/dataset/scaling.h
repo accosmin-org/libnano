@@ -14,15 +14,6 @@ enum class scaling_type : int32_t
     minmax,   ///< min-max normalization: x = (x - min(x)) / (max(x) - min(x))
     standard  ///< standardization with zero mean and unit variance: x = (x - mean(x)) / stdev(x)
 };
-
-template <>
-inline enum_map_t<scaling_type> enum_string<scaling_type>()
-{
-    return {
-        {    scaling_type::none,     "none"},
-        {    scaling_type::mean,     "mean"},
-        {  scaling_type::minmax,   "minmax"},
-        {scaling_type::standard, "standard"}
-    };
-}
 } // namespace nano
+
+NANO_MAKE_ENUM4(scaling_type, none, mean, minmax, standard)

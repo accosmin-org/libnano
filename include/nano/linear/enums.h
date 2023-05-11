@@ -19,16 +19,4 @@ enum class regularization_type
 };
 } // namespace nano::linear
 
-namespace nano
-{
-template <>
-inline enum_map_t<linear::regularization_type> enum_string<linear::regularization_type>()
-{
-    return {
-        {      linear::regularization_type::none,       "none"},
-        {     linear::regularization_type::lasso,      "lasso"},
-        {     linear::regularization_type::ridge,      "ridge"},
-        {linear::regularization_type::elasticnet, "elasticnet"}
-    };
-}
-} // namespace nano
+NANO_MAKE_ENUM4(linear::regularization_type, none, lasso, ridge, elasticnet)

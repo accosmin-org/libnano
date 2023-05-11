@@ -73,14 +73,6 @@ public:
     scalar_t f{0}; ///< line-search function value
     scalar_t g{0}; ///< line-search dot product gradient and descent direction
 };
-
-template <>
-inline enum_map_t<interpolation_type> enum_string<interpolation_type>()
-{
-    return {
-        {interpolation_type::bisection, "bisection"},
-        {interpolation_type::quadratic, "quadratic"},
-        {    interpolation_type::cubic,     "cubic"}
-    };
-}
 } // namespace nano
+
+NANO_MAKE_ENUM3(interpolation_type, bisection, quadratic, cubic)

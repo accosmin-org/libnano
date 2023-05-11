@@ -197,17 +197,6 @@ void solver_state_t::status(const solver_status status)
     m_status = status;
 }
 
-template <>
-enum_map_t<solver_status> nano::enum_string<solver_status>()
-{
-    return {
-        {solver_status::converged, "converged"},
-        {solver_status::max_iters, "max_iters"},
-        {   solver_status::failed,    "failed"},
-        {  solver_status::stopped,   "stopped"}
-    };
-}
-
 bool nano::operator<(const solver_state_t& lhs, const solver_state_t& rhs)
 {
     return (std::isfinite(lhs.fx()) ? lhs.fx() : std::numeric_limits<scalar_t>::max()) <

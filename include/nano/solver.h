@@ -28,9 +28,6 @@ enum class solver_type
     constrained,
 };
 
-template <>
-NANO_PUBLIC enum_map_t<solver_type> enum_string<solver_type>();
-
 ///
 /// \brief interface for numerical optimization algorithms.
 ///
@@ -139,3 +136,5 @@ private:
     solver_type m_type{solver_type::line_search}; ///<
 };
 } // namespace nano
+
+NANO_MAKE_ENUM3(solver_type, line_search, non_monotonic, constrained)

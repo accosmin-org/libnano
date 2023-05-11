@@ -156,13 +156,6 @@ public:
     ///
     void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
 };
-
-template <>
-inline enum_map_t<solver_quasi_t::initialization> enum_string<solver_quasi_t::initialization>()
-{
-    return {
-        {solver_quasi_t::initialization::identity, "identity"},
-        {  solver_quasi_t::initialization::scaled,   "scaled"}
-    };
-}
 } // namespace nano
+
+NANO_MAKE_ENUM2(solver_quasi_t::initialization, identity, scaled)
