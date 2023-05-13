@@ -299,7 +299,6 @@ int unsafe_main(int argc, const char* argv[])
     cmdline_t cmdline("benchmark solvers");
     ::setup_solver(cmdline);
     ::setup_function(cmdline);
-    cmdline.add("", "function", "regex to select the functions to benchmark", ".+");
     cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials", "number of random trials for each test function", "100");
