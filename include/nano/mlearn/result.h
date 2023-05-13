@@ -1,31 +1,20 @@
 #pragma once
 
 #include <any>
+#include <nano/mlearn/enums.h>
 #include <nano/string.h>
 #include <nano/tensor.h>
 
-namespace nano
+namespace nano::ml
 {
 ///
 /// \brief statistics collected while fitting a machine learning model for:
 ///     - a set of (train, validation) sample splits (aka folds) and
-///     - a set of candidate hyper-parameter values (to try/tune).
+///     - a set of candidate hyper-parameter values to tune.
 ///
-class NANO_PUBLIC fit_result_t
+class NANO_PUBLIC result_t
 {
 public:
-    enum class split_type
-    {
-        train,
-        valid
-    };
-
-    enum class value_type
-    {
-        errors,
-        losses
-    };
-
     struct stats_t
     {
         scalar_t m_mean{0.0};
@@ -59,9 +48,9 @@ public:
 
         tensor_size_t folds() const { return m_values.size<0>(); }
 
-        stats_t stats(tensor_size_t fold, split_type, value_type) const;
+        stats_t stats(tensor_size_t fold, ml::split_type, ml::value_type) const;
 
-        scalar_t value(split_type = split_type::valid, value_type = value_type::errors) const;
+        scalar_t value(ml::split_type = ml::split_type::valid, ml::value_type = ml::value_type::errors) const;
 
         const std::any& extra(tensor_size_t fold) const;
 
@@ -78,7 +67,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit fit_result_t(strings_t param_names = strings_t{});
+    explicit result_t(strings_t param_names = strings_t{});
 
     ///
     /// \brief add the evaluation results of a hyper-parameter trial.
@@ -108,7 +97,7 @@ public:
     ///
     /// \brief returns the statistics associated to the optimum hyper-parameters.
     ///
-    stats_t stats(value_type) const;
+    stats_t stats(ml::value_type) const;
 
     ///
     /// \brief returns the closest parameter to the given one.
@@ -122,9 +111,9 @@ private:
     tensor2d_t m_optim_values;  ///< optimum's evaluation (errors|losses, statistics e.g. mean|stdev)
 };
 
-inline bool operator<(const fit_result_t::param_t& lhs, const fit_result_t::param_t& rhs)
+inline bool operator<(const result_t::param_t& lhs, const result_t::param_t& rhs)
 {
     assert(lhs.folds() == rhs.folds());
     return lhs.value() < rhs.value();
 }
-} // namespace nano
+} // namespace nano::ml

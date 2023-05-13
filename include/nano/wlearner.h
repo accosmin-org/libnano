@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/learner.h>
-#include <nano/model/cluster.h>
+#include <nano/mlearn/cluster.h>
 
 namespace nano
 {
@@ -35,15 +35,6 @@ public:
     ///     are relative to the whole dataset in the range [0, dataset.samples()).
     ///
     cluster_t split(const dataset_t&, const indices_t&) const;
-
-    ///
-    /// \brief compute the predictions for the given samples and add them to the given output buffer.
-    ///
-    /// NB: the given sample indices
-    ///     are relative to the whole dataset in the range [0, dataset.samples()).
-    ///
-    tensor4d_t predict(const dataset_t&, const indices_cmap_t&) const;
-    void       predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const;
 
     ///
     /// \brief select the feature or the features and estimate their associated parameters
@@ -87,8 +78,7 @@ public:
     static constexpr scalar_t no_fit_score() { return std::numeric_limits<scalar_t>::max(); }
 
 protected:
-    virtual scalar_t  do_fit(const dataset_t&, const indices_t&, const tensor4d_t&)             = 0;
-    virtual cluster_t do_split(const dataset_t&, const indices_t&) const                        = 0;
-    virtual void      do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const = 0;
+    virtual scalar_t  do_fit(const dataset_t&, const indices_t&, const tensor4d_t&) = 0;
+    virtual cluster_t do_split(const dataset_t&, const indices_t&) const            = 0;
 };
 } // namespace nano

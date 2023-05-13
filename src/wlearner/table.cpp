@@ -246,7 +246,7 @@ std::ostream& table_wlearner_t::write(std::ostream& stream) const
     return stream;
 }
 
-void table_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void table_wlearner_t::do_predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
 {
     process(dataset, samples, feature(), m_hashes, m_hash2tables,
             [&](const tensor_size_t i, const tensor_size_t table) { outputs.vector(i) += vector(table); });

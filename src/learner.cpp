@@ -57,3 +57,21 @@ void learner_t::fit_dataset(const dataset_t& dataset)
         m_inputs.push_back(dataset.feature(i));
     }
 }
+
+tensor4d_t learner_t::predict(const dataset_t& dataset, indices_cmap_t samples) const
+{
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
+    outputs.zero();
+    predict(dataset, samples, outputs);
+
+    return outputs;
+}
+
+void learner_t::predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
+{
+    critical_compatible(dataset);
+
+    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
+
+    do_predict(dataset, samples, outputs);
+}

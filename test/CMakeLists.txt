@@ -55,8 +55,10 @@ make_test(test_linear_dataset NANO::nano)
 make_test(test_linear_function NANO::nano)
 make_test(test_linear_model NANO::nano)
 
-make_test(test_model NANO::nano)
-make_test(test_model_cluster NANO::nano)
+make_test(test_learner NANO::nano)
+make_test(test_mlearn_cluster NANO::nano)
+make_test(test_mlearn_params NANO::nano)
+make_test(test_mlearn_result NANO::nano)
 
 make_test(test_wlearner_util NANO::nano)
 make_test(test_wlearner_dtree NANO::nano)

@@ -1,11 +1,12 @@
 #include "fixture/dataset.h"
 #include "fixture/datasource/linear.h"
-#include "fixture/model.h"
+#include "fixture/learner.h"
 #include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
 #include <nano/linear/result.h>
 
 using namespace nano;
+using namespace nano::ml;
 
 [[maybe_unused]] static auto make_linear_datasource(const tensor_size_t samples, const tensor_size_t targets,
                                                     const tensor_size_t features, const tensor_size_t modulo = 31,
@@ -41,7 +42,7 @@ template <typename tweights, typename tbias>
     UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
 }
 
-[[maybe_unused]] static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+[[maybe_unused]] static void check_result(const result_t& result, const strings_t& expected_param_names,
                                           const tensor_size_t expected_folds, const scalar_t epsilon)
 {
     ::check_result(result, expected_param_names,

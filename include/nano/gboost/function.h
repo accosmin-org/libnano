@@ -4,7 +4,7 @@
 #include <nano/function.h>
 #include <nano/gboost/accumulator.h>
 #include <nano/loss.h>
-#include <nano/model/cluster.h>
+#include <nano/mlearn/cluster.h>
 
 namespace nano::gboost
 {

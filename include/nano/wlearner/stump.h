@@ -52,7 +52,7 @@ public:
     ///
     /// \brief @see wlearner_t
     ///
-    void do_predict(const dataset_t&, const indices_cmap_t&, tensor4d_map_t) const override;
+    void do_predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const override;
 
     ///
     /// \brief @see wlearner_t

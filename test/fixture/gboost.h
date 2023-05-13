@@ -1,4 +1,4 @@
-#include "fixture/model.h"
+#include "fixture/learner.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
@@ -8,15 +8,23 @@
 #include <nano/gboost/result.h>
 
 using namespace nano;
+using namespace nano::ml;
 
 static auto make_gbooster()
 {
-    auto model = gboost_model_t{};
-    model.logger(model_t::make_logger_stdio());
+    auto model                            = gboost_model_t{};
     model.parameter("gboost::max_rounds") = 100;
     model.parameter("gboost::epsilon")    = 1e-6;
     model.parameter("gboost::patience")   = 2;
     return model;
+}
+
+static auto make_wlearners()
+{
+    auto wlearners = rwlearners_t{};
+    wlearners.emplace_back(wlearner_t::all().get("affine"));
+    wlearners.emplace_back(wlearner_t::all().get("dense-table"));
+    return wlearners;
 }
 
 static void check_predict(const gboost_model_t& model, const dataset_t& dataset, const scalar_t epsilon = 1e-12)
@@ -44,8 +52,7 @@ static void check_predict_throws(const gboost_model_t& model)
     UTEST_CHECK_THROW(model.predict(dataset3, arange(0, dataset3.samples())), std::runtime_error);
 }
 
-static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::stats_t& rhs,
-                        const scalar_t epsilon = 1e-12)
+static void check_equal(const result_t::stats_t& lhs, const result_t::stats_t& rhs, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_CLOSE(lhs.m_mean, rhs.m_mean, epsilon);
     UTEST_CHECK_CLOSE(lhs.m_stdev, rhs.m_stdev, epsilon);
@@ -61,7 +68,7 @@ static void check_equal(const fit_result_t::stats_t& lhs, const fit_result_t::st
     UTEST_CHECK_CLOSE(lhs.m_per99, rhs.m_per99, epsilon);
 }
 
-static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const scalar_t epsilon = 1e-12)
+static void check_equal(const result_t& lhs, const result_t& rhs, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_EQUAL(lhs.param_names(), rhs.param_names());
 
@@ -89,7 +96,7 @@ static void check_equal(const fit_result_t& lhs, const fit_result_t& rhs, const 
     check_equal(lhs.stats(value_type::losses), rhs.stats(value_type::losses), epsilon);
 }
 
-static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+static void check_result(const result_t& result, const strings_t& expected_param_names,
                          const tensor_size_t expected_folds = 2, const scalar_t epsilon = 1e-5)
 {
     ::check_result(result, expected_param_names, expected_param_names.empty() ? 1U : 4U, expected_folds, epsilon);
@@ -152,19 +159,19 @@ static void check_result(const fit_result_t& result, const strings_t& expected_p
 template <typename tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
-    const auto loss     = make_loss("mse");
-    const auto solver   = make_solver("cgd-n", 1e-4, 100);
-    const auto dataset  = make_dataset(datasource0);
-    const auto splitter = make_splitter("k-fold", folds, 42U);
-    const auto tuner    = make_tuner("surrogate");
-    const auto samples  = arange(0, dataset.samples());
+    const auto loss       = make_loss("mse");
+    const auto dataset    = make_dataset(datasource0);
+    const auto samples    = arange(0, dataset.samples());
+    const auto splitter   = make_splitter("k-fold", folds, 42U);
+    const auto fit_params = params_t{}.splitter(splitter).logger(params_t::make_logger_stdio());
+    const auto wlearners  = make_wlearners();
 
     // fitting should fail if no weak learner to chose from
-    UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, *solver, *splitter, *tuner), std::runtime_error);
+    UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, rwlearners_t{}, fit_params), std::runtime_error);
 
     // fitting should work when properly setup
-    auto fit_result = fit_result_t{};
-    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner));
+    auto fit_result = result_t{};
+    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, wlearners, fit_params));
 
     // check model
     datasource0.check_gbooster(model);

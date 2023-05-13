@@ -3,7 +3,7 @@
 #include <nano/linear/model.h>
 #include <nano/linear/result.h>
 #include <nano/linear/util.h>
-#include <nano/model/util.h>
+#include <nano/mlearn/tune.h>
 #include <nano/tensor/stream.h>
 
 using namespace nano;
@@ -98,21 +98,15 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
 } // namespace
 
 linear_model_t::linear_model_t()
-    : model_t("linear")
 {
     register_parameter(parameter_t::make_integer("linear::batch", 10, LE, 100, LE, 10000));
     register_parameter(parameter_t::make_enum("linear::scaling", scaling_type::standard));
     register_parameter(parameter_t::make_enum("linear::regularization", regularization_type::lasso));
 }
 
-rmodel_t linear_model_t::clone() const
-{
-    return std::make_unique<linear_model_t>(*this);
-}
-
 std::istream& linear_model_t::read(std::istream& stream)
 {
-    model_t::read(stream);
+    learner_t::read(stream);
 
     critical(!::nano::read(stream, m_bias) || !::nano::read(stream, m_weights),
              "linear model: failed to read from stream!");
@@ -124,7 +118,7 @@ std::istream& linear_model_t::read(std::istream& stream)
 
 std::ostream& linear_model_t::write(std::ostream& stream) const
 {
-    model_t::write(stream);
+    learner_t::write(stream);
 
     critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_weights),
              "linear model: failed to write to stream!");
@@ -132,8 +126,8 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     return stream;
 }
 
-::nano::fit_result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                         const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
+ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                 const ml::params_t& fit_params)
 {
     learner_t::fit_dataset(dataset);
 
@@ -148,21 +142,20 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
     {
         const auto [l1reg, l2reg] = decode_params(params, regularization);
 
-        auto result              = ::fit(*this, dataset, train_samples, loss, solver, l1reg, l2reg, extra);
+        auto result              = ::fit(*this, dataset, train_samples, loss, fit_params.solver(), l1reg, l2reg, extra);
         auto train_errors_losses = evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
         auto valid_errors_losses = evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
 
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(result));
     };
 
-    auto fit_result =
-        ml::tune(samples, splitter, tuner, std::move(param_names), param_spaces, make_logger_lambda(), evaluator);
+    auto fit_result = ml::tune("linear", samples, fit_params, std::move(param_names), param_spaces, evaluator);
 
     // refit with the optimum hyper-parameters (if any) on all given samples
     {
         const auto [l1reg, l2reg] = decode_params(fit_result.optimum().params(), regularization);
 
-        auto result        = ::fit(*this, dataset, samples, loss, solver, l1reg, l2reg);
+        auto result        = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg);
         auto errors_losses = evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
         fit_result.evaluate(std::move(errors_losses));
@@ -170,24 +163,18 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
         m_bias    = std::move(result.m_bias);
         m_weights = std::move(result.m_weights);
     }
-    this->log(fit_result);
+    fit_params.log(fit_result, "linear");
 
     return fit_result;
 }
 
-tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
+void linear_model_t::do_predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
 {
-    learner_t::critical_compatible(dataset);
-
     // TODO: no need to allocate the sample indices one more time
-    // TODO: determine at runtime if worth parallelizing
     auto iterator = flatten_iterator_t(dataset, samples);
     iterator.scaling(scaling_type::none);
     iterator.batch(parameter("linear::batch").value<tensor_size_t>());
 
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
     iterator.loop([&](tensor_range_t range, size_t, tensor2d_cmap_t inputs)
                   { ::nano::linear::predict(inputs, m_weights, m_bias, outputs.slice(range)); });
-
-    return outputs;
 }

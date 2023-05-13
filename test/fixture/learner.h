@@ -1,32 +1,31 @@
-#include <nano/model.h>
+#include <nano/learner.h>
+#include <nano/mlearn/result.h>
 #include <utest/utest.h>
 
 using namespace nano;
+using namespace nano::ml;
 
-using split_type = fit_result_t::split_type;
-using value_type = fit_result_t::value_type;
-
-template <typename tmodel, typename... tfit_args>
+template <typename tlearner, typename... tfit_args>
 [[maybe_unused]] static auto check_fit(const dataset_t& dataset, const tfit_args&... fit_args)
 {
-    auto model = tmodel{};
-    UTEST_CHECK_NOTHROW(model.fit(dataset, fit_args...));
-    return model;
+    auto learner = tlearner{};
+    UTEST_CHECK_NOTHROW(learner.fit(dataset, fit_args...));
+    return learner;
 }
 
-[[maybe_unused]] static void check_predict(const model_t& model, const dataset_t& dataset, const indices_t& samples,
+[[maybe_unused]] static void check_predict(const learner_t& learner, const dataset_t& dataset, const indices_t& samples,
                                            const tensor4d_t& expected_predictions)
 {
-    UTEST_CHECK_EQUAL(model.predict(dataset, samples), expected_predictions);
+    UTEST_CHECK_EQUAL(learner.predict(dataset, samples), expected_predictions);
 }
 
-[[maybe_unused]] static void check_predict_fails(const model_t& model, const dataset_t& dataset,
+[[maybe_unused]] static void check_predict_fails(const learner_t& learner, const dataset_t& dataset,
                                                  const indices_t& samples)
 {
-    UTEST_CHECK_THROW(model.predict(dataset, samples), std::runtime_error);
+    UTEST_CHECK_THROW(learner.predict(dataset, samples), std::runtime_error);
 }
 
-[[maybe_unused]] static void check_result(const fit_result_t& result, const strings_t& expected_param_names,
+[[maybe_unused]] static void check_result(const result_t& result, const strings_t& expected_param_names,
                                           const size_t min_param_results_size, const tensor_size_t expected_folds,
                                           const scalar_t epsilon)
 {

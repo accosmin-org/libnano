@@ -30,6 +30,6 @@ struct NANO_PUBLIC fit_result_t
     // attributes
     tensor1d_t m_bias;       ///<
     tensor2d_t m_weights;    ///<
-    tensor1d_t m_statistics; ///< (boosting round, statistics indexed by the associated enumeration)
+    tensor1d_t m_statistics; ///< (statistics indexed by the associated enumeration)
 };
 } // namespace nano::linear

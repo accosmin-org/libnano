@@ -32,11 +32,21 @@ public:
     ///
     void critical_compatible(const dataset_t&) const;
 
+    ///
+    /// \brief compute the predictions for the given samples in the given output buffer.
+    ///
+    /// NB: the given sample indices are relative to the whole dataset in the range [0, dataset.samples()).
+    ///
+    tensor4d_t predict(const dataset_t&, indices_cmap_t) const;
+    void       predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const;
+
 protected:
     ///
     /// \brief fit the given dataset and store its fingerprint.
     ///
     void fit_dataset(const dataset_t&);
+
+    virtual void do_predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const = 0;
 
 private:
     // attributes

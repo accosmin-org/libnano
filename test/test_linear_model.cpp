@@ -6,6 +6,7 @@
 #include <nano/linear/enums.h>
 
 using namespace nano;
+using namespace nano::ml;
 
 namespace
 {
@@ -30,8 +31,12 @@ auto make_model()
 {
     auto model                       = linear_model_t{};
     model.parameter("linear::batch") = 30;
-    model.logger(model_t::make_logger_stdio());
     return model;
+}
+
+auto make_fit_params(const rsolver_t& solver)
+{
+    return params_t{}.splitter(make_splitter("k-fold", 2)).solver(solver).logger(params_t::make_logger_stdio());
 }
 
 void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
@@ -83,12 +88,11 @@ UTEST_CASE(regularization_none)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss     = make_loss(loss_id);
-        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter("k-fold", 2);
-        const auto tuner    = make_tuner();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
+        const auto loss       = make_loss(loss_id);
+        const auto solver     = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
+        const auto fit_params = make_fit_params(solver);
+        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto epsilon    = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -110,12 +114,11 @@ UTEST_CASE(regularization_lasso)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss     = make_loss(loss_id);
-        const auto solver   = make_nonsmooth_solver();
-        const auto splitter = make_splitter("k-fold", 2);
-        const auto tuner    = make_tuner();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = 1e-4;
+        const auto loss       = make_loss(loss_id);
+        const auto solver     = make_nonsmooth_solver();
+        const auto fit_params = make_fit_params(solver);
+        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto epsilon    = 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -137,12 +140,11 @@ UTEST_CASE(regularization_ridge)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss     = make_loss(loss_id);
-        const auto solver   = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
-        const auto splitter = make_splitter("k-fold", 2);
-        const auto tuner    = make_tuner();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
+        const auto loss       = make_loss(loss_id);
+        const auto solver     = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
+        const auto fit_params = make_fit_params(solver);
+        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto epsilon    = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -164,12 +166,11 @@ UTEST_CASE(regularization_elasticnet)
     {
         UTEST_NAMED_CASE(loss_id);
 
-        const auto loss     = make_loss(loss_id);
-        const auto solver   = make_nonsmooth_solver();
-        const auto splitter = make_splitter("k-fold", 2);
-        const auto tuner    = make_tuner();
-        const auto result   = model.fit(dataset, samples, *loss, *solver, *splitter, *tuner);
-        const auto epsilon  = 1e-4;
+        const auto loss       = make_loss(loss_id);
+        const auto solver     = make_nonsmooth_solver();
+        const auto fit_params = make_fit_params(solver);
+        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto epsilon    = 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);

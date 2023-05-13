@@ -1,6 +1,9 @@
 #pragma once
 
-#include <nano/model.h>
+#include <nano/learner.h>
+#include <nano/loss.h>
+#include <nano/mlearn/params.h>
+#include <nano/mlearn/result.h>
 
 namespace nano
 {
@@ -18,7 +21,7 @@ namespace nano
 /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
 /// see "Regularization and variable selection via the elastic net", by H. Zou, T. Hastie
 ///
-class NANO_PUBLIC linear_model_t final : public model_t
+class NANO_PUBLIC linear_model_t final : public learner_t
 {
 public:
     ///
@@ -37,20 +40,9 @@ public:
     std::ostream& write(std::ostream&) const override;
 
     ///
-    /// \brief @see clone_t
+    /// \brief fit the model using the given samples and return the associated statistics.
     ///
-    rmodel_t clone() const override;
-
-    ///
-    /// \brief @see model_
-    ///
-    fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
-                     const tuner_t&) override;
-
-    ///
-    /// \brief @see model_t
-    ///
-    tensor4d_t predict(const dataset_t&, const indices_t&) const override;
+    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const ml::params_t& = {});
 
     ///
     /// \brief returns the fitted bias vector (intercept).
@@ -63,6 +55,11 @@ public:
     const tensor2d_t& weights() const { return m_weights; }
 
 private:
+    ///
+    /// \brief @see learner_t
+    ///
+    void do_predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const override;
+
     // attributes
     tensor1d_t m_bias;    ///< bias vector (#outputs)
     tensor2d_t m_weights; ///< weight matrix (#inputs, #outputs)

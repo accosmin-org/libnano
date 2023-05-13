@@ -121,8 +121,7 @@ scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sa
     return best.m_score;
 }
 
-void affine_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples,
-                                   tensor4d_map_t outputs) const
+void affine_wlearner_t::do_predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
 {
     assert(tables().dims() == cat_dims(2, dataset.target_dims()));
 

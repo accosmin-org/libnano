@@ -29,24 +29,6 @@ scalar_t wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, con
     return score;
 }
 
-tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples) const
-{
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
-    outputs.zero();
-    predict(dataset, samples, outputs);
-
-    return outputs;
-}
-
-void wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
-{
-    learner_t::critical_compatible(dataset);
-
-    assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
-
-    do_predict(dataset, samples, outputs);
-}
-
 cluster_t wlearner_t::split(const dataset_t& dataset, const indices_t& samples) const
 {
     learner_t::critical_compatible(dataset);

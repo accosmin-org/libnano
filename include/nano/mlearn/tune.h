@@ -1,23 +1,30 @@
 #pragma once
 
 #include <nano/core/parallel.h>
-#include <nano/model.h>
+#include <nano/mlearn/params.h>
+#include <nano/mlearn/result.h>
 
 namespace nano::ml
 {
-NANO_PUBLIC const std::any& closest_extra(const fit_result_t&, const tensor1d_cmap_t& params, tensor_size_t fold);
+NANO_PUBLIC const std::any& closest_extra(const result_t&, const tensor1d_cmap_t& params, tensor_size_t fold);
 
-NANO_PUBLIC fit_result_t::params_t make_param_results(const tensor2d_t& all_params, tensor_size_t folds);
+NANO_PUBLIC result_t::params_t make_param_results(const tensor2d_t& all_params, tensor_size_t folds);
 
-template <typename tlogger, typename tevaluator>
-auto tune(const indices_t& samples, const splitter_t& splitter, const tuner_t& tuner, strings_t param_names,
-          const param_spaces_t& param_spaces, const tlogger& logger, const tevaluator& evaluator)
+///
+/// \brief tune hyper-parameters required to fit a machine learning model.
+///
+/// NB: each set of hyper-parameter values is evaluated using the given callback.
+/// NB: the tuning is performed in parallel across the current set of hyper-parameter values to evaluate and the folds.
+///
+template <typename tevaluator>
+auto tune(const string_t& prefix, const indices_t& samples, const params_t& fit_params, strings_t param_names,
+          const param_spaces_t& param_spaces, const tevaluator& evaluator)
 {
-    const auto splits = splitter.split(samples);
+    const auto splits = fit_params.splitter().split(samples);
     const auto folds  = static_cast<tensor_size_t>(splits.size());
 
     auto thread_pool = parallel::pool_t{};
-    auto fit_result  = fit_result_t{std::move(param_names)};
+    auto fit_result  = result_t{std::move(param_names)};
 
     // tune hyper-parameters (if any) in parallel by hyper-parameter trials and folds
     const auto callback = [&](const tensor2d_t& all_params)
@@ -51,14 +58,14 @@ auto tune(const indices_t& samples, const splitter_t& splitter, const tuner_t& t
             fit_result.add(std::move(param_result));
         }
 
-        logger(fit_result);
+        fit_params.log(fit_result, prefix);
 
         return values;
     };
 
     if (!param_spaces.empty())
     {
-        tuner.optimize(param_spaces, callback);
+        fit_params.tuner().optimize(param_spaces, callback);
     }
     else
     {

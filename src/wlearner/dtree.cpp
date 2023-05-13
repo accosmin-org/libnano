@@ -237,7 +237,7 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
     return score;
 }
 
-void dtree_wlearner_t::do_predict(const dataset_t& dataset, const indices_cmap_t& samples, tensor4d_map_t outputs) const
+void dtree_wlearner_t::do_predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
 {
     const auto cluster = split(dataset, samples);
     for (tensor_size_t i = 0, size = samples.size(); i < size; ++i)

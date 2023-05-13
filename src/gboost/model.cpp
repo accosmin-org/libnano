@@ -5,7 +5,7 @@
 #include <nano/gboost/result.h>
 #include <nano/gboost/sampler.h>
 #include <nano/gboost/util.h>
-#include <nano/model/util.h>
+#include <nano/mlearn/tune.h>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/util.h>
 #include <set>
@@ -197,7 +197,6 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
 } // namespace
 
 gboost_model_t::gboost_model_t()
-    : model_t("gboost")
 {
     register_parameter(parameter_t::make_scalar("gboost::epsilon", 1e-12, LE, 1e-6, LE, 1.0));
 
@@ -217,8 +216,8 @@ gboost_model_t::gboost_model_t(gboost_model_t&&) noexcept = default;
 gboost_model_t& gboost_model_t::operator=(gboost_model_t&&) noexcept = default;
 
 gboost_model_t::gboost_model_t(const gboost_model_t& other)
-    : model_t(other)
-    , m_protos(wlearner::clone(other.m_protos))
+    : learner_t(other)
+    , m_bias(other.m_bias)
     , m_wlearners(wlearner::clone(other.m_wlearners))
 {
 }
@@ -227,8 +226,8 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
 {
     if (this != &other)
     {
-        model_t::operator=(other);
-        m_protos    = wlearner::clone(other.m_protos);
+        learner_t::operator=(other);
+        m_bias      = other.m_bias;
         m_wlearners = wlearner::clone(other.m_wlearners);
     }
     return *this;
@@ -236,30 +235,11 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
 
 gboost_model_t::~gboost_model_t() = default;
 
-rmodel_t gboost_model_t::clone() const
-{
-    return std::make_unique<gboost_model_t>(*this);
-}
-
-void gboost_model_t::add(const wlearner_t& wlearner)
-{
-    m_protos.emplace_back(wlearner.clone());
-}
-
-void gboost_model_t::add(const string_t& wlearner_id)
-{
-    auto wlearner = wlearner_t::all().get(wlearner_id);
-
-    critical(!wlearner, "gboost: invalid weak learner id (", wlearner_id, ")!");
-
-    m_protos.emplace_back(std::move(wlearner));
-}
-
 std::istream& gboost_model_t::read(std::istream& stream)
 {
-    model_t::read(stream);
+    learner_t::read(stream);
 
-    critical(!::nano::read(stream, m_protos) || !::nano::read(stream, m_wlearners) || !::nano::read(stream, m_bias),
+    critical(!::nano::read(stream, m_bias) || !::nano::read(stream, m_wlearners),
              "gboost: failed to read from stream!");
 
     return stream;
@@ -267,18 +247,19 @@ std::istream& gboost_model_t::read(std::istream& stream)
 
 std::ostream& gboost_model_t::write(std::ostream& stream) const
 {
-    model_t::write(stream);
+    learner_t::write(stream);
 
-    critical(!::nano::write(stream, m_protos) || !::nano::write(stream, m_wlearners) || !::nano::write(stream, m_bias),
+    critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_wlearners),
              "gboost: failed to write to stream!");
 
     return stream;
 }
 
-::nano::fit_result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                         const solver_t& solver, const splitter_t& splitter, const tuner_t& tuner)
+ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
+                                 const rwlearners_t& protos_, const ml::params_t& fit_params)
 {
-    critical(m_protos.empty(), "gboost: cannot fit without any weak learner!");
+    const auto protos = wlearner::clone(protos_);
+    critical(protos.empty(), "gboost: cannot fit without any weak learner!");
 
     // tune hyper-parameters (if any)
     auto [param_names, param_spaces] = ::make_params(*this);
@@ -286,13 +267,12 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
     const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
         auto [gboost, train_errors_losses, valid_errors_losses] =
-            ::fit(*this, dataset, train_samples, valid_samples, loss, solver, m_protos, params);
+            ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params);
 
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };
 
-    auto fit_result =
-        ml::tune(samples, splitter, tuner, std::move(param_names), param_spaces, make_logger_lambda(), evaluator);
+    auto fit_result = ml::tune("gboost", samples, fit_params, std::move(param_names), param_spaces, evaluator);
 
     // choose the optimum hyper-parameters and merge the boosters fitted for each fold
     {
@@ -335,24 +315,19 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
 
         fit_result.evaluate(::selected(values, samples));
     }
-    this->log(fit_result);
+    fit_params.log(fit_result, "gboost");
 
     return fit_result;
 }
 
-tensor4d_t gboost_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
+void gboost_model_t::do_predict(const dataset_t& dataset, indices_cmap_t samples, tensor4d_map_t outputs) const
 {
-    learner_t::critical_compatible(dataset);
-
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.target_dims()));
     outputs.reshape(samples.size(), -1).matrix().rowwise() = m_bias.vector().transpose();
 
     for (const auto& wlearner : m_wlearners)
     {
         wlearner->predict(dataset, samples, outputs.tensor());
     }
-
-    return outputs;
 }
 
 indices_t gboost_model_t::features() const

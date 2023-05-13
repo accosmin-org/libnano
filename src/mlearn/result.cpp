@@ -1,7 +1,8 @@
 #include <nano/core/stats.h>
-#include <nano/model/result.h>
+#include <nano/mlearn/result.h>
 
 using namespace nano;
+using namespace nano::ml;
 
 namespace
 {
@@ -14,7 +15,7 @@ auto make_stats(const tensor1d_cmap_t& values)
 {
     assert(values.size() == 12);
 
-    return fit_result_t::stats_t{
+    return result_t::stats_t{
         values(0), values(1), values(2), values(3), values(4),  values(5),
         values(6), values(7), values(8), values(9), values(10), values(11),
     };
@@ -37,7 +38,7 @@ void store_stats(const tensor1d_map_t& values, const tensor1d_map_t& stats)
 }
 } // namespace
 
-fit_result_t::param_t::param_t(tensor1d_t params, const tensor_size_t folds)
+result_t::param_t::param_t(tensor1d_t params, const tensor_size_t folds)
     : m_params(std::move(params))
     , m_values(folds, 2, 2, 12)
     , m_extras(static_cast<size_t>(folds))
@@ -45,8 +46,8 @@ fit_result_t::param_t::param_t(tensor1d_t params, const tensor_size_t folds)
     m_values.full(std::numeric_limits<scalar_t>::quiet_NaN());
 }
 
-void fit_result_t::param_t::evaluate(const tensor_size_t fold, tensor2d_t train_errors_losses,
-                                     tensor2d_t valid_errors_losses, std::any extra)
+void result_t::param_t::evaluate(const tensor_size_t fold, tensor2d_t train_errors_losses,
+                                 tensor2d_t valid_errors_losses, std::any extra)
 {
     assert(fold >= 0 && fold < folds());
 
@@ -59,8 +60,8 @@ void fit_result_t::param_t::evaluate(const tensor_size_t fold, tensor2d_t train_
     m_extras[static_cast<size_t>(fold)] = std::move(extra);
 }
 
-fit_result_t::stats_t fit_result_t::param_t::stats(const tensor_size_t fold, const split_type split,
-                                                   const value_type value) const
+result_t::stats_t result_t::param_t::stats(const tensor_size_t fold, const split_type split,
+                                           const value_type value) const
 {
     assert(fold >= 0 && fold < folds());
 
@@ -70,7 +71,7 @@ fit_result_t::stats_t fit_result_t::param_t::stats(const tensor_size_t fold, con
     return ::make_stats(m_values.tensor(fold, split_index, value_index));
 }
 
-scalar_t fit_result_t::param_t::value(const split_type split, const value_type value) const
+scalar_t result_t::param_t::value(const split_type split, const value_type value) const
 {
     auto sum_mean = 0.0;
     for (tensor_size_t fold = 0, folds = this->folds(); fold < folds; ++fold)
@@ -82,27 +83,27 @@ scalar_t fit_result_t::param_t::value(const split_type split, const value_type v
     return std::log(sum_mean + std::numeric_limits<scalar_t>::epsilon());
 }
 
-const std::any& fit_result_t::param_t::extra(const tensor_size_t fold) const
+const std::any& result_t::param_t::extra(const tensor_size_t fold) const
 {
     assert(fold >= 0 && fold < folds());
 
     return m_extras[static_cast<size_t>(fold)];
 }
 
-fit_result_t::fit_result_t(strings_t param_names)
+result_t::result_t(strings_t param_names)
     : m_param_names(std::move(param_names))
     , m_optim_values(make_full_tensor<scalar_t>(make_dims(2, 12), std::numeric_limits<scalar_t>::quiet_NaN()))
 {
 }
 
-void fit_result_t::add(param_t param)
+void result_t::add(param_t param)
 {
     assert(param.params().size() == static_cast<tensor_size_t>(m_param_names.size()));
 
     m_param_results.emplace_back(std::move(param));
 }
 
-const fit_result_t::param_t& fit_result_t::optimum() const
+const result_t::param_t& result_t::optimum() const
 {
     static const auto noparams = param_t{};
 
@@ -119,22 +120,22 @@ const fit_result_t::param_t& fit_result_t::optimum() const
     }
 }
 
-void fit_result_t::evaluate(tensor2d_t errors_losses)
+void result_t::evaluate(tensor2d_t errors_losses)
 {
     ::store_stats(errors_losses.tensor(0), m_optim_values.tensor(0));
     ::store_stats(errors_losses.tensor(1), m_optim_values.tensor(1));
 }
 
-fit_result_t::stats_t fit_result_t::stats(const value_type value) const
+result_t::stats_t result_t::stats(const value_type value) const
 {
     const auto value_index = value == value_type::errors ? 0 : 1;
 
     return ::make_stats(m_optim_values.tensor(value_index));
 }
 
-const fit_result_t::param_t* fit_result_t::closest(const tensor1d_cmap_t& params) const
+const result_t::param_t* result_t::closest(const tensor1d_cmap_t& params) const
 {
-    const fit_result_t::param_t* closest = nullptr;
+    const result_t::param_t* closest = nullptr;
 
     auto distance = std::numeric_limits<scalar_t>::max();
     for (const auto& param_result : m_param_results)

@@ -189,8 +189,6 @@ template <typename... targs>
 auto make_gbooster_to_fit(const targs... args)
 {
     auto model = make_gbooster();
-    model.add("affine");
-    model.add("dense-table");
     config(model, args...);
     return model;
 }
@@ -205,17 +203,6 @@ UTEST_CASE(empty)
     UTEST_CHECK_EQUAL(model.bias().size(), 0);
     UTEST_CHECK_EQUAL(model.features().size(), 0);
     UTEST_CHECK_EQUAL(model.wlearners().size(), 0U);
-
-    check_predict_throws(model);
-}
-
-UTEST_CASE(add_protos)
-{
-    auto model = make_gbooster();
-
-    UTEST_CHECK_NOTHROW(model.add("affine"));
-    UTEST_CHECK_NOTHROW(model.add(affine_wlearner_t{}));
-    UTEST_CHECK_THROW(model.add("invalid"), std::runtime_error);
 
     check_predict_throws(model);
 }

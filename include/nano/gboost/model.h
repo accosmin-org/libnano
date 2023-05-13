@@ -1,6 +1,8 @@
 #pragma once
 
-#include <nano/model.h>
+#include <nano/loss.h>
+#include <nano/mlearn/params.h>
+#include <nano/mlearn/result.h>
 #include <nano/wlearner.h>
 
 namespace nano
@@ -26,7 +28,7 @@ namespace nano
 /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
 /// see "Variance Penalizing AdaBoost", by Pannagadatta K. Shivaswamy & Tony Jebara
 ///
-class NANO_PUBLIC gboost_model_t final : public model_t
+class NANO_PUBLIC gboost_model_t final : public learner_t
 {
 public:
     ///
@@ -52,12 +54,6 @@ public:
     ~gboost_model_t() override;
 
     ///
-    /// \brief register a weak learner as a prototype.
-    ///
-    void add(const wlearner_t&);
-    void add(const string_t& wlearner_id);
-
-    ///
     /// \brief @see configurable_t
     ///
     std::istream& read(std::istream&) override;
@@ -68,20 +64,9 @@ public:
     std::ostream& write(std::ostream&) const override;
 
     ///
-    /// \brief @see clone_t
+    /// \brief fit the model using the given samples and weak learners and return the associated statistics.
     ///
-    rmodel_t clone() const override;
-
-    ///
-    /// \brief @see model_
-    ///
-    fit_result_t fit(const dataset_t&, const indices_t&, const loss_t&, const solver_t&, const splitter_t&,
-                     const tuner_t&) override;
-
-    ///
-    /// \brief @see model_t
-    ///
-    tensor4d_t predict(const dataset_t&, const indices_t&) const override;
+    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const rwlearners_t&, const ml::params_t& = {});
 
     ///
     /// \brief returns the selected features.
@@ -99,9 +84,13 @@ public:
     const rwlearners_t& wlearners() const { return m_wlearners; }
 
 private:
+    ///
+    /// \brief @see learner_t
+    ///
+    void do_predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const override;
+
     // attributes
     tensor1d_t   m_bias;      ///< fitted bias
-    rwlearners_t m_protos;    ///< weak learners to choose from (prototypes)
     rwlearners_t m_wlearners; ///< fitted weak learners chosen from the prototypes
 };
 } // namespace nano
