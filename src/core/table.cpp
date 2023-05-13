@@ -155,7 +155,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
                 const auto size = cell.m_data.size() + cell.m_mark.size();
                 for (size_t c = 0; c < span; ++c, ++icol)
                 {
-                    colsizes[icol] = std::max(colsizes[icol], idiv(size, span));
+                    colsizes[icol] = std::max(colsizes[icol], size);
                 }
             }
             else
@@ -174,24 +174,16 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             const auto span = cell.m_span;
             if (span > 1)
             {
-                const auto size = cell.m_data.size() + cell.m_mark.size();
-                if (std::accumulate(colsizes.begin() + static_cast<int>(icol),
-                                    colsizes.begin() + static_cast<int>(icol + span), size_t(0)) < size)
+                const auto span_size = cell.m_data.size() + cell.m_mark.size();
+                const auto begin     = colsizes.begin() + static_cast<int>(icol);
+                const auto end       = colsizes.begin() + static_cast<int>(icol + span);
+                const auto cols_size = std::accumulate(begin, end, size_t(0)) + (span - 1U) * 3U - 1U;
+                if (cols_size < span_size)
                 {
-                    for (size_t c = 0; c < span; ++c, ++icol)
-                    {
-                        colsizes[icol] = std::max(colsizes[icol], idiv(size, span));
-                    }
-                }
-                else
-                {
-                    icol += span;
+                    std::for_each(begin, end, [=](auto& colsize) { colsize += idiv(span_size - cols_size, span); });
                 }
             }
-            else
-            {
-                icol += span;
-            }
+            icol += span;
         }
     }
 

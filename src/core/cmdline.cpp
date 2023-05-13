@@ -72,6 +72,8 @@ cmdline_t::cmdline_t(string_t title)
     : m_title(std::move(title))
 {
     add("h", "help", "usage");
+    add("v", "version", "library version");
+    add("g", "git-hash", "git commit hash");
 }
 
 void cmdline_t::add(string_t short_name, string_t name, string_t description)

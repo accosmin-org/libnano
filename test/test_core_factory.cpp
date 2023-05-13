@@ -1,5 +1,6 @@
 #include <nano/core/factory_util.h>
 #include <nano/core/strutil.h>
+#include <nano/lsearch0.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -132,6 +133,48 @@ UTEST_CASE(make_object_table)
                                    "| id2    | desc2       |\n"
                                    "| id3    | desc3       |\n"
                                    "|--------|-------------|\n");
+}
+
+UTEST_CASE(make_table_with_params_one)
+{
+    const auto table = make_table_with_params("lsearch0", lsearch0_t::all(), "what?!");
+    UTEST_CHECK_EQUAL(scat(table), "|----------|-----------|-------|--------|\n"
+                                   "| lsearch0 | parameter | value | domain |\n"
+                                   "|----------|-----------|-------|--------|\n");
+}
+
+UTEST_CASE(make_table_with_params_some)
+{
+    const auto table = make_table_with_params("lsearch0", lsearch0_t::all(), "linear|quadratic");
+    UTEST_CHECK_EQUAL(scat(table), "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| lsearch0  | parameter                     | value    | domain              |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| linear    | linearly interpolate the previous line-search step size        |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| linear    | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| linear    | lsearch0::linear::beta        | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| linear    | lsearch0::linear::alpha       | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| quadratic | quadratically interpolate the previous line-search step size   |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| quadratic | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| quadratic | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| quadratic | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n");
+}
+
+UTEST_CASE(make_table_with_params_only)
+{
+    const auto table = make_table_with_params("lsearch0", lsearch0_t::all(), "quadratic|what?!");
+    UTEST_CHECK_EQUAL(scat(table), "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| lsearch0  | parameter                     | value    | domain              |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| quadratic | quadratically interpolate the previous line-search step size   |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n"
+                                   "| quadratic | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| quadratic | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| quadratic | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "|-----------|-------------------------------|----------|---------------------|\n");
 }
 
 UTEST_END_MODULE()

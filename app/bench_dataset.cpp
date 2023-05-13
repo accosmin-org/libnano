@@ -101,9 +101,9 @@ int unsafe_main(int argc, const char* argv[])
     // parse the command line
     cmdline_t cmdline("benchmark loading datasets and generating features");
     cmdline.add("", "datasource", "regex to select the data sources to benchmark", ".+");
-    cmdline.add("", "generator",        "regex to select the feature generators to benchmark", ".+");
-    cmdline.add("", "list-datasource", "list the available data sources");
-    cmdline.add("", "list-generator",   "list the available feature generators");
+    cmdline.add("", "generator", "regex to select the feature generators to benchmark", ".+");
+    cmdline.add("", "list-datasource", "list the available machine learning datasets");
+    cmdline.add("", "list-generator", "list the available feature generation methods");
 
     const auto options = cmdline.process(argc, argv);
 

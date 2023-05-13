@@ -1,10 +1,5 @@
-#include <nano/core/table.h>
-#include <nano/core/chrono.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
 #include <nano/linear/model.h>
-#include <nano/linear/function.h>
-#include <nano/dataset/imclass.h>
 
 using namespace nano;
 
@@ -138,25 +133,27 @@ minimum)));
 int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
-    cmdline_t cmdline("report statistics on training linear models on image classification datasets");
-    cmdline.add("", "imclass",          "regex to select image classification datasets", ".+");
-    cmdline.add("", "solver",           "regex to select the solvers to benchmark", "lbfgs");
-    cmdline.add("", "loss",             "regex to select the loss functions to benchmark", "s-classnll");
-    cmdline.add("", "normalization",    "regex to select the feature scaling methods to benchmark", ".+");
-    cmdline.add("", "regularization",   "regex to select the regularization methods to benchmark", ".+");
-    cmdline.add("", "epsilon",          "convergence criterion (solver)", 1e-3);
-    cmdline.add("", "max-iterations",   "maximum number of iterations (solver)", 1000);
-    cmdline.add("", "tune-trials",      "maximum number of trials per tuning step of the regularization factor", 7);
-    cmdline.add("", "tune-steps",       "number of tuning steps of the regularization factor", 2);
-    cmdline.add("", "no-training",      "don't train the linear models (e.g. check dataset loading)");
+    cmdline_t cmdline("benchmark linear machine learning models");
+    cmdline.add("", "datasource", "data source");
+    cmdline.add("", "generator", "regex to select the feature generators", "identity.+");
+    cmdline.add("", "loss", "loss function");
+    cmdline.add("", "solver", "solver");
+    cmdline.add("", "tuner", "tuner");
+    cmdline.add("", "splitter", "splitting strategy");
+    cmdline.add("", "list-solver", "list the available solvers");
+    cmdline.add("", "list-loss", "list the available loss functions");
+    cmdline.add("", "list-datasource", "list the available machine learning datasets");
+    cmdline.add("", "list-generator", "list the available feature generation methods");
+    cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
+    cmdline.add("", "list-tuner", "list the available hyper-parameter tuning methods");
+
+    const auto options = cmdline.process(argc, argv);
 
     // todo: option to save trained models
     // todo: option to save training history to csv
     // todo: wrapper script to generate plots?!
 
-    cmdline.process(argc, argv);
-
-    if (cmdline.has("help"))
+    if (options.has("help"))
     {
         cmdline.usage();
         return EXIT_SUCCESS;

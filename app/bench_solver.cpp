@@ -1,3 +1,4 @@
+#include "util.h"
 #include <iomanip>
 #include <nano/core/chrono.h>
 #include <nano/core/cmdline.h>
@@ -296,7 +297,8 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-    cmdline.add("", "solver", "regex to select the line-search solvers to benchmark", ".+");
+    ::setup_solver(cmdline);
+    ::setup_function(cmdline);
     cmdline.add("", "function", "regex to select the functions to benchmark", ".+");
     cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
@@ -304,66 +306,11 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "convex", "use only convex test functions");
     cmdline.add("", "smooth", "use only smooth test functions");
     cmdline.add("", "non-smooth", "use only non-smooth test functions");
-    cmdline.add("", "lsearch0", "use this regex to select the line-search initialization methods", "quadratic");
-    cmdline.add("", "lsearchk", "use this regex to select the line-search strategies", "morethuente");
     cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
     cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
-    cmdline.add("", "list-solver", "list the available solvers");
     cmdline.add("", "list-function", "list the available test functions");
-    cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
-    cmdline.add("", "list-lsearchk", "list the available line-search strategies");
-    cmdline.add("", "list-solver-params", "list the available parameters of the selected solvers");
-    cmdline.add("", "list-lsearch0-params",
-                "list the available parameters of the selected line-search initialization methods");
-    cmdline.add("", "list-lsearchk-params", "list the available parameters of the selected line-search strategies");
 
-    const auto options = cmdline.process(argc, argv);
-
-    if (options.has("help"))
-    {
-        cmdline.usage();
-        return EXIT_SUCCESS;
-    }
-
-    const auto list_solver   = options.has("list-solver");
-    const auto list_function = options.has("list-function");
-    const auto list_lsearch0 = options.has("list-lsearch0");
-    const auto list_lsearchk = options.has("list-lsearchk");
-
-    if (list_solver || list_function || list_lsearch0 || list_lsearchk)
-    {
-        table_t table;
-        if (list_solver)
-        {
-            append_table(table, "solver", solver_t::all());
-        }
-        if (list_lsearch0)
-        {
-            if (list_solver)
-            {
-                table.delim();
-            }
-            append_table(table, "lsearch0", lsearch0_t::all());
-        }
-        if (list_lsearchk)
-        {
-            if (list_solver || list_lsearch0)
-            {
-                table.delim();
-            }
-            append_table(table, "lsearchk", lsearchk_t::all());
-        }
-        if (list_function)
-        {
-            if (list_solver || list_lsearch0 || list_lsearchk)
-            {
-                table.delim();
-            }
-            append_table(table, "function", function_t::all());
-        }
-        std::cout << table;
-        return EXIT_SUCCESS;
-    }
+    const auto options = ::process(cmdline, argc, argv);
 
     const auto list_solver_params   = options.has("list-solver-params");
     const auto list_lsearch0_params = options.has("list-lsearch0-params");
