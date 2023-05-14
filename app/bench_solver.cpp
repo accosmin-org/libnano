@@ -297,8 +297,21 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-    ::setup_solver(cmdline);
-    ::setup_function(cmdline);
+
+    cmdline.add("", "solver", "regex to select solvers", ".+");
+    cmdline.add("", "function", "regex to select test functions", ".+");
+    cmdline.add("", "lsearch0", "regex to select line-search initialization methods", "quadratic");
+    cmdline.add("", "lsearchk", "regex to select line-search strategies", "morethuente");
+
+    cmdline.add("", "list-solver", "list the available solvers");
+    cmdline.add("", "list-function", "list the available test functions");
+    cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
+    cmdline.add("", "list-lsearchk", "list the available line-search strategies");
+
+    cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
+    cmdline.add("", "list-lsearch0-params", "list the parameters of the selected line-search initialization methods");
+    cmdline.add("", "list-lsearchk-params", "list the parameters of the selected line-search strategies");
+
     cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials", "number of random trials for each test function", "100");
@@ -307,65 +320,8 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "non-smooth", "use only non-smooth test functions");
     cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
     cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
-    cmdline.add("", "list-function", "list the available test functions");
 
     const auto options = ::process(cmdline, argc, argv);
-
-    const auto list_solver_params   = options.has("list-solver-params");
-    const auto list_lsearch0_params = options.has("list-lsearch0-params");
-    const auto list_lsearchk_params = options.has("list-lsearchk-params");
-
-    if (list_solver_params || list_lsearch0_params || list_lsearchk_params)
-    {
-        const auto append = [](table_t& table, const char* name, const auto& factory, const std::regex& regex)
-        {
-            table.header() << name << "parameter"
-                           << "value"
-                           << "domain";
-            table.delim();
-
-            const auto ids = factory.ids(regex);
-            for (const auto& id : ids)
-            {
-                const auto estimator = factory.get(id);
-                for (const auto& param : estimator->parameters())
-                {
-                    table.append() << id << param.name() << param.value() << param.domain();
-                }
-                if (&id != &*ids.rbegin())
-                {
-                    table.delim();
-                }
-            }
-        };
-
-        table_t table;
-        if (list_solver_params)
-        {
-            const auto regex = std::regex(options.get<string_t>("solver"));
-            append(table, "solver", solver_t::all(), regex);
-        }
-        if (list_lsearch0_params)
-        {
-            const auto regex = std::regex(options.get<string_t>("lsearch0"));
-            if (list_solver_params)
-            {
-                table.delim();
-            }
-            append(table, "lsearch0", lsearch0_t::all(), regex);
-        }
-        if (list_lsearchk_params)
-        {
-            const auto regex = std::regex(options.get<string_t>("lsearchk"));
-            if (list_solver_params || list_lsearch0_params)
-            {
-                table.delim();
-            }
-            append(table, "lsearchk", lsearchk_t::all(), regex);
-        }
-        std::cout << table;
-        return EXIT_SUCCESS;
-    }
 
     // check arguments and options
     const auto min_dims = options.get<tensor_size_t>("min-dims");
@@ -393,24 +349,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto functions = function_t::make({min_dims, max_dims, convex, smooth}, fregex);
     critical(functions.empty(), "at least a function needs to be selected!");
 
-    // keep track of the used parameters
-    std::map<string_t, int> params_usage;
-    for (const auto& [param_name, param_value] : options.m_xvalues)
-    {
-        params_usage[param_name] = 0;
-    }
-
-    const auto setup_xvalues = [&](auto& estimator)
-    {
-        for (const auto& [param_name, param_value] : options.m_xvalues)
-        {
-            if (estimator.parameter_if(param_name) != nullptr)
-            {
-                estimator.parameter(param_name) = param_value;
-                params_usage[param_name]++;
-            }
-        }
-    };
+    auto param_tracker = parameter_tracker_t{options};
 
     // construct the list of solver configurations to evaluate
     solvers_t solvers;
@@ -427,9 +366,9 @@ int unsafe_main(int argc, const char* argv[])
                     auto lsearch0 = lsearch0_t::all().get(lsearch0_id);
                     auto lsearchk = lsearchk_t::all().get(lsearchk_id);
 
-                    setup_xvalues(*solver);
-                    setup_xvalues(*lsearch0);
-                    setup_xvalues(*lsearchk);
+                    param_tracker.setup(*solver);
+                    param_tracker.setup(*lsearch0);
+                    param_tracker.setup(*lsearchk);
 
                     solver->lsearch0(*lsearch0);
                     solver->lsearchk(*lsearchk);
@@ -440,7 +379,7 @@ int unsafe_main(int argc, const char* argv[])
         }
         else
         {
-            setup_xvalues(*solver);
+            param_tracker.setup(*solver);
             solvers.emplace_back(std::move(solver));
         }
     }
@@ -461,15 +400,6 @@ int unsafe_main(int argc, const char* argv[])
 
     // display global statistics
     print_table("solver", solvers, solver_stats);
-
-    // log all unused parameters (e.g. typos, not matching to any solver)
-    for (const auto& [param_name, count] : params_usage)
-    {
-        if (count == 0)
-        {
-            log_warning() << "parameter \"" << param_name << "\" was not used.";
-        }
-    }
 
     // OK
     return EXIT_SUCCESS;

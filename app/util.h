@@ -17,26 +17,50 @@ using namespace nano;
 
 namespace
 {
-[[maybe_unused]] void setup_solver(cmdline_t& cmdline)
+///
+/// \brief RAII utility to keep track of the used parameters and
+///     log all unused parameters at the end (e.g. typos, not matching to any solver).
+///
+class parameter_tracker_t
 {
-    cmdline.add("", "lsearch0", "regex to select line-search initialization methods", ".+");
-    cmdline.add("", "lsearchk", "regex to select line-search strategies", ".+");
-    cmdline.add("", "solver", "regex to select solvers", ".+");
+public:
+    parameter_tracker_t(const cmdline_t::result_t& options)
+        : m_options(options)
+    {
+        for (const auto& [param_name, param_value] : m_options.m_xvalues)
+        {
+            m_params_usage[param_name] = 0;
+        }
+    }
 
-    cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
-    cmdline.add("", "list-lsearchk", "list the available line-search strategies");
-    cmdline.add("", "list-solver", "list the available solvers");
+    void setup(configurable_t& configurable)
+    {
+        for (const auto& [param_name, param_value] : m_options.m_xvalues)
+        {
+            if (configurable.parameter_if(param_name) != nullptr)
+            {
+                configurable.parameter(param_name) = param_value;
+                m_params_usage[param_name]++;
+            }
+        }
+    }
 
-    cmdline.add("", "list-solver-params", "list the available parameters of the selected solvers");
-    cmdline.add("", "list-lsearch0-params",
-                "list the available parameters of the selected line-search initialization methods");
-    cmdline.add("", "list-lsearchk-params", "list the available parameters of the selected line-search strategies");
-}
+    ~parameter_tracker_t()
+    {
+        for (const auto& [param_name, count] : m_params_usage)
+        {
+            if (count == 0)
+            {
+                log_warning() << "parameter \"" << param_name << "\" was not used.";
+            }
+        }
+    }
 
-[[maybe_unused]] void setup_function(cmdline_t& cmdline)
-{
-    cmdline.add("", "function", "regex to select test functions", ".+");
-}
+private:
+    // attributes
+    const cmdline_t::result_t& m_options;      ///<
+    std::map<string_t, int>    m_params_usage; ///<
+};
 
 [[maybe_unused]] void setup_mlearn(cmdline_t& cmdline)
 {
