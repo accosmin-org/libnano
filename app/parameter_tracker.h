@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <nano/configurable.h>
 #include <nano/core/cmdline.h>
 #include <nano/core/logger.h>
