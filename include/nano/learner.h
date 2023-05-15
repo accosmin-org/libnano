@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/configurable.h>
+#include <nano/configurable.h>
 #include <nano/dataset.h>
 
 namespace nano

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/parameter.h>
+#include <nano/parameter.h>
 #include <nano/version.h>
 
 namespace nano

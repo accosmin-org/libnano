@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/core/configurable.h>
-#include <nano/core/factory.h>
+#include <nano/configurable.h>
+#include <nano/factory.h>
 #include <nano/tensor.h>
 
 namespace nano

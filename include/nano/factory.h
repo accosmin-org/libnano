@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <nano/core/clonable.h>
+#include <nano/clonable.h>
 #include <regex>
 
 namespace nano

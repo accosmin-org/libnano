@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/core/factory.h>
 #include <nano/core/table.h>
+#include <nano/factory.h>
 
 namespace nano
 {

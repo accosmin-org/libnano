@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/core/factory.h>
 #include <nano/datasource/storage.h>
+#include <nano/factory.h>
 
 namespace nano
 {

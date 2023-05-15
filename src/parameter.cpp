@@ -1,9 +1,9 @@
 #include <cmath>
 #include <nano/core/logger.h>
 #include <nano/core/numeric.h>
-#include <nano/core/parameter.h>
 #include <nano/core/stream.h>
 #include <nano/core/tokenizer.h>
+#include <nano/parameter.h>
 
 using namespace nano;
 

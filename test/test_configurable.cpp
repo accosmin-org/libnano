@@ -14,7 +14,7 @@ auto to_string(const configurable_t& configurable)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_core_configurable)
+UTEST_BEGIN_MODULE(test_configurable)
 
 UTEST_CASE(string)
 {

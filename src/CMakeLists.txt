@@ -13,9 +13,9 @@ target_sources(nano PRIVATE
     core/parallel.cpp
     core/sampling.cpp
     core/histogram.cpp
-    core/parameter.cpp
-    core/configurable.cpp
     feature.cpp
+    parameter.cpp
+    configurable.cpp
     generator.cpp
     generator/pairwise_base.cpp
     generator/pairwise_input.cpp

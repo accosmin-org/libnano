@@ -1,7 +1,7 @@
 #include "fixture/enum.h"
 #include <fstream>
-#include <nano/core/parameter.h>
 #include <nano/core/stream.h>
+#include <nano/parameter.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -114,7 +114,7 @@ void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_core_parameter)
+UTEST_BEGIN_MODULE(test_parameter)
 
 UTEST_CASE(monostate)
 {

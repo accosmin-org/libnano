@@ -37,7 +37,7 @@ std::ostream& operator<<(std::ostream& os, const strings_t& strings)
     return os;
 }
 
-UTEST_BEGIN_MODULE(test_core_factory)
+UTEST_BEGIN_MODULE(test_factory)
 
 UTEST_CASE(empty)
 {

@@ -1,4 +1,4 @@
-#include <nano/core/configurable.h>
+#include <nano/configurable.h>
 #include <nano/core/logger.h>
 #include <nano/core/stream.h>
 

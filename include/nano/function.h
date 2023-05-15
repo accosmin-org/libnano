@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/factory.h>
+#include <nano/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/string.h>
 

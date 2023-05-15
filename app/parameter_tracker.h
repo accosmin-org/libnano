@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/configurable.h>
 #include <nano/core/cmdline.h>
-#include <nano/core/configurable.h>
 #include <nano/core/logger.h>
 
 using namespace nano;

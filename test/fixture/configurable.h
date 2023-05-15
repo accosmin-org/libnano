@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nano/core/configurable.h>
+#include <nano/configurable.h>
 #include <nano/core/stream.h>
 #include <utest/utest.h>
 
