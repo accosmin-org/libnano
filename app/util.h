@@ -101,6 +101,10 @@ void process_list(const string_t& name, const cmdline_t::result_t& options)
     }
 }
 
+///
+/// \brief handle common command line requests:
+///     (e.g. help, version, list available implementations, list available parameters).
+///
 auto process(const cmdline_t& cmdline, const int argc, const char* argv[])
 {
     auto options = cmdline.process(argc, argv);

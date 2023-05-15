@@ -153,12 +153,6 @@ int unsafe_main(int argc, const char* argv[])
     // todo: option to save training history to csv
     // todo: wrapper script to generate plots?!
 
-    if (options.has("help"))
-    {
-        cmdline.usage();
-        return EXIT_SUCCESS;
-    }
-
     /*
     const auto folds = cmdline.get<size_t>("folds");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
