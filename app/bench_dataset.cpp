@@ -1,9 +1,4 @@
-#include <nano/core/chrono.h>
-#include <nano/core/cmdline.h>
-#include <nano/core/factory_util.h>
-#include <nano/core/logger.h>
-#include <nano/dataset.h>
-#include <nano/dataset/iterator.h>
+#include "util.h"
 
 using namespace nano;
 
@@ -38,6 +33,8 @@ auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
 auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 {
     const auto samples = arange(0, dataset.samples());
+
+    // TODO: benchmark batch size
 
     auto timer = ::nano::timer_t{};
     auto iterator = flatten_iterator_t{dataset, samples};
@@ -75,16 +72,7 @@ auto benchmark(const string_t& datasource_id, const strings_t& generator_ids)
     critical(!rdatasource, "invalid data source (", datasource_id, ")!");
 
     auto& datasource = *rdatasource;
-
-    const auto timer = ::nano::timer_t{};
-    datasource.load();
-    const auto elapsed = timer.elapsed();
-    log_info() << string_t(80, '=');
-    log_info() << "data source [" << datasource_id << "] loaded in <" << elapsed << ">.";
-    log_info() << "  type=" << datasource.type();
-    log_info() << "  samples=" << datasource.samples();
-    log_info() << "  features=" << datasource.features();
-    log_info() << string_t(80, '=');
+    ::load_datasource(datasource);
 
     for (const auto& generator_id : generator_ids)
     {
@@ -100,30 +88,12 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark loading datasets and generating features");
-    cmdline.add("", "datasource", "regex to select the data sources to benchmark", ".+");
-    cmdline.add("", "generator", "regex to select the feature generators to benchmark", ".+");
+    cmdline.add("", "datasource", "regex to select machine learning datasets", "mnist");
+    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
     cmdline.add("", "list-datasource", "list the available machine learning datasets");
     cmdline.add("", "list-generator", "list the available feature generation methods");
 
-    const auto options = cmdline.process(argc, argv);
-
-    if (options.has("help"))
-    {
-        cmdline.usage();
-        return EXIT_SUCCESS;
-    }
-
-    if (options.has("list-datasource"))
-    {
-        std::cout << make_table("datasource", datasource_t::all());
-        return EXIT_SUCCESS;
-    }
-
-    if (options.has("list-generator"))
-    {
-        std::cout << make_table("generator", generator_t::all());
-        return EXIT_SUCCESS;
-    }
+    const auto options = ::process(cmdline, argc, argv);
 
     // check arguments and options
     const auto dregex = std::regex(options.get<string_t>("datasource"));

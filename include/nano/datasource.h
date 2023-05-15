@@ -86,7 +86,7 @@ public:
     ///
     /// \brief returns the feature at the given index.
     ///
-    const feature_t& feature(tensor_size_t ifeature) const
+    const feature_t& feature(const tensor_size_t ifeature) const
     {
         assert(ifeature >= 0 && ifeature < features());
         return m_features[static_cast<size_t>(ifeature >= m_target ? ifeature + 1 : ifeature)];
@@ -110,7 +110,7 @@ public:
     /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
     ///
     template <typename toperator>
-    auto visit_inputs(tensor_size_t ifeature, const toperator& op) const
+    auto visit_inputs(const tensor_size_t ifeature, const toperator& op) const
     {
         assert(ifeature >= 0 && ifeature < features());
         return visit(ifeature >= m_target ? ifeature + 1 : ifeature, op);

@@ -163,7 +163,7 @@ auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const 
     const auto dataset    = make_dataset(datasource0);
     const auto samples    = arange(0, dataset.samples());
     const auto splitter   = make_splitter("k-fold", folds, 42U);
-    const auto fit_params = params_t{}.splitter(splitter).logger(params_t::make_logger_stdio());
+    const auto fit_params = params_t{}.splitter(splitter).logger(params_t::make_stdio_logger());
     const auto wlearners  = make_wlearners();
 
     // fitting should fail if no weak learner to chose from

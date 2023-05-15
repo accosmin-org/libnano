@@ -1,233 +1,86 @@
-#include <nano/core/cmdline.h>
+#include "parameter_tracker.h"
+#include "util.h"
+#include <nano/dataset.h>
+#include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
 
 using namespace nano;
 
 namespace
 {
-/*
-auto get_imclass(const string_t& id)
+template <typename tfactory>
+auto make_object(const cmdline_t::result_t& options, const tfactory& factory, const char* const option,
+                 const char* const obj_name)
 {
-    const auto start = nano::timer_t{};
+    const auto ids = factory.ids(std::regex(options.get<string_t>(option)));
+    critical(ids.size() != 1U, "expecting a single ", obj_name, ", got (", ids.size(), ") instead!");
 
-    auto dataset = imclass_dataset_t::all().get(id);
-    critical(!dataset, scat("invalid dataset '", id, "'"));
-    critical(!dataset->load(), scat("failed to load dataset '", id, "'"));
-
-    log_info() << ">>> loading done in " << start.elapsed() << ".";
-    return dataset;
+    auto object = factory.get(ids[0U]);
+    assert(object != nullptr);
+    return object;
 }
-
-auto get_loss(const string_t& id)
-{
-    auto loss = loss_t::all().get(id);
-    critical(!loss, scat("invalid loss '", id, "'"));
-    return loss;
-}
-
-auto get_solver(const string_t& id, const scalar_t epsilon, const int max_iterations)
-{
-    auto solver = solver_t::all().get(id);
-    critical(!solver, scat("invalid solver '", id, "'"));
-    solver->epsilon(epsilon);
-    solver->max_iterations(max_iterations);
-    solver->logger([&] (const solver_state_t& state)
-    {
-        std::cout << std::fixed << std::setprecision(6) << "\tdescent: " << state << ".\n";
-        return true;
-    });
-    return solver;
-}
-
-auto tune_batch(const dataset_t& dataset)
-{
-    const auto min_batch = 8;
-    const auto max_batch = 1024;
-    log_info() << "tuning the batch size per thread in the range [" << min_batch << ", " << max_batch << "]...";
-
-    std::vector<scalar_t> batch_millis;
-    table_t table;
-    {
-        auto& header = table.header();
-        header << colspan(1) << "" << alignment::center
-            << colspan(static_cast<int>(std::log2(max_batch) - std::log2(min_batch) + 1))
-            << scat("batch size [ms/", max_batch, "samples]");
-    }
-    table.delim();
-    {
-        auto& header = table.header();
-        header << "normalization";
-        for (tensor_size_t batch = min_batch; batch <= max_batch; batch *= 2)
-        {
-            header << batch;
-            batch_millis.push_back(0);
-        }
-    }
-
-    const auto loss = get_loss("s-classnll");
-    const auto samples = dataset.train_samples();
-    auto function = linear_function_t{*loss, dataset, samples};
-
-    const auto op_bench = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg, const auto&
-op)
-    {
-        for (tensor_size_t batch = min_batch, ibatch = 0; batch <= max_batch; batch *= 2, ++ ibatch)
-        {
-            function.l1reg(l1reg);
-            function.l2reg(l2reg);
-            function.vAreg(vAreg);
-            function.batch(batch);
-
-            const auto trials = size_t(10);
-            const auto duration = ::nano::measure<microseconds_t>(op, trials);
-            const auto millis = 1e-3 * static_cast<scalar_t>(duration.count()) / 2;
-            batch_millis[ibatch] += millis;
-            row << scat(std::fixed, std::setprecision(1), millis);
-        }
-    };
-
-    const auto op_bench_value = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg)
-    {
-        volatile scalar_t value = 0;
-        const vector_t x = vector_t::Random(function.size());
-        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x); });
-    };
-
-    const auto op_bench_vgrad = [&] (row_t& row, const scalar_t l1reg, const scalar_t l2reg, const scalar_t vAreg)
-    {
-        volatile scalar_t value = 0;
-        vector_t gx(function.size());
-        const vector_t x = vector_t::Random(function.size());
-        op_bench(row, l1reg, l2reg, vAreg, [&] () { value = function.vgrad(x, &gx); });
-    };
-
-    table.delim();
-    op_bench_value(table.append() << "none", 0e+0, 0e+0, 0e+0);
-    op_bench_value(table.append() << "lasso", 1e+0, 0e+0, 0e+0);
-    op_bench_value(table.append() << "ridge", 0e+0, 1e+0, 0e+0);
-    op_bench_value(table.append() << "variance", 0e+0, 0e+0, 1e+0);
-
-    table.delim();
-    op_bench_vgrad(table.append() << "none", 0e+0, 0e+0, 0e+0);
-    op_bench_vgrad(table.append() << "lasso", 1e+0, 0e+0, 0e+0);
-    op_bench_vgrad(table.append() << "ridge", 0e+0, 1e+0, 0e+0);
-    op_bench_vgrad(table.append() << "variance", 0e+0, 0e+0, 1e+0);
-
-    table.delim();
-    {
-        auto& row = table.append() << "average";
-        for (const auto& millis : batch_millis)
-        {
-            row << scat(std::fixed, std::setprecision(1), millis / 8.0);
-        }
-    }
-
-    std::cout << table;
-
-    const auto minimum = std::min_element(batch_millis.begin(), batch_millis.end());
-    return min_batch * static_cast<tensor_size_t>(1U << static_cast<uint32_t>(std::distance(batch_millis.begin(),
-minimum)));
-}
-*/
 
 int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark linear machine learning models");
-    cmdline.add("", "datasource", "data source");
-    cmdline.add("", "generator", "regex to select the feature generators", "identity.+");
-    cmdline.add("", "loss", "loss function");
-    cmdline.add("", "solver", "solver");
-    cmdline.add("", "tuner", "tuner");
-    cmdline.add("", "splitter", "splitting strategy");
-    cmdline.add("", "list-solver", "list the available solvers");
+    cmdline.add("", "loss", "regex to select loss functions", "<select>");
+    cmdline.add("", "solver", "regex to select solvers", "bfgs");
+    cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
+    cmdline.add("", "splitter", "regex to select train-validation splitting methods", "k-fold");
+    cmdline.add("", "datasource", "regex to select machine learning datasets", "<select>");
+    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
+
     cmdline.add("", "list-loss", "list the available loss functions");
+    cmdline.add("", "list-tuner", "list the available hyper-parameter tuning methods");
+    cmdline.add("", "list-solver", "list the available solvers");
+    cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
     cmdline.add("", "list-datasource", "list the available machine learning datasets");
     cmdline.add("", "list-generator", "list the available feature generation methods");
-    cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
-    cmdline.add("", "list-tuner", "list the available hyper-parameter tuning methods");
 
-    const auto options = cmdline.process(argc, argv);
+    // TODO: list parameters of the linear model
+    cmdline.add("", "list-loss-params", "list the parameters of the selected loss functions");
+    cmdline.add("", "list-tuner-params", "list the parameters of the selected hyper-parameter tuning methods");
+    cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
+    cmdline.add("", "list-splitter-params", "list the parameters of the selected train-validation splitting methods");
+    cmdline.add("", "list-datasource-params", "list the parameters of the selected machine learning datasets");
+    cmdline.add("", "list-generator-params", "list the parameters of the selected feature generation methods");
 
-    // todo: option to save trained models
-    // todo: option to save training history to csv
-    // todo: wrapper script to generate plots?!
+    const auto options = ::process(cmdline, argc, argv);
 
-    /*
-    const auto folds = cmdline.get<size_t>("folds");
-    const auto epsilon = cmdline.get<scalar_t>("epsilon");
-    const auto tune_steps = cmdline.get<int>("tune-steps");
-    const auto tune_trials = cmdline.get<int>("tune-trials");
-    const auto max_iterations = cmdline.get<int>("max-iterations");
-    const auto train_percentage = cmdline.get<int>("train-percentage");
-    const auto normalizations = enum_values<normalization>(std::regex(cmdline.get<string_t>("normalization")));
-    const auto regularizations = enum_values<regularization>(std::regex(cmdline.get<string_t>("regularization")));
+    // check arguments and options
+    const auto rloss       = make_object(options, loss_t::all(), "loss", "loss function");
+    const auto rtuner      = make_object(options, tuner_t::all(), "tuner", "hyper-parameter tuning method");
+    const auto rsolver     = make_object(options, solver_t::all(), "solver", "solver");
+    const auto rsplitter   = make_object(options, splitter_t::all(), "splitter", "train-validation splitting method");
+    const auto rdatasource = make_object(options, datasource_t::all(), "datasource", "machine learning dataset");
+    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("generator")));
 
-    // for each image classification dataset...
-    for (const auto& id_imclass : imclass_dataset_t::all().ids(std::regex(cmdline.get<string_t>("imclass"))))
-    {
-        const auto dataset = get_imclass(id_imclass, folds, train_percentage);
+    // TODO: option to save trained models
+    // TODO: option to save training history to csv
+    // TODO: wrapper script to generate plots?!
+    // TODO: experiments to evaluate batch size, feature value scaling, regularization method
 
-        // tune the batch size wrt the processing time
-        const auto batch = tune_batch(*dataset);
-        log_info() << ">>> optimum batch size per thread is " << batch << " (samples).";
+    auto param_tracker = parameter_tracker_t{options};
+    param_tracker.setup(*rloss);
+    param_tracker.setup(*rtuner);
+    param_tracker.setup(*rsolver);
+    param_tracker.setup(*rsplitter);
 
-        if (cmdline.has("no-training"))
-        {
-            continue;
-        }
+    // load dataset
+    ::load_datasource(*rdatasource);
+    const auto dataset = ::load_dataset(*rdatasource, generator_ids);
 
-        // train linear models
-        table_t table;
-        auto& header = table.append();
-        header << "solver" << "loss" << "normalization" << "regularization" << "test error" << "eval[ms]" << "train[ms]";
+    // TODO: nested cross-validation w/o respecting the datasource's test samples (if given)
 
-        // for each numerical optimization method...
-        for (const auto& id_solver : solver_t::all().ids(std::regex(cmdline.get<string_t>("solver"))))
-        {
-            const auto solver = get_solver(id_solver, epsilon, max_iterations);
+    // train the linear model
+    auto model = linear_model_t{};
 
-            // for each loss function...
-            for (const auto& id_loss : loss_t::all().ids(std::regex(cmdline.get<string_t>("loss"))))
-            {
-                const auto loss = get_loss(id_loss);
-
-                table.delim();
-
-                // for each feature scaling method...
-                for (const auto normalization : normalizations)
-                {
-                    // for each regularization method
-                    auto model = linear_model_t{};
-                    for (const auto regularization : regularizations)
-                    {
-                        model.batch(batch);
-                        model.tune_steps(tune_steps);
-                        model.tune_trials(tune_trials);
-                        model.normalization(normalization);
-                        model.regularization(regularization);
-                        const auto training = model.train(*loss, *dataset, *solver);
-
-                        stats_t te_errors, eval_times, train_times;
-                        for (const auto& tfold : training)
-                        {
-                            te_errors(tfold.te_error());
-                            eval_times(0); // FIXME: tfold.m_eval_time.count());
-                            train_times(0); // FIXME: tfold.m_train_time.count());
-                        }
-
-                        auto& row = table.append();
-                        row << id_solver << id_loss << scat(normalization) << scat(regularization)
-                            << scat(std::setprecision(2), std::fixed, te_errors.median())
-                            << std::lround(eval_times.median())
-                            << std::lround(train_times.median());
-                    }
-                }
-            }
-        }
-
-        std::cout << table;
-    }*/
+    const auto tr_samples = rdatasource->train_samples();
+    const auto fit_logger = ml::params_t::make_stdio_logger();
+    const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).splitter(*rsplitter).logger(fit_logger);
+    const auto fit_result = model.fit(dataset, tr_samples, *rloss, fit_params);
+    (void)fit_result;
 
     // OK
     return EXIT_SUCCESS;

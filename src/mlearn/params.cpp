@@ -6,7 +6,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-params_t::logger_t params_t::make_logger_stdio(const int precision)
+params_t::logger_t params_t::make_stdio_logger(const int precision)
 {
     return [=, last_trial = size_t{0U}](const result_t& result, const string_t& prefix) mutable
     {

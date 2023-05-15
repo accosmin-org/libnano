@@ -1,13 +1,10 @@
+#include "parameter_tracker.h"
 #include "util.h"
 #include <iomanip>
 #include <nano/core/chrono.h>
-#include <nano/core/cmdline.h>
 #include <nano/core/factory_util.h>
-#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/parallel.h>
-#include <nano/function.h>
-#include <nano/solver.h>
 #include <nano/tensor.h>
 
 using namespace nano;
@@ -297,11 +294,18 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-
     cmdline.add("", "solver", "regex to select solvers", ".+");
     cmdline.add("", "function", "regex to select test functions", ".+");
     cmdline.add("", "lsearch0", "regex to select line-search initialization methods", "quadratic");
     cmdline.add("", "lsearchk", "regex to select line-search strategies", "morethuente");
+    cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
+    cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
+    cmdline.add("", "trials", "number of random trials for each test function", "100");
+    cmdline.add("", "convex", "use only convex test functions");
+    cmdline.add("", "smooth", "use only smooth test functions");
+    cmdline.add("", "non-smooth", "use only non-smooth test functions");
+    cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
+    cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
 
     cmdline.add("", "list-solver", "list the available solvers");
     cmdline.add("", "list-function", "list the available test functions");
@@ -311,15 +315,6 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
     cmdline.add("", "list-lsearch0-params", "list the parameters of the selected line-search initialization methods");
     cmdline.add("", "list-lsearchk-params", "list the parameters of the selected line-search strategies");
-
-    cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
-    cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
-    cmdline.add("", "trials", "number of random trials for each test function", "100");
-    cmdline.add("", "convex", "use only convex test functions");
-    cmdline.add("", "smooth", "use only smooth test functions");
-    cmdline.add("", "non-smooth", "use only non-smooth test functions");
-    cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
-    cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
 
     const auto options = ::process(cmdline, argc, argv);
 

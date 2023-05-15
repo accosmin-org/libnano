@@ -24,7 +24,7 @@ public:
     ///
     /// \brief returns a default logging implementation that prints the current status to standard I/O.
     ///
-    static logger_t make_logger_stdio(int precision = 8);
+    static logger_t make_stdio_logger(int precision = 8);
 
     ///
     /// \brief default constructor
