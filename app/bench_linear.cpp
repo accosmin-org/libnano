@@ -59,7 +59,7 @@ int unsafe_main(int argc, const char* argv[])
     // TODO: option to save trained models
     // TODO: option to save training history to csv
     // TODO: wrapper script to generate plots?!
-    // TODO: experiments to evaluate batch size, feature value scaling, regularization method
+    // TODO: experiments to evaluate feature value scaling, regularization method
 
     auto param_tracker = parameter_tracker_t{options};
     param_tracker.setup(*rloss);

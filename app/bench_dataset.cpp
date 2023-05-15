@@ -8,25 +8,36 @@ auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
 {
     const auto samples = arange(0, dataset.samples());
 
+    auto timer    = ::nano::timer_t{};
     auto iterator = select_iterator_t{dataset};
-
-    auto timer = ::nano::timer_t{};
-    iterator.loop(samples, [] (tensor_size_t feature, size_t tnum, sclass_cmap_t values)
-    {
-        (void)feature; (void)tnum; (void)values;
-    });
-    iterator.loop(samples, [] (tensor_size_t feature, size_t tnum, mclass_cmap_t values)
-    {
-        (void)feature; (void)tnum; (void)values;
-    });
-    iterator.loop(samples, [] (tensor_size_t feature, size_t tnum, scalar_cmap_t values)
-    {
-        (void)feature; (void)tnum; (void)values;
-    });
-    iterator.loop(samples, [] (tensor_size_t feature, size_t tnum, struct_cmap_t values)
-    {
-        (void)feature; (void)tnum; (void)values;
-    });
+    iterator.loop(samples,
+                  [](const tensor_size_t feature, const size_t tnum, sclass_cmap_t values)
+                  {
+                      (void)feature;
+                      (void)tnum;
+                      (void)values;
+                  });
+    iterator.loop(samples,
+                  [](const tensor_size_t feature, const size_t tnum, mclass_cmap_t values)
+                  {
+                      (void)feature;
+                      (void)tnum;
+                      (void)values;
+                  });
+    iterator.loop(samples,
+                  [](const tensor_size_t feature, const size_t tnum, scalar_cmap_t values)
+                  {
+                      (void)feature;
+                      (void)tnum;
+                      (void)values;
+                  });
+    iterator.loop(samples,
+                  [](const tensor_size_t feature, const size_t tnum, struct_cmap_t values)
+                  {
+                      (void)feature;
+                      (void)tnum;
+                      (void)values;
+                  });
     log_info() << "generator_t [" << generator_id << "] feature selection in <" << timer.elapsed() << ">.";
 }
 
@@ -34,25 +45,45 @@ auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 {
     const auto samples = arange(0, dataset.samples());
 
-    // TODO: benchmark batch size
-
-    auto timer = ::nano::timer_t{};
-    auto iterator = flatten_iterator_t{dataset, samples};
-    iterator.batch(128);
-    log_info() << "generator [" << generator_id << "] built in <" << timer.elapsed() << ">.";
-
-    iterator.loop([] (tensor_range_t range, size_t tnum, tensor2d_cmap_t flatten)
+    // vary the sample batch size
+    auto table = table_t{};
+    table.header() << "generator"
+                   << "batch size"
+                   << "build [time]"
+                   << "flatten [time]"
+                   << "targets [time]";
+    table.delim();
+    for (const auto batch : {10, 20, 50, 100, 200, 500, 1000, 2000, 5000})
     {
-        (void)range; (void)tnum; (void)flatten;
-    });
-    log_info() << "generator [" << generator_id << "] flatten in <" << timer.elapsed() << ">.";
+        auto& row = table.append();
+        row << generator_id << batch;
 
-    timer.reset();
-    iterator.loop([] (tensor_range_t range, size_t tnum, tensor4d_cmap_t targets)
-    {
-        (void)range; (void)tnum; (void)targets;
-    });
-    log_info() << "generator [" << generator_id << "] targets in <" << timer.elapsed() << ">.";
+        auto timer    = ::nano::timer_t{};
+        auto iterator = flatten_iterator_t{dataset, samples};
+        iterator.batch(batch);
+        row << timer.elapsed();
+
+        timer.reset();
+        iterator.loop(
+            [](const tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
+            {
+                (void)range;
+                (void)tnum;
+                (void)flatten;
+            });
+        row << timer.elapsed();
+
+        timer.reset();
+        iterator.loop(
+            [](const tensor_range_t range, const size_t tnum, tensor4d_cmap_t targets)
+            {
+                (void)range;
+                (void)tnum;
+                (void)targets;
+            });
+        row << timer.elapsed();
+    }
+    std::cout << table;
 }
 
 auto benchmark(const string_t& generator_id, const dataset_t& dataset)
