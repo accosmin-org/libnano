@@ -17,7 +17,7 @@ using namespace nano;
 
 namespace
 {
-[[maybe_unused]] void load_datasource(datasource_t& datasource)
+[[maybe_unused]] inline void load_datasource(datasource_t& datasource)
 {
     const auto timer = ::nano::timer_t{};
     datasource.load();
@@ -28,7 +28,7 @@ namespace
     log_info() << "..features=" << datasource.features();
 }
 
-[[maybe_unused]] auto load_dataset(const datasource_t& datasource, const strings_t& generator_ids)
+[[maybe_unused]] inline auto load_dataset(const datasource_t& datasource, const strings_t& generator_ids)
 {
     const auto timer   = ::nano::timer_t{};
     auto       dataset = dataset_t{datasource};
@@ -65,7 +65,8 @@ void process_list(const string_t& name, const cmdline_t::result_t& options)
         }
     }
 }
-auto process(const cmdline_t& cmdline, const int argc, const char* argv[])
+
+inline auto process(const cmdline_t& cmdline, const int argc, const char* argv[])
 {
     auto options = cmdline.process(argc, argv);
 

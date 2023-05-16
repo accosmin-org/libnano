@@ -11,22 +11,16 @@ namespace nano
 template <typename tobject>
 table_t make_table(const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
 {
-    table_t table;
-    append_table(table, name, factory, regex);
-    return table;
-} // LCOV_EXCL_LINE
-
-template <typename tobject>
-void append_table(table_t& table, const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
-{
     const auto ids = factory.ids(std::regex(regex));
 
+    table_t table;
     table.header() << name << "description";
     table.delim();
     for (const auto& id : ids)
     {
         table.append() << id << factory.description(id);
     }
+    return table;
 } // LCOV_EXCL_LINE
 
 ///
@@ -35,17 +29,9 @@ void append_table(table_t& table, const string_t& name, const factory_t<tobject>
 template <typename tobject>
 table_t make_table_with_params(const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
 {
-    table_t table;
-    append_table_with_params(table, name, factory, regex);
-    return table;
-} // LCOV_EXCL_LINE
-
-template <typename tobject>
-void append_table_with_params(table_t& table, const string_t& name, const factory_t<tobject>& factory,
-                              const string_t& regex = ".+")
-{
     const auto ids = factory.ids(std::regex(regex));
 
+    table_t table;
     table.header() << name << "parameter"
                    << "value"
                    << "domain";
@@ -60,5 +46,6 @@ void append_table_with_params(table_t& table, const string_t& name, const factor
             table.append() << id << param.name() << param.value() << param.domain();
         }
     }
+    return table;
 } // LCOV_EXCL_LINE
 } // namespace nano

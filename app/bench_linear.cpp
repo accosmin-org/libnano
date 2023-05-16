@@ -38,7 +38,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-datasource", "list the available machine learning datasets");
     cmdline.add("", "list-generator", "list the available feature generation methods");
 
-    // TODO: list parameters of the linear model
+    cmdline.add("", "list-linear-params", "list the parameters of the linear model");
     cmdline.add("", "list-loss-params", "list the parameters of the selected loss functions");
     cmdline.add("", "list-tuner-params", "list the parameters of the selected hyper-parameter tuning methods");
     cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
@@ -47,6 +47,22 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-generator-params", "list the parameters of the selected feature generation methods");
 
     const auto options = ::process(cmdline, argc, argv);
+
+    if (options.has("list-linear-params"))
+    {
+        table_t table;
+        table.header() << "parameter"
+                       << "value"
+                       << "domain";
+        table.delim();
+        const auto configurable = linear_model_t{};
+        for (const auto& param : configurable.parameters())
+        {
+            table.append() << param.name() << param.value() << param.domain();
+        }
+        std::cout << table;
+        return EXIT_SUCCESS;
+    }
 
     // check arguments and options
     const auto rloss       = make_object(options, loss_t::all(), "loss", "loss function");
