@@ -45,7 +45,7 @@ namespace
 
 ///
 /// \brief handle common command line requests:
-///     (e.g. help, version, list available implementations, list available parameters).
+///     (e.g. help, version, list builtin factory objects, list available parameters for selected objects).
 ///
 template <typename tobject>
 void process_list(const string_t& name, const cmdline_t::result_t& options)
@@ -98,4 +98,4 @@ inline auto process(const cmdline_t& cmdline, const int argc, const char* argv[]
 
     return options;
 }
-}
+} // namespace

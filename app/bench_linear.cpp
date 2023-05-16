@@ -91,6 +91,7 @@ int unsafe_main(int argc, const char* argv[])
 
     // train the linear model
     auto model = linear_model_t{};
+    param_tracker.setup(model);
 
     const auto tr_samples = rdatasource->train_samples();
     const auto fit_logger = ml::params_t::make_stdio_logger();

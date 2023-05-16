@@ -30,6 +30,7 @@ function download_mnist {
     )
 
     for file in "${files[@]}"; do
+        #wget -N http://yann.lecun.com/exdb/mnist/${file} -P ${dir} || return 1
         wget -N https://archive.ics.uci.edu/ml/machine-learning-databases/mnist-mld/${file} -P ${dir} || return 1
     done
 
