@@ -13,7 +13,7 @@ cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 CXX=clang++ bash scripts/build.sh --clang-format
 
 ###############################################################################################################
-# standard debug/release/release+lto GCC builds
+# standard GCC builds
 ###############################################################################################################
 
 CXX=g++ bash scripts/build.sh --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
@@ -22,18 +22,21 @@ CXX=g++ bash scripts/build.sh --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
 CXX=g++ bash scripts/build.sh --suffix gcc-release -DCMAKE_BUILD_TYPE=Release --native \
     ${cmake_options} --config --build --test --install --build-example
 
+CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo --native \
+    ${cmake_options} --config --build --test --install --build-example
+
 #CXX=g++ bash scripts/build.sh --suffix gcc-release-lto -DCMAKE_BUILD_TYPE=Release --native --lto \
 #    ${cmake_options} --config --build --test --install --build-example
 
 ###############################################################################################################
-# standard debug/release/release+lto CLANG builds
+# standard CLANG builds
 ###############################################################################################################
 
-CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug \
-    ${cmake_options} --config --build --test --install --build-example
+#CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug \
+#    ${cmake_options} --config --build --test --install --build-example
 
-CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release --native \
-    ${cmake_options} --config --build --test --install --build-example
+#CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release --native \
+#    ${cmake_options} --config --build --test --install --build-example
 
 #CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --native --thinlto \
 #    ${cmake_options} --config --build --test --install --build-example

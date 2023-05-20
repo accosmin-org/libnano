@@ -41,6 +41,7 @@ if(NOT WIN32)
 endif()
 
 find_package(Eigen3 3.3 NO_MODULE REQUIRED)
+add_compile_definitions(-DEIGEN_DONT_PARALLELIZE)
 
 ##################################################################################################
 # setup library
