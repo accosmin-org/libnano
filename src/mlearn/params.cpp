@@ -70,8 +70,11 @@ params_t::logger_t params_t::make_stdio_logger(const int precision)
 params_t::params_t()
 {
     tuner("surrogate");
-    solver("hoshino");
+    solver("lbfgs");
     splitter("k-fold");
+
+    m_solver->parameter("solver::epsilon")   = 1e-6;
+    m_solver->parameter("solver::max_evals") = 1000;
 }
 
 params_t::params_t(params_t&&) noexcept = default;
