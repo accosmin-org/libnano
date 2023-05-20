@@ -40,12 +40,9 @@ UTEST_CASE(predict)
 {
     const auto epsilon = epsilon1<scalar_t>();
 
-    tensor1d_t bias(3);
-    bias.random();
-    tensor2d_t weights(3, 5);
-    weights.random();
-    tensor2d_t inputs(11, 5);
-    inputs.random();
+    const auto bias    = make_random_tensor<scalar_t>(make_dims(3));
+    const auto weights = make_random_tensor<scalar_t>(make_dims(3, 5));
+    const auto inputs  = make_random_tensor<scalar_t>(make_dims(11, 5));
 
     tensor4d_t outputs;
     linear::predict(inputs, weights, bias, outputs);
