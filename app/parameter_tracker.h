@@ -23,6 +23,12 @@ public:
         }
     }
 
+    parameter_tracker_t(parameter_tracker_t&&)      = delete;
+    parameter_tracker_t(const parameter_tracker_t&) = delete;
+
+    parameter_tracker_t& operator=(parameter_tracker_t&&)      = delete;
+    parameter_tracker_t& operator=(const parameter_tracker_t&) = delete;
+
     void setup(configurable_t& configurable)
     {
         for (const auto& [param_name, param_value] : m_options.m_xvalues)

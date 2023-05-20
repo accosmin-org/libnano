@@ -15,8 +15,6 @@
 
 using namespace nano;
 
-namespace
-{
 [[maybe_unused]] inline void load_datasource(datasource_t& datasource)
 {
     const auto timer = ::nano::timer_t{};
@@ -98,4 +96,3 @@ inline auto process(const cmdline_t& cmdline, const int argc, const char* argv[]
 
     return options;
 }
-} // namespace
