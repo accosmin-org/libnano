@@ -25,7 +25,7 @@ int unsafe_main(int argc, const char* argv[])
     // parse the command line
     cmdline_t cmdline("benchmark linear machine learning models");
     cmdline.add("", "loss", "regex to select loss functions", "<select>");
-    cmdline.add("", "solver", "regex to select solvers", "bfgs");
+    cmdline.add("", "solver", "regex to select solvers", "lbfgs");
     cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
     cmdline.add("", "splitter", "regex to select train-validation splitting methods", "k-fold");
     cmdline.add("", "datasource", "regex to select machine learning datasets", "<select>");
