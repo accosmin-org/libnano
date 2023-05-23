@@ -1,12 +1,15 @@
 #include <filesystem>
 #include <fstream>
-#include <nano/core/cmdline.h>
+#include <nano/core/logger.h>
+#include <nano/core/parameter_tracker.h>
 #include <utest/utest.h>
+
+using namespace nano;
 
 namespace
 {
-void check(const nano::cmdline_t::result_t& result, const nano::cmdline_t::result_t::storage_t& expected_ovalues,
-           const nano::cmdline_t::result_t::storage_t& expected_xvalues)
+void check(const cmdline_t::result_t& result, const cmdline_t::result_t::storage_t& expected_ovalues,
+           const cmdline_t::result_t::storage_t& expected_xvalues)
 {
     UTEST_CHECK_EQUAL(result.m_ovalues.size(), expected_ovalues.size());
     UTEST_CHECK_EQUAL(result.m_xvalues.size(), expected_xvalues.size());
@@ -52,7 +55,7 @@ UTEST_BEGIN_MODULE(test_core_cmdline)
 
 UTEST_CASE(empty)
 {
-    const auto cmdline = nano::cmdline_t{"unit testing"};
+    const auto cmdline = cmdline_t{"unit testing"};
 
     std::stringstream os;
     cmdline.usage(os);
@@ -67,7 +70,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(usage)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("d", "doit", "do something important if set"));
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version number", "0.3"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", 100));
@@ -88,7 +91,7 @@ UTEST_CASE(usage)
 
 UTEST_CASE(parse_chars)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version", "0.3"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "trials", "number of trials"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations"));
@@ -105,7 +108,7 @@ UTEST_CASE(parse_chars)
 
 UTEST_CASE(parse_string)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("", "doit", "do something important if set"));
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version", "0.3"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", 127));
@@ -132,7 +135,7 @@ UTEST_CASE(parse_string)
 
 UTEST_CASE(error_invalid_options)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
 
     UTEST_CHECK_THROW(cmdline.add("x", "", ""), std::runtime_error);
     UTEST_CHECK_THROW(cmdline.add("x", "-", ""), std::runtime_error);
@@ -144,7 +147,7 @@ UTEST_CASE(error_invalid_options)
 
 UTEST_CASE(error_duplicate_options)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
 
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", ""));
     UTEST_CHECK_THROW(cmdline.add("x", "xversion", ""), std::runtime_error);
@@ -154,7 +157,7 @@ UTEST_CASE(error_duplicate_options)
 
 UTEST_CASE(error_invalid_arg1)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -166,7 +169,7 @@ UTEST_CASE(error_invalid_arg1)
 
 UTEST_CASE(error_invalid_arg2)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -178,7 +181,7 @@ UTEST_CASE(error_invalid_arg2)
 
 UTEST_CASE(error_invalid_arg3)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -190,7 +193,7 @@ UTEST_CASE(error_invalid_arg3)
 
 UTEST_CASE(error_value_without_option)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -202,7 +205,7 @@ UTEST_CASE(error_value_without_option)
 
 UTEST_CASE(error_last_value_without_option)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -214,7 +217,7 @@ UTEST_CASE(error_last_value_without_option)
 
 UTEST_CASE(error_option_with_default_and_no_value)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -226,7 +229,7 @@ UTEST_CASE(error_option_with_default_and_no_value)
 
 UTEST_CASE(parse_config_file)
 {
-    nano::cmdline_t cmdline("unit testing");
+    auto cmdline = cmdline_t{"unit testing"};
     UTEST_CHECK_NOTHROW(cmdline.add("x", "xversion", "version"));
     UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
@@ -244,6 +247,62 @@ UTEST_CASE(parse_config_file)
               {"iterations", "xy"}
     },
           {{"extra", "42"}});
+}
+
+UTEST_CASE(parameter_tracker)
+{
+    std::ostringstream stream_cout, stream_warn, stream_cerr;
+    const auto         _ = logger_section_t{stream_cout, stream_warn, stream_cerr};
+
+    auto cmdline      = cmdline_t{"unit testing"};
+    auto configurable = configurable_t{};
+    UTEST_CHECK_NOTHROW(configurable.register_parameter(parameter_t::make_scalar("fparam", 0.0, LT, 0.5, LT, 1.0)));
+    UTEST_CHECK_NOTHROW(configurable.register_parameter(parameter_t::make_integer("iparam", 0, LE, 4, LE, 10)));
+    {
+        const int   argc    = 1;
+        const char* argv[]  = {""};
+        const auto  options = cmdline.process(argc, argv);
+        auto        tracker = parameter_tracker_t{options};
+
+        UTEST_CHECK_NOTHROW(tracker.setup(configurable));
+        UTEST_CHECK_EQUAL(configurable.parameter("iparam").value<int>(), 4);
+        UTEST_CHECK_CLOSE(configurable.parameter("fparam").value<double>(), 0.5, 1e-15);
+    }
+    {
+        UTEST_CHECK_EQUAL(stream_cout.str(), "");
+        UTEST_CHECK_EQUAL(stream_warn.str(), "");
+        UTEST_CHECK_EQUAL(stream_cerr.str(), "");
+    }
+    {
+        const int   argc    = 3;
+        const char* argv[]  = {"", "--iparam", "7"};
+        const auto  options = cmdline.process(argc, argv);
+        auto        tracker = parameter_tracker_t{options};
+
+        UTEST_CHECK_NOTHROW(tracker.setup(configurable));
+        UTEST_CHECK_EQUAL(configurable.parameter("iparam").value<int>(), 7);
+        UTEST_CHECK_CLOSE(configurable.parameter("fparam").value<double>(), 0.5, 1e-15);
+    }
+    {
+        UTEST_CHECK_EQUAL(stream_cout.str(), "");
+        UTEST_CHECK_EQUAL(stream_warn.str(), "");
+        UTEST_CHECK_EQUAL(stream_cerr.str(), "");
+    }
+    {
+        const int   argc    = 5;
+        const char* argv[]  = {"", "--fparam", "0.42", "--xparam", "42.0"};
+        const auto  options = cmdline.process(argc, argv);
+        auto        tracker = parameter_tracker_t{options};
+
+        UTEST_CHECK_NOTHROW(tracker.setup(configurable));
+        UTEST_CHECK_EQUAL(configurable.parameter("iparam").value<int>(), 7);
+        UTEST_CHECK_CLOSE(configurable.parameter("fparam").value<double>(), 0.42, 1e-15);
+    }
+    {
+        UTEST_CHECK_EQUAL(stream_cout.str(), "");
+        UTEST_CHECK(ends_with(stream_warn.str(), "parameter \"xparam\" was not used.\n"));
+        UTEST_CHECK_EQUAL(stream_cerr.str(), "");
+    }
 }
 
 UTEST_END_MODULE()

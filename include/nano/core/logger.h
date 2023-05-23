@@ -7,7 +7,7 @@
 namespace nano
 {
 ///
-/// \brief logging object.
+/// \brief logging object that uses a global streaming device.
 ///
 class NANO_PUBLIC logger_t
 {
@@ -22,7 +22,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit logger_t(type, std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr);
+    explicit logger_t(type);
 
     ///
     /// \brief disable copying
@@ -60,6 +60,16 @@ public:
         return *this;
     }
 
+    ///
+    /// \brief return the current streaming device associated to the given logging level.
+    ///
+    static std::ostream& stream(type);
+
+    ///
+    /// \brief change the current streaming device associated to the given logging level.
+    ///
+    static std::ostream& stream(type, std::ostream&);
+
 private:
     // attributes
     std::ostream&   m_stream;    ///< stream to write into
@@ -67,21 +77,52 @@ private:
 };
 
 ///
-/// \brief specific [information, warning, error] line loggers.
+/// \brief RAII utility to setup the given streaming devices during its lifetime.
 ///
-inline logger_t log_info(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
+class NANO_PUBLIC logger_section_t
 {
-    return logger_t(logger_t::type::info, cout, cerr);
+public:
+    ///
+    /// \brief constructor
+    ///
+    logger_section_t(std::ostream& info_stream, std::ostream& warn_stream, std::ostream& error_stream);
+
+    ///
+    /// \brief disable copying and moving.
+    ///
+    logger_section_t(logger_section_t&&)                 = delete;
+    logger_section_t(const logger_section_t&)            = delete;
+    logger_section_t& operator=(logger_section_t&&)      = delete;
+    logger_section_t& operator=(const logger_section_t&) = delete;
+
+    ///
+    /// \brief destructor (reset the global streaming devices).
+    ///
+    ~logger_section_t();
+
+private:
+    // attributes
+    std::ostream* m_stream_info{nullptr};  ///<
+    std::ostream* m_stream_warn{nullptr};  ///<
+    std::ostream* m_stream_error{nullptr}; ///<
+};
+
+///
+/// \brief specific [information, warning, error] line loggers using the current streaming device.
+///
+inline logger_t log_info()
+{
+    return logger_t(logger_t::type::info);
 }
 
-inline logger_t log_warning(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
+inline logger_t log_warning()
 {
-    return logger_t(logger_t::type::warn, cout, cerr);
+    return logger_t(logger_t::type::warn);
 }
 
-inline logger_t log_error(std::ostream* cout = &std::cout, std::ostream* cerr = &std::cerr)
+inline logger_t log_error()
 {
-    return logger_t(logger_t::type::error, cout, cerr);
+    return logger_t(logger_t::type::error);
 }
 
 ///

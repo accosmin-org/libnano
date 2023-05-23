@@ -13,6 +13,7 @@ target_sources(nano PRIVATE
     core/parallel.cpp
     core/sampling.cpp
     core/histogram.cpp
+    core/parameter_tracker.cpp
     feature.cpp
     parameter.cpp
     configurable.cpp

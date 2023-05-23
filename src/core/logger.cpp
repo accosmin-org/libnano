@@ -1,37 +1,65 @@
+#include <cassert>
 #include <ctime>
 #include <iomanip>
 #include <nano/core/logger.h>
-#include <string>
 
 using namespace nano;
 
 namespace
 {
-std::ostream& get_stream(logger_t::type type, std::ostream* cout, std::ostream* cerr)
+std::ostream*& info_stream()
 {
-    switch (type)
-    {
-    case logger_t::type::info:
-    case logger_t::type::warn: return (cout != nullptr ? *cout : std::cout);
-    case logger_t::type::error: return (cerr != nullptr ? *cerr : std::cerr);
-    default: return (cout != nullptr ? *cout : std::cout);
-    }
+    static auto* stream = &std::cout;
+    return stream;
 }
 
-const char* get_header(logger_t::type type)
+std::ostream*& warn_stream()
+{
+    static auto* stream = &std::cout;
+    return stream;
+}
+
+std::ostream*& error_stream()
+{
+    static auto* stream = &std::cerr;
+    return stream;
+}
+
+const char* get_header(const logger_t::type type)
 {
     switch (type)
     {
     case logger_t::type::info: return "\033[32m";
     case logger_t::type::warn: return "\033[33m";
-    case logger_t::type::error: return "\033[31m";
-    default: return "\033[91m";
+    default: return "\033[31m";
     }
 }
 } // namespace
 
-logger_t::logger_t(type ltype, std::ostream* cout, std::ostream* cerr)
-    : m_stream(get_stream(ltype, cout, cerr))
+std::ostream& logger_t::stream(const logger_t::type type)
+{
+    switch (type)
+    {
+    case logger_t::type::info: return *::info_stream();
+    case logger_t::type::warn: return *::warn_stream();
+    default: return *::error_stream();
+    }
+}
+
+std::ostream& logger_t::stream(const logger_t::type type, std::ostream& stream)
+{
+    switch (type)
+    {
+    case logger_t::type::info: ::info_stream() = &stream; break;
+    case logger_t::type::warn: ::warn_stream() = &stream; break;
+    case logger_t::type::error: ::error_stream() = &stream; break;
+    default: assert(false);
+    }
+    return stream;
+}
+
+logger_t::logger_t(const type ltype)
+    : m_stream(logger_t::stream(ltype))
     , m_precision(m_stream.precision())
 {
     const std::time_t t = std::time(nullptr);
@@ -51,4 +79,21 @@ logger_t::~logger_t()
 {
     m_stream << std::endl;
     m_stream.precision(m_precision);
+}
+
+logger_section_t::logger_section_t(std::ostream& info_stream, std::ostream& warn_stream, std::ostream& error_stream)
+    : m_stream_info(&logger_t::stream(logger_t::type::info))
+    , m_stream_warn(&logger_t::stream(logger_t::type::warn))
+    , m_stream_error(&logger_t::stream(logger_t::type::error))
+{
+    logger_t::stream(logger_t::type::info, info_stream);
+    logger_t::stream(logger_t::type::warn, warn_stream);
+    logger_t::stream(logger_t::type::error, error_stream);
+}
+
+logger_section_t::~logger_section_t()
+{
+    logger_t::stream(logger_t::type::info, *m_stream_info);
+    logger_t::stream(logger_t::type::warn, *m_stream_warn);
+    logger_t::stream(logger_t::type::error, *m_stream_error);
 }
