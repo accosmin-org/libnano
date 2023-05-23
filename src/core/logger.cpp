@@ -9,19 +9,19 @@ namespace
 {
 std::ostream*& info_stream()
 {
-    static auto* stream = &std::cout;
+    static auto* stream = &std::cout; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     return stream;
 }
 
 std::ostream*& warn_stream()
 {
-    static auto* stream = &std::cout;
+    static auto* stream = &std::cout; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     return stream;
 }
 
 std::ostream*& error_stream()
 {
-    static auto* stream = &std::cerr;
+    static auto* stream = &std::cerr; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     return stream;
 }
 
