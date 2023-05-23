@@ -27,7 +27,8 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "loss", "regex to select loss functions", "<select>");
     cmdline.add("", "solver", "regex to select solvers", "lbfgs");
     cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
-    cmdline.add("", "splitter", "regex to select train-validation splitting methods", "k-fold");
+    cmdline.add("", "splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
+                "k-fold");
     cmdline.add("", "datasource", "regex to select machine learning datasets", "<select>");
     cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
 
@@ -93,11 +94,28 @@ int unsafe_main(int argc, const char* argv[])
     auto model = linear_model_t{};
     param_tracker.setup(model);
 
-    const auto tr_samples = rdatasource->train_samples();
+    const auto allsamples = rdatasource->train_samples();
     const auto fit_logger = ml::params_t::make_stdio_logger();
-    const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).splitter(*rsplitter).logger(fit_logger);
-    const auto fit_result = model.fit(dataset, tr_samples, *rloss, fit_params);
-    (void)fit_result;
+    const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
+
+    for (const auto& [tr_samples, te_samples] : rsplitter->split(allsamples))
+    {
+        const auto fit_result = model.fit(dataset, tr_samples, *rloss, fit_params);
+
+        auto values = tensor1d_t{te_samples.size()};
+        auto errors = tensor1d_t{te_samples.size()};
+
+        const auto iterator = targets_iterator_t{dataset, te_samples};
+        iterator.loop(
+            [&](const tensor_range_t& range, const size_t, const tensor4d_cmap_t targets)
+            {
+                const auto outputs = model.predict(dataset, te_samples.slice(range));
+                rloss->value(targets, outputs, values.slice(range));
+                rloss->error(targets, outputs, errors.slice(range));
+            });
+
+        log_info() << "fold: value=" << values.mean() << "/" << errors.mean() << std::endl;
+    }
 
     // OK
     return EXIT_SUCCESS;
