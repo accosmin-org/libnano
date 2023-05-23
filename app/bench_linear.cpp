@@ -88,33 +88,38 @@ int unsafe_main(int argc, const char* argv[])
     ::load_datasource(*rdatasource);
     const auto dataset = ::load_dataset(*rdatasource, generator_ids);
 
-    // TODO: nested cross-validation w/o respecting the datasource's test samples (if given)
-
-    // train the linear model
-    auto model = linear_model_t{};
-    param_tracker.setup(model);
-
-    const auto allsamples = rdatasource->train_samples();
-    const auto fit_logger = ml::params_t::make_stdio_logger();
-    const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
-
-    for (const auto& [tr_samples, te_samples] : rsplitter->split(allsamples))
+    // train the model using nested cross-validation with respecting the datasource's test samples (if given):
+    //  for each outer fold...
+    //      make (training, validation) split
+    //      fit (and tune) on the training samples
+    //      evaluate on the validation samples
+    const auto test_samples  = rdatasource->test_samples();
+    const auto eval_samples  = rdatasource->train_samples();
+    for (const auto& [train_samples, valid_samples] : rsplitter->split(eval_samples))
     {
-        const auto fit_result = model.fit(dataset, tr_samples, *rloss, fit_params);
+        auto model = linear_model_t{};
+        param_tracker.setup(model);
 
-        auto values = tensor1d_t{te_samples.size()};
-        auto errors = tensor1d_t{te_samples.size()};
+        const auto fit_logger = ml::params_t::make_stdio_logger();
+        const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
+        const auto fit_result = model.fit(dataset, train_samples, *rloss, fit_params);
 
-        const auto iterator = targets_iterator_t{dataset, te_samples};
+        auto errors_values = tensor2d_t{2, valid_samples.size()};
+
+        const auto iterator = targets_iterator_t{dataset, valid_samples};
         iterator.loop(
             [&](const tensor_range_t& range, const size_t, const tensor4d_cmap_t targets)
             {
-                const auto outputs = model.predict(dataset, te_samples.slice(range));
-                rloss->value(targets, outputs, values.slice(range));
-                rloss->error(targets, outputs, errors.slice(range));
+                const auto outputs = model.predict(dataset, valid_samples.slice(range));
+                rloss->error(targets, outputs, errors_values.tensor(0).slice(range));
+                rloss->value(targets, outputs, errors_values.tensor(1).slice(range));
             });
 
-        log_info() << "fold: value=" << values.mean() << "/" << errors.mean() << std::endl;
+        log_info() << "fold: value=" << errors_values.tensor(0).mean() << "/" << errors_values.tensor(1).mean()
+                   << std::endl;
+
+        (void)test_samples;
+        // const auto tr_samples = rdatasource->train_samples();
     }
 
     // OK
