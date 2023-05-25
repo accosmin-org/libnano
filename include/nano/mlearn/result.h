@@ -2,8 +2,8 @@
 
 #include <any>
 #include <nano/mlearn/enums.h>
+#include <nano/mlearn/stats.h>
 #include <nano/string.h>
-#include <nano/tensor.h>
 
 namespace nano::ml
 {
@@ -15,22 +15,6 @@ namespace nano::ml
 class NANO_PUBLIC result_t
 {
 public:
-    struct stats_t
-    {
-        scalar_t m_mean{0.0};
-        scalar_t m_stdev{0.0};
-        scalar_t m_count{0.0};
-        scalar_t m_per01{0.0};
-        scalar_t m_per05{0.0};
-        scalar_t m_per10{0.0};
-        scalar_t m_per20{0.0};
-        scalar_t m_per50{0.0};
-        scalar_t m_per80{0.0};
-        scalar_t m_per90{0.0};
-        scalar_t m_per95{0.0};
-        scalar_t m_per99{0.0};
-    };
-
     ///
     /// \brief statistics collected while evaluating a set of hyper-parameter values for all folds.
     ///

@@ -6,7 +6,7 @@ using namespace nano::ml;
 
 namespace
 {
-void check_stats(const result_t::stats_t& stats, const scalar_t expected_mean, const scalar_t expected_stdev,
+void check_stats(const stats_t& stats, const scalar_t expected_mean, const scalar_t expected_stdev,
                  const scalar_t expected_count, const scalar_t expected_per01, const scalar_t expected_per05,
                  const scalar_t expected_per10, const scalar_t expected_per20, const scalar_t expected_per50,
                  const scalar_t expected_per80, const scalar_t expected_per90, const scalar_t expected_per95,

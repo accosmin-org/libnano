@@ -89,9 +89,10 @@ target_sources(nano PRIVATE
     loss/pinball.cpp
     learner.cpp
     mlearn/tune.cpp
-    mlearn/cluster.cpp
+    mlearn/stats.cpp
     mlearn/params.cpp
     mlearn/result.cpp
+    mlearn/cluster.cpp
     tuner.cpp
     tuner/util.cpp
     tuner/local.cpp
