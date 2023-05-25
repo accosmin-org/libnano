@@ -3,6 +3,7 @@
 #include "fixture/datasource/hits.h"
 #include "fixture/datasource/random.h"
 #include "fixture/learner.h"
+#include "fixture/loss.h"
 
 using namespace nano;
 
@@ -50,6 +51,7 @@ UTEST_BEGIN_MODULE(test_learner)
 
 UTEST_CASE(fit_predict)
 {
+    const auto loss          = make_loss();
     const auto train_samples = arange(0, 80);
     const auto valid_samples = arange(80, 100);
 
@@ -67,6 +69,10 @@ UTEST_CASE(fit_predict)
         check_predict_fails(learner, dataset1, train_samples);
         check_predict_fails(learner, dataset2, train_samples);
         check_predict_fails(learner, dataset3, train_samples);
+
+        check_evaluate_fails(learner, dataset1, train_samples, *loss);
+        check_evaluate_fails(learner, dataset2, train_samples, *loss);
+        check_evaluate_fails(learner, dataset3, train_samples, *loss);
     }
     {
         const auto learner = check_stream(check_fit<fixture_learner_t>(dataset1));
@@ -76,6 +82,9 @@ UTEST_CASE(fit_predict)
 
         check_predict_fails(learner, dataset2, train_samples);
         check_predict_fails(learner, dataset3, train_samples);
+
+        check_evaluate_fails(learner, dataset2, train_samples, *loss);
+        check_evaluate_fails(learner, dataset3, train_samples, *loss);
     }
     {
         const auto learner = check_stream(check_fit<fixture_learner_t>(dataset2));
@@ -85,6 +94,9 @@ UTEST_CASE(fit_predict)
 
         check_predict_fails(learner, dataset1, train_samples);
         check_predict_fails(learner, dataset3, train_samples);
+
+        check_evaluate_fails(learner, dataset1, train_samples, *loss);
+        check_evaluate_fails(learner, dataset3, train_samples, *loss);
     }
     {
         const auto learner = check_stream(check_fit<fixture_learner_t>(dataset3));
@@ -94,6 +106,9 @@ UTEST_CASE(fit_predict)
 
         check_predict_fails(learner, dataset1, train_samples);
         check_predict_fails(learner, dataset2, train_samples);
+
+        check_evaluate_fails(learner, dataset1, train_samples, *loss);
+        check_evaluate_fails(learner, dataset2, train_samples, *loss);
     }
 }
 

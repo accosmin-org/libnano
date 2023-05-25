@@ -1,4 +1,5 @@
 #include "util.h"
+#include <iomanip>
 #include <nano/core/parameter_tracker.h>
 #include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
@@ -93,10 +94,13 @@ int unsafe_main(int argc, const char* argv[])
     //      make (training, validation) split
     //      fit (and tune) on the training samples
     //      evaluate on the validation samples
-    const auto test_samples  = rdatasource->test_samples();
-    const auto eval_samples  = rdatasource->train_samples();
-    for (const auto& [train_samples, valid_samples] : rsplitter->split(eval_samples))
+    const auto test_samples = rdatasource->test_samples();
+    const auto eval_samples = rdatasource->train_samples();
+    const auto tr_vd_splits = rsplitter->split(eval_samples);
+    for (size_t outer_fold = 0U; outer_fold < tr_vd_splits.size(); ++outer_fold)
     {
+        const auto& [train_samples, valid_samples] = tr_vd_splits[outer_fold];
+
         auto model = linear_model_t{};
         param_tracker.setup(model);
 
@@ -104,19 +108,13 @@ int unsafe_main(int argc, const char* argv[])
         const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
         const auto fit_result = model.fit(dataset, train_samples, *rloss, fit_params);
 
-        auto errors_values = tensor2d_t{2, valid_samples.size()};
+        const auto errors_values = model.evaluate(dataset, valid_samples, *rloss);
 
-        const auto iterator = targets_iterator_t{dataset, valid_samples};
-        iterator.loop(
-            [&](const tensor_range_t& range, const size_t, const tensor4d_cmap_t targets)
-            {
-                const auto outputs = model.predict(dataset, valid_samples.slice(range));
-                rloss->error(targets, outputs, errors_values.tensor(0).slice(range));
-                rloss->value(targets, outputs, errors_values.tensor(1).slice(range));
-            });
+        log_info() << std::setprecision(8) << std::fixed << "linear: tests=" << errors_values.tensor(1).mean() << "/"
+                   << errors_values.tensor(0).mean() << ",outer_fold=" << (outer_fold + 1) << "/" << tr_vd_splits.size()
+                   << ".";
 
-        log_info() << "fold: value=" << errors_values.tensor(0).mean() << "/" << errors_values.tensor(1).mean()
-                   << std::endl;
+        // TODO: export inner/outer splits' results!
 
         (void)test_samples;
         // const auto tr_samples = rdatasource->train_samples();

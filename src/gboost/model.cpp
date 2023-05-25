@@ -113,7 +113,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     const auto bstate = solver.minimize(bfunction, make_full_vector<scalar_t>(bfunction.size(), 0.0));
 
     outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x().transpose();
-    evaluate(targets_iterator, loss, outputs, values);
+    ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
 
     auto result   = gboost::fit_result_t{max_rounds + 1};
     result.m_bias = map_tensor(bstate.x().data(), make_dims(bstate.x().size()));
@@ -179,7 +179,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
 
         // update predictions
         outputs.vector() += woutputs.vector();
-        evaluate(targets_iterator, loss, outputs, values);
+        ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
         result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
 
         // early stopping
@@ -311,7 +311,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
         auto targets_iterator = targets_iterator_t{dataset, all_samples};
         targets_iterator.batch(batch);
         targets_iterator.scaling(scaling_type::none);
-        evaluate(targets_iterator, loss, outputs, values);
+        ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
 
         fit_result.evaluate(::selected(values, samples));
     }

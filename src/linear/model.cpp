@@ -142,11 +142,11 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     {
         const auto [l1reg, l2reg] = decode_params(params, regularization);
 
-        auto result              = ::fit(*this, dataset, train_samples, loss, fit_params.solver(), l1reg, l2reg, extra);
-        auto train_errors_losses = evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
-        auto valid_errors_losses = evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
+        auto result    = ::fit(*this, dataset, train_samples, loss, fit_params.solver(), l1reg, l2reg, extra);
+        auto tr_values = ::nano::linear::evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
+        auto vd_values = ::nano::linear::evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
 
-        return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(result));
+        return std::make_tuple(std::move(tr_values), std::move(vd_values), std::move(result));
     };
 
     auto fit_result = ml::tune("linear", samples, fit_params, std::move(param_names), param_spaces, evaluator);
@@ -155,10 +155,10 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     {
         const auto [l1reg, l2reg] = decode_params(fit_result.optimum().params(), regularization);
 
-        auto result        = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg);
-        auto errors_losses = evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
+        auto result = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg);
+        auto values = ::nano::linear::evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
-        fit_result.evaluate(std::move(errors_losses));
+        fit_result.evaluate(std::move(values));
 
         m_bias    = std::move(result.m_bias);
         m_weights = std::move(result.m_weights);

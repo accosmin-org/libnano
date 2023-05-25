@@ -5,6 +5,8 @@
 
 namespace nano
 {
+class loss_t;
+
 ///
 /// \brief base class for machine learning models (e.g. strong and weak learners) useful
 ///     for fingerprinting the fitted dataset and checking its compatibility with the evaluation dataset.
@@ -39,6 +41,11 @@ public:
     ///
     tensor4d_t predict(const dataset_t&, indices_cmap_t) const;
     void       predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const;
+
+    ///
+    /// \brief evaluate the predictions for the given samples and return the errors and loss values.
+    ///
+    NANO_PUBLIC tensor2d_t evaluate(const dataset_t&, indices_cmap_t samples, const loss_t&) const;
 
 protected:
     ///

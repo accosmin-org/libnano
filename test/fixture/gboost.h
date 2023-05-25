@@ -52,7 +52,7 @@ static void check_predict_throws(const gboost_model_t& model)
     UTEST_CHECK_THROW(model.predict(dataset3, arange(0, dataset3.samples())), std::runtime_error);
 }
 
-static void check_equal(const result_t::stats_t& lhs, const result_t::stats_t& rhs, const scalar_t epsilon = 1e-12)
+static void check_equal(const stats_t& lhs, const stats_t& rhs, const scalar_t epsilon = 1e-12)
 {
     UTEST_CHECK_CLOSE(lhs.m_mean, rhs.m_mean, epsilon);
     UTEST_CHECK_CLOSE(lhs.m_stdev, rhs.m_stdev, epsilon);

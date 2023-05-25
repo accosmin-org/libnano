@@ -1,5 +1,7 @@
 #include <nano/core/stream.h>
+#include <nano/dataset/iterator.h>
 #include <nano/learner.h>
+#include <nano/loss.h>
 
 using namespace nano;
 
@@ -74,4 +76,20 @@ void learner_t::predict(const dataset_t& dataset, indices_cmap_t samples, tensor
     assert(outputs.dims() == cat_dims(samples.size(), dataset.target_dims()));
 
     do_predict(dataset, samples, outputs);
+}
+
+tensor2d_t learner_t::evaluate(const dataset_t& dataset, indices_cmap_t samples, const loss_t& loss) const
+{
+    auto errors_values = tensor2d_t{2, samples.size()};
+
+    const auto iterator = targets_iterator_t{dataset, samples};
+    iterator.loop(
+        [&](const tensor_range_t& range, const size_t, const tensor4d_cmap_t targets)
+        {
+            const auto outputs = predict(dataset, samples.slice(range));
+            loss.error(targets, outputs, errors_values.tensor(0).slice(range));
+            loss.value(targets, outputs, errors_values.tensor(1).slice(range));
+        });
+
+    return errors_values;
 }

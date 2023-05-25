@@ -25,6 +25,12 @@ template <typename tlearner, typename... tfit_args>
     UTEST_CHECK_THROW(learner.predict(dataset, samples), std::runtime_error);
 }
 
+[[maybe_unused]] static void check_evaluate_fails(const learner_t& learner, const dataset_t& dataset,
+                                                  const indices_t& samples, const loss_t& loss)
+{
+    UTEST_CHECK_THROW(learner.evaluate(dataset, samples, loss), std::runtime_error);
+}
+
 [[maybe_unused]] static void check_result(const result_t& result, const strings_t& expected_param_names,
                                           const size_t min_param_results_size, const tensor_size_t expected_folds,
                                           const scalar_t epsilon)
