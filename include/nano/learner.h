@@ -45,7 +45,7 @@ public:
     ///
     /// \brief evaluate the predictions for the given samples and return the errors and loss values.
     ///
-    NANO_PUBLIC tensor2d_t evaluate(const dataset_t&, indices_cmap_t samples, const loss_t&) const;
+    tensor2d_t evaluate(const dataset_t&, indices_cmap_t samples, const loss_t&) const;
 
 protected:
     ///
