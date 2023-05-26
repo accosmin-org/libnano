@@ -67,7 +67,7 @@ auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
     vector_t x0 = vector_t::Zero(function.size());
     if (extra.has_value())
     {
-        const auto& result                      = std::any_cast<linear::fit_result_t>(extra);
+        const auto& result                      = std::any_cast<linear::result_t>(extra);
         const auto& bias                        = result.m_bias;
         const auto& weights                     = result.m_weights;
         x0.segment(0, weights.size())           = weights.array();
@@ -93,7 +93,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     ::upscale(iterator.flatten_stats(), iterator.scaling(), iterator.targets_stats(), iterator.scaling(), weights,
               bias);
 
-    return linear::fit_result_t{std::move(bias), std::move(weights), state};
+    return linear::result_t{std::move(bias), std::move(weights), state};
 }
 } // namespace
 

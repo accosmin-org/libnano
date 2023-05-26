@@ -3,9 +3,9 @@
 using namespace nano;
 using namespace nano::linear;
 
-fit_result_t::fit_result_t() = default;
+result_t::result_t() = default;
 
-fit_result_t::fit_result_t(tensor1d_t bias, tensor2d_t weights, const solver_state_t& state)
+result_t::result_t(tensor1d_t bias, tensor2d_t weights, const solver_state_t& state)
     : m_bias(std::move(bias))
     , m_weights(std::move(weights))
     , m_statistics(3)

@@ -85,7 +85,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     const auto shrinkage       = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
     const auto subsample_ratio = configurable.parameter("gboost::subsample_ratio").value<scalar_t>();
 
-    const auto [shrinkage_ratio] = decode_params(params, shrinkage);
+    auto [shrinkage_ratio] = decode_params(params, shrinkage);
 
     const auto samples = arange(0, dataset.samples());
 
@@ -115,9 +115,9 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x().transpose();
     ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
 
-    auto result   = gboost::fit_result_t{max_rounds + 1};
+    auto result   = gboost::result_t{&values, &train_samples, &valid_samples, max_rounds + 1};
     result.m_bias = map_tensor(bstate.x().data(), make_dims(bstate.x().size()));
-    result.update(0, values, train_samples, valid_samples, bstate);
+    result.update(0, shrinkage_ratio, bstate);
 
     // keep track of the optimum boosting round using the validation error
     auto optimum = early_stopping_t{values};
@@ -161,7 +161,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         if (gstate.x().minCoeff() < std::numeric_limits<scalar_t>::epsilon())
         {
             // NB: scaling fails (optimization fails or convergence on training loss)
-            result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
+            result.update(round + 1, shrinkage_ratio, gstate, std::move(best_wlearner));
             break;
         }
 
@@ -172,15 +172,15 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
 
         if (shrinkage == shrinkage_type::local)
         {
-            const auto scale = tune_shrinkage(valid_targets_iterator, loss, outputs, woutputs);
-            best_wlearner->scale(make_full_vector<scalar_t>(1, scale));
-            woutputs.array() *= scale;
+            shrinkage_ratio = tune_shrinkage(valid_targets_iterator, loss, outputs, woutputs);
+            best_wlearner->scale(make_full_vector<scalar_t>(1, shrinkage_ratio));
+            woutputs.array() *= shrinkage_ratio;
         }
 
         // update predictions
         outputs.vector() += woutputs.vector();
         ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
-        result.update(round + 1, values, train_samples, valid_samples, gstate, std::move(best_wlearner));
+        result.update(round + 1, shrinkage_ratio, gstate, std::move(best_wlearner));
 
         // early stopping
         if (optimum.done(values, train_samples, valid_samples, result.m_wlearners, epsilon, patience))
@@ -284,7 +284,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
 
         for (tensor_size_t fold = 0; fold < folds; ++fold)
         {
-            const auto* const pgboost = std::any_cast<gboost::fit_result_t>(&optimum_params.extra(fold));
+            const auto* const pgboost = std::any_cast<gboost::result_t>(&optimum_params.extra(fold));
             assert(pgboost != nullptr);
             m_bias.vector() += pgboost->m_bias.vector();
             std::for_each(pgboost->m_wlearners.begin(), pgboost->m_wlearners.end(),

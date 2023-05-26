@@ -84,8 +84,8 @@ static void check_equal(const result_t& lhs, const result_t& rhs, const scalar_t
 
         for (tensor_size_t fold = 0; fold < ilhs.folds(); ++fold)
         {
-            const auto& xlhs = std::any_cast<gboost::fit_result_t>(ilhs.extra(fold));
-            const auto& xrhs = std::any_cast<gboost::fit_result_t>(irhs.extra(fold));
+            const auto& xlhs = std::any_cast<gboost::result_t>(ilhs.extra(fold));
+            const auto& xrhs = std::any_cast<gboost::result_t>(irhs.extra(fold));
 
             UTEST_CHECK_CLOSE(xlhs.m_bias, xrhs.m_bias, epsilon);
             UTEST_CHECK_CLOSE(xlhs.m_statistics, xrhs.m_statistics, epsilon);
@@ -110,14 +110,14 @@ static void check_result(const result_t& result, const strings_t& expected_param
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& pfresult        = std::any_cast<gboost::fit_result_t>(param_result.extra(fold));
+            const auto& pfresult        = std::any_cast<gboost::result_t>(param_result.extra(fold));
             const auto [rounds, nstats] = pfresult.m_statistics.dims();
             const auto optimum_round    = static_cast<tensor_size_t>(pfresult.m_wlearners.size());
 
             auto last_train_loss = std::numeric_limits<scalar_t>::max();
 
             UTEST_CHECK_LESS(rounds, 200);
-            UTEST_REQUIRE_EQUAL(nstats, 7);
+            UTEST_REQUIRE_EQUAL(nstats, 8);
             UTEST_CHECK_GREATER_EQUAL(rounds, optimum_round);
             for (tensor_size_t round = 0; round < rounds; ++round)
             {
@@ -128,9 +128,10 @@ static void check_result(const result_t& result, const strings_t& expected_param
                 const auto train_loss  = pfresult.m_statistics(round, 1);
                 const auto valid_error = pfresult.m_statistics(round, 2);
                 const auto valid_loss  = pfresult.m_statistics(round, 3);
-                const auto fcalls      = pfresult.m_statistics(round, 4);
-                const auto gcalls      = pfresult.m_statistics(round, 5);
-                const auto status      = pfresult.m_statistics(round, 6);
+                const auto shrinkage   = pfresult.m_statistics(round, 4);
+                const auto fcalls      = pfresult.m_statistics(round, 5);
+                const auto gcalls      = pfresult.m_statistics(round, 6);
+                const auto status      = pfresult.m_statistics(round, 7);
 
                 UTEST_CHECK(std::isfinite(train_error));
                 UTEST_CHECK(std::isfinite(train_loss));
@@ -141,6 +142,8 @@ static void check_result(const result_t& result, const strings_t& expected_param
                 UTEST_CHECK_GREATER_EQUAL(train_loss, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_error, 0.0);
                 UTEST_CHECK_GREATER_EQUAL(valid_loss, 0.0);
+                UTEST_CHECK_GREATER_EQUAL(shrinkage, 0.1);
+                UTEST_CHECK_LESS_EQUAL(shrinkage, 1.0);
 
                 UTEST_CHECK_GREATER_EQUAL(last_train_loss + epsilon, train_loss);
                 if (round <= optimum_round)

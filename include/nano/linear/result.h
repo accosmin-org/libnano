@@ -6,9 +6,10 @@
 namespace nano::linear
 {
 ///
-/// \brief linear model and optimization statistics.
+/// \brief results collected by fitting a linear model for a given set of hyper-parameter values
+///     and a training-validation split.
 ///
-struct NANO_PUBLIC fit_result_t
+struct NANO_PUBLIC result_t
 {
     enum class stats
     {
@@ -20,12 +21,12 @@ struct NANO_PUBLIC fit_result_t
     ///
     /// \brief default constructor
     ///
-    fit_result_t();
+    result_t();
 
     ///
     /// \brief constructor
     ///
-    explicit fit_result_t(tensor1d_t bias, tensor2d_t weights, const solver_state_t&);
+    explicit result_t(tensor1d_t bias, tensor2d_t weights, const solver_state_t&);
 
     // attributes
     tensor1d_t m_bias;       ///<
