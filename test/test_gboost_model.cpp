@@ -239,9 +239,8 @@ UTEST_CASE(fit_predict_tables)
 
 UTEST_CASE(fit_predict_subsample)
 {
-    for (const auto subsample :
-         {gboost::subsample_type::subsample, gboost::subsample_type::bootstrap,
-          gboost::subsample_type::wei_loss_bootstrap, gboost::subsample_type::wei_grad_bootstrap})
+    for (const auto subsample : {gboost_subsample::subsample, gboost_subsample::bootstrap,
+                                 gboost_subsample::wei_loss_bootstrap, gboost_subsample::wei_grad_bootstrap})
     {
         auto       model       = make_gbooster_to_fit("gboost::subsample", subsample, "gboost::subsample_ratio", 0.9);
         const auto param_names = strings_t{};

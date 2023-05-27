@@ -451,11 +451,11 @@ void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&.
     check_split_throws(wlearner, datasource0, datasourceX1, datasourceX2, datasourceX3, datasourceXs...);
 
     // check fitting with various criteria
-    for (const auto criterion : enum_values<wlearner::criterion_type>())
+    for (const auto criterion : enum_values<wlearner_criterion>())
     {
         wlearner.parameter("wlearner::criterion") = criterion;
         const auto score                          = check_fit(wlearner, datasource0);
-        if (criterion == wlearner::criterion_type::rss)
+        if (criterion == wlearner_criterion::rss)
         {
             UTEST_CHECK_CLOSE(score, 0.0, 1e-7);
         }

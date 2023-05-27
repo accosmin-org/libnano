@@ -1,8 +1,9 @@
 #pragma once
 
+#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
-namespace nano::linear
+namespace nano
 {
 ///
 /// \brief regularization methods for linear models.
@@ -10,13 +11,12 @@ namespace nano::linear
 /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
 /// see "Regularization and variable selection via the elastic net", by H. Zou, T. Hastie
 ///
-enum class regularization_type
+enum class linear_regularization
 {
     none,       ///< no regularization
     lasso,      ///< lasso
     ridge,      ///< ridge
     elasticnet, ///< elastic net
 };
-} // namespace nano::linear
-
-NANO_MAKE_ENUM4(linear::regularization_type, none, lasso, ridge, elasticnet)
+NANO_MAKE_ENUM4(linear_regularization, none, lasso, ridge, elasticnet)
+} // namespace nano

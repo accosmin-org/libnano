@@ -44,7 +44,7 @@ public:
             .sum();
     }
 
-    auto score(const criterion_type criterion) const
+    auto score(const wlearner_criterion criterion) const
     {
         const auto rss = rss_affine() + rss_zero(bin_missed);
         const auto k   = 2 * ::nano::size(tdims());
@@ -71,7 +71,7 @@ rwlearner_t affine_wlearner_t::clone() const
 
 scalar_t affine_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t(dataset);
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});

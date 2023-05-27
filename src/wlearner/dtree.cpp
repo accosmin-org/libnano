@@ -144,7 +144,7 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
 {
     const auto max_depth = parameter("wlearner::dtree::max_depth").value<tensor_size_t>();
     const auto min_split = parameter("wlearner::dtree::min_split").value<tensor_size_t>();
-    const auto criterion = parameter("wlearner::criterion").value<wlearner::criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
 
     const auto min_samples_size = std::min<tensor_size_t>(10, dataset.samples() * min_split / 100);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
 namespace nano
@@ -14,6 +15,5 @@ enum class scaling_type : int32_t
     minmax,   ///< min-max normalization: x = (x - min(x)) / (max(x) - min(x))
     standard  ///< standardization with zero mean and unit variance: x = (x - mean(x)) / stdev(x)
 };
-} // namespace nano
-
 NANO_MAKE_ENUM4(scaling_type, none, mean, minmax, standard)
+} // namespace nano

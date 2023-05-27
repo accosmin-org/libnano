@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 #include <nano/function.h>
 
@@ -12,6 +13,7 @@ enum class solver_status : int32_t
     failed,    ///< optimization failed (e.g. line-search failed)
     stopped    ///< user requested stop
 };
+NANO_MAKE_ENUM4(solver_status, max_iters, converged, failed, stopped)
 
 ///
 /// \brief models a state (step) in a numerical optimization method.
@@ -225,5 +227,3 @@ NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_
 NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
 NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano
-
-NANO_MAKE_ENUM4(solver_status, max_iters, converged, failed, stopped)

@@ -14,6 +14,7 @@ enum class interpolation_type
     quadratic, ///<
     cubic      ///<
 };
+NANO_MAKE_ENUM3(interpolation_type, bisection, quadratic, cubic)
 
 ///
 /// \brief line-search step function:
@@ -74,5 +75,3 @@ public:
     scalar_t g{0}; ///< line-search dot product gradient and descent direction
 };
 } // namespace nano
-
-NANO_MAKE_ENUM3(interpolation_type, bisection, quadratic, cubic)

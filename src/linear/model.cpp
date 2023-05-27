@@ -13,7 +13,7 @@ namespace
 {
 auto make_params(const configurable_t& configurable)
 {
-    const auto regularization = configurable.parameter("linear::regularization").value<regularization_type>();
+    const auto regularization = configurable.parameter("linear::regularization").value<linear_regularization>();
 
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
@@ -24,17 +24,17 @@ auto make_params(const configurable_t& configurable)
 
     switch (regularization)
     {
-    case regularization_type::lasso:
+    case linear_regularization::lasso:
         param_names.emplace_back("l1reg");
         param_spaces.emplace_back(param_space);
         break;
 
-    case regularization_type::ridge:
+    case linear_regularization::ridge:
         param_names.emplace_back("l2reg");
         param_spaces.emplace_back(param_space);
         break;
 
-    case regularization_type::elasticnet:
+    case linear_regularization::elasticnet:
         param_names.emplace_back("l1reg");
         param_names.emplace_back("l2reg");
         param_spaces.emplace_back(param_space);
@@ -47,15 +47,15 @@ auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-auto decode_params(const tensor1d_cmap_t& params, const regularization_type regularization)
+auto decode_params(const tensor1d_cmap_t& params, const linear_regularization regularization)
 {
     scalar_t l1reg = 0.0;
     scalar_t l2reg = 0.0;
     switch (regularization)
     {
-    case regularization_type::lasso: l1reg = params(0); break;
-    case regularization_type::ridge: l2reg = params(0); break;
-    case regularization_type::elasticnet: l1reg = params(0), l2reg = params(1); break;
+    case linear_regularization::lasso: l1reg = params(0); break;
+    case linear_regularization::ridge: l2reg = params(0); break;
+    case linear_regularization::elasticnet: l1reg = params(0), l2reg = params(1); break;
     default: break;
     }
 
@@ -101,7 +101,7 @@ linear_model_t::linear_model_t()
 {
     register_parameter(parameter_t::make_integer("linear::batch", 10, LE, 100, LE, 10000));
     register_parameter(parameter_t::make_enum("linear::scaling", scaling_type::standard));
-    register_parameter(parameter_t::make_enum("linear::regularization", regularization_type::lasso));
+    register_parameter(parameter_t::make_enum("linear::regularization", linear_regularization::lasso));
 }
 
 std::istream& linear_model_t::read(std::istream& stream)
@@ -132,7 +132,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     learner_t::fit_dataset(dataset);
 
     const auto batch          = parameter("linear::batch").value<tensor_size_t>();
-    const auto regularization = parameter("linear::regularization").value<regularization_type>();
+    const auto regularization = parameter("linear::regularization").value<linear_regularization>();
 
     // tune hyper-parameters
     auto [param_names, param_spaces] = ::make_params(*this);

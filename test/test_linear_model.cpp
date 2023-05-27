@@ -81,7 +81,7 @@ UTEST_CASE(regularization_none)
 
     auto model                                = make_model();
     model.parameter("linear::scaling")        = scaling_type::none;
-    model.parameter("linear::regularization") = linear::regularization_type::none;
+    model.parameter("linear::regularization") = linear_regularization::none;
 
     const auto param_names = strings_t{};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -107,7 +107,7 @@ UTEST_CASE(regularization_lasso)
 
     auto model                                = make_model();
     model.parameter("linear::scaling")        = scaling_type::standard;
-    model.parameter("linear::regularization") = linear::regularization_type::lasso;
+    model.parameter("linear::regularization") = linear_regularization::lasso;
 
     const auto param_names = strings_t{"l1reg"};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -133,7 +133,7 @@ UTEST_CASE(regularization_ridge)
 
     auto model                                = make_model();
     model.parameter("linear::scaling")        = scaling_type::mean;
-    model.parameter("linear::regularization") = linear::regularization_type::ridge;
+    model.parameter("linear::regularization") = linear_regularization::ridge;
 
     const auto param_names = strings_t{"l2reg"};
     for (const auto* const loss_id : {"mse", "mae"})
@@ -159,7 +159,7 @@ UTEST_CASE(regularization_elasticnet)
 
     auto model                                = make_model();
     model.parameter("linear::scaling")        = scaling_type::minmax;
-    model.parameter("linear::regularization") = linear::regularization_type::elasticnet;
+    model.parameter("linear::regularization") = linear_regularization::elasticnet;
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
     for (const auto* const loss_id : {"mse", "mae"})

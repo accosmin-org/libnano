@@ -31,6 +31,8 @@ enum class feature_type : int32_t
     sclass, ///< categorical feature (single-label - one value possible out of a fixed set)
     mclass, ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
 };
+NANO_MAKE_ENUM12(feature_type, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, sclass,
+                 mclass)
 
 ///
 /// \brief input feature (e.g. describes a column in a csv file)
@@ -213,6 +215,3 @@ private:
     scalar_t      m_importance{0.0}; ///< feature importance (e.g. impact on performance)
 };
 } // namespace nano
-
-NANO_MAKE_ENUM12(feature_type, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, sclass,
-                 mclass)

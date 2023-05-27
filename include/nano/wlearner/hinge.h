@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/model/enums.h>
 #include <nano/wlearner/single.h>
 
 namespace nano
@@ -15,6 +14,7 @@ enum class hinge_type : int32_t
     left = 0, ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
     right,    ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
 };
+NANO_MAKE_ENUM2(hinge_type, left, right)
 
 ///
 /// \brief a hinge is a weak learner that performs the following operation element-wise:
@@ -86,5 +86,3 @@ private:
     hinge_type m_hinge{hinge_type::left}; ///<
 };
 } // namespace nano
-
-NANO_MAKE_ENUM2(hinge_type, left, right)

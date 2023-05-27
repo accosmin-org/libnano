@@ -72,7 +72,7 @@ public:
 
     auto output_pos() const { return r1_pos() / x0_pos(); }
 
-    auto score(const criterion_type criterion, const scalar_t missing_rss, const scalar_t missing_cnt) const
+    auto score(const wlearner_criterion criterion, const scalar_t missing_rss, const scalar_t missing_cnt) const
     {
         const auto rss = ::score(x0_neg(), r1_neg(), r2_neg(), output_neg()) +
                          ::score(x0_pos(), r1_pos(), r2_pos(), output_pos()) + missing_rss;
@@ -125,7 +125,7 @@ rwlearner_t stump_wlearner_t::clone() const
 
 scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});

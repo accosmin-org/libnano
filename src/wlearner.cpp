@@ -12,7 +12,7 @@ using namespace nano::wlearner;
 wlearner_t::wlearner_t(string_t id)
     : clonable_t(std::move(id))
 {
-    register_parameter(parameter_t::make_enum("wlearner::criterion", criterion_type::aicc));
+    register_parameter(parameter_t::make_enum("wlearner::criterion", wlearner_criterion::aicc));
 }
 
 scalar_t wlearner_t::fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)

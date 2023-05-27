@@ -17,12 +17,12 @@ namespace
 {
 auto make_params(const configurable_t& configurable)
 {
-    const auto shrinkage = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto shrinkage = configurable.parameter("gboost::shrinkage").value<gboost_shrinkage>();
 
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
 
-    if (shrinkage == shrinkage_type::global)
+    if (shrinkage == gboost_shrinkage::global)
     {
         param_names.emplace_back("shrinkage");
         param_spaces.emplace_back(param_space_t::type::linear, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
@@ -31,12 +31,12 @@ auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-auto decode_params(const tensor1d_cmap_t& params, const shrinkage_type shrinkage)
+auto decode_params(const tensor1d_cmap_t& params, const gboost_shrinkage shrinkage)
 {
     scalar_t shrinkage_ratio = 1.0;
 
     tensor_size_t index = 0;
-    if (shrinkage == shrinkage_type::global)
+    if (shrinkage == gboost_shrinkage::global)
     {
         shrinkage_ratio = params(index);
         index++;
@@ -54,9 +54,9 @@ auto selected(const tensor2d_t& values, const indices_t& samples)
 }
 
 auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlearner_t& wlearner,
-                  const wscale_type wscale)
+                  const gboost_wscale wscale)
 {
-    if (wscale == wscale_type::tboost)
+    if (wscale == gboost_wscale::tboost)
     {
         return wlearner.split(dataset, samples);
     }
@@ -80,9 +80,9 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     const auto epsilon         = configurable.parameter("gboost::epsilon").value<scalar_t>();
     const auto patience        = configurable.parameter("gboost::patience").value<size_t>();
     auto       max_rounds      = configurable.parameter("gboost::max_rounds").value<tensor_size_t>();
-    const auto wscale          = configurable.parameter("gboost::wscale").value<wscale_type>();
-    const auto subsample       = configurable.parameter("gboost::subsample").value<subsample_type>();
-    const auto shrinkage       = configurable.parameter("gboost::shrinkage").value<shrinkage_type>();
+    const auto wscale          = configurable.parameter("gboost::wscale").value<gboost_wscale>();
+    const auto subsample       = configurable.parameter("gboost::subsample").value<gboost_subsample>();
+    const auto shrinkage       = configurable.parameter("gboost::shrinkage").value<gboost_shrinkage>();
     const auto subsample_ratio = configurable.parameter("gboost::subsample_ratio").value<scalar_t>();
 
     auto [shrinkage_ratio] = decode_params(params, shrinkage);
@@ -170,7 +170,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         woutputs.zero();
         best_wlearner->predict(dataset, samples, woutputs.tensor());
 
-        if (shrinkage == shrinkage_type::local)
+        if (shrinkage == gboost_shrinkage::local)
         {
             shrinkage_ratio = tune_shrinkage(valid_targets_iterator, loss, outputs, woutputs);
             best_wlearner->scale(make_full_vector<scalar_t>(1, shrinkage_ratio));
@@ -205,9 +205,9 @@ gboost_model_t::gboost_model_t()
     register_parameter(parameter_t::make_integer("gboost::patience", 1, LE, 10, LE, 1'000));
     register_parameter(parameter_t::make_integer("gboost::max_rounds", 10, LE, 1'000, LE, 1'000'000));
 
-    register_parameter(parameter_t::make_enum("gboost::wscale", wscale_type::gboost));
-    register_parameter(parameter_t::make_enum("gboost::shrinkage", shrinkage_type::off));
-    register_parameter(parameter_t::make_enum("gboost::subsample", subsample_type::off));
+    register_parameter(parameter_t::make_enum("gboost::wscale", gboost_wscale::gboost));
+    register_parameter(parameter_t::make_enum("gboost::shrinkage", gboost_shrinkage::off));
+    register_parameter(parameter_t::make_enum("gboost::subsample", gboost_subsample::off));
     register_parameter(parameter_t::make_scalar("gboost::subsample_ratio", 0.0, LT, 1.0, LE, 1.0));
 }
 

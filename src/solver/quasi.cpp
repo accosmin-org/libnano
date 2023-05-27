@@ -71,14 +71,14 @@ solver_quasi_t::solver_quasi_t(string_t id)
     type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 
-    register_parameter(parameter_t::make_enum("solver::quasi::initialization", initialization::identity));
+    register_parameter(parameter_t::make_enum("solver::quasi::initialization", quasi_initialization::identity));
 }
 
 solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
-    const auto init      = parameter("solver::quasi::initialization").value<initialization>();
+    const auto init      = parameter("solver::quasi::initialization").value<quasi_initialization>();
 
     auto cstate = solver_state_t{function, x0}; // current state
     if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon))
@@ -116,7 +116,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
         }
 
         // initialize the Hessian's inverse
-        if (first_iteration && init == initialization::scaled)
+        if (first_iteration && init == quasi_initialization::scaled)
         {
             const auto dx = cstate.x() - pstate.x();
             const auto dg = cstate.gx() - pstate.gx();

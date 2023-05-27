@@ -169,20 +169,20 @@ UTEST_CASE(quasi_bfgs_with_initializations)
                 const auto* const pname  = "solver::quasi::initialization";
                 auto              solver = solver_quasi_bfgs_t{};
 
-                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = quasi_initialization::identity);
                 check_minimize(solver, *function, x0);
 
-                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = quasi_initialization::scaled);
                 check_minimize(solver, *function, x0);
             }
             {
                 const auto* const pname  = "solver::quasi::initialization";
                 auto              solver = solver_quasi_fletcher_t{};
 
-                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::identity);
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = quasi_initialization::identity);
                 check_minimize(solver, *function, x0);
 
-                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = solver_quasi_t::initialization::scaled);
+                UTEST_REQUIRE_NOTHROW(solver.parameter(pname) = quasi_initialization::scaled);
                 check_minimize(solver, *function, x0);
             }
         }

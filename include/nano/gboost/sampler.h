@@ -15,7 +15,7 @@ public:
     ///
     /// \brief constructor
     ///
-    sampler_t(const indices_t& samples, subsample_type, uint64_t seed, scalar_t ratio);
+    sampler_t(const indices_t& samples, gboost_subsample, uint64_t seed, scalar_t ratio);
 
     ///
     /// \brief returns the samples to use for fitting weak learners.
@@ -24,10 +24,10 @@ public:
 
 private:
     // attributes
-    const indices_t& m_samples;                   ///< training samples to select from
-    subsample_type   m_type{subsample_type::off}; ///<
-    rng_t            m_rng;                       ///<
-    scalar_t         m_ratio{1.0};                ///<
-    tensor1d_t       m_weights;                   ///< per-sample weight
+    const indices_t& m_samples;                     ///< training samples to select from
+    gboost_subsample m_type{gboost_subsample::off}; ///<
+    rng_t            m_rng;                         ///<
+    scalar_t         m_ratio{1.0};                  ///<
+    tensor1d_t       m_weights;                     ///< per-sample weight
 };
 } // namespace nano::gboost

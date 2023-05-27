@@ -5,6 +5,16 @@
 namespace nano
 {
 ///
+/// \brief methods to initialize the first approximation of the Hessian's inverse.
+///
+enum class quasi_initialization
+{
+    identity, ///< H0 = I
+    scaled,   ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
+};
+NANO_MAKE_ENUM2(quasi_initialization, identity, scaled)
+
+///
 /// \brief quasi-Newton methods.
 ///     see (1) "Practical methods of optimization", Fletcher, 2nd edition
 ///     see (2) "Numerical optimization", Nocedal & Wright, 2nd edition
@@ -14,15 +24,6 @@ namespace nano
 class NANO_PUBLIC solver_quasi_t : public solver_t
 {
 public:
-    ///
-    /// \brief methods to initialize the first approximation of the Hessian's inverse.
-    ///
-    enum class initialization
-    {
-        identity, ///< H0 = I
-        scaled,   ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
-    };
-
     ///
     /// \brief constructor
     ///
@@ -157,5 +158,3 @@ public:
     void update(const solver_state_t&, const solver_state_t&, matrix_t&) const override;
 };
 } // namespace nano
-
-NANO_MAKE_ENUM2(solver_quasi_t::initialization, identity, scaled)

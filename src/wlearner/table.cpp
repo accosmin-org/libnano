@@ -56,7 +56,7 @@ public:
 
     auto score(const tensor_size_t bin) const { return (r2(bin) - r1(bin).square() / x0(bin)).sum(); }
 
-    void score_dense(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
+    void score_dense(const tensor_size_t feature, const hashes_t& hashes, const wlearner_criterion criterion)
     {
         const auto bins = this->bins();
 
@@ -86,7 +86,7 @@ public:
         }
     }
 
-    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion,
+    void score_kbest(const tensor_size_t feature, const hashes_t& hashes, const wlearner_criterion criterion,
                      tensor_size_t max_kbest = -1)
     {
         const auto bins    = this->bins();
@@ -126,7 +126,7 @@ public:
         }
     }
 
-    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const criterion_type criterion)
+    void score_ksplit(const tensor_size_t feature, const hashes_t& hashes, const wlearner_criterion criterion)
     {
         const auto bins = this->bins();
 
@@ -301,7 +301,7 @@ rwlearner_t dense_table_wlearner_t::clone() const
 
 scalar_t dense_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
@@ -336,7 +336,7 @@ rwlearner_t kbest_table_wlearner_t::clone() const
 
 scalar_t kbest_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
@@ -372,7 +372,7 @@ rwlearner_t ksplit_table_wlearner_t::clone() const
 scalar_t ksplit_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples,
                                          const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});
@@ -407,7 +407,7 @@ rwlearner_t dstep_table_wlearner_t::clone() const
 
 scalar_t dstep_table_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});

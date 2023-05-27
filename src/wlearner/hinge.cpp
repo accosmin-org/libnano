@@ -117,7 +117,7 @@ public:
                ::score(x0_pos(), x1_pos(), x2_pos(), r1_pos(), rx_pos(), r2_pos(), threshold, beta_pos(threshold));
     }
 
-    auto score_neg(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
+    auto score_neg(const scalar_t threshold, const wlearner_criterion criterion, const scalar_t missing_rss,
                    const scalar_t missing_cnt) const
     {
         const auto rss = score_neg(threshold) + missing_rss;
@@ -127,7 +127,7 @@ public:
         return make_score(criterion, rss, k, n);
     }
 
-    auto score_pos(const scalar_t threshold, const criterion_type criterion, const scalar_t missing_rss,
+    auto score_pos(const scalar_t threshold, const wlearner_criterion criterion, const scalar_t missing_rss,
                    const scalar_t missing_cnt) const
     {
         const auto rss = score_pos(threshold) + missing_rss;
@@ -183,7 +183,7 @@ rwlearner_t hinge_wlearner_t::clone() const
 
 scalar_t hinge_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& gradients)
 {
-    const auto criterion = parameter("wlearner::criterion").value<criterion_type>();
+    const auto criterion = parameter("wlearner::criterion").value<wlearner_criterion>();
     const auto iterator  = select_iterator_t{dataset};
 
     std::vector<cache_t> caches(iterator.concurrency(), cache_t{dataset.target_dims()});

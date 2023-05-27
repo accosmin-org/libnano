@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nano/core/enumutil.h>
+#include <nano/core/strutil.h>
 #include <nano/string.h>
 #include <nano/tensor/tensor.h>
 
@@ -14,6 +16,7 @@ enum class kernel3x3_type
     scharr,
     prewitt,
 };
+NANO_MAKE_ENUM3(kernel3x3_type, sobel, scharr, prewitt)
 
 ///
 /// \brief construct symmetric 3x3 kernels for computing image gradients.
@@ -143,5 +146,3 @@ void gradient3x3(gradient3x3_mode mode, tensor_cmap_t<tscalar_input, 2> input,
     }
 }
 } // namespace nano
-
-NANO_MAKE_ENUM3(kernel3x3_type, sobel, scharr, prewitt)

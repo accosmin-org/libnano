@@ -107,7 +107,7 @@ UTEST_CASE(sampler)
 
     for (const auto seed : {1U, 7U, 42U, 1000U})
     {
-        auto sampler = gboost::sampler_t{train_samples, gboost::subsample_type::off, seed, 1.0};
+        auto sampler = gboost::sampler_t{train_samples, gboost_subsample::off, seed, 1.0};
         UTEST_CHECK_EQUAL(sampler.sample(errors_losses, gradients), train_samples);
     }
 }
@@ -118,8 +118,8 @@ UTEST_CASE(bootstrap_sampler)
     const auto errors_losses = make_full_tensor<scalar_t>(make_dims(2, 10), 1.42);
     const auto gradients     = make_full_tensor<scalar_t>(make_dims(10, 1, 1, 1), 4.2);
 
-    for (const auto subsample : {gboost::subsample_type::bootstrap, gboost::subsample_type::wei_loss_bootstrap,
-                                 gboost::subsample_type::wei_grad_bootstrap})
+    for (const auto subsample :
+         {gboost_subsample::bootstrap, gboost_subsample::wei_loss_bootstrap, gboost_subsample::wei_grad_bootstrap})
     {
         auto prev_samples = indices_t{};
         for (const auto seed : {1U, 7U, 42U, 1000U})

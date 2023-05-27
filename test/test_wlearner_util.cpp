@@ -254,10 +254,10 @@ UTEST_CASE(criterion)
     const auto n   = 100;
     const auto k   = 3;
 
-    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::rss, rss, k, n), rss, 1e-12);
-    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::aic, rss, k, n), -354.517018598809136804, 1e-12);
-    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::aicc, rss, k, n), -354.267018598809136804, 1e-12);
-    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner::criterion_type::bic, rss, k, n), -346.70150804084486269988, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner_criterion::rss, rss, k, n), rss, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner_criterion::aic, rss, k, n), -354.517018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner_criterion::aicc, rss, k, n), -354.267018598809136804, 1e-12);
+    UTEST_CHECK_CLOSE(wlearner::make_score(wlearner_criterion::bic, rss, k, n), -346.70150804084486269988, 1e-12);
 }
 
 UTEST_END_MODULE()
