@@ -6,7 +6,7 @@
 ///     the targets is a random affine transformation of the flatten input features.
 ///
 /// NB: uniformly-distributed noise is added to targets if noise() > 0.
-/// NB: every column % modulo() is not taken into account.
+/// NB: every feature % modulo() is not taken into account.
 ///
 class linear_datasource_t final : public random_datasource_t
 {
@@ -67,9 +67,13 @@ private:
 
         m_bias.random();
         m_weights.random();
-        for (tensor_size_t column = m_modulo, columns = dataset.columns(); column < columns; column += m_modulo)
+        for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
         {
-            m_weights.matrix().row(column).setConstant(0.0);
+            const auto feature = dataset.column2feature(column);
+            if (feature % m_modulo == 0)
+            {
+                m_weights.matrix().col(column).setConstant(0.0);
+            }
         }
 
         auto iterator = flatten_iterator_t{dataset, arange(0, samples)};

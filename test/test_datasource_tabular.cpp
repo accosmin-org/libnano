@@ -140,18 +140,18 @@ private:
     void write_data(const char* path) const
     {
         std::ofstream os(path);
-        write(os, 1, 20, false);
+        write_tab(os, 1, 20, false);
         UTEST_REQUIRE(os);
     }
 
     void write_test(const char* path) const
     {
         std::ofstream os(path);
-        write(os, 21, 10, true);
+        write_tab(os, 21, 10, true);
         UTEST_REQUIRE(os);
     }
 
-    void write(std::ostream& os, int begin, int size, bool header) const
+    void write_tab(std::ostream& os, const int begin, const int size, const bool header) const
     {
         if (header)
         {
