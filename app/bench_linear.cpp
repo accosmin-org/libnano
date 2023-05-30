@@ -116,6 +116,21 @@ int unsafe_main(int argc, const char* argv[])
 
         // TODO: export inner/outer splits' results!
 
+        // TODO: compute and export feature weights
+        // TODO: check the selected features are the expected ones(lasso, elasticnet)
+        // TODO: compute some sparsity factor
+        // TODO: synthetic linear dataset (classification and regression) with known relevant feature sets
+        auto feature_weights = make_full_tensor<scalar_t>(make_dims(dataset.features()), 0.0);
+
+        const auto& weights = model.weights();
+        for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
+        {
+            const auto feature = dataset.column2feature(column);
+            feature_weights(feature) += weights.matrix().col(column).array().abs().sum();
+        }
+
+        std::cout << "feature_weights=" << feature_weights << std::endl;
+
         (void)test_samples;
         // const auto tr_samples = rdatasource->train_samples();
     }

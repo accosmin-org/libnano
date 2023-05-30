@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/arch.h>
+#include <nano/configurable.h>
 #include <nano/datasource/storage.h>
 #include <nano/factory.h>
 
@@ -20,7 +21,7 @@ using rdatasource_t = std::unique_ptr<datasource_t>;
 /// NB: the categorical features can be single-label or multi-label.
 /// NB: the continuous features can be structured (multi-dimensional) if feature_t::dims() != (1, 1, 1).
 ///
-class NANO_PUBLIC datasource_t : public clonable_t<datasource_t>
+class NANO_PUBLIC datasource_t : public configurable_t, public clonable_t<datasource_t>
 {
 public:
     ///
