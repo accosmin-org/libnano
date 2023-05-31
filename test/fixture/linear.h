@@ -1,7 +1,7 @@
 #include "fixture/dataset.h"
-#include "fixture/datasource/linear.h"
 #include "fixture/learner.h"
 #include <nano/dataset/iterator.h>
+#include <nano/datasource/linear.h>
 #include <nano/linear/model.h>
 #include <nano/linear/result.h>
 
@@ -12,9 +12,12 @@ using namespace nano::ml;
                                                     const tensor_size_t features, const tensor_size_t modulo = 31,
                                                     const scalar_t noise = 0.0)
 {
-    auto datasource = linear_datasource_t{samples, features, targets};
-    datasource.noise(noise);
-    datasource.modulo(modulo);
+    auto datasource                                      = linear_datasource_t{};
+    datasource.parameter("datasource::linear::samples")  = samples;
+    datasource.parameter("datasource::linear::targets")  = targets;
+    datasource.parameter("datasource::linear::features") = features;
+    datasource.parameter("datasource::linear::noise")    = noise;
+    datasource.parameter("datasource::linear::modulo")   = modulo;
     UTEST_REQUIRE_NOTHROW(datasource.load());
     return datasource;
 }
