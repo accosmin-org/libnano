@@ -1,10 +1,10 @@
 #include "fixture/configurable.h"
 #include "fixture/dataset.h"
 #include "fixture/datasource/hits.h"
-#include "fixture/datasource/random.h"
 #include "fixture/loss.h"
 #include <nano/dataset/hash.h>
 #include <nano/dataset/iterator.h>
+#include <nano/datasource/random.h>
 #include <nano/wlearner/criterion.h>
 #include <nano/wlearner/hinge.h>
 #include <nano/wlearner/util.h>

@@ -1,5 +1,5 @@
 #include "fixture/datasource/hits.h"
-#include "fixture/datasource/random.h"
+#include <nano/datasource/random.h>
 
 ///
 /// \brief synthetic dataset:

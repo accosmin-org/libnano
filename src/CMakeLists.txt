@@ -31,6 +31,7 @@ target_sources(nano PRIVATE
     datasource.cpp
     datasource/mask.cpp
     datasource/util.cpp
+    datasource/random.cpp
     datasource/tabular.cpp
     datasource/imclass_cifar.cpp
     datasource/imclass_mnist.cpp
