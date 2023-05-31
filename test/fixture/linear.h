@@ -10,7 +10,7 @@ using namespace nano::ml;
 
 [[maybe_unused]] static auto make_linear_datasource(const tensor_size_t samples, const tensor_size_t targets,
                                                     const tensor_size_t features, const tensor_size_t modulo = 31,
-                                                    const scalar_t noise = 0.0)
+                                                    const scalar_t noise = 0.0, const uint64_t seed = 42)
 {
     auto datasource                                      = linear_datasource_t{};
     datasource.parameter("datasource::linear::samples")  = samples;
@@ -18,6 +18,7 @@ using namespace nano::ml;
     datasource.parameter("datasource::linear::features") = features;
     datasource.parameter("datasource::linear::noise")    = noise;
     datasource.parameter("datasource::linear::modulo")   = modulo;
+    datasource.parameter("datasource::linear::seed")     = seed;
     UTEST_REQUIRE_NOTHROW(datasource.load());
     return datasource;
 }

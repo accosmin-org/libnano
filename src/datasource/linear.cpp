@@ -126,11 +126,9 @@ void linear_datasource_t::do_load()
     const auto dataset = ::make_dataset(*this);
     const auto targets = ::nano::size(dataset.target_dims());
 
-    m_bias.resize(targets);
-    m_weights.resize(targets, dataset.columns());
+    m_bias    = make_random_tensor<scalar_t>(make_dims(targets), -1.0, +1.0, sdist(rng));
+    m_weights = make_random_tensor<scalar_t>(make_dims(targets, dataset.columns()), -1.0, +1.0, sdist(rng));
 
-    m_bias.random();
-    m_weights.random();
     for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
     {
         const auto feature = dataset.column2feature(column);
