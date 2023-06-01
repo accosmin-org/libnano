@@ -46,3 +46,28 @@ tensor2d_t linear::evaluate(const dataset_t& dataset, const indices_t& samples, 
 
     return values;
 }
+
+tensor1d_t linear::feature_importance(const dataset_t& dataset, const tensor2d_t& weights)
+{
+    assert(weights.cols() == dataset.columns());
+    assert(weights.rows() == ::nano::size(dataset.target_dims()));
+
+    auto feature_importance = make_full_tensor<scalar_t>(make_dims(dataset.features()), 0.0);
+    for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
+    {
+        const auto feature = dataset.column2feature(column);
+        feature_importance(feature) += weights.matrix().col(column).array().abs().sum();
+    }
+
+    return feature_importance;
+}
+
+scalar_t linear::sparsity_ratio(const tensor1d_t& feature_importance, const scalar_t threshold)
+{
+    assert(threshold > 0.0);
+    assert(feature_importance.size() > 0);
+    assert(feature_importance.min() >= 0.0);
+
+    return static_cast<scalar_t>((feature_importance.array() < threshold).count()) /
+           static_cast<scalar_t>(feature_importance.size());
+}

@@ -72,4 +72,34 @@ UTEST_CASE(evaluate)
     }
 }
 
+UTEST_CASE(feature_importance)
+{
+    const auto datasource = make_linear_datasource(20, 1, 4);
+    const auto dataset    = make_dataset(datasource);
+    {
+        const auto weights = make_tensor<scalar_t>(make_dims(1, 13), 1, 0, -1, 0, 0, 1, -2, -3, 0, 0, 1, 1, 1);
+        const auto feature_importance  = linear::feature_importance(dataset, weights);
+        const auto expected_importance = make_tensor<scalar_t>(make_dims(4), 1, 2, 2, 6);
+
+        UTEST_CHECK_CLOSE(feature_importance, expected_importance, 1e-15);
+    }
+    {
+        const auto weights = make_tensor<scalar_t>(make_dims(1, 13), 0, 0, 0, 0, 0, 1, -2, -3, 0, 0, 0, 0, 0);
+        const auto feature_importance  = linear::feature_importance(dataset, weights);
+        const auto expected_importance = make_tensor<scalar_t>(make_dims(4), 0, 1, 2, 3);
+
+        UTEST_CHECK_CLOSE(feature_importance, expected_importance, 1e-15);
+    }
+}
+
+UTEST_CASE(sparsity_ratio)
+{
+    const auto feature_importance = make_tensor<scalar_t>(make_dims(8), 0.0, 1e-9, 1e-3, 1e-1, 1e-7, 1e-7, 1e-1, 1e+1);
+
+    UTEST_CHECK_CLOSE(linear::sparsity_ratio(feature_importance, 1e-10), 1.0 / 8.0, 1e-15);
+    UTEST_CHECK_CLOSE(linear::sparsity_ratio(feature_importance, 1e-8), 2.0 / 8.0, 1e-15);
+    UTEST_CHECK_CLOSE(linear::sparsity_ratio(feature_importance, 1e-6), 4.0 / 8.0, 1e-15);
+    UTEST_CHECK_CLOSE(linear::sparsity_ratio(feature_importance, 1e-2), 5.0 / 8.0, 1e-15);
+}
+
 UTEST_END_MODULE()
