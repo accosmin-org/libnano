@@ -4,6 +4,7 @@
 #include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
+#include <nano/linear/util.h>
 
 using namespace nano;
 
@@ -120,16 +121,20 @@ int unsafe_main(int argc, const char* argv[])
         // TODO: check the selected features are the expected ones(lasso, elasticnet)
         // TODO: compute some sparsity factor
         // TODO: synthetic linear dataset (classification and regression) with known relevant feature sets
-        auto feature_weights = make_full_tensor<scalar_t>(make_dims(dataset.features()), 0.0);
+        const auto feature_importance = linear::feature_importance(dataset, model.weights());
 
-        const auto& weights = model.weights();
-        for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
+        log_info() << std::fixed << std::setprecision(6) << "sparsity_ratio:"
+                   << " @1e-2=" << linear::sparsity_ratio(feature_importance, 1e-2)
+                   << ",@1e-3=" << linear::sparsity_ratio(feature_importance, 1e-3)
+                   << ",@1e-4=" << linear::sparsity_ratio(feature_importance, 1e-4)
+                   << ",@1e-5=" << linear::sparsity_ratio(feature_importance, 1e-5)
+                   << ",@1e-6=" << linear::sparsity_ratio(feature_importance, 1e-6);
+
+        for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ifeature)
         {
-            const auto feature = dataset.column2feature(column);
-            feature_weights(feature) += weights.matrix().col(column).array().abs().sum();
+            const auto& feature = dataset.feature(ifeature);
+            log_info() << "feature=" << feature << ",importance=" << feature_importance(ifeature);
         }
-
-        std::cout << "feature_weights=" << feature_weights << std::endl;
 
         (void)test_samples;
         // const auto tr_samples = rdatasource->train_samples();
