@@ -4,6 +4,7 @@
 #include "fixture/splitter.h"
 #include "fixture/tuner.h"
 #include <nano/linear/enums.h>
+#include <nano/linear/util.h>
 
 using namespace nano;
 using namespace nano::ml;
@@ -69,6 +70,18 @@ void check_model(const linear_model_t& model, const dataset_t& dataset, const in
         UTEST_CHECK_CLOSE(outputs, new_outputs, epsilon0<scalar_t>());
     }
 }
+
+void check_importance(const linear_model_t& model, const dataset_t& dataset)
+{
+    const auto importance = linear::feature_importance(dataset, model.weights());
+    const auto sparsity   = linear::sparsity_ratio(importance);
+    UTEST_REQUIRE_EQUAL(importance.size(), 4);
+    UTEST_CHECK_LESS(importance(0), 1e-6);
+    UTEST_CHECK_GREATER(importance(1), 1e-1);
+    UTEST_CHECK_GREATER(importance(2), 1e-1);
+    UTEST_CHECK_GREATER(importance(3), 1e-1);
+    UTEST_CHECK_CLOSE(sparsity, 0.25, 1e-15);
+}
 } // namespace
 
 UTEST_BEGIN_MODULE(test_linear_model)
@@ -96,6 +109,7 @@ UTEST_CASE(regularization_none)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
+        check_importance(model, dataset);
     }
 }
 
@@ -122,6 +136,7 @@ UTEST_CASE(regularization_lasso)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
+        check_importance(model, dataset);
     }
 }
 
@@ -148,6 +163,7 @@ UTEST_CASE(regularization_ridge)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
+        check_importance(model, dataset);
     }
 }
 
@@ -174,6 +190,7 @@ UTEST_CASE(regularization_elasticnet)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
+        check_importance(model, dataset);
     }
 }
 
