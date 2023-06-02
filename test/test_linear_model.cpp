@@ -76,8 +76,8 @@ void check_importance(const linear_model_t& model, const dataset_t& dataset)
     const auto importance = linear::feature_importance(dataset, model.weights());
     const auto sparsity   = linear::sparsity_ratio(importance);
     UTEST_REQUIRE_EQUAL(importance.size(), 4);
-    UTEST_CHECK_LESS(importance(0), 1e-6);
-    UTEST_CHECK_GREATER(importance(1), 1e-1);
+    UTEST_CHECK_GREATER(importance(0), 1e-6);
+    UTEST_CHECK_LESS(importance(1), 1e-1);
     UTEST_CHECK_GREATER(importance(2), 1e-1);
     UTEST_CHECK_GREATER(importance(3), 1e-1);
     UTEST_CHECK_CLOSE(sparsity, 0.25, 1e-15);
@@ -88,7 +88,7 @@ UTEST_BEGIN_MODULE(test_linear_model)
 
 UTEST_CASE(regularization_none)
 {
-    const auto datasource = make_linear_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -115,7 +115,7 @@ UTEST_CASE(regularization_none)
 
 UTEST_CASE(regularization_lasso)
 {
-    const auto datasource = make_linear_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -142,7 +142,7 @@ UTEST_CASE(regularization_lasso)
 
 UTEST_CASE(regularization_ridge)
 {
-    const auto datasource = make_linear_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
@@ -169,7 +169,7 @@ UTEST_CASE(regularization_ridge)
 
 UTEST_CASE(regularization_elasticnet)
 {
-    const auto datasource = make_linear_datasource(100, 1, 4);
+    const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 

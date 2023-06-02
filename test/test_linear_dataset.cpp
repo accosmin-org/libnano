@@ -32,10 +32,8 @@ UTEST_CASE(dataset)
     const auto targets  = tensor_size_t{3};
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
-    const auto modulo   = tensor_size_t{31};
-    const auto noise    = 0.0;
 
-    const auto datasource = make_linear_datasource(samples, targets, features, modulo, noise);
+    const auto datasource = make_linear_datasource(samples, targets, features);
     const auto dataset    = make_dataset(datasource);
 
     UTEST_CHECK_EQUAL(dataset.target(), feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));
@@ -47,6 +45,7 @@ UTEST_CASE(dataset)
     UTEST_REQUIRE_EQUAL(weights.rows(), targets);
     UTEST_REQUIRE_EQUAL(weights.cols(), 13 * features / 4);
 
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
     UTEST_CHECK_EQUAL(dataset.features(), features);
     UTEST_CHECK_EQUAL(dataset.samples(), samples);
     UTEST_CHECK_EQUAL(datasource.test_samples(), arange(0, 0));
@@ -60,14 +59,12 @@ UTEST_CASE(seed)
     const auto targets  = tensor_size_t{3};
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
-    const auto modulo   = tensor_size_t{31};
-    const auto noise    = 0.0;
     const auto seed1    = 42U;
     const auto seed2    = 43U;
 
-    const auto datasource11 = make_linear_datasource(samples, targets, features, modulo, noise, seed1);
-    const auto datasource12 = make_linear_datasource(samples, targets, features, modulo, noise, seed1);
-    const auto datasource21 = make_linear_datasource(samples, targets, features, modulo, noise, seed2);
+    const auto datasource11 = make_linear_datasource(samples, targets, features, "datasource::linear::seed", seed1);
+    const auto datasource12 = make_linear_datasource(samples, targets, features, "datasource::linear::seed", seed1);
+    const auto datasource21 = make_linear_datasource(samples, targets, features, "datasource::linear::seed", seed2);
 
     const auto dataset11 = make_dataset(datasource11);
     const auto dataset12 = make_dataset(datasource12);

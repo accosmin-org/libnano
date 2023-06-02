@@ -1,3 +1,4 @@
+#include "fixture/configurable.h"
 #include "fixture/dataset.h"
 #include "fixture/learner.h"
 #include <nano/dataset/iterator.h>
@@ -8,17 +9,15 @@
 using namespace nano;
 using namespace nano::ml;
 
+template <typename... targs>
 [[maybe_unused]] static auto make_linear_datasource(const tensor_size_t samples, const tensor_size_t targets,
-                                                    const tensor_size_t features, const tensor_size_t modulo = 31,
-                                                    const scalar_t noise = 0.0, const uint64_t seed = 42)
+                                                    const tensor_size_t features, const targs... args)
 {
     auto datasource                                      = linear_datasource_t{};
     datasource.parameter("datasource::linear::samples")  = samples;
     datasource.parameter("datasource::linear::targets")  = targets;
     datasource.parameter("datasource::linear::features") = features;
-    datasource.parameter("datasource::linear::noise")    = noise;
-    datasource.parameter("datasource::linear::modulo")   = modulo;
-    datasource.parameter("datasource::linear::seed")     = seed;
+    ::config(datasource, args...);
     UTEST_REQUIRE_NOTHROW(datasource.load());
     return datasource;
 }

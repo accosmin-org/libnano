@@ -42,14 +42,15 @@ linear_datasource_t::linear_datasource_t()
 {
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
+    register_parameter(parameter_t::make_enum("datasource::linear::task", task_type::regression));
     register_parameter(parameter_t::make_integer("datasource::linear::seed", 0, LE, 42, LE, 1024));
-    register_parameter(parameter_t::make_integer("datasource::linear::modulo", 1, LE, 3, LE, 1000));
     register_parameter(parameter_t::make_integer("datasource::linear::samples", 10, LE, 100, LE, 1e+6));
     register_parameter(parameter_t::make_integer("datasource::linear::features", 1, LE, 1, LE, 1e+6));
     register_parameter(parameter_t::make_integer("datasource::linear::targets", 1, LE, 1, LE, 1e+3));
 
     register_parameter(parameter_t::make_scalar("datasource::linear::noise", 0.0, LE, 0.0, LE, fmax));
-    register_parameter(parameter_t::make_scalar("datasource::linear::missing_percentage", 0, LE, 0, LE, 100));
+    register_parameter(parameter_t::make_scalar("datasource::linear::relevant", 0, LE, 100, LE, 100));
+    register_parameter(parameter_t::make_scalar("datasource::linear::missing", 0, LE, 0, LE, 100));
 }
 
 rdatasource_t linear_datasource_t::clone() const
@@ -59,13 +60,14 @@ rdatasource_t linear_datasource_t::clone() const
 
 void linear_datasource_t::do_load()
 {
+    // const auto task      = parameter("datasource::linear::task").value<task_type>();
     const auto seed      = parameter("datasource::linear::seed").value<uint64_t>();
-    const auto modulo    = parameter("datasource::linear::modulo").value<tensor_size_t>();
     const auto samples   = parameter("datasource::linear::samples").value<tensor_size_t>();
     const auto nfeatures = parameter("datasource::linear::features").value<tensor_size_t>();
     const auto ntargets  = parameter("datasource::linear::targets").value<tensor_size_t>();
     const auto noise     = parameter("datasource::linear::noise").value<scalar_t>();
-    const auto missing   = parameter("datasource::linear::missing_percentage").value<int>();
+    const auto missing   = parameter("datasource::linear::missing").value<int>();
+    const auto relevant  = parameter("datasource::linear::relevant").value<int>();
 
     const auto features = ::make_features(nfeatures, ntargets);
     const auto itarget  = features.size() - 1U;
@@ -73,8 +75,10 @@ void linear_datasource_t::do_load()
 
     auto rng   = make_rng(seed);
     auto mdist = make_udist<int>(0, 99);
+    auto rdist = make_udist<int>(0, 99);
     auto sdist = make_udist<uint64_t>(0, 1024);
 
+    // generate random inputs
     const auto hitter = [&]() { return mdist(rng) >= missing; };
 
     tensor_size_t ifeature = 0;
@@ -122,17 +126,19 @@ void linear_datasource_t::do_load()
         ++ifeature;
     }
 
-    // create samples: target = weights * input + bias + noise
+    // generate targets: target = weights * input + bias + noise
     const auto dataset = ::make_dataset(*this);
     const auto targets = ::nano::size(dataset.target_dims());
 
     m_bias    = make_random_tensor<scalar_t>(make_dims(targets), -1.0, +1.0, sdist(rng));
     m_weights = make_random_tensor<scalar_t>(make_dims(targets, dataset.columns()), -1.0, +1.0, sdist(rng));
 
+    auto irelevant = make_full_tensor<tensor_size_t>(make_dims(dataset.features()), 0);
+    std::for_each(irelevant.begin(), irelevant.end(), [&](auto& value) { value = rdist(rng) >= relevant; });
     for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
     {
         const auto feature = dataset.column2feature(column);
-        if (feature % modulo == 0)
+        if (irelevant(feature) != 0)
         {
             m_weights.matrix().col(column).setConstant(0.0);
         }
