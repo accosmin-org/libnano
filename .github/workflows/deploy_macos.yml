@@ -10,7 +10,7 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os: [macos-11, macos-12]
+        os: [macos-11, macos-12, macos-13]
         build_type: [Release, Debug]
         build_shared_libs: [OFF, ON]
 
