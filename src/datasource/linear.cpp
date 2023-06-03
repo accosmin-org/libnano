@@ -130,15 +130,15 @@ void linear_datasource_t::do_load()
     const auto dataset = ::make_dataset(*this);
     const auto targets = ::nano::size(dataset.target_dims());
 
-    m_bias    = make_random_tensor<scalar_t>(make_dims(targets), -1.0, +1.0, sdist(rng));
-    m_weights = make_random_tensor<scalar_t>(make_dims(targets, dataset.columns()), -1.0, +1.0, sdist(rng));
+    m_bias          = make_random_tensor<scalar_t>(make_dims(targets), -1.0, +1.0, sdist(rng));
+    m_weights       = make_random_tensor<scalar_t>(make_dims(targets, dataset.columns()), -1.0, +1.0, sdist(rng));
+    m_relevant_mask = make_full_tensor<tensor_size_t>(make_dims(dataset.features()), 0);
+    std::for_each(m_relevant_mask.begin(), m_relevant_mask.end(), [&](auto& value) { value = rdist(rng) < relevant; });
 
-    auto irelevant = make_full_tensor<tensor_size_t>(make_dims(dataset.features()), 0);
-    std::for_each(irelevant.begin(), irelevant.end(), [&](auto& value) { value = rdist(rng) >= relevant; });
     for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
     {
         const auto feature = dataset.column2feature(column);
-        if (irelevant(feature) != 0)
+        if (m_relevant_mask(feature) == 0)
         {
             m_weights.matrix().col(column).setConstant(0.0);
         }

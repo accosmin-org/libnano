@@ -71,16 +71,28 @@ void check_model(const linear_model_t& model, const dataset_t& dataset, const in
     }
 }
 
-void check_importance(const linear_model_t& model, const dataset_t& dataset)
+void check_importance(const linear_model_t& model, const dataset_t& dataset, const indices_t& relevancy)
 {
-    const auto importance = linear::feature_importance(dataset, model.weights());
-    const auto sparsity   = linear::sparsity_ratio(importance);
-    UTEST_REQUIRE_EQUAL(importance.size(), 4);
-    UTEST_CHECK_GREATER(importance(0), 1e-6);
-    UTEST_CHECK_LESS(importance(1), 1e-1);
-    UTEST_CHECK_GREATER(importance(2), 1e-1);
-    UTEST_CHECK_GREATER(importance(3), 1e-1);
-    UTEST_CHECK_CLOSE(sparsity, 0.25, 1e-15);
+    const auto importance         = linear::feature_importance(dataset, model.weights());
+    const auto sparsity           = linear::sparsity_ratio(importance);
+    const auto expected_revelancy = static_cast<scalar_t>(relevancy.sum()) / static_cast<scalar_t>(dataset.features());
+
+    UTEST_REQUIRE_EQUAL(relevancy.size(), dataset.features());
+    UTEST_REQUIRE_EQUAL(relevancy.size(), importance.size());
+
+    for (tensor_size_t feature = 0, features = dataset.features(); feature < features; ++feature)
+    {
+        if (relevancy(feature) != 0)
+        {
+            UTEST_CHECK_GREATER(importance(feature), 1e-1);
+        }
+        else
+        {
+            UTEST_CHECK_LESS(importance(feature), 1e-6);
+        }
+    }
+
+    UTEST_CHECK_CLOSE(sparsity, 1.0 - expected_revelancy, 1e-15);
 }
 } // namespace
 
@@ -109,7 +121,7 @@ UTEST_CASE(regularization_none)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset);
+        check_importance(model, dataset, datasource.relevant_feature_mask());
     }
 }
 
@@ -136,7 +148,7 @@ UTEST_CASE(regularization_lasso)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset);
+        check_importance(model, dataset, datasource.relevant_feature_mask());
     }
 }
 
@@ -163,7 +175,7 @@ UTEST_CASE(regularization_ridge)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset);
+        check_importance(model, dataset, datasource.relevant_feature_mask());
     }
 }
 
@@ -190,7 +202,7 @@ UTEST_CASE(regularization_elasticnet)
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset);
+        check_importance(model, dataset, datasource.relevant_feature_mask());
     }
 }
 
