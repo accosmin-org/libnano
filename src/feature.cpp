@@ -49,7 +49,17 @@ feature_t& feature_t::mclass(size_t count)
     return *this;
 }
 
+size_t feature_t::set_label(const char* label) const
+{
+    return set_label(std::string_view(label));
+}
+
 size_t feature_t::set_label(const string_t& label) const
+{
+    return set_label(std::string_view{label});
+}
+
+size_t feature_t::set_label(const std::string_view& label) const
 {
     if (label.empty())
     {

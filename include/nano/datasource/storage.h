@@ -46,7 +46,8 @@ public:
     void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
     {
         tensor_size_t label = 0; // NOLINT(misc-const-correctness)
-        if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*>)
+        if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*> ||
+                      std::is_same_v<tvalue, std::string_view>)
         {
             label = static_cast<tensor_size_t>(m_feature.set_label(value)); // NOLINT(cert-str34-c)
         }
@@ -100,7 +101,8 @@ public:
     template <typename tscalar, typename tvalue>
     void set(const tensor_map_t<tscalar, 4>& data, [[maybe_unused]] tensor_size_t sample, const tvalue& value) const
     {
-        if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*>)
+        if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*> ||
+                      std::is_same_v<tvalue, std::string_view>)
         {
             critical(::nano::size(dims()) != 1, "in-memory dataset: cannot set scalar feature <", name(),
                      ">: invalid tensor dimensions ", dims(), "!");
@@ -129,7 +131,7 @@ public:
 
 private:
     template <typename tscalar>
-    auto check_from_string(const char* type, const string_t& value) const
+    auto check_from_string(const char* type, const std::string_view& value) const
     {
         tscalar scalar;
         try

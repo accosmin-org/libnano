@@ -75,7 +75,9 @@ public:
     /// \brief try to add the given label if possible.
     /// NB: this is useful when the labels are discovered while loading some dataset.
     ///
+    size_t set_label(const char* label) const;
     size_t set_label(const string_t& label) const;
+    size_t set_label(const std::string_view& label) const;
 
     ///
     /// \brief returns true if the feature is valid (aka defined).

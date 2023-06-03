@@ -66,21 +66,17 @@ public:
     ///
     /// \brief returns the current token.
     ///
-    auto get() const
-    {
-        // todo: return a std::string_view when moving to C++17
-        return m_str.substr(m_pos, m_end - m_pos);
-    }
+    std::string_view get() const { return {m_str.data() + m_pos, m_end - m_pos}; };
 
     ///
     /// \brief returns the begining of the current token.
     ///
-    auto pos() const { return m_pos; }
+    size_t pos() const { return m_pos; }
 
     ///
     /// \brief returns the number of tokens found so far.
     ///
-    auto count() const { return m_count; }
+    size_t count() const { return m_count; }
 
 private:
     void next()

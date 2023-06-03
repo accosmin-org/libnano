@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <charconv>
 #include <nano/string.h>
 #include <regex>
 #include <sstream>
@@ -124,30 +125,27 @@ string_t scat(const tvalues&... values)
 
 ///
 /// \brief cast string to value.
-/// FIXME: use std::string_view instead of std::string (more efficient when used with tokenizer) when
-///        gcc (and clang) supports properly std::from_chars.
 ///
 template <typename tvalue>
-tvalue from_string(const string_t& str)
+tvalue from_string(const std::string_view& str)
 {
-    if constexpr (std::is_integral_v<tvalue>)
+    if constexpr (std::is_arithmetic_v<tvalue>)
     {
-        if constexpr (std::is_signed_v<tvalue>)
+        tvalue result{};
+        [[maybe_unused]] const auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+        if (ec == std::errc::invalid_argument)
         {
-            return static_cast<tvalue>(std::stoll(str));
+            throw std::invalid_argument("cannot interpret the string as an integer");
         }
-        else
+        else if (ec == std::errc::result_out_of_range)
         {
-            return static_cast<tvalue>(std::stoull(str));
+            throw std::out_of_range("out of range integer");
         }
+        return result;
     }
-    else if constexpr (std::is_floating_point_v<tvalue>)
+    else if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, std::string_view>)
     {
-        return static_cast<tvalue>(std::stold(str));
-    }
-    else if constexpr (std::is_same_v<tvalue, string_t>)
-    {
-        return str;
+        return tvalue{str};
     }
     else if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
     {
@@ -175,7 +173,7 @@ tvalue from_string(const string_t& str)
 /// \brief cast string to value and use the given default value if casting fails.
 ///
 template <typename tvalue>
-tvalue from_string(const string_t& str, const tvalue& default_value)
+tvalue from_string(const std::string_view& str, const tvalue& default_value)
 {
     try
     {

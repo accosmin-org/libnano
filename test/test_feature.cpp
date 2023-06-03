@@ -58,13 +58,19 @@ UTEST_CASE(task_type)
         UTEST_CHECK_EQUAL(scat(feature.task()), "unsupervised");
     }
     {
-        const auto feature = feature_t{"feature"}.sclass(7);
+        const auto feature = feature_t{"feature"}.sclass(3);
         UTEST_CHECK(feature.is_sclass());
         UTEST_CHECK(!feature.is_mclass());
         UTEST_CHECK(!feature.is_scalar());
         UTEST_CHECK(!feature.is_struct());
         UTEST_CHECK_EQUAL(feature.task(), task_type::sclassification);
         UTEST_CHECK_EQUAL(scat(feature.task()), "sclassification");
+        UTEST_CHECK_EQUAL(feature.set_label("label0"), 0U);
+        UTEST_CHECK_EQUAL(feature.set_label("label1"), 1U);
+        UTEST_CHECK_EQUAL(feature.set_label("label2"), 2U);
+        UTEST_CHECK_EQUAL(feature.set_label("label0"), 0U);
+        UTEST_CHECK_EQUAL(feature.set_label("label3"), string_t::npos);
+        UTEST_CHECK_EQUAL(feature.set_label("label1"), 1U);
     }
     {
         const auto feature = feature_t{"feature"}.mclass(7);

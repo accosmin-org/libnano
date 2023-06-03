@@ -205,7 +205,7 @@ cmdline_t::result_t cmdline_t::process(const string_t& config) const
     strings_t tokens;
     for (auto tokenizer = tokenizer_t{config, " \t\n\r"}; tokenizer; ++tokenizer)
     {
-        tokens.push_back(tokenizer.get());
+        tokens.emplace_back(tokenizer.get());
     }
 
     std::vector<const char*> ptokens(tokens.size() + 1, nullptr);

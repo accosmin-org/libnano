@@ -100,7 +100,7 @@ void tabular_datasource_t::parse(const csv_t& csv, const string_t& line, tensor_
             {
                 set(sample, static_cast<tensor_size_t>(f), token);
             }
-            catch (const std::exception&)
+            catch (const std::exception& e)
             {
                 critical0("tabular dataset: invalid line [", line, "]@", csv.m_path, ":", line_index,
                           ", invalid token [", token, "] for feature (", feature, ")!");
