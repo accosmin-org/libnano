@@ -22,6 +22,7 @@ set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
 include(GNUInstallDirs)
+include(CheckCXXSourceCompiles)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 
 exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
@@ -31,6 +32,17 @@ exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/nano/version.h")
+
+file(READ
+    "${CMAKE_SOURCE_DIR}/cmake/test_from_chars_float.cpp"
+    TEST_FROM_CHARS_FLOAT_SOURCE)
+
+check_cxx_source_compiles(
+    "${TEST_FROM_CHARS_FLOAT_SOURCE}"
+    PLATFORM_HAS_FROM_CHARS_FLOAT)
+if(PLATFORM_HAS_FROM_CHARS_FLOAT)
+    add_compile_definitions(NANO_HAS_FROM_CHARS_FLOAT)
+endif()
 
 ##################################################################################################
 # setup dependencies
@@ -118,6 +130,7 @@ message(STATUS "CXX RELEASE FLAGS:             " "${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CXX RELWITHDEBINFO FLAGS:      " "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message(STATUS "CXX MINSIZEREL FLAGS:          " "${CMAKE_CXX_FLAGS_MINSIZEREL}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS:        " "${CMAKE_EXE_LINKER_FLAGS}")
+message(STATUS "PLATFORM_HAS_FROM_CHARS_FLOAT: " "${PLATFORM_HAS_FROM_CHARS_FLOAT}")
 message(STATUS "------------------------------------------------------------------------------" "")
 message(STATUS "BUILD TYPE:                    " "${CMAKE_BUILD_TYPE}")
 message(STATUS "SHARED LIBS:                   " "${BUILD_SHARED_LIBS}")

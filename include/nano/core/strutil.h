@@ -113,6 +113,22 @@ void scat(std::ostringstream& stream, const tvalues&... values)
 {
     (scat(stream, values), ...);
 }
+
+template <typename tvalue>
+tvalue from_chars(const std::string_view& str)
+{
+    auto result                           = tvalue{};
+    [[maybe_unused]] const auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+    if (ec == std::errc::invalid_argument)
+    {
+        throw std::invalid_argument("cannot interpret the string as an integer");
+    }
+    else if (ec == std::errc::result_out_of_range)
+    {
+        throw std::out_of_range("out of range integer");
+    }
+    return result;
+}
 } // namespace detail
 
 template <typename... tvalues>
@@ -124,24 +140,26 @@ string_t scat(const tvalues&... values)
 }
 
 ///
-/// \brief cast string to value.
+/// \brief cast string to scalar value.
+/// NB: the enumerations are handled separetely.
 ///
 template <typename tvalue>
 tvalue from_string(const std::string_view& str)
 {
     if constexpr (std::is_arithmetic_v<tvalue>)
     {
-        tvalue result{};
-        [[maybe_unused]] const auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
-        if (ec == std::errc::invalid_argument)
+#ifdef NANO_HAS_FROM_CHARS_FLOAT
+        return detail::from_chars<tvalue>(str);
+#else
+        if constexpr (std::is_integral_v<tvalue>)
         {
-            throw std::invalid_argument("cannot interpret the string as an integer");
+            return detail::from_chars<tvalue>(str);
         }
-        else if (ec == std::errc::result_out_of_range)
+        else if constexpr (std::is_floating_point_v<tvalue>)
         {
-            throw std::out_of_range("out of range integer");
+            return static_cast<tvalue>(std::stold(string_t{str}));
         }
-        return result;
+#endif
     }
     else if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, std::string_view>)
     {
