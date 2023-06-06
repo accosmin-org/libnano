@@ -30,7 +30,7 @@ auto make_features()
 class fixture_datasource_t final : public datasource_t
 {
 public:
-    fixture_datasource_t(const tensor_size_t samples, const features_t features, size_t target)
+    fixture_datasource_t(const tensor_size_t samples, features_t features, const size_t target)
         : datasource_t("fixture")
         , m_samples(samples)
         , m_features(std::move(features))
@@ -155,8 +155,10 @@ public:
 
     auto data10() const // NOLINT(readability-convert-member-functions-to-static)
     {
-        return make_tensor<uint8_t>(make_dims(25), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0);
+        return m_target == 10U ? make_tensor<uint8_t>(make_dims(25), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
+                                                      1, 0, 1, 0, 1, 0, 1, 0)
+                               : make_tensor<uint8_t>(make_dims(25), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                      0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     auto data11() const
@@ -234,12 +236,27 @@ private:
     bool          m_do_load{true};
 };
 
-auto make_dataset(tensor_size_t samples, const features_t& features, size_t target)
+auto make_datasource(tensor_size_t samples, const features_t& features, size_t target)
 {
-    auto dataset = fixture_datasource_t{samples, features, target};
-    UTEST_CHECK_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.samples(), samples);
-    return dataset;
+    auto datasource = fixture_datasource_t{samples, features, target};
+    UTEST_CHECK_NOTHROW(datasource.load());
+    UTEST_CHECK_EQUAL(datasource.samples(), samples);
+    return datasource;
+}
+
+template <typename tdata>
+void check_inputs_or_target(const datasource_t& datasource, const features_t& features, const size_t ifeature,
+                            const size_t target, const tdata& data, const mask_cmap_t& mask)
+{
+    if (ifeature == target)
+    {
+        check_target(datasource, features[ifeature], data, mask);
+    }
+    else
+    {
+        check_inputs(datasource, static_cast<tensor_size_t>(ifeature < target ? ifeature : (ifeature - 1U)),
+                     features[ifeature], data, mask);
+    }
 }
 } // namespace
 
@@ -247,38 +264,38 @@ UTEST_BEGIN_MODULE(test_datasource_memory)
 
 UTEST_CASE(check_samples)
 {
-    const auto features = make_features();
-    const auto samples  = ::nano::arange(0, 100);
-    auto       dataset  = make_dataset(samples.size(), features, string_t::npos);
+    const auto features   = make_features();
+    const auto samples    = ::nano::arange(0, 100);
+    auto       datasource = make_datasource(samples.size(), features, string_t::npos);
     {
-        const auto test_samples = dataset.test_samples();
+        const auto test_samples = datasource.test_samples();
         UTEST_CHECK_EQUAL(test_samples.size(), 0);
 
-        const auto train_samples = dataset.train_samples();
+        const auto train_samples = datasource.train_samples();
         UTEST_CHECK_EQUAL(train_samples.size(), 100);
         UTEST_CHECK_EQUAL(train_samples, ::nano::arange(0, 100));
     }
     {
-        dataset.testing(make_range(0, 10));
-        dataset.testing(make_range(20, 50));
+        datasource.testing(make_range(0, 10));
+        datasource.testing(make_range(20, 50));
 
-        const auto test_samples = dataset.test_samples();
+        const auto test_samples = datasource.test_samples();
         UTEST_CHECK_EQUAL(test_samples.size(), 40);
         UTEST_CHECK_EQUAL(test_samples.slice(0, 10), ::nano::arange(0, 10));
         UTEST_CHECK_EQUAL(test_samples.slice(10, 40), ::nano::arange(20, 50));
 
-        const auto train_samples = dataset.train_samples();
+        const auto train_samples = datasource.train_samples();
         UTEST_CHECK_EQUAL(train_samples.size(), 60);
         UTEST_CHECK(train_samples.slice(0, 10) == ::nano::arange(10, 20));
         UTEST_CHECK(train_samples.slice(10, 60) == ::nano::arange(50, 100));
     }
     {
-        dataset.no_testing();
+        datasource.no_testing();
 
-        const auto test_samples = dataset.test_samples();
+        const auto test_samples = datasource.test_samples();
         UTEST_CHECK_EQUAL(test_samples.size(), 0);
 
-        const auto train_samples = dataset.train_samples();
+        const auto train_samples = datasource.train_samples();
         UTEST_CHECK_EQUAL(train_samples.size(), 100);
         UTEST_CHECK_EQUAL(train_samples, ::nano::arange(0, 100));
     }
@@ -286,98 +303,55 @@ UTEST_CASE(check_samples)
 
 UTEST_CASE(datasource_target_NA)
 {
-    const auto features = make_features();
-    const auto samples  = ::nano::arange(0, 25);
-    const auto dataset  = make_dataset(samples.size(), features, string_t::npos);
+    const auto features   = make_features();
+    const auto samples    = ::nano::arange(0, 25);
+    const auto datasource = make_datasource(samples.size(), features, string_t::npos);
 
-    UTEST_CHECK_EQUAL(dataset.features(), 13);
-    UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
+    UTEST_CHECK_EQUAL(datasource.features(), 13);
+    UTEST_CHECK_EQUAL(datasource.type(), task_type::unsupervised);
 
-    check_inputs(dataset, 0, features[0U], dataset.data0(), dataset.mask0());
-    check_inputs(dataset, 1, features[1U], dataset.data1(), dataset.mask1());
-    check_inputs(dataset, 2, features[2U], dataset.data2(), dataset.mask2());
-    check_inputs(dataset, 3, features[3U], dataset.data3(), dataset.mask3());
-    check_inputs(dataset, 4, features[4U], dataset.data4(), dataset.mask4());
-    check_inputs(dataset, 5, features[5U], dataset.data5(), dataset.mask5());
-    check_inputs(dataset, 6, features[6U], dataset.data6(), dataset.mask6());
-    check_inputs(dataset, 7, features[7U], dataset.data7(), dataset.mask7());
-    check_inputs(dataset, 8, features[8U], dataset.data8(), dataset.mask8());
-    check_inputs(dataset, 9, features[9U], dataset.data9(), dataset.mask9());
-    check_inputs(dataset, 10, features[10U], dataset.data10(), dataset.mask10());
-    check_inputs(dataset, 11, features[11U], dataset.data11(), dataset.mask11());
-    check_inputs(dataset, 12, features[12U], dataset.data12(), dataset.mask12());
+    check_inputs(datasource, 0, features[0U], datasource.data0(), datasource.mask0());
+    check_inputs(datasource, 1, features[1U], datasource.data1(), datasource.mask1());
+    check_inputs(datasource, 2, features[2U], datasource.data2(), datasource.mask2());
+    check_inputs(datasource, 3, features[3U], datasource.data3(), datasource.mask3());
+    check_inputs(datasource, 4, features[4U], datasource.data4(), datasource.mask4());
+    check_inputs(datasource, 5, features[5U], datasource.data5(), datasource.mask5());
+    check_inputs(datasource, 6, features[6U], datasource.data6(), datasource.mask6());
+    check_inputs(datasource, 7, features[7U], datasource.data7(), datasource.mask7());
+    check_inputs(datasource, 8, features[8U], datasource.data8(), datasource.mask8());
+    check_inputs(datasource, 9, features[9U], datasource.data9(), datasource.mask9());
+    check_inputs(datasource, 10, features[10U], datasource.data10(), datasource.mask10());
+    check_inputs(datasource, 11, features[11U], datasource.data11(), datasource.mask11());
+    check_inputs(datasource, 12, features[12U], datasource.data12(), datasource.mask12());
 }
 
-UTEST_CASE(datasource_target_0U)
+UTEST_CASE(datasource_target)
 {
     const auto features = make_features();
     const auto samples  = ::nano::arange(0, 25);
-    const auto dataset  = make_dataset(samples.size(), features, 0U);
+    for (size_t target = 0U; target < 13U; ++target)
+    {
+        const auto datasource = make_datasource(samples.size(), features, target);
 
-    UTEST_CHECK_EQUAL(dataset.features(), 12);
-    UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
+        UTEST_CHECK_EQUAL(datasource.features(), 12);
+        UTEST_CHECK_EQUAL(datasource.type(), target < 10U   ? task_type::regression
+                                             : target < 12U ? task_type::sclassification
+                                                            : task_type::mclassification);
 
-    check_target(dataset, features[0U], dataset.data0(), dataset.mask0());
-    check_inputs(dataset, 0, features[1U], dataset.data1(), dataset.mask1());
-    check_inputs(dataset, 1, features[2U], dataset.data2(), dataset.mask2());
-    check_inputs(dataset, 2, features[3U], dataset.data3(), dataset.mask3());
-    check_inputs(dataset, 3, features[4U], dataset.data4(), dataset.mask4());
-    check_inputs(dataset, 4, features[5U], dataset.data5(), dataset.mask5());
-    check_inputs(dataset, 5, features[6U], dataset.data6(), dataset.mask6());
-    check_inputs(dataset, 6, features[7U], dataset.data7(), dataset.mask7());
-    check_inputs(dataset, 7, features[8U], dataset.data8(), dataset.mask8());
-    check_inputs(dataset, 8, features[9U], dataset.data9(), dataset.mask9());
-    check_inputs(dataset, 9, features[10U], dataset.data10(), dataset.mask10());
-    check_inputs(dataset, 10, features[11U], dataset.data11(), dataset.mask11());
-    check_inputs(dataset, 11, features[12U], dataset.data12(), dataset.mask12());
-}
-
-UTEST_CASE(datasource_target_11U)
-{
-    const auto features = make_features();
-    const auto samples  = ::nano::arange(0, 25);
-    const auto dataset  = make_dataset(samples.size(), features, 11U);
-
-    UTEST_CHECK_EQUAL(dataset.features(), 12);
-    UTEST_CHECK_EQUAL(dataset.type(), task_type::sclassification);
-
-    check_inputs(dataset, 0, features[0U], dataset.data0(), dataset.mask0());
-    check_inputs(dataset, 1, features[1U], dataset.data1(), dataset.mask1());
-    check_inputs(dataset, 2, features[2U], dataset.data2(), dataset.mask2());
-    check_inputs(dataset, 3, features[3U], dataset.data3(), dataset.mask3());
-    check_inputs(dataset, 4, features[4U], dataset.data4(), dataset.mask4());
-    check_inputs(dataset, 5, features[5U], dataset.data5(), dataset.mask5());
-    check_inputs(dataset, 6, features[6U], dataset.data6(), dataset.mask6());
-    check_inputs(dataset, 7, features[7U], dataset.data7(), dataset.mask7());
-    check_inputs(dataset, 8, features[8U], dataset.data8(), dataset.mask8());
-    check_inputs(dataset, 9, features[9U], dataset.data9(), dataset.mask9());
-    check_inputs(dataset, 10, features[10U], dataset.data10(), dataset.mask10());
-    check_target(dataset, features[11U], dataset.data11(), dataset.mask11());
-    check_inputs(dataset, 11, features[12U], dataset.data12(), dataset.mask12());
-}
-
-UTEST_CASE(datasource_target_12U)
-{
-    const auto features = make_features();
-    const auto samples  = ::nano::arange(0, 25);
-    const auto dataset  = make_dataset(samples.size(), features, 12U);
-
-    UTEST_CHECK_EQUAL(dataset.features(), 12);
-    UTEST_CHECK_EQUAL(dataset.type(), task_type::mclassification);
-
-    check_inputs(dataset, 0, features[0U], dataset.data0(), dataset.mask0());
-    check_inputs(dataset, 1, features[1U], dataset.data1(), dataset.mask1());
-    check_inputs(dataset, 2, features[2U], dataset.data2(), dataset.mask2());
-    check_inputs(dataset, 3, features[3U], dataset.data3(), dataset.mask3());
-    check_inputs(dataset, 4, features[4U], dataset.data4(), dataset.mask4());
-    check_inputs(dataset, 5, features[5U], dataset.data5(), dataset.mask5());
-    check_inputs(dataset, 6, features[6U], dataset.data6(), dataset.mask6());
-    check_inputs(dataset, 7, features[7U], dataset.data7(), dataset.mask7());
-    check_inputs(dataset, 8, features[8U], dataset.data8(), dataset.mask8());
-    check_inputs(dataset, 9, features[9U], dataset.data9(), dataset.mask9());
-    check_inputs(dataset, 10, features[10U], dataset.data10(), dataset.mask10());
-    check_inputs(dataset, 11, features[11U], dataset.data11(), dataset.mask11());
-    check_target(dataset, features[12U], dataset.data12(), dataset.mask12());
+        check_inputs_or_target(datasource, features, 0U, target, datasource.data0(), datasource.mask0());
+        check_inputs_or_target(datasource, features, 1U, target, datasource.data1(), datasource.mask1());
+        check_inputs_or_target(datasource, features, 2U, target, datasource.data2(), datasource.mask2());
+        check_inputs_or_target(datasource, features, 3U, target, datasource.data3(), datasource.mask3());
+        check_inputs_or_target(datasource, features, 4U, target, datasource.data4(), datasource.mask4());
+        check_inputs_or_target(datasource, features, 5U, target, datasource.data5(), datasource.mask5());
+        check_inputs_or_target(datasource, features, 6U, target, datasource.data6(), datasource.mask6());
+        check_inputs_or_target(datasource, features, 7U, target, datasource.data7(), datasource.mask7());
+        check_inputs_or_target(datasource, features, 8U, target, datasource.data8(), datasource.mask8());
+        check_inputs_or_target(datasource, features, 9U, target, datasource.data9(), datasource.mask9());
+        check_inputs_or_target(datasource, features, 10U, target, datasource.data10(), datasource.mask10());
+        check_inputs_or_target(datasource, features, 11U, target, datasource.data11(), datasource.mask11());
+        check_inputs_or_target(datasource, features, 12U, target, datasource.data12(), datasource.mask12());
+    }
 }
 
 UTEST_CASE(invalid_feature_type)
@@ -385,12 +359,12 @@ UTEST_CASE(invalid_feature_type)
     auto features = make_features();
     features[0].scalar(static_cast<feature_type>(-1));
 
-    auto dataset = fixture_datasource_t{100, features, string_t::npos};
-    UTEST_CHECK_THROW(dataset.load(), std::runtime_error);
+    auto datasource = fixture_datasource_t{100, features, string_t::npos};
+    UTEST_CHECK_THROW(datasource.load(), std::runtime_error);
 
-    dataset.actually_do_load(false);
-    UTEST_CHECK_NOTHROW(dataset.load());
-    UTEST_CHECK_THROW(dataset.visit_inputs(0, [](const auto&, const auto&, const auto&) {}), std::runtime_error);
+    datasource.actually_do_load(false);
+    UTEST_CHECK_NOTHROW(datasource.load());
+    UTEST_CHECK_THROW(datasource.visit_inputs(0, [](const auto&, const auto&, const auto&) {}), std::runtime_error);
 }
 
 UTEST_CASE(invalid_targets_type)
@@ -398,12 +372,12 @@ UTEST_CASE(invalid_targets_type)
     auto features = make_features();
     features[0].scalar(static_cast<feature_type>(-1));
 
-    auto dataset = fixture_datasource_t{100, features, string_t::npos};
-    UTEST_CHECK_THROW(dataset.load(), std::runtime_error);
+    auto datasource = fixture_datasource_t{100, features, string_t::npos};
+    UTEST_CHECK_THROW(datasource.load(), std::runtime_error);
 
-    dataset.actually_do_load(false);
-    UTEST_CHECK_NOTHROW(dataset.load());
-    UTEST_CHECK_THROW(dataset.visit_inputs(0, [](const auto&, const auto&, const auto&) {}), std::runtime_error);
+    datasource.actually_do_load(false);
+    UTEST_CHECK_NOTHROW(datasource.load());
+    UTEST_CHECK_THROW(datasource.visit_inputs(0, [](const auto&, const auto&, const auto&) {}), std::runtime_error);
 }
 
 UTEST_END_MODULE()

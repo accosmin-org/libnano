@@ -4,7 +4,7 @@
 using namespace nano;
 
 template <typename tscalar, size_t trank>
-static auto check_inputs(const datasource_t& datasource, tensor_size_t index, const feature_t& gt_feature,
+static auto check_inputs(const datasource_t& datasource, const tensor_size_t index, const feature_t& gt_feature,
                          const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
 {
     const auto visitor = [&](const auto& feature, const auto& data, const auto& mask)
