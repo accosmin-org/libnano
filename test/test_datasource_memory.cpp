@@ -30,7 +30,7 @@ auto make_features()
 class fixture_datasource_t final : public datasource_t
 {
 public:
-    fixture_datasource_t(tensor_size_t samples, features_t features, size_t target)
+    fixture_datasource_t(const tensor_size_t samples, const features_t features, size_t target)
         : datasource_t("fixture")
         , m_samples(samples)
         , m_features(std::move(features))

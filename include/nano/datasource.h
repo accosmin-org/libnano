@@ -138,7 +138,7 @@ protected:
     /// \brief safely write a feature value for the given sample.
     ///
     template <typename tvalue>
-    void set(tensor_size_t sample, tensor_size_t ifeature, const tvalue& value)
+    void set(const tensor_size_t sample, const tensor_size_t ifeature, const tvalue& value)
     {
         assert(sample >= 0 && sample < samples());
         assert(ifeature >= 0 && ifeature < m_storage_range.size<0>());
