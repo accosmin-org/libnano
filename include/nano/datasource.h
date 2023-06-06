@@ -157,21 +157,9 @@ private:
 
     bool has_target() const { return m_target < m_storage_range.size<0>(); }
 
-    mask_cmap_t tmask() const
-    {
-        assert(has_target());
-        return this->mask(m_target);
-    }
+    mask_map_t mask(const tensor_size_t index) { return m_storage_mask.tensor(index); }
 
-    mask_cmap_t imask(tensor_size_t feature) const
-    {
-        assert(feature >= 0 && feature < features());
-        return this->mask(feature >= m_target ? feature + 1 : feature);
-    }
-
-    mask_map_t mask(tensor_size_t index) { return m_storage_mask.tensor(index); }
-
-    mask_cmap_t mask(tensor_size_t index) const { return m_storage_mask.tensor(index); }
+    mask_cmap_t mask(const tensor_size_t index) const { return m_storage_mask.tensor(index); }
 
     template <typename toperator>
     auto visit(const tensor_size_t ifeature, const toperator& op)
