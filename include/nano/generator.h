@@ -126,10 +126,10 @@ protected:
     static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
 
     template <size_t input_rank1, typename toperator>
-    void iterate(indices_cmap_t samples, const tensor_size_t ifeature, const tensor_size_t ioriginal,
+    void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal,
                  const toperator& op) const
     {
-        const auto visitor = [&](const auto&, const auto& data, const auto& mask)
+        const auto visitor = [this, ifeature, &op, &samples](const auto&, const auto& data, const auto& mask)
         {
             if (should_shuffle(ifeature))
             {
@@ -144,10 +144,11 @@ protected:
     }
 
     template <size_t input_rank1, size_t input_rank2, typename toperator>
-    void iterate(indices_cmap_t samples, const tensor_size_t ifeature, const tensor_size_t ioriginal1,
+    void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal1,
                  const tensor_size_t ioriginal2, const toperator& op) const
     {
-        const auto visitor = [&](const auto& data1, const auto& mask1, const auto& data2, const auto& mask2)
+        const auto visitor =
+            [this, ifeature, &op, &samples](const auto& data1, const auto& mask1, const auto& data2, const auto& mask2)
         {
             if (should_shuffle(ifeature))
             {

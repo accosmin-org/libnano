@@ -174,7 +174,7 @@ private:
     mask_cmap_t mask(tensor_size_t index) const { return m_storage_mask.tensor(index); }
 
     template <typename toperator>
-    auto visit(tensor_size_t ifeature, const toperator& op)
+    auto visit(const tensor_size_t ifeature, const toperator& op)
     {
         const auto& feature = m_features[static_cast<size_t>(ifeature)];
 
@@ -211,7 +211,7 @@ private:
     }
 
     template <typename toperator>
-    auto visit(tensor_size_t ifeature, const toperator& op) const
+    auto visit(const tensor_size_t ifeature, const toperator& op) const
     {
         const auto& feature = m_features[static_cast<size_t>(ifeature)];
 
