@@ -10,8 +10,7 @@ namespace nano
 class NANO_PUBLIC base_elemwise_generator_t : public generator_t
 {
 public:
-    explicit base_elemwise_generator_t(string_t id);
-    base_elemwise_generator_t(string_t id, indices_t original_features);
+    explicit base_elemwise_generator_t(string_t id, indices_t original_features = indices_t{});
 
     void fit(const datasource_t&) override;
 
@@ -22,9 +21,9 @@ protected:
     tensor_size_t   mapped_classes(tensor_size_t ifeature) const;
     tensor_size_t   mapped_original(tensor_size_t ifeature) const;
 
-    const auto& mapping() const { return m_feature_mapping; }
+    const feature_mapping_t& mapping() const { return m_feature_mapping; }
 
-    const auto& original_features() const { return m_original_features; }
+    const indices_t& original_features() const { return m_original_features; }
 
     feature_t make_scalar_feature(tensor_size_t ifeature, const char* name) const;
     feature_t make_sclass_feature(tensor_size_t ifeature, const char* name, strings_t labels) const;

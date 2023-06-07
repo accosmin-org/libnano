@@ -19,7 +19,7 @@ UTEST_CASE(scalar)
 
         auto values = make_full_tensor<scalar_t>(cat_dims(42, dims), std::numeric_limits<scalar_t>::quiet_NaN());
 
-        for (tensor_size_t sample : {0, 11})
+        for (const tensor_size_t sample : {0, 11})
         {
             const auto value          = 14.6F;
             const auto expected_value = make_full_tensor<scalar_t>(dims, value);
@@ -71,9 +71,8 @@ UTEST_CASE(sclass)
     UTEST_CHECK_EQUAL(storage.name(), "feature");
     UTEST_CHECK_EQUAL(storage.feature(), feature);
 
-    tensor_mem_t<uint8_t, 1> values(42);
-    values.zero();
-    for (tensor_size_t sample : {2, 7})
+    auto values = make_full_tensor<uint8_t>(make_dims(42), 0);
+    for (const tensor_size_t sample : {2, 7})
     {
         const auto value          = feature.classes() - 1;
         const auto expected_value = value;
@@ -118,9 +117,8 @@ UTEST_CASE(mclass)
     UTEST_CHECK_EQUAL(storage.name(), "feature");
     UTEST_CHECK_EQUAL(storage.feature(), feature);
 
-    tensor_mem_t<uint8_t, 2> values(42, feature.classes());
-    values.zero();
-    for (tensor_size_t sample : {11, 17})
+    auto values = make_full_tensor<uint8_t>(make_dims(42, feature.classes()), 0);
+    for (const tensor_size_t sample : {11, 17})
     {
         const auto value          = make_tensor<uint16_t>(make_dims(feature.classes()), 1, 0, 1);
         const auto expected_value = make_tensor<uint8_t>(make_dims(feature.classes()), 1, 0, 1);

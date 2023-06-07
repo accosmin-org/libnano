@@ -30,14 +30,14 @@ public:
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,
+    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
                 [[maybe_unused]] scalar_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::scalar)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [&](auto it)
+                [this, ifeature, &storage](auto it)
                 {
                     if (this->should_drop(ifeature))
                     {
@@ -54,14 +54,14 @@ public:
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,
+    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
                 [[maybe_unused]] sclass_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::sclass)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [&](auto it)
+                [this, ifeature, &storage](auto it)
                 {
                     if (this->should_drop(ifeature))
                     {
@@ -85,7 +85,7 @@ public:
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [&](auto it)
+                [this, ifeature, &storage](auto it)
                 {
                     if (this->should_drop(ifeature))
                     {
@@ -102,14 +102,14 @@ public:
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,
+    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
                 [[maybe_unused]] struct_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::structured)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [&](auto it)
+                [this, ifeature, &storage](auto it)
                 {
                     if (this->should_drop(ifeature))
                     {
@@ -133,7 +133,7 @@ public:
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [&](auto it)
+                [this, ifeature, &column, &storage](auto it)
                 {
                     const auto should_drop   = this->should_drop(ifeature);
                     const auto [op, colsize] = this->process(ifeature);

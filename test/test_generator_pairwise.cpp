@@ -22,9 +22,9 @@ public:
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
+    feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values1, const auto& values2)
@@ -51,12 +51,12 @@ public:
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_struct_feature(ifeature, "pow", make_dims(3, 1, 1));
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{3};
         const auto process = [=](const auto& values1, const auto& values2, auto&& structured)
@@ -89,12 +89,12 @@ public:
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_sclass_feature(ifeature, "sign", strings_t{"neg", "pos"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values1, const auto& values2)
@@ -125,12 +125,12 @@ public:
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_mclass_feature(ifeature, "mod", strings_t{"mod2", "mod3"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{2};
         const auto process = [=](const auto& values1, const auto& values2, auto&& mclass)
@@ -162,9 +162,9 @@ public:
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
+    feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& value1, const auto& value2)

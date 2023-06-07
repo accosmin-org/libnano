@@ -7,19 +7,14 @@ using namespace nano;
 class NANO_PUBLIC scalar_to_scalar_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    scalar_to_scalar_t()
-        : elemwise_input_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_to_scalar_t(indices_t features)
+    explicit scalar_to_scalar_t(indices_t features = indices_t{})
         : elemwise_input_scalar_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
+    feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values) { return static_cast<scalar_t>(values(0)) < 0.0 ? -1.0 : +1.0; };
@@ -30,22 +25,17 @@ public:
 class NANO_PUBLIC scalar_to_sclass_t : public elemwise_input_scalar_t, public generated_sclass_t
 {
 public:
-    scalar_to_sclass_t()
-        : elemwise_input_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_to_sclass_t(indices_t features)
+    explicit scalar_to_sclass_t(indices_t features = indices_t{})
         : elemwise_input_scalar_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_sclass_feature(ifeature, "feature", strings_t{"neg", "pos"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values) { return static_cast<scalar_t>(values(0)) < 0.0 ? 0 : 1; };
@@ -56,22 +46,17 @@ public:
 class NANO_PUBLIC scalar_to_mclass_t : public elemwise_input_scalar_t, public generated_mclass_t
 {
 public:
-    scalar_to_mclass_t()
-        : elemwise_input_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_to_mclass_t(indices_t features)
+    explicit scalar_to_mclass_t(indices_t features = indices_t{})
         : elemwise_input_scalar_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_mclass_feature(ifeature, "feature", strings_t{"odd", "even", "div3"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{3};
         const auto process = [=](const auto& values, auto&& mclass)
@@ -87,22 +72,17 @@ public:
 class NANO_PUBLIC scalar_to_struct_t : public elemwise_input_scalar_t, public generated_struct_t
 {
 public:
-    scalar_to_struct_t()
-        : elemwise_input_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_to_struct_t(indices_t features)
+    explicit scalar_to_struct_t(indices_t features = indices_t{})
         : elemwise_input_scalar_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_struct_feature(ifeature, "feature", make_dims(4, 1, 1));
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{4};
         const auto process = [=](const auto& values, auto&& structured)
@@ -120,19 +100,14 @@ public:
 class NANO_PUBLIC struct_to_scalar_t : public elemwise_input_struct_t, public generated_scalar_t
 {
 public:
-    struct_to_scalar_t()
-        : elemwise_input_struct_t("gg")
-    {
-    }
-
-    explicit struct_to_scalar_t(indices_t features)
+    explicit struct_to_scalar_t(indices_t features = indices_t{})
         : elemwise_input_struct_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
+    feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "feature"); }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values) { return values.array().template cast<scalar_t>().sum(); };
@@ -143,22 +118,17 @@ public:
 class NANO_PUBLIC struct_to_sclass_t : public elemwise_input_struct_t, public generated_sclass_t
 {
 public:
-    struct_to_sclass_t()
-        : elemwise_input_struct_t("gg")
-    {
-    }
-
-    explicit struct_to_sclass_t(indices_t features)
+    explicit struct_to_sclass_t(indices_t features = indices_t{})
         : elemwise_input_struct_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_sclass_feature(ifeature, "feature", strings_t{"<10", ">=10"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& values)
@@ -170,22 +140,17 @@ public:
 class NANO_PUBLIC struct_to_mclass_t : public elemwise_input_struct_t, public generated_mclass_t
 {
 public:
-    struct_to_mclass_t()
-        : elemwise_input_struct_t("gg")
-    {
-    }
-
-    explicit struct_to_mclass_t(indices_t features)
+    explicit struct_to_mclass_t(indices_t features = indices_t{})
         : elemwise_input_struct_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_mclass_feature(ifeature, "feature", strings_t{"<10", "<30", "<20"});
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{3};
         const auto process = [=](const auto& values, auto&& mclass)
@@ -202,22 +167,17 @@ public:
 class NANO_PUBLIC struct_to_struct_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    struct_to_struct_t()
-        : elemwise_input_struct_t("gg")
-    {
-    }
-
-    explicit struct_to_struct_t(indices_t features)
+    explicit struct_to_struct_t(indices_t features = indices_t{})
         : elemwise_input_struct_t("gg", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override
+    feature_t feature(const tensor_size_t ifeature) const override
     {
         return make_struct_feature(ifeature, "feature", make_dims(2, 1, 1));
     }
 
-    static auto process(tensor_size_t)
+    static auto process(const tensor_size_t)
     {
         const auto colsize = tensor_size_t{2};
         const auto process = [=](const auto& values, auto&& structured)

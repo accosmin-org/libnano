@@ -144,7 +144,7 @@ protected:
         assert(ifeature >= 0 && ifeature < m_storage_range.size<0>());
 
         this->visit(ifeature,
-                    [&](const feature_t& feature, const auto& data, const auto& mask)
+                    [sample, &value](const feature_t& feature, const auto& data, const auto& mask)
                     {
                         const auto setter = feature_storage_t{feature};
                         setter.set(data, sample, value);
@@ -161,6 +161,10 @@ private:
 
     mask_cmap_t mask(const tensor_size_t index) const { return m_storage_mask.tensor(index); }
 
+    static constexpr auto maxu08 = tensor_size_t(1) << 8;
+    static constexpr auto maxu16 = tensor_size_t(1) << 16;
+    static constexpr auto maxu32 = tensor_size_t(1) << 32;
+
     template <typename toperator>
     auto visit(const tensor_size_t ifeature, const toperator& op)
     {
@@ -170,10 +174,6 @@ private:
         const auto mask         = this->mask(ifeature);
         const auto [d0, d1, d2] = feature.dims();
         const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
-
-        static constexpr auto maxu08 = tensor_size_t(1) << 8;
-        static constexpr auto maxu16 = tensor_size_t(1) << 16;
-        static constexpr auto maxu32 = tensor_size_t(1) << 32;
 
         switch (feature.type())
         {
@@ -207,10 +207,6 @@ private:
         const auto mask         = this->mask(ifeature);
         const auto [d0, d1, d2] = feature.dims();
         const auto range        = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
-
-        static constexpr auto maxu08 = tensor_size_t(1) << 8;
-        static constexpr auto maxu16 = tensor_size_t(1) << 16;
-        static constexpr auto maxu32 = tensor_size_t(1) << 32;
 
         switch (feature.type())
         {

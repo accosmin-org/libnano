@@ -2,11 +2,6 @@
 
 using namespace nano;
 
-base_elemwise_generator_t::base_elemwise_generator_t(string_t id)
-    : generator_t(std::move(id))
-{
-}
-
 base_elemwise_generator_t::base_elemwise_generator_t(string_t id, indices_t original_features)
     : generator_t(std::move(id))
     , m_original_features(std::move(original_features))
