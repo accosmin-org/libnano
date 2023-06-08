@@ -10,8 +10,10 @@
 [![cppcheck](https://github.com/accosmin-org/libnano/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/cppcheck.yml)
 [![memcheck](https://github.com/accosmin-org/libnano/actions/workflows/memcheck.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/memcheck.yml)
 [![sanitizers](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml)
+
 [![coverage](https://github.com/accosmin-org/libnano/actions/workflows/coverage.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/coverage.yml)
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=libnano&metric=alert_status)](https://sonarcloud.io/summary/overall?id=libnano)
+[![codecov](https://codecov.io/gh/accosmin-org/libnano/branch/master/graph/badge.svg?token=X2IkpkoQEB)](https://codecov.io/gh/accosmin-org/libnano)
 
 ## Description
 
