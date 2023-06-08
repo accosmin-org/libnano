@@ -25,9 +25,16 @@ include(GNUInstallDirs)
 include(CheckCXXSourceCompiles)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 
-exec_program("git" ${CMAKE_CURRENT_SOURCE_DIR}
-    ARGS "rev-parse HEAD"
-    OUTPUT_VARIABLE PROJECT_GIT_COMMIT_HASH)
+find_package(Git REQUIRED)
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE PROJECT_GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+    message(FATAL_ERROR "Failed to get git hash: ${result}")
+endif()
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in"
