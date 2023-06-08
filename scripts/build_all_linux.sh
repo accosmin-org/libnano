@@ -81,7 +81,8 @@ CXX=clang++ bash scripts/build.sh --suffix clang-tsan -DCMAKE_BUILD_TYPE=Debug -
 ###############################################################################################################
 
 CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov
+    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov \
+    --codecov
 
 CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov \

@@ -163,6 +163,14 @@ function lcov_coverage {
     genhtml ${options} --output lcovhtml ${output} || return 1
 }
 
+function codecov {
+    cd ${basedir}
+
+    local output=${basedir}/lcov.info
+
+    bash <(curl -s https://codecov.io/bash) -f ${output} || echo "Codecov did not collect coverage reports"
+}
+
 function llvm_cov_coverage {
     cd ${basedir}
 
@@ -555,6 +563,7 @@ while [ "$1" != "" ]; do
         --build-example)                build_example || exit 1;;
         --clang-format)                 clang_format || exit 1;;
         --sonar)                        sonar || exit 1;;
+        --codecov)                      codecov || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
         -G*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;

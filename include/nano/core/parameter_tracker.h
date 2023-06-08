@@ -4,8 +4,6 @@
 #include <nano/configurable.h>
 #include <nano/core/cmdline.h>
 
-using namespace nano;
-
 namespace nano
 {
 ///
