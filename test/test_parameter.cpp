@@ -301,6 +301,35 @@ UTEST_CASE(fparam2)
     check_value_pair<false>(param, 12, 13);
 }
 
+UTEST_CASE(string)
+{
+    auto param = parameter_t::make_string("sparam", "str");
+
+    UTEST_CHECK_EQUAL(param.name(), "sparam");
+    UTEST_CHECK_EQUAL(scat(param), "sparam=str|domain=[.*]");
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t{});
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_enum("sparam", enum_type::type1));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("sparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer("sparam", 1, LT, 4, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_string("xparam", "str"));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar_pair("fparam", 0, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_integer_pair("fparam", 1, LT, 2, LT, 3, LE, 10));
+    UTEST_CHECK_EQUAL(param, parameter_t::make_string("sparam", "str"));
+
+    UTEST_CHECK_THROW(param = 1, std::runtime_error);
+    UTEST_CHECK_THROW(param = enum_type::type1, std::runtime_error);
+    const auto ituple = std::make_tuple(1, 2);
+    UTEST_CHECK_THROW(param = ituple, std::runtime_error);
+
+    UTEST_CHECK_NOTHROW(param = "str2");
+    UTEST_CHECK_EQUAL(param.value<string_t>(), "str2");
+    UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value<enum_type>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value_pair<scalar_t>(), std::runtime_error);
+
+    check_stream(param);
+}
+
 UTEST_CASE(invalid_float)
 {
     UTEST_CHECK_THROW(parameter_t::make_scalar("fparam", 1, LE, 1, LT, 1), std::runtime_error);

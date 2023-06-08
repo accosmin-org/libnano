@@ -236,6 +236,16 @@ std::ostream& domain(std::ostream& stream, const parameter_t::pair_range_t<tscal
                   << ::name(param.m_valcomp) << " " << param.m_value2 << " " << ::name(param.m_maxcomp) << " "
                   << param.m_max;
 }
+
+std::ostream& value(std::ostream& stream, const string_t& param)
+{
+    return stream << param;
+}
+
+std::ostream& domain(std::ostream& stream, const string_t&)
+{
+    return stream << ".*";
+}
 } // namespace
 
 parameter_t::parameter_t() = default;
@@ -243,6 +253,12 @@ parameter_t::parameter_t() = default;
 parameter_t::parameter_t(string_t name, enum_t param)
     : m_name(std::move(name))
     , m_storage(std::move(::update(m_name, param, std::move(param.m_value))))
+{
+}
+
+parameter_t::parameter_t(string_t name, string_t value)
+    : m_name(std::move(name))
+    , m_storage(std::move(value))
 {
 }
 
@@ -285,6 +301,7 @@ parameter_t& parameter_t::setd(scalar_t value)
 parameter_t& parameter_t::operator=(string_t value)
 {
     std::visit(overloaded{[&](enum_t& param) { ::update(m_name, param, std::move(value)); },
+                          [&](string_t& param) { param = std::move(value); },
                           [&](irange_t& param) { ::update(m_name, param, std::stoll(value)); },
                           [&](frange_t& param) { ::update(m_name, param, std::stod(value)); },
                           [&](iprange_t& param)
@@ -337,7 +354,6 @@ std::istream& parameter_t::read(std::istream& stream)
     {
         string_t  value;
         strings_t domain;
-
         critical(!::nano::read(stream, value) ||    // LCOV_EXCL_LINE
                      !::nano::read(stream, domain), // LCOV_EXCL_LINE
                  "parameter (", m_name, "): failed to read from stream!");
@@ -348,6 +364,13 @@ std::istream& parameter_t::read(std::istream& stream)
     case 2: m_storage = ::read(m_name, stream, frange_t{}); break;
     case 3: m_storage = ::read(m_name, stream, iprange_t{}); break;
     case 4: m_storage = ::read(m_name, stream, fprange_t{}); break;
+    case 5:
+    {
+        string_t value;
+        critical(!::nano::read(stream, value), "parameter (", m_name, "): failed to read from stream!");
+        m_storage = value;
+    }
+    break;
     default: critical0("parameter (", m_name, "): failed to read from stream (type=", type, ")!");
     }
 
@@ -373,7 +396,14 @@ std::ostream& parameter_t::write(std::ostream& stream) const
                           [&](const irange_t& param) { ::write(m_name, stream, 1, param); },
                           [&](const frange_t& param) { ::write(m_name, stream, 2, param); },
                           [&](const iprange_t& param) { ::write(m_name, stream, 3, param); },
-                          [&](const fprange_t& param) { ::write(m_name, stream, 4, param); }},
+                          [&](const fprange_t& param) { ::write(m_name, stream, 4, param); },
+                          [&](const string_t& param)
+                          {
+                              const int32_t type = 5;
+                              critical(!::nano::write(stream, type) || !::nano::write(stream, m_name) ||
+                                           !::nano::write(stream, param),
+                                       "parameter (", m_name, "): failed to write to stream!");
+                          }},
                m_storage);
 
     return stream;
@@ -394,7 +424,8 @@ bool nano::operator==(const parameter_t& lhs, const parameter_t& rhs)
                                  [&rhs](const parameter_t::irange_t& lparam) { return lparam == rhs.storage(); },
                                  [&rhs](const parameter_t::frange_t& lparam) { return lparam == rhs.storage(); },
                                  [&rhs](const parameter_t::iprange_t& lparam) { return lparam == rhs.storage(); },
-                                 [&rhs](const parameter_t::fprange_t& lparam) { return lparam == rhs.storage(); }},
+                                 [&rhs](const parameter_t::fprange_t& lparam) { return lparam == rhs.storage(); },
+                                 [&rhs](const string_t& lparam) { return lparam == rhs.storage(); }},
                       lhs.storage());
 }
 
@@ -415,7 +446,8 @@ std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::value_t&
                           [&stream](const parameter_t::irange_t& param) { ::value(stream, param); },
                           [&stream](const parameter_t::frange_t& param) { ::value(stream, param); },
                           [&stream](const parameter_t::iprange_t& param) { ::value(stream, param); },
-                          [&stream](const parameter_t::fprange_t& param) { ::value(stream, param); }},
+                          [&stream](const parameter_t::fprange_t& param) { ::value(stream, param); },
+                          [&stream](const string_t& param) { ::value(stream, param); }},
                value.m_parameter.storage());
     return stream;
 }
@@ -427,7 +459,8 @@ std::ostream& nano::operator<<(std::ostream& stream, const parameter_t::domain_t
                           [&stream](const parameter_t::irange_t& param) { ::domain(stream, param); },
                           [&stream](const parameter_t::frange_t& param) { ::domain(stream, param); },
                           [&stream](const parameter_t::iprange_t& param) { ::domain(stream, param); },
-                          [&stream](const parameter_t::fprange_t& param) { ::domain(stream, param); }},
+                          [&stream](const parameter_t::fprange_t& param) { ::domain(stream, param); },
+                          [&stream](const string_t& param) { ::domain(stream, param); }},
                domain.m_parameter.storage());
     return stream;
 }

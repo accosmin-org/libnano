@@ -90,7 +90,7 @@ public:
     using iprange_t = pair_range_t<int64_t>;
     using fprange_t = pair_range_t<scalar_t>;
 
-    using storage_t = std::variant<std::monostate, enum_t, irange_t, frange_t, iprange_t, fprange_t>;
+    using storage_t = std::variant<std::monostate, enum_t, irange_t, frange_t, iprange_t, fprange_t, string_t>;
 
     ///
     /// \brief default constructor
@@ -105,6 +105,11 @@ public:
     {
         return make_enum_(std::move(name), value);
     }
+
+    ///
+    /// \brief return a string parameter.
+    ///
+    static parameter_t make_string(string_t name, string_t value) { return {std::move(name), std::move(value)}; }
 
     ///
     /// \brief return a floating point parameter constrained to the given range:
@@ -199,6 +204,16 @@ public:
     ///
     /// \brief retrieve the current parameter's value.
     ///
+    template <typename tstring, std::enable_if_t<std::is_same_v<tstring, string_t>, bool> = true>
+    string_t value() const
+    {
+        if (const auto* param = std::get_if<string_t>(&m_storage))
+        {
+            return *param;
+        }
+        logical_error();
+    }
+
     template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
     tenum value() const
     {
@@ -273,6 +288,7 @@ private:
     parameter_t& seti(int64_t);
     parameter_t& setd(scalar_t);
     parameter_t(string_t name, enum_t);
+    parameter_t(string_t name, string_t);
     parameter_t(string_t name, irange_t);
     parameter_t(string_t name, frange_t);
     parameter_t(string_t name, iprange_t);

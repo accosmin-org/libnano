@@ -46,12 +46,12 @@ indices_t datasource_t::filter(tensor_size_t count, tensor_size_t condition) con
     return indices;
 }
 
-void datasource_t::resize(tensor_size_t samples, const features_t& features)
+void datasource_t::resize(const tensor_size_t samples, const features_t& features)
 {
     this->resize(samples, features, string_t::npos);
 }
 
-void datasource_t::resize(tensor_size_t samples, const features_t& features, size_t target)
+void datasource_t::resize(const tensor_size_t samples, const features_t& features, const size_t target)
 {
     std::map<feature_type, tensor_size_t> size_storage;
     const auto                            update_size_storage = [&](feature_type type, auto size)

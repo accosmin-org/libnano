@@ -18,7 +18,7 @@ jobs:
         CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov \
           --sonar
-    - name: coverage (lcov, codecov)
+    - name: coverage (gcc, lcov, codecov)
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
