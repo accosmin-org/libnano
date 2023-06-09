@@ -173,9 +173,9 @@ factory_t<function_t>& function_t::all()
         manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1.0, 0.0);
         manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1.0, 1.0);
 
-        manager.add<function_enet_mae_t>("mean squared error with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_mae_t>("mean squared error with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_mae_t>("mean squared error with elastic net-like regularization", 10, 1.0, 1.0);
+        manager.add<function_enet_mae_t>("mean absolute error with ridge-like regularization", 10, 0.0, 1.0);
+        manager.add<function_enet_mae_t>("mean absolute error with lasso-like regularization", 10, 1.0, 0.0);
+        manager.add<function_enet_mae_t>("mean absolute error with elastic net-like regularization", 10, 1.0, 1.0);
 
         manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with ridge-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with lasso-like regularization", 10, 1.0, 0.0);
