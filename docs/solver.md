@@ -279,7 +279,7 @@ Indeed the monotonic solvers are not converging, but surprisingly they produce t
 
 #### Tune the L-BFGS history size on convex smooth problems
 
-The limited-memory quasi-Newton (L-BFGS) method uses a small number of last known gradients to build a low-rank inverse of the Hessian matrix. This results in much more efficient iterations than quasi-Newton methods, but at a lower convergence rate and potential larger number of iterations. However it is not clear from the literature what is the optimum number of last gradients to use. The benchmark program allows to measure the impact of this parameter on nthe number of iterations until convergence.
+The limited-memory quasi-Newton (L-BFGS) method uses a small number of last known gradients to build a low-rank inverse of the Hessian matrix. This results in much more efficient iterations than quasi-Newton methods, but at a lower convergence rate and potential larger number of iterations. However it is not clear from the literature what is the optimum number of last gradients to use. The benchmark program allows to measure the impact of this parameter on the number of iterations until convergence.
 
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --smooth \
