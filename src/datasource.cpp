@@ -2,13 +2,13 @@
 #include <nano/datasource/imclass_cifar.h>
 #include <nano/datasource/imclass_mnist.h>
 #include <nano/datasource/tabular.h>
-#include <nano/datasource/util.h>
 
 using namespace nano;
 
 datasource_t::datasource_t(string_t id)
     : clonable_t(std::move(id))
 {
+    register_parameter(parameter_t::make_string("datasource::basedir", ""));
 }
 
 indices_t datasource_t::train_samples() const
@@ -153,11 +153,9 @@ factory_t<datasource_t>& datasource_t::all()
     static auto manager = factory_t<datasource_t>{};
     const auto  op      = []()
     {
-        const auto dir = scat(nano::getenv("HOME"), "/libnano/datasets/");
-
         manager.add<tabular_datasource_t>(
             "classify flowers from physical measurements of the sepal and petal (Fisher, 1936)", "iris",
-            csvs_t{csv_t{dir + "/iris/iris.data"}.delim(",").header(false).expected(150)},
+            csvs_t{csv_t{"iris/iris.data"}.delim(",").header(false).expected(150)},
             features_t{
                 feature_t{"sepal_length_cm"},
                 feature_t{"sepal_width_cm"},
@@ -169,7 +167,7 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "predict the wine type from its constituents (Aeberhard, Coomans & de Vel, 1992)", "wine",
-            csvs_t{csv_t{dir + "/wine/wine.data"}.delim(",").header(false).expected(178)},
+            csvs_t{csv_t{"wine/wine.data"}.delim(",").header(false).expected(178)},
             features_t{
                 feature_t{"class"}.sclass(3),
                 feature_t{"Alcohol"},
@@ -190,15 +188,14 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)", "adult",
-            csvs_t{
-                csv_t{dir + "/adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
-                csv_t{dir + "/adult/adult.test"}
-                    .skip('|')
-                    .delim(", .")
-                    .header(false)
-                    .expected(16281)
-                    .testing(make_range(0, 16281))
-                    .placeholder("?")},
+            csvs_t{csv_t{"adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
+                   csv_t{"adult/adult.test"}
+                       .skip('|')
+                       .delim(", .")
+                       .header(false)
+                       .expected(16281)
+                       .testing(make_range(0, 16281))
+                       .placeholder("?")},
             features_t{
                 feature_t{"age"},
                 feature_t{"workclass"}.sclass(8),
@@ -220,8 +217,8 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "predict the age of abalone from physical measurements (Waugh, 1995)", "abalone",
-            csvs_t{csv_t{dir + "/abalone/abalone.data"}.delim(",").header(false).expected(4177).testing(
-                make_range(3133, 4177))},
+            csvs_t{
+                csv_t{"abalone/abalone.data"}.delim(",").header(false).expected(4177).testing(make_range(3133, 4177))},
             features_t{
                 feature_t{"sex"}.sclass(3),
                 feature_t{"length"},
@@ -237,7 +234,7 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "predict the burned area of the forest (Cortez & Morais, 2007)", "forest-fires",
-            csvs_t{csv_t{dir + "/forest-fires/forestfires.csv"}.delim(",").header(true).expected(517)},
+            csvs_t{csv_t{"forest-fires/forestfires.csv"}.delim(",").header(true).expected(517)},
             features_t{feature_t{"X"}.sclass(9), feature_t{"Y"}.sclass(8), feature_t{"month"}.sclass(12),
                        feature_t{"day"}.sclass(7), feature_t{"FFMC"}, feature_t{"DMC"}, feature_t{"DC"},
                        feature_t{"ISI"}, feature_t{"temp"}, feature_t{"RH"}, feature_t{"wind"}, feature_t{"rain"},
@@ -246,7 +243,7 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "diagnostic breast cancer using measurements of cell nucleai (Street, Wolberg & Mangasarian, 1992)",
-            "breast-cancer", csvs_t{csv_t{dir + "/breast-cancer/wdbc.data"}.delim(",").header(false).expected(569)},
+            "breast-cancer", csvs_t{csv_t{"breast-cancer/wdbc.data"}.delim(",").header(false).expected(569)},
             features_t{feature_t{"ID"},          feature_t{"Diagnosis"}.sclass(2),
 
                        feature_t{"radius1"},     feature_t{"texture1"},
@@ -270,7 +267,7 @@ factory_t<datasource_t>& datasource_t::all()
 
         manager.add<tabular_datasource_t>(
             "predict if a client has subscribed a term deposit (Moro, Laureano & Cortez, 2011)", "bank-marketing",
-            csvs_t{csv_t{dir + "/bank-marketing/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)},
+            csvs_t{csv_t{"bank-marketing/bank-additional-full.csv"}.delim(";\"\r").header(true).expected(41188)},
             features_t{
                 feature_t{"age"},
                 feature_t{"job"}.sclass(12),

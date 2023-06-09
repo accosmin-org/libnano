@@ -1,4 +1,5 @@
 #include "util.h"
+#include <nano/core/parameter_tracker.h>
 
 using namespace nano;
 
@@ -97,12 +98,8 @@ auto benchmark(const string_t& generator_id, const dataset_t& dataset)
     benchmark_flatten(generator_id, dataset);
 }
 
-auto benchmark(const string_t& datasource_id, const strings_t& generator_ids)
+auto benchmark(datasource_t& datasource, const strings_t& generator_ids)
 {
-    const auto rdatasource = datasource_t::all().get(datasource_id);
-    critical(!rdatasource, "invalid data source (", datasource_id, ")!");
-
-    auto& datasource = *rdatasource;
     ::load_datasource(datasource);
 
     for (const auto& generator_id : generator_ids)
@@ -130,10 +127,17 @@ int unsafe_main(int argc, const char* argv[])
     const auto dregex = std::regex(options.get<string_t>("datasource"));
     const auto gregex = std::regex(options.get<string_t>("generator"));
 
+    auto param_tracker = parameter_tracker_t{options};
+
     // benchmark
     for (const auto& id : datasource_t::all().ids(dregex))
     {
-        benchmark(id, generator_t::all().ids(gregex));
+        const auto rdatasource = datasource_t::all().get(id);
+        critical(!rdatasource, "invalid data source (", id, ")!");
+
+        param_tracker.setup(*rdatasource);
+
+        benchmark(*rdatasource, generator_t::all().ids(gregex));
     }
 
     // OK

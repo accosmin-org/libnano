@@ -30,7 +30,6 @@ target_sources(nano PRIVATE
     dataset/iterator.cpp
     datasource.cpp
     datasource/mask.cpp
-    datasource/util.cpp
     datasource/linear.cpp
     datasource/tabular.cpp
     datasource/imclass_cifar.cpp

@@ -24,6 +24,8 @@ rdatasource_t tabular_datasource_t::clone() const
 
 void tabular_datasource_t::do_load()
 {
+    const auto basedir = parameter("datasource::basedir").value<string_t>();
+
     // check features
     critical(m_features.empty(), "tabular dataset: need to set at least one feature!");
 
@@ -43,12 +45,12 @@ void tabular_datasource_t::do_load()
     tensor_size_t samples = 0;
     for (const auto& csv : m_csvs)
     {
-        csv.parse(
-            [&](const string_t&, const tensor_size_t)
-            {
-                ++samples;
-                return true;
-            });
+        csv.parse(basedir,
+                  [&](const string_t&, const tensor_size_t)
+                  {
+                      ++samples;
+                      return true;
+                  });
     }
 
     critical(samples == 0, "tabular dataset: no data to read, check paths!");
@@ -62,12 +64,12 @@ void tabular_datasource_t::do_load()
         log_info() << "tabular dataset: reading " << csv.m_path << "...";
 
         const auto old_sample = sample;
-        csv.parse(
-            [&](const string_t& line, tensor_size_t line_index)
-            {
-                this->parse(csv, line, line_index, sample++);
-                return true;
-            });
+        csv.parse(basedir,
+                  [&](const string_t& line, tensor_size_t line_index)
+                  {
+                      this->parse(csv, line, line_index, sample++);
+                      return true;
+                  });
 
         const auto samples_read = sample - old_sample;
         critical(csv.m_expected > 0 && samples_read != csv.m_expected, "tabular dataset: read ", samples_read,

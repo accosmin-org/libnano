@@ -1,7 +1,6 @@
 #include <fstream>
 #include <nano/core/logger.h>
 #include <nano/datasource/imclass_cifar.h>
-#include <nano/datasource/util.h>
 
 using namespace nano;
 
@@ -13,6 +12,17 @@ cifar_datasource_t::cifar_datasource_t(string_t id, string_t dir, string_t name,
 {
 }
 
+string_t cifar_datasource_t::make_full_path(const string_t& path) const
+{
+    const auto basedir = parameter("datasource::basedir").value<string_t>();
+    return basedir + "/" + m_dir + path;
+}
+
+features_t cifar_datasource_t::make_features() const
+{
+    return {feature_t("image").scalar(feature_type::uint8, make_dims(3, 32, 32)), m_target};
+}
+
 void cifar_datasource_t::file(string_t filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
                               tensor_size_t label_index)
 {
@@ -21,15 +31,13 @@ void cifar_datasource_t::file(string_t filename, tensor_size_t offset, tensor_si
 
 void cifar_datasource_t::do_load()
 {
-    auto features =
-        std::vector<feature_t>{feature_t("image").scalar(feature_type::uint8, make_dims(3, 32, 32)), m_target};
-    resize(60000, features, 1U);
+    resize(60000, make_features(), 1U);
 
     tensor_size_t sample = 0;
     for (const auto& file : m_files)
     {
-        log_info() << m_name << ": loading file <" << (m_dir + file.m_filename) << "> ...";
-        critical(!iread(file), m_name, ": failed to load file <", m_dir, file.m_filename, ">!");
+        log_info() << m_name << ": loading file <" << make_full_path(file.m_filename) << "> ...";
+        critical(!iread(file), m_name, ": failed to load file <", make_full_path(file.m_filename), ">!");
 
         sample += file.m_expected;
         log_info() << m_name << ": loaded " << sample << " samples.";
@@ -40,7 +48,7 @@ void cifar_datasource_t::do_load()
 
 bool cifar_datasource_t::iread(const file_t& file)
 {
-    std::ifstream stream(m_dir + file.m_filename);
+    std::ifstream stream(make_full_path(file.m_filename));
 
     tensor_mem_t<int8_t, 1>  label(file.m_label_size);
     tensor_mem_t<uint8_t, 3> image(3, 32, 32);
@@ -67,7 +75,7 @@ bool cifar_datasource_t::iread(const file_t& file)
 }
 
 cifar10_datasource_t::cifar10_datasource_t()
-    : cifar_datasource_t("cifar10", scat(nano::getenv("HOME"), "/libnano/datasets/cifar10/"), "CIFAR-10",
+    : cifar_datasource_t("cifar10", "cifar10/", "CIFAR-10",
                          feature_t("class").sclass(strings_t{"airplane", "automobile", "bird", "cat", "deer", "dog",
                                                              "frog", "horse", "ship", "truck"}))
 {
@@ -85,7 +93,7 @@ rdatasource_t cifar10_datasource_t::clone() const
 }
 
 cifar100c_datasource_t::cifar100c_datasource_t()
-    : cifar_datasource_t("cifar100c", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+    : cifar_datasource_t("cifar100c", "cifar100/", "CIFAR-100",
                          feature_t("class").sclass(strings_t{"aquatic mammals",
                                                              "fish",
                                                              "flowers",
@@ -118,7 +126,7 @@ rdatasource_t cifar100c_datasource_t::clone() const
 
 cifar100f_datasource_t::cifar100f_datasource_t()
     : cifar_datasource_t(
-          "cifar100f", scat(nano::getenv("HOME"), "/libnano/datasets/cifar100/"), "CIFAR-100",
+          "cifar100f", "cifar100/", "CIFAR-100",
           feature_t("class").sclass(strings_t{
               "apple",      "aquarium_fish", "baby",         "bear",       "beaver",      "bed",         "bee",
               "beetle",     "bicycle",       "bottle",       "bowl",       "boy",         "bridge",      "bus",

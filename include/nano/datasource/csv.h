@@ -68,14 +68,17 @@ struct csv_t
 
     ///
     /// \brief parse the current configured CSV and call the given operator for each line.
+    /// NB: optionally a base directory path can be given as a prefix.
     ///
     template <typename toperator>
-    auto parse(const toperator& op) const
+    auto parse(const string_t& basedir, const toperator& op) const
     {
-        string_t      line;
-        auto          header     = m_header;
-        tensor_size_t line_index = 0;
-        for (std::ifstream stream(m_path); std::getline(stream, line); ++line_index)
+        const auto path = basedir.empty() ? m_path : (basedir + "/" + m_path);
+
+        string_t line;
+        auto     header     = m_header;
+        auto     line_index = tensor_size_t{0};
+        for (std::ifstream stream(path); std::getline(stream, line); ++line_index)
         {
             if (header && line_index == 0)
             {
@@ -91,6 +94,12 @@ struct csv_t
         }
 
         return true;
+    }
+
+    template <typename toperator>
+    auto parse(const toperator& op) const
+    {
+        return parse(string_t{}, op);
     }
 
     // attributes

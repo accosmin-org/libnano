@@ -1,4 +1,5 @@
 #include "fixture/datasource.h"
+#include <filesystem>
 #include <fstream>
 #include <nano/datasource/tabular.h>
 
@@ -62,16 +63,16 @@ public:
     fixture_datasource_t(csvs_t csvs, features_t features)
         : tabular_datasource_t("fixture", std::move(csvs), std::move(features))
     {
-        std::remove(data_path()); // NOLINT(cert-err33-c)
-        std::remove(test_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(data_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
     fixture_datasource_t(csvs_t csvs, features_t features, size_t target)
         : tabular_datasource_t("fixture", std::move(csvs), std::move(features), target)
         , m_target(target)
     {
-        std::remove(data_path()); // NOLINT(cert-err33-c)
-        std::remove(test_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(data_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
     fixture_datasource_t(fixture_datasource_t&&)                 = default;
@@ -81,8 +82,8 @@ public:
 
     ~fixture_datasource_t() override
     {
-        std::remove(data_path()); // NOLINT(cert-err33-c)
-        std::remove(test_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(data_path()); // NOLINT(cert-err33-c)
+        std::filesystem::remove(test_path()); // NOLINT(cert-err33-c)
     }
 
     void too_many_labels() { m_too_many_labels = true; }
@@ -312,6 +313,7 @@ UTEST_CASE(load_no_target)
     auto dataset = fixture_datasource_t{
         {feature_cont(), feature_cate()}
     };
+    dataset.parameter("datasource::basedir") = "";
     dataset.optional_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());
@@ -333,6 +335,7 @@ UTEST_CASE(load_cate_target)
         {feature_cont(), feature_cate()},
         1U
     };
+    dataset.parameter("datasource::basedir") = ".";
     dataset.mandatory_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());
@@ -357,6 +360,7 @@ UTEST_CASE(load_cont_target)
         {feature_cont(), feature_cate()},
         0U
     };
+    dataset.parameter("datasource::basedir") = ".";
     dataset.mandatory_target();
     UTEST_REQUIRE_NOTHROW(dataset.prepare());
     UTEST_REQUIRE_NOTHROW(dataset.load());

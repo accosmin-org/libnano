@@ -49,6 +49,9 @@ private:
     void do_load() override;
     bool iread(const file_t& file);
 
+    features_t make_features() const;
+    string_t   make_full_path(const string_t& path) const;
+
     // attributes
     string_t  m_dir;    ///< directory where to load the data from
     string_t  m_path;   ///< path to the archive where to load the data from

@@ -20,6 +20,9 @@ private:
     bool iread(const string_t&, tensor_size_t sample, tensor_size_t expected);
     bool tread(const string_t&, tensor_size_t sample, tensor_size_t expected);
 
+    features_t make_features() const;
+    string_t   make_full_path(const string_t& path) const;
+
     // attributes
     string_t  m_dir;    ///< directory where to load the data from
     string_t  m_name;   ///< dataset name
