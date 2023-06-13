@@ -65,8 +65,6 @@ indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) c
 
 void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize)
 {
-    static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
-
     const auto samples = storage.size<0>();
 
     if (colsize == 1)
