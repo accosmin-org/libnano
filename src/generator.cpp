@@ -66,22 +66,7 @@ indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) c
 void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize)
 {
     const auto samples = storage.size<0>();
-
-    if (colsize == 1)
-    {
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            storage(sample, column) = NaN;
-        }
-    }
-    else
-    {
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            auto segment = storage.vector(sample).segment(column, colsize);
-            segment.setConstant(NaN);
-        }
-    }
+    storage.matrix().block(0, column, samples, colsize).array() = NaN;
 }
 
 const datasource_t& generator_t::datasource() const
