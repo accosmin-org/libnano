@@ -66,7 +66,7 @@ public:
     {
     }
 
-    feature_t feature(const tensor_size_t ifeature) const override;
+    feature_t feature(tensor_size_t ifeature) const override;
 
     static auto process(tensor_size_t)
     {
