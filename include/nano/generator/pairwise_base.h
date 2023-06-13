@@ -10,14 +10,29 @@ namespace nano
 class NANO_PUBLIC base_pairwise_generator_t : public generator_t
 {
 public:
+    ///
+    /// \brief default constructor (use all available features).
+    ///
     explicit base_pairwise_generator_t(string_t id);
 
+    ///
+    /// \brief constructor (use pairs of the given features, if of the appropriate type).
+    ///
     base_pairwise_generator_t(string_t id, indices_t original_features);
 
+    ///
+    /// \brief constructor (use the given pairs of features, if of the appropriate type).
+    ///
     base_pairwise_generator_t(string_t id, indices_t original_features1, indices_t original_features2);
 
+    ///
+    /// \brief @see generator_t
+    ///
     void fit(const datasource_t&) override;
 
+    ///
+    /// \brief @see generator_t
+    ///
     tensor_size_t features() const override { return m_feature_mapping.size<0>(); }
 
 protected:

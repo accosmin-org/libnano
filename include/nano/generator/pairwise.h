@@ -18,8 +18,6 @@ template <typename tcomputer, std::enable_if_t<std::is_base_of_v<base_pairwise_g
 class NANO_PUBLIC pairwise_generator_t : public tcomputer
 {
 public:
-    static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
-
     using tcomputer::tcomputer;
 
     ///
@@ -30,96 +28,56 @@ public:
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
-                [[maybe_unused]] scalar_map_t storage) const override
+    void do_select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
+                   [[maybe_unused]] scalar_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::scalar)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [this, ifeature, &storage](auto it)
-                {
-                    if (this->should_drop(ifeature))
-                    {
-                        storage.full(NaN);
-                    }
-                    else
-                    {
-                        this->select_scalar(ifeature, storage, it);
-                    }
-                });
+                [this, ifeature, &storage](auto it) { this->select_scalar(ifeature, storage, it); });
         }
     }
 
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
-                [[maybe_unused]] sclass_map_t storage) const override
+    void do_select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
+                   [[maybe_unused]] sclass_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::sclass)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [this, ifeature, &storage](auto it)
-                {
-                    if (this->should_drop(ifeature))
-                    {
-                        storage.full(-1);
-                    }
-                    else
-                    {
-                        this->select_sclass(ifeature, storage, it);
-                    }
-                });
+                [this, ifeature, &storage](auto it) { this->select_sclass(ifeature, storage, it); });
         }
     }
 
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,
-                [[maybe_unused]] mclass_map_t storage) const override
+    void do_select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] tensor_size_t ifeature,
+                   [[maybe_unused]] mclass_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::mclass)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [this, ifeature, &storage](auto it)
-                {
-                    if (this->should_drop(ifeature))
-                    {
-                        storage.full(-1);
-                    }
-                    else
-                    {
-                        this->select_mclass(ifeature, storage, it);
-                    }
-                });
+                [this, ifeature, &storage](auto it) { this->select_mclass(ifeature, storage, it); });
         }
     }
 
     ///
     /// \brief @see generator_t
     ///
-    void select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
-                [[maybe_unused]] struct_map_t storage) const override
+    void do_select([[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] const tensor_size_t ifeature,
+                   [[maybe_unused]] struct_map_t storage) const override
     {
         if constexpr (tcomputer::generated_type == generator_type::structured)
         {
             this->template iterate<tcomputer::input_rank1, tcomputer::input_rank2>(
                 samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                [this, ifeature, &storage](auto it)
-                {
-                    if (this->should_drop(ifeature))
-                    {
-                        storage.full(NaN);
-                    }
-                    else
-                    {
-                        this->select_struct(ifeature, storage, it);
-                    }
-                });
+                [this, ifeature, &storage](auto it) { this->select_struct(ifeature, storage, it); });
         }
     }
 
@@ -164,7 +122,7 @@ private:
             }
             else
             {
-                storage(index) = NaN;
+                storage(index) = this->NaN;
             }
         }
     }
@@ -215,7 +173,7 @@ private:
             }
             else
             {
-                storage.tensor(index).full(NaN);
+                storage.tensor(index).full(this->NaN);
             }
         }
     }
@@ -259,12 +217,12 @@ private:
             {
                 if constexpr (tcomputer::generated_type == generator_type::scalar)
                 {
-                    storage(index, column) = NaN;
+                    storage(index, column) = this->NaN;
                 }
                 else
                 {
                     auto segment = storage.array(index).segment(column, colsize);
-                    segment.setConstant(NaN);
+                    segment.setConstant(this->NaN);
                 }
             }
         }

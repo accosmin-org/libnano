@@ -93,6 +93,54 @@ const datasource_t& generator_t::datasource() const
     return *m_datasource;
 }
 
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, scalar_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(NaN);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, sclass_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(-1);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, mclass_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(-1);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, struct_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(NaN);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
 factory_t<generator_t>& generator_t::all()
 {
     static auto manager = factory_t<generator_t>{};

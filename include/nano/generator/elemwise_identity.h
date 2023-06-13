@@ -10,14 +10,14 @@ namespace nano
 class NANO_PUBLIC sclass_identity_t : public elemwise_input_sclass_t, public generated_sclass_t
 {
 public:
-    sclass_identity_t()
-        : elemwise_input_sclass_t("identity-sclass")
+    explicit sclass_identity_t(indices_t features = indices_t{})
+        : elemwise_input_sclass_t("identity-sclass", std::move(features))
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = mapped_classes(ifeature) - 1;
         const auto process = [](const auto& label) { return static_cast<int32_t>(label); };
@@ -32,14 +32,14 @@ public:
 class NANO_PUBLIC mclass_identity_t : public elemwise_input_mclass_t, public generated_mclass_t
 {
 public:
-    mclass_identity_t()
-        : elemwise_input_mclass_t("identity-mclass")
+    explicit mclass_identity_t(indices_t features = indices_t{})
+        : elemwise_input_mclass_t("identity-mclass", std::move(features))
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = mapped_classes(ifeature);
         const auto process = [this](const auto& hits, auto&& storage) { this->copy(hits, storage); };
@@ -61,12 +61,12 @@ private:
 class NANO_PUBLIC scalar_identity_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    scalar_identity_t()
-        : elemwise_input_scalar_t("identity-scalar")
+    explicit scalar_identity_t(indices_t features = indices_t{})
+        : elemwise_input_scalar_t("identity-scalar", std::move(features))
     {
     }
 
-    feature_t feature(tensor_size_t ifeature) const override;
+    feature_t feature(const tensor_size_t ifeature) const override;
 
     static auto process(tensor_size_t)
     {
@@ -83,14 +83,14 @@ public:
 class NANO_PUBLIC struct_identity_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    struct_identity_t()
-        : elemwise_input_struct_t("identity-struct")
+    explicit struct_identity_t(indices_t features = indices_t{})
+        : elemwise_input_struct_t("identity-struct", std::move(features))
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = size(mapped_dims(ifeature));
         const auto process = [](const auto& values, auto&& storage)
