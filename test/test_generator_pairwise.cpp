@@ -4,23 +4,31 @@
 
 using namespace nano;
 
-class NANO_PUBLIC scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
+template <typename tinput, typename tgenerated>
+class NANO_PUBLIC test_generator_t : public tinput, public tgenerated
 {
 public:
-    scalar_scalar_to_scalar_t()
-        : pairwise_input_scalar_scalar_t("gg")
+    test_generator_t()
+        : tinput("gg")
     {
     }
 
-    explicit scalar_scalar_to_scalar_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
+    explicit test_generator_t(indices_t features)
+        : tinput("gg", std::move(features))
     {
     }
 
-    scalar_scalar_to_scalar_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
+    test_generator_t(indices_t features1, indices_t features2)
+        : tinput("gg", std::move(features1), std::move(features2))
     {
     }
+};
+
+class NANO_PUBLIC scalar_scalar_to_scalar_t
+    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_scalar_t>
+{
+public:
+    using test_generator_t::test_generator_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -33,23 +41,11 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
+class NANO_PUBLIC scalar_scalar_to_struct_t
+    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_struct_t>
 {
 public:
-    scalar_scalar_to_struct_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_struct_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_struct_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using test_generator_t::test_generator_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -71,23 +67,11 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
+class NANO_PUBLIC scalar_scalar_to_sclass_t
+    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_sclass_t>
 {
 public:
-    scalar_scalar_to_sclass_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_sclass_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_sclass_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using test_generator_t::test_generator_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -107,23 +91,11 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
+class NANO_PUBLIC scalar_scalar_to_mclass_t
+    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_mclass_t>
 {
 public:
-    scalar_scalar_to_mclass_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_mclass_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_mclass_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using test_generator_t::test_generator_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -144,23 +116,11 @@ public:
     }
 };
 
-class NANO_PUBLIC sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
+class NANO_PUBLIC sclass_sclass_to_scalar_t
+    : public test_generator_t<pairwise_input_sclass_sclass_t, generated_scalar_t>
 {
 public:
-    sclass_sclass_to_scalar_t()
-        : pairwise_input_sclass_sclass_t("gg")
-    {
-    }
-
-    explicit sclass_sclass_to_scalar_t(indices_t features)
-        : pairwise_input_sclass_sclass_t("gg", std::move(features))
-    {
-    }
-
-    sclass_sclass_to_scalar_t(indices_t features1, indices_t features2)
-        : pairwise_input_sclass_sclass_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using test_generator_t::test_generator_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
