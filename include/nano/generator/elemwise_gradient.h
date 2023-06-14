@@ -13,11 +13,17 @@ namespace nano
 class NANO_PUBLIC elemwise_gradient_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
+    ///
+    /// \brief constructor
+    ///
     explicit elemwise_gradient_t(kernel3x3_type = kernel3x3_type::sobel, indices_t original_features = indices_t{});
 
+    ///
+    /// \brief @see generator_t
+    ///
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto dims    = mapped_dims(ifeature);
         const auto mode    = mapped_mode(ifeature);

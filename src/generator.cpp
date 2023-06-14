@@ -65,7 +65,7 @@ indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) c
 
 void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize)
 {
-    const auto samples = storage.size<0>();
+    const auto samples                                          = storage.size<0>();
     storage.matrix().block(0, column, samples, colsize).array() = NaN;
 }
 

@@ -47,7 +47,7 @@ feature_mapping_t elemwise_gradient_t::do_fit()
     return feature_mapping;
 }
 
-feature_t elemwise_gradient_t::feature(tensor_size_t ifeature) const
+feature_t elemwise_gradient_t::feature(const tensor_size_t ifeature) const
 {
     const auto original = mapped_original(ifeature);
     const auto dims     = mapped_dims(ifeature);
