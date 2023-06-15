@@ -99,4 +99,9 @@ public:
         return std::make_tuple(process, colsize);
     }
 };
+
+using sclass_identity_generator_t = elemwise_generator_t<sclass_identity_t>;
+using mclass_identity_generator_t = elemwise_generator_t<mclass_identity_t>;
+using scalar_identity_generator_t = elemwise_generator_t<scalar_identity_t>;
+using struct_identity_generator_t = elemwise_generator_t<struct_identity_t>;
 } // namespace nano

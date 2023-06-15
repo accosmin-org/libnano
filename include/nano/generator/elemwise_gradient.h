@@ -49,4 +49,6 @@ private:
     kernel3x3_type m_type{kernel3x3_type::sobel}; ///<
     indices_t      m_original_features;           ///<
 };
+
+using gradient_generator_t = elemwise_generator_t<elemwise_gradient_t>;
 } // namespace nano

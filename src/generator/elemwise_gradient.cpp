@@ -80,3 +80,5 @@ gradient3x3_mode elemwise_gradient_t::mapped_mode(tensor_size_t ifeature) const
     assert(ifeature >= 0 && ifeature < features());
     return static_cast<gradient3x3_mode>(mapping()(ifeature, 6));
 }
+
+template class nano::elemwise_generator_t<elemwise_gradient_t>;

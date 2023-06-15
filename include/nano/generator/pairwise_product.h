@@ -11,17 +11,24 @@ class NANO_PUBLIC pairwise_product_t : public pairwise_input_scalar_scalar_t, pu
 {
 public:
     ///
-    /// \brief constructor
+    /// \brief default constructor (use all available features).
     ///
-    explicit pairwise_product_t(indices_t original_features = indices_t{})
-        : pairwise_input_scalar_scalar_t("product", std::move(original_features))
-    {
-    }
+    explicit pairwise_product_t();
+
+    ///
+    /// \brief constructor (use pairs of the given features, if of the appropriate type).
+    ///
+    pairwise_product_t(indices_t original_features);
+
+    ///
+    /// \brief constructor (use the given pairs of features, if of the appropriate type).
+    ///
+    pairwise_product_t(indices_t original_features1, indices_t original_features2);
 
     ///
     /// \brief @see generator_t
     ///
-    feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "product"); }
+    feature_t feature(tensor_size_t ifeature) const override;
 
     static auto process(tensor_size_t)
     {
@@ -32,4 +39,6 @@ public:
         return std::make_tuple(process, colsize);
     }
 };
+
+using pairwise_product_generator_t = pairwise_generator_t<pairwise_product_t>;
 } // namespace nano

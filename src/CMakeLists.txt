@@ -20,6 +20,7 @@ target_sources(nano PRIVATE
     generator.cpp
     generator/pairwise_base.cpp
     generator/pairwise_input.cpp
+    generator/pairwise_product.cpp
     generator/elemwise_base.cpp
     generator/elemwise_input.cpp
     generator/elemwise_gradient.cpp
