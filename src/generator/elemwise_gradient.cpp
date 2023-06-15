@@ -3,16 +3,9 @@
 
 using namespace nano;
 
-elemwise_gradient_t::elemwise_gradient_t(kernel3x3_type type, indices_t original_features)
-    : elemwise_input_struct_t("gradient")
-    , m_type(type)
-    , m_original_features(std::move(original_features))
-{
-}
-
 feature_mapping_t elemwise_gradient_t::do_fit()
 {
-    const auto mapping = select_struct(datasource(), m_original_features);
+    const auto mapping = select_struct(datasource(), original_features());
 
     tensor_size_t count = 0;
     for (tensor_size_t i = 0; i < mapping.size<0>(); ++i)

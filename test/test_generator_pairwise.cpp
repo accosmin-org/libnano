@@ -5,30 +5,20 @@
 using namespace nano;
 
 template <typename tinput, typename tgenerated>
-class NANO_PUBLIC test_generator_t : public tinput, public tgenerated
+class NANO_PUBLIC tester_t : public tinput, public tgenerated
 {
 public:
-    test_generator_t()
-        : tinput("gg")
-    {
-    }
-
-    explicit test_generator_t(indices_t features)
-        : tinput("gg", std::move(features))
-    {
-    }
-
-    test_generator_t(indices_t features1, indices_t features2)
-        : tinput("gg", std::move(features1), std::move(features2))
+    template <typename... targs>
+    explicit tester_t(targs... args)
+        : tinput("gg", std::forward<targs>(args)...)
     {
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_scalar_t
-    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_scalar_t>
+class NANO_PUBLIC scalar_scalar_to_scalar_t : public tester_t<pairwise_input_scalar_scalar_t, generated_scalar_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -41,11 +31,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_struct_t
-    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_struct_t>
+class NANO_PUBLIC scalar_scalar_to_struct_t : public tester_t<pairwise_input_scalar_scalar_t, generated_struct_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -67,11 +56,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_sclass_t
-    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_sclass_t>
+class NANO_PUBLIC scalar_scalar_to_sclass_t : public tester_t<pairwise_input_scalar_scalar_t, generated_sclass_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -91,11 +79,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_mclass_t
-    : public test_generator_t<pairwise_input_scalar_scalar_t, generated_mclass_t>
+class NANO_PUBLIC scalar_scalar_to_mclass_t : public tester_t<pairwise_input_scalar_scalar_t, generated_mclass_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -116,11 +103,10 @@ public:
     }
 };
 
-class NANO_PUBLIC sclass_sclass_to_scalar_t
-    : public test_generator_t<pairwise_input_sclass_sclass_t, generated_scalar_t>
+class NANO_PUBLIC sclass_sclass_to_scalar_t : public tester_t<pairwise_input_sclass_sclass_t, generated_scalar_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -133,11 +119,10 @@ public:
     }
 };
 
-class NANO_PUBLIC sclass_sclass_to_struct_t
-    : public test_generator_t<pairwise_input_sclass_sclass_t, generated_struct_t>
+class NANO_PUBLIC sclass_sclass_to_struct_t : public tester_t<pairwise_input_sclass_sclass_t, generated_struct_t>
 {
 public:
-    using test_generator_t::test_generator_t;
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {

@@ -10,8 +10,9 @@ namespace nano
 class NANO_PUBLIC sclass_identity_t : public elemwise_input_sclass_t, public generated_sclass_t
 {
 public:
-    explicit sclass_identity_t(indices_t features = indices_t{})
-        : elemwise_input_sclass_t("identity-sclass", std::move(features))
+    template <typename... targs>
+    explicit sclass_identity_t(targs... args)
+        : elemwise_input_sclass_t("identity-sclass", std::forward<targs>(args)...)
     {
     }
 
@@ -32,8 +33,9 @@ public:
 class NANO_PUBLIC mclass_identity_t : public elemwise_input_mclass_t, public generated_mclass_t
 {
 public:
-    explicit mclass_identity_t(indices_t features = indices_t{})
-        : elemwise_input_mclass_t("identity-mclass", std::move(features))
+    template <typename... targs>
+    explicit mclass_identity_t(targs... args)
+        : elemwise_input_mclass_t("identity-mclass", std::forward<targs>(args)...)
     {
     }
 
@@ -61,8 +63,9 @@ private:
 class NANO_PUBLIC scalar_identity_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    explicit scalar_identity_t(indices_t features = indices_t{})
-        : elemwise_input_scalar_t("identity-scalar", std::move(features))
+    template <typename... targs>
+    explicit scalar_identity_t(targs... args)
+        : elemwise_input_scalar_t("identity-scalar", std::forward<targs>(args)...)
     {
     }
 
@@ -83,8 +86,9 @@ public:
 class NANO_PUBLIC struct_identity_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    explicit struct_identity_t(indices_t features = indices_t{})
-        : elemwise_input_struct_t("identity-struct", std::move(features))
+    template <typename... targs>
+    explicit struct_identity_t(targs... args)
+        : elemwise_input_struct_t("identity-struct", std::forward<targs>(args)...)
     {
     }
 

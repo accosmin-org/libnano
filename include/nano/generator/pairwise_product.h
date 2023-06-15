@@ -11,19 +11,13 @@ class NANO_PUBLIC pairwise_product_t : public pairwise_input_scalar_scalar_t, pu
 {
 public:
     ///
-    /// \brief default constructor (use all available features).
+    /// \brief constructor
     ///
-    explicit pairwise_product_t();
-
-    ///
-    /// \brief constructor (use pairs of the given features, if of the appropriate type).
-    ///
-    pairwise_product_t(indices_t original_features);
-
-    ///
-    /// \brief constructor (use the given pairs of features, if of the appropriate type).
-    ///
-    pairwise_product_t(indices_t original_features1, indices_t original_features2);
+    template <typename... targs>
+    explicit pairwise_product_t(targs... args)
+        : pairwise_input_scalar_scalar_t("product", std::forward<targs>(args)...)
+    {
+    }
 
     ///
     /// \brief @see generator_t

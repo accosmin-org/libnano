@@ -16,7 +16,18 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit elemwise_gradient_t(kernel3x3_type = kernel3x3_type::sobel, indices_t original_features = indices_t{});
+    template <typename... targs>
+    explicit elemwise_gradient_t(kernel3x3_type type, targs... args)
+        : elemwise_input_struct_t("gradient", std::forward<targs>(args)...)
+        , m_type(type)
+    {
+    }
+
+    template <typename... targs>
+    explicit elemwise_gradient_t(targs... args)
+        : elemwise_gradient_t(kernel3x3_type::sobel, std::forward<targs>(args)...)
+    {
+    }
 
     ///
     /// \brief @see generator_t
@@ -47,7 +58,6 @@ private:
 
     // attributes
     kernel3x3_type m_type{kernel3x3_type::sobel}; ///<
-    indices_t      m_original_features;           ///<
 };
 
 using gradient_generator_t = elemwise_generator_t<elemwise_gradient_t>;
