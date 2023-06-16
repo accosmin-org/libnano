@@ -18,7 +18,7 @@
 
 ## Description
 
-Libnano implements parameter-free and flexible machine learning algorithms complemented by an extensive collection of numerical optimization algorithms. The implementation is cross-platform (Linux, macOS, Windows) with minimal dependencies (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
+Libnano implements parameter-free and flexible machine learning algorithms complemented by an extensive collection of numerical optimization algorithms. The implementation is **cross-platform** (Linux, macOS, Windows) with **minimal dependencies** (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
 
 
 In particular:
@@ -38,9 +38,6 @@ In particular:
 * the regularization hyper-parameters are automatically tuned using standard model evaluation (e.g. cross-validation).
 
 * the machine learning concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, splitting strategy, feature generation) are modelled using appropriate interfaces. As such the library is highly customizable to particular machine learning applications.
-
-
-The implementation is **cross-platform** (Linux, macOS, Windows) with **minimal dependencies** (standard library and [Eigen3](https://eigen.tuxfamily.org) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
 
 
 ## Documentation
