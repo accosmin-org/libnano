@@ -98,21 +98,6 @@ void linear_datasource_t::do_load()
                    hitter);
             break;
 
-        case feature_type::uint8:
-        case feature_type::uint16:
-        case feature_type::uint32:
-        case feature_type::uint64:
-            setter(ifeature, make_random_tensor<uint8_t>(cat_dims(samples, feature.dims()), 0, 13, sdist(rng)), hitter);
-            break;
-
-        case feature_type::int8:
-        case feature_type::int16:
-        case feature_type::int32:
-        case feature_type::int64:
-            setter(ifeature, make_random_tensor<int8_t>(cat_dims(samples, feature.dims()), -11, +17, sdist(rng)),
-                   hitter);
-            break;
-
         case feature_type::float32:
             setter(ifeature, make_random_tensor<float>(cat_dims(samples, feature.dims()), -3.0, +2.9, sdist(rng)),
                    hitter);
