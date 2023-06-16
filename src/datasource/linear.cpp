@@ -29,10 +29,10 @@ features_t make_features(const tensor_size_t n_features, const tensor_size_t n_t
 auto make_dataset(const datasource_t& datasource)
 {
     auto dataset = dataset_t{datasource};
-    dataset.add<elemwise_generator_t<sclass_identity_t>>();
-    dataset.add<elemwise_generator_t<mclass_identity_t>>();
-    dataset.add<elemwise_generator_t<scalar_identity_t>>();
-    dataset.add<elemwise_generator_t<struct_identity_t>>();
+    dataset.add<sclass_identity_generator_t>();
+    dataset.add<mclass_identity_generator_t>();
+    dataset.add<scalar_identity_generator_t>();
+    dataset.add<struct_identity_generator_t>();
     return dataset;
 }
 } // namespace

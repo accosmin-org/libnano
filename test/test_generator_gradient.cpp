@@ -91,7 +91,7 @@ auto make_datasource(tensor_size_t samples, size_t target, tensor_size_t channel
 auto make_dataset(const datasource_t& datasource)
 {
     auto dataset = dataset_t{datasource};
-    add_generator<elemwise_generator_t<elemwise_gradient_t>>(dataset);
+    add_generator<gradient_generator_t>(dataset);
     return dataset;
 }
 } // namespace

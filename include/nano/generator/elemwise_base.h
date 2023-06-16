@@ -10,10 +10,24 @@ namespace nano
 class NANO_PUBLIC base_elemwise_generator_t : public generator_t
 {
 public:
-    explicit base_elemwise_generator_t(string_t id, indices_t original_features = indices_t{});
+    ///
+    /// \brief default constructor (use all available features).
+    ///
+    explicit base_elemwise_generator_t(string_t id);
 
+    ///
+    /// \brief constructor (use the given features, if of the appropriate type).
+    ///
+    explicit base_elemwise_generator_t(string_t id, indices_t features);
+
+    ///
+    /// \brief @see generator_t
+    ///
     void fit(const datasource_t&) override;
 
+    ///
+    /// \brief @see generator_t
+    ///
     tensor_size_t features() const override { return m_feature_mapping.size<0>(); }
 
 protected:

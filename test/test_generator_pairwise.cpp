@@ -4,23 +4,21 @@
 
 using namespace nano;
 
-class NANO_PUBLIC scalar_scalar_to_scalar_t : public pairwise_input_scalar_scalar_t, public generated_scalar_t
+template <typename tinput, typename tgenerated>
+class NANO_PUBLIC tester_t : public tinput, public tgenerated
 {
 public:
-    scalar_scalar_to_scalar_t()
-        : pairwise_input_scalar_scalar_t("gg")
+    template <typename... targs>
+    explicit tester_t(targs... args)
+        : tinput("gg", std::forward<targs>(args)...)
     {
     }
+};
 
-    explicit scalar_scalar_to_scalar_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_scalar_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+class NANO_PUBLIC scalar_scalar_to_scalar_t : public tester_t<pairwise_input_scalar_scalar_t, generated_scalar_t>
+{
+public:
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -33,23 +31,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_struct_t : public pairwise_input_scalar_scalar_t, public generated_struct_t
+class NANO_PUBLIC scalar_scalar_to_struct_t : public tester_t<pairwise_input_scalar_scalar_t, generated_struct_t>
 {
 public:
-    scalar_scalar_to_struct_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_struct_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_struct_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -71,23 +56,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_sclass_t : public pairwise_input_scalar_scalar_t, public generated_sclass_t
+class NANO_PUBLIC scalar_scalar_to_sclass_t : public tester_t<pairwise_input_scalar_scalar_t, generated_sclass_t>
 {
 public:
-    scalar_scalar_to_sclass_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_sclass_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_sclass_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -107,23 +79,10 @@ public:
     }
 };
 
-class NANO_PUBLIC scalar_scalar_to_mclass_t : public pairwise_input_scalar_scalar_t, public generated_mclass_t
+class NANO_PUBLIC scalar_scalar_to_mclass_t : public tester_t<pairwise_input_scalar_scalar_t, generated_mclass_t>
 {
 public:
-    scalar_scalar_to_mclass_t()
-        : pairwise_input_scalar_scalar_t("gg")
-    {
-    }
-
-    explicit scalar_scalar_to_mclass_t(indices_t features)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features))
-    {
-    }
-
-    scalar_scalar_to_mclass_t(indices_t features1, indices_t features2)
-        : pairwise_input_scalar_scalar_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override
     {
@@ -144,23 +103,10 @@ public:
     }
 };
 
-class NANO_PUBLIC sclass_sclass_to_scalar_t : public pairwise_input_sclass_sclass_t, public generated_scalar_t
+class NANO_PUBLIC sclass_sclass_to_scalar_t : public tester_t<pairwise_input_sclass_sclass_t, generated_scalar_t>
 {
 public:
-    sclass_sclass_to_scalar_t()
-        : pairwise_input_sclass_sclass_t("gg")
-    {
-    }
-
-    explicit sclass_sclass_to_scalar_t(indices_t features)
-        : pairwise_input_sclass_sclass_t("gg", std::move(features))
-    {
-    }
-
-    sclass_sclass_to_scalar_t(indices_t features1, indices_t features2)
-        : pairwise_input_sclass_sclass_t("gg", std::move(features1), std::move(features2))
-    {
-    }
+    using tester_t::tester_t;
 
     feature_t feature(const tensor_size_t ifeature) const override { return make_scalar_feature(ifeature, "sum"); }
 
@@ -169,6 +115,31 @@ public:
         const auto colsize = tensor_size_t{1};
         const auto process = [=](const auto& value1, const auto& value2)
         { return static_cast<scalar_t>(value1) + static_cast<scalar_t>(value2); };
+        return std::make_tuple(process, colsize);
+    }
+};
+
+class NANO_PUBLIC sclass_sclass_to_struct_t : public tester_t<pairwise_input_sclass_sclass_t, generated_struct_t>
+{
+public:
+    using tester_t::tester_t;
+
+    feature_t feature(const tensor_size_t ifeature) const override
+    {
+        return make_struct_feature(ifeature, "pow", make_dims(3, 1, 1));
+    }
+
+    static auto process(const tensor_size_t)
+    {
+        const auto colsize = tensor_size_t{3};
+        const auto process = [=](const auto& value1, const auto& value2, auto&& structured)
+        {
+            const auto v1 = static_cast<scalar_t>(value1);
+            const auto v2 = static_cast<scalar_t>(value2);
+            structured(0) = v1 * v1;
+            structured(1) = v1 * v2;
+            structured(2) = v2 * v2;
+        };
         return std::make_tuple(process, colsize);
     }
 };
@@ -260,14 +231,19 @@ UTEST_CASE(sclass_sclass)
 
     auto dataset = dataset_t{datasource};
     add_generator<pairwise_generator_t<sclass_sclass_to_scalar_t>>(dataset);
+    add_generator<pairwise_generator_t<sclass_sclass_to_struct_t>>(dataset, make_indices(2, 3), make_indices(4));
 
-    UTEST_REQUIRE_EQUAL(dataset.features(), 6);
+    UTEST_REQUIRE_EQUAL(dataset.features(), 8);
     UTEST_CHECK_EQUAL(dataset.feature(0), feature_t{"sum(sclass0,sclass0)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(dataset.feature(1), feature_t{"sum(sclass0,sclass1)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(dataset.feature(2), feature_t{"sum(sclass0,sclass2)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(dataset.feature(3), feature_t{"sum(sclass1,sclass1)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(dataset.feature(4), feature_t{"sum(sclass1,sclass2)"}.scalar(feature_type::float64));
     UTEST_CHECK_EQUAL(dataset.feature(5), feature_t{"sum(sclass2,sclass2)"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(dataset.feature(6),
+                      feature_t{"pow(sclass0,sclass2)"}.scalar(feature_type::float64, make_dims(3, 1, 1)));
+    UTEST_CHECK_EQUAL(dataset.feature(7),
+                      feature_t{"pow(sclass1,sclass2)"}.scalar(feature_type::float64, make_dims(3, 1, 1)));
 
     check_select(dataset, 0, make_tensor<scalar_t>(make_dims(10), 4, N, 2, N, 0, N, 4, N, 2, N));
     check_select(dataset, 1, make_tensor<scalar_t>(make_dims(10), 3, N, 2, N, 1, N, 3, N, 2, N));
@@ -275,12 +251,20 @@ UTEST_CASE(sclass_sclass)
     check_select(dataset, 3, make_tensor<scalar_t>(make_dims(10), 2, 0, 2, 0, 2, 0, 2, 0, 2, 0));
     check_select(dataset, 4, make_tensor<scalar_t>(make_dims(10), 1, N, 1, N, 1, N, 1, N, 1, N));
     check_select(dataset, 5, make_tensor<scalar_t>(make_dims(10), 0, N, 0, N, 0, N, 0, N, 0, N));
+    check_select(dataset, 6,
+                 make_tensor<scalar_t>(make_dims(10, 3, 1, 1), 4, 0, 0, N, N, N, 1, 0, 0, N, N, N, 0, 0, 0, N, N, N, 4,
+                                       0, 0, N, N, N, 1, 0, 0, N, N, N));
+    check_select(dataset, 7,
+                 make_tensor<scalar_t>(make_dims(10, 3, 1, 1), 1, 0, 0, N, N, N, 1, 0, 0, N, N, N, 1, 0, 0, N, N, N, 1,
+                                       0, 0, N, N, N, 1, 0, 0, N, N, N));
 
     check_flatten(dataset,
-                  make_tensor<scalar_t>(make_dims(10, 6), 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N, 2, 2, 1, 2, 1, 0, N, N, N,
-                                        0, N, N, 0, 1, 0, 2, 1, 0, N, N, N, 0, N, N, 4, 3, 2, 2, 1, 0, N, N, N, 0, N, N,
-                                        2, 2, 1, 2, 1, 0, N, N, N, 0, N, N),
-                  make_indices(0, 1, 2, 3, 4, 5));
+                  make_tensor<scalar_t>(make_dims(10, 12), 4, 3, 2, 2, 1, 0, 4, 0, 0, 1, 0, 0, N, N, N, 0, N, N, N, N,
+                                        N, N, N, N, 2, 2, 1, 2, 1, 0, 1, 0, 0, 1, 0, 0, N, N, N, 0, N, N, N, N, N, N, N,
+                                        N, 0, 1, 0, 2, 1, 0, 0, 0, 0, 1, 0, 0, N, N, N, 0, N, N, N, N, N, N, N, N, 4, 3,
+                                        2, 2, 1, 0, 4, 0, 0, 1, 0, 0, N, N, N, 0, N, N, N, N, N, N, N, N, 2, 2, 1, 2, 1,
+                                        0, 1, 0, 0, 1, 0, 0, N, N, N, 0, N, N, N, N, N, N, N, N),
+                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 7, 7));
 }
 
 UTEST_END_MODULE()

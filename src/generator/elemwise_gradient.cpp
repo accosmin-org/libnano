@@ -3,16 +3,9 @@
 
 using namespace nano;
 
-elemwise_gradient_t::elemwise_gradient_t(kernel3x3_type type, indices_t original_features)
-    : elemwise_input_struct_t("gradient")
-    , m_type(type)
-    , m_original_features(std::move(original_features))
-{
-}
-
 feature_mapping_t elemwise_gradient_t::do_fit()
 {
-    const auto mapping = select_struct(datasource(), m_original_features);
+    const auto mapping = select_struct(datasource(), original_features());
 
     tensor_size_t count = 0;
     for (tensor_size_t i = 0; i < mapping.size<0>(); ++i)
@@ -47,7 +40,7 @@ feature_mapping_t elemwise_gradient_t::do_fit()
     return feature_mapping;
 }
 
-feature_t elemwise_gradient_t::feature(tensor_size_t ifeature) const
+feature_t elemwise_gradient_t::feature(const tensor_size_t ifeature) const
 {
     const auto original = mapped_original(ifeature);
     const auto dims     = mapped_dims(ifeature);
@@ -80,3 +73,5 @@ gradient3x3_mode elemwise_gradient_t::mapped_mode(tensor_size_t ifeature) const
     assert(ifeature >= 0 && ifeature < features());
     return static_cast<gradient3x3_mode>(mapping()(ifeature, 6));
 }
+
+template class nano::elemwise_generator_t<elemwise_gradient_t>;

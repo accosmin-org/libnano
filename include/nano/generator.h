@@ -59,6 +59,8 @@ struct generated_struct_t
 class NANO_PUBLIC generator_t : public clonable_t<generator_t>
 {
 public:
+    static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
+
     ///
     /// \brief constructor.
     ///
@@ -104,10 +106,10 @@ public:
     ///     useful for training and evaluating ML models that perform feature selection
     ///     (e.g. gradient boosting).
     ///
-    virtual void select(indices_cmap_t samples, tensor_size_t feature, sclass_map_t) const = 0;
-    virtual void select(indices_cmap_t samples, tensor_size_t feature, mclass_map_t) const = 0;
-    virtual void select(indices_cmap_t samples, tensor_size_t feature, scalar_map_t) const = 0;
-    virtual void select(indices_cmap_t samples, tensor_size_t feature, struct_map_t) const = 0;
+    void select(indices_cmap_t samples, tensor_size_t feature, sclass_map_t) const;
+    void select(indices_cmap_t samples, tensor_size_t feature, mclass_map_t) const;
+    void select(indices_cmap_t samples, tensor_size_t feature, scalar_map_t) const;
+    void select(indices_cmap_t samples, tensor_size_t feature, struct_map_t) const;
 
     ///
     /// \brief computes the values of all features for the given samples,
@@ -124,6 +126,11 @@ protected:
     bool should_shuffle(tensor_size_t feature) const;
 
     static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
+
+    virtual void do_select(indices_cmap_t samples, tensor_size_t feature, sclass_map_t) const = 0;
+    virtual void do_select(indices_cmap_t samples, tensor_size_t feature, mclass_map_t) const = 0;
+    virtual void do_select(indices_cmap_t samples, tensor_size_t feature, scalar_map_t) const = 0;
+    virtual void do_select(indices_cmap_t samples, tensor_size_t feature, struct_map_t) const = 0;
 
     template <size_t input_rank1, typename toperator>
     void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal,

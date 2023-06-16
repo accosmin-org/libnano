@@ -65,25 +65,8 @@ indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) c
 
 void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize)
 {
-    static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
-
-    const auto samples = storage.size<0>();
-
-    if (colsize == 1)
-    {
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            storage(sample, column) = NaN;
-        }
-    }
-    else
-    {
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            auto segment = storage.vector(sample).segment(column, colsize);
-            segment.setConstant(NaN);
-        }
-    }
+    const auto samples                                          = storage.size<0>();
+    storage.matrix().block(0, column, samples, colsize).array() = NaN;
 }
 
 const datasource_t& generator_t::datasource() const
@@ -93,25 +76,69 @@ const datasource_t& generator_t::datasource() const
     return *m_datasource;
 }
 
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, scalar_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(NaN);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, sclass_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(-1);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, mclass_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(-1);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
+void generator_t::select(indices_cmap_t samples, const tensor_size_t ifeature, struct_map_t storage) const
+{
+    if (should_drop(ifeature))
+    {
+        storage.full(NaN);
+    }
+    else
+    {
+        do_select(samples, ifeature, storage);
+    }
+}
+
 factory_t<generator_t>& generator_t::all()
 {
     static auto manager = factory_t<generator_t>{};
     const auto  op      = []()
     {
-        manager.add<elemwise_generator_t<elemwise_gradient_t>>(
+        manager.add<gradient_generator_t>(
             "gradient-like features (e.g. edge orientation & magnitude) from structured features (e.g. images)");
 
-        manager.add<elemwise_generator_t<sclass_identity_t>>(
-            "identity transformation, forward the single-label features");
-
-        manager.add<elemwise_generator_t<mclass_identity_t>>(
-            "identity transformation, forward the multi-label features");
-
-        manager.add<elemwise_generator_t<scalar_identity_t>>("identity transformation, forward the scalar features");
-        manager.add<elemwise_generator_t<struct_identity_t>>(
+        manager.add<sclass_identity_generator_t>("identity transformation, forward the single-label features");
+        manager.add<mclass_identity_generator_t>("identity transformation, forward the multi-label features");
+        manager.add<scalar_identity_generator_t>("identity transformation, forward the scalar features");
+        manager.add<struct_identity_generator_t>(
             "identity transformation, forward the structured features (e.g. images)");
 
-        manager.add<pairwise_generator_t<pairwise_product_t>>("product of scalar features to generate quadratic terms");
+        manager.add<pairwise_product_generator_t>("product of scalar features to generate quadratic terms");
     };
 
     static std::once_flag flag;

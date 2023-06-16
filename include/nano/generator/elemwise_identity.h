@@ -10,14 +10,15 @@ namespace nano
 class NANO_PUBLIC sclass_identity_t : public elemwise_input_sclass_t, public generated_sclass_t
 {
 public:
-    sclass_identity_t()
-        : elemwise_input_sclass_t("identity-sclass")
+    template <typename... targs>
+    explicit sclass_identity_t(targs... args)
+        : elemwise_input_sclass_t("identity-sclass", std::forward<targs>(args)...)
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = mapped_classes(ifeature) - 1;
         const auto process = [](const auto& label) { return static_cast<int32_t>(label); };
@@ -32,14 +33,15 @@ public:
 class NANO_PUBLIC mclass_identity_t : public elemwise_input_mclass_t, public generated_mclass_t
 {
 public:
-    mclass_identity_t()
-        : elemwise_input_mclass_t("identity-mclass")
+    template <typename... targs>
+    explicit mclass_identity_t(targs... args)
+        : elemwise_input_mclass_t("identity-mclass", std::forward<targs>(args)...)
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = mapped_classes(ifeature);
         const auto process = [this](const auto& hits, auto&& storage) { this->copy(hits, storage); };
@@ -61,8 +63,9 @@ private:
 class NANO_PUBLIC scalar_identity_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    scalar_identity_t()
-        : elemwise_input_scalar_t("identity-scalar")
+    template <typename... targs>
+    explicit scalar_identity_t(targs... args)
+        : elemwise_input_scalar_t("identity-scalar", std::forward<targs>(args)...)
     {
     }
 
@@ -83,14 +86,15 @@ public:
 class NANO_PUBLIC struct_identity_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    struct_identity_t()
-        : elemwise_input_struct_t("identity-struct")
+    template <typename... targs>
+    explicit struct_identity_t(targs... args)
+        : elemwise_input_struct_t("identity-struct", std::forward<targs>(args)...)
     {
     }
 
     feature_t feature(tensor_size_t ifeature) const override;
 
-    auto process(tensor_size_t ifeature) const
+    auto process(const tensor_size_t ifeature) const
     {
         const auto colsize = size(mapped_dims(ifeature));
         const auto process = [](const auto& values, auto&& storage)
@@ -99,4 +103,9 @@ public:
         return std::make_tuple(process, colsize);
     }
 };
+
+using sclass_identity_generator_t = elemwise_generator_t<sclass_identity_t>;
+using mclass_identity_generator_t = elemwise_generator_t<mclass_identity_t>;
+using scalar_identity_generator_t = elemwise_generator_t<scalar_identity_t>;
+using struct_identity_generator_t = elemwise_generator_t<struct_identity_t>;
 } // namespace nano
