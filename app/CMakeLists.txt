@@ -1,3 +1,4 @@
+make_app(info NANO::nano)
 make_app(bench_eigen NANO::nano)
 #make_app(bench_gboost NANO::nano)
 make_app(bench_linear NANO::nano)
