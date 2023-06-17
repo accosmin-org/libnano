@@ -87,7 +87,7 @@ int unsafe_main(int argc, const char* argv[])
     param_tracker.setup(*rsplitter);
 
     // load dataset
-    ::load_datasource(*rdatasource);
+    rdatasource->load();
     const auto dataset = ::load_dataset(*rdatasource, generator_ids);
 
     // train the model using nested cross-validation with respecting the datasource's test samples (if given):

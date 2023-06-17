@@ -1,4 +1,3 @@
-
 #include <nano/core/cmdline.h>
 #include <nano/core/factory_util.h>
 #include <nano/core/logger.h>

@@ -15,21 +15,6 @@
 
 using namespace nano;
 
-[[maybe_unused]] inline void load_datasource(datasource_t& datasource)
-{
-    const auto timer = ::nano::timer_t{};
-    datasource.load();
-    const auto elapsed = timer.elapsed();
-
-    const auto tr_samples = datasource.train_samples();
-    const auto te_samples = datasource.test_samples();
-
-    log_info() << "=> datasource [" << datasource.type_id() << "] loaded in <" << elapsed << ">.";
-    log_info() << "..type=" << datasource.type();
-    log_info() << "..samples=" << datasource.samples() << " (" << tr_samples.size() << "+" << te_samples.size() << ")";
-    log_info() << "..features=" << datasource.features();
-}
-
 [[maybe_unused]] inline auto load_dataset(const datasource_t& datasource, const strings_t& generator_ids)
 {
     const auto timer   = ::nano::timer_t{};

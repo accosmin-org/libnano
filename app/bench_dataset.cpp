@@ -100,7 +100,7 @@ auto benchmark(const string_t& generator_id, const dataset_t& dataset)
 
 auto benchmark(datasource_t& datasource, const strings_t& generator_ids)
 {
-    ::load_datasource(datasource);
+    datasource.load();
 
     for (const auto& generator_id : generator_ids)
     {

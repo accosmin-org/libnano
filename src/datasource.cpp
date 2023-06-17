@@ -1,4 +1,5 @@
 #include <mutex>
+#include <nano/core/chrono.h>
 #include <nano/datasource/imclass_cifar.h>
 #include <nano/datasource/imclass_mnist.h>
 #include <nano/datasource/tabular.h>
@@ -138,7 +139,9 @@ task_type datasource_t::type() const
 
 void datasource_t::load()
 {
+    const auto timer = ::nano::timer_t{};
     do_load();
+    const auto elapsed = timer.elapsed();
 
     // NB: targets must be non-optional if a supervised task
     if (has_target())
@@ -146,6 +149,15 @@ void datasource_t::load()
         visit_target([&](const feature_t&, const auto&, const auto& mask)
                      { critical(::nano::optional(mask, samples()), "dataset: the target cannot be optional!"); });
     }
+
+    const auto tr_samples = train_samples();
+    const auto te_samples = test_samples();
+
+    log_info() << "datasource [" << type_id() << "] loaded in <" << elapsed << ">.";
+    log_info() << "datasource [" << type_id() << "] type=" << type() << ",input features=" << features()
+               << ",samples=" << samples() << "(" << tr_samples.size() << "+" << te_samples.size() << ").";
+    log_info() << "datasource [" << type_id() << "] target=["
+               << (!has_target() ? "N/A" : scat(m_features[static_cast<size_t>(m_target)])) << "].";
 }
 
 factory_t<datasource_t>& datasource_t::all()
