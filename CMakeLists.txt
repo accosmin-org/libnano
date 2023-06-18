@@ -1,4 +1,16 @@
 cmake_minimum_required(VERSION 3.21)
+
+find_program(CCACHE_EXECUTABLE ccache)
+if(CCACHE_EXECUTABLE)
+    set(ccacheEnv CCACHE_SLOPPINESS=pch_defines,time_macros)
+    # NOTE: Ccache 4.2+ required for reliable CUDA support
+    foreach(lang IN ITEMS C CXX OBJC OBJCXX CUDA)
+        set(CMAKE_${lang}_COMPILER_LAUNCHER
+            ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_EXECUTABLE}
+        )
+    endforeach()
+endif()
+
 project(libnano
     VERSION 0.0.1
     LANGUAGES CXX
@@ -49,17 +61,6 @@ check_cxx_source_compiles(
     PLATFORM_HAS_FROM_CHARS_FLOAT)
 if(PLATFORM_HAS_FROM_CHARS_FLOAT)
     add_compile_definitions(NANO_HAS_FROM_CHARS_FLOAT)
-endif()
-
-find_program(CCACHE_EXECUTABLE ccache)
-if(CCACHE_EXECUTABLE)
-    set(ccacheEnv CCACHE_SLOPPINESS=pch_defines,time_macros)
-    # NOTE: Ccache 4.2+ required for reliable CUDA support
-    foreach(lang IN ITEMS C CXX OBJC OBJCXX CUDA)
-        set(CMAKE_${lang}_COMPILER_LAUNCHER
-            ${CMAKE_COMMAND} -E env ${ccacheEnv} ${CCACHE_EXECUTABLE}
-        )
-    endforeach()
 endif()
 
 ##################################################################################################
