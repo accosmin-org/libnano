@@ -17,29 +17,29 @@ CXX=clang++ bash scripts/build.sh --clang-format
 ###############################################################################################################
 
 CXX=g++ bash scripts/build.sh --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
-    ${cmake_options} --config --build --test --install --build-example
+    ${cmake_options} --lld --config --build --test --install --build-example
 
 CXX=g++ bash scripts/build.sh --suffix gcc-release -DCMAKE_BUILD_TYPE=Release --native \
-    ${cmake_options} --config --build --test --install --build-example
+    ${cmake_options} --lld --config --build --test --install --build-example
 
 CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo --native \
-    ${cmake_options} --config --build --test --install --build-example
+    ${cmake_options} --lld --config --build --test --install --build-example
 
 #CXX=g++ bash scripts/build.sh --suffix gcc-release-lto -DCMAKE_BUILD_TYPE=Release --native --lto \
-#    ${cmake_options} --config --build --test --install --build-example
+#    ${cmake_options} --lld --config --build --test --install --build-example
 
 ###############################################################################################################
 # standard CLANG builds
 ###############################################################################################################
 
 #CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug \
-#    ${cmake_options} --config --build --test --install --build-example
+#    ${cmake_options} --lld --config --build --test --install --build-example
 
 #CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release --native \
-#    ${cmake_options} --config --build --test --install --build-example
+#    ${cmake_options} --lld --config --build --test --install --build-example
 
 #CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --native --thinlto \
-#    ${cmake_options} --config --build --test --install --build-example
+#    ${cmake_options} --lld --config --build --test --install --build-example
 
 ###############################################################################################################
 # static analysis:
@@ -48,10 +48,10 @@ CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=Rel
 ###############################################################################################################
 
 CXX=g++ bash scripts/build.sh --suffix cppcheck \
-    ${cmake_options} --config --cppcheck
+    ${cmake_options} --lld --config --cppcheck
 
 CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
-    ${cmake_options} --config --build --clang-tidy-all
+    ${cmake_options} --lld --config --build --clang-tidy-all
 
 ###############################################################################################################
 # dynamic analysis:
@@ -60,19 +60,19 @@ CXX=clang++ bash scripts/build.sh --suffix clang-tidy \
 ###############################################################################################################
 
 CXX=g++ bash scripts/build.sh --suffix memcheck -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    ${cmake_options} --config --build --memcheck
+    ${cmake_options} --lld --config --build --memcheck
 
 CXX=clang++ bash scripts/build.sh --suffix clang-asan -DCMAKE_BUILD_TYPE=Debug --asan \
-    ${cmake_options} --config --build --test
+    ${cmake_options} --lld --config --build --test
 
 CXX=clang++ bash scripts/build.sh --suffix clang-lsan -DCMAKE_BUILD_TYPE=Debug --lsan \
-    ${cmake_options} --config --build --test
+    ${cmake_options} --lld --config --build --test
 
 CXX=clang++ bash scripts/build.sh --suffix clang-usan -DCMAKE_BUILD_TYPE=Debug --usan \
-    ${cmake_options} --config --build --test
+    ${cmake_options} --lld --config --build --test
 
 CXX=clang++ bash scripts/build.sh --suffix clang-tsan -DCMAKE_BUILD_TYPE=Debug --tsan \
-    ${cmake_options} --config --build --test
+    ${cmake_options} --lld --config --build --test
 
 ###############################################################################################################
 # code coverage:
@@ -81,9 +81,9 @@ CXX=clang++ bash scripts/build.sh --suffix clang-tsan -DCMAKE_BUILD_TYPE=Debug -
 ###############################################################################################################
 
 CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov \
+    --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --lld --config --build --lcov-init --test --lcov \
     --codecov
 
 CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --config --build --test --llvm-cov \
+    --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON ${cmake_options} --lld --config --build --test --llvm-cov \
     --sonar

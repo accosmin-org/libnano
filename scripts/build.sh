@@ -46,7 +46,10 @@ function tsan {
 
 function gold {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=gold"
-    export LDFLAGS="${LDFLAGS} -fuse-ld=gold"
+}
+
+function lld {
+    export CXXFLAGS="${CXXFLAGS} -fuse-ld=lld"
 }
 
 function native {
@@ -523,6 +526,7 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
+        --lld)                          lld;;
         --lto)                          lto;;
         --thinlto)                      thinlto;;
         --asan)                         asan;;
