@@ -445,6 +445,8 @@ usage: $0 [OPTIONS]
 options:
     -h,--help
         print usage
+    --lld
+        setup compiler and linker flags to enable the llvm linker
     --lto
         setup compiler and linker flags to enable link-time optimization
     --thinlto
