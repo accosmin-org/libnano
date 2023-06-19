@@ -1,6 +1,7 @@
-#include "util.h"
 #include <iomanip>
 #include <nano/core/chrono.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/logger.h>
 #include <nano/core/stats.h>
 #include <nano/core/table.h>
 #include <nano/function/util.h>
@@ -53,11 +54,15 @@ int unsafe_main(int argc, const char* argv[])
     // parse the command line
     cmdline_t cmdline("benchmark optimization test functions");
     cmdline.add("", "function", "use this regex to select test functions", ".+");
-    cmdline.add("", "list-function", "list the available test functions");
-    cmdline.add("", "min-dims",         "minimum number of dimensions for each test function (if feasible)", "1024");
-    cmdline.add("", "max-dims",         "maximum number of dimensions for each test function (if feasible)", "1024");
+    cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "1024");
+    cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "1024");
 
-    const auto options = ::process(cmdline, argc, argv);
+    const auto options = cmdline.process(argc, argv);
+    if (options.has("help"))
+    {
+        cmdline.usage();
+        std::exit(EXIT_SUCCESS);
+    }
 
     // check arguments and options
     const auto min_dims = options.get<tensor_size_t>("min-dims");

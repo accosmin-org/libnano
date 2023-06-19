@@ -1,5 +1,8 @@
 #include "util.h"
+#include <nano/core/cmdline.h>
 #include <nano/core/parameter_tracker.h>
+#include <nano/core/table.h>
+#include <nano/dataset/iterator.h>
 
 using namespace nano;
 
@@ -117,10 +120,13 @@ int unsafe_main(int argc, const char* argv[])
     cmdline_t cmdline("benchmark loading datasets and generating features");
     cmdline.add("", "datasource", "regex to select machine learning datasets", "mnist");
     cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
-    cmdline.add("", "list-datasource", "list the available machine learning datasets");
-    cmdline.add("", "list-generator", "list the available feature generation methods");
 
-    const auto options = ::process(cmdline, argc, argv);
+    const auto options = cmdline.process(argc, argv);
+    if (options.has("help"))
+    {
+        cmdline.usage();
+        std::exit(EXIT_SUCCESS);
+    }
 
     // check arguments and options
     const auto dregex = std::regex(options.get<string_t>("datasource"));

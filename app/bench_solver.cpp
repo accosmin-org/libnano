@@ -1,10 +1,12 @@
-#include "util.h"
 #include <iomanip>
 #include <nano/core/chrono.h>
-#include <nano/core/factory_util.h>
+#include <nano/core/cmdline.h>
+#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/parallel.h>
 #include <nano/core/parameter_tracker.h>
+#include <nano/core/table.h>
+#include <nano/solver.h>
 #include <nano/tensor.h>
 
 using namespace nano;
@@ -307,16 +309,12 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
     cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
 
-    cmdline.add("", "list-solver", "list the available solvers");
-    cmdline.add("", "list-function", "list the available test functions");
-    cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
-    cmdline.add("", "list-lsearchk", "list the available line-search strategies");
-
-    cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
-    cmdline.add("", "list-lsearch0-params", "list the parameters of the selected line-search initialization methods");
-    cmdline.add("", "list-lsearchk-params", "list the parameters of the selected line-search strategies");
-
-    const auto options = ::process(cmdline, argc, argv);
+    const auto options = cmdline.process(argc, argv);
+    if (options.has("help"))
+    {
+        cmdline.usage();
+        std::exit(EXIT_SUCCESS);
+    }
 
     // check arguments and options
     const auto min_dims = options.get<tensor_size_t>("min-dims");

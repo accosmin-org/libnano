@@ -15,7 +15,6 @@ using namespace nano;
 
 namespace
 {
-
 ///
 /// \brief handle common command line requests:
 ///     (e.g. help, version, list builtin factory objects, list available parameters for selected objects).

@@ -44,7 +44,7 @@ scalar_t result_t::param_t::value(const split_type split, const value_type value
         sum_mean += stats.m_mean;
     }
 
-    return std::log(sum_mean + std::numeric_limits<scalar_t>::epsilon());
+    return sum_mean / static_cast<scalar_t>(folds());
 }
 
 const std::any& result_t::param_t::extra(const tensor_size_t fold) const

@@ -1,6 +1,8 @@
 #include "util.h"
 #include <iomanip>
+#include <nano/core/cmdline.h>
 #include <nano/core/parameter_tracker.h>
+#include <nano/core/table.h>
 #include <nano/dataset.h>
 #include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
@@ -22,6 +24,33 @@ auto make_object(const cmdline_t::result_t& options, const tfactory& factory, co
     return object;
 }
 
+auto print_scalar(const scalar_t value)
+{
+    return scat(std::setprecision(6), std::fixed, value);
+}
+
+auto print_params(const ml::result_t& result)
+{
+    if (result.param_names().empty())
+    {
+        return string_t{"N/A"};
+    }
+    else
+    {
+        const auto& param_names  = result.param_names();
+        const auto& param_values = result.optimum().params();
+        assert(static_cast<tensor_size_t>(param_names.size()) == param_values.size());
+
+        string_t str;
+        for (size_t i = 0U; i < param_names.size(); ++i)
+        {
+            str += scat(param_names[i], "=", std::fixed, std::setprecision(8),
+                        param_values(static_cast<tensor_size_t>(i)), " ");
+        }
+        return str;
+    }
+}
+
 int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
@@ -33,24 +62,14 @@ int unsafe_main(int argc, const char* argv[])
                 "k-fold");
     cmdline.add("", "datasource", "regex to select machine learning datasets", "<select>");
     cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
-
-    cmdline.add("", "list-loss", "list the available loss functions");
-    cmdline.add("", "list-tuner", "list the available hyper-parameter tuning methods");
-    cmdline.add("", "list-solver", "list the available solvers");
-    cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
-    cmdline.add("", "list-datasource", "list the available machine learning datasets");
-    cmdline.add("", "list-generator", "list the available feature generation methods");
-
     cmdline.add("", "list-linear-params", "list the parameters of the linear model");
-    cmdline.add("", "list-loss-params", "list the parameters of the selected loss functions");
-    cmdline.add("", "list-tuner-params", "list the parameters of the selected hyper-parameter tuning methods");
-    cmdline.add("", "list-solver-params", "list the parameters of the selected solvers");
-    cmdline.add("", "list-splitter-params", "list the parameters of the selected train-validation splitting methods");
-    cmdline.add("", "list-datasource-params", "list the parameters of the selected machine learning datasets");
-    cmdline.add("", "list-generator-params", "list the parameters of the selected feature generation methods");
 
-    const auto options = ::process(cmdline, argc, argv);
-
+    const auto options = cmdline.process(argc, argv);
+    if (options.has("help"))
+    {
+        cmdline.usage();
+        std::exit(EXIT_SUCCESS);
+    }
     if (options.has("list-linear-params"))
     {
         table_t table;
@@ -78,13 +97,14 @@ int unsafe_main(int argc, const char* argv[])
     // TODO: option to save trained models
     // TODO: option to save training history to csv
     // TODO: wrapper script to generate plots?!
-    // TODO: experiments to evaluate feature value scaling, regularization method
+    // TODO: experiments to evaluate feature value scaling, regularization method, feature generation (products!)
 
     auto param_tracker = parameter_tracker_t{options};
     param_tracker.setup(*rloss);
     param_tracker.setup(*rtuner);
     param_tracker.setup(*rsolver);
     param_tracker.setup(*rsplitter);
+    param_tracker.setup(*rdatasource);
 
     // load dataset
     rdatasource->load();
@@ -95,6 +115,15 @@ int unsafe_main(int argc, const char* argv[])
     //      make (training, validation) split
     //      fit (and tune) on the training samples
     //      evaluate on the validation samples
+    auto table = table_t{};
+    table.header() << "fold"
+                   << "optimum params"
+                   << "train error"
+                   << "valid error"
+                   << "refit error"
+                   << "test error";
+    table.delim();
+
     const auto test_samples = rdatasource->test_samples();
     const auto eval_samples = rdatasource->train_samples();
     const auto tr_vd_splits = rsplitter->split(eval_samples);
@@ -109,17 +138,17 @@ int unsafe_main(int argc, const char* argv[])
         const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
         const auto fit_result = model.fit(dataset, train_samples, *rloss, fit_params);
 
-        const auto errors_values = model.evaluate(dataset, valid_samples, *rloss);
+        const auto test_errors_values = model.evaluate(dataset, valid_samples, *rloss);
 
-        log_info() << std::setprecision(8) << std::fixed << "linear: tests=" << errors_values.tensor(1).mean() << "/"
-                   << errors_values.tensor(0).mean() << ",outer_fold=" << (outer_fold + 1) << "/" << tr_vd_splits.size()
-                   << ".";
+        table.append() << scat(outer_fold + 1, "/", tr_vd_splits.size()) << print_params(fit_result)
+                       << print_scalar(fit_result.optimum().value(ml::split_type::train, ml::value_type::errors))
+                       << print_scalar(fit_result.optimum().value(ml::split_type::valid, ml::value_type::errors))
+                       << print_scalar(fit_result.stats(ml::value_type::errors).m_mean)
+                       << print_scalar(test_errors_values.tensor(0).mean());
+        std::cout << table;
 
         // TODO: export inner/outer splits' results!
-
-        // TODO: compute and export feature weights
         // TODO: check the selected features are the expected ones(lasso, elasticnet)
-        // TODO: compute some sparsity factor
         // TODO: synthetic linear dataset (classification and regression) with known relevant feature sets
         const auto feature_importance = linear::feature_importance(dataset, model.weights());
 
