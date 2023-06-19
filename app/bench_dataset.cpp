@@ -39,7 +39,7 @@ auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
                       (void)tnum;
                       (void)values;
                   });
-    log_info() << "generator_t [" << generator_id << "] feature selection in <" << timer.elapsed() << ">.";
+    log_info() << "generator[" << generator_id << "]: feature selection in <" << timer.elapsed() << ">.";
 }
 
 auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
@@ -89,10 +89,9 @@ auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 
 auto benchmark(const string_t& generator_id, const dataset_t& dataset)
 {
-    log_info() << "generator [" << generator_id << "]:";
-    log_info() << "  target=[" << dataset.target() << "]";
-    log_info() << "  columns=" << dataset.columns();
-    log_info() << "  features=" << dataset.features();
+    log_info() << "generator[" << generator_id << "]: columns=" << dataset.columns()
+               << ",features=" << dataset.features();
+    log_info() << "generator[" << generator_id << "]: target=[" << dataset.target() << "]";
 
     benchmark_select(generator_id, dataset);
     benchmark_flatten(generator_id, dataset);

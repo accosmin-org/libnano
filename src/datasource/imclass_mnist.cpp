@@ -4,10 +4,9 @@
 
 using namespace nano;
 
-base_mnist_datasource_t::base_mnist_datasource_t(string_t id, string_t dir, string_t name, feature_t target)
+base_mnist_datasource_t::base_mnist_datasource_t(string_t id, string_t dir, feature_t target)
     : datasource_t(std::move(id))
     , m_dir(std::move(dir))
-    , m_name(std::move(name))
     , m_target(std::move(target))
 {
 }
@@ -36,14 +35,14 @@ void base_mnist_datasource_t::do_load()
     tensor_size_t sample = 0;
     for (const auto& [ifile, tfile, offset, expected] : parts)
     {
-        log_info() << m_name << ": loading file <" << ifile << ">...";
-        critical(!iread(ifile, offset, expected), m_name, ": failed to load file <", ifile, ">!");
+        log_info() << "datasource[" << type_id() << "]: loading file <" << ifile << ">...";
+        critical(!iread(ifile, offset, expected), "datasource[", type_id(), "]: failed to load file <", ifile, ">!");
 
-        log_info() << m_name << ": loading file <" << tfile << ">...";
-        critical(!tread(tfile, offset, expected), m_name, ": failed to load file <", tfile, ">!");
+        log_info() << "datasource[" << type_id() << "]: loading file <" << tfile << ">...";
+        critical(!tread(tfile, offset, expected), "datasource[", type_id(), "]: failed to load file <", tfile, ">!");
 
         sample += expected;
-        log_info() << m_name << ": loaded " << sample << " samples.";
+        log_info() << "datasource[" << type_id() << "]: loaded " << sample << " samples.";
     }
 
     datasource_t::testing({make_range(60000, 70000)});
@@ -98,7 +97,7 @@ bool base_mnist_datasource_t::tread(const string_t& path, tensor_size_t sample, 
 }
 
 mnist_datasource_t::mnist_datasource_t()
-    : base_mnist_datasource_t("mnist", "mnist", "MNIST",
+    : base_mnist_datasource_t("mnist", "mnist",
                               feature_t("digit").sclass(strings_t{"digit0", "digit1", "digit2", "digit3", "digit4",
                                                                   "digit5", "digit6", "digit7", "digit8", "digit9"}))
 {
@@ -111,7 +110,7 @@ rdatasource_t mnist_datasource_t::clone() const
 
 fashion_mnist_datasource_t::fashion_mnist_datasource_t()
     : base_mnist_datasource_t(
-          "fashion-mnist", "fashion-mnist", "Fashion-MNIST",
+          "fashion-mnist", "fashion-mnist",
           feature_t("article").sclass(strings_t{"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal",
                                                 "Shirt", "Sneaker", "Bag", "Ankle boot"}))
 {

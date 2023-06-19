@@ -4,10 +4,9 @@
 
 using namespace nano;
 
-cifar_datasource_t::cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target)
+cifar_datasource_t::cifar_datasource_t(string_t id, string_t dir, feature_t target)
     : datasource_t(std::move(id))
     , m_dir(std::move(dir))
-    , m_name(std::move(name))
     , m_target(std::move(target))
 {
 }
@@ -36,11 +35,12 @@ void cifar_datasource_t::do_load()
     tensor_size_t sample = 0;
     for (const auto& file : m_files)
     {
-        log_info() << m_name << ": loading file <" << make_full_path(file.m_filename) << "> ...";
-        critical(!iread(file), m_name, ": failed to load file <", make_full_path(file.m_filename), ">!");
+        log_info() << "datasource[" << type_id() << "]: loading file <" << make_full_path(file.m_filename) << "> ...";
+        critical(!iread(file), "datasource[", type_id(), "]: failed to load file <", make_full_path(file.m_filename),
+                 ">!");
 
         sample += file.m_expected;
-        log_info() << m_name << ": loaded " << sample << " samples.";
+        log_info() << "datasource[" << type_id() << "]: loaded " << sample << " samples.";
     }
 
     datasource_t::testing({make_range(50000, 60000)});
@@ -75,7 +75,7 @@ bool cifar_datasource_t::iread(const file_t& file)
 }
 
 cifar10_datasource_t::cifar10_datasource_t()
-    : cifar_datasource_t("cifar10", "cifar10/", "CIFAR-10",
+    : cifar_datasource_t("cifar10", "cifar10/",
                          feature_t("class").sclass(strings_t{"airplane", "automobile", "bird", "cat", "deer", "dog",
                                                              "frog", "horse", "ship", "truck"}))
 {
@@ -93,7 +93,7 @@ rdatasource_t cifar10_datasource_t::clone() const
 }
 
 cifar100c_datasource_t::cifar100c_datasource_t()
-    : cifar_datasource_t("cifar100c", "cifar100/", "CIFAR-100",
+    : cifar_datasource_t("cifar100c", "cifar100/",
                          feature_t("class").sclass(strings_t{"aquatic mammals",
                                                              "fish",
                                                              "flowers",
@@ -126,7 +126,7 @@ rdatasource_t cifar100c_datasource_t::clone() const
 
 cifar100f_datasource_t::cifar100f_datasource_t()
     : cifar_datasource_t(
-          "cifar100f", "cifar100/", "CIFAR-100",
+          "cifar100f", "cifar100/",
           feature_t("class").sclass(strings_t{
               "apple",      "aquarium_fish", "baby",         "bear",       "beaver",      "bed",         "bee",
               "beetle",     "bicycle",       "bottle",       "bowl",       "boy",         "bridge",      "bus",

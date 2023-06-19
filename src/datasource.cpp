@@ -146,17 +146,20 @@ void datasource_t::load()
     // NB: targets must be non-optional if a supervised task
     if (has_target())
     {
-        visit_target([&](const feature_t&, const auto&, const auto& mask)
-                     { critical(::nano::optional(mask, samples()), "dataset: the target cannot be optional!"); });
+        visit_target(
+            [&](const feature_t&, const auto&, const auto& mask) {
+                critical(::nano::optional(mask, samples()), "datasource[", type_id(),
+                         "]: the target cannot be optional!");
+            });
     }
 
     const auto tr_samples = train_samples();
     const auto te_samples = test_samples();
 
-    log_info() << "datasource [" << type_id() << "] loaded in <" << elapsed << ">.";
-    log_info() << "datasource [" << type_id() << "] type=" << type() << ",input features=" << features()
+    log_info() << "datasource[" << type_id() << "]: loaded in <" << elapsed << ">.";
+    log_info() << "datasource[" << type_id() << "]: type=" << type() << ",input features=" << features()
                << ",samples=" << samples() << "(" << tr_samples.size() << "+" << te_samples.size() << ").";
-    log_info() << "datasource [" << type_id() << "] target=["
+    log_info() << "datasource[" << type_id() << "]: target=["
                << (!has_target() ? "N/A" : scat(m_features[static_cast<size_t>(m_target)])) << "].";
 }
 

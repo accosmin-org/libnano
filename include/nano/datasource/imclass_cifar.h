@@ -13,7 +13,7 @@ public:
     ///
     /// \brief constructor
     ///
-    cifar_datasource_t(string_t id, string_t dir, string_t name, feature_t target);
+    cifar_datasource_t(string_t id, string_t dir, feature_t target);
 
 protected:
     void file(string_t filename, tensor_size_t, tensor_size_t, tensor_size_t, tensor_size_t);
@@ -55,7 +55,6 @@ private:
     // attributes
     string_t  m_dir;    ///< directory where to load the data from
     string_t  m_path;   ///< path to the archive where to load the data from
-    string_t  m_name;   ///< dataset name
     feature_t m_target; ///< target feature
     files_t   m_files;  ///<
 };
