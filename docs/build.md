@@ -135,3 +135,75 @@ bash scripts/build.sh --suffix debug -DCMAKE_BUILD_TYPE=Debug -GNinja \
 
 
 NB: Use the ```--native``` flag when compiling for ```Release``` builds to maximize performance on a given machine. This is because Eigen3 uses vectorization internally for the linear algebra operations. Please note that the resulting binaries may not be usable on another platform.
+
+
+### Library design
+
+The library is designed by mapping all relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/debug``` using one of the example above.
+
+Examples:
+* list the available numerical optimization algorithms (solvers):
+```
+./build/libnano/debug/app/info --list-solver
+|-----------|---------------------------------------------------------------------|
+| solver    | description                                                         |
+|-----------|---------------------------------------------------------------------|
+| asga2     | accelerated sub-gradient algorithm (ASGA-2)                         |
+| asga4     | accelerated sub-gradient algorithm (ASGA-4)                         |
+| bfgs      | quasi-newton method (BFGS)                                          |
+| cgd-cd    | conjugate gradient descent (CD)                                     |
+| cgd-dy    | conjugate gradient descent (DY)                                     |
+| cgd-dycd  | conjugate gradient descent (DYCD)                                   |
+| cgd-dyhs  | conjugate gradient descent (DYHS)                                   |
+| cgd-fr    | conjugate gradient descent (FR)                                     |
+| cgd-frpr  | conjugate gradient descent (FRPR)                                   |
+| cgd-hs    | conjugate gradient descent (HS+)                                    |
+| cgd-ls    | conjugate gradient descent (LS+)                                    |
+| cgd-n     | conjugate gradient descent (N+)                                     |
+| cgd-pr    | conjugate gradient descent (default)                                |
+| cocob     | continuous coin betting (COCOB)                                     |
+| dfp       | quasi-newton method (DFP)                                           |
+| dgm       | universal dual gradient method (DGM)                                |
+| ellipsoid | ellipsoid method                                                    |
+| fgm       | universal fast gradient method (FGM)                                |
+| fletcher  | quasi-newton method (Fletcher's switch)                             |
+| gd        | gradient descent                                                    |
+| hoshino   | quasi-newton method (Hoshino formula)                               |
+| lbfgs     | limited-memory BFGS                                                 |
+| osga      | optimal sub-gradient algorithm (OSGA)                               |
+| pgm       | universal primal gradient method (PGM)                              |
+| sda       | simple dual averages (variant of primal-dual subgradient methods)   |
+| sgm       | sub-gradient method                                                 |
+| sr1       | quasi-newton method (SR1)                                           |
+| wda       | weighted dual averages (variant of primal-dual subgradient methods) |
+|-----------|---------------------------------------------------------------------|
+```
+
+* list the name, the default value and the domain of all parameters of some solvers of interest:
+```
+./build/libnano/debug/app/info --list-solver-params --solver "lbfgs|bfgs|cgd-pr"
+|--------|-------------------------------|--------------|--------------------------|
+| solver | parameter                     | value        | domain                   |
+|--------|-------------------------------|--------------|--------------------------|
+| bfgs   | quasi-newton method (BFGS)                                              |
+|--------|-------------------------------|--------------|--------------------------|
+| bfgs   | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| bfgs   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| bfgs   | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
+| bfgs   | solver::quasi::initialization | identity     | identity,scaled          |
+|--------|-------------------------------|--------------|--------------------------|
+| cgd-pr | conjugate gradient descent (default)                                    |
+|--------|-------------------------------|--------------|--------------------------|
+| cgd-pr | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| cgd-pr | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| cgd-pr | solver::tolerance             | (0.0001,0.1) | 0 < 0.0001 < 0.1 < 1     |
+| cgd-pr | solver::cgd::orthotest        | 0.1          | 0 < 0.1 < 1              |
+|--------|-------------------------------|--------------|--------------------------|
+| lbfgs  | limited-memory BFGS                                                     |
+|--------|-------------------------------|--------------|--------------------------|
+| lbfgs  | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| lbfgs  | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| lbfgs  | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
+| lbfgs  | solver::lbfgs::history        | 20           | 1 <= 20 <= 1000          |
+|--------|-------------------------------|--------------|--------------------------|
+```

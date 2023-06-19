@@ -6,10 +6,10 @@
 Libnano implements machine learning models to address the following types of supervised machine learning (ML) problems:
 * supervised univariate and multivariate `regression`,
 * supervised `binary classification` and
-* single-label or multi-label `multi-class classification`. 
+* single-label or multi-label `multi-class classification`.
 
 The most important concepts related to training and evaluating ML models are mapped to easy-to-use and extensible interfaces. The builtin implementations are available in the associated factories. The next sections explain how these interfaces work:
-* [datasource_t](../include/nano/datasource.h) - in-memory collection of samples consisting of input features and optional targets. 
+* [datasource_t](../include/nano/datasource.h) - in-memory collection of samples consisting of input features and optional targets.
 * [generator_t](../include/nano/generator.h) - generate features on the fly from a given dataset.
 * [dataset_t](../include/nano/dataset.h) - machine learning dataset consisting of samples and feature generators.
 * [model_t](../include/nano/model.h) - machine learning model to map the input features to the associated targets.
@@ -59,9 +59,9 @@ It is often useful to either represent the feature values of a dataset different
 
 Multiple generators can be combined on a given dataset using a `dataset_t` object. Then an iterator-like wrapper simplifies the usage for particular ML models as following:
 
-* `flatten_iterator_t` - useful for flattening the generated features to train and evaluate dense models like linear models or feed-forward neural networks. This iterator supports caching of the inputs and the targets, access by grouping samples in fixed-size batches and access in both the single-threaded and the multi-threaded cases. 
+* `flatten_iterator_t` - useful for flattening the generated features to train and evaluate dense models like linear models or feed-forward neural networks. This iterator supports caching of the inputs and the targets, access by grouping samples in fixed-size batches and access in both the single-threaded and the multi-threaded cases.
 
-* `select_iterator_t` - useful for train and evaluating models that perform explicit feature selection like gradient boosting. This iterator supports grouping features by type (e.g. categorical, continuous or categorical) and access in both the single-threaded and the multi-threaded cases. 
+* `select_iterator_t` - useful for train and evaluating models that perform explicit feature selection like gradient boosting. This iterator supports grouping features by type (e.g. categorical, continuous or categorical) and access in both the single-threaded and the multi-threaded cases.
 
 The builtin feature generators are available from their associated factory with:
 ```
@@ -122,10 +122,10 @@ The predictions and the targets are represented as 3D tensors for greater flexib
 
 The `model_t` interface represents a ML model with the following most important functionalities:
 * training with a given dataset, loss function and solver.
-* automatic tuning of any hyper-parameters using the given tuning strategy (e.g. by fitting a quadratic surrogate function). 
+* automatic tuning of any hyper-parameters using the given tuning strategy (e.g. by fitting a quadratic surrogate function).
 * customizable strategy for splitting samples into training (to optimize parameters) and validation (to evaluate and tune hyper-parameters, e.g. regularization parameters).
 * evaluation on a given dataset and loss function.
-* serialization to and from binary streams, e.g. file. 
+* serialization to and from binary streams, e.g. file.
 
 To properly train and evaluate ML models it is advised to divide samples using a nested cross-validation-like strategy in the following categories:
 
@@ -136,7 +136,6 @@ To properly train and evaluate ML models it is advised to divide samples using a
 Note that this process should be repeated multiple times to get an estimation of the performance distribution as ML is a stochastic process.
 
 
-
-The following ML models are builtin: 
+The following ML models are builtin:
 * [linear models](../docs/linear.md)
 * [gradient boosting models](../docs/gboost.md)

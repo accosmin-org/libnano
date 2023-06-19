@@ -327,3 +327,4 @@ L-BFGS is catching up to BFGS in terms of both accuracy and number of iterations
 * Linear programming solver
 * Quadratic programming solver
 * Solvers for constrained optimization
+* Solvers for non-smooth convex problems with reliable stopping criteria
