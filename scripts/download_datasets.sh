@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dir_data=$HOME/libnano/datasets
+dir_data=$HOME/.libnano/datasets
 
 function unzip_dir {
     local dir=$1
