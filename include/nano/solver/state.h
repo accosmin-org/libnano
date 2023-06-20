@@ -225,5 +225,4 @@ private:
 NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_t& current_state, scalar_t epsilon);
 
 NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
-NANO_PUBLIC bool          operator<(const solver_state_t& lhs, const solver_state_t& rhs);
 } // namespace nano

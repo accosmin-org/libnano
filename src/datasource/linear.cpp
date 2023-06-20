@@ -24,7 +24,7 @@ features_t make_features(const tensor_size_t n_features, const tensor_size_t n_t
     features.push_back(feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(n_targets, 1, 1)));
 
     return features;
-}
+} // LCOV_EXCL_LINE
 
 auto make_dataset(const datasource_t& datasource)
 {
@@ -34,7 +34,7 @@ auto make_dataset(const datasource_t& datasource)
     dataset.add<scalar_identity_generator_t>();
     dataset.add<struct_identity_generator_t>();
     return dataset;
-}
+} // LCOV_EXCL_LINE
 } // namespace
 
 linear_datasource_t::linear_datasource_t()

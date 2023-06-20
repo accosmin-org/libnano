@@ -24,7 +24,7 @@ rwlearners_t nano::wlearner::clone(const rwlearners_t& wlearners)
     }
 
     return clones;
-}
+} // LCOV_EXCL_LINE
 
 void nano::wlearner::merge(rwlearners_t& wlearners)
 {

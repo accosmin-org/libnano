@@ -71,7 +71,7 @@ std::istream& nano::read(std::istream& stream, dtree_node_t& node)
     if (!::nano::read_cast<int32_t>(stream, node.m_feature) || !::nano::read(stream, node.m_threshold) ||
         !::nano::read_cast<uint32_t>(stream, node.m_next) || !::nano::read_cast<int32_t>(stream, node.m_table))
     {
-        stream.setstate(std::ios_base::failbit);
+        stream.setstate(std::ios_base::failbit); // LCOV_EXCL_LINE
     }
     return stream;
 }
@@ -82,7 +82,7 @@ std::ostream& nano::write(std::ostream& stream, const dtree_node_t& node)
         !::nano::write(stream, static_cast<uint32_t>(node.m_next)) ||
         !::nano::write(stream, static_cast<int32_t>(node.m_table)))
     {
-        stream.setstate(std::ios_base::failbit);
+        stream.setstate(std::ios_base::failbit); // LCOV_EXCL_LINE
     }
     return stream;
 }

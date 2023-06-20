@@ -127,6 +127,7 @@ UTEST_CASE(monostate)
     UTEST_CHECK_NOT_EQUAL(param, parameter_t::make_scalar("", 0.0, LE, 0.5, LE, 1.0));
 
     UTEST_CHECK_THROW(param.value<int>(), std::runtime_error);
+    UTEST_CHECK_THROW(param.value<string_t>(), std::runtime_error);
     UTEST_CHECK_THROW(param.value<enum_type>(), std::runtime_error);
     UTEST_CHECK_THROW(param.value_pair<scalar_t>(), std::runtime_error);
 

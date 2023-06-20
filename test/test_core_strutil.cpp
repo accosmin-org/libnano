@@ -43,6 +43,9 @@ UTEST_CASE(from_string)
     UTEST_CHECK_EQUAL(nano::from_string<float>("0.2f"), 0.2F);
     UTEST_CHECK_EQUAL(nano::from_string<long int>("124545"), 124545);
     UTEST_CHECK_EQUAL(nano::from_string<unsigned long>("42"), 42U);
+
+    UTEST_CHECK_THROW(nano::from_string<int>("x"), std::invalid_argument);
+    UTEST_CHECK_THROW(nano::from_string<short>("1000000000"), std::out_of_range);
 }
 
 UTEST_CASE(enum_string)

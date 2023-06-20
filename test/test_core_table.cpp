@@ -50,12 +50,17 @@ UTEST_CASE(table_rows)
 {
     using namespace nano;
 
-    nano::table_t table;
-    table.header() << "head" << colspan(2) << "colx" << colspan(1) << "col3";
-    table.append() << "row1" << 1000 << 9000 << 4000;
-    table.append() << "row2"
-                   << "3200" << colspan(2) << "2000";
-    table.append() << "row3" << colspan(3) << "2500";
+    const auto table = []()
+    {
+        auto table_ = nano::table_t{};
+        table_.header() << "head" << colspan(2) << "colx" << colspan(1) << "col3";
+        table_.append() << "row1" << 1000 << 9000 << 4000;
+        table_.append() << "row2"
+                        << "3200" << colspan(2) << "2000";
+        table_.append() << "row3" << colspan(3) << "2500";
+        table_.row(0).data(0, "heax");
+        return table_;
+    }();
 
     UTEST_CHECK_EQUAL(table.rows(), 4U);
     UTEST_CHECK_EQUAL(table.cols(), 4U);
@@ -65,7 +70,7 @@ UTEST_CASE(table_rows)
     UTEST_CHECK_EQUAL(table.row(2).cols(), 4U);
     UTEST_CHECK_EQUAL(table.row(3).cols(), 4U);
 
-    UTEST_CHECK_EQUAL(table.row(0).data(0), "head");
+    UTEST_CHECK_EQUAL(table.row(0).data(0), "heax");
     UTEST_CHECK_EQUAL(table.row(0).mark(0), "");
     UTEST_CHECK_EQUAL(table.row(0).data(1), "colx");
     UTEST_CHECK_EQUAL(table.row(0).mark(1), "");

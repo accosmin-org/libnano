@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-cell_t::cell_t() = default;
+cell_t::cell_t() = default; // LCOV_EXCL_LINE
 
 cell_t::cell_t(string_t data, const size_t span, const alignment align, const char fill)
     : m_data(std::move(data))
@@ -12,7 +12,7 @@ cell_t::cell_t(string_t data, const size_t span, const alignment align, const ch
 {
 }
 
-row_t::row_t() = default;
+row_t::row_t() = default; // LCOV_EXCL_LINE
 
 row_t::row_t(const mode t)
     : m_type(t)

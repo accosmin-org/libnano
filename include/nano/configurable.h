@@ -23,13 +23,13 @@ public:
     /// \brief enable copying
     ///
     configurable_t(const configurable_t&)            = default;
-    configurable_t& operator=(const configurable_t&) = default;
+    configurable_t& operator=(const configurable_t&) = default; // LCOV_EXCL_LINE
 
     ///
     /// \brief enable moving
     ///
     configurable_t(configurable_t&&) noexcept            = default;
-    configurable_t& operator=(configurable_t&&) noexcept = default;
+    configurable_t& operator=(configurable_t&&) noexcept = default; // LCOV_EXCL_LINE
 
     ///
     /// \brief default destructor
