@@ -71,8 +71,7 @@ public:
     /// \brief support for feature importance estimation using sample-permutation like methods.
     ///
     void      unshuffle() const;
-    void      shuffle(tensor_size_t feature) const;
-    indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
+    indices_t shuffle(tensor_size_t feature) const;
 
     ///
     /// \brief returns the flatten feature values for all features on a given subset of samples.

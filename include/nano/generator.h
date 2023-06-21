@@ -98,8 +98,7 @@ public:
     /// \brief toggle sample permutation of features, useful for feature importance analysis.
     ///
     void      unshuffle();
-    void      shuffle(tensor_size_t feature);
-    indices_t shuffled(indices_cmap_t samples, tensor_size_t feature) const;
+    indices_t shuffle(tensor_size_t feature);
 
     ///
     /// \brief computes the values of the given feature and samples,
@@ -123,7 +122,7 @@ protected:
 
     void allocate(tensor_size_t features);
     bool should_drop(tensor_size_t feature) const;
-    bool should_shuffle(tensor_size_t feature) const;
+    indices_cmap_t shuffled(tensor_size_t feature) const;
 
     static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
 
@@ -136,43 +135,30 @@ protected:
     void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal,
                  const toperator& op) const
     {
-        const auto visitor = [this, ifeature, &op, &samples](const auto&, const auto& data, const auto& mask)
-        {
-            if (should_shuffle(ifeature))
-            {
-                loop_samples<input_rank1>(data, mask, shuffled(samples, ifeature), op);
-            }
-            else
-            {
-                loop_samples<input_rank1>(data, mask, samples, op);
-            }
-        };
-        datasource().visit_inputs(ioriginal, visitor);
+        const auto& ds = datasource();
+        ds.visit_inputs(ioriginal,
+                        [&](const auto&, const auto& data, const auto& mask)
+                        {
+                            const auto shuffled = this->shuffled(ifeature);
+                            loop_samples<input_rank1>(data, mask, samples, shuffled, op);
+                        });
     }
 
     template <size_t input_rank1, size_t input_rank2, typename toperator>
     void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal1,
                  const tensor_size_t ioriginal2, const toperator& op) const
     {
-        const auto visitor =
-            [this, ifeature, &op, &samples](const auto& data1, const auto& mask1, const auto& data2, const auto& mask2)
-        {
-            if (should_shuffle(ifeature))
-            {
-                loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, shuffled(samples, ifeature), op);
-            }
-            else
-            {
-                loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2, samples, op);
-            }
-        };
-
         const auto& ds = datasource();
         ds.visit_inputs(ioriginal1,
                         [&](const auto&, const auto& data1, const auto& mask1)
                         {
-                            ds.visit_inputs(ioriginal2, [&](const auto&, const auto& data2, const auto& mask2)
-                                            { visitor(data1, mask1, data2, mask2); });
+                            ds.visit_inputs(ioriginal2,
+                                            [&](const auto&, const auto& data2, const auto& mask2)
+                                            {
+                                                const auto shuffled = this->shuffled(ifeature);
+                                                loop_samples<input_rank1, input_rank2>(data1, mask1, data2, mask2,
+                                                                                       samples, shuffled, op);
+                                            });
                         });
     }
 
@@ -181,13 +167,12 @@ private:
     //  - 0: flags - 0 - default, 1 - to drop, 2 - to shuffle
     using feature_infos_t = tensor_mem_t<uint8_t, 1>;
 
-    // per feature:
-    //  - random number generator to use to shuffle the given samples
-    using feature_rands_t = std::vector<rng_t>;
+    // the permutation of all samples for shuffled features
+    using feature_shuffles_t = std::unordered_map<tensor_size_t, indices_t>;
 
     // attributes
     const datasource_t* m_datasource{nullptr}; ///<
     feature_infos_t     m_feature_infos;       ///<
-    feature_rands_t     m_feature_rands;       ///<
+    feature_shuffles_t  m_feature_shuffles;    ///<
 };
 } // namespace nano

@@ -12,11 +12,12 @@ class base_datasource_iterator_t
 public:
     base_datasource_iterator_t() = default;
 
-    explicit base_datasource_iterator_t(indices_cmap_t samples, tensor_size_t index = 0)
+    explicit base_datasource_iterator_t(indices_cmap_t samples, indices_cmap_t shuffled_all_samples,
+                                        tensor_size_t index = 0)
         : m_index(index)
         , m_samples(samples)
+        , m_shuffled_all_samples(shuffled_all_samples)
     {
-        assert(index >= 0 && index <= m_samples.size());
     }
 
     tensor_size_t size() const { return m_samples.size(); }
@@ -26,7 +27,16 @@ public:
     tensor_size_t sample() const
     {
         assert(m_index >= 0 && m_index < m_samples.size());
-        return m_samples(m_index);
+
+        if (m_shuffled_all_samples.size() == 0)
+        {
+            return m_samples(m_index);
+        }
+        else
+        {
+            assert(m_samples(m_index) >= 0 && m_samples(m_index) < m_shuffled_all_samples.size());
+            return m_shuffled_all_samples(m_samples(m_index));
+        }
     }
 
     base_datasource_iterator_t& operator++()
@@ -48,8 +58,9 @@ public:
 
 private:
     // attributes
-    tensor_size_t  m_index{0}; ///<
-    indices_cmap_t m_samples;  ///<
+    tensor_size_t  m_index{0};             ///<
+    indices_cmap_t m_samples;              ///<
+    indices_cmap_t m_shuffled_all_samples; ///<
 };
 
 ///
@@ -63,8 +74,9 @@ public:
 
     datasource_iterator_t() = default;
 
-    datasource_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples, tensor_size_t index = 0)
-        : base_datasource_iterator_t(samples, index)
+    datasource_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples,
+                          indices_cmap_t shuffled_all_samples, tensor_size_t index = 0)
+        : base_datasource_iterator_t(samples, shuffled_all_samples, index)
         , m_data(data)
         , m_mask(mask)
     {
@@ -104,8 +116,8 @@ public:
     datasource_pairwise_iterator_t() = default;
 
     datasource_pairwise_iterator_t(data1_cmap_t data1, mask_cmap_t mask1, data2_cmap_t data2, mask_cmap_t mask2,
-                                   indices_cmap_t samples, tensor_size_t index = 0)
-        : base_datasource_iterator_t(samples, index)
+                                   indices_cmap_t samples, indices_cmap_t shuffled_all_samples, tensor_size_t index = 0)
+        : base_datasource_iterator_t(samples, shuffled_all_samples, index)
         , m_data1(data1)
         , m_mask1(mask1)
         , m_data2(data2)
@@ -164,25 +176,28 @@ inline bool operator!=(const base_datasource_iterator_t& lhs, const base_datasou
 /// \brief construct an iterator from the given inputs.
 ///
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
+auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples,
+                   indices_cmap_t shuffled_all_samples)
 {
-    return datasource_iterator_t<tscalar, trank>{data, mask, samples, 0};
+    return datasource_iterator_t<tscalar, trank>{data, mask, samples, shuffled_all_samples};
 }
 
 template <template <typename, size_t> class tstorage1, typename tscalar1, size_t trank1,
           template <typename, size_t> class tstorage2, typename tscalar2, size_t trank2>
 auto make_iterator(const tensor_t<tstorage1, tscalar1, trank1>& data1, mask_cmap_t mask1,
-                   const tensor_t<tstorage2, tscalar2, trank2>& data2, mask_cmap_t mask2, indices_cmap_t samples)
+                   const tensor_t<tstorage2, tscalar2, trank2>& data2, mask_cmap_t mask2, indices_cmap_t samples,
+                   indices_cmap_t shuffled_all_samples)
 {
-    return datasource_pairwise_iterator_t<tscalar1, trank1, tscalar2, trank2>{data1, mask1, data2, mask2, samples, 0};
+    return datasource_pairwise_iterator_t<tscalar1, trank1, tscalar2, trank2>{data1, mask1,   data2,
+                                                                              mask2, samples, shuffled_all_samples};
 }
 
 ///
 /// \brief construct an invalid (end) iterator from the given inputs.
 ///
-inline auto make_end_iterator(indices_cmap_t samples)
+inline auto make_end_iterator(indices_cmap_t samples, indices_cmap_t shuffled_all_samples)
 {
-    return base_datasource_iterator_t{samples, samples.size()};
+    return base_datasource_iterator_t{samples, shuffled_all_samples, samples.size()};
 }
 
 ///
@@ -191,32 +206,32 @@ inline auto make_end_iterator(indices_cmap_t samples)
 ///
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename toperator_sclass,
           typename toperator_mclass, typename toperator_scalar>
-auto loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask,
-                  const indices_cmap_t& samples, const toperator_sclass& op_sclass, const toperator_mclass& op_mclass,
-                  const toperator_scalar& op_scalar)
+auto loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, indices_cmap_t samples,
+                  indices_cmap_t shuffled_all_samples, const toperator_sclass& op_sclass,
+                  const toperator_mclass& op_mclass, const toperator_scalar& op_scalar)
 {
     if constexpr (trank == 1)
     {
-        return op_sclass(make_iterator(data, mask, samples));
+        return op_sclass(make_iterator(data, mask, samples, shuffled_all_samples));
     }
     else if constexpr (trank == 2)
     {
-        return op_mclass(make_iterator(data, mask, samples));
+        return op_mclass(make_iterator(data, mask, samples, shuffled_all_samples));
     }
     else
     {
-        return op_scalar(make_iterator(data, mask, samples));
+        return op_scalar(make_iterator(data, mask, samples, shuffled_all_samples));
     }
 }
 
 template <size_t trank_expected, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
           typename toperator_expected>
-void loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask,
-                  const indices_cmap_t& samples, const toperator_expected& op_expected)
+void loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, indices_cmap_t samples,
+                  indices_cmap_t shuffled_all_samples, const toperator_expected& op_expected)
 {
     if constexpr (trank == trank_expected)
     {
-        op_expected(make_iterator(data, mask, samples));
+        op_expected(make_iterator(data, mask, samples, shuffled_all_samples));
     }
 }
 
@@ -224,12 +239,12 @@ template <size_t trank_expected1, size_t trank_expected2, template <typename, si
           typename tscalar1, size_t      trank1, template <typename, size_t> class tstorage2, typename tscalar2,
           size_t trank2, typename toperator_expected>
 void loop_samples(const tensor_t<tstorage1, tscalar1, trank1>& data1, const mask_cmap_t& mask1,
-                  const tensor_t<tstorage2, tscalar2, trank2>& data2, const mask_cmap_t& mask2,
-                  const indices_cmap_t& samples, const toperator_expected& op_expected)
+                  const tensor_t<tstorage2, tscalar2, trank2>& data2, const mask_cmap_t& mask2, indices_cmap_t samples,
+                  indices_cmap_t shuffled_all_samples, const toperator_expected& op_expected)
 {
     if constexpr (trank1 == trank_expected1 && trank2 == trank_expected2)
     {
-        op_expected(make_iterator(data1, mask1, data2, mask2, samples));
+        op_expected(make_iterator(data1, mask1, data2, mask2, samples, shuffled_all_samples));
     }
 }
 } // namespace nano

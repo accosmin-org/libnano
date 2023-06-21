@@ -435,7 +435,7 @@ void dataset_t::undrop() const
     }
 }
 
-void dataset_t::drop(tensor_size_t feature) const
+void dataset_t::drop(const tensor_size_t feature) const
 {
     byfeature(feature)->drop(m_feature_mapping(feature, 1));
 }
@@ -448,17 +448,12 @@ void dataset_t::unshuffle() const
     }
 }
 
-void dataset_t::shuffle(tensor_size_t feature) const
+indices_t dataset_t::shuffle(const tensor_size_t feature) const
 {
     byfeature(feature)->shuffle(m_feature_mapping(feature, 1));
 }
 
-indices_t dataset_t::shuffled(indices_cmap_t samples, tensor_size_t feature) const
-{
-    return byfeature(feature)->shuffled(samples, m_feature_mapping(feature, 1));
-}
-
-const rgenerator_t& dataset_t::byfeature(tensor_size_t feature) const
+const rgenerator_t& dataset_t::byfeature(const tensor_size_t feature) const
 {
     check(feature);
 

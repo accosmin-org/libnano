@@ -134,7 +134,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 }
 
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-[[maybe_unused]] static void check_select(const dataset_t& dataset, tensor_size_t feature,
+[[maybe_unused]] static void check_select(const dataset_t& dataset, const tensor_size_t feature,
                                           const tensor_t<tstorage, tscalar, trank>& expected)
 {
     auto iterator = select_iterator_t{dataset};
@@ -147,7 +147,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 }
 
 [[maybe_unused]] static void check_flatten(const dataset_t& dataset, const tensor2d_t& expected_flatten,
-                                           const indices_t& expected_column2features, scalar_t eps = 1e-12)
+                                           const indices_t& expected_column2features, const scalar_t eps = 1e-12)
 {
     UTEST_REQUIRE_EQUAL(dataset.columns(), expected_flatten.size<1>());
     UTEST_REQUIRE_EQUAL(dataset.columns(), expected_column2features.size());
@@ -161,10 +161,8 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     {
         auto iterator = flatten_iterator_t{dataset, samples};
 
-        for (const auto batch : {1, 3, 8})
+        for (const auto batch : {2, 3, 8})
         {
-            iterator.batch(batch);
-
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);
@@ -183,19 +181,58 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                 auto        expected_scaled_flatten = expected_flatten;
                 stats.scale(scaling, expected_scaled_flatten);
 
-                auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
-                UTEST_CHECK_NOTHROW(iterator.loop(
-                    [&](tensor_range_t range, size_t tnum, tensor2d_cmap_t flatten)
-                    {
-                        called.slice(range).full(1);
-                        UTEST_CHECK_GREATER_EQUAL(tnum, 0U);
-                        UTEST_CHECK_LESS(tnum, pool_t::max_size());
-                        UTEST_CHECK_LESS_EQUAL(range.size(), batch);
-                        UTEST_CHECK_GREATER_EQUAL(range.begin(), 0);
-                        UTEST_CHECK_LESS_EQUAL(range.end(), samples.size());
-                        UTEST_REQUIRE_CLOSE(flatten, expected_scaled_flatten.indexed(samples.slice(range)), eps);
-                    }));
-                UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
+                {
+                    auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
+                    UTEST_CHECK_NOTHROW(iterator.loop(
+                        [&](tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
+                        {
+                            called.slice(range).full(1);
+                            UTEST_CHECK_GREATER_EQUAL(tnum, 0U);
+                            UTEST_CHECK_LESS(tnum, pool_t::max_size());
+                            UTEST_CHECK_LESS_EQUAL(range.size(), batch);
+                            UTEST_CHECK_GREATER_EQUAL(range.begin(), 0);
+                            UTEST_CHECK_LESS_EQUAL(range.end(), samples.size());
+                            UTEST_REQUIRE_CLOSE(flatten, expected_scaled_flatten.indexed(samples.slice(range)), eps);
+                        }));
+                    UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
+                }
+                {
+                    // NB: also test with shuffling the columns associated to the first feature
+                    // NB: caching needs to be disabled (to make sure the old values are not reused)
+                    iterator.cache_flatten(0U);
+
+                    const auto feature_to_shuffle = 0;
+                    dataset.shuffle(feature_to_shuffle);
+                    const auto shuffle = dataset.shuffled(samples, feature_to_shuffle);
+                    UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
+                    UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
+
+                    auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
+                    UTEST_CHECK_NOTHROW(iterator.loop(
+                        [&](tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
+                        {
+                            called.slice(range).full(1);
+                            UTEST_CHECK_GREATER_EQUAL(tnum, 0U);
+                            UTEST_CHECK_LESS(tnum, pool_t::max_size());
+                            UTEST_CHECK_GREATER_EQUAL(range.begin(), 0);
+                            UTEST_CHECK_LESS_EQUAL(range.end(), samples.size());
+                            (void)flatten;
+                            for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
+                            {
+                                const auto& expected_samples =
+                                    dataset.column2feature(column) == feature_to_shuffle ? shuffle : samples;
+
+                                for (tensor_size_t index = range.begin(); index < range.end(); ++index)
+                                {
+                                    UTEST_REQUIRE_CLOSE(flatten(index - range.begin(), column),
+                                                        expected_scaled_flatten(expected_samples(index), column), eps);
+                                }
+                            }
+                        }));
+                    UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
+
+                    dataset.unshuffle();
+                }
             }
         }
     }

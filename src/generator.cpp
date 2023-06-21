@@ -15,7 +15,7 @@ void generator_t::fit(const datasource_t& datasource)
     m_datasource = &datasource;
 }
 
-void generator_t::allocate(tensor_size_t features)
+void generator_t::allocate(const tensor_size_t features)
 {
     m_feature_infos.resize(features);
     m_feature_infos.zero();
@@ -29,7 +29,7 @@ void generator_t::undrop()
     m_feature_infos.array() = 0x00;
 }
 
-void generator_t::drop(tensor_size_t feature)
+void generator_t::drop(const tensor_size_t feature)
 {
     m_feature_infos(feature) = 0x01;
 }
@@ -37,33 +37,42 @@ void generator_t::drop(tensor_size_t feature)
 void generator_t::unshuffle()
 {
     m_feature_infos.array() = 0x00;
+    m_feature_shuffles.clear();
 }
 
-void generator_t::shuffle(tensor_size_t feature)
+indices_t generator_t::shuffle(const tensor_size_t feature)
 {
     m_feature_infos(feature) = 0x02;
+
+    auto rng = make_rng();
+
+    indices_t shuffled = arange(0, datasource().samples());
+    std::shuffle(std::begin(shuffled), std::end(shuffled), rng);
+    m_feature_shuffles[feature] = shuffled;
+
+    return shuffled;
 }
 
-bool generator_t::should_drop(tensor_size_t feature) const
+bool generator_t::should_drop(const tensor_size_t feature) const
 {
     return m_feature_infos(feature) == 0x01;
 }
 
-bool generator_t::should_shuffle(tensor_size_t feature) const
+indices_cmap_t generator_t::shuffled(const tensor_size_t feature) const
 {
-    return m_feature_infos(feature) == 0x02;
+    if (m_feature_infos(feature) == 0x02)
+    {
+        const auto it = m_feature_shuffled.find(feature);
+        assert(it != m_feature_shuffled.end());
+        return it->second;
+    }
+    else
+    {
+        return indices_cmap_t{};
+    }
 }
 
-indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) const
-{
-    auto rng = m_feature_rands[static_cast<size_t>(feature)];
-
-    indices_t shuffled_samples = samples;
-    std::shuffle(std::begin(shuffled_samples), std::end(shuffled_samples), rng);
-    return shuffled_samples;
-}
-
-void generator_t::flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize)
+void generator_t::flatten_dropped(tensor2d_map_t storage, const tensor_size_t column, const tensor_size_t colsize)
 {
     const auto samples                                          = storage.size<0>();
     storage.matrix().block(0, column, samples, colsize).array() = NaN;

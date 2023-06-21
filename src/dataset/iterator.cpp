@@ -119,6 +119,8 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
     const auto& samples = this->samples();
     const auto& dataset = this->dataset();
 
+    m_flatten.resize(0, 0);
+
     auto cached = false;
     if (const auto isize = dataset.columns();
         static_cast<tensor_size_t>(sizeof(scalar_t)) * samples.size() * isize <= max_bytes)
