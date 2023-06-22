@@ -125,8 +125,8 @@ public:
 protected:
     const datasource_t& datasource() const;
 
-    void allocate(tensor_size_t features);
-    bool should_drop(tensor_size_t feature) const;
+    void           allocate(tensor_size_t features);
+    bool           should_drop(tensor_size_t feature) const;
     indices_cmap_t shuffled(tensor_size_t feature) const;
 
     static void flatten_dropped(tensor2d_map_t storage, tensor_size_t column, tensor_size_t colsize);
