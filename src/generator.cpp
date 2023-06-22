@@ -19,9 +19,6 @@ void generator_t::allocate(const tensor_size_t features)
 {
     m_feature_infos.resize(features);
     m_feature_infos.zero();
-
-    m_feature_rands.resize(static_cast<size_t>(features));
-    std::generate(std::begin(m_feature_rands), std::end(m_feature_rands), []() { return make_rng(); });
 }
 
 void generator_t::undrop()
@@ -40,7 +37,7 @@ void generator_t::unshuffle()
     m_feature_shuffles.clear();
 }
 
-indices_t generator_t::shuffle(const tensor_size_t feature)
+void generator_t::shuffle(const tensor_size_t feature)
 {
     m_feature_infos(feature) = 0x02;
 
@@ -49,6 +46,18 @@ indices_t generator_t::shuffle(const tensor_size_t feature)
     indices_t shuffled = arange(0, datasource().samples());
     std::shuffle(std::begin(shuffled), std::end(shuffled), rng);
     m_feature_shuffles[feature] = shuffled;
+}
+
+indices_t generator_t::shuffled(const tensor_size_t feature, indices_cmap_t samples) const
+{
+    const auto shuffled_all_samples = shuffled(feature);
+
+    auto shuffled = indices_t{samples.size()};
+    for (tensor_size_t i = 0; i < samples.size(); ++i)
+    {
+        assert(samples(i) >= 0 && samples(i) < shuffled_all_samples.size());
+        shuffled(i) = shuffled_all_samples(samples(i));
+    }
 
     return shuffled;
 }
@@ -62,8 +71,8 @@ indices_cmap_t generator_t::shuffled(const tensor_size_t feature) const
 {
     if (m_feature_infos(feature) == 0x02)
     {
-        const auto it = m_feature_shuffled.find(feature);
-        assert(it != m_feature_shuffled.end());
+        const auto it = m_feature_shuffles.find(feature);
+        assert(it != m_feature_shuffles.end());
         return it->second;
     }
     else

@@ -173,7 +173,7 @@ sclass_cmap_t dataset_t::select(indices_cmap_t samples, sclass_mem_t& buffer) co
         {
             auto storage = resize_and_map(buffer, samples.size());
             loop_samples(
-                data, mask, samples,
+                data, mask, samples, indices_cmap_t{},
                 [&](auto it)
                 {
                     for (; it; ++it)
@@ -203,7 +203,7 @@ mclass_cmap_t dataset_t::select(indices_cmap_t samples, mclass_mem_t& buffer) co
         {
             auto storage = resize_and_map(buffer, samples.size(), feature.classes());
             loop_samples(
-                data, mask, samples, [&](auto) {},
+                data, mask, samples, indices_cmap_t{}, [&](auto) {},
                 [&](auto it)
                 {
                     for (; it; ++it)
@@ -233,7 +233,7 @@ scalar_cmap_t dataset_t::select(indices_cmap_t samples, scalar_mem_t& buffer) co
         {
             auto storage = resize_and_map(buffer, samples.size());
             loop_samples(
-                data, mask, samples, [&](auto) {}, [&](auto) {},
+                data, mask, samples, indices_cmap_t{}, [&](auto) {}, [&](auto) {},
                 [&](auto it)
                 {
                     for (; it; ++it)
@@ -264,7 +264,7 @@ struct_cmap_t dataset_t::select(indices_cmap_t samples, struct_mem_t& buffer) co
 
             auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
             loop_samples(
-                data, mask, samples, [&](auto) {}, [&](auto) {},
+                data, mask, samples, indices_cmap_t{}, [&](auto) {}, [&](auto) {},
                 [&](auto it)
                 {
                     for (; it; ++it)
@@ -373,7 +373,7 @@ tensor4d_map_t dataset_t::targets(indices_cmap_t samples, tensor4d_t& buffer) co
         [&](const feature_t& feature, const auto& data, const auto& mask)
         {
             return loop_samples(
-                data, mask, samples,
+                data, mask, samples, indices_cmap_t{},
                 [&](auto it)
                 {
                     const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
@@ -448,9 +448,14 @@ void dataset_t::unshuffle() const
     }
 }
 
-indices_t dataset_t::shuffle(const tensor_size_t feature) const
+void dataset_t::shuffle(const tensor_size_t feature) const
 {
     byfeature(feature)->shuffle(m_feature_mapping(feature, 1));
+}
+
+indices_t dataset_t::shuffled(const tensor_size_t feature, indices_cmap_t samples) const
+{
+    return byfeature(feature)->shuffled(m_feature_mapping(feature, 1), samples);
 }
 
 const rgenerator_t& dataset_t::byfeature(const tensor_size_t feature) const

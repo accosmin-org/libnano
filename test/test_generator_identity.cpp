@@ -242,10 +242,10 @@ UTEST_CASE(unsupervised)
     check_flatten(dataset, expected_flatten, expected_columns);
 
     dataset.drop(0);
-    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1)), expected_columns);
+    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1)), expected_columns, true);
 
     dataset.drop(2);
-    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1, 3)), expected_column);
+    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1, 3)), expected_columns, true);
 
     dataset.undrop();
     check_flatten(dataset, expected_flatten, expected_columns);

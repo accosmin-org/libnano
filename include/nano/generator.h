@@ -97,8 +97,13 @@ public:
     ///
     /// \brief toggle sample permutation of features, useful for feature importance analysis.
     ///
-    void      unshuffle();
-    indices_t shuffle(tensor_size_t feature);
+    void unshuffle();
+    void shuffle(tensor_size_t feature);
+
+    ///
+    /// \brief map the given samples to the sample permutation associated to the given feature.
+    ///
+    indices_t shuffled(tensor_size_t feature, indices_cmap_t samples) const;
 
     ///
     /// \brief computes the values of the given feature and samples,

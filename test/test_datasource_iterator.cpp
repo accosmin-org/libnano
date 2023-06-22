@@ -7,17 +7,14 @@ UTEST_BEGIN_MODULE(test_datasource_iterator)
 
 UTEST_CASE(data1D)
 {
-    tensor_mem_t<int, 1> data(16);
-    data.full(-1);
-
     auto mask = make_mask(make_dims(16));
+    auto data = make_full_tensor<int>(make_dims(16), -1);
 
     for (int sample = 0; sample < 16; sample += 2)
     {
         setbit(mask, sample);
         data(sample) = sample + 3;
     }
-
     {
         const auto it = datasource_iterator_t<int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
@@ -26,16 +23,17 @@ UTEST_CASE(data1D)
     }
     {
         const auto samples = arange(5, 10);
+        const auto shuffle = make_indices(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
 
-        auto it = make_iterator(data, mask, samples);
+        auto it = make_iterator(data, mask, samples, shuffle);
         UTEST_CHECK_EQUAL(it.size(), 5);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
             const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 0);
-            UTEST_CHECK_EQUAL(given, false);
-            UTEST_CHECK_EQUAL(value, -1);
+            UTEST_CHECK_EQUAL(given, true);
+            UTEST_CHECK_EQUAL(value, 13);
         }
 
         ++it;
@@ -45,8 +43,8 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 1);
-            UTEST_CHECK_EQUAL(given, true);
-            UTEST_CHECK_EQUAL(value, 9);
+            UTEST_CHECK_EQUAL(given, false);
+            UTEST_CHECK_EQUAL(value, -1);
         }
 
         ++it;
@@ -56,8 +54,8 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 2);
-            UTEST_CHECK_EQUAL(given, false);
-            UTEST_CHECK_EQUAL(value, -1);
+            UTEST_CHECK_EQUAL(given, true);
+            UTEST_CHECK_EQUAL(value, 11);
         }
 
         ++it;
@@ -67,8 +65,8 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 3);
-            UTEST_CHECK_EQUAL(given, true);
-            UTEST_CHECK_EQUAL(value, 11);
+            UTEST_CHECK_EQUAL(given, false);
+            UTEST_CHECK_EQUAL(value, -1);
         }
 
         ++it;
@@ -78,8 +76,8 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 4);
-            UTEST_CHECK_EQUAL(given, false);
-            UTEST_CHECK_EQUAL(value, -1);
+            UTEST_CHECK_EQUAL(given, true);
+            UTEST_CHECK_EQUAL(value, 9);
         }
 
         ++it;
@@ -315,35 +313,36 @@ UTEST_CASE(loop_samples)
     auto mask2 = make_mask(make_dims(4));
 
     const auto samples = arange(0, 4);
-
+    const auto shuffle = indices_t{};
     {
         bool called = false;
-        loop_samples<1U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
+        loop_samples<1U, 1U>(data1, mask1, data2, mask2, samples, shuffle, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<2U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
+        loop_samples<2U, 1U>(data1, mask1, data2, mask2, samples, shuffle, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U, 4U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
+        loop_samples<4U, 4U>(data1, mask1, data2, mask2, samples, shuffle, [&](auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U, 1U>(data1, mask1, data2, mask2, samples, [&](auto) { called = true; });
+        loop_samples<4U, 1U>(data1, mask1, data2, mask2, samples, shuffle, [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
     {
         bool called = false;
-        loop_samples<4U, 4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&](auto) { called = true; });
+        loop_samples<4U, 4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, shuffle,
+                             [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
     {
         bool called = false;
-        loop_samples<1U, 1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&](auto) { called = true; });
+        loop_samples<1U, 1U>(data1.reshape(-1), mask1, data2, mask2, samples, shuffle, [&](auto) { called = true; });
         UTEST_CHECK(called);
     }
 }

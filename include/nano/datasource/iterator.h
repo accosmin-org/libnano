@@ -27,6 +27,8 @@ public:
     tensor_size_t sample() const
     {
         assert(m_index >= 0 && m_index < m_samples.size());
+        assert(m_shuffled_all_samples.size() == 0 ||
+               (m_samples(m_index) >= 0 && m_samples(m_index) < m_shuffled_all_samples.size()));
 
         if (m_shuffled_all_samples.size() == 0)
         {
@@ -34,7 +36,6 @@ public:
         }
         else
         {
-            assert(m_samples(m_index) >= 0 && m_samples(m_index) < m_shuffled_all_samples.size());
             return m_shuffled_all_samples(m_samples(m_index));
         }
     }
@@ -59,8 +60,8 @@ public:
 private:
     // attributes
     tensor_size_t  m_index{0};             ///<
-    indices_cmap_t m_samples;              ///<
-    indices_cmap_t m_shuffled_all_samples; ///<
+    indices_cmap_t m_samples;              ///< samples to loop over
+    indices_cmap_t m_shuffled_all_samples; ///< shuffled indices of all samples (optional)
 };
 
 ///
@@ -177,7 +178,7 @@ inline bool operator!=(const base_datasource_iterator_t& lhs, const base_datasou
 ///
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
 auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples,
-                   indices_cmap_t shuffled_all_samples)
+                   indices_cmap_t shuffled_all_samples = indices_cmap_t{})
 {
     return datasource_iterator_t<tscalar, trank>{data, mask, samples, shuffled_all_samples};
 }
@@ -186,7 +187,7 @@ template <template <typename, size_t> class tstorage1, typename tscalar1, size_t
           template <typename, size_t> class tstorage2, typename tscalar2, size_t trank2>
 auto make_iterator(const tensor_t<tstorage1, tscalar1, trank1>& data1, mask_cmap_t mask1,
                    const tensor_t<tstorage2, tscalar2, trank2>& data2, mask_cmap_t mask2, indices_cmap_t samples,
-                   indices_cmap_t shuffled_all_samples)
+                   indices_cmap_t shuffled_all_samples = indices_cmap_t{})
 {
     return datasource_pairwise_iterator_t<tscalar1, trank1, tscalar2, trank2>{data1, mask1,   data2,
                                                                               mask2, samples, shuffled_all_samples};
@@ -195,7 +196,7 @@ auto make_iterator(const tensor_t<tstorage1, tscalar1, trank1>& data1, mask_cmap
 ///
 /// \brief construct an invalid (end) iterator from the given inputs.
 ///
-inline auto make_end_iterator(indices_cmap_t samples, indices_cmap_t shuffled_all_samples)
+inline auto make_end_iterator(indices_cmap_t samples, indices_cmap_t shuffled_all_samples = indices_cmap_t{})
 {
     return base_datasource_iterator_t{samples, shuffled_all_samples, samples.size()};
 }

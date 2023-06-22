@@ -208,7 +208,7 @@ UTEST_CASE(scalar_scalar)
                                         Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, 13, Na,
                                         12, Na, Na, 36, 36, 36, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na, Na, Na, 14, Na,
                                         Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
-                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
+                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14), true);
 
     dataset.drop(6);
     check_flatten(dataset,
@@ -222,7 +222,7 @@ UTEST_CASE(scalar_scalar)
                                         Na, Na, Na, Na, Na, Na, Na, -1, Na, Na, Na, Na, Na, Na, Na, Na, Na, Na, 13, Na,
                                         12, Na, Na, Na, Na, Na, -1, -1, Na, -1, Na, Na, +1, +1, Na, Na, Na, Na, 14, Na,
                                         Na, 12, Na, Na, Na, -1, Na, -1, Na, Na, -1, Na, Na, Na, Na),
-                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14));
+                  make_indices(0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14), true);
 }
 
 UTEST_CASE(sclass_sclass)

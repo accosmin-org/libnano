@@ -59,13 +59,11 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     checker(expected.indexed(samples));
 
     dataset.shuffle(expected_feature);
-    const auto shuffle = dataset.shuffled(samples, expected_feature);
+    const auto shuffle = dataset.shuffled(expected_feature, samples);
     UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
-    UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
-    // UTEST_CHECK_NOT_EQUAL(shuffle, samples);
     checker(expected.indexed(shuffle));
 
-    const auto shuffle2 = dataset.shuffled(samples, expected_feature);
+    const auto shuffle2 = dataset.shuffled(expected_feature, samples);
     UTEST_CHECK_EQUAL(shuffle, shuffle2);
 
     dataset.unshuffle();
@@ -147,7 +145,8 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 }
 
 [[maybe_unused]] static void check_flatten(const dataset_t& dataset, const tensor2d_t& expected_flatten,
-                                           const indices_t& expected_column2features, const scalar_t eps = 1e-12)
+                                           const indices_t& expected_column2features, const bool dropped = false,
+                                           const scalar_t eps = 1e-12)
 {
     UTEST_REQUIRE_EQUAL(dataset.columns(), expected_flatten.size<1>());
     UTEST_REQUIRE_EQUAL(dataset.columns(), expected_column2features.size());
@@ -163,6 +162,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
         for (const auto batch : {2, 3, 8})
         {
+            iterator.batch(batch);
             for (const auto scaling : enum_values<scaling_type>())
             {
                 iterator.scaling(scaling);
@@ -196,6 +196,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                         }));
                     UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
                 }
+                if (!dropped)
                 {
                     // NB: also test with shuffling the columns associated to the first feature
                     // NB: caching needs to be disabled (to make sure the old values are not reused)
@@ -203,9 +204,8 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
                     const auto feature_to_shuffle = 0;
                     dataset.shuffle(feature_to_shuffle);
-                    const auto shuffle = dataset.shuffled(samples, feature_to_shuffle);
+                    const auto shuffle = dataset.shuffled(feature_to_shuffle, samples);
                     UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
-                    UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
 
                     auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
                     UTEST_CHECK_NOTHROW(iterator.loop(
@@ -216,7 +216,6 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                             UTEST_CHECK_LESS(tnum, pool_t::max_size());
                             UTEST_CHECK_GREATER_EQUAL(range.begin(), 0);
                             UTEST_CHECK_LESS_EQUAL(range.end(), samples.size());
-                            (void)flatten;
                             for (tensor_size_t column = 0, columns = dataset.columns(); column < columns; ++column)
                             {
                                 const auto& expected_samples =
