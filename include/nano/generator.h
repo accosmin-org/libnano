@@ -3,6 +3,7 @@
 #include <nano/datasource.h>
 #include <nano/datasource/iterator.h>
 #include <nano/generator/storage.h>
+#include <unordered_map>
 
 namespace nano
 {
