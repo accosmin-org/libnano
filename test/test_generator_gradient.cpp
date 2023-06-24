@@ -14,6 +14,9 @@ auto make_input_data()
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define NaN4 NaN, NaN, NaN, NaN
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define GX0(scale) (scale) * 2.00, (scale)*2.00, (scale)*1.50, (scale)*1.75
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define GX1(scale) (scale) * 1.00, (scale)*0.75, (scale)*0.50, (scale)*0.75
@@ -198,34 +201,31 @@ UTEST_CASE(unsupervised_gradient)
     UTEST_CHECK_EQUAL(dataset.feature(7),
                       feature_t{"sobel::theta(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
 
-    check_select(dataset, 0,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX0(1), NaN, NaN, NaN, NaN, GX0(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 1,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY0(1), NaN, NaN, NaN, NaN, GY0(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 2,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG0(1), NaN, NaN, NaN, NaN, GG0(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 3,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA0, NaN, NaN, NaN, NaN, THETA0, NaN, NaN, NaN, NaN));
-    check_select(dataset, 4,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX1(1), NaN, NaN, NaN, NaN, GX1(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 5,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY1(1), NaN, NaN, NaN, NaN, GY1(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 6,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG1(1), NaN, NaN, NaN, NaN, GG1(3), NaN, NaN, NaN, NaN));
-    check_select(dataset, 7,
-                 make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA1, NaN, NaN, NaN, NaN, THETA1, NaN, NaN, NaN, NaN));
+    check_select(dataset, 0, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX0(1), NaN4, GX0(3), NaN4));
+    check_select(dataset, 1, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY0(1), NaN4, GY0(3), NaN4));
+    check_select(dataset, 2, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG0(1), NaN4, GG0(3), NaN4));
+    check_select(dataset, 3, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA0, NaN4, THETA0, NaN4));
+    check_select(dataset, 4, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GX1(1), NaN4, GX1(3), NaN4));
+    check_select(dataset, 5, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GY1(1), NaN4, GY1(3), NaN4));
+    check_select(dataset, 6, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), GG1(1), NaN4, GG1(3), NaN4));
+    check_select(dataset, 7, make_tensor<scalar_t>(make_dims(4, 1, 2, 2), THETA1, NaN4, THETA1, NaN4));
     check_select_stats(dataset, indices_t{}, indices_t{}, indices_t{}, make_indices(0, 1, 2, 3, 4, 5, 6, 7));
 
     check_flatten(
         dataset,
-        make_tensor<scalar_t>(make_dims(4, 32), GX0(1), GY0(1), GG0(1), THETA0, GX1(1), GY1(1), GG1(1), THETA1, NaN,
-                              NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,
-                              NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,
-
-                              GX0(3), GY0(3), GG0(3), THETA0, GX1(3), GY1(3), GG1(3), THETA1, NaN, NaN, NaN, NaN, NaN,
-                              NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN,
-                              NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN),
+        make_tensor<scalar_t>(make_dims(4, 32), GX0(1), GY0(1), GG0(1), THETA0, GX1(1), GY1(1), GG1(1), THETA1, NaN4,
+                              NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, GX0(3), GY0(3), GG0(3), THETA0, GX1(3), GY1(3),
+                              GG1(3), THETA1, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4),
         make_indices(0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7));
+
+    dataset.drop(1);
+    check_flatten(
+        dataset,
+        make_tensor<scalar_t>(make_dims(4, 32), GX0(1), NaN4, GG0(1), THETA0, GX1(1), GY1(1), GG1(1), THETA1, NaN4,
+                              NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, GX0(3), NaN4, GG0(3), THETA0, GX1(3), GY1(3),
+                              GG1(3), THETA1, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4, NaN4),
+        make_indices(0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7),
+        true);
 }
 
 UTEST_CASE(unsupervised_too_small_rows)

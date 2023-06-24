@@ -134,17 +134,17 @@ private:
     // per column:
     //  - 0: generator index,
     //  - 1: column index within generator,
-    //  - 2: offset n_features (up to the current generator)
+    //  - 2: feature index
     using column_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
     // per feature:
     //  - 0: generator index,
     //  - 1: feature index within generator,
-    //  - 2-4: feature dimensions (dim1, dim2, dim3)
+    //  - 2-4: feature dimensions (dim1, dim2, dim3),
     using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
     // per generator:
-    //  - 0: number of features
+    //  - 0: number of columns
     using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
     using rtpool_t = std::unique_ptr<parallel::pool_t>;

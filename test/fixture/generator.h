@@ -184,7 +184,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                 {
                     auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
                     UTEST_CHECK_NOTHROW(iterator.loop(
-                        [&](tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
+                        [&](const tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
                         {
                             called.slice(range).full(1);
                             UTEST_CHECK_GREATER_EQUAL(tnum, 0U);
@@ -209,7 +209,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 
                     auto called = make_full_tensor<tensor_size_t>(make_dims(samples.size()), 0);
                     UTEST_CHECK_NOTHROW(iterator.loop(
-                        [&](tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
+                        [&](const tensor_range_t range, const size_t tnum, tensor2d_cmap_t flatten)
                         {
                             called.slice(range).full(1);
                             UTEST_CHECK_GREATER_EQUAL(tnum, 0U);
@@ -231,6 +231,20 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
                     UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples.size()), 1));
 
                     dataset.unshuffle();
+                }
+                if (!dropped)
+                {
+                    // NB: test dropping all features
+                    for (tensor_size_t feature = 0; feature < dataset.features(); ++feature)
+                    {
+                        dataset.drop(feature);
+                    }
+
+                    UTEST_CHECK_NOTHROW(iterator.loop(
+                        [&](const tensor_range_t, const size_t, tensor2d_cmap_t flatten)
+                        { UTEST_REQUIRE_CLOSE(flatten, make_full_tensor<scalar_t>(flatten.dims(), 0.0), eps); }));
+
+                    dataset.undrop();
                 }
             }
         }

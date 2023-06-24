@@ -311,6 +311,12 @@ UTEST_CASE(sclassification)
 
     check_flatten(dataset, expected_flatten, expected_columns);
 
+    dataset.drop(0);
+    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1)), expected_columns, true);
+
+    dataset.undrop();
+    check_flatten(dataset, expected_flatten, expected_columns);
+
     check_flatten_stats(
         dataset, make_indices(5, 5, 5, 10, 10, 10, 5, 5, 5, 5, 10, 5, 4, 10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 4, 4, 4),
         make_tensor<scalar_t>(make_dims(26), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -2, -3, +1, +0, +0, +0, +1, +0, +0, +0,
@@ -365,6 +371,12 @@ UTEST_CASE(mclassification)
     const auto expected_flatten = remove(::expected_flatten(), make_indices(4, 5, 6));
     const auto expected_columns = make_indices(0, 0, 1, 2, 3, 3, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 9, 9, 9);
 
+    check_flatten(dataset, expected_flatten, expected_columns);
+
+    dataset.drop(3);
+    check_flatten(dataset, drop(expected_flatten, make_indices(4, 5, 6, 7)), expected_columns, true);
+
+    dataset.undrop();
     check_flatten(dataset, expected_flatten, expected_columns);
 
     check_flatten_stats(
@@ -424,6 +436,12 @@ UTEST_CASE(regression)
 
     check_flatten(dataset, expected_flatten, expected_columns);
 
+    dataset.drop(0);
+    check_flatten(dataset, drop(expected_flatten, make_indices(0, 1)), expected_columns, true);
+
+    dataset.undrop();
+    check_flatten(dataset, expected_flatten, expected_columns);
+
     check_flatten_stats(
         dataset, make_indices(5, 5, 10, 5, 10, 10, 10, 5, 5, 5, 5, 5, 4, 10, 10, 10, 10, 5, 5, 5, 5, 5, 5, 4, 4, 4),
         make_tensor<scalar_t>(make_dims(26), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -3, +1, +0, +0, +0, +1, +0, +0, +0,
@@ -477,6 +495,12 @@ UTEST_CASE(mvregression)
     const auto expected_flatten = remove(::expected_flatten(), make_indices(14, 15, 16, 17));
     const auto expected_columns = make_indices(0, 0, 1, 2, 3, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 8, 8, 8, 8, 8, 9, 9, 9);
 
+    check_flatten(dataset, expected_flatten, expected_columns);
+
+    dataset.drop(1);
+    check_flatten(dataset, drop(expected_flatten, make_indices(2)), expected_columns, true);
+
+    dataset.undrop();
     check_flatten(dataset, expected_flatten, expected_columns);
 
     check_flatten_stats(dataset, make_indices(5, 5, 10, 5, 10, 10, 10, 5, 5, 5, 5, 10, 5, 4, 5, 5, 5, 5, 5, 5, 4, 4, 4),

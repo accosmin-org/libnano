@@ -337,6 +337,7 @@ tensor2d_map_t dataset_t::flatten(indices_cmap_t samples, tensor2d_t& buffer) co
         generator->flatten(samples, storage, offset);
         offset += m_generator_mapping(index++, 0);
     }
+
     return storage;
 }
 
