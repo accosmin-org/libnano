@@ -9,20 +9,6 @@ using namespace nano::constraint;
 
 namespace
 {
-template <typename... tvalues>
-vector_t make_x(tvalues... values)
-{
-    return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...).vector();
-}
-
-template <tensor_size_t trows, typename... tvalues>
-matrix_t make_X(tvalues... values)
-{
-    return make_tensor<scalar_t, 1>(make_dims(static_cast<tensor_size_t>(sizeof...(values))), values...)
-        .reshape(trows, -1)
-        .matrix();
-}
-
 void check_penalty(penalty_function_t& penalty_function, bool expected_convexity, bool expected_smoothness)
 {
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
@@ -334,10 +320,10 @@ UTEST_CASE(minimum)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.9, 1.0)), 0.1, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.9, 1.0)), 0.1, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 0.0)), 0.0, 1e-15);
 }
 
 UTEST_CASE(maximum)
@@ -351,10 +337,10 @@ UTEST_CASE(maximum)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.9, 0.9)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 1.2)), 0.2, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.9, 0.9)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 1.2)), 0.2, 1e-15);
 }
 
 UTEST_CASE(constant)
@@ -368,16 +354,16 @@ UTEST_CASE(constant)
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.9, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.1)), 0.1, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 0.8)), 0.2, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.9, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.1)), 0.1, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 0.8)), 0.2, 1e-15);
 }
 
 UTEST_CASE(euclidean_ball_equality)
 {
     const auto constraint = constraint_t{
-        euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0}
+        euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -385,16 +371,16 @@ UTEST_CASE(euclidean_ball_equality)
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 2.0)), 4.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 2.0)), 4.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0)), 1.0, 1e-15);
 }
 
 UTEST_CASE(euclidean_ball_inequality)
 {
     const auto constraint = constraint_t{
-        euclidean_ball_inequality_t{make_x(0.0, 0.0), 1.0}
+        euclidean_ball_inequality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -402,16 +388,16 @@ UTEST_CASE(euclidean_ball_inequality)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 2.0)), 4.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 2.0)), 4.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0)), 0.0, 1e-15);
 }
 
 UTEST_CASE(linear_equality)
 {
     const auto constraint = constraint_t{
-        linear_equality_t{make_x(1.0, 1.0), -2.0}
+        linear_equality_t{make_vector<scalar_t>(1.0, 1.0), -2.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -419,16 +405,16 @@ UTEST_CASE(linear_equality)
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 2.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 2.0)), 2.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 2.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 2.0)), 2.0, 1e-15);
 }
 
 UTEST_CASE(linear_inequality)
 {
     const auto constraint = constraint_t{
-        linear_inequality_t{make_x(1.0, 1.0), -2.0}
+        linear_inequality_t{make_vector<scalar_t>(1.0, 1.0), -2.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -436,16 +422,16 @@ UTEST_CASE(linear_inequality)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 2.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 2.0)), 2.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 2.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 2.0)), 2.0, 1e-15);
 }
 
 UTEST_CASE(quadratic_equality)
 {
     const auto constraint = constraint_t{
-        quadratic_equality_t{make_X<2>(1.0, 2.0, 2.0, 1.0), make_x(1.0, 1.0), -5.0}
+        quadratic_equality_t{make_matrix<scalar_t>(2, 1.0, 2.0, 2.0, 1.0), make_vector<scalar_t>(1.0, 1.0), -5.0}
     };
 
     UTEST_CHECK(!::nano::convex(constraint));
@@ -453,17 +439,18 @@ UTEST_CASE(quadratic_equality)
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0)), 5.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0)), 3.5, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0)), 3.5, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 2.0)), 4.5, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0)), 5.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0)), 3.5, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0)), 3.5, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 2.0)), 4.5, 1e-15);
 }
 
 UTEST_CASE(quadratic_inequality)
 {
     const auto constraint = constraint_t{
-        quadratic_inequality_t{make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0), make_x(1.0, 1.0, 1.0), -2.0}
+        quadratic_inequality_t{make_matrix<scalar_t>(3, 2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0),
+                               make_vector<scalar_t>(1.0, 1.0, 1.0), -2.0}
     };
 
     UTEST_CHECK(::nano::convex(constraint));
@@ -471,14 +458,14 @@ UTEST_CASE(quadratic_inequality)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0 - std::sqrt(2.0), 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 1.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 1.0, 1.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 0.0, 1.0)), 2.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0, 0.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0, 1.0)), 2.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0, 1.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 1.0, 1.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 0.0, 1.0)), 2.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0, 0.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0, 1.0)), 2.0, 1e-15);
 }
 
 UTEST_CASE(functional_equality)
@@ -490,10 +477,10 @@ UTEST_CASE(functional_equality)
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.9, 0.9, 0.0)), 0.8, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.0, 0.0)), 1.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(2.0, 1.2, 0.0)), 2.2, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0, 0.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.9, 0.9, 0.0)), 0.8, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.0, 0.0)), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(2.0, 1.2, 0.0)), 2.2, 1e-15);
 }
 
 UTEST_CASE(functional_inequality)
@@ -505,11 +492,11 @@ UTEST_CASE(functional_inequality)
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.0, 0.0, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.5, 0.2, 0.0)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.5, 0.0, -0.5)), 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(1.0, 1.2, 0.0)), 1.2, 1e-15);
-    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_x(0.1, -0.7, -0.4)), 0.2, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.0, 0.0, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.5, 0.2, 0.0)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.5, 0.0, -0.5)), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(1.0, 1.2, 0.0)), 1.2, 1e-15);
+    UTEST_CHECK_CLOSE(::nano::valid(constraint, make_vector<scalar_t>(0.1, -0.7, -0.4)), 0.2, 1e-15);
 }
 
 UTEST_CASE(noconstraint_convex_smooth)
@@ -566,14 +553,14 @@ UTEST_CASE(constrained_box_one)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 2);
 
     check_penalties(constrained, true, true);
-    check_penalties(constrained, make_x(-0.1, -0.1, -0.1), true);
-    check_penalties(constrained, make_x(+0.2, +0.2, +0.2), true);
-    check_penalties(constrained, make_x(+0.5, +0.5, +0.5), true);
-    check_penalties(constrained, make_x(-0.7, -0.7, -0.7), false);
-    check_penalties(constrained, make_x(+0.8, +0.8, +0.8), false);
-    check_penalties(constrained, make_x(-0.7, +0.1, +0.0), true);
-    check_penalties(constrained, make_x(-0.2, +0.2, -0.7), false);
-    check_penalties(constrained, make_x(-0.2, +0.6, +0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.1, -0.1, -0.1), true);
+    check_penalties(constrained, make_vector<scalar_t>(+0.2, +0.2, +0.2), true);
+    check_penalties(constrained, make_vector<scalar_t>(+0.5, +0.5, +0.5), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.7, -0.7, -0.7), false);
+    check_penalties(constrained, make_vector<scalar_t>(+0.8, +0.8, +0.8), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.7, +0.1, +0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.2, -0.7), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.6, +0.0), true);
 }
 
 UTEST_CASE(constrained_box_all)
@@ -586,28 +573,32 @@ UTEST_CASE(constrained_box_all)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
 
     check_penalties(constrained, true, true);
-    check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
-    check_penalties(constrained, make_x(-0.2, +0.1, +0.4), true);
-    check_penalties(constrained, make_x(-0.2, +0.6, +0.0), false);
-    check_penalties(constrained, make_x(-0.2, -0.3, +1.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.4), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.6, +0.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, -0.3, +1.0), false);
 }
 
 UTEST_CASE(constrained_box_vector)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain(make_x(-0.5, -0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
-    UTEST_CHECK(!constrained.constrain(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5, +0.5)));
-    UTEST_CHECK(!constrained.constrain(make_x(+0.5, +0.5, +0.5), make_x(-0.5, -0.5, -0.5)));
-    UTEST_CHECK(constrained.constrain(make_x(-0.5, -0.5, -0.5), make_x(+0.5, +0.5, +0.5)));
+    UTEST_CHECK(
+        !constrained.constrain(make_vector<scalar_t>(-0.5, -0.5, -0.5, -0.5), make_vector<scalar_t>(+0.5, +0.5, +0.5)));
+    UTEST_CHECK(
+        !constrained.constrain(make_vector<scalar_t>(-0.5, -0.5, -0.5), make_vector<scalar_t>(+0.5, +0.5, +0.5, +0.5)));
+    UTEST_CHECK(
+        !constrained.constrain(make_vector<scalar_t>(+0.5, +0.5, +0.5), make_vector<scalar_t>(-0.5, -0.5, -0.5)));
+    UTEST_CHECK(
+        constrained.constrain(make_vector<scalar_t>(-0.5, -0.5, -0.5), make_vector<scalar_t>(+0.5, +0.5, +0.5)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
     UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
 
     check_penalties(constrained, true, true);
-    check_penalties(constrained, make_x(-0.2, +0.1, +0.0), true);
-    check_penalties(constrained, make_x(-0.2, +0.1, +0.4), true);
-    check_penalties(constrained, make_x(-0.2, +0.6, +0.0), false);
-    check_penalties(constrained, make_x(-0.2, -0.3, +1.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.4), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.6, +0.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, -0.3, +1.0), false);
 }
 
 UTEST_CASE(constrained_constant)
@@ -621,60 +612,60 @@ UTEST_CASE(constrained_constant)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, false);
-    check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
-    check_penalties(constrained, make_x(1.0, 1.0, 1.0), true);
-    check_penalties(constrained, make_x(0.1, 0.2, 0.3), false);
-    check_penalties(constrained, make_x(0.1, 1.2, 1.3), false);
-    check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(1.0, 1.0, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 0.2, 0.3), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 1.2, 1.3), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 2.5), false);
 }
 
 UTEST_CASE(constrained_euclidean_ball_inequality)
 {
     auto constrained = sum_function_t{3};
-    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_x(1.0, 1.0, 1.0, 1.0), 1.0}));
-    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_x(1.0, 1.0, 1.0), 0.0}));
-    UTEST_CHECK(constrained.constrain(euclidean_ball_inequality_t{make_x(0.0, 0.0, 0.0), 1.0}));
+    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0), 1.0}));
+    UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), 0.0}));
+    UTEST_CHECK(constrained.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(0.0, 0.0, 0.0), 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
     UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, true);
-    check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
-    check_penalties(constrained, make_x(0.5, 0.5, 0.5), true);
-    check_penalties(constrained, make_x(0.6, 0.6, 0.6), false);
-    check_penalties(constrained, make_x(1.0, 1.0, 1.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 0.5, 0.5), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.6, 0.6, 0.6), false);
+    check_penalties(constrained, make_vector<scalar_t>(1.0, 1.0, 1.0), false);
 }
 
 UTEST_CASE(constrained_affine_equality)
 {
     auto constrained = sumabsm1_function_t{3};
-    UTEST_CHECK(!constrained.constrain(linear_equality_t{make_x(1.0, 1.0, 1.0, 1.0), -3.0}));
-    UTEST_CHECK(constrained.constrain(linear_equality_t{make_x(1.0, 1.0, 1.0), -3.0}));
+    UTEST_CHECK(!constrained.constrain(linear_equality_t{make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0), -3.0}));
+    UTEST_CHECK(constrained.constrain(linear_equality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
     UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, true, false);
-    check_penalties(constrained, make_x(0.5, 1.5, 1.0), true);
-    check_penalties(constrained, make_x(1.0, 1.0, 1.0), true);
-    check_penalties(constrained, make_x(0.1, 0.2, 0.3), false);
-    check_penalties(constrained, make_x(0.1, 1.2, 1.3), false);
-    check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(1.0, 1.0, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 0.2, 0.3), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 1.2, 1.3), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 2.5), false);
 }
 
 UTEST_CASE(constrained_affine_inequality)
 {
     auto constrained = sumabsm1_function_t{3};
-    UTEST_CHECK(!constrained.constrain(linear_inequality_t{make_x(1.0, 1.0, 1.0, 1.0), -3.0}));
-    UTEST_CHECK(constrained.constrain(linear_inequality_t{make_x(1.0, 1.0, 1.0), -3.0}));
+    UTEST_CHECK(!constrained.constrain(linear_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0), -3.0}));
+    UTEST_CHECK(constrained.constrain(linear_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
     UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, false);
-    check_penalties(constrained, make_x(0.1, 0.2, 0.3), true);
-    check_penalties(constrained, make_x(0.1, 1.2, 1.3), true);
-    check_penalties(constrained, make_x(0.5, 1.5, 2.5), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 0.2, 0.3), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 1.2, 1.3), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 2.5), false);
 }
 
 UTEST_CASE(constrained_cauchy_inequality)
@@ -687,12 +678,12 @@ UTEST_CASE(constrained_cauchy_inequality)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, false, true);
-    check_penalties(constrained, make_x(0.0, 0.0, 0.0), true);
-    check_penalties(constrained, make_x(0.0, 0.0, 0.7), true);
-    check_penalties(constrained, make_x(0.8, 0.0, 0.0), true);
-    check_penalties(constrained, make_x(0.1, 0.2, 0.3), true);
-    check_penalties(constrained, make_x(0.8, 0.1, 0.0), false);
-    check_penalties(constrained, make_x(0.0, 0.9, 0.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 0.7), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.8, 0.0, 0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.1, 0.2, 0.3), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.8, 0.1, 0.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.9, 0.0), false);
 }
 
 UTEST_CASE(constrained_sumabsm1_equality)
@@ -705,11 +696,11 @@ UTEST_CASE(constrained_sumabsm1_equality)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
 
     check_penalties(constrained, false, false);
-    check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
-    check_penalties(constrained, make_x(-0.9, 0.1, 0.0), true);
-    check_penalties(constrained, make_x(0.0, 0.9, 0.0), false);
-    check_penalties(constrained, make_x(-0.6, +0.8, 0.1), false);
-    check_penalties(constrained, make_x(-1.6, +0.8, 0.1), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.9, 0.1, 0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.9, 0.0), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.6, +0.8, 0.1), false);
+    check_penalties(constrained, make_vector<scalar_t>(-1.6, +0.8, 0.1), false);
 }
 
 UTEST_CASE(constrained_sumabsm1_inequality)
@@ -722,21 +713,21 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
 
     check_penalties(constrained, true, false);
-    check_penalties(constrained, make_x(0.0, 0.0, 1.0), true);
-    check_penalties(constrained, make_x(0.0, 0.9, 0.0), true);
-    check_penalties(constrained, make_x(-0.6, +0.2, 0.1), true);
-    check_penalties(constrained, make_x(-1.6, +0.8, 0.1), false);
-    check_penalties(constrained, make_x(-0.2, +0.8, 0.1), false);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 1.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(0.0, 0.9, 0.0), true);
+    check_penalties(constrained, make_vector<scalar_t>(-0.6, +0.2, 0.1), true);
+    check_penalties(constrained, make_vector<scalar_t>(-1.6, +0.8, 0.1), false);
+    check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.8, 0.1), false);
 }
 
 UTEST_CASE(constrained_quadratic2x2_inequality)
 {
-    auto q2 = make_x(1.0, 1.0);
-    auto q3 = make_x(1.0, 1.0, 1.0);
+    auto q2 = make_vector<scalar_t>(1.0, 1.0);
+    auto q3 = make_vector<scalar_t>(1.0, 1.0, 1.0);
 
-    auto P2x2 = make_X<2>(1.0, 2.0, 2.0, 1.0);
-    auto P2x3 = make_X<2>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
-    auto P3x2 = make_X<3>(1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
+    auto P2x2 = make_matrix<scalar_t>(2, 1.0, 2.0, 2.0, 1.0);
+    auto P2x3 = make_matrix<scalar_t>(2, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
+    auto P3x2 = make_matrix<scalar_t>(3, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0);
 
     auto constrained = sum_function_t{2};
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P2x2, q3, 1.0}));
@@ -752,12 +743,12 @@ UTEST_CASE(constrained_quadratic2x2_inequality)
 
 UTEST_CASE(constrained_quadratic3x3_inequality)
 {
-    auto q3 = make_x(1.0, 1.0, 1.0);
-    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
+    auto q3 = make_vector<scalar_t>(1.0, 1.0, 1.0);
+    auto q4 = make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0);
 
-    auto P3x3 = make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
-    auto P3x4 = make_X<3>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-    auto P4x3 = make_X<4>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P3x3 = make_matrix<scalar_t>(3, 2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
+    auto P3x4 = make_matrix<scalar_t>(3, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P4x3 = make_matrix<scalar_t>(4, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 
     auto constrained = sum_function_t{3};
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x3, q4, 1.0}));
@@ -773,12 +764,12 @@ UTEST_CASE(constrained_quadratic3x3_inequality)
 
 UTEST_CASE(constrained_quadratic3x3_equality)
 {
-    auto q3 = make_x(1.0, 1.0, 1.0);
-    auto q4 = make_x(1.0, 1.0, 1.0, 1.0);
+    auto q3 = make_vector<scalar_t>(1.0, 1.0, 1.0);
+    auto q4 = make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0);
 
-    auto P3x3 = make_X<3>(2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
-    auto P3x4 = make_X<3>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-    auto P4x3 = make_X<4>(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P3x3 = make_matrix<scalar_t>(3, 2.0, -1., 0.0, -1., 2.0, -1., 0.0, -1., 2.0);
+    auto P3x4 = make_matrix<scalar_t>(3, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    auto P4x3 = make_matrix<scalar_t>(4, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 
     auto constrained = sum_function_t{3};
     UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P3x3, q4, 1.0}));
@@ -796,32 +787,32 @@ UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective1_function_t{};
-    function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), std::sqrt(2.0)});
+    function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)});
 
     check_gradient(function);
     check_convexity(function);
     {
-        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-2.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-2.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 2.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(-1.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(-1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = -2.0;
-    const auto xbest = make_x(-1.0, -1.0);
+    const auto xbest = make_vector<scalar_t>(-1.0, -1.0);
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -834,22 +825,22 @@ UTEST_CASE(minimize_objective2)
     check_gradient(function);
     check_convexity(function);
     {
-        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(0.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 3.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(1.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 3.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = -5.0;
-    const auto xbest = make_x(1.0, 0.0);
+    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -862,22 +853,22 @@ UTEST_CASE(minimize_objective3)
     check_gradient(function);
     check_convexity(function);
     {
-        const auto state = solver_state_t{function, make_x(0.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_x(1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_x(0.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(1.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(2.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(2.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     const auto fbest = +1.0;
-    const auto xbest = make_x(1.0);
+    const auto xbest = make_vector<scalar_t>(1.0);
     check_penalty_solver(function, xbest, fbest);
 }
 
@@ -885,27 +876,27 @@ UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
     auto function = objective4_function_t{};
-    function.constrain(euclidean_ball_equality_t{make_x(0.0, 0.0), 1.0});
+    function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0});
 
     check_gradient(function);
     check_convexity(function);
     {
-        const auto state = solver_state_t{function, make_x(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(-1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(0.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
     }
     {
-        const auto state = solver_state_t{function, make_x(1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_x(1.0), 1e-12);
+        const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
     }
     const auto fbest = -1.0;
-    const auto xbest = make_x(1.0, 0.0);
+    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
     check_penalty_solver(function, xbest, fbest);
 }
 

@@ -63,6 +63,7 @@ target_sources(nano PRIVATE
     solver/ellipsoid.cpp
     solver/universal.cpp
     function.cpp
+    function/linprog.cpp
     function/constraint.cpp
     function/penalty.cpp
     function/util.cpp

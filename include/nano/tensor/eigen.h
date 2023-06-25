@@ -105,6 +105,21 @@ template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
 ///
+/// \brief create a matrix from an initializer list.
+///
+template <typename tscalar, typename... tvalues>
+auto make_matrix(const Eigen::Index rows, tvalues... values)
+{
+    const auto list = {static_cast<tscalar>(values)...};
+    const auto size = static_cast<Eigen::Index>(list.size());
+    assert(size % rows == 0);
+
+    tensor_matrix_t<tscalar> matrix{rows, size / rows};
+    std::copy(list.begin(), list.end(), begin(matrix));
+    return matrix;
+}
+
+///
 /// \brief create a vector from an initializer list.
 ///
 template <typename tscalar, typename... tvalues>
