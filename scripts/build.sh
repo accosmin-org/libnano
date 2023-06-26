@@ -25,7 +25,8 @@ function thinlto {
 }
 
 function asan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract"
+    export CXXFLAGS="${CXXFLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
 }
 
 function lsan {
