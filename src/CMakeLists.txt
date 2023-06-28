@@ -58,12 +58,12 @@ target_sources(nano PRIVATE
     solver/pdsgm.cpp
     solver/quasi.cpp
     solver/state.cpp
+    solver/linprog.cpp
     solver/penalty.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp
     solver/universal.cpp
     function.cpp
-    function/linprog.cpp
     function/constraint.cpp
     function/penalty.cpp
     function/util.cpp
