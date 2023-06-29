@@ -28,9 +28,9 @@ std::tuple<vector_t, vector_t, vector_t> nano::make_starting_point(const linear_
 
     const matrix_t invA = (A * A.transpose()).inverse();
 
-    vector_t x = A.transpose() * invA * b;
-    vector_t l = invA * A * c;
-    vector_t s = c - A.transpose() * l;
+    vector_t       x = A.transpose() * invA * b;
+    const vector_t l = invA * A * c;
+    vector_t       s = c - A.transpose() * l;
 
     const auto delta_x = std::max(0.0, -1.5 * x.minCoeff());
     const auto delta_s = std::max(0.0, -1.5 * s.minCoeff());
