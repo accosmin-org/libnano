@@ -1,5 +1,6 @@
 #include "fixture/function.h"
 #include "fixture/solver.h"
+#include <nano/function/lambda.h>
 #include <nano/function/penalty.h>
 #include <nano/solver/augmented.h>
 #include <nano/solver/penalty.h>
@@ -162,7 +163,7 @@ public:
     {
         if (gx != nullptr)
         {
-            gx->noalias() = vector_t::Ones(x.size());
+            gx->array() = 1.0;
         }
         return x.sum();
     }
@@ -209,100 +210,6 @@ public:
             gx->array() = x.array().sign();
         }
         return x.array().abs().sum() - 1.0;
-    }
-};
-
-class objective1_function_t final : public function_t
-{
-public:
-    explicit objective1_function_t()
-        : function_t("objective1", 2)
-    {
-        convex(convexity::yes);
-        smooth(smoothness::yes);
-        strong_convexity(0.0);
-    }
-
-    rfunction_t clone() const override { return std::make_unique<objective1_function_t>(*this); }
-
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            gx->noalias() = vector_t::Ones(x.size());
-        }
-        return x.sum();
-    }
-};
-
-class objective2_function_t final : public function_t
-{
-public:
-    explicit objective2_function_t()
-        : function_t("objective2", 2)
-    {
-        convex(convexity::no);
-        smooth(smoothness::yes);
-        strong_convexity(0.0);
-    }
-
-    rfunction_t clone() const override { return std::make_unique<objective2_function_t>(*this); }
-
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            (*gx)(0) = -10.0 * x(0);
-            (*gx)(1) = +2.0 * x(1);
-        }
-        return -5.0 * x(0) * x(0) + x(1) * x(1);
-    }
-};
-
-class objective3_function_t final : public function_t
-{
-public:
-    explicit objective3_function_t()
-        : function_t("objective3", 1)
-    {
-        convex(convexity::yes);
-        smooth(smoothness::yes);
-        strong_convexity(0.0);
-    }
-
-    rfunction_t clone() const override { return std::make_unique<objective3_function_t>(*this); }
-
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            gx->noalias() = vector_t::Ones(x.size());
-        }
-        return x.sum();
-    }
-};
-
-class objective4_function_t final : public function_t
-{
-public:
-    explicit objective4_function_t()
-        : function_t("objective4", 2)
-    {
-        convex(convexity::yes);
-        smooth(smoothness::yes);
-        strong_convexity(4.0);
-    }
-
-    rfunction_t clone() const override { return std::make_unique<objective4_function_t>(*this); }
-
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
-    {
-        if (gx != nullptr)
-        {
-            (*gx)(0) = 4.0 * x(0) - 1.0;
-            (*gx)(1) = 4.0 * x(1);
-        }
-        return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     }
 };
 } // namespace
@@ -786,7 +693,15 @@ UTEST_CASE(constrained_quadratic3x3_equality)
 UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
-    auto function = objective1_function_t{};
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            gx->array() = 1.0;
+        }
+        return x.sum();
+    };
+    auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
     function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)});
 
     check_gradient(function);
@@ -819,7 +734,16 @@ UTEST_CASE(minimize_objective1)
 UTEST_CASE(minimize_objective2)
 {
     // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
-    auto function = objective2_function_t{};
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            (*gx)(0) = -10.0 * x(0);
+            (*gx)(1) = +2.0 * x(1);
+        }
+        return -5.0 * x(0) * x(0) + x(1) * x(1);
+    };
+    auto function = make_function(2, convexity::no, smoothness::yes, 0.0, lambda);
     function.constrain(constant_t{1.0, 0});
 
     check_gradient(function);
@@ -847,7 +771,15 @@ UTEST_CASE(minimize_objective2)
 UTEST_CASE(minimize_objective3)
 {
     // see 17.24, "Numerical optimization", Nocedal & Wright, 2nd edition
-    auto function = objective3_function_t{};
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            gx->array() = 1.0;
+        }
+        return x.sum();
+    };
+    auto function = make_function(1, convexity::yes, smoothness::yes, 0.0, lambda);
     function.constrain(minimum_t{1.0, 0});
 
     check_gradient(function);
@@ -875,7 +807,16 @@ UTEST_CASE(minimize_objective3)
 UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
-    auto function = objective4_function_t{};
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            (*gx)(0) = 4.0 * x(0) - 1.0;
+            (*gx)(1) = 4.0 * x(1);
+        }
+        return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
+    };
+    auto function = make_function(2, convexity::yes, smoothness::yes, 4.0, lambda);
     function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0});
 
     check_gradient(function);
