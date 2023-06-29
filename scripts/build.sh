@@ -261,25 +261,13 @@ function clang_tidy {
         return 1
     fi
 
-    started="0"
-    while read line; do
-        if [[ $line == *"Enabled checks:"* ]]; then
-            printf "${line}\n"
-            started="1"
-        elif [[ -z ${line} ]]; then
-            started="0"
-        elif [[ ${started} == "1" ]]; then
-            printf "    ${line}\n";
-        fi
-    done < ${log}
-
     cat $log | grep -E "warning:|error:" | grep -oE "[^ ]+$" | sort | uniq -c
 
     # show log only if any warning or error is detected
-    warnings=$(cat $log | grep -E "warning:|error:" | sort -u | grep -v Eigen | wc -l)
+    warnings=$(cat $log | grep -E "warning:|error:" | sort -u | grep -v /usr/include | wc -l)
     if [[ $warnings -gt 0 ]]
     then
-        grep -E "warning:|error:" $log | sort -u
+        grep -E ".*warning:|error:" $log | sort -u
     fi
 
     # decide if should exit with failure
