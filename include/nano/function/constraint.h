@@ -17,7 +17,7 @@ struct euclidean_ball_t
 {
     euclidean_ball_t() = default;
 
-    euclidean_ball_t(vector_t origin, scalar_t radius)
+    euclidean_ball_t(vector_t origin, const scalar_t radius)
         : m_origin(std::move(origin))
         , m_radius(radius)
     {
@@ -31,7 +31,7 @@ struct linear_t
 {
     linear_t() = default;
 
-    linear_t(vector_t q, scalar_t r)
+    linear_t(vector_t q, const scalar_t r)
         : m_q(std::move(q))
         , m_r(r)
     {
@@ -45,7 +45,7 @@ struct quadratic_t
 {
     quadratic_t() = default;
 
-    quadratic_t(matrix_t P, vector_t q, scalar_t r)
+    quadratic_t(matrix_t P, vector_t q, const scalar_t r)
         : m_P(std::move(P))
         , m_q(std::move(q))
         , m_r(r)
@@ -82,7 +82,7 @@ struct euclidean_ball_equality_t : euclidean_ball_t
 {
     euclidean_ball_equality_t() = default;
 
-    euclidean_ball_equality_t(vector_t origin, scalar_t radius)
+    euclidean_ball_equality_t(vector_t origin, const scalar_t radius)
         : euclidean_ball_t(std::move(origin), radius)
     {
     }
@@ -95,7 +95,7 @@ struct euclidean_ball_inequality_t : euclidean_ball_t
 {
     euclidean_ball_inequality_t() = default;
 
-    euclidean_ball_inequality_t(vector_t origin, scalar_t radius)
+    euclidean_ball_inequality_t(vector_t origin, const scalar_t radius)
         : euclidean_ball_t(std::move(origin), radius)
     {
     }
@@ -108,7 +108,7 @@ struct constant_t
 {
     constant_t() = default;
 
-    constant_t(scalar_t value, tensor_size_t dimension)
+    constant_t(const scalar_t value, const tensor_size_t dimension)
         : m_value(value)
         , m_dimension(dimension)
     {

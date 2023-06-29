@@ -841,6 +841,47 @@ UTEST_CASE(minimize_objective4)
     check_penalty_solver(function, xbest, fbest);
 }
 
+UTEST_CASE(minimize_objective5)
+{
+    // see 12.36, "Numerical optimization", Nocedal & Wright, 2nd edition
+    // NB: the convention for the inequality constraints in the library is the opposite!
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        if (gx != nullptr)
+        {
+            (*gx)(0) = 2.0 * (x(0) - 1.5);
+            (*gx)(1) = 4.0 * cube(x(1) - 0.5);
+        }
+        return square(x(0) - 1.5) + quartic(x(1) - 0.5);
+    };
+    auto function = make_function(2, convexity::no, smoothness::yes, 0.0, lambda);
+    function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, -1.0), -1.0});
+    function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, +1.0), -1.0});
+    function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0});
+    function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, +1.0), -1.0});
+
+    check_gradient(function);
+    check_convexity(function);
+    {
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0, -1.0, -1.0, -1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-2.0, 0.0, -2.0, 0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+    }
+    {
+        const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
+        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-3.0, -1.0, -1.0, 1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+    }
+    const auto fbest = 5.0 / 16.0;
+    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
+    check_penalty_solver(function, xbest, fbest);
+}
+
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 
 UTEST_END_MODULE()
