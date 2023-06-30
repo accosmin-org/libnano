@@ -77,7 +77,7 @@ scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) co
 {
     assert(x.size() == size());
 
-    const auto op = [&](scalar_t fc, const auto& gc)
+    const auto op = [&](const scalar_t fc, const auto& gc)
     {
         if (gx != nullptr)
         {
@@ -105,7 +105,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx)
 {
     assert(x.size() == size());
 
-    const auto op = [&](scalar_t fc, const auto& gc)
+    const auto op = [&](const scalar_t fc, const auto& gc)
     {
         if (gx != nullptr)
         {

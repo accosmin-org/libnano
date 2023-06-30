@@ -13,7 +13,7 @@ using rfunctions_t = std::vector<rfunction_t>;
 
 namespace constraint
 {
-struct euclidean_ball_t
+struct NANO_PUBLIC euclidean_ball_t
 {
     euclidean_ball_t() = default;
 
@@ -27,7 +27,7 @@ struct euclidean_ball_t
     scalar_t m_radius{0.0};
 };
 
-struct linear_t
+struct NANO_PUBLIC linear_t
 {
     linear_t() = default;
 
@@ -41,7 +41,7 @@ struct linear_t
     scalar_t m_r{0.0};
 };
 
-struct quadratic_t
+struct NANO_PUBLIC quadratic_t
 {
     quadratic_t() = default;
 
@@ -76,7 +76,7 @@ struct NANO_PUBLIC functional_t
 };
 
 ///
-/// \brief equality constraint: h(x) = ||x - origin||^2 - radius^2 <= 0
+/// \brief equality constraint: h(x) = ||x - origin||^2 - radius^2 = 0
 ///
 struct euclidean_ball_equality_t : euclidean_ball_t
 {
@@ -89,7 +89,7 @@ struct euclidean_ball_equality_t : euclidean_ball_t
 };
 
 ///
-/// \brief inequality constraint: g(x) = ||x - origin||^2 - radius^2 = 0
+/// \brief inequality constraint: g(x) = ||x - origin||^2 - radius^2 <= 0
 ///
 struct euclidean_ball_inequality_t : euclidean_ball_t
 {

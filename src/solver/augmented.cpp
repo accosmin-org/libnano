@@ -62,8 +62,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto bstate        = solver_state_t{function, x0};
     auto ro            = make_ro1(bstate);
     auto old_criterion = scalar_t{0.0};
-    auto lambda        = vector_t{vector_t::Zero(bstate.ceq().size())};
-    auto miu           = vector_t{vector_t::Zero(bstate.cineq().size())};
+    auto lambda        = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
+    auto miu           = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
 
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
     auto solver           = make_solver(penalty_function, epsilon0, max_evals);
