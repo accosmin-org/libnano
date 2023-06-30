@@ -53,6 +53,10 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
     const auto miu               = function.strong_convexity();
 
     auto state = solver_state_t{function, x0};
+    if (state.gradient_test() < std::numeric_limits<scalar_t>::epsilon())
+    {
+        return state;
+    }
 
     auto Lk  = L0;
     auto Sk  = 0.0;
@@ -133,6 +137,10 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
     const auto miu               = function.strong_convexity();
 
     auto state = solver_state_t{function, x0};
+    if (state.gradient_test() < std::numeric_limits<scalar_t>::epsilon())
+    {
+        return state;
+    }
 
     auto Lk  = L0;
     auto Sk  = 0.0;

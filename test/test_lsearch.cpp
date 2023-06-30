@@ -44,6 +44,10 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
     const auto descent        = vector_t{-state0.gx()};
 
     UTEST_CHECK(state0.valid());
+    if (state0.gx().lpNorm<Eigen::Infinity>() < std::numeric_limits<scalar_t>::epsilon())
+    {
+        return;
+    }
     UTEST_CHECK(state0.has_descent(descent));
 
     std::stringstream stream;
