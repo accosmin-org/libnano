@@ -97,10 +97,11 @@ using namespace nano;
 [[maybe_unused]] static auto check_gradient(const function_t& function, const int trials = 100,
                                             const scalar_t epsilon = 1e-8)
 {
+    const auto rfunction = function.clone();
     for (auto trial = 0; trial < trials; ++trial)
     {
-        const auto x = make_random_x0(function);
-        UTEST_CHECK_LESS(grad_accuracy(function, x, epsilon), epsilon);
+        const auto x = make_random_x0(*rfunction);
+        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, epsilon), epsilon);
     }
 }
 
