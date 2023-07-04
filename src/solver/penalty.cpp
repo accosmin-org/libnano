@@ -9,10 +9,9 @@ solver_penalty_t::solver_penalty_t(string_t id)
     : solver_t(std::move(id))
 {
     type(solver_type::constrained);
-    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon0", 1e-12, LE, 1e-5, LE, 1e-2));
-    register_parameter(parameter_t::make_scalar("solver::penalty::epsilonK", 0.0, LT, 0.3, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 10.0, LE, 1e+3));
-    register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 1.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilonK", 0.0, LT, 0.5, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 5.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 10.0, LE, 1e+3));
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
 
@@ -57,6 +56,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 solver_linear_penalty_t::solver_linear_penalty_t()
     : solver_penalty_t("linear-penalty")
 {
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon0", 1e-12, LE, 1e-12, LE, 1e-2));
 }
 
 rsolver_t solver_linear_penalty_t::clone() const
@@ -74,6 +74,7 @@ solver_state_t solver_linear_penalty_t::do_minimize(const function_t& function, 
 solver_quadratic_penalty_t::solver_quadratic_penalty_t()
     : solver_penalty_t("quadratic-penalty")
 {
+    register_parameter(parameter_t::make_scalar("solver::penalty::epsilon0", 1e-12, LE, 1e-8, LE, 1e-2));
 }
 
 rsolver_t solver_quadratic_penalty_t::clone() const

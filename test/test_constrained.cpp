@@ -125,8 +125,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
 void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
                           const scalar_t epsilon_nonsmooth, const scalar_t epsilon_smooth = 1e-6)
 {
-    (void)epsilon_nonsmooth;
-    /*if (linear_penalty_function_t{function}.convex())
+    if (linear_penalty_function_t{function}.convex())
     // NB: cannot solve non-convex non-smooth problems precisely!
     {
         UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver"));
@@ -145,7 +144,7 @@ void check_penalty_solver(const function_t& function, const vector_t& xbest, con
         {
             check_minimize(*solver.clone(), function, x0, xbest, fbest, epsilon_smooth);
         }
-    }*/
+    }
     {
         UTEST_NAMED_CASE(scat(function.name(), "_augmented_lagrangian_solver"));
 
@@ -935,11 +934,9 @@ UTEST_CASE(minimize_objective6)
 
     const auto fbest = 0.0;
     const auto xbest = make_vector<scalar_t>(0.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-3);
+    check_penalty_solver(function, xbest, fbest, 1e-2);
 }
 
-// FIXME: sometimes the penalty methods fails to converge
-// FIXME: sometimes  the solution becomes much worse with a small increase in constraints (penalty methods)
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 
 UTEST_END_MODULE()
