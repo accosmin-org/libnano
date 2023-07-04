@@ -98,6 +98,7 @@ using namespace nano;
                                             const scalar_t epsilon = 1e-8)
 {
     const auto rfunction = function.clone();
+    UTEST_REQUIRE(rfunction != nullptr);
     for (auto trial = 0; trial < trials; ++trial)
     {
         const auto x = make_random_x0(*rfunction);
@@ -107,10 +108,12 @@ using namespace nano;
 
 [[maybe_unused]] static auto check_convexity(const function_t& function, const int trials = 100)
 {
+    const auto rfunction = function.clone();
+    UTEST_REQUIRE(rfunction != nullptr);
     for (auto trial = 0; trial < trials && function.convex(); ++trial)
     {
-        const auto x0 = make_random_x0(function);
-        const auto x1 = make_random_x0(function);
-        UTEST_CHECK(is_convex(function, x0, x1, 20));
+        const auto x0 = make_random_x0(*rfunction);
+        const auto x1 = make_random_x0(*rfunction);
+        UTEST_CHECK(is_convex(*rfunction, x0, x1, 20));
     }
 }
