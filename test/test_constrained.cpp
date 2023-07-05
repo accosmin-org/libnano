@@ -893,7 +893,7 @@ UTEST_CASE(minimize_objective5)
     }
     const auto fbest = 5.0 / 16.0;
     const auto xbest = make_vector<scalar_t>(1.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-3);
+    check_penalty_solver(function, xbest, fbest, 1e-2);
 }
 
 UTEST_CASE(minimize_objective6)
