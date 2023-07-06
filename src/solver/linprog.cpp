@@ -43,3 +43,5 @@ std::tuple<vector_t, vector_t, vector_t> nano::make_starting_point(const linear_
 
     return std::make_tuple(x.array() + delta_x_hat, l, s.array() + delta_s_hat);
 }
+
+// FIXME: remove dependant rows from A so that convergence is assured (see ch. 13)

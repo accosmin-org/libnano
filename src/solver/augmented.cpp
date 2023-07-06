@@ -82,6 +82,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
             break;
         }
 
+        // FIXME: update_if_better_constrained doesn't work properly, double check the original paper!
+
         // update lagrange multipliers
         lambda.array() = (lambda.array() + ro * cstate.ceq().array()).max(lambda_min).min(lambda_max);
         miu.array()    = (miu.array() + ro * cstate.cineq().array()).max(0.0).min(miu_max);

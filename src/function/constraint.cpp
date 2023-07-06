@@ -226,6 +226,16 @@ auto compatible(const function_t& function, const functional_t& constraint)
 }
 } // namespace
 
+functional_t::functional_t(const function_t& function)
+    : m_function(function.clone())
+{
+}
+
+functional_t::functional_t(rfunction_t&& function)
+    : m_function(std::move(function))
+{
+}
+
 functional_t::functional_t(const functional_t& other)
     : m_function(other.m_function->clone())
 {

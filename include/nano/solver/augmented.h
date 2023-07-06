@@ -7,7 +7,9 @@ namespace nano
 ///
 /// \brief (practical) augmented lagrangian method.
 ///
-/// see "Practical Augmented Lagrangian Methods", by E. G. Birgin, J. M. Martinez, 2007.
+/// see (1) "Practical Augmented Lagrangian Methods", by E. G. Birgin, J. M. Martinez, 2007.
+/// see (2) "On Augmented Lagrangian Methods With General Lower-Level Constraints",
+///     by R. Andreani, E. G. Birgin, J. M. Martinez, M. L. Schuverdt, 2008.
 ///
 /// NB: the penalty parameter and the estimated lagrangian multipliers are updated at the same time
 ///     in a loop to solve a potentially smooth function - the augmented lagrangian

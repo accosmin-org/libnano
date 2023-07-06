@@ -15,43 +15,18 @@ namespace constraint
 {
 struct NANO_PUBLIC euclidean_ball_t
 {
-    euclidean_ball_t() = default;
-
-    euclidean_ball_t(vector_t origin, const scalar_t radius)
-        : m_origin(std::move(origin))
-        , m_radius(radius)
-    {
-    }
-
     vector_t m_origin;
     scalar_t m_radius{0.0};
 };
 
 struct NANO_PUBLIC linear_t
 {
-    linear_t() = default;
-
-    linear_t(vector_t q, const scalar_t r)
-        : m_q(std::move(q))
-        , m_r(r)
-    {
-    }
-
     vector_t m_q;
     scalar_t m_r{0.0};
 };
 
 struct NANO_PUBLIC quadratic_t
 {
-    quadratic_t() = default;
-
-    quadratic_t(matrix_t P, vector_t q, const scalar_t r)
-        : m_P(std::move(P))
-        , m_q(std::move(q))
-        , m_r(r)
-    {
-    }
-
     matrix_t m_P;
     vector_t m_q;
     scalar_t m_r{0.0};
@@ -60,11 +35,8 @@ struct NANO_PUBLIC quadratic_t
 struct NANO_PUBLIC functional_t
 {
     functional_t() = default;
-
-    explicit functional_t(rfunction_t&& function)
-        : m_function(std::move(function))
-    {
-    }
+    explicit functional_t(const function_t&);
+    explicit functional_t(rfunction_t&& function);
 
     ~functional_t()                       = default;
     functional_t(functional_t&&) noexcept = default;
@@ -80,12 +52,6 @@ struct NANO_PUBLIC functional_t
 ///
 struct euclidean_ball_equality_t : euclidean_ball_t
 {
-    euclidean_ball_equality_t() = default;
-
-    euclidean_ball_equality_t(vector_t origin, const scalar_t radius)
-        : euclidean_ball_t(std::move(origin), radius)
-    {
-    }
 };
 
 ///
@@ -93,12 +59,6 @@ struct euclidean_ball_equality_t : euclidean_ball_t
 ///
 struct euclidean_ball_inequality_t : euclidean_ball_t
 {
-    euclidean_ball_inequality_t() = default;
-
-    euclidean_ball_inequality_t(vector_t origin, const scalar_t radius)
-        : euclidean_ball_t(std::move(origin), radius)
-    {
-    }
 };
 
 ///
@@ -106,14 +66,6 @@ struct euclidean_ball_inequality_t : euclidean_ball_t
 ///
 struct constant_t
 {
-    constant_t() = default;
-
-    constant_t(const scalar_t value, const tensor_size_t dimension)
-        : m_value(value)
-        , m_dimension(dimension)
-    {
-    }
-
     scalar_t      m_value{0.0};
     tensor_size_t m_dimension{-1};
 };
@@ -123,7 +75,6 @@ struct constant_t
 ///
 struct minimum_t : constant_t
 {
-    using constant_t::constant_t;
 };
 
 ///
@@ -131,7 +82,6 @@ struct minimum_t : constant_t
 ///
 struct maximum_t : constant_t
 {
-    using constant_t::constant_t;
 };
 
 ///
@@ -139,7 +89,6 @@ struct maximum_t : constant_t
 ///
 struct linear_equality_t : linear_t
 {
-    using linear_t::linear_t;
 };
 
 ///
@@ -147,7 +96,6 @@ struct linear_equality_t : linear_t
 ///
 struct linear_inequality_t : linear_t
 {
-    using linear_t::linear_t;
 };
 
 ///
@@ -155,7 +103,6 @@ struct linear_inequality_t : linear_t
 ///
 struct quadratic_equality_t : quadratic_t
 {
-    using quadratic_t::quadratic_t;
 };
 
 ///
@@ -163,7 +110,6 @@ struct quadratic_equality_t : quadratic_t
 ///
 struct quadratic_inequality_t : quadratic_t
 {
-    using quadratic_t::quadratic_t;
 };
 
 ///
