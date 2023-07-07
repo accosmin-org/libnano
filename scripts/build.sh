@@ -172,7 +172,7 @@ function codecov {
 
     local output=${basedir}/lcov.info
 
-    bash <(curl -s https://codecov.io/bash) -f ${output} || echo "Codecov did not collect coverage reports"
+    bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
 }
 
 function llvm_cov_coverage {
