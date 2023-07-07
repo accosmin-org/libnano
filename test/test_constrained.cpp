@@ -937,6 +937,37 @@ UTEST_CASE(minimize_objective6)
     check_penalty_solver(function, xbest, fbest, 1e-1);
 }
 
+UTEST_CASE(minimize_objective7)
+{
+    // see exercise 4.3, "Convex optimization", Boyd & Vanderberghe
+    const auto lambda = [](const vector_t& x, vector_t* gx)
+    {
+        static const auto P = make_matrix<scalar_t>(3, 13, 12, -2, 12, 17, 6, -2, 6, 12);
+        static const auto q = make_vector<scalar_t>(-22, -14.5, 13.0);
+        static const auto r = 1.0;
+        if (gx != nullptr)
+        {
+            *gx = P * x + q;
+        }
+        return 0.5 * x.dot(P * x) + x.dot(q) + r;
+    };
+    auto function = make_function(3, convexity::yes, smoothness::yes, 0.0, lambda);
+    function.constrain(minimum_t{-1.0, 0});
+    function.constrain(minimum_t{-1.0, 1});
+    function.constrain(minimum_t{-1.0, 2});
+    function.constrain(maximum_t{+1.0, 0});
+    function.constrain(maximum_t{+1.0, 1});
+    function.constrain(maximum_t{+1.0, 2});
+
+    check_gradient(function);
+    check_convexity(function);
+    check_penalties(function, convexity::yes, smoothness::yes, 0.0);
+
+    const auto fbest = -21.625;
+    const auto xbest = make_vector<scalar_t>(1.0, 0.5, -1.0);
+    check_penalty_solver(function, xbest, fbest, 1e-2);
+}
+
 // TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 
 UTEST_END_MODULE()
