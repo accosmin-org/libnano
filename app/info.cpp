@@ -10,6 +10,7 @@
 #include <nano/splitter.h>
 #include <nano/tuner.h>
 #include <nano/version.h>
+#include <nano/wlearner.h>
 
 using namespace nano;
 
@@ -53,6 +54,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "splitter", "regex to select train-validation splitting methods", ".+");
     cmdline.add("", "datasource", "regex to select machine learning datasets", ".+");
     cmdline.add("", "generator", "regex to select feature generation methods", ".+");
+    cmdline.add("", "wlearner", "regex to select weak learners", ".+");
 
     cmdline.add("", "list-lsearch0", "list the available line-search initialization methods");
     cmdline.add("", "list-lsearchk", "list the available line-search strategies");
@@ -64,6 +66,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-splitter", "list the available train-validation splitting methods");
     cmdline.add("", "list-datasource", "list the available machine learning datasets");
     cmdline.add("", "list-generator", "list the available feature generation methods");
+    cmdline.add("", "list-wlearner", "list the available weak learners");
 
     cmdline.add("", "list-lsearch0-params", "list the parameters of the selected line-search initialization methods");
     cmdline.add("", "list-lsearchk-params", "list the parameters of the selected line-search strategies");
@@ -74,6 +77,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "list-splitter-params", "list the parameters of the selected train-validation splitting methods");
     cmdline.add("", "list-datasource-params", "list the parameters of the selected machine learning datasets");
     cmdline.add("", "list-generator-params", "list the parameters of the selected feature generation methods");
+    cmdline.add("", "list-wlearner-params", "list the parameters of the selected weak learners");
 
     const auto options = cmdline.process(argc, argv);
 
@@ -101,6 +105,7 @@ int unsafe_main(int argc, const char* argv[])
     process_list<splitter_t>("splitter", options);
     process_list<datasource_t>("datasource", options);
     process_list<generator_t>("generator", options);
+    process_list<wlearner_t>("wlearner", options);
 
     // OK
     return EXIT_SUCCESS;
