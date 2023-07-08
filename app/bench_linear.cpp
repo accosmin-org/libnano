@@ -3,8 +3,6 @@
 #include <nano/core/cmdline.h>
 #include <nano/core/parameter_tracker.h>
 #include <nano/core/table.h>
-#include <nano/dataset.h>
-#include <nano/dataset/iterator.h>
 #include <nano/linear/model.h>
 #include <nano/linear/util.h>
 
@@ -55,12 +53,12 @@ int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark linear machine learning models");
-    cmdline.add("", "loss", "regex to select loss functions", "<select>");
+    cmdline.add("", "loss", "regex to select loss functions", "<mandatory>");
     cmdline.add("", "solver", "regex to select solvers", "lbfgs");
     cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
     cmdline.add("", "splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
                 "k-fold");
-    cmdline.add("", "datasource", "regex to select machine learning datasets", "<select>");
+    cmdline.add("", "datasource", "regex to select machine learning datasets", "<mandatory>");
     cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
     cmdline.add("", "list-linear-params", "list the parameters of the linear model");
 

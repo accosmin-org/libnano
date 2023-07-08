@@ -1,319 +1,168 @@
+#include "util.h"
 #include <iomanip>
-#include <nano/core/table.h>
-#include <nano/core/chrono.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
-#include <nano/core/tokenizer.h>
-#include <nano/mlearn/enums.h>
+#include <nano/core/parameter_tracker.h>
+#include <nano/core/table.h>
 #include <nano/gboost/model.h>
-#include <nano/model/grid_search.h>
-#include <nano/gboost/wlearner_table.h>
-#include <nano/gboost/wlearner_stump.h>
+#include <nano/wlearner.h>
 
 using namespace nano;
 
 namespace
 {
-template <typename tobject>
-void info_factory(const string_t& name, const factory_t<tobject>& factory, const string_t& regex)
+template <typename tfactory>
+auto make_object(const cmdline_t::result_t& options, const tfactory& factory, const char* const option,
+                 const char* const obj_name)
 {
-    table_t table;
-    table.header() << name << "description";
-    table.delim();
-    for (const auto& id : factory.ids(std::regex(regex)))
-    {
-        table.append() << id << factory.description(id);
-    }
-    std::cout << table;
+    const auto ids = factory.ids(std::regex(options.get<string_t>(option)));
+    critical(ids.size() != 1U, "expecting a single ", obj_name, ", got (", ids.size(), ") instead!");
+
+    auto object = factory.get(ids[0U]);
+    assert(object != nullptr);
+    return object;
 }
 
-void info_dataset(const rdataset_t& dataset, tensor_size_t max_features = 7)
+auto print_scalar(const scalar_t value)
 {
-    const auto op_append = [&] (table_t& table, const char* type, const feature_t& feature)
-    {
-        table.append() << type << feature.name()
-            << (feature.discrete() ? scat("discrete x", feature.labels().size()) : "continuous")
-            << (feature.optional() ? "optional" : "not optional");
-    };
+    return scat(std::setprecision(6), std::fixed, value);
+}
 
-    table_t table;
-    table.append() << "samples" << colspan(3) << dataset->samples();
-    table.delim();
-    if (dataset->features() > (max_features * 2))
+auto print_params(const ml::result_t& result)
+{
+    if (result.param_names().empty())
     {
-        for (tensor_size_t size = max_features, i = 0; i < size; ++ i)
-        {
-            op_append(table, "input", dataset->feature(i));
-        }
-        table.append() << "..." << "..." << "..." << "...";
-        for (tensor_size_t size = dataset->features(), i = size - max_features; i < size; ++ i)
-        {
-            op_append(table, "input", dataset->feature(i));
-        }
+        return string_t{"N/A"};
     }
     else
     {
-        for (tensor_size_t size = dataset->features(), i = 0; i < size; ++ i)
+        const auto& param_names  = result.param_names();
+        const auto& param_values = result.optimum().params();
+        assert(static_cast<tensor_size_t>(param_names.size()) == param_values.size());
+
+        string_t str;
+        for (size_t i = 0U; i < param_names.size(); ++i)
         {
-            op_append(table, "input", dataset->feature(i));
+            str += scat(param_names[i], "=", std::fixed, std::setprecision(8),
+                        param_values(static_cast<tensor_size_t>(i)), " ");
         }
+        return str;
     }
-    table.delim();
-    op_append(table, "target", dataset->target());
-    std::cout << table;
 }
 
-auto make_loss_id(const dataset_t& dataset, const cmdline_t& cmdline)
-{
-    string_t id;
-
-    if (cmdline.has("loss"))
-    {
-        id = cmdline.get<string_t>("loss");
-    }
-    else
-    {
-        switch (dataset.type())
-        {
-        case task_type::unsupervised:
-            critical(false, "unsupervised datasets are not supported!");
-            break;
-
-        case task_type::sclassification:
-            id = "s-logistic";
-            break;
-
-        case task_type::mclassification:
-            id = "m-logistic";
-            break;
-
-        default:
-            id = "squared";
-            break;
-        }
-        log_info() << "using loss <" << id << ">...";
-    }
-
-    return id;
-}
-
-auto make_loss(const string_t& id)
-{
-    auto loss = loss_t::all().get(id);
-    critical(!loss, scat("invalid loss '", id, "'"));
-    return loss;
-}
-
-auto make_dataset(const string_t& id)
-{
-    const auto start = nano::timer_t{};
-
-    auto dataset = dataset_t::all().get(id);
-    critical(!dataset, scat("invalid dataset '", id, "'"));
-    dataset->load();
-
-    log_info() << ">>> loading done in " << start.elapsed() << ".";
-    return dataset;
-}
-
-auto make_solver(const cmdline_t& cmdline)
-{
-    const auto id = cmdline.get<string_t>("solver");
-    const auto epsilon = cmdline.get<scalar_t>("solver-epsilon");
-    const auto max_iterations = cmdline.get<int>("solver-maxiter");
-
-    auto solver = solver_t::all().get(id);
-    critical(!solver, scat("invalid solver '", id, "'"));
-    solver->epsilon(epsilon);
-    solver->max_iterations(max_iterations);
-    /*solver->logger([&] (const solver_state_t& state)
-    {
-        std::cout << std::fixed << std::setprecision(6) << "\tdescent: " << state << ".\n";
-        return true;
-    });*/
-    return solver;
-}
-
-template <typename tscalar>
-auto split(const string_t& config)
-{
-    std::vector<tscalar> values;
-    for (auto tokenizer = tokenizer_t{config, ", \t\n\r"}; tokenizer; ++ tokenizer)
-    {
-        values.push_back(from_string<tscalar>(tokenizer.get()));
-    }
-    return values;
-}
-
-rmodel_t make_gridsearch(const gboost_model_t& model, const cmdline_t& cmdline, param_grid_t&& param_grid)
-{
-    auto gs = grid_search_model_t{model, param_grid};
-    gs.folds(cmdline.get<int>("gridsearch-folds"));
-    gs.max_trials(cmdline.get<int>("gridsearch-max-trials"));
-    return gs.clone();
-}
-
-auto make_boosters(const cmdline_t& cmdline)
-{
-    const auto wtable = wlearner_table_t{};
-    const auto wstump = wlearner_stump_t{};
-
-    auto model = gboost_model_t{};
-    model.add(wtable);
-    model.add(wstump);
-
-    model.vAreg(0.0);
-    model.shrinkage(1.0);
-    model.subsample(1.00);
-    model.batch(cmdline.get<int>("gboost-batch"));
-    model.rounds(cmdline.get<int>("gboost-rounds"));
-    model.epsilon(cmdline.get<scalar_t>("gboost-epsilon"));
-    model.wscale(cmdline.get<::nano::wscale>("gboost-wscale"));
-
-    const auto vAregs = split<scalar_t>(cmdline.get<string_t>("gboost-vAreg"));
-    const auto shrinkages = split<scalar_t>(cmdline.get<string_t>("gboost-shrinkage"));
-    const auto subsamples = split<scalar_t>(cmdline.get<string_t>("gboost-subsample"));
-
-    std::map<string_t, rmodel_t> boosters;
-
-    // no regularization
-    boosters.emplace("default", model.clone());
-
-    // tune shrinkage
-    if (shrinkages.size() > 1U)
-    {
-        boosters.emplace("+shrinkage", make_gridsearch(model, cmdline, {{"gboost::shrinkage", shrinkages}}));
-    }
-
-    // tune subsampling
-    if (subsamples.size() > 1U)
-    {
-        boosters.emplace("+subsample", make_gridsearch(model, cmdline, {{"gboost::subsample", subsamples}}));
-    }
-
-    // tune variance regularization
-    if (vAregs.size() > 1U)
-    {
-        boosters.emplace("+vAreg", make_gridsearch(model, cmdline, {{"gboost::vAreg", vAregs}}));
-    }
-
-    return boosters;
-}
-
-static int unsafe_main(int argc, const char* argv[])
+int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
-    cmdline_t cmdline("report statistics regarding training gradient boosting models on various builtin datasets");
-    cmdline.add("", "dataset",          "regex to select datasets, use --help-dataset to list the available options", "iris|wine");
-    cmdline.add("", "loss",             "loss function, use --help-loss to list the available options, otherwise an appropriate default will be used");
-    cmdline.add("", "solver",           "solver, use --help-solver to list the available options", "lbfgs");
-    cmdline.add("", "solver-epsilon",   "solver: convergence criterion's threshold", 1e-6);
-    cmdline.add("", "solver-maxiter",   "solver: maximum number of iterations", 100);
-    cmdline.add("", "gboost-batch",     "gboost: number of samples to process at once", 32);
-    cmdline.add("", "gboost-rounds",    "gboost: maximum number of boosting rounds", 100);
-    cmdline.add("", "gboost-epsilon",   "gboost: error threshold to stop training at", 1e-6);
-    cmdline.add("", "gboost-vAreg",     "gboost: comma-separated variance regularization factors [0,+inf)", "1e-3,1e-2,1e-1,1e+0");
-    cmdline.add("", "gboost-shrinkage", "gboost: comma-separated shrinkage factors (0,1]", "0.1,0.2,0.5,0.9,1.0");
-    cmdline.add("", "gboost-subsample", "gboost: comma-separated sub-sampling percentages (0,1]", "0.1,0.2,0.5,0.9,1.0");
-    cmdline.add("", "gboost-wscale",    scat("gboost: weak learner scale [", enum_values<wscale>(), "]"), wscale::gboost);
-    cmdline.add("", "importance",       scat("feature importance [", enum_values<importance>(), "]"), importance::shuffle);
-    cmdline.add("", "folds",            "number of folds for k-fold evaluation (outer loop)", 10);
-    cmdline.add("", "repetitions",      "number of repetitions for k-fold evaluation (outer loop)", 1);
-    cmdline.add("", "gridsearch-folds", "number of folds for grid-search tuning (inner loop)", 10);
-    cmdline.add("", "gridsearch-max-trials", "maximum number of trials for grid-search tuning (inner loop)", 100);
-    cmdline.add("", "no-training",      "don't train the models (e.g. check dataset loading)");
-    cmdline.add("", "show-config",      "display the parameter values for all the evaluated models");
-    cmdline.add("", "help-loss",        "regex to select the builtin loss functions to display", ".+");
-    cmdline.add("", "help-solver",      "regex to select the builtin solvers to display", ".+");
-    cmdline.add("", "help-dataset",     "regex to select the builtin datasets to display", ".+");
+    cmdline_t cmdline("benchmark gradient boosting machine learning models");
+    cmdline.add("", "loss", "regex to select loss functions", "<mandatory>");
+    cmdline.add("", "solver", "regex to select solvers", "lbfgs");
+    cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
+    cmdline.add("", "splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
+                "k-fold");
+    cmdline.add("", "datasource", "regex to select machine learning datasets", "<mandatory>");
+    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
+    cmdline.add("", "wlearner", "regex to select weak learners", "<mandatory>");
+    cmdline.add("", "list-gboost-params", "list the parameters of the gradient boosting model");
 
-    cmdline.process(argc, argv);
-
-    if (cmdline.has("help"))
+    const auto options = cmdline.process(argc, argv);
+    if (options.has("help"))
     {
         cmdline.usage();
-        return EXIT_SUCCESS;
+        std::exit(EXIT_SUCCESS);
     }
-    if (cmdline.has("help-loss"))
+    if (options.has("list-gboost-params"))
     {
-        info_factory("loss", loss_t::all(), cmdline.get<string_t>("help-loss"));
-        return EXIT_SUCCESS;
-    }
-    if (cmdline.has("help-solver"))
-    {
-        info_factory("solver", solver_t::all(), cmdline.get<string_t>("help-solver"));
-        return EXIT_SUCCESS;
-    }
-    if (cmdline.has("help-dataset"))
-    {
-        info_factory("dataset", dataset_t::all(), cmdline.get<string_t>("help-dataset"));
+        table_t table;
+        table.header() << "parameter"
+                       << "value"
+                       << "domain";
+        table.delim();
+        const auto configurable = gboost_model_t{};
+        for (const auto& param : configurable.parameters())
+        {
+            table.append() << param.name() << param.value() << param.domain();
+        }
+        std::cout << table;
         return EXIT_SUCCESS;
     }
 
-    table_t table;
-    table.header() << "dataset" << "loss" << "model" << "time" << "train error" << "valid error";
+    // check arguments and options
+    const auto rloss         = make_object(options, loss_t::all(), "loss", "loss function");
+    const auto rtuner        = make_object(options, tuner_t::all(), "tuner", "hyper-parameter tuning method");
+    const auto rsolver       = make_object(options, solver_t::all(), "solver", "solver");
+    const auto rsplitter     = make_object(options, splitter_t::all(), "splitter", "train-validation splitting method");
+    const auto rdatasource   = make_object(options, datasource_t::all(), "datasource", "machine learning dataset");
+    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("generator")));
+    const auto wlearner_ids  = wlearner_t::all().ids(std::regex(options.get<string_t>("wlearner")));
+
+    // TODO: option to save trained models
+    // TODO: option to save training history to csv
+    // TODO: wrapper script to generate plots?!
+    // TODO: experiments to evaluate feature value scaling, regularization method, feature generation (products!)
+
+    auto param_tracker = parameter_tracker_t{options};
+    param_tracker.setup(*rloss);
+    param_tracker.setup(*rtuner);
+    param_tracker.setup(*rsolver);
+    param_tracker.setup(*rsplitter);
+    param_tracker.setup(*rdatasource);
+
+    auto wlearners = rwlearners_t{};
+    for (const auto& wlearner_id : wlearner_ids)
+    {
+        auto wlearner = wlearner_t::all().get(wlearner_id);
+        assert(wlearner != nullptr);
+        param_tracker.setup(*wlearner);
+        wlearners.emplace_back(std::move(wlearner));
+    }
+
+    // load dataset
+    rdatasource->load();
+    const auto dataset = ::load_dataset(*rdatasource, generator_ids);
+
+    // train the model using nested cross-validation with respecting the datasource's test samples (if given):
+    //  for each outer fold...
+    //      make (training, validation) split
+    //      fit (and tune) on the training samples
+    //      evaluate on the validation samples
+    auto table = table_t{};
+    table.header() << "fold"
+                   << "optimum params"
+                   << "train error"
+                   << "valid error"
+                   << "refit error"
+                   << "test error";
     table.delim();
 
-    const auto dataset_ids = dataset_t::all().ids(std::regex(cmdline.get<string_t>("dataset")));
-    critical(dataset_ids.empty(), scat("invalid datasets '", cmdline.get<string_t>("dataset"), "'"));
-    for (const auto& dataset_id : dataset_ids)
+    const auto test_samples = rdatasource->test_samples();
+    const auto eval_samples = rdatasource->train_samples();
+    const auto tr_vd_splits = rsplitter->split(eval_samples);
+    for (size_t outer_fold = 0U; outer_fold < tr_vd_splits.size(); ++outer_fold)
     {
-        const auto dataset = make_dataset(dataset_id);
-        info_dataset(dataset);
+        const auto& [train_samples, valid_samples] = tr_vd_splits[outer_fold];
 
-        if (cmdline.has("no-training"))
-        {
-            continue;
-        }
+        auto model = gboost_model_t{};
+        param_tracker.setup(model);
 
-        // TODO: vary feature importance
-        // TODO: flavours to evaluate: wscale, w/o vAreg, w/o shrinkage, w/o subsample
-        // TODO: report statistics: training+validation mean&variance, most important features, best hyper-parameters per fold, training time
-        // TODO: t-test to rank models
-        // TODO: find setup that returns stable results across various runs!!!
-        // TODO: print report with best configs
+        const auto fit_logger = ml::params_t::make_stdio_logger();
+        const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
+        const auto fit_result = model.fit(dataset, train_samples, *rloss, wlearners, fit_params);
 
-        const auto folds = cmdline.get<int>("folds");
-        const auto repetitions = cmdline.get<int>("repetitions");
-        //const auto importance = ::nano::from_string<::nano::importance>(cmdline.get<string_t>("importance"));
+        const auto test_errors_values = model.evaluate(dataset, valid_samples, *rloss);
 
-        const auto loss_id = make_loss_id(*dataset, cmdline);
+        table.append() << scat(outer_fold + 1, "/", tr_vd_splits.size()) << print_params(fit_result)
+                       << print_scalar(fit_result.optimum().value(ml::split_type::train, ml::value_type::errors))
+                       << print_scalar(fit_result.optimum().value(ml::split_type::valid, ml::value_type::errors))
+                       << print_scalar(fit_result.stats(ml::value_type::errors).m_mean)
+                       << print_scalar(test_errors_values.tensor(0).mean());
+        std::cout << table;
 
-        const auto loss = make_loss(loss_id);
-        const auto solver = make_solver(cmdline);
+        // TODO: export inner/outer splits' results!
+        // TODO: check the selected features are the expected ones(lasso, elasticnet)
+        // TODO: feature importance analysis
 
-        for (const auto& [model_name, model] : make_boosters(cmdline))
-        {
-            const auto start = nano::timer_t{};
-            const auto result = kfold(*model, *loss, *dataset, dataset->train_samples(), *solver, folds, repetitions);
-            const auto elapsed = start.elapsed();
-
-            stats_t train_stats(begin(result.m_train_errors), end(result.m_train_errors));
-            stats_t valid_stats(begin(result.m_valid_errors), end(result.m_valid_errors));
-
-            auto& row = table.append();
-            row << dataset_id << loss_id << model_name << elapsed
-                << scat(std::setprecision(4), std::fixed, train_stats)
-                << scat(std::setprecision(4), std::fixed, valid_stats);
-
-            if (cmdline.has("show-config"))
-            {
-                table.delim();
-                for (size_t i = 0; i < result.m_models.size(); ++ i)
-                {
-                    auto& row = table.append();
-
-                    row << nano::colspan(5) << result.m_models[i]->config()
-                        << result.m_valid_errors(static_cast<tensor_size_t>(i));
-                }
-                table.delim();
-            }
-
-            // TODO: report median, stdev error
-        }
+        (void)test_samples;
+        // const auto tr_samples = rdatasource->train_samples();
     }
-
-    std::cout << table << std::endl;
 
     // OK
     return EXIT_SUCCESS;
