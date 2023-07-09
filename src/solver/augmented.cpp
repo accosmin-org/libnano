@@ -74,8 +74,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         penalty_function.penalty(ro);
         const auto cstate = solver->minimize(penalty_function, bstate.x());
 
-        // NB: the convergence check is different from (1) - here past two iterations produce very similar results
-        const auto iter_ok   = cstate.valid();
+        // check convergence
+        const auto iter_ok   = cstate.valid(); // && cstate.status() == solver_status::converged;
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
         if (done(bstate, iter_ok, converged))

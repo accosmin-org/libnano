@@ -31,23 +31,32 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
+        // solve the penalty problem
         penalty_function.penalty(penalty);
+        const auto cstate = solver->minimize(penalty_function, bstate.x());
 
-        const auto cstate    = solver->minimize(penalty_function, bstate.x());
-        const auto iter_ok   = cstate.valid();
+        // increase penalty until the solution is bounded
+        const auto iter_ok = cstate.valid();
+        if (!iter_ok)
+        {
+            penalty *= eta;
+            continue;
+        }
+
+        // check convergence
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
-
-        // FIXME: detect the case when the optimization diverges (unbounded problem if penalty too small)
-        // and the best state should not be updated while the penalty should be increased!
-        bstate.update(cstate.x());
-
+        const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
         if (done(bstate, iter_ok, converged))
         {
             break;
         }
 
+        // update penalty parameter
         penalty *= eta;
-        solver->more_precise(epsilonK);
+        if (improved)
+        {
+            solver->more_precise(epsilonK);
+        }
     }
 
     return bstate;
