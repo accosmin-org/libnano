@@ -14,7 +14,7 @@ public:
     /// \brief constructor
     ///
     template <typename... targs>
-    explicit pairwise_product_t(targs... args)
+    explicit pairwise_product_t(targs&&... args)
         : pairwise_input_scalar_scalar_t("product", std::forward<targs>(args)...)
     {
     }

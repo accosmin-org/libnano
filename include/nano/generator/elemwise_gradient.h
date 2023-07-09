@@ -17,14 +17,14 @@ public:
     /// \brief constructor
     ///
     template <typename... targs>
-    explicit elemwise_gradient_t(kernel3x3_type type, targs... args)
+    explicit elemwise_gradient_t(kernel3x3_type type, targs&&... args)
         : elemwise_input_struct_t("gradient", std::forward<targs>(args)...)
         , m_type(type)
     {
     }
 
     template <typename... targs>
-    explicit elemwise_gradient_t(targs... args)
+    explicit elemwise_gradient_t(targs&&... args)
         : elemwise_gradient_t(kernel3x3_type::sobel, std::forward<targs>(args)...)
     {
     }
