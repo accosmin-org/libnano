@@ -45,7 +45,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
         // check convergence
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
-        const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
+        bstate.update(cstate.x());
         if (done(bstate, iter_ok, converged))
         {
             break;
@@ -53,10 +53,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
 
         // update penalty parameter
         penalty *= eta;
-        if (improved)
-        {
-            solver->more_precise(epsilonK);
-        }
+        solver->more_precise(epsilonK);
     }
 
     return bstate;

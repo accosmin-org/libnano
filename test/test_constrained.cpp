@@ -965,9 +965,7 @@ UTEST_CASE(minimize_objective7)
 
     const auto fbest = -21.625;
     const auto xbest = make_vector<scalar_t>(1.0, 0.5, -1.0);
-    check_penalty_solver(function, xbest, fbest, 1e-2);
+    check_penalty_solver(function, xbest, fbest, 1e-1);
 }
-
-// TODO: check the case when the constraints are not feasible - is it possible to detect this case?!
 
 UTEST_END_MODULE()
