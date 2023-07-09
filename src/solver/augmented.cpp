@@ -70,35 +70,35 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
 
     for (tensor_size_t outer = 0; outer < max_outers; ++outer)
     {
+        // solve augmented lagrangian problem
         penalty_function.penalty(ro);
+        const auto cstate = solver->minimize(penalty_function, bstate.x());
 
-        const auto cstate    = solver->minimize(penalty_function, bstate.x());
+        // NB: the convergence check is different from (1) - here past two iterations produce very similar results
         const auto iter_ok   = cstate.valid();
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
-
         if (done(bstate, iter_ok, converged))
         {
             break;
         }
-
-        // FIXME: update_if_better_constrained doesn't work properly, double check the original paper!
-
-        // update lagrange multipliers
-        lambda.array() = (lambda.array() + ro * cstate.ceq().array()).max(lambda_min).min(lambda_max);
-        miu.array()    = (miu.array() + ro * cstate.cineq().array()).max(0.0).min(miu_max);
+        if (improved)
+        {
+            solver->more_precise(epsilonK);
+        }
 
         // update penalty parameter
+        const auto old_ro    = ro;
         const auto criterion = make_criterion(cstate, miu, ro);
         if (outer > 0 && criterion > tau * old_criterion)
         {
             ro = gamma * ro;
         }
         old_criterion = criterion;
-        if (improved)
-        {
-            solver->more_precise(epsilonK);
-        }
+
+        // update lagrange multipliers
+        lambda.array() = (lambda.array() + old_ro * cstate.ceq().array()).max(lambda_min).min(lambda_max);
+        miu.array()    = (miu.array() + old_ro * cstate.cineq().array()).max(0.0).min(miu_max);
     }
 
     return bstate;
