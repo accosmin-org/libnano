@@ -35,4 +35,14 @@ struct NANO_PUBLIC linear_program_t
 /// see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
 NANO_PUBLIC std::tuple<vector_t, vector_t, vector_t> make_starting_point(const linear_program_t&);
+
+///
+/// \brief returns the solution of the given linear program using the predictor-corrector algorithm.
+///
+/// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
+/// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+/// NB: this follows the notation from (2).
+///
+NANO_PUBLIC vector_t solve(const linear_program_t&);
 } // namespace nano
