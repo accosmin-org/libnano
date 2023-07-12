@@ -38,6 +38,7 @@ UTEST_CASE(program1)
     const auto xbest    = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
     const auto solution = linprog::solve(prog, make_logger());
     UTEST_CHECK(solution.converged());
+    UTEST_CHECK_LESS(solution.m_iters, 10);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-12);
     UTEST_CHECK_CLOSE(c.dot(solution.m_x), fbest, 1e-12);
 }
@@ -62,6 +63,7 @@ UTEST_CASE(program2)
     const auto xbest    = make_vector<scalar_t>(0.0, 1.0);
     const auto solution = linprog::solve(prog, make_logger());
     UTEST_CHECK(solution.converged());
+    UTEST_CHECK_LESS(solution.m_iters, 10);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-12);
     UTEST_CHECK_CLOSE(c.dot(solution.m_x), fbest, 1e-12);
 }
@@ -77,6 +79,7 @@ UTEST_CASE(program3)
     const auto solution = linprog::solve(prog, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
+    UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
 UTEST_CASE(program4)
@@ -90,6 +93,7 @@ UTEST_CASE(program4)
     const auto solution = linprog::solve(prog, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
+    UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
 UTEST_CASE(program5)
@@ -103,6 +107,7 @@ UTEST_CASE(program5)
     const auto solution = linprog::solve(prog, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
+    UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
 UTEST_END_MODULE()
