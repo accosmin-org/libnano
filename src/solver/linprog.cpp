@@ -2,9 +2,6 @@
 #include <nano/core/numeric.h>
 #include <nano/solver/linprog.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 namespace
@@ -21,10 +18,10 @@ auto make_alpha(const vector_t& v, const tvector& dv)
         }
     }
     return min;
-};
+}
 } // namespace
 
-linear_program_t::linear_program_t(vector_t c, matrix_t A, vector_t b)
+linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
     : m_c(std::move(c))
     , m_A(std::move(A))
     , m_b(std::move(b))
@@ -35,13 +32,23 @@ linear_program_t::linear_program_t(vector_t c, matrix_t A, vector_t b)
     assert(m_A.rows() == m_b.size());
 }
 
-bool linear_program_t::feasible(const vector_t& x, const scalar_t epsilon) const
+bool linprog::problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
 {
     assert(x.size() == m_c.size());
     return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && x.minCoeff() >= 0.0;
 }
 
-std::tuple<vector_t, vector_t, vector_t> nano::make_starting_point(const linear_program_t& prog)
+bool linprog::solution_t::converged() const
+{
+    return m_miu < std::numeric_limits<scalar_t>::epsilon();
+}
+
+bool linprog::solution_t::diverged() const
+{
+    return !std::isfinite(m_miu) || m_miu > 1e+10;
+}
+
+linprog::solution_t linprog::make_starting_point(const linprog::problem_t& prog)
 {
     const auto& c = prog.m_c;
     const auto& A = prog.m_A;
@@ -62,10 +69,10 @@ std::tuple<vector_t, vector_t, vector_t> nano::make_starting_point(const linear_
     const auto delta_x_hat = 0.5 * x.dot(s) / s.sum();
     const auto delta_s_hat = 0.5 * x.dot(s) / x.sum();
 
-    return std::make_tuple(x.array() + delta_x_hat, l, s.array() + delta_s_hat);
+    return {x.array() + delta_x_hat, l, s.array() + delta_s_hat};
 }
 
-vector_t nano::solve(const linear_program_t& prog)
+linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog::logger_t& logger)
 {
     const auto& A = prog.m_A;
     const auto& b = prog.m_b;
@@ -75,7 +82,6 @@ vector_t nano::solve(const linear_program_t& prog)
     const auto m = A.rows();
 
     const auto max_iters = 100;
-    const auto max_miu   = 1e+10;
 
     auto rb  = vector_t{m};
     auto rc  = vector_t{n};
@@ -100,27 +106,25 @@ vector_t nano::solve(const linear_program_t& prog)
         return std::make_tuple(sol.segment(0, n), sol.segment(n, m), sol.segment(n + m, n));
     };
 
-    auto [x, l, s] = make_starting_point(prog);
-    for (auto iter = 0; iter < max_iters; ++iter)
+    auto solution = make_starting_point(prog);
+    for (; solution.m_iters < max_iters; ++solution.m_iters)
     {
-        const auto miu = x.dot(s) / static_cast<scalar_t>(n);
+        auto& x = solution.m_x;
+        auto& l = solution.m_l;
+        auto& s = solution.m_s;
 
-        // check divergence
-        if (!std::isfinite(miu) || miu > max_miu)
+        solution.m_miu = x.dot(s) / static_cast<scalar_t>(n);
+        if (logger)
         {
-            x.array() = std::numeric_limits<scalar_t>::quiet_NaN();
-            break;
+            logger(solution);
         }
-
-        // check convergence
-        if (miu < std::numeric_limits<scalar_t>::epsilon())
+        if (solution.diverged() || solution.converged())
         {
             break;
         }
 
         update_mat(x, s);
 
-        //
         rb = A * x - b;
         rc = A.transpose() * l + s - c;
 
@@ -133,22 +137,19 @@ vector_t nano::solve(const linear_program_t& prog)
         const auto alpha_dual_aff           = std::min(1.0, make_alpha(s, ds_aff));
 
         const auto miu_aff = (x + alpha_pri_aff * dx_aff).dot(s + alpha_dual_aff * ds_aff) / static_cast<scalar_t>(n);
-        const auto sigma   = cube(miu_aff / miu);
+        const auto sigma   = cube(miu_aff / solution.m_miu);
 
-        vec.segment(n + m, n).array() -= dx_aff.array() * ds_aff.array() - sigma * miu;
+        vec.segment(n + m, n).array() -= dx_aff.array() * ds_aff.array() - sigma * solution.m_miu;
 
         const auto [dx, dl, ds] = solve();
-        const auto eta          = 1.0 - std::pow(0.1, iter + 1);
+        const auto eta          = 1.0 - std::pow(0.1, solution.m_iters + 1);
         const auto alpha_pri    = std::min(1.0, eta * make_alpha(x, dx));
         const auto alpha_dual   = std::min(1.0, eta * make_alpha(s, ds));
-
-        std::cout << std::fixed << std::setprecision(12) << "iter=" << iter << ", x=" << x.transpose()
-                  << ", miu=" << miu << std::endl;
 
         x += alpha_pri * dx;
         l += alpha_dual * dl;
         s += alpha_dual * ds;
     }
 
-    return x;
+    return solution;
 }
