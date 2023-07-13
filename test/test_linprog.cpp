@@ -25,20 +25,20 @@ UTEST_CASE(program1)
     const auto A = make_matrix<scalar_t>(2, 1, 1, 1, 0, 2, 0.5, 0, 1);
     const auto b = make_vector<scalar_t>(5, 8);
 
-    const auto prog = linprog::problem_t{c, A, b};
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0), 1e-12));
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
+    const auto problem = linprog::problem_t{c, A, b};
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0), 1e-12));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
 
-    const auto solution0 = linprog::make_starting_point(prog);
+    const auto solution0 = linprog::make_starting_point(problem);
     UTEST_CHECK_GREATER(solution0.m_x.minCoeff(), 0.0);
     UTEST_CHECK_GREATER(solution0.m_s.minCoeff(), 0.0);
 
     const auto fbest    = -52 / 3.0;
     const auto xbest    = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
-    const auto solution = linprog::solve(prog, make_logger());
+    const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(solution.converged());
-    UTEST_CHECK_LESS(solution.m_iters, 10);
+    UTEST_CHECK_LESS(solution.m_iters, 20);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-12);
     UTEST_CHECK_CLOSE(c.dot(solution.m_x), fbest, 1e-12);
 }
@@ -50,18 +50,18 @@ UTEST_CASE(program2)
     const auto A = make_matrix<scalar_t>(1, 1, 1);
     const auto b = make_vector<scalar_t>(1);
 
-    const auto prog = linprog::problem_t{c, A, b};
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(0.0, 1.0), 1e-12));
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
-    UTEST_CHECK(prog.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
+    const auto problem = linprog::problem_t{c, A, b};
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 1.0), 1e-12));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
 
-    const auto solution0 = linprog::make_starting_point(prog);
+    const auto solution0 = linprog::make_starting_point(problem);
     UTEST_CHECK_GREATER(solution0.m_x.minCoeff(), 0.0);
     UTEST_CHECK_GREATER(solution0.m_s.minCoeff(), 0.0);
 
     const auto fbest    = 0.0;
     const auto xbest    = make_vector<scalar_t>(0.0, 1.0);
-    const auto solution = linprog::solve(prog, make_logger());
+    const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(solution.converged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-12);
@@ -75,8 +75,8 @@ UTEST_CASE(program3)
     const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
     const auto b = make_vector<scalar_t>(2);
 
-    const auto prog     = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(prog, make_logger());
+    const auto problem  = linprog::problem_t{c, A, b};
+    const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
@@ -89,8 +89,8 @@ UTEST_CASE(program4)
     const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
     const auto b = make_vector<scalar_t>(-1, -1);
 
-    const auto prog     = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(prog, make_logger());
+    const auto problem  = linprog::problem_t{c, A, b};
+    const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
@@ -103,11 +103,61 @@ UTEST_CASE(program5)
     const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
-    const auto prog     = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(prog, make_logger());
+    const auto problem  = linprog::problem_t{c, A, b};
+    const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
+}
+
+UTEST_CASE(program6)
+{
+    const auto make_problem = [](const vector_t& c, const vector_t& a, const scalar_t b)
+    {
+        assert(a.size() == c.size());
+
+        const auto dims = c.size();
+
+        auto c2                = vector_t{2 * dims + 1};
+        c2.segment(0, dims)    = c;
+        c2.segment(dims, dims) = -c;
+        c2(2 * dims)           = 0.0;
+
+        auto A                       = matrix_t{1, 2 * dims + 1};
+        A.row(0).segment(0, dims)    = a;
+        A.row(0).segment(dims, dims) = -a;
+        A(0, 2 * dims)               = 1.0;
+
+        auto b2 = vector_t{1};
+        b2(0)   = b;
+
+        return linprog::problem_t{std::move(c2), std::move(A), std::move(b2)};
+    };
+
+    // exercise 4.8 (b), see "Convex Optimization", by S. Boyd and L. Vanderberghe
+    //  min c.dot(x) s.t. a.dot(x) <= b
+    //  where c = lambda * a
+    for (const auto dims : {1, 7, 17, 33})
+    {
+        for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
+        {
+            const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
+            const auto b = urand<scalar_t>(-1.0, +1.0, make_rng());
+            const auto c = lambda * a;
+
+            // TODO: utility to transform generic inequality LPs to standard form (problem & solution)
+            const auto problem  = make_problem(c, a, b);
+            const auto solution = linprog::solve(problem, make_logger());
+
+            const auto xbest = vector_t{solution.m_x.segment(0, dims) - solution.m_x.segment(dims, dims)};
+            const auto sbest = solution.m_x(static_cast<tensor_size_t>(2 * dims));
+            const auto fbest = lambda * b;
+
+            UTEST_CHECK_CLOSE(solution.m_x.dot(problem.m_c), fbest, 1e-8);
+            UTEST_CHECK_CLOSE(xbest.dot(c), fbest, 1e-8);
+            UTEST_CHECK_CLOSE(sbest, 0.0, 1e-8);
+        }
+    }
 }
 
 UTEST_END_MODULE()

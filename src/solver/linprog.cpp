@@ -45,7 +45,7 @@ bool linprog::solution_t::converged() const
 
 bool linprog::solution_t::diverged() const
 {
-    return !std::isfinite(m_miu) || m_miu > 1e+10;
+    return !std::isfinite(m_miu) || m_miu > 1e+20;
 }
 
 linprog::solution_t linprog::make_starting_point(const linprog::problem_t& prog)
@@ -81,7 +81,10 @@ linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog
     const auto n = c.size();
     const auto m = A.rows();
 
-    const auto max_iters = 100;
+    const auto max_iters      = 100;
+    const auto max_eta        = 1.0 - 1e-8;
+    const auto step_max_iters = 10;
+    const auto step_factor    = 0.99;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: these buffers can be allocated/stored once in a struct
@@ -147,13 +150,35 @@ linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog
         rxs.array() += dx.array() * ds.array() - sigma * solution.m_miu;
         solve(x, s);
 
-        const auto eta        = 1.0 - std::pow(0.1, solution.m_iters + 1);
-        const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
-        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
+        // step length search:
+        // - decrease geometrically the step length if the duality measure is not decreased
+        auto eta  = std::min(1.0 - std::pow(0.1, static_cast<double>(solution.m_iters + 1)), max_eta);
+        auto iter = 0;
+        for (; iter < step_max_iters; ++iter)
+        {
+            const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
+            const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
 
-        x += alpha_pri * dx;
-        l += alpha_dual * dl;
-        s += alpha_dual * ds;
+            const auto new_miu = (x + alpha_pri * dx).dot(s + alpha_dual * ds) / static_cast<scalar_t>(n);
+            if (new_miu > solution.m_miu)
+            {
+                eta *= step_factor;
+            }
+            else
+            {
+                x += alpha_pri * dx;
+                l += alpha_dual * dl;
+                s += alpha_dual * ds;
+                break;
+            }
+        }
+
+        // cannot find an appropriate step length: unbounded problem?!,
+        if (iter == step_max_iters)
+        {
+            solution.m_miu = std::numeric_limits<scalar_t>::max();
+            break;
+        }
     }
 
     return solution;
