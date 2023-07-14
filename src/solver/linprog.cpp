@@ -6,6 +6,35 @@ using namespace nano;
 
 namespace
 {
+///
+/// \brief return a starting point appropriate for primal-dual interior point methods.
+///
+/// see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+auto make_starting_point(const linprog::problem_t& prog)
+{
+    const auto& c = prog.m_c;
+    const auto& A = prog.m_A;
+    const auto& b = prog.m_b;
+
+    const matrix_t invA = (A * A.transpose()).inverse();
+
+    vector_t       x = A.transpose() * invA * b;
+    const vector_t l = invA * A * c;
+    vector_t       s = c - A.transpose() * l;
+
+    const auto delta_x = std::max(0.0, -1.5 * x.minCoeff());
+    const auto delta_s = std::max(0.0, -1.5 * s.minCoeff());
+
+    x.array() += delta_x;
+    s.array() += delta_s;
+
+    const auto delta_x_hat = 0.5 * x.dot(s) / s.sum();
+    const auto delta_s_hat = 0.5 * x.dot(s) / x.sum();
+
+    return linprog::solution_t{x.array() + delta_x_hat, l, s.array() + delta_s_hat};
+}
+
 template <typename tvector>
 auto make_alpha(const vector_t& v, const tvector& dv)
 {
@@ -34,8 +63,52 @@ linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
 
 bool linprog::problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
 {
+    assert(epsilon > 0.0);
     assert(x.size() == m_c.size());
+
     return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && x.minCoeff() >= 0.0;
+}
+
+linprog::inequality_problem_t::inequality_problem_t(vector_t c, matrix_t A, vector_t b)
+    : m_c(std::move(c))
+    , m_A(std::move(A))
+    , m_b(std::move(b))
+{
+    assert(m_c.size() > 0);
+    assert(m_b.size() > 0);
+    assert(m_A.cols() == m_c.size());
+    assert(m_A.rows() == m_b.size());
+}
+
+bool linprog::inequality_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
+{
+    assert(epsilon > 0.0);
+    assert(x.size() == m_c.size());
+
+    return (m_A * x - m_b).maxCoeff() < epsilon;
+}
+
+linprog::general_problem_t::general_problem_t(vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
+    : m_c(std::move(c))
+    , m_A(std::move(A))
+    , m_b(std::move(b))
+    , m_G(std::move(G))
+    , m_h(std::move(h))
+{
+    assert(m_c.size() > 0);
+    assert(m_b.size() > 0);
+    assert(m_A.cols() == m_c.size());
+    assert(m_A.rows() == m_b.size());
+    assert(m_G.cols() == m_c.size());
+    assert(m_G.rows() == m_h.size());
+}
+
+bool linprog::general_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
+{
+    assert(epsilon > 0.0);
+    assert(x.size() == m_c.size());
+
+    return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && (m_G * x - m_h).maxCoeff() < epsilon;
 }
 
 bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
@@ -46,30 +119,6 @@ bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
 bool linprog::solution_t::diverged(const scalar_t min_duality_measure) const
 {
     return !std::isfinite(m_miu) || m_miu > min_duality_measure;
-}
-
-linprog::solution_t linprog::make_starting_point(const linprog::problem_t& prog)
-{
-    const auto& c = prog.m_c;
-    const auto& A = prog.m_A;
-    const auto& b = prog.m_b;
-
-    const matrix_t invA = (A * A.transpose()).inverse();
-
-    vector_t       x = A.transpose() * invA * b;
-    const vector_t l = invA * A * c;
-    vector_t       s = c - A.transpose() * l;
-
-    const auto delta_x = std::max(0.0, -1.5 * x.minCoeff());
-    const auto delta_s = std::max(0.0, -1.5 * s.minCoeff());
-
-    x.array() += delta_x;
-    s.array() += delta_s;
-
-    const auto delta_x_hat = 0.5 * x.dot(s) / s.sum();
-    const auto delta_s_hat = 0.5 * x.dot(s) / x.sum();
-
-    return {x.array() + delta_x_hat, l, s.array() + delta_s_hat};
 }
 
 linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog::logger_t& logger)
@@ -120,7 +169,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog
     };
 
     auto solution = make_starting_point(prog);
-    for (; solution.m_iters < max_iters; ++solution.m_iters)
+    for (; solution.m_iters < max_iters && solution.m_x.minCoeff() > 0.0; ++solution.m_iters)
     {
         auto& x = solution.m_x;
         auto& l = solution.m_l;

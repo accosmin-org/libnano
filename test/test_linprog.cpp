@@ -18,6 +18,25 @@ auto make_logger()
 
 UTEST_BEGIN_MODULE(test_linprog)
 
+UTEST_CASE(solution)
+{
+    auto solution = linprog::solution_t{};
+    UTEST_CHECK(!solution.converged());
+    UTEST_CHECK(solution.diverged());
+
+    solution.m_miu = std::numeric_limits<scalar_t>::quiet_NaN();
+    UTEST_CHECK(!solution.converged());
+    UTEST_CHECK(solution.diverged());
+
+    solution.m_miu = std::numeric_limits<scalar_t>::epsilon();
+    UTEST_CHECK(solution.converged());
+    UTEST_CHECK(!solution.diverged());
+
+    solution.m_miu = 0.0;
+    UTEST_CHECK(solution.converged());
+    UTEST_CHECK(!solution.diverged());
+}
+
 UTEST_CASE(program1)
 {
     // see example 13.1, "Numerical optimization", Nocedal & Wright, 2nd edition
@@ -29,10 +48,6 @@ UTEST_CASE(program1)
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
-
-    const auto solution0 = linprog::make_starting_point(problem);
-    UTEST_CHECK_GREATER(solution0.m_x.minCoeff(), 0.0);
-    UTEST_CHECK_GREATER(solution0.m_s.minCoeff(), 0.0);
 
     const auto fbest    = -52 / 3.0;
     const auto xbest    = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
@@ -54,10 +69,6 @@ UTEST_CASE(program2)
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 1.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
-
-    const auto solution0 = linprog::make_starting_point(problem);
-    UTEST_CHECK_GREATER(solution0.m_x.minCoeff(), 0.0);
-    UTEST_CHECK_GREATER(solution0.m_s.minCoeff(), 0.0);
 
     const auto fbest    = 0.0;
     const auto xbest    = make_vector<scalar_t>(0.0, 1.0);
