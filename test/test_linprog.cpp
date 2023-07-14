@@ -137,7 +137,7 @@ UTEST_CASE(program6)
     // exercise 4.8 (b), see "Convex Optimization", by S. Boyd and L. Vanderberghe
     //  min c.dot(x) s.t. a.dot(x) <= b
     //  where c = lambda * a
-    for (const auto dims : {1, 7, 17, 33})
+    for (const tensor_size_t dims : {1, 7, 17, 33})
     {
         for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
         {
@@ -150,12 +150,12 @@ UTEST_CASE(program6)
             const auto solution = linprog::solve(problem, make_logger());
 
             const auto xbest = vector_t{solution.m_x.segment(0, dims) - solution.m_x.segment(dims, dims)};
-            const auto sbest = solution.m_x(static_cast<tensor_size_t>(2 * dims));
+            const auto sbest = solution.m_x(2 * dims);
             const auto fbest = lambda * b;
 
-            UTEST_CHECK_CLOSE(solution.m_x.dot(problem.m_c), fbest, 1e-8);
-            UTEST_CHECK_CLOSE(xbest.dot(c), fbest, 1e-8);
-            UTEST_CHECK_CLOSE(sbest, 0.0, 1e-8);
+            UTEST_CHECK_CLOSE(solution.m_x.dot(problem.m_c), fbest, 1e-12);
+            UTEST_CHECK_CLOSE(xbest.dot(c), fbest, 1e-12);
+            UTEST_CHECK_CLOSE(sbest, 0.0, 1e-12);
         }
     }
 }

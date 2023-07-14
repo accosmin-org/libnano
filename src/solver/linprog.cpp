@@ -38,14 +38,14 @@ bool linprog::problem_t::feasible(const vector_t& x, const scalar_t epsilon) con
     return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && x.minCoeff() >= 0.0;
 }
 
-bool linprog::solution_t::converged() const
+bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
 {
-    return m_miu < std::numeric_limits<scalar_t>::epsilon();
+    return m_miu < max_duality_measure;
 }
 
-bool linprog::solution_t::diverged() const
+bool linprog::solution_t::diverged(const scalar_t min_duality_measure) const
 {
-    return !std::isfinite(m_miu) || m_miu > 1e+20;
+    return !std::isfinite(m_miu) || m_miu > min_duality_measure;
 }
 
 linprog::solution_t linprog::make_starting_point(const linprog::problem_t& prog)

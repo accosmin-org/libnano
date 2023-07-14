@@ -39,12 +39,12 @@ struct NANO_PUBLIC solution_t
     ///
     /// \brief returns true if convergence is detected.
     ///
-    bool converged() const;
+    bool converged(scalar_t max_duality_measure = 1e-14) const;
 
     ///
     /// \brief returns true if convergence is detected (not feasible or unbounded problem).
     ///
-    bool diverged() const;
+    bool diverged(scalar_t min_duality_measure = 1e+12) const;
 
     // attributes
     vector_t m_x;        ///< solution (primal problem)
