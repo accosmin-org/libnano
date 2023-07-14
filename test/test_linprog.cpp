@@ -37,6 +37,69 @@ UTEST_CASE(solution)
     UTEST_CHECK(!solution.diverged());
 }
 
+UTEST_CASE(standard_problem)
+{
+    const auto c = make_vector<scalar_t>(1, 1);
+    const auto A = make_matrix<scalar_t>(1, 2, 1);
+    const auto b = make_vector<scalar_t>(5);
+
+    const auto epsilon = 1e-12;
+    const auto problem = linprog::problem_t{c, A, b};
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1, 3), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.5, 0), epsilon));
+}
+
+UTEST_CASE(general_problem)
+{
+    const auto c = make_vector<scalar_t>(1, 1);
+    const auto A = make_matrix<scalar_t>(1, 2, 1);
+    const auto b = make_vector<scalar_t>(5);
+    const auto G = make_matrix<scalar_t>(2, 1, 0, 1, 2);
+    const auto h = make_vector<scalar_t>(3, 5);
+
+    const auto epsilon = 1e-12;
+    const auto problem = linprog::general_problem_t{c, A, b, G, h};
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(1, 3), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.5, 0), epsilon));
+
+    const auto standard   = problem.transform();
+    const auto expected_c = make_vector<scalar_t>(1, 1, -1, -1, 0, 0);
+    const auto expected_A = make_matrix<scalar_t>(3, 2, 1, -2, -1, 0, 0, 1, 0, -1, 0, 1, 0, 1, 2, -1, -2, 0, 1);
+    const auto expected_b = make_vector<scalar_t>(5, 3, 5);
+    UTEST_CHECK_CLOSE(standard.m_c, expected_c, epsilon);
+    UTEST_CHECK_CLOSE(standard.m_A, expected_A, epsilon);
+    UTEST_CHECK_CLOSE(standard.m_b, expected_b, epsilon);
+}
+
+UTEST_CASE(inequality_problem)
+{
+    const auto c = make_vector<scalar_t>(1, 1);
+    const auto A = make_matrix<scalar_t>(1, 2, 1);
+    const auto b = make_vector<scalar_t>(5);
+
+    const auto epsilon = 1e-12;
+    const auto problem = linprog::inequality_problem_t{c, A, b};
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
+    UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1, 3), epsilon));
+    UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(2, 2), epsilon));
+
+    const auto standard   = problem.transform();
+    const auto expected_c = make_vector<scalar_t>(1, 1, -1, -1, 0);
+    const auto expected_A = make_matrix<scalar_t>(1, 2, 1, -2, -1, 1);
+    const auto expected_b = make_vector<scalar_t>(5);
+    UTEST_CHECK_CLOSE(standard.m_c, expected_c, epsilon);
+    UTEST_CHECK_CLOSE(standard.m_A, expected_A, epsilon);
+    UTEST_CHECK_CLOSE(standard.m_b, expected_b, epsilon);
+}
+
 UTEST_CASE(program1)
 {
     // see example 13.1, "Numerical optimization", Nocedal & Wright, 2nd edition

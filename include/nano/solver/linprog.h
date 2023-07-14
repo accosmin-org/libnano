@@ -47,10 +47,10 @@ struct NANO_PUBLIC solution_t
 
     // attributes
     static constexpr auto max = std::numeric_limits<scalar_t>::max();
-    vector_t m_x;        ///< solution (primal problem)
-    vector_t m_l;        ///< solution (dual problem) - equality constraints
-    vector_t m_s;        ///< solution (dual problem) - inequality constraints
-    int      m_iters{0}; ///< number of iterations
+    vector_t              m_x;        ///< solution (primal problem)
+    vector_t              m_l;        ///< solution (dual problem) - equality constraints
+    vector_t              m_s;        ///< solution (dual problem) - inequality constraints
+    int                   m_iters{0}; ///< number of iterations
     scalar_t m_miu{max}; ///< duality measure: ~zero (converged), very large/infinite (not feasible, unbounded)
 };
 

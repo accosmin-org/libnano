@@ -88,6 +88,24 @@ bool linprog::inequality_problem_t::feasible(const vector_t& x, const scalar_t e
     return (m_A * x - m_b).maxCoeff() < epsilon;
 }
 
+linprog::problem_t linprog::inequality_problem_t::transform() const
+{
+    const auto n = m_c.size();
+    const auto m = m_b.size();
+
+    auto c                      = vector_t{2 * n + m};
+    c.segment(0, n)             = m_c;
+    c.segment(n, n)             = -m_c;
+    c.segment(2 * n, m).array() = 0;
+
+    auto A              = matrix_t{m, 2 * n + m};
+    A.block(0, 0, m, n) = m_A;
+    A.block(0, n, m, n) = -m_A;
+    A.block(0, 2 * n, m, m).setIdentity();
+
+    return {std::move(c), std::move(A), m_b};
+}
+
 linprog::general_problem_t::general_problem_t(vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
     : m_c(std::move(c))
     , m_A(std::move(A))
@@ -109,6 +127,32 @@ bool linprog::general_problem_t::feasible(const vector_t& x, const scalar_t epsi
     assert(x.size() == m_c.size());
 
     return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && (m_G * x - m_h).maxCoeff() < epsilon;
+}
+
+linprog::problem_t linprog::general_problem_t::transform() const
+{
+    const auto n  = m_c.size();
+    const auto m1 = m_b.size();
+    const auto m2 = m_h.size();
+
+    auto c                       = vector_t{2 * n + m2};
+    c.segment(0, n)              = m_c;
+    c.segment(n, n)              = -m_c;
+    c.segment(2 * n, m2).array() = 0;
+
+    auto A               = matrix_t{m1 + m2, 2 * n + m2};
+    A.block(0, 0, m1, n) = m_A;
+    A.block(0, n, m1, n) = -m_A;
+    A.block(0, 2 * n, m2, m2).setZero();
+    A.block(m1, 0, m2, n) = m_G;
+    A.block(m1, n, m2, n) = -m_G;
+    A.block(m1, 2 * n, m2, m2).setIdentity();
+
+    auto b            = vector_t{m1 + m2};
+    b.segment(0, m1)  = m_b;
+    b.segment(m1, m2) = m_h;
+
+    return {std::move(c), std::move(A), std::move(b)};
 }
 
 bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
