@@ -106,6 +106,22 @@ linprog::problem_t linprog::inequality_problem_t::transform() const
     return {std::move(c), std::move(A), m_b};
 }
 
+linprog::solution_t linprog::inequality_problem_t::transform(const solution_t& isolution) const
+{
+    const auto                  n = m_c.size();
+    [[maybe_unused]] const auto m = m_b.size();
+
+    assert(isolution.m_x.size() == 2 * n + m);
+    assert(isolution.m_s.size() == 2 * n + m);
+    assert(isolution.m_l.size() == m);
+
+    auto solution        = isolution;
+    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
+    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    return solution;
+}
+
 linprog::general_problem_t::general_problem_t(vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
     : m_c(std::move(c))
     , m_A(std::move(A))

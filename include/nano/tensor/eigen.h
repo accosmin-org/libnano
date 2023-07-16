@@ -18,9 +18,9 @@ using tensor_vector_t = Eigen::Matrix<tscalar, trows, 1, Eigen::ColMajor>;
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
           typename tscalar = std::remove_const_t<tscalar_>,
           typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>>
-tresult map_vector(tscalar_* data, tsize rows) noexcept
+tresult map_vector(tscalar_* data, const tsize rows) noexcept
 {
-    return tresult(data, rows);
+    return {data, static_cast<Eigen::Index>(rows)};
 }
 
 ///
@@ -29,9 +29,9 @@ tresult map_vector(tscalar_* data, tsize rows) noexcept
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
           typename tscalar = std::remove_const_t<tscalar_>,
           typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>>
-tresult map_vector(const tscalar_* data, tsize rows) noexcept
+tresult map_vector(const tscalar_* data, const tsize rows) noexcept
 {
-    return tresult(data, rows);
+    return {data, static_cast<Eigen::Index>(rows)};
 }
 
 ///
@@ -44,23 +44,23 @@ using tensor_matrix_t = Eigen::Matrix<tscalar, trows, tcols, Eigen::RowMajor>;
 ///
 /// \brief map non-constant data to matrices.
 ///
-template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize1, typename tsize2,
           typename tscalar = std::remove_const_t<tscalar_>,
           typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>>
-tresult map_matrix(tscalar_* data, tsize rows, tsize cols) noexcept
+tresult map_matrix(tscalar_* data, const tsize1 rows, const tsize2 cols) noexcept
 {
-    return tresult(data, rows, cols);
+    return {data, static_cast<Eigen::Index>(rows), static_cast<Eigen::Index>(cols)};
 }
 
 ///
 /// \brief map constant data to Eigen matrices.
 ///
-template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
+template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize1, typename tsize2,
           typename tscalar = std::remove_const_t<tscalar_>,
           typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>>
-tresult map_matrix(const tscalar_* data, tsize rows, tsize cols) noexcept
+tresult map_matrix(const tscalar_* data, const tsize1 rows, const tsize2 cols) noexcept
 {
-    return tresult(data, rows, cols);
+    return {data, static_cast<Eigen::Index>(rows), static_cast<Eigen::Index>(cols)};
 }
 
 ///
