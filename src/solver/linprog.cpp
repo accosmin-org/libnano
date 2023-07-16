@@ -11,11 +11,11 @@ namespace
 ///
 /// see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-auto make_starting_point(const linprog::problem_t& prog)
+auto make_starting_point(const linprog::problem_t& problem)
 {
-    const auto& c = prog.m_c;
-    const auto& A = prog.m_A;
-    const auto& b = prog.m_b;
+    const auto& c = problem.m_c;
+    const auto& A = problem.m_A;
+    const auto& b = problem.m_b;
 
     const matrix_t invA = (A * A.transpose()).inverse();
 
@@ -181,11 +181,11 @@ bool linprog::solution_t::diverged(const scalar_t min_duality_measure) const
     return !std::isfinite(m_miu) || m_miu > min_duality_measure;
 }
 
-linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog::logger_t& logger)
+linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linprog::logger_t& logger)
 {
-    const auto& A = prog.m_A;
-    const auto& b = prog.m_b;
-    const auto& c = prog.m_c;
+    const auto& A = problem.m_A;
+    const auto& b = problem.m_b;
+    const auto& c = problem.m_c;
 
     const auto n = c.size();
     const auto m = A.rows();
@@ -228,7 +228,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog
         dx = (-rxs.array() - x.array() * ds.array()) / s.array();
     };
 
-    auto solution = make_starting_point(prog);
+    auto solution = make_starting_point(problem);
     for (; solution.m_iters < max_iters && solution.m_x.minCoeff() > 0.0; ++solution.m_iters)
     {
         auto& x = solution.m_x;
@@ -238,7 +238,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& prog, const linprog
         solution.m_miu = x.dot(s) / static_cast<scalar_t>(n);
         if (logger)
         {
-            logger(solution);
+            logger(problem, solution);
         }
         if (solution.diverged() || solution.converged())
         {

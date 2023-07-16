@@ -126,7 +126,7 @@ struct NANO_PUBLIC general_problem_t
     vector_t m_h; ///<
 };
 
-using logger_t = std::function<void(const solution_t&)>;
+using logger_t = std::function<void(const problem_t&, const solution_t&)>;
 
 ///
 /// \brief returns the solution of the given linear program using the predictor-corrector algorithm.

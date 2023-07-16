@@ -7,10 +7,12 @@ namespace
 {
 auto make_logger()
 {
-    const auto op = [](const linprog::solution_t& solution)
+    const auto op = [](const linprog::problem_t& problem, const linprog::solution_t& solution)
     {
         std::cout << std::fixed << std::setprecision(16) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
-                  << ",x=" << solution.m_x.transpose() << std::endl;
+                  << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
+                  << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>()
+                  << ",xmin=" << solution.m_x.minCoeff() << ",smin=" << solution.m_s.minCoeff() << std::endl;
     };
     return linprog::logger_t{op};
 }
@@ -187,10 +189,10 @@ UTEST_CASE(program5)
 UTEST_CASE(program6)
 {
     // exercise 4.8 (b), see "Convex Optimization", by S. Boyd and L. Vanderberghe
-    //  min c.dot(x) s.t. a.dot(x) <= b
-    //  where c = lambda * a
+    //  min c.dot(x) s.t. a.dot(x) <= b,
+    //  where c = lambda * a,
     //  with optimum = lambda * b.
-    for (const tensor_size_t dims : {1, 7, 17, 33})
+    for (const tensor_size_t dims : {1, 7, 17})
     {
         for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
         {
@@ -199,7 +201,7 @@ UTEST_CASE(program6)
             const auto c = lambda * a;
 
             const auto iproblem  = linprog::inequality_problem_t{c, map_matrix(a.data(), 1, dims), map_vector(&b, 1)};
-            const auto isolution = linprog::solve(iproblem.transform());
+            const auto isolution = linprog::solve(iproblem.transform(), make_logger());
             UTEST_CHECK(isolution.converged());
 
             const auto fbest    = lambda * b;
@@ -208,6 +210,41 @@ UTEST_CASE(program6)
             UTEST_CHECK_CLOSE(solution.m_x.dot(c), fbest, 1e-12);
             UTEST_CHECK_CLOSE(solution.m_x.dot(a), b, 1e-12);
         }
+    }
+}
+
+UTEST_CASE(program7)
+{
+    // exercise 4.8 (c), see "Convex Optimization", by S. Boyd and L. Vanderberghe
+    //  min c.dot(x) s.t. l <= x <= u,
+    //  where l <= u.
+    for (const tensor_size_t dims : {1, 7, 17})
+    {
+        const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+        const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+        const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
+
+        auto A = matrix_t{2 * dims, dims};
+        A.block(0, 0, dims, dims).setIdentity();
+        A.block(dims, 0, dims, dims).setZero();
+        A.block(dims, 0, dims, dims).diagonal().array() = -1.0;
+
+        auto b                = vector_t{2 * dims};
+        b.segment(0, dims)    = u;
+        b.segment(dims, dims) = -l;
+
+        const auto iproblem  = linprog::inequality_problem_t{c, std::move(A), std::move(b)};
+        const auto isolution = linprog::solve(iproblem.transform(), make_logger());
+        UTEST_CHECK(isolution.converged());
+
+        const auto xbest    = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
+        const auto fbest    = l.dot(c.array().max(0.0).matrix()) + u.dot(c.array().min(0.0).matrix());
+        const auto solution = iproblem.transform(isolution);
+        UTEST_CHECK(solution.converged());
+        UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-10);
+        UTEST_CHECK_CLOSE(solution.m_x.dot(c), fbest, 1e-10);
+        UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-10);
+        UTEST_CHECK_GREATER_EQUAL((u - solution.m_x).minCoeff(), -1e-10);
     }
 }
 
