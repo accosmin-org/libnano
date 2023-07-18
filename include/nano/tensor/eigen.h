@@ -154,6 +154,15 @@ auto make_random_vector(const Eigen::Index rows, const tscalar_value min_value =
 } // LCOV_EXCL_LINE
 
 ///
+/// \brief create a vector and fill it with the given value.
+///
+template <typename tscalar, typename tscalar_value = tscalar>
+auto make_full_matrix(const Eigen::Index rows, const Eigen::Index cols, const tscalar_value value)
+{
+    return tensor_matrix_t<tscalar>{tensor_matrix_t<tscalar>::Constant(rows, cols, static_cast<tscalar>(value))};
+} // LCOV_EXCL_LINE
+
+///
 /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
 ///
 template <typename tscalar, typename tscalar_value = tscalar>

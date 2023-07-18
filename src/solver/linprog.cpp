@@ -193,7 +193,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
     const auto max_iters      = 100;
     const auto max_eta        = 1.0 - 1e-8;
     const auto step_max_iters = 10;
-    const auto step_factor    = 0.99;
+    const auto step_factor    = 0.9;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: these buffers can be allocated/stored once in a struct
@@ -286,6 +286,10 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         if (iter == step_max_iters)
         {
             solution.m_miu = std::numeric_limits<scalar_t>::max();
+            if (logger)
+            {
+                logger(problem, solution);
+            }
             break;
         }
     }

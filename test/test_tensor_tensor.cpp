@@ -688,6 +688,20 @@ UTEST_CASE(make_full_vector)
     UTEST_CHECK_EQUAL(vector(4), 42);
 }
 
+UTEST_CASE(make_full_matrix)
+{
+    const auto matrix = make_full_matrix<int>(3, 2, 42);
+
+    UTEST_CHECK_EQUAL(matrix.rows(), 3);
+    UTEST_CHECK_EQUAL(matrix.cols(), 2);
+    UTEST_CHECK_EQUAL(matrix(0, 0), 42);
+    UTEST_CHECK_EQUAL(matrix(0, 1), 42);
+    UTEST_CHECK_EQUAL(matrix(1, 0), 42);
+    UTEST_CHECK_EQUAL(matrix(1, 1), 42);
+    UTEST_CHECK_EQUAL(matrix(2, 0), 42);
+    UTEST_CHECK_EQUAL(matrix(2, 1), 42);
+}
+
 UTEST_CASE(mem_from_map)
 {
     {

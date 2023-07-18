@@ -182,7 +182,7 @@ static exception_status check_throw(const toperator& op)
     }
 #define UTEST_HANDLE_FAILURE()                                                                                         \
     ++utest_n_failures;                                                                                                \
-    std::cout << ERROR_COLOR << __FILE__ << ":" << __LINE__ << std::fixed << std::setprecision(12)                     \
+    std::cout << ERROR_COLOR << __FILE__ << ":" << __LINE__ << std::fixed << std::setprecision(16)                     \
               << utest_location_t{} << ": "
 
 #define UTEST_EVALUATE(check, critical)                                                                                \
