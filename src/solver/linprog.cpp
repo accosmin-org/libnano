@@ -171,6 +171,23 @@ linprog::problem_t linprog::general_problem_t::transform() const
     return {std::move(c), std::move(A), std::move(b)};
 }
 
+linprog::solution_t linprog::general_problem_t::transform(const solution_t& isolution) const
+{
+    const auto                  n  = m_c.size();
+    [[maybe_unused]] const auto m1 = m_b.size();
+    [[maybe_unused]] const auto m2 = m_h.size();
+
+    assert(isolution.m_x.size() == 2 * n + m2);
+    assert(isolution.m_s.size() == 2 * n + m2);
+    assert(isolution.m_l.size() == m1 + m2);
+
+    auto solution        = isolution;
+    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
+    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    return solution;
+}
+
 bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
 {
     return m_miu < max_duality_measure;
@@ -190,10 +207,8 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
     const auto n = c.size();
     const auto m = A.rows();
 
-    const auto max_iters      = 100;
-    const auto max_eta        = 1.0 - 1e-8;
-    const auto step_max_iters = 10;
-    const auto step_factor    = 0.9;
+    const auto max_iters = 100;
+    const auto max_eta   = 1.0 - 1e-4;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: these buffers can be allocated/stored once in a struct
@@ -223,7 +238,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         mat = A * diX * diS * A.transpose();
         vec = -rb - A * diX * diS * rc + A * diS * rxs;
 
-        dl = mat.llt().solve(vec);
+        dl = mat.ldlt().solve(vec);
         ds = -rc - A.transpose() * dl;
         dx = (-rxs.array() - x.array() * ds.array()) / s.array();
     };
@@ -259,40 +274,26 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         rxs.array() += dx.array() * ds.array() - sigma * solution.m_miu;
         solve(x, s);
 
-        // step length search:
-        // - decrease geometrically the step length if the duality measure is not decreased
-        auto eta  = std::min(1.0 - std::pow(0.1, static_cast<double>(solution.m_iters + 1)), max_eta);
-        auto iter = 0;
-        for (; iter < step_max_iters; ++iter)
-        {
-            const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
-            const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
+        const auto eta        = std::min(1.0 - std::pow(0.1, static_cast<double>(solution.m_iters + 1)), max_eta);
+        const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
+        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
 
-            const auto new_miu = (x + alpha_pri * dx).dot(s + alpha_dual * ds) / static_cast<scalar_t>(n);
-            if (new_miu > solution.m_miu)
-            {
-                eta *= step_factor;
-            }
-            else
-            {
-                x += alpha_pri * dx;
-                l += alpha_dual * dl;
-                s += alpha_dual * ds;
-                break;
-            }
-        }
-
-        // cannot find an appropriate step length: unbounded problem?!,
-        if (iter == step_max_iters)
-        {
-            solution.m_miu = std::numeric_limits<scalar_t>::max();
-            if (logger)
-            {
-                logger(problem, solution);
-            }
-            break;
-        }
+        x += alpha_pri * dx;
+        l += alpha_dual * dl;
+        s += alpha_dual * ds;
     }
 
     return solution;
+}
+
+linprog::solution_t linprog::solve(const general_problem_t& problem, const logger_t& logger)
+{
+    const auto solution = solve(problem.transform(), logger);
+    return problem.transform(solution);
+}
+
+linprog::solution_t linprog::solve(const inequality_problem_t& problem, const logger_t& logger)
+{
+    const auto solution = solve(problem.transform(), logger);
+    return problem.transform(solution);
 }

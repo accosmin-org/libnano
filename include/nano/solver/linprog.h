@@ -43,7 +43,7 @@ struct NANO_PUBLIC solution_t
     ///
     /// \brief returns true if convergence is detected (not feasible or unbounded problem).
     ///
-    bool diverged(scalar_t min_duality_measure = 1e+12) const;
+    bool diverged(scalar_t min_duality_measure = 1e+6) const;
 
     // attributes
     static constexpr auto max = std::numeric_limits<scalar_t>::max();
@@ -135,4 +135,6 @@ using logger_t = std::function<void(const problem_t&, const solution_t&)>;
 /// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
 NANO_PUBLIC solution_t solve(const problem_t&, const logger_t& logger = logger_t{});
+NANO_PUBLIC solution_t solve(const general_problem_t&, const logger_t& logger = logger_t{});
+NANO_PUBLIC solution_t solve(const inequality_problem_t&, const logger_t& logger = logger_t{});
 } // namespace nano::linprog
