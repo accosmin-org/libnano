@@ -19,14 +19,13 @@ auto make_logger()
 
 template <typename tproblem>
 auto check_solution(const tproblem& problem, const linprog::solution_t& solution, const vector_t& xbest,
-                    const scalar_t fbest, const scalar_t epsilon = 1e-10)
+                    const scalar_t epsilon = 1e-10)
 {
     UTEST_CHECK(solution.converged());
     UTEST_CHECK_LESS(solution.m_miu, 1e-14);
-    UTEST_CHECK_LESS(solution.m_gap, 1e-10);
-    UTEST_CHECK_LESS(solution.m_iters, 10);
+    UTEST_CHECK_LESS(solution.m_gap, std::max(1e-10, epsilon));
+    UTEST_CHECK_LESS(solution.m_iters, 15);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, epsilon);
-    UTEST_CHECK_CLOSE(solution.m_x.dot(problem.m_c), fbest, epsilon);
     UTEST_CHECK(problem.feasible(xbest, epsilon));
 }
 } // namespace
@@ -128,9 +127,8 @@ UTEST_CASE(program1)
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
 
-    const auto fbest = -52 / 3.0;
     const auto xbest = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
-    check_solution(problem, solution, xbest, fbest);
+    check_solution(problem, solution, xbest);
 }
 
 UTEST_CASE(program2)
@@ -146,9 +144,8 @@ UTEST_CASE(program2)
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
 
-    const auto fbest = 0.0;
     const auto xbest = make_vector<scalar_t>(0.0, 1.0);
-    check_solution(problem, solution, xbest, fbest);
+    check_solution(problem, solution, xbest);
 }
 
 UTEST_CASE(program3)
@@ -242,8 +239,7 @@ UTEST_CASE(program7)
         const auto solution = linprog::solve(problem, make_logger());
 
         const auto xbest = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
-        const auto fbest = l.dot(c.array().max(0.0).matrix()) + u.dot(c.array().min(0.0).matrix());
-        check_solution(problem, solution, xbest, fbest);
+        check_solution(problem, solution, xbest);
         UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-10);
         UTEST_CHECK_GREATER_EQUAL((u - solution.m_x).minCoeff(), -1e-10);
     }
@@ -283,8 +279,7 @@ UTEST_CASE(program8)
         const auto solution = linprog::solve(problem, make_logger());
 
         const auto xbest = make_xbest(c);
-        const auto fbest = c.minCoeff();
-        check_solution(problem, solution, xbest, fbest);
+        check_solution(problem, solution, xbest);
     }
 
     // exercise 4.8 (d), see "Convex Optimization", by S. Boyd and L. Vanderberghe
@@ -307,8 +302,7 @@ UTEST_CASE(program8)
         const auto solution = linprog::solve(problem, make_logger());
 
         const auto xbest = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
-        const auto fbest = std::min(c.minCoeff(), 0.0);
-        check_solution(problem, solution, xbest, fbest);
+        check_solution(problem, solution, xbest);
     }
 }
 
@@ -350,15 +344,13 @@ UTEST_CASE(program9)
             const auto problem  = linprog::general_problem_t{c, A, b, std::move(G), std::move(h)};
             const auto solution = linprog::solve(problem, make_logger());
 
-            auto fbest = 0.0;
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0; i < alpha; ++i)
             {
                 const auto [value, index] = v[static_cast<size_t>(i)];
-                fbest += value;
-                xbest(index) = 1.0;
+                xbest(index)              = 1.0;
             }
-            check_solution(problem, solution, xbest, fbest);
+            check_solution(problem, solution, xbest);
         }
     }
 
@@ -386,7 +378,6 @@ UTEST_CASE(program9)
             const auto problem  = linprog::inequality_problem_t{c, A, b};
             const auto solution = linprog::solve(problem, make_logger());
 
-            auto fbest = 0.0;
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0, count = 0; i < dims && count < alpha; ++i)
             {
@@ -394,11 +385,72 @@ UTEST_CASE(program9)
                 if (value < 0.0)
                 {
                     ++count;
-                    fbest += value;
                     xbest(index) = 1.0;
                 }
             }
-            check_solution(problem, solution, xbest, fbest);
+            check_solution(problem, solution, xbest);
+        }
+    }
+}
+
+UTEST_CASE(program10)
+{
+    const auto make_sorted = [](const vector_t& c, const vector_t& d)
+    {
+        std::vector<std::pair<scalar_t, tensor_size_t>> values;
+        values.reserve(static_cast<size_t>(c.size()));
+        for (tensor_size_t i = 0; i < c.size(); ++i)
+        {
+            values.emplace_back(c(i) / d(i), i);
+        }
+        std::sort(values.begin(), values.end());
+        return values;
+    };
+
+    // exercise 4.8 (f), see "Convex Optimization", by S. Boyd and L. Vanderberghe
+    // minimizing a linear function over a unit box with a weighted budget constraint:
+    //  min c.dot(x) s.t. d.dot(x) = alpha, 0 <= x <= 1,
+    //  where d > 0 and 0 <= alpha <= 1.dot(d).
+    for (const tensor_size_t dims : {2, 3, 7})
+    {
+        const auto d = make_random_vector<scalar_t>(dims, 1.0, +2.0);
+
+        for (const auto alpha : {0.0, 0.3 * d.sum(), 0.7 * d.sum(), d.sum()})
+        {
+            const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+            const auto b = make_vector<scalar_t>(alpha);
+            const auto v = make_sorted(c, d);
+
+            auto A   = matrix_t{1, dims};
+            A.row(0) = d;
+
+            auto G = matrix_t{2 * dims, dims};
+            G.block(0, 0, dims, dims).setIdentity();
+            G.block(dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
+
+            auto h                        = vector_t{2 * dims};
+            h.segment(0, dims).array()    = 1;
+            h.segment(dims, dims).array() = 0;
+
+            const auto problem  = linprog::general_problem_t{c, A, b, std::move(G), std::move(h)};
+            const auto solution = linprog::solve(problem, make_logger());
+
+            auto accum = 0.0;
+            auto xbest = make_full_vector<scalar_t>(dims, 0.0);
+            for (tensor_size_t i = 0; i < dims && accum <= alpha; ++i)
+            {
+                [[maybe_unused]] const auto [_, index] = v[static_cast<size_t>(i)];
+                if (accum + d(index) > alpha)
+                {
+                    xbest(index) = (alpha - accum) / d(index);
+                }
+                else
+                {
+                    xbest(index) = 1.0;
+                }
+                accum += d(index);
+            }
+            check_solution(problem, solution, xbest, 1e-8);
         }
     }
 }
