@@ -190,7 +190,7 @@ linprog::solution_t linprog::general_problem_t::transform(const solution_t& isol
 
 bool linprog::solution_t::converged(const scalar_t max_duality_measure) const
 {
-    return m_miu < max_duality_measure;
+    return std::isfinite(m_miu) && m_miu < max_duality_measure;
 }
 
 bool linprog::solution_t::diverged(const scalar_t min_duality_measure) const
