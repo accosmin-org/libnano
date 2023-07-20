@@ -52,6 +52,7 @@ struct NANO_PUBLIC solution_t
     vector_t              m_s;        ///< solution (dual problem) - inequality constraints
     int                   m_iters{0}; ///< number of iterations
     scalar_t m_miu{max}; ///< duality measure: ~zero (converged), very large/infinite (not feasible, unbounded)
+    scalar_t m_gap{max}; ///< duality gap: different between the current primal and dual solutions
 };
 
 ///

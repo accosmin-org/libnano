@@ -238,6 +238,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         mat = A * diX * diS * A.transpose();
         vec = -rb - A * diX * diS * rc + A * diS * rxs;
 
+        // dl = mat.colPivHouseholderQr().solve(vec);
         dl = mat.ldlt().solve(vec);
         ds = -rc - A.transpose() * dl;
         dx = (-rxs.array() - x.array() * ds.array()) / s.array();
@@ -251,6 +252,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         auto& s = solution.m_s;
 
         solution.m_miu = x.dot(s) / static_cast<scalar_t>(n);
+        solution.m_gap = c.dot(x) - b.dot(l);
         if (logger)
         {
             logger(problem, solution);

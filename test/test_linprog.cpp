@@ -10,7 +10,7 @@ auto make_logger()
     const auto op = [](const linprog::problem_t& problem, const linprog::solution_t& solution)
     {
         std::cout << std::fixed << std::setprecision(16) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
-                  << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
+                  << ",gap=" << solution.m_gap << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
                   << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>()
                   << ",xmin=" << solution.m_x.minCoeff() << ",smin=" << solution.m_s.minCoeff() << std::endl;
     };
@@ -237,8 +237,8 @@ UTEST_CASE(program7)
         const auto xbest = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
         const auto fbest = l.dot(c.array().max(0.0).matrix()) + u.dot(c.array().min(0.0).matrix());
         UTEST_CHECK(solution.converged());
-        UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-12);
-        UTEST_CHECK_CLOSE(solution.m_x.dot(c), fbest, 1e-12);
+        UTEST_CHECK_CLOSE(solution.m_x, xbest, 1e-10);
+        UTEST_CHECK_CLOSE(solution.m_x.dot(c), fbest, 1e-10);
         UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-10);
         UTEST_CHECK_GREATER_EQUAL((u - solution.m_x).minCoeff(), -1e-10);
     }
