@@ -361,6 +361,46 @@ UTEST_CASE(program9)
             check_solution(problem, solution, xbest, fbest);
         }
     }
+
+    // exercise 4.8 (e), see "Convex Optimization", by S. Boyd and L. Vanderberghe
+    // minimizing a linear function over a unit box with a total budget constraint:
+    //  min c.dot(x) s.t. 1.dot(x) <= alpha, 0 <= x <= 1,
+    //  where alpha is an integer between 0 and n.
+    for (const tensor_size_t dims : {2, 3, 7})
+    {
+        for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
+        {
+            const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+            const auto v = make_sorted(c);
+
+            auto A           = matrix_t{1 + 2 * dims, dims};
+            A.row(0).array() = 1.0;
+            A.block(1, 0, dims, dims).setIdentity();
+            A.block(1 + dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
+
+            auto b                            = vector_t{1 + 2 * dims};
+            b(0)                              = static_cast<scalar_t>(alpha);
+            b.segment(1, dims).array()        = 1;
+            b.segment(1 + dims, dims).array() = 0;
+
+            const auto problem  = linprog::inequality_problem_t{c, A, b};
+            const auto solution = linprog::solve(problem, make_logger());
+
+            auto fbest = 0.0;
+            auto xbest = make_full_vector<scalar_t>(dims, 0.0);
+            for (tensor_size_t i = 0, count = 0; i < dims && count < alpha; ++i)
+            {
+                const auto [value, index] = v[static_cast<size_t>(i)];
+                if (value < 0.0)
+                {
+                    ++count;
+                    fbest += value;
+                    xbest(index) = 1.0;
+                }
+            }
+            check_solution(problem, solution, xbest, fbest);
+        }
+    }
 }
 
 UTEST_END_MODULE()
