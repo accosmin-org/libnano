@@ -208,7 +208,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
     const auto m = A.rows();
 
     const auto max_iters = 100;
-    const auto max_eta   = 1.0 - 1e-4;
+    const auto max_eta   = 1.0 - 1e-16;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: these buffers can be allocated/stored once in a struct

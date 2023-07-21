@@ -455,4 +455,27 @@ UTEST_CASE(program10)
     }
 }
 
+UTEST_CASE(program11)
+{
+    // exercise 4.8 (f), see "Convex Optimization", by S. Boyd and L. Vanderberghe
+    // square linear problem:
+    //  min c.dot(x) s.t. Ax <= b,
+    //  where A is square and nonsingular and A^-T * c <= 0 (to be feasible).
+    for (const tensor_size_t dims : {2, 3, 7})
+    {
+        const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0);
+        const auto A = matrix_t::Identity(dims, dims);
+        const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+
+        const auto problem  = linprog::inequality_problem_t{c, A, b};
+        const auto solution = linprog::solve(problem, make_logger());
+
+        const auto xbest = b;
+        check_solution(problem, solution, xbest);
+    }
+}
+
+// TODO: investigate why cannot obtain very high precision solutions! (e.g. miu increases)
+// TODO: process problems when A is not row full rank! - can add unit tests explicitly for this
+
 UTEST_END_MODULE()
