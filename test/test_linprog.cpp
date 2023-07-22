@@ -470,7 +470,7 @@ UTEST_CASE(program11)
         const auto problem  = linprog::inequality_problem_t{c, A, b};
         const auto solution = linprog::solve(problem, make_logger());
 
-        const auto xbest = b;
+        const auto& xbest = b;
         check_solution(problem, solution, xbest);
     }
 }
