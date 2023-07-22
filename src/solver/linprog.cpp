@@ -222,14 +222,13 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
 
     auto mat = matrix_t{m, m};                        // buffer to solve the linear system
     auto vec = vector_t{m};                           // buffer to solve the linear system
-    auto diX = make_full_matrix<scalar_t>(n, n, 0.0); // diag(x)
-    auto diS = make_full_matrix<scalar_t>(n, n, 0.0); // diag(s)^-1
+    auto mD2 = make_full_matrix<scalar_t>(n, n, 0.0); // D2 = diag(x/s)
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     const auto solve = [&](const auto& decomposition, const vector_t& x, const vector_t& s)
     {
         // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        vec = -rb - A * diX * diS * rc + A * diS * rxs;
+        vec = -rb - A * ((x.array() * rc.array() - rxs.array()) / s.array()).matrix();
         dl  = decomposition.solve(vec);
         ds  = -rc - A.transpose() * dl;
         dx  = (-rxs.array() - x.array() * ds.array()) / s.array();
@@ -256,9 +255,8 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
 
         // matrix decomposition to solve the linear systems (performed once per iteration)
         // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        diX.diagonal() = x;
-        diS.diagonal() = 1.0 / s.array();
-        mat            = A * diX * diS * A.transpose();
+        mD2.diagonal() = x.array() / s.array();
+        mat            = A * mD2 * A.transpose();
         // const auto decomposition = mat.colPivHouseholderQr();
         const auto decomposition = mat.ldlt();
 
