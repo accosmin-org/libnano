@@ -10,9 +10,8 @@ auto make_logger()
     const auto op = [](const linprog::problem_t& problem, const linprog::solution_t& solution)
     {
         std::cout << std::fixed << std::setprecision(16) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
-                  << ",gap=" << solution.m_gap << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
-                  << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>()
-                  << ",xmin=" << solution.m_x.minCoeff() << ",smin=" << solution.m_s.minCoeff() << std::endl;
+                  << ",KKT=" << solution.m_kkt << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
+                  << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>() << std::endl;
     };
     return linprog::logger_t{op};
 }
@@ -21,10 +20,10 @@ template <typename tproblem>
 auto check_solution(const tproblem& problem, const linprog::solution_t& solution, const vector_t& xbest,
                     const scalar_t epsilon = 1e-10)
 {
-    UTEST_CHECK(solution.converged());
-    UTEST_CHECK_LESS(solution.m_miu, 1e-14);
-    UTEST_CHECK_LESS(solution.m_gap, std::max(1e-10, epsilon));
-    UTEST_CHECK_LESS(solution.m_iters, 15);
+    UTEST_CHECK(solution.converged(epsilon));
+    UTEST_CHECK_LESS(solution.m_miu, epsilon);
+    UTEST_CHECK_LESS(solution.m_kkt, epsilon);
+    UTEST_CHECK_LESS(solution.m_iters, 20);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, epsilon);
     UTEST_CHECK(problem.feasible(xbest, epsilon));
 }
@@ -36,19 +35,15 @@ UTEST_CASE(solution)
 {
     auto solution = linprog::solution_t{};
     UTEST_CHECK(!solution.converged());
-    UTEST_CHECK(solution.diverged());
 
-    solution.m_miu = std::numeric_limits<scalar_t>::quiet_NaN();
+    solution.m_kkt = std::numeric_limits<scalar_t>::quiet_NaN();
     UTEST_CHECK(!solution.converged());
-    UTEST_CHECK(solution.diverged());
 
-    solution.m_miu = 1e-40;
+    solution.m_kkt = 1e-40;
     UTEST_CHECK(solution.converged());
-    UTEST_CHECK(!solution.diverged());
 
-    solution.m_miu = 0.0;
+    solution.m_kkt = 0.0;
     UTEST_CHECK(solution.converged());
-    UTEST_CHECK(!solution.diverged());
 }
 
 UTEST_CASE(standard_problem)
@@ -158,7 +153,6 @@ UTEST_CASE(program3)
     const auto problem  = linprog::problem_t{c, A, b};
     const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
-    UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
@@ -172,7 +166,6 @@ UTEST_CASE(program4)
     const auto problem  = linprog::problem_t{c, A, b};
     const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
-    UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
@@ -186,7 +179,6 @@ UTEST_CASE(program5)
     const auto problem  = linprog::problem_t{c, A, b};
     const auto solution = linprog::solve(problem, make_logger());
     UTEST_CHECK(!solution.converged());
-    UTEST_CHECK(solution.diverged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
 
@@ -382,7 +374,7 @@ UTEST_CASE(program9)
             for (tensor_size_t i = 0, count = 0; i < dims && count < alpha; ++i)
             {
                 const auto [value, index] = v[static_cast<size_t>(i)];
-                if (value < 0.0)
+                if (value <= 0.0)
                 {
                     ++count;
                     xbest(index) = 1.0;
@@ -437,7 +429,7 @@ UTEST_CASE(program10)
 
             auto accum = 0.0;
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
-            for (tensor_size_t i = 0; i < dims && accum <= alpha; ++i)
+            for (tensor_size_t i = 0; i < dims && accum < alpha; ++i)
             {
                 [[maybe_unused]] const auto [_, index] = v[static_cast<size_t>(i)];
                 if (accum + d(index) > alpha)
@@ -475,7 +467,6 @@ UTEST_CASE(program11)
     }
 }
 
-// TODO: investigate why cannot obtain very high precision solutions! (e.g. miu increases)
 // TODO: process problems when A is not row full rank! - can add unit tests explicitly for this
 
 UTEST_END_MODULE()

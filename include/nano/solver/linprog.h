@@ -38,21 +38,17 @@ struct NANO_PUBLIC solution_t
     ///
     /// \brief returns true if convergence is detected.
     ///
-    bool converged(scalar_t max_duality_measure = 1e-14) const;
-
-    ///
-    /// \brief returns true if convergence is detected (not feasible or unbounded problem).
-    ///
-    bool diverged(scalar_t min_duality_measure = 1e+6) const;
+    bool converged(scalar_t max_kkt_violation = 1e-12) const;
 
     // attributes
     static constexpr auto max = std::numeric_limits<scalar_t>::max();
-    vector_t              m_x;        ///< solution (primal problem)
-    vector_t              m_l;        ///< solution (dual problem) - equality constraints
-    vector_t              m_s;        ///< solution (dual problem) - inequality constraints
-    int                   m_iters{0}; ///< number of iterations
+
+    vector_t m_x;        ///< solution (primal problem)
+    vector_t m_l;        ///< solution (dual problem) - equality constraints
+    vector_t m_s;        ///< solution (dual problem) - inequality constraints
+    int      m_iters{0}; ///< number of iterations
     scalar_t m_miu{max}; ///< duality measure: ~zero (converged), very large/infinite (not feasible, unbounded)
-    scalar_t m_gap{max}; ///< duality gap: different between the current primal and dual solutions
+    scalar_t m_kkt{max}; ///< maximum deviation of the KKT sufficient conditions
 };
 
 ///
