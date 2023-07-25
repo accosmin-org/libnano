@@ -3,7 +3,7 @@
 
 #### Introduction
 
-Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum **x** of a (sub-)differential function **f(x)** of dimension *n* starting from an initial point **x0**. The returned point **x** is guaranteed to be the global minimum when the function is convex, and a stationary point (not necessarily a local minimum) otherwise. More details can be found in the following sources:
+Libnano provides various methods to solve unconstrained non-linear numerical optimization problems. The goal is to find the minimum `x` of a (sub-)differential function `f(x)` of dimension `n` starting from an initial point `x0`. The returned point `x` is guaranteed to be the global minimum when the function is convex, and a stationary point (not necessarily a local minimum) otherwise. More details can be found in the following sources:
 
 
 * "Practical Methods of Optimization 2e", R. Fletcher, 2000
@@ -12,11 +12,11 @@ Libnano provides various methods to solve unconstrained non-linear numerical opt
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-The builtin solvers are **non-parametric** in the sense that their convergence properties don't dependent on particular values of hyper-parameters. Also the functions to minimize are not constrained to have a particular structure (e.g. like in machine learning applications). Thus the solvers can be used efficiently as black-box solvers without needing tuning. However it is important to use an appropriate type of solver adapted to the problem at hand:
+The builtin solvers are `non-parametric` in the sense that their convergence properties don't dependent on particular values of hyper-parameters. Also the functions to minimize are not constrained to have a particular structure (e.g. like in machine learning applications). Thus the solvers can be used efficiently as black-box solvers without needing tuning. However it is important to use an appropriate type of solver adapted to the problem at hand:
 
-* **monotonic** solvers which decrease the current function value at each iteration using a *descent direction* and a *line-search* along this direction. These solvers are appropriate only for smooth functions, not necessarily convex, which can be solved with very high precision. Examples: conjugate gradient descent (CGD), LBFGS, quasi-Newton methods.
+* `monotonic` solvers which decrease the current function value at each iteration using a `descent direction` and a `line-search` along this direction. These solvers are appropriate only for smooth functions, not necessarily convex, which can be solved with very high precision. Examples: conjugate gradient descent (CGD), LBFGS, quasi-Newton methods.
 
-* **non-monotonic** solvers which are not guaranteed to decrease the current function value at each iteration. These solvers should be used only for non-smooth convex problems, which can be solved with high precision. They can work well for smooth convex problems as well, but they are not as efficient (iteration-wise) as the monotonic solvers. Examples: optimal sub-gradient algorithm (OSGA), sub-gradient method (SGM) or the ellipsoid method.
+* `non-monotonic` solvers which are not guaranteed to decrease the current function value at each iteration. These solvers should be used only for non-smooth convex problems. They can work well for smooth convex problems as well, but they are not as efficient (iteration-wise) as the monotonic solvers. Examples: optimal sub-gradient algorithm (OSGA), sub-gradient method (SGM) or the ellipsoid method.
 
 
 Each concept involved in the optimization procedure is mapped to a particular interface. Most relevant are the [function_t](../include/nano/function.h) and the [solver_t](../include/nano/solver.h) interfaces. The builtin implementations can be accessed programatically in C++ using their associated factory.
