@@ -18,28 +18,27 @@
 
 ## Description
 
-Libnano implements parameter-free and flexible machine learning algorithms complemented by an extensive collection of numerical optimization algorithms. The implementation is **cross-platform** (Linux, macOS, Windows) with **minimal dependencies** (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
+Libnano implements parameter-free and flexible machine learning algorithms complemented by an extensive collection of numerical optimization algorithms. The implementation is `cross-platform` (Linux, macOS, Windows) with `minimal dependencies` (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
 
+More specifically:
 
-In particular:
+* `state-of-the-art nonlinear numerical optimization algorithms` for unconstrained smooth and non-smooth convex problems (e.g. L-BFGS, quasi-Newton methods, non-linear conjugate gradient descent - CGD, optimal sub-gradient algorithm - OSGA). Additionally the library provides many builtin test functions of varying number of dimensions (some specific to ML applications) useful for benchmarking these algorithms.
 
-* **state-of-the-art nonlinear numerical optimization algorithms** for unconstrained smooth and non-smooth convex problems (e.g. L-BFGS, quasi-Newton methods, non-linear conjugate gradient descent - CGD, optimal sub-gradient algorithm - OSGA). Additionally the library provides many builtin test functions of varying number of dimensions (some specific to ML applications) useful for benchmarking these algorithms.
+* `constrained optimization algorithms` for linear and quadratic programming (e.g. primal-dual interior point methods) and general nonlinear problems (e.g. penalty methods, augmented lagrangian method).
 
-* **constrained optimization algorithms** for linear and quadratic programming (e.g. primal-dual interior point methods) and general nonlinear problems (e.g. penalty methods, augmented lagrangian method).
+* `tensors of arbitrary rank and scalar type` designed for machine learning applications. The implementation is using [Eigen3](https://eigen.tuxfamily.org) and as such fast and easy-to-use linear algebra operations are readily available.
 
-* **tensors of arbitrary rank and scalar type** designed for machine learning applications. The implementation is using [Eigen3](https://eigen.tuxfamily.org) and as such fast and easy-to-use linear algebra operations are readily available.
+* `efficient in-memory storage of machine learning datasets of mixed features` (e.g. categorical. continuous, structured like images or time series). The feature values can be optional (missing) and of different storage (e.g. signed or unsigned integers of various byte sizes, single or double precision floating point numbers). Additional features can be constructed on the fly to be used for training and evaluating machine learning models.
 
-* **efficient in-memory storage of machine learning datasets of mixed features** (e.g. categorical. continuous, structured like images or time series). The feature values can be optional and of different storage (e.g. signed or unsigned integers of various sizes, single or double precision floating point numbers). Additional features can be constructed on the fly to be used for training and evaluating machine learning models.
+* `linear models with arbitrary loss functions`. Standard regularization methods (e.g. like in lasso, ridge, elastic net) are builtin.
 
-* **linear models with arbitrary loss functions**. Standard regularization methods (e.g. like in lasso, ridge, elastic net) are builtin.
+* `gradient boosting models with arbitray loss functions and arbitrary weak learners`. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin.
 
-* **gradient boosting models with arbitray loss functions and arbitrary weak learners**. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin.
+* all machine learning models work with `any feature type` (e.g. categorical, continuous or structures) and potentially `missing feature values`.
 
-* all machine learning models work with any feature type (e.g. categorical, continuous or structures) and potentially missing feature values.
+* the regularization hyper-parameters are `automatically tuned` using standard model evaluation protocols (e.g. cross-validation).
 
-* the regularization hyper-parameters are automatically tuned using standard model evaluation (e.g. cross-validation).
-
-* the machine learning concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, splitting strategy, feature generation) are modelled using appropriate interfaces. As such the library is highly customizable to particular machine learning applications.
+* the machine learning concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, splitting strategy, feature generation) are modelled using appropriate orthogonal interfaces. As such the library is `highly customizable` and it can be easily be modified to particular machine learning applications.
 
 
 ## Documentation
@@ -48,16 +47,16 @@ In particular:
 
 2. [Tensor module](docs/tensor.md)
 
-3. [Nonlinear (unconstrained) optimization module](docs/nonlinear.md)
+3. [Nonlinear optimization module](docs/nonlinear.md)
 
-4. [Linear programming module](docs/linprog.md)
+5. [Linear programming module](docs/linprog.md)
 
-5. [Quadratic programming module - TODO](docs/quadprog.md)
+6. [Quadratic programming module - TODO](docs/quadprog.md)
 
-6. [Constrained optimization module - TODO](docs/unconstrained.md)
+7. [Constrained optimization module - TODO](docs/constrained.md)
 
-7. [Machine learning module - TODO](docs/mlearn.md)
+8. [Machine learning module - TODO](docs/mlearn.md)
 
-8. [Linear models - TODO](docs/linear.md)
+9. [Linear models - TODO](docs/linear.md)
 
-9. [Gradient boosting models - TODO](docs/gboost.md)
+10. [Gradient boosting models - TODO](docs/gboost.md)
