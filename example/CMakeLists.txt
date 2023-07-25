@@ -7,19 +7,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include("${CMAKE_SOURCE_DIR}/../cmake/utils.cmake")
 
-add_executable(tensor src/tensor.cpp)
-add_executable(minimize src/minimize.cpp)
-
 find_package(NANO 0.0.1 REQUIRED)
-
-target_link_libraries(tensor NANO::NANO)
-target_link_libraries(minimize NANO::NANO)
 
 include(CTest)
 enable_testing()
 
-add_test(tensor tensor)
-add_test(minimize minimize)
+function(make_example program)
+    add_executable(${program} src/${program}.cpp)
+    target_link_libraries(${program} NANO::NANO)
+    add_test(check_${program} ${program})
+    copy_runtime_dlls(${program})
+endfunction()
 
-copy_runtime_dlls(tensor)
-copy_runtime_dlls(minimize)
+make_example(tensor)
+make_example(linprog)
+make_example(nonlinear)

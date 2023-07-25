@@ -49,14 +49,26 @@ auto make_alpha(const vector_t& v, const tvector& dv)
     return min;
 }
 
+template <typename tvector>
+auto make_kkt(const linprog::problem_t& problem, const tvector& x, const tvector& l, const tvector& s)
+{
+    const auto test1 = (problem.m_A.transpose() * l + s - problem.m_c).array().abs().maxCoeff();
+    const auto test2 = (problem.m_A * x - problem.m_b).array().abs().maxCoeff();
+    const auto test3 = (s.array() * x.array()).abs().maxCoeff();
+    const auto test4 = x.array().minCoeff();
+    const auto test5 = s.array().minCoeff();
+    return std::max(test1, std::max(std::max(test2, test3), std::max(test4, test5)));
+}
+
 auto make_kkt(const linprog::problem_t& problem, const linprog::solution_t& solution)
 {
-    const auto test1 = (problem.m_A.transpose() * solution.m_l + solution.m_s - problem.m_c).array().abs().maxCoeff();
-    const auto test2 = (problem.m_A * solution.m_x - problem.m_b).array().abs().maxCoeff();
-    const auto test3 = (solution.m_s.array() * solution.m_x.array()).abs().maxCoeff();
-    const auto test4 = solution.m_x.array().minCoeff();
-    const auto test5 = solution.m_s.array().minCoeff();
-    return std::max(test1, std::max(std::max(test2, test3), std::max(test4, test5)));
+    return make_kkt(problem, solution.m_x, solution.m_l, solution.m_s);
+}
+
+auto make_eta(const int iters)
+{
+    const auto pow = std::pow(0.1, static_cast<double>(iters));
+    return std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
 }
 } // namespace
 
@@ -242,15 +254,18 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
 
     auto cstate = make_starting_point(problem); // current state
     auto bstate = cstate;                       // best state wrt KKT violation
-    for (; cstate.m_iters < max_iters && cstate.m_x.minCoeff() > 0.0; ++cstate.m_iters)
+    for (int eta_iters = 0; cstate.m_iters < max_iters && cstate.m_x.minCoeff() > 0.0; ++cstate.m_iters)
     {
         auto& x = cstate.m_x;
         auto& l = cstate.m_l;
         auto& s = cstate.m_s;
 
+        // compute statistics
         cstate.m_miu = x.dot(s) / static_cast<scalar_t>(n);
-        cstate.m_kkt = ::make_kkt(problem, cstate);
-        if (std::isfinite(cstate.m_kkt) && cstate.m_kkt < bstate.m_kkt)
+        cstate.m_kkt = make_kkt(problem, cstate);
+
+        const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt);
+        if (valid && std::isfinite(cstate.m_kkt) && cstate.m_kkt < bstate.m_kkt)
         {
             bstate = cstate;
         }
@@ -259,9 +274,11 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
             logger(problem, cstate);
         }
 
-        // check stopping criteria
-        if (!std::isfinite(cstate.m_kkt) || (cstate.m_iters >= kkt_patience + bstate.m_iters) ||
-            bstate.converged(kkt_epsilon))
+        // check stopping criteria:
+        // - divergence
+        // - convergence
+        // - no improvement in the past iterations
+        if (!valid || bstate.converged(kkt_epsilon) || (cstate.m_iters >= kkt_patience + bstate.m_iters))
         {
             break;
         }
@@ -290,8 +307,7 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         solve(decomposition, x, s);
 
         // update state
-        const auto pow        = std::pow(0.1, static_cast<double>(cstate.m_iters));
-        const auto eta        = std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
+        const auto eta        = make_eta(eta_iters++);
         const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
         const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
 

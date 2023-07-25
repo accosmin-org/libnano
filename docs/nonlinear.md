@@ -1,4 +1,4 @@
-# Numerical optimization module
+# Nonlinear optimization module
 
 
 #### Introduction
@@ -24,7 +24,7 @@ Each concept involved in the optimization procedure is mapped to a particular in
 
 #### Function
 
-The function to minimize must be an instance of `function_t`. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from the [example](../example/src/minimize.cpp) defines a quadratic function of arbitrary dimensions:
+The function to minimize must be an instance of `function_t`. The user needs to implement the evaluation of the function value and gradient. The following piece of code extracted from the [example](../example/src/nonlinear.cpp) defines a quadratic function of arbitrary dimensions:
 
 ```
 #include <nano/function.h>
@@ -121,13 +121,13 @@ std::cout << make_table("solver", solver_t::all());
 |-----------|---------------------------------------------------------------------|
 ```
 
-The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/minimize.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
+The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/nonlinear.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
 ```
 #include <nano/solver/lbfgs.h>
 
 auto solver = nano::solver_lbfgs_t{};
-solver.parameter("solver::lbfgs::history") = 6;
-solver.parameter("solver::epsilon") = 1e-6;
+solver.parameter("solver::lbfgs::history") = 20;
+solver.parameter("solver::epsilon") = 1e-8;
 solver.parameter("solver::max_evals") = 100;
 solver.parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
 solver.lsearch0("constant");
@@ -136,7 +136,7 @@ solver.lsearchk("morethuente");
 
 Then the optimal point is obtained by invoking the solver on the object like described below:
 ```
-const auto x0 = nano::vector_t::Random(objective.size());
+const auto x0 = nano::make_random_vector<scalar_t>(objective.size());
 const auto state = solver.minimize(objective, x0);
 const auto& x = state.x;
 
@@ -153,7 +153,7 @@ std::cout << std::fixed << std::setprecision(12)
 Choosing the right optimization algorithm is usually done in terms of processing time and memory usage. The non-linear conjugate gradient descent familly of algorithms (CGD) and the limited-memory BFGS (L-BFGS) are recommended for large problems because they perform *O(n)* FLOPs per iteration and use *O(n)* memory while having super-linear convergence. The quasi-Newton algorithms, and BFGS in particular, converge faster both in terms of iterations and gradient evaluations, but are only recommended for small problems because of their *O(n^2)* FLOPs and memory usage. The gradient descent is provided here as a baseline to compare with as it generally takes 1-2 orders of magnitude more iterations to reach similar accuracy as CGD or L-BFGS.
 
 
-The solvers can be configured with different line-search steps initialization and search methods that implement the `lsearch0_t` and the `lsearchk_t` interfaces respectively. The builtin implementations can be accessed from the associated factories with `lsearch_t::all()` and `lsearchk_t::all()` respectively. Note that the state-of-the-art line-search method *CG_DESCENT* is recommended to use when high precision solutions of machine precision are needed.
+The solvers can be configured with different line-search steps initialization and search methods that implement the `lsearch0_t` and the `lsearchk_t` interfaces respectively. The builtin implementations can be accessed from the associated factories with `lsearch0_t::all()` and `lsearchk_t::all()` respectively. Note that the state-of-the-art line-search method *CG_DESCENT* is recommended to use when high precision solutions of machine precision are needed.
 
 ```
 std::cout << make_table("lsearchk", lsearchk_t::all());
@@ -173,7 +173,7 @@ std::cout << make_table("lsearchk", lsearchk_t::all());
 #### Examples
 
 
-A working example for constructing and minimizing an objective function can be found in the [example](../example/src/minimize.cpp). The source shows additionally how to:
+A working example for constructing and minimizing an objective function can be found in the [example](../example/src/nonlinear.cpp). The source shows additionally how to:
 * compute objective function values at various points,
 * compute the accuracy of the gradient using central finite difference,
 * retrieve and configure the solver,
@@ -320,11 +320,3 @@ done
 ```
 
 L-BFGS is catching up to BFGS in terms of both accuracy and number of iterations by increasing the number of past gradients to use at very little additional computation cost.
-
-
-#### Future work
-
-* Linear programming solver
-* Quadratic programming solver
-* Solvers for constrained optimization
-* Solvers for non-smooth convex problems with reliable stopping criteria

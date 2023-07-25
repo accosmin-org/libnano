@@ -23,7 +23,9 @@ Libnano implements parameter-free and flexible machine learning algorithms compl
 
 In particular:
 
-* **state-of-the-art first-order optimization algorithms** for smooth and non-smooth convex problems (e.g. L-BFGS, quasi Newton methods, non-linear conjugate gradient descent - CGD, optimal sub-gradient algorithm - OSGA). Additionally the library provides many builtin test functions of varying number of dimensions (some specific to ML applications) useful for benchmarking these algorithms.
+* **state-of-the-art nonlinear numerical optimization algorithms** for unconstrained smooth and non-smooth convex problems (e.g. L-BFGS, quasi-Newton methods, non-linear conjugate gradient descent - CGD, optimal sub-gradient algorithm - OSGA). Additionally the library provides many builtin test functions of varying number of dimensions (some specific to ML applications) useful for benchmarking these algorithms.
+
+* **constrained optimization algorithms** for linear and quadratic programming (e.g. primal-dual interior point methods) and general nonlinear problems (e.g. penalty methods, augmented lagrangian method).
 
 * **tensors of arbitrary rank and scalar type** designed for machine learning applications. The implementation is using [Eigen3](https://eigen.tuxfamily.org) and as such fast and easy-to-use linear algebra operations are readily available.
 
@@ -46,10 +48,16 @@ In particular:
 
 2. [Tensor module](docs/tensor.md)
 
-3. [Numerical optimization module](docs/solver.md)
+3. [Nonlinear (unconstrained) optimization module](docs/solver.md)
 
-4. [Machine learning module](docs/mlearn.md)
+4. [Linear programming module](docs/linprog.md)
 
-5. [Linear models - TODO](docs/linear.md)
+5. [Quadratic programming module - TODO](docs/solver.md)
 
-6. [Gradient boosting models - TODO](docs/gboost.md)
+6. [Constrained optimization module - TODO](docs/solver.md)
+
+7. [Machine learning module - TODO](docs/mlearn.md)
+
+8. [Linear models - TODO](docs/linear.md)
+
+9. [Gradient boosting models - TODO](docs/gboost.md)

@@ -42,7 +42,8 @@ private:
 
 int main(const int, char*[])
 {
-    // construct an objective function
+    // construct a nonlinear unconstrained objective function
+    // NB: can use `nano::make_function` with an appropriate lambda instead of implementing the `nano::function_t`!
     const auto objective = objective_t{13};
 
     // check the objective function's gradient using central finite-difference
@@ -58,10 +59,10 @@ int main(const int, char*[])
 
     // construct a solver_t object to minimize the objective function
     // NB: this may be not needed as the default configuration will minimize the objective as well!
-    // NB: can also use the factory to get a default solver!
+    // NB: can also use the factory to get the default solver: `solver_t::all().get("lbfgs")`!
     auto solver                                = solver_lbfgs_t{};
-    solver.parameter("solver::lbfgs::history") = 6;
-    solver.parameter("solver::epsilon")        = 1e-6;
+    solver.parameter("solver::lbfgs::history") = 20;
+    solver.parameter("solver::epsilon")        = 1e-8;
     solver.parameter("solver::max_evals")      = 100;
     solver.parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
     solver.lsearch0("constant");
@@ -102,11 +103,17 @@ int main(const int, char*[])
                           << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << ".\n";
             });
 
+        // minimize
         const auto state = solver.minimize(objective, x0);
+        const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0, nullptr)
-                  << ",x-x*=" << (state.x() - objective.b()).lpNorm<Eigen::Infinity>() << "," << state << ".\n";
+                  << "]: f0=" << objective.vgrad(x0, nullptr) << ",x-x*=" << error << "," << state << ".\n";
+
+        if (error > 1e-7)
+        {
+            return EXIT_FAILURE;
+        }
     }
 
     return EXIT_SUCCESS;
