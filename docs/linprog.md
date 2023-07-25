@@ -35,7 +35,7 @@ The linear programming problems can be defined in various equivalent formulation
 Note that all inequalities above are specified element-wise. Additionally all non-standard problem formulations can be transformed to the standard form explicitly by calling the appropriate `transform` function. This is typically not necessary as the solver is performing the appropriate transformations if needed.
 
 
-The following example code extracted from `[example](../example/src/linprog.cpp)`:
+The following example code extracted from the [example](../example/src/linprog.cpp):
 ```
 const auto n_equals = 2;
 const auto c        = make_vector<scalar_t>(1, 1, 1);
@@ -57,7 +57,7 @@ with the obvious solution `(1, 2, 0)`.
 
 The linear programming problems are solved typically with variations of either the simplex method or the **primal-dual interior point method**. Libnano implements the latter - the variant of the `Mehrotra` algorithm as described in the `Numerical Optimization` reference above. This variation is relatively easy to code and understand and it can be easily tuned for specific applications.
 
-The following example code extracted from [example](../example/src/linprog.cpp) shows how to solve the linear programming problem defined above:
+The following example code extracted from the [example](../example/src/linprog.cpp) shows how to solve the linear programming problem defined above:
 ```
 const auto logger = [](const linprog::problem_t& problem, const linprog::solution_t& solution)
 {

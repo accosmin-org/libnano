@@ -48,13 +48,13 @@ In particular:
 
 2. [Tensor module](docs/tensor.md)
 
-3. [Nonlinear (unconstrained) optimization module](docs/solver.md)
+3. [Nonlinear (unconstrained) optimization module](docs/nonlinear.md)
 
 4. [Linear programming module](docs/linprog.md)
 
-5. [Quadratic programming module - TODO](docs/solver.md)
+5. [Quadratic programming module - TODO](docs/quadprog.md)
 
-6. [Constrained optimization module - TODO](docs/solver.md)
+6. [Constrained optimization module - TODO](docs/unconstrained.md)
 
 7. [Machine learning module - TODO](docs/mlearn.md)
 
