@@ -96,7 +96,6 @@ struct scratchpad_t
         , m_ds(n)
         , m_mat(m, m)
         , m_vec(m)
-        , m_D2(make_full_matrix<scalar_t>(n, n, 0.0))
     {
     }
 
@@ -122,7 +121,6 @@ struct scratchpad_t
     vector_t m_ds;  ///<
     matrix_t m_mat; ///< (m, m) buffer to solve the linear system
     vector_t m_vec; ///< (m) buffer to solve the linear system
-    matrix_t m_D2;  ///< (m, m) diag(x/s)
 };
 } // namespace
 
@@ -312,9 +310,7 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
 
         // matrix decomposition to solve the linear systems (performed once per iteration)
         // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        scratch.m_D2.diagonal() = x.array() / s.array();
-        scratch.m_mat           = A * scratch.m_D2 * A.transpose();
-
+        scratch.m_mat            = A * (x.array() / s.array()).matrix().asDiagonal() * A.transpose();
         const auto decomposition = scratch.m_mat.ldlt();
 
         // predictor step
