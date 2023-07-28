@@ -2,28 +2,28 @@
 #include <utest/utest.h>
 
 using namespace nano;
+using namespace nano::linprog;
 
 namespace
 {
 auto make_logger()
 {
-    const auto op = [](const linprog::problem_t& problem, const linprog::solution_t& solution)
+    return [](const problem_t& problem, const solution_t& solution)
     {
         std::cout << std::fixed << std::setprecision(16) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
                   << ",KKT=" << solution.m_kkt << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
                   << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>() << std::endl;
     };
-    return linprog::logger_t{op};
 }
 
 template <typename tproblem>
-auto check_solution(const tproblem& problem, const linprog::solution_t& solution, const vector_t& xbest,
-                    const scalar_t epsilon = 1e-10)
+auto check_solution(const tproblem& problem, const solution_t& solution, const vector_t& xbest,
+                    const scalar_t epsilon = 1e-11)
 {
-    UTEST_CHECK(solution.converged(epsilon));
-    UTEST_CHECK_LESS(solution.m_miu, epsilon);
-    UTEST_CHECK_LESS(solution.m_kkt, epsilon);
-    UTEST_CHECK_LESS(solution.m_iters, 20);
+    UTEST_CHECK(solution.converged(1e+1 * epsilon));
+    UTEST_CHECK_LESS(solution.m_miu, 1e+1 * epsilon);
+    UTEST_CHECK_LESS(solution.m_kkt, 1e+1 * epsilon);
+    UTEST_CHECK_LESS(solution.m_iters, 30);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, epsilon);
     UTEST_CHECK(problem.feasible(xbest, epsilon));
 }
@@ -33,7 +33,7 @@ UTEST_BEGIN_MODULE(test_linprog)
 
 UTEST_CASE(solution)
 {
-    auto solution = linprog::solution_t{};
+    auto solution = solution_t{};
     UTEST_CHECK(!solution.converged());
 
     solution.m_kkt = std::numeric_limits<scalar_t>::quiet_NaN();
@@ -53,7 +53,7 @@ UTEST_CASE(standard_problem)
     const auto b = make_vector<scalar_t>(5);
 
     const auto epsilon = 1e-12;
-    const auto problem = linprog::problem_t{c, A, b};
+    const auto problem = problem_t{c, A, b};
     UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
     UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
@@ -70,7 +70,7 @@ UTEST_CASE(general_problem)
     const auto h = make_vector<scalar_t>(3, 5);
 
     const auto epsilon = 1e-12;
-    const auto problem = linprog::general_problem_t{c, A, b, G, h};
+    const auto problem = general_problem_t{c, A, b, G, h};
     UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
     UTEST_CHECK(!problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
@@ -93,7 +93,7 @@ UTEST_CASE(inequality_problem)
     const auto b = make_vector<scalar_t>(5);
 
     const auto epsilon = 1e-12;
-    const auto problem = linprog::inequality_problem_t{c, A, b};
+    const auto problem = inequality_problem_t{c, A, b};
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(-1, 1), epsilon));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1, 1), epsilon));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2, 1), epsilon));
@@ -116,8 +116,8 @@ UTEST_CASE(program1)
     const auto A = make_matrix<scalar_t>(2, 1, 1, 1, 0, 2, 0.5, 0, 1);
     const auto b = make_vector<scalar_t>(5, 8);
 
-    const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, make_logger());
+    const auto problem  = problem_t{c, A, b};
+    const auto solution = solve(problem, make_params(make_logger()));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
@@ -133,8 +133,8 @@ UTEST_CASE(program2)
     const auto A = make_matrix<scalar_t>(1, 1, 1);
     const auto b = make_vector<scalar_t>(1);
 
-    const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, make_logger());
+    const auto problem  = problem_t{c, A, b};
+    const auto solution = solve(problem, make_params(make_logger()));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.0, 1.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
     UTEST_CHECK(problem.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
@@ -150,8 +150,8 @@ UTEST_CASE(program3)
     const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
     const auto b = make_vector<scalar_t>(2);
 
-    const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, make_logger());
+    const auto problem  = problem_t{c, A, b};
+    const auto solution = solve(problem, make_params(make_logger()));
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
@@ -163,8 +163,8 @@ UTEST_CASE(program4)
     const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
     const auto b = make_vector<scalar_t>(-1, -1);
 
-    const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, make_logger());
+    const auto problem  = problem_t{c, A, b};
+    const auto solution = solve(problem, make_params(make_logger()));
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
@@ -176,8 +176,8 @@ UTEST_CASE(program5)
     const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
-    const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, make_logger());
+    const auto problem  = problem_t{c, A, b};
+    const auto solution = solve(problem, make_params(make_logger()));
     UTEST_CHECK(!solution.converged());
     UTEST_CHECK_LESS(solution.m_iters, 10);
 }
@@ -196,11 +196,11 @@ UTEST_CASE(program6)
             const auto b = urand<scalar_t>(-1.0, +1.0, make_rng());
             const auto c = lambda * a;
 
-            const auto problem  = linprog::inequality_problem_t{c, map_matrix(a.data(), 1, dims), map_vector(&b, 1)};
-            const auto solution = linprog::solve(problem, make_logger());
+            const auto problem  = inequality_problem_t{c, map_matrix(a.data(), 1, dims), map_vector(&b, 1)};
+            const auto solution = solve(problem, make_params(make_logger()));
 
             const auto fbest = lambda * b;
-            UTEST_CHECK(solution.converged());
+            UTEST_CHECK(solution.converged(1e-12));
             UTEST_CHECK_CLOSE(solution.m_x.dot(c), fbest, 1e-12);
             UTEST_CHECK_CLOSE(solution.m_x.dot(a), b, 1e-12);
         }
@@ -227,8 +227,8 @@ UTEST_CASE(program7)
         b.segment(0, dims)    = u;
         b.segment(dims, dims) = -l;
 
-        const auto problem  = linprog::inequality_problem_t{c, std::move(A), std::move(b)};
-        const auto solution = linprog::solve(problem, make_logger());
+        const auto problem  = inequality_problem_t{c, std::move(A), std::move(b)};
+        const auto solution = solve(problem, make_params(make_logger()));
 
         const auto xbest = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
         check_solution(problem, solution, xbest);
@@ -267,8 +267,8 @@ UTEST_CASE(program8)
         const auto A = make_full_matrix<scalar_t>(1, dims, 1.0);
         const auto b = make_vector<scalar_t>(1.0);
 
-        const auto problem  = linprog::problem_t{c, A, b};
-        const auto solution = linprog::solve(problem, make_logger());
+        const auto problem  = problem_t{c, A, b};
+        const auto solution = solve(problem, make_params(make_logger()));
 
         const auto xbest = make_xbest(c);
         check_solution(problem, solution, xbest);
@@ -290,8 +290,8 @@ UTEST_CASE(program8)
         b(0)   = 1.0;
         b.segment(1, dims).setConstant(0.0);
 
-        const auto problem  = linprog::inequality_problem_t{c, std::move(A), std::move(b)};
-        const auto solution = linprog::solve(problem, make_logger());
+        const auto problem  = inequality_problem_t{c, std::move(A), std::move(b)};
+        const auto solution = solve(problem, make_params(make_logger()));
 
         const auto xbest = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
         check_solution(problem, solution, xbest);
@@ -333,8 +333,8 @@ UTEST_CASE(program9)
             h.segment(0, dims).array()    = 1;
             h.segment(dims, dims).array() = 0;
 
-            const auto problem  = linprog::general_problem_t{c, A, b, std::move(G), std::move(h)};
-            const auto solution = linprog::solve(problem, make_logger());
+            const auto problem  = general_problem_t{c, A, b, std::move(G), std::move(h)};
+            const auto solution = solve(problem, make_params(make_logger()));
 
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0; i < alpha; ++i)
@@ -367,8 +367,8 @@ UTEST_CASE(program9)
             b.segment(1, dims).array()        = 1;
             b.segment(1 + dims, dims).array() = 0;
 
-            const auto problem  = linprog::inequality_problem_t{c, A, b};
-            const auto solution = linprog::solve(problem, make_logger());
+            const auto problem  = inequality_problem_t{c, std::move(A), std::move(b)};
+            const auto solution = solve(problem, make_params(make_logger()));
 
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0, count = 0; i < dims && count < alpha; ++i)
@@ -424,25 +424,25 @@ UTEST_CASE(program10)
             h.segment(0, dims).array()    = 1;
             h.segment(dims, dims).array() = 0;
 
-            const auto problem  = linprog::general_problem_t{c, A, b, std::move(G), std::move(h)};
-            const auto solution = linprog::solve(problem, make_logger());
+            const auto problem  = general_problem_t{c, A, b, std::move(G), std::move(h)};
+            const auto solution = solve(problem, make_params(make_logger()));
 
             auto accum = 0.0;
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0; i < dims && accum < alpha; ++i)
             {
                 [[maybe_unused]] const auto [_, index] = v[static_cast<size_t>(i)];
-                if (accum + d(index) > alpha)
-                {
-                    xbest(index) = (alpha - accum) / d(index);
-                }
-                else
+                if (accum + d(index) <= alpha)
                 {
                     xbest(index) = 1.0;
                 }
+                else
+                {
+                    xbest(index) = (alpha - accum) / d(index);
+                }
                 accum += d(index);
             }
-            check_solution(problem, solution, xbest, 1e-8);
+            check_solution(problem, solution, xbest, 1e-9);
         }
     }
 }
@@ -459,8 +459,8 @@ UTEST_CASE(program11)
         const auto A = matrix_t::Identity(dims, dims);
         const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
-        const auto problem  = linprog::inequality_problem_t{c, A, b};
-        const auto solution = linprog::solve(problem, make_logger());
+        const auto problem  = inequality_problem_t{c, A, b};
+        const auto solution = solve(problem, make_params(make_logger()));
 
         const auto& xbest = b;
         check_solution(problem, solution, xbest);

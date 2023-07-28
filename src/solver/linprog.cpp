@@ -67,8 +67,9 @@ auto make_kkt(const linprog::problem_t& problem, const linprog::solution_t& solu
 
 auto make_eta(const int iters)
 {
-    const auto pow = std::pow(0.1, static_cast<double>(iters));
-    return std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
+    return 1.0 - 0.1 / static_cast<scalar_t>(iters + 1);
+    // const auto pow = std::pow(0.1, static_cast<double>(iters));
+    // return std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
 }
 } // namespace
 
@@ -215,7 +216,7 @@ bool linprog::solution_t::converged(const scalar_t max_kkt_violation) const
     return std::isfinite(m_kkt) && m_kkt < max_kkt_violation;
 }
 
-linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linprog::logger_t& logger)
+linprog::solution_t linprog::solve(const problem_t& problem, const params_t& params)
 {
     const auto& A = problem.m_A;
     const auto& b = problem.m_b;
@@ -223,10 +224,6 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
 
     const auto n = c.size();
     const auto m = A.rows();
-
-    const auto max_iters    = 100;
-    const auto kkt_epsilon  = 1e-15;
-    const auto kkt_patience = 3;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FIXME: these buffers can be allocated/stored once in a struct
@@ -249,12 +246,12 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         vec = -rb - A * ((x.array() * rc.array() - rxs.array()) / s.array()).matrix();
         dl  = decomposition.solve(vec);
         ds  = -rc - A.transpose() * dl;
-        dx  = (-rxs.array() - x.array() * ds.array()) / s.array();
+        dx  = -(rxs.array() + x.array() * ds.array()) / s.array();
     };
 
     auto cstate = make_starting_point(problem); // current state
     auto bstate = cstate;                       // best state wrt KKT violation
-    for (int eta_iters = 0; cstate.m_iters < max_iters && cstate.m_x.minCoeff() > 0.0; ++cstate.m_iters)
+    for (int eta_iters = 0; cstate.m_iters < params.m_max_iters && cstate.m_x.minCoeff() > 0.0; ++cstate.m_iters)
     {
         auto& x = cstate.m_x;
         auto& l = cstate.m_l;
@@ -269,16 +266,17 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         {
             bstate = cstate;
         }
-        if (logger)
+        if (params.m_logger)
         {
-            logger(problem, cstate);
+            params.m_logger(problem, cstate);
         }
 
         // check stopping criteria:
         // - divergence
         // - convergence
         // - no improvement in the past iterations
-        if (!valid || bstate.converged(kkt_epsilon) || (cstate.m_iters >= kkt_patience + bstate.m_iters))
+        if (!valid || bstate.converged(params.m_kkt_epsilon) ||
+            (cstate.m_iters >= params.m_kkt_patience + bstate.m_iters))
         {
             break;
         }
@@ -287,31 +285,31 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
         // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
         mD2.diagonal() = x.array() / s.array();
         mat            = A * mD2 * A.transpose();
-        // const auto decomposition = mat.colPivHouseholderQr();
+
         const auto decomposition = mat.ldlt();
 
-        // corrector step
+        // predictor step
         rb  = A * x - b;
         rc  = A.transpose() * l + s - c;
         rxs = x.array() * s.array();
         solve(decomposition, x, s);
 
-        const auto alpha_pri_aff  = std::min(1.0, make_alpha(x, dx));
+        // centering step
+        const auto alpha_prim_aff = std::min(1.0, make_alpha(x, dx));
         const auto alpha_dual_aff = std::min(1.0, make_alpha(s, ds));
 
-        const auto miu_aff = (x + alpha_pri_aff * dx).dot(s + alpha_dual_aff * ds) / static_cast<scalar_t>(n);
+        const auto miu_aff = (x + alpha_prim_aff * dx).dot(s + alpha_dual_aff * ds) / static_cast<scalar_t>(n);
         const auto sigma   = cube(miu_aff / cstate.m_miu);
 
-        // centering step
         rxs.array() += dx.array() * ds.array() - sigma * cstate.m_miu;
         solve(decomposition, x, s);
 
         // update state
         const auto eta        = make_eta(eta_iters++);
-        const auto alpha_pri  = std::min(1.0, eta * make_alpha(x, dx));
+        const auto alpha_prim = std::min(1.0, eta * make_alpha(x, dx));
         const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
 
-        x += alpha_pri * dx;
+        x += alpha_prim * dx;
         l += alpha_dual * dl;
         s += alpha_dual * ds;
     }
@@ -319,14 +317,21 @@ linprog::solution_t linprog::solve(const linprog::problem_t& problem, const linp
     return bstate;
 }
 
-linprog::solution_t linprog::solve(const general_problem_t& problem, const logger_t& logger)
+linprog::solution_t linprog::solve(const general_problem_t& problem, const params_t& params)
 {
-    const auto solution = solve(problem.transform(), logger);
+    const auto solution = solve(problem.transform(), params);
     return problem.transform(solution);
 }
 
-linprog::solution_t linprog::solve(const inequality_problem_t& problem, const logger_t& logger)
+linprog::solution_t linprog::solve(const inequality_problem_t& problem, const params_t& params)
 {
-    const auto solution = solve(problem.transform(), logger);
+    const auto solution = solve(problem.transform(), params);
     return problem.transform(solution);
+}
+
+linprog::params_t linprog::make_params(logger_t logger)
+{
+    auto params     = params_t{};
+    params.m_logger = std::move(logger);
+    return params;
 }

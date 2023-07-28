@@ -38,7 +38,7 @@ struct NANO_PUBLIC solution_t
     ///
     /// \brief returns true if convergence is detected.
     ///
-    bool converged(scalar_t max_kkt_violation = 1e-12) const;
+    bool converged(scalar_t max_kkt_violation = 1e-16) const;
 
     // attributes
     static constexpr auto max = std::numeric_limits<scalar_t>::max();
@@ -126,12 +126,26 @@ struct NANO_PUBLIC general_problem_t
 using logger_t = std::function<void(const problem_t&, const solution_t&)>;
 
 ///
+/// \brief parameters for the linear program solver.
+///
+struct NANO_PUBLIC params_t
+{
+    // attributes
+    int      m_max_iters{100};     ///< maximum number of iterations
+    scalar_t m_kkt_epsilon{1e-16}; ///< maximum deviation of the KKT conditions (the smaller, the more precise solution)
+    int      m_kkt_patience{3}; ///< maximum number of iterations to wait if the maximum KKT deviation doesn't improve
+    logger_t m_logger{};        ///< logging callback
+};
+
+NANO_PUBLIC params_t make_params(logger_t logger = logger_t{});
+
+///
 /// \brief returns the solution of the given linear program using the predictor-corrector algorithm.
 ///
 /// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
 /// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-NANO_PUBLIC solution_t solve(const problem_t&, const logger_t& logger = logger_t{});
-NANO_PUBLIC solution_t solve(const general_problem_t&, const logger_t& logger = logger_t{});
-NANO_PUBLIC solution_t solve(const inequality_problem_t&, const logger_t& logger = logger_t{});
+NANO_PUBLIC solution_t solve(const problem_t&, const params_t& params = params_t{});
+NANO_PUBLIC solution_t solve(const general_problem_t&, const params_t& params = params_t{});
+NANO_PUBLIC solution_t solve(const inequality_problem_t&, const params_t& params = params_t{});
 } // namespace nano::linprog
