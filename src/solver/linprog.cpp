@@ -50,6 +50,14 @@ auto make_alpha(const vector_t& v, const tvector& dv)
 }
 
 template <typename tvector>
+auto make_miu(const tvector& x, const tvector& s)
+{
+    assert(x.size() == s.size());
+
+    return x.dot(s) / static_cast<scalar_t>(x.size());
+}
+
+template <typename tvector>
 auto make_kkt(const linprog::problem_t& problem, const tvector& x, const tvector& l, const tvector& s)
 {
     const auto test1 = (problem.m_A.transpose() * l + s - problem.m_c).array().abs().maxCoeff();
@@ -71,6 +79,51 @@ auto make_eta(const int iters)
     // const auto pow = std::pow(0.1, static_cast<double>(iters));
     // return std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
 }
+
+struct scratchpad_t
+{
+    explicit scratchpad_t(const matrix_t& A)
+        : scratchpad_t(A.cols(), A.rows())
+    {
+    }
+
+    scratchpad_t(const tensor_size_t n, const tensor_size_t m)
+        : m_rb(m)
+        , m_rc(n)
+        , m_rxs(n)
+        , m_dx(n)
+        , m_dl(m)
+        , m_ds(n)
+        , m_mat(m, m)
+        , m_vec(m)
+        , m_D2(make_full_matrix<scalar_t>(n, n, 0.0))
+    {
+    }
+
+    template <typename tdecomposition>
+    void solve(const tdecomposition& decomposition, const matrix_t& A, const vector_t& x, const vector_t& s)
+    {
+        assert(A.rows() == m_dl.size());
+        assert(A.cols() == m_dx.size());
+
+        // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+        m_vec = -m_rb - A * ((x.array() * m_rc.array() - m_rxs.array()) / s.array()).matrix();
+        m_dl  = decomposition.solve(m_vec);
+        m_ds  = -m_rc - A.transpose() * m_dl;
+        m_dx  = -(m_rxs.array() + x.array() * m_ds.array()) / s.array();
+    }
+
+    // attributes
+    vector_t m_rb;  ///<
+    vector_t m_rc;  ///<
+    vector_t m_rxs; ///<
+    vector_t m_dx;  ///<
+    vector_t m_dl;  ///<
+    vector_t m_ds;  ///<
+    matrix_t m_mat; ///< (m, m) buffer to solve the linear system
+    vector_t m_vec; ///< (m) buffer to solve the linear system
+    matrix_t m_D2;  ///< (m, m) diag(x/s)
+};
 } // namespace
 
 linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
@@ -222,32 +275,8 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
     const auto& b = problem.m_b;
     const auto& c = problem.m_c;
 
-    const auto n = c.size();
-    const auto m = A.rows();
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // FIXME: these buffers can be allocated/stored once in a struct
-    //  (if a linear problem of the same size needs to be solved many times)
-    auto rb  = vector_t{m};
-    auto rc  = vector_t{n};
-    auto rxs = vector_t{n};
-    auto dx  = vector_t{n};
-    auto dl  = vector_t{m};
-    auto ds  = vector_t{n};
-
-    auto mat = matrix_t{m, m};                        // buffer to solve the linear system
-    auto vec = vector_t{m};                           // buffer to solve the linear system
-    auto mD2 = make_full_matrix<scalar_t>(n, n, 0.0); // D2 = diag(x/s)
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    const auto solve = [&](const auto& decomposition, const vector_t& x, const vector_t& s)
-    {
-        // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        vec = -rb - A * ((x.array() * rc.array() - rxs.array()) / s.array()).matrix();
-        dl  = decomposition.solve(vec);
-        ds  = -rc - A.transpose() * dl;
-        dx  = -(rxs.array() + x.array() * ds.array()) / s.array();
-    };
+    // TODO: buffer to reuse (useful if solving multiple linear problems of the same)
+    auto scratch = scratchpad_t{A};
 
     auto cstate = make_starting_point(problem); // current state
     auto bstate = cstate;                       // best state wrt KKT violation
@@ -258,7 +287,7 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
         auto& s = cstate.m_s;
 
         // compute statistics
-        cstate.m_miu = x.dot(s) / static_cast<scalar_t>(n);
+        cstate.m_miu = make_miu(x, s);
         cstate.m_kkt = make_kkt(problem, cstate);
 
         const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt);
@@ -283,35 +312,35 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
 
         // matrix decomposition to solve the linear systems (performed once per iteration)
         // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        mD2.diagonal() = x.array() / s.array();
-        mat            = A * mD2 * A.transpose();
+        scratch.m_D2.diagonal() = x.array() / s.array();
+        scratch.m_mat           = A * scratch.m_D2 * A.transpose();
 
-        const auto decomposition = mat.ldlt();
+        const auto decomposition = scratch.m_mat.ldlt();
 
         // predictor step
-        rb  = A * x - b;
-        rc  = A.transpose() * l + s - c;
-        rxs = x.array() * s.array();
-        solve(decomposition, x, s);
+        scratch.m_rb  = A * x - b;
+        scratch.m_rc  = A.transpose() * l + s - c;
+        scratch.m_rxs = x.array() * s.array();
+        scratch.solve(decomposition, A, x, s);
 
         // centering step
-        const auto alpha_prim_aff = std::min(1.0, make_alpha(x, dx));
-        const auto alpha_dual_aff = std::min(1.0, make_alpha(s, ds));
+        const auto alpha_prim_aff = std::min(1.0, make_alpha(x, scratch.m_dx));
+        const auto alpha_dual_aff = std::min(1.0, make_alpha(s, scratch.m_ds));
 
-        const auto miu_aff = (x + alpha_prim_aff * dx).dot(s + alpha_dual_aff * ds) / static_cast<scalar_t>(n);
+        const auto miu_aff = make_miu(x + alpha_prim_aff * scratch.m_dx, s + alpha_dual_aff * scratch.m_ds);
         const auto sigma   = cube(miu_aff / cstate.m_miu);
 
-        rxs.array() += dx.array() * ds.array() - sigma * cstate.m_miu;
-        solve(decomposition, x, s);
+        scratch.m_rxs.array() += scratch.m_dx.array() * scratch.m_ds.array() - sigma * cstate.m_miu;
+        scratch.solve(decomposition, A, x, s);
 
         // update state
         const auto eta        = make_eta(eta_iters++);
-        const auto alpha_prim = std::min(1.0, eta * make_alpha(x, dx));
-        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, ds));
+        const auto alpha_prim = std::min(1.0, eta * make_alpha(x, scratch.m_dx));
+        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, scratch.m_ds));
 
-        x += alpha_prim * dx;
-        l += alpha_dual * dl;
-        s += alpha_dual * ds;
+        x += alpha_prim * scratch.m_dx;
+        l += alpha_dual * scratch.m_dl;
+        s += alpha_dual * scratch.m_ds;
     }
 
     return bstate;

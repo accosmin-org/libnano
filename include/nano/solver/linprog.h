@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <nano/arch.h>
 #include <nano/eigen.h>
 
@@ -132,7 +133,7 @@ struct NANO_PUBLIC params_t
 {
     // attributes
     int      m_max_iters{100};     ///< maximum number of iterations
-    scalar_t m_kkt_epsilon{1e-16}; ///< maximum deviation of the KKT conditions (the smaller, the more precise solution)
+    scalar_t m_kkt_epsilon{1e-16}; ///< maximum deviation of the KKT conditions
     int      m_kkt_patience{3}; ///< maximum number of iterations to wait if the maximum KKT deviation doesn't improve
     logger_t m_logger{};        ///< logging callback
 };
