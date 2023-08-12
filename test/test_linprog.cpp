@@ -467,6 +467,40 @@ UTEST_CASE(program11)
     }
 }
 
-// TODO: process problems when A is not row full rank! - can add unit tests explicitly for this
+UTEST_CASE(equality_unique_solution)
+{
+    // min c.dot(x) s.t. Ax = b and x >= 0,
+    // where the linear equality has exactly one solution.
+    for (const tensor_size_t dims : {2, 3, 7})
+    {
+        const auto D = make_random_matrix<scalar_t>(dims, dims);
+        const auto A = D.transpose() * D + matrix_t::Identity(dims, dims);
+        const auto c = make_random_vector<scalar_t>(dims);
+
+        {
+            // the solution is feasible
+            const auto x = make_random_vector<scalar_t>(dims, 0.0, 1.0);
+            const auto b = A * x;
+
+            const auto problem  = problem_t{c, A, b};
+            const auto solution = solve(problem, make_params(make_logger()));
+
+            const auto& xbest = x;
+            check_solution(problem, solution, xbest);
+        }
+        {
+            // the solution is not feasible
+            const auto x = make_random_vector<scalar_t>(dims, -1.0, 0.0);
+            const auto b = A * x;
+
+            const auto problem  = problem_t{c, A, b};
+            const auto solution = solve(problem, make_params(make_logger()));
+
+            UTEST_CHECK(!solution.converged());
+        }
+    }
+}
+
+// TODO: process problems when A is not row full rank! - duplicate rows of A, linear combinations
 
 UTEST_END_MODULE()
