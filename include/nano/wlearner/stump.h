@@ -62,7 +62,7 @@ public:
     ///
     /// \brief returns the chosen feature value threshold.
     ///
-    auto threshold() const { return m_threshold; }
+    scalar_t threshold() const { return m_threshold; }
 
 private:
     // attributes

@@ -24,43 +24,43 @@ struct csv_t
     ///
     /// \brief configure.
     ///
-    auto& skip(char skip)
+    csv_t& skip(char skip)
     {
         m_skip = skip;
         return *this;
     }
 
-    auto& header(bool header)
+    csv_t& header(bool header)
     {
         m_header = header;
         return *this;
     }
 
-    auto& expected(int expected)
+    csv_t& expected(int expected)
     {
         m_expected = expected;
         return *this;
     }
 
-    auto& delim(string_t delim)
+    csv_t& delim(string_t delim)
     {
         m_delim = std::move(delim);
         return *this;
     }
 
-    auto& testing(tensor_range_t testing)
+    csv_t& testing(tensor_range_t testing)
     {
         m_testing = testing;
         return *this;
     }
 
-    auto& testing(tensor_size_t begin, tensor_size_t end)
+    csv_t& testing(tensor_size_t begin, tensor_size_t end)
     {
         m_testing = make_range(begin, end);
         return *this;
     }
 
-    auto& placeholder(string_t placeholder)
+    csv_t& placeholder(string_t placeholder)
     {
         m_placeholder = std::move(placeholder);
         return *this;

@@ -68,7 +68,7 @@ bool close(tscalar1 lhs, tscalar2 rhs, double epsilon) noexcept
 /// \brief round to the closest power of 10.
 ///
 template <typename tscalar, std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true>
-inline auto roundpow10(tscalar v) noexcept
+inline tscalar roundpow10(tscalar v) noexcept
 {
     return std::pow(tscalar(10), std::round(std::log10(v)));
 }

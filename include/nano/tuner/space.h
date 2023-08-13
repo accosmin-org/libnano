@@ -60,7 +60,7 @@ public:
     ///
     /// \brief returns the grid of values.
     ///
-    const auto& values() const { return m_grid_values; }
+    const tensor1d_t& values() const { return m_grid_values; }
 
 private:
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();

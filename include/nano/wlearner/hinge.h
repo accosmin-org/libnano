@@ -73,12 +73,12 @@ public:
     ///
     /// \brief returns the chosen hinge type (left or right).
     ///
-    auto hinge() const { return m_hinge; }
+    hinge_type hinge() const { return m_hinge; }
 
     ///
     /// \brief returns the chosen feature value threshold.
     ///
-    auto threshold() const { return m_threshold; }
+    scalar_t threshold() const { return m_threshold; }
 
 private:
     // attributes

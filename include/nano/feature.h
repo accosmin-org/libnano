@@ -121,7 +121,7 @@ public:
     ///
     /// \brief returns the set of labels (useful if a categorical feature).
     ///
-    const auto& labels() const { return m_labels; }
+    const strings_t& labels() const { return m_labels; }
 
     ///
     /// \brief returns the number of classes (useful if a categorical feature).
@@ -165,55 +165,4 @@ private:
 NANO_PUBLIC bool operator==(const feature_t& lhs, const feature_t& rhs);
 NANO_PUBLIC bool operator!=(const feature_t& lhs, const feature_t& rhs);
 NANO_PUBLIC std::ostream& operator<<(std::ostream&, const feature_t&);
-
-///
-/// \brief describe a feature (e.g. as selected by a weak learner) in terms of
-///     e.g. importance (impact on error rate).
-///
-class feature_info_t;
-using feature_infos_t = std::vector<feature_info_t>;
-
-class NANO_PUBLIC feature_info_t
-{
-public:
-    ///
-    /// \brief default constructor
-    ///
-    feature_info_t();
-
-    ///
-    /// \brief constructor
-    ///
-    feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance);
-
-    ///
-    /// \brief sort a list of (selected) features by their index.
-    ///
-    static void sort_by_index(feature_infos_t& features);
-
-    ///
-    /// \brief sort a list of (selected) features descendingly by their importance.
-    ///
-    static void sort_by_importance(feature_infos_t& features);
-
-    ///
-    /// \brief change the feature's importance.
-    ///
-    void importance(scalar_t importance);
-
-    ///
-    /// \brief access functions
-    ///
-    auto count() const { return m_count; }
-
-    auto feature() const { return m_feature; }
-
-    auto importance() const { return m_importance; }
-
-private:
-    // attributes
-    tensor_size_t m_feature{-1};     ///< feature index
-    tensor_size_t m_count{0};        ///< how many times it was selected (e.g. folds)
-    scalar_t      m_importance{0.0}; ///< feature importance (e.g. impact on performance)
-};
 } // namespace nano

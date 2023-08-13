@@ -113,12 +113,12 @@ public:
     ///
     /// \brief return the line-search initialization method.
     ///
-    const auto& lsearch0() const { return *m_lsearch0; }
+    const lsearch0_t& lsearch0() const { return *m_lsearch0; }
 
     ///
     /// \brief return the the line-search strategy method.
     ///
-    const auto& lsearchk() const { return *m_lsearchk; }
+    const lsearchk_t& lsearchk() const { return *m_lsearchk; }
 
 protected:
     void type(solver_type);

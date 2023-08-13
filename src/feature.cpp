@@ -155,29 +155,3 @@ std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
     }
     return stream << "]";
 }
-
-feature_info_t::feature_info_t() = default;
-
-feature_info_t::feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance)
-    : m_feature(feature)
-    , m_count(count)
-    , m_importance(importance)
-{
-}
-
-void feature_info_t::sort_by_index(feature_infos_t& features)
-{
-    std::stable_sort(features.begin(), features.end(),
-                     [](const auto& lhs, const auto& rhs) { return lhs.m_feature < rhs.m_feature; });
-}
-
-void feature_info_t::sort_by_importance(feature_infos_t& features)
-{
-    std::stable_sort(features.begin(), features.end(),
-                     [](const auto& lhs, const auto& rhs) { return lhs.m_importance > rhs.m_importance; });
-}
-
-void feature_info_t::importance(scalar_t importance)
-{
-    m_importance = importance;
-}

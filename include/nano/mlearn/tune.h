@@ -17,8 +17,8 @@ NANO_PUBLIC result_t::params_t make_param_results(const tensor2d_t& all_params, 
 /// NB: the tuning is performed in parallel across the current set of hyper-parameter values to evaluate and the folds.
 ///
 template <typename tevaluator>
-auto tune(const string_t& prefix, const indices_t& samples, const params_t& fit_params, strings_t param_names,
-          const param_spaces_t& param_spaces, const tevaluator& evaluator)
+result_t tune(const string_t& prefix, const indices_t& samples, const params_t& fit_params, strings_t param_names,
+              const param_spaces_t& param_spaces, const tevaluator& evaluator)
 {
     const auto splits = fit_params.splitter().split(samples);
     const auto folds  = static_cast<tensor_size_t>(splits.size());

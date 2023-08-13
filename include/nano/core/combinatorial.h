@@ -65,7 +65,7 @@ public:
         return *this;
     }
 
-    const auto& operator*() const { return m_current; }
+    const tensor_mem_t<tindex, 1>& operator*() const { return m_current; }
 
     tensor_size_t index() const { return m_combination; }
 

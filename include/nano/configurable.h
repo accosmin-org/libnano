@@ -76,22 +76,22 @@ public:
     ///
     /// \brief returns all stored parameters.
     ///
-    const auto& parameters() const { return m_parameters; }
+    const parameters_t& parameters() const { return m_parameters; }
 
     ///
     /// \brief returns the software's major version.
     ///
-    auto major_version() const { return m_major_version; }
+    int32_t major_version() const { return m_major_version; }
 
     ///
     /// \brief returns the software's minor version.
     ///
-    auto minor_version() const { return m_minor_version; }
+    int32_t minor_version() const { return m_minor_version; }
 
     ///
     /// \brief returns the software's patch version.
     ///
-    auto patch_version() const { return m_patch_version; }
+    int32_t patch_version() const { return m_patch_version; }
 
 private:
     // attributes

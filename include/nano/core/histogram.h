@@ -172,13 +172,13 @@ public:
         return histogram_t(begin, end, thresholds);
     }
 
-    const auto& means() const { return m_bin_means; }
+    const bin_means_t& means() const { return m_bin_means; }
 
-    const auto& counts() const { return m_bin_counts; }
+    const bin_counts_t& counts() const { return m_bin_counts; }
 
-    const auto& medians() const { return m_bin_medians; }
+    const bin_medians_t& medians() const { return m_bin_medians; }
 
-    const auto& thresholds() const { return m_thresholds; }
+    const thresholds_t& thresholds() const { return m_thresholds; }
 
     tensor_size_t bins() const { return m_bin_counts.size(); }
 

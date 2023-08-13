@@ -29,7 +29,7 @@ public:
     /// \brief enqueue a new task to execute.
     ///
     template <typename tfunction>
-    auto enqueue(tfunction&& f)
+    future_t enqueue(tfunction&& f)
     {
         auto task   = task_t(std::forward<tfunction>(f));
         auto future = task.get_future();
@@ -142,7 +142,7 @@ public:
     /// \brief enqueue a new task to execute.
     ///
     template <typename tfunction>
-    auto enqueue(tfunction&& f)
+    future_t enqueue(tfunction&& f)
     {
         return m_queue.enqueue(std::forward<tfunction>(f));
     }

@@ -172,44 +172,6 @@ UTEST_CASE(compare)
                       feature_t{"f"}.sclass(strings_t{"label1", "label2"}));
 }
 
-UTEST_CASE(feature_info)
-{
-    {
-        const auto info = feature_info_t{};
-        UTEST_CHECK_CLOSE(info.importance(), 0.0, 1e-12);
-    }
-    {
-        const auto info = feature_info_t{7, 13, 42.0};
-        UTEST_CHECK_EQUAL(info.feature(), 7);
-        UTEST_CHECK_EQUAL(info.count(), 13);
-        UTEST_CHECK_CLOSE(info.importance(), 42.0, 1e-12);
-    }
-    {
-        auto info = feature_info_t{};
-        UTEST_CHECK_NOTHROW(info.importance(37.5));
-        UTEST_CHECK_CLOSE(info.importance(), 37.5, 1e-12);
-    }
-    {
-        auto infos = feature_infos_t{
-            feature_info_t{5, 1, 45.0},
-            feature_info_t{6, 2, 36.0},
-            feature_info_t{4, 7, 41.0}
-        };
-
-        feature_info_t::sort_by_index(infos);
-        UTEST_REQUIRE_EQUAL(infos.size(), 3U);
-        UTEST_CHECK_EQUAL(infos[0].feature(), 4);
-        UTEST_CHECK_EQUAL(infos[1].feature(), 5);
-        UTEST_CHECK_EQUAL(infos[2].feature(), 6);
-
-        feature_info_t::sort_by_importance(infos);
-        UTEST_REQUIRE_EQUAL(infos.size(), 3U);
-        UTEST_CHECK_EQUAL(infos[0].feature(), 5);
-        UTEST_CHECK_EQUAL(infos[1].feature(), 4);
-        UTEST_CHECK_EQUAL(infos[2].feature(), 6);
-    }
-}
-
 UTEST_CASE(stream_feature)
 {
     check_stream(feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));

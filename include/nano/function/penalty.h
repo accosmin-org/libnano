@@ -28,7 +28,7 @@ public:
     ///
     /// \brief returns the constrained optimization objective.
     ///
-    const auto& function() const { return m_function; }
+    const function_t& function() const { return m_function; }
 
     ///
     /// \brief returns the set of registered constraints.

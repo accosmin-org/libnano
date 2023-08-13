@@ -47,7 +47,7 @@ public:
     ///
     /// \brief returns the object's type ID.
     ///
-    const auto& type_id() const { return m_type_id; }
+    const string_t& type_id() const { return m_type_id; }
 
 private:
     // attributes
