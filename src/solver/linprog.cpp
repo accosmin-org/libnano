@@ -23,8 +23,9 @@ auto make_starting_point(const linprog::problem_t& problem)
     const vector_t l = invA * A * c;
     vector_t       s = c - A.transpose() * l;
 
-    const auto delta_x = std::max(0.0, -1.5 * x.minCoeff());
-    const auto delta_s = std::max(0.0, -1.5 * s.minCoeff());
+    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
+    const auto delta_x = std::max(epsilon, -1.5 * x.minCoeff());
+    const auto delta_s = std::max(epsilon, -1.5 * s.minCoeff());
 
     x.array() += delta_x;
     s.array() += delta_s;
@@ -63,9 +64,9 @@ auto make_kkt(const linprog::problem_t& problem, const tvector& x, const tvector
     const auto test1 = (problem.m_A.transpose() * l + s - problem.m_c).array().abs().maxCoeff();
     const auto test2 = (problem.m_A * x - problem.m_b).array().abs().maxCoeff();
     const auto test3 = (s.array() * x.array()).abs().maxCoeff();
-    const auto test4 = x.array().minCoeff();
-    const auto test5 = s.array().minCoeff();
-    return std::max(test1, std::max(std::max(test2, test3), std::max(test4, test5)));
+    const auto test4 = x.array().min(0.0).abs().maxCoeff();
+    const auto test5 = s.array().min(0.0).abs().maxCoeff();
+    return std::max({test1, test2, test3, test4, test5});
 }
 
 auto make_kkt(const linprog::problem_t& problem, const linprog::solution_t& solution)
@@ -278,7 +279,7 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
 
     auto cstate = make_starting_point(problem); // current state
     auto bstate = cstate;                       // best state wrt KKT violation
-    for (int eta_iters = 0; cstate.m_iters < params.m_max_iters && cstate.m_x.minCoeff() > 0.0; ++cstate.m_iters)
+    for (int eta_iters = 0; cstate.m_iters < params.m_max_iters; ++cstate.m_iters)
     {
         auto& x = cstate.m_x;
         auto& l = cstate.m_l;
@@ -288,7 +289,7 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
         cstate.m_miu = make_miu(x, s);
         cstate.m_kkt = make_kkt(problem, cstate);
 
-        const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt);
+        const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt) && x.allFinite();
         if (valid && std::isfinite(cstate.m_kkt) && cstate.m_kkt < bstate.m_kkt)
         {
             bstate = cstate;
