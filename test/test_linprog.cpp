@@ -23,7 +23,7 @@ auto check_solution(const tproblem& problem, const solution_t& solution, const v
     UTEST_CHECK(solution.converged(1e+1 * epsilon));
     UTEST_CHECK_LESS(solution.m_miu, 1e+1 * epsilon);
     UTEST_CHECK_LESS(solution.m_kkt, 1e+1 * epsilon);
-    UTEST_CHECK_LESS(solution.m_iters, 30);
+    UTEST_CHECK_LESS(solution.m_iters, 20);
     UTEST_CHECK_CLOSE(solution.m_x, xbest, epsilon);
     UTEST_CHECK(problem.feasible(xbest, epsilon));
 }
