@@ -63,9 +63,9 @@ auto make_kkt(const linprog::problem_t& problem, const tvector& x, const tvector
     const auto test1 = (problem.m_A.transpose() * l + s - problem.m_c).array().abs().maxCoeff();
     const auto test2 = (problem.m_A * x - problem.m_b).array().abs().maxCoeff();
     const auto test3 = (s.array() * x.array()).abs().maxCoeff();
-    const auto test4 = x.array().minCoeff();
-    const auto test5 = s.array().minCoeff();
-    return std::max(test1, std::max(std::max(test2, test3), std::max(test4, test5)));
+    const auto test4 = x.array().min(0.0).abs().maxCoeff();
+    const auto test5 = s.array().min(0.0).abs().maxCoeff();
+    return std::max({test1, test2, test3, test4, test5});
 }
 
 auto make_kkt(const linprog::problem_t& problem, const linprog::solution_t& solution)
