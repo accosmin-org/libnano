@@ -94,8 +94,8 @@ int main(const int, char*[])
         const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
 
         solver.lsearchk_logger(
-            [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-                                  const scalar_t step_size)
+            [c1, c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+                     const scalar_t step_size)
             {
                 std::cout << "\t\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
                           << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)

@@ -1,4 +1,4 @@
-# Build instructions
+# Introduction
 
 
 #### Structure
@@ -21,7 +21,7 @@ System:
 * [CMake](https://cmake.org)
 * [Eigen3](https://eigen.tuxfamily.org) - high-performance linear-algebra C++ library
 
-Libnano is tested on Linux (Ubuntu, Fedora) using both gcc and clang, on MacOS using AppleClang and on Windows using Visual Studio. It may work with minor changes on other platforms as well or using other compiler versions.
+Libnano is tested on Linux (Ubuntu, Fedora) using the system GCC and Clang compilers, on MacOS using AppleClang and on Windows using Visual Studio. It may work with minor changes on other platforms as well.
 
 
 #### How to build

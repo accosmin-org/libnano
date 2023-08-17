@@ -43,7 +43,7 @@ More specifically:
 
 ## Documentation
 
-1. [Build instructions](docs/build.md)
+1. [Introduction](docs/intro.md)
 
 2. [Tensor module](docs/tensor.md)
 
