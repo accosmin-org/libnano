@@ -343,7 +343,7 @@ bool linprog::solution_t::converged(const scalar_t max_kkt_violation) const
 
 linprog::solution_t linprog::solve(const problem_t& problem, const params_t& params)
 {
-    const auto result = make_independant_equality_constraints(problem.m_A, problem.m_b);
+    auto result = make_independant_equality_constraints(problem.m_A, problem.m_b);
     if (result)
     {
         auto& Ab = result.value();
