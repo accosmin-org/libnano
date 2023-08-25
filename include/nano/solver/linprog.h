@@ -132,13 +132,18 @@ using logger_t = std::function<void(const problem_t&, const solution_t&)>;
 struct NANO_PUBLIC params_t
 {
     // attributes
+    logger_t m_logger{};           ///< logging callback
     int      m_max_iters{100};     ///< maximum number of iterations
     scalar_t m_kkt_epsilon{1e-16}; ///< maximum deviation of the KKT conditions
     int      m_kkt_patience{1}; ///< maximum number of iterations to wait if the maximum KKT deviation doesn't improve
-    logger_t m_logger{};        ///< logging callback
 };
 
-NANO_PUBLIC params_t make_params(logger_t logger = logger_t{});
+///
+/// \brief check if the equality constraints `Ax = b` are full row rank
+///     and if so return the row-independant linear constraints by performing an appropriate matrix decomposition.
+///
+NANO_PUBLIC std::optional<std::pair<matrix_t, vector_t>> make_independant_equality_constraints(const matrix_t& A,
+                                                                                               const vector_t& b);
 
 ///
 /// \brief returns the solution of the given linear program using the predictor-corrector algorithm.

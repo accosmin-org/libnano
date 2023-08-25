@@ -123,152 +123,8 @@ struct scratchpad_t
     matrix_t m_mat; ///< (m, m) buffer to solve the linear system
     vector_t m_vec; ///< (m) buffer to solve the linear system
 };
-} // namespace
 
-linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
-    : m_c(std::move(c))
-    , m_A(std::move(A))
-    , m_b(std::move(b))
-{
-    assert(m_c.size() > 0);
-    assert(m_b.size() > 0);
-    assert(m_A.cols() == m_c.size());
-    assert(m_A.rows() == m_b.size());
-}
-
-bool linprog::problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
-{
-    assert(epsilon > 0.0);
-    assert(x.size() == m_c.size());
-
-    return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && x.minCoeff() >= 0.0;
-}
-
-linprog::inequality_problem_t::inequality_problem_t(vector_t c, matrix_t A, vector_t b)
-    : m_c(std::move(c))
-    , m_A(std::move(A))
-    , m_b(std::move(b))
-{
-    assert(m_c.size() > 0);
-    assert(m_b.size() > 0);
-    assert(m_A.cols() == m_c.size());
-    assert(m_A.rows() == m_b.size());
-}
-
-bool linprog::inequality_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
-{
-    assert(epsilon > 0.0);
-    assert(x.size() == m_c.size());
-
-    return (m_A * x - m_b).maxCoeff() < epsilon;
-}
-
-linprog::problem_t linprog::inequality_problem_t::transform() const
-{
-    const auto n = m_c.size();
-    const auto m = m_b.size();
-
-    auto c                      = vector_t{2 * n + m};
-    c.segment(0, n)             = m_c;
-    c.segment(n, n)             = -m_c;
-    c.segment(2 * n, m).array() = 0;
-
-    auto A              = matrix_t{m, 2 * n + m};
-    A.block(0, 0, m, n) = m_A;
-    A.block(0, n, m, n) = -m_A;
-    A.block(0, 2 * n, m, m).setIdentity();
-
-    return {std::move(c), std::move(A), m_b};
-}
-
-linprog::solution_t linprog::inequality_problem_t::transform(const solution_t& isolution) const
-{
-    const auto                  n = m_c.size();
-    [[maybe_unused]] const auto m = m_b.size();
-
-    assert(isolution.m_x.size() == 2 * n + m);
-    assert(isolution.m_s.size() == 2 * n + m);
-    assert(isolution.m_l.size() == m);
-
-    auto solution        = isolution;
-    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
-    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
-    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
-    return solution;
-}
-
-linprog::general_problem_t::general_problem_t(vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
-    : m_c(std::move(c))
-    , m_A(std::move(A))
-    , m_b(std::move(b))
-    , m_G(std::move(G))
-    , m_h(std::move(h))
-{
-    assert(m_c.size() > 0);
-    assert(m_b.size() > 0);
-    assert(m_A.cols() == m_c.size());
-    assert(m_A.rows() == m_b.size());
-    assert(m_G.cols() == m_c.size());
-    assert(m_G.rows() == m_h.size());
-}
-
-bool linprog::general_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
-{
-    assert(epsilon > 0.0);
-    assert(x.size() == m_c.size());
-
-    return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && (m_G * x - m_h).maxCoeff() < epsilon;
-}
-
-linprog::problem_t linprog::general_problem_t::transform() const
-{
-    const auto n  = m_c.size();
-    const auto m1 = m_b.size();
-    const auto m2 = m_h.size();
-
-    auto c                       = vector_t{2 * n + m2};
-    c.segment(0, n)              = m_c;
-    c.segment(n, n)              = -m_c;
-    c.segment(2 * n, m2).array() = 0;
-
-    auto A               = matrix_t{m1 + m2, 2 * n + m2};
-    A.block(0, 0, m1, n) = m_A;
-    A.block(0, n, m1, n) = -m_A;
-    A.block(0, 2 * n, m2, m2).setZero();
-    A.block(m1, 0, m2, n) = m_G;
-    A.block(m1, n, m2, n) = -m_G;
-    A.block(m1, 2 * n, m2, m2).setIdentity();
-
-    auto b            = vector_t{m1 + m2};
-    b.segment(0, m1)  = m_b;
-    b.segment(m1, m2) = m_h;
-
-    return {std::move(c), std::move(A), std::move(b)};
-}
-
-linprog::solution_t linprog::general_problem_t::transform(const solution_t& isolution) const
-{
-    const auto                  n  = m_c.size();
-    [[maybe_unused]] const auto m1 = m_b.size();
-    [[maybe_unused]] const auto m2 = m_h.size();
-
-    assert(isolution.m_x.size() == 2 * n + m2);
-    assert(isolution.m_s.size() == 2 * n + m2);
-    assert(isolution.m_l.size() == m1 + m2);
-
-    auto solution        = isolution;
-    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
-    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
-    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
-    return solution;
-}
-
-bool linprog::solution_t::converged(const scalar_t max_kkt_violation) const
-{
-    return std::isfinite(m_kkt) && m_kkt < max_kkt_violation;
-}
-
-linprog::solution_t linprog::solve(const problem_t& problem, const params_t& params)
+auto solve(const linprog::problem_t& problem, const linprog::params_t& params)
 {
     const auto& A = problem.m_A;
     const auto& b = problem.m_b;
@@ -342,6 +198,162 @@ linprog::solution_t linprog::solve(const problem_t& problem, const params_t& par
 
     return bstate;
 }
+} // namespace
+
+linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
+    : m_c(std::move(c))
+    , m_A(std::move(A))
+    , m_b(std::move(b))
+{
+    assert(m_c.size() > 0);
+    assert(m_b.size() > 0);
+    assert(m_A.cols() == m_c.size());
+    assert(m_A.rows() == m_b.size());
+}
+
+bool linprog::problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
+{
+    assert(epsilon > 0.0);
+    assert(x.size() == m_c.size());
+
+    return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && x.minCoeff() >= 0.0;
+}
+
+linprog::inequality_problem_t::inequality_problem_t(vector_t c, matrix_t A, vector_t b)
+    : m_c(std::move(c))
+    , m_A(std::move(A))
+    , m_b(std::move(b))
+{
+    assert(m_c.size() > 0);
+    assert(m_b.size() > 0);
+    assert(m_A.cols() == m_c.size());
+    assert(m_A.rows() == m_b.size());
+}
+
+bool linprog::inequality_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
+{
+    assert(epsilon > 0.0);
+    assert(x.size() == m_c.size());
+
+    return (m_A * x - m_b).maxCoeff() < epsilon;
+}
+
+linprog::problem_t linprog::inequality_problem_t::transform() const
+{
+    const auto n = m_c.size();
+    const auto m = m_b.size();
+
+    auto c                      = vector_t{2 * n + m};
+    c.segment(0, n)             = m_c;
+    c.segment(n, n)             = -m_c;
+    c.segment(2 * n, m).array() = 0;
+
+    auto A              = matrix_t{m, 2 * n + m};
+    A.block(0, 0, m, n) = m_A;
+    A.block(0, n, m, n) = -m_A;
+    A.block(0, 2 * n, m, m).setIdentity();
+
+    return {std::move(c), std::move(A), m_b};
+}
+
+linprog::solution_t linprog::inequality_problem_t::transform(const solution_t& isolution) const
+{
+    const auto                  n = m_c.size();
+    [[maybe_unused]] const auto m = m_b.size();
+
+    assert(isolution.m_x.size() == 2 * n + m);
+    assert(isolution.m_s.size() == 2 * n + m);
+
+    auto solution        = isolution;
+    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
+    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    return solution;
+}
+
+linprog::general_problem_t::general_problem_t(vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
+    : m_c(std::move(c))
+    , m_A(std::move(A))
+    , m_b(std::move(b))
+    , m_G(std::move(G))
+    , m_h(std::move(h))
+{
+    assert(m_c.size() > 0);
+    assert(m_b.size() > 0);
+    assert(m_A.cols() == m_c.size());
+    assert(m_A.rows() == m_b.size());
+    assert(m_G.cols() == m_c.size());
+    assert(m_G.rows() == m_h.size());
+}
+
+bool linprog::general_problem_t::feasible(const vector_t& x, const scalar_t epsilon) const
+{
+    assert(epsilon > 0.0);
+    assert(x.size() == m_c.size());
+
+    return (m_A * x - m_b).lpNorm<Eigen::Infinity>() < epsilon && (m_G * x - m_h).maxCoeff() < epsilon;
+}
+
+linprog::problem_t linprog::general_problem_t::transform() const
+{
+    const auto n  = m_c.size();
+    const auto m1 = m_b.size();
+    const auto m2 = m_h.size();
+
+    auto c                       = vector_t{2 * n + m2};
+    c.segment(0, n)              = m_c;
+    c.segment(n, n)              = -m_c;
+    c.segment(2 * n, m2).array() = 0;
+
+    auto A               = matrix_t{m1 + m2, 2 * n + m2};
+    A.block(0, 0, m1, n) = m_A;
+    A.block(0, n, m1, n) = -m_A;
+    A.block(0, 2 * n, m2, m2).setZero();
+    A.block(m1, 0, m2, n) = m_G;
+    A.block(m1, n, m2, n) = -m_G;
+    A.block(m1, 2 * n, m2, m2).setIdentity();
+
+    auto b            = vector_t{m1 + m2};
+    b.segment(0, m1)  = m_b;
+    b.segment(m1, m2) = m_h;
+
+    return {std::move(c), std::move(A), std::move(b)};
+}
+
+linprog::solution_t linprog::general_problem_t::transform(const solution_t& isolution) const
+{
+    const auto                  n  = m_c.size();
+    [[maybe_unused]] const auto m1 = m_b.size();
+    [[maybe_unused]] const auto m2 = m_h.size();
+
+    assert(isolution.m_x.size() == 2 * n + m2);
+    assert(isolution.m_s.size() == 2 * n + m2);
+
+    auto solution        = isolution;
+    solution.m_x         = isolution.m_x.segment(0, n) - isolution.m_x.segment(n, n);
+    solution.m_s.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    solution.m_l.array() = std::numeric_limits<scalar_t>::quiet_NaN(); // FIXME: double check this?!
+    return solution;
+}
+
+bool linprog::solution_t::converged(const scalar_t max_kkt_violation) const
+{
+    return std::isfinite(m_kkt) && m_kkt < max_kkt_violation;
+}
+
+linprog::solution_t linprog::solve(const problem_t& problem, const params_t& params)
+{
+    const auto result = make_independant_equality_constraints(problem.m_A, problem.m_b);
+    if (result)
+    {
+        auto& Ab = result.value();
+        return ::solve(problem_t{problem.m_c, std::move(Ab.first), std::move(Ab.second)}, params);
+    }
+    else
+    {
+        return ::solve(problem, params);
+    }
+}
 
 linprog::solution_t linprog::solve(const general_problem_t& problem, const params_t& params)
 {
@@ -355,9 +367,27 @@ linprog::solution_t linprog::solve(const inequality_problem_t& problem, const pa
     return problem.transform(solution);
 }
 
-linprog::params_t linprog::make_params(logger_t logger)
+std::optional<std::pair<matrix_t, vector_t>> linprog::make_independant_equality_constraints(const matrix_t& A,
+                                                                                            const vector_t& b)
 {
-    auto params     = params_t{};
-    params.m_logger = std::move(logger);
-    return params;
+    assert(A.rows() == b.size());
+
+    const auto dd = A.transpose().fullPivLu();
+
+    // independant linear constraints
+    if (dd.rank() == A.rows())
+    {
+        return std::nullopt;
+    }
+
+    // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
+    const auto& P  = dd.permutationP();
+    const auto& Q  = dd.permutationQ();
+    const auto& LU = dd.matrixLU();
+
+    const auto L = LU.leftCols(std::min(A.rows(), A.cols())).triangularView<Eigen::UnitLower>().toDenseMatrix();
+    const auto U = LU.topRows(std::min(A.rows(), A.cols())).triangularView<Eigen::Upper>().toDenseMatrix();
+
+    return std::make_pair(matrix_t{U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P},
+                          vector_t{(Q.transpose() * b).segment(0, dd.rank())});
 }

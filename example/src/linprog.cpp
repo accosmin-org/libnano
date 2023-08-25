@@ -29,7 +29,7 @@ int main(const int, char*[])
     };
 
     // solve the linear programming problem
-    const auto params   = linprog::make_params(logger);
+    const auto params   = linprog::params_t{logger};
     const auto problem  = linprog::problem_t{c, A, b};
     const auto solution = linprog::solve(problem, params);
 
