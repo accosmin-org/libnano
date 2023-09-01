@@ -41,7 +41,7 @@ class NANO_PUBLIC solver_t : public configurable_t, public clonable_t<solver_t>
 {
 public:
     ///
-    /// \brief logging operator: op(state), returns false if the optimization should stop
+    /// \brief logging operator: op(state), returns false if the optimization should stop.
     ///
     using logger_t = std::function<bool(const solver_state_t&)>;
 

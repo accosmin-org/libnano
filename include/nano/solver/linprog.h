@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <nano/arch.h>
+#include <nano/configurable.h>
 #include <nano/eigen.h>
 
 namespace nano::linprog
@@ -48,8 +48,10 @@ struct NANO_PUBLIC solution_t
     vector_t m_l;        ///< solution (dual problem) - equality constraints
     vector_t m_s;        ///< solution (dual problem) - inequality constraints
     int      m_iters{0}; ///< number of iterations
-    scalar_t m_miu{max}; ///< duality measure: ~zero (converged), very large/infinite (not feasible, unbounded)
-    scalar_t m_kkt{max}; ///< maximum deviation of the KKT sufficient conditions
+    scalar_t m_miu{max}; ///< duality measure: ~zero (converged), very large/infinite (unfeasible/unbounded)
+    scalar_t m_kkt{max}; ///< deviation of KKT conditions: ~zero (converged), very large/infinite (unfeasible/unbounded)
+    scalar_t m_ldlt_rcond{0};        ///< LDLT decomposition: reciprocal condition number
+    bool     m_ldlt_positive{false}; ///< LDLT decomposition: positive semidefinite?! (if not, unstable system)
 };
 
 ///
@@ -124,18 +126,37 @@ struct NANO_PUBLIC general_problem_t
     vector_t m_h; ///<
 };
 
-using logger_t = std::function<void(const problem_t&, const solution_t&)>;
-
 ///
-/// \brief parameters for the linear program solver.
+/// \brief solver for linear programming problems.
 ///
-struct NANO_PUBLIC params_t
+class NANO_PUBLIC solver_t final : public configurable_t
 {
+public:
+    ///
+    /// \brief logging operator: op(proble, solution).
+    ///
+    using logger_t = std::function<void(const problem_t&, const solution_t&)>;
+
+    ///
+    /// \brief constructor
+    ///
+    explicit solver_t(logger_t logger = logger_t{});
+
+    ///
+    /// \brief returns the solution of the given linear program using the predictor-corrector algorithm.
+    ///
+    /// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
+    /// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+    ///
+    solution_t solve(const problem_t&) const;
+    solution_t solve(const general_problem_t&) const;
+    solution_t solve(const inequality_problem_t&) const;
+
+private:
+    solution_t solve_(const problem_t&) const;
+
     // attributes
-    logger_t m_logger{};           ///< logging callback
-    int      m_max_iters{100};     ///< maximum number of iterations
-    scalar_t m_kkt_epsilon{1e-16}; ///< maximum deviation of the KKT conditions
-    int      m_kkt_patience{1}; ///< maximum number of iterations to wait if the maximum KKT deviation doesn't improve
+    logger_t m_logger; ///<
 };
 
 ///
@@ -144,14 +165,4 @@ struct NANO_PUBLIC params_t
 ///
 NANO_PUBLIC std::optional<std::pair<matrix_t, vector_t>> make_independant_equality_constraints(const matrix_t& A,
                                                                                                const vector_t& b);
-
-///
-/// \brief returns the solution of the given linear program using the predictor-corrector algorithm.
-///
-/// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
-/// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-///
-NANO_PUBLIC solution_t solve(const problem_t&, const params_t& params = params_t{});
-NANO_PUBLIC solution_t solve(const general_problem_t&, const params_t& params = params_t{});
-NANO_PUBLIC solution_t solve(const inequality_problem_t&, const params_t& params = params_t{});
 } // namespace nano::linprog

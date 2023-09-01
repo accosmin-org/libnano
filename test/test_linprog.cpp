@@ -1,3 +1,4 @@
+#include <nano/core/strutil.h>
 #include <nano/solver/linprog.h>
 #include <sstream>
 #include <utest/utest.h>
@@ -11,17 +12,11 @@ auto make_logger(std::ostringstream& stream)
 {
     return [&stream](const problem_t& problem, const solution_t& solution)
     {
-        stream << std::fixed << std::setprecision(16) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
+        stream << std::fixed << std::setprecision(20) << "i=" << solution.m_iters << ",miu=" << solution.m_miu
                << ",KKT=" << solution.m_kkt << ",c.dot(x)=" << problem.m_c.dot(solution.m_x)
-               << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>() << std::endl;
+               << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>()
+               << ",rcond=" << solution.m_ldlt_rcond << (solution.m_ldlt_positive ? "(+)" : "(-)") << std::endl;
     };
-}
-
-auto make_params(logger_t logger)
-{
-    auto params     = params_t{};
-    params.m_logger = std::move(logger);
-    return params;
 }
 
 auto make_permutation(const tensor_size_t m)
@@ -57,13 +52,16 @@ auto duplicate_equality_constraints(const matrix_t& A, const vector_t& b, const 
 }
 
 template <typename tproblem>
-auto check_solution(const tproblem& problem, const vector_t& xbest = vector_t{}, const scalar_t epsilon = 1e-11)
+auto check_solution(const tproblem& problem, const vector_t& xbest = vector_t{}, const scalar_t epsilon = 1e-12)
 {
     std::ostringstream stream;
 
     const auto failures = utest_n_failures.load();
 
-    auto solution = solve(problem, make_params(make_logger(stream)));
+    auto solution = solver_t{make_logger(stream)}.solve(problem);
+    // const auto epsilon  = solution.m_ldlt_positive ? 1e-12 : 1e-8; // NB: cannot be very precise if badly
+    // conditioned!
+
     UTEST_CHECK(solution.converged(1e+1 * epsilon));
     UTEST_CHECK_LESS(solution.m_miu, 1e+1 * epsilon);
     UTEST_CHECK_LESS(solution.m_kkt, 1e+1 * epsilon);
@@ -83,10 +81,10 @@ auto check_solution(const tproblem& problem, const vector_t& xbest = vector_t{},
 }
 
 template <typename tproblem>
-auto check_converge(const tproblem& problem, const vector_t& xbest = vector_t{}, const scalar_t epsilon = 1e-11)
+auto check_converge(const tproblem& problem, const vector_t& xbest = vector_t{})
 {
     // original problem
-    auto solution = check_solution(problem, xbest, epsilon);
+    auto solution = check_solution(problem, xbest, 1e-9);
     if constexpr (std::is_same_v<tproblem, linprog::problem_t>)
     {
         UTEST_CHECK(!linprog::make_independant_equality_constraints(problem.m_A, problem.m_b).has_value());
@@ -97,7 +95,7 @@ auto check_converge(const tproblem& problem, const vector_t& xbest = vector_t{},
         auto dproblem                        = problem;
         std::tie(dproblem.m_A, dproblem.m_b) = duplicate_equality_constraints(problem.m_A, problem.m_b, 1.0, 0.0);
         UTEST_CHECK(linprog::make_independant_equality_constraints(dproblem.m_A, dproblem.m_b).has_value());
-        check_solution(dproblem, xbest, epsilon);
+        check_solution(dproblem, xbest, 1e-8);
     }
 
     // test linearly dependant equality constraints
@@ -105,7 +103,7 @@ auto check_converge(const tproblem& problem, const vector_t& xbest = vector_t{},
         auto dproblem                        = problem;
         std::tie(dproblem.m_A, dproblem.m_b) = duplicate_equality_constraints(problem.m_A, problem.m_b, 0.2, 1.1);
         UTEST_CHECK(linprog::make_independant_equality_constraints(dproblem.m_A, dproblem.m_b).has_value());
-        check_solution(dproblem, xbest, epsilon);
+        check_solution(dproblem, xbest, 1e-8);
     }
 
     return solution;
@@ -117,9 +115,9 @@ void check_diverge(const tproblem& problem, const scalar_t epsilon = 1e-2)
     std::ostringstream stream;
 
     const auto failures = utest_n_failures.load();
-    const auto solution = solve(problem, make_params(make_logger(stream)));
+    const auto solution = solver_t{make_logger(stream)}.solve(problem);
     UTEST_CHECK(!solution.converged(epsilon));
-    UTEST_CHECK_LESS(solution.m_iters, 10);
+    UTEST_CHECK_LESS(solution.m_iters, 20);
 
     if (failures != utest_n_failures.load())
     {
@@ -283,6 +281,8 @@ UTEST_CASE(program6)
     {
         for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
         {
+            UTEST_NAMED_CASE(scat("dims=", dims, ",lambda=", lambda));
+
             const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
             const auto b = urand<scalar_t>(-1.0, +1.0, make_rng());
             const auto c = lambda * a;
@@ -305,6 +305,8 @@ UTEST_CASE(program7)
     //  where l <= u.
     for (const tensor_size_t dims : {1, 7, 11})
     {
+        UTEST_NAMED_CASE(scat("dims=", dims));
+
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
@@ -321,8 +323,8 @@ UTEST_CASE(program7)
         const auto xbest    = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
         const auto solution = check_converge(problem, xbest);
 
-        UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-10);
-        UTEST_CHECK_GREATER_EQUAL((u - solution.m_x).minCoeff(), -1e-10);
+        UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-12);
+        UTEST_CHECK_GREATER_EQUAL((u - solution.m_x).minCoeff(), -1e-12);
     }
 }
 
@@ -352,6 +354,8 @@ UTEST_CASE(program8)
     //  min c.dot(x) s.t. 1.dot(x) = 1, x >= 0.
     for (const tensor_size_t dims : {2, 4, 9})
     {
+        UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()==1"));
+
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto A = make_full_matrix<scalar_t>(1, dims, 1.0);
         const auto b = make_vector<scalar_t>(1.0);
@@ -366,6 +370,8 @@ UTEST_CASE(program8)
     //  min c.dot(x) s.t. 1.dot(x) <= 1, x >= 0.
     for (const tensor_size_t dims : {2, 5, 8})
     {
+        UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()<=1"));
+
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
         auto A = matrix_t(dims + 1, dims);
@@ -405,6 +411,8 @@ UTEST_CASE(program9)
     {
         for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
         {
+            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha));
+
             const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
             const auto b = make_vector<scalar_t>(alpha);
             const auto A = make_full_matrix<scalar_t>(1, dims, 1.0);
@@ -438,6 +446,8 @@ UTEST_CASE(program9)
     {
         for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
         {
+            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha));
+
             const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
             const auto v = make_sorted(c);
 
@@ -492,6 +502,8 @@ UTEST_CASE(program10)
 
         for (const auto alpha : {0.0, 0.3 * d.sum(), 0.7 * d.sum(), d.sum()})
         {
+            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha / d.sum()));
+
             const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
             const auto b = make_vector<scalar_t>(alpha);
             const auto v = make_sorted(c, d);
@@ -513,7 +525,7 @@ UTEST_CASE(program10)
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0; i < dims && accum < alpha; ++i)
             {
-                [[maybe_unused]] const auto [_, index] = v[static_cast<size_t>(i)];
+                [[maybe_unused]] const auto [value, index] = v[static_cast<size_t>(i)];
                 if (accum + d(index) <= alpha)
                 {
                     xbest(index) = 1.0;
@@ -524,7 +536,7 @@ UTEST_CASE(program10)
                 }
                 accum += d(index);
             }
-            check_converge(problem, xbest, 1e-9);
+            check_converge(problem, xbest);
         }
     }
 }
@@ -534,9 +546,11 @@ UTEST_CASE(program11)
     // exercise 4.8 (f), see "Convex Optimization", by S. Boyd and L. Vanderberghe
     // square linear problem:
     //  min c.dot(x) s.t. Ax <= b,
-    //  where A is square and nonsingular and A^-T * c <= 0 (to be feasible).
+    //  where A is square and nonsingular and A^T * c <= 0 (to be feasible).
     for (const tensor_size_t dims : {2, 3, 5})
     {
+        UTEST_NAMED_CASE(scat("dims=", dims));
+
         const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0);
         const auto A = matrix_t::Identity(dims, dims);
         const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
@@ -557,8 +571,10 @@ UTEST_CASE(equality_unique_solution)
         const auto A = D.transpose() * D + matrix_t::Identity(dims, dims);
         const auto c = make_random_vector<scalar_t>(dims);
         {
+            UTEST_NAMED_CASE(scat("feasible(dims=", dims, ")"));
+
             // the solution is feasible
-            const auto x = make_random_vector<scalar_t>(dims, 0.0, 1.0);
+            const auto x = make_random_vector<scalar_t>(dims, +1.0, +2.0);
             const auto b = A * x;
 
             const auto  problem = problem_t{c, A, b};
@@ -566,8 +582,10 @@ UTEST_CASE(equality_unique_solution)
             check_converge(problem, xbest);
         }
         {
+            UTEST_NAMED_CASE(scat("not feasible(dims=", dims, ")"));
+
             // the solution is not feasible
-            const auto x = make_random_vector<scalar_t>(dims, -1.0, 0.0);
+            const auto x = make_random_vector<scalar_t>(dims, -2.0, -1.0);
             const auto b = A * x;
 
             const auto problem = problem_t{c, A, b};

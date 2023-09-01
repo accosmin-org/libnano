@@ -29,9 +29,12 @@ int main(const int, char*[])
     };
 
     // solve the linear programming problem
-    const auto params   = linprog::params_t{logger};
+    auto solver                           = linprog::solver_t{logger};
+    solver.parameter("solver::epsilon")   = 1e-15;
+    solver.parameter("solver::max_iters") = 100;
+
     const auto problem  = linprog::problem_t{c, A, b};
-    const auto solution = linprog::solve(problem, params);
+    const auto solution = solver.solve(problem);
 
     std::cout << std::fixed << std::setprecision(12) << "solution: x=" << solution.m_x.transpose() << std::endl;
 

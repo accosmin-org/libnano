@@ -70,9 +70,13 @@ const auto logger = [](const linprog::problem_t& problem, const linprog::solutio
               << ",|Ax-b|=" << (problem.m_A * solution.m_x - problem.m_b).lpNorm<Eigen::Infinity>() << std::endl;
 };
 
+auto solver                           = linprog::solver_t{logger};
+solver.parameter("solver::epsilon")   = 1e-15;
+solver.parameter("solver::max_iters") = 100;
+
 const auto params   = linprog::params_t{logger};
 const auto problem  = linprog::problem_t{c, A, b};
-const auto solution = linprog::solve(problem, params);
+const auto solution = solver.solve(problem);
 
 std::cout << std::fixed << std::setprecision(12) << "solution: x=" << solution.m_x.transpose() << std::endl;
 ```

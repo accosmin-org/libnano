@@ -3,27 +3,29 @@
 #include <nano/solver/linprog.h>
 
 using namespace nano;
+using namespace nano::linprog;
 
 namespace
 {
-///
-/// \brief return a starting point appropriate for primal-dual interior point methods.
-///
-/// see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-///
 auto make_starting_point(const linprog::problem_t& problem)
 {
+    // see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     const auto& c = problem.m_c;
     const auto& A = problem.m_A;
     const auto& b = problem.m_b;
 
-    const matrix_t invA = (A * A.transpose()).inverse();
+    const auto de = (A * A.transpose()).ldlt();
 
-    vector_t       x = A.transpose() * invA * b;
-    const vector_t l = invA * A * c;
+    vector_t       x = A.transpose() * de.solve(b);
+    const vector_t l = de.solve(A * c);
     vector_t       s = c - A.transpose() * l;
 
-    const auto epsilon = std::numeric_limits<scalar_t>::epsilon();
+    if (x.minCoeff() >= 0.0 && s.minCoeff() >= 0.0)
+    {
+        return linprog::solution_t{x, l, s};
+    }
+
+    const auto epsilon = std::numeric_limits<scalar_t>::min();
     const auto delta_x = std::max(epsilon, -1.5 * x.minCoeff());
     const auto delta_s = std::max(epsilon, -1.5 * s.minCoeff());
 
@@ -42,7 +44,7 @@ auto make_alpha(const vector_t& v, const tvector& dv)
     auto min = std::numeric_limits<scalar_t>::max();
     for (tensor_size_t i = 0, size = v.size(); i < size; ++i)
     {
-        if (dv(i) < 0.0)
+        if (dv(i) < std::numeric_limits<scalar_t>::min())
         {
             min = std::min(min, -v(i) / dv(i));
         }
@@ -61,24 +63,18 @@ auto make_miu(const tvector& x, const tvector& s)
 template <typename tvector>
 auto make_kkt(const linprog::problem_t& problem, const tvector& x, const tvector& l, const tvector& s)
 {
+    // see ch.14 (page 394) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     const auto test1 = (problem.m_A.transpose() * l + s - problem.m_c).array().abs().maxCoeff();
     const auto test2 = (problem.m_A * x - problem.m_b).array().abs().maxCoeff();
     const auto test3 = (s.array() * x.array()).abs().maxCoeff();
     const auto test4 = x.array().min(0.0).abs().maxCoeff();
     const auto test5 = s.array().min(0.0).abs().maxCoeff();
-    return std::max({test1, test2, test3, test4, test5});
+    return test1 + test2 + test3 + test4 + test5;
 }
 
 auto make_kkt(const linprog::problem_t& problem, const linprog::solution_t& solution)
 {
     return make_kkt(problem, solution.m_x, solution.m_l, solution.m_s);
-}
-
-auto make_eta(const int iters)
-{
-    return 1.0 - 0.1 / static_cast<scalar_t>(iters + 1);
-    // const auto pow = std::pow(0.1, static_cast<double>(iters));
-    // return std::max(0.9, 1.0 - pow + 0.5 * pow); // NB: 0.9, 0.95, 0.995, 0.9995, ...
 }
 
 struct scratchpad_t
@@ -123,81 +119,6 @@ struct scratchpad_t
     matrix_t m_mat; ///< (m, m) buffer to solve the linear system
     vector_t m_vec; ///< (m) buffer to solve the linear system
 };
-
-auto solve(const linprog::problem_t& problem, const linprog::params_t& params)
-{
-    const auto& A = problem.m_A;
-    const auto& b = problem.m_b;
-    const auto& c = problem.m_c;
-
-    // TODO: buffer to reuse (useful if solving multiple linear problems of the same)
-    auto scratch = scratchpad_t{A};
-
-    auto cstate = make_starting_point(problem); // current state
-    auto bstate = cstate;                       // best state wrt KKT violation
-    for (int eta_iters = 0; cstate.m_iters < params.m_max_iters; ++cstate.m_iters)
-    {
-        auto& x = cstate.m_x;
-        auto& l = cstate.m_l;
-        auto& s = cstate.m_s;
-
-        // compute statistics
-        cstate.m_miu = make_miu(x, s);
-        cstate.m_kkt = make_kkt(problem, cstate);
-
-        const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt) && x.allFinite();
-        if (valid && std::isfinite(cstate.m_kkt) && cstate.m_kkt < bstate.m_kkt)
-        {
-            bstate = cstate;
-        }
-        if (params.m_logger)
-        {
-            params.m_logger(problem, cstate);
-        }
-
-        // check stopping criteria:
-        // - divergence
-        // - convergence
-        // - no improvement in the past iterations
-        if (!valid || bstate.converged(params.m_kkt_epsilon) ||
-            (cstate.m_iters >= params.m_kkt_patience + bstate.m_iters))
-        {
-            break;
-        }
-
-        // matrix decomposition to solve the linear systems (performed once per iteration)
-        // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-        scratch.m_mat            = A * (x.array() / s.array()).matrix().asDiagonal() * A.transpose();
-        const auto decomposition = scratch.m_mat.ldlt();
-
-        // predictor step
-        scratch.m_rb  = A * x - b;
-        scratch.m_rc  = A.transpose() * l + s - c;
-        scratch.m_rxs = x.array() * s.array();
-        scratch.solve(decomposition, A, x, s);
-
-        // centering step
-        const auto alpha_prim_aff = std::min(1.0, make_alpha(x, scratch.m_dx));
-        const auto alpha_dual_aff = std::min(1.0, make_alpha(s, scratch.m_ds));
-
-        const auto miu_aff = make_miu(x + alpha_prim_aff * scratch.m_dx, s + alpha_dual_aff * scratch.m_ds);
-        const auto sigma   = cube(miu_aff / cstate.m_miu);
-
-        scratch.m_rxs.array() += scratch.m_dx.array() * scratch.m_ds.array() - sigma * cstate.m_miu;
-        scratch.solve(decomposition, A, x, s);
-
-        // update state
-        const auto eta        = make_eta(eta_iters++);
-        const auto alpha_prim = std::min(1.0, eta * make_alpha(x, scratch.m_dx));
-        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, scratch.m_ds));
-
-        x += alpha_prim * scratch.m_dx;
-        l += alpha_dual * scratch.m_dl;
-        s += alpha_dual * scratch.m_ds;
-    }
-
-    return bstate;
-}
 } // namespace
 
 linprog::problem_t::problem_t(vector_t c, matrix_t A, vector_t b)
@@ -341,32 +262,6 @@ bool linprog::solution_t::converged(const scalar_t max_kkt_violation) const
     return std::isfinite(m_kkt) && m_kkt < max_kkt_violation;
 }
 
-linprog::solution_t linprog::solve(const problem_t& problem, const params_t& params)
-{
-    auto result = make_independant_equality_constraints(problem.m_A, problem.m_b);
-    if (result)
-    {
-        auto& Ab = result.value();
-        return ::solve(problem_t{problem.m_c, std::move(Ab.first), std::move(Ab.second)}, params);
-    }
-    else
-    {
-        return ::solve(problem, params);
-    }
-}
-
-linprog::solution_t linprog::solve(const general_problem_t& problem, const params_t& params)
-{
-    const auto solution = solve(problem.transform(), params);
-    return problem.transform(solution);
-}
-
-linprog::solution_t linprog::solve(const inequality_problem_t& problem, const params_t& params)
-{
-    const auto solution = solve(problem.transform(), params);
-    return problem.transform(solution);
-}
-
 std::optional<std::pair<matrix_t, vector_t>> linprog::make_independant_equality_constraints(const matrix_t& A,
                                                                                             const vector_t& b)
 {
@@ -390,4 +285,121 @@ std::optional<std::pair<matrix_t, vector_t>> linprog::make_independant_equality_
 
     return std::make_pair(matrix_t{U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P},
                           vector_t{(Q.transpose() * b).segment(0, dd.rank())});
+}
+
+solver_t::solver_t(logger_t logger)
+    : m_logger(std::move(logger))
+{
+    register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-15, LE, 1e-3));
+    register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 100, LE, 1000));
+    register_parameter(parameter_t::make_integer("solver::patience", 1, LE, 1, LE, 10));
+    register_parameter(parameter_t::make_scalar("solver::eta0", 0.0, LT, 0.1, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::etaP", 1.0, LE, 3.0, LE, 9.0));
+}
+
+solution_t solver_t::solve(const problem_t& problem) const
+{
+    // NB: preprocess problem to remove dependant linear equality constraints!
+    auto result = make_independant_equality_constraints(problem.m_A, problem.m_b);
+    if (result)
+    {
+        auto& Ab = result.value();
+        return solve_({problem.m_c, std::move(Ab.first), std::move(Ab.second)});
+    }
+    else
+    {
+        return solve_(problem);
+    }
+}
+
+solution_t solver_t::solve_(const problem_t& problem) const
+{
+    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
+    const auto max_iters = parameter("solver::max_iters").value<tensor_size_t>();
+    const auto patience  = parameter("solver::patience").value<tensor_size_t>();
+    const auto eta0      = parameter("solver::eta0").value<scalar_t>();
+    const auto etaP      = parameter("solver::etaP").value<scalar_t>();
+
+    auto cstate  = make_starting_point(problem); // current state
+    auto bstate  = cstate;                       // best state wrt KKT violation
+    auto scratch = scratchpad_t{problem.m_A};    // TODO: buffer to reuse if solving linear problems of the same size
+
+    for (cstate.m_iters = 0; cstate.m_iters < max_iters; ++cstate.m_iters)
+    {
+        auto& x = cstate.m_x;
+        auto& l = cstate.m_l;
+        auto& s = cstate.m_s;
+
+        // matrix decomposition to solve the linear systems (performed once per iteration)
+        // see eq. 14.44 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+        scratch.m_mat = problem.m_A * (x.array() / s.array()).matrix().asDiagonal() * problem.m_A.transpose();
+
+        // compute statistics
+        const auto decomposition = scratch.m_mat.ldlt();
+        cstate.m_miu             = make_miu(x, s);
+        cstate.m_kkt             = make_kkt(problem, cstate);
+        cstate.m_ldlt_rcond      = decomposition.rcond();
+        cstate.m_ldlt_positive   = decomposition.isPositive();
+
+        const auto valid = std::isfinite(cstate.m_miu) && std::isfinite(cstate.m_kkt) && x.allFinite();
+        if (valid && cstate.m_kkt < bstate.m_kkt)
+        {
+            bstate = cstate;
+        }
+        if (m_logger)
+        {
+            m_logger(problem, cstate);
+        }
+
+        // check stopping criteria:
+        // - divergence
+        // - convergence
+        // - no improvement in the past iterations
+        if (!valid || bstate.converged(epsilon) || (cstate.m_iters >= patience + bstate.m_iters))
+        {
+            break;
+        }
+
+        // predictor step
+        // see eq. 14.7-8 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+        scratch.m_rb  = problem.m_A * x - problem.m_b;
+        scratch.m_rc  = problem.m_A.transpose() * l + s - problem.m_c;
+        scratch.m_rxs = x.array() * s.array();
+        scratch.solve(decomposition, problem.m_A, x, s);
+
+        // centering step
+        // see eq. 14.32-35 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+        const auto alpha_prim_aff = std::min(1.0, make_alpha(x, scratch.m_dx));
+        const auto alpha_dual_aff = std::min(1.0, make_alpha(s, scratch.m_ds));
+
+        const auto miu_aff = make_miu(x + alpha_prim_aff * scratch.m_dx, s + alpha_dual_aff * scratch.m_ds);
+        const auto sigma   = cube(miu_aff / cstate.m_miu);
+
+        scratch.m_rxs.array() += scratch.m_dx.array() * scratch.m_ds.array() - sigma * cstate.m_miu;
+        scratch.solve(decomposition, problem.m_A, x, s);
+
+        // update state
+        const auto eta_base   = static_cast<scalar_t>(cstate.m_iters + 1);
+        const auto eta        = 1.0 - eta0 / std::pow(eta_base, etaP);
+        const auto alpha_prim = std::min(1.0, eta * make_alpha(x, scratch.m_dx));
+        const auto alpha_dual = std::min(1.0, eta * make_alpha(s, scratch.m_ds));
+
+        x += alpha_prim * scratch.m_dx;
+        l += alpha_dual * scratch.m_dl;
+        s += alpha_dual * scratch.m_ds;
+    }
+
+    return bstate;
+}
+
+solution_t solver_t::solve(const general_problem_t& problem) const
+{
+    const auto solution = solve(problem.transform());
+    return problem.transform(solution);
+}
+
+solution_t solver_t::solve(const inequality_problem_t& problem) const
+{
+    const auto solution = solve(problem.transform());
+    return problem.transform(solution);
 }
