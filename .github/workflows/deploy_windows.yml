@@ -18,8 +18,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: setup
-      run: vcpkg install eigen3:x64-windows
     - name: build-test-install-example
       run: |
          scripts\build.bat --build-type ${{matrix.build_type}} \"-DBUILD_SHARED_LIBS=${{matrix.build_shared_libs}}\" --config --build --test --install --build-example
