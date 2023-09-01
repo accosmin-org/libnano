@@ -53,6 +53,7 @@ using namespace nano;
     if (function.name() == "exponential[1D]")
     {
         append(0.817256233948);
+        append(0.9192417159461983012);
     }
 
     // bug: LBFGS fails here (constrained objective1)
