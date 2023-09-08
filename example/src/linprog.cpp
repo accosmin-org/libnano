@@ -1,6 +1,6 @@
 #include <iomanip>
 #include <iostream>
-#include <nano/solver/linprog.h>
+#include <nano/linprog.h>
 
 using namespace nano;
 

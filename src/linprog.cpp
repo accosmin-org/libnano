@@ -1,12 +1,28 @@
 #include <Eigen/Dense>
 #include <nano/core/numeric.h>
-#include <nano/solver/linprog.h>
+#include <nano/linprog.h>
+#include <nano/tensor/stack.h>
 
 using namespace nano;
 using namespace nano::linprog;
 
 namespace
 {
+auto Zero(const tensor_size_t rows)
+{
+    return vector_t::Zero(rows);
+}
+
+auto Zero(const tensor_size_t rows, const tensor_size_t cols)
+{
+    return matrix_t::Zero(rows, cols);
+}
+
+auto Identity(const tensor_size_t rows, const tensor_size_t cols)
+{
+    return matrix_t::Identity(rows, cols);
+}
+
 auto make_starting_point(const linprog::problem_t& problem)
 {
     // see ch.14 (page 410) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
@@ -164,15 +180,8 @@ linprog::problem_t linprog::inequality_problem_t::transform() const
     const auto n = m_c.size();
     const auto m = m_b.size();
 
-    auto c                      = vector_t{2 * n + m};
-    c.segment(0, n)             = m_c;
-    c.segment(n, n)             = -m_c;
-    c.segment(2 * n, m).array() = 0;
-
-    auto A              = matrix_t{m, 2 * n + m};
-    A.block(0, 0, m, n) = m_A;
-    A.block(0, n, m, n) = -m_A;
-    A.block(0, 2 * n, m, m).setIdentity();
+    auto c = stack<scalar_t>(2 * n + m, m_c, -m_c, Zero(m));
+    auto A = stack<scalar_t>(m, 2 * n + m, m_A, -m_A, Identity(m, m));
 
     return {std::move(c), std::move(A), m_b};
 }
@@ -221,22 +230,10 @@ linprog::problem_t linprog::general_problem_t::transform() const
     const auto m1 = m_b.size();
     const auto m2 = m_h.size();
 
-    auto c                       = vector_t{2 * n + m2};
-    c.segment(0, n)              = m_c;
-    c.segment(n, n)              = -m_c;
-    c.segment(2 * n, m2).array() = 0;
+    auto c = stack<scalar_t>(2 * n + m2, m_c, -m_c, Zero(m2));
+    auto A = stack<scalar_t>(m1 + m2, 2 * n + m2, m_A, -m_A, Zero(m1, m2), m_G, -m_G, Identity(m2, m2));
 
-    auto A               = matrix_t{m1 + m2, 2 * n + m2};
-    A.block(0, 0, m1, n) = m_A;
-    A.block(0, n, m1, n) = -m_A;
-    A.block(0, 2 * n, m2, m2).setZero();
-    A.block(m1, 0, m2, n) = m_G;
-    A.block(m1, n, m2, n) = -m_G;
-    A.block(m1, 2 * n, m2, m2).setIdentity();
-
-    auto b            = vector_t{m1 + m2};
-    b.segment(0, m1)  = m_b;
-    b.segment(m1, m2) = m_h;
+    auto b = stack<scalar_t>(m1 + m2, m_b, m_h);
 
     return {std::move(c), std::move(A), std::move(b)};
 }

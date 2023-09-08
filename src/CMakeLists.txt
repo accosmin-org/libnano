@@ -46,6 +46,7 @@ target_sources(nano PRIVATE
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
+    linprog.cpp
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
@@ -58,7 +59,6 @@ target_sources(nano PRIVATE
     solver/pdsgm.cpp
     solver/quasi.cpp
     solver/state.cpp
-    solver/linprog.cpp
     solver/penalty.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp

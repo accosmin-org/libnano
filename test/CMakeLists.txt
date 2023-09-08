@@ -15,6 +15,7 @@ make_test(test_core_tokenizer NANO::nano)
 make_test(test_core_histogram NANO::nano)
 make_test(test_core_combinatorial NANO::nano)
 
+make_test(test_tensor_stack NANO::nano)
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)
 make_test(test_tensor_tensor NANO::nano)

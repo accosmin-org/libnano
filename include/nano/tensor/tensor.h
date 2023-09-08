@@ -763,7 +763,7 @@ auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value mi
 template <template <typename, size_t> class tstorage1, template <typename, size_t> class tstorage2, typename tscalar,
           size_t trank>
 bool close(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstorage2, tscalar, trank>& rhs,
-           double epsilon)
+           const double epsilon)
 {
     if (lhs.dims() != rhs.dims())
     {

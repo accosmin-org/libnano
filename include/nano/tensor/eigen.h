@@ -86,8 +86,8 @@ struct is_eigen<Eigen::Matrix<tscalar, trows, tcols, toptions>> : std::true_type
 {
 };
 
-template <typename BinaryOp, typename LhsType, typename RhsType>
-struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_type
+template <typename UnaryOp, typename XprType>
+struct is_eigen<Eigen::CwiseNullaryOp<UnaryOp, XprType>> : std::true_type
 {
 };
 
@@ -96,8 +96,18 @@ struct is_eigen<Eigen::CwiseUnaryOp<UnaryOp, XprType>> : std::true_type
 {
 };
 
+template <typename BinaryOp, typename LhsType, typename RhsType>
+struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_type
+{
+};
+
 template <class T>
 struct is_eigen<Eigen::ArrayWrapper<T>> : std::true_type
+{
+};
+
+template <class T>
+struct is_eigen<Eigen::Transpose<T>> : std::true_type
 {
 };
 

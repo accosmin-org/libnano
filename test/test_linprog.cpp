@@ -1,5 +1,6 @@
 #include <nano/core/strutil.h>
-#include <nano/solver/linprog.h>
+#include <nano/linprog.h>
+#include <nano/tensor/stack.h>
 #include <sstream>
 #include <utest/utest.h>
 
@@ -8,6 +9,21 @@ using namespace nano::linprog;
 
 namespace
 {
+auto Identity(const tensor_size_t rows, const tensor_size_t cols)
+{
+    return matrix_t::Identity(rows, cols);
+}
+
+auto Constant(const tensor_size_t rows, const tensor_size_t cols, const scalar_t value)
+{
+    return matrix_t::Constant(rows, cols, value);
+}
+
+auto Constant(const tensor_size_t rows, const scalar_t value)
+{
+    return vector_t::Constant(rows, value);
+}
+
 auto make_logger(std::ostringstream& stream)
 {
     return [&stream](const problem_t& problem, const solution_t& solution)
@@ -311,13 +327,8 @@ UTEST_CASE(program7)
         const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
 
-        auto A = matrix_t{2 * dims, dims};
-        A.block(0, 0, dims, dims).setIdentity();
-        A.block(dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
-
-        auto b                = vector_t{2 * dims};
-        b.segment(0, dims)    = u;
-        b.segment(dims, dims) = -l;
+        auto A = stack<scalar_t>(2 * dims, dims, Identity(dims, dims), -Identity(dims, dims));
+        auto b = stack<scalar_t>(2 * dims, u, -l);
 
         const auto problem  = inequality_problem_t{c, std::move(A), std::move(b)};
         const auto xbest    = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
@@ -374,14 +385,8 @@ UTEST_CASE(program8)
 
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
-        auto A = matrix_t(dims + 1, dims);
-        A.row(0).setConstant(1.0);
-        A.block(1, 0, dims, dims).setZero();
-        A.block(1, 0, dims, dims).diagonal().setConstant(-1.0);
-
-        auto b = vector_t(dims + 1);
-        b(0)   = 1.0;
-        b.segment(1, dims).setConstant(0.0);
+        auto A = stack<scalar_t>(dims + 1, dims, Constant(1, dims, 1.0), -Identity(dims, dims));
+        auto b = stack<scalar_t>(dims + 1, Constant(1, 1.0), Constant(dims, 0.0));
 
         const auto problem = inequality_problem_t{c, std::move(A), std::move(b)};
         const auto xbest   = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
@@ -418,13 +423,8 @@ UTEST_CASE(program9)
             const auto A = make_full_matrix<scalar_t>(1, dims, 1.0);
             const auto v = make_sorted(c);
 
-            auto G = matrix_t{2 * dims, dims};
-            G.block(0, 0, dims, dims).setIdentity();
-            G.block(dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
-
-            auto h                        = vector_t{2 * dims};
-            h.segment(0, dims).array()    = 1;
-            h.segment(dims, dims).array() = 0;
+            auto G = stack<scalar_t>(2 * dims, dims, Identity(dims, dims), -Identity(dims, dims));
+            auto h = stack<scalar_t>(2 * dims, Constant(dims, 1.0), Constant(dims, 0.0));
 
             const auto problem = general_problem_t{c, A, b, std::move(G), std::move(h)};
 
@@ -451,15 +451,10 @@ UTEST_CASE(program9)
             const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
             const auto v = make_sorted(c);
 
-            auto A           = matrix_t{1 + 2 * dims, dims};
-            A.row(0).array() = 1.0;
-            A.block(1, 0, dims, dims).setIdentity();
-            A.block(1 + dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
-
-            auto b                            = vector_t{1 + 2 * dims};
-            b(0)                              = static_cast<scalar_t>(alpha);
-            b.segment(1, dims).array()        = 1;
-            b.segment(1 + dims, dims).array() = 0;
+            auto A = stack<scalar_t>(1 + 2 * dims, dims, Constant(1, dims, 1.0), Identity(dims, dims),
+                                     -Identity(dims, dims));
+            auto b = stack<scalar_t>(1 + 2 * dims, Constant(1, static_cast<scalar_t>(alpha)), Constant(dims, 1.0),
+                                     Constant(dims, 0.0));
 
             const auto problem = inequality_problem_t{c, std::move(A), std::move(b)};
 
@@ -508,16 +503,9 @@ UTEST_CASE(program10)
             const auto b = make_vector<scalar_t>(alpha);
             const auto v = make_sorted(c, d);
 
-            auto A   = matrix_t{1, dims};
-            A.row(0) = d;
-
-            auto G = matrix_t{2 * dims, dims};
-            G.block(0, 0, dims, dims).setIdentity();
-            G.block(dims, 0, dims, dims) = -matrix_t::Identity(dims, dims);
-
-            auto h                        = vector_t{2 * dims};
-            h.segment(0, dims).array()    = 1;
-            h.segment(dims, dims).array() = 0;
+            auto A = stack<scalar_t>(1, dims, d.transpose());
+            auto G = stack<scalar_t>(2 * dims, dims, Identity(dims, dims), -Identity(dims, dims));
+            auto h = stack<scalar_t>(2 * dims, Constant(dims, 1.0), Constant(dims, 0.0));
 
             const auto problem = general_problem_t{c, A, b, std::move(G), std::move(h)};
 
