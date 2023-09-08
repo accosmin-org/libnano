@@ -9,6 +9,7 @@
 [![clang-tidy](https://github.com/accosmin-org/libnano/actions/workflows/clang_tidy.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/clang_tidy.yml)
 [![cppcheck](https://github.com/accosmin-org/libnano/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/cppcheck.yml)
 [![memcheck](https://github.com/accosmin-org/libnano/actions/workflows/memcheck.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/memcheck.yml)
+[![docs](https://github.com/accosmin-org/libnano/actions/workflows/docs.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/docs.yml)
 
 [![sanitizers](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml)
 [![sonar](https://github.com/accosmin-org/libnano/actions/workflows/sonar.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/sonar.yml)
