@@ -14,20 +14,20 @@ Libnano provides various methods to solve linear programming problems. The goal 
 
 The linear programming problems can be defined in various equivalent formulations. Libnano supports the following most common formulations:
 
-* the `standard form` implemented by [linprog::problem_t](../include/nano/solver/linprog.h) with equality contraints and positive element-wise solutions:
+* the `standard form` implemented by [linprog::problem_t](../include/nano/linprog.h) with equality contraints and positive element-wise solutions:
 ```
  min  c.dot(x)
  s.t. A * x = b,
       x >= 0.
 ```
 
-* the `inequality form` implemented by [linprog::inequality_problem_t](../include/nano/solver/linprog.h) with only inequality constraints:
+* the `inequality form` implemented by [linprog::inequality_problem_t](../include/nano/linprog.h) with only inequality constraints:
 ```
  min  c.dot(x)
  s.t. A * x <= b.
 ```
 
-* the `general form` implemented by [linprog::inequality_problem_t](../include/nano/solver/linprog.h) with both equality and inequality constraints:
+* the `general form` implemented by [linprog::inequality_problem_t](../include/nano/linprog.h) with both equality and inequality constraints:
 ```
  min  c.dot(x)
  s.t. A * x = b,

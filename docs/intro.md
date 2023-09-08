@@ -39,6 +39,8 @@ usage: scripts/build.sh [OPTIONS]
 options:
     -h,--help
         print usage
+    --lld
+        setup compiler and linker flags to enable the llvm linker
     --lto
         setup compiler and linker flags to enable link-time optimization
     --thinlto
@@ -105,6 +107,8 @@ options:
     --clang-tidy-cppcoreguidelines
     --clang-format
         check formatting with clang-format (the code will be modified in-place)
+    --check-markdown-docs
+        check the markdown documentation (e.g. invalid C++ includes, invalid local links)
     -D[option]
         options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
     -G[option]

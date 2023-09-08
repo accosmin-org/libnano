@@ -1,0 +1,13 @@
+name: docs
+
+on: [push]
+
+jobs:
+  check-markdown-docs:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: check-markdown-docs
+      run: bash scripts/build.sh --check-markdown-docs

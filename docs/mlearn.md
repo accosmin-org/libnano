@@ -12,12 +12,11 @@ The most important concepts related to training and evaluating ML models are map
 * [datasource_t](../include/nano/datasource.h) - in-memory collection of samples consisting of input features and optional targets.
 * [generator_t](../include/nano/generator.h) - generate features on the fly from a given dataset.
 * [dataset_t](../include/nano/dataset.h) - machine learning dataset consisting of samples and feature generators.
-* [model_t](../include/nano/model.h) - machine learning model to map the input features to the associated targets.
 * [loss_t](../include/nano/loss.h) - loss function measuring how well the model's predictions match the target.
 * [tuner_t](../include/nano/tuner.h) - strategy to optimize hyper-parameters of models.
 * [splitter_t](../include/nano/splitter.h) - strategy to split samples into training and validation (testing).
 
-The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [numerical optimization module](solver.md))  to minimize such functions and to yield the optimum parameters of the machine learning model of interest.
+The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [nonlinear numerical optimization module](nonlinear.md))  to minimize such functions and to yield the optimum parameters of the machine learning model of interest.
 
 
 #### Dataset

@@ -427,6 +427,54 @@ function sonar {
         -Dsonar.host.url=https://sonarcloud.io
 }
 
+function check_markdown_docs {
+    cd ${basedir}
+
+    returncode=0
+
+    docfiles=`find ${basedir} -type f -name "*.md"`
+    for docfile in ${docfiles}; do
+        echo "Checking documentation file <${docfile}>..."
+
+        # check local links [linkname](filename) that point to existing files
+        lines=`grep -E "\[.+\]\(.+\)" ${docfile} | grep -v "http"`
+        while read -r line; do
+            for token in ${line}; do
+                filename=`echo ${token} | grep -oP "\]\(.+\)"`
+                if [ -n "${filename}" ]; then
+                    filename=${filename//\]/}
+                    filename=${filename//\(/}
+                    filename=${filename//\)/}
+                    filename=`dirname ${docfile}`/${filename}
+                    if [ ! -d ${filename} ] && [ ! -f ${filename} ]; then
+                        echo "-- Error: invalid reference path ${filename}!"
+                        returncode=1
+                    fi
+                fi
+            done
+        done <<< "${lines}"
+
+        # check example codes with C++ includes that point to existing files
+        lines=`grep -E "#include <.+>" ${docfile}`
+        while read -r line; do
+            for token in ${line}; do
+                filename=`echo ${token} | grep -oP "\<.+\>" | grep -v "<iostream>"`
+                if [ -n "${filename}" ]; then
+                    filename=${filename//\</}
+                    filename=${filename//\>/}
+                    filename=include/${filename}
+                    if [ ! -f ${filename} ]; then
+                        echo "-- Error: invalid C++ include ${filename}!"
+                        returncode=1
+                    fi
+                fi
+            done
+        done <<< "${lines}"
+    done
+
+    return ${returncode}
+}
+
 function usage {
     cat <<EOF
 usage: $0 [OPTIONS]
@@ -502,6 +550,8 @@ options:
     --clang-tidy-cppcoreguidelines
     --clang-format
         check formatting with clang-format (the code will be modified in-place)
+    --check-markdown-docs
+        check the markdown documentation (e.g. invalid C++ includes, invalid local links)
     -D[option]
         options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
     -G[option]
@@ -559,6 +609,7 @@ while [ "$1" != "" ]; do
         --clang-format)                 clang_format || exit 1;;
         --sonar)                        sonar || exit 1;;
         --codecov)                      codecov || exit 1;;
+        --check-markdown-docs)          check_markdown_docs || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
         -G*)                            cmake_options="${cmake_options} $1";;
         *)                              echo "unrecognized option $1"; echo; usage;;
