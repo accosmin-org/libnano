@@ -72,8 +72,8 @@ void stack(tensor_vector_t<tscalar>& vector, const Eigen::Index row, const tbloc
 ///  +------------------------------------+
 ///
 template <typename tscalar, typename... tblocks>
-typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_matrix_t<tscalar>>::type
-stack(const Eigen::Index rows, const Eigen::Index cols, const tblocks&... blocks)
+auto stack(const Eigen::Index rows, const Eigen::Index cols, const tblocks&... blocks) ->
+    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_matrix_t<tscalar>>::type
 {
     auto matrix = tensor_matrix_t<tscalar>(rows, cols);
 
@@ -88,8 +88,8 @@ stack(const Eigen::Index rows, const Eigen::Index cols, const tblocks&... blocks
 /// NB: the segments are given in row-major fashion and are assumed to be compatible in size and without gaps.
 ///
 template <typename tscalar, typename... tblocks>
-typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_vector_t<tscalar>>::type stack(const Eigen::Index rows,
-                                                                                            const tblocks&... blocks)
+auto stack(const Eigen::Index rows, const tblocks&... blocks) ->
+    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_vector_t<tscalar>>::type
 {
     auto vector = tensor_vector_t<tscalar>(rows);
 
