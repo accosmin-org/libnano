@@ -37,6 +37,9 @@ The linear programming problems can be defined in various equivalent formulation
 Note that all inequalities above are specified element-wise. Additionally all non-standard problem formulations can be transformed to the standard form explicitly by calling the appropriate `problem.transform` function. This is typically not necessary as the solver is performing the appropriate transformations if needed.
 
 
+Note that element-wise box constraints `l <= x <= u` are a special case of the inequality form above.
+
+
 The following example code extracted from the [example](../example/src/linprog.cpp):
 ```
 const auto n_equals = 2;
@@ -81,6 +84,6 @@ const auto solution = solver.solve(problem);
 std::cout << std::fixed << std::setprecision(12) << "solution: x=" << solution.m_x.transpose() << std::endl;
 ```
 
-Note that typically the solution is found with 8-10 decimals in less than 10 iterations. Convergence can be checked by calling `solution.converged()` and if this is not the case then the problem is unfeasible.
+The solver has overloads for all supported non-standard formulations described above and it is configurable. In particular the parameters `eta0` and `etaP` control how much to move at each step towards the solution of the KKT linear system of equations. Often taking smaller steps results in more accurate solutions at the cost of more iterations.
 
-Note that the solver has overloads for all supported non-standard formulations.
+Note that typically the solution is found with 8-10 decimals in less than 10 iterations with the default settings. Convergence can be checked by calling `solution.converged()` and if this is not the case then the problem is most likely unfeasible.
