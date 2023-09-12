@@ -129,6 +129,18 @@ struct NANO_PUBLIC general_problem_t
 ///
 /// \brief solver for linear programming problems.
 ///
+/// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
+/// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+/// NB: the parameter `eta` is implemented as:
+///     `eta_k = 1 - eta0 / (1 + k)^etaP`, where k is the current iteration index
+///     to converge to 1 so that the algorithm converges fast.
+///
+/// NB: the faster `eta_k` approaches 1, the faster the convergence.
+/// NB: the solution is found with a 1e-8 accuracy in general in less than 10 iterations with the default settings.
+/// NB: more accurate solutions are obtained by decreasing the convergence speed (to 1) of `eta_k` at a cost of
+///     higher number of iterations. this can be achieved with setting `etaP` to either 1 or 2.
+///
 class NANO_PUBLIC solver_t final : public configurable_t
 {
 public:
@@ -144,9 +156,6 @@ public:
 
     ///
     /// \brief returns the solution of the given linear program using the predictor-corrector algorithm.
-    ///
-    /// see (1) "On the implementation of a primal-dual interior point method", by S. Mehrotra, 1992.
-    /// see (2) ch.14 (page 411) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
     ///
     solution_t solve(const problem_t&) const;
     solution_t solve(const general_problem_t&) const;
