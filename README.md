@@ -48,16 +48,14 @@ More specifically:
 
 2. [Tensor module](docs/tensor.md)
 
-3. [Nonlinear optimization module](docs/nonlinear.md)
+3. [Nonlinear optimization](docs/nonlinear.md)
 
-5. [Linear programming module](docs/linprog.md)
+4. [Linear and quadratic programming](docs/program.md)
 
-6. [Quadratic programming module - TODO](docs/quadprog.md)
+5. [Constrained optimization module - TODO](docs/constrained.md)
 
-7. [Constrained optimization module - TODO](docs/constrained.md)
+6. [Machine learning module - TODO](docs/mlearn.md)
 
-8. [Machine learning module - TODO](docs/mlearn.md)
+7. [Linear models - TODO](docs/linear.md)
 
-9. [Linear models - TODO](docs/linear.md)
-
-10. [Gradient boosting models - TODO](docs/gboost.md)
+8. [Gradient boosting models - TODO](docs/gboost.md)

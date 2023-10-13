@@ -7,26 +7,32 @@ using namespace nano::program;
 
 int main(const int, char*[])
 {
-    // construct a linear program in standard form:
-    //  min c.dot(x)
-    //  s.t Ax = b
-    //  and x >= 0.
+    // construct a quadratic program in general form:
+    //  min f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
+    //  s.t A * x = b
+    //  and G * x <= h.
     //
     // in particular:
-    //  min x1 + x2 + x3
-    //  s.t 2 * x1 + x2 = 4, x1 + x3 = 1, x1 >= 0, x2 >= 0, x3 >= 0.
+    //  min x1^2 + 4 * x2^2 - 8 * x1 - 16 * x2
+    //  s.t x1 + 2 * x2 = 12, x1 + x2 <= 10, 1 <= x1 <= 3, 1 <= x2 <= 6.
     //
-    // with solution: (1, 2, 0, 0)
-    const auto n_equals = 2;
-    const auto c        = make_vector<scalar_t>(1, 1, 1);
-    const auto A        = make_matrix<scalar_t>(n_equals, 2, 1, 0, 1, 0, 1);
-    const auto b        = make_vector<scalar_t>(4, 1);
-    const auto xbest    = make_vector<scalar_t>(1, 2, 0);
+    // with solution: (3, 4.5)
+    const auto n_equals   = 1;
+    const auto n_inequals = 1;
+    const auto Q          = make_matrix<scalar_t>(2, 2, 0, 0, 8);
+    const auto c          = make_vector<scalar_t>(-8, -16);
+    const auto A          = make_matrix<scalar_t>(n_equals, 1, 2);
+    const auto b          = make_vector<scalar_t>(12);
+    const auto G          = make_matrix<scalar_t>(n_inequals, 1, 1);
+    const auto h          = make_vector<scalar_t>(10);
+    const auto l          = make_vector<scalar_t>(1, 1);
+    const auto u          = make_vector<scalar_t>(3, 6);
+    const auto xbest      = make_vector<scalar_t>(3, 4.5);
 
     // log the optimization steps
     const auto logger = [](const solver_state_t& state)
     {
-        std::cout << std::fixed << std::setprecision(12) << "i=" << state.m_iters << ",fx=" << state.m_fx
+        std::cout << std::fixed << std::setprecision(10) << "i=" << state.m_iters << ",fx=" << state.m_fx
                   << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
                   << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
                   << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
@@ -34,12 +40,13 @@ int main(const int, char*[])
         return true;
     };
 
-    // solve the linear program
+    // solve the quadratic program
     auto solver                           = solver_t{logger};
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0.0);
+    const auto rbounds = inequality_t::from_rectangle(l, u);
+    const auto program = quadratic_program_t{Q, c} & equality_t{A, b} & inequality_t{G, h} & rbounds;
     const auto state   = solver.solve(program);
 
     std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;

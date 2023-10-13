@@ -28,9 +28,12 @@ make_test(test_feature NANO::nano)
 make_test(test_lsearch NANO::nano)
 make_test(test_splitter NANO::nano)
 
-make_test(test_linprog NANO::nano)
 make_test(test_function NANO::nano)
 make_test(test_constrained NANO::nano)
+
+make_test(test_program_linear NANO::nano)
+make_test(test_program_quadratic NANO::nano)
+make_test(test_program_constraint NANO::nano)
 
 make_test(test_solver NANO::nano)
 make_test(test_solver_smooth NANO::nano)

@@ -100,6 +100,12 @@ inline std::ostream& operator<<(std::ostream& stream, const utest_location_t&)
 
 struct utest_test_name_t
 {
+    utest_test_name_t(utest_test_name_t&&)      = default;
+    utest_test_name_t(const utest_test_name_t&) = default;
+
+    utest_test_name_t& operator=(utest_test_name_t&&)      = default;
+    utest_test_name_t& operator=(const utest_test_name_t&) = default;
+
     explicit utest_test_name_t(std::string test_name) { utest_test_name = std::move(test_name); }
 
     ~utest_test_name_t() { utest_test_name.clear(); }

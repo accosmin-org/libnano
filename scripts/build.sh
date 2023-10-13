@@ -434,7 +434,7 @@ function check_markdown_docs {
 
     docfiles=`find ${basedir} -type f -name "*.md"`
     for docfile in ${docfiles}; do
-        echo "Checking documentation file <${docfile}>..."
+        echo "-- Checking documentation file: ${docfile}"
 
         # check local links [linkname](filename) that point to existing files
         lines=`grep -E "\[.+\]\(.+\)" ${docfile} | grep -v "http"`

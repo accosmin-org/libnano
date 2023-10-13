@@ -46,7 +46,10 @@ target_sources(nano PRIVATE
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    linprog.cpp
+    program/solver.cpp
+    program/linear.cpp
+    program/quadratic.cpp
+    program/constraint.cpp
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp

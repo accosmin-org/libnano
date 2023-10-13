@@ -21,4 +21,5 @@ endfunction()
 
 make_example(tensor)
 make_example(linprog)
+make_example(quadprog)
 make_example(nonlinear)

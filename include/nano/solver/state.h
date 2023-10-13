@@ -1,20 +1,10 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
-#include <nano/core/strutil.h>
 #include <nano/function.h>
+#include <nano/solver/status.h>
 
 namespace nano
 {
-enum class solver_status : int32_t
-{
-    max_iters, ///< maximum number of iterations reached without convergence (default)
-    converged, ///< convergence criterion reached
-    failed,    ///< optimization failed (e.g. line-search failed)
-    stopped    ///< user requested stop
-};
-NANO_MAKE_ENUM4(solver_status, max_iters, converged, failed, stopped)
-
 ///
 /// \brief models a state (step) in a numerical optimization method.
 ///
