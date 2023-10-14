@@ -11,74 +11,47 @@ Libnano provides various methods to solve linear and quadratic programs. The goa
 * "Numerical Optimization", J. Nocedal, S. Wright, 2006
 
 
-#### Definition
+#### Program definition
 
-Linear and quadratic programs can be defined using the associated classes [linear_program_t](../include/nano/program/linear.h) and [quadratic_program_t](../include/nano/program/quadratic.h). Optionally arbitrarily many linear equality and inequality constraints can be chained using the `&` operator. See below for some examples:
-
+Linear and quadratic programs can be defined using the associated classes [linear_program_t](../include/nano/program/linear.h) and [quadratic_program_t](../include/nano/program/quadratic.h). Optionally arbitrarily many linear equality and inequality constraints can be chained using the `&` operator. Following we show how to define various programs using the C++ interface:
 
 * the `standard linear program` consists of equality contraints and positive element-wise solutions:
 ```
- min  c.dot(x)
- s.t. A * x = b,
-      x >= 0.
+ min  c.dot(x)                          const auto program = linear_program_t{c} & 
+ s.t. A * x = b,                              equality_t{A, b} & 
+      x >= 0.                                 inequality_t::greater(c.size(), 0.0);  
 ```
-and it can be defined in C++ as:
-```
-const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0.0);
-```
-
 
 * the `inequality linear program` consists of only inequality constraints:
 ```
- min  c.dot(x)
- s.t. A * x <= b.
+ min  c.dot(x)                          const auto program = linear_program_t{c} & 
+ s.t. A * x <= b.                             inequality_t{A, b};
 ```
-and it can be defined in C++ as:
-```
-const auto program = linear_program_t{c} & inequality_t{A, b};
-```
-
 
 * the `general linear program` consists of both equality and inequality constraints:
 ```
- min  c.dot(x)
- s.t. A * x = b,
-      G * x <= h.
+ min  c.dot(x)                          const auto program = linear_program_t{c} & 
+ s.t. A * x = b,                              equality_t{A, b} &
+      G * x <= h.                             inequality_t{G, h};
 ```
-and it can be defined in C++ as:
-```
-const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t{G, h};
-```
-
 
 * the `rectangle linear program` consists of element-wise inequality constraints:
 ```
- min  c.dot(x)
- s.t. A * x = b,
-      l <= x <= u.
+ min  c.dot(x)                          const auto program = linear_program_t{c} & 
+ s.t. A * x = b,                              equality_t{A, b} & 
+      l <= x <= u.                            inequality_t::from_rectangle(l, u);
 ```
-and it can be defined in C++ as:
-```
-const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::from_rectangle(l, u);
-```
-
 
 * the `general quadratic program` consists of both equality and inequality constraints:
 ```
- min  1/2 x.dot(Q * x) + c.dot(x)
- s.t. A * x = b,
-      G * x <= h.
+ min  1/2 x.dot(Q * x) + c.dot(x)       const auto program = quadratic_program_t{Q, c} & 
+ s.t. A * x = b,                              equality_t{A, b} & 
+      G * x <= h.                             inequality_t{G, h};
 ```
-and it can be defined in C++ as:
-```
-const auto program = quadratic_program_t{Q, c} & equality_t{A, b} & inequality_t{G, h};
-```
-
-
 Note that all equalities and inequalities above are specified element-wise.
 
 
-The following example code extracted from the [example](../example/src/linprog.cpp):
+More specifically the following example code extracted from the [linear programming example](../example/src/linprog.cpp):
 ```
 const auto n_equals = 2;
 const auto c        = make_vector<scalar_t>(1, 1, 1);
@@ -87,7 +60,6 @@ const auto b        = make_vector<scalar_t>(4, 1);
 
 const auto program  = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0.0);
 ```
-
 illustrates how to define the following standard-form linear program:
 ```
  min  x1 + x2 + x3
