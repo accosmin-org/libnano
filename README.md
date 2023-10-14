@@ -27,13 +27,13 @@ More specifically:
 
 * `constrained optimization algorithms` for linear and quadratic programming (e.g. primal-dual interior point methods) and general nonlinear problems (e.g. penalty methods, augmented lagrangian method).
 
-* `tensors of arbitrary rank and scalar type` designed for machine learning applications. The implementation is using [Eigen3](https://eigen.tuxfamily.org) and as such fast and easy-to-use linear algebra operations are readily available.
+* `tensors of arbitrary rank and scalar type` designed for machine learning applications. The implementation is using Eigen3 and as such fast and easy-to-use linear algebra operations are readily available.
 
 * `efficient in-memory storage of machine learning datasets of mixed features` (e.g. categorical. continuous, structured like images or time series). The feature values can be optional (missing) and of different storage (e.g. signed or unsigned integers of various byte sizes, single or double precision floating point numbers). Additional features can be constructed on the fly to be used for training and evaluating machine learning models.
 
 * `linear models with arbitrary loss functions`. Standard regularization methods (e.g. like in lasso, ridge, elastic net) are builtin.
 
-* `gradient boosting models with arbitray loss functions and arbitrary weak learners`. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin.
+* `gradient boosting models with arbitrary loss functions and weak learners`. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin.
 
 * all machine learning models work with `any feature type` (e.g. categorical, continuous or structures) and potentially `missing feature values`.
 
@@ -48,7 +48,7 @@ More specifically:
 
 2. [Tensor module](docs/tensor.md)
 
-3. [Nonlinear optimization](docs/nonlinear.md)
+3. [Nonlinear unconstrained optimization](docs/nonlinear.md)
 
 4. [Linear and quadratic programming](docs/program.md)
 
