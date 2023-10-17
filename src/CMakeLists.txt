@@ -2,9 +2,9 @@ if(NOT APPLE)
     set(CMAKE_INSTALL_RPATH $ORIGIN)
 endif()
 
-add_library(nano)
-
-target_sources(nano PRIVATE
+make_lib(core
+    parameter.cpp
+    configurable.cpp
     core/table.cpp
     core/chrono.cpp
     core/logger.cpp
@@ -13,43 +13,24 @@ target_sources(nano PRIVATE
     core/parallel.cpp
     core/sampling.cpp
     core/histogram.cpp
-    core/parameter_tracker.cpp
-    feature.cpp
-    parameter.cpp
-    configurable.cpp
-    generator.cpp
-    generator/pairwise_base.cpp
-    generator/pairwise_input.cpp
-    generator/pairwise_product.cpp
-    generator/elemwise_base.cpp
-    generator/elemwise_input.cpp
-    generator/elemwise_gradient.cpp
-    generator/elemwise_identity.cpp
-    dataset.cpp
-    dataset/hash.cpp
-    dataset/stats.cpp
-    dataset/iterator.cpp
-    datasource.cpp
-    datasource/mask.cpp
-    datasource/linear.cpp
-    datasource/tabular.cpp
-    datasource/imclass_cifar.cpp
-    datasource/imclass_mnist.cpp
+    core/parameter_tracker.cpp)
+
+make_lib(lsearch0
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp
     lsearch0/cgdescent.cpp
-    lsearch0/quadratic.cpp
+    lsearch0/quadratic.cpp)
+
+make_lib(lsearchk
     lsearchk.cpp
     lsearchk/fletcher.cpp
     lsearchk/backtrack.cpp
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
-    lsearchk/morethuente.cpp
-    program/solver.cpp
-    program/linear.cpp
-    program/quadratic.cpp
-    program/constraint.cpp
+    lsearchk/morethuente.cpp)
+
+make_lib(solver
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
@@ -65,7 +46,15 @@ target_sources(nano PRIVATE
     solver/penalty.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp
-    solver/universal.cpp
+    solver/universal.cpp)
+
+make_lib(program
+    program/solver.cpp
+    program/linear.cpp
+    program/quadratic.cpp
+    program/constraint.cpp)
+
+make_lib(function
     function.cpp
     function/constraint.cpp
     function/penalty.cpp
@@ -89,30 +78,67 @@ target_sources(nano PRIVATE
     function/benchmark/sphere.cpp
     function/benchmark/styblinski_tang.cpp
     function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp
+    function/benchmark/zakharov.cpp)
+
+make_lib(loss
     loss.cpp
-    loss/pinball.cpp
+    loss/pinball.cpp)
+
+make_lib(mlearn
     learner.cpp
     mlearn/tune.cpp
     mlearn/stats.cpp
     mlearn/params.cpp
     mlearn/result.cpp
-    mlearn/cluster.cpp
+    mlearn/cluster.cpp)
+
+make_lib(dataset
+    feature.cpp
+    dataset.cpp
+    dataset/hash.cpp
+    dataset/stats.cpp
+    dataset/iterator.cpp)
+
+make_lib(datasource
+    datasource.cpp
+    datasource/mask.cpp
+    datasource/linear.cpp
+    datasource/tabular.cpp
+    datasource/imclass_cifar.cpp
+    datasource/imclass_mnist.cpp)
+
+make_lib(generator
+    generator.cpp
+    generator/pairwise_base.cpp
+    generator/pairwise_input.cpp
+    generator/pairwise_product.cpp
+    generator/elemwise_base.cpp
+    generator/elemwise_input.cpp
+    generator/elemwise_gradient.cpp
+    generator/elemwise_identity.cpp)
+
+make_lib(tuner
     tuner.cpp
     tuner/util.cpp
     tuner/local.cpp
     tuner/space.cpp
-    tuner/surrogate.cpp
+    tuner/surrogate.cpp)
+
+make_lib(splitter
     splitter.cpp
     splitter/kfold.cpp
-    splitter/random.cpp
+    splitter/random.cpp)
+
+make_lib(gboost
     gboost/util.cpp
     gboost/model.cpp
     gboost/result.cpp
     gboost/sampler.cpp
     gboost/function.cpp
     gboost/accumulator.cpp
-    gboost/early_stopping.cpp
+    gboost/early_stopping.cpp)
+
+make_lib(wlearner
     wlearner.cpp
     wlearner/util.cpp
     wlearner/single.cpp
@@ -122,33 +148,19 @@ target_sources(nano PRIVATE
     wlearner/stump.cpp
     wlearner/table.cpp
     wlearner/criterion.cpp
-    wlearner/accumulator.cpp
+    wlearner/accumulator.cpp)
+
+make_lib(linear
     linear/util.cpp
     linear/model.cpp
     linear/result.cpp
     linear/function.cpp
-    linear/accumulator.cpp
-)
+    linear/accumulator.cpp)
 
-add_library(NANO::nano ALIAS nano)
+# add_library(nano)
+# target_sources(nano PRIVATE
+# add_library(NANO::nano ALIAS nano)
 
-target_include_directories(nano
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
+#install(TARGETS nano EXPORT nano-targets)
 
-target_link_libraries(nano
-    PUBLIC Eigen3::Eigen)
-
-if(NOT WIN32)
-    target_link_libraries(nano
-        PUBLIC Threads::Threads
-        PRIVATE Threads::Threads)
-endif()
-
-install(TARGETS nano EXPORT nano-targets)
-
-set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
+#set_targ(nano PROPERTIES EXPORT_NAME NANO)

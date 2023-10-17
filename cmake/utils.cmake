@@ -15,6 +15,25 @@ function(copy_runtime_dlls TARGET)
     endif ()
 endfunction()
 
+# function to create a library
+function(make_lib name sources)
+    add_library(${lib} PRIVATE ${sources})
+    target_include_directories(${lib}
+        PUBLIC
+            $<INSTALL_INTERFACE:include>
+            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(${lib}
+        PUBLIC Eigen3::Eigen)
+    if(NOT WIN32)
+        target_link_libraries(${lib}
+            PUBLIC Threads::Threads
+            PRIVATE Threads::Threads)
+    endif()
+endfunction()
+
 # function to create a unit test application
 function(make_test test libs)
     add_executable(${test} ${test}.cpp)
