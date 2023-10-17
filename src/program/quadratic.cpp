@@ -49,19 +49,3 @@ bool quadratic_program_t::convex() const
     const auto ldlt = m_Q.selfadjointView<Eigen::Upper>().ldlt();
     return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
 }
-
-quadratic_program_t nano::program::operator&(const quadratic_program_t& program, const equality_t& eq)
-{
-    auto result = program;
-    result.m_eq = result.m_eq & eq;
-    assert(!result.m_eq || result.m_eq.m_A.cols() == result.m_c.size());
-    return result;
-}
-
-quadratic_program_t nano::program::operator&(const quadratic_program_t& program, const inequality_t& ineq)
-{
-    auto result   = program;
-    result.m_ineq = result.m_ineq & ineq;
-    assert(!result.m_ineq || result.m_ineq.m_A.cols() == result.m_c.size());
-    return result;
-}

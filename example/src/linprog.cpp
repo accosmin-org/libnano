@@ -39,7 +39,7 @@ int main(const int, char*[])
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(c.size(), 0.0));
     const auto state   = solver.solve(program);
 
     std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;

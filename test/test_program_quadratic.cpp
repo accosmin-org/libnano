@@ -66,7 +66,7 @@ UTEST_CASE(program1)
     const auto b = make_vector<scalar_t>(3, 0);
     const auto Q = make_matrix<scalar_t>(3, 6, 2, 1, 2, 5, 2, 1, 2, 4);
 
-    const auto program = quadratic_program_t{q, c} & equality_t{A, b};
+    const auto program = make_quadratic(q, c, make_equality(A, b));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, -2, 2), 1e-12));
@@ -87,7 +87,7 @@ UTEST_CASE(program2)
     const auto h = vector_t::Zero(2);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = quadratic_program_t{q, c} & inequality_t{G, h};
+    const auto program = make_quadratic(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -109,7 +109,7 @@ UTEST_CASE(program3)
     const auto h = make_vector<scalar_t>(2, 6, 2, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = quadratic_program_t{q, c} & inequality_t{G, h};
+    const auto program = make_quadratic(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -129,7 +129,7 @@ UTEST_CASE(program4)
     const auto h = make_vector<scalar_t>(0, 4, 3);
     const auto Q = make_matrix<scalar_t>(2, 8, 2, 2, 2);
 
-    const auto program = quadratic_program_t{q, c} & inequality_t{G, h};
+    const auto program = make_quadratic(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -164,7 +164,7 @@ UTEST_CASE(program5)
             const auto A = L * U;
             const auto b = make_random_vector<scalar_t>(neqs);
 
-            const auto program = quadratic_program_t{Q, c} & equality_t{A, b};
+            const auto program = make_quadratic(Q, c, make_equality(A, b));
             UTEST_CHECK(program.convex());
 
             const auto invAA = (A * A.transpose()).inverse();
@@ -186,7 +186,7 @@ UTEST_CASE(program6)
     const auto h = make_vector<scalar_t>(1, 2, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, -2, -2, 4);
 
-    const auto program = quadratic_program_t{q, c} & inequality_t{G, h};
+    const auto program = make_quadratic(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
 
@@ -207,7 +207,7 @@ UTEST_CASE(program7)
     const auto h = make_vector<scalar_t>(3, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = quadratic_program_t{q, c} & inequality_t{G, h};
+    const auto program = make_quadratic(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
 
@@ -228,7 +228,7 @@ UTEST_CASE(program8)
         const auto l  = make_random_vector<scalar_t>(dims);
         const auto u  = vector_t{l.array() + 0.1};
 
-        const auto program = quadratic_program_t{Q, c} & inequality_t::from_rectangle(l, u);
+        const auto program = make_quadratic(Q, c, make_greater(l), make_less(u));
         UTEST_CHECK(program.convex());
 
         const auto xbest = vector_t{x0.array().max(l.array()).min(u.array())};

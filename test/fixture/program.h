@@ -25,7 +25,7 @@ static auto make_permutation(const tensor_size_t m)
     return permutation;
 }
 
-static auto duplicate(const equality_t& equality, const scalar_t dep_w1, const scalar_t dep_w2)
+static auto duplicate(const equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1, const scalar_t dep_w2)
 {
     const auto& A = equality.m_A;
     const auto& b = equality.m_b;
@@ -50,7 +50,7 @@ static auto duplicate(const equality_t& equality, const scalar_t dep_w1, const s
         A2.row(duplicat_row) = A.row(permuted_row).array() * dep_w1 + A.row(permuted_mix).array() * dep_w2;
     }
 
-    return equality_t{A2, b2};
+    return make_equality(A2, b2);
 }
 
 struct expected_t
@@ -151,7 +151,7 @@ template <typename tprogram>
 auto check_solution(const tprogram& program, const expected_t& expected)
 {
     // test duplicated equality constraints
-    if (program.m_eq)
+    if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
@@ -159,7 +159,7 @@ auto check_solution(const tprogram& program, const expected_t& expected)
     }
 
     // test linearly dependant equality constraints
-    if (program.m_eq)
+    if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);

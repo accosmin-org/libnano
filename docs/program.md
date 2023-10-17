@@ -13,40 +13,40 @@ Libnano provides various methods to solve linear and quadratic programs. The goa
 
 #### Program definition
 
-Linear and quadratic programs can be defined using the associated classes [linear_program_t](../include/nano/program/linear.h) and [quadratic_program_t](../include/nano/program/quadratic.h). Optionally arbitrarily many linear equality and inequality constraints can be chained using the `&` operator. Following we show how to define various programs using the C++ interface:
+Linear and quadratic programs can be defined using the associated classes [linear_program_t](../include/nano/program/linear.h) and [quadratic_program_t](../include/nano/program/quadratic.h). Optionally arbitrarily many linear equality and inequality constraints can be chained by calling either the `make_linear` or the `make_quadratic` utilities. Following we show how to define various programs using the C++ interface:
 
 * the `standard linear program` consists of equality contraints and positive element-wise solutions:
 ```
- min  c.dot(x)                          const auto program = linear_program_t{c} & 
- s.t. A * x = b,                              equality_t{A, b} & 
-      x >= 0.                                 inequality_t::greater(c.size(), 0.0);  
+ min  c.dot(x)                          const auto program = make_linear(c,
+ s.t. A * x = b,                              make_equality(A, b),
+      x >= 0.                                 make_greater(c.size(), 0.0));
 ```
 
 * the `inequality linear program` consists of only inequality constraints:
 ```
- min  c.dot(x)                          const auto program = linear_program_t{c} & 
- s.t. A * x <= b.                             inequality_t{A, b};
+ min  c.dot(x)                          const auto program = make_linear(c,
+ s.t. A * x <= b.                             make_inequality(A, b));
 ```
 
 * the `general linear program` consists of both equality and inequality constraints:
 ```
- min  c.dot(x)                          const auto program = linear_program_t{c} & 
- s.t. A * x = b,                              equality_t{A, b} &
-      G * x <= h.                             inequality_t{G, h};
+ min  c.dot(x)                          const auto program = make_linear(c,
+ s.t. A * x = b,                              make_equality(A, b),
+      G * x <= h.                             make_inequality(G, h));
 ```
 
 * the `rectangle linear program` consists of element-wise inequality constraints:
 ```
- min  c.dot(x)                          const auto program = linear_program_t{c} & 
- s.t. A * x = b,                              equality_t{A, b} & 
-      l <= x <= u.                            inequality_t::from_rectangle(l, u);
+ min  c.dot(x)                          const auto program = make_linear(c,
+ s.t. A * x = b,                              make_equality(A, b),
+      l <= x <= u.                            make_greater(l), make_less(u));
 ```
 
 * the `general quadratic program` consists of both equality and inequality constraints:
 ```
- min  1/2 x.dot(Q * x) + c.dot(x)       const auto program = quadratic_program_t{Q, c} & 
- s.t. A * x = b,                              equality_t{A, b} & 
-      G * x <= h.                             inequality_t{G, h};
+ min  1/2 x.dot(Q * x) + c.dot(x)       const auto program = make_quadratic(Q, c,
+ s.t. A * x = b,                              make_equality(A, b),
+      G * x <= h.                             make_inequality(G, h));
 ```
 Note that all equalities and inequalities above are specified element-wise.
 
@@ -58,7 +58,7 @@ const auto c        = make_vector<scalar_t>(1, 1, 1);
 const auto A        = make_matrix<scalar_t>(n_equals, 2, 1, 0, 1, 0, 1);
 const auto b        = make_vector<scalar_t>(4, 1);
 
-const auto program  = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0.0);
+const auto program  = make_linear(c, make_equality(A, b), make_greater(c.size(), 0.0));
 ```
 illustrates how to define the following standard-form linear program:
 ```
@@ -92,7 +92,7 @@ auto solver                           = solver_t{logger};
 solver.parameter("solver::epsilon")   = 1e-12;
 solver.parameter("solver::max_iters") = 100;
 
-const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(c.size(), 0);
+const auto program = make_linear(c, make_equality(A, b), make_greater(c.size(), 0));
 const auto state   = solver.solve(program);
 
 std::cout << std::fixed << std::setprecision(12)

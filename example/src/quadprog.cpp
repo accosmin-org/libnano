@@ -45,9 +45,9 @@ int main(const int, char*[])
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
 
-    const auto rbounds = inequality_t::from_rectangle(l, u);
-    const auto program = quadratic_program_t{Q, c} & equality_t{A, b} & inequality_t{G, h} & rbounds;
-    const auto state   = solver.solve(program);
+    const auto program =
+        make_quadratic(Q, c, make_equality(A, b), make_inequality(G, h), make_greater(l), make_less(u));
+    const auto state = solver.solve(program);
 
     std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;
 

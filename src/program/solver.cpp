@@ -9,7 +9,7 @@ namespace
 template <typename tprogram>
 vector_t make_x0(const tprogram& program)
 {
-    const auto x0 = program.m_ineq.make_strictly_feasible();
+    const auto x0 = program.make_strictly_feasible();
     if (!x0)
     {
         return vector_t::Zero(program.m_c.size());
@@ -177,26 +177,26 @@ solver_t::solver_t(logger_t logger)
 
 solver_state_t solver_t::solve(const linear_program_t& program) const
 {
-    return !program.m_ineq ? solve_without_inequality(program_t{program})
-                           : solve_with_inequality(program_t{program}, make_x0(program));
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
+                                   : solve_with_inequality(program_t{program}, make_x0(program));
 }
 
 solver_state_t solver_t::solve(const quadratic_program_t& program) const
 {
-    return !program.m_ineq ? solve_without_inequality(program_t{program})
-                           : solve_with_inequality(program_t{program}, make_x0(program));
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
+                                   : solve_with_inequality(program_t{program}, make_x0(program));
 }
 
 solver_state_t solver_t::solve(const linear_program_t& program, const vector_t& x0) const
 {
-    return !program.m_ineq ? solve_without_inequality(program_t{program})
-                           : solve_with_inequality(program_t{program}, x0);
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
+                                   : solve_with_inequality(program_t{program}, x0);
 }
 
 solver_state_t solver_t::solve(const quadratic_program_t& program, const vector_t& x0) const
 {
-    return !program.m_ineq ? solve_without_inequality(program_t{program})
-                           : solve_with_inequality(program_t{program}, x0);
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
+                                   : solve_with_inequality(program_t{program}, x0);
 }
 
 solver_state_t solver_t::solve_with_inequality(const program_t& program, const vector_t& x0) const

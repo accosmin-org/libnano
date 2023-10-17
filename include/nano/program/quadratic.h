@@ -37,6 +37,25 @@ struct NANO_PUBLIC quadratic_program_t : public linear_constrained_t
     vector_t m_c; ///<
 };
 
-NANO_PUBLIC quadratic_program_t operator&(const quadratic_program_t&, const equality_t&);
-NANO_PUBLIC quadratic_program_t operator&(const quadratic_program_t&, const inequality_t&);
+///
+/// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
+///
+template <typename... tconstraints>
+auto make_quadratic(matrix_t Q, vector_t c, const tconstraints&... constraints)
+{
+    auto program = quadratic_program_t{std::move(Q), std::move(c)};
+    program.constrain(constraints...);
+    return program;
+}
+
+///
+/// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
+///
+template <typename... tconstraints>
+auto make_quadratic(const vector_t& Q_upper_triangular, vector_t c, const tconstraints&... constraints)
+{
+    auto program = quadratic_program_t{Q_upper_triangular, std::move(c)};
+    program.constrain(constraints...);
+    return program;
+}
 } // namespace nano::program

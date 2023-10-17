@@ -101,6 +101,11 @@ struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_ty
 {
 };
 
+template <typename LhsType, typename RhsType, int toptions>
+struct is_eigen<Eigen::Product<LhsType, RhsType, toptions>> : std::true_type
+{
+};
+
 template <class T>
 struct is_eigen<Eigen::ArrayWrapper<T>> : std::true_type
 {

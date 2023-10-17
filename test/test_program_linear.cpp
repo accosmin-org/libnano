@@ -13,7 +13,7 @@ UTEST_CASE(program1)
     const auto A = make_matrix<scalar_t>(2, 1, 1, 1, 0, 2, 0.5, 0, 1);
     const auto b = make_vector<scalar_t>(5, 8);
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(4, 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(4, 0));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0), 1e-12));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(0.0, 4.0, 1.0, 6.0), 1e-12));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(2.0, 2.0, 1.0, 3.0), 1e-12));
@@ -30,7 +30,7 @@ UTEST_CASE(program2)
     const auto A = make_matrix<scalar_t>(1, 1, 1);
     const auto b = make_vector<scalar_t>(1);
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(2, 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(2, 0.0));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(0.0, 1.0), 1e-12));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1.0, 0.0), 1e-12));
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(0.1, 0.9), 1e-12));
@@ -46,7 +46,7 @@ UTEST_CASE(program3)
     const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
     const auto b = make_vector<scalar_t>(2);
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(3, 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
     check_solution(program, expected_t{}.status(solver_status::stopped));
     // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
 }
@@ -58,7 +58,7 @@ UTEST_CASE(program4)
     const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
     const auto b = make_vector<scalar_t>(-1, -1);
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(2, 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(2, 0.0));
     check_solution(program, expected_t{}.status(solver_status::stopped));
     // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
 }
@@ -70,7 +70,7 @@ UTEST_CASE(program5)
     const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
-    const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(3, 0.0);
+    const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
     check_solution(program, expected_t{}.status(solver_status::stopped));
     // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
 }
@@ -91,7 +91,7 @@ UTEST_CASE(program6)
             const auto b = urand<scalar_t>(-1.0, +1.0, make_rng());
             const auto c = lambda * a;
 
-            const auto program  = linear_program_t{c} & inequality_t{a, b};
+            const auto program  = make_linear(c, make_inequality(a, b));
             const auto solution = check_solution(program, expected_t{});
 
             const auto fbest = lambda * b;
@@ -116,7 +116,7 @@ UTEST_CASE(program7)
         const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
 
-        const auto program  = linear_program_t{c} & inequality_t::from_rectangle(l, u);
+        const auto program  = make_linear(c, make_greater(l), make_less(u));
         const auto xbest    = vector_t{l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign()};
         const auto solution = check_solution(program, expected_t{xbest});
         UTEST_CHECK_GREATER_EQUAL((solution.m_x - l).minCoeff(), -1e-12);
@@ -156,7 +156,7 @@ UTEST_CASE(program8)
         const auto A = vector_t::Constant(dims, 1.0);
         const auto b = 1.0;
 
-        const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(dims, 0.0);
+        const auto program = make_linear(c, make_equality(A, b), make_greater(dims, 0.0));
         const auto xbest   = make_xbest(c);
         check_solution(program, expected_t{xbest});
     }
@@ -174,9 +174,8 @@ UTEST_CASE(program8)
         const auto b = 1.0;
         const auto z = vector_t::Constant(dims, 0.0);
 
-        const auto program =
-            linear_program_t{c} & inequality_t{A, b} & inequality_t{N, z} & inequality_t::greater(dims, 0.0);
-        const auto xbest = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
+        const auto program = make_linear(c, make_inequality(A, b), make_inequality(N, z), make_greater(dims, 0.0));
+        const auto xbest   = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
         check_solution(program, expected_t{xbest});
     }
 }
@@ -209,8 +208,8 @@ UTEST_CASE(program9)
             const auto a = make_full_vector<scalar_t>(dims, 1.0);
             const auto v = make_sorted(c);
 
-            const auto program = linear_program_t{c} & equality_t{a, static_cast<scalar_t>(alpha)} &
-                                 inequality_t::from_rectangle(dims, 0.0, 1.0);
+            const auto program = make_linear(c, make_equality(a, static_cast<scalar_t>(alpha)), make_greater(dims, 0.0),
+                                             make_less(dims, 1.0));
 
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
             for (tensor_size_t i = 0; i < alpha; ++i)
@@ -236,8 +235,8 @@ UTEST_CASE(program9)
             const auto a = make_full_vector<scalar_t>(dims, 1.0);
             const auto v = make_sorted(c);
 
-            const auto program = linear_program_t{c} & inequality_t{a, static_cast<scalar_t>(alpha)} &
-                                 inequality_t::from_rectangle(dims, 0.0, 1.0);
+            const auto program = make_linear(c, make_inequality(a, static_cast<scalar_t>(alpha)),
+                                             make_greater(dims, 0.0), make_less(dims, 1.0));
             const auto estatus = alpha == 0 ? solver_status::unfeasible : solver_status::converged;
 
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
@@ -284,8 +283,7 @@ UTEST_CASE(program10)
             const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
             const auto v = make_sorted(c, d);
 
-            const auto program =
-                linear_program_t{c} & equality_t{d, alpha} & inequality_t::from_rectangle(dims, 0.0, 1.0);
+            const auto program = make_linear(c, make_equality(d, alpha), make_greater(dims, 0.0), make_less(dims, 1.0));
 
             auto accum = 0.0;
             auto xbest = make_full_vector<scalar_t>(dims, 0.0);
@@ -321,7 +319,7 @@ UTEST_CASE(program11)
         const auto A = matrix_t::Identity(dims, dims);
         const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
-        const auto  program = linear_program_t{c} & inequality_t{A, b};
+        const auto  program = make_linear(c, make_inequality(A, b));
         const auto& xbest   = b;
         check_solution(program, expected_t{xbest});
     }
@@ -343,7 +341,7 @@ UTEST_CASE(equality_unique_solution)
             const auto x = make_random_vector<scalar_t>(dims, +1.0, +2.0);
             const auto b = A * x;
 
-            const auto  program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(dims, 0.0);
+            const auto  program = make_linear(c, make_equality(A, b), make_greater(dims, 0.0));
             const auto& xbest   = x;
             check_solution(program, expected_t{xbest});
         }
@@ -354,7 +352,7 @@ UTEST_CASE(equality_unique_solution)
             const auto x = make_random_vector<scalar_t>(dims, -2.0, -1.0);
             const auto b = A * x;
 
-            const auto program = linear_program_t{c} & equality_t{A, b} & inequality_t::greater(dims, 0.0);
+            const auto program = make_linear(c, make_equality(A, b), make_greater(dims, 0.0));
             check_solution(program, expected_t{}.status(solver_status::stopped));
             // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
         }
