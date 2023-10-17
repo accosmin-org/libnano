@@ -16,8 +16,10 @@ function(copy_runtime_dlls TARGET)
 endfunction()
 
 # function to create a library
-function(make_lib name sources)
-    add_library(${lib} PRIVATE ${sources})
+function(make_lib lib sources)
+    add_library(${lib})
+    target_sources(${lib} PRIVATE ${sources})
+    add_library(NANO::${lib} ALIAS ${lib})
     target_include_directories(${lib}
         PUBLIC
             $<INSTALL_INTERFACE:include>
