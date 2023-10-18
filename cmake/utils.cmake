@@ -16,9 +16,9 @@ function(copy_runtime_dlls TARGET)
 endfunction()
 
 # function to create a library
-function(make_lib lib sources)
+function(make_lib lib)
     add_library(${lib})
-    target_sources(${lib} PRIVATE ${sources})
+    target_sources(${lib} PRIVATE ${ARGN})
     add_library(NANO::${lib} ALIAS ${lib})
     target_include_directories(${lib}
         PUBLIC
@@ -37,13 +37,13 @@ function(make_lib lib sources)
 endfunction()
 
 # function to create a unit test application
-function(make_test test libs)
+function(make_test test)
     add_executable(${test} ${test}.cpp)
     target_include_directories(${test}
         SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>
     )
     target_link_libraries(${test}
-        PRIVATE ${libs}
+        PRIVATE ${ARGN}
     )
 
     if (NANO_ENABLE_LLVM_COV)
@@ -60,12 +60,12 @@ function(make_test test libs)
 endfunction()
 
 # function to create an executable
-function(make_app app libs)
+function(make_app app)
     add_executable(${app} ${app}.cpp)
     target_include_directories(${app}
         PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
     target_link_libraries(${app}
-        PRIVATE ${libs})
+        PRIVATE ${ARGN})
     install(TARGETS ${app}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endfunction()

@@ -108,31 +108,6 @@ install(DIRECTORY include/
 install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
 
-install(EXPORT nano-targets
-    FILE NANOTargets.cmake
-    NAMESPACE NANO::
-    DESTINATION ${INSTALL_CONFIGDIR})
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
-
-configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/NANOConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
-
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
-    DESTINATION ${INSTALL_CONFIGDIR})
-
-export(EXPORT nano-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/NANOTargets.cmake
-    NAMESPACE NANO::)
-
 ##################################################################################################
 
 message(STATUS "-----------------------------------------------------------------------------" "")

@@ -15,33 +15,11 @@ make_lib(core
     core/histogram.cpp
     core/parameter_tracker.cpp)
 
-make_lib(function
+make_lib(solver
     function.cpp
     function/constraint.cpp
     function/penalty.cpp
     function/util.cpp
-    function/benchmark/axis_ellipsoid.cpp
-    function/benchmark/cauchy.cpp
-    function/benchmark/chung_reynolds.cpp
-    function/benchmark/dixon_price.cpp
-    function/benchmark/elastic_net.cpp
-    function/benchmark/exponential.cpp
-    function/benchmark/geometric.cpp
-    function/benchmark/kinks.cpp
-    function/benchmark/linear.cpp
-    function/benchmark/powell.cpp
-    function/benchmark/qing.cpp
-    function/benchmark/quadratic.cpp
-    function/benchmark/rosenbrock.cpp
-    function/benchmark/rotated_ellipsoid.cpp
-    function/benchmark/sargan.cpp
-    function/benchmark/schumer_steiglitz.cpp
-    function/benchmark/sphere.cpp
-    function/benchmark/styblinski_tang.cpp
-    function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp)
-
-make_lib(solver
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp
@@ -72,9 +50,48 @@ make_lib(solver
     program/solver.cpp
     program/linear.cpp
     program/quadratic.cpp
-    program/constraint.cpp)
+    program/constraint.cpp
+    function/benchmark/axis_ellipsoid.cpp
+    function/benchmark/cauchy.cpp
+    function/benchmark/chung_reynolds.cpp
+    function/benchmark/dixon_price.cpp
+    function/benchmark/elastic_net.cpp
+    function/benchmark/exponential.cpp
+    function/benchmark/geometric.cpp
+    function/benchmark/kinks.cpp
+    function/benchmark/linear.cpp
+    function/benchmark/powell.cpp
+    function/benchmark/qing.cpp
+    function/benchmark/quadratic.cpp
+    function/benchmark/rosenbrock.cpp
+    function/benchmark/rotated_ellipsoid.cpp
+    function/benchmark/sargan.cpp
+    function/benchmark/schumer_steiglitz.cpp
+    function/benchmark/sphere.cpp
+    function/benchmark/styblinski_tang.cpp
+    function/benchmark/trid.cpp
+    function/benchmark/zakharov.cpp)
 
 make_lib(machine
+    feature.cpp
+    dataset.cpp
+    dataset/hash.cpp
+    dataset/stats.cpp
+    dataset/iterator.cpp
+    datasource.cpp
+    datasource/mask.cpp
+    datasource/linear.cpp
+    datasource/tabular.cpp
+    datasource/imclass_cifar.cpp
+    datasource/imclass_mnist.cpp
+    generator.cpp
+    generator/pairwise_base.cpp
+    generator/pairwise_input.cpp
+    generator/pairwise_product.cpp
+    generator/elemwise_base.cpp
+    generator/elemwise_input.cpp
+    generator/elemwise_gradient.cpp
+    generator/elemwise_identity.cpp
     loss.cpp
     loss/pinball.cpp
     learner.cpp
@@ -114,31 +131,5 @@ make_lib(machine
     linear/function.cpp
     linear/accumulator.cpp)
 
-make_lib(dataset
-    feature.cpp
-    dataset.cpp
-    dataset/hash.cpp
-    dataset/stats.cpp
-    dataset/iterator.cpp
-    datasource.cpp
-    datasource/mask.cpp
-    datasource/linear.cpp
-    datasource/tabular.cpp
-    datasource/imclass_cifar.cpp
-    datasource/imclass_mnist.cpp
-    generator.cpp
-    generator/pairwise_base.cpp
-    generator/pairwise_input.cpp
-    generator/pairwise_product.cpp
-    generator/elemwise_base.cpp
-    generator/elemwise_input.cpp
-    generator/elemwise_gradient.cpp
-    generator/elemwise_identity.cpp)
-
-# add_library(nano)
-# target_sources(nano PRIVATE
-# add_library(NANO::nano ALIAS nano)
-
-#install(TARGETS nano EXPORT nano-targets)
-
-#set_targ(nano PROPERTIES EXPORT_NAME NANO)
+target_link_libraries(solver PUBLIC core)
+target_link_libraries(machine PUBLIC solver)
