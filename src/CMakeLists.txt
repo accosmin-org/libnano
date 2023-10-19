@@ -1,7 +1,16 @@
-if(NOT APPLE)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
+if(APPLE)
+    set(base @loader_path)
+else()
+    set(base $ORIGIN)
 endif()
 
+file(RELATIVE_PATH relDir
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+)
+set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
+
+# Generic utilities
 make_lib(core
     parameter.cpp
     configurable.cpp
@@ -15,6 +24,7 @@ make_lib(core
     core/histogram.cpp
     core/parameter_tracker.cpp)
 
+# Numerical optimization utilities
 make_lib(solver
     function.cpp
     function/constraint.cpp
@@ -72,6 +82,7 @@ make_lib(solver
     function/benchmark/trid.cpp
     function/benchmark/zakharov.cpp)
 
+# Machine learning utilities
 make_lib(machine
     feature.cpp
     dataset.cpp
@@ -131,5 +142,6 @@ make_lib(machine
     linear/function.cpp
     linear/accumulator.cpp)
 
+# Link libraries
 target_link_libraries(solver PUBLIC core)
 target_link_libraries(machine PUBLIC solver)

@@ -6,6 +6,11 @@ trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
 cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 
+CXX=g++ bash scripts/build.sh --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
+    ${cmake_options} --config --build --test --install --build-example
+
+exit 0
+
 ###############################################################################################################
 # code formatting using a fixed version of clang-format
 ###############################################################################################################

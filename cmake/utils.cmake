@@ -20,6 +20,7 @@ function(make_lib lib)
     add_library(${lib})
     target_sources(${lib} PRIVATE ${ARGN})
     add_library(NANO::${lib} ALIAS ${lib})
+
     target_include_directories(${lib}
         PUBLIC
             $<INSTALL_INTERFACE:include>
@@ -27,6 +28,7 @@ function(make_lib lib)
             $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
     target_link_libraries(${lib}
         PUBLIC Eigen3::Eigen)
     if(NOT WIN32)
@@ -34,6 +36,54 @@ function(make_lib lib)
             PUBLIC Threads::Threads
             PRIVATE Threads::Threads)
     endif()
+
+    # NB: see https://cmake.org/cmake/help/v3.28/manual/cmake-packages.7.html#config-file-packages
+    # NB: see "Professional CMake", by Craig Scott
+
+    include(GenerateExportHeader)
+    generate_export_header(${lib})
+    set_property(TARGET ${lib} PROPERTY VERSION ${PROJECT_VERSION})
+    set_property(TARGET ${lib} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
+    set_property(TARGET ${lib} PROPERTY INTERFACE_${lib}_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
+    set_property(TARGET ${lib} APPEND PROPERTY COMPATIBLE_INTERFACE_STRING ${PROJECT_VERSION_MAJOR})
+
+    install(TARGETS ${lib}
+        EXPORT ${lib}Targets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT ${lib}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${lib}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT ${lib}
+    )
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${lib}_export.h"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        COMPONENT Devel)
+
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${lib}ConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY AnyNewerVersion
+    )
+
+    export(EXPORT ${lib}Targets
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/${lib}Targets.cmake"
+        NAMESPACE NANO::
+    )
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/cmake/${lib}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${lib}Config.cmake"
+        COPYONLY
+    )
+
+    set(ConfigPackageLocation lib/cmake)
+    install(EXPORT ${lib}Targets
+        FILE ${lib}Targets.cmake
+        NAMESPACE NANO::
+        DESTINATION ${ConfigPackageLocation})
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${lib}Config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${lib}ConfigVersion.cmake"
+        DESTINATION ${ConfigPackageLocation}
+        COMPONENT Devel)
 endfunction()
 
 # function to create a unit test application
