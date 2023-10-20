@@ -14,7 +14,7 @@ enable_testing()
 
 function(make_example program)
     add_executable(${program} src/${program}.cpp)
-    target_link_libraries(${program} ${ARGN})
+    target_link_libraries(${program} PRIVATE ${ARGN})
     add_test(check_${program} ${program})
     copy_runtime_dlls(${program})
 endfunction()

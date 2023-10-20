@@ -16,15 +16,13 @@ function(copy_runtime_dlls TARGET)
 endfunction()
 
 # function to create a library as a component of the given project
-function(make_lib projname libname)
-    set(_NANO_lib "${projname}_${libname}")
-
+function(make_lib projname lib)
     # create library
-    add_library(${_NANO_lib})
-    target_sources(${_NANO_lib} PRIVATE ${ARGN})
-    add_library(${projname}::${libname} ALIAS ${_NANO_lib})
+    add_library(${lib})
+    target_sources(${lib} PRIVATE ${ARGN})
+    add_library(${projname}::${lib} ALIAS ${lib})
 
-    target_include_directories(${_NANO_lib}
+    target_include_directories(${lib}
         PUBLIC
             $<INSTALL_INTERFACE:include>
             $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
@@ -32,25 +30,25 @@ function(make_lib projname libname)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-    target_link_libraries(${_NANO_lib}
+    target_link_libraries(${lib}
         PUBLIC Eigen3::Eigen)
     if(NOT WIN32)
-        target_link_libraries(${_NANO_lib}
+        target_link_libraries(${lib}
             PUBLIC Threads::Threads
             PRIVATE Threads::Threads)
     endif()
 
     # install the target and create export-set
-    install(TARGETS ${_NANO_lib}
-        EXPORT ${_NANO_lib}Targets
+    install(TARGETS ${lib}
+        EXPORT ${lib}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
     # generate and install export file
-    install(EXPORT ${_NANO_lib}Targets
-        FILE ${_NANO_lib}Targets.cmake
+    install(EXPORT ${lib}Targets
+        FILE ${lib}Targets.cmake
         NAMESPACE ${projname}::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${projname})
 endfunction()

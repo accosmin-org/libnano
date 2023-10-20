@@ -10,7 +10,7 @@ file(RELATIVE_PATH relDir
 )
 set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
-# Generic utilities
+# generic utilities
 make_lib(NANO core
     parameter.cpp
     configurable.cpp
@@ -24,7 +24,7 @@ make_lib(NANO core
     core/histogram.cpp
     core/parameter_tracker.cpp)
 
-# Numerical optimization utilities
+# numerical optimization utilities
 make_lib(NANO solver
     function.cpp
     function/constraint.cpp
@@ -82,7 +82,7 @@ make_lib(NANO solver
     function/benchmark/trid.cpp
     function/benchmark/zakharov.cpp)
 
-# Machine learning utilities
+# machine learning utilities
 make_lib(NANO machine
     feature.cpp
     dataset.cpp
@@ -142,6 +142,6 @@ make_lib(NANO machine
     linear/function.cpp
     linear/accumulator.cpp)
 
-# Link libraries
-target_link_libraries(NANO_solver PUBLIC NANO_core)
-target_link_libraries(NANO_machine PUBLIC NANO_solver)
+# link libraries
+target_link_libraries(solver PUBLIC core)
+target_link_libraries(machine PUBLIC solver)
