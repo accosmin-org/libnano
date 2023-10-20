@@ -82,7 +82,6 @@ function suffix {
 function config {
     cd ${basedir}
     cmake -H${basedir} -B${libnanodir} ${cmake_options} \
-        -DCMAKE_INSTALL_RPATH=${installdir}/lib \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
 
@@ -105,7 +104,8 @@ function install {
 
 function build_example {
     cd ${basedir}
-    cmake -Hexample -B${exampledir} ${cmake_options} || return 1
+    cmake -Hexample -B${exampledir} ${cmake_options} \
+        -DCMAKE_PREFIX_PATH=${installdir} || return 1
     cd ${exampledir}
     echo "-- Using ${threads} threads to build"
     cmake --build ${exampledir} -- -j ${threads} || return 1
