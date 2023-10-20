@@ -1,10 +1,19 @@
-if(NOT APPLE)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
+if(APPLE)
+    set(base @loader_path)
+else()
+    set(base $ORIGIN)
 endif()
 
-add_library(nano)
+file(RELATIVE_PATH relDir
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+)
+set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
-target_sources(nano PRIVATE
+# generic utilities
+make_lib(NANO core
+    parameter.cpp
+    configurable.cpp
     core/table.cpp
     core/chrono.cpp
     core/logger.cpp
@@ -13,28 +22,14 @@ target_sources(nano PRIVATE
     core/parallel.cpp
     core/sampling.cpp
     core/histogram.cpp
-    core/parameter_tracker.cpp
-    feature.cpp
-    parameter.cpp
-    configurable.cpp
-    generator.cpp
-    generator/pairwise_base.cpp
-    generator/pairwise_input.cpp
-    generator/pairwise_product.cpp
-    generator/elemwise_base.cpp
-    generator/elemwise_input.cpp
-    generator/elemwise_gradient.cpp
-    generator/elemwise_identity.cpp
-    dataset.cpp
-    dataset/hash.cpp
-    dataset/stats.cpp
-    dataset/iterator.cpp
-    datasource.cpp
-    datasource/mask.cpp
-    datasource/linear.cpp
-    datasource/tabular.cpp
-    datasource/imclass_cifar.cpp
-    datasource/imclass_mnist.cpp
+    core/parameter_tracker.cpp)
+
+# numerical optimization utilities
+make_lib(NANO solver
+    function.cpp
+    function/constraint.cpp
+    function/penalty.cpp
+    function/util.cpp
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp
@@ -46,10 +41,6 @@ target_sources(nano PRIVATE
     lsearchk/cgdescent.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    program/solver.cpp
-    program/linear.cpp
-    program/quadratic.cpp
-    program/constraint.cpp
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
@@ -66,10 +57,10 @@ target_sources(nano PRIVATE
     solver/augmented.cpp
     solver/ellipsoid.cpp
     solver/universal.cpp
-    function.cpp
-    function/constraint.cpp
-    function/penalty.cpp
-    function/util.cpp
+    program/solver.cpp
+    program/linear.cpp
+    program/quadratic.cpp
+    program/constraint.cpp
     function/benchmark/axis_ellipsoid.cpp
     function/benchmark/cauchy.cpp
     function/benchmark/chung_reynolds.cpp
@@ -89,7 +80,29 @@ target_sources(nano PRIVATE
     function/benchmark/sphere.cpp
     function/benchmark/styblinski_tang.cpp
     function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp
+    function/benchmark/zakharov.cpp)
+
+# machine learning utilities
+make_lib(NANO machine
+    feature.cpp
+    dataset.cpp
+    dataset/hash.cpp
+    dataset/stats.cpp
+    dataset/iterator.cpp
+    datasource.cpp
+    datasource/mask.cpp
+    datasource/linear.cpp
+    datasource/tabular.cpp
+    datasource/imclass_cifar.cpp
+    datasource/imclass_mnist.cpp
+    generator.cpp
+    generator/pairwise_base.cpp
+    generator/pairwise_input.cpp
+    generator/pairwise_product.cpp
+    generator/elemwise_base.cpp
+    generator/elemwise_input.cpp
+    generator/elemwise_gradient.cpp
+    generator/elemwise_identity.cpp
     loss.cpp
     loss/pinball.cpp
     learner.cpp
@@ -127,28 +140,8 @@ target_sources(nano PRIVATE
     linear/model.cpp
     linear/result.cpp
     linear/function.cpp
-    linear/accumulator.cpp
-)
+    linear/accumulator.cpp)
 
-add_library(NANO::nano ALIAS nano)
-
-target_include_directories(nano
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-target_link_libraries(nano
-    PUBLIC Eigen3::Eigen)
-
-if(NOT WIN32)
-    target_link_libraries(nano
-        PUBLIC Threads::Threads
-        PRIVATE Threads::Threads)
-endif()
-
-install(TARGETS nano EXPORT nano-targets)
-
-set_target_properties(nano PROPERTIES EXPORT_NAME NANO)
+# link libraries
+target_link_libraries(solver PUBLIC core)
+target_link_libraries(machine PUBLIC solver)

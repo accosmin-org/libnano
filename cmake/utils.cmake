@@ -15,14 +15,52 @@ function(copy_runtime_dlls TARGET)
     endif ()
 endfunction()
 
+# function to create a library as a component of the given project
+function(make_lib projname lib)
+    # create library
+    add_library(${lib})
+    target_sources(${lib} PRIVATE ${ARGN})
+    add_library(${projname}::${lib} ALIAS ${lib})
+
+    target_include_directories(${lib}
+        PUBLIC
+            $<INSTALL_INTERFACE:include>
+            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+    target_link_libraries(${lib}
+        PUBLIC Eigen3::Eigen)
+    if(NOT WIN32)
+        target_link_libraries(${lib}
+            PUBLIC Threads::Threads
+            PRIVATE Threads::Threads)
+    endif()
+
+    # install the target and create export-set
+    install(TARGETS ${lib}
+        EXPORT ${lib}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    # generate and install export file
+    install(EXPORT ${lib}Targets
+        FILE ${lib}Targets.cmake
+        NAMESPACE ${projname}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${projname})
+endfunction()
+
 # function to create a unit test application
-function(make_test test libs)
+function(make_test test)
     add_executable(${test} ${test}.cpp)
     target_include_directories(${test}
         SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>
     )
     target_link_libraries(${test}
-        PRIVATE ${libs}
+        PRIVATE ${ARGN}
     )
 
     if (NANO_ENABLE_LLVM_COV)
@@ -39,12 +77,12 @@ function(make_test test libs)
 endfunction()
 
 # function to create an executable
-function(make_app app libs)
+function(make_app app)
     add_executable(${app} ${app}.cpp)
     target_include_directories(${app}
         PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
     target_link_libraries(${app}
-        PRIVATE ${libs})
+        PRIVATE ${ARGN})
     install(TARGETS ${app}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endfunction()

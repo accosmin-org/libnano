@@ -35,6 +35,7 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
 include(GNUInstallDirs)
 include(CheckCXXSourceCompiles)
+include(CMakePackageConfigHelpers)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 
 find_package(Git REQUIRED)
@@ -72,12 +73,10 @@ if(NOT WIN32)
 endif()
 
 find_package(Eigen3 3.3 NO_MODULE REQUIRED)
-add_compile_definitions(EIGEN_DONT_PARALLELIZE)
 
 ##################################################################################################
 # setup library
 
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
 add_subdirectory(src)
 
 ##################################################################################################
@@ -108,30 +107,25 @@ install(DIRECTORY include/
 install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
 
-install(EXPORT nano-targets
-    FILE NANOTargets.cmake
-    NAMESPACE NANO::
-    DESTINATION ${INSTALL_CONFIGDIR})
-
-include(CMakePackageConfigHelpers)
+# generate the version file for the config file
 write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion)
+    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY AnyNewerVersion)
 
+# create config file
 configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/NANOConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NANO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake
-    DESTINATION ${INSTALL_CONFIGDIR})
-
-export(EXPORT nano-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/NANOTargets.cmake
-    NAMESPACE NANO::)
+# install config files
+install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
 
 ##################################################################################################
 
