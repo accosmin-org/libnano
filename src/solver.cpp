@@ -5,6 +5,7 @@
 #include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
+#include <nano/solver/gs.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/pdsgm.h>
@@ -167,6 +168,7 @@ factory_t<solver_t>& solver_t::all()
     const auto  op      = []()
     {
         manager.add<solver_gd_t>("gradient descent");
+        manager.add<solver_gs_t>("gradient sampling");
         manager.add<solver_sgm_t>("sub-gradient method");
         manager.add<solver_cgd_pr_t>("conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("conjugate gradient descent (N+)");

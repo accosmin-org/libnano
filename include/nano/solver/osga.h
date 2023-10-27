@@ -6,13 +6,11 @@ namespace nano
 {
 ///
 /// \brief optimal subgradient algorithm (OSGA).
-///     see (1) "OSGA: A fast subgradient algorithm with optimal complexity", by A. Neumaier, 2014
-///     see (2) "Optimal subgradient algorithms with application to large-scale linear inverse problems",
-///         by M. Ahookhosh, 2014
-///     see (3) "An optimal subgradient algorithm for large-scale bound-constrained convex optimization",
-///         by M. Ahookhosh, A. Neumaier, 2015
-///     see (4) "An optimal subgradient algorithm for large-scale convex optimization in simple domains",
-///         by M. Ahookhosh, A. Neumaier, 2015
+///
+/// see (1) "OSGA: A fast subgradient algorithm with optimal complexity", by A. Neumaier, 2014
+/// see (2) "Optimal subgradient algorithms with application to large-scale linear inverse problems", by Ahookhosh, 2014
+/// see (3) "An optimal subgradient algorithm for large-scale bound-constrained convex optimization", by A, N, 2015
+/// see (4) "An optimal subgradient algorithm for large-scale convex optimization in simple domains", by A, N, 2015
 ///
 /// NB: the implementation follows the notation from (1).
 /// NB: the functional constraints (if any) are all ignored.

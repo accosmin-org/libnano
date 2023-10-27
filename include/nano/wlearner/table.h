@@ -151,7 +151,7 @@ public:
 ///
 /// NB: equivalent to k-best version with k set to 1.
 /// NB: this weak learner is inspired by the MARS algorithm extend to handle discrete/categorical features:
-///     see "Multivariate adaptive regression splines", by Jerome Friedman
+/// see "Multivariate adaptive regression splines", by Jerome Friedman, 1991
 ///
 class NANO_PUBLIC dstep_table_wlearner_t final : public table_wlearner_t
 {

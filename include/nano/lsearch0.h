@@ -11,8 +11,9 @@ using rlsearch0_t = std::unique_ptr<lsearch0_t>;
 
 ///
 /// \brief estimate the initial step size of the line-search procedure.
-///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
-///     see "Practical methods of optimization", Fletcher, chapter 2
+///
+/// see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
+/// see "Practical methods of optimization", Fletcher, chapter 2
 ///
 class NANO_PUBLIC lsearch0_t : public configurable_t, public clonable_t<lsearch0_t>
 {

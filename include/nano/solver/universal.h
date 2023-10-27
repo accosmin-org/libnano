@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief universal gradient methods.
-///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
+///
+/// see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
 ///
 /// NB: the functional constraints (if any) are all ignored.
 ///
@@ -33,7 +34,6 @@ public:
 
 ///
 /// \brief universal primal gradient method (PGM).
-///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
 ///
 class NANO_PUBLIC solver_pgm_t final : public solver_universal_t
 {
@@ -56,7 +56,6 @@ public:
 
 ///
 /// \brief universal dual gradient method (DGM).
-///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
 ///
 class NANO_PUBLIC solver_dgm_t final : public solver_universal_t
 {
@@ -79,7 +78,6 @@ public:
 
 ///
 /// \brief universal fast gradient method (FGM).
-///     see "Universal Gradient Methods for Convex Optimization Problems", by Yu. Nesterov, 2013
 ///
 class NANO_PUBLIC solver_fgm_t final : public solver_universal_t
 {

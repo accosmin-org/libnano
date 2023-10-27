@@ -6,9 +6,9 @@ namespace nano
 {
 ///
 /// \brief the ellipsoid method.
-///     see "Introductory lectures on convex optimization: A basic course", by Y. Nesterov, 2004
-///     see "Linear Controller Design: Limits of Performance", by S. Boyd and C. Baratt, 1991
-///         (for the deep-cut version)
+///
+/// see "Introductory lectures on convex optimization: A basic course", by Y. Nesterov, 2004
+/// see "Linear Controller Design: Limits of Performance", by S. Boyd and C. Baratt, 1991, (for the deep-cut version)
 ///
 /// NB: the functional constraints (if any) are all ignored.
 /// NB: the algorithm is sensitive to the initial radius of the hyper-ellipsoid.

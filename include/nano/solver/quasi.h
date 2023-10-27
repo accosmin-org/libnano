@@ -16,10 +16,11 @@ NANO_MAKE_ENUM2(quasi_initialization, identity, scaled)
 
 ///
 /// \brief quasi-Newton methods.
-///     see (1) "Practical methods of optimization", Fletcher, 2nd edition
-///     see (2) "Numerical optimization", Nocedal & Wright, 2nd edition
-///     see (3) "Introductory Lectures on Convex Optimization (Applied Optimization)", Nesterov, 2013
-///     see (4) "A new approach to variable metric algorithms", Fletcher, 1972
+///
+/// see (1) "Practical methods of optimization", Fletcher, 2nd edition
+/// see (2) "Numerical optimization", Nocedal & Wright, 2nd edition
+/// see (3) "Introductory Lectures on Convex Optimization (Applied Optimization)", Nesterov, 2013
+/// see (4) "A new approach to variable metric algorithms", Fletcher, 1972
 ///
 class NANO_PUBLIC solver_quasi_t : public solver_t
 {

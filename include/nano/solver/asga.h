@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief accelerated subgradient algorithms (ASGA).
-///     see "Accelerated first-order methods for large-scale convex minimization", by M. Ahookhosh, 2016
+///
+/// see "Accelerated first-order methods for large-scale convex minimization", by M. Ahookhosh, 2016
 ///
 /// NB: the algorithm was designed to minimize a structured problem,
 ///     but here it is applied to a sub-differentiable function directly.
@@ -31,7 +32,6 @@ public:
 
 ///
 /// \brief accelerated subgradient algorithm (ASGA-2).
-///     see "Accelerated first-order methods for large-scale convex minimization", by M. Ahookhosh, 2016
 ///
 class NANO_PUBLIC solver_asga2_t final : public solver_asga_t
 {
@@ -54,7 +54,6 @@ public:
 
 ///
 /// \brief accelerated subgradient algorithm (ASGA-4).
-///     see "Accelerated first-order methods for large-scale convex minimization", by M. Ahookhosh, 2016
 ///
 class NANO_PUBLIC solver_asga4_t final : public solver_asga_t
 {

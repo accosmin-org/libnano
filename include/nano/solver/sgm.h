@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief the sub-gradient method.
-///     see "Introductory lectures on convex optimization: A basic course", by Y. Nesterov, 2004
+///
+/// see "Introductory lectures on convex optimization: A basic course", by Y. Nesterov, 2004
 ///
 /// NB: the functional constraints (if any) are all ignored.
 /// NB: the algorithm is very slow and it is provided as a baseline.

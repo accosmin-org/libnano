@@ -43,6 +43,7 @@ make_lib(NANO solver
     lsearchk/morethuente.cpp
     solver.cpp
     solver/gd.cpp
+    solver/gs.cpp
     solver/cgd.cpp
     solver/sgm.cpp
     solver/asga.cpp

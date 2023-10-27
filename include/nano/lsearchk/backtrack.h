@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief backtracking line-search that stops when the Armijo condition is satisfied,
-///     see "Numerical optimization", Nocedal & Wright, 2nd edition
+///
+/// see "Numerical optimization", Nocedal & Wright, 2nd edition
 ///
 class NANO_PUBLIC lsearchk_backtrack_t final : public lsearchk_t
 {

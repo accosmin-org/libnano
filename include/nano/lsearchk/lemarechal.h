@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief the line-search algorithm described here:
-///     see "A view of line-searches", C. Lemarechal
+///
+/// see "A view of line-searches", by Lemarechal, 2005
 ///
 class NANO_PUBLIC lsearchk_lemarechal_t final : public lsearchk_t
 {
