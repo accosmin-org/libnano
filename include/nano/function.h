@@ -105,7 +105,7 @@ public:
 
     ///
     /// \brief evaluate the function's value at the given point
-    ///     (and its gradient or sub-gradient if not smooth).
+    ///     (and optionally its gradient or sub-gradient if not smooth).
     ///
     scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const;
 
