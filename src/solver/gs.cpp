@@ -32,6 +32,18 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     const auto theta_miu     = parameter("solver::gs::theta_miu").value<scalar_t>();
     const auto theta_epsilon = parameter("solver::gs::theta_epsilon").value<scalar_t>();
 
+    const auto m = function.size() + 1;
+    (void)(beta);
+    (void)(gamma);
+    (void)(miu0);
+    (void)(epsilon0);
+    (void)(theta_miu);
+    (void)(theta_epsilon);
+    (void)(m);
+
+    // TODO: utility to sample from B(x, e)
+    // TODO: reuse QP solver and problem definition
+    // TODO: option to use the previous gradient as the starting point for QP
     // TODO: can it work with any line-search method?!
     assert(false);
 

@@ -142,4 +142,70 @@ UTEST_CASE(sample_without_replacement_all)
     UTEST_CHECK_EQUAL(indices3, samples);
 }
 
+UTEST_CASE(sample_from_ball)
+{
+    for (tensor_size_t dims : {2, 3, 11})
+    {
+        auto       rng    = make_rng();
+        const auto x0     = make_random_vector<scalar_t>(dims, -1.0, +1.0);
+        const auto radius = urand(0.1, 1.0, rng);
+        const auto count  = dims + 1;
+
+        // check all points are inside the ball
+        const auto points = nano::sample_from_ball(x0, radius, count, rng);
+        UTEST_REQUIRE_EQUAL(points.rows(), count);
+        UTEST_REQUIRE_EQUAL(points.cols(), dims);
+        for (tensor_size_t i = 0; i < count; ++i)
+        {
+            const auto x = points.row(i);
+            const auto d = (x.transpose() - x0).lpNorm<2>();
+            UTEST_CHECK_LESS_EQUAL(d, radius);
+        }
+    }
+}
+
+UTEST_CASE(sample_from_ball2D)
+{
+    const auto dims = tensor_size_t{2};
+    const auto size = tensor_size_t{1000};
+
+    auto       rng    = make_rng();
+    const auto x0     = make_random_vector<scalar_t>(dims, size / 4, size * 3 / 4);
+    const auto radius = urand(size / 8, size / 5, rng);
+
+    auto n_hits = tensor_size_t{0};
+    for (tensor_size_t r = 0; r < size; ++r)
+    {
+        for (tensor_size_t c = 0; c < size; ++c)
+        {
+            const auto r0 = static_cast<tensor_size_t>(std::round(x0(0)));
+            const auto c0 = static_cast<tensor_size_t>(std::round(x0(1)));
+            if ((r - r0) * (r - r0) + (c - c0) * (c - c0) <= radius)
+            {
+                ++n_hits;
+            }
+        }
+    }
+    const auto count = n_hits;
+
+    // check that all points are inside the ball and approximatly uniformly distributed
+    const auto points = nano::sample_from_ball(x0, static_cast<scalar_t>(radius), count, rng);
+    UTEST_REQUIRE_EQUAL(points.rows(), count);
+    UTEST_REQUIRE_EQUAL(points.cols(), dims);
+
+    auto hits = std::unordered_map<tensor_size_t, tensor_size_t>{};
+    for (tensor_size_t i = 0; i < count; ++i)
+    {
+        const auto x = points.row(i);
+        const auto d = (x.transpose() - x0).lpNorm<2>();
+        UTEST_CHECK_LESS_EQUAL(d, static_cast<scalar_t>(radius));
+
+        const auto r = static_cast<tensor_size_t>(std::round(x(0)));
+        const auto c = static_cast<tensor_size_t>(std::round(x(1)));
+        hits[r * size + c] += 1;
+    }
+
+    UTEST_CHECK_GREATER(static_cast<tensor_size_t>(hits.size()), 9 * n_hits / 10);
+}
+
 UTEST_END_MODULE()
