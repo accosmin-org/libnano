@@ -41,6 +41,18 @@ public:
         return future;
     }
 
+    ///
+    /// \brief enqueue a new task without any locking.
+    ///
+    template <typename tfunction>
+    future_t enqueue_no_lock(tfunction&& f)
+    {
+        auto task   = task_t(std::forward<tfunction>(f));
+        auto future = task.get_future();
+        m_tasks.emplace_back(std::move(task));
+        return future;
+    }
+
     // attributes
     std::deque<task_t>              m_tasks;       ///< tasks to execute
     mutable std::mutex              m_mutex;       ///< synchronization
@@ -178,10 +190,14 @@ public:
         {
             section_t section;
             section.reserve(static_cast<size_t>(elements));
-            for (tsize index = 0; index < elements; ++index)
             {
-                section.emplace_back(enqueue([op, index](size_t tnum) { op(index, tnum); }));
+                const std::scoped_lock lock(m_queue.m_mutex);
+                for (tsize index = 0; index < elements; ++index)
+                {
+                    section.emplace_back(m_queue.enqueue_no_lock([op, index](const size_t tnum) { op(index, tnum); }));
+                }
             }
+            m_queue.m_condition.notify_all();
 
             section.block(raise);
         }
@@ -210,11 +226,16 @@ public:
         {
             section_t section;
             section.reserve(static_cast<size_t>((elements + chunksize - 1) / chunksize));
-            for (tsize begin = 0; begin < elements; begin += chunksize)
             {
-                const auto end = std::min(begin + chunksize, elements);
-                section.emplace_back(enqueue([op, begin, end](size_t tnum) { op(begin, end, tnum); }));
+                const std::scoped_lock lock(m_queue.m_mutex);
+                for (tsize begin = 0; begin < elements; begin += chunksize)
+                {
+                    const auto end = std::min(begin + chunksize, elements);
+                    section.emplace_back(
+                        m_queue.enqueue_no_lock([op, begin, end](const size_t tnum) { op(begin, end, tnum); }));
+                }
             }
+            m_queue.m_condition.notify_all();
 
             section.block(raise);
         }
