@@ -149,17 +149,13 @@ UTEST_CASE(sample_from_ball)
         auto       rng    = make_rng();
         const auto x0     = make_random_vector<scalar_t>(dims, -1.0, +1.0);
         const auto radius = urand(0.1, 1.0, rng);
-        const auto count  = dims + 1;
 
         // check all points are inside the ball
-        const auto points = nano::sample_from_ball(x0, radius, count, rng);
-        UTEST_REQUIRE_EQUAL(points.rows(), count);
-        UTEST_REQUIRE_EQUAL(points.cols(), dims);
-        for (tensor_size_t i = 0; i < count; ++i)
+        for (tensor_size_t trial = 0; trial < dims + 1; ++trial)
         {
-            const auto x = points.row(i);
-            const auto d = (x.transpose() - x0).lpNorm<2>();
-            UTEST_CHECK_LESS_EQUAL(d, radius);
+            const auto x = nano::sample_from_ball(x0, radius, rng);
+            UTEST_REQUIRE_EQUAL(x.size(), x0.size());
+            UTEST_CHECK_LESS_EQUAL((x - x0).lpNorm<2>(), radius);
         }
     }
 }
@@ -186,25 +182,19 @@ UTEST_CASE(sample_from_ball2D)
             }
         }
     }
-    const auto count = n_hits;
 
     // check that all points are inside the ball and approximatly uniformly distributed
-    const auto points = nano::sample_from_ball(x0, static_cast<scalar_t>(radius), count, rng);
-    UTEST_REQUIRE_EQUAL(points.rows(), count);
-    UTEST_REQUIRE_EQUAL(points.cols(), dims);
-
     auto hits = std::unordered_map<tensor_size_t, tensor_size_t>{};
-    for (tensor_size_t i = 0; i < count; ++i)
+    for (tensor_size_t trial = 0; trial < n_hits; ++trial)
     {
-        const auto x = points.row(i);
-        const auto d = (x.transpose() - x0).lpNorm<2>();
-        UTEST_CHECK_LESS_EQUAL(d, static_cast<scalar_t>(radius));
+        const auto x = nano::sample_from_ball(x0, static_cast<scalar_t>(radius), rng);
+        UTEST_REQUIRE_EQUAL(x.size(), x0.size());
+        UTEST_CHECK_LESS_EQUAL((x - x0).lpNorm<2>(), static_cast<scalar_t>(radius));
 
         const auto r = static_cast<tensor_size_t>(std::round(x(0)));
         const auto c = static_cast<tensor_size_t>(std::round(x(1)));
         hits[r * size + c] += 1;
     }
-
     UTEST_CHECK_GREATER(static_cast<tensor_size_t>(hits.size()), 9 * n_hits / 10);
 }
 

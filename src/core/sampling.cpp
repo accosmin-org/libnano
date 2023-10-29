@@ -56,38 +56,45 @@ indices_t nano::sample_without_replacement(sample_indices_t samples, const tenso
     return sample_without_replacement(samples, count, rng);
 }
 
-matrix_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius, const tensor_size_t count)
+vector_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius)
 {
     auto rng = make_rng();
-    return sample_from_ball(x0, radius, count, rng);
+    return sample_from_ball(x0, radius, rng);
 }
 
-matrix_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius, const tensor_size_t count, rng_t& rng)
+vector_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius, rng_t& rng)
 {
-    assert(count >= 0);
     assert(radius > 0.0);
     assert(x0.size() > 0);
 
-    // see algorithm 4.1 from the reference, applied to the euclidean distance
+    auto x = vector_t{x0.size()};
+    sample_from_ball(x0, radius, map_vector(x.data(), x.size()), rng);
+    return x;
+}
+
+void nano::sample_from_ball(const vector_t& x0, const scalar_t radius, vector_map_t x)
+{
+    auto rng = make_rng();
+    sample_from_ball(x0, radius, x, rng);
+}
+
+void nano::sample_from_ball(const vector_t& x0, const scalar_t radius, vector_map_t x, rng_t& rng)
+{
+    assert(radius > 0.0);
+    assert(x0.size() > 0);
+    assert(x0.size() == x.size());
+
     const auto n = x0.size();
 
     auto sign_dist    = std::discrete_distribution({1, 1});
     auto epsilon_dist = std::normal_distribution<scalar_t>{0.5, 2.0};
     auto scale_dist   = std::uniform_real_distribution<scalar_t>(0.0, 1.0);
 
-    auto xs = matrix_t{count, n};
-    for (tensor_size_t i = 0; i < count; ++i)
+    for (tensor_size_t k = 0; k < n; ++k)
     {
-        for (tensor_size_t k = 0; k < n; ++k)
-        {
-            xs(i, k) = epsilon_dist(rng) * (sign_dist(rng) == 0 ? -1.0 : +1.0);
-        }
-
-        const auto z = std::pow(scale_dist(rng), 1.0 / static_cast<scalar_t>(n));
-
-        auto x    = xs.row(i).transpose();
-        x.array() = x0.array() + radius * z * x.array() / x.lpNorm<2>();
+        x(k) = epsilon_dist(rng) * (sign_dist(rng) == 0 ? -1.0 : +1.0);
     }
 
-    return xs;
+    const auto z = std::pow(scale_dist(rng), 1.0 / static_cast<scalar_t>(n));
+    x.array()    = x0.array() + radius * z * x.array() / x.lpNorm<2>();
 }
