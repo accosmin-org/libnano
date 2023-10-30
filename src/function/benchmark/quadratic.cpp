@@ -21,11 +21,11 @@ rfunction_t function_quadratic_t::clone() const
     return std::make_unique<function_quadratic_t>(*this);
 }
 
-scalar_t function_quadratic_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_quadratic_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        gx->noalias() = m_a + m_A * x;
+        gx = m_a + m_A * x;
     }
 
     return x.dot(m_a + (m_A * x) / scalar_t(2));

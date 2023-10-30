@@ -5,7 +5,8 @@
 namespace nano
 {
 ///
-/// \brief maps a given lambda to the function_t interface.
+/// \brief maps a given lambda to the `function_t` interface.
+///     fx = lambda(vector_cmap_t x, vector_map_t gx)
 ///
 template <typename tlambda>
 class NANO_PUBLIC lambda_function_t final : public function_t
@@ -32,10 +33,10 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
         assert(x.size() == size());
-        assert(gx == nullptr || gx->size() == size());
+        assert(gx.size() == 0 || gx.size() == size());
 
         return m_lambda(x, gx);
     }

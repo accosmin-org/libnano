@@ -15,11 +15,11 @@ UTEST_CASE(name)
 
 UTEST_CASE(lambda)
 {
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->noalias() = 2 * x;
+            gx = 2 * x;
         }
         return x.dot(x);
     };

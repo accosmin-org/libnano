@@ -27,14 +27,14 @@ rfunction_t function_kinks_t::clone() const
     return std::make_unique<function_kinks_t>(*this);
 }
 
-scalar_t function_kinks_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_kinks_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        gx->setZero();
+        gx.setZero();
         for (tensor_size_t i = 0; i < m_kinks.rows(); ++i)
         {
-            gx->array() += (x.transpose().array() - m_kinks.row(i).array()).sign();
+            gx.array() += (x.transpose().array() - m_kinks.row(i).array()).sign();
         }
     }
 

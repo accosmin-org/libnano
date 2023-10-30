@@ -41,9 +41,9 @@ rfunction_t linear::function_t::clone() const
     return std::make_unique<linear::function_t>(*this);
 }
 
-scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    assert(!gx || gx->size() == x.size());
+    assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == (m_isize + 1) * m_tsize);
 
     const auto b = bias(x);
@@ -67,7 +67,7 @@ scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
 
             accumulator.m_vm1 += vvector.array().sum();
 
-            if (gx != nullptr)
+            if (gx.size() > 0)
             {
                 m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
 
@@ -82,10 +82,10 @@ scalar_t linear::function_t::do_vgrad(const vector_t& x, vector_t* gx) const
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, m_iterator.samples().size());
 
     // OK, normalize and add the regularization terms
-    if (gx != nullptr)
+    if (gx.size() > 0)
     {
-        auto gb = bias(*gx);
-        auto gW = weights(*gx);
+        auto gb = bias(gx);
+        auto gW = weights(gx);
 
         gb = accumulator.m_gb1;
         gW = accumulator.m_gW1;

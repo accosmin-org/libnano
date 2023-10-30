@@ -15,7 +15,7 @@ rfunction_t function_rotated_ellipsoid_t::clone() const
     return std::make_unique<function_rotated_ellipsoid_t>(*this);
 }
 
-scalar_t function_rotated_ellipsoid_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_rotated_ellipsoid_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     scalar_t fi = 0;
     scalar_t fx = 0;
@@ -23,17 +23,17 @@ scalar_t function_rotated_ellipsoid_t::do_vgrad(const vector_t& x, vector_t* gx)
     {
         fi += x(i);
         fx += nano::square(fi);
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            (*gx)(i) = 2 * fi;
+            gx(i) = 2 * fi;
         }
     }
 
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
         for (auto i = size() - 2; i >= 0; i--)
         {
-            (*gx)(i) += (*gx)(i + 1);
+            gx(i) += gx(i + 1);
         }
     }
 

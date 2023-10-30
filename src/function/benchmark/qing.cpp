@@ -15,11 +15,11 @@ rfunction_t function_qing_t::clone() const
     return std::make_unique<function_qing_t>(*this);
 }
 
-scalar_t function_qing_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_qing_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        *gx = 4 * (x.array().square() - m_bias.array()) * x.array();
+        gx = 4 * (x.array().square() - m_bias.array()) * x.array();
     }
 
     return (x.array().square() - m_bias.array()).square().sum();

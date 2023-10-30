@@ -19,11 +19,11 @@ rfunction_t function_geometric_optimization_t::clone() const
     return std::make_unique<function_geometric_optimization_t>(*this);
 }
 
-scalar_t function_geometric_optimization_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_geometric_optimization_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        gx->noalias() = m_A.transpose() * (m_a + m_A * x).array().exp().matrix();
+        gx = m_A.transpose() * (m_a + m_A * x).array().exp().matrix();
     }
 
     return (m_a + m_A * x).array().exp().sum();

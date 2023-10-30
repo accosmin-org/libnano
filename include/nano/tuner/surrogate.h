@@ -31,7 +31,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
 private:
     // attributes
@@ -62,7 +62,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override;
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
 private:
     // attributes

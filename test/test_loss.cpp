@@ -28,17 +28,15 @@ struct loss_function_t final : public function_t
 
     rfunction_t clone() const override { return std::make_unique<loss_function_t>(*this); }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
         UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
         const auto output = map_tensor(x.data(), m_target.dims());
 
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->resize(m_target.size());
-
-            m_loss->vgrad(m_target, output, map_tensor(gx->data(), m_target.dims()));
-            UTEST_REQUIRE(gx->array().isFinite().all());
+            m_loss->vgrad(m_target, output, map_tensor(gx.data(), m_target.dims()));
+            UTEST_REQUIRE(gx.array().isFinite().all());
         }
 
         m_loss->value(m_target, output, m_values.tensor());

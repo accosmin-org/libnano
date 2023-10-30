@@ -16,25 +16,29 @@ public:
     synthetic_linear_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
                        tensor_size_t modulo_correlated_inputs = 1);
 
-    const auto& wopt() const { return m_wopt; }
+    const tensor2d_t& wopt() const { return m_wopt; }
 
-    const auto& bopt() const { return m_bopt; }
+    const tensor1d_t& bopt() const { return m_bopt; }
 
     auto inputs() const { return m_inputs.matrix(); }
 
     tensor2d_t outputs(const vector_t& x) const;
     tensor2d_t outputs(tensor2d_cmap_t w) const;
 
-    auto make_w(vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
+    tensor2d_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
 
-    auto make_w(const vector_t& x) const { return map_tensor(x.data(), m_wopt.dims()); }
+    tensor2d_map_t make_w(vector_t& x) const { return make_w(map_vector(x.data(), x.size())); }
+
+    tensor2d_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
+
+    tensor2d_cmap_t make_w(const vector_t& x) const { return make_w(map_vector(x.data(), x.size())); }
 
     template <typename tgrad, typename tinputs>
-    void vgrad(vector_t* gx, const tgrad& gg, const tinputs& inputs) const
+    void vgrad(vector_map_t gx, const tgrad& gg, const tinputs& inputs) const
     {
         const auto samples = static_cast<scalar_t>(gg.rows());
 
-        auto gw = make_w(*gx).matrix();
+        auto gw = make_w(gx).matrix();
 
         // cppcheck-suppress redundantInitialization
         // cppcheck-suppress unreadVariable

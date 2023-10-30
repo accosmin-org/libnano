@@ -107,6 +107,7 @@ public:
     /// \brief evaluate the function's value at the given point
     ///     (and optionally its gradient or sub-gradient if not smooth).
     ///
+    scalar_t vgrad(vector_cmap_t x, vector_map_t gx) const;
     scalar_t vgrad(const vector_t& x, vector_t* gx = nullptr) const;
 
     ///
@@ -151,7 +152,7 @@ protected:
     void smooth(smoothness);
     void strong_convexity(scalar_t);
 
-    virtual scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const = 0;
+    virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 
 private:
     // attributes
