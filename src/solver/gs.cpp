@@ -1,3 +1,5 @@
+#include <nano/core/sampling.h>
+#include <nano/program/solver.h>
 #include <nano/solver/gs.h>
 
 using namespace nano;
@@ -32,35 +34,54 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     const auto theta_miu     = parameter("solver::gs::theta_miu").value<scalar_t>();
     const auto theta_epsilon = parameter("solver::gs::theta_epsilon").value<scalar_t>();
 
-    const auto m = function.size() + 1;
+    const auto n = function.size();
+    const auto m = n + 1;
+
+    auto rng = make_rng();
+    auto x   = vector_t{n};
+    auto G   = matrix_t{m, n};
+
+    const auto positive = program::make_greater(m, 0.0);
+    const auto weighted = program::make_equality(vector_t::Constant(m, 1.0), 1.0);
+
+    auto descent = vector_t{n};
+    auto solver  = program::solver_t{};
+    auto program =
+        program::make_quadratic(matrix_t{matrix_t::Zero(m, m)}, vector_t{vector_t::Zero(m)}, positive, weighted);
+
     (void)(beta);
     (void)(gamma);
     (void)(miu0);
     (void)(epsilon0);
     (void)(theta_miu);
     (void)(theta_epsilon);
-    (void)(m);
 
-    // TODO: utility to sample from B(x, e)
-    // TODO: reuse QP solver and problem definition
     // TODO: option to use the previous gradient as the starting point for QP
     // TODO: can it work with any line-search method?!
     assert(false);
 
     auto state = solver_state_t{function, x0};
-    if (solver_t::done(state, true, state.gradient_test() < epsilon))
-    {
-        return state;
-    }
-
-    auto lsearch = make_lsearch();
-    auto descent = vector_t{function.size()};
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        descent = -state.gx();
+        // FIXME: should be more efficient for some functions to compute all gradients at once!
+        // sample gradients within the given radius
+        for (tensor_size_t i = 0; i < m; ++i)
+        {
+            sample_from_ball(state.x(), epsilon0, map_vector(x.data(), n), rng);
+            function.vgrad(map_vector(x.data(), n), G.row(i));
+        }
+
+        // solve the quadratic problem to find the stabilized gradient
+        program.m_Q = G * G.transpose();
+        const auto solution = solver.solve(program);
+        assert(solution.m_status == solver_status::converged);
+
+        descent = -G.transpose() * solution.m_x;
+
+        // TODO: line-search
 
         // line-search
-        const auto iter_ok = lsearch.get(state, descent);
+        const auto iter_ok = false; // lsearch.get(state, descent);
         if (solver_t::done(state, iter_ok, state.gradient_test() < epsilon))
         {
             break;
