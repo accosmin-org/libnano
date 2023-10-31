@@ -113,12 +113,6 @@ const constraints_t& function_t::constraints() const
     return m_constraints;
 }
 
-scalar_t function_t::vgrad(const vector_t& x, vector_t* gx) const
-{
-    return vgrad(map_vector(x.data(), x.size()),
-                 gx != nullptr ? map_vector(gx->data(), gx->size()) : vector_map_t{nullptr, 0});
-}
-
 scalar_t function_t::vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());

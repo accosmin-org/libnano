@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <nano/arch.h>
-#include <nano/eigen.h>
+#include <nano/tensor.h>
 #include <variant>
 
 namespace nano
@@ -160,13 +160,13 @@ NANO_PUBLIC scalar_t strong_convexity(const constraint_t&);
 ///
 /// \brief returns how much a point violates the given constraint (the larger, the worse).
 ///
-NANO_PUBLIC scalar_t valid(const constraint_t&, const vector_t& x);
+NANO_PUBLIC scalar_t valid(const constraint_t&, vector_cmap_t x);
 
 ///
 /// \brief evaluate the given constraint's function value at the given point
 ///     (and its gradient or sub-gradient if not smooth).
 ///
-NANO_PUBLIC scalar_t vgrad(const constraint_t&, const vector_t& x, vector_t* gx = nullptr);
+NANO_PUBLIC scalar_t vgrad(const constraint_t&, vector_cmap_t x, vector_map_t gx = vector_map_t{});
 
 ///
 /// \brief returns true if the given function and constraint are compatible.

@@ -68,7 +68,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         for (tensor_size_t i = 0; i < m; ++i)
         {
             sample_from_ball(state.x(), epsilon0, map_vector(x.data(), n), rng);
-            function.vgrad(map_vector(x.data(), n), G.row(i));
+            function.vgrad(map_vector(x.data(), n), map_vector(G.row(i).data(), n));
         }
 
         // solve the quadratic problem to find the stabilized gradient

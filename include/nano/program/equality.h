@@ -1,16 +1,18 @@
 #pragma once
 
-#include <nano/eigen.h>
+#include <nano/tensor.h>
 
 namespace nano::program
 {
 ///
 /// \brief models a linear equality constraint: A * x = b.
 ///
-template <typename tmatrixA, typename tvectorb, std::enable_if_t<is_eigen_v<tmatrixA>, bool> = true,
-          std::enable_if_t<is_eigen_v<tvectorb>, bool> = true>
+template <typename tmatrixA, typename tvectorb>
 struct equality_t
 {
+    static_assert(is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>);
+    static_assert(is_eigen_v<tvectorb> || is_tensor_v<tvectorb>);
+
     ///
     /// \brief return true if the constraint is given.
     ///
@@ -42,8 +44,7 @@ struct equality_t
 ///
 /// \brief create a generic equality constraint: A * x = b.
 ///
-template <typename tmatrixA, typename tvectorb, std::enable_if_t<is_eigen_v<tmatrixA>, bool> = true,
-          std::enable_if_t<is_eigen_v<tvectorb>, bool> = true>
+template <typename tmatrixA, typename tvectorb>
 inline auto make_equality(tmatrixA A, tvectorb b)
 {
     return equality_t<std::remove_cv_t<tmatrixA>, std::remove_cv_t<tvectorb>>{std::move(A), std::move(b)};
@@ -52,11 +53,11 @@ inline auto make_equality(tmatrixA A, tvectorb b)
 ///
 /// \brief create a scalar equality constraint: a.dot(x) = b.
 ///
-template <typename tmatrixA, std::enable_if_t<is_eigen_v<tmatrixA>, bool> = true>
+template <typename tmatrixA>
 inline auto make_equality(const tmatrixA& a, const scalar_t b)
 {
     assert(a.cols() == 1);
-    return program::make_equality(a.transpose(), vector_t::Constant(1, b));
+    return program::make_equality(a.transpose(), vector_t::constant(1, b));
 }
 
 ///

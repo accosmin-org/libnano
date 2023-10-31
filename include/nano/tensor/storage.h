@@ -63,7 +63,7 @@ public:
 
     tensor_vector_storage_t& operator=(const tensor_carray_storage_t<tscalar, trank>& other)
     {
-        tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
+        eigen_vector_t<tscalar> data = map_vector(other.data(), other.size());
         resize(other.dims());
         std::swap(data, m_data);
         return *this;
@@ -71,7 +71,7 @@ public:
 
     tensor_vector_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other)
     {
-        tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
+        eigen_vector_t<tscalar> data = map_vector(other.data(), other.size());
         resize(other.dims());
         std::swap(data, m_data);
         return *this;
@@ -96,7 +96,7 @@ public:
 
 private:
     // attributes
-    tensor_vector_t<tscalar> m_data; ///< store tensor as a 1D vector.
+    eigen_vector_t<tscalar> m_data; ///< store tensor as a 1D vector.
 };
 
 ///

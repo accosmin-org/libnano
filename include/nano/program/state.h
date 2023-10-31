@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/eigen.h>
 #include <nano/solver/status.h>
+#include <nano/tensor.h>
 
 namespace nano::program
 {

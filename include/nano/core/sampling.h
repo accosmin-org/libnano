@@ -2,8 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/core/random.h>
-#include <nano/eigen.h>
-#include <nano/tensor/tensor.h>
+#include <nano/tensor.h>
 
 namespace nano
 {
@@ -42,9 +41,9 @@ NANO_PUBLIC indices_t sample_without_replacement(sample_indices_t, tensor_size_t
 ///
 /// see "Uniform Sample Generation in lpBalls for Probabilistic Robustness Analysis", by Calafiore, Dabbene, Tempo, 1998
 ///
-NANO_PUBLIC vector_t sample_from_ball(const vector_t& x0, scalar_t radius);
-NANO_PUBLIC vector_t sample_from_ball(const vector_t& x0, scalar_t radius, rng_t&);
+NANO_PUBLIC vector_t sample_from_ball(vector_cmap_t x0, scalar_t radius);
+NANO_PUBLIC vector_t sample_from_ball(vector_cmap_t x0, scalar_t radius, rng_t&);
 
-NANO_PUBLIC void sample_from_ball(const vector_t& x0, scalar_t radius, vector_map_t x);
-NANO_PUBLIC void sample_from_ball(const vector_t& x0, scalar_t radius, vector_map_t x, rng_t&);
+NANO_PUBLIC void sample_from_ball(vector_cmap_t x0, scalar_t radius, vector_map_t x);
+NANO_PUBLIC void sample_from_ball(vector_cmap_t x0, scalar_t radius, vector_map_t x, rng_t&);
 } // namespace nano

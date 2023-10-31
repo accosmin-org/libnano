@@ -56,29 +56,29 @@ indices_t nano::sample_without_replacement(sample_indices_t samples, const tenso
     return sample_without_replacement(samples, count, rng);
 }
 
-vector_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius)
+vector_t nano::sample_from_ball(vector_cmap_t x0, const scalar_t radius)
 {
     auto rng = make_rng();
     return sample_from_ball(x0, radius, rng);
 }
 
-vector_t nano::sample_from_ball(const vector_t& x0, const scalar_t radius, rng_t& rng)
+vector_t nano::sample_from_ball(vector_cmap_t x0, const scalar_t radius, rng_t& rng)
 {
     assert(radius > 0.0);
     assert(x0.size() > 0);
 
     auto x = vector_t{x0.size()};
-    sample_from_ball(x0, radius, map_vector(x.data(), x.size()), rng);
+    sample_from_ball(x0, radius, x.tensor(), rng);
     return x;
 }
 
-void nano::sample_from_ball(const vector_t& x0, const scalar_t radius, vector_map_t x)
+void nano::sample_from_ball(vector_cmap_t x0, const scalar_t radius, vector_map_t x)
 {
     auto rng = make_rng();
     sample_from_ball(x0, radius, x, rng);
 }
 
-void nano::sample_from_ball(const vector_t& x0, const scalar_t radius, vector_map_t x, rng_t& rng)
+void nano::sample_from_ball(vector_cmap_t x0, const scalar_t radius, vector_map_t x, rng_t& rng)
 {
     assert(radius > 0.0);
     assert(x0.size() > 0);

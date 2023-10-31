@@ -33,7 +33,7 @@ public:
         assert(x.size() == m_x.size());
         assert(x.size() == m_function->size());
         m_x  = x;
-        m_fx = m_function->vgrad(m_x, &m_gx);
+        m_fx = m_function->vgrad(m_x, m_gx);
         update_calls();
         update_constraints();
         return valid();
@@ -45,8 +45,8 @@ public:
     ///
     /// NB: this is usually called by non-monotonic solvers (e.g. for non-smooth optimization problems).
     ///
-    bool update_if_better(const vector_t& x, scalar_t fx);
-    bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
+    bool update_if_better(vector_cmap_t x, scalar_t fx);
+    bool update_if_better(vector_cmap_t x, vector_cmap_t gx, scalar_t fx);
 
     ///
     /// \brief try to update the current state and
@@ -87,21 +87,21 @@ public:
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    scalar_t dg(const vector_t& descent) const { return m_gx.dot(descent); }
+    scalar_t dg(vector_cmap_t descent) const { return m_gx.vector().dot(descent.vector()); }
 
     ///
     /// \brief returns true if the chosen direction is a descent direction.
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    bool has_descent(const vector_t& descent) const { return dg(descent) < 0.0; }
+    bool has_descent(vector_cmap_t descent) const { return dg(descent) < 0.0; }
 
     ///
     /// \brief check if the current step satisfies the Armijo condition (sufficient decrease).
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    bool has_armijo(const solver_state_t& origin, const vector_t& descent, scalar_t step_size, scalar_t c1) const;
+    bool has_armijo(const solver_state_t& origin, vector_cmap_t descent, scalar_t step_size, scalar_t c1) const;
 
     ///
     /// \brief check if the current step satisfies the approximate Armijo condition (sufficient decrease).
@@ -116,14 +116,14 @@ public:
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    bool has_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c2) const;
+    bool has_wolfe(const solver_state_t& origin, vector_cmap_t descent, scalar_t c2) const;
 
     ///
     /// \brief check if the current step satisfies the strong Wolfe condition (sufficient curvature).
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    bool has_strong_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c2) const;
+    bool has_strong_wolfe(const solver_state_t& origin, vector_cmap_t descent, scalar_t c2) const;
 
     ///
     /// \brief check if the current step satisfies the approximate Wolfe condition (sufficient curvature).
@@ -131,7 +131,7 @@ public:
     ///
     /// NB: only appropriate for smooth problems.
     ///
-    bool has_approx_wolfe(const solver_state_t& origin, const vector_t& descent, scalar_t c1, scalar_t c2) const;
+    bool has_approx_wolfe(const solver_state_t& origin, vector_cmap_t descent, scalar_t c1, scalar_t c2) const;
 
     ///
     /// \brief set the optimization status.

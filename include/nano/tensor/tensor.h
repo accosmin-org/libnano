@@ -146,6 +146,25 @@ public:
     }
 
     ///
+    /// \brief construct from an Eigen expression.
+    ///
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    tensor_t(const texpression& expression)
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            resize(expression.size());
+            vector() = expression;
+        }
+        else
+        {
+            resize(expression.rows(), expression.cols());
+            matrix() = expression;
+        }
+    }
+
+    ///
     /// \brief enable copying (delegate to the storage object).
     ///
     tensor_t(const tensor_t&)            = default;
@@ -158,7 +177,7 @@ public:
     tensor_t& operator=(tensor_t&&) noexcept = default;
 
     ///
-    /// \brief copy constructor from different types (e.g. const array from mutable array)
+    /// \brief copy constructor from different types (e.g. const array from mutable array).
     ///
     template <template <typename, size_t> class tstorage2>
     // cppcheck-suppress noExplicitConstructor
@@ -168,7 +187,7 @@ public:
     }
 
     ///
-    /// \brief copy constructor from different types (e.g. mutable array from mutable vector)
+    /// \brief copy constructor from different types (e.g. mutable array from mutable vector).
     ///
     template <template <typename, size_t> class tstorage2>
     // cppcheck-suppress noExplicitConstructor
@@ -178,12 +197,30 @@ public:
     }
 
     ///
-    /// \brief assignment operator from different types (e.g. const from non-const scalars)
+    /// \brief assignment operator from different types (e.g. const from non-const scalars).
     ///
     template <template <typename, size_t> class tstorage2>
     tensor_t& operator=(const tensor_t<tstorage2, tscalar, trank>& other)
     {
         tbase::operator=(other);
+        return *this;
+    }
+
+    ///
+    /// \brief assignment operator from an Eigen expression.
+    ///
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    tensor_t& operator=(const texpression& expression)
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            vector() = expression;
+        }
+        else
+        {
+            matrix() = expression;
+        }
         return *this;
     }
 
@@ -226,7 +263,7 @@ public:
     ///
     void lin_spaced(const tscalar min, const tscalar max)
     {
-        array() = tensor_vector_t<tscalar>::LinSpaced(size(), min, max);
+        array() = eigen_vector_t<tscalar>::LinSpaced(size(), min, max);
     }
 
     ///
@@ -250,7 +287,7 @@ public:
     auto sum() const { return vector().sum(); }
 
     ///
-    /// \brief returns the variance of all its values.
+    /// \brief returns the variance of the flatten array.
     ///
     auto variance() const
     {
@@ -266,7 +303,7 @@ public:
     }
 
     ///
-    /// \brief returns the safe_isfinitemple standard deviation.
+    /// \brief returns the sample standard deviation of the flatten array.
     ///
     auto stdev() const
     {
@@ -278,6 +315,20 @@ public:
         }
         return stdev;
     }
+
+    ///
+    /// \brief returns the lp-norm of the flatten array (using the Eigen backend).
+    ///
+    template <int p>
+    auto lpNorm() const
+    {
+        return vector().template lpNorm<p>();
+    }
+
+    ///
+    /// \brief returns the squared norm of the flatten array (using the Eigen backend).
+    ///
+    auto squaredNorm() const { return vector().squaredNorm(); }
 
     ///
     /// \brief access the whole tensor as an Eigen vector
@@ -477,99 +528,76 @@ public:
     auto end() const { return data() + size(); }
 
     ///
-    /// \brief pretty-print the tensor.
+    /// \brief construct an Eigen-based vector or matrix expression with all elements zero.
     ///
-    std::ostream& print(std::ostream& stream, const tensor_size_t prefix_space = 0,
-                        const tensor_size_t prefix_delim = 0, const tensor_size_t suffix = 0) const
+    static auto zero(const tensor_size_t size)
     {
-        [[maybe_unused]] const auto sprint = [&](const char c, const tensor_size_t count) -> std::ostream&
-        {
-            for (tensor_size_t i = 0; i < count; ++i)
-            {
-                stream << c;
-            }
-            return stream;
-        };
+        static_assert(trank == 1);
+        return eigen_vector_t<tscalar>::Zero(size);
+    }
 
-        if (prefix_space == 0 && prefix_delim == 0 && suffix == 0)
-        {
-            stream << "shape: " << dims() << "\n";
-        }
+    static auto zero(const tensor_size_t rows, const tensor_size_t cols)
+    {
+        static_assert(trank == 2);
+        return eigen_matrix_t<tscalar>::Zero(rows, cols);
+    }
 
-        if constexpr (trank == 1)
-        {
-            sprint('[', prefix_delim + 1);
-            if constexpr (std::is_same_v<tscalar, int8_t>)
-            {
-                stream << vector().transpose().template cast<int16_t>();
-            }
-            else if constexpr (std::is_same_v<tscalar, uint8_t>)
-            {
-                stream << vector().transpose().template cast<uint16_t>();
-            }
-            else
-            {
-                stream << vector().transpose();
-            }
-            sprint(']', suffix + 1);
-        }
-        else if constexpr (trank == 2)
-        {
-            const auto matrix = this->matrix();
-            for (tensor_size_t row = 0, nrows = matrix.rows(); row < nrows; ++row)
-            {
-                if (row == 0)
-                {
-                    sprint(' ', prefix_space);
-                    sprint('[', prefix_delim + 2);
-                }
-                else
-                {
-                    sprint(' ', prefix_space + prefix_delim + 1);
-                    sprint('[', 1);
-                }
+    ///
+    /// \brief construct an Eigen-based vector or matrix expression with all elements the given constant.
+    ///
+    template <typename tscalar_value>
+    static auto constant(const tensor_size_t size, const tscalar_value value)
+    {
+        static_assert(trank == 1);
+        return eigen_vector_t<tscalar>::Constant(size, static_cast<tscalar>(value));
+    }
 
-                if constexpr (std::is_same_v<tscalar, int8_t>)
-                {
-                    stream << matrix.row(row).template cast<int16_t>();
-                }
-                else if constexpr (std::is_same_v<tscalar, uint8_t>)
-                {
-                    stream << matrix.row(row).template cast<uint16_t>();
-                }
-                else
-                {
-                    stream << matrix.row(row);
-                }
+    template <typename tscalar_value>
+    static auto constant(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value value)
+    {
+        static_assert(trank == 2);
+        return eigen_matrix_t<tscalar>::Constant(rows, cols, static_cast<tscalar>(value));
+    }
 
-                if (row + 1 < nrows)
-                {
-                    stream << "]\n";
-                }
-                else
-                {
-                    sprint(']', suffix + 2);
-                }
-            }
-        }
-        else
-        {
-            for (tensor_size_t row = 0, nrows = this->template size<0>(); row < nrows; ++row)
-            {
-                tensor(row).print(stream, (row == 0) ? prefix_space : (prefix_space + prefix_delim + 1),
-                                  (row == 0) ? (prefix_delim + 1) : 0, suffix);
+    ///
+    /// \brief construct an Eigen-based identity matrix expression.
+    ///
+    static auto identity(const tensor_size_t rows, const tensor_size_t cols)
+    {
+        static_assert(trank == 2);
+        return eigen_matrix_t<tscalar>::Identity(rows, cols);
+    }
 
-                if (row + 1 < nrows)
-                {
-                    stream << "\n";
-                }
-                else
-                {
-                    stream << "]";
-                }
-            }
-        }
-        return stream;
+    ///
+    /// \brief return an Eigen-based vector segment view.
+    ///
+    auto segment(const tensor_size_t row, const tensor_size_t rowsize)
+    {
+        static_assert(trank == 1);
+        return vector().segment(row, rowsize);
+    }
+
+    auto segment(const tensor_size_t row, const tensor_size_t rowsize) const
+    {
+        static_assert(trank == 1);
+        return vector().segment(row, rowsize);
+    }
+
+    ///
+    /// \brief return an Eigen-based matrix block view.
+    ///
+    auto block(const tensor_size_t row, const tensor_size_t col, const tensor_size_t rowsize,
+               const tensor_size_t colsize)
+    {
+        static_assert(trank == 2);
+        return matrix().block(row, col, rowsize, colsize);
+    }
+
+    auto block(const tensor_size_t row, const tensor_size_t col, const tensor_size_t rowsize,
+               const tensor_size_t colsize) const
+    {
+        static_assert(trank == 2);
+        return matrix().block(row, col, rowsize, colsize);
     }
 
 private:
@@ -653,109 +681,6 @@ auto end(const tensor_t<tstorage, tscalar, trank>& m)
 {
     return m.data() + m.size();
 }
-
-///
-/// \brief construct consecutive tensor indices in the range [min, max).
-///
-inline auto arange(const tensor_size_t min, const tensor_size_t max)
-{
-    assert(min <= max);
-
-    indices_t indices(max - min);
-    indices.lin_spaced(min, max - 1);
-    return indices;
-}
-
-///
-/// \brief compare two tensors element-wise.
-///
-template <template <typename, size_t> class tstorage1, template <typename, size_t> class tstorage2, typename tscalar,
-          size_t trank>
-bool operator==(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstorage2, tscalar, trank>& rhs)
-{
-    return lhs.dims() == rhs.dims() && lhs.vector() == rhs.vector();
-}
-
-///
-/// \brief compare two tensors element-wise.
-///
-template <template <typename, size_t> class tstorage1, template <typename, size_t> class tstorage2, typename tscalar,
-          size_t trank>
-bool operator!=(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstorage2, tscalar, trank>& rhs)
-{
-    return lhs.dims() != rhs.dims() || lhs.vector() != rhs.vector();
-}
-
-///
-/// \brief pretty-print the given tensor.
-///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-std::ostream& operator<<(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor)
-{
-    return tensor.print(stream);
-}
-
-///
-/// \brief traits to check if a given type is a tensor.
-///
-template <class T>
-struct is_tensor : std::false_type
-{
-};
-
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-struct is_tensor<tensor_t<tstorage, tscalar, trank>> : std::true_type
-{
-};
-
-template <class T>
-inline constexpr bool is_tensor_v = is_tensor<T>::value;
-
-///
-/// \brief create a tensor from an initializer list.
-///
-template <typename tscalar, size_t trank, typename... tvalues>
-auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
-{
-    const auto list = {static_cast<tscalar>(values)...};
-    assert(::nano::size(dims) == static_cast<tensor_size_t>(list.size()));
-
-    tensor_mem_t<tscalar, trank> tensor{dims};
-    std::copy(list.begin(), list.end(), begin(tensor));
-    return tensor;
-}
-
-///
-/// \brief create indices from an initializer list.
-///
-template <typename... tindices>
-auto make_indices(tindices... indices)
-{
-    return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
-}
-
-///
-/// \brief create a tensor and fill it with the given value.
-///
-template <typename tscalar, size_t trank, typename tscalar_value>
-auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
-{
-    tensor_mem_t<tscalar, trank> tensor(dims);
-    tensor.full(static_cast<tscalar>(value));
-    return tensor;
-}
-
-///
-/// \brief create a tensor and fill it with random values.
-///
-template <typename tscalar, size_t trank, typename tscalar_value = tscalar>
-auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
-                        const tscalar_value max_value = +1, const seed_t seed = seed_t{})
-{
-    tensor_mem_t<tscalar, trank> tensor(dims);
-    tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), seed);
-    return tensor;
-} // LCOV_EXCL_LINE
 
 ///
 /// \brief returns true if the two tensors are close, ignoring not-finite values if present.
