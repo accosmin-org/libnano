@@ -16,22 +16,15 @@ public:
     synthetic_linear_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
                        tensor_size_t modulo_correlated_inputs = 1);
 
-    const tensor2d_t& wopt() const { return m_wopt; }
+    const matrix_t& wopt() const { return m_wopt; }
+    const vector_t& bopt() const { return m_bopt; }
+    const matrix_t& inputs() const { return m_inputs; }
 
-    const tensor1d_t& bopt() const { return m_bopt; }
+    tensor2d_t outputs(vector_cmap_t x) const;
+    tensor2d_t outputs(matrix_cmap_t w) const;
 
-    auto inputs() const { return m_inputs.matrix(); }
-
-    tensor2d_t outputs(const vector_t& x) const;
-    tensor2d_t outputs(tensor2d_cmap_t w) const;
-
-    tensor2d_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
-
-    tensor2d_map_t make_w(vector_t& x) const { return make_w(map_vector(x.data(), x.size())); }
-
-    tensor2d_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
-
-    tensor2d_cmap_t make_w(const vector_t& x) const { return make_w(map_vector(x.data(), x.size())); }
+    matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
+    matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
 
     template <typename tgrad, typename tinputs>
     void vgrad(vector_map_t gx, const tgrad& gg, const tinputs& inputs) const
@@ -46,9 +39,9 @@ public:
     }
 
 private:
-    tensor2d_t m_inputs; ///<
-    tensor2d_t m_wopt;   ///< weights used for generating the synthetic dataset
-    tensor1d_t m_bopt;   ///< bias used for generating the synthetic dataset
+    matrix_t m_inputs; ///<
+    matrix_t m_wopt;   ///< weights used for generating the synthetic dataset
+    vector_t m_bopt;   ///< bias used for generating the synthetic dataset
 };
 
 ///
@@ -60,10 +53,10 @@ public:
     synthetic_sclass_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
                        tensor_size_t modulo_correlated_inputs = 1);
 
-    auto targets() const { return m_targets.matrix(); }
+    const matrix_t& targets() const { return m_targets; }
 
 private:
-    tensor2d_t m_targets; ///<
+    matrix_t m_targets; ///<
 };
 
 ///
@@ -75,9 +68,9 @@ public:
     synthetic_scalar_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
                        tensor_size_t modulo_correlated_inputs = 1);
 
-    auto targets() const { return m_targets.matrix(); }
+    const matrix_t& targets() const { return m_targets; }
 
 private:
-    tensor2d_t m_targets; ///<
+    matrix_t m_targets; ///<
 };
 } // namespace nano

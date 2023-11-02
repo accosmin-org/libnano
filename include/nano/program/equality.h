@@ -21,8 +21,7 @@ struct equality_t
     ///
     /// \brief return true if the given point is feasible with the given threshold.
     ///
-    template <typename tvector, std::enable_if_t<is_eigen_v<tvector>, bool> = true>
-    bool feasible(const tvector& x, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const
+    bool feasible(vector_cmap_t x, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const
     {
         return deviation(x) < epsilon;
     }
@@ -30,8 +29,7 @@ struct equality_t
     ///
     /// \brief return the deviation of the given point from the constraint.
     ///
-    template <typename tvector, std::enable_if_t<is_eigen_v<tvector>, bool> = true>
-    scalar_t deviation(const tvector& x) const
+    scalar_t deviation(vector_cmap_t x) const
     {
         return valid() ? (m_A * x - m_b).array().abs().maxCoeff() : std::numeric_limits<scalar_t>::max();
     }

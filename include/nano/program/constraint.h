@@ -30,7 +30,7 @@ struct NANO_PUBLIC linear_constrained_t
     ///
     /// \brief return true if the given point is feasible with the given threshold.
     ///
-    bool feasible(const vector_t& x, scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const;
+    bool feasible(vector_cmap_t x, scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const;
 
     ///
     /// \brief return true if the equality constraint `Ax = b` is not full row rank.

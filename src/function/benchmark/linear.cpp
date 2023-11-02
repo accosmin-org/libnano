@@ -26,12 +26,12 @@ synthetic_linear_t::synthetic_linear_t(tensor_size_t samples, tensor_size_t outp
     }
 }
 
-tensor2d_t synthetic_linear_t::outputs(const vector_t& x) const
+tensor2d_t synthetic_linear_t::outputs(vector_cmap_t x) const
 {
     return outputs(make_w(x));
 }
 
-tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w) const
+tensor2d_t synthetic_linear_t::outputs(matrix_cmap_t w) const
 {
     tensor2d_t outputs(m_inputs.size<0>(), m_bopt.size());
     outputs.matrix() = inputs() * w.matrix().transpose();

@@ -241,105 +241,8 @@ public:
     void resize(const tdims& dimensions) { tbase::resize(dimensions); }
 
     ///
-    /// \brief set all elements to zero.
-    ///
-    void zero() { array() = tscalar(0); }
-
-    ///
-    /// \brief set all elements to the given constant value.
-    ///
-    void full(const tscalar value) { array() = value; }
-
-    ///
-    /// \brief set all elements to random values in the [min, max] range.
-    ///
-    void random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1, const seed_t seed = seed_t{})
-    {
-        random(array(), min, max, seed);
-    }
-
-    ///
-    /// \brief set all elements in an arithmetic progression from min to max.
-    ///
-    void lin_spaced(const tscalar min, const tscalar max)
-    {
-        array() = eigen_vector_t<tscalar>::LinSpaced(size(), min, max);
-    }
-
-    ///
-    /// \brief returns the minimum value.
-    ///
-    auto min() const { return vector().minCoeff(); }
-
-    ///
-    /// \brief returns the maximum value.
-    ///
-    auto max() const { return vector().maxCoeff(); }
-
-    ///
-    /// \brief returns the average value.
-    ///
-    auto mean() const { return vector().mean(); }
-
-    ///
-    /// \brief returns the sum of all its values.
-    ///
-    auto sum() const { return vector().sum(); }
-
-    ///
-    /// \brief returns the variance of the flatten array.
-    ///
-    auto variance() const
-    {
-        double variance = 0.0;
-        if (size() > 1)
-        {
-            const auto array   = this->array().template cast<double>();
-            const auto count   = static_cast<double>(size());
-            const auto average = array.mean();
-            variance           = array.square().sum() / count - average * average;
-        }
-        return variance;
-    }
-
-    ///
-    /// \brief returns the sample standard deviation of the flatten array.
-    ///
-    auto stdev() const
-    {
-        double stdev = 0.0;
-        if (size() > 1)
-        {
-            const auto count = static_cast<double>(size());
-            stdev            = std::sqrt(variance() / (count - 1));
-        }
-        return stdev;
-    }
-
-    ///
-    /// \brief returns the lp-norm of the flatten array (using the Eigen backend).
-    ///
-    template <int p>
-    auto lpNorm() const
-    {
-        return vector().template lpNorm<p>();
-    }
-
-    ///
-    /// \brief returns the squared norm of the flatten array (using the Eigen backend).
-    ///
-    auto squaredNorm() const { return vector().squaredNorm(); }
-
-    ///
-    /// \brief access the whole tensor as an Eigen vector
-    ///
-    auto vector() { return map_vector(data(), size()); }
-
-    auto vector() const { return map_vector(data(), size()); }
-
-    ///
     /// \brief access a continuous part of the tensor as an Eigen vector
-    ///     (assuming the last dimensions that are ignored are zero)
+    ///     (assuming the last dimensions that are ignored are zero).
     ///
     template <typename... tindices>
     auto vector(const tindices... indices)
@@ -354,15 +257,8 @@ public:
     }
 
     ///
-    /// \brief access the whole tensor as an Eigen array
-    ///
-    auto array() { return vector().array(); }
-
-    auto array() const { return vector().array(); }
-
-    ///
     /// \brief access a part of the tensor as an Eigen array
-    ///     (assuming the last dimensions that are ignored are zero)
+    ///     (assuming the last dimensions that are ignored are zero).
     ///
     template <typename... tindices>
     auto array(const tindices... indices)
@@ -378,7 +274,7 @@ public:
 
     ///
     /// \brief access a part of the tensor as an Eigen matrix
-    ///     (assuming that the last two dimensions are ignored)
+    ///     (assuming that the last two dimensions are ignored).
     ///
     template <typename... tindices>
     auto matrix(const tindices... indices)
@@ -528,6 +424,96 @@ public:
     auto end() const { return data() + size(); }
 
     ///
+    /// \brief set all elements to zero.
+    ///
+    void zero() { array() = tscalar(0); }
+
+    ///
+    /// \brief set all elements to the given constant value.
+    ///
+    void full(const tscalar value) { array() = value; }
+
+    ///
+    /// \brief set all elements to random values in the [min, max] range.
+    ///
+    void random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1, const seed_t seed = seed_t{})
+    {
+        random(array(), min, max, seed);
+    }
+
+    ///
+    /// \brief set all elements in an arithmetic progression from min to max.
+    ///
+    void lin_spaced(const tscalar min, const tscalar max)
+    {
+        array() = eigen_vector_t<tscalar>::LinSpaced(size(), min, max);
+    }
+
+    ///
+    /// \brief returns the minimum value.
+    ///
+    auto min() const { return vector().minCoeff(); }
+
+    ///
+    /// \brief returns the maximum value.
+    ///
+    auto max() const { return vector().maxCoeff(); }
+
+    ///
+    /// \brief returns the average value.
+    ///
+    auto mean() const { return vector().mean(); }
+
+    ///
+    /// \brief returns the sum of all its values.
+    ///
+    auto sum() const { return vector().sum(); }
+
+    ///
+    /// \brief returns the variance of the flatten array.
+    ///
+    auto variance() const
+    {
+        double variance = 0.0;
+        if (size() > 1)
+        {
+            const auto array   = this->array().template cast<double>();
+            const auto count   = static_cast<double>(size());
+            const auto average = array.mean();
+            variance           = array.square().sum() / count - average * average;
+        }
+        return variance;
+    }
+
+    ///
+    /// \brief returns the sample standard deviation of the flatten array.
+    ///
+    auto stdev() const
+    {
+        double stdev = 0.0;
+        if (size() > 1)
+        {
+            const auto count = static_cast<double>(size());
+            stdev            = std::sqrt(variance() / (count - 1));
+        }
+        return stdev;
+    }
+
+    ///
+    /// \brief returns the lp-norm of the flatten array (using the Eigen backend).
+    ///
+    template <int p>
+    auto lpNorm() const
+    {
+        return vector().template lpNorm<p>();
+    }
+
+    ///
+    /// \brief returns the squared norm of the flatten array (using the Eigen backend).
+    ///
+    auto squaredNorm() const { return vector().squaredNorm(); }
+
+    ///
     /// \brief construct an Eigen-based vector or matrix expression with all elements zero.
     ///
     static auto zero(const tensor_size_t size)
@@ -566,38 +552,6 @@ public:
     {
         static_assert(trank == 2);
         return eigen_matrix_t<tscalar>::Identity(rows, cols);
-    }
-
-    ///
-    /// \brief return an Eigen-based vector segment view.
-    ///
-    auto segment(const tensor_size_t row, const tensor_size_t rowsize)
-    {
-        static_assert(trank == 1);
-        return vector().segment(row, rowsize);
-    }
-
-    auto segment(const tensor_size_t row, const tensor_size_t rowsize) const
-    {
-        static_assert(trank == 1);
-        return vector().segment(row, rowsize);
-    }
-
-    ///
-    /// \brief return an Eigen-based matrix block view.
-    ///
-    auto block(const tensor_size_t row, const tensor_size_t col, const tensor_size_t rowsize,
-               const tensor_size_t colsize)
-    {
-        static_assert(trank == 2);
-        return matrix().block(row, col, rowsize, colsize);
-    }
-
-    auto block(const tensor_size_t row, const tensor_size_t col, const tensor_size_t rowsize,
-               const tensor_size_t colsize) const
-    {
-        static_assert(trank == 2);
-        return matrix().block(row, col, rowsize, colsize);
     }
 
 private:
