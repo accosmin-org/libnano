@@ -54,11 +54,10 @@ rfunction_t function_enet_t<tloss>::clone() const
 template <typename tloss>
 scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    const auto inputs  = this->inputs();
     const auto targets = this->targets();
     const auto outputs = this->outputs(x);
 
-    auto fx = tloss::vgrad(inputs, outputs, targets, gx);
+    auto fx = tloss::vgrad(outputs, targets, gx);
 
     if (gx.size() == x.size())
     {

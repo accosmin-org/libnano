@@ -53,14 +53,13 @@ public:
 
     using synthetic_scalar_t::synthetic_scalar_t;
 
-    template <typename tinputs, typename ttargets>
-    scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_map_t gx) const
+    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets;
+        const auto delta = outputs.matrix() - targets.matrix();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, delta, inputs);
+            synthetic_linear_t::vgrad(gx, delta);
         }
 
         return 0.5 * delta.squaredNorm() / static_cast<scalar_t>(outputs.rows());
@@ -79,14 +78,13 @@ public:
 
     using synthetic_scalar_t::synthetic_scalar_t;
 
-    template <typename tinputs, typename ttargets>
-    scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_map_t gx) const
+    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets;
+        const auto delta = outputs.matrix() - targets.matrix();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, delta.array().sign().matrix(), inputs);
+            synthetic_linear_t::vgrad(gx, delta.array().sign().matrix());
         }
 
         return delta.array().abs().sum() / static_cast<scalar_t>(outputs.rows());
@@ -105,14 +103,13 @@ public:
 
     using synthetic_scalar_t::synthetic_scalar_t;
 
-    template <typename tinputs, typename ttargets>
-    scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_map_t gx) const
+    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets;
+        const auto delta = outputs.matrix() - targets.matrix();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, (2.0 * delta.array() / (1.0 + delta.array().square())).matrix(), inputs);
+            synthetic_linear_t::vgrad(gx, (2.0 * delta.array() / (1.0 + delta.array().square())).matrix());
         }
 
         return (delta.array().square() + 1.0).log().sum() / static_cast<scalar_t>(outputs.rows());
@@ -131,14 +128,13 @@ public:
 
     using synthetic_sclass_t::synthetic_sclass_t;
 
-    template <typename tinputs, typename ttargets>
-    scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_map_t gx) const
+    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto edges = -outputs.array() * targets.array();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix(), inputs);
+            synthetic_linear_t::vgrad(gx, (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix());
         }
 
         return (1.0 + edges).max(0.0).sum() / static_cast<scalar_t>(outputs.rows());
@@ -157,14 +153,13 @@ public:
 
     using synthetic_sclass_t::synthetic_sclass_t;
 
-    template <typename tinputs, typename ttargets>
-    scalar_t vgrad(const tinputs& inputs, const tensor2d_t& outputs, const ttargets& targets, vector_map_t gx) const
+    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto edges = (-outputs.array() * targets.array()).exp();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, ((-targets.array() * edges) / (1.0 + edges)).matrix(), inputs);
+            synthetic_linear_t::vgrad(gx, ((-targets.array() * edges) / (1.0 + edges)).matrix());
         }
 
         return (1.0 + edges).log().sum() / static_cast<scalar_t>(outputs.rows());

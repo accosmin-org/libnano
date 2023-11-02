@@ -26,8 +26,8 @@ public:
     matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
     matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
 
-    template <typename tgrad, typename tinputs>
-    void vgrad(vector_map_t gx, const tgrad& gg, const tinputs& inputs) const
+    template <typename tgrad>
+    void vgrad(vector_map_t gx, const tgrad& gg) const
     {
         const auto samples = static_cast<scalar_t>(gg.rows());
 
@@ -35,7 +35,7 @@ public:
 
         // cppcheck-suppress redundantInitialization
         // cppcheck-suppress unreadVariable
-        gw = gg.transpose() * inputs.matrix() / samples;
+        gw = gg.matrix().transpose() * m_inputs.matrix() / samples;
     }
 
 private:
