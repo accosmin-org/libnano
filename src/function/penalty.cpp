@@ -35,7 +35,7 @@ auto penalty_vgrad(const function_t& function, vector_cmap_t x, vector_map_t gx,
     for (const auto& constraint : function.constraints())
     {
         auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
-        const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
+        const auto fc = ::nano::vgrad(constraint, x, gc);
         const auto eq = is_equality(constraint);
 
         if (eq || fc > 0.0)
@@ -81,7 +81,7 @@ scalar_t linear_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) c
     {
         if (gx.size() == x.size())
         {
-            gx += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
+            gx.vector() += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc.vector();
         }
         return penalty() * std::fabs(fc);
     };
@@ -109,7 +109,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx
     {
         if (gx.size() == x.size())
         {
-            gx += penalty() * 2.0 * fc * gc;
+            gx.vector() += penalty() * 2.0 * fc * gc.vector();
         }
         return penalty() * fc * fc;
     };
@@ -147,7 +147,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
     {
         auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
         const auto ro = penalty();
-        const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
+        const auto fc = ::nano::vgrad(constraint, x, gc);
         const auto eq = is_equality(constraint);
         const auto mu = eq ? m_lambda(ilambda++) : m_miu(imiu++);
 
@@ -156,7 +156,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
             if (gx.size() == x.size())
             {
-                gx += ro * (fc + mu / ro) * gc;
+                gx.vector() += ro * (fc + mu / ro) * gc.vector();
             }
         }
     }

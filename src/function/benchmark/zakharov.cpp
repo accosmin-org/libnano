@@ -5,8 +5,10 @@ using namespace nano;
 
 function_zakharov_t::function_zakharov_t(tensor_size_t dims)
     : function_t("zakharov", dims)
-    , m_bias(vector_t::LinSpaced(dims, scalar_t(0.5), scalar_t(dims) / scalar_t(2)))
+    , m_bias(dims)
 {
+    m_bias.lin_spaced(scalar_t(0.5), scalar_t(dims) / scalar_t(2));
+
     convex(convexity::yes);
     smooth(smoothness::yes);
 }
@@ -18,12 +20,12 @@ rfunction_t function_zakharov_t::clone() const
 
 scalar_t function_zakharov_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    const scalar_t u = x.dot(x);
-    const scalar_t v = x.dot(m_bias);
+    const auto u = x.dot(x);
+    const auto v = x.dot(m_bias);
 
     if (gx.size() == x.size())
     {
-        gx = 2 * x + (2 * v + 4 * nano::cube(v)) * m_bias;
+        gx = 2 * x.vector() + (2 * v + 4 * nano::cube(v)) * m_bias.vector();
     }
 
     return u + nano::square(v) + nano::quartic(v);

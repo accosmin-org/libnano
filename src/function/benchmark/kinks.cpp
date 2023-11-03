@@ -12,10 +12,10 @@ function_kinks_t::function_kinks_t(tensor_size_t dims)
     convex(convexity::yes);
     smooth(smoothness::no);
 
-    vector_t kinks(m_kinks.rows());
+    auto kinks = vector_t{m_kinks.rows()};
     for (tensor_size_t i = 0; i < m_kinks.cols(); ++i)
     {
-        kinks = m_kinks.col(i);
+        kinks.vector() = m_kinks.matrix().col(i);
 
         const auto opt = median(begin(kinks), end(kinks));
         m_offset += (kinks.array() - opt).abs().sum();
@@ -29,19 +29,22 @@ rfunction_t function_kinks_t::clone() const
 
 scalar_t function_kinks_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
+    const auto xv = x.vector();
+    const auto km = m_kinks.matrix();
+
     if (gx.size() == x.size())
     {
-        gx.setZero();
+        gx.full(0);
         for (tensor_size_t i = 0; i < m_kinks.rows(); ++i)
         {
-            gx.array() += (x.transpose().array() - m_kinks.row(i).array()).sign();
+            gx.array() += (xv.transpose().array() - km.row(i).array()).sign();
         }
     }
 
     scalar_t fx = 0;
     for (tensor_size_t i = 0; i < m_kinks.rows(); ++i)
     {
-        fx += (x.transpose().array() - m_kinks.row(i).array()).abs().sum();
+        fx += (xv.transpose().array() - km.row(i).array()).abs().sum();
     }
     return fx - m_offset;
 }

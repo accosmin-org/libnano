@@ -8,9 +8,9 @@ namespace nano
 /// \brief pretty-print the given tensor.
 ///
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-std::ostream& print(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor,
-                    const tensor_size_t prefix_space = 0, const tensor_size_t prefix_delim = 0,
-                    const tensor_size_t suffix = 0)
+std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor,
+                     const tensor_size_t prefix_space = 0, const tensor_size_t prefix_delim = 0,
+                     const tensor_size_t suffix = 0)
 {
     [[maybe_unused]] const auto sprint = [&](const char c, const tensor_size_t count) -> std::ostream&
     {
@@ -101,4 +101,4 @@ std::ostream& print(std::ostream& stream, const tensor_t<tstorage, tscalar, tran
     }
     return stream;
 }
-}
+} // namespace nano

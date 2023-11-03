@@ -21,12 +21,15 @@ rfunction_t function_geometric_optimization_t::clone() const
 
 scalar_t function_geometric_optimization_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
+    const auto a = m_a.vector();
+    const auto A = m_A.matrix();
+
     if (gx.size() == x.size())
     {
-        gx = m_A.transpose() * (m_a + m_A * x).array().exp().matrix();
+        gx = A.transpose() * (a + A * x.vector()).array().exp().matrix();
     }
 
-    return (m_a + m_A * x).array().exp().sum();
+    return (a + A * x.vector()).array().exp().sum();
 }
 
 rfunction_t function_geometric_optimization_t::make(tensor_size_t dims, tensor_size_t summands) const

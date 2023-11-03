@@ -1,13 +1,13 @@
 #pragma once
 
-#include <nano/tensor/eigen.h>
+#include <nano/tensor/tensor.h>
 
 namespace nano
 {
 namespace detail
 {
-template <typename tscalar, typename tblock, typename... tblocks>
-void stack(tensor_matrix_t<tscalar>& matrix, const Eigen::Index row, const Eigen::Index col, const tblock& block,
+template <typename tmatrix, typename tblock, typename... tblocks>
+void stack(tmatrix&& matrix, const tensor_size_t row, const tensor_size_t col, const tblock& block,
            const tblocks&... blocks)
 {
     static_assert(is_eigen_v<tblock>);
@@ -20,11 +20,11 @@ void stack(tensor_matrix_t<tscalar>& matrix, const Eigen::Index row, const Eigen
     {
         if (col + block.cols() >= matrix.cols())
         {
-            stack<tscalar>(matrix, row + block.rows(), 0, blocks...);
+            stack(matrix, row + block.rows(), 0, blocks...);
         }
         else
         {
-            stack<tscalar>(matrix, row, col + block.cols(), blocks...);
+            stack(matrix, row, col + block.cols(), blocks...);
         }
     }
     else
@@ -34,8 +34,8 @@ void stack(tensor_matrix_t<tscalar>& matrix, const Eigen::Index row, const Eigen
     }
 }
 
-template <typename tscalar, typename tblock, typename... tblocks>
-void stack(tensor_vector_t<tscalar>& vector, const Eigen::Index row, const tblock& block, const tblocks&... blocks)
+template <typename tvector, typename tblock, typename... tblocks>
+void stack(tvector&& vector, const tensor_size_t row, const tblock& block, const tblocks&... blocks)
 {
     static_assert(is_eigen_v<tblock>);
     assert(block.cols() == 1);
@@ -44,7 +44,7 @@ void stack(tensor_vector_t<tscalar>& vector, const Eigen::Index row, const tbloc
 
     if constexpr (sizeof...(blocks) > 0)
     {
-        stack<tscalar>(vector, row + block.rows(), blocks...);
+        stack(vector, row + block.rows(), blocks...);
     }
     else
     {
@@ -54,46 +54,47 @@ void stack(tensor_vector_t<tscalar>& vector, const Eigen::Index row, const tbloc
 } // namespace detail
 
 ///
-/// \brief stack the given Eigen blocks (e.g. matrices, vectors, operators) in a matrix with the given size.
+/// \brief stack the given Eigen blocks (e.g. matrices, vectors, expressions) in a matrix with the given size.
 ///
 /// NB: the blocks are given in row-major fashion and are assumed to be compatible in size and without gaps.
 ///
-/// example with blocks in the order (matrix1, mastrix2, matrix3, matrix4, matrix5, transposed_vector):
-///  +--------------------|---------------+
-///  |                    |               |
-///  |     matrix1        |    matrix2    |
-///  |                    |               |
-///  +------------|-------|-----|---------+
-///  |            |             |         |
-///  |  matrix3   |   matrix4   | matrix5 |
-///  |            |             |         |
-///  +------------------------------------+
-///  |          transposed_vector         |
-///  +------------------------------------+
+/// example:
+///     inputs: (matrix1, mastrix2, matrix3, matrix4, matrix5, transposed_vector)
+///     result: +--------------------|---------------+
+///             |                    |               |
+///             |     matrix1        |    matrix2    |
+///             |                    |               |
+///             +------------|-------|-----|---------+
+///             |            |             |         |
+///             |  matrix3   |   matrix4   | matrix5 |
+///             |            |             |         |
+///             +------------------------------------+
+///             |          transposed_vector         |
+///             +------------------------------------+
 ///
 template <typename tscalar, typename... tblocks>
-auto stack(const Eigen::Index rows, const Eigen::Index cols, const tblocks&... blocks) ->
-    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_matrix_t<tscalar>>::type
+auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
+    typename std::enable_if<(is_eigen_v<tblocks> && ...), matrix_t<tscalar>>::type
 {
-    auto matrix = tensor_matrix_t<tscalar>(rows, cols);
+    auto matrix = tensor_mem_t<tscalar>{rows, cols};
 
-    detail::stack<tscalar>(matrix, 0, 0, blocks...);
+    detail::stack<tscalar>(matrix.matrix(), 0, 0, blocks...);
 
     return matrix;
 }
 
 ///
-/// \brief stack the given Eigen segments (e.g. vectors, operators) in a vector with the given size.
+/// \brief stack the given Eigen segments (e.g. vectors, expressions) in a vector with the given size.
 ///
 /// NB: the segments are given in row-major fashion and are assumed to be compatible in size and without gaps.
 ///
 template <typename tscalar, typename... tblocks>
-auto stack(const Eigen::Index rows, const tblocks&... blocks) ->
+auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
     typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_vector_t<tscalar>>::type
 {
-    auto vector = tensor_vector_t<tscalar>(rows);
+    auto vector = tensor_mem_t<tscalar, 1>{rows};
 
-    detail::stack<tscalar>(vector, 0, blocks...);
+    detail::stack<tscalar>(vector.vector(), 0, blocks...);
 
     return vector;
 }

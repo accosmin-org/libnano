@@ -17,13 +17,16 @@ public:
                        tensor_size_t modulo_correlated_inputs = 1);
 
     const matrix_t& wopt() const { return m_wopt; }
+
     const vector_t& bopt() const { return m_bopt; }
+
     const matrix_t& inputs() const { return m_inputs; }
 
     tensor2d_t outputs(vector_cmap_t x) const;
     tensor2d_t outputs(matrix_cmap_t w) const;
 
     matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
+
     matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_wopt.dims()); }
 
     template <typename tgrad>

@@ -12,7 +12,7 @@ vector_t make_x0(const tprogram& program)
     const auto x0 = program.make_strictly_feasible();
     if (!x0)
     {
-        return vector_t::Zero(program.m_c.size());
+        return vector_t::zero(program.m_c.size());
     }
     else
     {

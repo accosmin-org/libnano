@@ -20,7 +20,7 @@ scalar_t function_chung_reynolds_t::do_vgrad(vector_cmap_t x, vector_map_t gx) c
 
     if (gx.size() == x.size())
     {
-        gx = (4 * u) * x;
+        gx = (4 * u) * x.vector();
     }
 
     return u * u;

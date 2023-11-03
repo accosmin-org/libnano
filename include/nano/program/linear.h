@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/program/constraint.h>
+#include <nano/program/constrained.h>
 
 namespace nano::program
 {

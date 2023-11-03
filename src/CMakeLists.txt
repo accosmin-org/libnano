@@ -61,7 +61,7 @@ make_lib(NANO solver
     program/solver.cpp
     program/linear.cpp
     program/quadratic.cpp
-    program/constraint.cpp
+    program/constrained.cpp
     function/benchmark/axis_ellipsoid.cpp
     function/benchmark/cauchy.cpp
     function/benchmark/chung_reynolds.cpp

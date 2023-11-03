@@ -86,7 +86,7 @@ bool function_t::constrain(scalar_t min, scalar_t max)
 
 bool function_t::constrain(const vector_t& min, const vector_t& max)
 {
-    if (min.size() == size() && max.size() == size() && (max - min).minCoeff() > 0.0)
+    if (min.size() == size() && max.size() == size() && (max.vector() - min.vector()).minCoeff() > 0.0)
     {
         for (tensor_size_t i = 0, size = this->size(); i < size; ++i)
         {

@@ -62,9 +62,9 @@ auto vgrad(const euclidean_ball_t& constraint, vector_cmap_t x, vector_map_t gx)
     const auto& x0 = constraint.m_origin;
     if (gx.size() == x.size())
     {
-        gx.vector() = 2.0 * (x.vector() - x0.vector());
+        gx = 2.0 * (x.vector() - x0.vector());
     }
-    return (x.vector() - x0.vector()).dot(x - x0.vector()) - constraint.m_radius * constraint.m_radius;
+    return (x.vector() - x0.vector()).squaredNorm() - constraint.m_radius * constraint.m_radius;
 }
 
 auto vgrad(const linear_t& constraint, vector_cmap_t x, vector_map_t gx)
@@ -78,19 +78,20 @@ auto vgrad(const linear_t& constraint, vector_cmap_t x, vector_map_t gx)
 
 auto vgrad(const quadratic_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
+    const auto P = constraint.m_P.matrix();
+    const auto q = constraint.m_q.vector();
     if (gx.size() == x.size())
     {
-        gx = constraint.m_P * x + constraint.m_q;
+        gx = P * x.vector() + q;
     }
-    return 0.5 * x.dot(constraint.m_P * x) + constraint.m_q.dot(x) + constraint.m_r;
+    return 0.5 * x.vector().dot(P * x.vector()) + q.dot(x.vector()) + constraint.m_r;
 }
 
 auto vgrad(const minimum_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
     if (gx.size() == x.size())
     {
-        gx.full(0.0);
-        gx(constraint.m_dimension) = -1.0;
+        gx.full(0.0)(constraint.m_dimension) = -1.0;
     }
     return constraint.m_value - x(constraint.m_dimension);
 }
@@ -99,8 +100,7 @@ auto vgrad(const maximum_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
     if (gx.size() == x.size())
     {
-        gx.full(0.0);
-        gx(constraint.m_dimension) = +1.0;
+        gx.full(0.0)(constraint.m_dimension) = +1.0;
     }
     return x(constraint.m_dimension) - constraint.m_value;
 }
@@ -109,8 +109,7 @@ auto vgrad(const constant_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
     if (gx.size() == x.size())
     {
-        gx.full(0.0);
-        gx(constraint.m_dimension) = +1.0;
+        gx.full(0.0)(constraint.m_dimension) = +1.0;
     }
     return x(constraint.m_dimension) - constraint.m_value;
 }

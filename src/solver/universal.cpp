@@ -51,7 +51,7 @@ solver_state_t solver_pgm_t::do_minimize(const function_t& function, const vecto
         for (tensor_size_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++k)
         {
             xk1     = xk - gxk / M;
-            fxk1    = function.vgrad(xk1, &gxk1);
+            fxk1    = function.vgrad(xk1, gxk1);
             iter_ok = std::isfinite(fxk1) &&
                       fxk1 <= fxk + gxk.dot(xk1 - xk) + 0.5 * M * (xk1 - xk).dot(xk1 - xk) + 0.5 * epsilon;
             M *= 2.0;
@@ -115,7 +115,7 @@ solver_state_t solver_dgm_t::do_minimize(const function_t& function, const vecto
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++k)
         {
             xk1     = gphi - gxk / M;
-            fxk1    = function.vgrad(xk1, &gxk1);
+            fxk1    = function.vgrad(xk1, gxk1);
             iter_ok = std::isfinite(fxk1) &&
                       function.vgrad(yk = xk1 - gxk1 / M) <= fxk1 - 0.5 * gxk1.dot(gxk1) / M + 0.5 * epsilon;
             M *= 2.0;
@@ -186,10 +186,10 @@ solver_state_t solver_fgm_t::do_minimize(const function_t& function, const vecto
             const auto tau = ak1 / (Ak + ak1);
 
             xk1  = tau * vk + (1.0 - tau) * yk;
-            fxk1 = function.vgrad(xk1, &gxk1);
+            fxk1 = function.vgrad(xk1, gxk1);
 
             yk1  = tau * (vk - ak1 * gxk1) + (1.0 - tau) * yk;
-            fyk1 = function.vgrad(yk1, &gyk1);
+            fyk1 = function.vgrad(yk1, gyk1);
 
             iter_ok = std::isfinite(fxk1) && std::isfinite(fyk1) &&
                       fyk1 <= fxk1 + gxk1.dot(yk1 - xk1) + 0.5 * M * (yk1 - xk1).dot(yk1 - xk1) + 0.5 * epsilon * tau;

@@ -431,22 +431,29 @@ public:
     ///
     /// \brief set all elements to the given constant value.
     ///
-    void full(const tscalar value) { array() = value; }
+    auto& full(const tscalar value)
+    {
+        array() = value;
+        return *this;
+    }
 
     ///
     /// \brief set all elements to random values in the [min, max] range.
     ///
-    void random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1, const seed_t seed = seed_t{})
+    auto& random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1,
+                 const seed_t seed = seed_t{})
     {
         random(array(), min, max, seed);
+        return *this;
     }
 
     ///
     /// \brief set all elements in an arithmetic progression from min to max.
     ///
-    void lin_spaced(const tscalar min, const tscalar max)
+    auto& lin_spaced(const tscalar min, const tscalar max)
     {
         array() = eigen_vector_t<tscalar>::LinSpaced(size(), min, max);
+        return *this;
     }
 
     ///
@@ -512,6 +519,43 @@ public:
     /// \brief returns the squared norm of the flatten array (using the Eigen backend).
     ///
     auto squaredNorm() const { return vector().squaredNorm(); }
+
+    ///
+    /// \brief returns the dot product of the flatten array with the given tensor.
+    ///
+    auto dot(const tensor_t<tstorage, tscalar, trank>& other) const { return vector().dot(other.vector()); }
+
+    ///
+    /// \brief returns the dot product of the flatten array with the given Eigen expression.
+    ///
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    auto dot(const texpression& expression) const
+    {
+        return vector().dot(expression);
+    }
+
+    ///
+    /// \brief returns the Eigen-expression associated to the flatten segment [begin, end).
+    ///
+    auto segment(const tensor_size_t begin, const tensor_size_t end) { return vector().segment(begin, end); }
+
+    auto segment(const tensor_size_t begin, const tensor_size_t end) const { return vector().segment(begin, end); }
+
+    ///
+    /// \brief returns the Eigen-expression associated to the matrix block:
+    ///     [row_begin, row_begin + block_rows) x [col_begin, col_begin + block_cols).
+    ///
+    auto block(const tensor_size_t row_begin, const tensor_size_t col_begin, const tensor_size_t block_rows,
+               const tensor_size_t block_cols)
+    {
+        return matrix().block(row_begin, col_begin, block_rows, block_cols);
+    }
+
+    auto block(const tensor_size_t row_begin, const tensor_size_t col_begin, const tensor_size_t block_rows,
+               const tensor_size_t block_cols) const
+    {
+        return matrix().block(row_begin, col_begin, block_rows, block_cols);
+    }
 
     ///
     /// \brief construct an Eigen-based vector or matrix expression with all elements zero.

@@ -72,7 +72,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         }
 
         // solve the quadratic problem to find the stabilized gradient
-        program.m_Q = G * G.transpose();
+        program.m_Q         = G * G.transpose();
         const auto solution = solver.solve(program);
         assert(solution.m_status == solver_status::converged);
 

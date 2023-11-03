@@ -8,7 +8,7 @@ namespace nano::program
 namespace detail
 {
 template <typename tconstraint>
-void update_size(Eigen::Index& rows, Eigen::Index& cols, const tconstraint& constraint)
+void update_size(tensor_size_t& rows, tensor_size_t& cols, const tconstraint& constraint)
 {
     assert(constraint.m_A.rows() == constraint.m_b.size());
     assert(!cols || cols == constraint.m_A.cols());
@@ -18,14 +18,14 @@ void update_size(Eigen::Index& rows, Eigen::Index& cols, const tconstraint& cons
 }
 
 template <typename tconstraint>
-void update_data(matrix_t& A, vector_t& b, const Eigen::Index row, const tconstraint& constraint)
+void update_data(matrix_t& A, vector_t& b, const tensor_size_t row, const tconstraint& constraint)
 {
     A.block(row, 0, constraint.m_A.rows(), constraint.m_A.cols()) = constraint.m_A;
     b.segment(row, constraint.m_b.size())                         = constraint.m_b;
 }
 
 template <typename tconstraint, typename... tconstraints>
-void make_size([[maybe_unused]] Eigen::Index& eqs, Eigen::Index& dims, [[maybe_unused]] Eigen::Index& ineqs,
+void make_size([[maybe_unused]] tensor_size_t& eqs, tensor_size_t& dims, [[maybe_unused]] tensor_size_t& ineqs,
                const tconstraint& constraint, const tconstraints&... constraints)
 {
     if constexpr (is_equality_v<tconstraint>)
@@ -44,7 +44,7 @@ void make_size([[maybe_unused]] Eigen::Index& eqs, Eigen::Index& dims, [[maybe_u
 
 template <typename tconstraint, typename... tconstraints>
 void stack([[maybe_unused]] matrix_t& A, [[maybe_unused]] vector_t& b, [[maybe_unused]] matrix_t& G,
-           [[maybe_unused]] vector_t& h, [[maybe_unused]] Eigen::Index eq, [[maybe_unused]] Eigen::Index ineq,
+           [[maybe_unused]] vector_t& h, [[maybe_unused]] tensor_size_t eq, [[maybe_unused]] tensor_size_t ineq,
            const tconstraint& constraint, const tconstraints&... constraints)
 {
     if constexpr (is_equality_v<tconstraint>)

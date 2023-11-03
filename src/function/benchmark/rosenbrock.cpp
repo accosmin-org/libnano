@@ -27,7 +27,7 @@ scalar_t function_rosenbrock_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 
     if (gx.size() == x.size())
     {
-        gx.setZero();
+        gx.full(0.0);
         for (tensor_size_t i = 0; i + 1 < size(); ++i)
         {
             gx(i) += 2 * (x(i) - 1);

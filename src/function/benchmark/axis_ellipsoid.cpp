@@ -4,8 +4,10 @@ using namespace nano;
 
 function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
     : function_t("axis-ellipsoid", dims)
-    , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+    , m_bias(dims)
 {
+    m_bias.lin_spaced(scalar_t(1), scalar_t(dims));
+
     convex(convexity::yes);
     smooth(smoothness::yes);
     strong_convexity(2.0);

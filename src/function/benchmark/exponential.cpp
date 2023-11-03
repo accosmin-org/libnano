@@ -23,7 +23,7 @@ scalar_t function_exponential_t::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
 
     if (gx.size() == x.size())
     {
-        gx = (2 * fx * alpha) * x;
+        gx = (2 * fx * alpha) * x.vector();
     }
 
     return fx;
