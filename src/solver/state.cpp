@@ -32,7 +32,7 @@ bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, con
     if (std::isfinite(fx))
     {
         const auto df = m_fx - fx;
-        const auto dx = (m_x.vector() - x.vector()).lpNorm<Eigen::Infinity>();
+        const auto dx = (m_x - x).lpNorm<Eigen::Infinity>();
 
         const auto better = df > 0.0;
         if (better)
@@ -210,7 +210,7 @@ std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state
 
 bool nano::converged(const solver_state_t& bstate, const solver_state_t& cstate, const scalar_t epsilon)
 {
-    const auto dx = (cstate.x().vector() - bstate.x().vector()).lpNorm<Eigen::Infinity>();
+    const auto dx = (cstate.x() - bstate.x()).lpNorm<Eigen::Infinity>();
 
     return cstate.constraint_test() < epsilon && (dx < epsilon * std::max(1.0, bstate.x().lpNorm<Eigen::Infinity>()));
 }

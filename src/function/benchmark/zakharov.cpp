@@ -25,7 +25,7 @@ scalar_t function_zakharov_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 
     if (gx.size() == x.size())
     {
-        gx = 2 * x.vector() + (2 * v + 4 * nano::cube(v)) * m_bias.vector();
+        gx = 2 * x + (2 * v + 4 * nano::cube(v)) * m_bias;
     }
 
     return u + nano::square(v) + nano::quartic(v);

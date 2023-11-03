@@ -81,7 +81,7 @@ scalar_t linear_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) c
     {
         if (gx.size() == x.size())
         {
-            gx.vector() += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc.vector();
+            gx.vector() += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
         }
         return penalty() * std::fabs(fc);
     };
@@ -109,7 +109,7 @@ scalar_t quadratic_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx
     {
         if (gx.size() == x.size())
         {
-            gx.vector() += penalty() * 2.0 * fc * gc.vector();
+            gx.vector() += penalty() * 2.0 * fc * gc;
         }
         return penalty() * fc * fc;
     };
@@ -156,7 +156,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
             if (gx.size() == x.size())
             {
-                gx.vector() += ro * (fc + mu / ro) * gc.vector();
+                gx.vector() += ro * (fc + mu / ro) * gc;
             }
         }
     }

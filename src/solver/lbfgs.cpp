@@ -50,7 +50,7 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
             const auto& y = ys[hsize - 1 - j];
 
             const scalar_t alpha = s.dot(q) / s.dot(y);
-            q.noalias() -= alpha * y;
+            q.vector() -= alpha * y;
             alphas[j] = alpha;
         }
 
@@ -73,11 +73,11 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
 
             const scalar_t alpha = alphas[hsize - 1 - j];
             const scalar_t beta  = y.dot(r) / s.dot(y);
-            r.noalias() += s * (alpha - beta);
+            r.vector() += s * (alpha - beta);
         }
 
         auto& descent = r;
-        descent       = -r;
+        descent       = -r.vector();
 
         // force descent direction
         const auto has_descent = cstate.has_descent(descent);

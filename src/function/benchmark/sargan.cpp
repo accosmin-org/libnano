@@ -21,7 +21,7 @@ scalar_t function_sargan_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 
     if (gx.size() == x.size())
     {
-        gx = (1.2 + 1.6 * x2sum) * x.vector();
+        gx = (1.2 + 1.6 * x2sum) * x;
     }
 
     return 0.6 * x2sum + 0.4 * nano::square(x2sum);

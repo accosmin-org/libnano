@@ -19,7 +19,7 @@ scalar_t function_sphere_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     if (gx.size() == x.size())
     {
-        gx = 2 * x.vector();
+        gx = 2 * x;
     }
 
     return x.dot(x);

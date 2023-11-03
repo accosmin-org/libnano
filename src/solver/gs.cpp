@@ -42,12 +42,11 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     auto G   = matrix_t{m, n};
 
     const auto positive = program::make_greater(m, 0.0);
-    const auto weighted = program::make_equality(vector_t::Constant(m, 1.0), 1.0);
+    const auto weighted = program::make_equality(vector_t::constant(m, 1.0), 1.0);
 
     auto descent = vector_t{n};
     auto solver  = program::solver_t{};
-    auto program =
-        program::make_quadratic(matrix_t{matrix_t::Zero(m, m)}, vector_t{vector_t::Zero(m)}, positive, weighted);
+    auto program = program::make_quadratic(matrix_t::zero(m, m), vector_t::zero(m), positive, weighted);
 
     (void)(beta);
     (void)(gamma);

@@ -59,12 +59,11 @@ scalar_t strong_convexity(const functional_t& constraint)
 
 auto vgrad(const euclidean_ball_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
-    const auto& x0 = constraint.m_origin;
     if (gx.size() == x.size())
     {
-        gx = 2.0 * (x.vector() - x0.vector());
+        gx = 2.0 * (x - constraint.m_origin);
     }
-    return (x.vector() - x0.vector()).squaredNorm() - constraint.m_radius * constraint.m_radius;
+    return (x - constraint.m_origin).squaredNorm() - constraint.m_radius * constraint.m_radius;
 }
 
 auto vgrad(const linear_t& constraint, vector_cmap_t x, vector_map_t gx)
@@ -73,7 +72,7 @@ auto vgrad(const linear_t& constraint, vector_cmap_t x, vector_map_t gx)
     {
         gx = constraint.m_q;
     }
-    return constraint.m_q.vector().dot(x.vector()) + constraint.m_r;
+    return constraint.m_q.dot(x) + constraint.m_r;
 }
 
 auto vgrad(const quadratic_t& constraint, vector_cmap_t x, vector_map_t gx)
