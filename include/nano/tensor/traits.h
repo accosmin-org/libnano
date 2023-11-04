@@ -1,9 +1,12 @@
 #pragma once
 
-#include <nano/tensor/tensor.h>
+#include <type_traits>
 
 namespace nano
 {
+template <template <typename, size_t> class, typename, size_t>
+class tensor_t;
+
 ///
 /// \brief traits to check if a given type is a tensor.
 ///

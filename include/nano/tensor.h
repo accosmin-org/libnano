@@ -1,9 +1,7 @@
 #pragma once
 
 #include <nano/scalar.h>
-#include <nano/tensor/makers.h>
-#include <nano/tensor/operators.h>
-#include <nano/tensor/traits.h>
+#include <nano/tensor/tensor.h>
 
 namespace nano
 {

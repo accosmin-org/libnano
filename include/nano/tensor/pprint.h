@@ -1,9 +1,24 @@
 #pragma once
 
-#include <nano/tensor/tensor.h>
+#include <nano/tensor/index.h>
+#include <ostream>
 
 namespace nano
 {
+template <template <typename, size_t> class, typename, size_t>
+class tensor_t;
+
+namespace detail
+{
+inline void sprint(std::ostream& stream, const char c, const tensor_size_t count)
+{
+    for (tensor_size_t i = 0; i < count; ++i)
+    {
+        stream << c;
+    }
+};
+} // namespace detail
+
 ///
 /// \brief pretty-print the given tensor.
 ///
@@ -12,15 +27,6 @@ std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, tra
                      const tensor_size_t prefix_space = 0, const tensor_size_t prefix_delim = 0,
                      const tensor_size_t suffix = 0)
 {
-    [[maybe_unused]] const auto sprint = [&](const char c, const tensor_size_t count) -> std::ostream&
-    {
-        for (tensor_size_t i = 0; i < count; ++i)
-        {
-            stream << c;
-        }
-        return stream;
-    };
-
     if (prefix_space == 0 && prefix_delim == 0 && suffix == 0)
     {
         stream << "shape: " << tensor.dims() << "\n";
@@ -28,20 +34,20 @@ std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, tra
 
     if constexpr (trank == 1)
     {
-        sprint('[', prefix_delim + 1);
+        detail::sprint(stream, '[', prefix_delim + 1);
         if constexpr (std::is_same_v<tscalar, int8_t>)
         {
-            stream << tensor.vector().transpose().template cast<int16_t>();
+            stream << tensor.transpose().template cast<int16_t>();
         }
         else if constexpr (std::is_same_v<tscalar, uint8_t>)
         {
-            stream << tensor.vector().transpose().template cast<uint16_t>();
+            stream << tensor.transpose().template cast<uint16_t>();
         }
         else
         {
             stream << tensor.vector().transpose();
         }
-        sprint(']', suffix + 1);
+        detail::sprint(stream, ']', suffix + 1);
     }
     else if constexpr (trank == 2)
     {
@@ -50,13 +56,13 @@ std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, tra
         {
             if (row == 0)
             {
-                sprint(' ', prefix_space);
-                sprint('[', prefix_delim + 2);
+                detail::sprint(stream, ' ', prefix_space);
+                detail::sprint(stream, '[', prefix_delim + 2);
             }
             else
             {
-                sprint(' ', prefix_space + prefix_delim + 1);
-                sprint('[', 1);
+                detail::sprint(stream, ' ', prefix_space + prefix_delim + 1);
+                detail::sprint(stream, '[', 1);
             }
 
             if constexpr (std::is_same_v<tscalar, int8_t>)
@@ -78,7 +84,7 @@ std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, tra
             }
             else
             {
-                sprint(']', suffix + 2);
+                detail::sprint(stream, ']', suffix + 2);
             }
         }
     }
@@ -86,8 +92,8 @@ std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, tra
     {
         for (tensor_size_t row = 0, nrows = tensor.template size<0>(); row < nrows; ++row)
         {
-            print(stream, tensor.tensor(row), (row == 0) ? prefix_space : (prefix_space + prefix_delim + 1),
-                  (row == 0) ? (prefix_delim + 1) : 0, suffix);
+            pprint(stream, tensor.tensor(row), (row == 0) ? prefix_space : (prefix_space + prefix_delim + 1),
+                   (row == 0) ? (prefix_delim + 1) : 0, suffix);
 
             if (row + 1 < nrows)
             {

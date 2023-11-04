@@ -6,8 +6,8 @@ namespace nano
 {
 namespace detail
 {
-template <typename tmatrix, typename tblock, typename... tblocks>
-void stack(tmatrix&& matrix, const tensor_size_t row, const tensor_size_t col, const tblock& block,
+template <typename tscalar, typename tblock, typename... tblocks>
+void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const tensor_size_t col, const tblock& block,
            const tblocks&... blocks)
 {
     static_assert(is_eigen_v<tblock>);
@@ -34,8 +34,8 @@ void stack(tmatrix&& matrix, const tensor_size_t row, const tensor_size_t col, c
     }
 }
 
-template <typename tvector, typename tblock, typename... tblocks>
-void stack(tvector&& vector, const tensor_size_t row, const tblock& block, const tblocks&... blocks)
+template <typename tscalar, typename tblock, typename... tblocks>
+void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tblock& block, const tblocks&... blocks)
 {
     static_assert(is_eigen_v<tblock>);
     assert(block.cols() == 1);
@@ -74,11 +74,11 @@ void stack(tvector&& vector, const tensor_size_t row, const tblock& block, const
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
-    typename std::enable_if<(is_eigen_v<tblocks> && ...), matrix_t<tscalar>>::type
+    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_mem_t<tscalar, 2U>>::type
 {
-    auto matrix = tensor_mem_t<tscalar>{rows, cols};
+    auto matrix = tensor_mem_t<tscalar, 2U>{rows, cols};
 
-    detail::stack<tscalar>(matrix.matrix(), 0, 0, blocks...);
+    detail::stack<tscalar>(matrix, 0, 0, blocks...);
 
     return matrix;
 }
@@ -90,11 +90,11 @@ auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&...
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
-    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_vector_t<tscalar>>::type
+    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_mem_t<tscalar, 1U>>::type
 {
-    auto vector = tensor_mem_t<tscalar, 1>{rows};
+    auto vector = tensor_mem_t<tscalar, 1U>{rows};
 
-    detail::stack<tscalar>(vector.vector(), 0, blocks...);
+    detail::stack<tscalar>(vector, 0, blocks...);
 
     return vector;
 }
