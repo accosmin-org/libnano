@@ -31,7 +31,7 @@ auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
 template <typename tvector>
 auto BFGS(const matrix_t& H, const tvector& dx, const tvector& dg)
 {
-    const auto I = matrix_t::Identity(H.rows(), H.cols());
+    const auto I = matrix_t::identity(H.rows(), H.cols());
 
     return (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
            dx * dx.transpose() / dx.dot(dg);
@@ -91,7 +91,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     auto descent = vector_t{};       // descent direction
 
     // current approximation of the Hessian's inverse
-    matrix_t H = matrix_t::Identity(function.size(), function.size());
+    matrix_t H = matrix_t::identity(function.size(), function.size());
 
     bool first_iteration = false;
     while (function.fcalls() + function.gcalls() < max_evals)

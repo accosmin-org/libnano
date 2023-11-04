@@ -123,7 +123,7 @@ solver_state_t solver_dgm_t::do_minimize(const function_t& function, const vecto
 
         if (iter_ok)
         {
-            gphi.vector() -= gxk / M;
+            gphi -= gxk / M;
 
             // 2. update current and best state (if the line-search step doesn't fail)
             L   = 0.5 * M;
@@ -202,7 +202,7 @@ solver_state_t solver_fgm_t::do_minimize(const function_t& function, const vecto
             yk = yk1;
             Ak += ak1;
             L = 0.5 * M;
-            vk.vector() -= ak1 * gxk1;
+            vk -= ak1 * gxk1;
             state.update_if_better(yk1, gyk1, fyk1);
 
             converged = state.value_test(patience) < epsilon;

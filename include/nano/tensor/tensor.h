@@ -558,6 +558,42 @@ public:
     }
 
     ///
+    /// \brief subtract element-wise the given Eigen expression.
+    ///
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    tensor_t& operator-=(const texpression& expression)
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            vector() -= expression;
+        }
+        else
+        {
+            matrix() -= expression;
+        }
+        return *this;
+    }
+
+    ///
+    /// \brief add element-wise the given Eigen expression.
+    ///
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    tensor_t& operator+=(const texpression& expression)
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            vector() += expression;
+        }
+        else
+        {
+            matrix() += expression;
+        }
+        return *this;
+    }
+
+    ///
     /// \brief construct an Eigen-based vector or matrix expression with all elements zero.
     ///
     static auto zero(const tensor_size_t size)

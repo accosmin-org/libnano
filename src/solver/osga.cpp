@@ -99,7 +99,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         }
 
         x            = xb + alpha * (u - xb);
-        const auto f = function.vgrad(x, &g);
+        const auto f = function.vgrad(x, g);
         g            = g - miu * proxy.gQ(x);
 
         h_hat                = h + alpha * (g - h);

@@ -69,8 +69,8 @@ struct solver_t::program_t
 
         if (p > 0)
         {
-            m_lmat.block(0, n, n, p) = m_A.transpose();
-            m_lmat.block(n, 0, p, n) = m_A;
+            m_lmat.block(0, n, n, p) = m_A.matrix().transpose();
+            m_lmat.block(n, 0, p, n) = m_A.matrix();
         }
         m_lmat.block(n, n, p, p).array() = 0.0;
     }
@@ -81,6 +81,16 @@ struct solver_t::program_t
 
     tensor_size_t m() const { return m_G.rows(); }
 
+    auto A() const { return m_A.matrix(); }
+
+    auto b() const { return m_b.vector(); }
+
+    auto G() const { return m_G.matrix(); }
+
+    auto h() const { return m_h.vector(); }
+
+    auto Q() const { return m_Q.value().get().matrix(); }
+
     template <typename thessvar, typename trdual, typename trprim>
     const vector_t& solve(const thessvar& hessvar, const trdual& rdual, const trprim& rprim) const
     {
@@ -90,7 +100,7 @@ struct solver_t::program_t
         // setup additional hessian components
         if (m_Q)
         {
-            m_lmat.block(0, 0, n, n) = m_Q.value().get() - hessvar;
+            m_lmat.block(0, 0, n, n) = Q() - hessvar;
         }
         else
         {
@@ -102,8 +112,8 @@ struct solver_t::program_t
         m_lvec.segment(n, p) = -rprim;
 
         // solve the system
-        m_ldlt.compute(m_lmat);
-        m_lsol = m_ldlt.solve(m_lvec);
+        m_ldlt.compute(m_lmat.matrix());
+        m_lsol = m_ldlt.solve(m_lvec.vector());
         return m_lsol;
     }
 
@@ -121,33 +131,33 @@ struct solver_t::program_t
         }
         else
         {
-            state.m_fx    = 0.5 * x.dot(m_Q.value().get() * x) + x.dot(m_c);
-            state.m_rdual = m_Q.value().get() * x + m_c;
+            state.m_fx    = 0.5 * x.dot(Q() * x) + x.dot(m_c);
+            state.m_rdual = Q() * x + m_c;
         }
 
         // surrogate duality gap
         if (m > 0)
         {
-            state.m_eta = -u.dot(m_G * x - m_h);
+            state.m_eta = -u.dot(G() * x - h());
         }
 
         // residual contributions of linear equality constraints
         if (p > 0)
         {
-            state.m_rdual += m_A.transpose() * v;
-            state.m_rprim = m_A * x - m_b;
+            state.m_rdual += A().transpose() * v;
+            state.m_rprim = A() * x - b();
         }
 
         // residual contributions of linear inequality constraints
         if (m > 0)
         {
-            state.m_rdual += m_G.transpose() * u;
-            state.m_rcent.array() =
-                -state.m_eta / (miu * static_cast<scalar_t>(m)) - u.array() * (m_G * x - m_h).array();
+            const auto sm = static_cast<scalar_t>(m);
+            state.m_rdual += G().transpose() * u;
+            state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (G() * x - h()).array();
         }
     }
 
-    using lin_solver_t = Eigen::LDLT<matrix_t>;
+    using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes
     opt_matrix_t         m_Q;    ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
@@ -210,11 +220,11 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
     const auto max_iters         = parameter("solver::max_iters").value<tensor_size_t>();
     const auto max_lsearch_iters = parameter("solver::max_lsearch_iters").value<tensor_size_t>();
 
-    const auto& G = program.m_G;
-    const auto& h = program.m_h;
-    const auto  n = program.n();
-    const auto  p = program.p();
-    const auto  m = program.m();
+    const auto G = program.G();
+    const auto h = program.h();
+    const auto n = program.n();
+    const auto p = program.p();
+    const auto m = program.m();
 
     auto state = solver_state_t{n, m, p};
     state.m_x  = x0;
@@ -349,7 +359,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
     const auto  p = program.p();
 
     // NB: solve directly the KKT-based system of linear equations coupling (x, v)
-    program.solve(matrix_t::Zero(n, n), c, -b);
+    program.solve(matrix_t::zero(n, n), c, -b);
 
     // current solver state
     auto state  = solver_state_t{n, 0, p};

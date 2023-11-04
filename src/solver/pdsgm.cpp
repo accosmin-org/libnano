@@ -100,7 +100,7 @@ solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vec
         model.update(lambda, x, gx);
 
         x             = model.xk1(betah);
-        const auto fx = function.vgrad(x, &gx);
+        const auto fx = function.vgrad(x, gx);
         state.update_if_better(x, gx, fx); // FIXME: option to obtain only the gradient without the function value!
 
         const auto iter_ok   = std::isfinite(fx);

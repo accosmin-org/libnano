@@ -44,13 +44,13 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         L.array() = L.array().max(gx.array().abs());
         G.array() += gx.array().abs();
 
-        theta -= gx;
+        theta -= gx.vector();
         reward = (reward.array() - (x - x0).array() * gx.array()).max(0.0);
 
         const auto beta = (theta.array() / (G + L).array()).tanh() / L.array();
         x               = x0.array() + beta * (L + reward).array();
 
-        const auto fx = function.vgrad(x, &gx);
+        const auto fx = function.vgrad(x, gx);
         state.update_if_better(x, gx, fx);
 
         const auto iter_ok   = std::isfinite(fx);

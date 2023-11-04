@@ -59,7 +59,7 @@ std::optional<vector_t> linear_constrained_t::make_strictly_feasible() const
         {
             const auto y = std::pow(epsil0, static_cast<scalar_t>(trial));
 
-            x = decomp.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
+            x.vector() = decomp.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
             if ((A * x.vector() - b).maxCoeff() < 0.0)
             {
                 ret = std::move(x);

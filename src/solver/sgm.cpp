@@ -40,7 +40,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
         }
 
         const auto lambda = 1.0 / std::pow(iteration + 1, power);
-        x.vector() -= lambda * g / g.lpNorm<2>();
+        x -= lambda * g / g.lpNorm<2>();
 
         const auto f = function.vgrad(x, g);
         state.update_if_better(x, g, f);

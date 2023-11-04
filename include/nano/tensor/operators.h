@@ -54,10 +54,18 @@ auto operator*(const tscalar_factor factor, const tensor_t<tstorage, tscalar, 1U
     return lhs.vector() * static_cast<tscalar>(factor);
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar>
-auto operator-(const tensor_t<tstorage, tscalar, 1U>& lhs, const tensor_t<tstorage, tscalar, 1U>& rhs)
+template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
+          typename tscalar>
+auto operator-(const tensor_t<tstorage_lhs, tscalar, 1U>& lhs, const tensor_t<tstorage_rhs, tscalar, 1U>& rhs)
 {
     return lhs.vector() - rhs.vector();
+}
+
+template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
+          typename tscalar>
+auto operator+(const tensor_t<tstorage_lhs, tscalar, 1U>& lhs, const tensor_t<tstorage_rhs, tscalar, 1U>& rhs)
+{
+    return lhs.vector() + rhs.vector();
 }
 
 template <template <typename, size_t> class tstorage, typename tscalar, typename texpression,
@@ -74,11 +82,26 @@ auto operator+(const tensor_t<tstorage, tscalar, 1U>& lhs, const texpression& ex
     return lhs.vector() + expression;
 }
 
+template <typename texpression, template <typename, size_t> class tstorage, typename tscalar,
+          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+auto operator-(const texpression& expression, const tensor_t<tstorage, tscalar, 1U>& rhs)
+{
+    return expression - rhs.vector();
+}
+
+template <typename texpression, template <typename, size_t> class tstorage, typename tscalar,
+          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+auto operator+(const texpression& expression, const tensor_t<tstorage, tscalar, 1U>& rhs)
+{
+    return expression + rhs.vector();
+}
+
 ///
 /// \brief mathematical operators for 2D tensors that return Eigen matrix expressions.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar>
-auto operator-(const tensor_t<tstorage, tscalar, 2U>& lhs, const tensor_t<tstorage, tscalar, 2U>& rhs)
+template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
+          typename tscalar>
+auto operator-(const tensor_t<tstorage_lhs, tscalar, 2U>& lhs, const tensor_t<tstorage_rhs, tscalar, 2U>& rhs)
 {
     return lhs.matrix() - rhs.matrix();
 }
