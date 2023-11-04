@@ -63,19 +63,16 @@ scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
             ::nano::linear::predict(inputs, W, b, accumulator.m_outputs);
             m_loss.value(targets, accumulator.m_outputs, accumulator.m_values);
 
-            const auto vvector = accumulator.m_values.vector();
-
-            accumulator.m_vm1 += vvector.array().sum();
+            accumulator.m_vm1 += accumulator.m_values.sum();
 
             if (gx.size() > 0)
             {
                 m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
 
-                const auto imatrix = inputs.matrix();
-                const auto gmatrix = accumulator.m_vgrads.reshape(range.size(), m_tsize).matrix();
+                const auto gmatrix = accumulator.m_vgrads.reshape(range.size(), m_tsize);
 
-                accumulator.m_gb1.vector() += gmatrix.colwise().sum();
-                accumulator.m_gW1.matrix() += gmatrix.transpose() * imatrix;
+                accumulator.m_gb1.vector() += gmatrix.matrix().colwise().sum();
+                accumulator.m_gW1.matrix() += gmatrix.transpose() * inputs;
             }
         });
 

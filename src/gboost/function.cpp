@@ -142,9 +142,8 @@ scalar_t bias_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
             {
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
-                const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
 
-                accumulator.m_gb1 += gmatrix.colwise().sum();
+                accumulator.m_gb1 += vgrads.reshape(range.size(), tsize).matrix().colwise().sum();
             }
         });
 
@@ -180,8 +179,7 @@ scalar_t grads_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     const auto& grads = gradients(map_tensor(x.data(), odims));
     if (gx.size() > 0)
     {
-        gx = grads.vector();
-        gx /= static_cast<scalar_t>(samples.size());
+        gx = grads.vector() / static_cast<scalar_t>(samples.size());
     }
 
     // OK
