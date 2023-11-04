@@ -66,16 +66,16 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         // sample gradients within the given radius
         for (tensor_size_t i = 0; i < m; ++i)
         {
-            sample_from_ball(state.x(), epsilon0, map_vector(x.data(), n), rng);
-            function.vgrad(map_vector(x.data(), n), map_vector(G.row(i).data(), n));
+            sample_from_ball(state.x(), epsilon0, x, rng);
+            function.vgrad(x, map_tensor(G.matrix().row(i).data(), n));
         }
 
         // solve the quadratic problem to find the stabilized gradient
-        program.m_Q         = G * G.transpose();
+        program.m_Q         = G.matrix() * G.matrix().transpose();
         const auto solution = solver.solve(program);
         assert(solution.m_status == solver_status::converged);
 
-        descent = -G.transpose() * solution.m_x;
+        descent = -G.matrix().transpose() * solution.m_x.vector();
 
         // TODO: line-search
 

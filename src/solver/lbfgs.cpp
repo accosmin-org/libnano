@@ -77,13 +77,13 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
         }
 
         auto& descent = r;
-        descent       = -r.vector();
+        descent       = -r;
 
         // force descent direction
         const auto has_descent = cstate.has_descent(descent);
         if (!has_descent)
         {
-            descent = -cstate.gx().vector();
+            descent = -cstate.gx();
         }
 
         // line-search

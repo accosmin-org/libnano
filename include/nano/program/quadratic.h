@@ -52,7 +52,7 @@ auto make_quadratic(matrix_t Q, vector_t c, const tconstraints&... constraints)
 /// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
 ///
 template <typename... tconstraints>
-auto make_quadratic(const vector_t& Q_upper_triangular, vector_t c, const tconstraints&... constraints)
+auto make_quadratic_symmetric(const vector_t& Q_upper_triangular, vector_t c, const tconstraints&... constraints)
 {
     auto program = quadratic_program_t{Q_upper_triangular, std::move(c)};
     program.constrain(constraints...);

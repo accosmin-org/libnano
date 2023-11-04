@@ -457,6 +457,11 @@ public:
     }
 
     ///
+    /// \brief return true if all values are finite.
+    ///
+    bool all_finite() const { return vector().allFinite(); }
+
+    ///
     /// \brief returns the minimum value.
     ///
     auto min() const { return vector().minCoeff(); }
