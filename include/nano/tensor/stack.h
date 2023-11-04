@@ -10,45 +10,82 @@ template <typename tscalar, typename tblock, typename... tblocks>
 void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const tensor_size_t col, const tblock& block,
            const tblocks&... blocks)
 {
-    static_assert(is_eigen_v<tblock>);
-    assert(col + block.cols() <= matrix.cols());
-    assert(row + block.rows() <= matrix.rows());
+    static_assert(is_eigen_v<tblock> || is_tensor_v<tblock>);
 
-    matrix.block(row, col, block.rows(), block.cols()) = block;
-
-    if constexpr (sizeof...(blocks) > 0)
+    const auto next = [&](const tensor_size_t block_rows, const tensor_size_t block_cols)
     {
-        if (col + block.cols() >= matrix.cols())
+        if constexpr (sizeof...(blocks) > 0)
         {
-            stack(matrix, row + block.rows(), 0, blocks...);
+            if (col + block_cols >= matrix.cols())
+            {
+                stack(matrix, row + block_rows, 0, blocks...);
+            }
+            else
+            {
+                stack(matrix, row, col + block_cols, blocks...);
+            }
         }
         else
         {
-            stack(matrix, row, col + block.cols(), blocks...);
+            assert(row + block_rows == matrix.rows());
+            assert(col + block_cols == matrix.cols());
         }
+    };
+
+    if constexpr (is_eigen_v<tblock>)
+    {
+        assert(col + block.cols() <= matrix.cols());
+        assert(row + block.rows() <= matrix.rows());
+
+        matrix.block(row, col, block.rows(), block.cols()) = block;
+        next(block.rows(), block.cols());
+    }
+    else if constexpr (block.rank() == 2U)
+    {
+        assert(col + block.cols() <= matrix.cols());
+        assert(row + block.rows() <= matrix.rows());
+
+        matrix.block(row, col, block.rows(), block.cols()) = block.matrix();
+        next(block.rows(), block.cols());
     }
     else
     {
-        assert(row + block.rows() == matrix.rows());
-        assert(col + block.cols() == matrix.cols());
+        static_assert(block.rank() == 1U);
+        assert(col + 1 <= matrix.cols());
+        assert(row + block.size() <= matrix.rows());
+
+        matrix.block(row, col, block.size(), 1) = block.vector();
+        next(block.size(), 1);
     }
 }
 
 template <typename tscalar, typename tblock, typename... tblocks>
 void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tblock& block, const tblocks&... blocks)
 {
-    static_assert(is_eigen_v<tblock>);
-    assert(block.cols() == 1);
+    static_assert(is_eigen_v<tblock> || is_tensor_v<tblock>);
 
-    vector.segment(row, block.rows()) = block;
-
-    if constexpr (sizeof...(blocks) > 0)
+    if constexpr (is_eigen_v<tblock>)
     {
-        stack(vector, row + block.rows(), blocks...);
+        assert(block.cols() == 1);
+        assert(row + block.size() <= vector.size());
+
+        vector.segment(row, block.size()) = block;
     }
     else
     {
-        assert(row + block.rows() == vector.rows());
+        static_assert(block.rank() == 1U);
+        assert(row + block.size() <= vector.size());
+
+        vector.segment(row, block.size()) = block.vector();
+    }
+
+    if constexpr (sizeof...(blocks) > 0)
+    {
+        stack(vector, row + block.size(), blocks...);
+    }
+    else
+    {
+        assert(row + block.size() == vector.size());
     }
 }
 } // namespace detail
@@ -74,7 +111,7 @@ void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tbl
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
-    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_mem_t<tscalar, 2U>>::type
+    typename std::enable_if<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 2U>>::type
 {
     auto matrix = tensor_mem_t<tscalar, 2U>{rows, cols};
 
@@ -90,7 +127,7 @@ auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&...
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
-    typename std::enable_if<(is_eigen_v<tblocks> && ...), tensor_mem_t<tscalar, 1U>>::type
+    typename std::enable_if<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 1U>>::type
 {
     auto vector = tensor_mem_t<tscalar, 1U>{rows};
 
