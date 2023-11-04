@@ -9,7 +9,7 @@ function_quadratic_t::function_quadratic_t(tensor_size_t dims)
 {
     // NB: generate random positive semi-definite matrix to keep the function convex
     const auto A = make_random_matrix<scalar_t>(dims, dims, -1.0, +1.0, seed_t{42});
-    m_A          = matrix_t::identity(dims, dims) + A.matrix() * A.matrix().transpose();
+    m_A          = matrix_t::identity(dims, dims) + A * A.transpose();
 
     convex(convexity::yes);
     smooth(smoothness::yes);

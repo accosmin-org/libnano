@@ -1,3 +1,4 @@
+#include <nano/core/numeric.h>
 #include <nano/dataset/iterator.h>
 
 using namespace nano;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/numeric.h>
 #include <nano/core/random.h>
 #include <nano/tensor/eigen.h>
 #include <nano/tensor/range.h>
@@ -542,9 +541,17 @@ public:
     ///
     /// \brief returns the Eigen-expression associated to the flatten segment [begin, end).
     ///
-    auto segment(const tensor_size_t begin, const tensor_size_t end) { return vector().segment(begin, end); }
+    auto segment(const tensor_size_t begin, const tensor_size_t end)
+    {
+        static_assert(trank == 1);
+        return vector().segment(begin, end);
+    }
 
-    auto segment(const tensor_size_t begin, const tensor_size_t end) const { return vector().segment(begin, end); }
+    auto segment(const tensor_size_t begin, const tensor_size_t end) const
+    {
+        static_assert(trank == 1);
+        return vector().segment(begin, end);
+    }
 
     ///
     /// \brief returns the Eigen-expression associated to the matrix block:
@@ -553,13 +560,64 @@ public:
     auto block(const tensor_size_t row_begin, const tensor_size_t col_begin, const tensor_size_t block_rows,
                const tensor_size_t block_cols)
     {
+        static_assert(trank == 2);
         return matrix().block(row_begin, col_begin, block_rows, block_cols);
     }
 
     auto block(const tensor_size_t row_begin, const tensor_size_t col_begin, const tensor_size_t block_rows,
                const tensor_size_t block_cols) const
     {
+        static_assert(trank == 2);
         return matrix().block(row_begin, col_begin, block_rows, block_cols);
+    }
+
+    ///
+    /// \brief returns the Eigen-expression associated to the vector or matrix transpose.
+    ///
+    auto transpose()
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            return vector().transpose();
+        }
+        else
+        {
+            return matrix().transpose();
+        }
+    }
+
+    auto transpose() const
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            return vector().transpose();
+        }
+        else
+        {
+            return matrix().transpose();
+        }
+    }
+
+    ///
+    /// \brief multiply element-wise by the given factor.
+    ///
+    template <typename tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
+    tensor_t& operator*=(const tscalar_factor factor)
+    {
+        vector() *= static_cast<tscalar>(factor);
+        return *this;
+    }
+
+    ///
+    /// \brief divide element-wise by the given factor.
+    ///
+    template <typename tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
+    tensor_t& operator/=(const tscalar_factor factor)
+    {
+        vector() /= static_cast<tscalar>(factor);
+        return *this;
     }
 
     ///
@@ -581,6 +639,17 @@ public:
     }
 
     ///
+    /// \brief subtract element-wise the given tensor.
+    ///
+    template <template <typename, size_t> class tstorage_rhs>
+    tensor_t& operator-=(const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
+    {
+        assert(dims() == rhs.dims());
+        vector() -= rhs.vector();
+        return *this;
+    }
+
+    ///
     /// \brief add element-wise the given Eigen expression.
     ///
     template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
@@ -595,6 +664,17 @@ public:
         {
             matrix() += expression;
         }
+        return *this;
+    }
+
+    ///
+    /// \brief add element-wise the given tensor.
+    ///
+    template <template <typename, size_t> class tstorage_rhs>
+    tensor_t& operator+=(const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
+    {
+        assert(dims() == rhs.dims());
+        vector() += rhs.vector();
         return *this;
     }
 
@@ -719,30 +799,5 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
 auto end(const tensor_t<tstorage, tscalar, trank>& m)
 {
     return m.data() + m.size();
-}
-
-///
-/// \brief returns true if the two tensors are close, ignoring not-finite values if present.
-///
-template <template <typename, size_t> class tstorage1, template <typename, size_t> class tstorage2, typename tscalar,
-          size_t trank>
-bool close(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstorage2, tscalar, trank>& rhs,
-           const double epsilon)
-{
-    if (lhs.dims() != rhs.dims())
-    {
-        return false;
-    }
-    for (tensor_size_t i = 0, size = lhs.size(); i < size; ++i)
-    {
-        const auto lhs_finite = ::nano::isfinite(lhs(i));
-        const auto rhs_finite = ::nano::isfinite(rhs(i));
-        if ((lhs_finite != rhs_finite) ||
-            (lhs_finite && !close(static_cast<double>(lhs(i)), static_cast<double>(rhs(i)), epsilon)))
-        {
-            return false;
-        }
-    }
-    return true;
 }
 } // namespace nano

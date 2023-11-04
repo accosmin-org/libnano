@@ -34,8 +34,8 @@ tensor2d_t synthetic_linear_t::outputs(vector_cmap_t x) const
 tensor2d_t synthetic_linear_t::outputs(matrix_cmap_t w) const
 {
     tensor2d_t outputs(m_inputs.size<0>(), m_bopt.size());
-    outputs.matrix() = inputs().matrix() * w.matrix().transpose();
-    outputs.matrix().rowwise() += m_bopt.vector().transpose();
+    outputs.matrix() = inputs().matrix() * w.transpose();
+    outputs.matrix().rowwise() += m_bopt.transpose();
     return outputs;
 } // LCOV_EXCL_LINE
 

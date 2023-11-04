@@ -19,7 +19,7 @@ bool linear_constrained_t::reduce()
     auto& A = m_eq.m_A;
     auto& b = m_eq.m_b;
 
-    const auto dd = A.matrix().transpose().fullPivLu();
+    const auto dd = A.transpose().fullPivLu();
 
     // independant linear constraints
     if (dd.rank() == A.rows())

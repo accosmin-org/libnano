@@ -101,6 +101,11 @@ struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_ty
 {
 };
 
+template <typename MatrixType, typename BinaryOp, int Direction>
+struct is_eigen<Eigen::PartialReduxExpr<MatrixType, BinaryOp, Direction>> : std::true_type
+{
+};
+
 template <typename LhsType, typename RhsType, int toptions>
 struct is_eigen<Eigen::Product<LhsType, RhsType, toptions>> : std::true_type
 {

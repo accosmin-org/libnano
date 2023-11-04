@@ -29,7 +29,7 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
     auto descent = vector_t{function.size()};
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        descent = -state.gx().vector();
+        descent = -state.gx();
 
         // line-search
         const auto iter_ok = lsearch.get(state, descent);

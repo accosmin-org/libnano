@@ -80,7 +80,7 @@ scalar_t quadratic_surrogate_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     if (gx.size() == x.size())
     {
-        gx.setZero();
+        gx.zero();
 
         auto k = tensor_size_t{1};
         for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
@@ -161,7 +161,7 @@ void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_ca
         }
 
         const auto surrogate_fit = quadratic_surrogate_fit_t{*loss, p, y};
-        auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::Zero(surrogate_fit.size()));
+        auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::zero(surrogate_fit.size()));
         critical(!min_state_fit.valid(), "tuner: failed to fit the surrogate model <", min_state_fit, ">!");
 
         const auto surrogate_opt = quadratic_surrogate_t{min_state_fit.x()};

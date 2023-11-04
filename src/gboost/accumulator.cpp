@@ -4,7 +4,7 @@ using namespace nano;
 using namespace nano::gboost;
 
 accumulator_t::accumulator_t(const tensor_size_t tsize)
-    : m_gb1(vector_t::Zero(tsize))
+    : m_gb1(vector_t::zero(tsize))
 {
 }
 

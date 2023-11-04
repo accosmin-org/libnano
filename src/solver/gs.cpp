@@ -71,11 +71,11 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         }
 
         // solve the quadratic problem to find the stabilized gradient
-        program.m_Q         = G.matrix() * G.matrix().transpose();
+        program.m_Q         = G * G.transpose();
         const auto solution = solver.solve(program);
         assert(solution.m_status == solver_status::converged);
 
-        descent = -G.matrix().transpose() * solution.m_x.vector();
+        descent = -G.transpose() * solution.m_x.vector();
 
         // TODO: line-search
 

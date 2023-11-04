@@ -69,7 +69,7 @@ struct solver_t::program_t
 
         if (p > 0)
         {
-            m_lmat.block(0, n, n, p) = m_A.matrix().transpose();
+            m_lmat.block(0, n, n, p) = m_A.transpose();
             m_lmat.block(n, 0, p, n) = m_A.matrix();
         }
         m_lmat.block(n, n, p, p).array() = 0.0;
@@ -136,7 +136,7 @@ struct solver_t::program_t
         // residual contributions of linear equality constraints
         if (p > 0)
         {
-            state.m_rdual += m_A.matrix().transpose() * v;
+            state.m_rdual += m_A.transpose() * v;
             state.m_rprim = m_A * x - m_b;
         }
 
@@ -144,7 +144,7 @@ struct solver_t::program_t
         if (m > 0)
         {
             const auto sm = static_cast<scalar_t>(m);
-            state.m_rdual += m_G.matrix().transpose() * u;
+            state.m_rdual += m_G.transpose() * u;
             state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
         }
     }
@@ -248,9 +248,8 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
 
         // solve primal-dual linear system of equations to get (dx, du, dv)
         const auto Gxh = G * state.m_x - h;
-        const auto Gm  = G.matrix();
-        program.solve(Gm.transpose() * (state.m_u.array() / Gxh.array()).matrix().asDiagonal() * Gm,
-                      state.m_rdual + Gm.transpose() * (state.m_rcent.array() / Gxh.array()).matrix(), state.m_rprim);
+        program.solve(G.transpose() * (state.m_u.array() / Gxh.array()).matrix().asDiagonal() * G.matrix(),
+                      state.m_rdual + G.transpose() * (state.m_rcent.array() / Gxh.array()).matrix(), state.m_rprim);
 
         dx = program.m_lsol.segment(0, n);
         dv = program.m_lsol.segment(n, p);
