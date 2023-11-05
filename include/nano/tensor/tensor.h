@@ -107,6 +107,7 @@ public:
     using tbase::offset;
     using tbase::offset0;
     using tbase::rank;
+    using tbase::resizable;
     using tbase::rows;
     using tbase::size;
     using tdims = typename tbase::tdims;
@@ -152,17 +153,8 @@ public:
     template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     tensor_t(const texpression& expression)
     {
-        static_assert(trank == 1 || trank == 2);
-        if constexpr (trank == 1)
-        {
-            resize(expression.size());
-            vector() = expression;
-        }
-        else
-        {
-            resize(expression.rows(), expression.cols());
-            matrix() = expression;
-        }
+        static_assert(resizable);
+        assign(expression);
     }
 
     ///
@@ -213,15 +205,7 @@ public:
     template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     tensor_t& operator=(const texpression& expression)
     {
-        static_assert(trank == 1 || trank == 2);
-        if constexpr (trank == 1)
-        {
-            vector() = expression;
-        }
-        else
-        {
-            matrix() = expression;
-        }
+        assign(expression);
         return *this;
     }
 
@@ -803,6 +787,31 @@ private:
         auto dimensions = dims();
         dimensions[0]   = end - begin;
         return map_tensor(ptr + offset0(begin), dimensions);
+    }
+
+    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    void assign(const texpression& expression)
+    {
+        static_assert(trank == 1 || trank == 2);
+        if constexpr (trank == 1)
+        {
+            if constexpr (resizable)
+            {
+                resize(expression.size());
+            }
+            assert(size() == expression.size());
+            vector() = expression;
+        }
+        else
+        {
+            if constexpr (resizable)
+            {
+                resize(expression.rows(), expression.cols());
+            }
+            assert(rows() == expression.rows());
+            assert(cols() == expression.cols());
+            matrix() = expression;
+        }
     }
 };
 

@@ -22,6 +22,7 @@ template <typename tscalar, size_t trank>
 class tensor_vector_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
+    static constexpr auto resizable = true;
     using tbase = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
@@ -107,6 +108,7 @@ template <typename tscalar, size_t trank>
 class tensor_carray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
+    static constexpr auto resizable = false;
     using tbase = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
@@ -170,6 +172,7 @@ template <typename tscalar, size_t trank>
 class tensor_marray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
+    static constexpr auto resizable = false;
     using tbase = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
