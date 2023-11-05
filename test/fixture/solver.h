@@ -141,6 +141,11 @@ struct solver_description_t
         return solver_description_t{solver_type::line_search}.smooth_config(
             minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
+    else if (solver_id == "gs")
+    {
+        return solver_description_t{solver_type::line_search}.smooth_config(
+            minimize_config_t{}.epsilon(5e-8).max_evals(10000).expected_maximum_deviation(1e-6));
+    }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
         // NB: very precise for both smooth and non-smooth problems.

@@ -37,27 +37,22 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     const auto n = function.size();
     const auto m = n + 1;
 
+    auto x = vector_t{n};
+    auto g = vector_t{n};
+    auto G = matrix_t{m, n};
     auto rng = make_rng();
-    auto x   = vector_t{n};
-    auto G   = matrix_t{m, n};
+    auto miuk     = miu0;
+    auto epsilonk = epsilon0;
 
     const auto positive = program::make_greater(m, 0.0);
     const auto weighted = program::make_equality(vector_t::constant(m, 1.0), 1.0);
 
-    auto descent = vector_t{n};
     auto solver  = program::solver_t{};
     auto program = program::make_quadratic(matrix_t::zero(m, m), vector_t::zero(m), positive, weighted);
 
-    (void)(beta);
-    (void)(gamma);
-    (void)(miu0);
-    (void)(epsilon0);
-    (void)(theta_miu);
-    (void)(theta_epsilon);
-
     // TODO: option to use the previous gradient as the starting point for QP
     // TODO: can it work with any line-search method?!
-    assert(false);
+    // TODO: how to implement steps 8-10?!
 
     auto state = solver_state_t{function, x0};
     while (function.fcalls() + function.gcalls() < max_evals)
@@ -66,24 +61,47 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         // sample gradients within the given radius
         for (tensor_size_t i = 0; i < m; ++i)
         {
-            sample_from_ball(state.x(), epsilon0, x, rng);
+            sample_from_ball(state.x(), epsilonk, x, rng);
             function.vgrad(x, map_tensor(G.row(i).data(), n));
         }
 
         // solve the quadratic problem to find the stabilized gradient
-        program.m_Q         = G * G.transpose();
+        program.m_Q = G * G.transpose();
+        program.reduce();
+
         const auto solution = solver.solve(program);
         assert(solution.m_status == solver_status::converged);
+        g = G.transpose() * solution.m_x.vector();
 
-        descent = -G.transpose() * solution.m_x.vector();
-
-        // TODO: line-search
-
-        // line-search
-        const auto iter_ok = false; // lsearch.get(state, descent);
-        if (solver_t::done(state, iter_ok, state.gradient_test() < epsilon))
+        // check convergence
+        const auto gnorm2    = g.lpNorm<2>();
+        const auto iter_ok   = g.all_finite();
+        const auto converged = gnorm2 <= epsilon && epsilonk <= epsilonk;
+        if (solver_t::done(state, iter_ok, converged))
         {
             break;
+        }
+
+        // line-search
+        if (gnorm2 <= miuk)
+        {
+            miuk *= theta_miu;
+            epsilonk *= theta_epsilon;
+        }
+        else
+        {
+            const auto gsquared = g.squaredNorm();
+            for (auto t = 1.0; t > std::numeric_limits<scalar_t>::epsilon(); t *= gamma)
+            {
+                x = state.x() - t * g;
+                if (const auto fx = function.vgrad(x); fx < state.fx() - beta * t * gsquared)
+                {
+                    break;
+                }
+            }
+
+            // FIXME: the functon value is computed multiple times at the same point during line-search!
+            state.update(x);
         }
     }
 
