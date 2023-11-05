@@ -122,6 +122,11 @@ struct is_eigen<Eigen::Transpose<T>> : std::true_type
 };
 
 template <class T>
+struct is_eigen<Eigen::Inverse<T>> : std::true_type
+{
+};
+
+template <class T>
 struct is_eigen<Eigen::VectorBlock<T>> : std::true_type
 {
 };

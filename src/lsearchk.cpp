@@ -73,7 +73,7 @@ void lsearchk_t::logger(const lsearchk_t::logger_t& logger)
 bool lsearchk_t::update(solver_state_t& state, const solver_state_t& state0, const vector_t& descent,
                         const scalar_t step_size) const
 {
-    const auto ok = state.update(state0.x().vector() + step_size * descent.vector());
+    const auto ok = state.update(state0.x() + step_size * descent);
     if (m_logger)
     {
         m_logger(state0, state, descent, step_size);

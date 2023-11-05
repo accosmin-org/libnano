@@ -540,18 +540,18 @@ public:
     }
 
     ///
-    /// \brief return the Eigen-expression associated to the flatten segment [begin, end).
+    /// \brief return the Eigen-expression associated to the flatten segment [begin, begin + length).
     ///
-    auto segment(const tensor_size_t begin, const tensor_size_t end)
+    auto segment(const tensor_size_t begin, const tensor_size_t length)
     {
         static_assert(trank == 1);
-        return vector().segment(begin, end);
+        return vector().segment(begin, length);
     }
 
-    auto segment(const tensor_size_t begin, const tensor_size_t end) const
+    auto segment(const tensor_size_t begin, const tensor_size_t length) const
     {
         static_assert(trank == 1);
-        return vector().segment(begin, end);
+        return vector().segment(begin, length);
     }
 
     ///

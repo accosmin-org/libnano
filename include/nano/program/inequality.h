@@ -23,8 +23,7 @@ struct inequality_t : public constraint_t<tmatrixA, tvectorb>
     ///
     scalar_t deviation(vector_cmap_t x) const
     {
-        return this->valid() ? (this->A() * x.vector() - this->b()).array().maxCoeff()
-                             : std::numeric_limits<scalar_t>::max();
+        return this->valid() ? (this->m_A * x - this->m_b).array().maxCoeff() : std::numeric_limits<scalar_t>::max();
     }
 };
 

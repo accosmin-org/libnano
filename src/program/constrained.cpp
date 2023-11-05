@@ -37,7 +37,7 @@ bool linear_constrained_t::reduce()
     const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
 
     A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
-    b = (Q.transpose() * b.vector()).segment(0, dd.rank());
+    b = vector_t{(Q.transpose() * b).segment(0, dd.rank())};
     return true;
 }
 
@@ -50,9 +50,9 @@ std::optional<vector_t> linear_constrained_t::make_strictly_feasible() const
 
     if (m_ineq.valid())
     {
-        const auto A      = m_ineq.m_A.matrix();
-        const auto b      = m_ineq.m_b.vector();
-        const auto decomp = (A.transpose() * A).ldlt();
+        const auto& A      = m_ineq.m_A;
+        const auto& b      = m_ineq.m_b;
+        const auto  decomp = (A.transpose() * A).ldlt();
 
         auto x = vector_t{A.cols()};
         for (auto trial = 0; trial < trials; ++trial)

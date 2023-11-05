@@ -18,36 +18,6 @@ struct constraint_t
     ///
     bool valid() const { return (m_A.size() > 0 && m_b.size() > 0) && m_A.rows() == m_b.size(); }
 
-    ///
-    /// \brief return an Eigen matrix expression of `A`.
-    ///
-    auto A() const
-    {
-        if constexpr (is_tensor_v<tmatrixA>)
-        {
-            return m_A.matrix();
-        }
-        else
-        {
-            return m_A;
-        }
-    }
-
-    ///
-    /// \brief return an Eigen vector expression of `b`.
-    ///
-    auto b() const
-    {
-        if constexpr (is_tensor_v<tvectorb>)
-        {
-            return m_b.vector();
-        }
-        else
-        {
-            return m_b;
-        }
-    }
-
     // attributes
     tmatrixA m_A; ///<
     tvectorb m_b; ///<
