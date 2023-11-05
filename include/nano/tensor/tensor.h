@@ -357,7 +357,7 @@ public:
     }
 
     ///
-    /// \brief returns a copy of some (sub-)tensors using the given indices.
+    /// \brief return a copy of some (sub-)tensors using the given indices.
     /// NB: the indices are relative to the first dimension.
     ///
     template <typename tscalar_return = tscalar>
@@ -463,27 +463,27 @@ public:
     bool all_finite() const { return vector().allFinite(); }
 
     ///
-    /// \brief returns the minimum value.
+    /// \brief return the minimum value.
     ///
     auto min() const { return vector().minCoeff(); }
 
     ///
-    /// \brief returns the maximum value.
+    /// \brief return the maximum value.
     ///
     auto max() const { return vector().maxCoeff(); }
 
     ///
-    /// \brief returns the average value.
+    /// \brief return the average value.
     ///
     auto mean() const { return vector().mean(); }
 
     ///
-    /// \brief returns the sum of all its values.
+    /// \brief return the sum of all its values.
     ///
     auto sum() const { return vector().sum(); }
 
     ///
-    /// \brief returns the variance of the flatten array.
+    /// \brief return the variance of the flatten array.
     ///
     auto variance() const
     {
@@ -499,7 +499,7 @@ public:
     }
 
     ///
-    /// \brief returns the sample standard deviation of the flatten array.
+    /// \brief return the sample standard deviation of the flatten array.
     ///
     auto stdev() const
     {
@@ -513,7 +513,7 @@ public:
     }
 
     ///
-    /// \brief returns the lp-norm of the flatten array (using the Eigen backend).
+    /// \brief return the lp-norm of the flatten array (using the Eigen backend).
     ///
     template <int p>
     auto lpNorm() const
@@ -522,17 +522,17 @@ public:
     }
 
     ///
-    /// \brief returns the squared norm of the flatten array (using the Eigen backend).
+    /// \brief return the squared norm of the flatten array (using the Eigen backend).
     ///
     auto squaredNorm() const { return vector().squaredNorm(); }
 
     ///
-    /// \brief returns the dot product of the flatten array with the given tensor.
+    /// \brief return the dot product of the flatten array with the given tensor.
     ///
     auto dot(const tensor_t<tstorage, tscalar, trank>& other) const { return vector().dot(other.vector()); }
 
     ///
-    /// \brief returns the dot product of the flatten array with the given Eigen expression.
+    /// \brief return the dot product of the flatten array with the given Eigen expression.
     ///
     template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     auto dot(const texpression& expression) const
@@ -541,7 +541,22 @@ public:
     }
 
     ///
-    /// \brief returns the Eigen-expression associated to the flatten segment [begin, end).
+    /// \brief return the Eigen-expression associated to the given row index.
+    ///
+    auto row(const tensor_size_t row)
+    {
+        static_assert(trank == 2);
+        return matrix().row(row);
+    }
+
+    auto row(const tensor_size_t row) const
+    {
+        static_assert(trank == 2);
+        return matrix().row(row);
+    }
+
+    ///
+    /// \brief return the Eigen-expression associated to the flatten segment [begin, end).
     ///
     auto segment(const tensor_size_t begin, const tensor_size_t end)
     {
@@ -556,7 +571,7 @@ public:
     }
 
     ///
-    /// \brief returns the Eigen-expression associated to the matrix block:
+    /// \brief return the Eigen-expression associated to the matrix block:
     ///     [row_begin, row_begin + block_rows) x [col_begin, col_begin + block_cols).
     ///
     auto block(const tensor_size_t row_begin, const tensor_size_t col_begin, const tensor_size_t block_rows,
@@ -574,7 +589,22 @@ public:
     }
 
     ///
-    /// \brief returns the Eigen-expression associated to the vector or matrix transpose.
+    /// \brief return the Eigen-expression associated to the matrix diagonal.
+    ///
+    auto diagonal()
+    {
+        static_assert(trank == 2);
+        return matrix().diagonal();
+    }
+
+    auto diagonal() const
+    {
+        static_assert(trank == 2);
+        return matrix().diagonal();
+    }
+
+    ///
+    /// \brief return the Eigen-expression associated to the vector or matrix transpose.
     ///
     auto transpose()
     {

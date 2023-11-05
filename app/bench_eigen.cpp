@@ -18,7 +18,7 @@ auto make_scalar()
 template <typename tscalar>
 auto make_vector(const tensor_size_t dims)
 {
-    tensor_vector_t<tscalar> x(dims);
+    eigen_vector_t<tscalar> x(dims);
     x.setRandom();
     return x;
 }
@@ -26,7 +26,7 @@ auto make_vector(const tensor_size_t dims)
 template <typename tscalar>
 auto make_matrix(const tensor_size_t rows, const tensor_size_t cols)
 {
-    tensor_matrix_t<tscalar> x(rows, cols);
+    eigen_matrix_t<tscalar> x(rows, cols);
     x.setRandom();
     return x;
 }

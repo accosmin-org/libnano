@@ -748,14 +748,14 @@ UTEST_CASE(make_random)
 
         const auto vector = make_random_vector<double>(100, min, max);
         UTEST_CHECK_EQUAL(vector.size(), 100);
-        UTEST_CHECK_LESS_EQUAL(min, vector.minCoeff());
-        UTEST_CHECK_LESS_EQUAL(vector.maxCoeff(), max);
+        UTEST_CHECK_LESS_EQUAL(min, vector.min());
+        UTEST_CHECK_LESS_EQUAL(vector.max(), max);
 
         const auto matrix = make_random_matrix<double>(10, 11, min, max);
         UTEST_CHECK_EQUAL(matrix.rows(), 10);
         UTEST_CHECK_EQUAL(matrix.cols(), 11);
-        UTEST_CHECK_LESS_EQUAL(min, matrix.minCoeff());
-        UTEST_CHECK_LESS_EQUAL(matrix.maxCoeff(), max);
+        UTEST_CHECK_LESS_EQUAL(min, matrix.min());
+        UTEST_CHECK_LESS_EQUAL(matrix.max(), max);
     }
 }
 

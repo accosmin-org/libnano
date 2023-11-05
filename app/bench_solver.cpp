@@ -244,7 +244,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
-    std::generate(x0s.begin(), x0s.end(), [&]() { return vector_t::Random(function.size()); });
+    std::generate(x0s.begin(), x0s.end(), [&]() { return make_random_vector<scalar_t>(function.size()); });
 
     // and minimize in parallel all (solver, random initial point) combinations
     const auto results = minimize_all(pool, function, solvers, x0s, log_failures, log_maxits);

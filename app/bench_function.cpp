@@ -13,8 +13,8 @@ namespace
 void eval_func(const function_t& function, table_t& table)
 {
     const auto dims = function.size();
-    const vector_t x = vector_t::Zero(dims);
-    vector_t g = vector_t::Zero(dims);
+    const auto x    = make_full_vector<scalar_t>(dims, 0);
+    auto       g    = make_full_vector<scalar_t>(dims, 0);
 
     const size_t trials = 16;
 
@@ -31,8 +31,8 @@ void eval_func(const function_t& function, table_t& table)
     {
         const auto old_value = gx;
 
-        function.vgrad(x, &g);
-        gx = old_value + g.template lpNorm<Eigen::Infinity>();
+        function.vgrad(x, g);
+        gx = old_value + g.lpNorm<Eigen::Infinity>();
     };
 
     const auto fval_time = measure<nanoseconds_t>(measure_fval, trials).count();
@@ -41,7 +41,7 @@ void eval_func(const function_t& function, table_t& table)
     scalar_t grad_accuracy = 0;
     for (size_t i = 0; i < trials; ++ i)
     {
-        grad_accuracy += ::nano::grad_accuracy(function, vector_t::Random(dims));
+        grad_accuracy += ::nano::grad_accuracy(function, make_random_vector<scalar_t>(dims));
     }
 
     auto& row = table.append();

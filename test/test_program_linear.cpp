@@ -129,7 +129,7 @@ UTEST_CASE(program8)
     const auto make_xbest = [&](const vector_t& c)
     {
         const auto dims = c.size();
-        const auto cmin = c.minCoeff();
+        const auto cmin = c.min();
 
         auto count = 0.0;
         auto xbest = make_full_vector<scalar_t>(dims, 0.0);
@@ -153,7 +153,7 @@ UTEST_CASE(program8)
         UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()==1"));
 
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
-        const auto A = vector_t::Constant(dims, 1.0);
+        const auto A = vector_t::constant(dims, 1.0);
         const auto b = 1.0;
 
         const auto program = make_linear(c, make_equality(A, b), make_greater(dims, 0.0));
@@ -169,13 +169,13 @@ UTEST_CASE(program8)
         UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()<=1"));
 
         const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
-        const auto A = vector_t::Constant(dims, 1.0);
-        const auto N = -matrix_t::Identity(dims, dims);
+        const auto A = vector_t::constant(dims, 1.0);
+        const auto N = -matrix_t::identity(dims, dims);
         const auto b = 1.0;
-        const auto z = vector_t::Constant(dims, 0.0);
+        const auto z = vector_t::constant(dims, 0.0);
 
         const auto program = make_linear(c, make_inequality(A, b), make_inequality(N, z), make_greater(dims, 0.0));
-        const auto xbest   = c.minCoeff() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
+        const auto xbest   = c.min() < 0.0 ? make_xbest(c) : make_full_vector<scalar_t>(dims, 0.0);
         check_solution(program, expected_t{xbest});
     }
 }
@@ -316,7 +316,7 @@ UTEST_CASE(program11)
         UTEST_NAMED_CASE(scat("dims=", dims));
 
         const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0);
-        const auto A = matrix_t::Identity(dims, dims);
+        const auto A = matrix_t::identity(dims, dims);
         const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
         const auto  program = make_linear(c, make_inequality(A, b));
@@ -332,7 +332,7 @@ UTEST_CASE(equality_unique_solution)
     for (const tensor_size_t dims : {2, 3, 5})
     {
         const auto D = make_random_matrix<scalar_t>(dims, dims);
-        const auto A = D.transpose() * D + matrix_t::Identity(dims, dims);
+        const auto A = D.transpose() * D + matrix_t::identity(dims, dims);
         const auto c = make_random_vector<scalar_t>(dims);
         {
             UTEST_NAMED_CASE(scat("feasible(dims=", dims, ")"));

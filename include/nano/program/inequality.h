@@ -31,19 +31,36 @@ struct inequality_t : public constraint_t<tmatrixA, tvectorb>
 ///
 /// \brief create a generic inequality constraint: A * x <= b.
 ///
-template <typename tmatrixA, typename tvectorb>
+template <typename tmatrixA, typename tvectorb,
+          std::enable_if_t<is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>, bool> = true,
+          std::enable_if_t<is_eigen_v<tvectorb> || is_tensor_v<tvectorb>, bool> = true>
 inline auto make_inequality(tmatrixA A, tvectorb b)
 {
+    if constexpr (is_tensor_v<tmatrixA>)
+    {
+        static_assert(A.rank() == 2U);
+    }
+    if constexpr (is_tensor_v<tvectorb>)
+    {
+        static_assert(b.rank() == 1U);
+    }
     return inequality_t<std::remove_cv_t<tmatrixA>, std::remove_cv_t<tvectorb>>{std::move(A), std::move(b)};
 }
 
 ///
 /// \brief create a scalar inequality constraint: a.dot(x) <= b.
 ///
-template <typename tmatrixA>
-inline auto make_inequality(const tmatrixA& a, const scalar_t b)
+template <typename tvectora, std::enable_if_t<is_eigen_v<tvectora> || is_tensor_v<tvectora>, bool> = true>
+inline auto make_inequality(const tvectora& a, const scalar_t b)
 {
-    assert(a.cols() == 1);
+    if constexpr (is_eigen_v<tvectora>)
+    {
+        assert(a.cols() == 1);
+    }
+    else
+    {
+        static_assert(a.rank() == 1U);
+    }
     return make_inequality(a.transpose(), vector_t::constant(1, b));
 }
 
