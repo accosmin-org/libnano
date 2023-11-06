@@ -143,8 +143,9 @@ struct solver_description_t
     }
     else if (solver_id == "gs")
     {
-        return solver_description_t{solver_type::line_search}.smooth_config(
-            minimize_config_t{}.epsilon(5e-8).max_evals(10000).expected_maximum_deviation(1e-6));
+        // NB: gradient sampling (GS) needs many more iterations to minimize badly conditioned problems!
+        return solver_description_t{solver_type::non_monotonic}.smooth_config(
+            minimize_config_t{}.epsilon(1e-5).max_evals(5000).expected_maximum_deviation(1e-5));
     }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
@@ -165,9 +166,9 @@ struct solver_description_t
         // - very slow convergence rate for both non-smooth and hard smooth problems
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(
-                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1))
+                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1))
             .nonsmooth_config(
-                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1));
+                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1));
     }
     else
     {
