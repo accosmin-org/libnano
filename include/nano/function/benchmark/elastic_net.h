@@ -55,7 +55,7 @@ public:
 
     scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets.matrix();
+        const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {
@@ -80,7 +80,7 @@ public:
 
     scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets.matrix();
+        const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {
@@ -105,7 +105,7 @@ public:
 
     scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
-        const auto delta = outputs.matrix() - targets.matrix();
+        const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {

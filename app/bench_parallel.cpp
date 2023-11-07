@@ -54,7 +54,7 @@ scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& out
     assert(targets.cols() == outputs.cols());
     assert(0 <= i && i < targets.rows());
 
-    return toperator::get(targets.matrix().row(i).array(), outputs.matrix().row(i).array());
+    return toperator::get(targets.row(i).array(), outputs.row(i).array());
 }
 
 template <typename toperator>

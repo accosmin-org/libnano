@@ -10,12 +10,12 @@ solver_gs_t::solver_gs_t()
     type(solver_type::non_monotonic);
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 
-    register_parameter(parameter_t::make_scalar("solver::gs::beta", 0, LT, 0.1, LT, 1));
-    register_parameter(parameter_t::make_scalar("solver::gs::gamma", 0, LT, 0.9, LT, 1));
-    register_parameter(parameter_t::make_scalar("solver::gs::miu0", 0, LT, 0.1, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar("solver::gs::beta", 0, LT, 1e-16, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::gamma", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::miu0", 0, LE, 0.1, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::gs::epsilon0", 0, LT, 0.1, LT, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::gs::theta_miu", 0, LT, 0.5, LE, 1));
-    register_parameter(parameter_t::make_scalar("solver::gs::theta_epsilon", 0, LT, 0.5, LE, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::theta_miu", 0, LT, 0.1, LE, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::theta_epsilon", 0, LT, 0.1, LE, 1));
     register_parameter(parameter_t::make_integer("solver::gs::lsearch_max_iters", 0, LT, 50, LE, 100));
 }
 
@@ -63,6 +63,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         for (tensor_size_t i = 0; i < m; ++i)
         {
             sample_from_ball(state.x(), epsilonk, x, rng);
+            assert((state.x() - x).lpNorm<2>() < epsilonk);
             function.vgrad(x, map_tensor(G.row(i).data(), n));
         }
         G.row(m) = state.gx().transpose();
@@ -76,16 +77,15 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         g = G.transpose() * solution.m_x.vector();
 
         // check convergence
-        const auto gnorm2    = g.lpNorm<2>();
-        const auto iter_ok   = g.all_finite();
-        const auto converged = gnorm2 <= epsilon && epsilonk <= epsilon;
+        const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
+        const auto converged = epsilonk < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }
 
         // line-search
-        if (gnorm2 <= miuk)
+        if (const auto gnorm2 = g.lpNorm<2>(); gnorm2 <= miuk)
         {
             miuk *= theta_miu;
             epsilonk *= theta_epsilon;
@@ -105,7 +105,6 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
 
             if (iters >= lsearch_max_iters)
             {
-                assert(false);
                 // NB: line-search failed, reduce the sampling radius - see (1).
                 epsilonk *= theta_epsilon;
             }
