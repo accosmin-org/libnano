@@ -2,6 +2,9 @@
 #include <nano/program/solver.h>
 #include <nano/solver/gs.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 solver_gs_t::solver_gs_t()
@@ -10,7 +13,7 @@ solver_gs_t::solver_gs_t()
     type(solver_type::non_monotonic);
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 
-    register_parameter(parameter_t::make_scalar("solver::gs::beta", 0, LT, 1e-16, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::beta", 0, LT, 1e-4, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::gs::gamma", 0, LT, 0.7, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::gs::miu0", 0, LE, 0.1, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::gs::epsilon0", 0, LT, 0.1, LT, 1e+6));
@@ -55,6 +58,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     // TODO: option to use the previous gradient as the starting point for QP
     // TODO: can it work with any line-search method?!
 
+    auto iterk = 0;
     auto state = solver_state_t{function, x0};
     while (function.fcalls() + function.gcalls() < max_evals)
     {
@@ -76,9 +80,14 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         assert(solution.m_status == solver_status::converged);
         g = G.transpose() * solution.m_x.vector();
 
+        std::cout << std::fixed << std::setprecision(10) << "i=" << iterk << ",mk=" << miuk << ",ek=" << epsilonk
+                  << ",g2=" << g.lpNorm<2>() << ",gI=" << g.lpNorm<Eigen::Infinity>()
+                  << ",calls=" << function.fcalls() << "/" << function.gcalls() << std::endl;
+        ++iterk;
+
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
-        const auto converged = epsilonk < epsilon;
+        const auto converged = g.lpNorm<2>() < epsilon && epsilonk < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
