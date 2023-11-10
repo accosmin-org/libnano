@@ -10,8 +10,10 @@ namespace nano
 /// see (1) "A robust gradient sampling algorithm for nonsmooth, nonconvex optimization", by Burke, Lewis, Overton, 2005
 /// see (2) "Convergence of the gradient sampling algorithm for nonsmooth nonconvex optimization", by Kiwiel, 2007
 /// see (3) "The gradient sampling methodology", by Burke, Curtis, Lewis, Overton, 2018
+/// see (4) "Two numerical methods for optimizing matrix stability", by Burke, Lewis, Overton, 2002
 ///
-/// NB: the implementation follows the notation from (3).
+/// NB: the implementation follows the notation from (3), uses the line-search idea from (4) and handles
+///     failures in the line-search procedure like in (1) (aka reduce the sampling radius).
 ///
 class NANO_PUBLIC solver_gs_t final : public solver_t
 {

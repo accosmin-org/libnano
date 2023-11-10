@@ -131,6 +131,8 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
 bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool converged) const
 {
+    state.update_calls();
+
     // stopping was requested (in an outer loop)
     if (state.status() == solver_status::stopped)
     {

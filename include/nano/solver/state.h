@@ -40,6 +40,11 @@ public:
     }
 
     ///
+    /// \brief update the number of function value and gradient evaluations.
+    ///
+    void update_calls();
+
+    ///
     /// \brief try to update the current state and
     ///     returns true if the given function value is smaller than the current one.
     ///
@@ -71,6 +76,7 @@ public:
     /// NB: only appropriate for smooth problems.
     ///
     scalar_t gradient_test() const;
+    scalar_t gradient_test(vector_cmap_t gx) const;
 
     ///
     /// \brief convergence criterion of the constraints (if any).
@@ -188,7 +194,6 @@ public:
     const vector_t& cineq() const { return m_cineq; }
 
 private:
-    void update_calls();
     void update_constraints();
 
     using scalars_t = std::vector<scalar_t>;

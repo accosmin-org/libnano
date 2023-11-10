@@ -17,19 +17,19 @@ auto make_input_data()
 #define NaN4 NaN, NaN, NaN, NaN
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GX0(scale) (scale) * 2.00, (scale)*2.00, (scale)*1.50, (scale)*1.75
+#define GX0(scale) (scale) * 2.00, (scale) * 2.00, (scale) * 1.50, (scale) * 1.75
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GX1(scale) (scale) * 1.00, (scale)*0.75, (scale)*0.50, (scale)*0.75
+#define GX1(scale) (scale) * 1.00, (scale) * 0.75, (scale) * 0.50, (scale) * 0.75
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GY0(scale) (scale) * +2.00, (scale) * +2.00, (scale)*1.00, (scale) * +0.25
+#define GY0(scale) (scale) * +2.00, (scale) * +2.00, (scale) * 1.00, (scale) * +0.25
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GY1(scale) (scale) * -0.50, (scale) * -0.25, (scale)*0.00, (scale) * -0.75
+#define GY1(scale) (scale) * -0.50, (scale) * -0.25, (scale) * 0.00, (scale) * -0.75
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GG0(scale) (scale) * sqrt(8.00), (scale)*sqrt(8.000), (scale)*sqrt(3.25), (scale)*sqrt(3.125)
+#define GG0(scale) (scale) * sqrt(8.00), (scale) * sqrt(8.000), (scale) * sqrt(3.25), (scale) * sqrt(3.125)
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define GG1(scale) (scale) * sqrt(1.25), (scale)*sqrt(0.625), (scale)*sqrt(0.25), (scale)*sqrt(1.125)
+#define GG1(scale) (scale) * sqrt(1.25), (scale) * sqrt(0.625), (scale) * sqrt(0.25), (scale) * sqrt(1.125)
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define THETA0 atan2(+2.0, 2.0), atan2(+2.00, 2.00), atan2(1.0, 1.5), atan2(+0.25, 1.75)

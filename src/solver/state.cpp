@@ -138,7 +138,12 @@ scalar_t solver_state_t::value_test(const tensor_size_t patience) const
 
 scalar_t solver_state_t::gradient_test() const
 {
-    return m_gx.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(m_fx));
+    return gradient_test(m_gx);
+}
+
+scalar_t solver_state_t::gradient_test(vector_cmap_t gx) const
+{
+    return gx.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(m_fx));
 }
 
 scalar_t solver_state_t::constraint_test() const

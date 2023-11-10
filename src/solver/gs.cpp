@@ -13,8 +13,7 @@ solver_gs_t::solver_gs_t()
     type(solver_type::non_monotonic);
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 
-    register_parameter(parameter_t::make_scalar("solver::gs::beta", 0, LT, 1e-4, LT, 1));
-    register_parameter(parameter_t::make_scalar("solver::gs::gamma", 0, LT, 0.7, LT, 1));
+    register_parameter(parameter_t::make_scalar("solver::gs::gamma", 0, LT, 0.5, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::gs::miu0", 0, LE, 0.1, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::gs::epsilon0", 0, LT, 0.1, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::gs::theta_miu", 0, LT, 0.1, LE, 1));
@@ -31,7 +30,6 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
 {
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
-    const auto beta              = parameter("solver::gs::beta").value<scalar_t>();
     const auto gamma             = parameter("solver::gs::gamma").value<scalar_t>();
     const auto miu0              = parameter("solver::gs::miu0").value<scalar_t>();
     const auto epsilon0          = parameter("solver::gs::epsilon0").value<scalar_t>();
@@ -55,11 +53,10 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     auto solver  = program::solver_t{};
     auto program = program::make_quadratic(matrix_t::zero(m + 1, m + 1), vector_t::zero(m + 1), positive, weighted);
 
-    // TODO: option to use the previous gradient as the starting point for QP
-    // TODO: can it work with any line-search method?!
+    auto state  = solver_state_t{function, x0};
+    auto cstate = state;
 
     auto iterk = 0;
-    auto state = solver_state_t{function, x0};
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // FIXME: should be more efficient for some functions to compute all gradients at once!
@@ -81,46 +78,66 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         g = G.transpose() * solution.m_x.vector();
 
         std::cout << std::fixed << std::setprecision(10) << "i=" << iterk << ",mk=" << miuk << ",ek=" << epsilonk
-                  << ",g2=" << g.lpNorm<2>() << ",gI=" << g.lpNorm<Eigen::Infinity>()
-                  << ",calls=" << function.fcalls() << "/" << function.gcalls() << std::endl;
+                  << ",g2=" << g.lpNorm<2>() << ",gI=" << g.lpNorm<Eigen::Infinity>() << ",calls=" << function.fcalls()
+                  << "/" << function.gcalls() << std::endl;
         ++iterk;
 
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
-        const auto converged = g.lpNorm<2>() < epsilon && epsilonk < epsilon;
+        const auto converged = state.gradient_test(g) < epsilon && epsilonk < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }
 
-        // line-search
-        if (const auto gnorm2 = g.lpNorm<2>(); gnorm2 <= miuk)
+        // too small gradient, reduce sampling radius (potentially convergence detected)
+        else if (const auto gnorm2 = g.lpNorm<2>(); gnorm2 <= miuk)
         {
             miuk *= theta_miu;
             epsilonk *= theta_epsilon;
         }
+
+        // line-search that handles functions that are not Lipschitz locally - see (4)
         else
         {
-            auto iters = 0;
-            for (auto t = 1.0; iters < lsearch_max_iters; t *= gamma, ++iters)
+            x             = state.x();
+            const auto fx = state.fx();
+
+            auto              t    = 1.0;
+            static const auto tmax = 1e+3;
+
+            if (cstate.update(x - t * g); cstate.fx() < fx)
             {
-                x = state.x() - t * g;
-                if (const auto fx = function.vgrad(x); fx < state.fx() - beta * t * square(gnorm2))
+                // doubling phase
+                for (auto iters = 0; iters < lsearch_max_iters && t < tmax; ++iters)
                 {
-                    state.update(x);
-                    break;
+                    state = cstate;
+                    if (t /= gamma, cstate.update(x - t * g); cstate.fx() >= fx)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // bisection phase
+                for (auto iters = 0; iters < lsearch_max_iters; ++iters)
+                {
+                    if (t *= gamma, cstate.update(x - t * g); cstate.fx() < fx)
+                    {
+                        state = cstate;
+                        break;
+                    }
                 }
             }
 
-            if (iters >= lsearch_max_iters)
+            /*if (state.fx() >= fx)
             {
-                // NB: line-search failed, reduce the sampling radius - see (1).
+                // NB: line-search failed, reduce the sampling radius - see (1)
                 epsilonk *= theta_epsilon;
-            }
+            }*/
         }
     }
 
-    // NB: make sure the function evaluations are updated at the returned point.
-    state.update(state.x());
     return state;
-} // LCOV_EXCL_LINE
+}

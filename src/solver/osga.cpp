@@ -147,7 +147,5 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         fb = fb_hat;
     }
 
-    // NB: make sure the gradient is updated at the returned point.
-    state.update(state.x());
     return state;
 }
