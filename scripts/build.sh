@@ -120,9 +120,7 @@ function call_cppcheck {
     echo "-- Using cppcheck ${cppcheck_version/* /}"
 
     # NB: the warnings are not fatal (exitcode=0) as they are usually false alarms!
-    #--suppress=shadowFunction
     #--suppress=shadowVar
-    #--suppress=unusedFunction
     cppcheck -j ${threads} \
         --project=compile_commands.json \
         --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
@@ -130,6 +128,7 @@ function call_cppcheck {
         --suppress=unknownMacro \
         --suppress=shadowFunction \
         --suppress=unusedFunction \
+        --suppress=missingIncludeSystem \
         --suppress=unmatchedSuppression
 }
 

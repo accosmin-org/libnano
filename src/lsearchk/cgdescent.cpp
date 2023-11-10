@@ -164,8 +164,7 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
         return {state.valid(), interval.step_size};
     }
 
-    const auto move_update_and_check_done =
-        [&, c1 = c1, c2 = c2, theta = theta, max_iterations = max_iterations](const auto t)
+    const auto move_update_and_check_done = [&, c1 = c1, c2 = c2](const auto t)
     {
         if (!std::isfinite(t))
         {

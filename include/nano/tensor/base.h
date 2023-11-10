@@ -123,10 +123,8 @@ public:
         return ::nano::index0(dims(), indices...);
     }
 
-    ///
-    /// \brief change size.
-    ///
-    void resize(const tdims& dims) { m_dims = dims; }
+protected:
+    void _resize(const tdims& dims) { m_dims = dims; }
 
 private:
     // attributes

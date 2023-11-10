@@ -108,6 +108,7 @@ public:
     using tbase::offset0;
     using tbase::rank;
     using tbase::resizable;
+    using tbase::resize;
     using tbase::rows;
     using tbase::size;
     using tdims = typename tbase::tdims;
@@ -151,7 +152,8 @@ public:
     /// \brief construct from an Eigen expression.
     ///
     template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-    tensor_t(const texpression& expression)
+    // cppcheck-suppress noExplicitConstructor
+    tensor_t(const texpression& expression) // NOLINT(hicpp-explicit-conversions)
     {
         static_assert(resizable);
         assign(expression);
@@ -213,17 +215,6 @@ public:
     /// \brief default destructor
     ///
     ~tensor_t() = default;
-
-    ///
-    /// \brief resize to new dimensions.
-    ///
-    template <typename... tsizes>
-    void resize(tsizes... dimensions)
-    {
-        tbase::resize(make_dims(dimensions...));
-    }
-
-    void resize(const tdims& dimensions) { tbase::resize(dimensions); }
 
     ///
     /// \brief access a continuous part of the tensor as an Eigen vector

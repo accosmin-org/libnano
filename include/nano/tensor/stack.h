@@ -12,7 +12,8 @@ void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const ten
 {
     static_assert(is_eigen_v<tblock> || is_tensor_v<tblock>);
 
-    const auto next = [&](const tensor_size_t block_rows, const tensor_size_t block_cols)
+    const auto next =
+        [&]([[maybe_unused]] const tensor_size_t block_rows, [[maybe_unused]] const tensor_size_t block_cols)
     {
         if constexpr (sizeof...(blocks) > 0)
         {
