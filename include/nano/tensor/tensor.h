@@ -449,27 +449,27 @@ public:
     ///
     /// \brief return the minimum value.
     ///
-    auto min() const { return vector().minCoeff(); }
+    tscalar min() const { return vector().minCoeff(); }
 
     ///
     /// \brief return the maximum value.
     ///
-    auto max() const { return vector().maxCoeff(); }
+    tscalar max() const { return vector().maxCoeff(); }
 
     ///
     /// \brief return the average value.
     ///
-    auto mean() const { return vector().mean(); }
+    tscalar mean() const { return vector().mean(); }
 
     ///
     /// \brief return the sum of all its values.
     ///
-    auto sum() const { return vector().sum(); }
+    tscalar sum() const { return vector().sum(); }
 
     ///
     /// \brief return the variance of the flatten array.
     ///
-    auto variance() const
+    double variance() const
     {
         double variance = 0.0;
         if (size() > 1)
@@ -485,7 +485,7 @@ public:
     ///
     /// \brief return the sample standard deviation of the flatten array.
     ///
-    auto stdev() const
+    double stdev() const
     {
         double stdev = 0.0;
         if (size() > 1)
