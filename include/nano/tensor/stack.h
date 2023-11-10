@@ -41,7 +41,7 @@ void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const ten
         matrix.block(row, col, block.rows(), block.cols()) = block;
         next(block.rows(), block.cols());
     }
-    else if constexpr (block.rank() == 2U)
+    else if constexpr (tblock::rank() == 2U)
     {
         assert(col + block.cols() <= matrix.cols());
         assert(row + block.rows() <= matrix.rows());
@@ -51,7 +51,7 @@ void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const ten
     }
     else
     {
-        static_assert(block.rank() == 1U);
+        static_assert(tblock::rank() == 1U);
         assert(col + 1 <= matrix.cols());
         assert(row + block.size() <= matrix.rows());
 
@@ -74,7 +74,7 @@ void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tbl
     }
     else
     {
-        static_assert(block.rank() == 1U);
+        static_assert(tblock::rank() == 1U);
         assert(row + block.size() <= vector.size());
 
         vector.segment(row, block.size()) = block.vector();
