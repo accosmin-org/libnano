@@ -16,7 +16,7 @@ inline void sprint(std::ostream& stream, const char c, const tensor_size_t count
     {
         stream << c;
     }
-};
+}
 } // namespace detail
 
 ///
