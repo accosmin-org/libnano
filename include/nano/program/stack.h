@@ -27,7 +27,7 @@ void update_data(matrix_t& A, vector_t& b, const tensor_size_t row, const tconst
     else
     {
         static_assert(is_tensor_v<tmatrixA>);
-        static_assert(constraint.m_A.rank() == 2U);
+        static_assert(tmatrixA::rank() == 2U);
         A.block(row, 0, constraint.m_A.rows(), constraint.m_A.cols()) = constraint.m_A.matrix();
     }
     if constexpr (is_eigen_v<tvectorb>)
@@ -37,7 +37,7 @@ void update_data(matrix_t& A, vector_t& b, const tensor_size_t row, const tconst
     else
     {
         static_assert(is_tensor_v<tvectorb>);
-        static_assert(constraint.m_b.rank() == 1U);
+        static_assert(tvectorb::rank() == 1U);
         b.segment(row, constraint.m_b.size()) = constraint.m_b.vector();
     }
 }

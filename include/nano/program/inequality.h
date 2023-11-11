@@ -37,11 +37,11 @@ inline auto make_inequality(tmatrixA A, tvectorb b)
 {
     if constexpr (is_tensor_v<tmatrixA>)
     {
-        static_assert(A.rank() == 2U);
+        static_assert(tmatrixA::rank() == 2U);
     }
     if constexpr (is_tensor_v<tvectorb>)
     {
-        static_assert(b.rank() == 1U);
+        static_assert(tvectorb::rank() == 1U);
     }
     return inequality_t<std::remove_cv_t<tmatrixA>, std::remove_cv_t<tvectorb>>{std::move(A), std::move(b)};
 }
@@ -58,7 +58,7 @@ inline auto make_inequality(const tvectora& a, const scalar_t b)
     }
     else
     {
-        static_assert(a.rank() == 1U);
+        static_assert(tvectora::rank() == 1U);
     }
     return make_inequality(a.transpose(), vector_t::constant(1, b));
 }
