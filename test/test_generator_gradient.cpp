@@ -13,6 +13,8 @@ auto make_input_data()
                                 1, 0, 0, 1, 1, 1, 0, 0, 0);
 }
 
+// clang-format off
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define NaN4 NaN, NaN, NaN, NaN
 
@@ -35,6 +37,8 @@ auto make_input_data()
 #define THETA0 atan2(+2.0, 2.0), atan2(+2.00, 2.00), atan2(1.0, 1.5), atan2(+0.25, 1.75)
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define THETA1 atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75)
+
+// clang-format on
 
 auto make_features(tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4)
 {
