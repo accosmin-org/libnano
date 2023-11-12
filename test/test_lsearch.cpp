@@ -18,13 +18,12 @@ auto make_functions()
 
 void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
 {
-    const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
-
-    // log the line-search trials
     lsearch.logger(
-        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-                              const scalar_t step_size)
+        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+            const scalar_t step_size)
         {
+            const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
+
             stream << "\tt=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
                    << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
                    << ",wolfe=" << state.has_wolfe(state0, descent, c2)

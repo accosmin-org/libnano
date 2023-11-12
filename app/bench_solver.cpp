@@ -135,12 +135,12 @@ auto log_solver(const function_t& function, const rsolver_t& solver, const vecto
                       << "." << std::endl;
         });
 
-    const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
-
     solver->lsearchk_logger(
-        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-                              const scalar_t step_size)
+        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+            const scalar_t step_size)
         {
+            const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
+
             std::cout << "\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
                       << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
                       << ",wolfe=" << state.has_wolfe(state0, descent, c2)
