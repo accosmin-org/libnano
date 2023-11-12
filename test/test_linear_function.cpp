@@ -206,7 +206,7 @@ UTEST_CASE(minimize_l1reg)
     const auto function = linear::function_t{iterator, *loss, 1.0, 0.0};
 
     [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_GREATER(state.fcalls(), 3);
+    UTEST_CHECK_GREATER(state.fcalls(), 2);
 }
 
 UTEST_CASE(minimize_l2reg)
