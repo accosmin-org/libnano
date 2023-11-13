@@ -88,12 +88,12 @@ int unsafe_main(int argc, const char* argv[])
     }
     if (options.has("version"))
     {
-        std::cout << nano::major_version << "." << nano::minor_version << std::endl;
+        std::cout << nano::major_version << "." << nano::minor_version << "\n";
         std::exit(EXIT_SUCCESS);
     }
     if (options.has("git-hash"))
     {
-        std::cout << nano::git_commit_hash << std::endl;
+        std::cout << nano::git_commit_hash << "\n";
         std::exit(EXIT_SUCCESS);
     }
     process_list<lsearch0_t>("lsearch0", options);

@@ -112,7 +112,7 @@ void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tbl
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
-    typename std::enable_if<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 2U>>::type
+    typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 2U>>
 {
     auto matrix = tensor_mem_t<tscalar, 2U>{rows, cols};
 
@@ -128,7 +128,7 @@ auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&...
 ///
 template <typename tscalar, typename... tblocks>
 auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
-    typename std::enable_if<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 1U>>::type
+    typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>)&&...), tensor_mem_t<tscalar, 1U>>
 {
     auto vector = tensor_mem_t<tscalar, 1U>{rows};
 

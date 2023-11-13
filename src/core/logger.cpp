@@ -77,7 +77,7 @@ logger_t::logger_t(const type ltype)
 
 logger_t::~logger_t()
 {
-    m_stream << std::endl;
+    m_stream << "\n";
     m_stream.precision(m_precision);
 }
 

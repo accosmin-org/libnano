@@ -154,7 +154,7 @@ public:
                         values.emplace_back(col + span, value);
                     }
                 }
-                catch (std::exception&)
+                catch (std::exception&) // NOLINT(bugprone-empty-catch)
                 {
                 }
                 col += cell.m_span;

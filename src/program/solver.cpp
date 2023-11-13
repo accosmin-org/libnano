@@ -81,7 +81,11 @@ struct solver_t::program_t
 
     tensor_size_t m() const { return m_G.rows(); }
 
-    const matrix_t& Q() const { return m_Q.value().get(); }
+    const matrix_t& Q() const
+    {
+        assert(m_Q);
+        return m_Q.value().get();
+    }
 
     template <typename thessvar, typename trdual, typename trprim>
     const vector_t& solve(const thessvar& hessvar, const trdual& rdual, const trprim& rprim) const

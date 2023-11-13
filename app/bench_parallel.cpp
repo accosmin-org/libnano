@@ -100,7 +100,7 @@ bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_
 {
     if (std::fabs(v1 - v2) > epsilon)
     {
-        std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!" << std::endl;
+        std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!\n";
         return false;
     }
     else

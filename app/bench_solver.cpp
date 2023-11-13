@@ -118,21 +118,19 @@ auto log_solver(const function_t& function, const rsolver_t& solver, const vecto
     std::cout << function.name() << " solver[" << solver->type_id() << "],lsearch0["
               << (solver->type() == solver_type::line_search ? solver->lsearch0().type_id() : string_t("N/A"))
               << "],lsearchk["
-              << (solver->type() == solver_type::line_search ? solver->lsearchk().type_id() : string_t("N/A")) << "]"
-              << std::endl;
+              << (solver->type() == solver_type::line_search ? solver->lsearchk().type_id() : string_t("N/A")) << "]\n";
 
     solver->logger(
         [&](const solver_state_t& state)
         {
-            std::cout << "descent: " << state << "." << std::endl;
+            std::cout << "descent: " << state << ".\n";
             return true;
         });
 
     solver->lsearch0_logger(
-        [&](const solver_state_t& state0, const scalar_t step_size)
-        {
+        [&](const solver_state_t& state0, const scalar_t step_size) {
             std::cout << "\tlsearch(0): t=" << step_size << ",f=" << state0.fx() << ",g=" << state0.gradient_test()
-                      << "." << std::endl;
+                      << ".\n";
         });
 
     solver->lsearchk_logger(
@@ -144,7 +142,7 @@ auto log_solver(const function_t& function, const rsolver_t& solver, const vecto
             std::cout << "\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
                       << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
                       << ",wolfe=" << state.has_wolfe(state0, descent, c2)
-                      << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << "." << std::endl;
+                      << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << ".\n";
         });
 
     auto state = solver->minimize(function, x0);

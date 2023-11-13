@@ -10,7 +10,7 @@ static auto check_inputs(const datasource_t& datasource, const tensor_size_t ind
     const auto visitor = [&](const auto& feature, const auto& data, const auto& mask)
     {
         UTEST_CHECK_EQUAL(feature, gt_feature);
-        if constexpr (std::is_same<decltype(data), const tensor_cmap_t<tscalar, trank>&>::value)
+        if constexpr (std::is_same_v<decltype(data), const tensor_cmap_t<tscalar, trank>&>)
         {
             UTEST_CHECK_CLOSE(data, gt_data, 1e-12);
             UTEST_CHECK_EQUAL(mask, gt_mask);
@@ -31,7 +31,7 @@ static auto check_target(const datasource_t& datasource, const feature_t& gt_fea
     const auto visitor = [&](const auto& feature, const auto& data, const auto& mask)
     {
         UTEST_CHECK_EQUAL(feature, gt_feature);
-        if constexpr (std::is_same<decltype(data), const tensor_cmap_t<tscalar, trank>&>::value)
+        if constexpr (std::is_same_v<decltype(data), const tensor_cmap_t<tscalar, trank>&>)
         {
             UTEST_CHECK_CLOSE(data, gt_data, 1e-12);
             UTEST_CHECK_EQUAL(mask, gt_mask);

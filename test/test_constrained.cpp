@@ -118,7 +118,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
 
     if (old_n_failures != utest_n_failures.load())
     {
-        std::cout << stream.str() << std::endl;
+        std::cout << stream.str() << "\n";
     }
 }
 

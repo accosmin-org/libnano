@@ -2,9 +2,6 @@
 #include <nano/program/solver.h>
 #include <nano/solver/gs.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 solver_gs_t::solver_gs_t()
@@ -56,7 +53,6 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     auto state  = solver_state_t{function, x0};
     auto cstate = state;
 
-    auto iterk = 0;
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // FIXME: should be more efficient for some functions to compute all gradients at once!
@@ -76,11 +72,6 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         const auto solution = solver.solve(program);
         assert(solution.m_status == solver_status::converged);
         g = G.transpose() * solution.m_x.vector();
-
-        std::cout << std::fixed << std::setprecision(10) << "i=" << iterk << ",mk=" << miuk << ",ek=" << epsilonk
-                  << ",g2=" << g.lpNorm<2>() << ",gI=" << g.lpNorm<Eigen::Infinity>() << ",calls=" << function.fcalls()
-                  << "/" << function.gcalls() << std::endl;
-        ++iterk;
 
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
