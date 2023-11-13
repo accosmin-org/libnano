@@ -144,7 +144,7 @@ UTEST_CASE(sample_without_replacement_all)
 
 UTEST_CASE(sample_from_ball)
 {
-    for (tensor_size_t dims : {2, 3, 11})
+    for (const tensor_size_t dims : {2, 3, 11})
     {
         auto       rng    = make_rng();
         const auto x0     = make_random_vector<scalar_t>(dims, -1.0, +1.0);

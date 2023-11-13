@@ -252,7 +252,7 @@ function clang_tidy {
     wrapper=run-clang-tidy${clang_suffix}
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     echo "-- Using wrapper ${wrapper}"
-    ${wrapper} -clang-tidy-binary clang-tidy${clang_suffix} \
+    ${wrapper} -p ${libnanodir} -clang-tidy-binary clang-tidy${clang_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
 
     if [[ $? -ne 0 ]]; then
@@ -286,7 +286,7 @@ function clang_tidy_concurrency {
 
 function clang_tidy_misc {
     checks="misc*"
-    checks="${checks},-misc-non-private-member-variables-in-classes"
+    checks="${checks},-misc-non-private-member-variables-in-classes,-misc-include-cleaner"
     clang_tidy ${checks}
 }
 
