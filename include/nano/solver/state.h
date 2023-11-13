@@ -33,11 +33,16 @@ public:
         assert(x.size() == m_x.size());
         assert(x.size() == m_function->size());
         m_x  = x;
-        m_fx = m_function->vgrad(m_x, &m_gx);
+        m_fx = m_function->vgrad(m_x, m_gx);
         update_calls();
         update_constraints();
         return valid();
     }
+
+    ///
+    /// \brief update the number of function value and gradient evaluations.
+    ///
+    void update_calls();
 
     ///
     /// \brief try to update the current state and
@@ -71,6 +76,7 @@ public:
     /// NB: only appropriate for smooth problems.
     ///
     scalar_t gradient_test() const;
+    scalar_t gradient_test(vector_cmap_t gx) const;
 
     ///
     /// \brief convergence criterion of the constraints (if any).
@@ -188,7 +194,6 @@ public:
     const vector_t& cineq() const { return m_cineq; }
 
 private:
-    void update_calls();
     void update_constraints();
 
     using scalars_t = std::vector<scalar_t>;
@@ -208,11 +213,14 @@ private:
 };
 
 ///
+/// \brief pretty print the given solver state.
+///
+NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
+
+///
 /// \brief convergence test that checks two consecutive (best) states are close enough.
 ///
 /// NB: appropriate for non-smooth or constrained problems.
 ///
 NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_t& current_state, scalar_t epsilon);
-
-NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
 } // namespace nano

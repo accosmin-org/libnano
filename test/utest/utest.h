@@ -4,7 +4,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <nano/tensor/eigen.h>
 #include <nano/tensor/tensor.h>
 #include <string>
 #include <utility>

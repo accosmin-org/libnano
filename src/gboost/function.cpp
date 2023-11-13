@@ -41,9 +41,9 @@ rfunction_t scale_function_t::clone() const
     return std::make_unique<scale_function_t>(*this);
 }
 
-scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t scale_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    assert(!gx || gx->size() == x.size());
+    assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == m_cluster.groups());
 
     ::clear(m_accumulators);
@@ -72,7 +72,7 @@ scalar_t scale_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
             m_loss.value(targets, outputs, values);
             accumulator.update(values);
 
-            if (gx != nullptr)
+            if (gx.size() == x.size())
             {
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
@@ -114,12 +114,12 @@ rfunction_t bias_function_t::clone() const
     return std::make_unique<bias_function_t>(*this);
 }
 
-scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t bias_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     const auto& samples = m_iterator.samples();
     const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
 
-    assert(!gx || gx->size() == x.size());
+    assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == tsize);
 
     ::clear(m_accumulators);
@@ -138,13 +138,12 @@ scalar_t bias_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
             m_loss.value(targets, outputs, values);
             accumulator.update(values);
 
-            if (gx != nullptr)
+            if (gx.size() > 0)
             {
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
-                const auto gmatrix = vgrads.reshape(range.size(), tsize).matrix();
 
-                accumulator.m_gb1.noalias() += gmatrix.colwise().sum();
+                accumulator.m_gb1 += vgrads.reshape(range.size(), tsize).matrix().colwise().sum();
             }
         });
 
@@ -169,19 +168,18 @@ rfunction_t grads_function_t::clone() const
     return std::make_unique<grads_function_t>(*this);
 }
 
-scalar_t grads_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t grads_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     const auto& samples = m_iterator.samples();
     const auto  odims   = cat_dims(samples.size(), m_iterator.dataset().target_dims());
 
-    assert(!gx || gx->size() == x.size());
+    assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == nano::size(odims));
 
     const auto& grads = gradients(map_tensor(x.data(), odims));
-    if (gx != nullptr)
+    if (gx.size() > 0)
     {
-        *gx = grads.vector();
-        *gx /= static_cast<scalar_t>(samples.size());
+        gx = grads.vector() / static_cast<scalar_t>(samples.size());
     }
 
     // OK

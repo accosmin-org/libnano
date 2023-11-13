@@ -18,16 +18,16 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<objective_t>(*this); }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());
 
         const auto dx = 1.0 + (x - m_b).dot(x - m_b) / 2;
 
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            *gx = (x - m_b) / dx;
+            gx = (x - m_b) / dx;
         }
 
         return std::log(dx);
@@ -74,7 +74,7 @@ int main(const int, char*[])
         const auto x0 = make_random_vector<scalar_t>(objective.size());
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0, nullptr) << "...\n";
+                  << "]: f0=" << objective.vgrad(x0) << "...\n";
 
         // log the optimization steps
         solver.logger(
@@ -108,7 +108,7 @@ int main(const int, char*[])
         const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0, nullptr) << ",x-x*=" << error << "," << state << ".\n";
+                  << "]: f0=" << objective.vgrad(x0) << ",x-x*=" << error << "," << state << ".\n";
 
         if (error > 1e-7)
         {

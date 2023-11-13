@@ -6,8 +6,9 @@ namespace nano
 {
 ///
 /// \brief limited memory BGFS (l-BGFS).
-///     see "Updating Quasi-Newton Matrices with Limited Storage", by J. Nocedal, 1980
-///     see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
+///
+/// see "Updating Quasi-Newton Matrices with Limited Storage", by J. Nocedal, 1980
+/// see "Numerical Optimization", by J. Nocedal, S. Wright, 2006
 ///
 /// NB: the functional constraints (if any) are all ignored.
 ///

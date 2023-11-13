@@ -4,7 +4,7 @@ using namespace nano;
 using namespace nano::gboost;
 
 accumulator_t::accumulator_t(const tensor_size_t tsize)
-    : m_gb1(vector_t::Zero(tsize))
+    : m_gb1(vector_t::zero(tsize))
 {
 }
 
@@ -33,11 +33,11 @@ void accumulator_t::update(const tensor1d_cmap_t& values)
     m_vm1 += values.array().sum();
 }
 
-scalar_t accumulator_t::vgrad(vector_t* gx) const
+scalar_t accumulator_t::vgrad(vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() > 0)
     {
-        *gx = m_gb1;
+        gx = m_gb1;
     }
     return m_vm1;
 }

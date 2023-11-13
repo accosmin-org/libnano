@@ -6,11 +6,11 @@ namespace nano
 {
 ///
 /// \brief non-linear conjugate gradient descent with line-search.
-///     see (1) "A survey of nonlinear conjugate gradient methods", by William W. Hager and Hongchao Zhang
-///     see (2) "Nonlinear Conjugate Gradient Methods", by Yu-Hong Dai
-///     see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager and
-///     Zhang
-///     see (4) "Numerical optimization", Nocedal & Wright, 2nd edition
+///
+/// see (1) "A survey of nonlinear conjugate gradient methods", by Hager, Zhang
+/// see (2) "Nonlinear Conjugate Gradient Methods", by Dai
+/// see (3) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager, Zhang
+/// see (4) "Numerical optimization", Nocedal & Wright, 2nd edition, 2006
 ///
 class NANO_PUBLIC solver_cgd_t : public solver_t
 {

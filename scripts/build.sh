@@ -120,9 +120,7 @@ function call_cppcheck {
     echo "-- Using cppcheck ${cppcheck_version/* /}"
 
     # NB: the warnings are not fatal (exitcode=0) as they are usually false alarms!
-    #--suppress=shadowFunction
     #--suppress=shadowVar
-    #--suppress=unusedFunction
     cppcheck -j ${threads} \
         --project=compile_commands.json \
         --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
@@ -130,6 +128,7 @@ function call_cppcheck {
         --suppress=unknownMacro \
         --suppress=shadowFunction \
         --suppress=unusedFunction \
+        --suppress=missingIncludeSystem \
         --suppress=unmatchedSuppression
 }
 
@@ -253,7 +252,7 @@ function clang_tidy {
     wrapper=run-clang-tidy${clang_suffix}
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     echo "-- Using wrapper ${wrapper}"
-    ${wrapper} -clang-tidy-binary clang-tidy${clang_suffix} \
+    ${wrapper} -p ${libnanodir} -clang-tidy-binary clang-tidy${clang_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
 
     if [[ $? -ne 0 ]]; then
@@ -287,7 +286,7 @@ function clang_tidy_concurrency {
 
 function clang_tidy_misc {
     checks="misc*"
-    checks="${checks},-misc-non-private-member-variables-in-classes"
+    checks="${checks},-misc-non-private-member-variables-in-classes,-misc-include-cleaner"
     clang_tidy ${checks}
 }
 

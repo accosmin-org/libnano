@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief parameter-free stochastic gradient method using coin betting strategies.
-///     see "Training Deep Networks without Learning Rates through Coin Betting", by F. Orabona, T. Tommasi, 2017
+///
+/// see "Training Deep Networks without Learning Rates through Coin Betting", by F. Orabona, T. Tommasi, 2017
 ///
 /// NB: the functional constraints (if any) are all ignored.
 /// NB: the algorithm is very slow and it is provided as a baseline.

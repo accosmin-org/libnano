@@ -79,12 +79,15 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
     vector_t u     = proxy.U(gamma - state.fx(), h);
     scalar_t eta   = proxy.E(gamma - state.fx(), h) - miu;
 
-    auto alpha = alpha_max;
-    auto xb    = state.x();
-    auto fb    = state.fx();
-    auto g     = state.gx();
-
-    vector_t x, x_prime, h_hat, u_hat, u_prime;
+    auto alpha   = alpha_max;
+    auto xb      = state.x();
+    auto fb      = state.fx();
+    auto g       = state.gx();
+    auto x       = vector_t{x0.size()};
+    auto x_prime = vector_t{x0.size()};
+    auto h_hat   = vector_t{x0.size()};
+    auto u_hat   = vector_t{x0.size()};
+    auto u_prime = vector_t{x0.size()};
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
@@ -99,7 +102,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         }
 
         x            = xb + alpha * (u - xb);
-        const auto f = function.vgrad(x, &g);
+        const auto f = function.vgrad(x, g);
         g            = g - miu * proxy.gQ(x);
 
         h_hat                = h + alpha * (g - h);
@@ -144,7 +147,5 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         fb = fb_hat;
     }
 
-    // NB: make sure the gradient is updated at the returned point.
-    state.update(state.x());
     return state;
 }

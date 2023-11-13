@@ -1,10 +1,18 @@
 #pragma once
 
-#include <nano/eigen.h>
+#include <nano/scalar.h>
 #include <nano/tensor/tensor.h>
 
 namespace nano
 {
+using vector_t      = tensor_mem_t<scalar_t, 1>;
+using vector_map_t  = tensor_map_t<scalar_t, 1>;
+using vector_cmap_t = tensor_cmap_t<scalar_t, 1>;
+
+using matrix_t      = tensor_mem_t<scalar_t, 2>;
+using matrix_map_t  = tensor_map_t<scalar_t, 2>;
+using matrix_cmap_t = tensor_cmap_t<scalar_t, 2>;
+
 using tensor1d_t = tensor_mem_t<scalar_t, 1>;
 using tensor2d_t = tensor_mem_t<scalar_t, 2>;
 using tensor3d_t = tensor_mem_t<scalar_t, 3>;

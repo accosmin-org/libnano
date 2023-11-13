@@ -158,7 +158,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         const auto function = scale_function_t{train_targets_iterator, loss, cluster, outputs, woutputs};
 
         auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0));
-        if (gstate.x().minCoeff() < std::numeric_limits<scalar_t>::epsilon())
+        if (gstate.x().min() < std::numeric_limits<scalar_t>::epsilon())
         {
             // NB: scaling fails (optimization fails or convergence on training loss)
             result.update(round + 1, shrinkage_ratio, gstate, std::move(best_wlearner));

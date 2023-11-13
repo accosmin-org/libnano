@@ -35,7 +35,8 @@ public:
     ///         given: q(u) = fu, q'(u) = gu
     ///         given: q(v) = fv, q'(v) = gv
     ///     minimizer: solution of 3*a*x^2 + 2*b*x + c = 0
-    ///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
+    ///
+    /// see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
     ///
     static scalar_t cubic(const lsearch_step_t& u, const lsearch_step_t& v);
 

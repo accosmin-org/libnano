@@ -7,7 +7,7 @@ namespace nano
 ///
 /// \brief hinge type (see MARS).
 ///
-/// see "Multivariate adaptive regression splines", by Jerome Friedman
+/// see "Multivariate adaptive regression splines", by Jerome Friedman, 1991
 ///
 enum class hinge_type : int32_t
 {
@@ -27,10 +27,11 @@ NANO_MAKE_ENUM2(hinge_type, left, right)
 ///
 ///     where feature is the selected continuous feature.
 ///
+/// see "Multivariate adaptive regression splines", by Jerome Friedman, 1991
+///
 /// NB: the discrete and the structured features are skipped during fiting.
 /// NB: the threshold and the hinge direction is shared across outputs, but the predictions can be different.
 /// NB: this weak learner is inspired by the MARS algorithm:
-///     see "Multivariate adaptive regression splines", by Jerome Friedman
 ///
 class NANO_PUBLIC hinge_wlearner_t final : public single_feature_wlearner_t
 {

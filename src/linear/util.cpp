@@ -16,7 +16,7 @@ void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weigh
     assert(samples * isize == inputs.size());
     assert(samples * tsize == outputs.size());
 
-    outputs.reshape(samples, tsize).matrix() = inputs.matrix() * weights.matrix().transpose();
+    outputs.reshape(samples, tsize) = inputs * weights.transpose();
     outputs.reshape(samples, tsize).matrix().rowwise() += bias.vector().transpose();
 }
 

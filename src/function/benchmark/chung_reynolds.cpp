@@ -14,13 +14,13 @@ rfunction_t function_chung_reynolds_t::clone() const
     return std::make_unique<function_chung_reynolds_t>(*this);
 }
 
-scalar_t function_chung_reynolds_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_chung_reynolds_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     const auto u = x.dot(x);
 
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        *gx = (4 * u) * x;
+        gx = (4 * u) * x.vector();
     }
 
     return u * u;

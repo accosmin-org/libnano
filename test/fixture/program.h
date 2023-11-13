@@ -13,7 +13,7 @@ static auto make_logger(std::ostringstream& stream, const int stop_at_iters = -1
                << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
                << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
                << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
-               << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]" << std::endl;
+               << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]\n";
         return state.m_iters != stop_at_iters;
     };
 }

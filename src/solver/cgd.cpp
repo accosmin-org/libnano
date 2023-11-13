@@ -43,7 +43,7 @@ scalar_t N(const vector_t& pg, const vector_t& pd, const vector_t& cg, scalar_t 
     const auto pg2 = pg.lpNorm<2>();
     eta            = -1 / (pd2 * std::min(eta, pg2));
 
-    return std::max(eta, div * (y - 2 * pd * y.squaredNorm() * div).dot(cg));
+    return std::max(eta, div * (y - 2 * pd * y.squaredNorm() * div).dot(cg.vector()));
 }
 
 scalar_t DYHS(const vector_t& pg, const vector_t& pd, const vector_t& cg)

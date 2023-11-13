@@ -10,7 +10,7 @@ synthetic_linear_t::synthetic_linear_t(tensor_size_t samples, tensor_size_t outp
 {
     for (tensor_size_t o = 0; o < outputs; ++o)
     {
-        m_wopt.matrix().row(o) /= m_wopt.matrix().row(o).sum();
+        m_wopt.row(o) /= m_wopt.row(o).sum();
     }
     for (tensor_size_t i = 0; i < inputs; ++i)
     {
@@ -26,16 +26,16 @@ synthetic_linear_t::synthetic_linear_t(tensor_size_t samples, tensor_size_t outp
     }
 }
 
-tensor2d_t synthetic_linear_t::outputs(const vector_t& x) const
+tensor2d_t synthetic_linear_t::outputs(vector_cmap_t x) const
 {
     return outputs(make_w(x));
 }
 
-tensor2d_t synthetic_linear_t::outputs(tensor2d_cmap_t w) const
+tensor2d_t synthetic_linear_t::outputs(matrix_cmap_t w) const
 {
     tensor2d_t outputs(m_inputs.size<0>(), m_bopt.size());
-    outputs.matrix() = inputs() * w.matrix().transpose();
-    outputs.matrix().rowwise() += m_bopt.vector().transpose();
+    outputs.matrix() = inputs().matrix() * w.transpose();
+    outputs.matrix().rowwise() += m_bopt.transpose();
     return outputs;
 } // LCOV_EXCL_LINE
 
@@ -47,8 +47,8 @@ synthetic_sclass_t::synthetic_sclass_t(tensor_size_t samples, tensor_size_t outp
     const auto xoutputs = this->outputs(wopt());
     for (tensor_size_t s = 0; s < samples; ++s)
     {
-        const auto woutput        = xoutputs.matrix().array().row(s) - bopt().array();
-        m_targets.matrix().row(s) = (woutput - 0.5).sign();
+        const auto woutput = xoutputs.matrix().array().row(s) - bopt().array();
+        m_targets.row(s)   = (woutput - 0.5).sign();
     }
 }
 

@@ -4,8 +4,10 @@ using namespace nano;
 
 function_qing_t::function_qing_t(tensor_size_t dims)
     : function_t("qing", dims)
-    , m_bias(vector_t::LinSpaced(dims, scalar_t(1), scalar_t(dims)))
+    , m_bias(dims)
 {
+    m_bias.lin_spaced(scalar_t(1), scalar_t(dims));
+
     convex(convexity::no);
     smooth(smoothness::yes);
 }
@@ -15,14 +17,17 @@ rfunction_t function_qing_t::clone() const
     return std::make_unique<function_qing_t>(*this);
 }
 
-scalar_t function_qing_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_qing_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    const auto xa = x.array();
+    const auto ba = m_bias.array();
+
+    if (gx.size() == x.size())
     {
-        *gx = 4 * (x.array().square() - m_bias.array()) * x.array();
+        gx = 4 * (xa.square() - ba) * xa;
     }
 
-    return (x.array().square() - m_bias.array()).square().sum();
+    return (xa.square() - ba).square().sum();
 }
 
 rfunction_t function_qing_t::make(tensor_size_t dims, tensor_size_t) const

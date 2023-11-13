@@ -31,12 +31,16 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
 
     const auto n = static_cast<scalar_t>(function.size());
 
-    matrix_t H = matrix_t::Identity(function.size(), function.size());
+    auto H = matrix_t{matrix_t::identity(function.size(), function.size())};
     H.array() *= function.size() == 1 ? R : (R * R);
+
+    auto xv = x.vector();
+    auto gv = g.vector();
+    auto Hm = H.matrix();
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto gHg = g.dot(H * g);
+        const auto gHg = gv.dot(Hm * gv);
         if (gHg < std::numeric_limits<scalar_t>::epsilon())
         {
             const auto iter_ok   = true;
@@ -49,19 +53,19 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
         {
             // NB: the ellipsoid method becomes bisection for the 1D case.
             x.array() += H(0) * (g(0) < 0.0 ? +1.0 : -1.0);
-            H /= 2.0;
+            Hm /= 2.0;
         }
         else
         {
             // NB: deep-cut variation
             const auto alpha = (f - state.fx()) / std::sqrt(gHg);
 
-            x.noalias() = x - (1 + n * alpha) / (n + 1) * (H * g) / std::sqrt(gHg);
-            H.noalias() = (n * n) / (n * n - 1) * (1 - alpha * alpha) *
-                          (H - 2 * (1 + n * alpha) / (n + 1) / (1 + alpha) * (H * g * g.transpose() * H) / gHg);
+            xv.noalias() = xv - (1 + n * alpha) / (n + 1) * (Hm * gv) / std::sqrt(gHg);
+            Hm.noalias() = (n * n) / (n * n - 1) * (1 - alpha * alpha) *
+                           (Hm - 2 * (1 + n * alpha) / (n + 1) / (1 + alpha) * (Hm * gv * gv.transpose() * Hm) / gHg);
         }
 
-        f = function.vgrad(x, &g);
+        f = function.vgrad(x, g);
         state.update_if_better(x, g, f);
 
         const auto iter_ok   = std::isfinite(f);

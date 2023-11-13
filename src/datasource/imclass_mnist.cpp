@@ -82,7 +82,7 @@ bool base_mnist_datasource_t::tread(const string_t& path, tensor_size_t sample, 
         return false;
     }
 
-    tensor_vector_t<char> labels(expected);
+    eigen_vector_t<char> labels(expected);
     if (!stream.read(labels.data(), labels.size()))
     {
         return false;

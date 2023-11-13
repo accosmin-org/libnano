@@ -118,7 +118,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
 
     if (old_n_failures != utest_n_failures.load())
     {
-        std::cout << stream.str() << std::endl;
+        std::cout << stream.str() << "\n";
     }
 }
 
@@ -168,11 +168,11 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<sum_function_t>(*this); }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->array() = 1.0;
+            gx.array() = 1.0;
         }
         return x.sum();
     }
@@ -190,11 +190,11 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<cauchy_function_t>(*this); }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->noalias() = 2.0 * x / (0.36 + x.dot(x));
+            gx = 2.0 * x / (0.36 + x.dot(x));
         }
         return std::log(0.36 + x.dot(x));
     }
@@ -212,11 +212,11 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<sumabsm1_function_t>(*this); }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->array() = x.array().sign();
+            gx.array() = x.array().sign();
         }
         return x.array().abs().sum() - 1.0;
     }
@@ -702,11 +702,11 @@ UTEST_CASE(constrained_quadratic3x3_equality)
 UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->array() = 1.0;
+            gx.array() = 1.0;
         }
         return x.sum();
     };
@@ -744,12 +744,12 @@ UTEST_CASE(minimize_objective1)
 UTEST_CASE(minimize_objective2)
 {
     // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            (*gx)(0) = -10.0 * x(0);
-            (*gx)(1) = +2.0 * x(1);
+            gx(0) = -10.0 * x(0);
+            gx(1) = +2.0 * x(1);
         }
         return -5.0 * x(0) * x(0) + x(1) * x(1);
     };
@@ -782,11 +782,11 @@ UTEST_CASE(minimize_objective2)
 UTEST_CASE(minimize_objective3)
 {
     // see 17.24, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->array() = 1.0;
+            gx.array() = 1.0;
         }
         return x.sum();
     };
@@ -819,12 +819,12 @@ UTEST_CASE(minimize_objective3)
 UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            (*gx)(0) = 4.0 * x(0) - 1.0;
-            (*gx)(1) = 4.0 * x(1);
+            gx(0) = 4.0 * x(0) - 1.0;
+            gx(1) = 4.0 * x(1);
         }
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
@@ -858,12 +858,12 @@ UTEST_CASE(minimize_objective5)
 {
     // see 12.36, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            (*gx)(0) = 2.0 * (x(0) - 1.5);
-            (*gx)(1) = 4.0 * cube(x(1) - 0.5);
+            gx(0) = 2.0 * (x(0) - 1.5);
+            gx(1) = 4.0 * cube(x(1) - 0.5);
         }
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
@@ -900,12 +900,12 @@ UTEST_CASE(minimize_objective6)
 {
     // see 12.56, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            (*gx)(0) = 1.0;
-            (*gx)(1) = 0.0;
+            gx(0) = 1.0;
+            gx(1) = 0.0;
         }
         return x(0);
     };
@@ -940,14 +940,14 @@ UTEST_CASE(minimize_objective6)
 UTEST_CASE(minimize_objective7)
 {
     // see exercise 4.3, "Convex optimization", Boyd & Vanderberghe
-    const auto lambda = [](const vector_t& x, vector_t* gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
     {
         static const auto P = make_matrix<scalar_t>(3, 13, 12, -2, 12, 17, 6, -2, 6, 12);
         static const auto q = make_vector<scalar_t>(-22, -14.5, 13.0);
         static const auto r = 1.0;
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            *gx = P * x + q;
+            gx = P * x + q;
         }
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };

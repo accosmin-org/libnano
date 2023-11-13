@@ -12,7 +12,7 @@ vector_t make_x0(const tprogram& program)
     const auto x0 = program.make_strictly_feasible();
     if (!x0)
     {
-        return vector_t::Zero(program.m_c.size());
+        return vector_t::zero(program.m_c.size());
     }
     else
     {
@@ -70,7 +70,7 @@ struct solver_t::program_t
         if (p > 0)
         {
             m_lmat.block(0, n, n, p) = m_A.transpose();
-            m_lmat.block(n, 0, p, n) = m_A;
+            m_lmat.block(n, 0, p, n) = m_A.matrix();
         }
         m_lmat.block(n, n, p, p).array() = 0.0;
     }
@@ -81,6 +81,12 @@ struct solver_t::program_t
 
     tensor_size_t m() const { return m_G.rows(); }
 
+    const matrix_t& Q() const
+    {
+        assert(m_Q);
+        return m_Q.value().get();
+    }
+
     template <typename thessvar, typename trdual, typename trprim>
     const vector_t& solve(const thessvar& hessvar, const trdual& rdual, const trprim& rprim) const
     {
@@ -90,7 +96,7 @@ struct solver_t::program_t
         // setup additional hessian components
         if (m_Q)
         {
-            m_lmat.block(0, 0, n, n) = m_Q.value().get() - hessvar;
+            m_lmat.block(0, 0, n, n) = Q() - hessvar;
         }
         else
         {
@@ -102,8 +108,8 @@ struct solver_t::program_t
         m_lvec.segment(n, p) = -rprim;
 
         // solve the system
-        m_ldlt.compute(m_lmat);
-        m_lsol = m_ldlt.solve(m_lvec);
+        m_ldlt.compute(m_lmat.matrix());
+        m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
         return m_lsol;
     }
 
@@ -116,13 +122,13 @@ struct solver_t::program_t
         // objective
         if (!m_Q)
         {
-            state.m_fx    = x.dot(m_c);
+            state.m_fx    = x.dot(m_c.vector());
             state.m_rdual = m_c;
         }
         else
         {
-            state.m_fx    = 0.5 * x.dot(m_Q.value().get() * x) + x.dot(m_c);
-            state.m_rdual = m_Q.value().get() * x + m_c;
+            state.m_fx    = 0.5 * x.dot(Q() * x) + x.dot(m_c.vector());
+            state.m_rdual = Q() * x + m_c;
         }
 
         // surrogate duality gap
@@ -141,13 +147,13 @@ struct solver_t::program_t
         // residual contributions of linear inequality constraints
         if (m > 0)
         {
+            const auto sm = static_cast<scalar_t>(m);
             state.m_rdual += m_G.transpose() * u;
-            state.m_rcent.array() =
-                -state.m_eta / (miu * static_cast<scalar_t>(m)) - u.array() * (m_G * x - m_h).array();
+            state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
         }
     }
 
-    using lin_solver_t = Eigen::LDLT<matrix_t>;
+    using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes
     opt_matrix_t         m_Q;    ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
@@ -232,7 +238,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
 
     // current solver state
     state.m_u = -1.0 / (G * x0 - h).array();
-    state.m_v = vector_t::Zero(p);
+    state.m_v = vector_t::zero(p);
 
     // update residuals
     program.update(state.m_x, state.m_u, state.m_v, miu, state);
@@ -246,7 +252,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
 
         // solve primal-dual linear system of equations to get (dx, du, dv)
         const auto Gxh = G * state.m_x - h;
-        program.solve(G.transpose() * (state.m_u.array() / Gxh.array()).matrix().asDiagonal() * G,
+        program.solve(G.transpose() * (state.m_u.array() / Gxh.array()).matrix().asDiagonal() * G.matrix(),
                       state.m_rdual + G.transpose() * (state.m_rcent.array() / Gxh.array()).matrix(), state.m_rprim);
 
         dx = program.m_lsol.segment(0, n);
@@ -257,7 +263,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         state.m_ldlt_positive = program.m_ldlt.isPositive();
 
         // stop if the linear system of equations is not stable
-        if (!std::isfinite(state.m_ldlt_rcond) || !dx.allFinite() || !dv.allFinite() || !du.allFinite())
+        if (!std::isfinite(state.m_ldlt_rcond) || !dx.all_finite() || !dv.all_finite() || !du.all_finite())
         {
             done(state, epsilon);
             break;
@@ -349,7 +355,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
     const auto  p = program.p();
 
     // NB: solve directly the KKT-based system of linear equations coupling (x, v)
-    program.solve(matrix_t::Zero(n, n), c, -b);
+    program.solve(matrix_t::zero(n, n), c, -b);
 
     // current solver state
     auto state  = solver_state_t{n, 0, p};
@@ -360,7 +366,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
 
     const auto epsil = std::sqrt(std::numeric_limits<scalar_t>::epsilon());
     const auto valid = std::isfinite(state.residual());
-    const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec, epsil);
+    const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsil);
     state.m_status   = (valid && aprox) ? solver_status::converged : solver_status::failed;
 
     log(state);

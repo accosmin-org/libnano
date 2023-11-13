@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief interface for primal-dual subgradient methods.
-///     see "Primal-dual subgradient methods", by Y. Nesterov, 2009
+///
+/// see "Primal-dual subgradient methods", by Y. Nesterov, 2009
 ///
 /// NB: the functional constraints (if any) are all ignored.
 /// NB: the prox-function is the Euclidean norm.
@@ -34,7 +35,6 @@ private:
 
 ///
 /// \brief simple dual averages (SDA) variation of primal-dual subgradient methods.
-///     see "Primal-dual subgradient methods", by Y. Nesterov, 2009
 ///
 class NANO_PUBLIC solver_sda_t final : public solver_pdsgm_t
 {
@@ -55,7 +55,6 @@ private:
 
 ///
 /// \brief weighted dual averages (WDA) variation of primal-dual subgradient methods.
-///     see "Primal-dual subgradient methods", by Y. Nesterov, 2009
 ///
 class NANO_PUBLIC solver_wda_t final : public solver_pdsgm_t
 {

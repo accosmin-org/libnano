@@ -43,17 +43,17 @@ rfunction_t quadratic_surrogate_fit_t::clone() const
     return std::make_unique<quadratic_surrogate_fit_t>(*this);
 }
 
-scalar_t quadratic_surrogate_fit_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t quadratic_surrogate_fit_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     m_loss_outputs.vector() = m_p2.matrix() * x;
 
     const auto samples = m_p2.size<0>();
     const auto targets = m_y.reshape(samples, 1, 1, 1);
 
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
         m_loss.vgrad(targets, m_loss_outputs, m_loss_vgrads);
-        gx->noalias() = m_p2.matrix().transpose() * m_loss_vgrads.vector();
+        gx = m_p2.matrix().transpose() * m_loss_vgrads.vector();
     }
 
     m_loss.value(targets, m_loss_outputs, m_loss_values);
@@ -76,24 +76,23 @@ rfunction_t quadratic_surrogate_t::clone() const
     return std::make_unique<quadratic_surrogate_t>(*this);
 }
 
-scalar_t quadratic_surrogate_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t quadratic_surrogate_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        auto& g = *gx;
-        g.setZero();
+        gx.zero();
 
         auto k = tensor_size_t{1};
         for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
         {
-            g(i) += m_model(k++);
+            gx(i) += m_model(k++);
         }
         for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
         {
             for (tensor_size_t j = i; j < size; ++j)
             {
-                g(i) += m_model(k) * x(j);
-                g(j) += m_model(k++) * x(i);
+                gx(i) += m_model(k) * x(j);
+                gx(j) += m_model(k++) * x(i);
             }
         }
     }
@@ -162,7 +161,7 @@ void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_ca
         }
 
         const auto surrogate_fit = quadratic_surrogate_fit_t{*loss, p, y};
-        auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::Zero(surrogate_fit.size()));
+        auto       min_state_fit = solver->minimize(surrogate_fit, vector_t::zero(surrogate_fit.size()));
         critical(!min_state_fit.valid(), "tuner: failed to fit the surrogate model <", min_state_fit, ">!");
 
         const auto surrogate_opt = quadratic_surrogate_t{min_state_fit.x()};

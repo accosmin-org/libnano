@@ -64,7 +64,7 @@ auto decode_params(const tensor1d_cmap_t& params, const linear_regularization re
 
 auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
 {
-    vector_t x0 = vector_t::Zero(function.size());
+    vector_t x0 = vector_t::zero(function.size());
     if (extra.has_value())
     {
         const auto& result                      = std::any_cast<linear::result_t>(extra);

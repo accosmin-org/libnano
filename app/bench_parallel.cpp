@@ -71,7 +71,7 @@ scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 template <typename toperator>
 scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(static_cast<tensor_size_t>(pool.size()));
+    auto values = make_full_vector<scalar_t>(static_cast<tensor_size_t>(pool.size()), 0);
     pool.map(targets.rows(), [&](tensor_size_t i, size_t t)
              { values(static_cast<tensor_size_t>(t)) += sti<toperator>(i, targets, outputs); });
 
@@ -82,7 +82,7 @@ scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix
 template <typename toperator>
 scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(omp_get_max_threads());
+    auto       values = make_full_vector<scalar_t>(omp_get_max_threads(), 0);
     const auto size = targets.rows();
 
     #pragma omp parallel for
@@ -100,7 +100,7 @@ bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_
 {
     if (std::fabs(v1 - v2) > epsilon)
     {
-        std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!" << std::endl;
+        std::cerr << "mis-matching sum (" << name << "): delta=" << std::fabs(v1 - v2) << ")!\n";
         return false;
     }
     else
@@ -124,8 +124,8 @@ bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_
     row1 << scat("reduce-", toperator::name()) << "single";
     for (tensor_size_t size = min_size; size <= max_size; size *= 2)
     {
-        matrix_t targets = matrix_t::Constant(size, 10, -1);
-        matrix_t outputs = matrix_t::Random(size, 10);
+        auto targets = make_full_matrix<scalar_t>(size, 10, -1);
+        auto outputs = make_random_matrix<scalar_t>(size, 10);
         for (tensor_size_t i = 0; i < size; ++ i)
         {
             targets(i, i % 10) = +1;

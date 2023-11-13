@@ -224,7 +224,7 @@ cmdline_t::result_t cmdline_t::process_config_file(const string_t& path) const
 
 void cmdline_t::usage(std::ostream& os, size_t indent) const
 {
-    os << m_title << std::endl;
+    os << m_title << "\n";
 
     size_t max_option_size = 0;
     for (const auto& option : m_options)
@@ -235,9 +235,8 @@ void cmdline_t::usage(std::ostream& os, size_t indent) const
     max_option_size += 4;
     for (const auto& option : m_options)
     {
-        os << string_t(indent, ' ') << nano::align(option.describe(), max_option_size) << option.m_description
-           << std::endl;
+        os << string_t(indent, ' ') << nano::align(option.describe(), max_option_size) << option.m_description << "\n";
     }
 
-    os << std::endl;
+    os << "\n";
 }

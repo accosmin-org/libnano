@@ -6,8 +6,9 @@ namespace nano
 {
 ///
 /// \brief the More&Thuente-like line-search algorithm described here:
-///     see (1) "Practical methods of optimization", Fletcher, 2nd edition, p.34
-///     see (2) "Numerical optimization", Nocedal & Wright, 2nd edition, p.60
+///
+/// see (1) "Practical methods of optimization", Fletcher, 2nd edition, p.34
+/// see (2) "Numerical optimization", Nocedal & Wright, 2nd edition, p.60
 ///
 /// NB: the implementation follows the notation from (1).
 ///

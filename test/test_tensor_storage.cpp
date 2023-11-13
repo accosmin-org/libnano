@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-using vector_t         = tensor_vector_t<double>;
+using vector_t         = eigen_vector_t<double>;
 using vector_storage_t = tensor_vector_storage_t<double, 1U>;
 using carray_storage_t = tensor_carray_storage_t<double, 1U>;
 using marray_storage_t = tensor_marray_storage_t<double, 1U>;

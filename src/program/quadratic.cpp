@@ -11,7 +11,7 @@ matrix_t make_Q(const vector_t& q)
     const auto n = static_cast<tensor_size_t>(std::sqrt(static_cast<double>(2 * q.size())));
     assert(2 * q.size() == n * (n + 1));
 
-    auto Q = matrix_t(n, n);
+    auto Q = matrix_t{n, n};
     for (tensor_size_t row = 0, idx = 0; row < n; ++row)
     {
         for (tensor_size_t col = row; col < n; ++col, ++idx)
@@ -41,11 +41,12 @@ quadratic_program_t::quadratic_program_t(const vector_t& Q_upper_triangular, vec
 
 bool quadratic_program_t::convex() const
 {
-    if (!m_Q.isApprox(m_Q.transpose()))
+    const auto Q = m_Q.matrix();
+    if (!Q.isApprox(Q.transpose()))
     {
         return false;
     }
 
-    const auto ldlt = m_Q.selfadjointView<Eigen::Upper>().ldlt();
+    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
     return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
 }

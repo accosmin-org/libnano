@@ -4,14 +4,14 @@ using namespace nano;
 
 namespace
 {
-template <typename tvector>
-auto SR1(const matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tmatrix, typename tvector>
+auto SR1(const tmatrix& H, const tvector& dx, const tvector& dg)
 {
     return H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
 }
 
-template <typename tvector>
-void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
+template <typename tmatrix, typename tvector>
+void SR1(tmatrix&& H, const tvector& dx, const tvector& dg, const scalar_t r)
 {
     const auto denom = (dx - H * dg).dot(dg);
     const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
@@ -22,31 +22,31 @@ void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
     }
 }
 
-template <typename tvector>
-auto DFP(const matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tmatrix, typename tvector>
+auto DFP(const tmatrix& H, const tvector& dx, const tvector& dg)
 {
     return H + (dx * dx.transpose()) / dx.dot(dg) - (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
 }
 
-template <typename tvector>
-auto BFGS(const matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tmatrix, typename tvector>
+auto BFGS(const tmatrix& H, const tvector& dx, const tvector& dg)
 {
-    const auto I = matrix_t::Identity(H.rows(), H.cols());
+    const auto I = matrix_t::identity(H.rows(), H.cols());
 
     return (I - dx * dg.transpose() / dx.dot(dg)) * H * (I - dg * dx.transpose() / dx.dot(dg)) +
            dx * dx.transpose() / dx.dot(dg);
 }
 
-template <typename tvector>
-auto HOSHINO(const matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tmatrix, typename tvector>
+auto HOSHINO(const tmatrix& H, const tvector& dx, const tvector& dg)
 {
     const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
 
     return (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
 }
 
-template <typename tvector>
-void FLETCHER(matrix_t& H, const tvector& dx, const tvector& dg)
+template <typename tmatrix, typename tvector>
+void FLETCHER(tmatrix&& H, const tvector& dx, const tvector& dg)
 {
     const auto phi = dx.dot(dg) / (dx.dot(dg) - dg.transpose() * H * dg);
 
@@ -91,20 +91,20 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     auto descent = vector_t{};       // descent direction
 
     // current approximation of the Hessian's inverse
-    matrix_t H = matrix_t::Identity(function.size(), function.size());
+    matrix_t H = matrix_t::identity(function.size(), function.size());
 
     bool first_iteration = false;
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
-        descent = -H * cstate.gx();
+        descent = -H.matrix() * cstate.gx().vector();
 
         // restart:
         //  - if not a descent direction
         if (!cstate.has_descent(descent))
         {
             descent = -cstate.gx();
-            H.setIdentity();
+            H       = matrix_t::identity(H.rows(), H.cols());
         }
 
         // line-search
@@ -120,7 +120,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
         {
             const auto dx = cstate.x() - pstate.x();
             const auto dg = cstate.gx() - pstate.gx();
-            H             = matrix_t::Identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
+            H             = matrix_t::identity(H.rows(), H.cols()) * dx.dot(dg) / dg.dot(dg);
         }
         first_iteration = false;
 
@@ -186,25 +186,25 @@ void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t
 {
     const auto r = parameter("solver::quasi::sr1::r").value<scalar_t>();
 
-    ::SR1(H, curr.x() - prev.x(), curr.gx() - prev.gx(), r);
+    ::SR1(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx(), r);
 }
 
 void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::DFP(H, curr.x() - prev.x(), curr.gx() - prev.gx());
+    H = ::DFP(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_bfgs_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::BFGS(H, curr.x() - prev.x(), curr.gx() - prev.gx());
+    H = ::BFGS(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_hoshino_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::HOSHINO(H, curr.x() - prev.x(), curr.gx() - prev.gx());
+    H = ::HOSHINO(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_fletcher_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    ::FLETCHER(H, curr.x() - prev.x(), curr.gx() - prev.gx());
+    ::FLETCHER(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
 }

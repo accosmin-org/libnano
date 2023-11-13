@@ -16,10 +16,10 @@ solver_state_t::solver_state_t() = default;
 solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     : m_function(&function)
     , m_x(std::move(x0))
-    , m_gx(vector_t::Zero(m_x.size()))
-    , m_fx(m_function->vgrad(m_x, &m_gx))
-    , m_ceq(vector_t::Constant(::nano::count_equalities(m_function->constraints()), fmax()))
-    , m_cineq(vector_t::Constant(::nano::count_inequalities(m_function->constraints()), fmax()))
+    , m_gx(vector_t::zero(m_x.size()))
+    , m_fx(m_function->vgrad(m_x, m_gx))
+    , m_ceq(vector_t::constant(::nano::count_equalities(m_function->constraints()), fmax()))
+    , m_cineq(vector_t::constant(::nano::count_inequalities(m_function->constraints()), fmax()))
 {
     update_calls();
     update_constraints();
@@ -138,7 +138,12 @@ scalar_t solver_state_t::value_test(const tensor_size_t patience) const
 
 scalar_t solver_state_t::gradient_test() const
 {
-    return m_gx.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(m_fx));
+    return gradient_test(m_gx);
+}
+
+scalar_t solver_state_t::gradient_test(vector_cmap_t gx) const
+{
+    return gx.lpNorm<Eigen::Infinity>() / std::max(scalar_t(1), std::fabs(m_fx));
 }
 
 scalar_t solver_state_t::constraint_test() const

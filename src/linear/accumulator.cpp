@@ -22,15 +22,15 @@ void accumulator_t::clear()
 accumulator_t& accumulator_t::operator+=(const accumulator_t& other)
 {
     m_vm1 += other.m_vm1;
-    m_gb1.vector() += other.m_gb1.vector();
-    m_gW1.vector() += other.m_gW1.vector();
+    m_gb1 += other.m_gb1;
+    m_gW1 += other.m_gW1;
     return *this;
 }
 
 accumulator_t& accumulator_t::operator/=(const tensor_size_t samples)
 {
     m_vm1 /= static_cast<scalar_t>(samples);
-    m_gb1.vector() /= static_cast<scalar_t>(samples);
-    m_gW1.vector() /= static_cast<scalar_t>(samples);
+    m_gb1 /= static_cast<scalar_t>(samples);
+    m_gW1 /= static_cast<scalar_t>(samples);
     return *this;
 }

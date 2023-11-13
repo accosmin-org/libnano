@@ -6,7 +6,8 @@ namespace nano
 {
 ///
 /// \brief constant step size (useful for LBFGS, Quasi-Newton and Newton methods).
-///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
+///
+/// see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
 ///
 class NANO_PUBLIC lsearch0_constant_t final : public lsearch0_t
 {

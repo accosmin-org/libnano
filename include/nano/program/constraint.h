@@ -1,52 +1,25 @@
 #pragma once
 
-#include <nano/program/stack.h>
+#include <nano/tensor.h>
 
 namespace nano::program
 {
-template <class T>
-inline constexpr bool is_constraint_v = is_equality<T>::value || is_inequality<T>::value;
-
 ///
-/// \brief models a linearly-constrained programming problem:
-///     min  f(x)
-///     s.t. A * x = b and G * x <= h.
+/// \brief models a linear constraint: A * x ? b.
 ///
-struct NANO_PUBLIC linear_constrained_t
+template <typename tmatrixA, typename tvectorb>
+struct constraint_t
 {
-    ///
-    /// \brief in-place update both equality and inequality constraints (if given).
-    ///
-    /// NB: memory allocations are minimized when using appropriatet Eigen operators to specify constraints
-    ///     with utilities like `make_less`, `make_equality` or `make_greater`.
-    ///
-    template <typename... tconstraints>
-    void constrain(const tconstraints&... constraints)
-    {
-        static_assert((is_constraint_v<tconstraints> && ...));
-        stack(m_eq.m_A, m_eq.m_b, m_ineq.m_A, m_ineq.m_b, constraints...);
-    }
+    static_assert(is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>);
+    static_assert(is_eigen_v<tvectorb> || is_tensor_v<tvectorb>);
 
     ///
-    /// \brief return true if the given point is feasible with the given threshold.
+    /// \brief return true if the constraint is given.
     ///
-    bool feasible(const vector_t& x, scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const;
-
-    ///
-    /// \brief return true if the equality constraint `Ax = b` is not full row rank.
-    ///
-    /// in this case the constraint is transformed in-place to obtain row-independant linear constraints
-    ///     by performing an appropriate matrix decomposition.
-    ///
-    bool reduce();
-
-    ///
-    /// \brief return a strictly feasible point wrt inequality constraints, if possible.
-    ///
-    std::optional<vector_t> make_strictly_feasible() const;
+    bool valid() const { return (m_A.size() > 0 && m_b.size() > 0) && m_A.rows() == m_b.size(); }
 
     // attributes
-    equality_t<matrix_t, vector_t>   m_eq;   ///<
-    inequality_t<matrix_t, vector_t> m_ineq; ///<
+    tmatrixA m_A; ///<
+    tvectorb m_b; ///<
 };
 } // namespace nano::program

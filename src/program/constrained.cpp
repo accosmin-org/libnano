@@ -1,10 +1,10 @@
 #include <Eigen/Dense>
-#include <nano/program/constraint.h>
+#include <nano/program/constrained.h>
 
 using namespace nano;
 using namespace nano::program;
 
-bool linear_constrained_t::feasible(const vector_t& x, const scalar_t epsilon) const
+bool linear_constrained_t::feasible(vector_cmap_t x, const scalar_t epsilon) const
 {
     return (!m_eq.valid() || m_eq.feasible(x, epsilon)) && (!m_ineq.valid() || m_ineq.feasible(x, epsilon));
 }
@@ -37,7 +37,7 @@ bool linear_constrained_t::reduce()
     const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
 
     A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
-    b = (Q.transpose() * b).segment(0, dd.rank());
+    b = vector_t{(Q.transpose() * b).segment(0, dd.rank())};
     return true;
 }
 
@@ -59,8 +59,8 @@ std::optional<vector_t> linear_constrained_t::make_strictly_feasible() const
         {
             const auto y = std::pow(epsil0, static_cast<scalar_t>(trial));
 
-            x = decomp.solve(A.transpose() * (b + vector_t::Constant(A.rows(), -y)));
-            if ((A * x - b).maxCoeff() < 0.0)
+            x.vector() = decomp.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
+            if ((A * x.vector() - b).maxCoeff() < 0.0)
             {
                 ret = std::move(x);
                 break;

@@ -1,3 +1,4 @@
+#include <nano/core/numeric.h>
 #include <nano/dataset/iterator.h>
 
 using namespace nano;
@@ -67,7 +68,7 @@ bool targets_iterator_t::cache_targets(tensor_size_t max_bytes)
                 });
             cached = true;
         }
-        catch (...)
+        catch (...) // NOLINT(bugprone-empty-catch)
         {
         } // LCOV_EXCL_LINE
     }
@@ -137,7 +138,7 @@ bool flatten_iterator_t::cache_flatten(tensor_size_t max_bytes)
                 });
             cached = true;
         }
-        catch (...)
+        catch (...) // NOLINT(bugprone-empty-catch)
         {
         } // LCOV_EXCL_LINE
     }

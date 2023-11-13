@@ -95,7 +95,7 @@ public:
     void prepare()
     {
         std::cout << "target=" << m_target << ", optional_target=" << m_optional_target
-                  << ", optional_cont=" << optional_cont() << ", optional_cate=" << optional_cate() << std::endl;
+                  << ", optional_cont=" << optional_cont() << ", optional_cate=" << optional_cate() << "\n";
         write_data(data_path());
         write_test(test_path());
     }

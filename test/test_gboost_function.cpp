@@ -107,7 +107,7 @@ auto make_datasource(const tensor_size_t samples = 100, const tensor_size_t isiz
 void check_optimum(const function_t& function, const vector_t& expected_optimum)
 {
     const auto solver = make_solver();
-    const auto state  = check_minimize(*solver, function, vector_t::Zero(function.size()));
+    const auto state  = check_minimize(*solver, function, vector_t::zero(function.size()));
     UTEST_CHECK_CLOSE(state.x(), expected_optimum, 1e+2 * solver->parameter("solver::epsilon").value<scalar_t>());
 }
 
@@ -135,7 +135,7 @@ UTEST_CASE(bias)
         const auto bias     = datasource.bias(samples);
         const auto targets  = datasource.targets(samples);
         const auto tmatrix  = targets.reshape(targets.size<0>(), -1).matrix();
-        const auto omatrix  = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
+        const auto omatrix  = matrix_t::zero(tmatrix.rows(), tmatrix.cols());
 
         const auto function = bias_function_t{iterator, *loss};
 
@@ -191,7 +191,7 @@ UTEST_CASE(grads)
     const auto  iterator    = targets_iterator_t{dataset, all_samples};
     const auto& targets     = datasource.targets();
     const auto  tmatrix     = targets.reshape(targets.size<0>(), -1).matrix();
-    const auto  omatrix     = matrix_t::Zero(tmatrix.rows(), tmatrix.cols());
+    const auto  omatrix     = matrix_t::zero(tmatrix.rows(), tmatrix.cols());
 
     const auto function = grads_function_t{iterator, *loss};
 

@@ -22,7 +22,8 @@ template <typename tscalar, size_t trank>
 class tensor_vector_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
-    using tbase = tensor_base_t<tscalar, trank>;
+    static constexpr auto resizable = true;
+    using tbase                     = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
     using tdims       = typename tbase::tdims;
@@ -63,16 +64,16 @@ public:
 
     tensor_vector_storage_t& operator=(const tensor_carray_storage_t<tscalar, trank>& other)
     {
-        tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
-        resize(other.dims());
+        eigen_vector_t<tscalar> data = map_vector(other.data(), other.size());
+        tbase::_resize(other.dims());
         std::swap(data, m_data);
         return *this;
     }
 
     tensor_vector_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other)
     {
-        tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
-        resize(other.dims());
+        eigen_vector_t<tscalar> data = map_vector(other.data(), other.size());
+        tbase::_resize(other.dims());
         std::swap(data, m_data);
         return *this;
     }
@@ -80,13 +81,13 @@ public:
     template <typename... tsizes>
     void resize(tsizes... dims)
     {
-        tbase::resize(make_dims(dims...));
+        tbase::_resize(make_dims(dims...));
         m_data.resize(size());
     }
 
     void resize(const tdims& dims)
     {
-        tbase::resize(dims);
+        tbase::_resize(dims);
         m_data.resize(size());
     }
 
@@ -96,7 +97,7 @@ public:
 
 private:
     // attributes
-    tensor_vector_t<tscalar> m_data; ///< store tensor as a 1D vector.
+    eigen_vector_t<tscalar> m_data; ///< store tensor as a 1D vector.
 };
 
 ///
@@ -107,7 +108,8 @@ template <typename tscalar, size_t trank>
 class tensor_carray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
-    using tbase = tensor_base_t<tscalar, trank>;
+    static constexpr auto resizable = false;
+    using tbase                     = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
     using tdims       = typename tbase::tdims;
@@ -170,7 +172,8 @@ template <typename tscalar, size_t trank>
 class tensor_marray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
-    using tbase = tensor_base_t<tscalar, trank>;
+    static constexpr auto resizable = false;
+    using tbase                     = tensor_base_t<tscalar, trank>;
 
     using tbase::size;
     using tdims       = typename tbase::tdims;
@@ -239,7 +242,7 @@ private:
     void copy(const tstorage& other)
     {
         assert(size() == other.size());
-        map_vector(data(), size()) = map_vector(other.data(), other.size());
+        map_vector(m_data, size()) = map_vector(other.data(), other.size());
     }
 
     // attributes

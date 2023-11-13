@@ -14,11 +14,11 @@ rfunction_t function_schumer_steiglitz_t::clone() const
     return std::make_unique<function_schumer_steiglitz_t>(*this);
 }
 
-scalar_t function_schumer_steiglitz_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_schumer_steiglitz_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        *gx = 4 * x.array().cube();
+        gx = 4 * x.array().cube();
     }
 
     return x.array().square().square().sum();

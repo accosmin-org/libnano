@@ -12,19 +12,19 @@ UTEST_CASE(program)
         const auto D = make_random_matrix<scalar_t>(dims, dims);
         const auto c = make_random_vector<scalar_t>(dims);
         {
-            const auto Q = matrix_t{matrix_t::Zero(dims, dims)};
+            const auto Q = matrix_t{matrix_t::zero(dims, dims)};
 
             const auto program = quadratic_program_t{Q, c};
             UTEST_CHECK(program.convex());
         }
         {
-            const auto Q = matrix_t{matrix_t::Identity(dims, dims)};
+            const auto Q = matrix_t{matrix_t::identity(dims, dims)};
 
             const auto program = quadratic_program_t{Q, c};
             UTEST_CHECK(program.convex());
         }
         {
-            const auto Q = matrix_t{-matrix_t::Identity(dims, dims)};
+            const auto Q = matrix_t{-matrix_t::identity(dims, dims)};
 
             const auto program = quadratic_program_t{Q, c};
             UTEST_CHECK(!program.convex());
@@ -36,19 +36,19 @@ UTEST_CASE(program)
             UTEST_CHECK(program.convex());
         }
         {
-            const auto Q = matrix_t{D.transpose() * D + matrix_t::Identity(dims, dims)};
+            const auto Q = matrix_t{D.transpose() * D + matrix_t::identity(dims, dims)};
 
             const auto program = quadratic_program_t{Q, c};
             UTEST_CHECK(program.convex());
         }
         {
-            const auto Q = matrix_t{-D.transpose() * D - matrix_t::Identity(dims, dims)};
+            const auto Q = matrix_t{-D.transpose() * D - matrix_t::identity(dims, dims)};
 
             const auto program = quadratic_program_t{Q, c};
             UTEST_CHECK(!program.convex());
         }
         {
-            auto Q = matrix_t{matrix_t::Identity(dims, dims)};
+            auto Q = matrix_t{matrix_t::identity(dims, dims)};
             Q(0, 1) += 1.0;
 
             const auto program = quadratic_program_t{Q, c};
@@ -66,7 +66,7 @@ UTEST_CASE(program1)
     const auto b = make_vector<scalar_t>(3, 0);
     const auto Q = make_matrix<scalar_t>(3, 6, 2, 1, 2, 5, 2, 1, 2, 4);
 
-    const auto program = make_quadratic(q, c, make_equality(A, b));
+    const auto program = make_quadratic_upper_triangular(q, c, make_equality(A, b));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, -2, 2), 1e-12));
@@ -83,11 +83,11 @@ UTEST_CASE(program2)
     // see example p.467, "Numerical optimization", Nocedal & Wright, 2nd edition
     const auto q = make_vector<scalar_t>(2, 0, 2);
     const auto c = make_vector<scalar_t>(0, 2);
-    const auto G = -matrix_t::Identity(2, 2);
-    const auto h = vector_t::Zero(2);
+    const auto G = -matrix_t::identity(2, 2);
+    const auto h = vector_t::zero(2);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = make_quadratic(q, c, make_inequality(G, h));
+    const auto program = make_quadratic_upper_triangular(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -109,7 +109,7 @@ UTEST_CASE(program3)
     const auto h = make_vector<scalar_t>(2, 6, 2, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = make_quadratic(q, c, make_inequality(G, h));
+    const auto program = make_quadratic_upper_triangular(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -129,7 +129,7 @@ UTEST_CASE(program4)
     const auto h = make_vector<scalar_t>(0, 4, 3);
     const auto Q = make_matrix<scalar_t>(2, 8, 2, 2, 2);
 
-    const auto program = make_quadratic(q, c, make_inequality(G, h));
+    const auto program = make_quadratic_upper_triangular(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
     UTEST_CHECK(program.feasible(make_vector<scalar_t>(1, 1), 1e-12));
@@ -147,7 +147,7 @@ UTEST_CASE(program5)
     for (const tensor_size_t dims : {3, 5, 11})
     {
         const auto x0 = make_random_vector<scalar_t>(dims);
-        const auto Q  = matrix_t{matrix_t::Identity(dims, dims)};
+        const auto Q  = matrix_t{matrix_t::identity(dims, dims)};
         const auto c  = vector_t{-x0};
 
         for (const tensor_size_t neqs : {tensor_size_t{1}, dims - 1, dims})
@@ -155,8 +155,8 @@ UTEST_CASE(program5)
             auto L = make_random_matrix<scalar_t>(neqs, neqs);
             auto U = make_random_matrix<scalar_t>(neqs, dims);
 
-            L.triangularView<Eigen::Upper>().setZero();
-            U.triangularView<Eigen::Lower>().setZero();
+            L.matrix().triangularView<Eigen::Upper>().setZero();
+            U.matrix().triangularView<Eigen::Lower>().setZero();
 
             L.diagonal().array() = 1.0;
             U.diagonal().array() = 1.0;
@@ -186,7 +186,7 @@ UTEST_CASE(program6)
     const auto h = make_vector<scalar_t>(1, 2, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, -2, -2, 4);
 
-    const auto program = make_quadratic(q, c, make_inequality(G, h));
+    const auto program = make_quadratic_upper_triangular(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
 
@@ -207,7 +207,7 @@ UTEST_CASE(program7)
     const auto h = make_vector<scalar_t>(3, 0, 0);
     const auto Q = make_matrix<scalar_t>(2, 2, 0, 0, 2);
 
-    const auto program = make_quadratic(q, c, make_inequality(G, h));
+    const auto program = make_quadratic_upper_triangular(q, c, make_inequality(G, h));
     UTEST_CHECK(program.convex());
     UTEST_CHECK_CLOSE(program.m_Q, Q, 1e-15);
 
@@ -223,7 +223,7 @@ UTEST_CASE(program8)
         UTEST_NAMED_CASE(scat("dims=", dims));
 
         const auto x0 = make_random_vector<scalar_t>(dims);
-        const auto Q  = matrix_t{matrix_t::Identity(dims, dims)};
+        const auto Q  = matrix_t{matrix_t::identity(dims, dims)};
         const auto c  = vector_t{-x0};
         const auto l  = make_random_vector<scalar_t>(dims);
         const auto u  = vector_t{l.array() + 0.1};

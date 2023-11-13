@@ -45,7 +45,8 @@ scalar_t lsearch0_cgdescent_t::get(const solver_state_t& state, const vector_t& 
         const auto& funct = state.function();
         const auto  prevt = last_step_size;
         const auto  step0 = lsearch_step_t{0, state.fx(), state.dg(descent)};
-        const auto  stepx = lsearch_step_t{prevt * phi1, funct.vgrad(state.x() + prevt * phi1 * descent), 0};
+        const auto  trial = vector_t{state.x() + prevt * phi1 * descent};
+        const auto  stepx = lsearch_step_t{prevt * phi1, funct.vgrad(trial), 0};
 
         bool       convexity = false;
         const auto tq        = lsearch_step_t::quadratic(step0, stepx, &convexity);

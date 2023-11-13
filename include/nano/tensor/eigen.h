@@ -10,14 +10,14 @@ namespace nano
 /// \brief vector types.
 ///
 template <typename tscalar_, int trows = Eigen::Dynamic, typename tscalar = std::remove_const_t<tscalar_>>
-using tensor_vector_t = Eigen::Matrix<tscalar, trows, 1, Eigen::ColMajor>;
+using eigen_vector_t = Eigen::Matrix<tscalar, trows, 1, Eigen::ColMajor>;
 
 ///
 /// \brief map non-constant arrays to vectors.
 ///
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
           typename tscalar = std::remove_const_t<tscalar_>,
-          typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>>
+          typename tresult = Eigen::Map<eigen_vector_t<tscalar>, alignment>>
 tresult map_vector(tscalar_* data, const tsize rows) noexcept
 {
     return {data, static_cast<Eigen::Index>(rows)};
@@ -28,7 +28,7 @@ tresult map_vector(tscalar_* data, const tsize rows) noexcept
 ///
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize,
           typename tscalar = std::remove_const_t<tscalar_>,
-          typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>>
+          typename tresult = Eigen::Map<const eigen_vector_t<tscalar>, alignment>>
 tresult map_vector(const tscalar_* data, const tsize rows) noexcept
 {
     return {data, static_cast<Eigen::Index>(rows)};
@@ -39,14 +39,14 @@ tresult map_vector(const tscalar_* data, const tsize rows) noexcept
 ///
 template <typename tscalar_, int trows = Eigen::Dynamic, int tcols = Eigen::Dynamic,
           typename tscalar = std::remove_const_t<tscalar_>>
-using tensor_matrix_t = Eigen::Matrix<tscalar, trows, tcols, Eigen::RowMajor>;
+using eigen_matrix_t = Eigen::Matrix<tscalar, trows, tcols, Eigen::RowMajor>;
 
 ///
 /// \brief map non-constant data to matrices.
 ///
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize1, typename tsize2,
           typename tscalar = std::remove_const_t<tscalar_>,
-          typename tresult = Eigen::Map<tensor_matrix_t<tscalar>, alignment>>
+          typename tresult = Eigen::Map<eigen_matrix_t<tscalar>, alignment>>
 tresult map_matrix(tscalar_* data, const tsize1 rows, const tsize2 cols) noexcept
 {
     return {data, static_cast<Eigen::Index>(rows), static_cast<Eigen::Index>(cols)};
@@ -57,7 +57,7 @@ tresult map_matrix(tscalar_* data, const tsize1 rows, const tsize2 cols) noexcep
 ///
 template <int alignment    = Eigen::Unaligned, typename tscalar_, typename tsize1, typename tsize2,
           typename tscalar = std::remove_const_t<tscalar_>,
-          typename tresult = Eigen::Map<const tensor_matrix_t<tscalar>, alignment>>
+          typename tresult = Eigen::Map<const eigen_matrix_t<tscalar>, alignment>>
 tresult map_matrix(const tscalar_* data, const tsize1 rows, const tsize2 cols) noexcept
 {
     return {data, static_cast<Eigen::Index>(rows), static_cast<Eigen::Index>(cols)};
@@ -101,6 +101,11 @@ struct is_eigen<Eigen::CwiseBinaryOp<BinaryOp, LhsType, RhsType>> : std::true_ty
 {
 };
 
+template <typename MatrixType, typename BinaryOp, int Direction>
+struct is_eigen<Eigen::PartialReduxExpr<MatrixType, BinaryOp, Direction>> : std::true_type
+{
+};
+
 template <typename LhsType, typename RhsType, int toptions>
 struct is_eigen<Eigen::Product<LhsType, RhsType, toptions>> : std::true_type
 {
@@ -117,77 +122,17 @@ struct is_eigen<Eigen::Transpose<T>> : std::true_type
 };
 
 template <class T>
+struct is_eigen<Eigen::Inverse<T>> : std::true_type
+{
+};
+
+template <class T>
+struct is_eigen<Eigen::VectorBlock<T>> : std::true_type
+{
+};
+
+template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
-
-///
-/// \brief create a matrix from an initializer list.
-///
-template <typename tscalar, typename... tvalues>
-auto make_matrix(const Eigen::Index rows, tvalues... values)
-{
-    const auto list = {static_cast<tscalar>(values)...};
-    const auto size = static_cast<Eigen::Index>(list.size());
-    assert(size % rows == 0);
-
-    tensor_matrix_t<tscalar> matrix{rows, size / rows};
-    std::copy(list.begin(), list.end(), begin(matrix));
-    return matrix;
-}
-
-///
-/// \brief create a vector from an initializer list.
-///
-template <typename tscalar, typename... tvalues>
-auto make_vector(tvalues... values)
-{
-    const auto list = {static_cast<tscalar>(values)...};
-
-    tensor_vector_t<tscalar> vector{static_cast<Eigen::Index>(list.size())};
-    std::copy(list.begin(), list.end(), begin(vector));
-    return vector;
-}
-
-///
-/// \brief create a vector and fill it with the given value.
-///
-template <typename tscalar, typename tscalar_value>
-auto make_full_vector(const Eigen::Index rows, const tscalar_value value)
-{
-    return tensor_vector_t<tscalar>{tensor_vector_t<tscalar>::Constant(rows, static_cast<tscalar>(value))};
-}
-
-///
-/// \brief create a vector and fill it with random values uniformly distributed in the given range.
-///
-template <typename tscalar, typename tscalar_value = tscalar>
-auto make_random_vector(const Eigen::Index rows, const tscalar_value min_value = -1, const tscalar_value max_value = +1,
-                        const seed_t seed = seed_t{})
-{
-    tensor_vector_t<tscalar> vector(rows);
-    urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(vector), end(vector), make_rng(seed));
-    return vector;
-} // LCOV_EXCL_LINE
-
-///
-/// \brief create a vector and fill it with the given value.
-///
-template <typename tscalar, typename tscalar_value = tscalar>
-auto make_full_matrix(const Eigen::Index rows, const Eigen::Index cols, const tscalar_value value)
-{
-    return tensor_matrix_t<tscalar>{tensor_matrix_t<tscalar>::Constant(rows, cols, static_cast<tscalar>(value))};
-} // LCOV_EXCL_LINE
-
-///
-/// \brief create a matrix and fill it with random values uniformly distributed in the given range.
-///
-template <typename tscalar, typename tscalar_value = tscalar>
-auto make_random_matrix(const Eigen::Index rows, const Eigen::Index cols, const tscalar_value min_value = -1,
-                        const tscalar_value max_value = +1, const seed_t seed = seed_t{})
-{
-    tensor_matrix_t<tscalar> matrix(rows, cols);
-    urand(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), begin(matrix), end(matrix), make_rng(seed));
-    return matrix;
-} // LCOV_EXCL_LINE
 
 ///
 /// \brief returns true if the two Eigen vectors or matrices are close.

@@ -193,7 +193,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
         {
             os << "|" << string_t(colsize + 2, '-');
         }
-        os << "|" << std::endl;
+        os << "|\n";
     };
 
     // display rows
@@ -216,7 +216,7 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
                 os << "| " << align(coltext, colsize + extsize, cell.m_alignment, cell.m_fill) << " ";
                 std::advance(it, colspan);
             }
-            os << "|" << std::endl;
+            os << "|\n";
         }
     }
     print_row_delim();

@@ -28,14 +28,14 @@ auto smooth(const function_t& function)
 }
 
 template <typename toperator>
-auto penalty_vgrad(const function_t& function, const vector_t& x, vector_t* gx, const toperator& op)
+auto penalty_vgrad(const function_t& function, vector_cmap_t x, vector_map_t gx, const toperator& op)
 {
-    scalar_t fx = function.vgrad(x, gx);
-    vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
+    auto fx = function.vgrad(x, gx);
 
     for (const auto& constraint : function.constraints())
     {
-        const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
+        auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
+        const auto fc = ::nano::vgrad(constraint, x, gc);
         const auto eq = is_equality(constraint);
 
         if (eq || fc > 0.0)
@@ -73,15 +73,15 @@ rfunction_t linear_penalty_function_t::clone() const
     return std::make_unique<linear_penalty_function_t>(*this);
 }
 
-scalar_t linear_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t linear_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());
 
-    const auto op = [&](const scalar_t fc, const auto& gc)
+    const auto op = [&](const scalar_t fc, const vector_t& gc)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->noalias() += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
+            gx += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
         }
         return penalty() * std::fabs(fc);
     };
@@ -101,15 +101,15 @@ rfunction_t quadratic_penalty_function_t::clone() const
     return std::make_unique<quadratic_penalty_function_t>(*this);
 }
 
-scalar_t quadratic_penalty_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t quadratic_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());
 
-    const auto op = [&](const scalar_t fc, const auto& gc)
+    const auto op = [&](const scalar_t fc, const vector_t& gc)
     {
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            gx->noalias() += penalty() * 2.0 * fc * gc;
+            gx += penalty() * 2.0 * fc * gc;
         }
         return penalty() * fc * fc;
     };
@@ -135,29 +135,28 @@ rfunction_t augmented_lagrangian_function_t::clone() const
     return std::make_unique<augmented_lagrangian_function_t>(*this);
 }
 
-scalar_t augmented_lagrangian_function_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());
 
-    scalar_t fx = function().vgrad(x, gx);
-    vector_t gc{gx != nullptr ? x.size() : tensor_size_t{0}};
-
-    tensor_size_t ilambda = 0;
-    tensor_size_t imiu    = 0;
+    auto fx      = function().vgrad(x, gx);
+    auto ilambda = tensor_size_t{0};
+    auto imiu    = tensor_size_t{0};
 
     for (const auto& constraint : constraints())
     {
+        auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
         const auto ro = penalty();
-        const auto fc = ::nano::vgrad(constraint, x, gc.size() == 0 ? nullptr : &gc);
+        const auto fc = ::nano::vgrad(constraint, x, gc);
         const auto eq = is_equality(constraint);
         const auto mu = eq ? m_lambda(ilambda++) : m_miu(imiu++);
 
         if (eq || (fc + mu / ro > 0.0))
         {
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
-            if (gx != nullptr)
+            if (gx.size() == x.size())
             {
-                gx->noalias() += ro * (fc + mu / ro) * gc;
+                gx += ro * (fc + mu / ro) * gc;
             }
         }
     }

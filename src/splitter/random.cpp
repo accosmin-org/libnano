@@ -1,3 +1,4 @@
+#include <nano/core/numeric.h>
 #include <nano/core/random.h>
 #include <nano/splitter/random.h>
 

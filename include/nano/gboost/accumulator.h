@@ -28,7 +28,7 @@ public:
     ///
     /// \brief returns the function value and optionally its gradient.
     ///
-    scalar_t vgrad(vector_t* gx) const;
+    scalar_t vgrad(vector_map_t gx) const;
 
     ///
     /// \brief cumulate partial results.

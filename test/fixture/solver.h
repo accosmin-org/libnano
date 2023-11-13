@@ -29,12 +29,12 @@ static void setup_logger(solver_t& solver, std::stringstream& stream)
                    << ".\n";
         });
 
-    const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
-
     solver.lsearchk_logger(
-        [&, c1 = c1, c2 = c2](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-                              const scalar_t step_size)
+        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
+            const scalar_t step_size)
         {
+            const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
+
             stream << "\t\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
                    << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
                    << ",wolfe=" << state.has_wolfe(state0, descent, c2)
@@ -141,6 +141,12 @@ struct solver_description_t
         return solver_description_t{solver_type::line_search}.smooth_config(
             minimize_config_t{}.epsilon(5e-7).max_evals(10000).expected_maximum_deviation(1e-5));
     }
+    else if (solver_id == "gs")
+    {
+        // NB: gradient sampling (GS) needs many more iterations to minimize badly conditioned problems!
+        return solver_description_t{solver_type::non_monotonic}.smooth_config(
+            minimize_config_t{}.epsilon(1e-6).max_evals(10000).expected_maximum_deviation(1e-5));
+    }
     else if (solver_id == "ellipsoid" || solver_id == "osga")
     {
         // NB: very precise for both smooth and non-smooth problems.
@@ -160,9 +166,9 @@ struct solver_description_t
         // - very slow convergence rate for both non-smooth and hard smooth problems
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(
-                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1))
+                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1))
             .nonsmooth_config(
-                minimize_config_t{}.max_evals(1000).expected_convergence(false).expected_maximum_deviation(1e+1));
+                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1));
     }
     else
     {

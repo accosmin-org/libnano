@@ -14,11 +14,11 @@ rfunction_t function_styblinski_tang_t::clone() const
     return std::make_unique<function_styblinski_tang_t>(*this);
 }
 
-scalar_t function_styblinski_tang_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_styblinski_tang_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        *gx = 4 * x.array().cube() - 32 * x.array() + 5;
+        gx = 4 * x.array().cube() - 32 * x.array() + 5;
     }
 
     return (x.array().square().square() - 16 * x.array().square() + 5 * x.array()).sum();

@@ -6,8 +6,9 @@ namespace nano
 {
 ///
 /// \brief use linear interpolation of the previous line-search step sizes.
-///     see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
-///     see "Practical methods of optimization", Fletcher, p.38-39
+///
+/// see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59-60
+/// see "Practical methods of optimization", Fletcher, p.38-39
 ///
 class NANO_PUBLIC lsearch0_linear_t final : public lsearch0_t
 {

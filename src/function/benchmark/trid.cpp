@@ -14,13 +14,13 @@ rfunction_t function_trid_t::clone() const
     return std::make_unique<function_trid_t>(*this);
 }
 
-scalar_t function_trid_t::do_vgrad(const vector_t& x, vector_t* gx) const
+scalar_t function_trid_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    if (gx != nullptr)
+    if (gx.size() == x.size())
     {
-        *gx = 2 * (x.array() - 1);
-        gx->segment(1, size() - 1) -= x.segment(0, size() - 1);
-        gx->segment(0, size() - 1) -= x.segment(1, size() - 1);
+        gx = 2 * (x.array() - 1);
+        gx.segment(1, size() - 1) -= x.segment(0, size() - 1);
+        gx.segment(0, size() - 1) -= x.segment(1, size() - 1);
     }
 
     return (x.array() - 1).square().sum() - (x.segment(0, size() - 1).array() * x.segment(1, size() - 1).array()).sum();

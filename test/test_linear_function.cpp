@@ -55,7 +55,7 @@ auto check_minimize(const function_t& function)
     const auto        solver         = make_solver(solver_id);
     solver->lsearchk("cgdescent");
 
-    const auto x0     = vector_t{vector_t::Zero(function.size())};
+    const auto x0     = make_full_vector<scalar_t>(function.size(), 0);
     const auto config = minimize_config_t{}.max_evals(20000).epsilon(epsilon_solver);
     const auto state  = check_minimize(*solver, function, x0, config);
     return std::make_pair(state, epsilon_linear);
@@ -206,7 +206,7 @@ UTEST_CASE(minimize_l1reg)
     const auto function = linear::function_t{iterator, *loss, 1.0, 0.0};
 
     [[maybe_unused]] const auto [state, epsilon] = check_minimize(function);
-    UTEST_CHECK_GREATER(state.fcalls(), 3);
+    UTEST_CHECK_GREATER(state.fcalls(), 2);
 }
 
 UTEST_CASE(minimize_l2reg)
