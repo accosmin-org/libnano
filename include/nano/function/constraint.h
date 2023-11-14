@@ -117,7 +117,7 @@ struct quadratic_inequality_t : quadratic_t
 ///
 struct functional_equality_t : functional_t
 {
-    using functional_t::functional_t;
+    using functional_t::functional_t; // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
 };
 
 ///
@@ -125,7 +125,7 @@ struct functional_equality_t : functional_t
 ///
 struct functional_inequality_t : functional_t
 {
-    using functional_t::functional_t;
+    using functional_t::functional_t; // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
 };
 } // namespace constraint
 

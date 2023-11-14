@@ -419,7 +419,8 @@ public:
     auto& random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1,
                  const seed_t seed = seed_t{})
     {
-        random(array(), min, max, seed);
+        assert(min < max);
+        urand(min, max, begin(), end(), seed);
         return *this;
     }
 
@@ -727,13 +728,6 @@ public:
     }
 
 private:
-    template <typename tarray>
-    static void random(tarray&& array, tscalar min, tscalar max, seed_t seed)
-    {
-        assert(min < max);
-        urand(min, max, array.data(), array.data() + array.size(), make_rng(seed));
-    }
-
     template <typename tdata, typename... tindices>
     auto tvector(tdata ptr, tindices... indices) const
     {

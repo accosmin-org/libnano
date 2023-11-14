@@ -43,26 +43,40 @@ inline auto make_udist(const tscalar min, const tscalar max)
 ///
 /// \brief generate a random value uniformaly distributed in the [min, max] range.
 ///
-template <typename tscalar, typename trng,
-          std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-tscalar urand(const tscalar min, const tscalar max, trng&& rng)
+template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+tscalar urand(const tscalar min, const tscalar max, rng_t& rng)
 {
     auto udist = make_udist<tscalar>(min, max);
     return static_cast<tscalar>(udist(rng));
+}
+
+template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+tscalar urand(const tscalar min, const tscalar max, const seed_t seed = seed_t{})
+{
+    auto rng = make_rng(seed);
+    return urand(min, max, rng);
 }
 
 ///
 /// \brief fill the [begin, range) range of elements with random values uniformaly distributed in the [min, max]
 /// range.
 ///
-template <typename tscalar, typename titerator, typename trng,
+template <typename tscalar, typename titerator,
           std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
+void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, rng_t& rng)
 {
     auto udist = make_udist<tscalar>(min, max);
     for (; begin != end; ++begin)
     {
         *begin = static_cast<tscalar>(udist(rng));
     }
+}
+
+template <typename tscalar, typename titerator,
+          std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, const seed_t seed = seed_t{})
+{
+    auto rng = make_rng(seed);
+    return urand(min, max, begin, end, rng);
 }
 } // namespace nano

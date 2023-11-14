@@ -10,9 +10,8 @@ namespace nano
 template <size_t trank>
 struct integral_t
 {
-    template <template <typename, size_t> class tstoragei, typename tscalari,
-              template <typename, size_t> class tstorageo, typename tscalaro>
-    static void get(const tensor_t<tstoragei, tscalari, trank>& itensor, tensor_t<tstorageo, tscalaro, trank>&& otensor)
+    template <typename tscalari, typename tscalaro>
+    static void get(tensor_cmap_t<tscalari, trank> itensor, tensor_map_t<tscalaro, trank> otensor)
     {
         for (tensor_size_t i0 = 0, size0 = itensor.template size<0>(); i0 < size0; ++i0)
         {
@@ -28,9 +27,8 @@ struct integral_t
 template <>
 struct integral_t<1>
 {
-    template <template <typename, size_t> class tstoragei, typename tscalari,
-              template <typename, size_t> class tstorageo, typename tscalaro>
-    static void get(const tensor_t<tstoragei, tscalari, 1>& itensor, tensor_t<tstorageo, tscalaro, 1>&& otensor)
+    template <typename tscalari, typename tscalaro>
+    static void get(tensor_cmap_t<tscalari, 1> itensor, tensor_map_t<tscalaro, 1> otensor)
     {
         otensor(0) = itensor(0);
         for (tensor_size_t i0 = 1, size0 = itensor.template size<0>(); i0 < size0; ++i0)
@@ -40,14 +38,20 @@ struct integral_t<1>
     }
 };
 
-template <size_t trank, template <typename, size_t> class tstoragei, typename tscalari,
-          template <typename, size_t> class tstorageo, typename tscalaro>
-void integral(const tensor_t<tstoragei, tscalari, trank>& itensor, tensor_t<tstorageo, tscalaro, trank>& otensor)
+template <typename tscalari, size_t trank, typename tscalaro>
+void integral(tensor_cmap_t<tscalari, trank> itensor, tensor_map_t<tscalaro, trank> otensor)
 {
     assert(itensor.dims() == otensor.dims());
+
     if (itensor.size() > 0)
     {
-        integral_t<trank>::get(itensor, std::move(otensor));
+        integral_t<trank>::get(itensor, otensor);
     }
+}
+
+template <typename tscalari, size_t trank, typename tscalaro>
+void integral(const tensor_mem_t<tscalari, trank>& itensor, tensor_mem_t<tscalaro, trank>& otensor)
+{
+    integral(itensor.tensor(), otensor.tensor());
 }
 } // namespace nano

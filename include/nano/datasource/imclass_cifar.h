@@ -26,9 +26,9 @@ private:
     {
         file_t() = default;
 
-        file_t(string_t&& filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
+        file_t(string_t filename, tensor_size_t offset, tensor_size_t expected, tensor_size_t label_size,
                tensor_size_t label_index)
-            : m_filename(filename)
+            : m_filename(std::move(filename))
             , m_offset(offset)
             , m_expected(expected)
             , m_label_size(label_size)

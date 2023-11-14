@@ -46,7 +46,7 @@ public:
     void clear(tensor_size_t bins);
 
     template <typename tarray>
-    void update(tarray&& vgrad, const tensor_size_t bin = 0)
+    void update(const tarray& vgrad, const tensor_size_t bin = 0)
     {
         x0(bin) += 1;
         r1(bin) -= vgrad;
@@ -54,7 +54,7 @@ public:
     }
 
     template <typename tarray>
-    void update(const scalar_t value, tarray&& vgrad, const tensor_size_t bin = 0)
+    void update(const scalar_t value, const tarray& vgrad, const tensor_size_t bin = 0)
     {
         update(vgrad, bin);
         x1(bin) += value;

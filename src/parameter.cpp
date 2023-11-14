@@ -31,12 +31,12 @@ auto split_pair(const string_t& value)
     return std::make_tuple(value1, value2);
 }
 
-auto& update(const string_t& name, parameter_t::enum_t& param, string_t&& value)
+auto& update(const string_t& name, parameter_t::enum_t& param, string_t value)
 {
     critical(std::find(param.m_domain.begin(), param.m_domain.end(), value) == param.m_domain.end(), "parameter (",
              name, "): out of domain enumeration value, !('", value, "' in [", scat(param.m_domain), "])");
 
-    param.m_value = value;
+    param.m_value = std::move(value);
     return param;
 }
 

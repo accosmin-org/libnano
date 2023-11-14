@@ -16,12 +16,12 @@ rloss_t pinball_loss_t::clone() const
     return std::make_unique<pinball_loss_t>(*this);
 }
 
-void pinball_loss_t::error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t errors) const
+void pinball_loss_t::error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const
 {
     value(targets, outputs, errors);
 }
 
-void pinball_loss_t::value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t values) const
+void pinball_loss_t::value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const
 {
     assert(targets.dims() == outputs.dims());
     assert(values.size() == targets.size<0>());
@@ -37,7 +37,7 @@ void pinball_loss_t::value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t
     }
 }
 
-void pinball_loss_t::vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t vgrads) const
+void pinball_loss_t::vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const
 {
     assert(targets.dims() == vgrads.dims());
     assert(targets.dims() == outputs.dims());

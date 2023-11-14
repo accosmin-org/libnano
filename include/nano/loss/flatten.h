@@ -45,7 +45,7 @@ public:
     ///
     /// \brief @see loss_t
     ///
-    void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t errors) const override
+    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const override
     {
         assert(targets.dims() == outputs.dims());
         assert(errors.size() == targets.size<0>());
@@ -59,7 +59,7 @@ public:
     ///
     /// \brief @see loss_t
     ///
-    void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t values) const override
+    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const override
     {
         assert(targets.dims() == outputs.dims());
         assert(values.size() == targets.size<0>());
@@ -73,7 +73,7 @@ public:
     ///
     /// \brief @see loss_t
     ///
-    void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t vgrads) const override
+    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const override
     {
         assert(targets.dims() == vgrads.dims());
         assert(targets.dims() == outputs.dims());
@@ -117,7 +117,7 @@ struct classnll_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         tensor_size_t imax = 0;
         const auto    omax = output.maxCoeff(&imax);
@@ -155,7 +155,7 @@ struct exponential_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * (-target * output).exp();
     }
@@ -184,7 +184,7 @@ struct logistic_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
         {
@@ -212,7 +212,7 @@ struct hinge_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * ((1 - target * output).sign() + 1) * 0.5;
     }
@@ -235,7 +235,7 @@ struct squared_hinge_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * ((1 - target * output).max(0)) * 2.0;
     }
@@ -258,7 +258,7 @@ struct savage_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -2 * target / ((1 + (target * output).exp()).square() * (1 + (-target * output).exp()));
     }
@@ -281,7 +281,7 @@ struct tangent_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
     }
@@ -304,7 +304,7 @@ struct mae_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = (output - target).sign();
     }
@@ -327,7 +327,7 @@ struct mse_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = output - target;
     }
@@ -350,7 +350,7 @@ struct cauchy_t : public terror
     }
 
     template <typename tarray, typename tgarray>
-    static void vgrad(const tarray& target, const tarray& output, tgarray&& vgrad)
+    static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = (output - target) / (1 + (output - target).square());
     }

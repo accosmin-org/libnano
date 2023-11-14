@@ -138,7 +138,7 @@ UTEST_CASE(enqueue)
     auto pool = parallel::pool_t{};
 
     const auto max_tasks = size_t{1024};
-    const auto tasks     = urand<size_t>(1U, max_tasks, make_rng());
+    const auto tasks     = urand<size_t>(1U, max_tasks);
 
     std::mutex          mutex;
     std::vector<size_t> tasks_done;
@@ -149,7 +149,7 @@ UTEST_CASE(enqueue)
             futures.push_back(pool.enqueue(
                 [=, &mutex, &tasks_done](size_t)
                 {
-                    const auto sleep1 = urand<size_t>(1, 5, make_rng());
+                    const auto sleep1 = urand<size_t>(1, 5);
                     std::this_thread::sleep_for(std::chrono::milliseconds(sleep1));
                     {
                         const std::lock_guard<std::mutex> lock(mutex);

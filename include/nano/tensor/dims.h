@@ -85,6 +85,17 @@ void get_dims0(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
         get_dims0<idim + 1>(dims, dimsx);
     }
 }
+
+template <size_t idim, size_t trank>
+std::ostream& print(std::ostream& os, const tensor_dims_t<trank>& dims)
+{
+    os << dims[idim] << (idim + 1U == trank ? "" : "x");
+    if constexpr (idim + 1U < trank)
+    {
+        print<idim + 1U>(os, dims);
+    }
+    return os;
+}
 } // namespace detail
 
 ///
@@ -158,10 +169,6 @@ namespace std // NOLINT(cert-dcl58-cpp)
 template <size_t trank>
 std::ostream& operator<<(std::ostream& os, const ::nano::tensor_dims_t<trank>& dims) // NOLINT(cert-dcl58-cpp)
 {
-    for (size_t d = 0; d < dims.size(); ++d)
-    {
-        os << dims[d] << (d + 1 == dims.size() ? "" : "x");
-    }
-    return os;
+    return ::nano::detail::print<0U>(os, dims);
 }
 } // namespace std

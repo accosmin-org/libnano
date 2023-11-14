@@ -36,28 +36,28 @@ public:
     /// NB: the targets and the outputs are given as 4D tensors,
     ///     where the first index is the sample index
     ///
-    virtual void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t) const = 0;
-    virtual void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_map_t) const = 0;
-    virtual void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_map_t) const = 0;
+    virtual void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
+    virtual void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
+    virtual void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const = 0;
 
     ///
     /// \brief overloads to simplify usage.
     ///
     /// NB: the output tensors are allocated accordingly.
     ///
-    void error(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_t& errors) const
+    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& errors) const
     {
         errors.resize(targets.size<0>());
         error(targets, outputs, errors.tensor());
     }
 
-    void value(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor1d_t& values) const
+    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& values) const
     {
         values.resize(targets.size<0>());
         value(targets, outputs, values.tensor());
     }
 
-    void vgrad(const tensor4d_cmap_t& targets, const tensor4d_cmap_t& outputs, tensor4d_t& vgrads) const
+    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& vgrads) const
     {
         vgrads.resize(targets.dims());
         vgrad(targets, outputs, vgrads.tensor());

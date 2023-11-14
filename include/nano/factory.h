@@ -23,7 +23,7 @@ public:
     {
         static_assert(std::is_base_of_v<tobject, tobject_impl>);
 
-        auto prototype = std::make_unique<tobject_impl>(args...);
+        auto prototype = std::make_unique<tobject_impl>(std::forward<targs>(args)...);
         auto type_id   = prototype->type_id();
 
         return m_protos.emplace(std::move(type_id), proto_t{std::move(prototype), description}).second;

@@ -4,7 +4,7 @@
 using namespace nano;
 
 void linear::predict(const tensor2d_cmap_t& inputs, const tensor2d_cmap_t& weights, const tensor1d_cmap_t& bias,
-                     tensor4d_map_t&& outputs)
+                     tensor4d_map_t outputs)
 {
     [[maybe_unused]] const auto isize   = weights.cols();
     const auto                  tsize   = weights.rows();

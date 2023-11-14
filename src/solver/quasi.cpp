@@ -4,32 +4,38 @@ using namespace nano;
 
 namespace
 {
-template <typename tmatrix, typename tvector>
-auto SR1(const tmatrix& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+void SR1(matrix_t& H, const tvector& dx, const tvector& dg)
 {
-    return H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
+    H = H + (dx - H * dg) * (dx - H * dg).transpose() / (dx - H * dg).dot(dg);
 }
 
-template <typename tmatrix, typename tvector>
-void SR1(tmatrix&& H, const tvector& dx, const tvector& dg, const scalar_t r)
+template <typename tvector>
+void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
 {
     const auto denom = (dx - H * dg).dot(dg);
     const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
 
     if (apply)
     {
-        H = SR1(H, dx, dg);
+        SR1(H, dx, dg);
     }
 }
 
-template <typename tmatrix, typename tvector>
-auto DFP(const tmatrix& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+auto DFP_(const matrix_t& H, const tvector& dx, const tvector& dg)
 {
     return H + (dx * dx.transpose()) / dx.dot(dg) - (H * dg * dg.transpose() * H) / (dg.transpose() * H * dg);
 }
 
-template <typename tmatrix, typename tvector>
-auto BFGS(const tmatrix& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+void DFP(matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    H = DFP_(H, dx, dg);
+}
+
+template <typename tvector>
+auto BFGS_(matrix_t& H, const tvector& dx, const tvector& dg)
 {
     const auto I = matrix_t::identity(H.rows(), H.cols());
 
@@ -37,30 +43,36 @@ auto BFGS(const tmatrix& H, const tvector& dx, const tvector& dg)
            dx * dx.transpose() / dx.dot(dg);
 }
 
-template <typename tmatrix, typename tvector>
-auto HOSHINO(const tmatrix& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+void BFGS(matrix_t& H, const tvector& dx, const tvector& dg)
+{
+    H = BFGS_(H, dx, dg);
+}
+
+template <typename tvector>
+void HOSHINO(matrix_t& H, const tvector& dx, const tvector& dg)
 {
     const auto phi = dx.dot(dg) / (dx.dot(dg) + dg.transpose() * H * dg);
 
-    return (1 - phi) * DFP(H, dx, dg) + phi * BFGS(H, dx, dg);
+    H = (1 - phi) * DFP_(H, dx, dg) + phi * BFGS_(H, dx, dg);
 }
 
-template <typename tmatrix, typename tvector>
-void FLETCHER(tmatrix&& H, const tvector& dx, const tvector& dg)
+template <typename tvector>
+void FLETCHER(matrix_t& H, const tvector& dx, const tvector& dg)
 {
     const auto phi = dx.dot(dg) / (dx.dot(dg) - dg.transpose() * H * dg);
 
     if (phi < scalar_t(0))
     {
-        H = DFP(H, dx, dg);
+        DFP(H, dx, dg);
     }
     else if (phi > scalar_t(1))
     {
-        H = BFGS(H, dx, dg);
+        BFGS(H, dx, dg);
     }
     else
     {
-        H = SR1(H, dx, dg);
+        SR1(H, dx, dg);
     }
 }
 } // namespace
@@ -186,25 +198,25 @@ void solver_quasi_sr1_t::update(const solver_state_t& prev, const solver_state_t
 {
     const auto r = parameter("solver::quasi::sr1::r").value<scalar_t>();
 
-    ::SR1(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx(), r);
+    ::SR1(H, curr.x() - prev.x(), curr.gx() - prev.gx(), r);
 }
 
 void solver_quasi_dfp_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::DFP(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
+    ::DFP(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_bfgs_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::BFGS(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
+    ::BFGS(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_hoshino_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    H = ::HOSHINO(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
+    ::HOSHINO(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }
 
 void solver_quasi_fletcher_t::update(const solver_state_t& prev, const solver_state_t& curr, matrix_t& H) const
 {
-    ::FLETCHER(H.matrix(), curr.x() - prev.x(), curr.gx() - prev.gx());
+    ::FLETCHER(H, curr.x() - prev.x(), curr.gx() - prev.gx());
 }

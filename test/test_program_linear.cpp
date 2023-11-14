@@ -88,7 +88,7 @@ UTEST_CASE(program6)
             UTEST_NAMED_CASE(scat("dims=", dims, ",lambda=", lambda));
 
             const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
-            const auto b = urand<scalar_t>(-1.0, +1.0, make_rng());
+            const auto b = urand<scalar_t>(-1.0, +1.0);
             const auto c = lambda * a;
 
             const auto program  = make_linear(c, make_inequality(a, b));
