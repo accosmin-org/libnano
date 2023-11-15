@@ -7,8 +7,8 @@ indices_t nano::sample_with_replacement(sample_indices_t samples, const tensor_s
     auto udist = make_udist<tensor_size_t>(0, samples.size() - 1);
 
     auto selection = indices_t{count};
-    std::generate(begin(selection), end(selection), [&]() { return samples(udist(rng)); });
-    std::sort(begin(selection), end(selection));
+    std::generate(std::begin(selection), std::end(selection), [&]() { return samples(udist(rng)); });
+    std::sort(std::begin(selection), std::end(selection));
     return selection;
 }
 
@@ -24,11 +24,11 @@ indices_t nano::sample_with_replacement(sample_indices_t samples, sample_weights
     assert(weights.min() >= 0.0);
     assert(samples.size() == weights.size());
 
-    auto wdist = std::discrete_distribution<tensor_size_t>(begin(weights), end(weights));
+    auto wdist = std::discrete_distribution<tensor_size_t>(std::begin(weights), std::end(weights));
 
     auto selection = indices_t{count};
-    std::generate(begin(selection), end(selection), [&]() { return samples(wdist(rng)); });
-    std::sort(begin(selection), end(selection));
+    std::generate(std::begin(selection), std::end(selection), [&]() { return samples(wdist(rng)); });
+    std::sort(std::begin(selection), std::end(selection));
     return selection;
 }
 
@@ -43,10 +43,10 @@ indices_t nano::sample_without_replacement(sample_indices_t samples_, const tens
     assert(count <= samples_.size());
 
     auto samples = indices_t{samples_};
-    std::shuffle(begin(samples), end(samples), rng);
+    std::shuffle(std::begin(samples), std::end(samples), rng);
 
     auto selection = samples.slice(0, count);
-    std::sort(begin(selection), end(selection));
+    std::sort(std::begin(selection), std::end(selection));
     return selection;
 }
 

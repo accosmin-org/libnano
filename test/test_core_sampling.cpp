@@ -17,7 +17,7 @@ void check_sample_with_replacement(const indices_t& indices, const tensor_size_t
     UTEST_CHECK_EQUAL(indices.size(), expected_count);
     UTEST_CHECK_LESS(indices.max(), expected_total);
     UTEST_CHECK_GREATER_EQUAL(indices.min(), 0);
-    UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
+    UTEST_CHECK(std::is_sorted(std::begin(indices), std::end(indices)));
 }
 
 void check_sample_without_replacement(const indices_t& indices)
@@ -25,8 +25,8 @@ void check_sample_without_replacement(const indices_t& indices)
     UTEST_CHECK_EQUAL(indices.size(), 60);
     UTEST_CHECK_LESS(indices.max(), 140);
     UTEST_CHECK_GREATER_EQUAL(indices.min(), 0);
-    UTEST_CHECK(std::is_sorted(begin(indices), end(indices)));
-    UTEST_CHECK(std::adjacent_find(begin(indices), end(indices)) == end(indices));
+    UTEST_CHECK(std::is_sorted(std::begin(indices), std::end(indices)));
+    UTEST_CHECK(std::adjacent_find(std::begin(indices), std::end(indices)) == std::end(indices));
 }
 } // namespace
 

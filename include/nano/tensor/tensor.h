@@ -801,33 +801,6 @@ private:
 };
 
 ///
-/// \brief iterators for STL compatibility.
-///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-auto begin(tensor_t<tstorage, tscalar, trank>& m)
-{
-    return m.data();
-}
-
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-auto begin(const tensor_t<tstorage, tscalar, trank>& m)
-{
-    return m.data();
-}
-
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-auto end(tensor_t<tstorage, tscalar, trank>& m)
-{
-    return m.data() + m.size();
-}
-
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-auto end(const tensor_t<tstorage, tscalar, trank>& m)
-{
-    return m.data() + m.size();
-}
-
-///
 /// \brief pretty-print the given tensor.
 ///
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
@@ -858,7 +831,7 @@ auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
     assert(::nano::size(dims) == static_cast<tensor_size_t>(list.size()));
 
     tensor_mem_t<tscalar, trank> tensor{dims};
-    std::copy(list.begin(), list.end(), begin(tensor));
+    std::copy(list.begin(), list.end(), std::begin(tensor));
     return tensor;
 }
 
@@ -892,7 +865,7 @@ auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value mi
     tensor_mem_t<tscalar, trank> tensor(dims);
     tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), seed);
     return tensor;
-}
+} // LCOV_EXCL_LINE
 
 ///
 /// \brief create a matrix from an initializer list.
@@ -905,7 +878,7 @@ auto make_matrix(const tensor_size_t rows, tvalues... values)
     assert(size % rows == 0);
 
     tensor_mem_t<tscalar, 2> matrix{rows, size / rows};
-    std::copy(list.begin(), list.end(), begin(matrix));
+    std::copy(list.begin(), list.end(), std::begin(matrix));
     return matrix;
 }
 
@@ -918,7 +891,7 @@ auto make_vector(tvalues... values)
     const auto list = {static_cast<tscalar>(values)...};
 
     tensor_mem_t<tscalar, 1> vector{static_cast<tensor_size_t>(list.size())};
-    std::copy(list.begin(), list.end(), begin(vector));
+    std::copy(list.begin(), list.end(), std::begin(vector));
     return vector;
 }
 

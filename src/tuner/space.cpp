@@ -8,13 +8,13 @@ namespace
 auto make_min(const tensor1d_t& grid_values)
 {
     return (grid_values.size() < 1) ? std::numeric_limits<scalar_t>::quiet_NaN()
-                                    : *std::min_element(begin(grid_values), end(grid_values));
+                                    : *std::min_element(std::begin(grid_values), std::end(grid_values));
 }
 
 auto make_max(const tensor1d_t& grid_values)
 {
     return (grid_values.size() < 1) ? std::numeric_limits<scalar_t>::quiet_NaN()
-                                    : *std::max_element(begin(grid_values), end(grid_values));
+                                    : *std::max_element(std::begin(grid_values), std::end(grid_values));
 }
 } // namespace
 
@@ -26,14 +26,14 @@ param_space_t::param_space_t(param_space_t::type type_, tensor1d_t grid_values)
 {
     critical(m_grid_values.size() < 2, "parameter space: at least two grid values must be given!");
 
-    critical(!std::is_sorted(begin(m_grid_values), end(m_grid_values)),
+    critical(!std::is_sorted(std::begin(m_grid_values), std::end(m_grid_values)),
              "parameter space: the grid values must be sorted!");
 
-    critical(std::unique(begin(m_grid_values), end(m_grid_values)) != end(m_grid_values),
+    critical(std::unique(std::begin(m_grid_values), std::end(m_grid_values)) != std::end(m_grid_values),
              "parameter space: the grid values must be distinct!");
 
-    critical(m_type == type::log10 &&
-                 *std::min_element(begin(m_grid_values), end(m_grid_values)) < std::numeric_limits<scalar_t>::epsilon(),
+    critical(m_type == type::log10 && *std::min_element(std::begin(m_grid_values), std::end(m_grid_values)) <
+                                          std::numeric_limits<scalar_t>::epsilon(),
              "parameter space: the grid values must be strictly positive if using the logarithmic scale!");
 }
 

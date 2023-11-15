@@ -19,6 +19,7 @@ make_test(test_tensor_stack NANO::core)
 make_test(test_tensor_index NANO::core)
 make_test(test_tensor_stream NANO::core)
 make_test(test_tensor_tensor NANO::core)
+make_test(test_tensor_numeric NANO::core)
 make_test(test_tensor_storage NANO::core)
 make_test(test_tensor_integral NANO::core)
 

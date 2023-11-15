@@ -75,7 +75,7 @@ private:
     static tensor_size_t product(const tensor_mem_t<tindex, 1>& counts)
     {
         const auto multiply = [](tensor_size_t acc, tindex val) { return acc * static_cast<tensor_size_t>(val); };
-        return std::accumulate(begin(counts), end(counts), tensor_size_t{1}, multiply);
+        return std::accumulate(std::begin(counts), std::end(counts), tensor_size_t{1}, multiply);
     }
 
     // attributes

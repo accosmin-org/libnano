@@ -26,7 +26,7 @@ splitter_t::splits_t random_splitter_t::split(indices_t samples) const
 
     for (tensor_size_t fold = 0; fold < folds; ++fold)
     {
-        std::shuffle(begin(samples), end(samples), rng);
+        std::shuffle(std::begin(samples), std::end(samples), rng);
 
         indices_t valid(valid_size);
         indices_t train(train_size);
@@ -35,8 +35,8 @@ splitter_t::splits_t random_splitter_t::split(indices_t samples) const
         valid.vector() = samples.vector().segment(train_size, valid_size);
 
         // NB: sorting samples by index may increase speed!
-        std::sort(begin(train), end(train));
-        std::sort(begin(valid), end(valid));
+        std::sort(std::begin(train), std::end(train));
+        std::sort(std::begin(valid), std::end(valid));
 
         splits.emplace_back(std::move(train), std::move(valid));
     }

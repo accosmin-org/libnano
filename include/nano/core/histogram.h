@@ -46,7 +46,7 @@ public:
         assert(m_thresholds.size() > 0);
 
         std::sort(begin, end);
-        std::sort(::nano::begin(m_thresholds), ::nano::end(m_thresholds));
+        std::sort(std::begin(m_thresholds), std::end(m_thresholds));
 
         update(begin, end);
     }
@@ -61,7 +61,7 @@ public:
     static histogram_t make_from_percentiles(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> percentiles)
     {
         std::sort(begin, end);
-        std::sort(::nano::begin(percentiles), ::nano::end(percentiles));
+        std::sort(std::begin(percentiles), std::end(percentiles));
 
         assert(std::distance(begin, end) > 0);
         assert(percentiles.size() > 0);
@@ -93,7 +93,7 @@ public:
     static histogram_t make_from_ratios(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> ratios)
     {
         std::sort(begin, end);
-        std::sort(::nano::begin(ratios), ::nano::end(ratios));
+        std::sort(std::begin(ratios), std::end(ratios));
 
         assert(std::distance(begin, end) > 0);
         assert(ratios.size() > 0);
@@ -193,8 +193,8 @@ public:
     {
         const auto svalue = static_cast<tensor_size_t>(value); // NOLINT(cert-str34-c)
 
-        const auto* const begin = ::nano::begin(m_thresholds);
-        const auto* const end   = ::nano::end(m_thresholds);
+        const auto* const begin = std::begin(m_thresholds);
+        const auto* const end   = std::end(m_thresholds);
 
         const auto* const it = std::upper_bound(begin, end, svalue);
         if (it == end)

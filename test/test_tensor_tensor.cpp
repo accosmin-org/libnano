@@ -299,7 +299,7 @@ UTEST_CASE(tensor4d_map)
         v.push_back(-35 + i);
     }
 
-    const auto tmap = ::nano::map_tensor(v.data(), dim1, dim2, rows, cols);
+    const auto tmap = ::nano::map_tensor(static_cast<const int*>(v.data()), dim1, dim2, rows, cols);
     UTEST_CHECK_EQUAL(tmap.rank(), 4);
     UTEST_CHECK_EQUAL(tmap.size<0>(), dim1);
     UTEST_CHECK_EQUAL(tmap.size<1>(), dim2);
@@ -444,8 +444,8 @@ UTEST_CASE(tensor4d_subtensor)
     tensor.full(42);
     tensor.tensor(1).full(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1).dims(), nano::make_dims(dim2, rows, cols));
-    UTEST_CHECK_EQUAL(tensor.array(1).minCoeff(), 7);
-    UTEST_CHECK_EQUAL(tensor.array(1).maxCoeff(), 7);
+    UTEST_CHECK_EQUAL(const_cast<const tensor4d_t&>(tensor).array(1).minCoeff(), 7);
+    UTEST_CHECK_EQUAL(const_cast<const tensor4d_t&>(tensor).array(1).maxCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1).sum(), 7 * dim2 * rows * cols);
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dim1 * dim2 * rows * cols - (42 - 7) * dim2 * rows * cols);
 }
@@ -519,15 +519,29 @@ UTEST_CASE(tensor4d_slice)
     const auto slice1 = tensor.slice(0, 2);
     const auto slice2 = tensor.tensor(2, 3).slice(make_range(1, 2));
 
+    const auto cslice1 = (const_cast<const tensor4d_t&>(tensor)).slice(0, 2);
+    const auto cslicex = (const_cast<const tensor4d_t&>(tensor)).slice(make_range(0, 2));
+    const auto cslice2 = (const_cast<const tensor4d_t&>(tensor)).tensor(2, 3).slice(make_range(1, 2));
+
     const auto dims1 = nano::make_dims(2, 7, 3, 4);
     const auto dims2 = nano::make_dims(1, 4);
 
     UTEST_REQUIRE_EQUAL(slice1.dims(), dims1);
     UTEST_REQUIRE_EQUAL(slice2.dims(), dims2);
 
+    UTEST_REQUIRE_EQUAL(cslice1.dims(), dims1);
+    UTEST_REQUIRE_EQUAL(cslicex.dims(), dims1);
+    UTEST_REQUIRE_EQUAL(cslice2.dims(), dims2);
+
     UTEST_CHECK_EQUAL(tensor.vector(0), slice1.vector(0));
     UTEST_CHECK_EQUAL(tensor.vector(1), slice1.vector(1));
     UTEST_CHECK_EQUAL(tensor.vector(2, 3, 1), slice2.vector());
+
+    UTEST_CHECK_EQUAL(tensor.vector(0), cslice1.vector(0));
+    UTEST_CHECK_EQUAL(tensor.vector(1), cslice1.vector(1));
+    UTEST_CHECK_EQUAL(tensor.vector(0), cslicex.vector(0));
+    UTEST_CHECK_EQUAL(tensor.vector(1), cslicex.vector(1));
+    UTEST_CHECK_EQUAL(tensor.vector(2, 3, 1), cslice2.vector());
 }
 
 UTEST_CASE(tensor4d_lin_spaced)
@@ -561,6 +575,9 @@ UTEST_CASE(tensor4d_begin_end)
     {
         value = index++; // cppcheck-suppress useStlAlgorithm
     }
+
+    const auto ctensor = tensor;
+    UTEST_CHECK_EQUAL(std::accumulate(ctensor.begin(), ctensor.end(), 0), 23 * 24 / 2);
 
     for (tensor_size_t i = 0; i < tensor.size(); ++i)
     {

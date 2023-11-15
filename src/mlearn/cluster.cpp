@@ -38,5 +38,5 @@ tensor_size_t cluster_t::count(tensor_size_t group) const
 {
     assert(group >= 0 && group < groups());
 
-    return std::count_if(begin(m_indices), end(m_indices), [=](tensor_size_t g) { return g == group; });
+    return std::count_if(std::begin(m_indices), std::end(m_indices), [=](tensor_size_t g) { return g == group; });
 }

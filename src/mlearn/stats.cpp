@@ -8,7 +8,7 @@ namespace
 {
 auto percentile(const tensor1d_map_t& values, const double percentage)
 {
-    return ::nano::percentile(begin(values), end(values), percentage);
+    return ::nano::percentile(std::begin(values), std::end(values), percentage);
 }
 } // namespace
 

@@ -131,6 +131,11 @@ struct is_eigen<Eigen::VectorBlock<T>> : std::true_type
 {
 };
 
+template <typename XprType, int BlockRows, int BlockCols, bool InnerPanel>
+struct is_eigen<Eigen::Block<XprType, BlockRows, BlockCols, InnerPanel>> : std::true_type
+{
+};
+
 template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
@@ -158,32 +163,34 @@ bool close(const teigen1& lhs, const teigen2& rhs, tscalar epsilon) noexcept
 }
 } // namespace nano
 
-namespace Eigen
+namespace std // NOLINT(cert-dcl58-cpp)
 {
 ///
 /// \brief iterators for Eigen matrices for STL compatibility.
 ///
 template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-auto begin(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
+auto begin(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept // NOLINT(cert-dcl58-cpp)
 {
     return m.data();
 }
 
 template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-auto begin(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
+auto begin( // NOLINT(cert-dcl58-cpp)
+    const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
 {
     return m.data();
 }
 
 template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-auto end(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
+auto end(Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept // NOLINT(cert-dcl58-cpp)
 {
     return m.data() + m.size();
 }
 
 template <typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-auto end(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
+auto end( // NOLINT(cert-dcl58-cpp)
+    const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>& m) noexcept
 {
     return m.data() + m.size();
 }
-} // namespace Eigen
+} // namespace std

@@ -17,7 +17,7 @@ function_kinks_t::function_kinks_t(tensor_size_t dims)
     {
         kinks.vector() = m_kinks.matrix().col(i);
 
-        const auto opt = median(begin(kinks), end(kinks));
+        const auto opt = median(std::begin(kinks), std::end(kinks));
         m_offset += (kinks.array() - opt).abs().sum();
     }
 }

@@ -57,12 +57,12 @@ scalar_t gboost::mean_loss(const tensor2d_t& errors_losses, const indices_t& sam
 {
     const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + errors_losses(1, sample); };
     const auto denom = static_cast<scalar_t>(std::max(samples.size(), tensor_size_t{1}));
-    return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
+    return std::accumulate(std::begin(samples), std::end(samples), 0.0, opsum) / denom;
 }
 
 scalar_t gboost::mean_error(const tensor2d_t& errors_losses, const indices_t& samples)
 {
     const auto opsum = [&](const scalar_t sum, const tensor_size_t sample) { return sum + errors_losses(0, sample); };
     const auto denom = static_cast<scalar_t>(std::max(samples.size(), tensor_size_t{1}));
-    return std::accumulate(begin(samples), end(samples), 0.0, opsum) / denom;
+    return std::accumulate(std::begin(samples), std::end(samples), 0.0, opsum) / denom;
 }

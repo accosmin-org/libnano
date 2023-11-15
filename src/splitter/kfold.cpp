@@ -13,7 +13,7 @@ splitter_t::splits_t kfold_splitter_t::split(indices_t samples) const
     const auto seed  = parameter("splitter::seed").value<uint64_t>();
     const auto folds = parameter("splitter::folds").value<tensor_size_t>();
 
-    std::shuffle(begin(samples), end(samples), make_rng(seed));
+    std::shuffle(std::begin(samples), std::end(samples), make_rng(seed));
 
     splits_t splits;
     splits.reserve(static_cast<size_t>(folds));
@@ -35,8 +35,8 @@ splitter_t::splits_t kfold_splitter_t::split(indices_t samples) const
             world.segment(valid_end, world.size() - valid_end);
 
         // NB: sorting samples by index may increase speed!
-        std::sort(begin(train), end(train));
-        std::sort(begin(valid), end(valid));
+        std::sort(std::begin(train), std::end(train));
+        std::sort(std::begin(valid), std::end(valid));
 
         splits.emplace_back(std::move(train), std::move(valid));
     }

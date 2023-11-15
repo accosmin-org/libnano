@@ -32,6 +32,20 @@ auto make_vector_storage(const vector_t& data)
 
 UTEST_BEGIN_MODULE(test_tensor_storage)
 
+UTEST_CASE(begin_end)
+{
+    vector_t       data0 = vector_t::Constant(7, 0);
+    const vector_t data1 = vector_t::Constant(7, 1);
+
+    UTEST_CHECK_EQUAL(0, std::accumulate(std::begin(data0), std::end(data0), 0.0));
+    UTEST_CHECK_EQUAL(7, std::accumulate(std::begin(data1), std::end(data1), 0.0));
+
+    std::for_each(std::begin(data0), std::end(data0), [](auto& value) { value += 2.0; });
+
+    UTEST_CHECK_EQUAL(14, std::accumulate(std::begin(data0), std::end(data0), 0.0));
+    UTEST_CHECK_EQUAL(7, std::accumulate(std::begin(data1), std::end(data1), 0.0));
+}
+
 UTEST_CASE(vector_init)
 {
     vector_t       data0 = vector_t::Constant(7, 0);
@@ -80,6 +94,12 @@ UTEST_CASE(carray_init)
     vector_t       data0 = vector_t::Constant(7, 0);
     const vector_t data1 = vector_t::Constant(7, 1);
 
+    // carray(default)
+    {
+        const auto carray = carray_storage_t{};
+        UTEST_CHECK_EQUAL(carray.data(), nullptr);
+        UTEST_CHECK_EQUAL(carray.size(), 0);
+    }
     // carray(carray)
     {
         const auto carray1 = carray_storage_t{data1.data(), data1.size()};
@@ -114,6 +134,12 @@ UTEST_CASE(marray_init)
 {
     vector_t data0 = vector_t::Constant(7, 0);
 
+    // carray(default)
+    {
+        const auto marray = marray_storage_t{};
+        UTEST_CHECK_EQUAL(marray.data(), nullptr);
+        UTEST_CHECK_EQUAL(marray.size(), 0);
+    }
     // marray(marray)
     {
         const auto marray1 = marray_storage_t{data0.data(), data0.size()};
@@ -144,6 +170,11 @@ UTEST_CASE(vector_copy)
     auto vector = make_vector_storage(data2);
     storage_must_match(vector, data2);
     UTEST_CHECK_NOT_EQUAL(vector.data(), data2.data());
+
+    vector = make_vector_storage(data1);
+    storage_must_match(vector, data1);
+    UTEST_CHECK_NOT_EQUAL(vector.data(), data1.data());
+    vector = make_vector_storage(data2);
 
     const auto vother = make_vector_storage(data1);
     vector            = vother;

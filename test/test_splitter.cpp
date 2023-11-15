@@ -28,20 +28,21 @@ void check_split(const indices_t& train, const indices_t& valid, const tensor_si
     UTEST_CHECK_GREATER_EQUAL(valid.min(), samples);
 
     // sorted splits
-    UTEST_CHECK(std::is_sorted(begin(train), end(train)));
-    UTEST_CHECK(std::is_sorted(begin(valid), end(valid)));
+    UTEST_CHECK(std::is_sorted(std::begin(train), std::end(train)));
+    UTEST_CHECK(std::is_sorted(std::begin(valid), std::end(valid)));
 
     // unique sample indices per split
-    UTEST_CHECK(std::adjacent_find(begin(train), end(train)) == end(train));
-    UTEST_CHECK(std::adjacent_find(begin(valid), end(valid)) == end(valid));
+    UTEST_CHECK(std::adjacent_find(std::begin(train), std::end(train)) == std::end(train));
+    UTEST_CHECK(std::adjacent_find(std::begin(valid), std::end(valid)) == std::end(valid));
 
     // disjoint splits
     for (tensor_size_t sample = samples; sample < 2 * samples; ++sample)
     {
-        const auto* const it = std::find(begin(train), end(train), sample);
-        const auto* const iv = std::find(begin(valid), end(valid), sample);
+        const auto* const it = std::find(std::begin(train), std::end(train), sample);
+        const auto* const iv = std::find(std::begin(valid), std::end(valid), sample);
 
-        UTEST_CHECK((it == end(train) && iv != end(valid)) || (it != end(train) && iv == end(valid)));
+        UTEST_CHECK((it == std::end(train) && iv != std::end(valid)) ||
+                    (it != std::end(train) && iv == std::end(valid)));
     }
 }
 } // namespace
@@ -81,7 +82,7 @@ UTEST_CASE(kfold)
         }
 
         // validation splits should be disjoint and concatenate to make the full samples
-        std::sort(begin(all_valids), end(all_valids));
+        std::sort(std::begin(all_valids), std::end(all_valids));
         UTEST_CHECK_EQUAL(all_valids, make_samples(samples));
     }
 }

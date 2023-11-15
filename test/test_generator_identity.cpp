@@ -33,8 +33,8 @@ auto remove(const tensor2d_t& flatten, const indices_t& columns_to_remove)
 {
     const auto [samples, columns] = flatten.dims();
 
-    const auto* const begin = ::nano::begin(columns_to_remove);
-    const auto* const end   = ::nano::end(columns_to_remove);
+    const auto* const begin = std::begin(columns_to_remove);
+    const auto* const end   = std::end(columns_to_remove);
 
     tensor2d_t tensor(samples, columns - columns_to_remove.size());
     for (tensor_size_t column = 0, column2 = 0; column < columns; ++column)

@@ -13,7 +13,7 @@ public:
     ///
     /// \brief constructor
     ///
-    tensor_range_t() = default;
+    tensor_range_t() = default; // LCOV_EXCL_LINE
 
     ///
     /// \brief constructor

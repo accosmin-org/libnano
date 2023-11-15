@@ -64,7 +64,7 @@ UTEST_CASE(histogram_from_ratios)
     {
         auto       data      = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         const auto ratios    = make_tensor<scalar_t>(make_dims(3), 0.15, 0.55, 0.85);
-        const auto histogram = histogram_t::make_from_ratios(begin(data), end(data), ratios);
+        const auto histogram = histogram_t::make_from_ratios(std::begin(data), std::end(data), ratios);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(4), 2, 4, 3, 2);
@@ -81,7 +81,7 @@ UTEST_CASE(histogram_from_ratios)
 
         auto       data      = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         const auto ratios    = 4;
-        const auto histogram = histogram_t::make_from_ratios(begin(data), end(data), ratios);
+        const auto histogram = histogram_t::make_from_ratios(std::begin(data), std::end(data), ratios);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(4), 1.0, 3.5, 6.0, 9.0);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(4), 3, 2, 3, 3);
@@ -115,7 +115,7 @@ UTEST_CASE(histogram_from_thresholds)
     {
         auto       data       = make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
         const auto thresholds = make_tensor<scalar_t>(make_dims(2), 2.5, 6.4);
-        const auto histogram  = histogram_t::make_from_thresholds(begin(data), end(data), thresholds);
+        const auto histogram  = histogram_t::make_from_thresholds(std::begin(data), std::end(data), thresholds);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(3), 1.0, 4.5, 8.0);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(3), 3, 4, 3);
@@ -147,7 +147,7 @@ UTEST_CASE(histogram_from_thresholds)
 
         auto       data       = make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
         const auto thresholds = make_tensor<scalar_t>(make_dims(1), 5.3);
-        const auto histogram  = histogram_t::make_from_thresholds(begin(data), end(data), thresholds);
+        const auto histogram  = histogram_t::make_from_thresholds(std::begin(data), std::end(data), thresholds);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(2), 2.5, 7.5);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(2), 6, 4);
@@ -182,7 +182,7 @@ UTEST_CASE(histogram_from_percentiles)
     {
         auto       data        = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         const auto percentiles = make_tensor<scalar_t>(make_dims(3), 15.0, 55.0, 85.0);
-        const auto histogram   = histogram_t::make_from_percentiles(begin(data), end(data), percentiles);
+        const auto histogram   = histogram_t::make_from_percentiles(std::begin(data), std::end(data), percentiles);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(4), 2, 4, 3, 2);
@@ -199,7 +199,7 @@ UTEST_CASE(histogram_from_percentiles)
 
         auto       data        = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         const auto percentiles = 4;
-        const auto histogram   = histogram_t::make_from_percentiles(begin(data), end(data), percentiles);
+        const auto histogram   = histogram_t::make_from_percentiles(std::begin(data), std::end(data), percentiles);
 
         const auto expected_means      = make_tensor<scalar_t>(make_dims(4), 1.0, 3.5, 6.0, 9.0);
         const auto expected_counts     = make_tensor<tensor_size_t>(make_dims(4), 3, 2, 3, 3);
@@ -222,7 +222,7 @@ UTEST_CASE(histogram_from_exponents)
                                           3e-13, 3e-12, 4e-12);
         const auto base      = 10.0;
         const auto epsilon   = 1e-16;
-        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+        const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means =
             make_tensor<scalar_t>(make_dims(6), 2e-32, 3e-16, (10.0 / 3.0) * 1e-15, 2.5e-14, 2e-13, 3.5e-12);
@@ -241,7 +241,7 @@ UTEST_CASE(histogram_from_exponents)
                                           4e-3, 5e-3, 1e+0, 2e+0);
         const auto base      = 10.0;
         const auto epsilon   = 1e-16;
-        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+        const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means =
             make_tensor<scalar_t>(make_dims(8), NaN, 2e-6, 2e-5, 4e-4, (13.0 / 4.0) * 1e-3, NaN, NaN, 1.5e+0);
@@ -261,7 +261,7 @@ UTEST_CASE(histogram_from_exponents)
                                           -4e-4, -2e-4);
         const auto base      = 10.0;
         const auto epsilon   = 1e-16;
-        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+        const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means =
             make_tensor<scalar_t>(make_dims(5), NaN, -21.0 / 3.0 * 1e-2, -26.0 / 4.0 * 1e-3, -24.0 / 4.0 * 1e-4, NaN);
@@ -281,7 +281,7 @@ UTEST_CASE(histogram_from_exponents)
                                           -2e-13, -3e-13, -3e-12, -4e-12);
         const auto base      = 10.0;
         const auto epsilon   = 1e-16;
-        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+        const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means = make_tensor<scalar_t>(make_dims(6), -3.5 * 1e-12, -2.5 * 1e-13, -15.0 / 3.0 * 1e-14,
                                                           -10.0 / 3.0 * 1e-15, -3e-16, -2e-32);
@@ -301,7 +301,7 @@ UTEST_CASE(histogram_from_exponents)
                                           0.0, +1e-30, +1e-16, +2e-16, +9e-16, +1e-15, +2e-15, +7e-15);
         const auto base      = 10.0;
         const auto epsilon   = 1e-16;
-        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+        const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means  = make_tensor<scalar_t>(make_dims(5), -2.5 * 1e-15, -23.0 / 4.0 * 1e-16, 0.0,
                                                           +12.0 / 3.0 * 1e-16, +10.0 / 3.0 * 1e-15);
