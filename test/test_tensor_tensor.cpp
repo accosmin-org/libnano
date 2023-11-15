@@ -444,7 +444,9 @@ UTEST_CASE(tensor4d_subtensor)
     tensor.full(42);
     tensor.tensor(1).full(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1).dims(), nano::make_dims(dim2, rows, cols));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     UTEST_CHECK_EQUAL(const_cast<const tensor4d_t&>(tensor).array(1).minCoeff(), 7);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     UTEST_CHECK_EQUAL(const_cast<const tensor4d_t&>(tensor).array(1).maxCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1).sum(), 7 * dim2 * rows * cols);
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dim1 * dim2 * rows * cols - (42 - 7) * dim2 * rows * cols);
@@ -519,8 +521,11 @@ UTEST_CASE(tensor4d_slice)
     const auto slice1 = tensor.slice(0, 2);
     const auto slice2 = tensor.tensor(2, 3).slice(make_range(1, 2));
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto cslice1 = (const_cast<const tensor4d_t&>(tensor)).slice(0, 2);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto cslicex = (const_cast<const tensor4d_t&>(tensor)).slice(make_range(0, 2));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto cslice2 = (const_cast<const tensor4d_t&>(tensor)).tensor(2, 3).slice(make_range(1, 2));
 
     const auto dims1 = nano::make_dims(2, 7, 3, 4);

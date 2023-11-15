@@ -121,6 +121,7 @@ UTEST_CASE(eigen_expressions)
     UTEST_CHECK_EQUAL(row0, make_tensor<int>(make_dims(3), 2, 2, 3));
     UTEST_CHECK_EQUAL(part, make_tensor<int>(make_dims(2), 2, 2));
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto matrixT = matrix_t{const_cast<const matrix_t&>(matrix).transpose()};
     const auto matrixV = vector_t{matrixT.vector()};
     const auto column0 = vector_t{matrixT.row(0)};
