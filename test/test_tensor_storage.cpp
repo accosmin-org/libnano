@@ -1,4 +1,5 @@
 #include <nano/tensor/storage.h>
+#include <numeric>
 #include <utest/utest.h>
 
 using namespace nano;
