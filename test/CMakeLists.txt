@@ -38,7 +38,8 @@ make_test(test_program_constraint NANO::solver)
 
 make_test(test_solver NANO::solver)
 make_test(test_solver_smooth NANO::solver)
-make_test(test_solver_nonsmooth NANO::solver)
+make_test(test_solver_convex_smooth NANO::solver)
+make_test(test_solver_convex_nonsmooth NANO::solver)
 
 make_test(test_datasource_mask NANO::machine)
 make_test(test_datasource_memory NANO::machine)

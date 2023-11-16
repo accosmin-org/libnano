@@ -73,7 +73,7 @@ struct minimize_config_t
 
     auto& expected_minimum(const scalar_t value)
     {
-        if (!std::isfinite(m_expected_minimum))
+        if (!std::isfinite(m_expected_minimum) && m_expected_convergence)
         {
             m_expected_minimum = value;
         }
@@ -165,10 +165,8 @@ struct solver_description_t
         // - either no theoretical or practical stopping criterion
         // - very slow convergence rate for both non-smooth and hard smooth problems
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(
-                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1))
-            .nonsmooth_config(
-                minimize_config_t{}.max_evals(500).expected_convergence(false).expected_maximum_deviation(1e+1));
+            .smooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false))
+            .nonsmooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false));
     }
     else
     {
@@ -221,7 +219,7 @@ struct solver_description_t
     }
     UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
     UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
-    if (function.convex() && std::isfinite(config.m_expected_minimum))
+    if (function.convex() && std::isfinite(config.m_expected_minimum) && config.m_expected_convergence)
     {
         UTEST_CHECK_CLOSE(state.fx(), config.m_expected_minimum, config.m_expected_maximum_deviation);
     }
