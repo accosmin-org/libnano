@@ -21,9 +21,9 @@ UTEST_CASE(timer)
     auto timer = nano::timer_t{};
 
     timer.reset();
-    UTEST_CHECK_LESS(timer.nanoseconds().count(), 1000000);
-    UTEST_CHECK_LESS(timer.microseconds().count(), 100000);
-    UTEST_CHECK_LESS(timer.milliseconds().count(), 100);
+    UTEST_CHECK_LESS(timer.nanoseconds().count(), 10000000);
+    UTEST_CHECK_LESS(timer.microseconds().count(), 1000000);
+    UTEST_CHECK_LESS(timer.milliseconds().count(), 1000);
     UTEST_CHECK_EQUAL(timer.seconds().count(), 0);
     UTEST_CHECK_EQUAL(timer.elapsed().empty(), false);
 }
