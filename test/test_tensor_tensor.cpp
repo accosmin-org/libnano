@@ -1,5 +1,6 @@
 #include <nano/core/numeric.h>
 #include <nano/tensor/tensor.h>
+#include <numeric>
 #include <utest/utest.h>
 #include <vector>
 
