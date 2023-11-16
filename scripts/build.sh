@@ -180,7 +180,10 @@ function llvm_cov_coverage {
     local output=${basedir}/llvmcov.info
 
     tests=$(find ${libnanodir}/test/test_* | grep -v profraw | grep -v profdata)
-    objects="$(find ${libnanodir}/src/libnano*)"
+    objects=""
+    for object in $(find ${libnanodir}/src/lib*.so); do
+        objects="${objects} -object ${object}"
+    done
     for utest in ${tests}; do
         objects="${objects} -object ${utest}"
     done
