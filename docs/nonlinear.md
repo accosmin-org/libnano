@@ -110,6 +110,7 @@ std::cout << make_table("solver", solver_t::all());
 | fgm       | universal fast gradient method (FGM)                                |
 | fletcher  | quasi-newton method (Fletcher's switch)                             |
 | gd        | gradient descent                                                    |
+| gs        | gradient sampling                                                   |
 | hoshino   | quasi-newton method (Hoshino formula)                               |
 | lbfgs     | limited-memory BFGS                                                 |
 | osga      | optimal sub-gradient algorithm (OSGA)                               |
@@ -253,8 +254,8 @@ The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge f
 
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --convex --non-smooth \
-    --solver "gd|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm|asga2|asga4" \
-    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 18
+    --solver "gd|gs|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm|asga2|asga4" \
+    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 19
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank  | value        | gnorm        | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
@@ -270,6 +271,7 @@ The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge f
 | asga4                            | -2.1634   | 10.16 | N/A          | 0.627735     | 0      | 111    | 1672   | 1672   | 97    |
 | cocob                            | -1.8201   | 7.92  | N/A          | 0.762904     | 0      | 1280   | 2421   | 2421   | 159   |
 | pgm                              | -1.5533   | 11.93 | N/A          | 0.266456     | 0      | 256    | 737    | 737    | 40    |
+| gs                               | -1.4107   | 9.47  | N/A          | 0.727334     | 0      | 1325   | 2574   | 2574   | 367   |
 | dgm                              | -1.3563   | 12.12 | N/A          | 0.2893       | 0      | 655    | 2117   | 1059   | 98    |
 | sda                              | -1.3026   | 10.18 | N/A          | 0.909667     | 0      | 1349   | 2479   | 2479   | 149   |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
