@@ -60,7 +60,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
         for (tensor_size_t i = 0; i < m; ++i)
         {
             sample_from_ball(state.x(), epsilonk, x, rng);
-            assert((state.x() - x).lpNorm<2>() < epsilonk);
+            assert((state.x() - x).lpNorm<2>() <= epsilonk);
             function.vgrad(x, map_tensor(G.row(i).data(), n));
         }
         G.row(m) = state.gx().transpose();

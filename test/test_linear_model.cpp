@@ -56,6 +56,9 @@ void check_model(const linear_model_t& model, const dataset_t& dataset, const in
     const auto outputs = model.predict(dataset, samples);
     check_outputs(dataset, samples, outputs, epsilon);
 
+    UTEST_CHECK_EQUAL(model.weights().dims(), make_dims(1, dataset.columns()));
+    UTEST_CHECK_EQUAL(model.bias().dims(), make_dims(1));
+
     string_t str;
     {
         std::ostringstream stream;
