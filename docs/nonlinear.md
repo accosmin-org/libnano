@@ -271,9 +271,9 @@ The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge f
 | asga4                            | -2.1634   | 10.16 | N/A          | 0.627735     | 0      | 111    | 1672   | 1672   | 97    |
 | cocob                            | -1.8201   | 7.92  | N/A          | 0.762904     | 0      | 1280   | 2421   | 2421   | 159   |
 | pgm                              | -1.5533   | 11.93 | N/A          | 0.266456     | 0      | 256    | 737    | 737    | 40    |
-| gs                               | -1.4107   | 9.47  | N/A          | 0.727334     | 0      | 1325   | 2574   | 2574   | 367   |
 | dgm                              | -1.3563   | 12.12 | N/A          | 0.2893       | 0      | 655    | 2117   | 1059   | 98    |
 | sda                              | -1.3026   | 10.18 | N/A          | 0.909667     | 0      | 1349   | 2479   | 2479   | 149   |
+| gs                               | -0.6173   | 12.07 | N/A          | 0.86502      | 0      | 1408   | 2661   | 2661   | 872   |
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 Indeed the monotonic solvers are not converging, but surprisingly they produce the most accurate solutions by at least an order of magnitude in the worst case. Out of the non-monotonic solvers only OSGA produces reasonable accurate solutions. The rest of non-monotonic solvers don't seem capable of converging fast enough for practical applications. Note that it is very difficult to have a practical and reliable stopping criterion for general convex non-smooth problems.

@@ -35,7 +35,7 @@ solver_state_t solver_gs_t::do_minimize(const function_t& function, const vector
     const auto lsearch_max_iters = parameter("solver::gs::lsearch_max_iters").value<tensor_size_t>();
 
     const auto n = function.size();
-    const auto m = n + 1;
+    const auto m = 2 * n;
 
     auto x        = vector_t{n};
     auto g        = vector_t{n};
