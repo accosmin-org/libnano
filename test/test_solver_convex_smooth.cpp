@@ -15,15 +15,9 @@ UTEST_CASE(default_solvers)
         for (const auto& x0 : make_random_x0s(*function))
         {
             auto config = minimize_config_t{};
-            for (const auto& solver_id : solver_t::all().ids())
+            for (const auto& solver : make_smooth_solvers())
             {
-                // NB: any unconstrained solver should be able to minimize smooth convex problems!
-                const auto solver = make_solver(solver_id);
-                if (solver->type() != solver_type::line_search && solver->type() != solver_type::non_monotonic)
-                {
-                    continue;
-                }
-
+                const auto solver_id = solver->type_id();
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
