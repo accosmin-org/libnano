@@ -9,6 +9,8 @@
 #include <nano/function/benchmark/exponential.h>
 #include <nano/function/benchmark/geometric.h>
 #include <nano/function/benchmark/kinks.h>
+#include <nano/function/benchmark/maxhilb.h>
+#include <nano/function/benchmark/maxq.h>
 #include <nano/function/benchmark/powell.h>
 #include <nano/function/benchmark/qing.h>
 #include <nano/function/benchmark/quadratic.h>
@@ -149,9 +151,12 @@ factory_t<function_t>& function_t::all()
     static auto manager = factory_t<function_t>{};
     const auto  op      = []()
     {
+        manager.add<function_maxq_t>("MAXQ function: f(x) = max(i, x_i^2)");
+        manager.add<function_maxhilb_t>("MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))");
+
         manager.add<function_trid_t>("Trid function: https://www.sfu.ca/~ssurjano/trid.html");
         manager.add<function_qing_t>("Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html");
-        manager.add<function_kinks_t>("random kinks: f(x_ = sum(|x - K_i|, i)");
+        manager.add<function_kinks_t>("random kinks: f(x) = sum(|x - K_i|, i)");
         manager.add<function_cauchy_t>("Cauchy function: f(x) = log(1 + x.dot(x))");
         manager.add<function_sargan_t>(
             "Sargan function: http://infinity77.net/global_optimization/test_functions_nd_S.html");

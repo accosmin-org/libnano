@@ -71,6 +71,8 @@ make_lib(NANO solver
     function/benchmark/geometric.cpp
     function/benchmark/kinks.cpp
     function/benchmark/linear.cpp
+    function/benchmark/maxq.cpp
+    function/benchmark/maxhilb.cpp
     function/benchmark/powell.cpp
     function/benchmark/qing.cpp
     function/benchmark/quadratic.cpp
