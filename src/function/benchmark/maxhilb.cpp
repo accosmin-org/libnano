@@ -4,10 +4,19 @@ using namespace nano;
 
 function_maxhilb_t::function_maxhilb_t(tensor_size_t dims)
     : function_t("maxhilb", dims)
+    , m_weights(dims, dims)
 {
     convex(convexity::yes);
     smooth(smoothness::no);
     strong_convexity(0.0);
+
+    for (tensor_size_t i = 0; i < dims; ++i)
+    {
+        for (tensor_size_t j = 0; j < dims; ++j)
+        {
+            m_weights(i, j) = 1.0 / static_cast<scalar_t>(i + j + 1);
+        }
+    }
 }
 
 rfunction_t function_maxhilb_t::clone() const
@@ -18,31 +27,12 @@ rfunction_t function_maxhilb_t::clone() const
 scalar_t function_maxhilb_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     auto idx = tensor_size_t{0};
-    auto fx  = std::numeric_limits<scalar_t>::lowest();
-    auto sgn = +1.0;
-
-    for (tensor_size_t i = 0, dims = x.size(); i < dims; ++i)
-    {
-        auto fi = 0.0;
-        for (tensor_size_t j = 0; j < dims; ++j)
-        {
-            fi += x(j) / static_cast<scalar_t>(i + j + 1);
-        }
-
-        if (std::fabs(fi) > fx)
-        {
-            fx  = std::fabs(fi);
-            idx = i;
-            sgn = std::signbit(fi) ? -1.0 : +1.0;
-        }
-    }
+    const auto fx  = (m_weights * x).array().abs().maxCoeff(&idx);
 
     if (gx.size() == x.size())
     {
-        for (tensor_size_t j = 0, dims = x.size(); j < dims; ++j)
-        {
-            gx(j) = sgn / static_cast<scalar_t>(idx + j + 1);
-        }
+        const auto wei = m_weights.row(idx).transpose();
+        gx             = wei * (std::signbit(x.dot(wei)) ? -1.0 : +1.0);
     }
 
     return fx;

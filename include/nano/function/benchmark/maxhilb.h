@@ -30,5 +30,9 @@ public:
     /// \brief @see function_t
     ///
     rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+
+private:
+    // attributes
+    matrix_t m_weights; ///<
 };
 } // namespace nano
