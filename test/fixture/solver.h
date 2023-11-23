@@ -190,14 +190,22 @@ struct solver_description_t
         return solver_description_t{solver_type::non_monotonic}.smooth_config(
             minimize_config_t{}.epsilon(1e-6).max_evals(10000).expected_maximum_deviation(1e-5));
     }
-    else if (solver_id == "ellipsoid" || solver_id == "osga")
+    else if (solver_id == "ellipsoid")
     {
         // NB: very precise for both smooth and non-smooth problems.
         // NB: the ellipsoid method is reasonably fast only for very low-dimensional problems.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
-            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(3e-5));
+            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
+    }
+    else if (solver_id == "osga")
+    {
+        // NB: precise for both smooth and non-smooth problems.
+        // NB: the stopping criterion is working very well in practice.
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.epsilon(1e-6).expected_maximum_deviation(1e-4));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
              solver_id == "wda" ||                                             // primal-dual subgradient method

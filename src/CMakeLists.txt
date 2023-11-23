@@ -64,6 +64,7 @@ make_lib(NANO solver
     program/constrained.cpp
     function/benchmark/axis_ellipsoid.cpp
     function/benchmark/cauchy.cpp
+    function/benchmark/chainedlq.cpp
     function/benchmark/chung_reynolds.cpp
     function/benchmark/dixon_price.cpp
     function/benchmark/elastic_net.cpp
