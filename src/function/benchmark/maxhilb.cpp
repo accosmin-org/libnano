@@ -26,7 +26,7 @@ rfunction_t function_maxhilb_t::clone() const
 
 scalar_t function_maxhilb_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    auto idx = tensor_size_t{0};
+    auto       idx = tensor_size_t{0};
     const auto fx  = (m_weights * x).array().abs().maxCoeff(&idx);
 
     if (gx.size() == x.size())
