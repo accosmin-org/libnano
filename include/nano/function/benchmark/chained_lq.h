@@ -8,13 +8,13 @@ namespace nano
 /// \brief convex non-smooth test function: chained LQ.
 /// see "New limited memory bundle method for large-scale nonsmooth optimization", by Haarala, Miettinen, Makela, 2004
 ///
-class NANO_PUBLIC function_chainedlq_t final : public function_t
+class NANO_PUBLIC function_chained_lq_t final : public function_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit function_chainedlq_t(tensor_size_t dims = 10);
+    explicit function_chained_lq_t(tensor_size_t dims = 10);
 
     ///
     /// \brief @see clonable_t

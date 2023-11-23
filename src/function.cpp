@@ -3,7 +3,9 @@
 #include <nano/core/strutil.h>
 #include <nano/function/benchmark/axis_ellipsoid.h>
 #include <nano/function/benchmark/cauchy.h>
-#include <nano/function/benchmark/chainedlq.h>
+#include <nano/function/benchmark/chained_cb3I.h>
+#include <nano/function/benchmark/chained_cb3II.h>
+#include <nano/function/benchmark/chained_lq.h>
 #include <nano/function/benchmark/chung_reynolds.h>
 #include <nano/function/benchmark/dixon_price.h>
 #include <nano/function/benchmark/elastic_net.h>
@@ -154,7 +156,9 @@ factory_t<function_t>& function_t::all()
     {
         manager.add<function_maxq_t>("MAXQ function: f(x) = max(i, x_i^2)");
         manager.add<function_maxhilb_t>("MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))");
-        manager.add<function_chainedlq_t>("chained LQ function (see documentation)");
+        manager.add<function_chained_lq_t>("chained LQ function (see documentation)");
+        manager.add<function_chained_cb3I_t>("chained CB3 I function (see documentation)");
+        manager.add<function_chained_cb3II_t>("chained CB3 II function (see documentation)");
 
         manager.add<function_trid_t>("Trid function: https://www.sfu.ca/~ssurjano/trid.html");
         manager.add<function_qing_t>("Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html");
