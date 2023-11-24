@@ -50,7 +50,7 @@ solver_osga_t::solver_osga_t()
 
     register_parameter(parameter_t::make_scalar("solver::osga::lambda", 0, LT, 0.9, LT, 1));
     register_parameter(parameter_t::make_scalar("solver::osga::alpha_max", 0, LT, 0.7, LT, 1));
-    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 0.1, LE, 1.1, LE, fmax));
+    register_parameter(parameter_t::make_scalar_pair("solver::osga::kappas", 0, LT, 1e-6, LE, 1.0, LE, fmax));
     register_parameter(parameter_t::make_integer("solver::osga::patience", 10, LE, 1000, LE, 1e+6));
 }
 

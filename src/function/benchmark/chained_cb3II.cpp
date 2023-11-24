@@ -18,7 +18,10 @@ rfunction_t function_chained_cb3II_t::clone() const
 
 scalar_t function_chained_cb3II_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    const auto values = [&](const tensor_size_t i = 0)
+    auto fx1 = 0.0;
+    auto fx2 = 0.0;
+    auto fx3 = 0.0;
+    for (tensor_size_t i = 0, dims = size(); i + 1 < dims; ++i)
     {
         const auto xi  = x(i);
         const auto xi1 = x(i + 1);
@@ -26,15 +29,6 @@ scalar_t function_chained_cb3II_t::do_vgrad(vector_cmap_t x, vector_map_t gx) co
         const auto v2  = square(2.0 - xi) + square(2 - xi1);
         const auto v3  = 2.0 * std::exp(-xi + xi1);
 
-        return std::make_tuple(v1, v2, v3);
-    };
-
-    auto fx1 = 0.0;
-    auto fx2 = 0.0;
-    auto fx3 = 0.0;
-    for (tensor_size_t i = 0, dims = size(); i + 1 < dims; ++i)
-    {
-        const auto [v1, v2, v3] = values(i);
         fx1 += v1;
         fx2 += v2;
         fx3 += v3;
