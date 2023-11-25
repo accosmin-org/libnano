@@ -49,8 +49,8 @@ scalar_t function_chained_cb3II_t::do_vgrad(vector_cmap_t x, vector_map_t gx) co
         {
             for (tensor_size_t i = 0, dims = size(); i + 1 < dims; ++i)
             {
-                gx(i) -= 4.0 - 2.0 * x(i);
-                gx(i + 1) -= 4.0 - 2.0 * x(i + 1);
+                gx(i) += 2.0 * x(i) - 4.0;
+                gx(i + 1) += 2.0 * x(i + 1) - 4.0;
             }
         }
         else

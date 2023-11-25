@@ -169,41 +169,39 @@ struct solver_description_t
         solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
         solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
-        return solver_description_t{solver_type::line_search}.smooth_config(
-            minimize_config_t{}.epsilon(5e-8).max_evals(1000).expected_maximum_deviation(1e-6));
+        // NB: very fast, accurate and reliable on smooth problems
+        return solver_description_t{solver_type::line_search}
+            .smooth_config(minimize_config_t{}.max_evals(1000))
+            .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
     else if (solver_id == "dfp")
     {
-        // NB: DFP needs many more iterations to reach the solution!
-        return solver_description_t{solver_type::line_search}.smooth_config(
-            minimize_config_t{}.epsilon(5e-8).max_evals(20000).expected_maximum_deviation(1e-6));
+        // NB: DFP needs many more iterations to reach the solution for some smooth problems
+        return solver_description_t{solver_type::line_search}
+            .smooth_config(minimize_config_t{}.max_evals(20000))
+            .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
     else if (solver_id == "gd")
     {
-        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems!
-        return solver_description_t{solver_type::line_search}.smooth_config(
-            minimize_config_t{}.epsilon(5e-7).expected_maximum_deviation(1e-5));
+        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems
+        return solver_description_t{solver_type::line_search}
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
+            .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
-    else if (solver_id == "gs")
+    else if (solver_id == "gs" || solver_id == "ellipsoid")
     {
-        // NB: gradient sampling (GS) needs many more iterations to minimize badly conditioned problems!
-        return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.epsilon(1e-6).expected_maximum_deviation(1e-5))
-            .nonsmooth_config(minimize_config_t{}.epsilon(1e-6).expected_maximum_deviation(1e-5));
-    }
-    else if (solver_id == "ellipsoid" || solver_id == "osga")
-    {
-        // NB: very precise for both smooth and non-smooth problems.
+        // NB: gradient sampling (GS) is reasonable accurate for both smooth and non-smooth problems
         // NB: the ellipsoid method is reasonably fast only for very low-dimensional problems.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-6))
-            .nonsmooth_config(minimize_config_t{}.epsilon(5e-8).expected_maximum_deviation(1e-5));
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
              solver_id == "wda" ||                                             // primal-dual subgradient method
              solver_id == "pgm" || solver_id == "dgm" || solver_id == "fgm" || // universal gradient methods
-             solver_id == "asga2" || solver_id == "asga4")                     // accelerated sub-gradient methods
+             solver_id == "asga2" || solver_id == "asga4" ||                   // accelerated sub-gradient methods
+             solver_id == "osga")                                              // optimal subgradient algorithm
     {
         // NB: unreliable methods:
         // - either no theoretical or practical stopping criterion

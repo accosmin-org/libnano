@@ -9,7 +9,6 @@ struct lsearchk_cgdescent_t::params_t
     scalar_t    m_c2;
     mutable int m_max_iterations;
     scalar_t    m_theta;
-    scalar_t    m_epsilon;
     scalar_t    m_ro;
     scalar_t    m_gamma;
     scalar_t    m_epsilonk;
@@ -23,7 +22,6 @@ auto make_params(const configurable_t& configurable, const solver_state_t& state
             std::get<1>(configurable.parameter("lsearchk::tolerance").value_pair<scalar_t>()),
             configurable.parameter("lsearchk::max_iterations").value<int>(),
             configurable.parameter("lsearchk::cgdescent::theta").value<scalar_t>(),
-            configurable.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>(),
             configurable.parameter("lsearchk::cgdescent::ro").value<scalar_t>(),
             configurable.parameter("lsearchk::cgdescent::gamma").value<scalar_t>(),
             configurable.parameter("lsearchk::cgdescent::epsilon").value<scalar_t>() * std::fabs(state0.fx())};
