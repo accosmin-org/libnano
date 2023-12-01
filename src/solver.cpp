@@ -37,7 +37,7 @@ solver_t::solver_t(string_t id)
     : clonable_t(std::move(id))
 {
     lsearch0("quadratic");
-    lsearchk("morethuente");
+    lsearchk("cgdescent");
 
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-8, LE, 1e-1));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));

@@ -297,7 +297,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "solver", "regex to select solvers", ".+");
     cmdline.add("", "function", "regex to select test functions", ".+");
     cmdline.add("", "lsearch0", "regex to select line-search initialization methods", "quadratic");
-    cmdline.add("", "lsearchk", "regex to select line-search strategies", "morethuente");
+    cmdline.add("", "lsearchk", "regex to select line-search strategies", "cgdescent");
     cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("", "trials", "number of random trials for each test function", "100");

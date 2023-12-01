@@ -13,19 +13,12 @@ namespace
 {
 auto make_smooth_solver()
 {
-    auto solver                            = make_solver("hoshino");
-    solver->parameter("solver::max_evals") = 1000;
-    solver->parameter("solver::epsilon")   = 1e-10;
-    solver->lsearchk("cgdescent");
-    return solver;
+    return make_solver("lbfgs");
 }
 
 auto make_nonsmooth_solver()
 {
-    auto solver                            = make_solver("hoshino");
-    solver->parameter("solver::max_evals") = 1000;
-    solver->parameter("solver::epsilon")   = 1e-10;
-    return solver;
+    return make_solver("osga");
 }
 
 auto make_model()
