@@ -169,33 +169,42 @@ struct solver_description_t
         solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
         solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
     {
-        // NB: very fast, accurate and reliable on smooth problems
+        // NB: very fast, accurate and reliable on smooth problems.
         return solver_description_t{solver_type::line_search}
             .smooth_config(minimize_config_t{}.max_evals(1000))
             .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
     else if (solver_id == "dfp")
     {
-        // NB: DFP needs many more iterations to reach the solution for some smooth problems
+        // NB: DFP needs many more iterations to reach the solution for some smooth problems.
         return solver_description_t{solver_type::line_search}
             .smooth_config(minimize_config_t{}.max_evals(20000))
             .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
     else if (solver_id == "gd")
     {
-        // NB: gradient descent (GD) needs many more iterations to minimize badly conditioned problems
+        // NB: gradient descent needs many more iterations to minimize badly conditioned problems.
         return solver_description_t{solver_type::line_search}
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
             .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_convergence(false));
     }
-    else if (solver_id == "gs" || solver_id == "ellipsoid")
+    else if (solver_id == "ellipsoid")
     {
-        // NB: gradient sampling (GS) is reasonable accurate for both smooth and non-smooth problems
         // NB: the ellipsoid method is reasonably fast only for very low-dimensional problems.
+        // NB: the ellipsoid method is very precise (used as a reference) and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5));
+    }
+    else if (solver_id == "gs" || solver_id == "gs-lbfgs" || solver_id == "ags" || solver_id == "ags-lbfgs")
+    {
+        // NB: the gradient sampling methods are accurate for both smooth and non-smooth problems.
+        // NB: the gradient sampling methods are very expensive on debug.
+        // NB: the stopping criterion is working very well in practice.
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
              solver_id == "wda" ||                                             // primal-dual subgradient method

@@ -25,6 +25,18 @@ matrix_t make_Q(const vector_t& q)
 }
 } // namespace
 
+bool nano::program::is_psd(matrix_cmap_t tQ)
+{
+    const auto Q = tQ.matrix();
+    if (!Q.isApprox(Q.transpose()))
+    {
+        return false;
+    }
+
+    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
+    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
+}
+
 quadratic_program_t::quadratic_program_t(matrix_t Q, vector_t c)
     : m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -41,12 +53,5 @@ quadratic_program_t::quadratic_program_t(const vector_t& Q_upper_triangular, vec
 
 bool quadratic_program_t::convex() const
 {
-    const auto Q = m_Q.matrix();
-    if (!Q.isApprox(Q.transpose()))
-    {
-        return false;
-    }
-
-    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
-    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
+    return is_psd(m_Q);
 }

@@ -42,17 +42,17 @@ Examples:
 
 ### Machine learning module
 
-The machine learning (ML) module is designed to as generic and as customizable as possible. As such various important ML concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, dataset splitting strategy, feature generation, weak learner) are modelled using appropriate orthogonal interfaces which can be extended by the user to particular machine learning applications. Additionally the implementation follows strictly the scientific principles of statistical learning to properly tune and evaluate the ML models. 
+The machine learning (ML) module is designed to as generic and as customizable as possible. As such various important ML concepts (e.g. loss function, hyper-parameter tuning strategy, numerical optimization solver, dataset splitting strategy, feature generation, weak learner) are modelled using appropriate orthogonal interfaces which can be extended by the user to particular machine learning applications. Additionally the implementation follows strictly the scientific principles of statistical learning to properly tune and evaluate the ML models.
 
 In particular the following requirements were considered when designing the API:
 
-* all ML models should work with `any feature type` (e.g. categorical, continuous or structures) and even with `missing feature values`. 
+* all ML models should work with `any feature type` (e.g. categorical, continuous or structures) and even with `missing feature values`.
 
 * all features should be labeled with a meaningful name, a type (e.g. categorical, continuous), shape (if applicable) and labels (if applicable). This is important for model analysis (e.g. feature importance) and debugging, for designing appropriate feature selection methods (e.g. weak learners) and feature generation.
 
 * a ML dataset must be able to handle efficiently `arbitrary sets of features` (e.g. categorical. continuous, structured like images or time series). The feature values can be optional (missing) and of different storage (e.g. signed or unsigned integers of various byte sizes, single or double precision floating point numbers). Additional features can be constructed on the fly or cached by implementing the appropriate interface.
 
-* all ML models should work with `any loss function`. This is modeled using an appropriate interface which can be extended by the user. For example two of the most used ML models, like linear models and gradient boosting, are easy to extend to any loss function. 
+* all ML models should work with `any loss function`. This is modeled using an appropriate interface which can be extended by the user. For example two of the most used ML models, like linear models and gradient boosting, are easy to extend to any loss function.
 
 * the regularization `hyper-parameters are automatically tuned` using standard model evaluation protocols (e.g. cross-validation). The values of the hyper-parameters are fixed a-priori to reduce the risk of overfitting the validation dataset or of adjusting the parameter grid based on the results on the test dataset. The user can override the tuning strategy (e.g. local search) and the evaluation protocol (e.g. cross-validation, bootstrapping) using appropriate interfaces. For example the builtin parameter grid is adapted to standard regularization methods of linear models (e.g. like in lasso, ridge, elastic net). Note that models with few hyper-parameters are prefered as they are simpler to understand and tune.
 
@@ -67,8 +67,8 @@ Examples:
 | loss function | hinge, logistic, mse |
 | dataset splitting | bootstrapping, k-fold cross-validation |
 | hyper-parameter tuning | local search, quadratic model |
-| weak learner | look-up table, decision stump, decision tree | 
-| feature generation | 2D gradient, product | 
+| weak learner | look-up table, decision stump, decision tree |
+| feature generation | 2D gradient, product |
 
 
 
