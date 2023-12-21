@@ -9,6 +9,7 @@
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/pdsgm.h>
+#include <nano/solver/proximal.h>
 #include <nano/solver/quasi.h>
 #include <nano/solver/sgm.h>
 #include <nano/solver/universal.h>
@@ -202,6 +203,8 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_pgm_t>("universal primal gradient method (PGM)");
         manager.add<solver_dgm_t>("universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("universal fast gradient method (FGM)");
+        manager.add<solver_fpba1_t>("fast bundle proximal algorithm (FPBA1)");
+        manager.add<solver_fpba2_t>("fast bundle proximal algorithm (FPBA2)");
     };
 
     static std::once_flag flag;

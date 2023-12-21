@@ -55,6 +55,7 @@ make_lib(NANO solver
     solver/quasi.cpp
     solver/state.cpp
     solver/penalty.cpp
+    solver/proximal.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp
     solver/universal.cpp

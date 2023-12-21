@@ -125,7 +125,7 @@ struct linesearch_t
 };
 } // namespace
 
-struct gs::fixed_sampler_t : public sampler_t
+struct gs::fixed_sampler_t final : public sampler_t
 {
     explicit fixed_sampler_t(const tensor_size_t n)
         : sampler_t(n)
@@ -163,7 +163,7 @@ struct gs::fixed_sampler_t : public sampler_t
     program::quadratic_program_t m_program;
 };
 
-struct gs::adaptive_sampler_t : public sampler_t
+struct gs::adaptive_sampler_t final : public sampler_t
 {
     explicit adaptive_sampler_t(const tensor_size_t n)
         : sampler_t(n)
