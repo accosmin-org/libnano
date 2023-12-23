@@ -1,14 +1,94 @@
 #include <nano/program/solver.h>
 #include <nano/solver/proximal.h>
+#include <nano/tensor/stack.h>
 
 using namespace nano;
 
 namespace
 {
+struct point_t
+{
+    point_t() {}
+
+    template <typename tvector>
+    point_t(const scalar_t f, tvector g, const scalar_t gdotz)
+        : m_f(f)
+        , m_g(std::move(g))
+        , m_gdotz(gdotz)
+    {
+    }
+
+    scalar_t m_f{0.0};     ///< f(z)
+    vector_t m_g;          ///< f'(z)
+    scalar_t m_gdotz{0.0}; ///< f'(z).dot(z)
+};
+
+struct bundle_t
+{
+    void append(const vector_cmap_t z, const scalar_t fz, const vector_cmap_t gz)
+    {
+        m_points.emplace_back(fz, gz, gz.dot(z));
+    }
+
+    scalar_t value(const vector_cmap_t x) const
+    {
+        auto value = std::numeric_limits<scalar_t>::lowest();
+        for (const auto& point : m_points)
+        {
+            assert(point.m_g.size() == x.size());
+
+            value = std::max(value, point.m_f + point.m_g.dot(x) - point.m_gdotz);
+        }
+
+        return value;
+    }
+
+    vector_t proximal(const vector_cmap_t x, const scalar_t miu)
+    {
+        const auto n = x.size();
+        const auto m = static_cast<tensor_size_t>(m_points.size());
+
+        // objective: 0.5 * [z|w].dot(Q * [z|w]) + r.dot([z|w])
+        auto Q = stack<scalar_t>(n + 1, n + 1, miu * matrix_t::identity(n, n), matrix_t::zero(n, 1),
+                                 matrix_t::zero(1, n + 1));
+        auto r = stack<scalar_t>(n + 1, -miu * x, vector_t::constant(1, 1.0));
+
+        // inequality constraints: A * [z|w] <= b
+        auto A = matrix_t{m, n + 1};
+        auto b = vector_t{m};
+        for (tensor_size_t i = 0; i < m; ++i)
+        {
+            const auto& point = m_points[static_cast<size_t>(i)];
+            assert(point.m_g.size() == x.size());
+
+            A.row(i).segment(0, n) = point.m_g.transpose();
+            A(i, n)                = -1.0;
+            b(i)                   = point.m_gdotz - point.m_f;
+        }
+
+        // solve quadratic program
+        const auto inequality = program::make_inequality(std::move(A), std::move(b));
+        const auto program    = program::make_quadratic(std::move(Q), std::move(r), inequality);
+
+        const auto solution = m_solver.solve(program);
+        assert(solution.m_status == solver_status::converged);
+
+        return solution.m_x.slice(0, n);
+    }
+
+    // FIXME: implement sugradient aggregation or selection to keep the bundle small
+    // FIXME: store bundle more efficiently
+
+    // attributes
+    std::vector<point_t> m_points; ///< bundle information
+    program::solver_t    m_solver; ///<
+};
+
 struct sequence_t
 {
     scalar_t update() { return m_lambda = 0.5 * (1.0 + std::sqrt(1.0 + 4.0 * m_lambda * m_lambda)); }
 
+    // attributes
     scalar_t m_lambda{1.0};
 };
 } // namespace
@@ -56,6 +136,7 @@ base_solver_fpba_t<tsequence, ttype_id>::base_solver_fpba_t()
     const auto basename = scat("solver::", ttype_id::str(), "::");
 
     register_parameter(parameter_t::make_scalar(basename + "miu", 0, LT, 1.0, LT, 1e+6));
+    register_parameter(parameter_t::make_scalar(basename + "sigma", 0, LT, 0.5, LT, 1.0));
 }
 
 template <typename tsequence, typename ttype_id>
@@ -72,9 +153,11 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     const auto max_evals = parameter("solver::max_evals").template value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").template value<scalar_t>();
     const auto miu       = parameter(basename + "miu").template value<scalar_t>();
+    const auto sigma     = parameter(basename + "sigma").template value<scalar_t>();
 
     (void)epsilon;
     (void)miu;
+    (void)sigma;
 
     auto state = solver_state_t{function, x0};
 

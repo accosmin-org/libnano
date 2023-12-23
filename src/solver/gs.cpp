@@ -27,7 +27,6 @@ struct sampler_t
     {
         const auto G = m_G.slice(0, m_psize);
         program.m_Q  = G * W * G.transpose();
-        program.reduce(); // FIXME: is this really needed?!
 
         const auto solution = m_solver.solve(program);
         assert(solution.m_status == solver_status::converged);
