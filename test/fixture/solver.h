@@ -197,6 +197,14 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5));
     }
+    else if (solver_id == "fpba1" || solver_id == "fpba2")
+    {
+        // NB: the fast proximal bundle algorithm is very precise and very reliable.
+        // NB: the stopping criterion is working very well in practice.
+        return solver_description_t{solver_type::non_monotonic}
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5));
+    }
     else if (solver_id == "gs" || solver_id == "gs-lbfgs" || solver_id == "ags" || solver_id == "ags-lbfgs")
     {
         // NB: the gradient sampling methods are accurate for both smooth and non-smooth problems.

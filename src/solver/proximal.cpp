@@ -18,6 +18,7 @@ struct point_t
     {
     }
 
+    // attributes
     scalar_t m_f{0.0};     ///< f(z)
     vector_t m_g;          ///< f'(z)
     scalar_t m_gdotz{0.0}; ///< f'(z).dot(z)
@@ -25,6 +26,8 @@ struct point_t
 
 struct bundle_t
 {
+    bundle_t() = default;
+
     void append(const vector_cmap_t z, const scalar_t fz, const vector_cmap_t gz)
     {
         m_points.emplace_back(fz, gz, gz.dot(z));
@@ -81,7 +84,7 @@ struct bundle_t
 
     // attributes
     std::vector<point_t> m_points; ///< bundle information
-    program::solver_t    m_solver; ///<
+    program::solver_t    m_solver{}; ///<
 };
 
 struct sequence_t
@@ -95,7 +98,7 @@ struct sequence_t
 
 struct proximal::sequence1_t final : public sequence_t
 {
-    auto alpha_beta()
+    auto make_alpha_beta()
     {
         const auto curr  = m_lambda;
         const auto next  = update();
@@ -107,7 +110,7 @@ struct proximal::sequence1_t final : public sequence_t
 
 struct proximal::sequence2_t final : public sequence_t
 {
-    auto alpha_beta()
+    auto make_alpha_beta()
     {
         const auto curr  = m_lambda;
         const auto next  = update();
@@ -156,14 +159,40 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     const auto sigma     = parameter(basename + "sigma").template value<scalar_t>();
 
     (void)epsilon;
-    (void)miu;
     (void)sigma;
+
+    auto x = x0;
+    auto y  = x0;
+    auto z  = x0;
+    auto gz = x0;
 
     auto state = solver_state_t{function, x0};
 
+    auto bundle   = bundle_t{};
+    auto sequence = tsequence{};
+
+    bundle.append(state.x(), state.fx(), state.gx());
+
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        break;
+        z = bundle.proximal(x, miu);
+
+        const auto fz = function.vgrad(z, gz);
+        const auto ek = epsilon / (2.0 * sequence.m_lambda);
+
+        if (fz - bundle.value(z) <= ek)
+        {
+            const auto [ak, bk] = sequence.make_alpha_beta();
+
+            x = y + ak * (z - y) + bk * (z - x);
+            y = z;
+        }
+        else
+        {
+            bundle.append(z, fz, gz);
+        }
+
+        state.update_if_better(z, gz, fz);
     }
 
     return state;

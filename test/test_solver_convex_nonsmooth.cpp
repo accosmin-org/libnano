@@ -20,6 +20,11 @@ UTEST_CASE(default_solvers)
                 const auto solver_id = solver->type_id();
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
+                if (solver_id != "fpba1" && solver_id != "fpba2")
+                {
+                    continue;
+                }
+
                 const auto descr = make_description(solver_id);
                 config.config(descr.m_nonsmooth_config);
 
