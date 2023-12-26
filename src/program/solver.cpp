@@ -229,6 +229,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
     {
         state.m_status = solver_status::unfeasible;
+        log(state);
         return state;
     }
 

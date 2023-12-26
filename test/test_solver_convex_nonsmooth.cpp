@@ -20,7 +20,7 @@ UTEST_CASE(default_solvers)
                 const auto solver_id = solver->type_id();
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
-                if (solver_id != "fpba1" && solver_id != "fpba2")
+                if (solver_id != "ellipsoid" && solver_id != "fpba1" && solver_id != "fpba2")
                 {
                     continue;
                 }

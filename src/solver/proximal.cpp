@@ -2,10 +2,27 @@
 #include <nano/solver/proximal.h>
 #include <nano/tensor/stack.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 namespace
 {
+auto make_logger(const int stop_at_iters = -1)
+{
+    return [stop_at_iters = stop_at_iters](const program::solver_state_t& state)
+    {
+        std::cout << std::fixed << std::setprecision(16) << "i=" << state.m_iters << ",fx=" << state.m_fx
+                  << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
+                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
+                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
+                  << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]" << std::endl;
+        ;
+        return state.m_iters != stop_at_iters;
+    };
+}
+
 struct point_t
 {
     point_t() {}
@@ -26,7 +43,10 @@ struct point_t
 
 struct bundle_t
 {
-    bundle_t() = default;
+    bundle_t()
+        : m_solver(make_logger())
+    {
+    }
 
     void append(const vector_cmap_t z, const scalar_t fz, const vector_cmap_t gz)
     {
@@ -46,7 +66,7 @@ struct bundle_t
         return value;
     }
 
-    vector_t proximal(const vector_cmap_t x, const scalar_t miu)
+    void proximal(const vector_cmap_t x, const scalar_t miu, vector_t& z)
     {
         const auto n = x.size();
         const auto m = static_cast<tensor_size_t>(m_points.size());
@@ -75,8 +95,7 @@ struct bundle_t
 
         const auto solution = m_solver.solve(program);
         assert(solution.m_status == solver_status::converged);
-
-        return solution.m_x.slice(0, n);
+        z = solution.m_x.slice(0, n);
     }
 
     // FIXME: implement sugradient aggregation or selection to keep the bundle small
@@ -84,7 +103,7 @@ struct bundle_t
 
     // attributes
     std::vector<point_t> m_points; ///< bundle information
-    program::solver_t    m_solver{}; ///<
+    program::solver_t    m_solver; ///<
 };
 
 struct sequence_t
@@ -161,12 +180,14 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     (void)epsilon;
     (void)sigma;
 
-    auto x = x0;
+    auto x  = x0;
     auto y  = x0;
     auto z  = x0;
-    auto gz = x0;
+    auto gz = vector_t{x0.size()};
 
     auto state = solver_state_t{function, x0};
+    std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
+              << ",x0=" << x0.transpose() << ",fx0=" << state.fx() << std::endl;
 
     auto bundle   = bundle_t{};
     auto sequence = tsequence{};
@@ -175,10 +196,14 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        z = bundle.proximal(x, miu);
+        bundle.proximal(x, miu, z);
 
         const auto fz = function.vgrad(z, gz);
         const auto ek = epsilon / (2.0 * sequence.m_lambda);
+
+        std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
+                  << ",z=" << z.transpose() << ",fz=" << fz << ",bv=" << bundle.value(z) << ",ek=" << ek
+                  << ",lk=" << sequence.m_lambda << ",df=" << (state.fx() - bundle.value(state.x())) << std::endl;
 
         if (fz - bundle.value(z) <= ek)
         {
@@ -193,6 +218,8 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         }
 
         state.update_if_better(z, gz, fz);
+
+        // TODO: stopping criterion - best state close to the bundle value?!
     }
 
     return state;
