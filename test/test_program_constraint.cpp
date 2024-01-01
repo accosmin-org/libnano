@@ -115,4 +115,28 @@ UTEST_CASE(inequality_strictly_feasible)
     }
 }
 
+UTEST_CASE(inequality_strictly_feasible_bundle)
+{
+    // generating a strictly feasible point fails for the FPBA solvers generated for the `chained_cb3I[4D]` problem.
+
+    const auto A = make_matrix<scalar_t>(
+        5, -13.0791713343359675, 11.0223780863932728, -4.4019980261743887, -2.5763086376600111, -1.0000000000000000,
+        7215.0982713243365652, -9299047.8599894158542156, 9299623.7717038244009018, 6.5763086376600093,
+        -1.0000000000000000, 7214.4055358504474498, -3412548.2061092313379049, 3412971.5455180155113339,
+        6.5763076510207092, -1.0000000000000000, 7211.3160869768435077, -1247120.8129310656804591,
+        1247420.0596358175389469, 6.5763032495401736, -1.0000000000000000, 7199.5211198816032265,
+        -450621.4467068934463896, 450821.7497615875909105, 6.5762864247748309, -1.0000000000000000);
+
+    const auto b = make_vector<scalar_t>(-1.4491983618949895, 133530540.3222339451313019, 45624197.2596000581979752,
+                                         15460162.1538065522909164, 5169566.8448949512094259);
+
+    const auto c = make_random_vector<scalar_t>(5);
+
+    const auto program = make_linear(c, make_inequality(A, b));
+
+    const auto opt_x = program.make_strictly_feasible();
+    UTEST_REQUIRE(opt_x);
+    UTEST_CHECK_LESS((A * opt_x.value() - b).maxCoeff(), 0.0);
+}
+
 UTEST_END_MODULE()

@@ -93,7 +93,18 @@ struct bundle_t
         const auto inequality = program::make_inequality(std::move(A), std::move(b));
         const auto program    = program::make_quadratic(std::move(Q), std::move(r), inequality);
 
-        const auto solution = m_solver.solve(program);
+        // auto x0          = vector_t{n + 1};
+        // x0.segment(0, n) = x.vector();
+        // x0(n)            = value(x) + 0.1;
+        //
+        // assert(program.feasible(x0));
+
+        const auto solution = m_solver.solve(program); //, x0);
+        if (solution.m_status == solver_status::unfeasible)
+        {
+            std::cout << std::fixed << std::setprecision(16) << program.m_ineq.m_A << std::endl;
+            std::cout << std::fixed << std::setprecision(16) << program.m_ineq.m_b << std::endl;
+        }
         assert(solution.m_status == solver_status::converged);
         z = solution.m_x.slice(0, n);
     }
@@ -177,15 +188,14 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     const auto miu       = parameter(basename + "miu").template value<scalar_t>();
     const auto sigma     = parameter(basename + "sigma").template value<scalar_t>();
 
-    (void)epsilon;
-    (void)sigma;
+    auto state = solver_state_t{function, x0};
 
     auto x  = x0;
     auto y  = x0;
     auto z  = x0;
     auto gz = vector_t{x0.size()};
+    auto fx = state.fx();
 
-    auto state = solver_state_t{function, x0};
     std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
               << ",x0=" << x0.transpose() << ",fx0=" << state.fx() << std::endl;
 
@@ -199,18 +209,19 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         bundle.proximal(x, miu, z);
 
         const auto fz = function.vgrad(z, gz);
-        const auto ek = epsilon / (2.0 * sequence.m_lambda);
 
         std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
-                  << ",z=" << z.transpose() << ",fz=" << fz << ",bv=" << bundle.value(z) << ",ek=" << ek
-                  << ",lk=" << sequence.m_lambda << ",df=" << (state.fx() - bundle.value(state.x())) << std::endl;
+                  << ",z=" << z.transpose() << ",fz=" << fz << ",bv=" << bundle.value(z) << ",lk=" << sequence.m_lambda
+                  << ",df=" << (state.fx() - bundle.value(state.x())) << std::endl;
 
-        if (fz - bundle.value(z) <= ek)
+        if (fz <= fx - sigma * (fx - bundle.value(z)))
         {
+            assert(false);
             const auto [ak, bk] = sequence.make_alpha_beta();
 
-            x = y + ak * (z - y) + bk * (z - x);
-            y = z;
+            x  = y + ak * (z - y) + bk * (z - x);
+            y  = z;
+            fx = function.vgrad(x);
         }
         else
         {
@@ -220,6 +231,7 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         state.update_if_better(z, gz, fz);
 
         // TODO: stopping criterion - best state close to the bundle value?!
+        (void)epsilon;
     }
 
     return state;
