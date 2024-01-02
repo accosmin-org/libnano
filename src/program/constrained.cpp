@@ -43,9 +43,6 @@ bool linear_constrained_t::reduce()
 
 std::optional<vector_t> linear_constrained_t::make_strictly_feasible() const
 {
-    static constexpr auto epsil0 = 0.1;
-    static constexpr auto trials = 20;
-
     std::optional<vector_t> ret;
 
     if (m_ineq.valid())
@@ -54,17 +51,32 @@ std::optional<vector_t> linear_constrained_t::make_strictly_feasible() const
         const auto& b      = m_ineq.m_b;
         const auto  decomp = (A.transpose() * A).ldlt();
 
-        auto x = vector_t{A.cols()};
-        for (auto trial = 0; trial < trials; ++trial)
+        auto       x    = vector_t{A.cols()};
+        const auto eval = [&](const scalar_t y)
         {
-            const auto y = std::pow(epsil0, static_cast<scalar_t>(trial));
-
             x.vector() = decomp.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
             if ((A * x.vector() - b).maxCoeff() < 0.0)
             {
                 ret = std::move(x);
+                return true;
+            }
+            return false;
+        };
+
+        static constexpr auto gamma  = 0.3;
+        static constexpr auto trials = 100;
+
+        // NB: try both smaller and bigger distances to the edges!
+        auto ym = 1.0;
+        auto yM = 1.0 / gamma;
+        for (auto trial = 0; trial < trials; trial += 2)
+        {
+            if (eval(ym) || eval(yM))
+            {
                 break;
             }
+            ym *= gamma;
+            yM /= gamma;
         }
     }
 
