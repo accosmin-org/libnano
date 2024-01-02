@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/core/logger.h>
 #include <nano/solver/asga.h>
+#include <nano/solver/bundle.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
@@ -9,7 +10,6 @@
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/pdsgm.h>
-#include <nano/solver/proximal.h>
 #include <nano/solver/quasi.h>
 #include <nano/solver/sgm.h>
 #include <nano/solver/universal.h>

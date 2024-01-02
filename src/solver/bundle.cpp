@@ -1,5 +1,5 @@
 #include <nano/program/solver.h>
-#include <nano/solver/proximal.h>
+#include <nano/solver/bundle.h>
 #include <nano/tensor/stack.h>
 
 #include <iomanip>
@@ -9,20 +9,6 @@ using namespace nano;
 
 namespace
 {
-auto make_logger(const int stop_at_iters = -1)
-{
-    return [stop_at_iters = stop_at_iters](const program::solver_state_t& state)
-    {
-        std::cout << std::fixed << std::setprecision(16) << "i=" << state.m_iters << ",fx=" << state.m_fx
-                  << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
-                  << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]" << std::endl;
-        ;
-        return state.m_iters != stop_at_iters;
-    };
-}
-
 struct point_t
 {
     point_t() {}
@@ -43,8 +29,16 @@ struct point_t
 
 struct bundle_t
 {
-    bundle_t()
-        : m_solver(make_logger())
+    bundle_t(const solver_state_t& state)
+        : bundle_t(state.x().size())
+    {
+        append(state.x(), state.fx(), state.gx());
+    }
+
+    bundle_t(const tensor_size_t n)
+        : m_solver()
+        , m_program(matrix_t{matrix_t::zero(n + 1, n + 1)}, vector_t{vector_t::constant(n + 1, 1.0)})
+        , m_x0(n + 1)
     {
     }
 
@@ -71,10 +65,9 @@ struct bundle_t
         const auto n = x.size();
         const auto m = static_cast<tensor_size_t>(m_points.size());
 
-        // objective: 0.5 * [z|w].dot(Q * [z|w]) + r.dot([z|w])
-        auto Q = stack<scalar_t>(n + 1, n + 1, miu * matrix_t::identity(n, n), matrix_t::zero(n, 1),
-                                 matrix_t::zero(1, n + 1));
-        auto r = stack<scalar_t>(n + 1, -miu * x, vector_t::constant(1, 1.0));
+        // objective: 0.5 * [z|w].dot(Q * [z|w]) + c.dot([z|w])
+        m_program.m_Q.block(0, 0, n, n) = miu * matrix_t::identity(n, n);
+        m_program.m_c.segment(0, n)     = -miu * x;
 
         // inequality constraints: A * [z|w] <= b
         auto A = matrix_t{m, n + 1};
@@ -88,23 +81,14 @@ struct bundle_t
             A(i, n)                = -1.0;
             b(i)                   = point.m_gdotz - point.m_f;
         }
+        m_program.m_ineq = program::make_inequality(std::move(A), std::move(b));
 
         // solve quadratic program
-        const auto inequality = program::make_inequality(std::move(A), std::move(b));
-        const auto program    = program::make_quadratic(std::move(Q), std::move(r), inequality);
+        m_x0.segment(0, n) = x.vector();
+        m_x0(n)            = value(x) + 0.1;
+        assert(m_program.feasible(m_x0));
 
-        // auto x0          = vector_t{n + 1};
-        // x0.segment(0, n) = x.vector();
-        // x0(n)            = value(x) + 0.1;
-        //
-        // assert(program.feasible(x0));
-
-        const auto solution = m_solver.solve(program); //, x0);
-        if (solution.m_status == solver_status::unfeasible)
-        {
-            std::cout << std::fixed << std::setprecision(16) << program.m_ineq.m_A << std::endl;
-            std::cout << std::fixed << std::setprecision(16) << program.m_ineq.m_b << std::endl;
-        }
+        const auto solution = m_solver.solve(m_program, m_x0);
         assert(solution.m_status == solver_status::converged);
         z = solution.m_x.slice(0, n);
     }
@@ -112,9 +96,13 @@ struct bundle_t
     // FIXME: implement sugradient aggregation or selection to keep the bundle small
     // FIXME: store bundle more efficiently
 
+    using program_t = program::quadratic_program_t;
+
     // attributes
-    std::vector<point_t> m_points; ///< bundle information
-    program::solver_t    m_solver; ///<
+    std::vector<point_t> m_points;  ///< bundle information
+    program::solver_t    m_solver;  ///< buffer: quadratic program solver
+    program_t            m_program; ///< buffer: quadratic program
+    vector_t             m_x0;      ///< buffer: starting point for the quadratic program
 };
 
 struct sequence_t
@@ -199,10 +187,8 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
               << ",x0=" << x0.transpose() << ",fx0=" << state.fx() << std::endl;
 
-    auto bundle   = bundle_t{};
+    auto bundle   = bundle_t{state};
     auto sequence = tsequence{};
-
-    bundle.append(state.x(), state.fx(), state.gx());
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
