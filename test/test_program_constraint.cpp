@@ -117,8 +117,7 @@ UTEST_CASE(inequality_strictly_feasible)
 
 UTEST_CASE(inequality_strictly_feasible_bundle)
 {
-    // generating a strictly feasible point fails for the FPBA solvers generated for the `chained_cb3I[4D]` problem.
-
+    // NB: generating a strictly feasible point fails for the FPBA solvers generated for the `chained_cb3I[4D]` problem.
     const auto A = make_matrix<scalar_t>(
         5, -13.0791713343359675, 11.0223780863932728, -4.4019980261743887, -2.5763086376600111, -1.0000000000000000,
         7215.0982713243365652, -9299047.8599894158542156, 9299623.7717038244009018, 6.5763086376600093,
