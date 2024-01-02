@@ -56,7 +56,7 @@ struct bundle_t
         return value;
     }
 
-    void proximal(const vector_cmap_t x, const scalar_t miu, vector_t& z)
+    bool proximal(const vector_cmap_t x, const scalar_t miu, vector_t& z)
     {
         const auto n = x.size();
         const auto m = static_cast<tensor_size_t>(m_points.size());
@@ -85,8 +85,9 @@ struct bundle_t
         assert(m_program.feasible(m_x0));
 
         const auto solution = m_solver.solve(m_program, m_x0);
-        assert(solution.m_status == solver_status::converged);
-        z = solution.m_x.slice(0, n);
+        z                   = solution.m_x.slice(0, n);
+
+        return solution.m_status == solver_status::converged;
     }
 
     // FIXME: implement sugradient aggregation or selection to keep the bundle small
@@ -185,21 +186,23 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        bundle.proximal(x, miu, z);
-
+        const auto ok = bundle.proximal(x, miu, z);
         const auto fz = function.vgrad(z, gz);
+        const auto bz = bundle.value(z);
         state.update_if_better(z, gz, fz);
 
         // check convergence
-        const auto iter_ok   = std::isfinite(fz) && z.all_finite() && gz.all_finite();
-        const auto converged = fz - bundle.value(z) < epsilon;
+        assert(bz <= fx + epsilon);
+        const auto iter_ok   = ok && std::isfinite(fz) && z.all_finite() && gz.all_finite();
+        const auto converged = fx - bz < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }
 
-        if (fz <= fx - sigma * (fx - bundle.value(z)))
+        if (fz <= fx - sigma * (fx - bz))
         {
+            // proximal point is approximated
             const auto [ak, bk] = sequence.make_alpha_beta();
 
             x  = y + ak * (z - y) + bk * (z - x);
@@ -208,6 +211,7 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         }
         else
         {
+            // update bundle to better approximate the proximal point
             bundle.append(z, fz, gz);
         }
     }
