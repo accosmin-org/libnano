@@ -1,9 +1,5 @@
 #include <nano/program/solver.h>
 #include <nano/solver/bundle.h>
-#include <nano/tensor/stack.h>
-
-#include <iomanip>
-#include <iostream>
 
 using namespace nano;
 
@@ -184,9 +180,6 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     auto gz = vector_t{x0.size()};
     auto fx = state.fx();
 
-    std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
-              << ",x0=" << x0.transpose() << ",fx0=" << state.fx() << std::endl;
-
     auto bundle   = bundle_t{state};
     auto sequence = tsequence{};
 
@@ -195,14 +188,18 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         bundle.proximal(x, miu, z);
 
         const auto fz = function.vgrad(z, gz);
+        state.update_if_better(z, gz, fz);
 
-        std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "|" << function.gcalls()
-                  << ",z=" << z.transpose() << ",fz=" << fz << ",bv=" << bundle.value(z) << ",lk=" << sequence.m_lambda
-                  << ",df=" << (state.fx() - bundle.value(state.x())) << std::endl;
+        // check convergence
+        const auto iter_ok   = std::isfinite(fz) && z.all_finite() && gz.all_finite();
+        const auto converged = fz - bundle.value(z) < epsilon;
+        if (solver_t::done(state, iter_ok, converged))
+        {
+            break;
+        }
 
         if (fz <= fx - sigma * (fx - bundle.value(z)))
         {
-            assert(false);
             const auto [ak, bk] = sequence.make_alpha_beta();
 
             x  = y + ak * (z - y) + bk * (z - x);
@@ -213,11 +210,6 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         {
             bundle.append(z, fz, gz);
         }
-
-        state.update_if_better(z, gz, fz);
-
-        // TODO: stopping criterion - best state close to the bundle value?!
-        (void)epsilon;
     }
 
     return state;
