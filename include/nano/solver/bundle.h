@@ -9,6 +9,8 @@ namespace nano
 ///
 /// see "Proximal bundle algorithms for nonsmooth convex optimization via fast gradient smooth methods", by Ouorou, 2020
 ///
+/// NB: the approximation error follows the classical proximal bundle algorithm, see eq. 4.3 from the citation.
+///
 
 namespace proximal
 {

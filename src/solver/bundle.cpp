@@ -1,6 +1,9 @@
 #include <nano/program/solver.h>
 #include <nano/solver/bundle.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 namespace
@@ -186,25 +189,31 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto ok = bundle.proximal(x, miu, z);
+        // NB: the solution is useful even if not always found with the default high accuracy, so ignore return code!
+        [[maybe_unused]] const auto ok = bundle.proximal(x, miu, z);
         const auto fz = function.vgrad(z, gz);
         const auto bz = bundle.value(z);
         state.update_if_better(z, gz, fz);
 
         // check convergence
         assert(bz <= fx + epsilon);
-        const auto iter_ok   = ok && std::isfinite(fz) && z.all_finite() && gz.all_finite();
+        const auto iter_ok   = std::isfinite(fz) && z.all_finite() && gz.all_finite();
         const auto converged = fx - bz < epsilon;
         if (solver_t::done(state, iter_ok, converged))
         {
             break;
         }
 
+        std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "/" << function.gcalls()
+                  << ",fz=" << fz << std::endl;
+
         const auto ek = (1.0 - sigma) * (fx - bz);
         if (fz - bz <= ek)
         {
             // proximal point is approximated
             const auto [ak, bk] = sequence.make_alpha_beta();
+            std::cout << std::fixed << std::setprecision(10) << "ak=" << ak << ",bk=" << bk << ",x=" << x.transpose()
+                      << ",x-y=" << (x - y).lpNorm<Eigen::Infinity>() << std::endl;
 
             x  = z + ak * (z - y) + bk * (z - x);
             y  = z;
@@ -212,7 +221,7 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
         }
         else
         {
-            // update bundle to better approximate the proximal point
+            // null step, update bundle to better approximate the proximal point
             bundle.append(z, fz, gz);
         }
     }
