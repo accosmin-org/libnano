@@ -62,7 +62,7 @@ static void setup_logger(solver_t& solver, std::stringstream& stream)
     solver.logger(
         [&](const solver_state_t& state)
         {
-            stream << "\tdescent: " << state << ",x=" << state.x().transpose() << ".\n ";
+            stream << "\tdescent: " << state << ",x=" << state.x().transpose() << ".\n";
             return true;
         });
 

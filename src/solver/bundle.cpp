@@ -200,12 +200,13 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
             break;
         }
 
-        if (fz <= fx - sigma * (fx - bz))
+        const auto ek = (1.0 - sigma) * (fx - bz);
+        if (fz - bz <= ek)
         {
             // proximal point is approximated
             const auto [ak, bk] = sequence.make_alpha_beta();
 
-            x  = y + ak * (z - y) + bk * (z - x);
+            x  = z + ak * (z - y) + bk * (z - x);
             y  = z;
             fx = function.vgrad(x);
         }
