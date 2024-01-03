@@ -202,8 +202,8 @@ struct solver_description_t
         // NB: the fast proximal bundle algorithm is very precise and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4));
+            .smooth_config(minimize_config_t{}.max_evals(500).expected_maximum_deviation(1e-6))
+            .nonsmooth_config(minimize_config_t{}.max_evals(500).expected_maximum_deviation(1e-4));
     }
     else if (solver_id == "gs" || solver_id == "gs-lbfgs" || solver_id == "ags" || solver_id == "ags-lbfgs")
     {

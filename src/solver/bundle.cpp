@@ -1,9 +1,6 @@
 #include <nano/program/solver.h>
 #include <nano/solver/bundle.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 namespace
@@ -31,7 +28,7 @@ struct bundle_t
     bundle_t(const solver_state_t& state)
         : bundle_t(state.x().size())
     {
-        append(state.x(), state.fx(), state.gx());
+        append(state.x(), state.gx(), state.fx());
     }
 
     bundle_t(const tensor_size_t n)
@@ -41,7 +38,7 @@ struct bundle_t
     {
     }
 
-    void append(const vector_cmap_t z, const scalar_t fz, const vector_cmap_t gz)
+    void append(const vector_cmap_t z, const vector_cmap_t gz, const scalar_t fz)
     {
         m_points.emplace_back(fz, gz, gz.dot(z));
     }
@@ -59,7 +56,7 @@ struct bundle_t
         return value;
     }
 
-    bool proximal(const vector_cmap_t x, const scalar_t miu, vector_t& z)
+    vector_cmap_t proximal(const vector_cmap_t x, const scalar_t miu)
     {
         const auto n = x.size();
         const auto m = static_cast<tensor_size_t>(m_points.size());
@@ -87,10 +84,8 @@ struct bundle_t
         m_x0(n)            = value(x) + 0.1;
         assert(m_program.feasible(m_x0));
 
-        const auto solution = m_solver.solve(m_program, m_x0);
-        z                   = solution.m_x.slice(0, n);
-
-        return solution.m_status == solver_status::converged;
+        m_x0 = m_solver.solve(m_program, m_x0).m_x;
+        return m_x0.slice(0, n);
     }
 
     // FIXME: implement sugradient aggregation or selection to keep the bundle small
@@ -181,6 +176,7 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
     auto x  = x0;
     auto y  = x0;
     auto z  = x0;
+    auto p  = vector_t{x0.size()};
     auto gz = vector_t{x0.size()};
     auto fx = state.fx();
 
@@ -189,43 +185,40 @@ solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const functi
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        // NB: the solution is useful even if not always found with the default high accuracy, so ignore return code!
-        [[maybe_unused]] const auto ok = bundle.proximal(x, miu, z);
+        // estimate proximal point
+        z             = bundle.proximal(x, miu);
         const auto fz = function.vgrad(z, gz);
         const auto bz = bundle.value(z);
-        state.update_if_better(z, gz, fz);
 
-        // check convergence
-        assert(bz <= fx + epsilon);
-        const auto iter_ok   = std::isfinite(fz) && z.all_finite() && gz.all_finite();
-        const auto converged = fx - bz < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
-        {
-            break;
-        }
-
-        std::cout << std::fixed << std::setprecision(10) << "calls=" << function.fcalls() << "/" << function.gcalls()
-                  << ",fz=" << fz << std::endl;
-
+        // check if proximal point is approximated well enough
         const auto ek = (1.0 - sigma) * (fx - bz);
-        if (fz - bz <= ek)
+        if (fz - bz <= ek + std::numeric_limits<scalar_t>::epsilon())
         {
-            // proximal point is approximated
+            // update stability center
             const auto [ak, bk] = sequence.make_alpha_beta();
-            std::cout << std::fixed << std::setprecision(10) << "ak=" << ak << ",bk=" << bk << ",x=" << x.transpose()
-                      << ",x-y=" << (x - y).lpNorm<Eigen::Infinity>() << std::endl;
 
             x  = z + ak * (z - y) + bk * (z - x);
             y  = z;
             fx = function.vgrad(x);
+
+            state.update(y);
+
+            // check convergence: small gap between `y=z` and its approximated proximal point
+            p                    = bundle.proximal(z, miu);
+            const auto fp        = bundle.value(p) + 0.5 * miu * (z - p).dot(z - p);
+            const auto iter_ok   = std::isfinite(fz) && std::isfinite(fp);
+            const auto converged = fz - fp < epsilon;
+            if (solver_t::done(state, iter_ok, converged))
+            {
+                break;
+            }
         }
-        else
-        {
-            // null step, update bundle to better approximate the proximal point
-            bundle.append(z, fz, gz);
-        }
+
+        // update bundle
+        bundle.append(z, gz, fz);
     }
 
+    state.update_calls();
     return state;
 }
 
