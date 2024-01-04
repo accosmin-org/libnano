@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/core/logger.h>
 #include <nano/solver/asga.h>
+#include <nano/solver/bundle.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
@@ -202,6 +203,8 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_pgm_t>("universal primal gradient method (PGM)");
         manager.add<solver_dgm_t>("universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("universal fast gradient method (FGM)");
+        manager.add<solver_fpba1_t>("fast bundle proximal algorithm (FPBA1)");
+        manager.add<solver_fpba2_t>("fast bundle proximal algorithm (FPBA2)");
     };
 
     static std::once_flag flag;

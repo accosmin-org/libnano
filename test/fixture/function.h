@@ -102,7 +102,19 @@ using namespace nano;
     for (auto trial = 0; trial < trials; ++trial)
     {
         const auto x = make_random_x0(*rfunction);
+        const auto z = make_random_x0(*rfunction);
+
+        // (sub-)gradient approximation with centering difference
         UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, epsilon), epsilon);
+
+        // (sub-)gradient inequality for convex inequality
+        if (rfunction->convex())
+        {
+            auto       gx = vector_t{x.size()};
+            const auto fz = rfunction->vgrad(z);
+            const auto fx = rfunction->vgrad(x, gx);
+            UTEST_CHECK_LESS(fx + gx.dot(z - x), fz + 1e-10);
+        }
     }
 }
 
