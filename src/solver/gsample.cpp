@@ -1,6 +1,6 @@
 #include <nano/core/sampling.h>
 #include <nano/program/solver.h>
-#include <nano/solver/gs.h>
+#include <nano/solver/gsample.h>
 
 using namespace nano;
 

@@ -6,7 +6,7 @@
 #include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
 #include <nano/solver/gd.h>
-#include <nano/solver/gs.h>
+#include <nano/solver/gsample.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/pdsgm.h>

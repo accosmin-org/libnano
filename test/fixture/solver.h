@@ -14,49 +14,6 @@ using namespace nano;
     return solver;
 }
 
-inline void put_first(std::vector<rsolver_t>& solvers, const char* const solver_id)
-{
-    const auto op = [=](const rsolver_t& solver) { return solver->type_id() == solver_id; };
-    const auto it = std::find_if(std::begin(solvers), std::end(solvers), op);
-    assert(it != solvers.end());
-    if (it != solvers.begin())
-    {
-        std::iter_swap(it, solvers.begin());
-    }
-}
-
-template <typename toperator>
-inline auto make_solvers(const toperator& op, const char* const reference_solver_id)
-{
-    auto solvers = std::vector<rsolver_t>{};
-    for (const auto& solver_id : solver_t::all().ids())
-    {
-        auto solver = make_solver(solver_id);
-        if (op(solver->type()))
-        {
-            solvers.emplace_back(std::move(solver));
-        }
-    }
-
-    // NB: make sure the first solver is a reliable one as it is used as the reference!
-    put_first(solvers, reference_solver_id);
-    return solvers;
-}
-
-inline auto make_smooth_solvers()
-{
-    // NB: any unconstrained solver should be able to minimize smooth convex problems!
-    const auto op = [](const solver_type type) { return type != solver_type::constrained; };
-    return make_solvers(op, "bfgs");
-}
-
-inline auto make_nonsmooth_solvers()
-{
-    // NB: check all non-monotonic solvers, but some of them are not expected to always converge!
-    const auto op = [](const solver_type type) { return type == solver_type::non_monotonic; };
-    return make_solvers(op, "ellipsoid");
-}
-
 static void setup_logger(solver_t& solver, std::stringstream& stream)
 {
     solver.logger(

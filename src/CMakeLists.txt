@@ -43,7 +43,6 @@ make_lib(NANO solver
     lsearchk/morethuente.cpp
     solver.cpp
     solver/gd.cpp
-    solver/gs.cpp
     solver/cgd.cpp
     solver/sgm.cpp
     solver/asga.cpp
@@ -55,6 +54,7 @@ make_lib(NANO solver
     solver/quasi.cpp
     solver/state.cpp
     solver/bundle.cpp
+    solver/gsample.cpp
     solver/penalty.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp
