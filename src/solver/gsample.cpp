@@ -357,7 +357,7 @@ base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::base_solver_gs_t()
     register_parameter(parameter_t::make_scalar(basename + "lsearch_beta", 0, LE, 1e-8, LT, 1));
     register_parameter(parameter_t::make_scalar(basename + "lsearch_gamma", 0, LT, 0.5, LT, 1));
     register_parameter(parameter_t::make_scalar(basename + "lsearch_perturb_c", 0, LE, 1e-6, LT, 1));
-    register_parameter(parameter_t::make_integer(basename + "lsearch_max_iters", 0, LT, 30, LE, 100));
+    register_parameter(parameter_t::make_integer(basename + "lsearch_max_iters", 0, LT, 50, LE, 100));
 }
 
 template <typename tsampler, typename tpreconditioner, typename ttype_id>
@@ -431,6 +431,7 @@ solver_state_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::do_minimiz
         }
     }
 
+    state.update_calls();
     return state;
 }
 
