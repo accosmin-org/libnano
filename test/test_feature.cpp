@@ -156,11 +156,11 @@ UTEST_CASE(compare)
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("gf"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("f", feature_type::float64));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("f", feature_type::float32, make_dims(1, 2, 2)));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cont("f")), "name=f,type=float32,dims=1x1x1,labels[]");
+    UTEST_CHECK_EQUAL(to_string(make_feature_cont("f")), "name=f,type=float32,dims=1x1x1");
 
     UTEST_CHECK_EQUAL(make_feature_cate("f"), make_feature_cate("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate("f"), make_feature_cate("x"));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cate("f")), "name=f,type=sclass,dims=1x1x1,labels[cate0,cate1,cate2]");
+    UTEST_CHECK_EQUAL(to_string(make_feature_cate("f")), "name=f,type=sclass,dims=1x1x1,labels=[cate0,cate1,cate2]");
 
     UTEST_CHECK_NOT_EQUAL(feature_t{"f"}.sclass(strings_t{"label1", "label2"}),
                           feature_t{"f"}.sclass(strings_t{"label2", "label1"}));

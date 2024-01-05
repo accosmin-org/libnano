@@ -144,14 +144,19 @@ bool nano::operator!=(const feature_t& f1, const feature_t& f2)
 
 std::ostream& nano::operator<<(std::ostream& stream, const feature_t& feature)
 {
-    stream << "name=" << feature.name() << ",type=" << feature.type() << ",dims=" << feature.dims() << ",labels[";
-    for (const auto& label : feature.labels())
+    stream << "name=" << feature.name() << ",type=" << feature.type() << ",dims=" << feature.dims();
+    if (!feature.labels().empty())
     {
-        stream << label;
-        if (&label != &(*(feature.labels().rbegin())))
+        stream << ",labels=[";
+        for (const auto& label : feature.labels())
         {
-            stream << ",";
+            stream << label;
+            if (&label != &(*(feature.labels().rbegin())))
+            {
+                stream << ",";
+            }
         }
+        stream << "]";
     }
-    return stream << "]";
+    return stream;
 }
