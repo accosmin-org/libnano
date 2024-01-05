@@ -19,12 +19,12 @@ struct NANO_PUBLIC solver_state_t
     /// \brief constructor
     ///
     solver_state_t(const tensor_size_t n, const tensor_size_t n_ineqs, const tensor_size_t n_eqs)
-        : m_x(n)
-        , m_u(n_ineqs)
-        , m_v(n_eqs)
-        , m_rdual(n)
-        , m_rcent(n_ineqs)
-        , m_rprim(n_eqs)
+        : m_x(vector_t::constant(n, nan))
+        , m_u(vector_t::constant(n_ineqs, nan))
+        , m_v(vector_t::constant(n_eqs, nan))
+        , m_rdual(vector_t::constant(n, nan))
+        , m_rcent(vector_t::constant(n_ineqs, nan))
+        , m_rprim(vector_t::constant(n_eqs, nan))
     {
     }
 
