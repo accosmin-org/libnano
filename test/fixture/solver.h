@@ -4,8 +4,8 @@
 
 using namespace nano;
 
-[[maybe_unused]] inline auto make_solver(const string_t& name = "cgd-n", const scalar_t epsilon = 1e-8,
-                                         const int max_evals = 20000)
+[[maybe_unused]] inline auto make_solver(const string_t& name = "lbfgs", const scalar_t epsilon = 1e-8,
+                                         const int max_evals = 5000)
 {
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);

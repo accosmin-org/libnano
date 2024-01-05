@@ -21,10 +21,10 @@ auto make_nonsmooth_solver()
     return make_solver("osga");
 }
 
-auto make_model()
+auto make_model(const tensor_size_t batch = 100)
 {
     auto model                       = linear_model_t{};
-    model.parameter("linear::batch") = 30;
+    model.parameter("linear::batch") = batch;
     return model;
 }
 
@@ -100,20 +100,20 @@ UTEST_CASE(regularization_none)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                = make_model();
+    auto model                                = make_model(21);
     model.parameter("linear::scaling")        = scaling_type::none;
     model.parameter("linear::regularization") = linear_regularization::none;
 
     const auto param_names = strings_t{};
-    for (const auto* const loss_id : {"mse", "mae"})
+    for (const auto& loss_id : strings_t{"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss       = make_loss(loss_id);
-        const auto solver     = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
+        const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
         const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
+        const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -127,12 +127,12 @@ UTEST_CASE(regularization_lasso)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                = make_model();
+    auto model                                = make_model(50);
     model.parameter("linear::scaling")        = scaling_type::standard;
     model.parameter("linear::regularization") = linear_regularization::lasso;
 
     const auto param_names = strings_t{"l1reg"};
-    for (const auto* const loss_id : {"mse", "mae"})
+    for (const auto& loss_id : strings_t{"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
@@ -154,20 +154,20 @@ UTEST_CASE(regularization_ridge)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                = make_model();
+    auto model                                = make_model(100);
     model.parameter("linear::scaling")        = scaling_type::mean;
     model.parameter("linear::regularization") = linear_regularization::ridge;
 
     const auto param_names = strings_t{"l2reg"};
-    for (const auto* const loss_id : {"mse", "mae"})
+    for (const auto& loss_id : strings_t{"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss       = make_loss(loss_id);
-        const auto solver     = string_t(loss_id) == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
+        const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
         const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = string_t{loss_id} == "mse" ? 1e-6 : 1e-4;
+        const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -181,12 +181,12 @@ UTEST_CASE(regularization_elasticnet)
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
 
-    auto model                                = make_model();
+    auto model                                = make_model(100);
     model.parameter("linear::scaling")        = scaling_type::minmax;
     model.parameter("linear::regularization") = linear_regularization::elasticnet;
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
-    for (const auto* const loss_id : {"mse", "mae"})
+    for (const auto& loss_id : strings_t{"mse", "mae"})
     {
         UTEST_NAMED_CASE(loss_id);
 
