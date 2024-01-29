@@ -22,6 +22,7 @@ make_test(test_tensor_tensor NANO::core)
 make_test(test_tensor_numeric NANO::core)
 make_test(test_tensor_storage NANO::core)
 make_test(test_tensor_integral NANO::core)
+make_test(test_tensor_algorithm NANO::core)
 
 make_test(test_loss NANO::machine)
 make_test(test_tuner NANO::machine)
