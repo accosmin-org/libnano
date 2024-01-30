@@ -7,10 +7,9 @@ namespace nano
 namespace detail
 {
 template <typename ttensor, typename... ttensors>
-auto size(const ttensor& tensor, const ttensors&... tensors)
+auto size(const ttensor& tensor, const ttensors&...)
 {
     const auto size = tensor.template size<0>();
-    (assert(size == tensors.template size<0>()), ...);
     return size;
 }
 
@@ -38,10 +37,10 @@ void copy(const tensor_size_t isrc, const tensor_size_t idst, ttensor& tensor)
 /// NB: no allocation is performed.
 ///
 template <typename toperator, typename... ttensors>
-auto remove_if(const toperator& op, ttensors&... tensors) noexcept ->
-    typename std::enable_if_t<(is_tensor_v<ttensors> && ...), tensor_size_t>
+auto remove_if(const toperator& op, ttensors&&... tensors) ->
+    typename std::enable_if_t<(is_tensor_v<std::remove_reference_t<ttensors>> && ...), tensor_size_t>
 {
-    const auto size = detail::size(tensors...);
+    const auto size = detail::size(std::forward<ttensors>(tensors)...);
 
     auto last = tensor_size_t{0};
     for (; last < size && !op(last); ++last)
