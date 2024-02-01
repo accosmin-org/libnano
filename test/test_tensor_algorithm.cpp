@@ -62,6 +62,14 @@ UTEST_CASE(mixed)
         UTEST_CHECK_EQUAL(mat, make_matrix<int>(8, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 15));
     }
     {
+        const auto op = [&](const tensor_size_t i) { return i < 3 || i > 5; };
+
+        const auto [size, vec, mat] = copy_remove_if(op, xvec, xmat);
+        UTEST_CHECK_EQUAL(size, 3);
+        UTEST_CHECK_EQUAL(vec, make_vector<int>(3, 4, 5, 3, 4, 5, 6, 7));
+        UTEST_CHECK_EQUAL(mat, make_matrix<int>(8, 6, 7, 8, 9, 10, 11, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+    }
+    {
         const auto op = [&](const tensor_size_t i) { return i > 5; };
 
         const auto [size, vec, mat] = copy_remove_if(op, xvec, xmat);

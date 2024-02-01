@@ -768,7 +768,7 @@ private:
     template <typename tdata>
     auto tslice(tdata ptr, tensor_size_t begin, tensor_size_t end) const
     {
-        assert(begin >= 0 && begin < end && end <= this->template size<0>());
+        assert(begin >= 0 && begin <= end && end <= this->template size<0>());
         auto dimensions = dims();
         dimensions[0]   = end - begin;
         return map_tensor(ptr + offset0(begin), dimensions);

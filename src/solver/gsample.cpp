@@ -1,6 +1,7 @@
 #include <nano/core/sampling.h>
 #include <nano/program/solver.h>
 #include <nano/solver/gsample.h>
+#include <nano/tensor/algorithm.h>
 
 using namespace nano;
 
@@ -166,7 +167,6 @@ struct gs::adaptive_sampler_t final : public sampler_t
 {
     explicit adaptive_sampler_t(const tensor_size_t n)
         : sampler_t(n)
-        , m_samples(m_X.rows())
     {
     }
 
@@ -177,22 +177,13 @@ struct gs::adaptive_sampler_t final : public sampler_t
         const auto phat = std::max(n / 10, tensor_size_t{1});
 
         // remove previously selected points outside the current ball
-        m_samples.lin_spaced(0, p - 1);
-
-        const auto        op = [&](const tensor_size_t i) { return (state.x() - m_X.tensor(i)).lpNorm<2>() > epsilon; };
-        const auto* const it = std::remove_if(m_samples.begin(), m_samples.begin() + m_psize, op);
+        const auto op1 = [&](const tensor_size_t i) { return (state.x() - m_X.tensor(i)).lpNorm<2>() > epsilon; };
+        m_psize        = nano::remove_if(op1, m_X.slice(0, m_psize), m_G.slice(0, m_psize));
 
         // NB: to make sure at most `p` samples are used!
-        const auto psize = it - m_samples.begin();
-        const auto begin = std::max(tensor_size_t{0}, psize + 1 + phat - p);
-
-        m_psize = 0;
-        for (tensor_size_t i = begin; i < psize; ++i, ++m_psize)
-        {
-            const auto k        = m_samples(i);
-            m_X.tensor(m_psize) = m_X.tensor(k);
-            m_G.tensor(m_psize) = m_G.tensor(k);
-        }
+        const auto op2 = [&](const tensor_size_t i) { return i < (m_psize + 1 + phat - p); };
+        m_psize        = nano::remove_if(op2, m_X.slice(0, m_psize), m_G.slice(0, m_psize));
+        assert(m_psize + 1 + phat <= p);
 
         // current point (center of the ball)
         m_X.tensor(m_psize) = state.x();
@@ -219,9 +210,6 @@ struct gs::adaptive_sampler_t final : public sampler_t
         auto program = make_program(m_psize);
         sampler_t::descent(program, W, g);
     }
-
-    // attributes
-    indices_t m_samples; ///< buffer of sample indices (p)
 };
 
 class gs::identity_preconditioner_t
