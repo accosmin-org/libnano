@@ -25,11 +25,39 @@ make_lib(NANO core
     core/parameter_tracker.cpp)
 
 # numerical optimization utilities
-make_lib(NANO solver
+make_lib(NANO function
     function.cpp
     function/constraint.cpp
     function/penalty.cpp
     function/util.cpp
+    function/benchmark/axis_ellipsoid.cpp
+    function/benchmark/cauchy.cpp
+    function/benchmark/chained_lq.cpp
+    function/benchmark/chained_cb3I.cpp
+    function/benchmark/chained_cb3II.cpp
+    function/benchmark/chung_reynolds.cpp
+    function/benchmark/dixon_price.cpp
+    function/benchmark/elastic_net.cpp
+    function/benchmark/exponential.cpp
+    function/benchmark/geometric.cpp
+    function/benchmark/kinks.cpp
+    function/benchmark/linear.cpp
+    function/benchmark/maxq.cpp
+    function/benchmark/maxhilb.cpp
+    function/benchmark/powell.cpp
+    function/benchmark/qing.cpp
+    function/benchmark/quadratic.cpp
+    function/benchmark/rosenbrock.cpp
+    function/benchmark/rotated_ellipsoid.cpp
+    function/benchmark/sargan.cpp
+    function/benchmark/schumer_steiglitz.cpp
+    function/benchmark/sphere.cpp
+    function/benchmark/styblinski_tang.cpp
+    function/benchmark/trid.cpp
+    function/benchmark/zakharov.cpp)
+
+# numerical optimization utilities
+make_lib(NANO solver
     lsearch0.cpp
     lsearch0/linear.cpp
     lsearch0/constant.cpp
@@ -62,32 +90,7 @@ make_lib(NANO solver
     program/solver.cpp
     program/linear.cpp
     program/quadratic.cpp
-    program/constrained.cpp
-    function/benchmark/axis_ellipsoid.cpp
-    function/benchmark/cauchy.cpp
-    function/benchmark/chained_lq.cpp
-    function/benchmark/chained_cb3I.cpp
-    function/benchmark/chained_cb3II.cpp
-    function/benchmark/chung_reynolds.cpp
-    function/benchmark/dixon_price.cpp
-    function/benchmark/elastic_net.cpp
-    function/benchmark/exponential.cpp
-    function/benchmark/geometric.cpp
-    function/benchmark/kinks.cpp
-    function/benchmark/linear.cpp
-    function/benchmark/maxq.cpp
-    function/benchmark/maxhilb.cpp
-    function/benchmark/powell.cpp
-    function/benchmark/qing.cpp
-    function/benchmark/quadratic.cpp
-    function/benchmark/rosenbrock.cpp
-    function/benchmark/rotated_ellipsoid.cpp
-    function/benchmark/sargan.cpp
-    function/benchmark/schumer_steiglitz.cpp
-    function/benchmark/sphere.cpp
-    function/benchmark/styblinski_tang.cpp
-    function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp)
+    program/constrained.cpp)
 
 # machine learning utilities
 make_lib(NANO machine
@@ -150,5 +153,6 @@ make_lib(NANO machine
     linear/accumulator.cpp)
 
 # link libraries
-target_link_libraries(solver PUBLIC core)
+target_link_libraries(function PUBLIC core)
+target_link_libraries(solver PUBLIC function)
 target_link_libraries(machine PUBLIC solver)

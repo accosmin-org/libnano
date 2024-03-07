@@ -30,7 +30,7 @@ make_test(test_feature NANO::machine)
 make_test(test_lsearch NANO::machine)
 make_test(test_splitter NANO::machine)
 
-make_test(test_function NANO::solver)
+make_test(test_function NANO::function)
 make_test(test_constrained NANO::solver)
 
 make_test(test_program_linear NANO::solver)
