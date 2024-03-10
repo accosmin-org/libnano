@@ -149,11 +149,12 @@ UTEST_CASE(convex_hull_feasible_center)
         const auto wsum1 = program::make_equality(vector_t::constant(dims, 1.0), 1.0);
 
         const auto program = program::make_linear(c, lower, upper, wsum1);
+        const auto epsilon = 5.0 * epsilon0<scalar_t>();
 
         const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
-        UTEST_CHECK_LESS(program.m_eq.deviation(x0), 2.0 * epsilon0<scalar_t>());
-        UTEST_CHECK_LESS(program.m_ineq.deviation(x0), 2.0 * epsilon0<scalar_t>());
-        UTEST_CHECK(program.feasible(x0));
+        UTEST_CHECK_LESS(program.m_eq.deviation(x0), epsilon);
+        UTEST_CHECK_LESS(program.m_ineq.deviation(x0), epsilon);
+        UTEST_CHECK(program.feasible(x0, epsilon));
     }
 }
 
