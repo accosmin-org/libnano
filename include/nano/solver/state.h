@@ -39,6 +39,8 @@ public:
         return valid();
     }
 
+    bool update(vector_cmap_t x, vector_cmap_t gx, scalar_t fx);
+
     ///
     /// \brief update the number of function value and gradient evaluations.
     ///
@@ -48,7 +50,7 @@ public:
     /// \brief try to update the current state and
     ///     returns true if the given function value is smaller than the current one.
     ///
-    /// NB: this is usually called by non-monotonic solvers (e.g. for non-smooth optimization problems).
+    /// NB: this is usually called by non-monotonic solvers (e.g. for some non-smooth optimization problems).
     ///
     bool update_if_better(const vector_t& x, scalar_t fx);
     bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
@@ -215,7 +217,7 @@ private:
 ///
 /// \brief pretty print the given solver state.
 ///
-NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const solver_state_t&);
+NANO_PUBLIC std::ostream& operator<<(std::ostream&, const solver_state_t&);
 
 ///
 /// \brief convergence test that checks two consecutive (best) states are close enough.

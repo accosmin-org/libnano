@@ -1,5 +1,4 @@
 #include "fixture/dataset.h"
-#include "fixture/function.h"
 #include "fixture/loss.h"
 #include "fixture/solver.h"
 #include <nano/gboost/function.h>

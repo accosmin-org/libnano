@@ -9,11 +9,7 @@ static auto make_logger(std::ostringstream& stream, const int stop_at_iters = -1
 {
     return [&stream, stop_at_iters = stop_at_iters](const solver_state_t& state)
     {
-        stream << std::fixed << std::setprecision(12) << "i=" << state.m_iters << ",fx=" << state.m_fx
-               << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-               << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-               << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
-               << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]\n";
+        stream << std::fixed << std::setprecision(12) << state << "\n";
         return state.m_iters != stop_at_iters;
     };
 }

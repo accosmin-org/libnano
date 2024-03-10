@@ -1,225 +1,178 @@
-#include <nano/program/solver.h>
 #include <nano/solver/bundle.h>
 
 using namespace nano;
 
-namespace
+bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
+    : m_solver()
+    , m_bundleS(max_size + 1, state.x().size())
+    , m_bundleE(max_size + 1)
+    , m_alphas(max_size + 1)
+    , m_x(state.x())
+    , m_gx(state.gx())
+    , m_fx(state.fx())
 {
-struct point_t
-{
-    point_t() = default;
-
-    template <typename tvector>
-    point_t(const scalar_t f, tvector g, const scalar_t gdotz)
-        : m_f(f)
-        , m_g(std::move(g))
-        , m_gdotz(gdotz)
-    {
-    }
-
-    // attributes
-    scalar_t m_f{0.0};     ///< f(z)
-    vector_t m_g;          ///< f'(z)
-    scalar_t m_gdotz{0.0}; ///< f'(z).dot(z)
-};
-
-struct bundle_t
-{
-    explicit bundle_t(const solver_state_t& state)
-        : bundle_t(state.x().size())
-    {
-        append(state.x(), state.gx(), state.fx());
-    }
-
-    explicit bundle_t(const tensor_size_t n)
-        : m_program(matrix_t{matrix_t::zero(n + 1, n + 1)}, vector_t{vector_t::constant(n + 1, 1.0)})
-        , m_x0(n + 1)
-    {
-    }
-
-    void append(const vector_cmap_t z, const vector_cmap_t gz, const scalar_t fz)
-    {
-        m_points.emplace_back(fz, gz, gz.dot(z));
-    }
-
-    scalar_t value(const vector_cmap_t x) const
-    {
-        auto value = std::numeric_limits<scalar_t>::lowest();
-        for (const auto& point : m_points)
-        {
-            assert(point.m_g.size() == x.size());
-
-            value = std::max(value, point.m_f + point.m_g.dot(x) - point.m_gdotz);
-        }
-
-        return value;
-    }
-
-    vector_cmap_t proximal(const vector_cmap_t x, const scalar_t miu)
-    {
-        const auto n = x.size();
-        const auto m = static_cast<tensor_size_t>(m_points.size());
-
-        // objective: 0.5 * [z|w].dot(Q * [z|w]) + c.dot([z|w])
-        m_program.m_Q.block(0, 0, n, n) = miu * matrix_t::identity(n, n);
-        m_program.m_c.segment(0, n)     = -miu * x;
-
-        // inequality constraints: A * [z|w] <= b
-        auto A = matrix_t{m, n + 1};
-        auto b = vector_t{m};
-        for (tensor_size_t i = 0; i < m; ++i)
-        {
-            const auto& point = m_points[static_cast<size_t>(i)];
-            assert(point.m_g.size() == x.size());
-
-            A.row(i).segment(0, n) = point.m_g.transpose();
-            A(i, n)                = -1.0;
-            b(i)                   = point.m_gdotz - point.m_f;
-        }
-        m_program.m_ineq = program::make_inequality(std::move(A), std::move(b));
-
-        // solve quadratic program
-        m_x0.segment(0, n) = x.vector();
-        m_x0(n)            = value(x) + 0.1;
-        assert(m_program.feasible(m_x0));
-
-        m_x0 = m_solver.solve(m_program, m_x0).m_x;
-        return m_x0.slice(0, n);
-    }
-
-    // FIXME: implement sugradient aggregation or selection to keep the bundle small
-    // FIXME: store bundle more efficiently
-
-    using program_t = program::quadratic_program_t;
-
-    // attributes
-    std::vector<point_t> m_points;  ///< bundle information
-    program::solver_t    m_solver;  ///< buffer: quadratic program solver
-    program_t            m_program; ///< buffer: quadratic program
-    vector_t             m_x0;      ///< buffer: starting point for the quadratic program
-};
-
-struct sequence_t
-{
-    scalar_t update() { return m_lambda = 0.5 * (1.0 + std::sqrt(1.0 + 4.0 * m_lambda * m_lambda)); }
-
-    // attributes
-    scalar_t m_lambda{1.0};
-};
-} // namespace
-
-struct proximal::sequence1_t final : public sequence_t
-{
-    auto make_alpha_beta()
-    {
-        const auto curr  = m_lambda;
-        const auto next  = update();
-        const auto alpha = (curr - 1.0) / next;
-        const auto beta  = 0.0;
-        return std::make_tuple(alpha, beta);
-    }
-};
-
-struct proximal::sequence2_t final : public sequence_t
-{
-    auto make_alpha_beta()
-    {
-        const auto curr  = m_lambda;
-        const auto next  = update();
-        const auto alpha = (curr - 1.0) / next;
-        const auto beta  = curr / next;
-        return std::make_tuple(alpha, beta);
-    }
-};
-
-struct proximal::fpba1_type_id_t
-{
-    static auto str() { return "fpba1"; }
-};
-
-struct proximal::fpba2_type_id_t
-{
-    static auto str() { return "fpba2"; }
-};
-
-template <typename tsequence, typename ttype_id>
-base_solver_fpba_t<tsequence, ttype_id>::base_solver_fpba_t()
-    : solver_t(ttype_id::str())
-{
-    type(solver_type::non_monotonic);
-
-    const auto basename = scat("solver::", ttype_id::str(), "::");
-
-    register_parameter(parameter_t::make_scalar(basename + "miu", 0, LT, 1.0, LT, 1e+6));
-    register_parameter(parameter_t::make_scalar(basename + "sigma", 0, LT, 0.5, LT, 1.0));
+    append(state.x(), state.gx(), state.fx(), true);
 }
 
-template <typename tsequence, typename ttype_id>
-rsolver_t base_solver_fpba_t<tsequence, ttype_id>::clone() const
+void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
 {
-    return std::make_unique<base_solver_fpba_t<tsequence, ttype_id>>(*this);
+    const auto serious_step = true;
+    append(y, gy, fy, serious_step);
+    m_x  = y;
+    m_gx = gy;
+    m_fx = fy;
 }
 
-template <typename tsequence, typename ttype_id>
-solver_state_t base_solver_fpba_t<tsequence, ttype_id>::do_minimize(const function_t& function,
-                                                                    const vector_t&   x0) const
+void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
 {
-    const auto basename  = scat("solver::", ttype_id::str(), "::");
-    const auto max_evals = parameter("solver::max_evals").template value<tensor_size_t>();
-    const auto epsilon   = parameter("solver::epsilon").template value<scalar_t>();
-    const auto miu       = parameter(basename + "miu").template value<scalar_t>();
-    const auto sigma     = parameter(basename + "sigma").template value<scalar_t>();
+    const auto serious_step = false;
+    append(y, gy, fy, serious_step);
+}
 
-    auto state = solver_state_t{function, x0};
+void bundle_t::solve(const scalar_t miu)
+{
+    assert(size() > 0);
+    assert(dims() == m_x.size());
 
-    auto x  = x0;
-    auto y  = x0;
-    auto z  = x0;
-    auto p  = vector_t{x0.size()};
-    auto gz = vector_t{x0.size()};
-    auto fx = state.fx();
-
-    auto bundle   = bundle_t{state};
-    auto sequence = tsequence{};
-
-    while (function.fcalls() + function.gcalls() < max_evals)
+    if (m_size == 1)
     {
-        // estimate proximal point
-        z             = bundle.proximal(x, miu);
-        const auto fz = function.vgrad(z, gz);
-        const auto bz = bundle.value(z);
-
-        // check if proximal point is approximated well enough
-        const auto ek = (1.0 - sigma) * (fx - bz);
-        if (fz - bz <= ek + std::numeric_limits<scalar_t>::epsilon())
-        {
-            // update stability center
-            const auto [ak, bk] = sequence.make_alpha_beta();
-
-            x  = z + ak * (z - y) + bk * (z - x);
-            y  = z;
-            fx = function.vgrad(x);
-
-            state.update(y);
-
-            // check convergence: small gap between `y=z` and its approximated proximal point
-            p                    = bundle.proximal(z, miu);
-            const auto fp        = bundle.value(p) + 0.5 * miu * (z - p).dot(z - p);
-            const auto iter_ok   = std::isfinite(fz) && std::isfinite(fp);
-            const auto converged = fz - fp < epsilon;
-            if (solver_t::done(state, iter_ok, converged))
-            {
-                break;
-            }
-        }
-
-        // update bundle
-        bundle.append(z, gz, fz);
+        m_alphas(0) = 1.0;
     }
+    else if (m_size == 2)
+    {
+        // NB: can compute analytically the solution for this case!
+        const auto Q = S() * S().transpose();
+        const auto c = miu * e();
 
-    state.update_calls();
-    return state;
+        const auto q = Q(0, 0) + Q(1, 1) - Q(0, 1) - Q(1, 0);
+        const auto p = 0.5 * (Q(0, 1) + Q(1, 0)) - Q(1, 1) + c(0) - c(1);
+
+        const auto b = -p / q;
+        const auto a = (std::isfinite(b) && b >= 0.0 && b <= 1.0) ? b : ((0.5 * q + p) > 0.0 ? 0.0 : 1.0);
+
+        m_alphas(0) = a;
+        m_alphas(1) = 1.0 - a;
+    }
+    else
+    {
+        const auto Q = S() * S().transpose();
+        const auto c = miu * e();
+
+        const auto lower = program::make_less(m_size, 1.0);
+        const auto upper = program::make_greater(m_size, 0.0);
+        const auto wsum1 = program::make_equality(vector_t::constant(m_size, 1.0), 1.0);
+
+        const auto program = program::make_quadratic(Q, c, lower, upper, wsum1);
+
+        const auto x0 = vector_t{vector_t::constant(m_size, 1.0 / static_cast<scalar_t>(m_size))};
+        assert(program.feasible(x0, epsilon1<scalar_t>()));
+
+        const auto solution = m_solver.solve(program, x0);
+        assert(program.feasible(solution.m_x, epsilon1<scalar_t>()));
+        assert(solution.m_status == solver_status::converged);
+
+        m_alphas.slice(0, m_size) = solution.m_x;
+    }
 }
 
-template class nano::base_solver_fpba_t<proximal::sequence1_t, proximal::fpba1_type_id_t>;
-template class nano::base_solver_fpba_t<proximal::sequence2_t, proximal::fpba2_type_id_t>;
+void bundle_t::delete_oldest(const tensor_size_t count)
+{
+    if (size() + 1 == capacity())
+    {
+        store_aggregate();
+
+        assert(count <= size());
+        m_size = remove_if([&](const tensor_size_t i) { return i < count; });
+
+        append_aggregate();
+    }
+}
+
+void bundle_t::delete_smallest(const tensor_size_t count)
+{
+    if (size() + 1 == capacity())
+    {
+        store_aggregate();
+
+        // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
+        assert(count <= size());
+        m_alphas.slice(0, size()) = m_bundleE.slice(0, size());
+        std::nth_element(m_alphas.begin(), m_alphas.begin() + count, m_alphas.begin() + size());
+
+        m_size = remove_if([&, thres = m_alphas(count) + epsilon0<scalar_t>()](const tensor_size_t i)
+                           { return m_bundleE(i) < thres; });
+
+        append_aggregate();
+    }
+}
+
+void bundle_t::delete_inactive(const scalar_t epsilon)
+{
+    if (size() > 0)
+    {
+        m_size = remove_if([&](const tensor_size_t i) { return m_alphas(i) < epsilon; });
+    }
+}
+
+void bundle_t::store_aggregate()
+{
+    // NB: stored the aggregation in the last slot!
+    const auto ilast        = capacity() - 1;
+    m_bundleE(ilast)        = smeared_e();
+    m_bundleS.tensor(ilast) = smeared_s();
+}
+
+void bundle_t::append_aggregate()
+{
+    // NB: the aggregation is stored in the last slot!
+    const auto ilast         = capacity() - 1;
+    m_bundleS.tensor(m_size) = m_bundleS.tensor(ilast);
+    m_bundleE(m_size)        = m_bundleE(ilast);
+    ++m_size;
+}
+
+void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy, const bool serious_step)
+{
+    assert(dims() == y.size());
+    assert(dims() == gy.size());
+
+    delete_inactive();
+    delete_oldest();
+    // delete_smallest();
+
+    // FIXME: actually the largest epsilon value is deleted - see RQB reference, experimentation chapter
+    // TODO: how to use the dual problem with a full quasi newton matrix (SR1) - see RQB reference
+
+    // TODO: remove by alpha < 1e-3
+    // TODO: remove by cumulated alpha < 1e-2
+
+    if (serious_step)
+    {
+        for (tensor_size_t i = 0; i < m_size; ++i)
+        {
+            m_bundleE(i) += fy - m_fx - m_bundleS.vector(i).dot(y - m_x);
+        }
+        m_bundleE(m_size)        = 0.0;
+        m_bundleS.tensor(m_size) = gy;
+    }
+    else
+    {
+        m_bundleE(m_size)        = m_fx - (fy + gy.dot(m_x - y));
+        m_bundleS.tensor(m_size) = gy;
+    }
+    ++m_size;
+
+    assert(m_size < capacity());
+}
+
+void bundle_t::config(configurable_t& c, const string_t& prefix)
+{
+    c.register_parameter(parameter_t::make_integer(scat(prefix, "bundle::max_size"), 2, LE, 10, LE, 1000));
+}
+
+bundle_t bundle_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
+{
+    const auto max_size = c.parameter(scat(prefix, "bundle::max_size")).value<tensor_size_t>();
+
+    return {state, max_size};
+}

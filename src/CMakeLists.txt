@@ -72,8 +72,10 @@ make_lib(NANO solver
     solver.cpp
     solver/gd.cpp
     solver/cgd.cpp
+    solver/rqb.cpp
     solver/sgm.cpp
     solver/asga.cpp
+    solver/fpba.cpp
     solver/osga.cpp
     solver/cocob.cpp
     solver/lstep.cpp
@@ -82,11 +84,14 @@ make_lib(NANO solver
     solver/quasi.cpp
     solver/state.cpp
     solver/bundle.cpp
+    solver/csearch.cpp
     solver/gsample.cpp
     solver/penalty.cpp
     solver/augmented.cpp
     solver/ellipsoid.cpp
+    solver/proximity.cpp
     solver/universal.cpp
+    program/state.cpp
     program/solver.cpp
     program/linear.cpp
     program/quadratic.cpp

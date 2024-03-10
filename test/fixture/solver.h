@@ -1,3 +1,5 @@
+#include "fixture/function.h"
+#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/solver.h>
 #include <utest/utest.h>
@@ -154,9 +156,9 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6));
     }
-    else if (solver_id == "fpba1" || solver_id == "fpba2")
+    else if (solver_id == "rqb" || solver_id == "fpba1" || solver_id == "fpba2")
     {
-        // NB: the fast proximal bundle algorithm is very precise and very reliable.
+        // NB: the (fast) proximal bundle algorithms are very precise and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-4))
@@ -246,4 +248,45 @@ struct solver_description_t
     }
 
     return state;
+}
+
+[[maybe_unused]] static void check_solvers(const strings_t& solver_ids, const rfunctions_t& functions)
+{
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+
+        for (const auto& x0 : make_random_x0s(*function))
+        {
+            auto config = minimize_config_t{};
+            for (const auto& solver_id : solver_ids)
+            {
+                const auto solver = make_solver(solver_id);
+                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+
+                const auto descr = make_description(solver_id);
+                config.config(function->smooth() ? descr.m_smooth_config : descr.m_nonsmooth_config);
+
+                const auto state = check_minimize(*solver, *function, x0, config);
+                config.expected_minimum(state.fx());
+
+                log_info() << function->name() << ": solver=" << solver_id << ",fx=" << state.fx()
+                           << ",calls=" << state.fcalls() << "|" << state.gcalls() << ".";
+            }
+        }
+    }
+}
+
+[[maybe_unused]] static void check_solvers_on_smooth_functions(const strings_t&    solver_ids,
+                                                               const tensor_size_t min_dims = 4,
+                                                               const tensor_size_t max_dims = 4)
+{
+    check_solvers(solver_ids, function_t::make({min_dims, max_dims, convexity::yes, smoothness::yes, 100}));
+}
+
+[[maybe_unused]] static void check_solvers_on_nonsmooth_functions(const strings_t&    solver_ids,
+                                                                  const tensor_size_t min_dims = 4,
+                                                                  const tensor_size_t max_dims = 4)
+{
+    check_solvers(solver_ids, function_t::make({min_dims, max_dims, convexity::yes, smoothness::no, 100}));
 }

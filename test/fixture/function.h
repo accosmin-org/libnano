@@ -1,15 +1,17 @@
+#pragma once
+
 #include <nano/core/numeric.h>
 #include <nano/function/util.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-[[maybe_unused]] static auto make_random_x0(const function_t& function, const scalar_t scale = 1.0)
+[[maybe_unused]] inline auto make_random_x0(const function_t& function, const scalar_t scale = 1.0)
 {
     return make_random_vector<scalar_t>(function.size(), -scale, +scale);
 }
 
-[[maybe_unused]] static std::vector<vector_t> make_random_x0s(const function_t& function, const scalar_t scale = 1.0)
+[[maybe_unused]] inline std::vector<vector_t> make_random_x0s(const function_t& function, const scalar_t scale = 1.0)
 {
     const auto dims = make_dims(function.size());
 
@@ -91,10 +93,22 @@ using namespace nano;
         append(0.0639720138900110591, -0.6688867632042181377, 0.5664703735616101188, -0.7206801838939891347);
     }
 
+    // bug: bundle methods fail here
+    if (function.name() == "maxhilb[4D]")
+    {
+        append(0.2504205211128525121, -0.9901859205828136279, 0.8443897205517758575, 0.2324576140386427348);
+    }
+
+    // bug: bundle methods fail here
+    if (function.name() == "mae+lasso[4D]")
+    {
+        append(-0.8266018564672519275, 0.7071120652910407589, -0.8543004988236786446, 0.2548284277181698254);
+    }
+
     return vectors;
 }
 
-[[maybe_unused]] static auto check_gradient(const function_t& function, const int trials = 100,
+[[maybe_unused]] inline auto check_gradient(const function_t& function, const int trials = 100,
                                             const scalar_t epsilon = 1e-8)
 {
     const auto rfunction = function.clone();
@@ -118,7 +132,7 @@ using namespace nano;
     }
 }
 
-[[maybe_unused]] static auto check_convexity(const function_t& function, const int trials = 100)
+[[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);

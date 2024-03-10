@@ -177,7 +177,7 @@ solver_t::solver_t(logger_t logger)
     register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-9, LE, 1e-3));
     register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-15, LE, 1e-3));
-    register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 100, LE, 1000));
+    register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 300, LE, 1000));
     register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 30, LE, 1000));
 }
 

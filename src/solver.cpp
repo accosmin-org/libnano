@@ -1,16 +1,17 @@
 #include <mutex>
 #include <nano/core/logger.h>
 #include <nano/solver/asga.h>
-#include <nano/solver/bundle.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/cocob.h>
 #include <nano/solver/ellipsoid.h>
+#include <nano/solver/fpba.h>
 #include <nano/solver/gd.h>
 #include <nano/solver/gsample.h>
 #include <nano/solver/lbfgs.h>
 #include <nano/solver/osga.h>
 #include <nano/solver/pdsgm.h>
 #include <nano/solver/quasi.h>
+#include <nano/solver/rqb.h>
 #include <nano/solver/sgm.h>
 #include <nano/solver/universal.h>
 
@@ -203,8 +204,9 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_pgm_t>("universal primal gradient method (PGM)");
         manager.add<solver_dgm_t>("universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("universal fast gradient method (FGM)");
-        manager.add<solver_fpba1_t>("fast bundle proximal algorithm (FPBA1)");
-        manager.add<solver_fpba2_t>("fast bundle proximal algorithm (FPBA2)");
+        manager.add<solver_rqb_t>("reversal quasi-newton bundle algorithm (RQB)");
+        manager.add<solver_fpba1_t>("fast proximal bundle algorithm (FPBA1)");
+        manager.add<solver_fpba2_t>("fast proximal bundle algorithm (FPBA2)");
     };
 
     static std::once_flag flag;

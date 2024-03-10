@@ -256,7 +256,7 @@ function clang_tidy {
     wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     echo "-- Using wrapper ${wrapper}"
     ${wrapper} -p ${libnanodir} -clang-tidy-binary clang-tidy${clang_suffix} \
-        -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
+        -header-filter=.* -checks=-*,${check} -quiet -j ${threads} > $log 2>&1
 
     if [[ $? -ne 0 ]]; then
         cat ${log}

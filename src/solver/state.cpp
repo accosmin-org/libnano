@@ -25,6 +25,20 @@ solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     update_constraints();
 }
 
+bool solver_state_t::update(vector_cmap_t x, vector_cmap_t gx, const scalar_t fx)
+{
+    assert(m_function);
+    assert(x.size() == m_x.size());
+    assert(x.size() == m_function->size());
+    assert(gx.size() == m_x.size());
+    m_x  = x;
+    m_gx = gx;
+    m_fx = fx;
+    update_calls();
+    update_constraints();
+    return valid();
+}
+
 bool solver_state_t::update_if_better(const vector_t& x, const vector_t& gx, const scalar_t fx)
 {
     update_calls();

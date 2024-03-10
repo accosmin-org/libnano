@@ -13,7 +13,7 @@ struct inequality_t : public constraint_t<tmatrixA, tvectorb>
     ///
     /// \brief return true if the given point is feasible with the given threshold.
     ///
-    bool feasible(vector_cmap_t x, const scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon()) const
+    bool feasible(vector_cmap_t x, const scalar_t epsilon = epsilon0<scalar_t>()) const
     {
         return deviation(x) < epsilon;
     }
