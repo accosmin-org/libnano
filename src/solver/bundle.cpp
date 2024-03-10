@@ -3,8 +3,7 @@
 using namespace nano;
 
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
-    : m_solver()
-    , m_bundleS(max_size + 1, state.x().size())
+    : m_bundleS(max_size + 1, state.x().size())
     , m_bundleE(max_size + 1)
     , m_alphas(max_size + 1)
     , m_x(state.x())

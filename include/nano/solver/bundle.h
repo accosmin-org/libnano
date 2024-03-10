@@ -70,12 +70,12 @@ public:
     ///
     /// \brief change the proximity center to the given point and update the bundle.
     ///
-    void moveto(const vector_cmap_t y, const vector_cmap_t gy, scalar_t fy);
+    void moveto(vector_cmap_t y, vector_cmap_t gy, scalar_t fy);
 
     ///
     /// \brief update the bundle with the given point.
     ///
-    void append(const vector_cmap_t y, const vector_cmap_t gy, scalar_t fy);
+    void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy);
 
     ///
     /// \brief return the solution of the penalized proximal bundle problem.
@@ -95,7 +95,7 @@ private:
 
     void store_aggregate();
     void append_aggregate();
-    void append(const vector_cmap_t y, const vector_cmap_t gy, scalar_t fy, bool serious_step);
+    void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
     // attributes
     program::solver_t m_solver;  ///< buffer: quadratic program solver
