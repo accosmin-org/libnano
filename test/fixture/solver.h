@@ -257,7 +257,7 @@ struct solver_description_t
     return state;
 }
 
-[[maybe_unused]] static void check_solvers(const strings_t& solver_ids, const rfunctions_t& functions)
+[[maybe_unused]] static void check_solvers(const rsolvers_t& solvers, const rfunctions_t& functions)
 {
     for (const auto& function : functions)
     {
@@ -266,9 +266,9 @@ struct solver_description_t
         for (const auto& x0 : make_random_x0s(*function))
         {
             auto config = minimize_config_t{};
-            for (const auto& solver_id : solver_ids)
+            for (const auto& solver : solvers)
             {
-                const auto solver = make_solver(solver_id);
+                const auto& solver_id = solver->type_id();
                 UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
 
                 const auto descr = make_description(solver_id);
@@ -284,6 +284,18 @@ struct solver_description_t
     }
 }
 
+[[maybe_unused]] static void check_solvers(const strings_t& solver_ids, const rfunctions_t& functions)
+{
+    auto solvers = rsolvers_t{};
+    solvers.reserve(solver_ids.size());
+    for (const auto& solver_id : solver_ids)
+    {
+        solvers.emplace_back(make_solver(solver_id));
+    }
+
+    check_solvers(solvers, functions);
+}
+
 [[maybe_unused]] static void check_solvers_on_smooth_functions(const strings_t&    solver_ids,
                                                                const tensor_size_t min_dims = 4,
                                                                const tensor_size_t max_dims = 4)
@@ -296,4 +308,18 @@ struct solver_description_t
                                                                   const tensor_size_t max_dims = 4)
 {
     check_solvers(solver_ids, function_t::make({min_dims, max_dims, convexity::yes, smoothness::no, 100}));
+}
+
+[[maybe_unused]] static void check_solvers_on_smooth_functions(const rsolvers_t&   solvers,
+                                                               const tensor_size_t min_dims = 4,
+                                                               const tensor_size_t max_dims = 4)
+{
+    check_solvers(solvers, function_t::make({min_dims, max_dims, convexity::yes, smoothness::yes, 100}));
+}
+
+[[maybe_unused]] static void check_solvers_on_nonsmooth_functions(const rsolvers_t&   solvers,
+                                                                  const tensor_size_t min_dims = 4,
+                                                                  const tensor_size_t max_dims = 4)
+{
+    check_solvers(solvers, function_t::make({min_dims, max_dims, convexity::yes, smoothness::no, 100}));
 }

@@ -68,7 +68,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto& x     = bundle.x();
         const auto  fx    = bundle.fx();
         const auto  e     = bundle.smeared_e();
-        const auto  s     = bundle.smeared_s(); // FIXME: this is G - store in proximal_t!
+        const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
 
         std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" << m_function.gcalls()

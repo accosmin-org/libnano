@@ -6,7 +6,8 @@
 namespace nano
 {
 class solver_t;
-using rsolver_t = std::unique_ptr<solver_t>;
+using rsolver_t  = std::unique_ptr<solver_t>;
+using rsolvers_t = std::vector<rsolver_t>;
 
 ///
 /// \brief classifies numerical optimization algorithms (solvers).

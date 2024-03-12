@@ -2,13 +2,23 @@
 
 using namespace nano;
 
-bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
+template <>
+nano::enum_map_t<bundle_pruning> nano::enum_string()
+{
+    return {
+        { bundle_pruning::oldest_point,  "oldest"},
+        {bundle_pruning::largest_error, "largest"},
+    };
+}
+
+bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size, const bundle_pruning pruning)
     : m_bundleS(max_size + 1, state.x().size())
     , m_bundleE(max_size + 1)
     , m_alphas(max_size + 1)
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
+    , m_pruning(pruning)
 {
     append(state.x(), state.gx(), state.fx(), true);
 }
@@ -87,7 +97,7 @@ void bundle_t::delete_oldest(const tensor_size_t count)
     }
 }
 
-void bundle_t::delete_smallest(const tensor_size_t count)
+void bundle_t::delete_largest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
     {
@@ -96,10 +106,10 @@ void bundle_t::delete_smallest(const tensor_size_t count)
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
         assert(count <= size());
         m_alphas.slice(0, size()) = m_bundleE.slice(0, size());
-        std::nth_element(m_alphas.begin(), m_alphas.begin() + count, m_alphas.begin() + size());
+        std::nth_element(m_alphas.begin(), m_alphas.begin() + (size() - count), m_alphas.begin() + size());
 
-        m_size = remove_if([&, thres = m_alphas(count) + epsilon0<scalar_t>()](const tensor_size_t i)
-                           { return m_bundleE(i) < thres; });
+        m_size = remove_if([&, thres = m_alphas(count) - epsilon0<scalar_t>()](const tensor_size_t i)
+                           { return m_bundleE(i) > thres; });
 
         append_aggregate();
     }
@@ -136,14 +146,17 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     assert(dims() == gy.size());
 
     delete_inactive();
-    delete_oldest();
-    // delete_smallest();
+    if (m_pruning == bundle_pruning::oldest_point)
+    {
+        delete_oldest();
+    }
+    else
+    {
+        assert(m_pruning == bundle_pruning::largest_error);
+        delete_largest();
+    }
 
-    // FIXME: actually the largest epsilon value is deleted - see RQB reference, experimentation chapter
     // TODO: how to use the dual problem with a full quasi newton matrix (SR1) - see RQB reference
-
-    // TODO: remove by alpha < 1e-3
-    // TODO: remove by cumulated alpha < 1e-2
 
     if (serious_step)
     {
@@ -166,12 +179,14 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
 
 void bundle_t::config(configurable_t& c, const string_t& prefix)
 {
-    c.register_parameter(parameter_t::make_integer(scat(prefix, "bundle::max_size"), 2, LE, 10, LE, 1000));
+    c.register_parameter(parameter_t::make_integer(scat(prefix, "::bundle::max_size"), 2, LE, 10, LE, 1000));
+    c.register_parameter(parameter_t::make_enum(scat(prefix, "::bundle::pruning"), bundle_pruning::largest_error));
 }
 
 bundle_t bundle_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
 {
-    const auto max_size = c.parameter(scat(prefix, "bundle::max_size")).value<tensor_size_t>();
+    const auto max_size = c.parameter(scat(prefix, "::bundle::max_size")).value<tensor_size_t>();
+    const auto pruning  = c.parameter(scat(prefix, "::bundle::pruning")).value<bundle_pruning>();
 
-    return {state, max_size};
+    return {state, max_size, pruning};
 }
