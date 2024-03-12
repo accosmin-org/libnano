@@ -161,7 +161,7 @@ struct solver_description_t
         // NB: the (fast) proximal bundle algorithms are very precise and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-4))
+            .smooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-5))
             .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-4));
     }
     else if (solver_id == "gs" || solver_id == "gs-lbfgs")
@@ -170,15 +170,15 @@ struct solver_description_t
         // NB: the gradient sampling methods are very expensive on debug.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.max_evals(3000).expected_maximum_deviation(1e-5))
-            .nonsmooth_config(minimize_config_t{}.max_evals(3000).expected_maximum_deviation(1e-4));
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4));
     }
     else if (solver_id == "ags" || solver_id == "ags-lbfgs")
     {
         // NB: the adaptive gradient sampling methods are not very stable.
         return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false))
-            .nonsmooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false));
+            .smooth_config(minimize_config_t{}.max_evals(100).expected_convergence(false))
+            .nonsmooth_config(minimize_config_t{}.max_evals(100).expected_convergence(false));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
              solver_id == "wda" ||                                             // primal-dual subgradient method
