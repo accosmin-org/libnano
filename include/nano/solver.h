@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
 #include <nano/solver/lsearch.h>
 
 namespace nano
@@ -29,7 +28,16 @@ enum class solver_type
     ///< recommended for constrained optimization problems.
     constrained,
 };
-NANO_MAKE_ENUM3(solver_type, line_search, non_monotonic, constrained)
+
+template <>
+inline enum_map_t<solver_type> enum_string()
+{
+    return {
+        {  solver_type::line_search,   "line_search"},
+        {solver_type::non_monotonic, "non_monotonic"},
+        {  solver_type::constrained,   "constrained"}
+    };
+}
 
 ///
 /// \brief interface for numerical optimization algorithms.

@@ -31,8 +31,25 @@ enum class feature_type : int32_t
     sclass, ///< categorical feature (single-label - one value possible out of a fixed set)
     mclass, ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
 };
-NANO_MAKE_ENUM12(feature_type, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, sclass,
-                 mclass)
+
+template <>
+inline enum_map_t<feature_type> enum_string()
+{
+    return {
+        {   feature_type::int8,    "int8"},
+        {  feature_type::int16,   "int16"},
+        {  feature_type::int32,   "int32"},
+        {  feature_type::int64,   "int64"},
+        {  feature_type::uint8,   "uint8"},
+        { feature_type::uint16,  "uint16"},
+        { feature_type::uint32,  "uint32"},
+        { feature_type::uint64,  "uint64"},
+        {feature_type::float32, "float32"},
+        {feature_type::float64, "float64"},
+        { feature_type::sclass,  "sclass"},
+        { feature_type::mclass,  "mclass"}
+    };
+}
 
 ///
 /// \brief input feature (e.g. describes a column in a csv file)

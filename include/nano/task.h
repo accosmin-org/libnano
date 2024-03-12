@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
 namespace nano
@@ -15,5 +14,15 @@ enum class task_type : int32_t
     mclassification, ///< multi-label classification
     unsupervised,    ///< unsupervised
 };
-NANO_MAKE_ENUM4(task_type, regression, sclassification, mclassification, unsupervised)
+
+template <>
+inline enum_map_t<task_type> enum_string()
+{
+    return {
+        {     task_type::regression,      "regression"},
+        {task_type::sclassification, "sclassification"},
+        {task_type::mclassification, "mclassification"},
+        {   task_type::unsupervised,    "unsupervised"}
+    };
+}
 } // namespace nano

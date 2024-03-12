@@ -14,7 +14,15 @@ enum class hinge_type : int32_t
     left = 0, ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
     right,    ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!
 };
-NANO_MAKE_ENUM2(hinge_type, left, right)
+
+template <>
+inline enum_map_t<hinge_type> enum_string()
+{
+    return {
+        { hinge_type::left,  "left"},
+        {hinge_type::right, "right"}
+    };
+}
 
 ///
 /// \brief a hinge is a weak learner that performs the following operation element-wise:

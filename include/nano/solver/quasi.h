@@ -12,7 +12,15 @@ enum class quasi_initialization
     identity, ///< H0 = I
     scaled,   ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)
 };
-NANO_MAKE_ENUM2(quasi_initialization, identity, scaled)
+
+template <>
+inline enum_map_t<quasi_initialization> enum_string()
+{
+    return {
+        {quasi_initialization::identity, "identity"},
+        {  quasi_initialization::scaled,   "scaled"}
+    };
+}
 
 ///
 /// \brief quasi-Newton methods.

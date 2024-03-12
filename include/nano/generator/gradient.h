@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 #include <nano/string.h>
 #include <nano/tensor/tensor.h>
@@ -16,7 +15,16 @@ enum class kernel3x3_type
     scharr,
     prewitt,
 };
-NANO_MAKE_ENUM3(kernel3x3_type, sobel, scharr, prewitt)
+
+template <>
+inline enum_map_t<kernel3x3_type> enum_string()
+{
+    return {
+        {  kernel3x3_type::sobel,   "sobel"},
+        { kernel3x3_type::scharr,  "scharr"},
+        {kernel3x3_type::prewitt, "prewitt"}
+    };
+}
 
 ///
 /// \brief construct symmetric 3x3 kernels for computing image gradients.

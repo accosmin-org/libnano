@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
 namespace nano
@@ -18,5 +17,15 @@ enum class linear_regularization
     ridge,      ///< ridge
     elasticnet, ///< elastic net
 };
-NANO_MAKE_ENUM4(linear_regularization, none, lasso, ridge, elasticnet)
+
+template <>
+inline enum_map_t<linear_regularization> enum_string()
+{
+    return {
+        {      linear_regularization::none,       "none"},
+        {     linear_regularization::lasso,      "lasso"},
+        {     linear_regularization::ridge,      "ridge"},
+        {linear_regularization::elasticnet, "elasticnet"}
+    };
+}
 } // namespace nano

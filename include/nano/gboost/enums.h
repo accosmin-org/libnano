@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
 namespace nano
@@ -15,7 +14,15 @@ enum class gboost_wscale : int32_t
     gboost = 0, ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
     tboost,     ///< use a potentially different scaling factor for each split (e.g. see TreeBoost variation)
 };
-NANO_MAKE_ENUM2(gboost_wscale, gboost, tboost)
+
+template <>
+inline enum_map_t<gboost_wscale> enum_string()
+{
+    return {
+        {gboost_wscale::gboost, "gboost"},
+        {gboost_wscale::tboost, "tboost"}
+    };
+}
 
 ///
 /// \brief toggle shrinkage of the fitted weak learners at each boosting round.
@@ -28,7 +35,16 @@ enum class gboost_shrinkage : int32_t
     global, ///< same value for all boosting rounds (see reference)
     local,  ///< different values per boosting round
 };
-NANO_MAKE_ENUM3(gboost_shrinkage, off, global, local)
+
+template <>
+inline enum_map_t<gboost_shrinkage> enum_string()
+{
+    return {
+        {   gboost_shrinkage::off,    "off"},
+        {gboost_shrinkage::global, "global"},
+        { gboost_shrinkage::local,  "local"}
+    };
+}
 
 ///
 /// \brief toggle sub-sampling of the training samples at each boosting round.
@@ -43,5 +59,16 @@ enum class gboost_subsample : int32_t
     wei_loss_bootstrap, ///< weighted (by the loss value) boostrapping of the training samples
     wei_grad_bootstrap, ///< weighted (by the loss gradient magnitudevalue) boostrapping of the training samples
 };
-NANO_MAKE_ENUM5(gboost_subsample, off, subsample, bootstrap, wei_loss_bootstrap, wei_grad_bootstrap)
+
+template <>
+inline enum_map_t<gboost_subsample> enum_string()
+{
+    return {
+        {               gboost_subsample::off,                "off"},
+        {         gboost_subsample::subsample,          "subsample"},
+        {         gboost_subsample::bootstrap,          "bootstrap"},
+        {gboost_subsample::wei_loss_bootstrap, "wei_loss_bootstrap"},
+        {gboost_subsample::wei_grad_bootstrap, "wei_grad_bootstrap"}
+    };
+}
 } // namespace nano

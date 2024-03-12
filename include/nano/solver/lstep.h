@@ -14,7 +14,16 @@ enum class interpolation_type
     quadratic, ///<
     cubic      ///<
 };
-NANO_MAKE_ENUM3(interpolation_type, bisection, quadratic, cubic)
+
+template <>
+inline enum_map_t<interpolation_type> enum_string()
+{
+    return {
+        {interpolation_type::bisection, "bisection"},
+        {interpolation_type::quadratic, "quadratic"},
+        {    interpolation_type::cubic,     "cubic"}
+    };
+}
 
 ///
 /// \brief line-search step function:

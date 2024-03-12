@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/core/enumutil.h>
 #include <nano/core/strutil.h>
 
 namespace nano
@@ -16,7 +15,17 @@ enum class wlearner_criterion
     aicc, ///< AICc
     bic,  ///< BIC
 };
-NANO_MAKE_ENUM4(wlearner_criterion, rss, aic, aicc, bic)
+
+template <>
+inline enum_map_t<wlearner_criterion> enum_string()
+{
+    return {
+        { wlearner_criterion::rss,  "rss"},
+        { wlearner_criterion::aic,  "aic"},
+        {wlearner_criterion::aicc, "aicc"},
+        { wlearner_criterion::bic,  "bic"}
+    };
+}
 } // namespace nano
 
 namespace nano::wlearner
