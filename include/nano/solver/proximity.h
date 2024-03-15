@@ -34,9 +34,14 @@ public:
     static proximity_t make(const solver_state_t&, const configurable_t&, const string_t& prefix);
 
     ///
-    /// \brief return the current proximity parameter value.
+    /// \brief return the current quasi-newton approximation of the Hessian.
     ///
-    scalar_t miu() const;
+    const matrix_t& H() const { return m_H; }
+
+    ///
+    /// \brief return the current quasi-newton approximation of the Hessian's inverse.
+    ///
+    const matrix_t& B() const { return m_B; }
 
     ///
     /// \brief update the proximity parameter given a new proximity center.
@@ -45,6 +50,7 @@ public:
 
 private:
     // attributes
-    scalar_t m_miu{1.0}; ///< current proximity parameter value
+    matrix_t m_H; ///< quasi-newton approximation of the Hessian (see the M_n in (2))
+    matrix_t m_B; ///< quasi-newton approximation of the Hessian's inverse (see the M_n^-1 in (2))
 };
 } // namespace nano
