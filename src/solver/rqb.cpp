@@ -33,7 +33,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity.miu(), max_evals, epsilon);
+        const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity, max_evals, epsilon);
 
         const auto iter_ok   = status != csearch_status::failed;
         const auto converged = status == csearch_status::converged;

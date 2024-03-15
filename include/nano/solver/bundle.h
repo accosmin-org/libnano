@@ -74,17 +74,17 @@ public:
     ///
     /// \brief return the approximation error, see (1).
     ///
-    scalar_t delta(const scalar_t miu) const
-    {
-        const auto delta = smeared_e() + 1.0 / (2.0 * miu) * smeared_s().squaredNorm();
-        assert(delta + epsilon1<scalar_t>() >= 0.0);
-        return delta;
-    }
+    scalar_t delta(const matrix_t& M, scalar_t miu) const;
 
     ///
     /// \brief return the estimated proximal point.
     ///
-    auto proximal(const scalar_t miu) const { return m_x - smeared_s() / miu; }
+    auto proximal(const matrix_t& invM, const scalar_t miu) const
+    {
+        assert(std::isfinite(miu));
+        assert(miu > 0.0);
+        return m_x - (invM * smeared_s()) / miu;
+    }
 
     ///
     /// \brief change the proximity center to the given point and update the bundle.
@@ -97,9 +97,9 @@ public:
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy);
 
     ///
-    /// \brief return the solution of the penalized proximal bundle problem.
+    /// \brief return the solution of the penalized proximal bundle problem, see (1).
     ///
-    void solve(scalar_t miu);
+    void solve(const matrix_t& M, scalar_t miu);
 
 private:
     tensor_size_t dims() const { return m_bundleS.size<1>(); }

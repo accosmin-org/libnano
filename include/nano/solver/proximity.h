@@ -24,33 +24,33 @@ public:
     proximity_t(const solver_state_t& state, scalar_t miu0_min, scalar_t miu0_max);
 
     ///
-    /// \brief
+    /// \brief setup the default configuration.
     ///
     static void config(configurable_t&, const string_t& prefix);
 
     ///
-    /// \brief
+    /// \brief construct a proximity parameter with the given configuration.
     ///
     static proximity_t make(const solver_state_t&, const configurable_t&, const string_t& prefix);
 
     ///
     /// \brief return the current quasi-newton approximation of the Hessian.
     ///
-    const matrix_t& H() const { return m_H; }
+    const matrix_t& M() const { return m_M; }
 
     ///
     /// \brief return the current quasi-newton approximation of the Hessian's inverse.
     ///
-    const matrix_t& B() const { return m_B; }
+    const matrix_t& invM() const { return m_invM; }
 
     ///
-    /// \brief update the proximity parameter given a new proximity center.
+    /// \brief update the proximity parameter given a new proximity center, see (2).
     ///
     void update(scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn, const vector_t& gn1);
 
 private:
     // attributes
-    matrix_t m_H; ///< quasi-newton approximation of the Hessian (see the M_n in (2))
-    matrix_t m_B; ///< quasi-newton approximation of the Hessian's inverse (see the M_n^-1 in (2))
+    matrix_t m_M;    ///< quasi-newton approximation of the Hessian (see the M_n in (2))
+    matrix_t m_invM; ///< quasi-newton approximation of the Hessian's inverse (see the M_n^-1 in (2))
 };
 } // namespace nano

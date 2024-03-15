@@ -28,7 +28,7 @@ csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar
     m_point.m_gy.resize(function.size());
 }
 
-const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu, const tensor_size_t max_evals,
+const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const proximity_t& prox, const tensor_size_t max_evals,
                                             const scalar_t epsilon)
 {
     // FIXME: the references do not specify how to choose these thresholds
@@ -60,21 +60,20 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto& fy     = m_point.m_fy;
 
         // estimate proximal point
-        bundle.solve(miu / t);
+        bundle.solve(prox.M(), 1.0 / t);
 
-        y  = bundle.proximal(miu / t);
+        y  = bundle.proximal(prox.invM(), 1.0 / t);
         fy = m_function.vgrad(y, gy);
 
         const auto& x     = bundle.x();
         const auto  fx    = bundle.fx();
         const auto  e     = bundle.smeared_e();
         const auto  s     = bundle.smeared_s();
-        const auto  delta = bundle.delta(miu / t);
+        const auto  delta = bundle.delta(prox.M(), 1.0 / t);
 
         std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" << m_function.gcalls()
                   << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
-                  << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
-                  << std::endl;
+                  << ",bsize=" << bundle.size() << ",t=" << t << "[" << tL << "," << tR << "]" << std::endl;
 
         if (const auto failed = !std::isfinite(fy); failed)
         {

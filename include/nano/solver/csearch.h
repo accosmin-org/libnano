@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/solver/bundle.h>
+#include <nano/solver/proximity.h>
 
 namespace nano
 {
@@ -52,7 +53,7 @@ public:
     ///
     /// \brief return a new stability center.
     ///
-    const point_t& search(bundle_t&, scalar_t miu, tensor_size_t max_evals, scalar_t epsilon);
+    const point_t& search(bundle_t&, const proximity_t&, tensor_size_t max_evals, scalar_t epsilon);
 
 private:
     // attributes

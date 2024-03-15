@@ -23,6 +23,16 @@ bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size, co
     append(state.x(), state.gx(), state.fx(), true);
 }
 
+scalar_t bundle_t::delta(const matrix_t& M, const scalar_t miu) const
+{
+    assert(std::isfinite(miu));
+    assert(miu > 0.0);
+    const auto s_hat = smeared_s();
+    const auto delta = smeared_e() + (M * s_hat).dot(s_hat) / (2.0 * miu);
+    assert(delta + epsilon1<scalar_t>() >= 0.0);
+    return delta;
+}
+
 void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
 {
     const auto serious_step = true;
@@ -38,7 +48,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
-void bundle_t::solve(const scalar_t miu)
+void bundle_t::solve(const matrix_t& M, const scalar_t miu)
 {
     assert(size() > 0);
     assert(dims() == m_x.size());
@@ -50,7 +60,7 @@ void bundle_t::solve(const scalar_t miu)
     else if (m_size == 2)
     {
         // NB: can compute analytically the solution for this case!
-        const auto Q = S() * S().transpose();
+        const auto Q = S() * M * S().transpose();
         const auto c = miu * e();
 
         const auto q = Q(0, 0) + Q(1, 1) - Q(0, 1) - Q(1, 0);
@@ -64,7 +74,7 @@ void bundle_t::solve(const scalar_t miu)
     }
     else
     {
-        const auto Q = S() * S().transpose();
+        const auto Q = S() * M * S().transpose();
         const auto c = miu * e();
 
         const auto lower = program::make_less(m_size, 1.0);

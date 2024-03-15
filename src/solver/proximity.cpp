@@ -10,22 +10,22 @@ scalar_t make_miu0(const solver_state_t& state)
     return 5.0 * state.gx().squaredNorm() / (std::abs(state.fx()) + epsilon1<scalar_t>());
 }
 
-void update(const scalar_t miu, matrix_t& H, matrix_t& B)
+void update(const scalar_t miu, matrix_t& M, matrix_t& invM)
 {
-    H = miu * matrix_t::identity(H.rows(), H.cols());
-    B = (1.0 / miu) * matrix_t::identity(B.rows(), B.cols());
+    M    = miu * matrix_t::identity(M.rows(), M.cols());
+    invM = (1.0 / miu) * matrix_t::identity(M.rows(), M.cols());
 }
 } // namespace
 
 proximity_t::proximity_t(const solver_state_t& state, const scalar_t miu0_min, const scalar_t miu0_max)
-    : m_H(state.x().size(), state.x().size())
-    , m_B(state.x().size(), state.x().size())
+    : m_M(state.x().size(), state.x().size())
+    , m_invM(state.x().size(), state.x().size())
 {
     const auto miu = std::clamp(make_miu0(state), miu0_min, miu0_max);
     assert(std::isfinite(miu));
     assert(miu > 0.0);
 
-    ::update(miu, m_H, m_B);
+    ::update(miu, m_M, m_invM);
 }
 
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
@@ -37,14 +37,14 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
     const auto nu = gn1 - gn;
     const auto xi = xn1 - xn;
 
-    const auto u = xi + t * m_B * nu;
+    const auto u = xi + t * m_invM * nu;
     assert(nu.dot(u) >= 0.0);
 
     // NB: no positive solution if the function to optimize is not strictly convex!
     if (nu.dot(u) > epsilon0<scalar_t>())
     {
         const auto miu = nu.dot(nu) / nu.dot(u);
-        ::update(miu, m_H, m_B);
+        ::update(miu, m_M, m_invM);
     }
 }
 
