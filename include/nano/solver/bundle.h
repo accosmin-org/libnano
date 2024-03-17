@@ -74,7 +74,7 @@ public:
     ///
     /// \brief return the approximation error, see (1).
     ///
-    scalar_t delta(const matrix_t& M, scalar_t miu) const;
+    scalar_t delta(const matrix_t& invM, scalar_t miu) const;
 
     ///
     /// \brief return the estimated proximal point.
@@ -99,7 +99,7 @@ public:
     ///
     /// \brief return the solution of the penalized proximal bundle problem, see (1).
     ///
-    void solve(const matrix_t& M, scalar_t miu);
+    void solve(const matrix_t& invM, scalar_t miu);
 
 private:
     tensor_size_t dims() const { return m_bundleS.size<1>(); }

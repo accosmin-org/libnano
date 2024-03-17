@@ -60,7 +60,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const proximity_t&
         auto& fy     = m_point.m_fy;
 
         // estimate proximal point
-        bundle.solve(prox.M(), 1.0 / t);
+        bundle.solve(prox.invM(), 1.0 / t);
 
         y  = bundle.proximal(prox.invM(), 1.0 / t);
         fy = m_function.vgrad(y, gy);
@@ -69,11 +69,12 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const proximity_t&
         const auto  fx    = bundle.fx();
         const auto  e     = bundle.smeared_e();
         const auto  s     = bundle.smeared_s();
-        const auto  delta = bundle.delta(prox.M(), 1.0 / t);
+        const auto  delta = bundle.delta(prox.invM(), 1.0 / t);
 
         std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" << m_function.gcalls()
                   << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
-                  << ",bsize=" << bundle.size() << ",t=" << t << "[" << tL << "," << tR << "]" << std::endl;
+                  << ",bsize=" << bundle.size() << ",miu=" << prox.M()(0, 0) << ",t=" << t << "[" << tL << "," << tR
+                  << "]" << std::endl;
 
         if (const auto failed = !std::isfinite(fy); failed)
         {
