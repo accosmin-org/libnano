@@ -31,7 +31,6 @@ proximity_t::proximity_t(const solver_state_t& state, const scalar_t miu0_min, c
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
                          const vector_t& gn1)
 {
-    // FIXME: RQB citation + book chapter
     // TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
 
     const auto nu = gn1 - gn;
@@ -43,8 +42,17 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
     // NB: no positive solution if the function to optimize is not strictly convex!
     if (nu.dot(u) > epsilon0<scalar_t>())
     {
-        const auto miu = nu.dot(nu) / nu.dot(u);
-        ::update(miu, m_M, m_invM);
+        const auto dg = nu;
+        const auto dx = u;
+
+        // m_invM += (dx - m_invM * dg) * (dx - m_invM * dg).transpose() / (dx - m_invM * dg).dot(dg);
+        const auto I = matrix_t::identity(m_invM.rows(), m_invM.cols());
+
+        m_invM = (I - dx * dg.transpose() / dx.dot(dg)) * m_invM * (I - dg * dx.transpose() / dx.dot(dg)) +
+                 dx * dx.transpose() / dx.dot(dg);
+
+        // const auto miu = nu.dot(nu) / nu.dot(u);
+        // ::update(miu, m_M, m_invM);
     }
 }
 
