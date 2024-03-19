@@ -18,7 +18,7 @@ auto make_smooth_solver()
 
 auto make_nonsmooth_solver()
 {
-    return make_solver("osga");
+    return make_solver("rqb");
 }
 
 auto make_model(const tensor_size_t batch = 100)
