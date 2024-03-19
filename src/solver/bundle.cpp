@@ -1,6 +1,5 @@
 #include <iomanip>
-#include <iostream>
-#include <nano/assert.h>
+#include <nano/core/logger.h>
 #include <nano/solver/bundle.h>
 
 using namespace nano;
@@ -80,14 +79,10 @@ void bundle_t::solve(const scalar_t miu)
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
         const auto solution = m_solver.solve(program, x0);
-        assert(program.feasible(solution.m_x, epsilon1<scalar_t>()));
-        NANO_ASSERT(solution.m_status == solver_status::converged,
-                    [&]()
-                    {
-                        std::cout << std::fixed << std::setprecision(20) << "bundle solution failed:"
-                                  << "\n\tstatus=" << scat(solution.m_status) << "\n\tQ=" << Q << "\n\tc=" << c
-                                  << std::endl;
-                    });
+        critical(!program.feasible(solution.m_x, epsilon1<scalar_t>()), std::fixed, std::setprecision(20),
+                 "unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c, "\n");
+        critical(solution.m_status != solver_status::converged, std::fixed, std::setprecision(20),
+                 "failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c, "\n");
 
         m_alphas.slice(0, m_size) = solution.m_x;
     }
