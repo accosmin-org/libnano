@@ -179,7 +179,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
 
 void bundle_t::config(configurable_t& c, const string_t& prefix)
 {
-    c.register_parameter(parameter_t::make_integer(scat(prefix, "::bundle::max_size"), 2, LE, 10, LE, 1000));
+    c.register_parameter(parameter_t::make_integer(scat(prefix, "::bundle::max_size"), 2, LE, 100, LE, 1000));
     c.register_parameter(parameter_t::make_enum(scat(prefix, "::bundle::pruning"), bundle_pruning::largest_error));
 }
 

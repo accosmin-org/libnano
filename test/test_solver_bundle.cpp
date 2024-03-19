@@ -7,7 +7,7 @@ inline auto make_solver_ids()
     return strings_t{"ellipsoid", "rqb", "fpba1", "fpba2"};
 }
 
-inline auto make_solvers(const char* const pruning, const tensor_size_t bundle_max_size = 10)
+inline auto make_solvers(const char* const pruning, const tensor_size_t bundle_max_size = 8)
 {
     auto solvers = rsolvers_t{};
     solvers.emplace_back(make_solver("ellipsoid"));

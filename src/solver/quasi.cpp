@@ -35,7 +35,7 @@ void DFP(matrix_t& H, const tvector& dx, const tvector& dg)
 }
 
 template <typename tvector>
-auto BFGS_(matrix_t& H, const tvector& dx, const tvector& dg)
+auto BFGS_(const matrix_t& H, const tvector& dx, const tvector& dg)
 {
     const auto I = matrix_t::identity(H.rows(), H.cols());
 
