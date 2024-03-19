@@ -127,6 +127,7 @@ inline logger_t log_error()
 
 ///
 /// \brief throws an exception as a critical condition is satisfied.
+/// FIXME: use std::source_location when moving to C++20 to automatically add this information
 ///
 template <typename... tmessage>
 [[noreturn]] void critical0(const tmessage&... message)
@@ -137,6 +138,7 @@ template <typename... tmessage>
 
 ///
 /// \brief checks and throws an exception if the given condition is satisfied.
+/// FIXME: use std::source_location when moving to C++20 to automatically add this information
 ///
 template <typename tcondition, typename... tmessage>
 void critical(const tcondition& condition, const tmessage&... message)
@@ -146,6 +148,19 @@ void critical(const tcondition& condition, const tmessage&... message)
         critical0(message...);
     }
 }
+
+#ifdef NDEBUG
+template <typename tcondition, typename... tmessage>
+void debug_critical(const tcondition&, const tmessage&...)
+{
+}
+#else
+template <typename tcondition, typename... tmessage>
+void debug_critical(const tcondition& condition, const tmessage&... message)
+{
+    critical(condition, message...);
+}
+#endif
 
 ///
 /// \brief wraps main function to catch and log all exceptions.

@@ -1,3 +1,5 @@
+#include <iomanip>
+#include <nano/core/logger.h>
 #include <nano/solver/bundle.h>
 
 using namespace nano;
@@ -87,8 +89,10 @@ void bundle_t::solve(const matrix_t& invM, const scalar_t miu)
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
         const auto solution = m_solver.solve(program, x0);
-        assert(program.feasible(solution.m_x, epsilon1<scalar_t>()));
-        assert(solution.m_status == solver_status::converged);
+        debug_critical(!program.feasible(solution.m_x, epsilon1<scalar_t>()), std::fixed, std::setprecision(20),
+                       "unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c, "\n");
+        debug_critical(solution.m_status != solver_status::converged, std::fixed, std::setprecision(20),
+                       "failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c, "\n");
 
         m_alphas.slice(0, m_size) = solution.m_x;
     }
@@ -189,7 +193,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
 
 void bundle_t::config(configurable_t& c, const string_t& prefix)
 {
-    c.register_parameter(parameter_t::make_integer(scat(prefix, "::bundle::max_size"), 2, LE, 10, LE, 1000));
+    c.register_parameter(parameter_t::make_integer(scat(prefix, "::bundle::max_size"), 2, LE, 100, LE, 1000));
     c.register_parameter(parameter_t::make_enum(scat(prefix, "::bundle::pruning"), bundle_pruning::largest_error));
 }
 
