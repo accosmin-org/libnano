@@ -149,6 +149,19 @@ void critical(const tcondition& condition, const tmessage&... message)
     }
 }
 
+#ifdef NDEBUG
+template <typename tcondition, typename... tmessage>
+void debug_critical(const tcondition&, const tmessage&...)
+{
+}
+#else
+template <typename tcondition, typename... tmessage>
+void debug_critical(const tcondition& condition, const tmessage&... message)
+{
+    critical(condition, message...);
+}
+#endif
+
 ///
 /// \brief wraps main function to catch and log all exceptions.
 ///
