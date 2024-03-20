@@ -239,9 +239,8 @@ UTEST_CASE(program8)
 
 UTEST_CASE(program9)
 {
-    const auto dims = 6;
-    const auto Q    = make_matrix<scalar_t>(
-        dims, 7695057.3606177885085344, -7692711.7498994730412960, 1774665.9566367159131914, -2958099.6455304687842727,
+    const auto Q1 = make_matrix<scalar_t>(
+        6, 7695057.3606177885085344, -7692711.7498994730412960, 1774665.9566367159131914, -2958099.6455304687842727,
         593055.4774447004310787, -2957389.7971845343708992, -7692711.7498994730412960, 7690370.3438775558024645,
         -1778501.9468738515861332, 2956050.9844734095968306, -592876.0527072392869741, 2957489.0522283604368567,
         1774665.9566367159131914, -1778501.9468738515861332, 7688594.0792828639969230, -1777899.3335352085996419,
@@ -250,20 +249,34 @@ UTEST_CASE(program9)
         593055.4774446999654174, -592876.0527072392869741, -593608.1158854841487482, -2959509.8127272245474160,
         7692237.0262242779135704, -2958799.9643812905997038, -2957389.7971845343708992, 2957489.0522283604368567,
         -1777189.4851892746519297, 590636.6286198727320880, -2958799.9643812905997038, 7691938.1929421387612820);
-    const auto c = make_vector<scalar_t>(0.0000000000000000, 286.0212216630087028, 0.0000396148702730,
-                                         0.0000951540357619, 0.0000492518259509, 0.0000961890000983);
 
-    const auto lower = program::make_less(dims, 1.0);
-    const auto upper = program::make_greater(dims, 0.0);
-    const auto wsum1 = program::make_equality(vector_t::constant(dims, 1.0), 1.0);
+    const auto c1 = make_vector<scalar_t>(0.0000000000000000, 286.0212216630087028, 0.0000396148702730,
+                                          0.0000951540357619, 0.0000492518259509, 0.0000961890000983);
 
-    const auto program = program::make_quadratic(Q, c, lower, upper, wsum1);
-    UTEST_CHECK(program.convex());
+    const auto Q2 =
+        make_matrix<scalar_t>(3, 769254010.1276453733444214, -769258932.4067106246948242, -59174331.5974321961402893,
+                              -769258932.4067106246948242, 769263856.1250183582305908, 59151610.9445311576128006,
+                              -59174331.5974321961402893, 59151610.9445311576128006, 769202060.4053010940551758);
 
-    const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
-    assert(program.feasible(x0, epsilon1<scalar_t>()));
+    const auto c2 = make_vector<scalar_t>(0.0000000000000000, 8886.7208660855503695, 0.0000032102354108);
 
-    check_solution_(program, expected_t{}.x0(x0));
+    for (const auto& [Q, c] : {std::make_tuple(Q1, c1), std::make_tuple(Q2, c2)})
+    {
+        UTEST_NAMED_CASE(scat("c=", c));
+
+        const auto dims  = c.size();
+        const auto lower = program::make_less(dims, 1.0);
+        const auto upper = program::make_greater(dims, 0.0);
+        const auto wsum1 = program::make_equality(vector_t::constant(dims, 1.0), 1.0);
+
+        const auto program = program::make_quadratic(Q, c, lower, upper, wsum1);
+        UTEST_CHECK(program.convex());
+
+        const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
+        assert(program.feasible(x0, epsilon1<scalar_t>()));
+
+        check_solution_(program, expected_t{}.x0(x0));
+    }
 }
 
 UTEST_END_MODULE()

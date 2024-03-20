@@ -171,7 +171,7 @@ struct solver_t::program_t
 solver_t::solver_t(logger_t logger)
     : m_logger(std::move(logger))
 {
-    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.99, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.5, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-4, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.5, LT, 1.0));
