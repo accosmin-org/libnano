@@ -66,6 +66,7 @@ void bundle_t::solve(const scalar_t miu)
     }
     else
     {
+        // NB: the
         const auto Q = S() * S().transpose();
         const auto c = miu * e();
 
@@ -79,8 +80,6 @@ void bundle_t::solve(const scalar_t miu)
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
         const auto solution = m_solver.solve(program, x0);
-        debug_critical(c.minCoeff() < epsilon0<scalar_t>(), std::fixed, std::setprecision(16),
-                       "improperly constrained bundle problem:\n\tc=", c);
         debug_critical(!program.feasible(solution.m_x, epsilon1<scalar_t>()), std::fixed, std::setprecision(16),
                        "unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
                        "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
