@@ -1,4 +1,6 @@
 #include <Eigen/Dense>
+#include <iomanip>
+#include <nano/core/logger.h>
 #include <nano/program/solver.h>
 
 using namespace nano;
@@ -109,7 +111,12 @@ struct solver_t::program_t
 
         // solve the system
         m_ldlt.compute(m_lmat.matrix());
-        m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
+        m_lsol.vector()  = m_ldlt.solve(m_lvec.vector());
+
+        [[maybe_unused]] const auto error = m_lmat * m_lsol - m_lvec;
+        debug_critical(error.lpNorm<Eigen::Infinity>() > epsilon1<scalar_t>(), std::fixed, std::setprecision(16),
+                       "failed to solve precisely the primal-dual system:\n\terror=", error.transpose());
+
         return m_lsol;
     }
 
@@ -171,9 +178,9 @@ struct solver_t::program_t
 solver_t::solver_t(logger_t logger)
     : m_logger(std::move(logger))
 {
-    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.5, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-4, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-2, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-9, LE, 1e-3));
     register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-15, LE, 1e-3));
