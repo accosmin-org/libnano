@@ -1,5 +1,7 @@
 #include "fixture/program.h"
 
+#include <Eigen/Dense>
+
 using namespace nano;
 using namespace nano::program;
 
@@ -263,6 +265,32 @@ UTEST_CASE(program9)
     for (const auto& [Q, c] : {std::make_tuple(Q1, c1), std::make_tuple(Q2, c2)})
     {
         UTEST_NAMED_CASE(scat("c=", c));
+
+        std::cout << std::fixed << std::setprecision(16) << "dQ=" << (Q - Q.transpose()).lpNorm<Eigen::Infinity>()
+                  << std::endl;
+        assert(Q.matrix().isApprox(Q.transpose()));
+
+        {
+            const auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{Q.matrix()};
+            std::cout << std::fixed << std::setprecision(16) << "rcond=" << solver.rcond()
+                      << ",ispos=" << solver.isPositive() << ",isneg=" << solver.isNegative()
+                      << ",diag=" << solver.vectorD().transpose() << std::endl;
+
+            auto vector     = vector_t{c.size()};
+            vector.vector() = solver.solve(-c.vector());
+
+            const auto error = vector_t{Q * vector} + c;
+            std::cout << std::fixed << std::setprecision(16) << "error=" << error.transpose() << std::endl;
+        }
+        {
+            const auto solver =
+                Eigen::BDCSVD<eigen_matrix_t<scalar_t>>{Q.matrix(), Eigen::ComputeFullU | Eigen::ComputeFullV};
+            auto       vector = vector_t{c.size()};
+            vector.vector()   = solver.solve(-c.vector());
+
+            const auto error = vector_t{Q * vector} + c;
+            std::cout << std::fixed << std::setprecision(16) << "error=" << error.transpose() << std::endl;
+        }
 
         const auto dims  = c.size();
         const auto lower = program::make_less(dims, 1.0);

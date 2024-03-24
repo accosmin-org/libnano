@@ -66,7 +66,6 @@ void bundle_t::solve(const scalar_t miu)
     }
     else
     {
-        // NB: the
         const auto Q = S() * S().transpose();
         const auto c = miu * e();
 
