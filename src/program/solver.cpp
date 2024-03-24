@@ -115,7 +115,9 @@ struct solver_t::program_t
 
         [[maybe_unused]] const auto error = m_lmat * m_lsol - m_lvec;
         debug_critical(error.lpNorm<Eigen::Infinity>() > epsilon1<scalar_t>(), std::fixed, std::setprecision(16),
-                       "failed to solve precisely the primal-dual system:\n\terror=", error.transpose());
+                       "failed to solve precisely the primal-dual system:\n\terror=", error.transpose(),
+                       "\n\tlmat=", m_lmat, "\n\tlvec=", m_lvec, "\n\trcond=", m_ldlt.rcond(),
+                       "\n\tispos=", m_ldlt.isPositive(), "\n\tisneg=", m_ldlt.isNegative());
 
         return m_lsol;
     }
