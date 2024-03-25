@@ -41,6 +41,9 @@ struct NANO_PUBLIC solver_state_t
     solver_status m_status{solver_status::max_iters}; ///< optimization status
     scalar_t      m_ldlt_rcond{0};                    ///< LDLT decomp: reciprocal condition number
     bool          m_ldlt_positive{false};             ///< LDLT decomp: positive semidefinite?, otherwise unstable
+    scalar_t      m_eta_denom{1.0};                   ///< normalization factor for the surrogate duality gap
+    scalar_t      m_rdual_denom{1.0};                 ///< normalization factor for the dual residual
+    scalar_t      m_rprim_denom{1.0};                 ///< normalization factor for the primal residual
 };
 
 ///

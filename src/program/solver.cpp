@@ -1,6 +1,4 @@
 #include <Eigen/Dense>
-#include <iomanip>
-#include <nano/core/logger.h>
 #include <nano/program/solver.h>
 
 using namespace nano;
@@ -111,14 +109,7 @@ struct solver_t::program_t
 
         // solve the system
         m_ldlt.compute(m_lmat.matrix());
-        m_lsol.vector()  = m_ldlt.solve(m_lvec.vector());
-
-        [[maybe_unused]] const auto error = m_lmat * m_lsol - m_lvec;
-        debug_critical(error.lpNorm<Eigen::Infinity>() > epsilon1<scalar_t>(), std::fixed, std::setprecision(16),
-                       "failed to solve precisely the primal-dual system:\n\terror=", error.transpose(),
-                       "\n\tlmat=", m_lmat, "\n\tlvec=", m_lvec, "\n\trcond=", m_ldlt.rcond(),
-                       "\n\tispos=", m_ldlt.isPositive(), "\n\tisneg=", m_ldlt.isNegative());
-
+        m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
         return m_lsol;
     }
 
@@ -139,12 +130,14 @@ struct solver_t::program_t
             state.m_fx    = 0.5 * x.dot(Q() * x) + x.dot(m_c.vector());
             state.m_rdual = Q() * x + m_c;
         }
+        state.m_rdual_denom = 1.0 + state.m_rdual.lpNorm<2>();
 
         // surrogate duality gap
         if (m > 0)
         {
             state.m_eta = -u.dot(m_G * x - m_h);
         }
+        state.m_eta_denom = 1.0 + m_h.lpNorm<2>();
 
         // residual contributions of linear equality constraints
         if (p > 0)
@@ -152,6 +145,7 @@ struct solver_t::program_t
             state.m_rdual += m_A.transpose() * v;
             state.m_rprim = m_A * x - m_b;
         }
+        state.m_rprim_denom = 1.0 + m_b.lpNorm<2>();
 
         // residual contributions of linear inequality constraints
         if (m > 0)
@@ -374,9 +368,8 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
     state.m_eta = 0.0;
     program.update(state.m_x, state.m_u, state.m_v, miu, state);
 
-    const auto epsil = std::sqrt(std::numeric_limits<scalar_t>::epsilon());
     const auto valid = std::isfinite(state.residual());
-    const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsil);
+    const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsilon2<scalar_t>());
     state.m_status   = (valid && aprox) ? solver_status::converged : solver_status::failed;
 
     log(state);
@@ -385,11 +378,11 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
 
 void solver_t::done(solver_state_t& state, const scalar_t epsilon) const
 {
-    const auto curr_eta   = state.m_eta;
-    const auto curr_rdual = state.m_rdual.lpNorm<Eigen::Infinity>();
-    const auto curr_rprim = state.m_rprim.lpNorm<Eigen::Infinity>();
+    const auto norm_eta   = state.m_eta / state.m_eta_denom;
+    const auto norm_rdual = state.m_rdual.lpNorm<2>() / state.m_rdual_denom;
+    const auto norm_rprim = state.m_rprim.lpNorm<2>() / state.m_rprim_denom;
 
-    const auto converged = std::max({curr_eta, curr_rdual, curr_rprim}) < epsilon;
+    const auto converged = std::max({norm_eta, norm_rdual, norm_rprim}) < epsilon;
     state.m_status       = converged ? solver_status::converged : solver_status::failed;
     log(state);
 }

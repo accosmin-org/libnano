@@ -17,10 +17,7 @@ solver_state_t::solver_state_t(const tensor_size_t n, const tensor_size_t n_ineq
 
 scalar_t solver_state_t::residual() const
 {
-    const auto edual = m_rdual.lpNorm<Eigen::Infinity>();
-    const auto ecent = m_rcent.lpNorm<Eigen::Infinity>();
-    const auto eprim = m_rprim.lpNorm<Eigen::Infinity>();
-    return std::max({edual, ecent, eprim});
+    return std::sqrt(m_rdual.dot(m_rdual) + m_rcent.dot(m_rcent) + m_rprim.dot(m_rprim));
 }
 
 std::ostream& nano::program::operator<<(std::ostream& stream, const solver_state_t& state)
