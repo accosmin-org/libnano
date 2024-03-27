@@ -168,17 +168,17 @@ struct solver_t::program_t
     using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes
-    matrix_t             m_Q;    ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
-    vector_t             m_c;    ///<
-    matrix_t             m_A;    ///< equality constraint: A * x = b
-    vector_t             m_b;    ///<
-    matrix_t             m_G;    ///< inequality constraint: Gx <= h
-    vector_t             m_h;    ///<
-    scalar_t             m_mufx; ///< scaling coefficient of the objective
-    mutable lin_solver_t m_ldlt; ///< buffers for the linear system of equations coupling (dx, dv)
-    mutable matrix_t     m_lmat; ///<
-    mutable vector_t     m_lvec; ///<
-    mutable vector_t     m_lsol; ///<
+    matrix_t             m_Q;         ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
+    vector_t             m_c;         ///<
+    matrix_t             m_A;         ///< equality constraint: A * x = b
+    vector_t             m_b;         ///<
+    matrix_t             m_G;         ///< inequality constraint: Gx <= h
+    vector_t             m_h;         ///<
+    scalar_t             m_mufx{1.0}; ///< scaling coefficient of the objective
+    mutable lin_solver_t m_ldlt;      ///< buffers for the linear system of equations coupling (dx, dv)
+    mutable matrix_t     m_lmat;      ///<
+    mutable vector_t     m_lvec;      ///<
+    mutable vector_t     m_lsol;      ///<
 };
 
 solver_t::solver_t(logger_t logger)
@@ -188,8 +188,8 @@ solver_t::solver_t(logger_t logger)
     register_parameter(parameter_t::make_scalar("solver::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-2, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.5, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-9, LE, 1e-3));
-    register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-15, LE, 1e-3));
+    register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-10, LE, 1e-3));
+    register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
     register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 300, LE, 1000));
     register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 30, LE, 1000));
 }
