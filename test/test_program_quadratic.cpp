@@ -169,11 +169,11 @@ UTEST_CASE(program5)
             const auto program = make_quadratic(Q, c, make_equality(A, b));
             UTEST_CHECK(program.convex());
 
-            const auto muv = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
-            std::cout << "muv=" << muv << std::endl;
+            const auto muv   = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
+            const auto mux   = std::max({1.0, Q.lpNorm<2>(), c.lpNorm<2>()});
             const auto invAA = (A * A.transpose()).inverse();
             const auto xbest = vector_t{x0 + A.transpose() * invAA * (b - A * x0)};
-            const auto vbest = vector_t{-invAA * (b - A * x0)};
+            const auto vbest = vector_t{-invAA * (b - A * x0) * muv / mux};
             const auto fbest = scalar_t{0.5 * (b - A * x0).dot(invAA * (b - A * x0))} - 0.5 * x0.dot(x0);
             const auto state = check_solution(program, expected_t{xbest}.fbest(fbest));
             UTEST_CHECK_CLOSE(state.m_v, vbest, 1e-10);
