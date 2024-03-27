@@ -13,9 +13,6 @@ namespace nano::program
 /// see (1) ch.5,6 "Primal-dual interior-point methods", by S. Wright, 1997.
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
-/// see (4) "A repository of convex quadratic programming problems", by I. Maros, C. Meszaros, 1999.
-///
-/// NB: the stopping criterion is using the residuals normalized like in (4).
 ///
 class NANO_PUBLIC solver_t final : public configurable_t
 {

@@ -169,6 +169,8 @@ UTEST_CASE(program5)
             const auto program = make_quadratic(Q, c, make_equality(A, b));
             UTEST_CHECK(program.convex());
 
+            const auto muv = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
+            std::cout << "muv=" << muv << std::endl;
             const auto invAA = (A * A.transpose()).inverse();
             const auto xbest = vector_t{x0 + A.transpose() * invAA * (b - A * x0)};
             const auto vbest = vector_t{-invAA * (b - A * x0)};
@@ -241,6 +243,7 @@ UTEST_CASE(program8)
 
 UTEST_CASE(program9)
 {
+    // badly scaled programs generated with the RQB solver applied to linear machine learning problems.
     const auto Q1 = make_matrix<scalar_t>(
         6, 7695057.3606177885085344, -7692711.7498994730412960, 1774665.9566367159131914, -2958099.6455304687842727,
         593055.4774447004310787, -2957389.7971845343708992, -7692711.7498994730412960, 7690370.3438775558024645,

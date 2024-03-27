@@ -35,35 +35,46 @@ auto make_smax(const vector_t& u, const vector_t& du)
 
     return std::min(smax, 1.0);
 }
+
+scalar_t normalize(matrix_t& A, vector_t& b)
+{
+    const auto denom = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
+    A.array() /= denom;
+    b.array() /= denom;
+    return denom;
+}
 } // namespace
 
 struct solver_t::program_t
 {
-    using opt_matrix_t = std::optional<std::reference_wrapper<const matrix_t>>;
-
     explicit program_t(const linear_program_t& program)
-        : program_t({}, program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A, program.m_ineq.m_b)
+        : program_t(matrix_t{}, program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A, program.m_ineq.m_b)
     {
     }
 
     explicit program_t(const quadratic_program_t& program)
-        : program_t(std::cref(program.m_Q), program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A,
+        : program_t(program.m_Q, program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A,
                     program.m_ineq.m_b)
     {
     }
 
-    program_t(const opt_matrix_t& Q, const vector_t& c, const matrix_t& A, const vector_t& b, const matrix_t& G,
-              const vector_t& h)
-        : m_Q(Q)
-        , m_c(c)
-        , m_A(A)
-        , m_b(b)
-        , m_G(G)
-        , m_h(h)
+    program_t(matrix_t Q, vector_t c, matrix_t A, vector_t b, matrix_t G, vector_t h)
+        : m_Q(std::move(Q))
+        , m_c(std::move(c))
+        , m_A(std::move(A))
+        , m_b(std::move(b))
+        , m_G(std::move(G))
+        , m_h(std::move(h))
         , m_lmat(n() + p(), n() + p())
         , m_lvec(n() + p())
         , m_lsol(n() + p())
     {
+        // normalize objective and constraints
+        m_mufx = ::normalize(m_Q, m_c);
+        ::normalize(m_A, m_b);
+        ::normalize(m_G, m_h);
+
+        // allocate buffers for the linear system of equations
         const auto n = this->n();
         const auto p = this->p();
 
@@ -83,8 +94,8 @@ struct solver_t::program_t
 
     const matrix_t& Q() const
     {
-        assert(m_Q);
-        return m_Q.value().get();
+        assert(m_Q.size() > 0);
+        return m_Q;
     }
 
     template <typename thessvar, typename trdual, typename trprim>
@@ -94,13 +105,13 @@ struct solver_t::program_t
         const auto p = this->p();
 
         // setup additional hessian components
-        if (m_Q)
+        if (!m_Q.size())
         {
-            m_lmat.block(0, 0, n, n) = Q() - hessvar;
+            m_lmat.block(0, 0, n, n) = -hessvar;
         }
         else
         {
-            m_lmat.block(0, 0, n, n) = -hessvar;
+            m_lmat.block(0, 0, n, n) = Q() - hessvar;
         }
 
         // setup residuals
@@ -120,7 +131,7 @@ struct solver_t::program_t
         const auto p = this->p();
 
         // objective
-        if (!m_Q)
+        if (!m_Q.size())
         {
             state.m_fx    = x.dot(m_c.vector());
             state.m_rdual = m_c;
@@ -130,14 +141,13 @@ struct solver_t::program_t
             state.m_fx    = 0.5 * x.dot(Q() * x) + x.dot(m_c.vector());
             state.m_rdual = Q() * x + m_c;
         }
-        state.m_rdual_denom = 1.0 + state.m_rdual.lpNorm<2>();
+        state.m_fx *= m_mufx; // NB: rescale the objective!
 
         // surrogate duality gap
         if (m > 0)
         {
             state.m_eta = -u.dot(m_G * x - m_h);
         }
-        state.m_eta_denom = 1.0 + m_h.lpNorm<2>();
 
         // residual contributions of linear equality constraints
         if (p > 0)
@@ -145,7 +155,6 @@ struct solver_t::program_t
             state.m_rdual += m_A.transpose() * v;
             state.m_rprim = m_A * x - m_b;
         }
-        state.m_rprim_denom = 1.0 + m_b.lpNorm<2>();
 
         // residual contributions of linear inequality constraints
         if (m > 0)
@@ -159,12 +168,13 @@ struct solver_t::program_t
     using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 
     // attributes
-    opt_matrix_t         m_Q;    ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
-    const vector_t&      m_c;    ///<
-    const matrix_t&      m_A;    ///< equality constraint: A * x = b
-    const vector_t&      m_b;    ///<
-    const matrix_t&      m_G;    ///< inequality constraint: Gx <= h
-    const vector_t&      m_h;    ///<
+    matrix_t             m_Q;    ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
+    vector_t             m_c;    ///<
+    matrix_t             m_A;    ///< equality constraint: A * x = b
+    vector_t             m_b;    ///<
+    matrix_t             m_G;    ///< inequality constraint: Gx <= h
+    vector_t             m_h;    ///<
+    scalar_t             m_mufx; ///< scaling coefficient of the objective
     mutable lin_solver_t m_ldlt; ///< buffers for the linear system of equations coupling (dx, dv)
     mutable matrix_t     m_lmat; ///<
     mutable vector_t     m_lvec; ///<
@@ -378,11 +388,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
 
 void solver_t::done(solver_state_t& state, const scalar_t epsilon) const
 {
-    const auto norm_eta   = state.m_eta / state.m_eta_denom;
-    const auto norm_rdual = state.m_rdual.lpNorm<2>() / state.m_rdual_denom;
-    const auto norm_rprim = state.m_rprim.lpNorm<2>() / state.m_rprim_denom;
-
-    const auto converged = std::max({norm_eta, norm_rdual, norm_rprim}) < epsilon;
+    const auto converged = std::max({state.m_eta, state.m_rdual.lpNorm<2>(), state.m_rprim.lpNorm<2>()}) < epsilon;
     state.m_status       = converged ? solver_status::converged : solver_status::failed;
     log(state);
 }
