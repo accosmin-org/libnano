@@ -5,36 +5,44 @@ using namespace nano;
 
 namespace
 {
-auto make_suffix(scalar_t alpha1, scalar_t alpha2)
+auto make_suffix(const scalar_t alpha1, const scalar_t alpha2)
 {
+    assert(alpha1 >= 0.0);
+    assert(alpha2 >= 0.0);
+
     if (alpha1 == 0.0)
     {
-        return "ridge";
+        return scat("ridge[", alpha2, "]");
+    }
+    else if (alpha2 == 0.0)
+    {
+        return scat("lasso[", alpha1, "]");
     }
     else
     {
-        return alpha2 == 0.0 ? "lasso" : "elasticnet";
+        return scat("elasticnet[", alpha1, ",", alpha2, "]");
     }
 }
 
-auto make_size(tensor_size_t dims)
+auto make_size(const tensor_size_t dims)
 {
     return std::max(dims, tensor_size_t{2});
 }
 
-auto make_inputs(tensor_size_t dims)
+auto make_inputs(const tensor_size_t dims)
 {
     return std::max(dims, tensor_size_t{2});
 }
 
-auto make_outputs(tensor_size_t)
+auto make_outputs(const tensor_size_t)
 {
     return tensor_size_t{1};
 }
 } // namespace
 
 template <typename tloss>
-function_enet_t<tloss>::function_enet_t(tensor_size_t dims, scalar_t alpha1, scalar_t alpha2, tensor_size_t summands)
+function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t alpha1, const scalar_t alpha2,
+                                        const tensor_size_t summands)
     : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims))
     , tloss(summands, make_outputs(dims), make_inputs(dims))
     , m_alpha1(alpha1)

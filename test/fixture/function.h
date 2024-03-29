@@ -100,7 +100,7 @@ using namespace nano;
     }
 
     // bug: bundle methods fail here
-    if (function.name() == "mae+lasso[4D]")
+    if (function.name() == "mae+lasso[1][4D]")
     {
         append(-0.8266018564672519275, 0.7071120652910407589, -0.8543004988236786446, 0.2548284277181698254);
     }
