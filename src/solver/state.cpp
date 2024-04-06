@@ -183,7 +183,7 @@ bool solver_state_t::valid() const
 bool solver_state_t::has_armijo(const solver_state_t& origin, const vector_t& descent, const scalar_t step_size,
                                 const scalar_t c1) const
 {
-    assert(c1 > 0 && c1 < 1);
+    assert(c1 > 0.0 && c1 < 1.0);
     return m_fx <= origin.fx() + step_size * c1 * origin.dg(descent);
 }
 
@@ -194,13 +194,13 @@ bool solver_state_t::has_approx_armijo(const solver_state_t& origin, const scala
 
 bool solver_state_t::has_wolfe(const solver_state_t& origin, const vector_t& descent, const scalar_t c2) const
 {
-    assert(c2 > 0 && c2 < 1);
+    assert(c2 > 0.0 && c2 < 1.0);
     return dg(descent) >= c2 * origin.dg(descent);
 }
 
 bool solver_state_t::has_strong_wolfe(const solver_state_t& origin, const vector_t& descent, const scalar_t c2) const
 {
-    assert(c2 > 0 && c2 < 1);
+    assert(c2 > 0.0 && c2 < 1.0);
     return std::fabs(dg(descent)) <= c2 * std::fabs(origin.dg(descent));
 }
 
