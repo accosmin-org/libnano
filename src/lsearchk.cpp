@@ -100,15 +100,3 @@ lsearch_type lsearchk_t::type() const
 {
     return m_type;
 }
-
-template <>
-enum_map_t<lsearch_type> nano::enum_string<lsearch_type>()
-{
-    return {
-        {              lsearch_type::none,                          "N/A"},
-        {            lsearch_type::armijo,                       "Armijo"},
-        {             lsearch_type::wolfe,                        "Wolfe"},
-        {      lsearch_type::strong_wolfe,                 "strong Wolfe"},
-        {lsearch_type::wolfe_approx_wolfe, "Wolfe or approximative Wolfe"},
-    };
-}

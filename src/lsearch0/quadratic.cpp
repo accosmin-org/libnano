@@ -21,13 +21,13 @@ scalar_t lsearch0_quadratic_t::get(const solver_state_t& state, const vector_t& 
     const auto epsilon = parameter("lsearch0::epsilon").value<scalar_t>();
 
     scalar_t t0 = 0;
-    if (last_step_size < 0)
+    if (last_step_size < 0.0)
     {
-        t0 = 1;
+        t0 = 1.0;
     }
     else
     {
-        t0 = std::min(scalar_t(1), -alpha * 2 * std::max(m_prevf - state.fx(), beta * epsilon) / m_prevdg);
+        t0 = std::min(1.0, -alpha * 2.0 * std::max(m_prevf - state.fx(), beta * epsilon) / m_prevdg);
     }
 
     m_prevf  = state.fx();

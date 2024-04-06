@@ -27,11 +27,12 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
 
     for (int i = 0; i < max_iterations && std::fabs(lo.t - hi.t) > epsilon0<scalar_t>(); ++i)
     {
-        const auto tmin = lo.t + std::min(tau2, c2) * (hi.t - lo.t);
-        const auto tmax = hi.t - tau3 * (hi.t - lo.t);
+        const auto tmin = std::min(lo.t, hi.t) + std::min(tau2, c2) * std::fabs(hi.t - lo.t);
+        const auto tmax = std::max(lo.t, hi.t) - tau3 * std::fabs(hi.t - lo.t);
+        assert(tmin < tmax);
 
         auto step_size = lsearch_step_t::interpolate(lo, hi, interpolation);
-        step_size      = std::clamp(step_size, std::min(tmin, tmax), std::max(tmin, tmax));
+        step_size      = std::clamp(step_size, tmin, tmax);
 
         if (!update(state, state0, descent, step_size))
         {
@@ -41,13 +42,12 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
         {
             hi = {state, descent, step_size};
         }
+        else if (state.has_strong_wolfe(state0, descent, c2))
+        {
+            return {true, step_size};
+        }
         else
         {
-            if (state.has_strong_wolfe(state0, descent, c2))
-            {
-                return {true, step_size};
-            }
-
             if (state.dg(descent) * (hi.t - lo.t) >= scalar_t(0))
             {
                 hi = lo;
@@ -72,7 +72,9 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
 
     for (int i = 1; i < max_iterations; ++i)
     {
-        if (!state.has_armijo(state0, descent, step_size, c1) || (state.fx() >= prev.f && i > 1))
+        assert(prev.t < curr.t);
+
+        if (!state.has_armijo(state0, descent, step_size, c1) || curr.f >= prev.f)
         {
             return zoom(state0, descent, prev, curr, state);
         }
@@ -86,8 +88,9 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
         }
 
         // next trial
-        const auto tmin = curr.t + 2 * (curr.t - prev.t);
+        const auto tmin = curr.t + 1.0 * (curr.t - prev.t);
         const auto tmax = curr.t + tau1 * (curr.t - prev.t);
+        assert(tmin < tmax);
 
         step_size = lsearch_step_t::interpolate(prev, curr, interpolation);
         step_size = std::clamp(step_size, tmin, tmax);

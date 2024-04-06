@@ -22,7 +22,16 @@ enum class lsearch_type
 };
 
 template <>
-NANO_PUBLIC enum_map_t<lsearch_type> enum_string<lsearch_type>();
+inline enum_map_t<lsearch_type> nano::enum_string<lsearch_type>()
+{
+    return {
+        {              lsearch_type::none,                          "N/A"},
+        {            lsearch_type::armijo,                       "Armijo"},
+        {             lsearch_type::wolfe,                        "Wolfe"},
+        {      lsearch_type::strong_wolfe,                 "strong Wolfe"},
+        {lsearch_type::wolfe_approx_wolfe, "Wolfe or approximative Wolfe"},
+    };
+}
 
 ///
 /// \brief compute the step size along the given descent direction starting from the initial guess `t0`.

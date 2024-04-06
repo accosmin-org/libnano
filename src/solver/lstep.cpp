@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-lsearch_step_t::lsearch_step_t(scalar_t tt, scalar_t ff, scalar_t dg)
+lsearch_step_t::lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t dg)
     : t(tt)
     , f(ff)
     , g(dg)
@@ -16,9 +16,9 @@ lsearch_step_t::lsearch_step_t(const solver_state_t& state, const vector_t& desc
 
 scalar_t lsearch_step_t::cubic(const lsearch_step_t& u, const lsearch_step_t& v)
 {
-    const auto d1 = u.g + v.g - 3 * (u.f - v.f) / (u.t - v.t);
-    const auto d2 = (v.t > u.t ? +1 : -1) * std::sqrt(d1 * d1 - u.g * v.g);
-    return v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2 * d2);
+    const auto d1 = u.g + v.g - 3.0 * (u.f - v.f) / (u.t - v.t);
+    const auto d2 = (v.t > u.t ? +1.0 : -1.0) * std::sqrt(d1 * d1 - u.g * v.g);
+    return v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2.0 * d2);
 }
 
 scalar_t lsearch_step_t::quadratic(const lsearch_step_t& u, const lsearch_step_t& v, bool* convexity)
@@ -27,9 +27,9 @@ scalar_t lsearch_step_t::quadratic(const lsearch_step_t& u, const lsearch_step_t
     const auto df = u.f - v.f;
     if (convexity != nullptr)
     {
-        *convexity = (u.g - df / dt) * dt > 0;
+        *convexity = (u.g - df / dt) * dt > 0.0;
     }
-    return u.t - u.g * dt * dt / (2 * (u.g * dt - df));
+    return u.t - u.g * dt * dt * 0.5 / (u.g * dt - df);
 }
 
 scalar_t lsearch_step_t::secant(const lsearch_step_t& u, const lsearch_step_t& v)
@@ -39,7 +39,7 @@ scalar_t lsearch_step_t::secant(const lsearch_step_t& u, const lsearch_step_t& v
 
 scalar_t lsearch_step_t::bisection(const lsearch_step_t& u, const lsearch_step_t& v)
 {
-    return (u.t + v.t) / 2;
+    return 0.5 * (u.t + v.t);
 }
 
 scalar_t lsearch_step_t::interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation_type method)
