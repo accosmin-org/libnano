@@ -104,7 +104,7 @@ scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     }
     if (m_l2reg > 0.0)
     {
-        fx += m_l2reg * W.array().square().mean();
+        fx += (std::sqrt(m_l2reg) * W.array()).square().mean();
     }
     return fx;
 }

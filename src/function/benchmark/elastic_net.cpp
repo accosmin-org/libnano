@@ -72,7 +72,7 @@ scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
         gx.array() += m_alpha1 * x.array().sign() + m_alpha2 * x.array();
     }
 
-    fx += m_alpha1 * x.template lpNorm<1>() + 0.5 * m_alpha2 * x.squaredNorm();
+    fx += m_alpha1 * x.template lpNorm<1>() + 0.5 * (std::sqrt(m_alpha2) * x).squaredNorm();
     return fx;
 }
 
