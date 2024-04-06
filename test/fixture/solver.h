@@ -164,17 +164,11 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-5))
             .nonsmooth_config(minimize_config_t{}.max_evals(1000).expected_maximum_deviation(1e-4));
     }
-    else if (solver_id == "gs" || solver_id == "gs-lbfgs")
+    else if (solver_id == "gs" || solver_id == "gs-lbfgs" || solver_id == "ags" || solver_id == "ags-lbfgs")
     {
         // NB: the gradient sampling methods are accurate for both smooth and non-smooth problems.
         // NB: the gradient sampling methods are very expensive on debug.
-        // NB: the stopping criterion is working very well in practice.
-        return solver_description_t{solver_type::non_monotonic}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4));
-    }
-    else if (solver_id == "ags" || solver_id == "ags-lbfgs")
-    {
+        // NB: the stopping criterion is working well in practice, but it needs many iterations.
         // NB: the adaptive gradient sampling methods are not very stable.
         return solver_description_t{solver_type::non_monotonic}
             .smooth_config(minimize_config_t{}.max_evals(100).expected_convergence(false))

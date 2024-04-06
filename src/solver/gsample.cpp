@@ -55,7 +55,7 @@ struct perturbation_t
 
     const vector_t& generate(const solver_state_t& state, const vector_t& g)
     {
-        const auto radius = m_c * state.gx().dot(g) / state.gx().lpNorm<2>();
+        const auto radius = std::max(m_c * state.gx().dot(g) / state.gx().lpNorm<2>(), epsilon0<scalar_t>());
         assert(std::isfinite(radius));
         assert(radius > 0.0);
         sample_from_ball(m_zero, radius, m_ksi, m_rng);
