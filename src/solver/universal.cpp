@@ -10,7 +10,7 @@ solver_universal_t::solver_universal_t(string_t id)
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
     register_parameter(parameter_t::make_scalar("solver::universal::L0", 0.0, LT, 1e+0, LT, fmax));
-    register_parameter(parameter_t::make_integer("solver::universal::lsearch_max_iters", 10, LE, 50, LE, 100));
+    register_parameter(parameter_t::make_integer("solver::universal::lsearch_max_iters", 10, LE, 100, LE, 100));
     register_parameter(parameter_t::make_integer("solver::universal::patience", 10, LE, 1000, LE, 1e+6));
 }
 
