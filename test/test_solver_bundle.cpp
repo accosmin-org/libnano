@@ -2,16 +2,11 @@
 
 using namespace nano;
 
-inline auto make_solver_ids()
-{
-    return strings_t{"ellipsoid", "rqb", "fpba1", "fpba2"};
-}
-
 inline auto make_solvers(const char* const pruning, const tensor_size_t bundle_max_size = 8)
 {
     auto solvers = rsolvers_t{};
     solvers.emplace_back(make_solver("ellipsoid"));
-    for (const auto* const solver_id : {"rqb", "fpba1", "fpba2"})
+    for (const auto* const solver_id : {"rqb"}) //, "fpba1", "fpba2"})
     {
         auto solver                                                          = make_solver(solver_id);
         solver->parameter(scat("solver::", solver_id, "::bundle::pruning"))  = pruning;
