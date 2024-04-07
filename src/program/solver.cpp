@@ -65,12 +65,12 @@ struct solver_t::program_t
         , m_b(std::move(b))
         , m_G(std::move(G))
         , m_h(std::move(h))
+        , m_mufx(::normalize(m_Q, m_c)) // normalize objective
         , m_lmat(n() + p(), n() + p())
         , m_lvec(n() + p())
         , m_lsol(n() + p())
     {
-        // normalize objective and constraints
-        m_mufx = ::normalize(m_Q, m_c);
+        // normalize constraints
         ::normalize(m_A, m_b);
         ::normalize(m_G, m_h);
 
