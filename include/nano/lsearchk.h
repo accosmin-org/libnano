@@ -22,7 +22,7 @@ enum class lsearch_type
 };
 
 template <>
-inline enum_map_t<lsearch_type> nano::enum_string<lsearch_type>()
+inline enum_map_t<lsearch_type> enum_string<lsearch_type>()
 {
     return {
         {              lsearch_type::none,                          "N/A"},
