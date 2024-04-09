@@ -7,21 +7,13 @@
 namespace nano
 {
 ///
-/// \brief bundle pruning strategies.
-///
-enum class bundle_pruning
-{
-    oldest_point, ///< see (1) - the oldest point in the bundle
-    largest_error ///< see (2) - the point with the largest approximation error
-};
-
-///
 /// \brief models the bundle of sub-gradients as used by penalized (proximal) bundle algorithms.
 ///
 /// see (1) "Numerical optimization - theoretical and practical aspects", 2nd edition, 2006
 /// see (2) "Variable metric bundle methods: from conceptual to implementable forms", by Lemarechal, Sagastizabal, 1997
 ///
-/// NB: the bundle is kept small by removing all inactive constraints and the oldest ones if needed.
+/// NB: the bundle is kept small by removing all inactive constraints and then the ones with the largest
+///     approximation error if needed - see (2).
 ///
 class NANO_PUBLIC bundle_t
 {
@@ -29,7 +21,7 @@ public:
     ///
     /// \brief constructor
     ///
-    bundle_t(const solver_state_t&, tensor_size_t max_size, bundle_pruning);
+    bundle_t(const solver_state_t&, tensor_size_t max_size);
 
     ///
     /// \brief setup the default configuration.
@@ -123,23 +115,21 @@ private:
         return nano::remove_if(op, m_bundleE.slice(0, m_size), m_bundleS.slice(0, m_size), m_alphas.slice(0, m_size));
     }
 
-    void delete_oldest(tensor_size_t count = 2);
-    void delete_largest(tensor_size_t count = 2);
     void delete_inactive(scalar_t epsilon);
+    void delete_largest(tensor_size_t count);
 
     void store_aggregate();
     void append_aggregate();
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
     // attributes
-    program::solver_t m_solver;                                ///< buffer: quadratic program solver
-    tensor_size_t     m_size{0};                               ///< bundle: number of points
-    matrix_t          m_bundleS;                               ///< bundle: sub-gradients (size, dims)
-    vector_t          m_bundleE;                               ///< bundle: linearized errors (size)
-    vector_t          m_alphas;                                ///< optimal Lagrange multipliers (size)
-    vector_t          m_x;                                     ///< proximal center (dims)
-    vector_t          m_gx;                                    ///< proximal center's gradient (dims)
-    scalar_t          m_fx;                                    ///< proximal center's function value
-    bundle_pruning    m_pruning{bundle_pruning::oldest_point}; ///<
+    program::solver_t m_solver;  ///< buffer: quadratic program solver
+    tensor_size_t     m_size{0}; ///< bundle: number of points
+    matrix_t          m_bundleS; ///< bundle: sub-gradients (size, dims)
+    vector_t          m_bundleE; ///< bundle: linearized errors (size)
+    vector_t          m_alphas;  ///< optimal Lagrange multipliers (size)
+    vector_t          m_x;       ///< proximal center (dims)
+    vector_t          m_gx;      ///< proximal center's gradient (dims)
+    scalar_t          m_fx;      ///< proximal center's function value
 };
 } // namespace nano
