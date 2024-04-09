@@ -18,9 +18,9 @@ auto make_params(const configurable_t& configurable)
     auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
 
-    static const auto param_space = make_param_space(
-        param_space_t::type::log10, 1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1,
-        1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4, 3e+4, 1e+5, 3e+5, 1e+6, 3e+6, 1e+7);
+    static const auto param_space =
+        make_param_space(param_space_t::type::log10, 1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2,
+                         3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4);
 
     switch (regularization)
     {
