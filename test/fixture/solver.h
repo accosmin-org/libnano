@@ -271,8 +271,8 @@ struct solver_description_t
                 const auto state = check_minimize(*solver, *function, x0, config);
                 config.expected_minimum(state.fx());
 
-                log_info() << function->name() << ": solver=" << solver_id << ",fx=" << state.fx()
-                           << ",calls=" << state.fcalls() << "|" << state.gcalls() << ".";
+                log_info() << std::fixed << std::setprecision(10) << function->name() << ": solver=" << solver_id
+                           << ",fx=" << state.fx() << ",calls=" << state.fcalls() << "|" << state.gcalls() << ".";
             }
         }
     }

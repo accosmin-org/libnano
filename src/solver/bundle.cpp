@@ -151,7 +151,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     assert(dims() == y.size());
     assert(dims() == gy.size());
 
-    delete_inactive();
+    delete_inactive(epsilon1<scalar_t>());
     if (m_pruning == bundle_pruning::oldest_point)
     {
         delete_oldest();

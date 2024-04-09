@@ -16,6 +16,19 @@ bool converged(const scalar_t delta, const scalar_t error, const tvector& sgrad,
 }
 } // namespace
 
+template <>
+nano::enum_map_t<csearch_status> nano::enum_string()
+{
+    return {
+        {            csearch_status::failed,             "failed"},
+        {         csearch_status::max_iters,          "max_iters"},
+        {         csearch_status::converged,          "converged"},
+        {         csearch_status::null_step,          "null step"},
+        {      csearch_status::descent_step,       "descent step"},
+        {csearch_status::cutting_plane_step, "cutting plane step"}
+    };
+}
+
 csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar_t m2, const scalar_t m3,
                      const scalar_t m4)
     : m_function(function)

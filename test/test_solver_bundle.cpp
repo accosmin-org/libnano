@@ -6,7 +6,7 @@ inline auto make_solvers(const char* const pruning, const tensor_size_t bundle_m
 {
     auto solvers = rsolvers_t{};
     solvers.emplace_back(make_solver("ellipsoid"));
-    for (const auto* const solver_id : {"rqb"}) //, "fpba1", "fpba2"})
+    for (const auto* const solver_id : {"rqb", "fpba1", "fpba2"})
     {
         auto solver                                                          = make_solver(solver_id);
         solver->parameter(scat("solver::", solver_id, "::bundle::pruning"))  = pruning;

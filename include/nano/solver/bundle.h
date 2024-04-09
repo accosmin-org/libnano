@@ -125,7 +125,7 @@ private:
 
     void delete_oldest(tensor_size_t count = 2);
     void delete_largest(tensor_size_t count = 2);
-    void delete_inactive(scalar_t epsilon = epsilon1<scalar_t>());
+    void delete_inactive(scalar_t epsilon);
 
     void store_aggregate();
     void append_aggregate();
