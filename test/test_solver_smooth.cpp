@@ -77,8 +77,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
                         // NB: the MSE+RIDGE function is very badly conditioned for high regularization parameters
                         // and some line-searchers are not numerically robust!
-                        if ((function->name() == "mse+ridge[10000][4D]" || function->name() == "mse+ridge[1e+06][4D]" ||
-                             function->name() == "mse+ridge[1e+08][4D]") &&
+                        if ((function->name() == "mse+ridge[10000][4D]") &&
                             (lsearchk_id == "fletcher" || lsearchk_id == "lemarechal"))
                         {
                             continue;
