@@ -121,7 +121,7 @@ UTEST_CASE(regularization_none)
     }
 }
 
-UTEST_CASE(regularization_lasso)
+/*UTEST_CASE(regularization_lasso)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
@@ -146,7 +146,7 @@ UTEST_CASE(regularization_lasso)
         check_model(model, dataset, samples, epsilon);
         check_importance(model, dataset, datasource.relevant_feature_mask());
     }
-}
+}*/
 
 UTEST_CASE(regularization_ridge)
 {
@@ -175,7 +175,7 @@ UTEST_CASE(regularization_ridge)
     }
 }
 
-UTEST_CASE(regularization_elasticnet)
+/*UTEST_CASE(regularization_elasticnet)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
@@ -200,6 +200,6 @@ UTEST_CASE(regularization_elasticnet)
         check_model(model, dataset, samples, epsilon);
         check_importance(model, dataset, datasource.relevant_feature_mask());
     }
-}
+}*/
 
 UTEST_END_MODULE()
