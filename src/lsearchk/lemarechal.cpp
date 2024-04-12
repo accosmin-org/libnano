@@ -45,7 +45,7 @@ lsearchk_t::result_t lsearchk_lemarechal_t::do_get(const solver_state_t& state0,
                 L = {state, descent, step_size};
                 if (!R_updated)
                 {
-                    tmin = std::max(L.t, R.t) + 1.0 * std::fabs(L.t - R.t);
+                    tmin = std::max(L.t, R.t) + 2.0 * std::fabs(L.t - R.t);
                     tmax = std::max(L.t, R.t) + tau1 * std::fabs(L.t - R.t);
                 }
                 else

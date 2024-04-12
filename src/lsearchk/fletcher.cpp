@@ -88,7 +88,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
         }
 
         // next trial
-        const auto tmin = curr.t + 1.0 * (curr.t - prev.t);
+        const auto tmin = curr.t + 2.0 * (curr.t - prev.t);
         const auto tmax = curr.t + tau1 * (curr.t - prev.t);
         assert(tmin < tmax);
 
