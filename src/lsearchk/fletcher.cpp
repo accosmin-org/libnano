@@ -48,7 +48,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
         }
         else
         {
-            if (state.dg(descent) * (hi.t - lo.t) >= scalar_t(0))
+            if (state.dg(descent) * (hi.t - lo.t) >= 0.0)
             {
                 hi = lo;
             }

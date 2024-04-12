@@ -46,16 +46,20 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     // adjust the initial step size if it produces an invalid state
     const auto state0 = state;
 
-    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), scalar_t(1)) : scalar_t(1);
-    for (int i = 0; i < max_iterations; ++i)
+    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), 1.0) : scalar_t(1);
+    for (int i = 0; i < max_iterations && !update(state, state0, descent, step_size); ++i)
     {
+        step_size *= 0.3;
+        assert(false);
+    }
+
+    // adjust the initial step if the function value is too close (e.g. badly conditioned function)
+    for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon0<scalar_t>(); ++i)
+    {
+        step_size *= 3.0;
         if (!update(state, state0, descent, step_size))
         {
-            step_size *= 0.5;
-        }
-        else
-        {
-            break;
+            return {false, step_size};
         }
     }
 
