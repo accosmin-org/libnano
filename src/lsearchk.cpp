@@ -54,7 +54,7 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     }
 
     // adjust the initial step if the function value is too close (e.g. badly conditioned function)
-    for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon1<scalar_t>(); ++i)
+    for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon0<scalar_t>(); ++i)
     {
         step_size *= 3.0;
         if (!update(state, state0, descent, step_size))
