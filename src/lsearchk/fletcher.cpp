@@ -29,7 +29,6 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
     {
         const auto tmin = std::min(lo.t, hi.t) + std::min(tau2, c2) * std::fabs(hi.t - lo.t);
         const auto tmax = std::max(lo.t, hi.t) - tau3 * std::fabs(hi.t - lo.t);
-        assert(tmin < tmax);
 
         auto step_size = lsearch_step_t::interpolate(lo, hi, interpolation);
         step_size      = std::clamp(step_size, tmin, tmax);

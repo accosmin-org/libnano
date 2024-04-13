@@ -9,7 +9,7 @@ lsearchk_lemarechal_t::lsearchk_lemarechal_t()
     type(lsearch_type::wolfe);
     register_parameter(parameter_t::make_enum("lsearchk::lemarechal::interpolation", interpolation_type::cubic));
     register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::tau1", 2, LT, 9, LT, 1e+6));
-    register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::safeguard", 0.0, LT, 0.1, LT, 0.5));
+    register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::safeguard", 0.0, LT, 1e-3, LT, 0.5));
 }
 
 rlsearchk_t lsearchk_lemarechal_t::clone() const

@@ -12,7 +12,7 @@ lsearchk_t::lsearchk_t(string_t id)
     : clonable_t(std::move(id))
 {
     register_parameter(parameter_t::make_scalar_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
-    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 1000, LE, 10000));
+    register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 128, LE, 10000));
 }
 
 factory_t<lsearchk_t>& lsearchk_t::all()
@@ -54,7 +54,7 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     }
 
     // adjust the initial step if the function value is too close (e.g. badly conditioned function)
-    for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon0<scalar_t>(); ++i)
+    for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon1<scalar_t>(); ++i)
     {
         step_size *= 3.0;
         if (!update(state, state0, descent, step_size))
