@@ -4,9 +4,9 @@ using namespace nano;
 
 synthetic_linear_t::synthetic_linear_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
                                        tensor_size_t modulo_correlated_inputs)
-    : m_inputs(make_random_tensor<scalar_t>(make_dims(samples, inputs), +0.0, +1.0))
-    , m_wopt(make_random_tensor<scalar_t>(make_dims(outputs, inputs), +0.0, +1.0))
-    , m_bopt(make_random_tensor<scalar_t>(make_dims(outputs), -0.5, +0.5))
+    : m_inputs(make_random_tensor<scalar_t>(make_dims(samples, inputs), +0.0, +1.0, seed_t{42}))
+    , m_wopt(make_random_tensor<scalar_t>(make_dims(outputs, inputs), +0.0, +1.0, seed_t{42}))
+    , m_bopt(make_random_tensor<scalar_t>(make_dims(outputs), -0.5, +0.5, seed_t{42}))
 {
     for (tensor_size_t o = 0; o < outputs; ++o)
     {
