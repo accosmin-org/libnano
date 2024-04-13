@@ -38,13 +38,13 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
         {
             return {false, step_size};
         }
-        else if (!state.has_armijo(state0, descent, step_size, c1) || state.fx() >= lo.f)
-        {
-            hi = {state, descent, step_size};
-        }
         else if (state.has_strong_wolfe(state0, descent, c2))
         {
             return {true, step_size};
+        }
+        else if (!state.has_armijo(state0, descent, step_size, c1) || state.fx() >= lo.f)
+        {
+            hi = {state, descent, step_size};
         }
         else
         {
@@ -74,13 +74,13 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
     {
         assert(prev.t < curr.t);
 
-        if (!state.has_armijo(state0, descent, step_size, c1) || curr.f >= prev.f)
-        {
-            return zoom(state0, descent, prev, curr, state);
-        }
-        else if (state.has_strong_wolfe(state0, descent, c2))
+        if (state.has_strong_wolfe(state0, descent, c2))
         {
             return {true, step_size};
+        }
+        else if (!state.has_armijo(state0, descent, step_size, c1) || curr.f >= prev.f)
+        {
+            return zoom(state0, descent, prev, curr, state);
         }
         else if (!state.has_descent(descent))
         {
