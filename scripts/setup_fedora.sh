@@ -4,7 +4,7 @@ function setup {
     sudo dnf update -qq
     sudo dnf install -y git vim cmake lcov cppcheck valgrind ninja-build ccache
     sudo dnf install -y eigen3-devel
-    sudo dnf install -y gcc g++
+    sudo dnf install -y gcc g++ libubsan liblsan libasan libtsan
     sudo dnf install -y clang clang-tools-extra libcxx libcxx-devel libcxxabi llvm lld
 }
 
