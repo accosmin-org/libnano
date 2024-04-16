@@ -105,7 +105,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::identity(function.size(), function.size());
 
-    bool first_iteration = false;
+    bool first_iteration = true;
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
