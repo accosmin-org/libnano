@@ -9,7 +9,7 @@ lsearchk_lemarechal_t::lsearchk_lemarechal_t()
     type(lsearch_type::wolfe);
     register_parameter(parameter_t::make_enum("lsearchk::lemarechal::interpolation", interpolation_type::cubic));
     register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::tau1", 2, LT, 9, LT, 1e+6));
-    register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::safeguard", 0.0, LT, 1e-3, LT, 0.5));
+    register_parameter(parameter_t::make_scalar("lsearchk::lemarechal::safeguard", 0.0, LT, 0.1, LT, 0.5));
 }
 
 rlsearchk_t lsearchk_lemarechal_t::clone() const
@@ -29,11 +29,8 @@ lsearchk_t::result_t lsearchk_lemarechal_t::do_get(const solver_state_t& state0,
     auto L = lsearch_step_t{state0, descent, 0.0};
     auto R = L;
 
-    bool R_updated = false;
     for (int i = 1; i < max_iterations; ++i)
     {
-        scalar_t tmin = 0;
-        scalar_t tmax = 0;
         if (state.has_armijo(state0, descent, step_size, c1))
         {
             if (state.has_wolfe(state0, descent, c2))
@@ -43,32 +40,35 @@ lsearchk_t::result_t lsearchk_lemarechal_t::do_get(const solver_state_t& state0,
             else
             {
                 L = {state, descent, step_size};
-                if (!R_updated)
+                if (R.t < epsilon0<scalar_t>())
                 {
-                    tmin = std::max(L.t, R.t) + 2.0 * std::fabs(L.t - R.t);
-                    tmax = std::max(L.t, R.t) + tau1 * std::fabs(L.t - R.t);
+                    // extrapolation step
+                    step_size = tau1 * L.t;
                 }
                 else
                 {
-                    tmin = std::min(L.t, R.t);
-                    tmax = std::max(L.t, R.t);
+                    // interpolation step
+                    assert(L.t < R.t);
+                    const auto interp_min = L.t + safeguard * (R.t - L.t);
+                    const auto interp_max = R.t - safeguard * (R.t - L.t);
+                    step_size             = lsearch_step_t::interpolate(L, R, interpolation);
+                    step_size             = std::clamp(step_size, interp_min, interp_max);
                 }
             }
         }
         else
         {
-            R         = {state, descent, step_size};
-            R_updated = true;
-            tmin      = std::min(L.t, R.t);
-            tmax      = std::max(L.t, R.t);
+            R = {state, descent, step_size};
+
+            // interpolation step
+            assert(L.t < R.t);
+            const auto interp_min = L.t + safeguard * (R.t - L.t);
+            const auto interp_max = R.t - safeguard * (R.t - L.t);
+            step_size             = lsearch_step_t::interpolate(L, R, interpolation);
+            step_size             = std::clamp(step_size, interp_min, interp_max);
         }
 
         // next trial
-        const auto interp_min = tmin + safeguard * (tmax - tmin);
-        const auto interp_max = tmax - safeguard * (tmax - tmin);
-
-        step_size = lsearch_step_t::interpolate(L, R, interpolation);
-        step_size = std::clamp(step_size, interp_min, interp_max);
         if (!update(state, state0, descent, step_size))
         {
             return {false, step_size};
