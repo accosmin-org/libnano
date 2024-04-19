@@ -50,7 +50,6 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     for (int i = 0; i < max_iterations && !update(state, state0, descent, step_size); ++i)
     {
         step_size *= 0.3;
-        assert(false);
     }
 
     // adjust the initial step if the function value is too close (e.g. badly conditioned function)
