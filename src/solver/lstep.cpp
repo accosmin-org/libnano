@@ -2,23 +2,6 @@
 
 using namespace nano;
 
-namespace
-{
-template <typename toperator>
-scalar_t interpolate(const lsearch_step_t& u, const lsearch_step_t& v, const toperator& op)
-{
-    const auto ut = static_cast<long double>(u.t);
-    const auto uf = static_cast<long double>(u.f);
-    const auto ug = static_cast<long double>(u.g);
-
-    const auto vt = static_cast<long double>(v.t);
-    const auto vf = static_cast<long double>(v.f);
-    const auto vg = static_cast<long double>(v.g);
-
-    return static_cast<scalar_t>(op(ut, uf, ug, vt, vf, vg));
-}
-} // namespace
-
 lsearch_step_t::lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t dg)
     : t(tt)
     , f(ff)
@@ -33,35 +16,25 @@ lsearch_step_t::lsearch_step_t(const solver_state_t& state, const vector_t& desc
 
 scalar_t lsearch_step_t::cubic(const lsearch_step_t& u, const lsearch_step_t& v)
 {
-    const auto op = [](const auto ut, const auto uf, const auto ug, const auto vt, const auto vf, const auto vg)
-    {
-        const auto d1 = ug + vg - 3.0L * (uf - vf) / (ut - vt);
-        const auto d2 = (vt > ut ? +1.0L : -1.0L) * std::sqrt(d1 * d1 - ug * vg);
-        return vt - (vt - ut) * (vg + d2 - d1) / (vg - ug + 2.0L * d2);
-    };
-    return ::interpolate(u, v, op);
+    const auto d1 = u.g + v.g - 3.0 * (u.f - v.f) / (u.t - v.t);
+    const auto d2 = (v.t > u.t ? +1.0 : -1.0) * std::sqrt(d1 * d1 - u.g * v.g);
+    return v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2.0 * d2);
 }
 
 scalar_t lsearch_step_t::quadratic(const lsearch_step_t& u, const lsearch_step_t& v, bool* convexity)
 {
-    const auto op = [&](const auto ut, const auto uf, const auto ug, const auto vt, const auto vf, const auto)
+    const auto dt = u.t - v.t;
+    const auto df = u.f - v.f;
+    if (convexity != nullptr)
     {
-        const auto dt = ut - vt;
-        const auto df = uf - vf;
-        if (convexity != nullptr)
-        {
-            *convexity = (dt * ug - df) > 0.0;
-        }
-        return ut - 0.5L * ug * dt / (ug - df / dt);
-    };
-    return ::interpolate(u, v, op);
+        *convexity = (dt * u.g - df) > 0.0;
+    }
+    return u.t - 0.5 * u.g * dt / (u.g - df / dt);
 }
 
 scalar_t lsearch_step_t::secant(const lsearch_step_t& u, const lsearch_step_t& v)
 {
-    const auto op = [](const auto ut, const auto, const auto ug, const auto vt, const auto, const auto vg)
-    { return (vt * ug - ut * vg) / (ug - vg); };
-    return ::interpolate(u, v, op);
+    return (v.t * u.g - u.t * v.g) / (u.g - v.g);
 }
 
 scalar_t lsearch_step_t::bisection(const lsearch_step_t& u, const lsearch_step_t& v)
