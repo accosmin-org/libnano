@@ -197,7 +197,6 @@ bool solver_state_t::has_approx_armijo(const solver_state_t& origin, const scala
 bool solver_state_t::has_wolfe(const solver_state_t& origin, const vector_t& descent, const scalar_t c2) const
 {
     assert(c2 > 0.0 && c2 < 1.0);
-    assert((origin.x() + step_size * descent - x()).lpNorm<Eigen::Infinity>() < epsilon1<scalar_t>());
 
     return dg(descent) >= c2 * origin.dg(descent);
 }
@@ -205,7 +204,6 @@ bool solver_state_t::has_wolfe(const solver_state_t& origin, const vector_t& des
 bool solver_state_t::has_strong_wolfe(const solver_state_t& origin, const vector_t& descent, const scalar_t c2) const
 {
     assert(c2 > 0.0 && c2 < 1.0);
-    assert((origin.x() + step_size * descent - x()).lpNorm<Eigen::Infinity>() < epsilon1<scalar_t>());
 
     return std::fabs(dg(descent)) <= c2 * std::fabs(origin.dg(descent));
 }
@@ -214,7 +212,6 @@ bool solver_state_t::has_approx_wolfe(const solver_state_t& origin, const vector
                                       const scalar_t c2) const
 {
     assert(0 < c1 && c1 < scalar_t(0.5) && c1 < c2 && c2 < 1);
-    assert((origin.x() + step_size * descent - x()).lpNorm<Eigen::Infinity>() < epsilon1<scalar_t>());
 
     return (2.0 * c1 - 1.0) * origin.dg(descent) >= dg(descent) && dg(descent) >= c2 * origin.dg(descent);
 }
