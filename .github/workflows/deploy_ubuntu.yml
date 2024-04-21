@@ -27,6 +27,7 @@ jobs:
         fi
     - name: build-test-install-example
       run: |
+         export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3"
          bash scripts/build.sh \
            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
            -DBUILD_SHARED_LIBS=${{matrix.build_shared_libs}} \
