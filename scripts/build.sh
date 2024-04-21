@@ -27,22 +27,27 @@ function thinlto {
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract"
     export CXXFLAGS="${CXXFLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
 function lsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=leak -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
 function usan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
 function msan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
 function tsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
 function gold {
