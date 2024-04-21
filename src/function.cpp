@@ -189,12 +189,14 @@ factory_t<function_t>& function_t::all()
         manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+6);
 
         manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+0, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+1, 0.0);
+        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+2, 0.0);
         manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+4, 0.0);
+        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+6, 0.0);
 
         manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+0, 1e+0);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+3, 1e+2);
+        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+2, 1e+2);
         manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+4, 1e+4);
+        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+6, 1e+6);
 
         manager.add<function_enet_mae_t>("mean absolute error with ridge-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_mae_t>("mean absolute error with lasso-like regularization", 10, 1.0, 0.0);
