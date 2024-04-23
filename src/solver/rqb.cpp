@@ -31,6 +31,9 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     auto csearch   = csearch_t::make(function, *this, prefix);
     auto proximity = proximity_t::make(state, *this, prefix);
 
+    auto Gn  = state.gx();
+    auto Gn1 = state.gx();
+
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity.miu(), max_evals, epsilon);
@@ -44,7 +47,10 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
         if (status == csearch_status::descent_step)
         {
-            proximity.update(t, bundle.x(), y, bundle.gx(), gy);
+            Gn1 = bundle.smeared_s();
+            proximity.update(t, bundle.x(), y, bundle.gx(), gy); //, Gn, Gn1);
+            Gn = Gn1;
+
             bundle.moveto(y, gy, fy);
             assert(fy < state.fx());
             state.update(y, gy, fy);

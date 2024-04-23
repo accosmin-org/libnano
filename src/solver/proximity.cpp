@@ -9,6 +9,25 @@ scalar_t make_miu0(const solver_state_t& state)
     // see (4)
     return 5.0 * state.gx().squaredNorm() / (std::abs(state.fx()) + epsilon1<scalar_t>());
 }
+
+template <typename tnu, typename txi>
+scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi& xi)
+{
+    // see (2)
+    const auto u = xi + t / miu * nu;
+    assert(nu.dot(u) >= 0.0);
+    //  TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
+
+    // NB: no positive solution if the function to optimize is not strictly convex!
+    if (nu.dot(u) > epsilon0<scalar_t>())
+    {
+        return nu.dot(nu) / nu.dot(u);
+    }
+    else
+    {
+        return miu;
+    }
+}
 } // namespace
 
 proximity_t::proximity_t(const solver_state_t& state, const scalar_t miu0_min, const scalar_t miu0_max)
@@ -26,20 +45,15 @@ scalar_t proximity_t::miu() const
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
                          const vector_t& gn1)
 {
-    // FIXME: RQB citation + book chapter
-    // TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
+    m_miu = ::make_miu(m_miu, t, gn1 - gn, xn1 - xn);
+}
 
-    const auto nu = gn1 - gn;
-    const auto xi = xn1 - xn;
-
-    const auto u = xi + t / m_miu * nu;
-    assert(nu.dot(u) >= 0.0);
-
-    // NB: no positive solution if the function to optimize is not strictly convex!
-    if (nu.dot(u) > epsilon0<scalar_t>())
-    {
-        m_miu = nu.dot(nu) / nu.dot(u);
-    }
+void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
+                         const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
+{
+    // see (2)
+    m_miu = std::min({::make_miu(m_miu, t, gn1 - gn, xn1 - xn), ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn),
+                      ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn), ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn)});
 }
 
 void proximity_t::config(configurable_t& c, const string_t& prefix)

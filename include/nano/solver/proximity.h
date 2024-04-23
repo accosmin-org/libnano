@@ -42,6 +42,8 @@ public:
     /// \brief update the proximity parameter given a new proximity center.
     ///
     void update(scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn, const vector_t& gn1);
+    void update(scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn, const vector_t& gn1,
+                const vector_t& Gn, const vector_t& Gn1);
 
 private:
     // attributes

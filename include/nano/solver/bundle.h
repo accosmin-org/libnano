@@ -129,7 +129,7 @@ private:
     vector_t          m_bundleE; ///< bundle: linearized errors (size)
     vector_t          m_alphas;  ///< optimal Lagrange multipliers (size)
     vector_t          m_x;       ///< proximal center (dims)
-    vector_t          m_gx;      ///< proximal center's gradient (dims)
-    scalar_t          m_fx;      ///< proximal center's function value
+    vector_t          m_gx;      ///< function gradient at the proximal center (dims)
+    scalar_t          m_fx;      ///< function value at the proximal center
 };
 } // namespace nano
