@@ -84,10 +84,11 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
 
-        std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" << m_function.gcalls()
-                  << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
-                  << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
-                  << std::endl;
+        // std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" <<
+        // m_function.gcalls()
+        //          << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
+        //        << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
+        //      << std::endl;
 
         if (const auto failed = !std::isfinite(fy); failed)
         {

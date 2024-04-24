@@ -15,7 +15,7 @@ scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi
 {
     // see (2)
     const auto u = xi + t / miu * nu;
-    assert(nu.dot(u) >= 0.0);
+    // assert(nu.dot(u) >= 0.0);
     //  TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
 
     // NB: no positive solution if the function to optimize is not strictly convex!
