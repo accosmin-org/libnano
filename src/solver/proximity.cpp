@@ -13,19 +13,19 @@ scalar_t make_miu0(const solver_state_t& state)
 template <typename tnu, typename txi>
 scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi& xi)
 {
-    // see (2)
+    // see (2): reversal poor man's quasi-newton formula.
     const auto u = xi + t / miu * nu;
     // assert(nu.dot(u) >= 0.0);
     //  TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
 
     // NB: no positive solution if the function to optimize is not strictly convex!
-    if (nu.dot(u) > epsilon0<scalar_t>())
+    if (nu.dot(u) > epsilon2<scalar_t>())
     {
         return nu.dot(nu) / nu.dot(u);
     }
     else
     {
-        return miu;
+        return std::numeric_limits<scalar_t>::max();
     }
 }
 } // namespace
@@ -51,9 +51,13 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
                          const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
 {
-    // see (2)
-    m_miu = std::min({::make_miu(m_miu, t, gn1 - gn, xn1 - xn), ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn),
-                      ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn), ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn)});
+    // see (2): the variation that gives the minimum proximity parameter.
+    const auto miu = std::min({::make_miu(m_miu, t, gn1 - gn, xn1 - xn), ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn),
+                               ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn), ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn)});
+    if (miu != std::numeric_limits<scalar_t>::max())
+    {
+        m_miu = miu;
+    }
 }
 
 void proximity_t::config(configurable_t& c, const string_t& prefix)

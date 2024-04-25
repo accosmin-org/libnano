@@ -86,8 +86,7 @@ void update(const string_t& name, parameter_t::storage_t& storage, std::tuple<tv
     const auto value2 = std::get<1>(value);
 
     std::visit(overloaded{[&](parameter_t::iprange_t& param) { ::update(name, param, value1, value2); },
-                          [&](parameter_t::fprange_t& param) { ::update(name, param, value1, value2); },
-                          [&](auto&)
+                          [&](parameter_t::fprange_t& param) { ::update(name, param, value1, value2); }, [&](auto&)
                           { critical0("parameter (", name, "): cannot set value (", value1, ",", value2, ")!"); }},
                storage);
 }

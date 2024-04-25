@@ -9,8 +9,7 @@ namespace
 {
 auto find(const cmdline_t::options_t& options, const string_t& name_or_short_name)
 {
-    return std::find_if(options.begin(), options.end(),
-                        [&](const cmdline_t::option_t& option)
+    return std::find_if(options.begin(), options.end(), [&](const cmdline_t::option_t& option)
                         { return option.m_short_name == name_or_short_name || option.m_name == name_or_short_name; });
 }
 } // namespace

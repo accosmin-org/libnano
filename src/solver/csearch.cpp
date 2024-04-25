@@ -30,12 +30,13 @@ nano::enum_map_t<csearch_status> nano::enum_string()
 }
 
 csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar_t m2, const scalar_t m3,
-                     const scalar_t m4)
+                     const scalar_t m4, const scalar_t extrapol)
     : m_function(function)
     , m_m1(m1)
     , m_m2(m2)
     , m_m3(m3)
     , m_m4(m4)
+    , m_extrapol(extrapol)
 {
     m_point.m_y.resize(function.size());
     m_point.m_gy.resize(function.size());
@@ -45,8 +46,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                                             const scalar_t epsilon)
 {
     // FIXME: the references do not specify how to choose these thresholds
-    const auto etol = epsilon / std::sqrt(static_cast<scalar_t>(m_function.size()));
-    const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size())) * 1e+2;
+    const auto etol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
+    const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size())) * 1e+1;
 
     auto& t = m_point.m_t;
     t       = 1.0;
@@ -61,7 +62,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         }
         else
         {
-            return t * 10.0; // TODO: customizable
+            return t * m_extrapol;
         }
     };
 
@@ -84,11 +85,10 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
 
-        // std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" <<
-        // m_function.gcalls()
-        //          << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
-        //        << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
-        //      << std::endl;
+        std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" << m_function.gcalls()
+                  << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
+                  << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
+                  << std::endl;
 
         if (const auto failed = !std::isfinite(fy); failed)
         {
@@ -142,6 +142,7 @@ void csearch_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::m3"), 0, LT, 1.0, LT, 1e+6));
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::m4"), 0, LT, 1.0, LT, 1e+6));
+    c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::extrapol"), 1.0, LT, 5.0, LT, 1e+2));
     c.register_parameter(parameter_t::make_scalar_pair(scat(prefix, "::csearch::m1m2"), 0, LT, 0.5, LT, 0.9, LT, 1.0));
 }
 
@@ -150,6 +151,7 @@ csearch_t csearch_t::make(const function_t& function, const configurable_t& c, c
     const auto [m1, m2] = c.parameter(scat(prefix, "::csearch::m1m2")).value_pair<scalar_t>();
     const auto m3       = c.parameter(scat(prefix, "::csearch::m3")).value<scalar_t>();
     const auto m4       = c.parameter(scat(prefix, "::csearch::m4")).value<scalar_t>();
+    const auto extrapol = c.parameter(scat(prefix, "::csearch::extrapol")).value<scalar_t>();
 
-    return {function, m1, m2, m3, m4};
+    return {function, m1, m2, m3, m4, extrapol};
 }

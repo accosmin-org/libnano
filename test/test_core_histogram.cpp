@@ -304,7 +304,7 @@ UTEST_CASE(histogram_from_exponents)
         const auto histogram = histogram_t::make_from_exponents(std::begin(data), std::end(data), base, epsilon);
 
         const auto expected_means  = make_tensor<scalar_t>(make_dims(5), -2.5 * 1e-15, -23.0 / 4.0 * 1e-16, 0.0,
-                                                          +12.0 / 3.0 * 1e-16, +10.0 / 3.0 * 1e-15);
+                                                           +12.0 / 3.0 * 1e-16, +10.0 / 3.0 * 1e-15);
         const auto expected_counts = make_tensor<tensor_size_t>(make_dims(5), 2, 4, 4, 3, 3);
         const auto expected_medians =
             make_tensor<scalar_t>(make_dims(5), -2.5 * 1e-15, -5.5 * 1e-16, -0.0, +2e-16, +2e-15);

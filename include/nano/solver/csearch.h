@@ -37,7 +37,7 @@ public:
     ///
     /// \brief constructor
     ///
-    csearch_t(const function_t&, scalar_t m1, scalar_t m2, scalar_t m3, scalar_t m4);
+    csearch_t(const function_t&, scalar_t m1, scalar_t m2, scalar_t m3, scalar_t m4, scalar_t extrapol);
 
     ///
     /// \brief
@@ -56,11 +56,12 @@ public:
 
 private:
     // attributes
-    const function_t& m_function; ///<
-    scalar_t          m_m1{0.5};  ///<
-    scalar_t          m_m2{0.9};  ///<
-    scalar_t          m_m3{1.0};  ///<
-    scalar_t          m_m4{1.0};  ///<
-    point_t           m_point;    ///<
+    const function_t& m_function;      ///<
+    scalar_t          m_m1{0.5};       ///<
+    scalar_t          m_m2{0.9};       ///<
+    scalar_t          m_m3{1.0};       ///<
+    scalar_t          m_m4{1.0};       ///<
+    scalar_t          m_extrapol{5.0}; ///<
+    point_t           m_point;         ///<
 };
 } // namespace nano
