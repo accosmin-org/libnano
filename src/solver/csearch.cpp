@@ -9,10 +9,9 @@ using namespace nano;
 namespace
 {
 template <typename tvector>
-bool converged(const scalar_t delta, const scalar_t error, const tvector& sgrad, const scalar_t etol,
-               const scalar_t stol)
+bool converged(const scalar_t error, const tvector& sgrad, const scalar_t etol, const scalar_t stol)
 {
-    return std::max({delta, error}) < etol && sgrad.template lpNorm<2>() < stol;
+    return (error < etol) && (sgrad.template lpNorm<2>() < stol);
 }
 } // namespace
 
@@ -30,12 +29,13 @@ nano::enum_map_t<csearch_status> nano::enum_string()
 }
 
 csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar_t m2, const scalar_t m3,
-                     const scalar_t m4, const scalar_t extrapol)
+                     const scalar_t m4, const scalar_t interpol, const scalar_t extrapol)
     : m_function(function)
     , m_m1(m1)
     , m_m2(m2)
     , m_m3(m3)
     , m_m4(m4)
+    , m_interpol(interpol)
     , m_extrapol(extrapol)
 {
     m_point.m_y.resize(function.size());
@@ -47,7 +47,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
 {
     // FIXME: the references do not specify how to choose these thresholds
     const auto etol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
-    const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size())) * 1e+1;
+    const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
 
     auto& t = m_point.m_t;
     t       = 1.0;
@@ -58,7 +58,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
     {
         if (std::isfinite(tR))
         {
-            return 0.5 * (tL + tR); // TODO: better than bisection?!
+            return (1.0 - m_interpol) * tL + m_interpol * tR;
         }
         else
         {
@@ -95,7 +95,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
             status = csearch_status::failed;
             break;
         }
-        else if (const auto converged = ::converged(delta, e, s, etol, stol); converged)
+        else if (const auto converged = ::converged(e, s, etol, stol); converged)
         {
             status = csearch_status::converged;
             break;
@@ -142,6 +142,7 @@ void csearch_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::m3"), 0, LT, 1.0, LT, 1e+6));
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::m4"), 0, LT, 1.0, LT, 1e+6));
+    c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::interpol"), 0.0, LT, 0.3, LT, 1.0));
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::csearch::extrapol"), 1.0, LT, 5.0, LT, 1e+2));
     c.register_parameter(parameter_t::make_scalar_pair(scat(prefix, "::csearch::m1m2"), 0, LT, 0.5, LT, 0.9, LT, 1.0));
 }
@@ -151,7 +152,8 @@ csearch_t csearch_t::make(const function_t& function, const configurable_t& c, c
     const auto [m1, m2] = c.parameter(scat(prefix, "::csearch::m1m2")).value_pair<scalar_t>();
     const auto m3       = c.parameter(scat(prefix, "::csearch::m3")).value<scalar_t>();
     const auto m4       = c.parameter(scat(prefix, "::csearch::m4")).value<scalar_t>();
+    const auto interpol = c.parameter(scat(prefix, "::csearch::interpol")).value<scalar_t>();
     const auto extrapol = c.parameter(scat(prefix, "::csearch::extrapol")).value<scalar_t>();
 
-    return {function, m1, m2, m3, m4, extrapol};
+    return {function, m1, m2, m3, m4, interpol, extrapol};
 }

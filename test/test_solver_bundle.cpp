@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-inline auto make_solvers(const tensor_size_t bundle_max_size = 8)
+inline auto make_solvers(const tensor_size_t bundle_max_size = 10)
 {
     auto solvers = rsolvers_t{};
     solvers.emplace_back(make_solver("ellipsoid"));

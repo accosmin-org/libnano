@@ -19,7 +19,7 @@ scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi
     //  TODO: make it work for other quasi-newton updates (e.g. SR1, BFGS)
 
     // NB: no positive solution if the function to optimize is not strictly convex!
-    if (nu.dot(u) > epsilon2<scalar_t>())
+    if (nu.dot(u) > epsilon0<scalar_t>())
     {
         return nu.dot(nu) / nu.dot(u);
     }
@@ -45,16 +45,22 @@ scalar_t proximity_t::miu() const
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
                          const vector_t& gn1)
 {
-    m_miu = ::make_miu(m_miu, t, gn1 - gn, xn1 - xn);
+    if (const auto miu = ::make_miu(m_miu, t, gn1 - gn, xn1 - xn); miu != std::numeric_limits<scalar_t>::max())
+    {
+        m_miu = miu;
+    }
 }
 
 void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
                          const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
 {
     // see (2): the variation that gives the minimum proximity parameter.
-    const auto miu = std::min({::make_miu(m_miu, t, gn1 - gn, xn1 - xn), ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn),
-                               ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn), ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn)});
-    if (miu != std::numeric_limits<scalar_t>::max())
+    const auto miu1 = ::make_miu(m_miu, t, gn1 - gn, xn1 - xn);
+    const auto miu2 = ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn);
+    const auto miu3 = ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn);
+    const auto miu4 = ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn);
+
+    if (const auto miu = std::min({miu1, miu2, miu3, miu4}); miu != std::numeric_limits<scalar_t>::max())
     {
         m_miu = miu;
     }
