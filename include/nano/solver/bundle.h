@@ -12,8 +12,9 @@ namespace nano
 /// see (1) "Numerical optimization - theoretical and practical aspects", 2nd edition, 2006
 /// see (2) "Variable metric bundle methods: from conceptual to implementable forms", by Lemarechal, Sagastizabal, 1997
 ///
-/// NB: the bundle is kept small by removing all inactive constraints and then the ones with the largest
-///     approximation error if needed - see (2).
+/// NB: the bundle is kept small by:
+///     - first removing all inactive constraints and
+///     - then the ones with the largest approximation error if needed - see (2).
 ///
 class NANO_PUBLIC bundle_t
 {

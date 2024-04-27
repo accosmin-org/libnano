@@ -96,6 +96,7 @@ void bundle_t::delete_largest(const tensor_size_t count)
 
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
         assert(count <= size());
+
         m_alphas.slice(0, size()) = m_bundleE.slice(0, size());
         std::nth_element(m_alphas.begin(), m_alphas.begin() + (size() - count), m_alphas.begin() + size());
 
