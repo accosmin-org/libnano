@@ -75,7 +75,7 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 
 void proximity_t::config(configurable_t& c, const string_t& prefix)
 {
-    c.register_parameter(parameter_t::make_scalar_pair(scat(prefix, "::miu0_range"), 0.0, LT, 1e-4, LT, 1e+4, LT, 1e6));
+    c.register_parameter(parameter_t::make_scalar_pair(scat(prefix, "::miu0_range"), 0.0, LT, 1e+0, LT, 1e+4, LT, 1e6));
 }
 
 proximity_t proximity_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
