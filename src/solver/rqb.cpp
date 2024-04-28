@@ -31,8 +31,8 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     auto csearch   = csearch_t::make(function, *this, prefix);
     auto proximity = proximity_t::make(state, *this, prefix);
 
-    auto Gn  = state.gx();
-    auto Gn1 = state.gx();
+    auto Gn  = state.gx(); ///< approximation of the gradient of Moreau-Yosida regularization model at x_n
+    auto Gn1 = state.gx(); ///< same at x_{n+1} - the next proximity center
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
@@ -57,8 +57,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         }
         else if (status == csearch_status::cutting_plane_step)
         {
-            Gn1 = bundle.smeared_s();
-            Gn  = Gn1;
+            Gn = bundle.smeared_s();
 
             bundle.moveto(y, gy, fy);
             assert(fy < state.fx());

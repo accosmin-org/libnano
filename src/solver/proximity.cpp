@@ -55,12 +55,19 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
                          const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
 {
     // see (2): the variation that gives the minimum proximity parameter.
-    const auto miu1 = ::make_miu(m_miu, t, gn1 - gn, xn1 - xn);
-    const auto miu2 = ::make_miu(m_miu, t, gn1 - Gn, xn1 - xn);
-    const auto miu3 = ::make_miu(m_miu, t, Gn1 - Gn, xn1 - xn);
-    const auto miu4 = ::make_miu(m_miu, t, Gn1 - gn, xn1 - xn);
+    auto miu = std::numeric_limits<scalar_t>::max();
+    for (const auto alpha1 : {0.0, 0.5, 1.0})
+    {
+        for (const auto alpha2 : {0.0, 0.5, 1.0})
+        {
+            const auto xi = xn1 - xn;
+            const auto nu = alpha1 * gn1 + (1.0 - alpha1) * Gn1 - alpha2 * gn - (1.0 - alpha2) * Gn;
 
-    if (const auto miu = std::min({miu1, miu2, miu3, miu4}); miu != std::numeric_limits<scalar_t>::max())
+            miu = std::min(miu, ::make_miu(m_miu, t, nu, xi));
+        }
+    }
+
+    if (miu != std::numeric_limits<scalar_t>::max())
     {
         m_miu = miu;
     }
