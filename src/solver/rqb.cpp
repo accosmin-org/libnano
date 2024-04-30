@@ -48,7 +48,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         if (status == csearch_status::descent_step)
         {
             Gn1 = bundle.smeared_s();
-            proximity.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
+            proximity.update(t, bundle.x(), y, bundle.gx(), gy); //, Gn, Gn1);
             Gn = Gn1;
 
             bundle.moveto(y, gy, fy);
