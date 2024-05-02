@@ -7,7 +7,7 @@ using namespace nano;
 solver_rqb_t::solver_rqb_t()
     : solver_t("rqb")
 {
-    type(solver_type::non_monotonic);
+    type(solver_type::monotonic);
 
     const auto prefix = string_t{"solver::rqb"};
     bundle_t::config(*this, prefix);
