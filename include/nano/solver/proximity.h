@@ -21,7 +21,7 @@ public:
     ///
     /// \brief constructor
     ///
-    proximity_t(const solver_state_t& state, scalar_t miu0_min, scalar_t miu0_max);
+    proximity_t(const solver_state_t& state, scalar_t miu0_min, scalar_t miu0_max, scalar_t min_dot_nuv);
 
     ///
     /// \brief
@@ -48,5 +48,6 @@ public:
 private:
     // attributes
     scalar_t m_miu{1.0}; ///< current proximity parameter value
+    scalar_t m_min_dot_nuv{0.0}; ///< minimum nu.dot(v) to accept to adjust the proximity parameter, see (2) or (3)
 };
 } // namespace nano
