@@ -182,8 +182,7 @@ void stump_wlearner_t::do_predict(const dataset_t& dataset, indices_cmap_t sampl
     const auto lo = vector(0);
     const auto hi = vector(1);
 
-    loop_scalar(dataset, samples, feature(),
-                [&](const tensor_size_t i, const scalar_t value)
+    loop_scalar(dataset, samples, feature(), [&](const tensor_size_t i, const scalar_t value)
                 { outputs.vector(i) += value < m_threshold ? lo : hi; });
 }
 
@@ -197,8 +196,7 @@ cluster_t stump_wlearner_t::split(const dataset_t& dataset, const indices_t& sam
 {
     cluster_t cluster(dataset.samples(), 2);
 
-    loop_scalar(dataset, samples, feature,
-                [&](const tensor_size_t i, const scalar_t value)
+    loop_scalar(dataset, samples, feature, [&](const tensor_size_t i, const scalar_t value)
                 { cluster.assign(samples(i), value < threshold ? 0 : 1); });
 
     return cluster;

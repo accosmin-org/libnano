@@ -117,32 +117,28 @@ feature_mapping_t select(const tdataset& dataset, const indices_t& feature_indic
 template <typename tdataset>
 feature_mapping_t select_sclass(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
-    return detail::select(dataset, feature_indices,
-                          [&](const auto&, tensor_size_t ifeature, const auto& op)
+    return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_sclass(dataset, ifeature, op); });
 }
 
 template <typename tdataset>
 feature_mapping_t select_mclass(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
-    return detail::select(dataset, feature_indices,
-                          [&](const auto&, tensor_size_t ifeature, const auto& op)
+    return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_mclass(dataset, ifeature, op); });
 }
 
 template <typename tdataset>
 feature_mapping_t select_scalar(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
-    return detail::select(dataset, feature_indices,
-                          [&](const auto&, tensor_size_t ifeature, const auto& op)
+    return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_scalar(dataset, ifeature, op); });
 }
 
 template <typename tdataset>
 feature_mapping_t select_struct(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
-    return detail::select(dataset, feature_indices,
-                          [&](const auto&, tensor_size_t ifeature, const auto& op)
+    return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_struct(dataset, ifeature, op); });
 }
 } // namespace nano
