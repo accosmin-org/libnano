@@ -1,9 +1,6 @@
 #include <nano/solver/bundle.h>
 #include <nano/solver/csearch.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 namespace
