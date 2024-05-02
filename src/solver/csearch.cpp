@@ -43,7 +43,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                                             const scalar_t epsilon)
 {
     // FIXME: the references do not specify how to choose these thresholds
-    const auto etol = epsilon;
+    const auto etol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
     const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
 
     auto& t = m_point.m_t;
