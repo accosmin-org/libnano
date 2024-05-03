@@ -47,7 +47,7 @@ public:
 
 private:
     // attributes
-    scalar_t m_miu{1.0}; ///< current proximity parameter value
+    scalar_t m_miu{1.0};         ///< current proximity parameter value
     scalar_t m_min_dot_nuv{0.0}; ///< minimum nu.dot(v) to accept to adjust the proximity parameter, see (2) or (3)
 };
 } // namespace nano
