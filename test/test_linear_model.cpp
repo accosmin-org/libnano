@@ -121,6 +121,7 @@ UTEST_CASE(regularization_none)
     }
 }
 
+// FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
 /*UTEST_CASE(regularization_lasso)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
@@ -175,6 +176,7 @@ UTEST_CASE(regularization_ridge)
     }
 }
 
+// FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
 /*UTEST_CASE(regularization_elasticnet)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
