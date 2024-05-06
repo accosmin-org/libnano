@@ -7,7 +7,7 @@ namespace nano
 ///
 /// \brief scaling methods for flattening input features and scalar targets.
 ///
-enum class scaling_type : int32_t
+enum class scaling_type : uint8_t
 {
     none = 0, ///< no normalization, use the feature values as is
     mean,     ///< mean normalization: x = (x - mean(x)) / (max(x) - min(x))

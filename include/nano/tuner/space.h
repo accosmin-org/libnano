@@ -17,7 +17,7 @@ using param_spaces_t = std::vector<param_space_t>;
 class NANO_PUBLIC param_space_t
 {
 public:
-    enum class type
+    enum class type : uint8_t
     {
         log10,  ///< logarithmic mapping to [0, 1]
         linear, ///< linear mapping to [0, 1]

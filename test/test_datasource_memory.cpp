@@ -357,7 +357,7 @@ UTEST_CASE(datasource_target)
 UTEST_CASE(invalid_feature_type)
 {
     auto features = make_features();
-    features[0].scalar(static_cast<feature_type>(-1));
+    features[0].scalar(static_cast<feature_type>(0xFF));
 
     auto datasource = fixture_datasource_t{100, features, string_t::npos};
     UTEST_CHECK_THROW(datasource.load(), std::runtime_error);
@@ -370,7 +370,7 @@ UTEST_CASE(invalid_feature_type)
 UTEST_CASE(invalid_targets_type)
 {
     auto features = make_features();
-    features[0].scalar(static_cast<feature_type>(-1));
+    features[0].scalar(static_cast<feature_type>(0xFF));
 
     auto datasource = fixture_datasource_t{100, features, string_t::npos};
     UTEST_CHECK_THROW(datasource.load(), std::runtime_error);

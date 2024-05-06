@@ -74,8 +74,8 @@ function! Formatonsave()
   if filereadable("/usr/share/clang/clang-format.py")
       py3f /usr/share/clang/clang-format.py
   endif
-  if filereadable("/usr/share/clang/clang-format-14/clang-format.py")
-      py3f /usr/share/clang/clang-format-14/clang-format.py
+  if filereadable("/usr/share/clang/clang-format-18/clang-format.py")
+      py3f /usr/share/clang/clang-format-18/clang-format.py
   endif
 endfunction
 autocmd BufWritePre *.h,*.cc,*.cpp call Formatonsave()

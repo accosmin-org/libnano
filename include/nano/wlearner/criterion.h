@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief criteria to select weak learner, trading between fitting and complexity.
 ///
-enum class wlearner_criterion
+enum class wlearner_criterion : uint8_t
 {
     rss,  ///< residual sum of squares
     aic,  ///< AIC

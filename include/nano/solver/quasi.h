@@ -7,7 +7,7 @@ namespace nano
 ///
 /// \brief methods to initialize the first approximation of the Hessian's inverse.
 ///
-enum class quasi_initialization
+enum class quasi_initialization : uint8_t
 {
     identity, ///< H0 = I
     scaled,   ///< H0 = I * dg.dot(dx) / dg.dot(dg) - see (2)

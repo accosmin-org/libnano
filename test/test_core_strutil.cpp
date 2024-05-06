@@ -4,7 +4,7 @@
 
 namespace nano
 {
-enum class enum_type
+enum class enum_type : uint8_t
 {
     type1,
     type2,

@@ -11,7 +11,7 @@ namespace nano::gboost
 ///
 struct NANO_PUBLIC result_t
 {
-    enum class stats
+    enum class stats : uint8_t
     {
         train_error,    ///< mean training error
         train_loss,     ///< mean training loss value

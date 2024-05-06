@@ -7,7 +7,7 @@ namespace nano
 ///
 /// \brief machine learning task type.
 ///
-enum class task_type : int32_t
+enum class task_type : uint8_t
 {
     regression = 0,  ///< regression
     sclassification, ///< single-label classification

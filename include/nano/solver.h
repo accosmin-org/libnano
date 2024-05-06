@@ -11,7 +11,7 @@ using rsolvers_t = std::vector<rsolver_t>;
 ///
 /// \brief classifies numerical optimization algorithms (solvers).
 ///
-enum class solver_type
+enum class solver_type : uint8_t
 {
     ///< descent is guaranteed at each step using line-search along a descent direction.
     ///< the constraints (if any) are ignored.

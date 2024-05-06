@@ -14,7 +14,7 @@ using rgenerators_t = std::vector<rgenerator_t>;
 ///
 /// \brief type of generated features.
 ///
-enum class generator_type
+enum class generator_type : uint8_t
 {
     mclass,
     sclass,

@@ -9,14 +9,14 @@ namespace nano
 class function_t;
 using rfunction_t = std::unique_ptr<function_t>;
 
-enum class convexity
+enum class convexity : uint8_t
 {
     ignore,
     yes,
     no
 };
 
-enum class smoothness
+enum class smoothness : uint8_t
 {
     ignore,
     yes,

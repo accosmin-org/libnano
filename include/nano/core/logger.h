@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <iostream>
 #include <nano/arch.h>
 #include <nano/string.h>
@@ -12,7 +13,7 @@ namespace nano
 class NANO_PUBLIC logger_t
 {
 public:
-    enum class type
+    enum class type : uint8_t
     {
         info,
         warn,

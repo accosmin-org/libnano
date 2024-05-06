@@ -12,7 +12,7 @@ using rlsearchk_t = std::unique_ptr<lsearchk_t>;
 ///
 /// \brief the objective type of the line-search procedure.
 ///
-enum class lsearch_type
+enum class lsearch_type : uint8_t
 {
     none,               ///<
     armijo,             ///< sufficient decrease of the function value (Armijo)

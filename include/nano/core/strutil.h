@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cstdint>
 #include <nano/string.h>
 #include <regex>
 #include <sstream>
@@ -14,7 +15,7 @@ namespace nano
 ///
 /// \brief text alignment options
 ///
-enum class alignment : int
+enum class alignment : uint8_t
 {
     left,
     center,

@@ -4,7 +4,7 @@
 
 namespace nano
 {
-enum class csearch_status : int32_t
+enum class csearch_status : uint8_t
 {
     failed,
     max_iters,
@@ -23,8 +23,8 @@ enum class csearch_status : int32_t
 /// see (4) "A NU-algorithm for convex minimization", by Mifflin, Sagastizabal, 2005
 ///
 /// NB: the implementation follows the notation from (2).
-/// NB: the stopping criterion is not clearly given in the references, but some papers specify which we use here:
-///     (smeared_error < epsilon * sqrt(N)) && (smeared_grad < epsilon * sqrt(N)).
+/// NB: the stopping criterion is not clearly given in the references, but some papers specify the following:
+///     smeared_error < epsilon * sqrt(N) && smeared_grad < epsilon * sqrt(N).
 ///
 class NANO_PUBLIC csearch_t
 {

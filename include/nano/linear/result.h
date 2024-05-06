@@ -11,7 +11,7 @@ namespace nano::linear
 ///
 struct NANO_PUBLIC result_t
 {
-    enum class stats
+    enum class stats : uint8_t
     {
         solver_fcalls,  ///< number of function value calls by the solver
         solver_gcalls,  ///< number of function gradient calls by the solver

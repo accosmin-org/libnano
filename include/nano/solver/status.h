@@ -4,7 +4,7 @@
 
 namespace nano
 {
-enum class solver_status : int32_t
+enum class solver_status : uint8_t
 {
     max_iters,  ///< maximum number of iterations reached without convergence (default)
     converged,  ///< convergence criterion reached

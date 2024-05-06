@@ -9,7 +9,7 @@ namespace nano
 ///
 /// see "Multivariate adaptive regression splines", by Jerome Friedman, 1991
 ///
-enum class hinge_type : int32_t
+enum class hinge_type : uint8_t
 {
     left = 0, ///< beta * (threshold - x(feature))+       => zero on the right, linear on the left!
     right,    ///< beta * (x(feature) - threshold)+       => zero on the left, linear on the right!

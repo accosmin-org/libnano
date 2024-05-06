@@ -13,7 +13,7 @@ using features_t = std::vector<feature_t>;
 ///
 /// \brief input or target feature type.
 ///
-enum class feature_type : int32_t
+enum class feature_type : uint8_t
 {
     // continuous features
     int8 = 0,

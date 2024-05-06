@@ -74,7 +74,7 @@ inline colfill_t colfill(const char fill)
 class NANO_PUBLIC row_t
 {
 public:
-    enum class mode
+    enum class mode : uint8_t
     {
         header = 0, ///< header (not considered for operations like sorting or marking)
         delim,      ///< delimiting row

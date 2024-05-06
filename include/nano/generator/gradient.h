@@ -9,7 +9,7 @@ namespace nano
 ///
 /// \brief supported symmetric 3x3 kernels.
 ///
-enum class kernel3x3_type
+enum class kernel3x3_type : uint8_t
 {
     sobel,
     scharr,
@@ -55,7 +55,7 @@ std::array<tscalar, 3> make_kernel3x3(kernel3x3_type type)
 ///
 /// \brief computation mode for gradients.
 ///
-enum class gradient3x3_mode
+enum class gradient3x3_mode : uint8_t
 {
     gradx,     ///< horizontal gradient
     grady,     ///< vertical gradient

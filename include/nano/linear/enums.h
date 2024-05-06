@@ -10,7 +10,7 @@ namespace nano
 /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
 /// see "Regularization and variable selection via the elastic net", by H. Zou, T. Hastie
 ///
-enum class linear_regularization
+enum class linear_regularization : uint8_t
 {
     none,       ///< no regularization
     lasso,      ///< lasso

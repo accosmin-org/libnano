@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief interpolation method using the information at two line-search step trials.
 ///
-enum class interpolation_type
+enum class interpolation_type : uint8_t
 {
     bisection, ///<
     quadratic, ///<

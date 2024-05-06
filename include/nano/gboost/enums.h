@@ -9,7 +9,7 @@ namespace nano
 ///
 /// see "Greedy Function Approximation: A Gradient Boosting Machine", by Jerome Friedman
 ///
-enum class gboost_wscale : int32_t
+enum class gboost_wscale : uint8_t
 {
     gboost = 0, ///< use the same scaling factor for all samples (e.g. vanilla GradientBoosting)
     tboost,     ///< use a potentially different scaling factor for each split (e.g. see TreeBoost variation)
@@ -29,7 +29,7 @@ inline enum_map_t<gboost_wscale> enum_string()
 ///
 /// see "Stochastic Gradient Boosting", by Jerome Friedman
 ///
-enum class gboost_shrinkage : int32_t
+enum class gboost_shrinkage : uint8_t
 {
     off,    ///< no shrinkage
     global, ///< same value for all boosting rounds (see reference)
@@ -51,7 +51,7 @@ inline enum_map_t<gboost_shrinkage> enum_string()
 ///
 /// see "Stochastic Gradient Boosting", by Jerome Friedman
 ///
-enum class gboost_subsample : int32_t
+enum class gboost_subsample : uint8_t
 {
     off,                ///< always use all available training samples
     subsample,          ///< (uniform) subsample the training samples (withput replacement)
