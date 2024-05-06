@@ -191,22 +191,22 @@ select_iterator_t::select_iterator_t(const dataset_t& dataset)
 
 void select_iterator_t::loop(indices_cmap_t samples, const sclass_callback_t& callback) const
 {
-    return loop(samples, m_sclass_features, callback);
+    loop(samples, m_sclass_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const mclass_callback_t& callback) const
 {
-    return loop(samples, m_mclass_features, callback);
+    loop(samples, m_mclass_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const scalar_callback_t& callback) const
 {
-    return loop(samples, m_scalar_features, callback);
+    loop(samples, m_scalar_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, const struct_callback_t& callback) const
 {
-    return loop(samples, m_struct_features, callback);
+    loop(samples, m_struct_features, callback);
 }
 
 void select_iterator_t::loop(indices_cmap_t samples, tensor_size_t ifeature, const sclass_callback_t& callback) const

@@ -47,7 +47,7 @@ void section_t::block(const bool raise)
     {
         if (future.valid())
         {
-            raise ? (void)future.get() : future.wait();
+            raise ? future.get() : future.wait();
         }
     }
 }
