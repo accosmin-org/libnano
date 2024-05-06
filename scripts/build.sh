@@ -341,6 +341,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-else-after-return"
     checks="${checks},-readability-function-cognitive-complexity"
     checks="${checks},-readability-identifier-length"
+    checks="${checks},-readability-avoid-nested-conditional-operator"
     clang_tidy ${checks}
 }
 
