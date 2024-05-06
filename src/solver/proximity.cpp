@@ -79,15 +79,16 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 
 void proximity_t::config(configurable_t& c, const string_t& prefix)
 {
-    c.register_parameter(parameter_t::make_scalar_pair(scat(prefix, "::miu0_range"), 0.0, LT, 1e+2, LT, 1e+4, LT, 1e6));
     c.register_parameter(
-        parameter_t::make_scalar(scat(prefix, "::min_dot_nuv"), 0.0, LT, epsilon1<scalar_t>(), LT, 1.0));
+        parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e+2, LT, 1e+4, LT, 1e6));
+    c.register_parameter(
+        parameter_t::make_scalar(scat(prefix, "::prox::min_dot_nuv"), 0.0, LT, epsilon0<scalar_t>(), LT, 1.0));
 }
 
 proximity_t proximity_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
 {
-    const auto [miu0_min, miu0_max] = c.parameter(scat(prefix, "::miu0_range")).value_pair<scalar_t>();
-    const auto min_dot_nuv          = c.parameter(scat(prefix, "::min_dot_nuv")).value<scalar_t>();
+    const auto [miu0_min, miu0_max] = c.parameter(scat(prefix, "::prox::miu0_range")).value_pair<scalar_t>();
+    const auto min_dot_nuv          = c.parameter(scat(prefix, "::prox::min_dot_nuv")).value<scalar_t>();
 
     return {state, miu0_min, miu0_max, min_dot_nuv};
 }

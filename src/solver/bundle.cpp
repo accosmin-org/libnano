@@ -129,7 +129,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     assert(dims() == y.size());
     assert(dims() == gy.size());
 
-    delete_inactive(epsilon1<scalar_t>());
+    delete_inactive(epsilon0<scalar_t>());
     delete_largest(2);
 
     if (serious_step)
