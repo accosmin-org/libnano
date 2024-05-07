@@ -7,6 +7,7 @@ basedir=`dirname "${basedir}"`
 installdir=${basedir}/install
 libnanodir=${basedir}/build/libnano
 exampledir=${basedir}/build/example
+
 clang_suffix=""
 cmake_options="-GNinja -DBUILD_SHARED_LIBS=ON"
 

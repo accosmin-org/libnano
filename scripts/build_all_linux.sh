@@ -6,7 +6,7 @@ trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
 cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 
-export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3"
+export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 
 ###############################################################################################################
 # code formatting using a fixed version of clang-format
@@ -40,14 +40,14 @@ CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=Rel
 # standard CLANG builds
 ###############################################################################################################
 
-#CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug \
-#    ${cmake_options} --config --build --test --install --build-example
+CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug \
+    ${cmake_options} --config --build --test --install --build-example
 
-#CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release \
-#    ${cmake_options} --config --build --test --install --build-example
+CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release \
+    ${cmake_options} --config --build --test --install --build-example
 
-#CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --thinlto \
-#    ${cmake_options} --config --build --test --install --build-example
+CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --thinlto \
+    ${cmake_options} --config --build --test --install --build-example
 
 ###############################################################################################################
 # static analysis:
