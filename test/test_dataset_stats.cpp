@@ -221,7 +221,9 @@ UTEST_CASE(scaling)
     }
     {
         tensor2d_t values = flatten;
+        // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
         UTEST_CHECK_THROW(stats.scale(static_cast<scaling_type>(0xFF), values), std::runtime_error);
+        // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
         UTEST_CHECK_THROW(stats.upscale(static_cast<scaling_type>(0xFF), values), std::runtime_error);
         UTEST_CHECK_CLOSE(values, flatten, 1e-12);
     }

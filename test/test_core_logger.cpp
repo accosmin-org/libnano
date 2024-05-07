@@ -17,6 +17,7 @@ UTEST_CASE(_default)
     UTEST_CHECK_NOTHROW(log_info() << "info message");
     UTEST_CHECK_NOTHROW(log_error() << "error message");
     UTEST_CHECK_NOTHROW(log_warning() << "warning message");
+    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     UTEST_CHECK_NOTHROW(logger_t(static_cast<logger_t::type>(42)) << "what message");
 }
 

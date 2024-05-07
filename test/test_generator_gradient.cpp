@@ -126,6 +126,7 @@ UTEST_CASE(kernel)
         UTEST_CHECK_CLOSE(kernel[2], 1.0 / 3.0, 1e-15);
     }
     {
+        // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
         const auto kernel = make_kernel3x3<double>(static_cast<kernel3x3_type>(0xFF));
         UTEST_CHECK(!std::isfinite(kernel[0]));
         UTEST_CHECK(!std::isfinite(kernel[1]));
