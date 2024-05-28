@@ -12,150 +12,347 @@ set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
 # generic utilities
 make_lib(NANO core
-    parameter.cpp
+    arch.h
+    clonable.h
     configurable.cpp
-    core/table.cpp
+    configurable.h
     core/chrono.cpp
-    core/logger.cpp
-    core/random.cpp
+    core/chrono.h
     core/cmdline.cpp
-    core/parallel.cpp
-    core/sampling.cpp
+    core/cmdline.h
+    core/combinatorial.h
+    core/factory_util.h
+    core/hash.h
     core/histogram.cpp
-    core/parameter_tracker.cpp)
+    core/histogram.h
+    core/logger.cpp
+    core/logger.h
+    core/numeric.h
+    core/parallel.cpp
+    core/parallel.h
+    core/parameter_tracker.cpp
+    core/parameter_tracker.h
+    core/random.cpp
+    core/random.h
+    core/reduce.h
+    core/sampling.cpp
+    core/sampling.h
+    core/seed.h
+    core/stats.h
+    core/stream.h
+    core/strutil.h
+    core/table.cpp
+    core/table.h
+    core/tokenizer.h
+    core/util.h
+    factory.h
+    feature.cpp
+    feature.h
+    parameter.cpp
+    parameter.h
+    scalar.h
+    string.h
+    tensor.h
+    tensor/algorithm.h
+    tensor/base.h
+    tensor/dims.h
+    tensor/eigen.h
+    tensor/index.h
+    tensor/integral.h
+    tensor/numeric.h
+    tensor/pprint.h
+    tensor/range.h
+    tensor/stack.h
+    tensor/storage.h
+    tensor/stream.h
+    tensor/tensor.h
+    tensor/traits.h
+)
 
 # numerical optimization utilities
 make_lib(NANO function
     function.cpp
-    function/constraint.cpp
-    function/penalty.cpp
-    function/util.cpp
+    function.h
     function/benchmark/axis_ellipsoid.cpp
+    function/benchmark/axis_ellipsoid.h
     function/benchmark/cauchy.cpp
-    function/benchmark/chained_lq.cpp
+    function/benchmark/cauchy.h
     function/benchmark/chained_cb3I.cpp
+    function/benchmark/chained_cb3I.h
     function/benchmark/chained_cb3II.cpp
+    function/benchmark/chained_cb3II.h
+    function/benchmark/chained_lq.cpp
+    function/benchmark/chained_lq.h
     function/benchmark/chung_reynolds.cpp
+    function/benchmark/chung_reynolds.h
     function/benchmark/dixon_price.cpp
+    function/benchmark/dixon_price.h
     function/benchmark/elastic_net.cpp
+    function/benchmark/elastic_net.h
     function/benchmark/exponential.cpp
+    function/benchmark/exponential.h
     function/benchmark/geometric.cpp
+    function/benchmark/geometric.h
     function/benchmark/kinks.cpp
+    function/benchmark/kinks.h
     function/benchmark/linear.cpp
-    function/benchmark/maxq.cpp
+    function/benchmark/linear.h
     function/benchmark/maxhilb.cpp
+    function/benchmark/maxhilb.h
+    function/benchmark/maxq.cpp
+    function/benchmark/maxq.h
     function/benchmark/powell.cpp
+    function/benchmark/powell.h
     function/benchmark/qing.cpp
+    function/benchmark/qing.h
     function/benchmark/quadratic.cpp
+    function/benchmark/quadratic.h
     function/benchmark/rosenbrock.cpp
+    function/benchmark/rosenbrock.h
     function/benchmark/rotated_ellipsoid.cpp
+    function/benchmark/rotated_ellipsoid.h
     function/benchmark/sargan.cpp
+    function/benchmark/sargan.h
     function/benchmark/schumer_steiglitz.cpp
+    function/benchmark/schumer_steiglitz.h
     function/benchmark/sphere.cpp
+    function/benchmark/sphere.h
     function/benchmark/styblinski_tang.cpp
+    function/benchmark/styblinski_tang.h
     function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp)
+    function/benchmark/trid.h
+    function/benchmark/zakharov.cpp
+    function/benchmark/zakharov.h
+    function/constraint.cpp
+    function/constraint.h
+    function/lambda.h
+    function/penalty.cpp
+    function/penalty.h
+    function/util.cpp
+    function/util.h
+)
 
 # numerical optimization utilities
 make_lib(NANO solver
     lsearch0.cpp
-    lsearch0/linear.cpp
-    lsearch0/constant.cpp
+    lsearch0.h
     lsearch0/cgdescent.cpp
+    lsearch0/cgdescent.h
+    lsearch0/constant.cpp
+    lsearch0/constant.h
+    lsearch0/linear.cpp
+    lsearch0/linear.h
     lsearch0/quadratic.cpp
+    lsearch0/quadratic.h
     lsearchk.cpp
-    lsearchk/fletcher.cpp
+    lsearchk.h
     lsearchk/backtrack.cpp
+    lsearchk/backtrack.h
     lsearchk/cgdescent.cpp
+    lsearchk/cgdescent.h
+    lsearchk/fletcher.cpp
+    lsearchk/fletcher.h
     lsearchk/lemarechal.cpp
+    lsearchk/lemarechal.h
     lsearchk/morethuente.cpp
-    solver.cpp
-    solver/gd.cpp
-    solver/cgd.cpp
-    solver/rqb.cpp
-    solver/sgm.cpp
-    solver/asga.cpp
-    solver/fpba.cpp
-    solver/osga.cpp
-    solver/cocob.cpp
-    solver/lstep.cpp
-    solver/lbfgs.cpp
-    solver/pdsgm.cpp
-    solver/quasi.cpp
-    solver/state.cpp
-    solver/bundle.cpp
-    solver/csearch.cpp
-    solver/gsample.cpp
-    solver/penalty.cpp
-    solver/augmented.cpp
-    solver/ellipsoid.cpp
-    solver/proximity.cpp
-    solver/universal.cpp
-    program/state.cpp
-    program/solver.cpp
+    lsearchk/morethuente.h
+    program/constrained.cpp
+    program/constrained.h
+    program/constraint.h
+    program/equality.h
+    program/inequality.h
     program/linear.cpp
+    program/linear.h
     program/quadratic.cpp
-    program/constrained.cpp)
+    program/quadratic.h
+    program/solver.cpp
+    program/solver.h
+    program/stack.h
+    program/state.cpp
+    program/state.h
+    solver.cpp
+    solver.h
+    solver/asga.cpp
+    solver/asga.h
+    solver/augmented.cpp
+    solver/augmented.h
+    solver/bundle.cpp
+    solver/bundle.h
+    solver/cgd.cpp
+    solver/cgd.h
+    solver/cocob.cpp
+    solver/cocob.h
+    solver/csearch.cpp
+    solver/csearch.h
+    solver/ellipsoid.cpp
+    solver/ellipsoid.h
+    solver/fpba.cpp
+    solver/fpba.h
+    solver/gd.cpp
+    solver/gd.h
+    solver/gsample.cpp
+    solver/gsample.h
+    solver/lbfgs.cpp
+    solver/lbfgs.h
+    solver/lsearch.h
+    solver/lstep.cpp
+    solver/lstep.h
+    solver/osga.cpp
+    solver/osga.h
+    solver/pdsgm.cpp
+    solver/pdsgm.h
+    solver/penalty.cpp
+    solver/penalty.h
+    solver/proximity.cpp
+    solver/proximity.h
+    solver/quasi.cpp
+    solver/quasi.h
+    solver/rqb.cpp
+    solver/rqb.h
+    solver/sgm.cpp
+    solver/sgm.h
+    solver/state.cpp
+    solver/state.h
+    solver/status.h
+    solver/universal.cpp
+    solver/universal.h
+)
 
 # machine learning utilities
 make_lib(NANO machine
-    feature.cpp
     dataset.cpp
+    dataset.h
     dataset/hash.cpp
-    dataset/stats.cpp
+    dataset/hash.h
     dataset/iterator.cpp
+    dataset/iterator.h
+    dataset/scaling.h
+    dataset/stats.cpp
+    dataset/stats.h
     datasource.cpp
-    datasource/mask.cpp
-    datasource/linear.cpp
-    datasource/tabular.cpp
+    datasource.h
+    datasource/csv.h
     datasource/imclass_cifar.cpp
+    datasource/imclass_cifar.h
     datasource/imclass_mnist.cpp
-    generator.cpp
-    generator/pairwise_base.cpp
-    generator/pairwise_input.cpp
-    generator/pairwise_product.cpp
-    generator/elemwise_base.cpp
-    generator/elemwise_input.cpp
-    generator/elemwise_gradient.cpp
-    generator/elemwise_identity.cpp
-    loss.cpp
-    loss/pinball.cpp
-    learner.cpp
-    mlearn/tune.cpp
-    mlearn/stats.cpp
-    mlearn/params.cpp
-    mlearn/result.cpp
-    mlearn/cluster.cpp
-    tuner.cpp
-    tuner/util.cpp
-    tuner/local.cpp
-    tuner/space.cpp
-    tuner/surrogate.cpp
-    splitter.cpp
-    splitter/kfold.cpp
-    splitter/random.cpp
-    gboost/util.cpp
-    gboost/model.cpp
-    gboost/result.cpp
-    gboost/sampler.cpp
-    gboost/function.cpp
+    datasource/imclass_mnist.h
+    datasource/iterator.h
+    datasource/linear.cpp
+    datasource/linear.h
+    datasource/mask.cpp
+    datasource/mask.h
+    datasource/storage.h
+    datasource/tabular.cpp
+    datasource/tabular.h
+    feature.cpp
+    feature.h
     gboost/accumulator.cpp
+    gboost/accumulator.h
     gboost/early_stopping.cpp
-    wlearner.cpp
-    wlearner/util.cpp
-    wlearner/single.cpp
-    wlearner/affine.cpp
-    wlearner/dtree.cpp
-    wlearner/hinge.cpp
-    wlearner/stump.cpp
-    wlearner/table.cpp
-    wlearner/criterion.cpp
-    wlearner/accumulator.cpp
-    linear/util.cpp
-    linear/model.cpp
-    linear/result.cpp
+    gboost/early_stopping.h
+    gboost/enums.h
+    gboost/function.cpp
+    gboost/function.h
+    gboost/model.cpp
+    gboost/model.h
+    gboost/result.cpp
+    gboost/result.h
+    gboost/sampler.cpp
+    gboost/sampler.h
+    gboost/util.cpp
+    gboost/util.h
+    generator.cpp
+    generator.h
+    generator/elemwise_base.cpp
+    generator/elemwise_base.h
+    generator/elemwise_gradient.cpp
+    generator/elemwise_gradient.h
+    generator/elemwise.h
+    generator/elemwise_identity.cpp
+    generator/elemwise_identity.h
+    generator/elemwise_input.cpp
+    generator/elemwise_input.h
+    generator/gradient.h
+    generator/pairwise_base.cpp
+    generator/pairwise_base.h
+    generator/pairwise.h
+    generator/pairwise_input.cpp
+    generator/pairwise_input.h
+    generator/pairwise_product.cpp
+    generator/pairwise_product.h
+    generator/select.h
+    generator/storage.h
+    learner.cpp
+    learner.h
+    linear/accumulator.cpp
+    linear/accumulator.h
+    linear/enums.h
     linear/function.cpp
-    linear/accumulator.cpp)
+    linear/function.h
+    linear/model.cpp
+    linear/model.h
+    linear/result.cpp
+    linear/result.h
+    linear/util.cpp
+    linear/util.h
+    loss.cpp
+    loss.h
+    loss/class.h
+    loss/error.h
+    loss/flatten.h
+    loss/pinball.cpp
+    loss/pinball.h
+    mlearn/cluster.cpp
+    mlearn/cluster.h
+    mlearn/enums.h
+    mlearn/params.cpp
+    mlearn/params.h
+    mlearn/result.cpp
+    mlearn/result.h
+    mlearn/stats.cpp
+    mlearn/stats.h
+    mlearn/tune.cpp
+    mlearn/tune.h
+    splitter.cpp
+    splitter.h
+    splitter/kfold.cpp
+    splitter/kfold.h
+    splitter/random.cpp
+    splitter/random.h
+    task.h
+    tuner.cpp
+    tuner.h
+    tuner/local.cpp
+    tuner/local.h
+    tuner/space.cpp
+    tuner/space.h
+    tuner/step.h
+    tuner/callback.h
+    tuner/surrogate.cpp
+    tuner/surrogate.h
+    tuner/util.cpp
+    tuner/util.h
+    wlearner.cpp
+    wlearner.h
+    wlearner/accumulator.cpp
+    wlearner/accumulator.h
+    wlearner/affine.cpp
+    wlearner/affine.h
+    wlearner/criterion.cpp
+    wlearner/criterion.h
+    wlearner/dtree.cpp
+    wlearner/dtree.h
+    wlearner/hinge.cpp
+    wlearner/hinge.h
+    wlearner/single.cpp
+    wlearner/single.h
+    wlearner/stump.cpp
+    wlearner/stump.h
+    wlearner/table.cpp
+    wlearner/table.h
+    wlearner/util.cpp
+    wlearner/util.h
+)
 
 # link libraries
 target_link_libraries(function PUBLIC core)
