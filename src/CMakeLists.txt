@@ -12,346 +12,348 @@ set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
 # generic utilities
 make_lib(NANO core
-    arch.h
-    clonable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/arch.h
+    ${CMAKE_SOURCE_DIR}/include/nano/clonable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/configurable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/chrono.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/cmdline.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/combinatorial.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/factory_util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/hash.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/histogram.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/logger.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/numeric.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/parallel.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/parameter_tracker.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/random.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/reduce.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/sampling.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/seed.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/stats.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/stream.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/strutil.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/table.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/tokenizer.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/factory.h
+    ${CMAKE_SOURCE_DIR}/include/nano/parameter.h
+    ${CMAKE_SOURCE_DIR}/include/nano/scalar.h
+    ${CMAKE_SOURCE_DIR}/include/nano/string.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/algorithm.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/base.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/dims.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/eigen.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/index.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/integral.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/numeric.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/pprint.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/range.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/stack.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/storage.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/stream.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/tensor.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/traits.h
+
     configurable.cpp
-    configurable.h
-    core/chrono.cpp
-    core/chrono.h
-    core/cmdline.cpp
-    core/cmdline.h
-    core/combinatorial.h
-    core/factory_util.h
-    core/hash.h
-    core/histogram.cpp
-    core/histogram.h
-    core/logger.cpp
-    core/logger.h
-    core/numeric.h
-    core/parallel.cpp
-    core/parallel.h
-    core/parameter_tracker.cpp
-    core/parameter_tracker.h
-    core/random.cpp
-    core/random.h
-    core/reduce.h
-    core/sampling.cpp
-    core/sampling.h
-    core/seed.h
-    core/stats.h
-    core/stream.h
-    core/strutil.h
-    core/table.cpp
-    core/table.h
-    core/tokenizer.h
-    core/util.h
-    factory.h
-    feature.cpp
-    feature.h
     parameter.cpp
-    parameter.h
-    scalar.h
-    string.h
-    tensor.h
-    tensor/algorithm.h
-    tensor/base.h
-    tensor/dims.h
-    tensor/eigen.h
-    tensor/index.h
-    tensor/integral.h
-    tensor/numeric.h
-    tensor/pprint.h
-    tensor/range.h
-    tensor/stack.h
-    tensor/storage.h
-    tensor/stream.h
-    tensor/tensor.h
-    tensor/traits.h
+    core/chrono.cpp
+    core/cmdline.cpp
+    core/histogram.cpp
+    core/logger.cpp
+    core/parallel.cpp
+    core/parameter_tracker.cpp
+    core/random.cpp
+    core/sampling.cpp
+    core/table.cpp
 )
 
 # numerical optimization utilities
 make_lib(NANO function
+    ${CMAKE_SOURCE_DIR}/include/nano/function.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/axis_ellipsoid.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/cauchy.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3I.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3II.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_lq.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chung_reynolds.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/dixon_price.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/elastic_net.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/exponential.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/geometric.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/kinks.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/linear.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxhilb.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxq.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/powell.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/qing.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/quadratic.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rosenbrock.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rotated_ellipsoid.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sargan.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/schumer_steiglitz.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sphere.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/styblinski_tang.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/trid.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/zakharov.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/util.h
+
     function.cpp
-    function.h
     function/benchmark/axis_ellipsoid.cpp
-    function/benchmark/axis_ellipsoid.h
     function/benchmark/cauchy.cpp
-    function/benchmark/cauchy.h
     function/benchmark/chained_cb3I.cpp
-    function/benchmark/chained_cb3I.h
     function/benchmark/chained_cb3II.cpp
-    function/benchmark/chained_cb3II.h
     function/benchmark/chained_lq.cpp
-    function/benchmark/chained_lq.h
     function/benchmark/chung_reynolds.cpp
-    function/benchmark/chung_reynolds.h
     function/benchmark/dixon_price.cpp
-    function/benchmark/dixon_price.h
     function/benchmark/elastic_net.cpp
-    function/benchmark/elastic_net.h
     function/benchmark/exponential.cpp
-    function/benchmark/exponential.h
     function/benchmark/geometric.cpp
-    function/benchmark/geometric.h
     function/benchmark/kinks.cpp
-    function/benchmark/kinks.h
     function/benchmark/linear.cpp
-    function/benchmark/linear.h
     function/benchmark/maxhilb.cpp
-    function/benchmark/maxhilb.h
     function/benchmark/maxq.cpp
-    function/benchmark/maxq.h
     function/benchmark/powell.cpp
-    function/benchmark/powell.h
     function/benchmark/qing.cpp
-    function/benchmark/qing.h
     function/benchmark/quadratic.cpp
-    function/benchmark/quadratic.h
     function/benchmark/rosenbrock.cpp
-    function/benchmark/rosenbrock.h
     function/benchmark/rotated_ellipsoid.cpp
-    function/benchmark/rotated_ellipsoid.h
     function/benchmark/sargan.cpp
-    function/benchmark/sargan.h
     function/benchmark/schumer_steiglitz.cpp
-    function/benchmark/schumer_steiglitz.h
     function/benchmark/sphere.cpp
-    function/benchmark/sphere.h
     function/benchmark/styblinski_tang.cpp
-    function/benchmark/styblinski_tang.h
     function/benchmark/trid.cpp
-    function/benchmark/trid.h
     function/benchmark/zakharov.cpp
-    function/benchmark/zakharov.h
     function/constraint.cpp
-    function/constraint.h
-    function/lambda.h
     function/penalty.cpp
-    function/penalty.h
     function/util.cpp
-    function/util.h
 )
 
 # numerical optimization utilities
 make_lib(NANO solver
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/cgdescent.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/constant.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/linear.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/quadratic.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/backtrack.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/cgdescent.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/fletcher.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/lemarechal.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/morethuente.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/constrained.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/constraint.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/equality.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/inequality.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/linear.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/quadratic.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/solver.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/stack.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/state.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/asga.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/cgd.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/cocob.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/ellipsoid.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/fpba.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/gd.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/gsample.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/lbfgs.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/osga.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/pdsgm.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/quasi.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/rqb.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/sgm.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/universal.h
+
     lsearch0.cpp
-    lsearch0.h
     lsearch0/cgdescent.cpp
-    lsearch0/cgdescent.h
     lsearch0/constant.cpp
-    lsearch0/constant.h
     lsearch0/linear.cpp
-    lsearch0/linear.h
     lsearch0/quadratic.cpp
-    lsearch0/quadratic.h
     lsearchk.cpp
-    lsearchk.h
     lsearchk/backtrack.cpp
-    lsearchk/backtrack.h
     lsearchk/cgdescent.cpp
-    lsearchk/cgdescent.h
     lsearchk/fletcher.cpp
-    lsearchk/fletcher.h
     lsearchk/lemarechal.cpp
-    lsearchk/lemarechal.h
     lsearchk/morethuente.cpp
-    lsearchk/morethuente.h
     program/constrained.cpp
-    program/constrained.h
-    program/constraint.h
-    program/equality.h
-    program/inequality.h
     program/linear.cpp
-    program/linear.h
     program/quadratic.cpp
-    program/quadratic.h
     program/solver.cpp
-    program/solver.h
-    program/stack.h
     program/state.cpp
-    program/state.h
     solver.cpp
-    solver.h
     solver/asga.cpp
-    solver/asga.h
     solver/augmented.cpp
-    solver/augmented.h
     solver/bundle.cpp
-    solver/bundle.h
     solver/cgd.cpp
-    solver/cgd.h
     solver/cocob.cpp
-    solver/cocob.h
     solver/csearch.cpp
-    solver/csearch.h
     solver/ellipsoid.cpp
-    solver/ellipsoid.h
     solver/fpba.cpp
-    solver/fpba.h
     solver/gd.cpp
-    solver/gd.h
     solver/gsample.cpp
-    solver/gsample.h
     solver/lbfgs.cpp
-    solver/lbfgs.h
-    solver/lsearch.h
     solver/lstep.cpp
-    solver/lstep.h
     solver/osga.cpp
-    solver/osga.h
     solver/pdsgm.cpp
-    solver/pdsgm.h
     solver/penalty.cpp
-    solver/penalty.h
     solver/proximity.cpp
-    solver/proximity.h
     solver/quasi.cpp
-    solver/quasi.h
     solver/rqb.cpp
-    solver/rqb.h
     solver/sgm.cpp
-    solver/sgm.h
     solver/state.cpp
-    solver/state.h
-    solver/status.h
     solver/universal.cpp
-    solver/universal.h
 )
 
 # machine learning utilities
 make_lib(NANO machine
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset.h
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset/hash.h
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset/iterator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset/scaling.h
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset/stats.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/csv.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/imclass_cifar.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/imclass_mnist.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/iterator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/linear.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/mask.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/storage.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource/tabular.h
+    ${CMAKE_SOURCE_DIR}/include/nano/feature.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/accumulator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/early_stopping.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/enums.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/function.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/model.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/result.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/sampler.h
+    ${CMAKE_SOURCE_DIR}/include/nano/gboost/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/elemwise_base.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/elemwise_gradient.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/elemwise.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/elemwise_identity.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/elemwise_input.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/gradient.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/pairwise_base.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/pairwise.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/pairwise_input.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/pairwise_product.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/select.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator/storage.h
+    ${CMAKE_SOURCE_DIR}/include/nano/learner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/accumulator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/enums.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/function.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/model.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/result.h
+    ${CMAKE_SOURCE_DIR}/include/nano/linear/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss/class.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss/error.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss/flatten.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss/pinball.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/cluster.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/enums.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/params.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/result.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/stats.h
+    ${CMAKE_SOURCE_DIR}/include/nano/mlearn/tune.h
+    ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
+    ${CMAKE_SOURCE_DIR}/include/nano/splitter/kfold.h
+    ${CMAKE_SOURCE_DIR}/include/nano/splitter/random.h
+    ${CMAKE_SOURCE_DIR}/include/nano/task.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/local.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/space.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/step.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/callback.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/surrogate.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/accumulator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/affine.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/criterion.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/dtree.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/hinge.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/single.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/stump.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/table.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner/util.h
+
     dataset.cpp
-    dataset.h
     dataset/hash.cpp
-    dataset/hash.h
     dataset/iterator.cpp
-    dataset/iterator.h
-    dataset/scaling.h
     dataset/stats.cpp
-    dataset/stats.h
     datasource.cpp
-    datasource.h
-    datasource/csv.h
     datasource/imclass_cifar.cpp
-    datasource/imclass_cifar.h
     datasource/imclass_mnist.cpp
-    datasource/imclass_mnist.h
-    datasource/iterator.h
     datasource/linear.cpp
-    datasource/linear.h
     datasource/mask.cpp
-    datasource/mask.h
-    datasource/storage.h
     datasource/tabular.cpp
-    datasource/tabular.h
     feature.cpp
-    feature.h
     gboost/accumulator.cpp
-    gboost/accumulator.h
     gboost/early_stopping.cpp
-    gboost/early_stopping.h
-    gboost/enums.h
     gboost/function.cpp
-    gboost/function.h
     gboost/model.cpp
-    gboost/model.h
     gboost/result.cpp
-    gboost/result.h
     gboost/sampler.cpp
-    gboost/sampler.h
     gboost/util.cpp
-    gboost/util.h
     generator.cpp
-    generator.h
     generator/elemwise_base.cpp
-    generator/elemwise_base.h
     generator/elemwise_gradient.cpp
-    generator/elemwise_gradient.h
-    generator/elemwise.h
     generator/elemwise_identity.cpp
-    generator/elemwise_identity.h
     generator/elemwise_input.cpp
-    generator/elemwise_input.h
-    generator/gradient.h
     generator/pairwise_base.cpp
-    generator/pairwise_base.h
-    generator/pairwise.h
     generator/pairwise_input.cpp
-    generator/pairwise_input.h
     generator/pairwise_product.cpp
-    generator/pairwise_product.h
-    generator/select.h
-    generator/storage.h
     learner.cpp
-    learner.h
     linear/accumulator.cpp
-    linear/accumulator.h
-    linear/enums.h
     linear/function.cpp
-    linear/function.h
     linear/model.cpp
-    linear/model.h
     linear/result.cpp
-    linear/result.h
     linear/util.cpp
-    linear/util.h
     loss.cpp
-    loss.h
-    loss/class.h
-    loss/error.h
-    loss/flatten.h
     loss/pinball.cpp
-    loss/pinball.h
     mlearn/cluster.cpp
-    mlearn/cluster.h
-    mlearn/enums.h
     mlearn/params.cpp
-    mlearn/params.h
     mlearn/result.cpp
-    mlearn/result.h
     mlearn/stats.cpp
-    mlearn/stats.h
     mlearn/tune.cpp
-    mlearn/tune.h
     splitter.cpp
-    splitter.h
     splitter/kfold.cpp
-    splitter/kfold.h
     splitter/random.cpp
-    splitter/random.h
-    task.h
     tuner.cpp
-    tuner.h
     tuner/local.cpp
-    tuner/local.h
     tuner/space.cpp
-    tuner/space.h
-    tuner/step.h
-    tuner/callback.h
     tuner/surrogate.cpp
-    tuner/surrogate.h
     tuner/util.cpp
-    tuner/util.h
     wlearner.cpp
-    wlearner.h
     wlearner/accumulator.cpp
-    wlearner/accumulator.h
     wlearner/affine.cpp
-    wlearner/affine.h
     wlearner/criterion.cpp
-    wlearner/criterion.h
     wlearner/dtree.cpp
-    wlearner/dtree.h
     wlearner/hinge.cpp
-    wlearner/hinge.h
     wlearner/single.cpp
-    wlearner/single.h
     wlearner/stump.cpp
-    wlearner/stump.h
     wlearner/table.cpp
-    wlearner/table.h
     wlearner/util.cpp
-    wlearner/util.h
 )
 
 # link libraries
