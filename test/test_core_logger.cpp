@@ -31,7 +31,8 @@ UTEST_CASE(stream_section)
         UTEST_CHECK(&logger_t::stream(logger_t::type::warn) == &stream_warn);
         UTEST_CHECK(&logger_t::stream(logger_t::type::error) == &stream_cerr);
 
-        log_info() << std::flush << "info message" << "\n\n";
+        log_info() << std::flush << "info message"
+                   << "\n\n";
         UTEST_CHECK(ends_with(stream_cout.str(), ": info message\n\n\n"));
         UTEST_CHECK_EQUAL(stream_warn.str(), "");
         UTEST_CHECK_EQUAL(stream_cerr.str(), "");

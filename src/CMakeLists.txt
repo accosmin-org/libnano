@@ -28,6 +28,7 @@ make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/core/random.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/reduce.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/sampling.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/scat.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/seed.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/stats.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/stream.h
@@ -35,6 +36,7 @@ make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/core/table.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/tokenizer.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/enum.h
     ${CMAKE_SOURCE_DIR}/include/nano/factory.h
     ${CMAKE_SOURCE_DIR}/include/nano/parameter.h
     ${CMAKE_SOURCE_DIR}/include/nano/scalar.h
@@ -65,6 +67,7 @@ make_lib(NANO core
     core/parameter_tracker.cpp
     core/random.cpp
     core/sampling.cpp
+    core/strutil.cpp
     core/table.cpp
 )
 

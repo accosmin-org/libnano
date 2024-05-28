@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <nano/arch.h>
+#include <nano/core/strutil.h>
 #include <nano/task.h>
 #include <nano/tensor.h>
 

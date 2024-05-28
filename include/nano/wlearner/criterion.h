@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/arch.h>
-#include <nano/core/strutil.h>
+#include <nano/enum.h>
 
 namespace nano
 {

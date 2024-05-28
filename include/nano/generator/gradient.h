@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/strutil.h>
+#include <nano/enum.h>
 #include <nano/string.h>
 #include <nano/tensor/tensor.h>
 

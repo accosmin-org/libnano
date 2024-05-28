@@ -32,7 +32,9 @@ table_t make_table_with_params(const string_t& name, const factory_t<tobject>& f
     const auto ids = factory.ids(std::regex(regex));
 
     table_t table;
-    table.header() << name << "parameter" << "value" << "domain";
+    table.header() << name << "parameter"
+                   << "value"
+                   << "domain";
     for (const auto& id : ids)
     {
         table.delim();

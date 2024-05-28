@@ -28,11 +28,19 @@ UTEST_CASE(make_greater)
 UTEST_CASE(table)
 {
     nano::table_t t1;
-    t1.header() << "head" << "col1" << "col2";
+    t1.header() << "head"
+                << "col1"
+                << "col2";
     t1.delim();
-    t1.append() << "row1" << "v11" << "v12";
-    t1.append() << "row2" << "v21" << "v22";
-    t1.append() << "row3" << "v21" << "v22";
+    t1.append() << "row1"
+                << "v11"
+                << "v12";
+    t1.append() << "row2"
+                << "v21"
+                << "v22";
+    t1.append() << "row3"
+                << "v21"
+                << "v22";
 
     UTEST_CHECK_EQUAL(t1.rows(), 5U);
     UTEST_CHECK_EQUAL(t1.cols(), 3U);
@@ -47,7 +55,8 @@ UTEST_CASE(table_rows)
         auto table_ = nano::table_t{};
         table_.header() << "head" << colspan(2) << "colx" << colspan(1) << "col3";
         table_.append() << "row1" << 1000 << 9000 << 4000;
-        table_.append() << "row2" << "3200" << colspan(2) << "2000";
+        table_.append() << "row2"
+                        << "3200" << colspan(2) << "2000";
         table_.append() << "row3" << colspan(3) << "2500";
         table_.row(0).data(0, "heax");
         return table_;
@@ -135,10 +144,22 @@ UTEST_CASE(table_rows)
 UTEST_CASE(table_mark)
 {
     nano::table_t table;
-    table.header() << "name " << "col1" << "col2" << "col3";
-    table.append() << "name1" << "1000" << "9000" << "4000";
-    table.append() << "name2" << "3200" << "2000" << "5000";
-    table.append() << "name3" << "1500" << "7000" << "6000";
+    table.header() << "name "
+                   << "col1"
+                   << "col2"
+                   << "col3";
+    table.append() << "name1"
+                   << "1000"
+                   << "9000"
+                   << "4000";
+    table.append() << "name2"
+                   << "3200"
+                   << "2000"
+                   << "5000";
+    table.append() << "name3"
+                   << "1500"
+                   << "7000"
+                   << "6000";
 
     for (size_t r = 0; r < table.rows(); ++r)
     {
@@ -166,10 +187,22 @@ UTEST_CASE(table_mark)
 UTEST_CASE(table_sort)
 {
     nano::table_t table;
-    table.header() << "name" << "col1" << "col2" << "col3";
-    table.append() << "name" << "1000" << "9000" << "4000";
-    table.append() << "name" << "3200" << "2000" << "6000";
-    table.append() << "name" << "1500" << "2000" << "5000";
+    table.header() << "name"
+                   << "col1"
+                   << "col2"
+                   << "col3";
+    table.append() << "name"
+                   << "1000"
+                   << "9000"
+                   << "4000";
+    table.append() << "name"
+                   << "3200"
+                   << "2000"
+                   << "6000";
+    table.append() << "name"
+                   << "1500"
+                   << "2000"
+                   << "5000";
 
     {
         auto tablex = table;
@@ -248,10 +281,15 @@ UTEST_CASE(table_sort)
 UTEST_CASE(table_stream_single_line)
 {
     nano::table_t table;
-    table.header() << "head" << "col1" << "col2";
+    table.header() << "head"
+                   << "col1"
+                   << "col2";
     table.delim();
-    table.append() << "row1" << "v11" << "v12";
-    table.append() << nano::colspan(2) << "row2+v21" << "v22";
+    table.append() << "row1"
+                   << "v11"
+                   << "v12";
+    table.append() << nano::colspan(2) << "row2+v21"
+                   << "v22";
     table.append() << nano::colspan(3) << "row3+v31+v32";
 
     std::stringstream stream;
