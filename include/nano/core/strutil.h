@@ -93,6 +93,6 @@ NANO_PUBLIC bool ends_with(const std::string_view& str, const std::string_view& 
 ///
 /// \brief align a string to fill the given size (if possible).
 ///
-NANO_PUBLIC string_t align(const std::string_view& str, const size_t str_size, const alignment mode = alignment::left,
-                           const char fill_char = ' ');
+NANO_PUBLIC string_t align(const std::string_view& str, size_t str_size, alignment mode = alignment::left,
+                           char fill_char = ' ');
 } // namespace nano
