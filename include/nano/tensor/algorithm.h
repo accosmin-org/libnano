@@ -9,8 +9,7 @@ namespace detail
 template <class ttensor, class... ttensors>
 auto size(const ttensor& tensor, const ttensors&...)
 {
-    const auto size = tensor.template size<0>();
-    return size;
+    return tensor.template size<0>();
 }
 
 template <class ttensor>

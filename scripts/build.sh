@@ -69,8 +69,8 @@ function libcpp {
 }
 
 function coverage {
-    export CXXFLAGS="${CXXFLAGS} -fno-inline -fno-omit-frame-pointer -fno-inline-small-functions -fno-default-inline"
-    export CXXFLAGS="${CXXFLAGS} -coverage -O0"
+    export CXXFLAGS="${CXXFLAGS} -coverage -fno-omit-frame-pointer -Og"
+    export LDFLAGS="${LDFLAGS} -coverage"
 }
 
 function llvm_coverage {
@@ -138,38 +138,47 @@ function call_cppcheck {
         --suppress=unmatchedSuppression
 }
 
+lcov_options="
+    --ignore-errors unused
+    --ignore-errors mismatch
+    --rc lcov_branch_coverage=1
+    --rc genhtml_dark_mode=1
+    --rc genhtml_branch_coverage=1
+    "
+
 function lcov_coverage_init {
     cd ${basedir}
 
     local base_output=${basedir}/lcov_base.info
 
-    options=""
-    options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
-    options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
-
-    lcov ${options} -d ${libnanodir} -i -c -o ${base_output} || return 1
-    lcov ${options} -r ${base_output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/app/*' '*/build/*' -o ${base_output} || return 1
+    lcov ${lcov_options} --no-external --capture --initial --directory ${basedir} \
+        --output-file ${base_output} || return 1
 }
 
 function lcov_coverage {
     cd ${basedir}
 
     local output=${basedir}/lcov.info
+    local html_output=${basedir}/lcovhtml
+    local comb_output=${basedir}/lcov_comb.info
     local base_output=${basedir}/lcov_base.info
     local test_output=${basedir}/lcov_test.info
 
-    options=""
-    options="${options} --rc lcov_branch_coverage=1 --rc lcov_function_coverage=0"
-    options="${options} --rc genhtml_branch_coverage=1 --rc genhtml_function_coverage=0"
+    lcov ${lcov_options} --no-external --capture --directory ${basedir} \
+        --output-file ${test_output} || return 1
 
-    lcov ${options} -d ${libnanodir} --gcov-tool ${GCOV} -c -o ${test_output} || return 1
-    lcov ${options} -r ${test_output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/app/*' '*/build/*' -o ${test_output} || return 1
+    lcov ${lcov_options} --add-tracefile ${base_output} --add-tracefile ${test_output} \
+        --output-file ${comb_output} || return 1
 
-    lcov ${options} -a ${base_output} -a ${test_output} -o ${output} || return 1
-    rm -f ${base_output} ${test_output}
+    lcov ${lcov_options} --remove ${comb_output} '/usr/*' '*/test/*' '*/app/*' '*/build/*' \
+        --output-file ${output} || return 1
 
-    lcov ${options} --list ${output} || return 1
-    genhtml ${options} --output lcovhtml ${output} || return 1
+    rm -f ${base_output} ${test_output} ${comb_output}
+
+    lcov ${lcov_options} --list ${output} || return 1
+
+    genhtml ${lcov_options} --prefix ${basedir} --ignore-errors source ${output} --legend --title "libnano" \
+        --output-directory=${html_output} || return 1
 }
 
 function codecov {
