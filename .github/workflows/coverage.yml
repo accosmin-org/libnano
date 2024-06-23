@@ -1,4 +1,4 @@
-name: llvm-cov-sonar
+name: coverage
 
 on: [push]
 
@@ -7,6 +7,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lcov:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: setup
+      run: bash scripts/setup_ubuntu2204.sh --default
+    - name: coverage (gcc, lcov)
+      run: |
+        CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov
+
   llvm-cov-and-sonar:
     runs-on: ubuntu-22.04
     steps:

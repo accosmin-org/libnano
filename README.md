@@ -12,10 +12,8 @@
 [![docs](https://github.com/accosmin-org/libnano/actions/workflows/docs.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/docs.yml)
 
 [![sanitizers](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/sanitizers.yml)
-[![sonar](https://github.com/accosmin-org/libnano/actions/workflows/sonar.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/sonar.yml)
-[![codecov](https://github.com/accosmin-org/libnano/actions/workflows/codecov.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/codecov.yml)
+[![coverage](https://github.com/accosmin-org/libnano/actions/workflows/coverage.yml/badge.svg)](https://github.com/accosmin-org/libnano/actions/workflows/coverage.yml)
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=libnano&metric=alert_status)](https://sonarcloud.io/summary/overall?id=libnano)
-[![codecov](https://codecov.io/gh/accosmin-org/libnano/branch/master/graph/badge.svg?token=X2IkpkoQEB)](https://codecov.io/gh/accosmin-org/libnano)
 
 
 ### Description
