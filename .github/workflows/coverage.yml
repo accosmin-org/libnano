@@ -8,13 +8,13 @@ concurrency:
 
 jobs:
   lcov:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
+      run: bash scripts/setup_ubuntu2404.sh --default
     - name: coverage (gcc, lcov)
       run: |
         CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
