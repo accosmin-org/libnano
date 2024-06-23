@@ -1,21 +1,22 @@
-#include <nano/tensor.h>
-#include <nano/core/table.h>
 #include <nano/core/chrono.h>
-#include <nano/core/logger.h>
 #include <nano/core/cmdline.h>
+#include <nano/core/table.h>
+#include <nano/critical.h>
+#include <nano/main.h>
+#include <nano/tensor.h>
 
 namespace
 {
 using namespace nano;
 
-template <typename tscalar>
+template <class tscalar>
 auto make_scalar()
 {
     auto rng = make_rng();
     return make_udist<tscalar>(-1, +1)(rng);
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto make_vector(const tensor_size_t dims)
 {
     eigen_vector_t<tscalar> x(dims);
@@ -23,7 +24,7 @@ auto make_vector(const tensor_size_t dims)
     return x;
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto make_matrix(const tensor_size_t rows, const tensor_size_t cols)
 {
     eigen_matrix_t<tscalar> x(rows, cols);
@@ -31,7 +32,7 @@ auto make_matrix(const tensor_size_t rows, const tensor_size_t cols)
     return x;
 }
 
-template <typename toperator>
+template <class toperator>
 void store(row_t& row, const tensor_size_t flops, const toperator& op)
 {
     const auto trials   = size_t(10);
@@ -41,7 +42,7 @@ void store(row_t& row, const tensor_size_t flops, const toperator& op)
 
 struct copy1_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto x = make_vector<tscalar>(dims);
@@ -53,7 +54,7 @@ struct copy1_t
 
 struct copy2_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto x = make_vector<tscalar>(dims);
@@ -65,7 +66,7 @@ struct copy2_t
 
 struct copy3_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto x = make_vector<tscalar>(dims);
@@ -77,7 +78,7 @@ struct copy3_t
 
 struct blas11_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto c = make_scalar<tscalar>();
@@ -90,7 +91,7 @@ struct blas11_t
 
 struct blas12_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto x = make_vector<tscalar>(dims);
@@ -103,7 +104,7 @@ struct blas12_t
 
 struct blas13_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto a = make_scalar<tscalar>();
@@ -117,7 +118,7 @@ struct blas13_t
 
 struct blas14_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto a = make_scalar<tscalar>();
@@ -131,7 +132,7 @@ struct blas14_t
 
 struct blas15_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto a = make_scalar<tscalar>();
@@ -146,7 +147,7 @@ struct blas15_t
 
 struct blas16_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto a = make_scalar<tscalar>();
@@ -162,7 +163,7 @@ struct blas16_t
 
 struct blas21_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -175,7 +176,7 @@ struct blas21_t
 
 struct blas22_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -189,7 +190,7 @@ struct blas22_t
 
 struct blas23_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -203,7 +204,7 @@ struct blas23_t
 
 struct blas24_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static void measure(const tensor_size_t dims, row_t& row)
     {
         auto Z = make_matrix<tscalar>(dims, dims);
@@ -217,7 +218,7 @@ struct blas24_t
 
 struct blas31_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static auto measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -230,7 +231,7 @@ struct blas31_t
 
 struct blas32_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static auto measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -244,7 +245,7 @@ struct blas32_t
 
 struct blas33_t
 {
-    template <typename tscalar>
+    template <class tscalar>
     static auto measure(const tensor_size_t dims, row_t& row)
     {
         auto A = make_matrix<tscalar>(dims, dims);
@@ -256,7 +257,7 @@ struct blas33_t
     }
 };
 
-template <typename top>
+template <class top>
 void foreach_dims(const tensor_size_t min, const tensor_size_t max, const top& op)
 {
     for (tensor_size_t dim = min; dim <= max; dim *= 2)
@@ -265,7 +266,7 @@ void foreach_dims(const tensor_size_t min, const tensor_size_t max, const top& o
     }
 }
 
-template <typename tscalar, typename top>
+template <class tscalar, class top>
 void foreach_dims_row(const tensor_size_t min, const tensor_size_t max, row_t& row, const top& op)
 {
     for (tensor_size_t dim = min; dim <= max; dim *= 2)
@@ -299,7 +300,7 @@ void header2(const tensor_size_t min, const tensor_size_t max, const char* opera
     table.delim();
 }
 
-template <typename tscalar>
+template <class tscalar>
 void copy(const tensor_size_t min, const tensor_size_t max, table_t& table)
 {
     foreach_dims_row<tscalar>(min, max, table.append() << "z = x (std::memcpy)", copy1_t{});
@@ -307,7 +308,7 @@ void copy(const tensor_size_t min, const tensor_size_t max, table_t& table)
     foreach_dims_row<tscalar>(min, max, table.append() << "z = x (Eigen)", copy3_t{});
 }
 
-template <typename tscalar>
+template <class tscalar>
 void blas1(const tensor_size_t min, const tensor_size_t max, table_t& table)
 {
     foreach_dims_row<tscalar>(min, max, table.append() << "z = x + c", blas11_t{});
@@ -318,7 +319,7 @@ void blas1(const tensor_size_t min, const tensor_size_t max, table_t& table)
     foreach_dims_row<tscalar>(min, max, table.append() << "z = ax + by + c", blas16_t{});
 }
 
-template <typename tscalar>
+template <class tscalar>
 void blas2(const tensor_size_t min, const tensor_size_t max, table_t& table)
 {
     foreach_dims_row<tscalar>(min, max, table.append() << "z = Ax", blas21_t{});
@@ -327,7 +328,7 @@ void blas2(const tensor_size_t min, const tensor_size_t max, table_t& table)
     foreach_dims_row<tscalar>(min, max, table.append() << "Z = xy^t + C", blas24_t{});
 }
 
-template <typename tscalar>
+template <class tscalar>
 void blas3(const tensor_size_t min, const tensor_size_t max, table_t& table)
 {
     foreach_dims_row<tscalar>(min, max, table.append() << "Z = AB", blas31_t{});
@@ -341,37 +342,30 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark linear algebra operations using Eigen");
-    cmdline.add("", "min-dims", "minimum number of dimensions [1, 1024]", "16");
-    cmdline.add("", "max-dims", "maximum number of dimensions [--min-dims, 4096]", "1024");
-    cmdline.add("", "copy", "benchmark copy operations (vector to vector)");
-    cmdline.add("", "blas1", "benchmark level1 BLAS operations (vector-vector)");
-    cmdline.add("", "blas2", "benchmark level2 BLAS operations (matrix-vector)");
-    cmdline.add("", "blas3", "benchmark level3 BLAS operations (matrix-matrix)");
+    cmdline.add("--min-dims", "minimum number of dimensions [1, 1024]", 16);
+    cmdline.add("--max-dims", "maximum number of dimensions [--min-dims, 4096]", 1024);
+    cmdline.add("--copy", "benchmark copy operations (vector to vector)");
+    cmdline.add("--blas1", "benchmark level1 BLAS operations (vector-vector)");
+    cmdline.add("--blas2", "benchmark level2 BLAS operations (matrix-vector)");
+    cmdline.add("--blas3", "benchmark level3 BLAS operations (matrix-matrix)");
 
     const auto options = cmdline.process(argc, argv);
-
-    // check arguments and options
-    const auto min_dims = std::clamp(options.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
-    const auto max_dims = std::clamp(options.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
-    const auto copy     = options.has("copy");
-    const auto blas1    = options.has("blas1");
-    const auto blas2    = options.has("blas2");
-    const auto blas3    = options.has("blas3");
-
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
         return EXIT_SUCCESS;
     }
 
-    if (!blas1 && !blas2 && !blas3 && !copy)
-    {
-        cmdline.usage();
-        return EXIT_FAILURE;
-    }
+    // check arguments and options
+    const auto min_dims = std::clamp(options.get<tensor_size_t>("--min-dims"), tensor_size_t(1), tensor_size_t(1024));
+    const auto max_dims = std::clamp(options.get<tensor_size_t>("--max-dims"), min_dims, tensor_size_t(4096));
+    const auto copy     = options.has("--copy");
+    const auto blas1    = options.has("--blas1");
+    const auto blas2    = options.has("--blas2");
+    const auto blas3    = options.has("--blas3");
+
+    critical(!blas1 && !blas2 && !blas3 && !copy, "no benchmark set was chosen");
 
     table_t table;
-
     if (copy)
     {
         const auto min = 1024 * min_dims;

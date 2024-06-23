@@ -39,7 +39,7 @@ public:
 
     histogram_t() = default;
 
-    template <typename titerator>
+    template <class titerator>
     histogram_t(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> thresholds)
         : m_thresholds(std::move(thresholds))
     {
@@ -51,13 +51,13 @@ public:
         update(begin, end);
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_percentiles(titerator begin, titerator end, tensor_size_t bins)
     {
         return make_from_percentiles(begin, end, make_equidistant_percentiles(bins));
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_percentiles(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> percentiles)
     {
         std::sort(begin, end);
@@ -77,19 +77,19 @@ public:
         return histogram_t(begin, end, thresholds);
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_thresholds(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> thresholds)
     {
         return histogram_t(begin, end, std::move(thresholds));
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_ratios(titerator begin, titerator end, tensor_size_t bins)
     {
         return make_from_ratios(begin, end, make_equidistant_ratios(bins));
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_ratios(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> ratios)
     {
         std::sort(begin, end);
@@ -114,7 +114,7 @@ public:
         return histogram_t(begin, end, thresholds);
     }
 
-    template <typename titerator>
+    template <class titerator>
     static histogram_t make_from_exponents(titerator begin, titerator end, scalar_t base,
                                            scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon())
     {
@@ -188,7 +188,7 @@ public:
 
     tensor_size_t count(tensor_size_t bin) const { return m_bin_counts(bin); }
 
-    template <typename tvalue>
+    template <class tvalue>
     tensor_size_t bin(tvalue value) const
     {
         const auto svalue = static_cast<tensor_size_t>(value); // NOLINT(cert-str34-c)
@@ -208,7 +208,7 @@ public:
     }
 
 private:
-    template <typename titerator>
+    template <class titerator>
     void update(titerator begin, titerator end)
     {
         const auto bins = m_thresholds.size() + 1;
@@ -237,7 +237,7 @@ private:
         }
     }
 
-    template <typename titerator>
+    template <class titerator>
     void update_bin(titerator begin, titerator end, tensor_size_t bin)
     {
         const auto count = static_cast<tensor_size_t>(std::distance(begin, end));
@@ -255,7 +255,7 @@ private:
         }
     }
 
-    template <typename titerator>
+    template <class titerator>
     static scalar_t mean(titerator begin, titerator end, tensor_size_t count)
     {
         const auto accumulator = [](scalar_t acc, auto value) { return acc + static_cast<scalar_t>(value); };

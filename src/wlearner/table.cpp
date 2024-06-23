@@ -11,7 +11,7 @@ using namespace nano::wlearner;
 
 namespace
 {
-template <typename toperator>
+template <class toperator>
 void process(const dataset_t& dataset, const indices_cmap_t& samples, const tensor_size_t feature,
              const hashes_t& hashes, const indices_t& hash2tables, const toperator& op)
 {
@@ -163,7 +163,7 @@ public:
         }
     }
 
-    template <typename tfvalues, typename tvalidator>
+    template <class tfvalues, class tvalidator>
     auto update(const indices_t& samples, const tensor4d_t& gradients, const tfvalues& fvalues,
                 const tvalidator& validator)
     {
@@ -268,15 +268,13 @@ cluster_t table_wlearner_t::do_split(const dataset_t& dataset, const indices_t& 
 scalar_t table_wlearner_t::set([[maybe_unused]] const dataset_t& dataset, [[maybe_unused]] const indices_t& samples,
                                const cache_t& cache)
 {
-    // const auto feature = cache.m_feature >= 0 ? dataset.feature(cache.m_feature) : feature_t{};
+    const auto feature = cache.m_feature >= 0 ? dataset.feature(cache.m_feature) : feature_t{};
 
-    // log_info() << std::fixed << std::setprecision(8) << " === table(feature=" << cache.m_feature << "|"
-    //            << (feature.valid() ? feature.name() : string_t("N/A"))
-    //            << ",classes=" << (feature.valid() ? scat(feature.classes()) : string_t("N/A"))
-    //            << ",tables=" << cache.m_tables.size<0>() << ",hashes=" << cache.m_hashes.size()
-    //            << "),samples=" << samples.size()
-    //            << ",score=" << (cache.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(cache.m_score)) <<
-    //            ".";
+    log_info('[', type_id(), "]: ", std::fixed, std::setprecision(8), " === table(feature=", cache.m_feature, "|",
+             feature.valid() ? feature.name() : string_t("N/A"),
+             ",classes=", feature.valid() ? scat(feature.classes()) : string_t("N/A"),
+             ",tables=", cache.m_tables.size<0>(), ",hashes=", cache.m_hashes.size(), "),samples=", samples.size(),
+             ",score=", cache.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(cache.m_score), ".\n");
 
     if (cache.m_score != wlearner_t::no_fit_score())
     {

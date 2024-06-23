@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <nano/core/chrono.h>
 #include <nano/core/cmdline.h>
-#include <nano/core/logger.h>
 #include <nano/core/parallel.h>
 #include <nano/core/table.h>
+#include <nano/main.h>
 #include <nano/tensor.h>
 
 #if defined(_OPENMP)
@@ -18,7 +18,7 @@ struct exp_t
 {
     static const char* name() { return "exp"; }
 
-    template <typename tarray>
+    template <class tarray>
     static scalar_t get(const tarray& targets, const tarray& outputs)
     {
         return (-targets * outputs).exp().sum();
@@ -29,7 +29,7 @@ struct log_t
 {
     static const char* name() { return "log"; }
 
-    template <typename tarray>
+    template <class tarray>
     static scalar_t get(const tarray& targets, const tarray& outputs)
     {
         return ((-targets * outputs).exp() + 1).log().sum();
@@ -40,14 +40,14 @@ struct mse_t
 {
     static const char* name() { return "mse"; }
 
-    template <typename tarray>
+    template <class tarray>
     static scalar_t get(const tarray& targets, const tarray& outputs)
     {
         return (targets - outputs).square().sum();
     }
 };
 
-template <typename toperator>
+template <class toperator>
 scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& outputs)
 {
     assert(targets.rows() == outputs.rows());
@@ -57,7 +57,7 @@ scalar_t sti(const tensor_size_t i, const matrix_t& targets, const matrix_t& out
     return toperator::get(targets.row(i).array(), outputs.row(i).array());
 }
 
-template <typename toperator>
+template <class toperator>
 scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 {
     scalar_t value = 0;
@@ -68,7 +68,7 @@ scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
     return value / static_cast<scalar_t>(targets.rows());
 }
 
-template <typename toperator>
+template <class toperator>
 scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix_t& outputs)
 {
     auto values = make_full_vector<scalar_t>(static_cast<tensor_size_t>(pool.size()), 0);
@@ -79,7 +79,7 @@ scalar_t reduce_mt(parallel::pool_t& pool, const matrix_t& targets, const matrix
 }
 
 #if defined(_OPENMP)
-template <typename toperator>
+template <class toperator>
 scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
 {
     auto       values = make_full_vector<scalar_t>(omp_get_max_threads(), 0);
@@ -109,7 +109,7 @@ bool close(const scalar_t v1, const scalar_t v2, const char* name, const scalar_
     }
 }
 
-template <typename toperator>
+template <class toperator>
 bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_t& table)
 {
     parallel::pool_t pool;
@@ -184,21 +184,19 @@ int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark thread pool");
-    cmdline.add("", "min-size",     "minimum problem size (in kilo)", 1);
-    cmdline.add("", "max-size",     "maximum problem size (in kilo)", 1024);
+    cmdline.add("--min-size", "minimum problem size (in kilo)", 1);
+    cmdline.add("--max-size", "maximum problem size (in kilo)", 1024);
 
     const auto options = cmdline.process(argc, argv);
-
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
         return EXIT_SUCCESS;
     }
 
     // check arguments and options
     const auto kilo = tensor_size_t(1024), mega = kilo * kilo, giga = mega * kilo;
-    const auto cmd_min_size = std::clamp(kilo * options.get<tensor_size_t>("min-size"), kilo, mega);
-    const auto cmd_max_size = std::clamp(kilo * options.get<tensor_size_t>("max-size"), cmd_min_size, giga);
+    const auto cmd_min_size = std::clamp(kilo * options.get<tensor_size_t>("--min-size"), kilo, mega);
+    const auto cmd_max_size = std::clamp(kilo * options.get<tensor_size_t>("--max-size"), cmd_min_size, giga);
 
     table_t table;
     auto& header = table.header();

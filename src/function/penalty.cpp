@@ -27,7 +27,7 @@ auto smooth(const function_t& function)
              : smoothness::no;
 }
 
-template <typename toperator>
+template <class toperator>
 auto penalty_vgrad(const function_t& function, vector_cmap_t x, vector_map_t gx, const toperator& op)
 {
     auto fx = function.vgrad(x, gx);

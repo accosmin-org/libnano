@@ -29,21 +29,11 @@ int main(const int, char*[])
     const auto u          = make_vector<scalar_t>(3, 6);
     const auto xbest      = make_vector<scalar_t>(3, 4.5);
 
-    // log the optimization steps
-    const auto logger = [](const solver_state_t& state)
-    {
-        std::cout << std::fixed << std::setprecision(10) << "i=" << state.m_iters << ",fx=" << state.m_fx
-                  << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
-                  << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]" << std::endl;
-        return true;
-    };
-
     // solve the quadratic program
-    auto solver                           = solver_t{logger};
+    auto solver                           = solver_t{};
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
+    solver.logger(make_stdout_logger());
 
     const auto program =
         make_quadratic(Q, c, make_equality(A, b), make_inequality(G, h), make_greater(l), make_less(u));

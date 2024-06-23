@@ -1,5 +1,5 @@
 #include <nano/core/combinatorial.h>
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/tuner/util.h>
 
 using namespace nano;

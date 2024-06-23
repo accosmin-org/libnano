@@ -35,7 +35,7 @@ auto evaluate10(const scalar_t x, const scalar_t y, const scalar_t x0, const sca
     return square(x - x0) + square(std::log10(y) - std::log10(y0) - (1.0 + x) / (1.0 + x0) + 1.0) + 0.5;
 }
 
-template <typename tevaluator>
+template <class tevaluator>
 void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, const tevaluator& evaluator)
 {
     const auto& params0 = spaces[0].values();

@@ -10,7 +10,7 @@ namespace nano
 template <size_t trank>
 struct integral_t
 {
-    template <typename tscalari, typename tscalaro>
+    template <class tscalari, class tscalaro>
     static void get(tensor_cmap_t<tscalari, trank> itensor, tensor_map_t<tscalaro, trank> otensor)
     {
         for (tensor_size_t i0 = 0, size0 = itensor.template size<0>(); i0 < size0; ++i0)
@@ -27,7 +27,7 @@ struct integral_t
 template <>
 struct integral_t<1>
 {
-    template <typename tscalari, typename tscalaro>
+    template <class tscalari, class tscalaro>
     static void get(tensor_cmap_t<tscalari, 1> itensor, tensor_map_t<tscalaro, 1> otensor)
     {
         otensor(0) = itensor(0);
@@ -38,7 +38,7 @@ struct integral_t<1>
     }
 };
 
-template <typename tscalari, size_t trank, typename tscalaro>
+template <class tscalari, size_t trank, class tscalaro>
 void integral(tensor_cmap_t<tscalari, trank> itensor, tensor_map_t<tscalaro, trank> otensor)
 {
     assert(itensor.dims() == otensor.dims());
@@ -49,7 +49,7 @@ void integral(tensor_cmap_t<tscalari, trank> itensor, tensor_map_t<tscalaro, tra
     }
 }
 
-template <typename tscalari, size_t trank, typename tscalaro>
+template <class tscalari, size_t trank, class tscalaro>
 void integral(const tensor_mem_t<tscalari, trank>& itensor, tensor_mem_t<tscalaro, trank>& otensor)
 {
     integral(itensor.tensor(), otensor.tensor());

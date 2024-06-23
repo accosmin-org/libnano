@@ -36,13 +36,13 @@ struct is_pair<std::pair<T1, T2>> : std::true_type
 template <class T>
 inline constexpr bool is_pair_v = is_pair<T>::value;
 
-template <typename tvalue1, typename tvalue2>
+template <class tvalue1, class tvalue2>
 static std::ostream& operator<<(std::ostream& stream, const std::pair<tvalue1, tvalue2>& pair)
 {
     return stream << "{" << pair.first << "," << pair.second << "}";
 }
 
-template <size_t tindex, typename... tvalues>
+template <size_t tindex, class... tvalues>
 static std::ostream& print_tuple(std::ostream& stream, const std::tuple<tvalues...>& tuple)
 {
     stream << "{" << std::get<tindex>(tuple) << "}";
@@ -53,7 +53,7 @@ static std::ostream& print_tuple(std::ostream& stream, const std::tuple<tvalues.
     return stream;
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 static std::ostream& operator<<(std::ostream& stream, const std::tuple<tvalues...>& tuple)
 {
     stream << "{";
@@ -61,26 +61,26 @@ static std::ostream& operator<<(std::ostream& stream, const std::tuple<tvalues..
     return stream << "}";
 }
 
-template <typename tvalue>
-static std::ostream& operator<<(std::ostream& os, const std::vector<tvalue>& values)
+template <class tvalue>
+static std::ostream& operator<<(std::ostream& stream, const std::vector<tvalue>& values)
 {
-    os << "{";
+    stream << "{";
     for (const auto& value : values)
     {
         if constexpr (std::is_arithmetic_v<tvalue> || std::is_same_v<tvalue, std::string>)
         {
-            os << "{" << value << "}";
+            stream << "{" << value << "}";
         }
         else if constexpr (is_pair_v<tvalue>)
         {
-            os << "{" << value.first << "," << value.second << "}";
+            stream << "{" << value.first << "," << value.second << "}";
         }
         else
         {
-            os << "{" << value << "}";
+            stream << "{" << value << "}";
         }
     }
-    return os << "}";
+    return stream << "}";
 }
 
 struct utest_location_t
@@ -119,7 +119,7 @@ enum class exception_status
     unexpected
 };
 
-template <typename texception, typename toperator>
+template <class texception, class toperator>
 static exception_status check_throw(const toperator& op)
 {
     try

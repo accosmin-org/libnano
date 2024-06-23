@@ -17,7 +17,7 @@ using rtuner_t = std::unique_ptr<tuner_t>;
 /// NB: a candidate combination of hyper-parameter values is usually evaluated using some error function
 ///     computed on the validation split.
 ///
-class NANO_PUBLIC tuner_t : public configurable_t, public clonable_t<tuner_t>
+class NANO_PUBLIC tuner_t : public typed_t, public configurable_t, public clonable_t<tuner_t>
 {
 public:
     ///

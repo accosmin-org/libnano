@@ -1,3 +1,4 @@
+#include <map>
 #include <nano/generator/pairwise.h>
 
 using namespace nano;
@@ -80,7 +81,7 @@ feature_mapping_t base_pairwise_generator_t::make_pairwise(const feature_mapping
         mapping.array(k).segment(vals1, vals2) = mapping2.array(i2);
     };
 
-    std::map<std::pair<tensor_size_t, tensor_size_t>, std::pair<tensor_size_t, tensor_size_t>> upairs;
+    auto upairs = std::map<std::pair<tensor_size_t, tensor_size_t>, std::pair<tensor_size_t, tensor_size_t>>{};
     for (tensor_size_t i1 = 0; i1 < size1; ++i1)
     {
         for (tensor_size_t i2 = 0; i2 < size2; ++i2)

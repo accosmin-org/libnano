@@ -26,7 +26,7 @@ enum class csearch_status : uint8_t
 /// NB: the stopping criterion is not clearly given in the references, but some papers specify the following:
 ///     smeared_error < epsilon * sqrt(N) && smeared_grad < epsilon * sqrt(N).
 ///
-class NANO_PUBLIC csearch_t
+class NANO_PUBLIC csearch_t : public loggable_t
 {
 public:
     struct point_t

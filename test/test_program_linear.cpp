@@ -20,7 +20,7 @@ UTEST_CASE(program1)
 
     const auto xbest = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
     check_solution(program, expected_t{xbest}.fbest(xbest.dot(c)));
-    check_solution(program, expected_t{xbest}.fbest(xbest.dot(c)).use_logger(false));
+    check_solution(program, expected_t{xbest}.fbest(xbest.dot(c)));
 }
 
 UTEST_CASE(program2)
@@ -47,8 +47,7 @@ UTEST_CASE(program3)
     const auto b = make_vector<scalar_t>(2);
 
     const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::stopped));
-    // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
+    check_solution(program, expected_t{}.status(solver_status::unbounded));
 }
 
 UTEST_CASE(program4)
@@ -59,8 +58,7 @@ UTEST_CASE(program4)
     const auto b = make_vector<scalar_t>(-1, -1);
 
     const auto program = make_linear(c, make_equality(A, b), make_greater(2, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::stopped));
-    // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
+    check_solution(program, expected_t{}.status(solver_status::unfeasible));
 }
 
 UTEST_CASE(program5)
@@ -71,8 +69,7 @@ UTEST_CASE(program5)
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
     const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::stopped));
-    // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
+    check_solution(program, expected_t{}.status(solver_status::unfeasible));
 }
 
 UTEST_CASE(program6)
@@ -353,8 +350,7 @@ UTEST_CASE(equality_unique_solution)
             const auto b = A * x;
 
             const auto program = make_linear(c, make_equality(A, b), make_greater(dims, 0.0));
-            check_solution(program, expected_t{}.status(solver_status::stopped));
-            // FIXME: check_solution(program, expected_t{}.status(solver_status::unbounded));
+            check_solution(program, expected_t{}.status(solver_status::unfeasible));
         }
     }
 }

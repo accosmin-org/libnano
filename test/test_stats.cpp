@@ -6,7 +6,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_core_stats)
+UTEST_BEGIN_MODULE(test_stats)
 
 UTEST_CASE(IC)
 {

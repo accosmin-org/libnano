@@ -1,7 +1,7 @@
 #include <nano/core/chrono.h>
 #include <utest/utest.h>
 
-UTEST_BEGIN_MODULE(test_core_chrono)
+UTEST_BEGIN_MODULE(test_chrono)
 
 UTEST_CASE(elapsed)
 {

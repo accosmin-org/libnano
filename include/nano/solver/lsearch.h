@@ -16,25 +16,12 @@ public:
     ///
     /// \brief constructor
     ///
-    lsearch_t(rlsearch0_t&& lsearch0, rlsearchk_t&& lsearchk)
-        : m_lsearch0(std::move(lsearch0))
-        , m_lsearchk(std::move(lsearchk))
-    {
-    }
+    lsearch_t(rlsearch0_t&& lsearch0, rlsearchk_t&& lsearchk);
 
     ///
     /// \brief compute the step size along the given descent direction.
     ///
-    bool get(solver_state_t& state, const vector_t& descent) const
-    {
-        assert(m_lsearch0);
-        assert(m_lsearchk);
-
-        const auto init_step_size  = m_lsearch0->get(state, descent, m_last_step_size);
-        const auto [ok, step_size] = m_lsearchk->get(state, descent, init_step_size);
-        m_last_step_size           = step_size;
-        return ok;
-    }
+    bool get(solver_state_t& state, const vector_t& descent) const;
 
 private:
     // attributes

@@ -6,7 +6,7 @@ namespace nano
 {
 namespace detail
 {
-template <typename tscalar, typename tblock, typename... tblocks>
+template <class tscalar, class tblock, class... tblocks>
 void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const tensor_size_t col, const tblock& block,
            const tblocks&... blocks)
 {
@@ -60,7 +60,7 @@ void stack(tensor_mem_t<tscalar, 2U>& matrix, const tensor_size_t row, const ten
     }
 }
 
-template <typename tscalar, typename tblock, typename... tblocks>
+template <class tscalar, class tblock, class... tblocks>
 void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tblock& block, const tblocks&... blocks)
 {
     static_assert(is_eigen_v<tblock> || is_tensor_v<tblock>);
@@ -110,7 +110,7 @@ void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tbl
 ///             |          transposed_vector         |
 ///             +------------------------------------+
 ///
-template <typename tscalar, typename... tblocks>
+template <class tscalar, class... tblocks>
 auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
     typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...), tensor_mem_t<tscalar, 2U>>
 {
@@ -126,9 +126,10 @@ auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&...
 ///
 /// NB: the segments are given in row-major fashion and are assumed to be compatible in size and without gaps.
 ///
-template <typename tscalar, typename... tblocks>
+template <class tscalar, class... tblocks>
 auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
     typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...), tensor_mem_t<tscalar, 1U>>
+
 {
     auto vector = tensor_mem_t<tscalar, 1U>{rows};
 

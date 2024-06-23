@@ -1,9 +1,9 @@
 #pragma once
 
-#include <nano/arch.h>
 #include <nano/configurable.h>
 #include <nano/datasource/storage.h>
 #include <nano/factory.h>
+#include <nano/loggable.h>
 
 namespace nano
 {
@@ -21,7 +21,10 @@ using rdatasource_t = std::unique_ptr<datasource_t>;
 /// NB: the categorical features can be single-label or multi-label.
 /// NB: the continuous features can be structured (multi-dimensional) if feature_t::dims() != (1, 1, 1).
 ///
-class NANO_PUBLIC datasource_t : public configurable_t, public clonable_t<datasource_t>
+class NANO_PUBLIC datasource_t : public typed_t,
+                                 public configurable_t,
+                                 public loggable_t,
+                                 public clonable_t<datasource_t>
 {
 public:
     ///
@@ -98,7 +101,7 @@ public:
     ///
     /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
     ///
-    template <typename toperator>
+    template <class toperator>
     auto visit_target(const toperator& op) const
     {
         assert(has_target());
@@ -110,7 +113,7 @@ public:
     ///
     /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
     ///
-    template <typename toperator>
+    template <class toperator>
     auto visit_inputs(const tensor_size_t ifeature, const toperator& op) const
     {
         assert(ifeature >= 0 && ifeature < features());
@@ -137,7 +140,7 @@ protected:
     ///
     /// \brief safely write a feature value for the given sample.
     ///
-    template <typename tvalue>
+    template <class tvalue>
     void set(const tensor_size_t sample, const tensor_size_t ifeature, const tvalue& value)
     {
         assert(sample >= 0 && sample < samples());
@@ -165,7 +168,7 @@ private:
     static constexpr auto maxu16 = tensor_size_t(1) << 16;
     static constexpr auto maxu32 = tensor_size_t(1) << 32;
 
-    template <typename toperator>
+    template <class toperator>
     auto visit(const tensor_size_t ifeature, const toperator& op)
     {
         const auto& feature = m_features[static_cast<size_t>(ifeature)];
@@ -198,7 +201,7 @@ private:
         return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
     }
 
-    template <typename toperator>
+    template <class toperator>
     auto visit(const tensor_size_t ifeature, const toperator& op) const
     {
         const auto& feature = m_features[static_cast<size_t>(ifeature)];
@@ -233,7 +236,7 @@ private:
 
     indices_t filter(tensor_size_t count, tensor_size_t condition) const;
 
-    template <typename tscalar>
+    template <class tscalar>
     using storage_t       = tensor_mem_t<tscalar, 2>;
     using storage_mask_t  = tensor_mem_t<uint8_t, 2>;
     using storage_type_t  = std::vector<feature_type>;

@@ -23,7 +23,7 @@ NANO_PUBLIC rwlearners_t clone(const rwlearners_t&);
 ///
 /// \brief loop over the feature values of the given scalar feature and samples.
 ///
-template <typename toperator>
+template <class toperator>
 void loop_scalar(const dataset_t& dataset, const indices_t& samples, const tensor_size_t feature, const toperator& op)
 {
     const auto iterator = select_iterator_t{dataset};
@@ -43,7 +43,7 @@ void loop_scalar(const dataset_t& dataset, const indices_t& samples, const tenso
 ///
 /// \brief loop over the feature values of the single-label scalar feature and samples.
 ///
-template <typename toperator>
+template <class toperator>
 void loop_sclass(const dataset_t& dataset, const indices_t& samples, const tensor_size_t feature, const toperator& op)
 {
     const auto iterator = select_iterator_t{dataset};
@@ -63,7 +63,7 @@ void loop_sclass(const dataset_t& dataset, const indices_t& samples, const tenso
 ///
 /// \brief loop over the feature values of the multi-label scalar feature and samples.
 ///
-template <typename toperator>
+template <class toperator>
 void loop_mclass(const dataset_t& dataset, const indices_t& samples, const tensor_size_t feature, const toperator& op)
 {
     const auto iterator = select_iterator_t{dataset};

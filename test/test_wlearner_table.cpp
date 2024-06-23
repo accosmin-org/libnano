@@ -48,7 +48,7 @@ auto make_dstep_noise(const tensor_size_t classes, const tensor_size_t fv)
 }
 } // namespace
 
-template <typename twlearner>
+template <class twlearner>
 class fixture_datasource_t final : public wlearner_datasource_t
 {
 public:
@@ -152,7 +152,7 @@ private:
         noisy_target.array() += target.array();
     }
 
-    template <typename tfvalue>
+    template <class tfvalue>
     auto make_cluster(const tfvalue& fvalue) const
     {
         // map labeling to the right cluster

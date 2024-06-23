@@ -9,7 +9,7 @@ namespace nano
 ///
 /// \brief write unformatted the given tensor.
 ///
-template <template <typename tscalar, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class tscalar, size_t> class tstorage, class tscalar, size_t trank>
 std::ostream& write(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor)
 {
     if (!::nano::write(stream, detail::hash_version()) ||                     // version
@@ -27,7 +27,7 @@ std::ostream& write(std::ostream& stream, const tensor_t<tstorage, tscalar, tran
 ///
 /// \brief read unformatted the given tensor.
 ///
-template <template <typename tscalar, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class tscalar, size_t> class tstorage, class tscalar, size_t trank>
 std::istream& read(std::istream& stream, tensor_t<tstorage, tscalar, trank>& tensor)
 {
     typename tensor_t<tstorage, tscalar, trank>::tdims dims;

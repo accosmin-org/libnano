@@ -52,7 +52,7 @@ public:
     }
 
 protected:
-    template <typename tfvalues>
+    template <class tfvalues>
     void set_stump_target(const tensor_size_t sample, const tensor_size_t feature, const tfvalues& fvalues,
                           const scalar_t threshold, const scalar_t pred_lower, const scalar_t pred_upper,
                           const tensor_size_t cluster_offset)

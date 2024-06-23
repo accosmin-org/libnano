@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief organize the registered objects in a factory in a tabular form.
 ///
-template <typename tobject>
+template <class tobject>
 table_t make_table(const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
 {
     const auto ids = factory.ids(std::regex(regex));
@@ -26,7 +26,7 @@ table_t make_table(const string_t& name, const factory_t<tobject>& factory, cons
 ///
 /// \brief organize the registered configurable objects in a factory in a tabular form.
 ///
-template <typename tobject>
+template <class tobject>
 table_t make_table_with_params(const string_t& name, const factory_t<tobject>& factory, const string_t& regex = ".+")
 {
     const auto ids = factory.ids(std::regex(regex));

@@ -29,7 +29,7 @@ inline enum_map_t<kernel3x3_type> enum_string()
 ///
 /// \brief construct symmetric 3x3 kernels for computing image gradients.
 ///
-template <typename tscalar>
+template <class tscalar>
 std::array<tscalar, 3> make_kernel3x3(kernel3x3_type type)
 {
     switch (type)
@@ -69,7 +69,7 @@ enum class gradient3x3_mode : uint8_t
 ///
 /// NB: optionally the pixels values can be scaled, for example by standardizing them across the image.
 ///
-template <typename tscalar_input, typename tscalar_output>
+template <class tscalar_input, class tscalar_output>
 void gradient3x3(gradient3x3_mode mode, tensor_cmap_t<tscalar_input, 2> input,
                  const std::array<tscalar_output, 3> kernel, tensor_map_t<tscalar_output, 2> output)
 {

@@ -1,8 +1,32 @@
 #include <Eigen/Dense>
 #include <nano/program/constrained.h>
+#include <nano/tensor/stack.h>
 
 using namespace nano;
 using namespace nano::program;
+
+namespace
+{
+void reduce(matrix_t& A)
+{
+    // independant linear constraints
+    const auto dd = A.transpose().fullPivLu();
+    if (dd.rank() == A.rows())
+    {
+        return;
+    }
+
+    // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
+    const auto& P  = dd.permutationP();
+    const auto& LU = dd.matrixLU();
+
+    const auto n = std::min(A.rows(), A.cols());
+    const auto L = LU.leftCols(n).triangularView<Eigen::UnitLower>().toDenseMatrix();
+    const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
+
+    A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
+}
+} // namespace
 
 bool linear_constrained_t::feasible(vector_cmap_t x, const scalar_t epsilon) const
 {
@@ -16,28 +40,15 @@ bool linear_constrained_t::reduce()
         return false;
     }
 
+    // NB: need to reduce [A|b] altogether!
     auto& A = m_eq.m_A;
     auto& b = m_eq.m_b;
 
-    const auto dd = A.transpose().fullPivLu();
+    auto Ab = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
+    ::reduce(Ab);
 
-    // independant linear constraints
-    if (dd.rank() == A.rows())
-    {
-        return false;
-    }
-
-    // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
-    const auto& P  = dd.permutationP();
-    const auto& Q  = dd.permutationQ();
-    const auto& LU = dd.matrixLU();
-
-    const auto n = std::min(A.rows(), A.cols());
-    const auto L = LU.leftCols(n).triangularView<Eigen::UnitLower>().toDenseMatrix();
-    const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
-
-    A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
-    b = vector_t{(Q.transpose() * b).segment(0, dd.rank())};
+    A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
+    b = Ab.matrix().col(Ab.cols() - 1);
     return true;
 }
 

@@ -13,10 +13,9 @@ rlsearch0_t lsearch0_constant_t::clone() const
     return std::make_unique<lsearch0_constant_t>(*this);
 }
 
-scalar_t lsearch0_constant_t::get(const solver_state_t& state, const vector_t&, const scalar_t)
+scalar_t lsearch0_constant_t::get(const solver_state_t&, const vector_t&, const scalar_t)
 {
     const auto t0 = parameter("lsearch0::constant::t0").value<scalar_t>();
 
-    log(state, t0);
     return t0;
 }

@@ -1,5 +1,4 @@
 #include <iomanip>
-#include <nano/core/logger.h>
 #include <nano/core/reduce.h>
 #include <nano/core/stream.h>
 #include <nano/wlearner/accumulator.h>
@@ -12,7 +11,7 @@ using namespace nano::wlearner;
 
 namespace
 {
-template <typename tarray, typename toutputs>
+template <class tarray, class toutputs>
 auto score(const scalar_t r0, const tarray& r1, const tarray& r2, const toutputs& outputs)
 {
     return (r2 + outputs.square() * r0 - 2 * outputs * r1).sum();
@@ -161,11 +160,10 @@ scalar_t stump_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
     // OK, return and store the optimum feature across threads
     const auto& best = min_reduce(caches);
 
-    // log_info() << std::fixed << std::setprecision(8) << " === stump(feature=" << best.m_feature << "|"
-    //            << (best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"))
-    //            << ",threshold=" << best.m_threshold << "),samples=" << samples.size()
-    //            << ",score=" << (best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score)) <<
-    //            ".";
+    log_info('[', type_id(), "]: ", std::fixed, std::setprecision(8), " === stump(feature=", best.m_feature, "|",
+             best.m_feature >= 0 ? dataset.feature(best.m_feature).name() : string_t("N/A"),
+             ",threshold=", best.m_threshold, "),samples=", samples.size(),
+             ",score=", best.m_score == wlearner_t::no_fit_score() ? scat("N/A") : scat(best.m_score), ".\n");
 
     if (best.m_score != wlearner_t::no_fit_score())
     {

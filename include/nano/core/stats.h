@@ -12,7 +12,7 @@ namespace nano
 {
 namespace detail
 {
-template <typename titerator, typename toperator>
+template <class titerator, class toperator>
 auto percentile(titerator begin, titerator end, const double percentage, const toperator& from_position) noexcept
 {
     assert(percentage >= 0.0 && percentage <= 100.0);
@@ -39,7 +39,7 @@ auto percentile(titerator begin, titerator end, const double percentage, const t
 ///
 /// \brief returns the percentile value from a potentially not sorted list of values.
 ///
-template <typename titerator>
+template <class titerator>
 auto percentile(titerator begin, titerator end, const double percentage) noexcept
 {
     const auto from_position = [begin = begin, end = end](auto pos)
@@ -56,7 +56,7 @@ auto percentile(titerator begin, titerator end, const double percentage) noexcep
 ///
 /// \brief returns the percentile value from a sorted list of values.
 ///
-template <typename titerator>
+template <class titerator>
 auto percentile_sorted(titerator begin, titerator end, const double percentage) noexcept
 {
     assert(std::is_sorted(begin, end));
@@ -74,7 +74,7 @@ auto percentile_sorted(titerator begin, titerator end, const double percentage) 
 ///
 /// \brief returns the median value from a potentially not sorted list of values.
 ///
-template <typename titerator>
+template <class titerator>
 auto median(titerator begin, titerator end) noexcept
 {
     return percentile(begin, end, 50);
@@ -83,7 +83,7 @@ auto median(titerator begin, titerator end) noexcept
 ///
 /// \brief returns the median value from a sorted list of values.
 ///
-template <typename titerator>
+template <class titerator>
 auto median_sorted(titerator begin, titerator end) noexcept
 {
     return percentile_sorted(begin, end, 50);

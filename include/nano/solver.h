@@ -46,14 +46,9 @@ inline enum_map_t<solver_type> enum_string()
 ///     - the global minimum if the function is convex or
 ///     - a critical point (not necessarily a local minimum) otherwise.
 ///
-class NANO_PUBLIC solver_t : public configurable_t, public clonable_t<solver_t>
+class NANO_PUBLIC solver_t : public typed_t, public configurable_t, public loggable_t, public clonable_t<solver_t>
 {
 public:
-    ///
-    /// \brief logging operator: op(state), returns false if the optimization should stop.
-    ///
-    using logger_t = std::function<bool(const solver_state_t&)>;
-
     ///
     /// \brief constructor
     ///
@@ -91,13 +86,6 @@ public:
     solver_state_t minimize(const function_t&, const vector_t& x0) const;
 
     ///
-    /// \brief set the logging callbacks.
-    ///
-    void logger(const logger_t& logger);
-    void lsearch0_logger(const lsearch0_t::logger_t& logger);
-    void lsearchk_logger(const lsearchk_t::logger_t& logger);
-
-    ///
     /// \brief set the line-search initialization method.
     ///
     void lsearch0(const lsearch0_t&);
@@ -131,17 +119,15 @@ public:
 
 protected:
     void type(solver_type);
-    bool log(const solver_state_t&) const;
     bool done(solver_state_t&, bool iter_ok, bool converged) const;
 
-    lsearch_t make_lsearch() const;
-    rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals) const;
+    lsearch_t        make_lsearch() const;
+    static rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals);
 
     virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
 
 private:
     // attributes
-    logger_t    m_logger;                         ///<
     rlsearch0_t m_lsearch0;                       ///<
     rlsearchk_t m_lsearchk;                       ///<
     solver_type m_type{solver_type::line_search}; ///<

@@ -1,5 +1,6 @@
 #include <iomanip>
-#include <nano/core/logger.h>
+#include <nano/critical.h>
+#include <nano/logger.h>
 #include <nano/mlearn/params.h>
 #include <nano/mlearn/result.h>
 
@@ -19,13 +20,14 @@ params_t::logger_t params_t::make_stdio_logger(const int precision)
         {
             assert(param_names.size() == static_cast<size_t>(param_values.size()));
 
-            auto logger = log_info();
-            logger << std::fixed << std::setprecision(precision) << std::fixed << prefix << ": ";
+            // FIXME: should use the loggable_t interface for this!
+            auto logger = make_stdout_logger();
+            logger.log(log_type::info, std::fixed, std::setprecision(precision), std::fixed, prefix, ": ");
             for (size_t i = 0U, size = param_names.size(); i < size; ++i)
             {
-                logger << param_names[i] << "=" << param_values(static_cast<tensor_size_t>(i)) << ",";
+                logger.log(param_names[i], "=", param_values(static_cast<tensor_size_t>(i)), ",");
             }
-            (logger << ... << tokens) << ".";
+            logger.log(tokens..., ".\n");
         };
 
         for (size_t trial = last_trial; trial < param_results.size(); ++trial)

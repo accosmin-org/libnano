@@ -1,7 +1,7 @@
 #pragma once
 
-#include <map>
 #include <nano/clonable.h>
+#include <nano/typed.h>
 #include <regex>
 
 namespace nano
@@ -9,37 +9,45 @@ namespace nano
 ///
 /// \brief implements the factory pattern: create objects of similar type.
 ///
-template <typename tobject>
+template <class tobject>
 class factory_t
 {
 public:
     using trobject = std::unique_ptr<tobject>;
 
+    static_assert(std::is_base_of_v<typed_t, tobject>);
+    static_assert(std::is_base_of_v<clonable_t<tobject>, tobject>);
+
     ///
-    /// \brief register a new object with the given ID.
+    /// \brief register a new object with the given ID and return true if possible.
     ///
-    template <typename tobject_impl, typename... targs>
-    bool add(const string_t& description, targs&&... args)
+    template <class tobject_impl, class... targs>
+    bool add(string_t description, targs&&... args)
     {
         static_assert(std::is_base_of_v<tobject, tobject_impl>);
 
         auto prototype = std::make_unique<tobject_impl>(std::forward<targs>(args)...);
         auto type_id   = prototype->type_id();
 
-        return m_protos.emplace(std::move(type_id), proto_t{std::move(prototype), description}).second;
+        const auto duplicate = find(type_id) != m_protos.end();
+        if (!duplicate)
+        {
+            m_protos.emplace_back(std::move(type_id), proto_t{std::move(prototype), std::move(description)});
+        }
+        return !duplicate;
     }
 
     ///
-    /// \brief check if an object was registered with the given ID.
+    /// \brief return true if an object was registered with the given ID.
     ///
-    bool has(const string_t& type_id) const { return m_protos.find(type_id) != m_protos.end(); }
+    bool has(const std::string_view type_id) const { return find(type_id) != m_protos.end(); }
 
     ///
     /// \brief retrieve a new object with the given ID.
     ///
-    trobject get(const string_t& type_id) const
+    trobject get(const std::string_view type_id) const
     {
-        const auto it = m_protos.find(type_id);
+        const auto it = find(type_id);
         return (it == m_protos.end()) ? nullptr : it->second.m_prototype->clone();
     } // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
@@ -67,10 +75,10 @@ public:
     ///
     /// \brief get the description of the object with the given ID.
     ///
-    string_t description(const string_t& type_id) const
+    string_t description(const std::string_view type_id) const
     {
-        const auto it = m_protos.find(type_id);
-        return (it == m_protos.end()) ? string_t() : m_protos.at(type_id).m_description;
+        const auto it = find(type_id);
+        return (it == m_protos.end()) ? string_t() : it->second.m_description;
     }
 
 private:
@@ -80,7 +88,13 @@ private:
         string_t m_description;
     };
 
-    using protos_t = std::map<string_t, proto_t>;
+    auto find(const std::string_view type_id) const
+    {
+        const auto op = [&](const auto& proto) { return proto.first == type_id; };
+        return std::find_if(m_protos.begin(), m_protos.end(), op);
+    }
+
+    using protos_t = std::vector<std::pair<string_t, proto_t>>;
 
     // attributes
     protos_t m_protos; ///< registered object instances

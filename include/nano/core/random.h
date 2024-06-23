@@ -10,7 +10,7 @@ namespace nano
 {
 using rng_t = std::minstd_rand;
 
-template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 using udist_t = typename std::conditional_t<std::is_integral_v<tscalar>, std::uniform_int_distribution<tscalar>,
                                             std::uniform_real_distribution<tscalar>>;
 
@@ -22,7 +22,7 @@ NANO_PUBLIC rng_t make_rng(seed_t seed = seed_t{});
 ///
 /// \brief create an uniform distribution for the [min, max] range.
 ///
-template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 inline auto make_udist(const tscalar min, const tscalar max)
 {
     assert(min <= max);
@@ -43,14 +43,14 @@ inline auto make_udist(const tscalar min, const tscalar max)
 ///
 /// \brief generate a random value uniformaly distributed in the [min, max] range.
 ///
-template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 tscalar urand(const tscalar min, const tscalar max, rng_t& rng)
 {
     auto udist = make_udist<tscalar>(min, max);
     return static_cast<tscalar>(udist(rng));
 }
 
-template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
+template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 tscalar urand(const tscalar min, const tscalar max, const seed_t seed = seed_t{})
 {
     auto rng = make_rng(seed);
@@ -61,7 +61,7 @@ tscalar urand(const tscalar min, const tscalar max, const seed_t seed = seed_t{}
 /// \brief fill the [begin, range) range of elements with random values uniformaly distributed in the [min, max]
 /// range.
 ///
-template <typename tscalar, typename titerator,
+template <class tscalar, class titerator,
           std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, rng_t& rng)
 {
@@ -72,7 +72,7 @@ void urand(const tscalar min, const tscalar max, titerator begin, const titerato
     }
 }
 
-template <typename tscalar, typename titerator,
+template <class tscalar, class titerator,
           std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
 void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, const seed_t seed = seed_t{})
 {

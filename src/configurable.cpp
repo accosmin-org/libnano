@@ -1,13 +1,12 @@
 #include <nano/configurable.h>
-#include <nano/core/logger.h>
 #include <nano/core/stream.h>
+#include <nano/critical.h>
 
 using namespace nano;
 
 namespace
 {
-template <typename tname>
-parameter_t* find_param(parameters_t& parameters, const tname& name, bool mandatory)
+parameter_t* find_param(parameters_t& parameters, const std::string_view name, const bool mandatory)
 {
     const auto it = std::find_if(parameters.begin(), parameters.end(),
                                  [&](const parameter_t& param) { return param.name() == name; });
@@ -17,8 +16,7 @@ parameter_t* find_param(parameters_t& parameters, const tname& name, bool mandat
     return (it == parameters.end()) ? nullptr : (&*it);
 }
 
-template <typename tname>
-const parameter_t* find_param(const parameters_t& parameters, const tname& name, bool mandatory)
+const parameter_t* find_param(const parameters_t& parameters, const std::string_view name, const bool mandatory)
 {
     const auto it = std::find_if(parameters.begin(), parameters.end(),
                                  [&](const parameter_t& param) { return param.name() == name; });
@@ -37,42 +35,22 @@ void configurable_t::register_parameter(parameter_t parameter)
     m_parameters.emplace_back(std::move(parameter));
 }
 
-parameter_t& configurable_t::parameter(const char* name)
+parameter_t& configurable_t::parameter(const std::string_view name)
 {
     return *find_param(m_parameters, name, true);
 }
 
-parameter_t& configurable_t::parameter(const string_t& name)
+const parameter_t& configurable_t::parameter(const std::string_view name) const
 {
     return *find_param(m_parameters, name, true);
 }
 
-const parameter_t& configurable_t::parameter(const char* name) const
-{
-    return *find_param(m_parameters, name, true);
-}
-
-const parameter_t& configurable_t::parameter(const string_t& name) const
-{
-    return *find_param(m_parameters, name, true);
-}
-
-parameter_t* configurable_t::parameter_if(const char* name)
+parameter_t* configurable_t::parameter_if(const std::string_view name)
 {
     return find_param(m_parameters, name, false);
 }
 
-parameter_t* configurable_t::parameter_if(const string_t& name)
-{
-    return find_param(m_parameters, name, false);
-}
-
-const parameter_t* configurable_t::parameter_if(const char* name) const
-{
-    return find_param(m_parameters, name, false);
-}
-
-const parameter_t* configurable_t::parameter_if(const string_t& name) const
+const parameter_t* configurable_t::parameter_if(const std::string_view name) const
 {
     return find_param(m_parameters, name, false);
 }

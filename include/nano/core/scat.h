@@ -15,7 +15,7 @@ namespace nano
 ///
 namespace detail
 {
-template <typename tvalue>
+template <class tvalue>
 void scat(std::ostringstream& stream, const tvalue& value)
 {
     if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
@@ -41,7 +41,7 @@ void scat(std::ostringstream& stream, const tvalue& value)
     }
 }
 
-template <typename tvalue>
+template <class tvalue>
 void scat(std::ostringstream& stream, const std::vector<tvalue>& values)
 {
     for (auto begin = values.begin(), end = values.end(); begin != end;)
@@ -54,13 +54,13 @@ void scat(std::ostringstream& stream, const std::vector<tvalue>& values)
     }
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 void scat(std::ostringstream& stream, const tvalues&... values)
 {
     (scat(stream, values), ...);
 }
 
-template <typename tvalue>
+template <class tvalue>
 tvalue from_chars(const std::string_view& str)
 {
     auto result                           = tvalue{};
@@ -77,7 +77,7 @@ tvalue from_chars(const std::string_view& str)
 }
 } // namespace detail
 
-template <typename... tvalues>
+template <class... tvalues>
 string_t scat(const tvalues&... values)
 {
     std::ostringstream stream;

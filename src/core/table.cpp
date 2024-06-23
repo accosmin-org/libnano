@@ -139,7 +139,7 @@ const row_t& table_t::row(const size_t r) const
     return m_rows[r];
 }
 
-std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
+std::ostream& nano::operator<<(std::ostream& stream, const table_t& table)
 {
     std::vector<size_t> colsizes(table.cols(), 0);
 
@@ -191,9 +191,9 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
     {
         for (const auto colsize : colsizes)
         {
-            os << "|" << string_t(colsize + 2, '-');
+            stream << "|" << string_t(colsize + 2, '-');
         }
-        os << "|\n";
+        stream << "|\n";
     };
 
     // display rows
@@ -213,13 +213,13 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
                 const auto colsize = std::accumulate(it, it + colspan, size_t(0));
                 const auto extsize = (cell.m_span - 1) * 3;
                 const auto coltext = cell.m_data + cell.m_mark;
-                os << "| " << align(coltext, colsize + extsize, cell.m_alignment, cell.m_fill) << " ";
+                stream << "| " << align(coltext, colsize + extsize, cell.m_alignment, cell.m_fill) << " ";
                 std::advance(it, colspan);
             }
-            os << "|\n";
+            stream << "|\n";
         }
     }
     print_row_delim();
 
-    return os;
+    return stream;
 }

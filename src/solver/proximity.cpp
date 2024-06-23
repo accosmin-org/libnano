@@ -10,7 +10,7 @@ scalar_t make_miu0(const solver_state_t& state)
     return 5.0 * state.gx().squaredNorm() / (std::abs(state.fx()) + epsilon0<scalar_t>());
 }
 
-template <typename tnu, typename txi>
+template <class tnu, class txi>
 scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi& xi, const scalar_t min_dot_nuv)
 {
     // see (2): reversal poor man's quasi-newton formula.

@@ -9,7 +9,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-template <typename... targs>
+template <class... targs>
 [[maybe_unused]] static auto make_linear_datasource(const tensor_size_t samples, const tensor_size_t targets,
                                                     const tensor_size_t features, const targs... args)
 {
@@ -22,7 +22,7 @@ template <typename... targs>
     return datasource;
 }
 
-template <typename tweights, typename tbias>
+template <class tweights, class tbias>
 [[maybe_unused]] static void check_linear(const dataset_t& dataset, tweights weights, tbias bias, scalar_t epsilon)
 {
     const auto samples = dataset.samples();

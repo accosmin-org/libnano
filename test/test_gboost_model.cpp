@@ -185,7 +185,7 @@ private:
     }
 };
 
-template <typename... targs>
+template <class... targs>
 auto make_gbooster_to_fit(const targs... args)
 {
     auto model = make_gbooster();

@@ -19,25 +19,25 @@ static auto make_sample_splits(const dataset_t& dataset)
     return std::vector<indices_t>{arange(0, samples), arange(0, samples / 2), arange(samples / 2, samples)};
 }
 
-template <typename tgenerator>
+template <class tgenerator>
 static void add_generator(dataset_t& dataset)
 {
     UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>());
 }
 
-template <typename tgenerator>
+template <class tgenerator>
 static void add_generator(dataset_t& dataset, indices_t features)
 {
     UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>(std::move(features)));
 }
 
-template <typename tgenerator>
+template <class tgenerator>
 static void add_generator(dataset_t& dataset, indices_t features1, indices_t features2)
 {
     UTEST_REQUIRE_NOTHROW(dataset.add<tgenerator>(std::move(features1), std::move(features2)));
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 [[maybe_unused]] static void check_select0(const select_iterator_t& iterator, indices_cmap_t samples,
                                            indices_cmap_t features, const tensor_t<tstorage, tscalar, trank>& expected)
 {
@@ -131,7 +131,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     check_select0(iterator, samples, features, expected);
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 [[maybe_unused]] static void check_select(const dataset_t& dataset, const tensor_size_t feature,
                                           const tensor_t<tstorage, tscalar, trank>& expected)
 {

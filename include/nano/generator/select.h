@@ -10,7 +10,7 @@ namespace nano
 ///     the given operator is called for matching features and their components if applicable like:
 ///     op(feature_t, feature index, component index or -1).
 ///
-template <typename tdataset, typename toperator>
+template <class tdataset, class toperator>
 void call_scalar(const tdataset& dataset, tensor_size_t ifeature, const toperator& op)
 {
     const auto& feature = dataset.feature(ifeature);
@@ -24,7 +24,7 @@ void call_scalar(const tdataset& dataset, tensor_size_t ifeature, const toperato
     }
 }
 
-template <typename tdataset, typename toperator>
+template <class tdataset, class toperator>
 void call_struct(const tdataset& dataset, tensor_size_t ifeature, const toperator& op)
 {
     const auto& feature = dataset.feature(ifeature);
@@ -38,7 +38,7 @@ void call_struct(const tdataset& dataset, tensor_size_t ifeature, const toperato
     }
 }
 
-template <typename tdataset, typename toperator>
+template <class tdataset, class toperator>
 void call_sclass(const tdataset& dataset, tensor_size_t ifeature, const toperator& op)
 {
     const auto& feature = dataset.feature(ifeature);
@@ -48,7 +48,7 @@ void call_sclass(const tdataset& dataset, tensor_size_t ifeature, const toperato
     }
 }
 
-template <typename tdataset, typename toperator>
+template <class tdataset, class toperator>
 void call_mclass(const tdataset& dataset, tensor_size_t ifeature, const toperator& op)
 {
     const auto& feature = dataset.feature(ifeature);
@@ -60,7 +60,7 @@ void call_mclass(const tdataset& dataset, tensor_size_t ifeature, const toperato
 
 namespace detail
 {
-template <typename tdataset, typename toperator>
+template <class tdataset, class toperator>
 feature_mapping_t select(const tdataset& dataset, const indices_t& feature_indices, const toperator& callback)
 {
     tensor_size_t count = 0;
@@ -114,28 +114,28 @@ feature_mapping_t select(const tdataset& dataset, const indices_t& feature_indic
 }
 } // namespace detail
 
-template <typename tdataset>
+template <class tdataset>
 feature_mapping_t select_sclass(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
     return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_sclass(dataset, ifeature, op); });
 }
 
-template <typename tdataset>
+template <class tdataset>
 feature_mapping_t select_mclass(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
     return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_mclass(dataset, ifeature, op); });
 }
 
-template <typename tdataset>
+template <class tdataset>
 feature_mapping_t select_scalar(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
     return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)
                           { call_scalar(dataset, ifeature, op); });
 }
 
-template <typename tdataset>
+template <class tdataset>
 feature_mapping_t select_struct(const tdataset& dataset, const indices_t& feature_indices = indices_t{})
 {
     return detail::select(dataset, feature_indices, [&](const auto&, tensor_size_t ifeature, const auto& op)

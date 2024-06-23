@@ -15,16 +15,16 @@ make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/arch.h
     ${CMAKE_SOURCE_DIR}/include/nano/clonable.h
     ${CMAKE_SOURCE_DIR}/include/nano/configurable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/critical.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/chrono.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/cmdline.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/combinatorial.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/factory_util.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/hash.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/histogram.h
-    ${CMAKE_SOURCE_DIR}/include/nano/core/logger.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/numeric.h
+    ${CMAKE_SOURCE_DIR}/include/nano/core/overloaded.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/parallel.h
-    ${CMAKE_SOURCE_DIR}/include/nano/core/parameter_tracker.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/random.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/reduce.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/sampling.h
@@ -35,9 +35,11 @@ make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/core/strutil.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/table.h
     ${CMAKE_SOURCE_DIR}/include/nano/core/tokenizer.h
-    ${CMAKE_SOURCE_DIR}/include/nano/core/util.h
     ${CMAKE_SOURCE_DIR}/include/nano/enum.h
     ${CMAKE_SOURCE_DIR}/include/nano/factory.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loggable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/logger.h
+    ${CMAKE_SOURCE_DIR}/include/nano/main.h
     ${CMAKE_SOURCE_DIR}/include/nano/parameter.h
     ${CMAKE_SOURCE_DIR}/include/nano/scalar.h
     ${CMAKE_SOURCE_DIR}/include/nano/string.h
@@ -56,15 +58,15 @@ make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/tensor/stream.h
     ${CMAKE_SOURCE_DIR}/include/nano/tensor/tensor.h
     ${CMAKE_SOURCE_DIR}/include/nano/tensor/traits.h
+    ${CMAKE_SOURCE_DIR}/include/nano/typed.h
 
+    logger.cpp
     configurable.cpp
     parameter.cpp
     core/chrono.cpp
     core/cmdline.cpp
     core/histogram.cpp
-    core/logger.cpp
     core/parallel.cpp
-    core/parameter_tracker.cpp
     core/random.cpp
     core/sampling.cpp
     core/strutil.cpp
@@ -210,6 +212,7 @@ make_lib(NANO solver
     solver/gd.cpp
     solver/gsample.cpp
     solver/lbfgs.cpp
+    solver/lsearch.cpp
     solver/lstep.cpp
     solver/osga.cpp
     solver/pdsgm.cpp

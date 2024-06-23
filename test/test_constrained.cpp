@@ -28,7 +28,7 @@ void check_penalty(penalty_function_t& penalty_function, const convexity expecte
     }
 }
 
-template <typename tpenalty>
+template <class tpenalty>
 void check_penalty(const function_t& function, const convexity expected_convexity, const smoothness expected_smoothness,
                    const scalar_t expected_strong_convexity)
 {
@@ -65,7 +65,7 @@ void check_penalties(const function_t& function, const convexity expected_convex
                                                    expected_strong_convexity);
 }
 
-template <typename tpenalty>
+template <class tpenalty>
 void check_penalty(const function_t& function, const vector_t& x, const bool expected_valid)
 {
     UTEST_CHECK_EQUAL(function.valid(x), expected_valid);
@@ -100,7 +100,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
            << ":x0=[" << x0.transpose() << "]\n";
 
-    ::setup_logger(solver, stream);
+    solver.logger(make_stream_logger(stream));
 
     function.clear_statistics();
     const auto state = solver.minimize(function, x0);

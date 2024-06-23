@@ -1,20 +1,21 @@
 #include "util.h"
 #include <iomanip>
 #include <nano/core/cmdline.h>
-#include <nano/core/parameter_tracker.h>
 #include <nano/core/table.h>
+#include <nano/critical.h>
 #include <nano/gboost/model.h>
+#include <nano/main.h>
 #include <nano/wlearner.h>
 
 using namespace nano;
 
 namespace
 {
-template <typename tfactory>
-auto make_object(const cmdline_t::result_t& options, const tfactory& factory, const char* const option,
-                 const char* const obj_name)
+template <class tfactory>
+auto make_object(const cmdresult_t& options, const tfactory& factory, const std::string_view option_name,
+                 const std::string_view obj_name)
 {
-    const auto ids = factory.ids(std::regex(options.get<string_t>(option)));
+    const auto ids = factory.ids(std::regex(options.get<string_t>(option_name)));
     critical(ids.size() != 1U, "expecting a single ", obj_name, ", got (", ids.size(), ") instead!");
 
     auto object = factory.get(ids[0U]);
@@ -53,23 +54,22 @@ int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark gradient boosting machine learning models");
-    cmdline.add("", "loss", "regex to select loss functions", "<mandatory>");
-    cmdline.add("", "solver", "regex to select solvers", "lbfgs");
-    cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
-    cmdline.add("", "splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
+    cmdline.add("--loss", "regex to select loss functions", "<mandatory>");
+    cmdline.add("--solver", "regex to select solvers", "lbfgs");
+    cmdline.add("--tuner", "regex to select hyper-parameter tuning methods", "surrogate");
+    cmdline.add("--splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
                 "k-fold");
-    cmdline.add("", "datasource", "regex to select machine learning datasets", "<mandatory>");
-    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
-    cmdline.add("", "wlearner", "regex to select weak learners", "<mandatory>");
-    cmdline.add("", "list-gboost-params", "list the parameters of the gradient boosting model");
+    cmdline.add("--datasource", "regex to select machine learning datasets", "<mandatory>");
+    cmdline.add("--generator", "regex to select feature generation methods", "identity.+");
+    cmdline.add("--wlearner", "regex to select weak learners", "<mandatory>");
+    cmdline.add("--list-gboost-params", "list the parameters of the gradient boosting model");
 
     const auto options = cmdline.process(argc, argv);
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
-    if (options.has("list-gboost-params"))
+    if (options.has("--list-gboost-params"))
     {
         table_t table;
         table.header() << "parameter"
@@ -86,32 +86,32 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // check arguments and options
-    const auto rloss         = make_object(options, loss_t::all(), "loss", "loss function");
-    const auto rtuner        = make_object(options, tuner_t::all(), "tuner", "hyper-parameter tuning method");
-    const auto rsolver       = make_object(options, solver_t::all(), "solver", "solver");
-    const auto rsplitter     = make_object(options, splitter_t::all(), "splitter", "train-validation splitting method");
-    const auto rdatasource   = make_object(options, datasource_t::all(), "datasource", "machine learning dataset");
-    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("generator")));
-    const auto wlearner_ids  = wlearner_t::all().ids(std::regex(options.get<string_t>("wlearner")));
+    const auto rloss       = make_object(options, loss_t::all(), "--loss", "loss function");
+    const auto rtuner      = make_object(options, tuner_t::all(), "--tuner", "hyper-parameter tuning method");
+    const auto rsolver     = make_object(options, solver_t::all(), "--solver", "solver");
+    const auto rsplitter   = make_object(options, splitter_t::all(), "--splitter", "train-validation splitting method");
+    const auto rdatasource = make_object(options, datasource_t::all(), "--datasource", "machine learning dataset");
+    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("--generator")));
+    const auto wlearner_ids  = wlearner_t::all().ids(std::regex(options.get<string_t>("--wlearner")));
 
     // TODO: option to save trained models
     // TODO: option to save training history to csv
     // TODO: wrapper script to generate plots?!
     // TODO: experiments to evaluate feature value scaling, regularization method, feature generation (products!)
 
-    auto param_tracker = parameter_tracker_t{options};
-    param_tracker.setup(*rloss);
-    param_tracker.setup(*rtuner);
-    param_tracker.setup(*rsolver);
-    param_tracker.setup(*rsplitter);
-    param_tracker.setup(*rdatasource);
+    auto rconfig = cmdconfig_t{options};
+    rconfig.setup(*rloss);
+    rconfig.setup(*rtuner);
+    rconfig.setup(*rsolver);
+    rconfig.setup(*rsplitter);
+    rconfig.setup(*rdatasource);
 
     auto wlearners = rwlearners_t{};
     for (const auto& wlearner_id : wlearner_ids)
     {
         auto wlearner = wlearner_t::all().get(wlearner_id);
         assert(wlearner != nullptr);
-        param_tracker.setup(*wlearner);
+        rconfig.setup(*wlearner);
         wlearners.emplace_back(std::move(wlearner));
     }
 
@@ -141,7 +141,7 @@ int unsafe_main(int argc, const char* argv[])
         const auto& [train_samples, valid_samples] = tr_vd_splits[outer_fold];
 
         auto model = gboost_model_t{};
-        param_tracker.setup(model);
+        rconfig.setup(model);
 
         const auto fit_logger = ml::params_t::make_stdio_logger();
         const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);

@@ -1,5 +1,4 @@
 #include <fstream>
-#include <nano/core/logger.h>
 #include <nano/datasource/imclass_mnist.h>
 
 using namespace nano;
@@ -35,14 +34,14 @@ void base_mnist_datasource_t::do_load()
     tensor_size_t sample = 0;
     for (const auto& [ifile, tfile, offset, expected] : parts)
     {
-        log_info() << "datasource[" << type_id() << "]: loading file <" << ifile << ">...";
+        log_info("[", type_id(), "]: loading file <", ifile, ">...");
         critical(!iread(ifile, offset, expected), "datasource[", type_id(), "]: failed to load file <", ifile, ">!");
 
-        log_info() << "datasource[" << type_id() << "]: loading file <" << tfile << ">...";
+        log_info("[", type_id(), "]: loading file <", tfile, ">...");
         critical(!tread(tfile, offset, expected), "datasource[", type_id(), "]: failed to load file <", tfile, ">!");
 
         sample += expected;
-        log_info() << "datasource[" << type_id() << "]: loaded " << sample << " samples.";
+        log_info("[", type_id(), "]: loaded ", sample, " samples.");
     }
 
     datasource_t::testing({make_range(60000, 70000)});

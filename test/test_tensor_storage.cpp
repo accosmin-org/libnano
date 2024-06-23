@@ -11,7 +11,7 @@ using marray_storage_t = tensor_marray_storage_t<double, 1U>;
 
 namespace
 {
-template <typename tlhs, typename trhs>
+template <class tlhs, class trhs>
 void storage_must_match(const tlhs& lhs, const trhs& rhs)
 {
     UTEST_CHECK_EQUAL(lhs.size(), rhs.size());

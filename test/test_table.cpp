@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_core_table)
+UTEST_BEGIN_MODULE(test_table)
 
 UTEST_CASE(make_less)
 {

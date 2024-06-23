@@ -10,7 +10,7 @@
 
 namespace nano
 {
-template <typename tscalar,
+template <class tscalar,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::ostream& write(std::ostream& stream, tscalar scalar)
 {
@@ -19,7 +19,7 @@ std::ostream& write(std::ostream& stream, tscalar scalar)
         reinterpret_cast<const char*>(&scalar), static_cast<std::streamsize>(sizeof(tscalar)));
 }
 
-template <typename tscalar, typename tcount,
+template <class tscalar, class tcount,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
 {
@@ -29,7 +29,7 @@ std::ostream& write(std::ostream& stream, const tscalar* data, const tcount coun
         static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
 }
 
-template <typename twscalar, typename tscalar, typename tcount,
+template <class twscalar, class tscalar, class tcount,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
 {
@@ -49,7 +49,7 @@ inline std::ostream& write(std::ostream& stream, const std::string_view& string)
 ///
 /// \brief serialize objects with a write method to binary stream.
 ///
-template <typename tobject, std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::write)>, bool> = true>
+template <class tobject, std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::write)>, bool> = true>
 std::ostream& write(std::ostream& stream, const tobject& object)
 {
     return object.write(stream);
@@ -58,7 +58,7 @@ std::ostream& write(std::ostream& stream, const tobject& object)
 ///
 /// \brief serialize factory objects to binary stream.
 ///
-template <typename tobject>
+template <class tobject>
 std::ostream& write(std::ostream& stream, const std::unique_ptr<tobject>& object)
 {
     if (!::nano::write(stream, object->type_id()) || !::nano::write(stream, *object))
@@ -71,7 +71,7 @@ std::ostream& write(std::ostream& stream, const std::unique_ptr<tobject>& object
 ///
 /// \brief serialize a vector of values to binary stream.
 ///
-template <typename tvalue>
+template <class tvalue>
 std::ostream& write(std::ostream& stream, const std::vector<tvalue>& values)
 {
     if (!write(stream, static_cast<uint64_t>(values.size())))
@@ -87,7 +87,7 @@ std::ostream& write(std::ostream& stream, const std::vector<tvalue>& values)
     return stream;
 }
 
-template <typename tscalar,
+template <class tscalar,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::istream& read(std::istream& stream, tscalar& scalar)
 {
@@ -96,7 +96,7 @@ std::istream& read(std::istream& stream, tscalar& scalar)
         reinterpret_cast<char*>(&scalar), static_cast<std::streamsize>(sizeof(tscalar)));
 }
 
-template <typename tscalar, typename tcount,
+template <class tscalar, class tcount,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::istream& read(std::istream& stream, tscalar* data, tcount count)
 {
@@ -106,7 +106,7 @@ std::istream& read(std::istream& stream, tscalar* data, tcount count)
         static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
 }
 
-template <typename trscalar, typename tscalar,
+template <class trscalar, class tscalar,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::istream& read_cast(std::istream& stream, tscalar& scalar)
 {
@@ -116,7 +116,7 @@ std::istream& read_cast(std::istream& stream, tscalar& scalar)
     return stream;
 }
 
-template <typename trscalar, typename tscalar, typename tcount,
+template <class trscalar, class tscalar, class tcount,
           std::enable_if_t<std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>, bool> = true>
 std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
 {
@@ -146,7 +146,7 @@ inline std::istream& read(std::istream& stream, std::string& string)
 ///
 /// \brief serialize objects with a read method from binary stream.
 ///
-template <typename tobject, std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::read)>, bool> = true>
+template <class tobject, std::enable_if_t<std::is_member_function_pointer_v<decltype(&tobject::read)>, bool> = true>
 std::istream& read(std::istream& stream, tobject& object)
 {
     return object.read(stream);
@@ -155,7 +155,7 @@ std::istream& read(std::istream& stream, tobject& object)
 ///
 /// \brief serialize factory objects from binary stream.
 ///
-template <typename tobject>
+template <class tobject>
 std::istream& read(std::istream& stream, std::unique_ptr<tobject>& object)
 {
     std::string type_id;
@@ -177,7 +177,7 @@ std::istream& read(std::istream& stream, std::unique_ptr<tobject>& object)
 ///
 /// \brief serialize a vector of values from binary stream.
 ///
-template <typename tvalue>
+template <class tvalue>
 std::istream& read(std::istream& stream, std::vector<tvalue>& values)
 {
     uint64_t size = 0;

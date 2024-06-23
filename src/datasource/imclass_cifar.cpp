@@ -1,5 +1,4 @@
 #include <fstream>
-#include <nano/core/logger.h>
 #include <nano/datasource/imclass_cifar.h>
 
 using namespace nano;
@@ -35,12 +34,12 @@ void cifar_datasource_t::do_load()
     tensor_size_t sample = 0;
     for (const auto& file : m_files)
     {
-        log_info() << "datasource[" << type_id() << "]: loading file <" << make_full_path(file.m_filename) << "> ...";
+        log_info("[", type_id(), "]: loading file <", make_full_path(file.m_filename), "> ...");
         critical(!iread(file), "datasource[", type_id(), "]: failed to load file <", make_full_path(file.m_filename),
                  ">!");
 
         sample += file.m_expected;
-        log_info() << "datasource[" << type_id() << "]: loaded " << sample << " samples.";
+        log_info("[", type_id(), "]: loaded ", sample, " samples.");
     }
 
     datasource_t::testing({make_range(50000, 60000)});

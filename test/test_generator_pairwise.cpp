@@ -4,11 +4,11 @@
 
 using namespace nano;
 
-template <typename tinput, typename tgenerated>
+template <class tinput, class tgenerated>
 class NANO_PUBLIC tester_t : public tinput, public tgenerated
 {
 public:
-    template <typename... targs>
+    template <class... targs>
     explicit tester_t(targs... args)
         : tinput("gg", std::forward<targs>(args)...)
     {

@@ -57,7 +57,7 @@ struct generated_struct_t
 ///     - with NaN,
 ///         if accessing all features at once as flatten (e.g. linear models).
 ///
-class NANO_PUBLIC generator_t : public clonable_t<generator_t>
+class NANO_PUBLIC generator_t : public typed_t, public clonable_t<generator_t>
 {
 public:
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
@@ -137,7 +137,7 @@ protected:
     virtual void do_select(indices_cmap_t samples, tensor_size_t feature, scalar_map_t) const = 0;
     virtual void do_select(indices_cmap_t samples, tensor_size_t feature, struct_map_t) const = 0;
 
-    template <size_t input_rank1, typename toperator>
+    template <size_t input_rank1, class toperator>
     void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal,
                  const toperator& op) const
     {
@@ -150,7 +150,7 @@ protected:
                         });
     }
 
-    template <size_t input_rank1, size_t input_rank2, typename toperator>
+    template <size_t input_rank1, size_t input_rank2, class toperator>
     void iterate(const indices_cmap_t& samples, const tensor_size_t ifeature, const tensor_size_t ioriginal1,
                  const tensor_size_t ioriginal2, const toperator& op) const
     {

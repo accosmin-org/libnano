@@ -1,8 +1,8 @@
 #include "util.h"
 #include <nano/core/cmdline.h>
-#include <nano/core/parameter_tracker.h>
 #include <nano/core/table.h>
 #include <nano/dataset/iterator.h>
+#include <nano/main.h>
 
 using namespace nano;
 
@@ -10,6 +10,7 @@ namespace
 {
 auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
 {
+    const auto logger  = make_stdout_logger();
     const auto samples = arange(0, dataset.samples());
 
     auto timer    = ::nano::timer_t{};
@@ -42,7 +43,8 @@ auto benchmark_select(const string_t& generator_id, const dataset_t& dataset)
                       (void)tnum;
                       (void)values;
                   });
-    log_info() << "generator[" << generator_id << "]: feature selection in <" << timer.elapsed() << ">.";
+
+    logger.log(log_type::info, "generator[", generator_id, "]: feature selection in <", timer.elapsed(), ">.\n");
 }
 
 auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
@@ -92,9 +94,10 @@ auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 
 auto benchmark(const string_t& generator_id, const dataset_t& dataset)
 {
-    log_info() << "generator[" << generator_id << "]: columns=" << dataset.columns()
-               << ",features=" << dataset.features();
-    log_info() << "generator[" << generator_id << "]: target=[" << dataset.target() << "]";
+    const auto logger = make_stdout_logger();
+    logger.log(log_type::info, "generator[", generator_id, "]: columns=", dataset.columns(),
+               ",features=", dataset.features(), "\n");
+    logger.log(log_type::info, "generator[", generator_id, "]: target=[", dataset.target(), "]\n");
 
     benchmark_select(generator_id, dataset);
     benchmark_flatten(generator_id, dataset);
@@ -118,29 +121,27 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark loading datasets and generating features");
-    cmdline.add("", "datasource", "regex to select machine learning datasets", "mnist");
-    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
+    cmdline.add("--datasource", "regex to select machine learning datasets", "mnist");
+    cmdline.add("--generator", "regex to select feature generation methods", "identity.+");
 
     const auto options = cmdline.process(argc, argv);
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
     // check arguments and options
-    const auto dregex = std::regex(options.get<string_t>("datasource"));
-    const auto gregex = std::regex(options.get<string_t>("generator"));
-
-    auto param_tracker = parameter_tracker_t{options};
+    const auto dregex = std::regex(options.get<string_t>("--datasource"));
+    const auto gregex = std::regex(options.get<string_t>("--generator"));
 
     // benchmark
+    auto rconfig = cmdconfig_t{options};
     for (const auto& id : datasource_t::all().ids(dregex))
     {
         const auto rdatasource = datasource_t::all().get(id);
         critical(!rdatasource, "invalid data source (", id, ")!");
 
-        param_tracker.setup(*rdatasource);
+        rconfig.setup(*rdatasource);
 
         benchmark(*rdatasource, generator_t::all().ids(gregex));
     }

@@ -152,27 +152,28 @@ private:
         UTEST_REQUIRE(os);
     }
 
-    void write_tab(std::ostream& os, const int begin, const int size, const bool header) const
+    void write_tab(std::ostream& stream, const int begin, const int size, const bool header) const
     {
         if (header)
         {
-            os << "cont,cate\n";
+            stream << "cont,cate\n";
         }
 
         for (auto index = begin; index < begin + size; ++index)
         {
-            (index % 2 == 0 && optional_cont()) ? (os << "?,") : (os << (3.0 - 0.2 * index) << ",");
-            (index % 5 == 4 && optional_cate()) ? (os << "?,")
-                                                : (os << "cate" << ((index - 1) % (m_too_many_labels ? 4 : 3)) << ",");
-            os << "\n";
+            (index % 2 == 0 && optional_cont()) ? (stream << "?,") : (stream << (3.0 - 0.2 * index) << ",");
+            (index % 5 == 4 && optional_cate())
+                ? (stream << "?,")
+                : (stream << "cate" << ((index - 1) % (m_too_many_labels ? 4 : 3)) << ",");
+            stream << "\n";
 
             if (index % 7 == 0)
             {
-                os << "\n";
+                stream << "\n";
             }
             if (index % 9 == 0)
             {
-                os << "@ this line should be skipped\n";
+                stream << "@ this line should be skipped\n";
             }
         }
     }

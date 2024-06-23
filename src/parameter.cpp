@@ -1,8 +1,8 @@
 #include <cmath>
-#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/stream.h>
 #include <nano/core/tokenizer.h>
+#include <nano/critical.h>
 #include <nano/parameter.h>
 
 using namespace nano;
@@ -14,7 +14,7 @@ auto name(const LEorLT& lelt)
     return std::holds_alternative<LE_t>(lelt) ? "<=" : "<";
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto check(const LEorLT& lelt, tscalar value1, tscalar value2)
 {
     return std::holds_alternative<LE_t>(lelt) ? (value1 <= value2) : (value1 < value2);
@@ -40,7 +40,7 @@ auto& update(const string_t& name, parameter_t::enum_t& param, string_t value)
     return param;
 }
 
-template <typename tscalar, typename tvalue>
+template <class tscalar, class tvalue>
 auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, tvalue value_)
 {
     const auto value = static_cast<tscalar>(value_);
@@ -54,7 +54,7 @@ auto& update(const string_t& name, parameter_t::range_t<tscalar>& param, tvalue 
     return param;
 }
 
-template <typename tscalar, typename tvalue1, typename tvalue2>
+template <class tscalar, class tvalue1, class tvalue2>
 auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& param, tvalue1 value1_, tvalue2 value2_)
 {
     const auto value1 = static_cast<tscalar>(value1_);
@@ -70,7 +70,7 @@ auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& param, tv
     return param;
 }
 
-template <typename tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
+template <class tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
 void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
 {
     std::visit(overloaded{[&](parameter_t::irange_t& param) { ::update(name, param, value); },
@@ -79,7 +79,7 @@ void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
                storage);
 }
 
-template <typename tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
+template <class tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
 void update(const string_t& name, parameter_t::storage_t& storage, std::tuple<tvalue, tvalue> value)
 {
     const auto value1 = std::get<0>(value);
@@ -101,7 +101,7 @@ auto make_flag(LEorLT comp)
     return std::get_if<LE_t>(&comp) != nullptr ? 1U : 0U;
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
 {
     tscalar  value = 0;
@@ -120,7 +120,7 @@ auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscal
     return parameter_t::range_t<tscalar>{value, min, max, make_comp(minLE), make_comp(maxLE)};
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
 {
     tscalar  value1  = 0;
@@ -144,7 +144,7 @@ auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<
                                               make_comp(maxLE)};
 }
 
-template <typename tscalar>
+template <class tscalar>
 void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
 {
     critical(!::nano::write(stream, type) || !::nano::write(stream, name) ||
@@ -156,7 +156,7 @@ void write(const string_t& name, std::ostream& stream, int32_t type, const param
              "parameter (", name, "): failed to write to stream!");
 }
 
-template <typename tscalar>
+template <class tscalar>
 void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::pair_range_t<tscalar>& param)
 {
     critical(!::nano::write(stream, type) || !::nano::write(stream, name) ||
@@ -175,7 +175,7 @@ bool operator==(const parameter_t::enum_t& lhs, const parameter_t::enum_t& rhs)
     return lhs.m_value == rhs.m_value && lhs.m_domain == rhs.m_domain;
 }
 
-template <typename tscalar>
+template <class tscalar>
 bool operator==(const parameter_t::range_t<tscalar>& lhs, const parameter_t::range_t<tscalar>& rhs)
 {
     return lhs.m_value == rhs.m_value && lhs.m_min == rhs.m_min &&
@@ -183,7 +183,7 @@ bool operator==(const parameter_t::range_t<tscalar>& lhs, const parameter_t::ran
            make_flag(lhs.m_maxcomp) == make_flag(rhs.m_maxcomp);
 }
 
-template <typename tscalar>
+template <class tscalar>
 bool operator==(const parameter_t::pair_range_t<tscalar>& lhs, const parameter_t::pair_range_t<tscalar>& rhs)
 {
     return lhs.m_value1 == rhs.m_value1 && lhs.m_value2 == rhs.m_value2 &&
@@ -192,7 +192,7 @@ bool operator==(const parameter_t::pair_range_t<tscalar>& lhs, const parameter_t
            make_flag(lhs.m_maxcomp) == make_flag(rhs.m_maxcomp);
 }
 
-template <typename tparam>
+template <class tparam>
 bool operator==(const tparam& lparam, const parameter_t::storage_t& rstorage)
 {
     const auto* rparam = std::get_if<tparam>(&rstorage);
@@ -209,26 +209,26 @@ std::ostream& domain(std::ostream& stream, const parameter_t::enum_t& param)
     return stream << scat(param.m_domain);
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::ostream& value(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
 {
     return stream << param.m_value;
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::ostream& domain(std::ostream& stream, const parameter_t::range_t<tscalar>& param)
 {
     return stream << param.m_min << " " << ::name(param.m_mincomp) << " " << param.m_value << " "
                   << ::name(param.m_maxcomp) << " " << param.m_max;
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::ostream& value(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
 {
     return stream << "(" << param.m_value1 << "," << param.m_value2 << ")";
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::ostream& domain(std::ostream& stream, const parameter_t::pair_range_t<tscalar>& param)
 {
     return stream << param.m_min << " " << ::name(param.m_mincomp) << " " << param.m_value1 << " "

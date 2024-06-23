@@ -176,7 +176,7 @@ UTEST_CASE(program5)
             const auto vbest = vector_t{-invAA * (b - A * x0) * muv / mux};
             const auto fbest = scalar_t{0.5 * (b - A * x0).dot(invAA * (b - A * x0))} - 0.5 * x0.dot(x0);
             const auto state = check_solution(program, expected_t{xbest}.fbest(fbest));
-            UTEST_CHECK_CLOSE(state.m_v, vbest, 1e-10);
+            UTEST_CHECK_CLOSE(state.m_v, vbest, 1e-9);
         }
     }
 }

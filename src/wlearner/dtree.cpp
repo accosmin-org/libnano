@@ -1,6 +1,5 @@
 #include <deque>
 #include <iomanip>
-#include <nano/core/logger.h>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/criterion.h>
 #include <nano/wlearner/dtree.h>
@@ -162,9 +161,9 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
         const auto cache = caches.front();
 
         // split the node using decision stumps...
-        // log_info() << std::fixed << std::setprecision(8) << " +++ depth=" << cache.m_depth
-        //           << ",samples=" << cache.m_samples.size()
-        //           << ",score=" << (score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score)) << "...";
+        log_info('[', type_id(), "]: ", std::fixed, std::setprecision(8), " +++ depth=", cache.m_depth,
+                 ",samples=", cache.m_samples.size(),
+                 ",score=", score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score), "...\n");
         const auto score_stump = stump.fit(dataset, cache.m_samples, gradients);
         if (score_stump == wlearner_t::no_fit_score())
         {
@@ -223,9 +222,9 @@ scalar_t dtree_wlearner_t::do_fit(const dataset_t& dataset, const indices_t& sam
     // OK, compact the selected features
     auto features = unique_features(nodes);
 
-    // log_info() << std::fixed << std::setprecision(8) << " === tree(features=" << features.size()
-    //            << ",nodes=" << nodes.size() << ",leafs=" << tables.size<0>() << ")"
-    //            << ",score=" << (score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score)) << ".";
+    log_info('[', type_id(), "]: ", std::fixed, std::setprecision(8), " === tree(features=", features.size(),
+             ",nodes=", nodes.size(), ",leafs=", tables.size<0>(), ")",
+             ",score=", score == wlearner_t::no_fit_score() ? scat("N/A") : scat(score), ".\n");
 
     if (score != wlearner_t::no_fit_score())
     {

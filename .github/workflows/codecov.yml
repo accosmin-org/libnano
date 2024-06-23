@@ -2,6 +2,10 @@ name: lcov-codecov
 
 on: [push]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   llvm-cov-and-sonar:
     runs-on: ubuntu-22.04

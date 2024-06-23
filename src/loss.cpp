@@ -5,7 +5,7 @@
 using namespace nano;
 
 loss_t::loss_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
 }
 

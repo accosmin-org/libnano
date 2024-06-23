@@ -16,7 +16,7 @@ using rsplitter_t = std::unique_ptr<splitter_t>;
 ///
 /// \brief generates (training, validation) splits for training, tuning and evaluating machine learning models.
 ///
-class NANO_PUBLIC splitter_t : public configurable_t, public clonable_t<splitter_t>
+class NANO_PUBLIC splitter_t : public typed_t, public configurable_t, public clonable_t<splitter_t>
 {
 public:
     ///< split with (training, validation) sample indices

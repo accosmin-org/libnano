@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief interface for element-wise feature generators.
 ///
-template <typename tcomputer, std::enable_if_t<std::is_base_of_v<base_elemwise_generator_t, tcomputer>, bool> = true>
+template <class tcomputer, std::enable_if_t<std::is_base_of_v<base_elemwise_generator_t, tcomputer>, bool> = true>
 class NANO_PUBLIC elemwise_generator_t : public tcomputer
 {
 public:
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    template <typename titerator>
+    template <class titerator>
     void select_scalar(const tensor_size_t ifeature, const scalar_map_t& storage, titerator it) const
     {
         [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
@@ -120,7 +120,7 @@ private:
         }
     }
 
-    template <typename titerator>
+    template <class titerator>
     void select_sclass(const tensor_size_t ifeature, const sclass_map_t& storage, titerator it) const
     {
         [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
@@ -137,7 +137,7 @@ private:
         }
     }
 
-    template <typename titerator>
+    template <class titerator>
     void select_mclass(const tensor_size_t ifeature, const mclass_map_t& storage, titerator it) const
     {
         [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
@@ -154,7 +154,7 @@ private:
         }
     }
 
-    template <typename titerator>
+    template <class titerator>
     void select_struct(const tensor_size_t ifeature, const struct_map_t& storage, titerator it) const
     {
         [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
@@ -171,7 +171,7 @@ private:
         }
     }
 
-    template <typename toperator, typename titerator>
+    template <class toperator, class titerator>
     void flatten(const tensor2d_map_t& storage, const tensor_size_t column, const toperator& op,
                  [[maybe_unused]] const tensor_size_t colsize, titerator it) const
     {

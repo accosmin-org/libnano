@@ -110,7 +110,7 @@ void check_optimum(const function_t& function, const vector_t& expected_optimum)
     UTEST_CHECK_CLOSE(state.x(), expected_optimum, 1e+2 * solver->parameter("solver::epsilon").value<scalar_t>());
 }
 
-template <typename ttmatrix, typename tomatrix>
+template <class ttmatrix, class tomatrix>
 void check_value(const function_t& function, const ttmatrix& tmatrix, const tomatrix& omatrix,
                  const scalar_t epsilon = 1e-12)
 {

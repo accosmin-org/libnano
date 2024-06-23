@@ -10,7 +10,7 @@ using namespace nano;
 using namespace nano::wlearner;
 
 wlearner_t::wlearner_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
     register_parameter(parameter_t::make_enum("wlearner::criterion", wlearner_criterion::aicc));
 }

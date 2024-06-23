@@ -1,5 +1,5 @@
 #include "fixture/function.h"
-#include <nano/core/logger.h>
+#include "fixture/logger.h"
 #include <nano/core/numeric.h>
 #include <nano/solver.h>
 #include <utest/utest.h>
@@ -14,34 +14,6 @@ using namespace nano;
     solver->parameter("solver::epsilon")   = epsilon;
     solver->parameter("solver::max_evals") = max_evals;
     return solver;
-}
-
-static void setup_logger(solver_t& solver, std::stringstream& stream)
-{
-    solver.logger(
-        [&](const solver_state_t& state)
-        {
-            stream << "\tdescent: " << state << ",x=" << state.x().transpose() << ".\n";
-            return true;
-        });
-
-    solver.lsearch0_logger(
-        [&](const solver_state_t& state, const scalar_t step_size) {
-            stream << "\t\tlsearch(0): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
-                   << ".\n";
-        });
-
-    solver.lsearchk_logger(
-        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-            const scalar_t step_size)
-        {
-            const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
-
-            stream << "\t\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
-                   << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
-                   << ",wolfe=" << state.has_wolfe(state0, descent, c2)
-                   << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << ".\n";
-        });
 }
 
 struct minimize_config_t
@@ -213,7 +185,7 @@ struct solver_description_t
         stream << ",c0=" << state0.constraint_test() << "\n";
     }
 
-    setup_logger(solver, stream);
+    solver.logger(make_stream_logger(stream));
 
     // minimize
     solver.parameter("solver::epsilon")   = config.m_epsilon;
@@ -271,8 +243,8 @@ struct solver_description_t
                 const auto state = check_minimize(*solver, *function, x0, config);
                 config.expected_minimum(state.fx());
 
-                log_info() << std::fixed << std::setprecision(10) << function->name() << ": solver=" << solver_id
-                           << ",fx=" << state.fx() << ",calls=" << state.fcalls() << "|" << state.gcalls() << ".";
+                log_info(std::fixed, std::setprecision(10), function->name(), ": solver=", solver_id,
+                         ",fx=", state.fx(), ",calls=", state.fcalls(), "|", state.gcalls(), ".");
             }
         }
     }

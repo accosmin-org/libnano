@@ -17,7 +17,7 @@ using rloss_t = std::unique_ptr<loss_t>;
 /// NB: usually the loss function upper-bounds or
 ///     approximates the true (usually non-smooth) error function to minimize.
 ///
-class NANO_PUBLIC loss_t : public configurable_t, public clonable_t<loss_t>
+class NANO_PUBLIC loss_t : public typed_t, public configurable_t, public clonable_t<loss_t>
 {
 public:
     ///

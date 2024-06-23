@@ -16,7 +16,7 @@ using tensor_dims_t = std::array<tensor_size_t, trank>;
 ///
 /// \brief stores the dimensions of a tensor.
 ///
-template <typename... tsizes>
+template <class... tsizes>
 auto make_dims(const tsizes... sizes)
 {
     return tensor_dims_t<sizeof...(sizes)>({{sizes...}});
@@ -55,7 +55,7 @@ tensor_size_t get_index(const tensor_dims_t<trank>&, tensor_size_t index)
     return index;
 }
 
-template <size_t idim, size_t trank, typename... tindices>
+template <size_t idim, size_t trank, class... tindices>
 tensor_size_t get_index(const tensor_dims_t<trank>& dims, tensor_size_t index, tindices... indices)
 {
     assert(index >= 0 && index < std::get<idim>(dims));
@@ -68,7 +68,7 @@ tensor_size_t get_index0(const tensor_dims_t<trank>&)
     return 0;
 }
 
-template <size_t idim, size_t trank, typename... tindices>
+template <size_t idim, size_t trank, class... tindices>
 tensor_size_t get_index0(const tensor_dims_t<trank>& dims, tensor_size_t index, tindices... indices)
 {
     assert(index >= 0 && index < std::get<idim>(dims));
@@ -87,21 +87,21 @@ void get_dims0(const tensor_dims_t<trank>& dims, tensor_dims_t<trankx>& dimsx)
 }
 
 template <size_t idim, size_t trank>
-std::ostream& print(std::ostream& os, const tensor_dims_t<trank>& dims)
+std::ostream& print(std::ostream& stream, const tensor_dims_t<trank>& dims)
 {
-    os << dims[idim] << (idim + 1U == trank ? "" : "x");
+    stream << dims[idim] << (idim + 1U == trank ? "" : "x");
     if constexpr (idim + 1U < trank)
     {
-        print<idim + 1U>(os, dims);
+        print<idim + 1U>(stream, dims);
     }
-    return os;
+    return stream;
 }
 } // namespace detail
 
 ///
 /// \brief index a multi-dimensional tensor.
 ///
-template <size_t trank, typename... tindices>
+template <size_t trank, class... tindices>
 tensor_size_t index(const tensor_dims_t<trank>& dims, const tindices... indices)
 {
     static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -112,7 +112,7 @@ tensor_size_t index(const tensor_dims_t<trank>& dims, const tindices... indices)
 ///
 /// \brief index a multi-dimensional tensor (assuming the last dimensions that are ignored are zero).
 ///
-template <size_t trank, typename... tindices>
+template <size_t trank, class... tindices>
 tensor_size_t index0(const tensor_dims_t<trank>& dims, const tindices... indices)
 {
     static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -124,7 +124,7 @@ tensor_size_t index0(const tensor_dims_t<trank>& dims, const tindices... indices
 /// \brief gather the missing dimensions in a multi-dimensional tensor
 ///     (assuming the last dimensions that are ignored are zero).
 ///
-template <size_t trank, typename... tindices, size_t trankx = trank - sizeof...(tindices)>
+template <size_t trank, class... tindices, size_t trankx = trank - sizeof...(tindices)>
 tensor_dims_t<trankx> dims0(const tensor_dims_t<trank>& dims, const tindices...)
 {
     static_assert(trank >= 1, "invalid number of tensor dimensions");
@@ -167,8 +167,8 @@ namespace std // NOLINT(cert-dcl58-cpp)
 /// \brief stream tensor dimensions.
 ///
 template <size_t trank>
-std::ostream& operator<<(std::ostream& os, const ::nano::tensor_dims_t<trank>& dims) // NOLINT(cert-dcl58-cpp)
+std::ostream& operator<<(std::ostream& stream, const ::nano::tensor_dims_t<trank>& dims) // NOLINT(cert-dcl58-cpp)
 {
-    return ::nano::detail::print<0U>(os, dims);
+    return ::nano::detail::print<0U>(stream, dims);
 }
 } // namespace std

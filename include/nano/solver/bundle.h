@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/loggable.h>
 #include <nano/program/solver.h>
 #include <nano/solver/state.h>
 #include <nano/tensor/algorithm.h>
@@ -16,7 +17,7 @@ namespace nano
 ///     - first removing all inactive constraints and
 ///     - then the ones with the largest approximation error if needed - see (2).
 ///
-class NANO_PUBLIC bundle_t
+class NANO_PUBLIC bundle_t : public loggable_t
 {
 public:
     ///
@@ -110,7 +111,7 @@ private:
         return e;
     }
 
-    template <typename toperator>
+    template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
         return nano::remove_if(op, m_bundleE.slice(0, m_size), m_bundleS.slice(0, m_size), m_alphas.slice(0, m_size));

@@ -46,13 +46,13 @@ public:
     const dataset_t& dataset() const { return m_dataset; }
 
 protected:
-    template <typename toperator>
+    template <class toperator>
     void map(const tensor_size_t elements, const toperator& op) const
     {
         m_dataset.thread_pool().map(elements, op);
     }
 
-    template <typename toperator>
+    template <class toperator>
     void map(const tensor_size_t elements, const tensor_size_t chunksize, const toperator& op) const
     {
         m_dataset.thread_pool().map(elements, chunksize, op);

@@ -58,20 +58,14 @@ public:
     ///
     /// \brief return the parameter with the given name if any, otherwise return nullptr.
     ///
-    parameter_t* parameter_if(const char* name);
-    parameter_t* parameter_if(const string_t& name);
-
-    const parameter_t* parameter_if(const char* name) const;
-    const parameter_t* parameter_if(const string_t& name) const;
+    parameter_t*       parameter_if(std::string_view name);
+    const parameter_t* parameter_if(std::string_view name) const;
 
     ///
     /// \brief return the parameter with the given name if any, otherwise throw an exception.
     ///
-    parameter_t& parameter(const char* name);
-    parameter_t& parameter(const string_t& name);
-
-    const parameter_t& parameter(const char* name) const;
-    const parameter_t& parameter(const string_t& name) const;
+    parameter_t&       parameter(std::string_view name);
+    const parameter_t& parameter(std::string_view name) const;
 
     ///
     /// \brief returns all stored parameters.

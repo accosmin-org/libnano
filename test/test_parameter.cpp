@@ -48,7 +48,7 @@ void check_stream(const parameter_t& param)
     }
 }
 
-template <bool valid, typename tvalue>
+template <bool valid, class tvalue>
 void check_value(parameter_t param, tvalue value)
 {
     UTEST_CHECK_THROW(param = "", std::invalid_argument);
@@ -76,7 +76,7 @@ void check_value(parameter_t param, tvalue value)
     }
 }
 
-template <bool valid, typename tvalue>
+template <bool valid, class tvalue>
 void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
 {
     const auto i32pair = std::make_tuple(static_cast<int32_t>(value1), static_cast<int32_t>(value2));

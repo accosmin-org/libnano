@@ -1,5 +1,5 @@
-#include <nano/core/logger.h>
 #include <nano/core/stream.h>
+#include <nano/critical.h>
 #include <nano/feature.h>
 
 using namespace nano;

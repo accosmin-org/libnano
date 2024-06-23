@@ -5,20 +5,20 @@
 
 namespace nano
 {
-template <typename, size_t>
+template <class, size_t>
 class tensor_vector_storage_t;
 
-template <typename, size_t>
+template <class, size_t>
 class tensor_carray_storage_t;
 
-template <typename, size_t>
+template <class, size_t>
 class tensor_marray_storage_t;
 
 ///
 /// \brief tensor storage using an Eigen vector.
 /// NB: the tensor owns the allocated memory and as such it is resizable.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 class tensor_vector_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
@@ -37,7 +37,7 @@ public:
     tensor_vector_storage_t& operator=(const tensor_vector_storage_t&)     = default;
     tensor_vector_storage_t& operator=(tensor_vector_storage_t&&) noexcept = default;
 
-    template <typename... tsizes>
+    template <class... tsizes>
     explicit tensor_vector_storage_t(tsizes... dims)
         : tbase(make_dims(dims...))
         , m_data(size())
@@ -78,7 +78,7 @@ public:
         return *this;
     }
 
-    template <typename... tsizes>
+    template <class... tsizes>
     void resize(tsizes... dims)
     {
         tbase::_resize(make_dims(dims...));
@@ -104,7 +104,7 @@ private:
 /// \brief tensor storage using a constant C-array.
 /// NB: the tensor doesn't own the allocated memory and as such it is not resizable.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 class tensor_carray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
@@ -122,7 +122,7 @@ public:
     tensor_carray_storage_t(tensor_carray_storage_t&&) noexcept                  = default;
     tensor_carray_storage_t& operator=(tensor_carray_storage_t&& other) noexcept = default;
 
-    template <typename... tsizes>
+    template <class... tsizes>
     explicit tensor_carray_storage_t(const tscalar* data, tsizes... dims)
         : tbase(make_dims(dims...))
         , m_data(data)
@@ -153,7 +153,7 @@ public:
     tensor_carray_storage_t& operator=(const tensor_carray_storage_t<tscalar, trank>& other) = delete;
     tensor_carray_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other) = delete;
 
-    template <typename... tsizes>
+    template <class... tsizes>
     void resize(tsizes...)    = delete;
     void resize(const tdims&) = delete;
 
@@ -168,7 +168,7 @@ private:
 /// \brief tensor storage using a mutable C-array.
 /// NB: the tensor doesn't own the allocated memory and as such it is not resizable.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 class tensor_marray_storage_t : public tensor_base_t<tscalar, trank>
 {
 public:
@@ -191,7 +191,7 @@ public:
         return *this;
     }
 
-    template <typename... tsizes>
+    template <class... tsizes>
     explicit tensor_marray_storage_t(tscalar* data, tsizes... dims)
         : tbase(make_dims(dims...))
         , m_data(data)
@@ -231,14 +231,14 @@ public:
         return *this;
     }
 
-    template <typename... tsizes>
+    template <class... tsizes>
     void resize(tsizes...)    = delete;
     void resize(const tdims&) = delete;
 
     auto data() const { return m_data; }
 
 private:
-    template <typename tstorage>
+    template <class tstorage>
     void copy(const tstorage& other)
     {
         assert(size() == other.size());

@@ -5,7 +5,7 @@ using namespace nano;
 
 namespace
 {
-template <typename tvector>
+template <class tvector>
 bool converged(const scalar_t error, const tvector& sgrad, const scalar_t etol, const scalar_t stol)
 {
     return (error < etol) && (sgrad.template lpNorm<2>() < stol);
@@ -82,11 +82,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
 
-        // std::cout << std::fixed << std::setprecision(9) << "calls=" << m_function.fcalls() << "|" <<
-        // m_function.gcalls()
-        //         << ",fx=" << fx << ",fy=" << fy << ",de=" << e << ",ds=" << s.lpNorm<2>() << ",dd=" << delta
-        //       << ",bsize=" << bundle.size() << ",miu=" << miu << ",t=" << t << "[" << tL << "," << tR << "]"
-        //     << std::endl;
+        log("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy, ",de=", e,
+            ",ds=", s.lpNorm<2>(), ",dd=", delta, ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
+            "]\n");
 
         if (const auto failed = !std::isfinite(fy); failed)
         {

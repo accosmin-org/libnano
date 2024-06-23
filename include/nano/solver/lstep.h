@@ -26,7 +26,7 @@ inline enum_map_t<interpolation_type> enum_string()
 }
 
 ///
-/// \brief line-search step function:
+/// \brief models the line-search step function:
 ///     phi(t) = f(x + t * d), f - the function to minimize and d - the descent direction.
 ///
 class NANO_PUBLIC lsearch_step_t

@@ -1,20 +1,21 @@
 #include "util.h"
 #include <iomanip>
 #include <nano/core/cmdline.h>
-#include <nano/core/parameter_tracker.h>
 #include <nano/core/table.h>
+#include <nano/critical.h>
 #include <nano/linear/model.h>
 #include <nano/linear/util.h>
+#include <nano/main.h>
 
 using namespace nano;
 
 namespace
 {
-template <typename tfactory>
-auto make_object(const cmdline_t::result_t& options, const tfactory& factory, const char* const option,
-                 const char* const obj_name)
+template <class tfactory>
+auto make_object(const cmdresult_t& options, const tfactory& factory, const std::string_view option_name,
+                 const std::string_view obj_name)
 {
-    const auto ids = factory.ids(std::regex(options.get<string_t>(option)));
+    const auto ids = factory.ids(std::regex(options.get<string_t>(option_name)));
     critical(ids.size() != 1U, "expecting a single ", obj_name, ", got (", ids.size(), ") instead!");
 
     auto object = factory.get(ids[0U]);
@@ -53,22 +54,21 @@ int unsafe_main(int argc, const char* argv[])
 {
     // parse the command line
     cmdline_t cmdline("benchmark linear machine learning models");
-    cmdline.add("", "loss", "regex to select loss functions", "<mandatory>");
-    cmdline.add("", "solver", "regex to select solvers", "lbfgs");
-    cmdline.add("", "tuner", "regex to select hyper-parameter tuning methods", "surrogate");
-    cmdline.add("", "splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
+    cmdline.add("--loss", "regex to select loss functions", "<mandatory>");
+    cmdline.add("--solver", "regex to select solvers", "lbfgs");
+    cmdline.add("--tuner", "regex to select hyper-parameter tuning methods", "surrogate");
+    cmdline.add("--splitter", "regex to select train-validation splitting methods (evaluation aka outer splits)",
                 "k-fold");
-    cmdline.add("", "datasource", "regex to select machine learning datasets", "<mandatory>");
-    cmdline.add("", "generator", "regex to select feature generation methods", "identity.+");
-    cmdline.add("", "list-linear-params", "list the parameters of the linear model");
+    cmdline.add("--datasource", "regex to select machine learning datasets", "<mandatory>");
+    cmdline.add("--generator", "regex to select feature generation methods", "identity.+");
+    cmdline.add("--list-linear-params", "list the parameters of the linear model");
 
     const auto options = cmdline.process(argc, argv);
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
-    if (options.has("list-linear-params"))
+    if (options.has("--list-linear-params"))
     {
         table_t table;
         table.header() << "parameter"
@@ -85,24 +85,24 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // check arguments and options
-    const auto rloss       = make_object(options, loss_t::all(), "loss", "loss function");
-    const auto rtuner      = make_object(options, tuner_t::all(), "tuner", "hyper-parameter tuning method");
-    const auto rsolver     = make_object(options, solver_t::all(), "solver", "solver");
-    const auto rsplitter   = make_object(options, splitter_t::all(), "splitter", "train-validation splitting method");
-    const auto rdatasource = make_object(options, datasource_t::all(), "datasource", "machine learning dataset");
-    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("generator")));
+    const auto rloss       = make_object(options, loss_t::all(), "--loss", "loss function");
+    const auto rtuner      = make_object(options, tuner_t::all(), "--tuner", "hyper-parameter tuning method");
+    const auto rsolver     = make_object(options, solver_t::all(), "--solver", "solver");
+    const auto rsplitter   = make_object(options, splitter_t::all(), "--splitter", "train-validation splitting method");
+    const auto rdatasource = make_object(options, datasource_t::all(), "--datasource", "machine learning dataset");
+    const auto generator_ids = generator_t::all().ids(std::regex(options.get<string_t>("--generator")));
 
     // TODO: option to save trained models
     // TODO: option to save training history to csv
     // TODO: wrapper script to generate plots?!
     // TODO: experiments to evaluate feature value scaling, regularization method, feature generation (products!)
 
-    auto param_tracker = parameter_tracker_t{options};
-    param_tracker.setup(*rloss);
-    param_tracker.setup(*rtuner);
-    param_tracker.setup(*rsolver);
-    param_tracker.setup(*rsplitter);
-    param_tracker.setup(*rdatasource);
+    auto rconfig = cmdconfig_t{options};
+    rconfig.setup(*rloss);
+    rconfig.setup(*rtuner);
+    rconfig.setup(*rsolver);
+    rconfig.setup(*rsplitter);
+    rconfig.setup(*rdatasource);
 
     // load dataset
     rdatasource->load();
@@ -130,7 +130,7 @@ int unsafe_main(int argc, const char* argv[])
         const auto& [train_samples, valid_samples] = tr_vd_splits[outer_fold];
 
         auto model = linear_model_t{};
-        param_tracker.setup(model);
+        rconfig.setup(model);
 
         const auto fit_logger = ml::params_t::make_stdio_logger();
         const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
@@ -150,17 +150,18 @@ int unsafe_main(int argc, const char* argv[])
         // TODO: synthetic linear dataset (classification and regression) with known relevant feature sets
         const auto feature_importance = linear::feature_importance(dataset, model.weights());
 
-        log_info() << std::fixed << std::setprecision(6) << "sparsity_ratio:"
-                   << " @1e-2=" << linear::sparsity_ratio(feature_importance, 1e-2)
-                   << ",@1e-3=" << linear::sparsity_ratio(feature_importance, 1e-3)
-                   << ",@1e-4=" << linear::sparsity_ratio(feature_importance, 1e-4)
-                   << ",@1e-5=" << linear::sparsity_ratio(feature_importance, 1e-5)
-                   << ",@1e-6=" << linear::sparsity_ratio(feature_importance, 1e-6);
+        const auto logger = make_stdout_logger();
+        logger.log(log_type::info, std::fixed, std::setprecision(6),
+                   "sparsity_ratio:", " @1e-2=", linear::sparsity_ratio(feature_importance, 1e-2),
+                   ",@1e-3=", linear::sparsity_ratio(feature_importance, 1e-3),
+                   ",@1e-4=", linear::sparsity_ratio(feature_importance, 1e-4),
+                   ",@1e-5=", linear::sparsity_ratio(feature_importance, 1e-5),
+                   ",@1e-6=", linear::sparsity_ratio(feature_importance, 1e-6));
 
         for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ifeature)
         {
             const auto& feature = dataset.feature(ifeature);
-            log_info() << "feature=" << feature << ",importance=" << feature_importance(ifeature);
+            logger.log(log_type::info, "feature=", feature, ",importance=", feature_importance(ifeature));
         }
 
         (void)test_samples;

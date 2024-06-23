@@ -6,7 +6,7 @@ using namespace nano;
 
 namespace
 {
-template <typename tscalar>
+template <class tscalar>
 auto make_input_data()
 {
     return make_tensor<tscalar>(make_dims(2, 4, 4), 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6, 4, 4, 4, 5, 0, 1, 1, 1, 0, 0, 1,

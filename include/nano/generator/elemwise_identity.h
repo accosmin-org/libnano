@@ -10,7 +10,7 @@ namespace nano
 class NANO_PUBLIC sclass_identity_t : public elemwise_input_sclass_t, public generated_sclass_t
 {
 public:
-    template <typename... targs>
+    template <class... targs>
     explicit sclass_identity_t(targs&&... args)
         : elemwise_input_sclass_t("identity-sclass", std::forward<targs>(args)...)
     {
@@ -33,7 +33,7 @@ public:
 class NANO_PUBLIC mclass_identity_t : public elemwise_input_mclass_t, public generated_mclass_t
 {
 public:
-    template <typename... targs>
+    template <class... targs>
     explicit mclass_identity_t(targs&&... args)
         : elemwise_input_mclass_t("identity-mclass", std::forward<targs>(args)...)
     {
@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    template <typename thits, typename tstorage>
+    template <class thits, class tstorage>
     static void copy(const thits& hits, tstorage& storage)
     {
         storage = hits.array().template cast<typename tstorage::Scalar>();
@@ -63,7 +63,7 @@ private:
 class NANO_PUBLIC scalar_identity_t : public elemwise_input_scalar_t, public generated_scalar_t
 {
 public:
-    template <typename... targs>
+    template <class... targs>
     explicit scalar_identity_t(targs&&... args)
         : elemwise_input_scalar_t("identity-scalar", std::forward<targs>(args)...)
     {
@@ -86,7 +86,7 @@ public:
 class NANO_PUBLIC struct_identity_t : public elemwise_input_struct_t, public generated_struct_t
 {
 public:
-    template <typename... targs>
+    template <class... targs>
     explicit struct_identity_t(targs&&... args)
         : elemwise_input_struct_t("identity-struct", std::forward<targs>(args)...)
     {

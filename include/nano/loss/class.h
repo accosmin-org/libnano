@@ -37,7 +37,7 @@ inline void class_target(const tensor3d_t&)
 {
 }
 
-template <typename... tindices>
+template <class... tindices>
 inline void class_target(tensor3d_t& target, const tensor_size_t index, const tindices... indices)
 {
     if (index >= 0 && index < target.size())
@@ -48,7 +48,7 @@ inline void class_target(tensor3d_t& target, const tensor_size_t index, const ti
 }
 } // namespace detail
 
-template <typename... tindices>
+template <class... tindices>
 inline tensor3d_t class_target(const tensor_size_t n_labels, const tindices... indices)
 {
     tensor3d_t target(n_labels, 1, 1);

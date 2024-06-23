@@ -23,21 +23,11 @@ int main(const int, char*[])
     const auto b        = make_vector<scalar_t>(4, 1);
     const auto xbest    = make_vector<scalar_t>(1, 2, 0);
 
-    // log the optimization steps
-    const auto logger = [](const solver_state_t& state)
-    {
-        std::cout << std::fixed << std::setprecision(12) << "i=" << state.m_iters << ",fx=" << state.m_fx
-                  << ",eta=" << state.m_eta << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",rcond=" << state.m_ldlt_rcond
-                  << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status << "]" << std::endl;
-        return true;
-    };
-
     // solve the linear program
-    auto solver                           = solver_t{logger};
+    auto solver                           = solver_t{};
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
+    solver.logger(make_stdout_logger());
 
     const auto program = make_linear(c, make_equality(A, b), make_greater(c.size(), 0.0));
     const auto state   = solver.solve(program);

@@ -2,6 +2,10 @@ name: clang-format
 
 on: [push]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   clang-format:
     runs-on: ubuntu-22.04

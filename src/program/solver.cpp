@@ -6,7 +6,7 @@ using namespace nano::program;
 
 namespace
 {
-template <typename tprogram>
+template <class tprogram>
 vector_t make_x0(const tprogram& program)
 {
     const auto x0 = program.make_strictly_feasible();
@@ -92,13 +92,24 @@ struct solver_t::program_t
 
     tensor_size_t m() const { return m_G.rows(); }
 
+    bool feasible(const solver_state_t& state) const
+    {
+        const auto& A = m_A;
+        const auto& b = m_b;
+        const auto& G = m_G;
+        const auto& h = m_h;
+
+        return (A.rows() == 0 || (A * state.m_x - b).lpNorm<2>() < epsilon2<scalar_t>()) &&
+               (G.rows() == 0 || (G * state.m_x - h).maxCoeff() < epsilon2<scalar_t>());
+    }
+
     const matrix_t& Q() const
     {
         assert(m_Q.size() > 0);
         return m_Q;
     }
 
-    template <typename thessvar, typename trdual, typename trprim>
+    template <class thessvar, class trdual, class trprim>
     const vector_t& solve(const thessvar& hessvar, const trdual& rdual, const trprim& rprim) const
     {
         const auto n = this->n();
@@ -124,7 +135,7 @@ struct solver_t::program_t
         return m_lsol;
     }
 
-    template <typename tvector>
+    template <class tvector>
     void update(const tvector& x, const tvector& u, const tvector& v, const scalar_t miu, solver_state_t& state) const
     {
         const auto m = this->m();
@@ -181,17 +192,16 @@ struct solver_t::program_t
     mutable vector_t     m_lsol;      ///<
 };
 
-solver_t::solver_t(logger_t logger)
-    : m_logger(std::move(logger))
+solver_t::solver_t()
 {
-    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.99, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.999, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-2, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.5, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.9, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-10, LE, 1e-3));
     register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
     register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 300, LE, 1000));
-    register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 30, LE, 1000));
+    register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 50, LE, 1000));
 }
 
 solver_state_t solver_t::solve(const linear_program_t& program) const
@@ -242,7 +252,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
     {
         state.m_status = solver_status::unfeasible;
-        log(state);
+        log("[program]: ", state, ".\n");
         return state;
     }
 
@@ -279,7 +289,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         // stop if the linear system of equations is not stable
         if (!std::isfinite(state.m_ldlt_rcond) || !dx.all_finite() || !dv.all_finite() || !du.all_finite())
         {
-            done(state, epsilon);
+            done(program, state, epsilon);
             break;
         }
 
@@ -299,7 +309,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         }
         if (iter == max_lsearch_iters)
         {
-            done(state, epsilon);
+            done(program, state, epsilon);
             break;
         }
 
@@ -324,7 +334,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
             {
                 program.update(state.m_x, state.m_u, state.m_v, miu, state);
             }
-            done(state, epsilon);
+            done(program, state, epsilon);
             break;
         }
 
@@ -340,19 +350,20 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         // check stopping criteria
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
         {
+            // numerical instabilities
             state.m_status = solver_status::failed;
-            log(state);
+            log("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
             break;
         }
         else if (std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
         {
-            done(state, epsilon);
+            // very precise convergence detected, check global convergence criterion!
+            done(program, state, epsilon);
             break;
         }
-        else if (!log(state))
+        else
         {
-            state.m_status = solver_status::stopped;
-            break;
+            log("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
         }
     }
 
@@ -380,20 +391,27 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
 
     const auto valid = std::isfinite(state.residual());
     const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsilon2<scalar_t>());
-    state.m_status   = (valid && aprox) ? solver_status::converged : solver_status::failed;
+    state.m_status =
+        (valid && aprox) ? solver_status::converged : (!valid ? solver_status::failed : solver_status::unfeasible);
 
-    log(state);
+    log("[program]: ", state, ".\n");
     return state;
 }
 
-void solver_t::done(solver_state_t& state, const scalar_t epsilon) const
+void solver_t::done(const program_t& program, solver_state_t& state, const scalar_t epsilon) const
 {
-    const auto converged = std::max({state.m_eta, state.m_rdual.lpNorm<2>(), state.m_rprim.lpNorm<2>()}) < epsilon;
-    state.m_status       = converged ? solver_status::converged : solver_status::failed;
-    log(state);
-}
+    const auto feasible = program.feasible(state);
 
-bool solver_t::log(const solver_state_t& state) const
-{
-    return !m_logger ? true : m_logger(state);
+    if (feasible && std::max({state.m_eta, state.m_rdual.lpNorm<2>(), state.m_rprim.lpNorm<2>()}) < epsilon)
+    {
+        state.m_status = solver_status::converged;
+    }
+    else
+    {
+        // FIXME: this is an heuristic, to search for a theoretically sound method to detect unboundness and
+        // unfeasibility!
+        state.m_status = feasible ? solver_status::unbounded : solver_status::unfeasible;
+    }
+
+    log("[program]: ", state, ",feasible=", feasible, ".\n");
 }

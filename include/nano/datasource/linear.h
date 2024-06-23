@@ -41,7 +41,7 @@ public:
     const indices_t& relevant_feature_mask() const { return m_relevant_mask; }
 
 private:
-    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename thitter>
+    template <template <class, size_t> class tstorage, class tscalar, size_t trank, class thitter>
     void setter(const tensor_size_t feature, const tensor_t<tstorage, tscalar, trank>& fvalues, const thitter& hitter)
     {
         for (tensor_size_t sample = 0, samples = fvalues.template size<0>(); sample < samples; ++sample)

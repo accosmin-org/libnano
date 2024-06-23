@@ -31,7 +31,7 @@ public:
     ///
     /// \brief call the given operator for all samples associated to the given group.
     ///
-    template <typename toperator>
+    template <class toperator>
     void loop(const tensor_size_t group, const toperator& op)
     {
         assert(group >= 0 && group < groups());

@@ -1,4 +1,4 @@
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/solver.h>
 #include <nano/tuner/surrogate.h>
 #include <nano/tuner/util.h>

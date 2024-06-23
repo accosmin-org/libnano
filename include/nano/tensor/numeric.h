@@ -6,13 +6,13 @@
 
 namespace nano
 {
-template <template <typename, size_t> class, typename, size_t>
+template <template <class, size_t> class, class, size_t>
 class tensor_t;
 
 ///
 /// \brief returns true if the two tensors are close, ignoring not-finite values if present.
 ///
-template <template <typename, size_t> class tstorage1, template <typename, size_t> class tstorage2, typename tscalar,
+template <template <class, size_t> class tstorage1, template <class, size_t> class tstorage2, class tscalar,
           size_t trank>
 bool close(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstorage2, tscalar, trank>& rhs,
            const double epsilon)
@@ -37,8 +37,8 @@ bool close(const tensor_t<tstorage1, tscalar, trank>& lhs, const tensor_t<tstora
 ///
 /// \brief compare two tensors element-wise.
 ///
-template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
-          typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage_lhs, template <class, size_t> class tstorage_rhs, class tscalar,
+          size_t trank>
 bool operator==(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
 {
     return lhs.dims() == rhs.dims() && lhs.vector() == rhs.vector();
@@ -47,8 +47,8 @@ bool operator==(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_
 ///
 /// \brief compare two tensors element-wise.
 ///
-template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
-          typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage_lhs, template <class, size_t> class tstorage_rhs, class tscalar,
+          size_t trank>
 bool operator!=(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
 {
     return lhs.dims() != rhs.dims() || lhs.vector() != rhs.vector();
@@ -57,7 +57,7 @@ bool operator!=(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_
 ///
 /// \brief divide the tensor element-wise by the given factor and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename tscalar_factor,
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor,
           std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
 auto operator/(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_factor factor)
 {
@@ -76,7 +76,7 @@ auto operator/(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_fact
 ///
 /// \brief multiply the tensor element-wise with the given factor and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename tscalar_factor,
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor,
           std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
 auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_factor factor)
 {
@@ -92,7 +92,7 @@ auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_fact
     }
 }
 
-template <typename tscalar_factor, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+template <class tscalar_factor, template <class, size_t> class tstorage, class tscalar, size_t trank,
           std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
 auto operator*(const tscalar_factor factor, const tensor_t<tstorage, tscalar, trank>& rhs)
 {
@@ -111,7 +111,7 @@ auto operator*(const tscalar_factor factor, const tensor_t<tstorage, tscalar, tr
 ///
 /// \brief negate the tensor element-wise and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage_lhs, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage_lhs, class tscalar, size_t trank>
 auto operator-(const tensor_t<tstorage_lhs, tscalar, trank>& lhs)
 {
     static_assert(trank == 1U || trank == 2U);
@@ -129,8 +129,8 @@ auto operator-(const tensor_t<tstorage_lhs, tscalar, trank>& lhs)
 ///
 /// \brief subtract the two tensors or Eigen expressions and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
-          typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage_lhs, template <class, size_t> class tstorage_rhs, class tscalar,
+          size_t trank>
 auto operator-(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
 {
     static_assert(trank == 1U || trank == 2U);
@@ -145,7 +145,7 @@ auto operator-(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t
     }
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename texpression,
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator-(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
 {
@@ -161,7 +161,7 @@ auto operator-(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression&
     }
 }
 
-template <typename texpression, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator-(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& lhs)
 {
@@ -180,8 +180,8 @@ auto operator-(const texpression& expression, const tensor_t<tstorage, tscalar, 
 ///
 /// \brief add the two tensors or Eigen expressions and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
-          typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage_lhs, template <class, size_t> class tstorage_rhs, class tscalar,
+          size_t trank>
 auto operator+(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
 {
     static_assert(trank == 1U || trank == 2U);
@@ -196,7 +196,7 @@ auto operator+(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t
     }
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename texpression,
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator+(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
 {
@@ -212,7 +212,7 @@ auto operator+(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression&
     }
 }
 
-template <typename texpression, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator+(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& lhs)
 {
@@ -231,7 +231,7 @@ auto operator+(const texpression& expression, const tensor_t<tstorage, tscalar, 
 ///
 /// \brief multiply the two tensors or Eigen expressions and return the associated Eigen expression.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename texpression,
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
 {
@@ -240,7 +240,7 @@ auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression&
     return lhs.matrix() * expression;
 }
 
-template <typename texpression, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
           std::enable_if_t<is_eigen_v<texpression>, bool> = true>
 auto operator*(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& rhs)
 {
@@ -256,8 +256,8 @@ auto operator*(const texpression& expression, const tensor_t<tstorage, tscalar, 
     }
 }
 
-template <template <typename, size_t> class tstorage_lhs, template <typename, size_t> class tstorage_rhs,
-          typename tscalar, size_t trank_lhs, size_t trank_rhs>
+template <template <class, size_t> class tstorage_lhs, template <class, size_t> class tstorage_rhs, class tscalar,
+          size_t trank_lhs, size_t trank_rhs>
 auto operator*(const tensor_t<tstorage_lhs, tscalar, trank_lhs>& lhs,
                const tensor_t<tstorage_rhs, tscalar, trank_rhs>& rhs)
 {

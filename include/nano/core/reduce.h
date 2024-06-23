@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief min-reduce the given set of accumulators (e.g. per thread) using the `m_score` attribute.
 ///
-template <typename taccumulator>
+template <class taccumulator>
 const auto& min_reduce(const std::vector<taccumulator>& accumulators)
 {
     const auto op = [](const taccumulator& one, const taccumulator& other) { return one.m_score < other.m_score; };
@@ -19,7 +19,7 @@ const auto& min_reduce(const std::vector<taccumulator>& accumulators)
 ///
 /// \brief map-reduce the given set of accumulators (e.g. per thread) into the first accumulator.
 ///
-template <typename taccumulator>
+template <class taccumulator>
 const auto& sum_reduce(std::vector<taccumulator>& accumulators, const tensor_size_t samples)
 {
     auto& accumulator0 = accumulators[0];

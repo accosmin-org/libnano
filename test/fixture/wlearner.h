@@ -69,7 +69,7 @@ public:
         return std::make_tuple(fvalue, target, fvalue);
     }
 
-    template <typename tfvalues>
+    template <class tfvalues>
     static auto make_table_target(const tfvalues& fvalues, const tensor4d_t& tables, const hashes_t& hashes)
     {
         const auto fvalue = ::nano::find(hashes, fvalues);
@@ -79,7 +79,7 @@ public:
         return std::make_tuple(fvalues, target, fvalue);
     }
 
-    template <typename toperator>
+    template <class toperator>
     void set_targets(const tensor_size_t feature, const toperator& op)
     {
         const auto hits    = this->hits();
@@ -147,7 +147,7 @@ static auto make_features_invalid_target()
     return features;
 }
 
-template <typename tdatasource, typename... targs>
+template <class tdatasource, class... targs>
 static auto make_datasource(const tensor_size_t samples, const targs&... args)
 {
     auto datasource = tdatasource{samples, args...};
@@ -275,7 +275,7 @@ inline void check_split_throws(const wlearner_t& wlearner, const datasource_t& d
     check_split_throws(wlearner, make_dataset(datasource));
 }
 
-template <typename... tdatasources>
+template <class... tdatasources>
 inline void check_split_throws(const wlearner_t& wlearner, const datasource_t& datasource,
                                const tdatasources&... datasources)
 {
@@ -329,7 +329,7 @@ inline void check_predict_throws(const wlearner_t& wlearner, const datasource_t&
     check_predict_throws(wlearner, make_dataset(datasource));
 }
 
-template <typename... tdatasources>
+template <class... tdatasources>
 inline void check_predict_throws(const wlearner_t& wlearner, const datasource_t& datasource,
                                  const tdatasources&... datasources)
 {
@@ -376,7 +376,7 @@ inline void check_scale(wlearner_t& wlearner, const datasource_t& datasource, co
     check_scale(wlearner, make_dataset(datasource), expected_cluster);
 }
 
-template <typename twlearner>
+template <class twlearner>
 auto check_merge(const twlearner& _wlearner, const datasource_t& datasource, const rwlearners_t& compatible_rwlearners,
                  const rwlearners_t& incompatible_rwlearners)
 {
@@ -417,7 +417,7 @@ auto check_merge(const twlearner& _wlearner, const datasource_t& datasource, con
     return wlearner;
 }
 
-template <typename twlearner>
+template <class twlearner>
 auto check_merge(const twlearner& wlearner, const rwlearners_t& rwlearners, const size_t compatibles)
 {
     auto cloned_rwlearners = ::nano::wlearner::clone(rwlearners);
@@ -433,7 +433,7 @@ auto check_merge(const twlearner& wlearner, const rwlearners_t& rwlearners, cons
     return merged_wlearner;
 }
 
-template <typename tdatasource, typename... tinvalid_datasources>
+template <class tdatasource, class... tinvalid_datasources>
 void check_wlearner(const tdatasource& datasource0, const tinvalid_datasources&... datasourceXs)
 {
     const auto datasourceX1 = make_random_datasource(make_features_too_few());

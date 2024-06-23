@@ -12,7 +12,7 @@ struct absdiff_t
 {
     static constexpr auto prefix = "";
 
-    template <typename tarray>
+    template <class tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         return (target - output).abs().sum();
@@ -27,7 +27,7 @@ struct mclass_t
 {
     static constexpr auto prefix = "m-";
 
-    template <typename tarray>
+    template <class tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         const auto     edges   = target * output;
@@ -45,7 +45,7 @@ struct sclass_t
 {
     static constexpr auto prefix = "s-";
 
-    template <typename tarray>
+    template <class tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         if (target.size() > 1)

@@ -44,7 +44,7 @@ struct NANO_PUBLIC linear_program_t : public linear_constrained_t
 ///
 /// \brief construct a linear program from the given objective and the equality and inequality constraints.
 ///
-template <typename... tconstraints>
+template <class... tconstraints>
 auto make_linear(vector_t c, const tconstraints&... constraints)
 {
     auto program = linear_program_t{std::move(c)};

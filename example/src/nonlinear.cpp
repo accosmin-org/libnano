@@ -67,41 +67,14 @@ int main(const int, char*[])
     solver.parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
     solver.lsearch0("constant");
     solver.lsearchk("morethuente");
+    solver.logger(make_stdout_logger());
 
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++trial)
     {
         const auto x0 = make_random_vector<scalar_t>(objective.size());
-
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
                   << "]: f0=" << objective.vgrad(x0) << "...\n";
-
-        // log the optimization steps
-        solver.logger(
-            [&](const solver_state_t& state)
-            {
-                std::cout << "\tdescent: " << state << ".\n";
-                return true;
-            });
-
-        // log the line-search steps
-        solver.lsearch0_logger(
-            [&](const solver_state_t& state0, const scalar_t t0) {
-                std::cout << "\t\tlsearch(0): t=" << t0 << ",f=" << state0.fx() << ",g=" << state0.gradient_test()
-                          << ".\n";
-            });
-
-        const auto [c1, c2] = solver.parameter("solver::tolerance").value_pair<scalar_t>();
-
-        solver.lsearchk_logger(
-            [tol_c1 = c1, tol_c2 = c2](const solver_state_t& state0, const solver_state_t& state,
-                                       const vector_t& descent, const scalar_t step_size)
-            {
-                std::cout << "\t\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
-                          << ",armijo=" << state.has_armijo(state0, descent, step_size, tol_c1)
-                          << ",wolfe=" << state.has_wolfe(state0, descent, tol_c2)
-                          << ",swolfe=" << state.has_strong_wolfe(state0, descent, tol_c2) << ".\n";
-            });
 
         // minimize
         const auto state = solver.minimize(objective, x0);

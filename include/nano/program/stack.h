@@ -7,7 +7,7 @@ namespace nano::program
 {
 namespace detail
 {
-template <typename tconstraint>
+template <class tconstraint>
 void update_size(tensor_size_t& rows, tensor_size_t& cols, const tconstraint& constraint)
 {
     assert(constraint.m_A.rows() == constraint.m_b.size());
@@ -17,7 +17,7 @@ void update_size(tensor_size_t& rows, tensor_size_t& cols, const tconstraint& co
     cols = constraint.m_A.cols();
 }
 
-template <template <typename, typename> class tconstraint, typename tmatrixA, typename tvectorb>
+template <template <class, class> class tconstraint, class tmatrixA, class tvectorb>
 void update_data(matrix_t& A, vector_t& b, const tensor_size_t row, const tconstraint<tmatrixA, tvectorb>& constraint)
 {
     if constexpr (is_eigen_v<tmatrixA>)
@@ -42,7 +42,7 @@ void update_data(matrix_t& A, vector_t& b, const tensor_size_t row, const tconst
     }
 }
 
-template <typename tconstraint, typename... tconstraints>
+template <class tconstraint, class... tconstraints>
 void make_size([[maybe_unused]] tensor_size_t& eqs, tensor_size_t& dims, [[maybe_unused]] tensor_size_t& ineqs,
                const tconstraint& constraint, const tconstraints&... constraints)
 {
@@ -60,7 +60,7 @@ void make_size([[maybe_unused]] tensor_size_t& eqs, tensor_size_t& dims, [[maybe
     }
 }
 
-template <typename tconstraint, typename... tconstraints>
+template <class tconstraint, class... tconstraints>
 void stack([[maybe_unused]] matrix_t& A, [[maybe_unused]] vector_t& b, [[maybe_unused]] matrix_t& G,
            [[maybe_unused]] vector_t& h, [[maybe_unused]] tensor_size_t eq, [[maybe_unused]] tensor_size_t ineq,
            const tconstraint& constraint, const tconstraints&... constraints)
@@ -86,7 +86,7 @@ void stack([[maybe_unused]] matrix_t& A, [[maybe_unused]] vector_t& b, [[maybe_u
 /// \brief (vertically-)stack in-place the given equality and inequality constraints:
 ///     A * x = b and G * x <= h.
 ///
-template <typename... tconstraints>
+template <class... tconstraints>
 void stack(matrix_t& A, vector_t& b, matrix_t& G, vector_t& h, const tconstraints&... constraints)
 {
     auto eqs   = tensor_size_t{0};

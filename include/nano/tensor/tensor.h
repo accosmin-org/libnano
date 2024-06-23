@@ -9,25 +9,25 @@
 
 namespace nano
 {
-template <template <typename, size_t> class, typename, size_t>
+template <template <class, size_t> class, class, size_t>
 class tensor_t;
 
 ///
 /// \brief tensor that owns the allocated memory.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 using tensor_mem_t = tensor_t<tensor_vector_storage_t, tscalar, trank>;
 
 ///
 /// \brief tensor mapping a non-constant array.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 using tensor_map_t = tensor_t<tensor_marray_storage_t, tscalar, trank>;
 
 ///
 /// \brief tensor mapping a constant array.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 using tensor_cmap_t = tensor_t<tensor_carray_storage_t, tscalar, trank>;
 
 ///
@@ -40,7 +40,7 @@ using indices_cmap_t = tensor_cmap_t<tensor_size_t, 1>;
 ///
 /// \brief map non-constant data to tensors.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 auto map_tensor(tscalar* data, const tensor_dims_t<trank>& dims)
 {
     return tensor_map_t<tscalar, trank>(data, dims);
@@ -49,7 +49,7 @@ auto map_tensor(tscalar* data, const tensor_dims_t<trank>& dims)
 ///
 /// \brief map constant data to tensors.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 auto map_tensor(const tscalar* data, const tensor_dims_t<trank>& dims)
 {
     return tensor_cmap_t<tscalar, trank>(data, dims);
@@ -58,7 +58,7 @@ auto map_tensor(const tscalar* data, const tensor_dims_t<trank>& dims)
 ///
 /// \brief map non-constant data to tensors.
 ///
-template <typename tscalar, typename... tsizes>
+template <class tscalar, class... tsizes>
 auto map_tensor(tscalar* data, tsizes... dims)
 {
     return map_tensor(data, make_dims(dims...));
@@ -67,7 +67,7 @@ auto map_tensor(tscalar* data, tsizes... dims)
 ///
 /// \brief map constant data to tensors.
 ///
-template <typename tscalar, typename... tsizes>
+template <class tscalar, class... tsizes>
 auto map_tensor(const tscalar* data, tsizes... dims)
 {
     return map_tensor(data, make_dims(dims...));
@@ -76,7 +76,7 @@ auto map_tensor(const tscalar* data, tsizes... dims)
 ///
 /// \brief return the default minimum range for random sampling of tensor values.
 ///
-template <typename tscalar>
+template <class tscalar>
 static constexpr auto default_min_random()
 {
     if constexpr (std::is_unsigned_v<tscalar>)
@@ -95,7 +95,7 @@ static constexpr auto default_min_random()
 /// NB: all access operations (e.g. Eigen arrays, vectors or matrices or sub-tensors) are performed
 ///     using only continuous memory.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 class tensor_t : public tstorage<tscalar, trank>
 {
 public:
@@ -121,7 +121,7 @@ public:
     ///
     /// \brief construct to match the given size.
     ///
-    template <typename... tsizes>
+    template <class... tsizes>
     explicit tensor_t(tsizes... dimensions)
         : tbase(make_dims(dimensions...))
     {
@@ -151,7 +151,7 @@ public:
     ///
     /// \brief construct from an Eigen expression.
     ///
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     // cppcheck-suppress noExplicitConstructor
     tensor_t(const texpression& expression) // NOLINT(hicpp-explicit-conversions)
     {
@@ -174,7 +174,7 @@ public:
     ///
     /// \brief copy constructor from different types (e.g. const array from mutable array).
     ///
-    template <template <typename, size_t> class tstorage2>
+    template <template <class, size_t> class tstorage2>
     // cppcheck-suppress noExplicitConstructor
     tensor_t(const tensor_t<tstorage2, tscalar, trank>& other) // NOLINT(hicpp-explicit-conversions)
         : tbase(static_cast<const tstorage2<tscalar, trank>&>(other))
@@ -184,7 +184,7 @@ public:
     ///
     /// \brief copy constructor from different types (e.g. mutable array from mutable vector).
     ///
-    template <template <typename, size_t> class tstorage2>
+    template <template <class, size_t> class tstorage2>
     // cppcheck-suppress noExplicitConstructor
     tensor_t(tensor_t<tstorage2, tscalar, trank>& other) // NOLINT(hicpp-explicit-conversions)
         : tbase(static_cast<tstorage2<tscalar, trank>&>(other))
@@ -194,7 +194,7 @@ public:
     ///
     /// \brief assignment operator from different types (e.g. const from non-const scalars).
     ///
-    template <template <typename, size_t> class tstorage2>
+    template <template <class, size_t> class tstorage2>
     tensor_t& operator=(const tensor_t<tstorage2, tscalar, trank>& other)
     {
         tbase::operator=(other);
@@ -204,7 +204,7 @@ public:
     ///
     /// \brief assignment operator from an Eigen expression.
     ///
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     tensor_t& operator=(const texpression& expression)
     {
         assign(expression);
@@ -220,13 +220,13 @@ public:
     /// \brief access a continuous part of the tensor as an Eigen vector
     ///     (assuming the last dimensions that are ignored are zero).
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto vector(const tindices... indices)
     {
         return tvector(data(), indices...);
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     auto vector(const tindices... indices) const
     {
         return tvector(data(), indices...);
@@ -236,13 +236,13 @@ public:
     /// \brief access a part of the tensor as an Eigen array
     ///     (assuming the last dimensions that are ignored are zero).
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto array(const tindices... indices)
     {
         return vector(indices...).array();
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     auto array(const tindices... indices) const
     {
         return vector(indices...).array();
@@ -252,13 +252,13 @@ public:
     /// \brief access a part of the tensor as an Eigen matrix
     ///     (assuming that the last two dimensions are ignored).
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto matrix(const tindices... indices)
     {
         return tmatrix(data(), indices...);
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     auto matrix(const tindices... indices) const
     {
         return tmatrix(data(), indices...);
@@ -268,13 +268,13 @@ public:
     /// \brief access a part of the tensor as a (sub-)tensor
     ///     (assuming the last dimensions that are ignored are zero)
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto tensor(const tindices... indices)
     {
         return ttensor(data(), indices...);
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     auto tensor(const tindices... indices) const
     {
         return ttensor(data(), indices...);
@@ -296,7 +296,7 @@ public:
     /// \brief copy some of (sub-)tensors using the given indices.
     /// NB: the indices are relative to the first dimension.
     ///
-    template <typename tscalar_return = tscalar>
+    template <class tscalar_return = tscalar>
     void indexed(indices_cmap_t indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
     {
         auto dimensions = dims();
@@ -306,7 +306,7 @@ public:
         indexed(indices, subtensor.tensor());
     }
 
-    template <typename tscalar_return = tscalar>
+    template <class tscalar_return = tscalar>
     void indexed(indices_cmap_t indices, tensor_map_t<tscalar_return, trank> subtensor) const
     {
         assert(indices.min() >= 0 && indices.max() < this->template size<0>());
@@ -335,7 +335,7 @@ public:
     /// \brief return a copy of some (sub-)tensors using the given indices.
     /// NB: the indices are relative to the first dimension.
     ///
-    template <typename tscalar_return = tscalar>
+    template <class tscalar_return = tscalar>
     auto indexed(indices_cmap_t indices) const
     {
         auto subtensor = tensor_mem_t<tscalar_return, trank>{};
@@ -360,13 +360,13 @@ public:
         return data()[index];
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     typename tbase::tmutableref operator()(const tensor_size_t index, const tindices... indices)
     {
         return operator()(offset(index, indices...));
     }
 
-    template <typename... tindices>
+    template <class... tindices>
     typename tbase::tconstref operator()(const tensor_size_t index, const tindices... indices) const
     {
         return operator()(offset(index, indices...));
@@ -376,13 +376,13 @@ public:
     /// \brief reshape to a new tensor (with the same number of elements).
     /// NB: a single -1 dimension can be inferred from the total size and the remaining positive dimensions!
     ///
-    template <typename... tsizes>
+    template <class... tsizes>
     auto reshape(tsizes... sizes)
     {
         return treshape(data(), sizes...);
     }
 
-    template <typename... tsizes>
+    template <class... tsizes>
     auto reshape(tsizes... sizes) const
     {
         return treshape(data(), sizes...);
@@ -510,7 +510,7 @@ public:
     ///
     /// \brief return the dot product of the flatten array with the given Eigen expression.
     ///
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     auto dot(const texpression& expression) const
     {
         return vector().dot(expression);
@@ -611,7 +611,7 @@ public:
     ///
     /// \brief multiply element-wise by the given factor.
     ///
-    template <typename tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
+    template <class tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
     tensor_t& operator*=(const tscalar_factor factor)
     {
         vector() *= static_cast<tscalar>(factor);
@@ -621,7 +621,7 @@ public:
     ///
     /// \brief divide element-wise by the given factor.
     ///
-    template <typename tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
+    template <class tscalar_factor, std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
     tensor_t& operator/=(const tscalar_factor factor)
     {
         vector() /= static_cast<tscalar>(factor);
@@ -631,7 +631,7 @@ public:
     ///
     /// \brief subtract element-wise the given Eigen expression.
     ///
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     tensor_t& operator-=(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
@@ -649,7 +649,7 @@ public:
     ///
     /// \brief subtract element-wise the given tensor.
     ///
-    template <template <typename, size_t> class tstorage_rhs>
+    template <template <class, size_t> class tstorage_rhs>
     tensor_t& operator-=(const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
     {
         assert(dims() == rhs.dims());
@@ -660,7 +660,7 @@ public:
     ///
     /// \brief add element-wise the given Eigen expression.
     ///
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     tensor_t& operator+=(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
@@ -678,7 +678,7 @@ public:
     ///
     /// \brief add element-wise the given tensor.
     ///
-    template <template <typename, size_t> class tstorage_rhs>
+    template <template <class, size_t> class tstorage_rhs>
     tensor_t& operator+=(const tensor_t<tstorage_rhs, tscalar, trank>& rhs)
     {
         assert(dims() == rhs.dims());
@@ -704,14 +704,14 @@ public:
     ///
     /// \brief construct an Eigen-based vector or matrix expression with all elements the given constant.
     ///
-    template <typename tscalar_value>
+    template <class tscalar_value>
     static auto constant(const tensor_size_t size, const tscalar_value value)
     {
         static_assert(trank == 1);
         return eigen_vector_t<tscalar>::Constant(size, static_cast<tscalar>(value));
     }
 
-    template <typename tscalar_value>
+    template <class tscalar_value>
     static auto constant(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value value)
     {
         static_assert(trank == 2);
@@ -728,28 +728,28 @@ public:
     }
 
 private:
-    template <typename tdata, typename... tindices>
+    template <class tdata, class... tindices>
     auto tvector(tdata ptr, tindices... indices) const
     {
         static_assert(sizeof...(indices) < trank, "invalid number of tensor dimensions");
         return map_vector(ptr + offset0(indices...), ::nano::size(::nano::dims0(dims(), indices...)));
     }
 
-    template <typename tdata, typename... tindices>
+    template <class tdata, class... tindices>
     auto tmatrix(tdata ptr, tindices... indices) const
     {
         static_assert(sizeof...(indices) == trank - 2, "invalid number of tensor dimensions");
         return map_matrix(ptr + offset0(indices...), rows(), cols());
     }
 
-    template <typename tdata, typename... tindices>
+    template <class tdata, class... tindices>
     auto ttensor(tdata ptr, tindices... indices) const
     {
         static_assert(sizeof...(indices) < trank, "invalid number of tensor dimensions");
         return map_tensor(ptr + offset0(indices...), ::nano::dims0(dims(), indices...));
     }
 
-    template <typename tdata, typename... tsizes>
+    template <class tdata, class... tsizes>
     auto treshape(tdata ptr, tsizes... sizes) const
     {
         auto dimensions = ::nano::make_dims(sizes...);
@@ -765,7 +765,7 @@ private:
         return map_tensor(ptr, dimensions);
     }
 
-    template <typename tdata>
+    template <class tdata>
     auto tslice(tdata ptr, tensor_size_t begin, tensor_size_t end) const
     {
         assert(begin >= 0 && begin <= end && end <= this->template size<0>());
@@ -774,7 +774,7 @@ private:
         return map_tensor(ptr + offset0(begin), dimensions);
     }
 
-    template <typename texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
+    template <class texpression, std::enable_if_t<is_eigen_v<texpression>, bool> = true>
     void assign(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
@@ -803,7 +803,7 @@ private:
 ///
 /// \brief pretty-print the given tensor.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 std::ostream& operator<<(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor)
 {
     return pprint(stream, tensor);
@@ -824,7 +824,7 @@ inline auto arange(const tensor_size_t min, const tensor_size_t max)
 ///
 /// \brief create a tensor from an initializer list.
 ///
-template <typename tscalar, size_t trank, typename... tvalues>
+template <class tscalar, size_t trank, class... tvalues>
 auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
 {
     const auto list = {static_cast<tscalar>(values)...};
@@ -838,7 +838,7 @@ auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
 ///
 /// \brief create indices from an initializer list.
 ///
-template <typename... tindices>
+template <class... tindices>
 auto make_indices(tindices... indices)
 {
     return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
@@ -847,7 +847,7 @@ auto make_indices(tindices... indices)
 ///
 /// \brief create a tensor and fill it with the given value.
 ///
-template <typename tscalar, size_t trank, typename tscalar_value>
+template <class tscalar, size_t trank, class tscalar_value>
 auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
@@ -858,7 +858,7 @@ auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
 ///
 /// \brief create a tensor and fill it with random values.
 ///
-template <typename tscalar, size_t trank, typename tscalar_value = tscalar>
+template <class tscalar, size_t trank, class tscalar_value = tscalar>
 auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
@@ -870,7 +870,7 @@ auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value mi
 ///
 /// \brief create a matrix from an initializer list.
 ///
-template <typename tscalar, typename... tvalues>
+template <class tscalar, class... tvalues>
 auto make_matrix(const tensor_size_t rows, tvalues... values)
 {
     const auto list = {static_cast<tscalar>(values)...};
@@ -885,7 +885,7 @@ auto make_matrix(const tensor_size_t rows, tvalues... values)
 ///
 /// \brief create a vector from an initializer list.
 ///
-template <typename tscalar, typename... tvalues>
+template <class tscalar, class... tvalues>
 auto make_vector(tvalues... values)
 {
     const auto list = {static_cast<tscalar>(values)...};
@@ -898,7 +898,7 @@ auto make_vector(tvalues... values)
 ///
 /// \brief create a vector and fill it with the given value.
 ///
-template <typename tscalar, typename tscalar_value>
+template <class tscalar, class tscalar_value>
 auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows), value);
@@ -907,7 +907,7 @@ auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
 ///
 /// \brief create a vector and fill it with random values uniformly distributed in the given range.
 ///
-template <typename tscalar, typename tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar>
 auto make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
@@ -917,7 +917,7 @@ auto make_random_vector(const tensor_size_t rows, const tscalar_value min_value 
 ///
 /// \brief create a vector and fill it with the given value.
 ///
-template <typename tscalar, typename tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar>
 auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows, cols), value);
@@ -926,7 +926,7 @@ auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, const 
 ///
 /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
 ///
-template <typename tscalar, typename tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar>
 auto make_random_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {

@@ -1,5 +1,5 @@
-#include <nano/core/logger.h>
 #include <nano/core/tokenizer.h>
+#include <nano/critical.h>
 #include <nano/datasource/tabular.h>
 
 using namespace nano;
@@ -62,7 +62,7 @@ void tabular_datasource_t::do_load()
     tensor_size_t sample = 0;
     for (const auto& csv : m_csvs)
     {
-        log_info() << "datasource[" << type_id() << "]: reading " << csv.m_path << "...";
+        log_info("[", type_id(), "]: reading ", csv.m_path, "...");
 
         const auto old_sample = sample;
         csv.parse(basedir,
@@ -78,7 +78,7 @@ void tabular_datasource_t::do_load()
 
         datasource_t::testing(make_range(old_sample + csv.m_testing.begin(), old_sample + csv.m_testing.end()));
 
-        log_info() << "datasource[" << type_id() << "]: read " << sample << " samples!";
+        log_info("[", type_id(), "]: read ", sample, " samples!");
     }
 
     critical(sample != samples, "datasource[", type_id(), "]: read ", sample, " samples, expecting ", samples, "!");

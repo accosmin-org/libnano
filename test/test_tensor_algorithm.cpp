@@ -5,7 +5,7 @@ using namespace nano;
 
 namespace
 {
-template <typename toperator, typename... ttensors>
+template <class toperator, class... ttensors>
 auto copy_remove_if(const toperator& op, ttensors... tensors)
 {
     const auto count = nano::remove_if(op, tensors...);

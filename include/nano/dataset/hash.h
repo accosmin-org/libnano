@@ -11,7 +11,7 @@ using hashes_cmap_t = tensor_cmap_t<uint64_t, 1>;
 NANO_PUBLIC hashes_t make_hashes(const sclass_cmap_t& values);
 NANO_PUBLIC hashes_t make_hashes(const mclass_cmap_t& values);
 
-template <typename tfvalues>
+template <class tfvalues>
 uint64_t hash(const tfvalues& values)
 {
     if constexpr (std::is_arithmetic_v<tfvalues>)
@@ -26,7 +26,7 @@ uint64_t hash(const tfvalues& values)
     }
 }
 
-template <typename tfvalues>
+template <class tfvalues>
 tensor_size_t find(const hashes_t& hashes, const tfvalues& values)
 {
     const auto hash = ::nano::hash(values);

@@ -5,15 +5,6 @@
 using namespace nano;
 using namespace nano::program;
 
-static auto make_logger(std::ostringstream& stream, const int stop_at_iters = -1)
-{
-    return [&stream, stop_at_iters = stop_at_iters](const solver_state_t& state)
-    {
-        stream << std::fixed << std::setprecision(12) << state << "\n";
-        return state.m_iters != stop_at_iters;
-    };
-}
-
 static auto make_permutation(const tensor_size_t m)
 {
     auto permutation = arange(0, m);
@@ -64,7 +55,7 @@ struct expected_t
         return *this;
     }
 
-    auto& status(solver_status status)
+    auto& status(const solver_status status)
     {
         m_status = status;
         return *this;
@@ -76,30 +67,10 @@ struct expected_t
         return *this;
     }
 
-    auto& use_logger(const bool use_logger)
-    {
-        m_use_logger = use_logger;
-        return *this;
-    }
-
     auto& fbest(const scalar_t fbest)
     {
         m_fbest = fbest;
         return *this;
-    }
-
-    auto make_solver(std::ostringstream& stream) const
-    {
-        const auto stop_at_iters = m_status == solver_status::stopped ? 3 : -1;
-
-        if (m_use_logger)
-        {
-            return solver_t{make_logger(stream, stop_at_iters)};
-        }
-        else
-        {
-            return solver_t{};
-        }
     }
 
     vector_t      m_xbest;
@@ -107,18 +78,19 @@ struct expected_t
     vector_t      m_x0;
     scalar_t      m_epsilon{1e-8};
     solver_status m_status{solver_status::converged};
-    bool          m_use_logger{true};
 };
 
-template <typename tprogram>
+template <class tprogram>
 auto check_solution_(tprogram program, const expected_t& expected)
 {
     const auto failures = utest_n_failures.load();
 
     program.reduce();
 
+    auto solver = solver_t{};
     auto stream = std::ostringstream{};
-    auto solver = expected.make_solver(stream);
+    solver.logger(make_stream_logger(stream));
+
     auto bstate = (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0) : solver.solve(program);
 
     UTEST_CHECK_EQUAL(bstate.m_status, expected.m_status);
@@ -143,7 +115,7 @@ auto check_solution_(tprogram program, const expected_t& expected)
     return bstate;
 }
 
-template <typename tprogram>
+template <class tprogram>
 auto check_solution(const tprogram& program, const expected_t& expected)
 {
     // test duplicated equality constraints

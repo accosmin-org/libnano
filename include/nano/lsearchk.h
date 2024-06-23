@@ -2,6 +2,7 @@
 
 #include <nano/configurable.h>
 #include <nano/factory.h>
+#include <nano/loggable.h>
 #include <nano/solver/lstep.h>
 
 namespace nano
@@ -38,15 +39,9 @@ inline enum_map_t<lsearch_type> enum_string<lsearch_type>()
 ///
 /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
 ///
-class NANO_PUBLIC lsearchk_t : public configurable_t, public clonable_t<lsearchk_t>
+class NANO_PUBLIC lsearchk_t : public typed_t, public configurable_t, public loggable_t, public clonable_t<lsearchk_t>
 {
 public:
-    ///
-    /// logging operator called for each trial of the line-search step size:
-    ///     op(solver_state_at_0, solver_state_at_t, descent direction, step_size).
-    ///
-    using logger_t = std::function<void(const solver_state_t&, const solver_state_t&, const vector_t&, scalar_t)>;
-
     ///
     /// line-search result: <success flag, step size>.
     ///
@@ -66,11 +61,6 @@ public:
     /// \brief compute the step size starting from the given state and the initial estimate of the step size.
     ///
     result_t get(solver_state_t&, const vector_t& descent, scalar_t initial_step_size) const;
-
-    ///
-    /// \brief set the logging operator.
-    ///
-    void logger(const logger_t& logger);
 
     ///
     /// \brief minimum allowed line-search step.
@@ -95,7 +85,6 @@ protected:
 
 private:
     // attributes
-    logger_t     m_logger;                   ///<
     lsearch_type m_type{lsearch_type::none}; ///<
 };
 } // namespace nano

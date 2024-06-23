@@ -31,6 +31,9 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     auto csearch   = csearch_t::make(function, *this, prefix);
     auto proximity = proximity_t::make(state, *this, prefix);
 
+    bundle.logger(logger());
+    csearch.logger(logger());
+
     auto Gn  = state.gx(); ///< approximation of the gradient of Moreau-Yosida regularization model at x_n
     auto Gn1 = state.gx(); ///< same at x_{n+1} - the next proximity center
 

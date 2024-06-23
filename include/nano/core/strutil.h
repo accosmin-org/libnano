@@ -20,7 +20,7 @@ enum class alignment : uint8_t
 /// \brief cast string to scalar value.
 /// NB: the enumerations are handled separetely.
 ///
-template <typename tvalue>
+template <class tvalue>
 tvalue from_string(const std::string_view& str)
 {
     if constexpr (std::is_arithmetic_v<tvalue>)
@@ -67,7 +67,7 @@ tvalue from_string(const std::string_view& str)
 ///
 /// \brief cast string to value and use the given default value if casting fails.
 ///
-template <typename tvalue>
+template <class tvalue>
 tvalue from_string(const std::string_view& str, const tvalue& default_value)
 {
     try
@@ -83,16 +83,16 @@ tvalue from_string(const std::string_view& str, const tvalue& default_value)
 ///
 /// \brief check if a string starts with a token (case sensitive).
 ///
-NANO_PUBLIC bool starts_with(const std::string_view& str, const std::string_view& token);
+NANO_PUBLIC bool starts_with(std::string_view str, std::string_view token);
 
 ///
 /// \brief check if a string ends with a token (case sensitive).
 ///
-NANO_PUBLIC bool ends_with(const std::string_view& str, const std::string_view& token);
+NANO_PUBLIC bool ends_with(std::string_view str, std::string_view token);
 
 ///
 /// \brief align a string to fill the given size (if possible).
 ///
-NANO_PUBLIC string_t align(const std::string_view& str, size_t str_size, alignment mode = alignment::left,
+NANO_PUBLIC string_t align(std::string_view str, size_t str_size, alignment mode = alignment::left,
                            char fill_char = ' ');
 } // namespace nano

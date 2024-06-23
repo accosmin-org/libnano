@@ -2,7 +2,6 @@
 #include "fixture/lsearchk.h"
 #include "fixture/solver.h"
 #include <iomanip>
-#include <nano/core/logger.h>
 #include <nano/solver/quasi.h>
 
 using namespace nano;
@@ -90,10 +89,9 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         const auto state = check_minimize(*solver, *function, x0, config);
                         config.expected_minimum(state.fx());
 
-                        log_info() << std::fixed << std::setprecision(10) << function->name()
-                                   << ": solver=" << solver_id << ",lsearch0=" << lsearch0_id
-                                   << ",lsearchk=" << lsearchk_id << ",fx=" << state.fx() << ",calls=" << state.fcalls()
-                                   << "|" << state.gcalls() << ".";
+                        log_info(std::fixed, std::setprecision(10), function->name(), ": solver=", solver_id,
+                                 ",lsearch0=", lsearch0_id, ",lsearchk=", lsearchk_id, ",fx=", state.fx(),
+                                 ",calls=", state.fcalls(), "|", state.gcalls(), ".");
                     }
                 }
             }
@@ -121,9 +119,9 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
                 const auto state = check_minimize(*solver, *function, x0, config);
                 config.expected_minimum(state.fx());
 
-                log_info() << std::fixed << std::setprecision(10) << function->name() << ": solver=" << solver_id
-                           << ",lsearch0=cgdescent,lsearchk=cgdescent,fx=" << state.fx() << ",calls=" << state.fcalls()
-                           << "|" << state.gcalls() << ".";
+                log_info(std::fixed, std::setprecision(10), function->name(), ": solver=", solver_id,
+                         ",lsearch0=cgdescent,lsearchk=cgdescent,fx=", state.fx(), ",calls=", state.fcalls(), "|",
+                         state.gcalls(), ".");
             }
         }
     }

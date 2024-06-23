@@ -16,35 +16,35 @@ auto make_features()
     };
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 auto make_scalars(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<scalar_t>(make_dims(samples), values...);
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 auto make_sclass_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<int32_t>(make_dims(samples), values...);
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 auto make_mclass_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values)) / 3;
     return make_tensor<int8_t>(make_dims(samples, 3), values...);
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 auto make_scalar_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values));
     return make_tensor<scalar_t>(make_dims(samples), values...);
 }
 
-template <typename... tvalues>
+template <class... tvalues>
 auto make_struct_data(const tvalues... values)
 {
     const auto samples = static_cast<tensor_size_t>(sizeof...(values)) / 4;

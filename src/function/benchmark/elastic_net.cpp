@@ -40,7 +40,7 @@ auto make_outputs(const tensor_size_t)
 }
 } // namespace
 
-template <typename tloss>
+template <class tloss>
 function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t alpha1, const scalar_t alpha2,
                                         const tensor_size_t summands)
     : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), ::make_size(dims))
@@ -53,13 +53,13 @@ function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t
     strong_convexity(m_alpha2);
 }
 
-template <typename tloss>
+template <class tloss>
 rfunction_t function_enet_t<tloss>::clone() const
 {
     return std::make_unique<function_enet_t<tloss>>(*this);
 }
 
-template <typename tloss>
+template <class tloss>
 scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     const auto targets = this->targets();
@@ -76,7 +76,7 @@ scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
     return fx;
 }
 
-template <typename tloss>
+template <class tloss>
 rfunction_t function_enet_t<tloss>::make(tensor_size_t dims, tensor_size_t summands) const
 {
     return std::make_unique<function_enet_t<tloss>>(dims, m_alpha1, m_alpha2, summands);

@@ -23,7 +23,7 @@ namespace nano
 /// (2): "On the design of loss functions for classification: theory, robustness to outliers, and SavageBoost",
 ///      2008, by H. Masnadi-Shirazi, N. Vasconcelos
 ///
-template <typename tloss>
+template <class tloss>
 class flatten_loss_t final : public loss_t
 {
 public:
@@ -90,14 +90,14 @@ namespace detail
 ///
 /// \brief class negative log-likelihood loss (also called cross-entropy loss).
 ///
-template <typename terror>
+template <class terror>
 struct classnll_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "classnll";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         tensor_size_t imax = 0;
@@ -116,7 +116,7 @@ struct classnll_t : public terror
         return std::log(value) - posum + omax;
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         tensor_size_t imax = 0;
@@ -141,20 +141,20 @@ struct classnll_t : public terror
 ///
 /// \brief multi-class exponential loss.
 ///
-template <typename terror>
+template <class terror>
 struct exponential_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "exponential";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (-target * output).exp().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * (-target * output).exp();
@@ -164,14 +164,14 @@ struct exponential_t : public terror
 ///
 /// \brief multi-class logistic loss.
 ///
-template <typename terror>
+template <class terror>
 struct logistic_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "logistic";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         scalar_t value = 0.0;
@@ -183,7 +183,7 @@ struct logistic_t : public terror
         return value;
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
@@ -198,20 +198,20 @@ struct logistic_t : public terror
 ///
 /// \brief multi-class hinge loss.
 ///
-template <typename terror>
+template <class terror>
 struct hinge_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = false;
     static constexpr auto basename = "hinge";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (1 - target * output).max(0).sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * ((1 - target * output).sign() + 1) * 0.5;
@@ -221,20 +221,20 @@ struct hinge_t : public terror
 ///
 /// \brief multi-class squared hinge loss (smooth version of the hinge loss).
 ///
-template <typename terror>
+template <class terror>
 struct squared_hinge_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "squared-hinge";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (1 - target * output).max(0).square().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * ((1 - target * output).max(0)) * 2.0;
@@ -244,20 +244,20 @@ struct squared_hinge_t : public terror
 ///
 /// \brief multi-class savage loss.
 ///
-template <typename terror>
+template <class terror>
 struct savage_t : public terror
 {
     static constexpr auto convex   = false;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "savage";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (1 / (1 + (target * output).exp()).square()).sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -2 * target / ((1 + (target * output).exp()).square() * (1 + (-target * output).exp()));
@@ -267,20 +267,20 @@ struct savage_t : public terror
 ///
 /// \brief multi-class tangent loss.
 ///
-template <typename terror>
+template <class terror>
 struct tangent_t : public terror
 {
     static constexpr auto convex   = false;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "tangent";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (2 * (target * output).atan() - 1).square().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
@@ -290,20 +290,20 @@ struct tangent_t : public terror
 ///
 /// \brief absolute-difference loss.
 ///
-template <typename terror>
+template <class terror>
 struct mae_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = false;
     static constexpr auto basename = "mae";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return (output - target).abs().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = (output - target).sign();
@@ -313,20 +313,20 @@ struct mae_t : public terror
 ///
 /// \brief squared-difference loss.
 ///
-template <typename terror>
+template <class terror>
 struct mse_t : public terror
 {
     static constexpr auto convex   = true;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "mse";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return scalar_t(0.5) * (output - target).square().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = output - target;
@@ -336,20 +336,20 @@ struct mse_t : public terror
 ///
 /// \brief robust-to-noise Cauchy loss.
 ///
-template <typename terror>
+template <class terror>
 struct cauchy_t : public terror
 {
     static constexpr auto convex   = false;
     static constexpr auto smooth   = true;
     static constexpr auto basename = "cauchy";
 
-    template <typename tarray>
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
         return scalar_t(0.5) * ((target - output).square() + 1).log().sum();
     }
 
-    template <typename tarray, typename tgarray>
+    template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = (output - target) / (1 + (output - target).square());

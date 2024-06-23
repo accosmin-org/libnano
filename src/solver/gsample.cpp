@@ -23,7 +23,7 @@ struct sampler_t
     {
     }
 
-    template <typename tmatrix>
+    template <class tmatrix>
     void descent(program::quadratic_program_t& program, const tmatrix& W, vector_t& g)
     {
         const auto G = m_G.slice(0, m_psize);
@@ -79,7 +79,7 @@ struct linesearch_t
     {
     }
 
-    template <typename thessian>
+    template <class thessian>
     scalar_t step(vector_t& x, const vector_t& g, solver_state_t& state, const thessian& H)
     {
         const auto& function = state.function();
@@ -153,7 +153,7 @@ struct gs::fixed_sampler_t final : public sampler_t
         assert(m_psize == m_G.rows());
     }
 
-    template <typename tmatrix>
+    template <class tmatrix>
     void descent(const tmatrix& W, vector_t& g)
     {
         sampler_t::descent(m_program, W, g);
@@ -204,7 +204,7 @@ struct gs::adaptive_sampler_t final : public sampler_t
         }
     }
 
-    template <typename tmatrix>
+    template <class tmatrix>
     void descent(const tmatrix& W, vector_t& g)
     {
         auto program = make_program(m_psize);
@@ -329,7 +329,7 @@ struct gs::ags_lbfgs_type_id_t
     static auto str() { return "ags-lbfgs"; }
 };
 
-template <typename tsampler, typename tpreconditioner, typename ttype_id>
+template <class tsampler, class tpreconditioner, class ttype_id>
 base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::base_solver_gs_t()
     : solver_t(ttype_id::str())
 {
@@ -348,13 +348,13 @@ base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::base_solver_gs_t()
     register_parameter(parameter_t::make_integer(basename + "lsearch_max_iters", 0, LT, 50, LE, 100));
 }
 
-template <typename tsampler, typename tpreconditioner, typename ttype_id>
+template <class tsampler, class tpreconditioner, class ttype_id>
 rsolver_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::clone() const
 {
     return std::make_unique<base_solver_gs_t<tsampler, tpreconditioner, ttype_id>>(*this);
 }
 
-template <typename tsampler, typename tpreconditioner, typename ttype_id>
+template <class tsampler, class tpreconditioner, class ttype_id>
 solver_state_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::do_minimize(const function_t& function,
                                                                                   const vector_t&   x0) const
 {

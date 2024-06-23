@@ -16,22 +16,6 @@ auto make_functions()
     return function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
 }
 
-void setup_logger(lsearchk_t& lsearch, std::stringstream& stream)
-{
-    lsearch.logger(
-        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-            const scalar_t step_size)
-        {
-            const auto [c1, c2] = lsearch.parameter("lsearchk::tolerance").value_pair<scalar_t>();
-
-            stream << "\tt=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
-                   << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
-                   << ",wolfe=" << state.has_wolfe(state0, descent, c2)
-                   << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2)
-                   << ",awolfe=" << state.has_approx_wolfe(state0, descent, c1, c2) << ".\n";
-        });
-}
-
 void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,
           const std::tuple<scalar_t, scalar_t>& c12)
 {
@@ -53,7 +37,7 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
     stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
            << state0.x().transpose() << "],t0=" << t0 << ",f0=" << state0.fx() << ",g0=" << state0.gradient_test()
            << "\n";
-    setup_logger(*lsearch, stream);
+    lsearch->logger(make_stream_logger(stream));
 
     const auto cgdescent_epsilon = [&]()
     { return lsearch->parameter("lsearchk::cgdescent::epsilon").value<scalar_t>(); };

@@ -28,7 +28,7 @@ public:
     ///
     /// \brief enqueue a new task to execute.
     ///
-    template <typename tfunction>
+    template <class tfunction>
     future_t enqueue(tfunction&& f)
     {
         auto task   = task_t(std::forward<tfunction>(f));
@@ -44,7 +44,7 @@ public:
     ///
     /// \brief enqueue a new task without any locking.
     ///
-    template <typename tfunction>
+    template <class tfunction>
     future_t enqueue_no_lock(tfunction&& f)
     {
         auto task   = task_t(std::forward<tfunction>(f));
@@ -153,7 +153,7 @@ public:
     ///
     /// \brief enqueue a new task to execute.
     ///
-    template <typename tfunction>
+    template <class tfunction>
     future_t enqueue(tfunction&& f)
     {
         return m_queue.enqueue(std::forward<tfunction>(f));
@@ -176,7 +176,7 @@ public:
     /// NB: the operator receives the element index to process and the assigned thread index:
     ///     op(index, tnum)
     ///
-    template <typename tsize, typename toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
+    template <class tsize, class toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
     void map(tsize elements, const toperator& op, bool raise = true)
     {
         if (size() == 1 || elements <= 1)
@@ -210,7 +210,7 @@ public:
     /// NB: the operator receives the range [begin, end) of elements to process and the assigned thread index:
     ///     op(begin, end, tnum)
     ///
-    template <typename tsize, typename toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
+    template <class tsize, class toperator, std::enable_if_t<std::is_integral_v<tsize>, bool> = true>
     void map(tsize elements, tsize chunksize, const toperator& op, bool raise = true)
     {
         assert(chunksize >= tsize(1));

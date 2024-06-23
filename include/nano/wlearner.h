@@ -15,7 +15,7 @@ using rwlearners_t = std::vector<rwlearner_t>;
 ///     - easy to fit to the given residuals (aka the solution can be found analytically),
 ///     - with rather low accuracy that can be boosted by assemblying many of them using e.g. GradientBoosting.
 ///
-class NANO_PUBLIC wlearner_t : public learner_t, public clonable_t<wlearner_t>
+class NANO_PUBLIC wlearner_t : public typed_t, public learner_t, public loggable_t, public clonable_t<wlearner_t>
 {
 public:
     ///

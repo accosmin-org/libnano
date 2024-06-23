@@ -1,4 +1,4 @@
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/single.h>
 #include <nano/wlearner/util.h>

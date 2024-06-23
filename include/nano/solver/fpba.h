@@ -26,7 +26,7 @@ struct sequence2_t;
 ///
 /// \brief base class for fast proximal bundle algorithsm (FPBAx).
 ///
-template <typename tsequence>
+template <class tsequence>
 class NANO_PUBLIC base_solver_fpba_t final : public solver_t
 {
 public:

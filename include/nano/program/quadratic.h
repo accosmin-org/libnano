@@ -45,7 +45,7 @@ struct NANO_PUBLIC quadratic_program_t : public linear_constrained_t
 ///
 /// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
 ///
-template <typename... tconstraints>
+template <class... tconstraints>
 auto make_quadratic(matrix_t Q, vector_t c, const tconstraints&... constraints)
 {
     auto program = quadratic_program_t{std::move(Q), std::move(c)};
@@ -56,7 +56,7 @@ auto make_quadratic(matrix_t Q, vector_t c, const tconstraints&... constraints)
 ///
 /// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
 ///
-template <typename... tconstraints>
+template <class... tconstraints>
 auto make_quadratic_upper_triangular(const vector_t& Q_upper_triangular, vector_t c, const tconstraints&... constraints)
 {
     auto program = quadratic_program_t{Q_upper_triangular, std::move(c)};

@@ -244,7 +244,7 @@ auto make_datasource(tensor_size_t samples, const features_t& features, size_t t
     return datasource;
 }
 
-template <typename tdata>
+template <class tdata>
 void check_inputs_or_target(const datasource_t& datasource, const features_t& features, const size_t ifeature,
                             const size_t target, const tdata& data, const mask_cmap_t& mask)
 {

@@ -70,7 +70,7 @@ struct csv_t
     /// \brief parse the current configured CSV and call the given operator for each line.
     /// NB: optionally a base directory path can be given as a prefix.
     ///
-    template <typename toperator>
+    template <class toperator>
     auto parse(const string_t& basedir, const toperator& op) const
     {
         const auto path = basedir.empty() ? m_path : (basedir + "/" + m_path);
@@ -96,7 +96,7 @@ struct csv_t
         return true;
     }
 
-    template <typename toperator>
+    template <class toperator>
     auto parse(const toperator& op) const
     {
         return parse(string_t{}, op);

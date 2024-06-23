@@ -27,14 +27,14 @@ public:
     ///
     /// \brief extract the weight matrix from the given tensor
     ///
-    template <typename ttensor>
+    template <class ttensor>
     auto weights(ttensor& x) const
     {
         assert(x.size() == m_isize * m_tsize + m_tsize);
         return map_tensor(x.data(), m_tsize, m_isize);
     }
 
-    template <typename ttensor>
+    template <class ttensor>
     auto weights(const ttensor& x) const
     {
         assert(x.size() == m_isize * m_tsize + m_tsize);
@@ -44,14 +44,14 @@ public:
     ///
     /// \brief extract the bias vector from the given tensor
     ///
-    template <typename ttensor>
+    template <class ttensor>
     auto bias(ttensor& x) const
     {
         assert(x.size() == m_isize * m_tsize + m_tsize);
         return map_tensor(x.data() + m_isize * m_tsize, m_tsize);
     }
 
-    template <typename ttensor>
+    template <class ttensor>
     auto bias(const ttensor& x) const
     {
         assert(x.size() == m_isize * m_tsize + m_tsize);

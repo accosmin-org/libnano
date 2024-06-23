@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/datasource/mask.h>
 #include <nano/feature.h>
 
@@ -42,7 +42,7 @@ public:
     #pragma warning(push)
     #pragma warning(disable : 4702) // NB: unreachable code for the default switch label below!
 #endif
-    template <typename tscalar, typename tvalue>
+    template <class tscalar, class tvalue>
     void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
     {
         tensor_size_t label = 0; // NOLINT(misc-const-correctness)
@@ -72,7 +72,7 @@ public:
     ///
     /// \brief set the feature value of a sample for a multi-label categorical feature.
     ///
-    template <typename tscalar, typename tvalue>
+    template <class tscalar, class tvalue>
     void set(const tensor_map_t<tscalar, 2>& data, [[maybe_unused]] tensor_size_t sample, const tvalue& value) const
     {
         if constexpr (::nano::is_tensor_v<tvalue>)
@@ -98,7 +98,7 @@ public:
     ///
     /// \brief set the feature value of a sample for a continuous scalar or structured feature.
     ///
-    template <typename tscalar, typename tvalue>
+    template <class tscalar, class tvalue>
     void set(const tensor_map_t<tscalar, 4>& data, [[maybe_unused]] tensor_size_t sample, const tvalue& value) const
     {
         if constexpr (std::is_same_v<tvalue, string_t> || std::is_same_v<tvalue, const char*> ||
@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    template <typename tscalar>
+    template <class tscalar>
     auto check_from_string(const char* type, const std::string_view& value) const
     {
         tscalar scalar;

@@ -33,6 +33,5 @@ scalar_t lsearch0_linear_t::get(const solver_state_t& state, const vector_t& des
     }
 
     m_prevdg = dg;
-    log(state, t0);
     return t0;
 }

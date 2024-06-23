@@ -5,7 +5,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-template <typename tlearner, typename... tfit_args>
+template <class tlearner, class... tfit_args>
 [[maybe_unused]] static auto check_fit(const dataset_t& dataset, const tfit_args&... fit_args)
 {
     auto learner = tlearner{};

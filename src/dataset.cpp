@@ -44,7 +44,7 @@ void handle_struct(const tensor_size_t ifeature, const feature_t& feature)
     critical(!feature.is_struct(), "dataset: unhandled structured feature <", ifeature, ":", feature, ">!");
 }
 
-template <typename tscalar, size_t trank, typename... tindices>
+template <class tscalar, size_t trank, class... tindices>
 auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
 {
     if (buffer.size() < ::nano::size(make_dims(dims...)))

@@ -159,7 +159,7 @@ static void check_result(const result_t& result, const strings_t& expected_param
     }
 }
 
-template <typename tdatasource>
+template <class tdatasource>
 auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const tensor_size_t folds = 2)
 {
     const auto loss       = make_loss("mse");

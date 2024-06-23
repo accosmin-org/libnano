@@ -7,7 +7,7 @@ using namespace nano;
 
 namespace
 {
-template <typename tderived>
+template <class tderived>
 class sequence_t
 {
 public:
@@ -81,7 +81,7 @@ struct proximal::sequence2_t final : public sequence_t<proximal::sequence2_t>
     static auto str() { return "2"; }
 };
 
-template <typename tsequence>
+template <class tsequence>
 base_solver_fpba_t<tsequence>::base_solver_fpba_t()
     : solver_t(scat("fpba", tsequence::str()))
 {
@@ -93,13 +93,13 @@ base_solver_fpba_t<tsequence>::base_solver_fpba_t()
     proximity_t::config(*this, prefix);
 }
 
-template <typename tsequence>
+template <class tsequence>
 rsolver_t base_solver_fpba_t<tsequence>::clone() const
 {
     return std::make_unique<base_solver_fpba_t<tsequence>>(*this);
 }
 
-template <typename tsequence>
+template <class tsequence>
 solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& function, const vector_t& x0) const
 {
     const auto prefix    = scat("solver::", type_id());

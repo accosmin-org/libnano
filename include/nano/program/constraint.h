@@ -7,7 +7,7 @@ namespace nano::program
 ///
 /// \brief models a linear constraint: A * x ? b.
 ///
-template <typename tmatrixA, typename tvectorb>
+template <class tmatrixA, class tvectorb>
 struct constraint_t
 {
     static_assert(is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>);

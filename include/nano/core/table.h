@@ -104,7 +104,7 @@ public:
     row_t& operator<<(const char*);
     row_t& operator<<(const string_t&);
 
-    template <typename tscalar>
+    template <class tscalar>
     row_t& operator<<(const tscalar& value)
     {
         m_cells.emplace_back(scat(value), m_colspan, m_alignment, m_colfill);
@@ -112,7 +112,7 @@ public:
         return (*this) << colspan(1) << alignment::left << colfill(' ');
     }
 
-    template <typename tscalar>
+    template <class tscalar>
     row_t& operator<<(const std::vector<tscalar>& values)
     {
         for (const auto& value : values)
@@ -137,7 +137,7 @@ public:
     ///
     /// \brief collect the columns as scalar values using nano::from_string<tscalar>.
     ///
-    template <typename tscalar>
+    template <class tscalar>
     auto collect() const
     {
         std::vector<std::pair<size_t, tscalar>> values;
@@ -166,7 +166,7 @@ public:
     ///
     /// \brief select the columns that satisfy the given operator
     ///
-    template <typename tscalar, typename toperator>
+    template <class tscalar, class toperator>
     auto select(const toperator& op) const
     {
         std::vector<size_t> indices;
@@ -243,7 +243,7 @@ public:
     /// \brief (stable) sort the table using the given operator and columns.
     /// e.g. toperator can be nano::make_[less|greater]_from_string<tscalar>
     ///
-    template <typename toperator>
+    template <class toperator>
     void sort(const toperator& comp, const std::vector<size_t>& columns)
     {
         const auto op = [&](const row_t& row1, const row_t& row2)
@@ -280,7 +280,7 @@ public:
     ///
     /// \brief mark row-wise the selected columns with the given operator.
     ///
-    template <typename tmarker>
+    template <class tmarker>
     void mark(const tmarker& marker, const char* marker_string = " (*)")
     {
         for (auto& row : m_rows)
@@ -330,12 +330,12 @@ inline bool operator==(const table_t& t1, const table_t& t2)
 ///
 /// \brief pretty-print the table.
 ///
-NANO_PUBLIC std::ostream& operator<<(std::ostream& os, const table_t& table);
+NANO_PUBLIC std::ostream& operator<<(std::ostream& stream, const table_t& table);
 
 ///
 /// \brief construct an operator to compare two strings numerically.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_less_from_string()
 {
     return [](const string_t& v1, const string_t& v2)
@@ -348,7 +348,7 @@ auto make_less_from_string()
 ///
 /// \brief construct an operator to compare two strings numerically.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_greater_from_string()
 {
     return [](const string_t& v1, const string_t& v2)
@@ -360,21 +360,21 @@ auto make_greater_from_string()
 
 namespace detail
 {
-template <typename tscalar>
+template <class tscalar>
 auto min_element(const std::vector<std::pair<size_t, tscalar>>& values)
 {
     const auto comp = [](const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
     return std::min_element(values.begin(), values.end(), comp);
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto max_element(const std::vector<std::pair<size_t, tscalar>>& values)
 {
     const auto comp = [](const auto& cv1, const auto& cv2) { return cv1.second < cv2.second; };
     return std::max_element(values.begin(), values.end(), comp);
 }
 
-template <typename tscalar, typename toperator>
+template <class tscalar, class toperator>
 std::vector<size_t> filter(const std::vector<std::pair<size_t, tscalar>>& values, const toperator& op)
 {
     std::vector<size_t> indices;
@@ -389,13 +389,13 @@ std::vector<size_t> filter(const std::vector<std::pair<size_t, tscalar>>& values
     return indices;
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::vector<size_t> filter_less(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
 {
     return filter(values, [threshold = threshold](const auto& cvlt) { return cvlt < threshold; });
 }
 
-template <typename tscalar>
+template <class tscalar>
 std::vector<size_t> filter_greater(const std::vector<std::pair<size_t, tscalar>>& values, const tscalar threshold)
 {
     return filter(values, [threshold = threshold](const auto& cvgt) { return cvgt > threshold; });
@@ -405,7 +405,7 @@ std::vector<size_t> filter_greater(const std::vector<std::pair<size_t, tscalar>>
 ///
 /// \brief select the column with the minimum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_minimum_col()
 {
     return [](const row_t& row)
@@ -419,7 +419,7 @@ auto make_marker_minimum_col()
 ///
 /// \brief select the column with the maximum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_maximum_col()
 {
     return [](const row_t& row)
@@ -433,7 +433,7 @@ auto make_marker_maximum_col()
 ///
 /// \brief select the columns within [0, epsilon] from the maximum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_maximum_epsilon_cols(const tscalar epsilon)
 {
     return [epsilon = epsilon](const row_t& row)
@@ -447,7 +447,7 @@ auto make_marker_maximum_epsilon_cols(const tscalar epsilon)
 ///
 /// \brief select the columns within [0, epsilon] from the minimum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_minimum_epsilon_cols(const tscalar epsilon)
 {
     return [epsilon = epsilon](const row_t& row)
@@ -461,7 +461,7 @@ auto make_marker_minimum_epsilon_cols(const tscalar epsilon)
 ///
 /// \brief select the columns within [0, percentage]% from the maximum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_maximum_percentage_cols(const tscalar percentage)
 {
     return [percentage = percentage](const row_t& row)
@@ -480,7 +480,7 @@ auto make_marker_maximum_percentage_cols(const tscalar percentage)
 ///
 /// \brief select the columns within [0, percentage]% from the minimum value.
 ///
-template <typename tscalar>
+template <class tscalar>
 auto make_marker_minimum_percentage_cols(const tscalar percentage)
 {
     return [percentage = percentage](const row_t& row)

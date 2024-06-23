@@ -32,6 +32,5 @@ scalar_t lsearch0_quadratic_t::get(const solver_state_t& state, const vector_t& 
 
     m_prevf  = state.fx();
     m_prevdg = state.dg(descent);
-    log(state, t0);
     return t0;
 }

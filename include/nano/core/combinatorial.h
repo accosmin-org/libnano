@@ -9,7 +9,7 @@ namespace nano
 /// \brief generate all combinations of the given number of elements per dimension
 ///     (e.g. number of distinct values per parameter).
 ///
-template <typename tindex, std::enable_if_t<std::is_integral_v<tindex>, bool> = true>
+template <class tindex, std::enable_if_t<std::is_integral_v<tindex>, bool> = true>
 class combinatorial_iterator_t
 {
 public:

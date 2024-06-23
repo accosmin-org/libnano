@@ -1,4 +1,4 @@
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/tuner/space.h>
 
 using namespace nano;

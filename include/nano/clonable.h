@@ -1,35 +1,29 @@
 #pragma once
 
 #include <memory>
-#include <nano/string.h>
 
 namespace nano
 {
 ///
-/// \brief interface for objects that can be:
-///     - copied exactly and
-///     - identified with a type ID (useful within factories) to identify the specific implementation.
+/// \brief interface for objects that can be cloned (copied exactly).
 ///
-template <typename tobject>
+template <class tobject>
 class clonable_t
 {
 public:
     ///
-    /// \brief constructor
+    /// \brief default contructor
     ///
-    explicit clonable_t(string_t type_id)
-        : m_type_id(std::move(type_id))
-    {
-    }
+    clonable_t() = default;
 
     ///
-    /// \brief enable copying
+    /// \brief enable copying.
     ///
     clonable_t(const clonable_t&)            = default;
     clonable_t& operator=(const clonable_t&) = default;
 
     ///
-    /// \brief enable moving
+    /// \brief enable moving.
     ///
     clonable_t(clonable_t&&) noexcept            = default;
     clonable_t& operator=(clonable_t&&) noexcept = default;
@@ -43,14 +37,5 @@ public:
     /// \brief returns a copy of the current object.
     ///
     virtual std::unique_ptr<tobject> clone() const = 0;
-
-    ///
-    /// \brief returns the object's type ID.
-    ///
-    const string_t& type_id() const { return m_type_id; }
-
-private:
-    // attributes
-    string_t m_type_id; ///< type ID
 };
 } // namespace nano

@@ -5,7 +5,7 @@
 
 namespace nano
 {
-template <template <typename, size_t> class, typename, size_t>
+template <template <class, size_t> class, class, size_t>
 class tensor_t;
 
 namespace detail
@@ -22,7 +22,7 @@ inline void sprint(std::ostream& stream, const char c, const tensor_size_t count
 ///
 /// \brief pretty-print the given tensor.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 std::ostream& pprint(std::ostream& stream, const tensor_t<tstorage, tscalar, trank>& tensor,
                      const tensor_size_t prefix_space = 0, const tensor_size_t prefix_delim = 0,
                      const tensor_size_t suffix = 0)

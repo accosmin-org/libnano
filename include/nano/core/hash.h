@@ -15,7 +15,7 @@ inline uint64_t hash_combine(const uint64_t seed, const uint64_t hash)
     return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
-template <typename tscalar, typename tsize>
+template <class tscalar, class tsize>
 uint64_t hash(const tscalar* data, const tsize size)
 {
     static_assert(sizeof(float) == 4);

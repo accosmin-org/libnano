@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 static auto check_inputs(const datasource_t& datasource, const tensor_size_t index, const feature_t& gt_feature,
                          const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
 {
@@ -24,7 +24,7 @@ static auto check_inputs(const datasource_t& datasource, const tensor_size_t ind
     datasource.visit_inputs(index, visitor);
 }
 
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 static auto check_target(const datasource_t& datasource, const feature_t& gt_feature,
                          const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
 {

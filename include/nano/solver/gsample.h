@@ -42,7 +42,7 @@ struct ags_lbfgs_type_id_t;
 ///
 /// \brief base class for gradient sampling solvers.
 ///
-template <typename tsampler, typename tpreconditioner, typename ttype_id>
+template <class tsampler, class tpreconditioner, class ttype_id>
 class NANO_PUBLIC base_solver_gs_t final : public solver_t
 {
 public:

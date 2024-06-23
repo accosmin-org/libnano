@@ -1,13 +1,13 @@
+#include <filesystem>
 #include <iomanip>
 #include <nano/core/chrono.h>
 #include <nano/core/cmdline.h>
-#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 #include <nano/core/parallel.h>
-#include <nano/core/parameter_tracker.h>
 #include <nano/core/table.h>
+#include <nano/critical.h>
+#include <nano/main.h>
 #include <nano/solver.h>
-#include <nano/tensor.h>
 
 using namespace nano;
 
@@ -112,50 +112,6 @@ using points_t = std::vector<vector_t>;
 using results_t = std::vector<result_t>;
 using solvers_t = std::vector<rsolver_t>;
 
-auto log_solver(const function_t& function, const rsolver_t& solver, const vector_t& x0)
-{
-    std::cout << std::fixed << std::setprecision(10);
-    std::cout << function.name() << " solver[" << solver->type_id() << "],lsearch0["
-              << (solver->type() == solver_type::line_search ? solver->lsearch0().type_id() : string_t("N/A"))
-              << "],lsearchk["
-              << (solver->type() == solver_type::line_search ? solver->lsearchk().type_id() : string_t("N/A")) << "]\n";
-
-    solver->logger(
-        [&](const solver_state_t& state)
-        {
-            std::cout << "descent: " << state << ".\n";
-            return true;
-        });
-
-    solver->lsearch0_logger(
-        [&](const solver_state_t& state0, const scalar_t step_size) {
-            std::cout << "\tlsearch(0): t=" << step_size << ",f=" << state0.fx() << ",g=" << state0.gradient_test()
-                      << ".\n";
-        });
-
-    solver->lsearchk_logger(
-        [&](const solver_state_t& state0, const solver_state_t& state, const vector_t& descent,
-            const scalar_t step_size)
-        {
-            const auto [c1, c2] = solver->parameter("solver::tolerance").value_pair<scalar_t>();
-
-            std::cout << "\tlsearch(t): t=" << step_size << ",f=" << state.fx() << ",g=" << state.gradient_test()
-                      << ",armijo=" << state.has_armijo(state0, descent, step_size, c1)
-                      << ",wolfe=" << state.has_wolfe(state0, descent, c2)
-                      << ",swolfe=" << state.has_strong_wolfe(state0, descent, c2) << ".\n";
-        });
-
-    auto state = solver->minimize(function, x0);
-    std::cout << std::flush;
-
-    // NB: need to reset the logger for the next batch of tests!
-    solver->logger({});
-    solver->lsearch0_logger({});
-    solver->lsearchk_logger({});
-
-    return state;
-}
-
 auto& print_scalar(row_t& row, const scalar_t value)
 {
     return std::isfinite(value) ? (row << value) : (row << "N/A");
@@ -204,12 +160,23 @@ void print_table(const string_t& table_name, const solvers_t& solvers, const std
 }
 
 auto minimize_all(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const points_t& x0s,
-                  const bool log_failures, const bool log_maxits)
+                  const string_t& log_dir)
 {
     const auto minimize_one = [&](const size_t i)
     {
-        const auto& x0     = x0s[i / solvers.size()];
-        const auto& solver = solvers[i % solvers.size()];
+        const auto itrial  = i / solvers.size();
+        const auto isolver = i % solvers.size();
+
+        const auto& x0     = x0s[itrial];
+        const auto  solver = solvers[isolver]->clone();
+
+        if (!log_dir.empty())
+        {
+            const auto path = std::filesystem::path(log_dir) / function.name() / scat("trial", itrial + 1) /
+                              scat(solver->type_id(), ".log");
+
+            solver->logger(make_file_logger(path.string()));
+        }
 
         const auto timer = nano::timer_t{};
         const auto state = solver->minimize(*function.clone(), x0);
@@ -218,34 +185,20 @@ auto minimize_all(parallel::pool_t& pool, const function_t& function, const solv
         return result_t{state, milli};
     };
 
-    results_t results{x0s.size() * solvers.size()};
-    pool.map(results.size(), [&](size_t i, size_t) { results[i] = minimize_one(i); });
-
-    for (size_t i = 0; i < results.size() && (log_failures || log_maxits); ++i)
-    {
-        // log in full detail the optimization trajectory if it fails
-        if ((results[i].m_status == solver_status::max_iters && log_maxits) ||
-            (results[i].m_status == solver_status::failed && log_failures))
-        {
-            const auto& x0     = x0s[i / solvers.size()];
-            const auto& solver = solvers[i % solvers.size()];
-            const auto  state  = log_solver(function, solver, x0);
-            assert(state.status() == results[i].m_status);
-        }
-    }
-
+    auto results = results_t{x0s.size() * solvers.size()};
+    pool.map(results.size(), [&](const size_t i, const size_t) { results[i] = minimize_one(i); });
     return results;
 }
 
 auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
-               const bool log_failures, const bool log_maxits)
+               const string_t& log_dir)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
     std::generate(x0s.begin(), x0s.end(), [&]() { return make_random_vector<scalar_t>(function.size()); });
 
     // and minimize in parallel all (solver, random initial point) combinations
-    const auto results = minimize_all(pool, function, solvers, x0s, log_failures, log_maxits);
+    const auto results = minimize_all(pool, function, solvers, x0s, log_dir);
 
     // gather statistics per solver
     auto stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{trials}};
@@ -294,45 +247,41 @@ int unsafe_main(int argc, const char* argv[])
 
     // parse the command line
     cmdline_t cmdline("benchmark solvers");
-    cmdline.add("", "solver", "regex to select solvers", ".+");
-    cmdline.add("", "function", "regex to select test functions", ".+");
-    cmdline.add("", "lsearch0", "regex to select line-search initialization methods", "quadratic");
-    cmdline.add("", "lsearchk", "regex to select line-search strategies", "cgdescent");
-    cmdline.add("", "min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
-    cmdline.add("", "max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
-    cmdline.add("", "trials", "number of random trials for each test function", "100");
-    cmdline.add("", "convex", "use only convex test functions");
-    cmdline.add("", "smooth", "use only smooth test functions");
-    cmdline.add("", "non-smooth", "use only non-smooth test functions");
-    cmdline.add("", "log-failures", "log the optimization trajectory for the runs that fail");
-    cmdline.add("", "log-maxits", "log the optimization trajectory that failed to converge");
+    cmdline.add("--solver", "regex to select solvers", ".+");
+    cmdline.add("--function", "regex to select test functions", ".+");
+    cmdline.add("--lsearch0", "regex to select line-search initialization methods", "quadratic");
+    cmdline.add("--lsearchk", "regex to select line-search strategies", "cgdescent");
+    cmdline.add("--min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
+    cmdline.add("--max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
+    cmdline.add("--trials", "number of random trials for each test function", "100");
+    cmdline.add("--convex", "use only convex test functions");
+    cmdline.add("--smooth", "use only smooth test functions");
+    cmdline.add("--non-smooth", "use only non-smooth test functions");
+    cmdline.add("--log-dir", "directory to log the optimization trajectories");
 
     const auto options = cmdline.process(argc, argv);
-    if (options.has("help"))
+    if (cmdline.handle(options))
     {
-        cmdline.usage();
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
     // check arguments and options
-    const auto min_dims = options.get<tensor_size_t>("min-dims");
-    const auto max_dims = options.get<tensor_size_t>("max-dims");
-    const auto trials   = options.get<size_t>("trials");
+    const auto min_dims = options.get<tensor_size_t>("--min-dims");
+    const auto max_dims = options.get<tensor_size_t>("--max-dims");
+    const auto trials   = options.get<size_t>("--trials");
 
-    const auto convex = options.has("convex") ? convexity::yes : convexity::ignore;
+    const auto convex = options.has("--convex") ? convexity::yes : convexity::ignore;
     const auto smooth =
-        options.has("smooth") ? smoothness::yes : (options.has("non-smooth") ? smoothness::no : smoothness::ignore);
+        options.has("--smooth") ? smoothness::yes : (options.has("--non-smooth") ? smoothness::no : smoothness::ignore);
 
-    const auto log_failures = options.has("log-failures");
-    const auto log_maxits   = options.has("log-maxits");
+    const auto log_dir = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
+    const auto fregex  = std::regex(options.get<string_t>("--function"));
+    const auto sregex  = std::regex(options.get<string_t>("--solver"));
+    const auto l0regex = std::regex(options.get<string_t>("--lsearch0"));
+    const auto lkregex = std::regex(options.get<string_t>("--lsearchk"));
 
-    const auto fregex  = std::regex(options.get<string_t>("function"));
-    const auto sregex  = std::regex(options.get<string_t>("solver"));
-    const auto l0regex = std::regex(options.get<string_t>("lsearch0"));
-    const auto lkregex = std::regex(options.get<string_t>("lsearchk"));
-
-    const auto lsearch0_ids = options.has("lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
-    const auto lsearchk_ids = options.has("lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
+    const auto lsearch0_ids = options.has("--lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
+    const auto lsearchk_ids = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
 
     const auto solver_ids = solver_t::all().ids(sregex);
     critical(solver_ids.empty(), "at least a solver needs to be selected!");
@@ -340,7 +289,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto functions = function_t::make({min_dims, max_dims, convex, smooth}, fregex);
     critical(functions.empty(), "at least a function needs to be selected!");
 
-    auto param_tracker = parameter_tracker_t{options};
+    auto rconfig = cmdconfig_t{options};
 
     // construct the list of solver configurations to evaluate
     solvers_t solvers;
@@ -357,9 +306,9 @@ int unsafe_main(int argc, const char* argv[])
                     auto lsearch0 = lsearch0_t::all().get(lsearch0_id);
                     auto lsearchk = lsearchk_t::all().get(lsearchk_id);
 
-                    param_tracker.setup(*solver);
-                    param_tracker.setup(*lsearch0);
-                    param_tracker.setup(*lsearchk);
+                    rconfig.setup(*solver);
+                    rconfig.setup(*lsearch0);
+                    rconfig.setup(*lsearchk);
 
                     solver->lsearch0(*lsearch0);
                     solver->lsearchk(*lsearchk);
@@ -370,18 +319,19 @@ int unsafe_main(int argc, const char* argv[])
         }
         else
         {
-            param_tracker.setup(*solver);
+            rconfig.setup(*solver);
             solvers.emplace_back(std::move(solver));
         }
     }
 
     // benchmark solvers and display statistics independently per function
-    parallel::pool_t pool;
-    auto             solver_stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{functions.size()}};
+    auto thread_pool  = parallel::pool_t{};
+    auto solver_stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{functions.size()}};
+
     for (size_t ifunction = 0U; ifunction < functions.size(); ++ifunction)
     {
         const auto& function = functions[ifunction];
-        const auto  funstats = benchmark(pool, *function, solvers, trials, log_failures, log_maxits);
+        const auto  funstats = benchmark(thread_pool, *function, solvers, trials, log_dir);
         for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
         {
             const auto& stats = funstats[isolver];

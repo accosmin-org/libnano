@@ -29,7 +29,7 @@
 using namespace nano;
 
 function_t::function_t(string_t id, tensor_size_t size)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
     , m_size(size)
 {
 }

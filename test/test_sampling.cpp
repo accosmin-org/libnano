@@ -30,7 +30,7 @@ void check_sample_without_replacement(const indices_t& indices)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_core_sampling)
+UTEST_BEGIN_MODULE(test_sampling)
 
 UTEST_CASE(sample_with_replacement)
 {

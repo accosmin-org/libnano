@@ -31,7 +31,7 @@ public:
     ///
     /// \brief constructor
     ///
-    template <typename... tscalars>
+    template <class... tscalars>
     explicit param_space_t(type type_, const tscalars... scalars)
         : param_space_t(type_, make_grid_values(scalars...))
     {
@@ -65,7 +65,7 @@ public:
 private:
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
-    template <typename... tscalars>
+    template <class... tscalars>
     static auto make_grid_values(const tscalars... scalars)
     {
         const auto size = static_cast<tensor_size_t>(sizeof...(scalars));
@@ -79,7 +79,7 @@ private:
     scalar_t   m_max{NaN};           ///<
 };
 
-template <typename... tscalars>
+template <class... tscalars>
 auto make_param_space(const param_space_t::type type, const tscalars... scalars)
 {
     return param_space_t{type, scalars...};

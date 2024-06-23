@@ -65,7 +65,7 @@ public:
 private:
     static timepoint_t now() { return std::chrono::high_resolution_clock::now(); }
 
-    template <typename tduration>
+    template <class tduration>
     tduration duration() const
     {
         return std::chrono::duration_cast<tduration>(now() - m_start);
@@ -78,7 +78,7 @@ private:
 ///
 /// \brief robustly measure a function call (in the given time units).
 ///
-template <typename tunits, typename toperator>
+template <class tunits, class toperator>
 tunits measure(const toperator& op, int64_t trials, int64_t min_trial_iterations = 1,
                microseconds_t min_trial_duration = microseconds_t(1000))
 {
@@ -117,7 +117,7 @@ tunits measure(const toperator& op, int64_t trials, int64_t min_trial_iterations
 /// \brief compute GFLOPS (giga floating point operations per seconds)
 ///     given the number of FLOPs run in the given duration.
 ///
-template <typename tinteger, typename tduration>
+template <class tinteger, class tduration>
 int64_t gflops(const tinteger flops, const tduration& duration)
 {
     const auto div = static_cast<int64_t>(std::chrono::duration_cast<picoseconds_t>(duration).count());

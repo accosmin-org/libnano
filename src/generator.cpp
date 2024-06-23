@@ -6,7 +6,7 @@
 using namespace nano;
 
 generator_t::generator_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
 }
 

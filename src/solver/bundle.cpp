@@ -1,5 +1,3 @@
-#include <iomanip>
-#include <nano/core/logger.h>
 #include <nano/solver/bundle.h>
 
 using namespace nano;
@@ -69,12 +67,16 @@ void bundle_t::solve(const scalar_t miu)
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
         const auto solution = m_solver.solve(program, x0);
-        debug_critical(!program.feasible(solution.m_x, epsilon1<scalar_t>()), std::fixed, std::setprecision(16),
-                       "unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
-                       "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
-                       "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
-        debug_critical(solution.m_status != solver_status::converged, std::fixed, std::setprecision(16),
-                       "failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
+        if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
+        {
+            log(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
+                "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
+                "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
+        }
+        if (solution.m_status != solver_status::converged)
+        {
+            log(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
+        }
 
         m_alphas.slice(0, m_size) = solution.m_x;
     }

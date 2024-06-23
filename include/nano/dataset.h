@@ -8,7 +8,7 @@ namespace nano
 ///
 /// \brief wraps a collection of feature generators, potentially of different types.
 ///
-class NANO_PUBLIC dataset_t
+class NANO_PUBLIC dataset_t : public loggable_t
 {
 public:
     ///
@@ -19,7 +19,7 @@ public:
     ///
     /// \brief register a new feature generator.
     ///
-    template <typename tgenerator, typename... tgenerator_args>
+    template <class tgenerator, class... tgenerator_args>
     dataset_t& add(tgenerator_args... args)
     {
         static_assert(std::is_base_of_v<generator_t, tgenerator>);

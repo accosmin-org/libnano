@@ -2,204 +2,213 @@
 #include <fstream>
 #include <nano/core/cmdline.h>
 #include <nano/core/tokenizer.h>
+#include <nano/critical.h>
+#include <nano/version.h>
 
 using namespace nano;
 
 namespace
 {
-auto find(const cmdline_t::options_t& options, const string_t& name_or_short_name)
+auto valid_option_name(const std::string_view name)
 {
-    return std::find_if(options.begin(), options.end(), [&](const cmdline_t::option_t& option)
-                        { return option.m_short_name == name_or_short_name || option.m_name == name_or_short_name; });
-}
-} // namespace
-
-static const auto str_dash      = string_t{"-"};  // NOLINT(cert-err58-cpp)
-static const auto str_dash_dash = string_t{"--"}; // NOLINT(cert-err58-cpp)
-
-cmdline_t::option_t::option_t() = default; // LCOV_EXCL_LINE
-
-cmdline_t::option_t::option_t(string_t short_name, string_t name, string_t description, string_t default_value)
-    : m_short_name(std::move(short_name))
-    , m_name(std::move(name))
-    , m_description(std::move(description))
-    , m_default_value(std::move(default_value))
-{
-}
-
-string_t cmdline_t::option_t::describe() const
-{
-    string_t str;
-    if (!m_short_name.empty())
+    if (starts_with(name, "--"))
     {
-        str += "-";
-        str += m_short_name;
-        str += ",";
+        // --name
+        return name.size() > 2U && name[2U] != '-';
     }
-    str += "--";
-    str += m_name;
-    if (!m_default_value.empty())
+    else if (starts_with(name, "-"))
+    {
+        // -n or -name
+        return name.size() > 1U;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+auto describe(const cmdoption_t& option)
+{
+    string_t str = option.m_keywords;
+    if (option.m_default_value)
     {
         str += "(";
-        str += m_default_value;
+        str += option.m_default_value.value();
         str += ")";
     }
 
     return str;
-} // LCOV_EXCL_LINE
+}
+} // namespace
 
-bool cmdline_t::result_t::has(const string_t& name) const
+cmdresult_t::cmdresult_t() = default;
+
+cmdresult_t::cmdresult_t(const cmdvalues_t& values)
 {
-    return m_ovalues.find(name) != m_ovalues.end();
+    for (const auto& [name, value] : values)
+    {
+        if (value.has_value())
+        {
+            m_values[name] = value;
+        }
+    }
 }
 
-string_t cmdline_t::result_t::get(const string_t& name) const
+bool cmdresult_t::has(const std::string_view name) const
 {
-    const auto it = m_ovalues.find(name);
-    if (it == m_ovalues.end())
+    // FIXME: no need to create a string when moving to C++20!
+    return m_values.find(string_t{name}) != m_values.end();
+}
+
+bool cmdresult_t::has_value(const std::string_view name) const
+{
+    // FIXME: no need to create a string when moving to C++20!
+    const auto it = m_values.find(string_t{name});
+    return it != m_values.end() && it->second.has_value();
+}
+
+string_t cmdresult_t::get(const std::string_view name) const
+{
+    // FIXME: no need to create a string when moving to C++20!
+    const auto it = m_values.find(string_t{name});
+    critical(it == m_values.end(), "cmdline: unrecognized option [", name, "]");
+    critical(!it->second.has_value(), "cmdline: no value provided for option [", name, "]");
+    return it->second.value();
+}
+
+cmdconfig_t::cmdconfig_t(const cmdresult_t& options, logger_t logger)
+    : m_options(options)
+    , m_logger(std::move(logger))
+{
+    for (const auto& [param_name, param_value] : m_options.m_values)
     {
-        throw std::runtime_error(scat("cmdline: unrecognized option [", name, "]"));
+        if (param_value.is_extra())
+        {
+            m_params_usage[param_name] = 0;
+        }
     }
-    else if (it->second.empty())
+}
+
+void cmdconfig_t::setup(configurable_t& configurable)
+{
+    for (const auto& [param_name, param_value] : m_options.m_values)
     {
-        throw std::runtime_error(scat("cmdline: no value provided for option [", name, "]"));
+        if (param_value.has_value() && param_value.is_extra())
+        {
+            const auto* const data = param_name.data();
+            const auto        size = param_name.size();
+            const auto        name = starts_with(param_name, "--") ? std::string_view{data + 2U, size - 2U}
+                                   : starts_with(param_name, "-")  ? std::string_view{data + 1U, size - 1U}
+                                                                   : std::string_view{};
+
+            if (configurable.parameter_if(name) != nullptr)
+            {
+                configurable.parameter(name) = param_value.value();
+                m_params_usage[param_name]++;
+            }
+        }
     }
-    return it->second;
+}
+
+cmdconfig_t::~cmdconfig_t()
+{
+    for (const auto& [param_name, count] : m_params_usage)
+    {
+        if (count == 0)
+        {
+            m_logger.log(log_type::warn, "parameter '", param_name, "' was not used.\n");
+        }
+    }
 }
 
 cmdline_t::cmdline_t(string_t title)
     : m_title(std::move(title))
 {
-    add("h", "help", "usage");
-    add("v", "version", "library version");
-    add("g", "git-hash", "git commit hash");
+    add("-h,--help", "print usage");
+    add("-v,--version", "print library's version");
+    add("-g,--git-hash", "print library's git commit hash");
 }
 
-void cmdline_t::add(string_t short_name, string_t name, string_t description)
+void cmdline_t::add(string_t keywords, string_t description)
 {
-    add(std::move(short_name), std::move(name), std::move(description), string_t());
+    add(cmdoption_t{std::move(keywords), std::move(description), ostring_t{}});
 }
 
-void cmdline_t::add(string_t short_name, string_t name, string_t description, string_t default_value)
+void cmdline_t::add(string_t keywords, string_t description, string_t default_value)
 {
-    // NOLINTNEXTLINE(readability-suspicious-call-argument)
-    if (name.empty() || nano::starts_with(name, str_dash_dash) || nano::starts_with(name, str_dash))
-    {
-        throw std::runtime_error(scat("cmdline: invalid option name [", name, "]"));
-    }
-    if (::find(m_options, name) != m_options.end())
-    {
-        throw std::runtime_error(scat("cmdline: duplicated option [", name, "]"));
-    }
-
-    if (!short_name.empty())
-    {
-        if (short_name.size() != 1 || short_name[0] == '-')
-        {
-            throw std::runtime_error(scat("cmdline: invalid short option name [", short_name, "]"));
-        }
-        if (::find(m_options, short_name) != m_options.end())
-        {
-            throw std::runtime_error(scat("cmdline: duplicated short option [", short_name, "]"));
-        }
-    }
-
-    m_options.emplace_back(std::move(short_name), std::move(name), std::move(description), std::move(default_value));
+    add(cmdoption_t{std::move(keywords), std::move(description), std::move(default_value)});
 }
 
-cmdline_t::result_t cmdline_t::process(const int argc, const char* argv[]) const
+void cmdline_t::add(cmdoption_t option)
 {
-    std::vector<std::pair<string_t, int>> tokens;
-    for (int i = 1; i < argc; ++i)
-    {
-        string_t token = argv[i];
-        assert(!token.empty());
+    critical(option.m_keywords.empty(), "cmdline: option cannot be empty");
+    critical(option.m_description.empty(), "cmdline: description cannot be empty");
 
-        // NOLINTNEXTLINE(readability-suspicious-call-argument)
-        if (nano::starts_with(token, str_dash_dash))
+    for (auto tokenizer = tokenizer_t{option.m_keywords, ","}; tokenizer; ++tokenizer)
+    {
+        const auto name = tokenizer.get();
+        critical(!valid_option_name(name), "cmdline: option '", name,
+                 "' must start with either a single or a double dash");
+
+        const auto uniq = m_values.emplace(name, cmdvalue_t{option.m_default_value, m_options.size()}).second;
+        critical(!uniq, "cmdline: duplicated option '", name, "'");
+    }
+
+    m_options.emplace_back(std::move(option));
+}
+
+cmdresult_t cmdline_t::process(const int argc, const char* argv[]) const
+{
+    auto result = cmdresult_t{m_values};
+
+    for (int i = 1; i < argc;)
+    {
+        const auto name = string_t{argv[i]};
+        assert(!name.empty());
+
+        critical(!valid_option_name(name), "cmdline: expecting option name [", name,
+                 "] to start with either a single or a double dash");
+
+        const auto itval = m_values.find(name);
+        const auto nextv = (i + 1 < argc) && !valid_option_name(argv[i + 1]);
+
+        // known option...
+        if (itval != m_values.end())
         {
-            if (token.size() == 2U)
+            const auto index = itval->second.m_index;
+            assert(index < m_options.size());
+
+            // NB: also add all equivalent keywords from the associated option!
+            const auto& option = m_options[index];
+            for (auto tokenizer = tokenizer_t{option.m_keywords, ","}; tokenizer; ++tokenizer)
             {
-                throw std::runtime_error(scat("cmdline: invalid option name [", token, "]"));
+                const auto tname       = string_t{tokenizer.get()};
+                result.m_values[tname] = nextv ? cmdvalue_t{argv[i + 1], index} : cmdvalue_t{{}, index};
             }
-
-            tokens.emplace_back(token.substr(2), 0);
         }
-        // NOLINTNEXTLINE(readability-suspicious-call-argument)
-        else if (nano::starts_with(token, str_dash))
-        {
-            if (token.size() != 2U)
-            {
-                throw std::runtime_error(scat("cmdline: invalid short option name [", token, "]"));
-            }
 
-            tokens.emplace_back(token.substr(1), 1);
-        }
+        // unknown option...
         else
         {
-            tokens.emplace_back(std::move(token), 2);
-        }
-    }
-
-    const auto get_mandatory_value = [&](const string_t& name, size_t i)
-    {
-        if (i + 1 == tokens.size())
-        {
-            throw std::runtime_error(scat("cmdline: expecting a value for option [", name, "]"));
+            result.m_values[name] = nextv ? cmdvalue_t{argv[i + 1]} : cmdvalue_t{};
         }
 
-        const auto& [value, type] = tokens[i + 1];
-        if (type != 2)
+        if (nextv)
         {
-            throw std::runtime_error(scat("cmdline: expecting a value for option [", name, "]"));
-        }
-
-        return value;
-    };
-
-    result_t result;
-    for (const auto& option : m_options)
-    {
-        if (!option.m_default_value.empty())
-        {
-            result.m_ovalues[option.m_name] = option.m_default_value;
-        }
-    }
-
-    for (size_t i = 0; i < tokens.size();)
-    {
-        const auto& [name, type] = tokens[i];
-
-        if (type == 2)
-        {
-            throw std::runtime_error(scat("cmdline: value [", name, "] should follow a long or short option"));
-        }
-
-        const auto it = ::find(m_options, name);
-        if (it == m_options.end())
-        {
-            result.m_xvalues[name] = get_mandatory_value(name, i);
+            // NB: skip two tokens: --option value
             i += 2;
         }
         else
         {
-            if (it->m_default_value.empty())
-            {
-                result.m_ovalues[it->m_name] = string_t{};
-                i += 1;
-            }
-            else
-            {
-                result.m_ovalues[it->m_name] = get_mandatory_value(name, i);
-                i += 2;
-            }
+            // NB: skip one token (potentially boolean option): --option
+            i += 1;
         }
     }
 
     return result;
 }
 
-cmdline_t::result_t cmdline_t::process(const string_t& config) const
+cmdresult_t cmdline_t::process(const string_t& config) const
 {
     strings_t tokens;
     for (auto tokenizer = tokenizer_t{config, " \t\n\r"}; tokenizer; ++tokenizer)
@@ -213,29 +222,52 @@ cmdline_t::result_t cmdline_t::process(const string_t& config) const
     return process(static_cast<int>(ptokens.size()), ptokens.data());
 }
 
-cmdline_t::result_t cmdline_t::process_config_file(const string_t& path) const
+cmdresult_t cmdline_t::process_config_file(const std::filesystem::path& path) const
 {
-    std::ifstream  in(path.c_str());
-    const string_t config((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    auto       stream = std::ifstream{path};
+    const auto config = string_t{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
 
     return process(config);
 }
 
-void cmdline_t::usage(std::ostream& os, size_t indent) const
+void cmdline_t::usage(std::ostream& stream, const size_t indent) const
 {
-    os << m_title << "\n";
+    stream << m_title << "\n";
 
     size_t max_option_size = 0;
     for (const auto& option : m_options)
     {
-        max_option_size = std::max(max_option_size, option.describe().size());
+        max_option_size = std::max(max_option_size, describe(option).size());
     }
+
+    const auto header = string_t(indent, ' ');
 
     max_option_size += 4;
     for (const auto& option : m_options)
     {
-        os << string_t(indent, ' ') << nano::align(option.describe(), max_option_size) << option.m_description << "\n";
+        stream << header << nano::align(describe(option), max_option_size) << option.m_description << "\n";
     }
+}
 
-    os << "\n";
+bool cmdline_t::handle(const cmdresult_t& options, std::ostream& stream, const size_t indent) const
+{
+    if (options.has("--help"))
+    {
+        usage(stream, indent);
+        return true;
+    }
+    else if (options.has("--version"))
+    {
+        stream << nano::major_version << "." << nano::minor_version << "." << nano::patch_version << "\n";
+        return true;
+    }
+    else if (options.has("--git-hash"))
+    {
+        stream << nano::git_commit_hash << "\n";
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

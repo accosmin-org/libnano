@@ -1,5 +1,5 @@
 #include <mutex>
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/solver/asga.h>
 #include <nano/solver/cgd.h>
 #include <nano/solver/cocob.h>
@@ -19,11 +19,10 @@ using namespace nano;
 
 namespace
 {
-template <typename tsolver>
-rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, const solver_t::logger_t& logger)
+template <class tsolver>
+rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals)
 {
     auto solver = std::make_unique<tsolver>();
-    solver->logger(logger);
     if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
     {
         // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
@@ -36,7 +35,7 @@ rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals, con
 } // namespace
 
 solver_t::solver_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
     lsearch0("quadratic");
     lsearchk("cgdescent");
@@ -47,9 +46,10 @@ solver_t::solver_t(string_t id)
 }
 
 solver_t::solver_t(const solver_t& other)
-    : configurable_t(other)
+    : typed_t(other)
+    , configurable_t(other)
+    , loggable_t(other)
     , clonable_t(other)
-    , m_logger(other.m_logger)
     , m_lsearch0(other.lsearch0().clone())
     , m_lsearchk(other.lsearchk().clone())
     , m_type(other.type())
@@ -82,21 +82,6 @@ void solver_t::lsearchk(const lsearchk_t& lsearchk)
     m_lsearchk = lsearchk.clone();
 }
 
-void solver_t::lsearch0_logger(const lsearch0_t::logger_t& logger)
-{
-    m_lsearch0->logger(logger);
-}
-
-void solver_t::lsearchk_logger(const lsearchk_t::logger_t& logger)
-{
-    m_lsearchk->logger(logger);
-}
-
-void solver_t::logger(const logger_t& logger)
-{
-    m_logger = logger;
-}
-
 void solver_t::type(const solver_type type)
 {
     m_type = type;
@@ -115,6 +100,9 @@ lsearch_t solver_t::make_lsearch() const
     //  - to pass the solver's parameters
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
+
+    lsearch0->logger(logger());
+    lsearchk->logger(logger());
 
     lsearch0->parameter("lsearch0::epsilon")   = parameter("solver::epsilon").value<scalar_t>();
     lsearchk->parameter("lsearchk::tolerance") = parameter("solver::tolerance").value_pair<scalar_t>();
@@ -135,35 +123,19 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool conver
 {
     state.update_calls();
 
-    // stopping was requested (in an outer loop)
-    if (state.status() == solver_status::stopped)
+    if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
     {
+        // either converged or failed
+        state.status(converged ? solver_status::converged : solver_status::failed);
+        log("[", type_id(), "]: ", state, ".\n");
         return true;
     }
     else
     {
-        if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
-        {
-            // either converged or failed
-            state.status(converged ? solver_status::converged : solver_status::failed);
-            log(state);
-            return true;
-        }
-        else if (!log(state))
-        {
-            // stopping was requested
-            state.status(solver_status::stopped);
-            return true;
-        }
-
         // OK, go on with the optimization
+        log("[", type_id(), "]: ", state, ".\n");
         return false;
     }
-}
-
-bool solver_t::log(const solver_state_t& state) const
-{
-    return !m_logger ? true : m_logger(state);
 }
 
 factory_t<solver_t>& solver_t::all()
@@ -215,10 +187,11 @@ factory_t<solver_t>& solver_t::all()
     return manager;
 }
 
-rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals) const
+rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals)
 {
-    return function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals, m_logger)
-                             : ::make_solver<solver_osga_t>(epsilon, max_evals, m_logger);
+    // FIXME: should use RQB or some other proximal bundle method
+    return function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals)
+                             : ::make_solver<solver_osga_t>(epsilon, max_evals);
 }
 
 void solver_t::more_precise(const scalar_t epsilon_factor)

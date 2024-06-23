@@ -26,7 +26,7 @@ public:
     ///
     /// \brief move to another point and returns true if the new point is valid.
     ///
-    template <typename tvector>
+    template <class tvector>
     bool update(const tvector& x)
     {
         assert(m_function);

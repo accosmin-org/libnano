@@ -6,14 +6,14 @@ namespace nano
 {
 namespace detail
 {
-template <typename ttensor, typename... ttensors>
+template <class ttensor, class... ttensors>
 auto size(const ttensor& tensor, const ttensors&...)
 {
     const auto size = tensor.template size<0>();
     return size;
 }
 
-template <typename ttensor>
+template <class ttensor>
 void copy(const tensor_size_t isrc, const tensor_size_t idst, ttensor& tensor)
 {
     assert(isrc < tensor.template size<0>());
@@ -36,7 +36,7 @@ void copy(const tensor_size_t isrc, const tensor_size_t idst, ttensor& tensor)
 /// NB: the remaining ones are compacted starting the begining and their number is returned.
 /// NB: no allocation is performed.
 ///
-template <typename toperator, typename... ttensors>
+template <class toperator, class... ttensors>
 auto remove_if(const toperator& op, ttensors&&... tensors) ->
     typename std::enable_if_t<(is_tensor_v<std::remove_reference_t<ttensors>> && ...), tensor_size_t>
 {

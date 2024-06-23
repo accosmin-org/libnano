@@ -11,7 +11,7 @@ using namespace nano;
 namespace
 {
 // single-threaded
-template <typename toperator>
+template <class toperator>
 auto test_single(size_t size, const toperator op)
 {
     std::vector<double> results(size);
@@ -24,7 +24,7 @@ auto test_single(size_t size, const toperator op)
 }
 
 // multi-threaded (by index)
-template <typename toperator>
+template <class toperator>
 auto test_loopi(parallel::pool_t& pool, size_t size, const toperator op)
 {
     std::vector<double> results(size, -1);
@@ -41,7 +41,7 @@ auto test_loopi(parallel::pool_t& pool, size_t size, const toperator op)
 }
 
 // multi-threaded (by range)
-template <typename toperator>
+template <class toperator>
 auto test_loopr(parallel::pool_t& pool, size_t size, size_t chunk, const toperator op)
 {
     std::vector<double> results(size, -1);
@@ -73,7 +73,7 @@ auto thread_counts()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_core_parallel)
+UTEST_BEGIN_MODULE(test_parallel)
 
 UTEST_CASE(init)
 {

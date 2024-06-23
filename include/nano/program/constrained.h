@@ -17,10 +17,10 @@ struct NANO_PUBLIC linear_constrained_t
     ///
     /// \brief in-place update both equality and inequality constraints (if given).
     ///
-    /// NB: memory allocations are minimized when using appropriatet Eigen operators to specify constraints
+    /// NB: memory allocations are minimized when using appropriated Eigen operators to specify constraints
     ///     with utilities like `make_less`, `make_equality` or `make_greater`.
     ///
-    template <typename... tconstraints>
+    template <class... tconstraints>
     void constrain(const tconstraints&... constraints)
     {
         static_assert((is_constraint_v<tconstraints> && ...));

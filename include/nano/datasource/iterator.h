@@ -67,7 +67,7 @@ private:
 ///
 /// \brief utility to iterate over the masked feature values of a given set of samples.
 ///
-template <typename tscalar, size_t trank>
+template <class tscalar, size_t trank>
 class datasource_iterator_t : public base_datasource_iterator_t
 {
 public:
@@ -107,7 +107,7 @@ private:
 ///
 /// \brief utility to iterate over the masked feature pair values of a given set of samples.
 ///
-template <typename tscalar1, size_t trank1, typename tscalar2, size_t trank2>
+template <class tscalar1, size_t trank1, class tscalar2, size_t trank2>
 class datasource_pairwise_iterator_t : public base_datasource_iterator_t
 {
 public:
@@ -176,15 +176,15 @@ inline bool operator!=(const base_datasource_iterator_t& lhs, const base_datasou
 ///
 /// \brief construct an iterator from the given inputs.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples,
                    indices_cmap_t shuffled_all_samples = indices_cmap_t{})
 {
     return datasource_iterator_t<tscalar, trank>{data, mask, samples, shuffled_all_samples};
 }
 
-template <template <typename, size_t> class tstorage1, typename tscalar1, size_t trank1,
-          template <typename, size_t> class tstorage2, typename tscalar2, size_t trank2>
+template <template <class, size_t> class tstorage1, class tscalar1, size_t trank1,
+          template <class, size_t> class tstorage2, class tscalar2, size_t trank2>
 auto make_iterator(const tensor_t<tstorage1, tscalar1, trank1>& data1, mask_cmap_t mask1,
                    const tensor_t<tstorage2, tscalar2, trank2>& data2, mask_cmap_t mask2, indices_cmap_t samples,
                    indices_cmap_t shuffled_all_samples = indices_cmap_t{})
@@ -205,8 +205,8 @@ inline auto make_end_iterator(indices_cmap_t samples, indices_cmap_t shuffled_al
 /// \brief call the appropriate operator for the given data,
 ///     distinguishing between single-label, multi-label and scalar/structured cases.
 ///
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank, typename toperator_sclass,
-          typename toperator_mclass, typename toperator_scalar>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class toperator_sclass,
+          class toperator_mclass, class toperator_scalar>
 auto loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, indices_cmap_t samples,
                   indices_cmap_t shuffled_all_samples, const toperator_sclass& op_sclass,
                   const toperator_mclass& op_mclass, const toperator_scalar& op_scalar)
@@ -225,8 +225,8 @@ auto loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cma
     }
 }
 
-template <size_t trank_expected, template <typename, size_t> class tstorage, typename tscalar, size_t trank,
-          typename toperator_expected>
+template <size_t trank_expected, template <class, size_t> class tstorage, class tscalar, size_t trank,
+          class toperator_expected>
 void loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask,
                   [[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] indices_cmap_t shuffled_all_samples,
                   const toperator_expected& op_expected)
@@ -237,9 +237,9 @@ void loop_samples(const tensor_t<tstorage, tscalar, trank>& data, const mask_cma
     }
 }
 
-template <size_t trank_expected1, size_t trank_expected2, template <typename, size_t> class tstorage1,
-          typename tscalar1, size_t      trank1, template <typename, size_t> class tstorage2, typename tscalar2,
-          size_t trank2, typename toperator_expected>
+template <size_t trank_expected1, size_t trank_expected2, template <class, size_t> class tstorage1, class tscalar1,
+          size_t trank1, template <class, size_t> class tstorage2, class tscalar2, size_t trank2,
+          class toperator_expected>
 void loop_samples(const tensor_t<tstorage1, tscalar1, trank1>& data1, const mask_cmap_t& mask1,
                   const tensor_t<tstorage2, tscalar2, trank2>& data2, const mask_cmap_t& mask2,
                   [[maybe_unused]] indices_cmap_t samples, [[maybe_unused]] indices_cmap_t shuffled_all_samples,

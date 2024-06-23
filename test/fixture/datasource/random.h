@@ -38,7 +38,7 @@ public:
     const tensor_mem_t<int8_t, 2>& hits() const { return m_hits; }
 
 protected:
-    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+    template <template <class, size_t> class tstorage, class tscalar, size_t trank>
     void set_fvalues(const tensor_size_t feature, const tensor_t<tstorage, tscalar, trank>& fvalues)
     {
         for (tensor_size_t sample = 0; sample < m_samples; ++sample)

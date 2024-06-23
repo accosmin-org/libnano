@@ -5,7 +5,8 @@
 
 using namespace nano;
 
-[[maybe_unused]] inline auto load_dataset(const datasource_t& datasource, const strings_t& generator_ids)
+// FIXME: move it to library!
+[[maybe_unused]] inline dataset_t load_dataset(const datasource_t& datasource, const strings_t& generator_ids)
 {
     const auto timer   = ::nano::timer_t{};
     auto       dataset = dataset_t{datasource};
@@ -13,9 +14,11 @@ using namespace nano;
     {
         dataset.add(generator_t::all().get(generator_id));
     }
+
+    const auto logger  = make_stdout_logger();
     const auto elapsed = timer.elapsed();
-    log_info() << "=> dataset loaded with feature generators loaded in <" << elapsed << ">.";
-    log_info() << "..columns=" << dataset.columns();
-    log_info() << "..target=[" << dataset.target() << "]";
+    logger.log(log_type::info, "=> dataset loaded with feature generators loaded in <", elapsed, ">.\n");
+    logger.log(log_type::info, "..columns=", dataset.columns(), "\n");
+    logger.log(log_type::info, "..target=[", dataset.target(), "]\n");
     return dataset;
 }

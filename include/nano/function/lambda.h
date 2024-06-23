@@ -8,7 +8,7 @@ namespace nano
 /// \brief maps a given lambda to the `function_t` interface.
 ///     fx = lambda(vector_cmap_t x, vector_map_t gx)
 ///
-template <typename tlambda>
+template <class tlambda>
 class NANO_PUBLIC lambda_function_t final : public function_t
 {
 public:
@@ -49,7 +49,7 @@ private:
 ///
 /// \brief create a compatible function_t from the given lambda.
 ///
-template <typename tlambda>
+template <class tlambda>
 auto make_function(const tensor_size_t dims, const convexity convex, const smoothness smooth,
                    const scalar_t strong_convexity, tlambda lambda)
 {

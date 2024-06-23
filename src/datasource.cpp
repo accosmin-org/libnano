@@ -7,7 +7,7 @@
 using namespace nano;
 
 datasource_t::datasource_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
     register_parameter(parameter_t::make_string("datasource::basedir", ""));
 }
@@ -54,8 +54,8 @@ void datasource_t::resize(const tensor_size_t samples, const features_t& feature
 
 void datasource_t::resize(const tensor_size_t samples, const features_t& features, const size_t target)
 {
-    std::map<feature_type, tensor_size_t> size_storage;
-    const auto                            update_size_storage = [&](feature_type type, auto size)
+    auto       size_storage        = std::unordered_map<feature_type, tensor_size_t>{};
+    const auto update_size_storage = [&](feature_type type, auto size)
     {
         const auto begin   = size_storage[type];
         const auto end     = begin + static_cast<tensor_size_t>(size);
@@ -156,11 +156,11 @@ void datasource_t::load()
     const auto tr_samples = train_samples();
     const auto te_samples = test_samples();
 
-    log_info() << "datasource[" << type_id() << "]: loaded in <" << elapsed << ">.";
-    log_info() << "datasource[" << type_id() << "]: type=" << type() << ",input features=" << features()
-               << ",samples=" << samples() << "(" << tr_samples.size() << "+" << te_samples.size() << ").";
-    log_info() << "datasource[" << type_id() << "]: target=["
-               << (!has_target() ? "N/A" : scat(m_features[static_cast<size_t>(m_target)])) << "].";
+    log_info("[", type_id(), "]: loaded in <", elapsed, ">.");
+    log_info("[", type_id(), "]: type=", type(), ",input features=", features(), ",samples=", samples(), "(",
+             tr_samples.size(), "+", te_samples.size(), ").");
+    log_info("[", type_id(), "]: target=[", (!has_target() ? "N/A" : scat(m_features[static_cast<size_t>(m_target)])),
+             "].");
 }
 
 factory_t<datasource_t>& datasource_t::all()

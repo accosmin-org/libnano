@@ -1,5 +1,5 @@
-#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
+#include <nano/critical.h>
 #include <nano/dataset.h>
 #include <nano/dataset/stats.h>
 
@@ -7,7 +7,7 @@ using namespace nano;
 
 namespace
 {
-template <typename tvalues>
+template <class tvalues>
 void nan2zero(tvalues& values)
 {
     // NB: replace missing scalar values (represented as NaN) with zeros,
@@ -22,7 +22,7 @@ void nan2zero(tvalues& values)
     }
 }
 
-template <typename toperator>
+template <class toperator>
 auto make_features(const dataset_t& dataset, const toperator& op)
 {
     tensor_size_t count = 0;
@@ -145,7 +145,7 @@ void done(scalar_stats_t& stats, const tensor_mem_t<uint8_t, 1>& enable_scaling 
     }
 }
 
-template <typename tvalues>
+template <class tvalues>
 auto alloc_xclass_stats(const tvalues& values)
 {
     xclass_stats_t stats;
@@ -156,7 +156,7 @@ auto alloc_xclass_stats(const tvalues& values)
     return stats;
 } // LCOV_EXCL_LINE
 
-template <typename tvalues>
+template <class tvalues>
 void update(xclass_stats_t& stats, const tensor_size_t sample, const tvalues& values)
 {
     const auto iclass = ::nano::find(stats.m_class_hashes, values);

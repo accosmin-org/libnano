@@ -15,7 +15,7 @@ namespace nano
 ///
 /// NB: the proximity parameter is initialized following (4) (ch. 6).
 ///
-class proximity_t
+class NANO_PUBLIC proximity_t
 {
 public:
     ///

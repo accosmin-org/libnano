@@ -9,7 +9,7 @@
 using namespace nano;
 
 lsearchk_t::lsearchk_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
     register_parameter(parameter_t::make_scalar_pair("lsearchk::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
     register_parameter(parameter_t::make_integer("lsearchk::max_iterations", 1, LE, 128, LE, 10000));
@@ -68,19 +68,16 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     return do_get(state0, descent, step_size, state);
 }
 
-void lsearchk_t::logger(const lsearchk_t::logger_t& logger)
-{
-    m_logger = logger;
-}
-
 bool lsearchk_t::update(solver_state_t& state, const solver_state_t& state0, const vector_t& descent,
                         const scalar_t step_size) const
 {
-    const auto ok = state.update(state0.x() + step_size * descent);
-    if (m_logger)
-    {
-        m_logger(state0, state, descent, step_size);
-    }
+    const auto ok       = state.update(state0.x() + step_size * descent);
+    const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
+
+    log("[", type_id(), "]: t=", step_size, ",f=", state.fx(), ",g=", state.gradient_test(),
+        ",armijo=", state.has_armijo(state0, descent, step_size, c1), ",wolfe=", state.has_wolfe(state0, descent, c2),
+        ",swolfe=", state.has_strong_wolfe(state0, descent, c2), ".\n");
+
     return ok;
 }
 

@@ -1,5 +1,5 @@
 #include <mutex>
-#include <nano/core/logger.h>
+#include <nano/critical.h>
 #include <nano/tuner/local.h>
 #include <nano/tuner/surrogate.h>
 #include <nano/tuner/util.h>
@@ -7,7 +7,7 @@
 using namespace nano;
 
 tuner_t::tuner_t(string_t id)
-    : clonable_t(std::move(id))
+    : typed_t(std::move(id))
 {
     register_parameter(parameter_t::make_integer("tuner::max_evals", 10, LE, 100, LE, 1000));
 }

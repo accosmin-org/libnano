@@ -7,7 +7,7 @@ using namespace nano;
 
 namespace
 {
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
 {
     std::ostringstream stream;
@@ -16,7 +16,7 @@ auto tensor2str(const tensor_t<tstorage, tscalar, trank>& tensor)
     return stream.str();
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto make_tensor()
 {
     tensor_mem_t<tscalar, 3> tensor(5, 3, 1);
@@ -24,7 +24,7 @@ auto make_tensor()
     return tensor;
 }
 
-template <typename tscalar>
+template <class tscalar>
 auto check_read_tensor(const std::string& str)
 {
     tensor_mem_t<tscalar, 3> tensor;

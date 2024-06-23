@@ -10,7 +10,7 @@ namespace nano
 ///     f(x) = 1/2N * sum(loss(W * input_i + b, target_i), i=1,N) + alpha1 * |W| + alpha2/2 * ||W||^2,
 ///     where x=[W|b].
 ///
-template <typename tloss>
+template <class tloss>
 class NANO_PUBLIC function_enet_t final : public function_t, private tloss
 {
 public:

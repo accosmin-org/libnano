@@ -5,7 +5,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_core_numeric)
+UTEST_BEGIN_MODULE(test_numeric)
 
 UTEST_CASE(square)
 {

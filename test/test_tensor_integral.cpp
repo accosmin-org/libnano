@@ -5,7 +5,7 @@ using namespace nano;
 
 namespace
 {
-template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+template <class tsum, template <class, size_t> class tstorage, class tscalar>
 auto check(const tensor_t<tstorage, tscalar, 1>& tensor, tensor_size_t index0)
 {
     tsum sum = 0;
@@ -17,7 +17,7 @@ auto check(const tensor_t<tstorage, tscalar, 1>& tensor, tensor_size_t index0)
     return sum;
 }
 
-template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+template <class tsum, template <class, size_t> class tstorage, class tscalar>
 auto check(const tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t index0, tensor_size_t index1)
 {
     tsum sum = 0;
@@ -32,7 +32,7 @@ auto check(const tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t index0, t
     return sum;
 }
 
-template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+template <class tsum, template <class, size_t> class tstorage, class tscalar>
 auto check(const tensor_t<tstorage, tscalar, 3>& tensor, tensor_size_t index0, tensor_size_t index1,
            tensor_size_t index2)
 {
@@ -51,7 +51,7 @@ auto check(const tensor_t<tstorage, tscalar, 3>& tensor, tensor_size_t index0, t
     return sum;
 }
 
-template <typename tsum, template <typename, size_t> class tstorage, typename tscalar>
+template <class tsum, template <class, size_t> class tstorage, class tscalar>
 auto check(const tensor_t<tstorage, tscalar, 4>& tensor, tensor_size_t index0, tensor_size_t index1,
            tensor_size_t index2, tensor_size_t index3)
 {

@@ -1,6 +1,7 @@
 #include "fixture/function.h"
 #include <nano/function/benchmark/sphere.h>
 #include <nano/function/lambda.h>
+#include <unordered_map>
 
 using namespace nano;
 
@@ -75,10 +76,10 @@ UTEST_CASE(select)
     {
         for (const auto smooth : {smoothness::ignore, smoothness::yes, smoothness::no})
         {
-            int                          total = 0;
-            std::map<bool, int>          counts_per_convexity;
-            std::map<bool, int>          counts_per_smoothness;
-            std::map<tensor_size_t, int> counts_per_size;
+            auto total                 = 0;
+            auto counts_per_convexity  = std::unordered_map<bool, int>{};
+            auto counts_per_smoothness = std::unordered_map<bool, int>{};
+            auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
 
             for (const auto& function : function_t::make({4, 16, convex, smooth, 5}))
             {

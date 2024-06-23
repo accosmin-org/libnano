@@ -9,7 +9,7 @@ namespace nano
 ///     - stores dimensions
 ///     - handles the indexing
 ///
-template <typename tscalar, size_t trank, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
+template <class tscalar, size_t trank, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
 class tensor_base_t
 {
 public:
@@ -64,7 +64,7 @@ public:
     /// \brief gather the missing dimensions in a multi-dimensional tensor
     ///     (assuming the last dimensions that are ignored are zero).
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto dims0(const tindices... indices) const
     {
         static_assert(sizeof...(indices) <= trank, "invalid number of tensor dimensions");
@@ -105,7 +105,7 @@ public:
     ///
     /// \brief compute the linearized index from the list of offsets.
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto offset(const tindices... indices) const
     {
         static_assert(sizeof...(indices) == trank, "invalid number of tensor dimensions");
@@ -116,7 +116,7 @@ public:
     /// \brief compute the linearized index from the list of offsets
     ///     (assuming the last dimensions that are ignored are zero).
     ///
-    template <typename... tindices>
+    template <class... tindices>
     auto offset0(const tindices... indices) const
     {
         static_assert(sizeof...(indices) <= trank, "invalid number of tensor dimensions");

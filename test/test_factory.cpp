@@ -5,11 +5,11 @@
 
 using namespace nano;
 
-class object_t final : public clonable_t<object_t>
+class object_t final : public typed_t, public clonable_t<object_t>
 {
 public:
-    explicit object_t(int tv)
-        : clonable_t(scat("id", tv))
+    explicit object_t(const int tv)
+        : typed_t(scat("id", tv))
         , m_tv(tv)
     {
     }
@@ -28,13 +28,13 @@ private:
     int m_tv{0};
 };
 
-std::ostream& operator<<(std::ostream& os, const strings_t& strings)
+std::ostream& operator<<(std::ostream& stream, const strings_t& strings)
 {
     for (size_t i = 0; i < strings.size(); ++i)
     {
-        os << strings[i] << (i + 1 == strings.size() ? "" : ",");
+        stream << strings[i] << (i + 1 == strings.size() ? "" : ",");
     }
-    return os;
+    return stream;
 }
 
 UTEST_BEGIN_MODULE(test_factory)
@@ -54,7 +54,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(retrieval)
 {
-    factory_t<object_t> manager;
+    auto manager = factory_t<object_t>{};
 
     const auto id1 = scat("id", 1);
     const auto id2 = scat("id", 2);
@@ -119,7 +119,7 @@ UTEST_CASE(retrieval)
 
 UTEST_CASE(make_object_table)
 {
-    factory_t<object_t> manager;
+    auto manager = factory_t<object_t>{};
 
     UTEST_CHECK(manager.add<object_t>("desc1", 1));
     UTEST_CHECK(manager.add<object_t>("desc2", 2));
