@@ -1,4 +1,3 @@
-#include "util.h"
 #include <iomanip>
 #include <nano/core/cmdline.h>
 #include <nano/core/table.h>
@@ -106,7 +105,11 @@ int unsafe_main(int argc, const char* argv[])
 
     // load dataset
     rdatasource->load();
-    const auto dataset = ::load_dataset(*rdatasource, generator_ids);
+    auto dataset = dataset_t{*rdatasource};
+    for (const auto& generator_id : generator_ids)
+    {
+        dataset.add(generator_t::all().get(generator_id));
+    }
 
     // train the model using nested cross-validation with respecting the datasource's test samples (if given):
     //  for each outer fold...

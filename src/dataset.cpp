@@ -1,3 +1,4 @@
+#include <nano/core/chrono.h>
 #include <nano/dataset.h>
 
 using namespace nano;
@@ -68,9 +69,17 @@ dataset_t::dataset_t(const datasource_t& datasource, const size_t threads)
 
 dataset_t& dataset_t::add(rgenerator_t&& generator)
 {
+    const auto timer = ::nano::timer_t{};
+    const auto genid = generator->type_id();
+
     generator->fit(m_datasource);
     m_generators.emplace_back(std::move(generator));
     update();
+
+    const auto elapsed = timer.elapsed();
+    log(log_type::info, "dataset: loaded feature generator '", genid, "' in <", elapsed, ">.\n");
+    log(log_type::info, "dataset: > columns=", columns(), "\n");
+    log(log_type::info, "dataset: > target=[", target(), "]\n");
     return *this;
 }
 

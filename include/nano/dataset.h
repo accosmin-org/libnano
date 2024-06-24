@@ -20,10 +20,10 @@ public:
     /// \brief register a new feature generator.
     ///
     template <class tgenerator, class... tgenerator_args>
-    dataset_t& add(tgenerator_args... args)
+    dataset_t& add(tgenerator_args&&... args)
     {
         static_assert(std::is_base_of_v<generator_t, tgenerator>);
-        return this->add(std::make_unique<tgenerator>(args...));
+        return this->add(std::make_unique<tgenerator>(std::forward<tgenerator_args>(args)...));
     }
 
     ///
