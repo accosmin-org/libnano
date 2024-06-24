@@ -209,21 +209,21 @@ function llvm_cov_coverage {
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
         -format=html -Xdemangler=c++filt -tab-size=4 \
-        -show-line-counts --show-branches=count --show-expansions \
+        -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
         -output-dir llvmcovhtml \
         ${objects}
 
     llvm-cov report \
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
-        -show-branch-summary \
+        -show-branch-summary --show-instantiation-summary \
         ${objects}
 
     llvm-cov show \
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
         -format=text -Xdemangler=c++filt -tab-size=4 \
-        -show-line-counts --show-branches=count --show-expansions \
+        -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
         ${objects} > ${basedir}/llvmcov.text
 }
 
