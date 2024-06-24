@@ -74,7 +74,7 @@ function coverage {
 }
 
 function llvm_coverage {
-    export CXXFLAGS="${CXXFLAGS} -fprofile-instr-generate -fcoverage-mapping"
+    export CXXFLAGS="${CXXFLAGS} -fprofile-instr-generate -fcoverage-mapping -Og"
 }
 
 function suffix {
@@ -209,21 +209,21 @@ function llvm_cov_coverage {
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
         -format=html -Xdemangler=c++filt -tab-size=4 \
-        -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
+        -show-line-counts --show-branches=count --show-expansions \
         -output-dir llvmcovhtml \
         ${objects}
 
     llvm-cov report \
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
-        -show-branch-summary --show-instantiation-summary \
+        -show-branch-summary \
         ${objects}
 
     llvm-cov show \
         -instr-profile=${output} \
         -ignore-filename-regex=test\/ \
         -format=text -Xdemangler=c++filt -tab-size=4 \
-        -show-line-counts --show-branches=count --show-expansions --show-instantiation-summary \
+        -show-line-counts --show-branches=count --show-expansions \
         ${objects} > ${basedir}/llvmcov.text
 }
 
