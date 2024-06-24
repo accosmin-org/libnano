@@ -108,7 +108,7 @@ tscalar epsilon3() noexcept
 }
 
 ///
-///  \brief check if the given scalar is finite.
+/// \brief check if the given scalar is finite.
 /// NB: handles explicitly integer values as MSVC doesn't cast it to the appropriate floating point types.
 ///
 template <class tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
