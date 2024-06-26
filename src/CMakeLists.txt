@@ -10,6 +10,10 @@ file(RELATIVE_PATH relDir
 )
 set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
+add_subdirectory(function)
+add_subdirectory(program)
+add_subdirectory(solver)
+
 # generic utilities
 make_lib(NANO core
     ${CMAKE_SOURCE_DIR}/include/nano/arch.h
@@ -71,163 +75,6 @@ make_lib(NANO core
     core/sampling.cpp
     core/strutil.cpp
     core/table.cpp
-)
-
-# numerical optimization function and benchmarks
-make_lib(NANO function
-    ${CMAKE_SOURCE_DIR}/include/nano/function.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/axis_ellipsoid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/cauchy.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3I.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3II.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_lq.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chung_reynolds.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/dixon_price.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/elastic_net.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/exponential.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/geometric.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/kinks.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/linear.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxhilb.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxq.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/powell.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/qing.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/quadratic.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rosenbrock.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rotated_ellipsoid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sargan.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/schumer_steiglitz.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sphere.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/styblinski_tang.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/trid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/zakharov.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/util.h
-
-    function.cpp
-    function/benchmark/axis_ellipsoid.cpp
-    function/benchmark/cauchy.cpp
-    function/benchmark/chained_cb3I.cpp
-    function/benchmark/chained_cb3II.cpp
-    function/benchmark/chained_lq.cpp
-    function/benchmark/chung_reynolds.cpp
-    function/benchmark/dixon_price.cpp
-    function/benchmark/elastic_net.cpp
-    function/benchmark/exponential.cpp
-    function/benchmark/geometric.cpp
-    function/benchmark/kinks.cpp
-    function/benchmark/linear.cpp
-    function/benchmark/maxhilb.cpp
-    function/benchmark/maxq.cpp
-    function/benchmark/powell.cpp
-    function/benchmark/qing.cpp
-    function/benchmark/quadratic.cpp
-    function/benchmark/rosenbrock.cpp
-    function/benchmark/rotated_ellipsoid.cpp
-    function/benchmark/sargan.cpp
-    function/benchmark/schumer_steiglitz.cpp
-    function/benchmark/sphere.cpp
-    function/benchmark/styblinski_tang.cpp
-    function/benchmark/trid.cpp
-    function/benchmark/zakharov.cpp
-    function/constraint.cpp
-    function/penalty.cpp
-    function/util.cpp
-)
-
-# numerical optimization program
-make_lib(NANO program
-    ${CMAKE_SOURCE_DIR}/include/nano/program/constrained.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/constraint.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/equality.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/inequality.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/linear.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/quadratic.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/solver.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/stack.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/state.h
-
-    program/constrained.cpp
-    program/linear.cpp
-    program/quadratic.cpp
-    program/solver.cpp
-    program/state.cpp
-)
-
-# numerical optimization utilities
-make_lib(NANO solver
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/cgdescent.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/constant.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/linear.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0/quadratic.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/backtrack.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/cgdescent.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/fletcher.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/lemarechal.h
-    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/morethuente.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/asga.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/cgd.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/cocob.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/ellipsoid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/fpba.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/gd.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/gsample.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/lbfgs.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/osga.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/pdsgm.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/quasi.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/rqb.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/sgm.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/universal.h
-
-    lsearch0.cpp
-    lsearch0/cgdescent.cpp
-    lsearch0/constant.cpp
-    lsearch0/linear.cpp
-    lsearch0/quadratic.cpp
-    lsearchk.cpp
-    lsearchk/backtrack.cpp
-    lsearchk/cgdescent.cpp
-    lsearchk/fletcher.cpp
-    lsearchk/lemarechal.cpp
-    lsearchk/morethuente.cpp
-    solver.cpp
-    solver/asga.cpp
-    solver/augmented.cpp
-    solver/bundle.cpp
-    solver/cgd.cpp
-    solver/cocob.cpp
-    solver/csearch.cpp
-    solver/ellipsoid.cpp
-    solver/fpba.cpp
-    solver/gd.cpp
-    solver/gsample.cpp
-    solver/lbfgs.cpp
-    solver/lsearch.cpp
-    solver/lstep.cpp
-    solver/osga.cpp
-    solver/pdsgm.cpp
-    solver/penalty.cpp
-    solver/proximity.cpp
-    solver/quasi.cpp
-    solver/rqb.cpp
-    solver/sgm.cpp
-    solver/state.cpp
-    solver/universal.cpp
 )
 
 # machine learning utilities
@@ -368,6 +215,15 @@ make_lib(NANO machine
 )
 
 # link libraries
+target_link_libraries(core
+    PUBLIC Eigen3::Eigen)
+
+if(NOT WIN32)
+    target_link_libraries(core
+        PUBLIC Threads::Threads
+        PRIVATE Threads::Threads)
+endif()
+
 target_link_libraries(function PUBLIC core)
 target_link_libraries(program PUBLIC core)
 target_link_libraries(solver PUBLIC function program)
