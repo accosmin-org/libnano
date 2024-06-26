@@ -73,7 +73,7 @@ make_lib(NANO core
     core/table.cpp
 )
 
-# numerical optimization utilities
+# numerical optimization function and benchmarks
 make_lib(NANO function
     ${CMAKE_SOURCE_DIR}/include/nano/function.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/axis_ellipsoid.h
@@ -137,6 +137,25 @@ make_lib(NANO function
     function/util.cpp
 )
 
+# numerical optimization program
+make_lib(NANO program
+    ${CMAKE_SOURCE_DIR}/include/nano/program/constrained.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/constraint.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/equality.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/inequality.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/linear.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/quadratic.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/solver.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/stack.h
+    ${CMAKE_SOURCE_DIR}/include/nano/program/state.h
+
+    program/constrained.cpp
+    program/linear.cpp
+    program/quadratic.cpp
+    program/solver.cpp
+    program/state.cpp
+)
+
 # numerical optimization utilities
 make_lib(NANO solver
     ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
@@ -150,15 +169,6 @@ make_lib(NANO solver
     ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/fletcher.h
     ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/lemarechal.h
     ${CMAKE_SOURCE_DIR}/include/nano/lsearchk/morethuente.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/constrained.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/constraint.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/equality.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/inequality.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/linear.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/quadratic.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/solver.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/stack.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/state.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/asga.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
@@ -195,11 +205,6 @@ make_lib(NANO solver
     lsearchk/fletcher.cpp
     lsearchk/lemarechal.cpp
     lsearchk/morethuente.cpp
-    program/constrained.cpp
-    program/linear.cpp
-    program/quadratic.cpp
-    program/solver.cpp
-    program/state.cpp
     solver.cpp
     solver/asga.cpp
     solver/augmented.cpp
@@ -364,5 +369,6 @@ make_lib(NANO machine
 
 # link libraries
 target_link_libraries(function PUBLIC core)
-target_link_libraries(solver PUBLIC function)
+target_link_libraries(program PUBLIC core)
+target_link_libraries(solver PUBLIC function program)
 target_link_libraries(machine PUBLIC solver)
