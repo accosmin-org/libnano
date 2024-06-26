@@ -30,14 +30,6 @@ function(make_lib projname lib)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-    target_link_libraries(${lib}
-        PUBLIC Eigen3::Eigen)
-    if(NOT WIN32)
-        target_link_libraries(${lib}
-            PUBLIC Threads::Threads
-            PRIVATE Threads::Threads)
-    endif()
-
     # install the target and create export-set
     install(TARGETS ${lib}
         EXPORT ${lib}Targets
