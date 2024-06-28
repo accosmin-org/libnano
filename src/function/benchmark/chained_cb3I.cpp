@@ -1,5 +1,5 @@
+#include <function/benchmark/chained_cb3I.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/chained_cb3I.h>
 
 using namespace nano;
 

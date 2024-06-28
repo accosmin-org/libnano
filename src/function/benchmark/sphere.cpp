@@ -1,4 +1,4 @@
-#include <nano/function/benchmark/sphere.h>
+#include <function/benchmark/sphere.h>
 
 using namespace nano;
 

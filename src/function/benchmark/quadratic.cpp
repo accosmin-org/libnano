@@ -1,4 +1,4 @@
-#include <nano/function/benchmark/quadratic.h>
+#include <function/benchmark/quadratic.h>
 #include <nano/function/util.h>
 
 using namespace nano;

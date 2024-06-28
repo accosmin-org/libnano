@@ -1,5 +1,5 @@
+#include <function/benchmark/chained_lq.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/chained_lq.h>
 
 using namespace nano;
 

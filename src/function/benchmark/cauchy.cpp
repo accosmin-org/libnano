@@ -1,4 +1,4 @@
-#include <nano/function/benchmark/cauchy.h>
+#include <function/benchmark/cauchy.h>
 
 using namespace nano;
 

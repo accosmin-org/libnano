@@ -1,5 +1,5 @@
+#include <function/benchmark/rosenbrock.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/rosenbrock.h>
 
 using namespace nano;
 

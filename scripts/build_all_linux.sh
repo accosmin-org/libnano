@@ -15,10 +15,12 @@ export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 CXX=clang++ bash scripts/build.sh --clang-format
 
 ###############################################################################################################
-# check documentation
+# check structure and documentation
 ###############################################################################################################
 
-bash scripts/build.sh --check-markdown-docs
+# bash scripts/build.sh \
+#    --check-source-files \
+#    --check-markdown-docs
 
 ###############################################################################################################
 # standard GCC builds

@@ -1,5 +1,5 @@
+#include <function/benchmark/sargan.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/sargan.h>
 
 using namespace nano;
 

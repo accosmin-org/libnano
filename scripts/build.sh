@@ -452,6 +452,7 @@ function check_source_files {
 
     filenames=`find include/nano -type f -name "*.h"`
     for filename in ${filenames}; do
+        echo ${filename}
         check=`grep ${filename} ${basedir}/src/CMakeLists.txt`
         if [ -z "${check}" ]; then
             echo "-- Error: unreferenced header file ${filename}!"
@@ -459,7 +460,7 @@ function check_source_files {
         fi
     done
 
-    filenames=`find src -type f -name "*.cpp"`
+    filenames=`find src -type f -name "*.cpp" -o -name "*.h"`
     for filename in ${filenames}; do
         filename=${filename/src\//}
         check=`grep ${filename} ${basedir}/src/CMakeLists.txt`

@@ -2,7 +2,7 @@
 #include "fixture/lsearch0.h"
 #include "fixture/lsearchk.h"
 #include "fixture/solver.h"
-#include <nano/function/benchmark/sphere.h>
+#include <function/benchmark/sphere.h>
 #include <nano/solver.h>
 
 using namespace nano;

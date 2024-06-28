@@ -28,6 +28,7 @@ function(make_lib projname lib)
             $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
             $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
     # install the target and create export-set
@@ -49,7 +50,9 @@ endfunction()
 function(make_test test)
     add_executable(${test} ${test}.cpp)
     target_include_directories(${test}
-        SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>
+        SYSTEM PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/test>
     )
     target_link_libraries(${test}
         PRIVATE ${ARGN}

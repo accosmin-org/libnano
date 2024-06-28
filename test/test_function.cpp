@@ -1,5 +1,5 @@
 #include "fixture/function.h"
-#include <nano/function/benchmark/sphere.h>
+#include <function/benchmark/sphere.h>
 #include <nano/function/lambda.h>
 #include <unordered_map>
 

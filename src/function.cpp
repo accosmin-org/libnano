@@ -1,30 +1,30 @@
 #include <mutex>
 
+#include <function/benchmark/axis_ellipsoid.h>
+#include <function/benchmark/cauchy.h>
+#include <function/benchmark/chained_cb3I.h>
+#include <function/benchmark/chained_cb3II.h>
+#include <function/benchmark/chained_lq.h>
+#include <function/benchmark/chung_reynolds.h>
+#include <function/benchmark/dixon_price.h>
+#include <function/benchmark/elastic_net.h>
+#include <function/benchmark/exponential.h>
+#include <function/benchmark/geometric.h>
+#include <function/benchmark/kinks.h>
+#include <function/benchmark/maxhilb.h>
+#include <function/benchmark/maxq.h>
+#include <function/benchmark/powell.h>
+#include <function/benchmark/qing.h>
+#include <function/benchmark/quadratic.h>
+#include <function/benchmark/rosenbrock.h>
+#include <function/benchmark/rotated_ellipsoid.h>
+#include <function/benchmark/sargan.h>
+#include <function/benchmark/schumer_steiglitz.h>
+#include <function/benchmark/sphere.h>
+#include <function/benchmark/styblinski_tang.h>
+#include <function/benchmark/trid.h>
+#include <function/benchmark/zakharov.h>
 #include <nano/core/strutil.h>
-#include <nano/function/benchmark/axis_ellipsoid.h>
-#include <nano/function/benchmark/cauchy.h>
-#include <nano/function/benchmark/chained_cb3I.h>
-#include <nano/function/benchmark/chained_cb3II.h>
-#include <nano/function/benchmark/chained_lq.h>
-#include <nano/function/benchmark/chung_reynolds.h>
-#include <nano/function/benchmark/dixon_price.h>
-#include <nano/function/benchmark/elastic_net.h>
-#include <nano/function/benchmark/exponential.h>
-#include <nano/function/benchmark/geometric.h>
-#include <nano/function/benchmark/kinks.h>
-#include <nano/function/benchmark/maxhilb.h>
-#include <nano/function/benchmark/maxq.h>
-#include <nano/function/benchmark/powell.h>
-#include <nano/function/benchmark/qing.h>
-#include <nano/function/benchmark/quadratic.h>
-#include <nano/function/benchmark/rosenbrock.h>
-#include <nano/function/benchmark/rotated_ellipsoid.h>
-#include <nano/function/benchmark/sargan.h>
-#include <nano/function/benchmark/schumer_steiglitz.h>
-#include <nano/function/benchmark/sphere.h>
-#include <nano/function/benchmark/styblinski_tang.h>
-#include <nano/function/benchmark/trid.h>
-#include <nano/function/benchmark/zakharov.h>
 
 using namespace nano;
 

@@ -1,4 +1,4 @@
-#include <nano/function/benchmark/maxhilb.h>
+#include <function/benchmark/maxhilb.h>
 
 using namespace nano;
 

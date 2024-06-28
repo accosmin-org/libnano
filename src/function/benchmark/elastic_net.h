@@ -1,7 +1,7 @@
 #pragma once
 
+#include <function/benchmark/linear.h>
 #include <nano/function.h>
-#include <nano/function/benchmark/linear.h>
 
 namespace nano
 {

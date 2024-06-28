@@ -1,4 +1,4 @@
-#include <nano/function/benchmark/maxq.h>
+#include <function/benchmark/maxq.h>
 
 using namespace nano;
 

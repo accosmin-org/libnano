@@ -1,5 +1,5 @@
+#include <function/benchmark/rotated_ellipsoid.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/rotated_ellipsoid.h>
 
 using namespace nano;
 

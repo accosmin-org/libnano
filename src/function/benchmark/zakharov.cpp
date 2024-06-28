@@ -1,5 +1,5 @@
+#include <function/benchmark/zakharov.h>
 #include <nano/core/numeric.h>
-#include <nano/function/benchmark/zakharov.h>
 
 using namespace nano;
 

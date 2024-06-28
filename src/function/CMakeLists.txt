@@ -1,30 +1,5 @@
 make_lib(NANO function
     ${CMAKE_SOURCE_DIR}/include/nano/function.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/axis_ellipsoid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/cauchy.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3I.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_cb3II.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chained_lq.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/chung_reynolds.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/dixon_price.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/elastic_net.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/exponential.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/geometric.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/kinks.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/linear.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxhilb.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/maxq.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/powell.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/qing.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/quadratic.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rosenbrock.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/rotated_ellipsoid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sargan.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/schumer_steiglitz.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/sphere.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/styblinski_tang.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/trid.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/benchmark/zakharov.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
@@ -34,6 +9,32 @@ make_lib(NANO function
     ${CMAKE_SOURCE_DIR}/src/function/constraint.cpp
     ${CMAKE_SOURCE_DIR}/src/function/penalty.cpp
     ${CMAKE_SOURCE_DIR}/src/function/util.cpp
+
+    benchmark/axis_ellipsoid.h
+    benchmark/cauchy.h
+    benchmark/chained_cb3I.h
+    benchmark/chained_cb3II.h
+    benchmark/chained_lq.h
+    benchmark/chung_reynolds.h
+    benchmark/dixon_price.h
+    benchmark/elastic_net.h
+    benchmark/exponential.h
+    benchmark/geometric.h
+    benchmark/kinks.h
+    benchmark/linear.h
+    benchmark/maxhilb.h
+    benchmark/maxq.h
+    benchmark/powell.h
+    benchmark/qing.h
+    benchmark/quadratic.h
+    benchmark/rosenbrock.h
+    benchmark/rotated_ellipsoid.h
+    benchmark/sargan.h
+    benchmark/schumer_steiglitz.h
+    benchmark/sphere.h
+    benchmark/styblinski_tang.h
+    benchmark/trid.h
+    benchmark/zakharov.h
 
     benchmark/axis_ellipsoid.cpp
     benchmark/cauchy.cpp
