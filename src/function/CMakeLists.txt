@@ -1,64 +1,11 @@
-make_lib(NANO function
-    ${CMAKE_SOURCE_DIR}/include/nano/function.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
-    ${CMAKE_SOURCE_DIR}/include/nano/function/util.h
+target_sources(function
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
+        ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
+        ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
+        ${CMAKE_SOURCE_DIR}/include/nano/function/util.h
+        constraint.cpp
+        penalty.cpp
+        util.cpp)
 
-    ${CMAKE_SOURCE_DIR}/src/function.cpp
-    ${CMAKE_SOURCE_DIR}/src/function/constraint.cpp
-    ${CMAKE_SOURCE_DIR}/src/function/penalty.cpp
-    ${CMAKE_SOURCE_DIR}/src/function/util.cpp
-
-    benchmark/axis_ellipsoid.h
-    benchmark/cauchy.h
-    benchmark/chained_cb3I.h
-    benchmark/chained_cb3II.h
-    benchmark/chained_lq.h
-    benchmark/chung_reynolds.h
-    benchmark/dixon_price.h
-    benchmark/elastic_net.h
-    benchmark/exponential.h
-    benchmark/geometric.h
-    benchmark/kinks.h
-    benchmark/linear.h
-    benchmark/maxhilb.h
-    benchmark/maxq.h
-    benchmark/powell.h
-    benchmark/qing.h
-    benchmark/quadratic.h
-    benchmark/rosenbrock.h
-    benchmark/rotated_ellipsoid.h
-    benchmark/sargan.h
-    benchmark/schumer_steiglitz.h
-    benchmark/sphere.h
-    benchmark/styblinski_tang.h
-    benchmark/trid.h
-    benchmark/zakharov.h
-
-    benchmark/axis_ellipsoid.cpp
-    benchmark/cauchy.cpp
-    benchmark/chained_cb3I.cpp
-    benchmark/chained_cb3II.cpp
-    benchmark/chained_lq.cpp
-    benchmark/chung_reynolds.cpp
-    benchmark/dixon_price.cpp
-    benchmark/elastic_net.cpp
-    benchmark/exponential.cpp
-    benchmark/geometric.cpp
-    benchmark/kinks.cpp
-    benchmark/linear.cpp
-    benchmark/maxhilb.cpp
-    benchmark/maxq.cpp
-    benchmark/powell.cpp
-    benchmark/qing.cpp
-    benchmark/quadratic.cpp
-    benchmark/rosenbrock.cpp
-    benchmark/rotated_ellipsoid.cpp
-    benchmark/sargan.cpp
-    benchmark/schumer_steiglitz.cpp
-    benchmark/sphere.cpp
-    benchmark/styblinski_tang.cpp
-    benchmark/trid.cpp
-    benchmark/zakharov.cpp
-)
+add_subdirectory(benchmark)

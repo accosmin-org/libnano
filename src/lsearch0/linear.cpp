@@ -1,4 +1,4 @@
-#include <nano/lsearch0/linear.h>
+#include <lsearch0/linear.h>
 
 using namespace nano;
 

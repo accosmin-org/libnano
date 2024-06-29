@@ -1,10 +1,10 @@
+#include <lsearchk/backtrack.h>
+#include <lsearchk/cgdescent.h>
+#include <lsearchk/fletcher.h>
+#include <lsearchk/lemarechal.h>
+#include <lsearchk/morethuente.h>
 #include <mutex>
 #include <nano/core/numeric.h>
-#include <nano/lsearchk/backtrack.h>
-#include <nano/lsearchk/cgdescent.h>
-#include <nano/lsearchk/fletcher.h>
-#include <nano/lsearchk/lemarechal.h>
-#include <nano/lsearchk/morethuente.h>
 
 using namespace nano;
 

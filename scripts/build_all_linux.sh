@@ -9,18 +9,16 @@ cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 
 ###############################################################################################################
-# code formatting using a fixed version of clang-format
+# generic checks:
+#   - code formatting using a fixed version of clang-format
+#   - code structure
+#   - documentation
 ###############################################################################################################
 
-CXX=clang++ bash scripts/build.sh --clang-format
-
-###############################################################################################################
-# check structure and documentation
-###############################################################################################################
-
-# bash scripts/build.sh \
-#    --check-source-files \
-#    --check-markdown-docs
+CXX=clang++ bash scripts/build.sh \
+    --check-source-files \
+    --check-markdown-docs \
+    --clang-format
 
 ###############################################################################################################
 # standard GCC builds

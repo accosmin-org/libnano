@@ -1,5 +1,5 @@
 #include <nano/core/random.h>
-#include <nano/splitter/kfold.h>
+#include <splitter/kfold.h>
 
 using namespace nano;
 

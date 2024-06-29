@@ -1,0 +1,13 @@
+target_sources(machine
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/accumulator.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/enums.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/function.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/model.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/result.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/util.h
+        accumulator.cpp
+        function.cpp
+        model.cpp
+        result.cpp
+        util.cpp)

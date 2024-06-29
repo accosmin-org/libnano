@@ -15,12 +15,15 @@ function(copy_runtime_dlls TARGET)
     endif ()
 endfunction()
 
-# function to create a library as a component of the given project
+# function to configure the given library (e.g. alias, includes, installation)
 function(make_lib projname lib)
-    # create library
     add_library(${lib})
-    target_sources(${lib} PRIVATE ${ARGN})
     add_library(${projname}::${lib} ALIAS ${lib})
+
+    set_target_properties(${lib}
+        PROPERTIES
+            LANGUAGE CXX
+            LINKER_LANGUAGE CXX)
 
     target_include_directories(${lib}
         PUBLIC

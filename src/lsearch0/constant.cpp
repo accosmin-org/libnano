@@ -1,4 +1,4 @@
-#include <nano/lsearch0/constant.h>
+#include <lsearch0/constant.h>
 
 using namespace nano;
 

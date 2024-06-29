@@ -1,6 +1,6 @@
 #include <mutex>
-#include <nano/splitter/kfold.h>
-#include <nano/splitter/random.h>
+#include <splitter/kfold.h>
+#include <splitter/random.h>
 
 using namespace nano;
 

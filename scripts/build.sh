@@ -450,33 +450,52 @@ function check_source_files {
 
     returncode=0
 
+    # NB: the headers in the public interface should include only files
+    # from external libraries and own public interface.
     filenames=`find include/nano -type f -name "*.h"`
     for filename in ${filenames}; do
-        echo ${filename}
-        check=`grep ${filename} ${basedir}/src/CMakeLists.txt`
-        if [ -z "${check}" ]; then
-            echo "-- Error: unreferenced header file ${filename}!"
+        includes=`grep "#include <nano" ${filename} | cut -d ' ' -f 2`
+        for include in ${includes}; do
+            include=${include/</}
+            include=${include/>/}
+            incpath=include/${include}
+            if [ ! "${include}" = "nano/version.h" ] && [ ! -f "${incpath}" ]; then
+                echo "-- Error: included ${include} in ${filename} is not in the public interface!"
+                returncode=1
+            fi
+        done
+    done
+
+    # NB: the interface header files should be included exactly once in the CMakeLists.txt!
+    filenames=`find include -type f -name "*.cpp" -o -name "*.h"`
+    for filename in ${filenames}; do
+        count=`find src -type f -name CMakeLists.txt | xargs grep \${CMAKE_SOURCE_DIR}${filename/\./\\\.} | wc -l`
+
+        if [ ! ${count} = 1 ]; then
+            echo "-- Error: unreferenced interface file ${filename} in CMakeLists.txt!"
             returncode=1
         fi
     done
 
+    # NB: the implementation files should be included exactly once in the CMakeLists.txt!
     filenames=`find src -type f -name "*.cpp" -o -name "*.h"`
     for filename in ${filenames}; do
-        filename=${filename/src\//}
-        check=`grep ${filename} ${basedir}/src/CMakeLists.txt`
+        check=$(grep `basename ${filename}` `dirname ${filename}`/CMakeLists.txt)
+
         if [ -z "${check}" ]; then
-            echo "-- Error: unreferenced source file ${filename}!"
+            echo "-- Error: unreferenced source file ${filename} in CMakeLists.txt!"
             returncode=1
         fi
     done
 
+    # NB: the test source files should be included exactly once in the CMakeLists.txt!
     filenames=`find test -type f -name "*.cpp"`
     for filename in ${filenames}; do
         filename=${filename/test\//}
         filename=${filename/\.cpp/}
-        check=`grep ${filename} ${basedir}/test/CMakeLists.txt`
-        if [ -z "${check}" ]; then
-            echo "-- Error: unreferenced test file ${filename}!"
+        check=`grep make_test\(${filename}\ NANO ${basedir}/test/CMakeLists.txt | wc -l`
+        if [ ! "${check}" = 1 ]; then
+            echo "-- Error: unreferenced test file ${filename} in CMakeLists.txt!"
             returncode=1
         fi
     done

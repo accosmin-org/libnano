@@ -1,5 +1,5 @@
+#include <lsearchk/fletcher.h>
 #include <nano/core/numeric.h>
-#include <nano/lsearchk/fletcher.h>
 
 using namespace nano;
 

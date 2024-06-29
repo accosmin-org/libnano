@@ -1,11 +1,6 @@
 #include "fixture/function.h"
 #include "fixture/lsearchk.h"
 #include <iomanip>
-#include <nano/lsearchk/backtrack.h>
-#include <nano/lsearchk/cgdescent.h>
-#include <nano/lsearchk/fletcher.h>
-#include <nano/lsearchk/lemarechal.h>
-#include <nano/lsearchk/morethuente.h>
 
 using namespace nano;
 

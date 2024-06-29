@@ -1,5 +1,5 @@
+#include <lsearchk/cgdescent.h>
 #include <nano/core/numeric.h>
-#include <nano/lsearchk/cgdescent.h>
 
 using namespace nano;
 

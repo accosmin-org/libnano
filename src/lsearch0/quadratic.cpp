@@ -1,4 +1,4 @@
-#include <nano/lsearch0/quadratic.h>
+#include <lsearch0/quadratic.h>
 
 using namespace nano;
 

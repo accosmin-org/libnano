@@ -1,6 +1,6 @@
 #include <nano/core/numeric.h>
 #include <nano/core/random.h>
-#include <nano/splitter/random.h>
+#include <splitter/random.h>
 
 using namespace nano;
 

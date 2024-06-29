@@ -1,8 +1,8 @@
+#include <lsearch0/cgdescent.h>
+#include <lsearch0/constant.h>
+#include <lsearch0/linear.h>
+#include <lsearch0/quadratic.h>
 #include <mutex>
-#include <nano/lsearch0/cgdescent.h>
-#include <nano/lsearch0/constant.h>
-#include <nano/lsearch0/linear.h>
-#include <nano/lsearch0/quadratic.h>
 
 using namespace nano;
 

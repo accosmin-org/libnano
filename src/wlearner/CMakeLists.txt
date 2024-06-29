@@ -1,0 +1,20 @@
+target_sources(machine
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/accumulator.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/affine.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/criterion.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/dtree.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/hinge.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/single.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/stump.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/table.h
+        ${CMAKE_SOURCE_DIR}/include/nano/wlearner/util.h
+        accumulator.cpp
+        affine.cpp
+        criterion.cpp
+        dtree.cpp
+        hinge.cpp
+        single.cpp
+        stump.cpp
+        table.cpp
+        util.cpp)
