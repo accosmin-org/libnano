@@ -8,10 +8,10 @@ concurrency:
 
 jobs:
   cppcheck:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
+      run: bash scripts/setup_ubuntu2404.sh --default
     - name: cppcheck
       run: CXX=g++ bash scripts/build.sh --config --cppcheck
