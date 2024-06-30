@@ -131,6 +131,7 @@ function call_cppcheck {
         --project=compile_commands.json \
         --enable=all --quiet --std=c++17 --error-exitcode=0 --inline-suppr --force \
         --template='{file}:{line},{severity},{id},{message}' \
+        --check-level=exhaustive \
         --suppress=unknownMacro \
         --suppress=shadowFunction \
         --suppress=unusedFunction \
