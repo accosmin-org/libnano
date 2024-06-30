@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fixture/generator.h"
+#include <fixture/generator.h>
 #include <nano/generator/elemwise_identity.h>
 
 using namespace nano;
