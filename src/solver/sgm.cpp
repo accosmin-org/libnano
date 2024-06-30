@@ -1,4 +1,4 @@
-#include <nano/solver/sgm.h>
+#include <solver/sgm.h>
 
 using namespace nano;
 

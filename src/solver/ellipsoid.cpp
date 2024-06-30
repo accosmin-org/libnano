@@ -1,4 +1,4 @@
-#include <nano/solver/ellipsoid.h>
+#include <solver/ellipsoid.h>
 
 using namespace nano;
 

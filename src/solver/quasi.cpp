@@ -1,4 +1,4 @@
-#include <nano/solver/quasi.h>
+#include <solver/quasi.h>
 
 using namespace nano;
 

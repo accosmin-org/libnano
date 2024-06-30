@@ -1,4 +1,4 @@
-#include <nano/solver/cgd.h>
+#include <solver/cgd.h>
 
 using namespace nano;
 

@@ -2,7 +2,7 @@
 #include "fixture/lsearchk.h"
 #include "fixture/solver.h"
 #include <iomanip>
-#include <nano/solver/quasi.h>
+#include <solver/quasi.h>
 
 using namespace nano;
 

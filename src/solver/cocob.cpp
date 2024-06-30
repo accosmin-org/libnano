@@ -1,4 +1,4 @@
-#include <nano/solver/cocob.h>
+#include <solver/cocob.h>
 
 using namespace nano;
 

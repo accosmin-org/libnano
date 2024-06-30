@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include <nano/function/util.h>
-#include <nano/solver/lbfgs.h>
+#include <nano/solver.h>
 
 using namespace nano;
 
@@ -60,14 +60,14 @@ int main(const int, char*[])
     // construct a solver_t object to minimize the objective function
     // NB: this may be not needed as the default configuration will minimize the objective as well!
     // NB: can also use the factory to get the default solver: `solver_t::all().get("lbfgs")`!
-    auto solver                                = solver_lbfgs_t{};
-    solver.parameter("solver::lbfgs::history") = 20;
-    solver.parameter("solver::epsilon")        = 1e-8;
-    solver.parameter("solver::max_evals")      = 100;
-    solver.parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
-    solver.lsearch0("constant");
-    solver.lsearchk("morethuente");
-    solver.logger(make_stdout_logger());
+    auto solver                                 = solver_t::all().get("lbfgs");
+    solver->parameter("solver::lbfgs::history") = 20;
+    solver->parameter("solver::epsilon")        = 1e-8;
+    solver->parameter("solver::max_evals")      = 100;
+    solver->parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
+    solver->lsearch0("constant");
+    solver->lsearchk("morethuente");
+    solver->logger(make_stdout_logger());
 
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++trial)
@@ -77,7 +77,7 @@ int main(const int, char*[])
                   << "]: f0=" << objective.vgrad(x0) << "...\n";
 
         // minimize
-        const auto state = solver.minimize(objective, x0);
+        const auto state = solver->minimize(objective, x0);
         const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials

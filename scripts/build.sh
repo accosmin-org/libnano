@@ -460,7 +460,8 @@ function check_source_files {
             include=${include/>/}
             incpath=include/${include}
             if [ ! "${include}" = "nano/version.h" ] && [ ! -f "${incpath}" ]; then
-                echo "-- Error: included ${include} in ${filename} is not in the public interface!"
+                echo -n "-- Error: found include '${include}' from the library interface '${filename}' "
+                echo "which is not in 'include/nano'!"
                 returncode=1
             fi
         done
@@ -472,7 +473,8 @@ function check_source_files {
         count=`find src -type f -name CMakeLists.txt | xargs grep \${CMAKE_SOURCE_DIR}${filename/\./\\\.} | wc -l`
 
         if [ ! ${count} = 1 ]; then
-            echo "-- Error: unreferenced interface file ${filename} in CMakeLists.txt!"
+            echo -n "-- Error: found library interface '${filename}' "
+            echo "which should be referenced exactly once in 'src/CMakeLists.txt', got ${count} times instead!"
             returncode=1
         fi
     done
@@ -480,10 +482,11 @@ function check_source_files {
     # NB: the implementation files should be included exactly once in the CMakeLists.txt!
     filenames=`find src -type f -name "*.cpp" -o -name "*.h"`
     for filename in ${filenames}; do
-        check=$(grep `basename ${filename}` `dirname ${filename}`/CMakeLists.txt)
+        count=$(grep `basename ${filename}` `dirname ${filename}`/CMakeLists.txt | wc -l)
 
-        if [ -z "${check}" ]; then
-            echo "-- Error: unreferenced source file ${filename} in CMakeLists.txt!"
+        if [ ${count} = 0 ]; then
+            echo -n "-- Error: found source '${filename}' "
+            echo "which should be referenced exactly once in 'src/*/CMakeLists.txt', got ${count} times instead!"
             returncode=1
         fi
     done
@@ -493,9 +496,10 @@ function check_source_files {
     for filename in ${filenames}; do
         filename=${filename/test\//}
         filename=${filename/\.cpp/}
-        check=`grep make_test\(${filename}\ NANO ${basedir}/test/CMakeLists.txt | wc -l`
-        if [ ! "${check}" = 1 ]; then
-            echo "-- Error: unreferenced test file ${filename} in CMakeLists.txt!"
+        count=`grep make_test\(${filename}\ NANO ${basedir}/test/CMakeLists.txt | wc -l`
+        if [ ! ${count} = 1 ]; then
+            echo -n "-- Error: found test '${filename}' "
+            echo "which should be referenced exactly once in 'test/CMakeLists.txt', got ${count} times instead!"
             returncode=1
         fi
     done
@@ -523,7 +527,7 @@ function check_markdown_docs {
                     filename=${filename//\)/}
                     filename=`dirname ${docfile}`/${filename}
                     if [ ! -d ${filename} ] && [ ! -f ${filename} ]; then
-                        echo "-- Error: invalid reference path ${filename}!"
+                        echo "-- Error: invalid reference path '${filename}'!"
                         returncode=1
                     fi
                 fi
@@ -540,7 +544,7 @@ function check_markdown_docs {
                     filename=${filename//\>/}
                     filename=include/${filename}
                     if [ ! -f ${filename} ]; then
-                        echo "-- Error: invalid C++ include ${filename}!"
+                        echo "-- Error: invalid C++ include '${filename}'!"
                         returncode=1
                     fi
                 fi

@@ -1,19 +1,19 @@
 #include <mutex>
 #include <nano/critical.h>
-#include <nano/solver/asga.h>
-#include <nano/solver/cgd.h>
-#include <nano/solver/cocob.h>
-#include <nano/solver/ellipsoid.h>
-#include <nano/solver/fpba.h>
-#include <nano/solver/gd.h>
-#include <nano/solver/gsample.h>
-#include <nano/solver/lbfgs.h>
-#include <nano/solver/osga.h>
-#include <nano/solver/pdsgm.h>
-#include <nano/solver/quasi.h>
-#include <nano/solver/rqb.h>
-#include <nano/solver/sgm.h>
-#include <nano/solver/universal.h>
+#include <solver/asga.h>
+#include <solver/cgd.h>
+#include <solver/cocob.h>
+#include <solver/ellipsoid.h>
+#include <solver/fpba.h>
+#include <solver/gd.h>
+#include <solver/gsample.h>
+#include <solver/lbfgs.h>
+#include <solver/osga.h>
+#include <solver/pdsgm.h>
+#include <solver/quasi.h>
+#include <solver/rqb.h>
+#include <solver/sgm.h>
+#include <solver/universal.h>
 
 using namespace nano;
 

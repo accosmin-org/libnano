@@ -1,4 +1,4 @@
-#include <nano/solver/universal.h>
+#include <solver/universal.h>
 
 using namespace nano;
 

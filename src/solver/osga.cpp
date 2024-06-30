@@ -1,5 +1,5 @@
 #include <nano/core/numeric.h>
-#include <nano/solver/osga.h>
+#include <solver/osga.h>
 
 using namespace nano;
 

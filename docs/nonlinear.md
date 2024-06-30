@@ -124,22 +124,22 @@ std::cout << make_table("solver", solver_t::all());
 
 The default configurations are close to optimal for most situations. Still the user is free to experiment with the available parameters. The following piece of code extracted from the [example](../example/src/nonlinear.cpp) shows how to create a L-BFGS solver and how to change the line-search strategy, the tolerance and the maximum number of iterations:
 ```
-#include <nano/solver/lbfgs.h>
+#include <nano/solver.h>
 
-auto solver = nano::solver_lbfgs_t{};
-solver.parameter("solver::lbfgs::history") = 20;
-solver.parameter("solver::epsilon") = 1e-8;
-solver.parameter("solver::max_evals") = 100;
-solver.parameter("solver::tolerance") = std::make_tuple(1e-4, 9e-1);
-solver.lsearch0("constant");
-solver.lsearchk("morethuente");
+auto solver                                 = solver_t::all().get("lbfgs");
+solver->parameter("solver::lbfgs::history") = 20;
+solver->parameter("solver::epsilon")        = 1e-8;
+solver->parameter("solver::max_evals")      = 100;
+solver->parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
+solver->lsearch0("constant");
+solver->lsearchk("morethuente");
 ```
 
 Then the optimal point is obtained by invoking the solver on the object like described below:
 ```
-const auto x0 = nano::make_random_vector<scalar_t>(objective.size());
-const auto state = solver.minimize(objective, x0);
-const auto& x = state.x;
+const auto  x0    = nano::make_random_vector<scalar_t>(objective.size());
+const auto  state = solver->minimize(objective, x0);
+const auto& x     = state.x;
 
 std::cout << std::fixed << std::setprecision(12)
     << "f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.fx()

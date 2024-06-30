@@ -1,7 +1,7 @@
 #include <nano/core/sampling.h>
 #include <nano/program/solver.h>
-#include <nano/solver/gsample.h>
 #include <nano/tensor/algorithm.h>
+#include <solver/gsample.h>
 
 using namespace nano;
 

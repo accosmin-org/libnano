@@ -1,6 +1,4 @@
 #include <nano/function/penalty.h>
-#include <nano/solver/ellipsoid.h>
-#include <nano/solver/lbfgs.h>
 #include <nano/solver/penalty.h>
 
 using namespace nano;

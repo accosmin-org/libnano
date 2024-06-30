@@ -1,28 +1,28 @@
 target_sources(solver
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/asga.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/cgd.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/cocob.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/ellipsoid.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/fpba.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/gd.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/gsample.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/lbfgs.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/osga.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/pdsgm.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/quasi.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/rqb.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/sgm.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
         ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver/universal.h
+        asga.h
+        cgd.h
+        cocob.h
+        ellipsoid.h
+        fpba.h
+        gd.h
+        gsample.h
+        lbfgs.h
+        osga.h
+        pdsgm.h
+        quasi.h
+        rqb.h
+        sgm.h
+        universal.h
         asga.cpp
         augmented.cpp
         bundle.cpp

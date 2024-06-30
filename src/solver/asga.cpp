@@ -1,4 +1,4 @@
-#include <nano/solver/asga.h>
+#include <solver/asga.h>
 
 using namespace nano;
 
