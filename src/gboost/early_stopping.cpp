@@ -28,7 +28,7 @@ bool early_stopping_t::done(const tensor2d_t& errors_losses, const indices_t& tr
 
     // significant improvement, continue
     // OR refitting step when no validation samples are given, so don't stop until the optimum number of boosting rounds
-    else if (train_value < epsilon || valid_value < m_value - epsilon || valid_samples.size() == 0)
+    else if (valid_value < m_value - epsilon || valid_samples.size() == 0)
     {
         m_value  = valid_value;
         m_round  = wlearners.size();
