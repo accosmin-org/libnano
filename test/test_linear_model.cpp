@@ -39,8 +39,14 @@ void check_outputs(const dataset_t& dataset, const indices_t& samples, const ten
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(7);
     iterator.scaling(scaling_type::none);
-    iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets)
-                  { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
+
+    auto mutex = std::mutex{};
+    iterator.loop(
+        [&](tensor_range_t range, size_t, tensor4d_cmap_t targets)
+        {
+            const auto _ = std::scoped_lock{mutex};
+            UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon);
+        });
 }
 
 void check_model(const linear_model_t& model, const dataset_t& dataset, const indices_t& samples,
@@ -113,7 +119,7 @@ UTEST_CASE(regularization_none)
         const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
         const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
+        const auto epsilon    = 1e-6;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
@@ -121,8 +127,7 @@ UTEST_CASE(regularization_none)
     }
 }
 
-// FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
-/*UTEST_CASE(regularization_lasso)
+UTEST_CASE(regularization_lasso)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
@@ -141,13 +146,13 @@ UTEST_CASE(regularization_none)
         const auto solver     = make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
         const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = 1e-4;
+        const auto epsilon    = 1e-6;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
         check_importance(model, dataset, datasource.relevant_feature_mask());
     }
-}*/
+}
 
 UTEST_CASE(regularization_ridge)
 {
@@ -168,7 +173,7 @@ UTEST_CASE(regularization_ridge)
         const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
         const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
+        const auto epsilon    = 1e-6;
 
         check_result(result, param_names, 2, epsilon);
         check_model(model, dataset, samples, epsilon);
