@@ -127,7 +127,7 @@ std::ostream& linear_model_t::write(std::ostream& stream) const
 }
 
 ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                 const ml::params_t& fit_params)
+                                 const ml::config_t& fit_params)
 {
     learner_t::fit_dataset(dataset);
 

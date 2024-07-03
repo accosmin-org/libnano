@@ -1,9 +1,6 @@
 #pragma once
 
-#include <any>
-#include <nano/mlearn/enums.h>
-#include <nano/mlearn/stats.h>
-#include <nano/string.h>
+#include <nano/mlearn/fit_hparam.h>
 
 namespace nano::ml
 {
@@ -15,37 +12,6 @@ namespace nano::ml
 class NANO_PUBLIC result_t
 {
 public:
-    ///
-    /// \brief statistics collected while evaluating a set of hyper-parameter values for all folds.
-    ///
-    class NANO_PUBLIC param_t
-    {
-    public:
-        explicit param_t(tensor1d_t params = tensor1d_t{}, tensor_size_t folds = 0);
-
-        void evaluate(tensor_size_t fold, tensor2d_t train_errors_losses, tensor2d_t valid_errors_losses,
-                      std::any extra = std::any{});
-
-        const tensor1d_t& params() const { return m_params; }
-
-        const tensor4d_t& values() const { return m_values; }
-
-        tensor_size_t folds() const { return m_values.size<0>(); }
-
-        stats_t stats(tensor_size_t fold, ml::split_type, ml::value_type) const;
-
-        scalar_t value(ml::split_type = ml::split_type::valid, ml::value_type = ml::value_type::errors) const;
-
-        const std::any& extra(tensor_size_t fold) const;
-
-    private:
-        using anys_t = std::vector<std::any>;
-
-        tensor1d_t m_params; ///< hyper-parameter values
-        tensor4d_t m_values; ///< evaluation (fold, train|valid, errors|losses, statistics e.g. mean|stdev)
-        anys_t     m_extras; ///< model specific data per fold
-    };
-
     using params_t = std::vector<param_t>;
 
     ///

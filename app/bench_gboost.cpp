@@ -146,8 +146,8 @@ int unsafe_main(int argc, const char* argv[])
         auto model = gboost_model_t{};
         rconfig.setup(model);
 
-        const auto fit_logger = ml::params_t::make_stdio_logger();
-        const auto fit_params = ml::params_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
+        const auto fit_logger = ml::config_t::make_stdio_logger();
+        const auto fit_params = ml::config_t{}.solver(*rsolver).tuner(*rtuner).logger(fit_logger);
         const auto fit_result = model.fit(dataset, train_samples, *rloss, wlearners, fit_params);
 
         const auto test_errors_values = model.evaluate(dataset, valid_samples, *rloss);

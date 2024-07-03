@@ -1,13 +1,13 @@
 #include <iomanip>
 #include <nano/critical.h>
 #include <nano/logger.h>
-#include <nano/mlearn/params.h>
+#include <nano/mlearn/config.h>
 #include <nano/mlearn/result.h>
 
 using namespace nano;
 using namespace nano::ml;
 
-params_t::logger_t params_t::make_stdio_logger(const int precision)
+config_t::logger_t config_t::make_stdio_logger(const int precision)
 {
     return [=, last_trial = size_t{0U}](const result_t& result, const string_t& prefix) mutable
     {
@@ -69,7 +69,7 @@ params_t::logger_t params_t::make_stdio_logger(const int precision)
     };
 }
 
-params_t::params_t()
+config_t::config_t()
 {
     tuner("surrogate");
     solver("lbfgs");
@@ -83,9 +83,9 @@ params_t::params_t()
     m_solver->parameter("solver::max_evals") = 1000;
 }
 
-params_t::params_t(params_t&&) noexcept = default;
+config_t::config_t(config_t&&) noexcept = default;
 
-params_t::params_t(const params_t& other)
+config_t::config_t(const config_t& other)
     : m_logger(other.m_logger)
     , m_tuner(other.m_tuner->clone())
     , m_solver(other.m_solver->clone())
@@ -93,9 +93,9 @@ params_t::params_t(const params_t& other)
 {
 }
 
-params_t& params_t::operator=(params_t&&) noexcept = default;
+config_t& config_t::operator=(config_t&&) noexcept = default;
 
-params_t& params_t::operator=(const params_t& other)
+config_t& config_t::operator=(const config_t& other)
 {
     if (this != &other)
     {
@@ -107,110 +107,110 @@ params_t& params_t::operator=(const params_t& other)
     return *this;
 }
 
-params_t::~params_t() = default;
+config_t::~config_t() = default;
 
-params_t& params_t::tuner(const tuner_t& tuner)
+config_t& config_t::tuner(const tuner_t& tuner)
 {
     m_tuner = tuner.clone();
     return *this;
 }
 
-params_t& params_t::tuner(rtuner_t&& tuner)
+config_t& config_t::tuner(rtuner_t&& tuner)
 {
     critical(!tuner, "params: unitialized tuner!");
     m_tuner = std::move(tuner);
     return *this;
 }
 
-params_t& params_t::tuner(const rtuner_t& tuner)
+config_t& config_t::tuner(const rtuner_t& tuner)
 {
     critical(!tuner, "params: unitialized tuner!");
     m_tuner = tuner->clone();
     return *this;
 }
 
-params_t& params_t::tuner(const string_t& id)
+config_t& config_t::tuner(const string_t& id)
 {
     return tuner(tuner_t::all().get(id));
 }
 
-params_t& params_t::solver(const solver_t& solver)
+config_t& config_t::solver(const solver_t& solver)
 {
     m_solver = solver.clone();
     return *this;
 }
 
-params_t& params_t::solver(rsolver_t&& solver)
+config_t& config_t::solver(rsolver_t&& solver)
 {
     critical(!solver, "params: unitialized solver!");
     m_solver = std::move(solver);
     return *this;
 }
 
-params_t& params_t::solver(const rsolver_t& solver)
+config_t& config_t::solver(const rsolver_t& solver)
 {
     critical(!solver, "params: unitialized solver!");
     m_solver = solver->clone();
     return *this;
 }
 
-params_t& params_t::solver(const string_t& id)
+config_t& config_t::solver(const string_t& id)
 {
     return solver(solver_t::all().get(id));
 }
 
-params_t& params_t::splitter(const splitter_t& splitter)
+config_t& config_t::splitter(const splitter_t& splitter)
 {
     m_splitter = splitter.clone();
     return *this;
 }
 
-params_t& params_t::splitter(rsplitter_t&& splitter)
+config_t& config_t::splitter(rsplitter_t&& splitter)
 {
     critical(!splitter, "params: unitialized splitter!");
     m_splitter = std::move(splitter);
     return *this;
 }
 
-params_t& params_t::splitter(const rsplitter_t& splitter)
+config_t& config_t::splitter(const rsplitter_t& splitter)
 {
     critical(!splitter, "params: unitialized splitter!");
     m_splitter = splitter->clone();
     return *this;
 }
 
-params_t& params_t::splitter(const string_t& id)
+config_t& config_t::splitter(const string_t& id)
 {
     return splitter(splitter_t::all().get(id));
 }
 
-params_t& params_t::logger(logger_t logger)
+config_t& config_t::logger(logger_t logger)
 {
     m_logger = std::move(logger);
     return *this;
 }
 
-const tuner_t& params_t::tuner() const
+const tuner_t& config_t::tuner() const
 {
     return *m_tuner;
 }
 
-const solver_t& params_t::solver() const
+const solver_t& config_t::solver() const
 {
     return *m_solver;
 }
 
-const splitter_t& params_t::splitter() const
+const splitter_t& config_t::splitter() const
 {
     return *m_splitter;
 }
 
-const params_t::logger_t& params_t::logger() const
+const config_t::logger_t& config_t::logger() const
 {
     return m_logger;
 }
 
-void params_t::log(const result_t& result, const string_t& prefix) const
+void config_t::log(const result_t& result, const string_t& prefix) const
 {
     if (m_logger)
     {

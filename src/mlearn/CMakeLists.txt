@@ -1,13 +1,15 @@
 target_sources(machine
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/nano/mlearn/cluster.h
+        ${CMAKE_SOURCE_DIR}/include/nano/mlearn/config.h
         ${CMAKE_SOURCE_DIR}/include/nano/mlearn/enums.h
-        ${CMAKE_SOURCE_DIR}/include/nano/mlearn/params.h
-        ${CMAKE_SOURCE_DIR}/include/nano/mlearn/result.h
+        ${CMAKE_SOURCE_DIR}/include/nano/mlearn/fit_hparam.h
+        ${CMAKE_SOURCE_DIR}/include/nano/mlearn/fit_result.h
         ${CMAKE_SOURCE_DIR}/include/nano/mlearn/stats.h
         ${CMAKE_SOURCE_DIR}/include/nano/mlearn/tune.h
         cluster.cpp
-        params.cpp
-        result.cpp
+        config.cpp
+        fit_hparam.cpp
+        fit_result.cpp
         stats.cpp
         tune.cpp)

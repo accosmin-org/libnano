@@ -2,7 +2,7 @@
 
 #include <nano/learner.h>
 #include <nano/loss.h>
-#include <nano/mlearn/params.h>
+#include <nano/mlearn/config.h>
 #include <nano/mlearn/result.h>
 
 namespace nano
@@ -42,7 +42,7 @@ public:
     ///
     /// \brief fit the model using the given samples and return the associated statistics.
     ///
-    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const ml::params_t& = {});
+    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const ml::config_t& = {});
 
     ///
     /// \brief returns the fitted bias vector (intercept).

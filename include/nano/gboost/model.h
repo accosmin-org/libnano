@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/loss.h>
-#include <nano/mlearn/params.h>
+#include <nano/mlearn/config.h>
 #include <nano/mlearn/result.h>
 #include <nano/wlearner.h>
 
@@ -66,7 +66,7 @@ public:
     ///
     /// \brief fit the model using the given samples and weak learners and return the associated statistics.
     ///
-    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const rwlearners_t&, const ml::params_t& = {});
+    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const rwlearners_t&, const ml::config_t& = {});
 
     ///
     /// \brief returns the selected features.

@@ -256,7 +256,7 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
 }
 
 ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                 const rwlearners_t& protos_, const ml::params_t& fit_params)
+                                 const rwlearners_t& protos_, const ml::config_t& fit_params)
 {
     const auto protos = wlearner::clone(protos_);
     critical(protos.empty(), "gboost: cannot fit without any weak learner!");

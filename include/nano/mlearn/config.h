@@ -13,9 +13,14 @@ class result_t;
 ///
 /// NB: the default parameters are suitable for most machine learning tasks.
 ///
-class NANO_PUBLIC params_t
+class NANO_PUBLIC config_t
 {
 public:
+    // TODO: set directory where to log everything...
+    //  -> log: chosen hyper-parameter values, statistics per fold for each hyper-parameter config
+    //  -> hparamX/foldX/model: serialized model
+    //  -> hparamX/foldX/log: detailed log - solver steps, chosen weak learners etc.
+
     ///
     /// \brief logging operator: op(result - up to the current step, prefix)
     ///
@@ -29,53 +34,53 @@ public:
     ///
     /// \brief default constructor
     ///
-    params_t();
+    config_t();
 
     ///
     /// \brief enable copying
     ///
-    params_t(const params_t&);
-    params_t& operator=(const params_t&);
+    config_t(const config_t&);
+    config_t& operator=(const config_t&);
 
     ///
     /// \brief enable copying
     ///
-    params_t(params_t&&) noexcept;
-    params_t& operator=(params_t&&) noexcept;
+    config_t(config_t&&) noexcept;
+    config_t& operator=(config_t&&) noexcept;
 
     ///
     /// \brief default destructor
     ///
-    ~params_t();
+    ~config_t();
 
     ///
     /// \brief change the tuning strategy.
     ///
-    params_t& tuner(rtuner_t&&);
-    params_t& tuner(const tuner_t&);
-    params_t& tuner(const rtuner_t&);
-    params_t& tuner(const string_t& id);
+    config_t& tuner(rtuner_t&&);
+    config_t& tuner(const tuner_t&);
+    config_t& tuner(const rtuner_t&);
+    config_t& tuner(const string_t& id);
 
     ///
     /// \brief change the numerical optimization method.
     ///
-    params_t& solver(rsolver_t&&);
-    params_t& solver(const solver_t&);
-    params_t& solver(const rsolver_t&);
-    params_t& solver(const string_t& id);
+    config_t& solver(rsolver_t&&);
+    config_t& solver(const solver_t&);
+    config_t& solver(const rsolver_t&);
+    config_t& solver(const string_t& id);
 
     ///
     /// \brief change the sample splitting strategy.
     ///
-    params_t& splitter(rsplitter_t&&);
-    params_t& splitter(const splitter_t&);
-    params_t& splitter(const rsplitter_t&);
-    params_t& splitter(const string_t& id);
+    config_t& splitter(rsplitter_t&&);
+    config_t& splitter(const splitter_t&);
+    config_t& splitter(const rsplitter_t&);
+    config_t& splitter(const string_t& id);
 
     ///
     /// \brief change the logging method.
     ///
-    params_t& logger(logger_t);
+    config_t& logger(logger_t);
 
     ///
     /// \brief return the current tuning strategy.

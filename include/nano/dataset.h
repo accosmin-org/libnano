@@ -8,9 +8,16 @@ namespace nano
 ///
 /// \brief wraps a collection of feature generators, potentially of different types.
 ///
+/// NB: as the central point for ML tasks, it contains additionally the:
+///     - the thread pool to parallelize training and tuning of hyper-parameters and
+///     - the dictionary of loggers (e.g. for each hyper-parameter, fold index).
+///
 class NANO_PUBLIC dataset_t : public loggable_t
 {
 public:
+    // TODO: collect all logger objects per hyper-parameter, fold etc.
+    // std::unordered_map<std::tuple<string_t, string_t>, logger_t>;
+
     ///
     /// \brief constructor
     ///
