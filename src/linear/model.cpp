@@ -1,3 +1,5 @@
+#include <filesystem>
+#include <fstream>
 #include <nano/linear/enums.h>
 #include <nano/linear/function.h>
 #include <nano/linear/model.h>
@@ -47,7 +49,7 @@ auto make_params(const configurable_t& configurable)
     return std::make_tuple(std::move(param_names), std::move(param_spaces));
 }
 
-auto decode_params(const tensor1d_cmap_t& params, const linear_regularization regularization)
+auto decode_params(const tensor1d_cmap_t params, const linear_regularization regularization)
 {
     scalar_t l1reg = 0.0;
     scalar_t l2reg = 0.0;
@@ -62,14 +64,17 @@ auto decode_params(const tensor1d_cmap_t& params, const linear_regularization re
     return std::make_tuple(l1reg, l2reg);
 }
 
-auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
+auto make_x0(const ::nano::linear::function_t& function, const std::string& model_path)
 {
     vector_t x0 = vector_t::zero(function.size());
-    if (extra.has_value())
+    if (std::filesystem::exists(model_path))
     {
-        const auto& result                      = std::any_cast<linear::result_t>(extra);
-        const auto& bias                        = result.m_bias;
-        const auto& weights                     = result.m_weights;
+        auto bias    = tensor1d_t{};
+        auto weights = tensor2d_t{};
+        ::read(model_path, bias, weights);
+
+        critical(bias.size() + weights.size() != function.size(), "linear model: read invalid model!");
+
         x0.segment(0, weights.size())           = weights.array();
         x0.segment(weights.size(), bias.size()) = bias.array();
     }
@@ -77,7 +82,8 @@ auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
 } // LCOV_EXCL_LINE
 
 auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const std::any& extra = std::any{})
+         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const string_t& closest_model_path,
+         const string_t& model_path, const string_t& logger_path)
 {
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(configurable.parameter("linear::batch").value<tensor_size_t>());
@@ -86,7 +92,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
 
     const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg};
-    const auto state    = solver.minimize(function, make_x0(function, extra));
+    const auto state    = solver.minimize(function, make_x0(function, closest_model_path));
 
     tensor1d_t bias    = function.bias(state.x());
     tensor2d_t weights = function.weights(state.x());
@@ -94,6 +100,26 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
               bias);
 
     return linear::result_t{std::move(bias), std::move(weights), state};
+}
+
+void read(const string_t& path, tensor1d_t& bias, tensor2d_t& weights)
+{
+    auto stream = std::ifstream(path);
+    ::read(stream, bias, weights);
+}
+
+void read(std::istream& stream, tensor1d_t& bias, tensor2d_t& weights)
+{
+    critical(!::nano::read(stream, bias) || !::nano::read(stream, weights),
+             "linear model: failed to read from stream!");
+
+    critical(bias.size() != weights.rows(), "linear model: parameter mismatch!");
+}
+
+void write(std::ostream& stream, const tensor1d_t& bias, const tensor2d_t& weights)
+{
+    critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_weights),
+             "linear model: failed to write to stream!");
 }
 } // namespace
 
@@ -107,22 +133,14 @@ linear_model_t::linear_model_t()
 std::istream& linear_model_t::read(std::istream& stream)
 {
     learner_t::read(stream);
-
-    critical(!::nano::read(stream, m_bias) || !::nano::read(stream, m_weights),
-             "linear model: failed to read from stream!");
-
-    critical(m_bias.size() != m_weights.rows(), "linear model: parameter mismatch!");
-
+    ::read(stream, m_bias, m_weights);
     return stream;
 }
 
 std::ostream& linear_model_t::write(std::ostream& stream) const
 {
     learner_t::write(stream);
-
-    critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_weights),
-             "linear model: failed to write to stream!");
-
+    ::write(stream, m_bias, m_weights);
     return stream;
 }
 
@@ -137,8 +155,9 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     // tune hyper-parameters
     auto [param_names, param_spaces] = ::make_params(*this);
 
-    const auto evaluator =
-        [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto& extra)
+    const auto evaluator = [&](indices_cmap_t tr_samples, indices_cmap_t vd_samples, tensor1d_cmap_t params,
+                               const string_t& closest_model_path, const string_t& model_path,
+                               const string_t& logger_path)
     {
         const auto [l1reg, l2reg] = decode_params(params, regularization);
 

@@ -23,15 +23,15 @@ public:
     tensor_size_t folds() const { return m_values.size<0>(); }
 
     const string_t& serial_path(tensor_size_t fold) const;
+
     const string_t& logger_path(tensor_size_t fold) const;
 
     stats_t stats(tensor_size_t fold, ml::split_type, ml::value_type) const;
 
     scalar_t value(ml::split_type = ml::split_type::valid, ml::value_type = ml::value_type::errors) const;
 
-    const std::any& extra(tensor_size_t fold) const;
-
 private:
+    // attributes
     tensor1d_t m_params;       ///< hyper-parameter values
     tensor4d_t m_values;       ///< evaluation results (fold, train|valid, errors|losses, statistics e.g. mean|stdev)
     strings_t  m_serial_paths; ///< paths to serialized models (fold,)

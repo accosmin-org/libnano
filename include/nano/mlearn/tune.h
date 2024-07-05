@@ -6,8 +6,6 @@
 
 namespace nano::ml
 {
-NANO_PUBLIC const std::any& closest_extra(const result_t&, const tensor1d_cmap_t& params, tensor_size_t fold);
-
 NANO_PUBLIC result_t::params_t make_param_results(const tensor2d_t& all_params, tensor_size_t folds);
 
 ///
@@ -35,13 +33,16 @@ result_t tune(const string_t& prefix, const indices_t& samples, const config_t& 
         {
             const auto fold  = index % folds;
             const auto trial = index / folds;
+            const auto ifold = static_cast<size_t>(fold);
 
-            const auto  params        = all_params.tensor(trial);
-            const auto& closest_extra = ::nano::ml::closest_extra(fit_result, params, fold);
+            const auto params                    = all_params.tensor(trial);
 
-            const auto& [train_samples, valid_samples] = splits[static_cast<size_t>(fold)];
+            const auto& [tr_samples, vd_samples] = splits[ifold];
 
-            auto [train_values, valid_values, extra] = evaluator(train_samples, valid_samples, params, closest_extra);
+            const auto* const closest = fit_result.closest(params);
+            const auto        closest_
+
+                auto [train_values, valid_values, extra] = evaluator(train_samples, valid_samples, params, closest);
 
             auto& param_result = param_results[static_cast<size_t>(trial)];
             param_result.evaluate(fold, std::move(train_values), std::move(valid_values), std::move(extra));
