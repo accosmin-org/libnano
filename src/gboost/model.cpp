@@ -17,18 +17,16 @@ namespace
 {
 auto make_params(const configurable_t& configurable)
 {
-    const auto shrinkage = configurable.parameter("gboost::shrinkage").value<gboost_shrinkage>();
-
-    auto param_names  = strings_t{};
     auto param_spaces = param_spaces_t{};
 
-    if (shrinkage == gboost_shrinkage::global)
+    if (const auto shrinkage = configurable.parameter("gboost::shrinkage").value<gboost_shrinkage>();
+        shrinkage == gboost_shrinkage::global)
     {
-        param_names.emplace_back("shrinkage");
-        param_spaces.emplace_back(param_space_t::type::linear, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
+        param_spaces.emplace_back("shrinkage", param_space_t::type::linear, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
+                                  1.0);
     }
 
-    return std::make_tuple(std::move(param_names), std::move(param_spaces));
+    return param_spaces;
 }
 
 auto decode_params(const tensor1d_cmap_t& params, const gboost_shrinkage shrinkage)
@@ -262,7 +260,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
     critical(protos.empty(), "gboost: cannot fit without any weak learner!");
 
     // tune hyper-parameters (if any)
-    auto [param_names, param_spaces] = ::make_params(*this);
+    auto param_spaces = ::make_params(*this);
 
     const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
@@ -272,19 +270,19 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };
 
-    auto fit_result = ml::tune("gboost", samples, fit_params, std::move(param_names), param_spaces, evaluator);
+    auto fit_result = ml::tune("gboost", samples, fit_params, param_spaces, evaluator);
 
     // choose the optimum hyper-parameters and merge the boosters fitted for each fold
     {
-        const auto& optimum_params = fit_result.optimum();
-        const auto  folds          = optimum_params.folds();
+        const auto optimum_trial = fit_result.optimum_trial();
+        const auto folds         = fit_result.folds();
 
         m_bias = make_full_tensor<scalar_t>(make_dims(::nano::size(dataset.target_dims())), 0.0);
         m_wlearners.clear();
 
         for (tensor_size_t fold = 0; fold < folds; ++fold)
         {
-            const auto* const pgboost = std::any_cast<gboost::result_t>(&optimum_params.extra(fold));
+            const auto* const pgboost = std::any_cast<gboost::result_t>(&fit_result.extra(optimum_trial, fold));
             assert(pgboost != nullptr);
             m_bias.vector() += pgboost->m_bias.vector();
             std::for_each(pgboost->m_wlearners.begin(), pgboost->m_wlearners.end(),
@@ -313,7 +311,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
         targets_iterator.scaling(scaling_type::none);
         ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
 
-        fit_result.evaluate(::selected(values, samples));
+        fit_result.store(::selected(values, samples));
     }
     fit_params.log(fit_result, "gboost");
 

@@ -70,22 +70,23 @@ static void check_equal(const stats_t& lhs, const stats_t& rhs, const scalar_t e
 
 static void check_equal(const result_t& lhs, const result_t& rhs, const scalar_t epsilon = 1e-12)
 {
-    UTEST_CHECK_EQUAL(lhs.param_names(), rhs.param_names());
+    UTEST_REQUIRE_EQUAL(lhs.folds(), rhs.folds());
+    UTEST_REQUIRE_EQUAL(lhs.trials(), rhs.trials());
 
-    UTEST_REQUIRE_EQUAL(lhs.param_results().size(), rhs.param_results().size());
-    for (size_t i = 0U; i < lhs.param_results().size(); ++i)
+    UTEST_REQUIRE_EQUAL(lhs.param_spaces().size(), rhs.param_spaces().size());
+    for (size_t i = 0; i < lhs.param_spaces().size(); ++i)
     {
-        const auto& ilhs = lhs.param_results()[i];
-        const auto& irhs = rhs.param_results()[i];
+        UTEST_CHECK_EQUAL(lhs.param_spaces()[i].name(), rhs.param_spaces()[i].name());
+    }
 
-        UTEST_CHECK_EQUAL(ilhs.folds(), irhs.folds());
-        UTEST_CHECK_CLOSE(ilhs.params(), irhs.params(), epsilon);
-        UTEST_CHECK_CLOSE(ilhs.values(), irhs.values(), epsilon);
+    for (tensor_size_t trial = 0; trial < lhs.trials(); ++trial)
+    {
+        UTEST_CHECK_CLOSE(lhs.params(trial), rhs.params(trial), epsilon);
 
-        for (tensor_size_t fold = 0; fold < ilhs.folds(); ++fold)
+        for (tensor_size_t fold = 0; fold < lhs.folds(); ++fold)
         {
-            const auto& xlhs = std::any_cast<gboost::result_t>(ilhs.extra(fold));
-            const auto& xrhs = std::any_cast<gboost::result_t>(irhs.extra(fold));
+            const auto& xlhs = std::any_cast<gboost::result_t>(lhs.extra(trial, fold));
+            const auto& xrhs = std::any_cast<gboost::result_t>(rhs.extra(trial, fold));
 
             UTEST_CHECK_CLOSE(xlhs.m_bias, xrhs.m_bias, epsilon);
             UTEST_CHECK_CLOSE(xlhs.m_statistics, xrhs.m_statistics, epsilon);
@@ -101,16 +102,11 @@ static void check_result(const result_t& result, const strings_t& expected_param
 {
     ::check_result(result, expected_param_names, expected_param_names.empty() ? 1U : 4U, expected_folds, epsilon);
 
-    if (expected_param_names.empty())
-    {
-        UTEST_CHECK_EQUAL(result.param_results().size(), 1U);
-    }
-
-    for (const auto& param_result : result.param_results())
+    for (tensor_size_t trial = 0; trial < result.trials(); ++trial)
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& pfresult        = std::any_cast<gboost::result_t>(param_result.extra(fold));
+            const auto& pfresult        = std::any_cast<gboost::result_t>(result.extra(trial, fold));
             const auto [rounds, nstats] = pfresult.m_statistics.dims();
             const auto optimum_round    = static_cast<tensor_size_t>(pfresult.m_wlearners.size());
 
@@ -121,7 +117,7 @@ static void check_result(const result_t& result, const strings_t& expected_param
             UTEST_CHECK_GREATER_EQUAL(rounds, optimum_round);
             for (tensor_size_t round = 0; round < rounds; ++round)
             {
-                UTEST_NAMED_CASE(scat("params=", param_result.params().array().transpose(), ",fold=", fold,
+                UTEST_NAMED_CASE(scat("params=", result.params(trial).array().transpose(), ",fold=", fold,
                                       ",round=", round, ",optim_round=", optimum_round));
 
                 const auto train_error = pfresult.m_statistics(round, 0);

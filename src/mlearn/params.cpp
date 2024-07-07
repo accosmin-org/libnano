@@ -9,32 +9,30 @@ using namespace nano::ml;
 
 params_t::logger_t params_t::make_stdio_logger(const int precision)
 {
-    return [=, last_trial = size_t{0U}](const result_t& result, const string_t& prefix) mutable
+    return [=, last_trial = tensor_size_t{0U}](const result_t& result, const string_t& prefix) mutable
     {
-        const auto& param_names        = result.param_names();
-        const auto& param_results      = result.param_results();
+        const auto& spaces             = result.param_spaces();
         const auto  optim_errors_stats = result.stats(value_type::errors);
         const auto  optim_losses_stats = result.stats(value_type::losses);
 
-        const auto print_params = [&](const tensor1d_t& param_values, const auto... tokens)
+        const auto print_params = [&](const tensor1d_cmap_t params, const auto... tokens)
         {
-            assert(param_names.size() == static_cast<size_t>(param_values.size()));
+            assert(spaces.size() == static_cast<size_t>(params.size()));
 
             // FIXME: should use the loggable_t interface for this!
             auto logger = make_stdout_logger();
             logger.log(log_type::info, std::fixed, std::setprecision(precision), std::fixed, prefix, ": ");
-            for (size_t i = 0U, size = param_names.size(); i < size; ++i)
+            for (size_t i = 0U, size = spaces.size(); i < size; ++i)
             {
-                logger.log(param_names[i], "=", param_values(static_cast<tensor_size_t>(i)), ",");
+                logger.log(spaces[i].name(), "=", params(static_cast<tensor_size_t>(i)), ",");
             }
             logger.log(tokens..., ".\n");
         };
 
-        for (size_t trial = last_trial; trial < param_results.size(); ++trial)
+        for (tensor_size_t trial = last_trial; trial < result.trials(); ++trial)
         {
-            const auto& param_result = param_results[trial];
-            const auto  folds        = param_result.folds();
-            const auto  norm         = static_cast<scalar_t>(folds);
+            const auto folds = result.folds();
+            const auto norm  = static_cast<scalar_t>(folds);
 
             auto sum_train_losses = 0.0;
             auto sum_train_errors = 0.0;
@@ -42,12 +40,12 @@ params_t::logger_t params_t::make_stdio_logger(const int precision)
             auto sum_valid_errors = 0.0;
             for (tensor_size_t fold = 0; fold < folds; ++fold)
             {
-                const auto fold_train_value = param_result.stats(fold, split_type::train, value_type::losses).m_mean;
-                const auto fold_train_error = param_result.stats(fold, split_type::train, value_type::errors).m_mean;
-                const auto fold_valid_value = param_result.stats(fold, split_type::valid, value_type::losses).m_mean;
-                const auto fold_valid_error = param_result.stats(fold, split_type::valid, value_type::errors).m_mean;
+                const auto fold_train_value = result.stats(trial, fold, split_type::train, value_type::losses).m_mean;
+                const auto fold_train_error = result.stats(trial, fold, split_type::train, value_type::errors).m_mean;
+                const auto fold_valid_value = result.stats(trial, fold, split_type::valid, value_type::losses).m_mean;
+                const auto fold_valid_error = result.stats(trial, fold, split_type::valid, value_type::errors).m_mean;
 
-                print_params(param_result.params(), "train=", fold_train_value, "/", fold_train_error, ",",
+                print_params(result.params(trial), "train=", fold_train_value, "/", fold_train_error, ",",
                              "valid=", fold_valid_value, "/", fold_valid_error, ",fold=", (fold + 1), "/", folds);
 
                 sum_train_losses += fold_train_value;
@@ -56,15 +54,15 @@ params_t::logger_t params_t::make_stdio_logger(const int precision)
                 sum_valid_errors += fold_valid_error;
             }
 
-            print_params(param_result.params(), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
+            print_params(result.params(trial), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
                          "valid=", sum_valid_losses / norm, "/", sum_valid_errors / norm, "(average)");
         }
-        last_trial = param_results.size();
+        last_trial = result.trials();
 
         if (std::isfinite(optim_errors_stats.m_mean))
         {
-            const auto& optimum_params = result.optimum().params();
-            print_params(optimum_params, "refit=", optim_losses_stats.m_mean, "/", optim_errors_stats.m_mean);
+            const auto trial = result.optimum_trial();
+            print_params(result.params(trial), "refit=", optim_losses_stats.m_mean, "/", optim_errors_stats.m_mean);
         }
     };
 }

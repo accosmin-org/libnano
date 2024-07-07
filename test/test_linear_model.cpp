@@ -2,7 +2,6 @@
 #include "fixture/loss.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
-#include "fixture/tuner.h"
 #include <nano/linear/enums.h>
 #include <nano/linear/util.h>
 

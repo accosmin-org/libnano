@@ -11,40 +11,60 @@ using namespace nano::linear;
 
 namespace
 {
-auto make_params(const configurable_t& configurable)
+auto make_param_space(string_t name)
 {
-    const auto regularization = configurable.parameter("linear::regularization").value<linear_regularization>();
+    return param_space_t{std::move(name),
+                         param_space_t::type::log10,
+                         1e-7,
+                         3e-7,
+                         1e-6,
+                         3e-6,
+                         1e-5,
+                         3e-5,
+                         1e-4,
+                         3e-4,
+                         1e-3,
+                         3e-3,
+                         1e-2,
+                         3e-2,
+                         1e-1,
+                         3e-1,
+                         1e+0,
+                         3e+0,
+                         1e+1,
+                         3e+1,
+                         1e+2,
+                         3e+2,
+                         1e+3,
+                         3e+3,
+                         1e+4,
+                         3e+4,
+                         1e+5,
+                         3e+5,
+                         1e+6,
+                         3e+6,
+                         1e+7};
+}
 
-    auto param_names  = strings_t{};
+auto make_param_spaces(const configurable_t& configurable)
+{
     auto param_spaces = param_spaces_t{};
 
-    static const auto param_space = make_param_space(
-        param_space_t::type::log10, 1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1,
-        1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2, 1e+3, 3e+3, 1e+4, 3e+4, 1e+5, 3e+5, 1e+6, 3e+6, 1e+7);
-
-    switch (regularization)
+    switch (configurable.parameter("linear::regularization").value<linear_regularization>())
     {
-    case linear_regularization::lasso:
-        param_names.emplace_back("l1reg");
-        param_spaces.emplace_back(param_space);
-        break;
+    case linear_regularization::lasso: param_spaces.emplace_back(make_param_space("l1reg")); break;
 
-    case linear_regularization::ridge:
-        param_names.emplace_back("l2reg");
-        param_spaces.emplace_back(param_space);
-        break;
+    case linear_regularization::ridge: param_spaces.emplace_back(make_param_space("l2reg")); break;
 
     case linear_regularization::elasticnet:
-        param_names.emplace_back("l1reg");
-        param_names.emplace_back("l2reg");
-        param_spaces.emplace_back(param_space);
-        param_spaces.emplace_back(param_space);
+        param_spaces.emplace_back(make_param_space("l1reg"));
+        param_spaces.emplace_back(make_param_space("l2reg"));
         break;
 
     default: break;
     }
 
-    return std::make_tuple(std::move(param_names), std::move(param_spaces));
+    return param_spaces;
 }
 
 auto decode_params(const tensor1d_cmap_t& params, const linear_regularization regularization)
@@ -135,7 +155,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto regularization = parameter("linear::regularization").value<linear_regularization>();
 
     // tune hyper-parameters
-    auto [param_names, param_spaces] = ::make_params(*this);
+    auto param_spaces = ::make_param_spaces(*this);
 
     const auto evaluator =
         [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto& extra)
@@ -149,16 +169,17 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
         return std::make_tuple(std::move(tr_values), std::move(vd_values), std::move(result));
     };
 
-    auto fit_result = ml::tune("linear", samples, fit_params, std::move(param_names), param_spaces, evaluator);
+    auto fit_result = ml::tune("linear", samples, fit_params, param_spaces, evaluator);
 
     // refit with the optimum hyper-parameters (if any) on all given samples
     {
-        const auto [l1reg, l2reg] = decode_params(fit_result.optimum().params(), regularization);
+        const auto optimum_params = fit_result.params(fit_result.optimum_trial());
+        const auto [l1reg, l2reg] = decode_params(optimum_params, regularization);
 
         auto result = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg);
         auto values = ::nano::linear::evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
-        fit_result.evaluate(std::move(values));
+        fit_result.store(std::move(values));
 
         m_bias    = std::move(result.m_bias);
         m_weights = std::move(result.m_weights);

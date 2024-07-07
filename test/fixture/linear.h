@@ -54,11 +54,11 @@ template <class tweights, class tbias>
                                                        : 15U,
                    expected_folds, epsilon);
 
-    for (const auto& param_result : result.param_results())
+    for (tensor_size_t trial = 0; trial < result.trials(); ++trial)
     {
         for (tensor_size_t fold = 0; fold < expected_folds; ++fold)
         {
-            const auto& pfresult = std::any_cast<linear::result_t>(param_result.extra(fold));
+            const auto& pfresult = std::any_cast<linear::result_t>(result.extra(trial, fold));
 
             UTEST_REQUIRE_EQUAL(pfresult.m_statistics.size(), 3);
 

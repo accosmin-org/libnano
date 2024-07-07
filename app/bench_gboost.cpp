@@ -29,20 +29,20 @@ auto print_scalar(const scalar_t value)
 
 auto print_params(const ml::result_t& result)
 {
-    if (result.param_names().empty())
+    if (result.param_spaces().empty())
     {
         return string_t{"N/A"};
     }
     else
     {
-        const auto& param_names  = result.param_names();
-        const auto& param_values = result.optimum().params();
-        assert(static_cast<tensor_size_t>(param_names.size()) == param_values.size());
+        const auto& param_spaces = result.param_spaces();
+        const auto  param_values = result.params(result.optimum_trial());
+        assert(static_cast<tensor_size_t>(param_spaces.size()) == param_values.size());
 
         string_t str;
-        for (size_t i = 0U; i < param_names.size(); ++i)
+        for (size_t i = 0U; i < param_spaces.size(); ++i)
         {
-            str += scat(param_names[i], "=", std::fixed, std::setprecision(8),
+            str += scat(param_spaces[i].name(), "=", std::fixed, std::setprecision(8),
                         param_values(static_cast<tensor_size_t>(i)), " ");
         }
         return str;
@@ -151,10 +151,11 @@ int unsafe_main(int argc, const char* argv[])
         const auto fit_result = model.fit(dataset, train_samples, *rloss, wlearners, fit_params);
 
         const auto test_errors_values = model.evaluate(dataset, valid_samples, *rloss);
+        const auto optimum_trial      = fit_result.optimum_trial();
 
         table.append() << scat(outer_fold + 1, "/", tr_vd_splits.size()) << print_params(fit_result)
-                       << print_scalar(fit_result.optimum().value(ml::split_type::train, ml::value_type::errors))
-                       << print_scalar(fit_result.optimum().value(ml::split_type::valid, ml::value_type::errors))
+                       << print_scalar(fit_result.value(optimum_trial, ml::split_type::train, ml::value_type::errors))
+                       << print_scalar(fit_result.value(optimum_trial, ml::split_type::valid, ml::value_type::errors))
                        << print_scalar(fit_result.stats(ml::value_type::errors).m_mean)
                        << print_scalar(test_errors_values.tensor(0).mean());
         std::cout << table;

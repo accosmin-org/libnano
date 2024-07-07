@@ -3,101 +3,102 @@
 #include <any>
 #include <nano/mlearn/enums.h>
 #include <nano/mlearn/stats.h>
-#include <nano/string.h>
+#include <nano/tuner/space.h>
 
 namespace nano::ml
 {
 ///
 /// \brief statistics collected while fitting a machine learning model for:
 ///     - a set of (train, validation) sample splits (aka folds) and
-///     - a set of candidate hyper-parameter values to tune.
+///     - a set of candidate hyper-parameter values to tune (aka trials).
 ///
 class NANO_PUBLIC result_t
 {
 public:
     ///
-    /// \brief statistics collected while evaluating a set of hyper-parameter values for all folds.
+    /// \brief default constructor
     ///
-    class NANO_PUBLIC param_t
-    {
-    public:
-        explicit param_t(tensor1d_t params = tensor1d_t{}, tensor_size_t folds = 0);
-
-        void evaluate(tensor_size_t fold, tensor2d_t train_errors_losses, tensor2d_t valid_errors_losses,
-                      std::any extra = std::any{});
-
-        const tensor1d_t& params() const { return m_params; }
-
-        const tensor4d_t& values() const { return m_values; }
-
-        tensor_size_t folds() const { return m_values.size<0>(); }
-
-        stats_t stats(tensor_size_t fold, ml::split_type, ml::value_type) const;
-
-        scalar_t value(ml::split_type = ml::split_type::valid, ml::value_type = ml::value_type::errors) const;
-
-        const std::any& extra(tensor_size_t fold) const;
-
-    private:
-        using anys_t = std::vector<std::any>;
-
-        tensor1d_t m_params; ///< hyper-parameter values
-        tensor4d_t m_values; ///< evaluation (fold, train|valid, errors|losses, statistics e.g. mean|stdev)
-        anys_t     m_extras; ///< model specific data per fold
-    };
-
-    using params_t = std::vector<param_t>;
+    result_t();
 
     ///
     /// \brief constructor
     ///
-    explicit result_t(strings_t param_names = strings_t{});
+    result_t(param_spaces_t, tensor_size_t folds);
+
+    ///
+    /// \brief returns the number of folds.
+    ///
+    tensor_size_t folds() const { return m_values.size<1>(); }
+
+    ///
+    /// \brief returns the number of trials.
+    ///
+    tensor_size_t trials() const { return m_values.size<0>(); }
+
+    ///
+    /// \brief returns the hyper-parameter space to sample from.
+    ///
+    const param_spaces_t& param_spaces() const { return m_spaces; }
 
     ///
     /// \brief add the evaluation results of a hyper-parameter trial.
     ///
-    void add(param_t);
+    void add(const tensor2d_t& params_to_try);
 
     ///
-    /// \brief return the optimum hyper-parameters from all stored trials.
+    /// \brief return the trial with the optimum hyper-parameter values.
     ///
-    const param_t& optimum() const;
+    tensor_size_t optimum_trial() const;
+
+    ///
+    /// \brief returns the trial with the hyper-parameter values closest to the given ones.
+    ///
+    tensor_size_t closest_trial(tensor1d_cmap_t params, tensor_size_t max_trials) const;
 
     ///
     /// \brief set the evaluation results for the optimum hyper-parameters.
     ///
-    void evaluate(tensor2d_t errors_losses);
+    void store(tensor2d_t errors_losses);
 
     ///
-    /// \brief returns the hyper-parameter names.
+    /// \brief set the evaluation results for the given trial and fold.
     ///
-    const strings_t& param_names() const { return m_param_names; }
+    void store(tensor_size_t trial, tensor_size_t fold, tensor2d_t train_errors_losses, tensor2d_t valid_errors_losses,
+               std::any extra = std::any{});
 
     ///
-    /// \brief returns the set of hyper-parameters that have been evaluated.
+    /// \brief returns the hyper-parameter values for the given trial.
     ///
-    const params_t& param_results() const { return m_param_results; }
+    tensor1d_cmap_t params(tensor_size_t trial) const;
 
     ///
-    /// \brief returns the statistics associated to the optimum hyper-parameters.
+    /// \brief returns the average value of the given trial across folds.
+    ///
+    scalar_t value(tensor_size_t trial, split_type = split_type::valid, value_type = value_type::errors) const;
+
+    ///
+    /// \brief returns the statistics for the optimum hyper-parameters.
     ///
     stats_t stats(ml::value_type) const;
 
     ///
-    /// \brief returns the closest parameter to the given one.
+    /// \brief returns the statistics for the given trial and fold.
     ///
-    const param_t* closest(const tensor1d_cmap_t& params) const;
+    stats_t stats(tensor_size_t trial, tensor_size_t fold, split_type, value_type) const;
+
+    ///
+    /// \brief returns the model specific data stored for the given trial and fold.
+    ///
+    const std::any& extra(tensor_size_t trial, tensor_size_t fold) const;
 
 private:
-    // attributes
-    strings_t  m_param_names;   ///< name of the hyper-parameters
-    params_t   m_param_results; ///< results obtained by evaluating candidate hyper-parameters
-    tensor2d_t m_optim_values;  ///< optimum's evaluation (errors|losses, statistics e.g. mean|stdev)
-};
+    using anys_t = std::vector<std::any>;
 
-inline bool operator<(const result_t::param_t& lhs, const result_t::param_t& rhs)
-{
-    assert(lhs.folds() == rhs.folds());
-    return lhs.value() < rhs.value();
-}
+    // attributes
+    param_spaces_t m_spaces; ///< hyper-parameter spaces to sample from
+    tensor2d_t     m_params; ///< tried hyper-parameter values (trial, param)
+    tensor5d_t     m_values; ///< results (trial, fold, train|valid, errors|losses, statistics e.g. mean|stdev)
+    tensor2d_t     m_optims; ///< results at the optimum (errors|losses, statistics e.g. mean|stdev)
+    anys_t         m_extras; ///< model specific data (trial, fold)
+};
 } // namespace nano::ml

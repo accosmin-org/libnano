@@ -18,28 +18,30 @@ auto make_max(const tensor1d_t& grid_values)
 }
 } // namespace
 
-param_space_t::param_space_t(param_space_t::type type_, tensor1d_t grid_values)
-    : m_type(type_)
+param_space_t::param_space_t(string_t name, param_space_t::type type_, tensor1d_t grid_values)
+    : m_name(std::move(name))
+    , m_type(type_)
     , m_grid_values(std::move(grid_values))
     , m_min(make_min(m_grid_values))
     , m_max(make_max(m_grid_values))
 {
-    critical(m_grid_values.size() < 2, "parameter space: at least two grid values must be given!");
+    critical(m_grid_values.size() < 2, "parameter space [", m_name, "]: at least two grid values must be given!");
 
-    critical(!std::is_sorted(std::begin(m_grid_values), std::end(m_grid_values)),
-             "parameter space: the grid values must be sorted!");
+    critical(!std::is_sorted(std::begin(m_grid_values), std::end(m_grid_values)), "parameter space [", m_name,
+             "]: the grid values must be sorted!");
 
     critical(std::unique(std::begin(m_grid_values), std::end(m_grid_values)) != std::end(m_grid_values),
-             "parameter space: the grid values must be distinct!");
+             "parameter space [", m_name, "]: the grid values must be distinct!");
 
     critical(m_type == type::log10 && *std::min_element(std::begin(m_grid_values), std::end(m_grid_values)) <
                                           std::numeric_limits<scalar_t>::epsilon(),
-             "parameter space: the grid values must be strictly positive if using the logarithmic scale!");
+             "parameter space [", m_name,
+             "]: the grid values must be strictly positive if using the logarithmic scale!");
 }
 
 scalar_t param_space_t::to_surrogate(const scalar_t value) const
 {
-    critical(value < m_min || value > m_max, "parameter space: cannot map value (", value,
+    critical(value < m_min || value > m_max, "parameter space [", m_name, "]: cannot map value (", value,
              ") outside the parameter grid range [", m_min, ",", m_max, "]!");
 
     switch (m_type)

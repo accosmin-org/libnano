@@ -91,6 +91,11 @@ bool nano::evaluate(const param_spaces_t& spaces, const tuner_callback_t& callba
     const auto it = std::remove_if(igrids.begin(), igrids.end(), op);
     igrids.erase(it, igrids.end());
 
+    if (igrids.empty())
+    {
+        return false;
+    }
+
     // evaluate the new grid points...
     const auto before = steps.size();
     const auto params = map_to_grid(spaces, igrids);

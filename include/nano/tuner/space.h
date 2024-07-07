@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/arch.h>
+#include <nano/string.h>
 #include <nano/tensor.h>
 
 namespace nano
@@ -26,14 +27,14 @@ public:
     ///
     /// \brief constructor
     ///
-    param_space_t(type, tensor1d_t grid_values);
+    param_space_t(string_t name, type, tensor1d_t grid_values);
 
     ///
     /// \brief constructor
     ///
     template <class... tscalars>
-    explicit param_space_t(type type_, const tscalars... scalars)
-        : param_space_t(type_, make_grid_values(scalars...))
+    param_space_t(string_t name, type type_, const tscalars... scalars)
+        : param_space_t(std::move(name), type_, make_grid_values(scalars...))
     {
     }
 
@@ -58,6 +59,11 @@ public:
     scalar_t closest_grid_value_from_surrogate(scalar_t value) const;
 
     ///
+    /// \brief returns the hyper-parameter's name.
+    ///
+    const string_t& name() const { return m_name; }
+
+    ///
     /// \brief returns the grid of values.
     ///
     const tensor1d_t& values() const { return m_grid_values; }
@@ -73,6 +79,7 @@ private:
     }
 
     // attributes
+    string_t   m_name;               ///<
     type       m_type{type::linear}; ///<
     tensor1d_t m_grid_values;        ///<
     scalar_t   m_min{NaN};           ///<
@@ -80,8 +87,8 @@ private:
 };
 
 template <class... tscalars>
-auto make_param_space(const param_space_t::type type, const tscalars... scalars)
+auto make_param_space(string_t name, const param_space_t::type type, const tscalars... scalars)
 {
-    return param_space_t{type, scalars...};
+    return param_space_t{std::move(name), type, scalars...};
 }
 } // namespace nano

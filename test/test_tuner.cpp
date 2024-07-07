@@ -12,12 +12,12 @@ namespace
 {
 auto make_param_space1()
 {
-    return param_space_t{param_space_t::type::linear, 0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+    return make_param_space("param1", param_space_t::type::linear, 0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0);
 }
 
 auto make_param_space2()
 {
-    return param_space_t{param_space_t::type::log10, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3};
+    return make_param_space("param2", param_space_t::type::log10, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2, 1e+3);
 }
 
 auto make_param_spaces()
@@ -125,7 +125,7 @@ UTEST_CASE(factory)
 
 UTEST_CASE(param_space_empty)
 {
-    const auto make = [](const param_space_t::type type) { return param_space_t{type, tensor1d_t{}}; };
+    const auto make = [](const param_space_t::type type) { return make_param_space("param", type, tensor1d_t{}); };
 
     UTEST_CHECK_THROW(make(param_space_t::type::log10), std::runtime_error);
     UTEST_CHECK_THROW(make(param_space_t::type::linear), std::runtime_error);
@@ -133,21 +133,23 @@ UTEST_CASE(param_space_empty)
 
 UTEST_CASE(param_space_invalid)
 {
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::log10, -1.0, +1.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::log10, -1.0, +1.0), std::runtime_error);
 
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::log10, +1.0), std::runtime_error);
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::linear, +1.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::log10, +1.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::linear, +1.0), std::runtime_error);
 
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::log10, -1.0, +1.0, +1.0), std::runtime_error);
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::linear, -1.0, +1.0, +1.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::log10, -1.0, +1.0, +1.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::linear, -1.0, +1.0, +1.0), std::runtime_error);
 
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::log10, -1.0, +2.0, +1.0, +3.0), std::runtime_error);
-    UTEST_CHECK_THROW(make_param_space(param_space_t::type::linear, -1, 0, +2.0, +1.0, +3.0), std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::log10, -1.0, +2.0, +1.0, +3.0),
+                      std::runtime_error);
+    UTEST_CHECK_THROW(make_param_space("param", param_space_t::type::linear, -1, 0, +2.0, +1.0, +3.0),
+                      std::runtime_error);
 }
 
 UTEST_CASE(param_space_log10)
 {
-    const auto space = make_param_space(param_space_t::type::log10, 1e-6, 1e-3, 1e+1, 1e+2);
+    const auto space = make_param_space("param", param_space_t::type::log10, 1e-6, 1e-3, 1e+1, 1e+2);
 
     UTEST_CHECK_CLOSE(space.to_surrogate(1e-5), -5.0, 1e-12);
     UTEST_CHECK_CLOSE(space.to_surrogate(1e+0), +0.0, 1e-12);
@@ -180,7 +182,7 @@ UTEST_CASE(param_space_log10)
 UTEST_CASE(param_space_linear)
 {
     const auto type  = param_space_t::type::linear;
-    const auto space = param_space_t{type, make_tensor<scalar_t>(make_dims(4), 0.1, 0.2, 0.5, 1.0)};
+    const auto space = param_space_t{"param", type, make_tensor<scalar_t>(make_dims(4), 0.1, 0.2, 0.5, 1.0)};
 
     UTEST_CHECK_CLOSE(space.to_surrogate(0.10), +0.0, 1e-12);
     UTEST_CHECK_CLOSE(space.to_surrogate(0.55), +0.5, 1e-12);
