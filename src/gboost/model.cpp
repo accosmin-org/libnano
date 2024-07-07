@@ -313,7 +313,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
 
         fit_result.store(::selected(values, samples));
     }
-    fit_params.log(fit_result, "gboost");
+    fit_params.log(fit_result, fit_result.trials(), "gboost");
 
     return fit_result;
 }

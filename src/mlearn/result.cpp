@@ -108,6 +108,8 @@ tensor1d_cmap_t result_t::params(const tensor_size_t trial) const
 
 scalar_t result_t::value(const tensor_size_t trial, const split_type split, const value_type value) const
 {
+    assert(trial >= 0 && trial < trials());
+
     auto sum_mean = 0.0;
     for (tensor_size_t fold = 0, folds = this->folds(); fold < folds; ++fold)
     {
@@ -116,6 +118,16 @@ scalar_t result_t::value(const tensor_size_t trial, const split_type split, cons
     }
 
     return sum_mean / static_cast<scalar_t>(folds());
+}
+
+tensor1d_t result_t::values(const tensor_range_t trial_range, const split_type split, const value_type value) const
+{
+    tensor1d_t values(trial_range.size());
+    for (tensor_size_t trial = trial_range.begin(); trial < trial_range.end(); ++trial)
+    {
+        values(trial - trial_range.begin()) = this->value(trial, split, value);
+    }
+    return values;
 }
 
 stats_t result_t::stats(const value_type value) const

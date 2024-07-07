@@ -125,7 +125,7 @@ rtuner_t surrogate_tuner_t::clone() const
 }
 
 void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_callback_t& callback,
-                                    tuner_steps_t& steps) const
+                                    const logger_t& logger, tuner_steps_t& steps) const
 {
     const auto max_evals = parameter("tuner::max_evals").value<size_t>();
     const auto min_igrid = make_min_igrid(spaces);
@@ -178,7 +178,7 @@ void surrogate_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_ca
         }
 
         const auto igrids = local_search(min_igrid, max_igrid, src_igrid, 1);
-        if (!evaluate(spaces, callback, igrids, steps))
+        if (!evaluate(spaces, callback, igrids, logger, steps))
         {
             break;
         }

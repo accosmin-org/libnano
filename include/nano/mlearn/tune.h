@@ -22,6 +22,9 @@ result_t tune(const string_t& prefix, const indices_t& samples, const params_t& 
     auto tpool  = parallel::pool_t{};
     auto result = result_t{std::move(param_spaces), folds};
 
+    // TODO: detailed logs in the splitter and tuner
+    // TODO: detailed logs for each trial+fold for ML models and solvers
+
     // tune hyper-parameters (if any) in parallel by hyper-parameter trials and folds
     const auto callback = [&](const tensor2d_t& new_params)
     {
@@ -48,19 +51,14 @@ result_t tune(const string_t& prefix, const indices_t& samples, const params_t& 
 
         tpool.map(folds * new_trials, thread_callback);
 
-        fit_params.log(result, prefix);
+        fit_params.log(result, old_trials, prefix);
 
-        tensor1d_t values{new_trials};
-        for (tensor_size_t trial = 0; trial < new_trials; ++trial)
-        {
-            values(trial) = result.value(old_trials + trial);
-        }
-        return values;
+        return result.values(make_range(old_trials, old_trials + new_trials));
     };
 
     if (!result.param_spaces().empty())
     {
-        fit_params.tuner().optimize(result.param_spaces(), callback);
+        fit_params.tuner().optimize(result.param_spaces(), callback, fit_params.logger());
     }
     else
     {

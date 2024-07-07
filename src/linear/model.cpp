@@ -184,7 +184,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
         m_bias    = std::move(result.m_bias);
         m_weights = std::move(result.m_weights);
     }
-    fit_params.log(fit_result, "linear");
+    fit_params.log(fit_result, fit_result.trials(), "linear");
 
     return fit_result;
 }

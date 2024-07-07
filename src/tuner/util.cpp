@@ -1,5 +1,6 @@
 #include <nano/core/combinatorial.h>
 #include <nano/critical.h>
+#include <nano/logger.h>
 #include <nano/tuner/util.h>
 
 using namespace nano;
@@ -79,7 +80,7 @@ igrids_t nano::local_search(const igrid_t& min_igrid, const igrid_t& max_igrid, 
     return igrids;
 }
 
-bool nano::evaluate(const param_spaces_t& spaces, const tuner_callback_t& callback, igrids_t igrids,
+bool nano::evaluate(const param_spaces_t& spaces, const tuner_callback_t& callback, igrids_t igrids, const logger_t&,
                     tuner_steps_t& steps)
 {
     // no need to consider grid points already evaluated

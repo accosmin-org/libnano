@@ -14,7 +14,7 @@ rtuner_t local_search_tuner_t::clone() const
 }
 
 void local_search_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner_callback_t& callback,
-                                       tuner_steps_t& steps) const
+                                       const logger_t& logger, tuner_steps_t& steps) const
 {
     const auto max_evals = parameter("tuner::max_evals").value<size_t>();
     const auto min_igrid = make_min_igrid(spaces);
@@ -24,7 +24,7 @@ void local_search_tuner_t::do_optimize(const param_spaces_t& spaces, const tuner
     for (; !steps.empty() && steps.size() < max_evals;)
     {
         const auto igrids = local_search(min_igrid, max_igrid, steps.begin()->m_igrid, 1);
-        if (!evaluate(spaces, callback, igrids, steps))
+        if (!evaluate(spaces, callback, igrids, logger, steps))
         {
             break;
         }

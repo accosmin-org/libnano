@@ -89,6 +89,6 @@ public:
     ///
     /// \brief @see tuner_t
     ///
-    void do_optimize(const param_spaces_t&, const tuner_callback_t&, tuner_steps_t&) const override;
+    void do_optimize(const param_spaces_t&, const tuner_callback_t&, const logger_t&, tuner_steps_t&) const override;
 };
 } // namespace nano

@@ -17,16 +17,6 @@ class NANO_PUBLIC params_t
 {
 public:
     ///
-    /// \brief logging operator: op(result - up to the current step, prefix)
-    ///
-    using logger_t = std::function<void(const result_t&, const string_t&)>;
-
-    ///
-    /// \brief returns a default logging implementation that prints the current status to standard I/O.
-    ///
-    static logger_t make_stdio_logger(int precision = 8);
-
-    ///
     /// \brief default constructor
     ///
     params_t();
@@ -100,7 +90,7 @@ public:
     ///
     /// \brief log the current fitting result.
     ///
-    void log(const result_t&, const string_t& prefix) const;
+    void log(const result_t&, tensor_size_t last_trial, const string_t& prefix, int precision = 8) const;
 
 private:
     // attributes

@@ -6,6 +6,7 @@
 
 namespace nano
 {
+class logger_t;
 using igrid_t  = indices_t;
 using igrids_t = std::vector<igrid_t>;
 
@@ -39,5 +40,6 @@ NANO_PUBLIC igrids_t local_search(const igrid_t& min_igrid, const igrid_t& max_i
 /// \brief evaluate the given grid points (if not already) and update the given tuner steps.
 ///     returns true if at least one new grid point needs to be evaluated.
 ///
-NANO_PUBLIC bool evaluate(const param_spaces_t&, const tuner_callback_t&, igrids_t igrids, tuner_steps_t&);
+NANO_PUBLIC bool evaluate(const param_spaces_t&, const tuner_callback_t&, igrids_t igrids, const logger_t&,
+                          tuner_steps_t&);
 } // namespace nano

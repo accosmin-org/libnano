@@ -38,6 +38,7 @@ auto evaluate10(const scalar_t x, const scalar_t y, const scalar_t x0, const sca
 template <class tevaluator>
 void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, const tevaluator& evaluator)
 {
+    const auto  logger  = make_stdout_logger();
     const auto& params0 = spaces[0].values();
     const auto& params1 = spaces[1].values();
 
@@ -59,7 +60,7 @@ void check_optimize(const tuner_t& tuner, const param_spaces_t& spaces, const te
             };
 
             tuner_steps_t steps;
-            UTEST_REQUIRE_NOTHROW(steps = tuner.optimize(spaces, callback));
+            UTEST_REQUIRE_NOTHROW(steps = tuner.optimize(spaces, callback, logger));
             UTEST_CHECK(std::is_sorted(steps.begin(), steps.end()));
 
             igrids_t igrids;
@@ -225,6 +226,7 @@ UTEST_CASE(step)
 UTEST_CASE(util)
 {
     const auto spaces = make_param_spaces();
+    const auto logger = make_null_logger();
 
     const auto min_igrid = make_min_igrid(spaces);
     const auto avg_igrid = make_avg_igrid(spaces);
@@ -286,23 +288,23 @@ UTEST_CASE(util)
 
         tuner_steps_t steps;
 
-        UTEST_CHECK(evaluate(spaces, callback, {min_igrid, max_igrid}, steps));
+        UTEST_CHECK(evaluate(spaces, callback, {min_igrid, max_igrid}, logger, steps));
         UTEST_REQUIRE_EQUAL(steps.size(), 2U);
         UTEST_CHECK_EQUAL(steps[0].m_igrid, min_igrid);
         UTEST_CHECK_EQUAL(steps[1].m_igrid, max_igrid);
 
-        UTEST_CHECK(!evaluate(spaces, callback, {min_igrid, max_igrid}, steps));
+        UTEST_CHECK(!evaluate(spaces, callback, {min_igrid, max_igrid}, logger, steps));
         UTEST_REQUIRE_EQUAL(steps.size(), 2U);
         UTEST_CHECK_EQUAL(steps[0].m_igrid, min_igrid);
         UTEST_CHECK_EQUAL(steps[1].m_igrid, max_igrid);
 
-        UTEST_CHECK(evaluate(spaces, callback, {avg_igrid}, steps));
+        UTEST_CHECK(evaluate(spaces, callback, {avg_igrid}, logger, steps));
         UTEST_REQUIRE_EQUAL(steps.size(), 3U);
         UTEST_CHECK_EQUAL(steps[0].m_igrid, min_igrid);
         UTEST_CHECK_EQUAL(steps[1].m_igrid, max_igrid);
         UTEST_CHECK_EQUAL(steps[2].m_igrid, avg_igrid);
 
-        UTEST_CHECK(!evaluate(spaces, callback, {avg_igrid}, steps));
+        UTEST_CHECK(!evaluate(spaces, callback, {avg_igrid}, logger, steps));
         UTEST_REQUIRE_EQUAL(steps.size(), 3U);
         UTEST_CHECK_EQUAL(steps[0].m_igrid, min_igrid);
         UTEST_CHECK_EQUAL(steps[1].m_igrid, max_igrid);
@@ -384,18 +386,20 @@ UTEST_CASE(surrogate)
 UTEST_CASE(fails_empty_param_spaces)
 {
     const auto spaces   = param_spaces_t{};
+    const auto logger   = make_stdout_logger();
     const auto callback = [](const tensor2d_t&) { return tensor1d_t{}; };
 
     for (const auto& id : tuner_t::all().ids())
     {
         const auto tuner = make_tuner(id);
-        UTEST_CHECK_THROW(tuner->optimize(spaces, callback), std::runtime_error);
+        UTEST_CHECK_THROW(tuner->optimize(spaces, callback, logger), std::runtime_error);
     }
 }
 
 UTEST_CASE(fails_invalid_param_values)
 {
     const auto spaces   = make_param_spaces();
+    const auto logger   = make_stdout_logger();
     const auto callback = [](const tensor2d_t& params)
     {
         const auto dims = make_dims(params.size<0>());
@@ -405,7 +409,7 @@ UTEST_CASE(fails_invalid_param_values)
     for (const auto& id : tuner_t::all().ids())
     {
         const auto tuner = make_tuner(id);
-        UTEST_CHECK_THROW(tuner->optimize(spaces, callback), std::runtime_error);
+        UTEST_CHECK_THROW(tuner->optimize(spaces, callback, logger), std::runtime_error);
     }
 }
 

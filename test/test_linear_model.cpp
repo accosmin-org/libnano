@@ -29,7 +29,7 @@ auto make_model(const tensor_size_t batch = 100)
 
 auto make_fit_params(const rsolver_t& solver)
 {
-    return params_t{}.splitter(make_splitter("k-fold", 2)).solver(solver).logger(params_t::make_stdio_logger());
+    return params_t{}.splitter(make_splitter("k-fold", 2)).solver(solver).logger(make_stdout_logger());
 }
 
 void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,

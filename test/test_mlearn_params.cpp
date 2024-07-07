@@ -9,26 +9,9 @@ UTEST_BEGIN_MODULE(test_mlearn_params)
 UTEST_CASE(_default)
 {
     const auto params = params_t{};
-
-    UTEST_CHECK(!params.logger());
     UTEST_CHECK_NOTHROW(params.tuner());
     UTEST_CHECK_NOTHROW(params.solver());
     UTEST_CHECK_NOTHROW(params.splitter());
-}
-
-UTEST_CASE(set_logger)
-{
-    const auto logger0 = params_t::logger_t{};
-    const auto loggerX = [&](const result_t&, const string_t&) {};
-
-    auto params = params_t{};
-    UTEST_CHECK(!params.logger());
-
-    UTEST_CHECK_NOTHROW(params.logger(logger0));
-    UTEST_CHECK(!params.logger());
-
-    UTEST_CHECK_NOTHROW(params.logger(loggerX));
-    UTEST_CHECK(params.logger());
 }
 
 UTEST_CASE(set_tuner)

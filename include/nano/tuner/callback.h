@@ -5,6 +5,6 @@
 
 namespace nano
 {
-///< evaluates the candidate hyper-parameter values
+///< evaluates the given set of hyper-parameter values: (trials, hyper-parameter values) => (trials,)
 using tuner_callback_t = std::function<tensor1d_t(const tensor2d_t&)>;
 } // namespace nano

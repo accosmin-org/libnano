@@ -2,6 +2,7 @@
 
 #include <nano/configurable.h>
 #include <nano/factory.h>
+#include <nano/logger.h>
 #include <nano/tuner/callback.h>
 #include <nano/tuner/space.h>
 #include <nano/tuner/step.h>
@@ -33,9 +34,9 @@ public:
     ///
     /// \brief optimize the given hyper-parameters and returns all the evaluated steps.
     ///
-    tuner_steps_t optimize(const param_spaces_t&, const tuner_callback_t&) const;
+    tuner_steps_t optimize(const param_spaces_t&, const tuner_callback_t&, const logger_t&) const;
 
 private:
-    virtual void do_optimize(const param_spaces_t&, const tuner_callback_t&, tuner_steps_t& steps) const = 0;
+    virtual void do_optimize(const param_spaces_t&, const tuner_callback_t&, const logger_t&, tuner_steps_t&) const = 0;
 };
 } // namespace nano

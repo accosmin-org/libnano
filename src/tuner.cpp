@@ -12,7 +12,8 @@ tuner_t::tuner_t(string_t id)
     register_parameter(parameter_t::make_integer("tuner::max_evals", 10, LE, 100, LE, 1000));
 }
 
-tuner_steps_t tuner_t::optimize(const param_spaces_t& spaces, const tuner_callback_t& callback) const
+tuner_steps_t tuner_t::optimize(const param_spaces_t& spaces, const tuner_callback_t& callback,
+                                const logger_t& logger) const
 {
     critical(spaces.empty(), "tuner: at least one parameter space is needed!");
 
@@ -24,17 +25,17 @@ tuner_steps_t tuner_t::optimize(const param_spaces_t& spaces, const tuner_callba
     tuner_steps_t steps;
 
     // initialize using a coarse grid
-    evaluate(spaces, callback, igrids_t{avg_igrid}, steps);
+    evaluate(spaces, callback, igrids_t{avg_igrid}, logger, steps);
     for (tensor_size_t radius = 2; !steps.empty() && steps.size() < max_evals / 2; radius *= 2)
     {
         const auto igrids = local_search(min_igrid, max_igrid, steps.begin()->m_igrid, radius);
-        if (!evaluate(spaces, callback, igrids, steps))
+        if (!evaluate(spaces, callback, igrids, logger, steps))
         {
             break;
         }
     }
 
-    do_optimize(spaces, callback, steps);
+    do_optimize(spaces, callback, logger, steps);
 
     return steps;
 }

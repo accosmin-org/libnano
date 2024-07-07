@@ -7,66 +7,6 @@
 using namespace nano;
 using namespace nano::ml;
 
-params_t::logger_t params_t::make_stdio_logger(const int precision)
-{
-    return [=, last_trial = tensor_size_t{0U}](const result_t& result, const string_t& prefix) mutable
-    {
-        const auto& spaces             = result.param_spaces();
-        const auto  optim_errors_stats = result.stats(value_type::errors);
-        const auto  optim_losses_stats = result.stats(value_type::losses);
-
-        const auto print_params = [&](const tensor1d_cmap_t params, const auto... tokens)
-        {
-            assert(spaces.size() == static_cast<size_t>(params.size()));
-
-            // FIXME: should use the loggable_t interface for this!
-            auto logger = make_stdout_logger();
-            logger.log(log_type::info, std::fixed, std::setprecision(precision), std::fixed, prefix, ": ");
-            for (size_t i = 0U, size = spaces.size(); i < size; ++i)
-            {
-                logger.log(spaces[i].name(), "=", params(static_cast<tensor_size_t>(i)), ",");
-            }
-            logger.log(tokens..., ".\n");
-        };
-
-        for (tensor_size_t trial = last_trial; trial < result.trials(); ++trial)
-        {
-            const auto folds = result.folds();
-            const auto norm  = static_cast<scalar_t>(folds);
-
-            auto sum_train_losses = 0.0;
-            auto sum_train_errors = 0.0;
-            auto sum_valid_losses = 0.0;
-            auto sum_valid_errors = 0.0;
-            for (tensor_size_t fold = 0; fold < folds; ++fold)
-            {
-                const auto fold_train_value = result.stats(trial, fold, split_type::train, value_type::losses).m_mean;
-                const auto fold_train_error = result.stats(trial, fold, split_type::train, value_type::errors).m_mean;
-                const auto fold_valid_value = result.stats(trial, fold, split_type::valid, value_type::losses).m_mean;
-                const auto fold_valid_error = result.stats(trial, fold, split_type::valid, value_type::errors).m_mean;
-
-                print_params(result.params(trial), "train=", fold_train_value, "/", fold_train_error, ",",
-                             "valid=", fold_valid_value, "/", fold_valid_error, ",fold=", (fold + 1), "/", folds);
-
-                sum_train_losses += fold_train_value;
-                sum_train_errors += fold_train_error;
-                sum_valid_losses += fold_valid_value;
-                sum_valid_errors += fold_valid_error;
-            }
-
-            print_params(result.params(trial), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
-                         "valid=", sum_valid_losses / norm, "/", sum_valid_errors / norm, "(average)");
-        }
-        last_trial = result.trials();
-
-        if (std::isfinite(optim_errors_stats.m_mean))
-        {
-            const auto trial = result.optimum_trial();
-            print_params(result.params(trial), "refit=", optim_losses_stats.m_mean, "/", optim_errors_stats.m_mean);
-        }
-    };
-}
-
 params_t::params_t()
 {
     tuner("surrogate");
@@ -203,15 +143,63 @@ const splitter_t& params_t::splitter() const
     return *m_splitter;
 }
 
-const params_t::logger_t& params_t::logger() const
+const logger_t& params_t::logger() const
 {
     return m_logger;
 }
 
-void params_t::log(const result_t& result, const string_t& prefix) const
+void params_t::log(const result_t& result, const tensor_size_t last_trial, const string_t& prefix,
+                   const int precision) const
 {
-    if (m_logger)
+    const auto& spaces             = result.param_spaces();
+    const auto  optim_errors_stats = result.stats(value_type::errors);
+    const auto  optim_losses_stats = result.stats(value_type::losses);
+
+    const auto print_params = [&](const tensor1d_cmap_t params, const auto... tokens)
     {
-        m_logger(result, prefix);
+        assert(spaces.size() == static_cast<size_t>(params.size()));
+
+        // FIXME: should use the loggable_t interface for this!
+        m_logger.log(log_type::info, std::fixed, std::setprecision(precision), std::fixed, prefix, ": ");
+        for (size_t i = 0U, size = spaces.size(); i < size; ++i)
+        {
+            m_logger.log(spaces[i].name(), "=", params(static_cast<tensor_size_t>(i)), ",");
+        }
+        m_logger.log(tokens..., ".\n");
+    };
+
+    for (tensor_size_t trial = last_trial; trial < result.trials(); ++trial)
+    {
+        const auto folds = result.folds();
+        const auto norm  = static_cast<scalar_t>(folds);
+
+        auto sum_train_losses = 0.0;
+        auto sum_train_errors = 0.0;
+        auto sum_valid_losses = 0.0;
+        auto sum_valid_errors = 0.0;
+        for (tensor_size_t fold = 0; fold < folds; ++fold)
+        {
+            const auto fold_train_value = result.stats(trial, fold, split_type::train, value_type::losses).m_mean;
+            const auto fold_train_error = result.stats(trial, fold, split_type::train, value_type::errors).m_mean;
+            const auto fold_valid_value = result.stats(trial, fold, split_type::valid, value_type::losses).m_mean;
+            const auto fold_valid_error = result.stats(trial, fold, split_type::valid, value_type::errors).m_mean;
+
+            print_params(result.params(trial), "train=", fold_train_value, "/", fold_train_error, ",",
+                         "valid=", fold_valid_value, "/", fold_valid_error, ",fold=", (fold + 1), "/", folds);
+
+            sum_train_losses += fold_train_value;
+            sum_train_errors += fold_train_error;
+            sum_valid_losses += fold_valid_value;
+            sum_valid_errors += fold_valid_error;
+        }
+
+        print_params(result.params(trial), "train=", sum_train_losses / norm, "/", sum_train_errors / norm, ",",
+                     "valid=", sum_valid_losses / norm, "/", sum_valid_errors / norm, "(average)");
+    }
+
+    if (std::isfinite(optim_errors_stats.m_mean))
+    {
+        const auto trial = result.optimum_trial();
+        print_params(result.params(trial), "refit=", optim_losses_stats.m_mean, "/", optim_errors_stats.m_mean);
     }
 }

@@ -77,6 +77,12 @@ public:
     scalar_t value(tensor_size_t trial, split_type = split_type::valid, value_type = value_type::errors) const;
 
     ///
+    /// \brief returns the average value of the given trial range across folds.
+    ///
+    tensor1d_t values(tensor_range_t trial_range, split_type = split_type::valid,
+                      value_type = value_type::errors) const;
+
+    ///
     /// \brief returns the statistics for the optimum hyper-parameters.
     ///
     stats_t stats(ml::value_type) const;
