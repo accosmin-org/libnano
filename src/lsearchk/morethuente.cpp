@@ -150,7 +150,8 @@ rlsearchk_t lsearchk_morethuente_t::clone() const
 }
 
 lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0, const vector_t& descent,
-                                                    scalar_t step_size, solver_state_t& state) const
+                                                    scalar_t step_size, solver_state_t& state,
+                                                    const logger_t& logger) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -268,7 +269,7 @@ lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0
         }
 
         // Obtain another function and derivative
-        if (!update(state, state0, descent, stp))
+        if (!update(state, state0, descent, stp, logger))
         {
             return {false, stp};
         }

@@ -356,7 +356,8 @@ rsolver_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::clone() const
 
 template <class tsampler, class tpreconditioner, class ttype_id>
 solver_state_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::do_minimize(const function_t& function,
-                                                                                  const vector_t&   x0) const
+                                                                                  const vector_t&   x0,
+                                                                                  const logger_t&   logger) const
 {
     const auto basename      = scat("solver::", ttype_id::str(), "::");
     const auto max_evals     = parameter("solver::max_evals").template value<tensor_size_t>();
@@ -391,7 +392,7 @@ solver_state_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::do_minimiz
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
         const auto converged = state.gradient_test(g) < epsilon && epsilonk < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

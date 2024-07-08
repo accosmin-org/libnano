@@ -41,7 +41,7 @@ rsolver_t solver_asga2_t::clone() const
     return std::make_unique<solver_asga2_t>(*this);
 }
 
-solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
@@ -99,7 +99,7 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
         state.update_if_better(xk1, gxk1, fxk1);
 
         const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }
@@ -125,7 +125,7 @@ rsolver_t solver_asga4_t::clone() const
     return std::make_unique<solver_asga4_t>(*this);
 }
 
-solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
@@ -183,7 +183,7 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
         state.update_if_better(yk1, gyk1, fyk1);
 
         const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

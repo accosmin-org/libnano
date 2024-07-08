@@ -32,14 +32,15 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
     stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
            << state0.x().transpose() << "],t0=" << t0 << ",f0=" << state0.fx() << ",g0=" << state0.gradient_test()
            << "\n";
-    lsearch->logger(make_stream_logger(stream));
+
+    const auto logger = make_stream_logger(stream);
 
     const auto cgdescent_epsilon = [&]()
     { return lsearch->parameter("lsearchk::cgdescent::epsilon").value<scalar_t>(); };
 
     // check the Armijo and the Wolfe-like conditions are valid after line-search
     auto state                 = state0;
-    const auto [ok, step_size] = lsearch->get(state, descent, t0);
+    const auto [ok, step_size] = lsearch->get(state, descent, t0, logger);
     UTEST_CHECK(ok);
     UTEST_CHECK(state.valid());
     UTEST_CHECK_GREATER(step_size, 0.0);

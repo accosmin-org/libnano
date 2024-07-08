@@ -185,14 +185,14 @@ struct solver_description_t
         stream << ",c0=" << state0.constraint_test() << "\n";
     }
 
-    solver.logger(make_stream_logger(stream));
+    const auto logger = make_stream_logger(stream);
 
     // minimize
     solver.parameter("solver::epsilon")   = config.m_epsilon;
     solver.parameter("solver::max_evals") = config.m_max_evals;
 
     function.clear_statistics();
-    auto state = solver.minimize(function, x0);
+    auto state = solver.minimize(function, x0, logger);
 
     UTEST_CHECK(state.valid());
     UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());

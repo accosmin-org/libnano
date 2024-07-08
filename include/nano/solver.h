@@ -46,7 +46,7 @@ inline enum_map_t<solver_type> enum_string()
 ///     - the global minimum if the function is convex or
 ///     - a critical point (not necessarily a local minimum) otherwise.
 ///
-class NANO_PUBLIC solver_t : public typed_t, public configurable_t, public loggable_t, public clonable_t<solver_t>
+class NANO_PUBLIC solver_t : public typed_t, public configurable_t, public clonable_t<solver_t>
 {
 public:
     ///
@@ -78,12 +78,11 @@ public:
 
     ///
     /// \brief minimize the given function starting from the initial point x0 until:
-    ///     - convergence is achieved (critical point, possiblly a local/global minima) or
+    ///     - convergence is achieved (e.g. critical point, possiblly a local/global minima) or
     ///     - the maximum number of iterations is reached or
-    ///     - the user canceled the optimization (using the logging function) or
-    ///     - the solver failed (e.g. line-search failed)
+    ///     - the solver failed (e.g. line-search failed).
     ///
-    solver_state_t minimize(const function_t&, const vector_t& x0) const;
+    solver_state_t minimize(const function_t&, const vector_t& x0, const logger_t&) const;
 
     ///
     /// \brief set the line-search initialization method.
@@ -119,12 +118,12 @@ public:
 
 protected:
     void type(solver_type);
-    bool done(solver_state_t&, bool iter_ok, bool converged) const;
+    bool done(solver_state_t&, bool iter_ok, bool converged, const logger_t&) const;
 
     lsearch_t        make_lsearch() const;
     static rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals);
 
-    virtual solver_state_t do_minimize(const function_t&, const vector_t& x0) const = 0;
+    virtual solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const = 0;
 
 private:
     // attributes

@@ -18,14 +18,14 @@ rsolver_t solver_lbfgs_t::clone() const
     return std::make_unique<solver_lbfgs_t>(*this);
 }
 
-solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto history   = parameter("solver::lbfgs::history").value<size_t>();
 
     auto cstate = solver_state_t{function, x0}; // current state
-    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon))
+    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon, logger))
     {
         return cstate;
     }
@@ -87,9 +87,10 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
         }
 
         // line-search
-        pstate             = cstate;
-        const auto iter_ok = lsearch.get(cstate, descent);
-        if (solver_t::done(cstate, iter_ok, cstate.gradient_test() < epsilon))
+        pstate               = cstate;
+        const auto iter_ok   = lsearch.get(cstate, descent, logger);
+        const auto converged = cstate.gradient_test() < epsilon;
+        if (solver_t::done(cstate, iter_ok, converged, logger))
         {
             break;
         }

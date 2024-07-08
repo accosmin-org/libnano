@@ -2,7 +2,7 @@
 
 #include <nano/configurable.h>
 #include <nano/factory.h>
-#include <nano/loggable.h>
+#include <nano/logger.h>
 #include <nano/solver/lstep.h>
 
 namespace nano
@@ -39,7 +39,7 @@ inline enum_map_t<lsearch_type> enum_string<lsearch_type>()
 ///
 /// NB: the returned step size is positive and guaranteed to decrease the function value (if no failure).
 ///
-class NANO_PUBLIC lsearchk_t : public typed_t, public configurable_t, public loggable_t, public clonable_t<lsearchk_t>
+class NANO_PUBLIC lsearchk_t : public typed_t, public configurable_t, public clonable_t<lsearchk_t>
 {
 public:
     ///
@@ -60,7 +60,7 @@ public:
     ///
     /// \brief compute the step size starting from the given state and the initial estimate of the step size.
     ///
-    result_t get(solver_state_t&, const vector_t& descent, scalar_t initial_step_size) const;
+    result_t get(solver_state_t&, const vector_t& descent, scalar_t initial_step_size, const logger_t&) const;
 
     ///
     /// \brief minimum allowed line-search step.
@@ -79,9 +79,10 @@ public:
 
 protected:
     void type(lsearch_type);
-    bool update(solver_state_t&, const solver_state_t&, const vector_t&, scalar_t) const;
+    bool update(solver_state_t&, const solver_state_t&, const vector_t&, scalar_t, const logger_t&) const;
 
-    virtual result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&) const = 0;
+    virtual result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&,
+                            const logger_t&) const = 0;
 
 private:
     // attributes

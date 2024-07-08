@@ -47,7 +47,8 @@ rsolver_t solver_augmented_lagrangian_t::clone() const
     return std::make_unique<solver_augmented_lagrangian_t>(*this);
 }
 
-solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& function, const vector_t& x0,
+                                                          const logger_t& logger) const
 {
     const auto epsilon                  = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals                = parameter("solver::max_evals").value<tensor_size_t>();
@@ -72,13 +73,13 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     {
         // solve augmented lagrangian problem
         penalty_function.penalty(ro);
-        const auto cstate = solver->minimize(penalty_function, bstate.x());
+        const auto cstate = solver->minimize(penalty_function, bstate.x(), logger);
 
         // check convergence
         const auto iter_ok   = cstate.valid(); // && cstate.status() == solver_status::converged;
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
-        if (done(bstate, iter_ok, converged))
+        if (done(bstate, iter_ok, converged, logger))
         {
             break;
         }

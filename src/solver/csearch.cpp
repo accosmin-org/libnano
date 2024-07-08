@@ -40,7 +40,7 @@ csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar
 }
 
 const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu, const tensor_size_t max_evals,
-                                            const scalar_t epsilon)
+                                            const scalar_t epsilon, const logger_t& logger)
 {
     // FIXME: the references do not specify how to choose these thresholds
     const auto etol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
@@ -71,7 +71,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto& fy     = m_point.m_fy;
 
         // estimate proximal point
-        bundle.solve(miu / t);
+        bundle.solve(miu / t, logger);
 
         y  = bundle.proximal(miu / t);
         fy = m_function.vgrad(y, gy);
@@ -82,9 +82,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
 
-        log("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy, ",de=", e,
-            ",ds=", s.lpNorm<2>(), ",dd=", delta, ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
-            "]\n");
+        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
+                    ",de=", e, ",ds=", s.lpNorm<2>(), ",dd=", delta, ",bsize=", bundle.size(), ",miu=", miu, ",t=", t,
+                    "[", tL, ",", tR, "]\n");
 
         if (const auto failed = !std::isfinite(fy); failed)
         {

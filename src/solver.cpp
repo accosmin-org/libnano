@@ -48,7 +48,6 @@ solver_t::solver_t(string_t id)
 solver_t::solver_t(const solver_t& other)
     : typed_t(other)
     , configurable_t(other)
-    , loggable_t(other)
     , clonable_t(other)
     , m_lsearch0(other.lsearch0().clone())
     , m_lsearchk(other.lsearchk().clone())
@@ -101,25 +100,22 @@ lsearch_t solver_t::make_lsearch() const
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
 
-    lsearch0->logger(logger());
-    lsearchk->logger(logger());
-
     lsearch0->parameter("lsearch0::epsilon")   = parameter("solver::epsilon").value<scalar_t>();
     lsearchk->parameter("lsearchk::tolerance") = parameter("solver::tolerance").value_pair<scalar_t>();
     return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 }
 
-solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     critical(function.size() != x0.size(), "solver: incompatible initial point (", x0.size(),
              " dimensions), expecting ", function.size(), " dimensions!");
 
     function.clear_statistics();
 
-    return do_minimize(function, x0);
+    return do_minimize(function, x0, logger);
 }
 
-bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool converged) const
+bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool converged, const logger_t& logger) const
 {
     state.update_calls();
 
@@ -127,13 +123,13 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool conver
     {
         // either converged or failed
         state.status(converged ? solver_status::converged : solver_status::failed);
-        log("[", type_id(), "]: ", state, ".\n");
+        logger.info("solver-[", type_id(), "]: ", state, ".\n");
         return true;
     }
     else
     {
         // OK, go on with the optimization
-        log("[", type_id(), "]: ", state, ".\n");
+        logger.info("solver-[", type_id(), "]: ", state, ".\n");
         return false;
     }
 }

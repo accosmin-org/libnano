@@ -13,7 +13,8 @@ solver_penalty_t::solver_penalty_t(string_t id)
     register_parameter(parameter_t::make_integer("solver::penalty::max_outer_iters", 10, LE, 20, LE, 100));
 }
 
-solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, const vector_t& x0) const
+solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, const vector_t& x0,
+                                          const logger_t& logger) const
 {
     const auto epsilon    = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals  = parameter("solver::max_evals").value<tensor_size_t>();
@@ -31,7 +32,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
     {
         // solve the penalty problem
         penalty_function.penalty(penalty);
-        const auto cstate = solver->minimize(penalty_function, bstate.x());
+        const auto cstate = solver->minimize(penalty_function, bstate.x(), logger);
 
         // increase penalty until the solution is bounded
         const auto iter_ok = cstate.valid();
@@ -44,7 +45,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
         // check convergence
         const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
         bstate.update(cstate.x());
-        if (done(bstate, iter_ok, converged))
+        if (done(bstate, iter_ok, converged, logger))
         {
             break;
         }
@@ -68,11 +69,12 @@ rsolver_t solver_linear_penalty_t::clone() const
     return std::make_unique<solver_linear_penalty_t>(*this);
 }
 
-solver_state_t solver_linear_penalty_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_linear_penalty_t::do_minimize(const function_t& function, const vector_t& x0,
+                                                    const logger_t& logger) const
 {
     auto penalty_function = linear_penalty_function_t{function};
 
-    return minimize(penalty_function, x0);
+    return minimize(penalty_function, x0, logger);
 }
 
 solver_quadratic_penalty_t::solver_quadratic_penalty_t()
@@ -86,9 +88,10 @@ rsolver_t solver_quadratic_penalty_t::clone() const
     return std::make_unique<solver_quadratic_penalty_t>(*this);
 }
 
-solver_state_t solver_quadratic_penalty_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_quadratic_penalty_t::do_minimize(const function_t& function, const vector_t& x0,
+                                                       const logger_t& logger) const
 {
     auto penalty_function = quadratic_penalty_function_t{function};
 
-    return minimize(penalty_function, x0);
+    return minimize(penalty_function, x0, logger);
 }

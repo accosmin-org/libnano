@@ -28,7 +28,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
-void bundle_t::solve(const scalar_t miu)
+void bundle_t::solve(const scalar_t miu, const logger_t& logger)
 {
     assert(size() > 0);
     assert(dims() == m_x.size());
@@ -69,13 +69,13 @@ void bundle_t::solve(const scalar_t miu)
         const auto solution = m_solver.solve(program, x0);
         if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
         {
-            log(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
-                "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
-                "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
+            logger.error(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
+                         "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
+                         "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
         }
         if (solution.m_status != solver_status::converged)
         {
-            log(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
+            logger.error(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
         }
 
         m_alphas.slice(0, m_size) = solution.m_x;

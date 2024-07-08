@@ -67,7 +67,6 @@ int main(const int, char*[])
     solver->parameter("solver::tolerance")      = std::make_tuple(1e-4, 9e-1);
     solver->lsearch0("constant");
     solver->lsearchk("morethuente");
-    solver->logger(make_stdout_logger());
 
     // minimize starting from various random points
     for (auto trial = 0; trial < trials; ++trial)
@@ -77,7 +76,7 @@ int main(const int, char*[])
                   << "]: f0=" << objective.vgrad(x0) << "...\n";
 
         // minimize
-        const auto state = solver->minimize(objective, x0);
+        const auto state = solver->minimize(objective, x0, make_stdout_logger());
         const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials

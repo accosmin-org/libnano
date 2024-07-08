@@ -72,7 +72,7 @@ solver_pdsgm_t::solver_pdsgm_t(string_t id)
     register_parameter(parameter_t::make_integer("solver::pdsgm::patience", 10, LE, 1000, LE, 1e+6));
 }
 
-solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
@@ -91,7 +91,7 @@ solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vec
         {
             const auto iter_ok   = state.valid();
             const auto converged = true;
-            solver_t::done(state, iter_ok, converged);
+            solver_t::done(state, iter_ok, converged, logger);
             break;
         }
 
@@ -105,7 +105,7 @@ solver_state_t solver_pdsgm_t::do_minimize(const function_t& function, const vec
 
         const auto iter_ok   = std::isfinite(fx);
         const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

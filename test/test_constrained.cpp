@@ -100,10 +100,10 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
     stream << std::fixed << std::setprecision(16) << function.name() << "\n"
            << ":x0=[" << x0.transpose() << "]\n";
 
-    solver.logger(make_stream_logger(stream));
+    const auto logger = make_stream_logger(stream);
 
     function.clear_statistics();
-    const auto state = solver.minimize(function, x0);
+    const auto state = solver.minimize(function, x0, logger);
 
     const auto old_n_failures = utest_n_failures.load();
 

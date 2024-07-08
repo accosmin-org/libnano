@@ -138,7 +138,7 @@ solver->lsearchk("morethuente");
 Then the optimal point is obtained by invoking the solver on the object like described below:
 ```
 const auto  x0    = nano::make_random_vector<scalar_t>(objective.size());
-const auto  state = solver->minimize(objective, x0);
+const auto  state = solver->minimize(objective, x0, make_stdout_logger());
 const auto& x     = state.x;
 
 std::cout << std::fixed << std::setprecision(12)

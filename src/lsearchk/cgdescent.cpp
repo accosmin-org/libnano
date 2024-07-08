@@ -95,17 +95,17 @@ rlsearchk_t lsearchk_cgdescent_t::clone() const
     return std::make_unique<lsearchk_cgdescent_t>(*this);
 }
 
-void lsearchk_cgdescent_t::move(interval_t& interval, const scalar_t step_size_) const
+void lsearchk_cgdescent_t::move(interval_t& interval, const scalar_t step_size, const logger_t& logger) const
 {
-    interval.step_size = step_size_;
-    lsearchk_t::update(interval.c, interval.state0, interval.descent, interval.step_size);
+    interval.step_size = step_size;
+    lsearchk_t::update(interval.c, interval.state0, interval.descent, interval.step_size, logger);
 }
 
-void lsearchk_cgdescent_t::updateU(interval_t& interval, const params_t& params) const
+void lsearchk_cgdescent_t::updateU(interval_t& interval, const params_t& params, const logger_t& logger) const
 {
     for (; params.m_max_iterations > 0 && (interval.b.t - interval.a.t) > stpmin(); --params.m_max_iterations)
     {
-        move(interval, (1 - params.m_theta) * interval.a.t + params.m_theta * interval.b.t);
+        move(interval, (1 - params.m_theta) * interval.a.t + params.m_theta * interval.b.t, logger);
         if (!interval.c.valid())
         {
             return;
@@ -126,7 +126,7 @@ void lsearchk_cgdescent_t::updateU(interval_t& interval, const params_t& params)
     }
 }
 
-void lsearchk_cgdescent_t::update(interval_t& interval, const params_t& params) const
+void lsearchk_cgdescent_t::update(interval_t& interval, const params_t& params, const logger_t& logger) const
 {
     if (interval.step_size <= interval.a.t || interval.step_size >= interval.b.t)
     {
@@ -143,11 +143,11 @@ void lsearchk_cgdescent_t::update(interval_t& interval, const params_t& params) 
     else
     {
         interval.updateB();
-        updateU(interval, params);
+        updateU(interval, params, logger);
     }
 }
 
-void lsearchk_cgdescent_t::bracket(interval_t& interval, const params_t& params) const
+void lsearchk_cgdescent_t::bracket(interval_t& interval, const params_t& params, const logger_t& logger) const
 {
     auto last_a = interval.a;
     for (; params.m_max_iterations > 0 && interval.c.valid(); --params.m_max_iterations)
@@ -162,19 +162,20 @@ void lsearchk_cgdescent_t::bracket(interval_t& interval, const params_t& params)
         {
             interval.a = {interval.state0, interval.descent, 0.0};
             interval.updateB();
-            updateU(interval, params);
+            updateU(interval, params, logger);
             return;
         }
         else
         {
             last_a = {interval.c, interval.descent, interval.step_size};
-            move(interval, params.m_ro * interval.step_size);
+            move(interval, params.m_ro * interval.step_size, logger);
         }
     }
 }
 
 lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, const vector_t& descent,
-                                                  scalar_t step_size, solver_state_t& state) const
+                                                  scalar_t step_size, solver_state_t& state,
+                                                  const logger_t& logger) const
 {
     assert(state0.has_descent(descent));
 
@@ -188,7 +189,7 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
     }
 
     // bracket the initial step size
-    bracket(interval, params);
+    bracket(interval, params, logger);
     if (interval.done(params.m_c1, params.m_c2, params.m_epsilonk))
     {
         return {state.valid(), interval.step_size};
@@ -202,13 +203,13 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
             return false;
         }
 
-        move(interval, t);
+        move(interval, t, logger);
         if (interval.done(params.m_c1, params.m_c2, params.m_epsilonk))
         {
             return true;
         }
 
-        update(interval, params);
+        update(interval, params, logger);
         return interval.done(params.m_c1, params.m_c2, params.m_epsilonk);
     };
 

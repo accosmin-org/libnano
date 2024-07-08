@@ -18,7 +18,7 @@ rlsearchk_t lsearchk_fletcher_t::clone() const
 }
 
 lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, const vector_t& descent, lsearch_step_t lo,
-                                               lsearch_step_t hi, solver_state_t& state) const
+                                               lsearch_step_t hi, solver_state_t& state, const logger_t& logger) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -33,7 +33,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
         auto step_size = lsearch_step_t::interpolate(lo, hi, interpolation);
         step_size      = std::clamp(step_size, tmin, tmax);
 
-        if (!update(state, state0, descent, step_size))
+        if (!update(state, state0, descent, step_size, logger))
         {
             return {false, step_size};
         }
@@ -59,7 +59,8 @@ lsearchk_t::result_t lsearchk_fletcher_t::zoom(const solver_state_t& state0, con
 }
 
 lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, const vector_t& descent,
-                                                 scalar_t step_size, solver_state_t& state) const
+                                                 scalar_t step_size, solver_state_t& state,
+                                                 const logger_t& logger) const
 {
     const auto [c1, c2]       = parameter("lsearchk::tolerance").value_pair<scalar_t>();
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
@@ -75,7 +76,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
 
         if (!state.has_armijo(state0, descent, step_size, c1) || curr.f >= prev.f)
         {
-            return zoom(state0, descent, prev, curr, state);
+            return zoom(state0, descent, prev, curr, state, logger);
         }
         else if (state.has_strong_wolfe(state0, descent, c2))
         {
@@ -83,7 +84,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
         }
         else if (!state.has_descent(descent))
         {
-            return zoom(state0, descent, curr, prev, state);
+            return zoom(state0, descent, curr, prev, state, logger);
         }
 
         // next trial
@@ -94,7 +95,7 @@ lsearchk_t::result_t lsearchk_fletcher_t::do_get(const solver_state_t& state0, c
         step_size = lsearch_step_t::interpolate(prev, curr, interpolation);
         step_size = std::clamp(step_size, tmin, tmax);
 
-        if (!update(state, state0, descent, step_size))
+        if (!update(state, state0, descent, step_size, logger))
         {
             return {false, step_size};
         }

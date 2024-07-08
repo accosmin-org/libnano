@@ -21,7 +21,7 @@ public:
     ///
     /// \brief compute the step size along the given descent direction.
     ///
-    bool get(solver_state_t& state, const vector_t& descent) const;
+    bool get(solver_state_t&, const vector_t& descent, const logger_t&) const;
 
 private:
     // attributes

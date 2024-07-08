@@ -100,7 +100,8 @@ rsolver_t base_solver_fpba_t<tsequence>::clone() const
 }
 
 template <class tsequence>
-solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& function, const vector_t& x0,
+                                                          const logger_t& logger) const
 {
     const auto prefix    = scat("solver::", type_id());
     const auto max_evals = parameter("solver::max_evals").template value<tensor_size_t>();
@@ -132,11 +133,11 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity.miu(), max_evals, epsilon);
+        const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity.miu(), max_evals, epsilon, logger);
 
         const auto iter_ok   = status != csearch_status::failed;
         const auto converged = status == csearch_status::converged;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

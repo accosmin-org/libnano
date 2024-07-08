@@ -27,7 +27,7 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 
 private:
     virtual std::tuple<scalar_t, scalar_t> update(const model_t& model, const vector_t& gx) const = 0;

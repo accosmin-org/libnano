@@ -2,7 +2,6 @@
 
 #include <nano/configurable.h>
 #include <nano/factory.h>
-#include <nano/loggable.h>
 #include <nano/solver/lstep.h>
 
 namespace nano
@@ -16,7 +15,7 @@ using rlsearch0_t = std::unique_ptr<lsearch0_t>;
 /// see "Numerical optimization", Nocedal & Wright, 2nd edition, p.59
 /// see "Practical methods of optimization", Fletcher, chapter 2
 ///
-class NANO_PUBLIC lsearch0_t : public typed_t, public configurable_t, public loggable_t, public clonable_t<lsearch0_t>
+class NANO_PUBLIC lsearch0_t : public typed_t, public configurable_t, public clonable_t<lsearch0_t>
 {
 public:
     ///
@@ -34,6 +33,6 @@ public:
     ///
     /// NB: may keep track of the initial step sizes computed for previous calls.
     ///
-    virtual scalar_t get(const solver_state_t& state, const vector_t& descent, scalar_t last_step_size) = 0;
+    virtual scalar_t get(const solver_state_t&, const vector_t& descent, scalar_t last_step_size) = 0;
 };
 } // namespace nano

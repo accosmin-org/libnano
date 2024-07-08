@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/loggable.h>
+#include <nano/logger.h>
 #include <nano/program/solver.h>
 #include <nano/solver/state.h>
 #include <nano/tensor/algorithm.h>
@@ -17,7 +17,7 @@ namespace nano
 ///     - first removing all inactive constraints and
 ///     - then the ones with the largest approximation error if needed - see (2).
 ///
-class NANO_PUBLIC bundle_t : public loggable_t
+class NANO_PUBLIC bundle_t
 {
 public:
     ///
@@ -93,7 +93,7 @@ public:
     ///
     /// \brief return the solution of the penalized proximal bundle problem.
     ///
-    void solve(scalar_t miu);
+    void solve(scalar_t miu, const logger_t&);
 
 private:
     tensor_size_t dims() const { return m_bundleS.size<1>(); }

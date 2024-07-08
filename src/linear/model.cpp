@@ -97,7 +97,8 @@ auto make_x0(const ::nano::linear::function_t& function, const std::any& extra)
 } // LCOV_EXCL_LINE
 
 auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const std::any& extra = std::any{})
+         const solver_t& solver, const scalar_t l1reg, const scalar_t l2reg, const logger_t& logger,
+         const std::any& extra = std::any{})
 {
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(configurable.parameter("linear::batch").value<tensor_size_t>());
@@ -106,7 +107,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     iterator.cache_targets(std::numeric_limits<tensor_size_t>::max());
 
     const auto function = ::nano::linear::function_t{iterator, loss, l1reg, l2reg};
-    const auto state    = solver.minimize(function, make_x0(function, extra));
+    const auto state    = solver.minimize(function, make_x0(function, extra), logger);
 
     tensor1d_t bias    = function.bias(state.x());
     tensor2d_t weights = function.weights(state.x());
@@ -151,8 +152,9 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
 {
     learner_t::fit_dataset(dataset);
 
-    const auto batch          = parameter("linear::batch").value<tensor_size_t>();
-    const auto regularization = parameter("linear::regularization").value<linear_regularization>();
+    const auto& logger         = fit_params.logger();
+    const auto  batch          = parameter("linear::batch").value<tensor_size_t>();
+    const auto  regularization = parameter("linear::regularization").value<linear_regularization>();
 
     // tune hyper-parameters
     auto param_spaces = ::make_param_spaces(*this);
@@ -162,7 +164,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     {
         const auto [l1reg, l2reg] = decode_params(params, regularization);
 
-        auto result    = ::fit(*this, dataset, train_samples, loss, fit_params.solver(), l1reg, l2reg, extra);
+        auto result    = ::fit(*this, dataset, train_samples, loss, fit_params.solver(), l1reg, l2reg, logger, extra);
         auto tr_values = ::nano::linear::evaluate(dataset, train_samples, loss, result.m_weights, result.m_bias, batch);
         auto vd_values = ::nano::linear::evaluate(dataset, valid_samples, loss, result.m_weights, result.m_bias, batch);
 
@@ -176,7 +178,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
         const auto optimum_params = fit_result.params(fit_result.optimum_trial());
         const auto [l1reg, l2reg] = decode_params(optimum_params, regularization);
 
-        auto result = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg);
+        auto result = ::fit(*this, dataset, samples, loss, fit_params.solver(), l1reg, l2reg, logger);
         auto values = ::nano::linear::evaluate(dataset, samples, loss, result.m_weights, result.m_bias, batch);
 
         fit_result.store(std::move(values));

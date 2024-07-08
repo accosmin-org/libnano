@@ -85,6 +85,33 @@ public:
         return *this;
     }
 
+    ///
+    /// \brief log the given tokens using the information level.
+    ///
+    template <class... targs>
+    const logger_t& info(const targs&... args) const
+    {
+        return log(log_type::info, args...);
+    }
+
+    ///
+    /// \brief log the given tokens using the warning level.
+    ///
+    template <class... targs>
+    const logger_t& warn(const targs&... args) const
+    {
+        return log(log_type::warn, args...);
+    }
+
+    ///
+    /// \brief log the given tokens using the error level.
+    ///
+    template <class... targs>
+    const logger_t& error(const targs&... args) const
+    {
+        return log(log_type::error, args...);
+    }
+
 private:
     std::ostream* stream() const;
 

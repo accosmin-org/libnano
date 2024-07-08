@@ -170,16 +170,23 @@ auto minimize_all(parallel::pool_t& pool, const function_t& function, const solv
         const auto& x0     = x0s[itrial];
         const auto  solver = solvers[isolver]->clone();
 
-        if (!log_dir.empty())
+        const auto logger = [&]()
         {
-            const auto path = std::filesystem::path(log_dir) / function.name() / scat("trial", itrial + 1) /
-                              scat(solver->type_id(), ".log");
+            if (!log_dir.empty())
+            {
+                const auto path = std::filesystem::path(log_dir) / function.name() / scat("trial", itrial + 1) /
+                                  scat(solver->type_id(), ".log");
 
-            solver->logger(make_file_logger(path.string()));
-        }
+                return make_file_logger(path.string());
+            }
+            else
+            {
+                return make_null_logger();
+            }
+        }();
 
         const auto timer = nano::timer_t{};
-        const auto state = solver->minimize(*function.clone(), x0);
+        const auto state = solver->minimize(*function.clone(), x0, logger);
         const auto milli = timer.milliseconds().count();
 
         return result_t{state, milli};

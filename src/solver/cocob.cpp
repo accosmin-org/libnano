@@ -19,7 +19,7 @@ rsolver_t solver_cocob_t::clone() const
     return std::make_unique<solver_cocob_t>(*this);
 }
 
-solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto epsilon      = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals    = parameter("solver::max_evals").value<int>();
@@ -55,7 +55,7 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
 
         const auto iter_ok   = std::isfinite(fx);
         const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

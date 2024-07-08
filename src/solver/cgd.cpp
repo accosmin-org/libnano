@@ -75,14 +75,14 @@ solver_cgd_t::solver_cgd_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
 }
 
-solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
     const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
 
     auto cstate = solver_state_t{function, x0}; // current state
-    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon))
+    if (solver_t::done(cstate, true, cstate.gradient_test() < epsilon, logger))
     {
         return cstate;
     }
@@ -118,8 +118,9 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
         pdescent = cdescent;
 
         // line-search
-        const auto iter_ok = lsearch.get(cstate, cdescent);
-        if (solver_t::done(cstate, iter_ok, cstate.gradient_test() < epsilon))
+        const auto iter_ok   = lsearch.get(cstate, cdescent, logger);
+        const auto converged = cstate.gradient_test() < epsilon;
+        if (solver_t::done(cstate, iter_ok, converged, logger))
         {
             break;
         }

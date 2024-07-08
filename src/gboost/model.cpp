@@ -71,7 +71,7 @@ auto make_cluster(const dataset_t& dataset, const indices_t& samples, const wlea
 
 auto fit(const configurable_t& configurable, const dataset_t& dataset, const indices_t& train_samples,
          const indices_t& valid_samples, const loss_t& loss, const solver_t& solver, const rwlearners_t& prototypes,
-         const tensor1d_t& params)
+         const tensor1d_t& params, const logger_t& logger)
 {
     const auto seed            = configurable.parameter("gboost::seed").value<uint64_t>();
     const auto batch           = configurable.parameter("gboost::batch").value<tensor_size_t>();
@@ -108,7 +108,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
     const auto bfunction = bias_function_t{train_targets_iterator, loss};
 
     // estimate bias
-    const auto bstate = solver.minimize(bfunction, make_full_vector<scalar_t>(bfunction.size(), 0.0));
+    const auto bstate = solver.minimize(bfunction, make_full_vector<scalar_t>(bfunction.size(), 0.0), logger);
 
     outputs.reshape(samples.size(), -1).matrix().rowwise() = bstate.x().transpose();
     ::nano::gboost::evaluate(targets_iterator, loss, outputs, values);
@@ -155,7 +155,7 @@ auto fit(const configurable_t& configurable, const dataset_t& dataset, const ind
         const auto cluster  = make_cluster(dataset, samples, *best_wlearner, wscale);
         const auto function = scale_function_t{train_targets_iterator, loss, cluster, outputs, woutputs};
 
-        auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0));
+        auto gstate = solver.minimize(function, make_full_vector<scalar_t>(function.size(), 1.0), logger);
         if (gstate.x().min() < std::numeric_limits<scalar_t>::epsilon())
         {
             // NB: scaling fails (optimization fails or convergence on training loss)
@@ -259,13 +259,15 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto protos = wlearner::clone(protos_);
     critical(protos.empty(), "gboost: cannot fit without any weak learner!");
 
+    const auto& logger = fit_params.logger();
+
     // tune hyper-parameters (if any)
     auto param_spaces = ::make_params(*this);
 
     const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
         auto [gboost, train_errors_losses, valid_errors_losses] =
-            ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params);
+            ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params, logger);
 
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };

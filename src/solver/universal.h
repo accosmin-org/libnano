@@ -51,7 +51,7 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 };
 
 ///
@@ -73,7 +73,7 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 };
 
 ///
@@ -95,6 +95,6 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 };
 } // namespace nano

@@ -17,7 +17,8 @@ rsolver_t solver_ellipsoid_t::clone() const
     return std::make_unique<solver_ellipsoid_t>(*this);
 }
 
-solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const vector_t& x0) const
+solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const vector_t& x0,
+                                               const logger_t& logger) const
 {
     const auto R         = parameter("solver::ellipsoid::R").value<scalar_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
@@ -45,7 +46,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
         {
             const auto iter_ok   = true;
             const auto converged = true;
-            solver_t::done(state, iter_ok, converged);
+            solver_t::done(state, iter_ok, converged, logger);
             break;
         }
 
@@ -70,7 +71,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
 
         const auto iter_ok   = std::isfinite(f);
         const auto converged = std::sqrt(gHg) < epsilon;
-        if (solver_t::done(state, iter_ok, converged))
+        if (solver_t::done(state, iter_ok, converged, logger))
         {
             break;
         }

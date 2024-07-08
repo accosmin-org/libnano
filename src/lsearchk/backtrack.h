@@ -25,6 +25,6 @@ public:
     ///
     /// \brief @see lsearchk_t
     ///
-    result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&) const override;
+    result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&, const logger_t&) const override;
 };
 } // namespace nano

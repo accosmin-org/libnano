@@ -20,7 +20,7 @@ public:
     explicit solver_penalty_t(string_t id);
 
 protected:
-    solver_state_t minimize(penalty_function_t&, const vector_t& x0) const;
+    solver_state_t minimize(penalty_function_t&, const vector_t& x0, const logger_t&) const;
 };
 
 ///
@@ -50,7 +50,7 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 };
 
 ///
@@ -80,6 +80,6 @@ public:
     ///
     /// \brief @see solver_t
     ///
-    solver_state_t do_minimize(const function_t&, const vector_t& x0) const override;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 };
 } // namespace nano
