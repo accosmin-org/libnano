@@ -262,9 +262,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto& logger = fit_params.logger();
 
     // tune hyper-parameters (if any)
-    auto param_spaces = ::make_params(*this);
-
-    const auto evaluator = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
+    const auto callback = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
     {
         auto [gboost, train_errors_losses, valid_errors_losses] =
             ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params, logger);
@@ -272,7 +270,7 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };
 
-    auto fit_result = ml::tune("gboost", samples, fit_params, param_spaces, evaluator);
+    auto fit_result = ml::tune("gboost", samples, fit_params, ::make_params(*this), callback);
 
     // choose the optimum hyper-parameters and merge the boosters fitted for each fold
     {

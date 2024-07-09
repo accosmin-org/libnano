@@ -9,4 +9,5 @@ target_sources(machine
         cluster.cpp
         params.cpp
         result.cpp
-        stats.cpp)
+        stats.cpp
+        tune.cpp)

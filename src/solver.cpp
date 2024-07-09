@@ -123,13 +123,13 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool conver
     {
         // either converged or failed
         state.status(converged ? solver_status::converged : solver_status::failed);
-        logger.info("solver-[", type_id(), "]: ", state, ".\n");
+        logger.info("[solver-", type_id(), "]: ", state, ".\n");
         return true;
     }
     else
     {
         // OK, go on with the optimization
-        logger.info("solver-[", type_id(), "]: ", state, ".\n");
+        logger.info("[solver-", type_id(), "]: ", state, ".\n");
         return false;
     }
 }

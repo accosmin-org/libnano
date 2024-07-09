@@ -157,9 +157,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto  regularization = parameter("linear::regularization").value<linear_regularization>();
 
     // tune hyper-parameters
-    auto param_spaces = ::make_param_spaces(*this);
-
-    const auto evaluator =
+    const auto callback =
         [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto& extra)
     {
         const auto [l1reg, l2reg] = decode_params(params, regularization);
@@ -171,7 +169,7 @@ ml::result_t linear_model_t::fit(const dataset_t& dataset, const indices_t& samp
         return std::make_tuple(std::move(tr_values), std::move(vd_values), std::move(result));
     };
 
-    auto fit_result = ml::tune("linear", samples, fit_params, param_spaces, evaluator);
+    auto fit_result = ml::tune("linear", samples, fit_params, ::make_param_spaces(*this), callback);
 
     // refit with the optimum hyper-parameters (if any) on all given samples
     {
