@@ -14,9 +14,6 @@ result_t nano::ml::tune(const string_t& prefix, const indices_t& samples, const 
     auto tpool  = parallel::pool_t{};
     auto result = result_t{std::move(param_spaces), folds};
 
-    // TODO: detailed logs in the splitter and tuner
-    // TODO: detailed logs for each trial+fold for ML models and solvers
-
     // tune hyper-parameters (if any) in parallel by hyper-parameter trials and folds
     const auto tuner_callback = [&](const tensor2d_t& new_params)
     {
@@ -34,9 +31,10 @@ result_t nano::ml::tune(const string_t& prefix, const indices_t& samples, const 
             const auto closest_trial = result.closest_trial(params, old_trials);
 
             const auto& [tr_samples, vd_samples] = splits[static_cast<size_t>(fold)];
+            const auto logger                    = make_file_logger(result.log_path(trial, fold));
+            const auto closest                   = result.extra(closest_trial, fold);
 
-            auto [tr_values, vd_values, extra] =
-                callback(tr_samples, vd_samples, params, result.extra(closest_trial, fold));
+            auto [tr_values, vd_values, extra] = callback(tr_samples, vd_samples, params, closest, logger);
 
             result.store(old_trials + trial, fold, std::move(tr_values), std::move(vd_values), std::move(extra));
         };

@@ -259,10 +259,9 @@ ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samp
     const auto protos = wlearner::clone(protos_);
     critical(protos.empty(), "gboost: cannot fit without any weak learner!");
 
-    const auto& logger = fit_params.logger();
-
     // tune hyper-parameters (if any)
-    const auto callback = [&](const auto& train_samples, const auto& valid_samples, const auto& params, const auto&)
+    const auto callback = [&](const indices_t& train_samples, const indices_t& valid_samples,
+                              const tensor1d_cmap_t params, const std::any&, const logger_t& logger)
     {
         auto [gboost, train_errors_losses, valid_errors_losses] =
             ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params, logger);

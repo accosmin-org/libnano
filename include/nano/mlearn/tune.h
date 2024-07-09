@@ -7,11 +7,11 @@ namespace nano::ml
 {
 ///
 /// \brief callback to evaluate the given set of hyper-parameter values:
-///     (training samples, validation samples, hyper-parameter values, previous relevant model) =>
-///     (errors and loss function values for training samples, same for validation samples, model)
+///     in:  (training samples, validation samples, hyper-parameter values, previous relevant model, logger) =>
+///     out: (errors and loss function values for training samples, same for validation samples, model)
 ///
-using tune_callback_t = std::function<std::tuple<tensor2d_t, tensor2d_t, std::any>(const indices_t&, const indices_t&,
-                                                                                   tensor1d_cmap_t, std::any)>;
+using tune_callback_t = std::function<std::tuple<tensor2d_t, tensor2d_t, std::any>(
+    const indices_t&, const indices_t&, tensor1d_cmap_t, const std::any&, const logger_t&)>;
 
 ///
 /// \brief tune hyper-parameters required to fit a machine learning model.

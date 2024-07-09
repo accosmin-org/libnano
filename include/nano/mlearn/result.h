@@ -97,14 +97,20 @@ public:
     ///
     const std::any& extra(tensor_size_t trial, tensor_size_t fold) const;
 
+    ///
+    /// \brief returns the path where the detailed log is stored for the given trial and fold.
+    ///
+    const string_t& log_path(tensor_size_t trial, tensor_size_t fold) const;
+
 private:
     using anys_t = std::vector<std::any>;
 
     // attributes
-    param_spaces_t m_spaces; ///< hyper-parameter spaces to sample from
-    tensor2d_t     m_params; ///< tried hyper-parameter values (trial, param)
-    tensor5d_t     m_values; ///< results (trial, fold, train|valid, errors|losses, statistics e.g. mean|stdev)
-    tensor2d_t     m_optims; ///< results at the optimum (errors|losses, statistics e.g. mean|stdev)
-    anys_t         m_extras; ///< model specific data (trial, fold)
+    param_spaces_t m_spaces;    ///< hyper-parameter spaces to sample from
+    tensor2d_t     m_params;    ///< tried hyper-parameter values (trial, param)
+    tensor5d_t     m_values;    ///< results (trial, fold, train|valid, errors|losses, statistics e.g. mean|stdev)
+    tensor2d_t     m_optims;    ///< results at the optimum (errors|losses, statistics e.g. mean|stdev)
+    strings_t      m_log_paths; ///< path to detailed logs (trial, fold)
+    anys_t         m_extras;    ///< model specific data (trial, fold)
 };
 } // namespace nano::ml

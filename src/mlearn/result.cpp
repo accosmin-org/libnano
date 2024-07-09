@@ -1,3 +1,6 @@
+#include <chrono>
+#include <filesystem>
+#include <nano/core/scat.h>
 #include <nano/mlearn/result.h>
 
 using namespace nano;
@@ -34,6 +37,13 @@ void result_t::add(const tensor2d_t& params_to_try)
     m_values.slice(old_trials, new_trials).full(std::numeric_limits<scalar_t>::quiet_NaN());
 
     m_extras.resize(static_cast<size_t>(new_trials * folds));
+
+    for (size_t i = 0; i < static_cast<size_t>(new_trials * folds); ++i)
+    {
+        const auto time = std::chrono::steady_clock::now().time_since_epoch().count();
+        const auto path = std::filesystem::temp_directory_path() / scat(time, "_", i, ".log");
+        m_log_paths.emplace_back(path.string());
+    }
 }
 
 tensor_size_t result_t::optimum_trial() const
@@ -155,4 +165,12 @@ const std::any& result_t::extra(const tensor_size_t trial, const tensor_size_t f
     assert(trial >= 0 && trial < trials());
 
     return m_extras[static_cast<size_t>(trial * folds() + fold)];
+}
+
+const string_t& result_t::log_path(const tensor_size_t trial, const tensor_size_t fold) const
+{
+    assert(fold >= 0 && fold < folds());
+    assert(trial >= 0 && trial < trials());
+
+    return m_log_paths[static_cast<size_t>(trial * folds() + fold)];
 }

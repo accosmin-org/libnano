@@ -8,6 +8,9 @@ namespace nano::ml
 {
 class result_t;
 
+// TODO: detailed logs in the splitter and tuner
+// TODO: detailed logs for each trial+fold for ML models and solvers
+
 ///
 /// \brief utility to gather common parameters useful for fitting machine learning models.
 ///
