@@ -217,6 +217,7 @@ gboost_model_t::gboost_model_t(const gboost_model_t& other)
     : learner_t(other)
     , m_bias(other.m_bias)
     , m_wlearners(wlearner::clone(other.m_wlearners))
+    , m_prototypes(wlearner::clone(other.m_prototypes))
 {
 }
 
@@ -225,8 +226,9 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
     if (this != &other)
     {
         learner_t::operator=(other);
-        m_bias      = other.m_bias;
-        m_wlearners = wlearner::clone(other.m_wlearners);
+        m_bias       = other.m_bias;
+        m_wlearners  = wlearner::clone(other.m_wlearners);
+        m_prototypes = wlearner::clone(other.m_prototypes);
     }
     return *this;
 }
