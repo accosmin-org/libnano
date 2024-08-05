@@ -166,11 +166,16 @@ auto check_gbooster(gboost_model_t model, const tdatasource& datasource0, const 
     const auto wlearners  = make_wlearners();
 
     // fitting should fail if no weak learner to chose from
-    UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, rwlearners_t{}, fit_params), std::runtime_error);
+    {
+        auto model0 = make_gbooster();
+        model0.prototypes(rwlearners_t{});
+        UTEST_REQUIRE_THROW(make_gbooster().fit(dataset, samples, *loss, fit_params), std::runtime_error);
+    }
 
     // fitting should work when properly setup
     auto fit_result = result_t{};
-    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, wlearners, fit_params));
+    model.prototypes(wlearners);
+    UTEST_REQUIRE_NOTHROW(fit_result = model.fit(dataset, samples, *loss, fit_params));
 
     // check model
     datasource0.check_gbooster(model);

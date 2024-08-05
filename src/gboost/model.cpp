@@ -233,11 +233,21 @@ gboost_model_t& gboost_model_t::operator=(const gboost_model_t& other)
 
 gboost_model_t::~gboost_model_t() = default;
 
+void gboost_model_t::prototypes(const rwlearners_t& prototypes)
+{
+    m_prototypes = wlearner::clone(prototypes);
+}
+
+void gboost_model_t::prototypes(rwlearners_t&& prototypes)
+{
+    m_prototypes = std::move(prototypes);
+}
+
 std::istream& gboost_model_t::read(std::istream& stream)
 {
     learner_t::read(stream);
 
-    critical(!::nano::read(stream, m_bias) || !::nano::read(stream, m_wlearners),
+    critical(!::nano::read(stream, m_bias) || !::nano::read(stream, m_wlearners) || !::nano::read(stream, m_prototypes),
              "gboost: failed to read from stream!");
 
     return stream;
@@ -247,24 +257,24 @@ std::ostream& gboost_model_t::write(std::ostream& stream) const
 {
     learner_t::write(stream);
 
-    critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_wlearners),
+    critical(!::nano::write(stream, m_bias) || !::nano::write(stream, m_wlearners) ||
+                 !::nano::write(stream, m_prototypes),
              "gboost: failed to write to stream!");
 
     return stream;
 }
 
 ml::result_t gboost_model_t::fit(const dataset_t& dataset, const indices_t& samples, const loss_t& loss,
-                                 const rwlearners_t& protos_, const ml::params_t& fit_params)
+                                 const ml::params_t& fit_params)
 {
-    const auto protos = wlearner::clone(protos_);
-    critical(protos.empty(), "gboost: cannot fit without any weak learner!");
+    critical(m_prototypes.empty(), "gboost: cannot fit without any weak learner!");
 
     // tune hyper-parameters (if any)
     const auto callback = [&](const indices_t& train_samples, const indices_t& valid_samples,
                               const tensor1d_cmap_t params, const std::any&, const logger_t& logger)
     {
-        auto [gboost, train_errors_losses, valid_errors_losses] =
-            ::fit(*this, dataset, train_samples, valid_samples, loss, fit_params.solver(), protos, params, logger);
+        auto [gboost, train_errors_losses, valid_errors_losses] = ::fit(
+            *this, dataset, train_samples, valid_samples, loss, fit_params.solver(), m_prototypes, params, logger);
 
         return std::make_tuple(std::move(train_errors_losses), std::move(valid_errors_losses), std::move(gboost));
     };

@@ -64,9 +64,15 @@ public:
     std::ostream& write(std::ostream&) const override;
 
     ///
+    /// \brief set the prototype weak learners to fit from.
+    ///
+    void prototypes(rwlearners_t&&);
+    void prototypes(const rwlearners_t&);
+
+    ///
     /// \brief fit the model using the given samples and weak learners and return the associated statistics.
     ///
-    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const rwlearners_t&, const ml::params_t& = {});
+    ml::result_t fit(const dataset_t&, const indices_t&, const loss_t&, const ml::params_t& = {});
 
     ///
     /// \brief returns the selected features.
@@ -83,6 +89,11 @@ public:
     ///
     const rwlearners_t& wlearners() const { return m_wlearners; }
 
+    ///
+    /// \brief returns the prototype weak learners.
+    ///
+    const rwlearners_t& prototypes() const { return m_prototypes; }
+
 private:
     ///
     /// \brief @see learner_t
@@ -90,7 +101,8 @@ private:
     void do_predict(const dataset_t&, indices_cmap_t, tensor4d_map_t) const override;
 
     // attributes
-    tensor1d_t   m_bias;      ///< fitted bias
-    rwlearners_t m_wlearners; ///< fitted weak learners chosen from the prototypes
+    tensor1d_t   m_bias;       ///< fitted bias
+    rwlearners_t m_wlearners;  ///< fitted weak learners chosen from the prototypes
+    rwlearners_t m_prototypes; ///< prototype weak learners to fit from
 };
 } // namespace nano
