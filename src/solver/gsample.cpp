@@ -24,12 +24,12 @@ struct sampler_t
     }
 
     template <class tmatrix>
-    void descent(program::quadratic_program_t& program, const tmatrix& W, vector_t& g)
+    void descent(program::quadratic_program_t& program, const tmatrix& W, vector_t& g, const logger_t& logger)
     {
         const auto G = m_G.slice(0, m_psize);
         program.m_Q  = G * W * G.transpose();
 
-        const auto solution = m_solver.solve(program);
+        const auto solution = m_solver.solve(program, logger);
         assert(solution.m_status == solver_status::converged);
         g = G.transpose() * solution.m_x.vector();
         g = W * g;
@@ -154,9 +154,9 @@ struct gs::fixed_sampler_t final : public sampler_t
     }
 
     template <class tmatrix>
-    void descent(const tmatrix& W, vector_t& g)
+    void descent(const tmatrix& W, vector_t& g, const logger_t& logger)
     {
-        sampler_t::descent(m_program, W, g);
+        sampler_t::descent(m_program, W, g, logger);
     }
 
     // attributes
@@ -205,10 +205,10 @@ struct gs::adaptive_sampler_t final : public sampler_t
     }
 
     template <class tmatrix>
-    void descent(const tmatrix& W, vector_t& g)
+    void descent(const tmatrix& W, vector_t& g, const logger_t& logger)
     {
         auto program = make_program(m_psize);
-        sampler_t::descent(program, W, g);
+        sampler_t::descent(program, W, g, logger);
     }
 };
 
@@ -387,7 +387,7 @@ solver_state_t base_solver_gs_t<tsampler, tpreconditioner, ttype_id>::do_minimiz
         precond.update(sampler, state, epsilonk);
 
         // solve the quadratic problem to find the stabilized gradient
-        sampler.descent(precond.W(), g);
+        sampler.descent(precond.W(), g, logger);
 
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();

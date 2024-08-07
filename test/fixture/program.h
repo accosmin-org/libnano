@@ -89,9 +89,10 @@ auto check_solution_(tprogram program, const expected_t& expected)
 
     auto solver = solver_t{};
     auto stream = std::ostringstream{};
-    solver.logger(make_stream_logger(stream));
+    auto logger = make_stream_logger(stream);
 
-    auto bstate = (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0) : solver.solve(program);
+    auto bstate =
+        (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0, logger) : solver.solve(program, logger);
 
     UTEST_CHECK_EQUAL(bstate.m_status, expected.m_status);
     if (expected.m_status == solver_status::converged)

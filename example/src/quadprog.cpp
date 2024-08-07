@@ -33,11 +33,11 @@ int main(const int, char*[])
     auto solver                           = solver_t{};
     solver.parameter("solver::epsilon")   = 1e-12;
     solver.parameter("solver::max_iters") = 100;
-    solver.logger(make_stdout_logger());
 
     const auto program =
         make_quadratic(Q, c, make_equality(A, b), make_inequality(G, h), make_greater(l), make_less(u));
-    const auto state = solver.solve(program);
+    const auto logger = make_stdout_logger();
+    const auto state  = solver.solve(program, logger);
 
     std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;
 

@@ -66,7 +66,7 @@ void bundle_t::solve(const scalar_t miu, const logger_t& logger)
         const auto x0 = vector_t{vector_t::constant(m_size, 1.0 / static_cast<scalar_t>(m_size))};
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
-        const auto solution = m_solver.solve(program, x0);
+        const auto solution = m_solver.solve(program, x0, logger);
         if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
         {
             logger.error(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,

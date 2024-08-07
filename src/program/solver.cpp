@@ -204,31 +204,32 @@ solver_t::solver_t()
     register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 50, LE, 1000));
 }
 
-solver_state_t solver_t::solve(const linear_program_t& program) const
+solver_state_t solver_t::solve(const linear_program_t& program, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
-                                   : solve_with_inequality(program_t{program}, make_x0(program));
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
+                                   : solve_with_inequality(program_t{program}, make_x0(program), logger);
 }
 
-solver_state_t solver_t::solve(const quadratic_program_t& program) const
+solver_state_t solver_t::solve(const quadratic_program_t& program, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
-                                   : solve_with_inequality(program_t{program}, make_x0(program));
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
+                                   : solve_with_inequality(program_t{program}, make_x0(program), logger);
 }
 
-solver_state_t solver_t::solve(const linear_program_t& program, const vector_t& x0) const
+solver_state_t solver_t::solve(const linear_program_t& program, const vector_t& x0, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
-                                   : solve_with_inequality(program_t{program}, x0);
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
+                                   : solve_with_inequality(program_t{program}, x0, logger);
 }
 
-solver_state_t solver_t::solve(const quadratic_program_t& program, const vector_t& x0) const
+solver_state_t solver_t::solve(const quadratic_program_t& program, const vector_t& x0, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program})
-                                   : solve_with_inequality(program_t{program}, x0);
+    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
+                                   : solve_with_inequality(program_t{program}, x0, logger);
 }
 
-solver_state_t solver_t::solve_with_inequality(const program_t& program, const vector_t& x0) const
+solver_state_t solver_t::solve_with_inequality(const program_t& program, const vector_t& x0,
+                                               const logger_t& logger) const
 {
     const auto s0                = parameter("solver::s0").value<scalar_t>();
     const auto miu               = parameter("solver::miu").value<scalar_t>();
@@ -252,7 +253,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
     {
         state.m_status = solver_status::unfeasible;
-        log("[program]: ", state, ".\n");
+        logger.info("[program]: ", state, ".\n");
         return state;
     }
 
@@ -289,7 +290,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         // stop if the linear system of equations is not stable
         if (!std::isfinite(state.m_ldlt_rcond) || !dx.all_finite() || !dv.all_finite() || !du.all_finite())
         {
-            done(program, state, epsilon);
+            done(program, state, epsilon, logger);
             break;
         }
 
@@ -309,7 +310,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         }
         if (iter == max_lsearch_iters)
         {
-            done(program, state, epsilon);
+            done(program, state, epsilon, logger);
             break;
         }
 
@@ -334,7 +335,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
             {
                 program.update(state.m_x, state.m_u, state.m_v, miu, state);
             }
-            done(program, state, epsilon);
+            done(program, state, epsilon, logger);
             break;
         }
 
@@ -352,25 +353,25 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         {
             // numerical instabilities
             state.m_status = solver_status::failed;
-            log("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
+            logger.info("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
             break;
         }
         else if (std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
         {
             // very precise convergence detected, check global convergence criterion!
-            done(program, state, epsilon);
+            done(program, state, epsilon, logger);
             break;
         }
         else
         {
-            log("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
+            logger.info("[program]: ", state, ",feasible=", program.feasible(state), ".\n");
         }
     }
 
     return state;
 }
 
-solver_state_t solver_t::solve_without_inequality(const program_t& program) const
+solver_state_t solver_t::solve_without_inequality(const program_t& program, const logger_t& logger) const
 {
     const auto miu = parameter("solver::miu").value<scalar_t>();
 
@@ -394,11 +395,12 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program) cons
     state.m_status =
         (valid && aprox) ? solver_status::converged : (!valid ? solver_status::failed : solver_status::unfeasible);
 
-    log("[program]: ", state, ".\n");
+    logger.info("[program]: ", state, ".\n");
     return state;
 }
 
-void solver_t::done(const program_t& program, solver_state_t& state, const scalar_t epsilon) const
+void solver_t::done(const program_t& program, solver_state_t& state, const scalar_t epsilon,
+                    const logger_t& logger) const
 {
     const auto feasible = program.feasible(state);
 
@@ -413,5 +415,5 @@ void solver_t::done(const program_t& program, solver_state_t& state, const scala
         state.m_status = feasible ? solver_status::unbounded : solver_status::unfeasible;
     }
 
-    log("[program]: ", state, ",feasible=", feasible, ".\n");
+    logger.info("[program]: ", state, ",feasible=", feasible, ".\n");
 }
