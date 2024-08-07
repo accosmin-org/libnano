@@ -38,7 +38,7 @@ public:
 private:
     struct program_t;
 
-    void done(const program_t&, solver_state_t&, scalar_t epsilon, const logger_t&) const;
+    static void done(const program_t&, solver_state_t&, scalar_t epsilon, const logger_t&);
 
     solver_state_t solve_without_inequality(const program_t&, const logger_t&) const;
     solver_state_t solve_with_inequality(const program_t&, const vector_t&, const logger_t&) const;

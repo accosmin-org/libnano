@@ -399,8 +399,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program, cons
     return state;
 }
 
-void solver_t::done(const program_t& program, solver_state_t& state, const scalar_t epsilon,
-                    const logger_t& logger) const
+void solver_t::done(const program_t& program, solver_state_t& state, const scalar_t epsilon, const logger_t& logger)
 {
     const auto feasible = program.feasible(state);
 
