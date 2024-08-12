@@ -5,7 +5,7 @@
 #include <nano/gboost/result.h>
 #include <nano/gboost/sampler.h>
 #include <nano/gboost/util.h>
-#include <nano/mlearn/tune.h>
+#include <nano/machine/tune.h>
 #include <nano/tensor/stream.h>
 #include <nano/wlearner/util.h>
 #include <set>

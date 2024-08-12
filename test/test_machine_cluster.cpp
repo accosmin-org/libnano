@@ -1,9 +1,9 @@
-#include <nano/mlearn/cluster.h>
+#include <nano/machine/cluster.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_mlearn_cluster)
+UTEST_BEGIN_MODULE(test_machine_cluster)
 
 UTEST_CASE(_default)
 {

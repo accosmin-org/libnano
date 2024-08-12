@@ -1,7 +1,7 @@
 #include <nano/core/parallel.h>
-#include <nano/mlearn/params.h>
-#include <nano/mlearn/result.h>
-#include <nano/mlearn/tune.h>
+#include <nano/machine/params.h>
+#include <nano/machine/result.h>
+#include <nano/machine/tune.h>
 
 using namespace nano::ml;
 

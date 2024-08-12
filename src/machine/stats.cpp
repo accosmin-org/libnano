@@ -1,5 +1,5 @@
 #include <nano/core/stats.h>
-#include <nano/mlearn/stats.h>
+#include <nano/machine/stats.h>
 
 using namespace nano;
 using namespace nano::ml;

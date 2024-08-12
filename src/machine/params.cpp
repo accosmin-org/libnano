@@ -1,7 +1,7 @@
 #include <nano/critical.h>
 #include <nano/logger.h>
-#include <nano/mlearn/params.h>
-#include <nano/mlearn/result.h>
+#include <nano/machine/params.h>
+#include <nano/machine/result.h>
 
 using namespace nano;
 using namespace nano::ml;

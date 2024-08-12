@@ -1,7 +1,7 @@
 #include <chrono>
 #include <filesystem>
 #include <nano/core/scat.h>
-#include <nano/mlearn/result.h>
+#include <nano/machine/result.h>
 
 using namespace nano;
 using namespace nano::ml;

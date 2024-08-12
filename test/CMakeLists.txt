@@ -67,9 +67,9 @@ make_test(test_linear_function NANO::machine)
 make_test(test_linear_model NANO::machine)
 
 make_test(test_learner NANO::machine)
-make_test(test_mlearn_cluster NANO::machine)
-make_test(test_mlearn_params NANO::machine)
-make_test(test_mlearn_result NANO::machine)
+make_test(test_machine_cluster NANO::machine)
+make_test(test_machine_params NANO::machine)
+make_test(test_machine_result NANO::machine)
 
 make_test(test_wlearner_util NANO::machine)
 make_test(test_wlearner_dtree NANO::machine)

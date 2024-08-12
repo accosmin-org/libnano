@@ -2,8 +2,8 @@
 
 #include <nano/learner.h>
 #include <nano/linear/function.h>
-#include <nano/mlearn/params.h>
-#include <nano/mlearn/result.h>
+#include <nano/machine/params.h>
+#include <nano/machine/result.h>
 
 namespace nano
 {

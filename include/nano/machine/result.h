@@ -1,8 +1,8 @@
 #pragma once
 
 #include <any>
-#include <nano/mlearn/enums.h>
-#include <nano/mlearn/stats.h>
+#include <nano/machine/enums.h>
+#include <nano/machine/stats.h>
 #include <nano/tuner/space.h>
 
 namespace nano::ml

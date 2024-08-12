@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/mlearn/params.h>
-#include <nano/mlearn/result.h>
+#include <nano/machine/params.h>
+#include <nano/machine/result.h>
 
 namespace nano::ml
 {

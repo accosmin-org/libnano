@@ -1,5 +1,5 @@
 #include <nano/learner.h>
-#include <nano/mlearn/result.h>
+#include <nano/machine/result.h>
 #include <utest/utest.h>
 
 using namespace nano;

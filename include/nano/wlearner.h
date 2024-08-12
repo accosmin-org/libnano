@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/learner.h>
-#include <nano/mlearn/cluster.h>
+#include <nano/machine/cluster.h>
 
 namespace nano
 {

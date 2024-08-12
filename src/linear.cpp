@@ -5,7 +5,7 @@
 #include <nano/linear/result.h>
 #include <nano/linear/ridge.h>
 #include <nano/linear/util.h>
-#include <nano/mlearn/tune.h>
+#include <nano/machine/tune.h>
 #include <nano/tensor/stream.h>
 
 using namespace nano;
