@@ -1,4 +1,4 @@
-#include "fixture/gboost.h"
+#include <fixture/gboost.h>
 #include <nano/wlearner/affine.h>
 #include <nano/wlearner/table.h>
 
@@ -189,7 +189,7 @@ template <class... targs>
 auto make_gbooster_to_fit(const targs... args)
 {
     auto model = make_gbooster();
-    config(model, args...);
+    model.config(args...);
     return model;
 }
 } // namespace

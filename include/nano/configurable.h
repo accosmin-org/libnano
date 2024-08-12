@@ -87,6 +87,18 @@ public:
     ///
     int32_t patch_version() const { return m_patch_version; }
 
+    ///
+    /// \brief configure the object with the given pairs of parameter names and values.
+    ///
+    void config() {}
+
+    template <class targ, class... targs>
+    void config(const char* const param_name, const targ value, const targs... args)
+    {
+        parameter(param_name) = value;
+        config(args...);
+    }
+
 private:
     // attributes
     int32_t      m_major_version{::nano::major_version}; ///<

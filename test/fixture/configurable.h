@@ -47,15 +47,3 @@ template <class tconfigurable>
         return xconfigurable;
     }
 }
-
-[[maybe_unused]] static void config(configurable_t&)
-{
-}
-
-template <class targ, class... targs>
-[[maybe_unused]] static void config(configurable_t& configurable, const char* const param_name, const targ value,
-                                    const targs... args)
-{
-    configurable.parameter(param_name) = value;
-    config(configurable, args...);
-}

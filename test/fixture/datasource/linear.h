@@ -1,4 +1,3 @@
-#include <fixture/configurable.h>
 #include <nano/datasource/linear.h>
 #include <utest/utest.h>
 
@@ -12,7 +11,7 @@ template <class... targs>
     datasource.parameter("datasource::linear::samples")  = samples;
     datasource.parameter("datasource::linear::targets")  = targets;
     datasource.parameter("datasource::linear::features") = features;
-    ::config(datasource, args...);
+    datasource.config(args...);
     UTEST_REQUIRE_NOTHROW(datasource.load());
     return datasource;
 }
