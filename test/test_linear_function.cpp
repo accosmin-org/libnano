@@ -1,7 +1,8 @@
-#include "fixture/function.h"
-#include "fixture/linear.h"
-#include "fixture/loss.h"
-#include "fixture/solver.h"
+#include <fixture/datasource/linear.h>
+#include <fixture/function.h>
+#include <fixture/linear.h>
+#include <fixture/loss.h>
+#include <fixture/solver.h>
 #include <nano/linear/function.h>
 #include <nano/linear/util.h>
 

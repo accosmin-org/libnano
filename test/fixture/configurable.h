@@ -1,3 +1,5 @@
+#pragma once
+
 #include <fstream>
 #include <nano/configurable.h>
 #include <nano/core/stream.h>

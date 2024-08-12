@@ -1,5 +1,6 @@
-#include "fixture/linear.h"
-#include "fixture/loss.h"
+#include <fixture/datasource/linear.h>
+#include <fixture/linear.h>
+#include <fixture/loss.h>
 #include <nano/core/reduce.h>
 #include <nano/linear/accumulator.h>
 #include <nano/linear/util.h>

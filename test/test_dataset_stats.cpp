@@ -1,5 +1,5 @@
-#include "fixture/dataset.h"
-#include "fixture/linear.h"
+#include <fixture/dataset.h>
+#include <fixture/datasource/linear.h>
 #include <nano/dataset/stats.h>
 
 using namespace nano;

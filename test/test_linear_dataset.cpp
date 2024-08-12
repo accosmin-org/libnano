@@ -1,4 +1,5 @@
-#include "fixture/linear.h"
+#include <fixture/datasource/linear.h>
+#include <fixture/linear.h>
 
 using namespace nano;
 

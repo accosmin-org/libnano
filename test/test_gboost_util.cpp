@@ -1,5 +1,6 @@
-#include "fixture/linear.h"
-#include "fixture/loss.h"
+#include <fixture/dataset.h>
+#include <fixture/datasource/linear.h>
+#include <fixture/loss.h>
 #include <nano/gboost/accumulator.h>
 #include <nano/gboost/early_stopping.h>
 #include <nano/gboost/sampler.h>

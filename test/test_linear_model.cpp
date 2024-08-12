@@ -1,7 +1,8 @@
-#include "fixture/linear.h"
-#include "fixture/loss.h"
-#include "fixture/solver.h"
-#include "fixture/splitter.h"
+#include <fixture/datasource/linear.h>
+#include <fixture/linear.h>
+#include <fixture/loss.h>
+#include <fixture/solver.h>
+#include <fixture/splitter.h>
 #include <nano/linear/util.h>
 
 using namespace nano;
