@@ -1,4 +1,4 @@
-target_sources(machine
+target_sources(linear
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/nano/linear/accumulator.h
         ${CMAKE_SOURCE_DIR}/include/nano/linear/function.h

@@ -1,6 +1,6 @@
 @PACKAGE_INIT@
 
-set(_NANO_supported_components core function program solver machine)
+set(_NANO_supported_components core function program solver machine linear)
 
 foreach(_comp ${NANO_FIND_COMPONENTS})
     if (NOT _comp IN_LIST _NANO_supported_components)

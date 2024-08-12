@@ -16,6 +16,7 @@ make_lib(NANO function)
 make_lib(NANO program)
 make_lib(NANO solver)
 make_lib(NANO machine)
+make_lib(NANO linear)
 
 add_subdirectory(core)
 add_subdirectory(dataset)
@@ -98,17 +99,20 @@ target_sources(machine
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/nano/feature.h
         ${CMAKE_SOURCE_DIR}/include/nano/learner.h
-        ${CMAKE_SOURCE_DIR}/include/nano/linear.h
         ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
         ${CMAKE_SOURCE_DIR}/include/nano/task.h
         ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
         ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
         feature.cpp
         learner.cpp
-        linear.cpp
         splitter.cpp
         tuner.cpp
         wlearner.cpp)
+
+target_sources(linear
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/nano/linear.h
+        linear.cpp)
 
 # link libraries
 target_link_libraries(core
@@ -124,3 +128,4 @@ target_link_libraries(function PUBLIC core)
 target_link_libraries(program PUBLIC core)
 target_link_libraries(solver PUBLIC function program)
 target_link_libraries(machine PUBLIC solver)
+target_link_libraries(linear PUBLIC machine)
