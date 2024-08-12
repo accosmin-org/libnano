@@ -8,8 +8,8 @@
 namespace nano::linear
 {
 ///
-/// \brief the ERM criterion used for optimizing the parameters of a linear model,
-///     using a given loss function.
+/// \brief the empirical risk minimization (ERM) criterion
+///     used for optimizing the parameters of a linear model with a generic loss function.
 ///
 /// NB: the ERM loss can be optionally regularized by penalizing:
 ///     - (1) the L1-norm of the weights matrix - like in LASSO

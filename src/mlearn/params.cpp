@@ -1,4 +1,3 @@
-#include <iomanip>
 #include <nano/critical.h>
 #include <nano/logger.h>
 #include <nano/mlearn/params.h>
@@ -148,8 +147,7 @@ const logger_t& params_t::logger() const
     return m_logger;
 }
 
-void params_t::log(const result_t& result, const tensor_size_t last_trial, const string_t& prefix,
-                   const int precision) const
+void params_t::log(const result_t& result, const tensor_size_t last_trial, const string_t& prefix) const
 {
     const auto& spaces             = result.param_spaces();
     const auto  optim_errors_stats = result.stats(value_type::errors);
@@ -159,8 +157,7 @@ void params_t::log(const result_t& result, const tensor_size_t last_trial, const
     {
         assert(spaces.size() == static_cast<size_t>(params.size()));
 
-        // FIXME: should use the loggable_t interface for this!
-        m_logger.log(log_type::info, std::fixed, std::setprecision(precision), std::fixed, prefix, ": ");
+        m_logger.log(log_type::info, "[", prefix, "]: ");
         for (size_t i = 0U, size = spaces.size(); i < size; ++i)
         {
             m_logger.log(spaces[i].name(), "=", params(static_cast<tensor_size_t>(i)), ",");

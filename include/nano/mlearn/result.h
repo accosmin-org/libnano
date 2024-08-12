@@ -58,7 +58,7 @@ public:
     ///
     /// \brief set the evaluation results for the optimum hyper-parameters.
     ///
-    void store(tensor2d_t errors_losses);
+    void store(tensor2d_t errors_losses, std::any extra = std::any{});
 
     ///
     /// \brief set the evaluation results for the given trial and fold.
@@ -98,19 +98,31 @@ public:
     const std::any& extra(tensor_size_t trial, tensor_size_t fold) const;
 
     ///
+    /// \brief returns the model specific data stored for the final refitting step.
+    ///
+    const std::any& extra() const;
+
+    ///
     /// \brief returns the path where the detailed log is stored for the given trial and fold.
     ///
     const string_t& log_path(tensor_size_t trial, tensor_size_t fold) const;
+
+    ///
+    /// \brief returns the path where the detailed log is stored for final the refitting step.
+    ///
+    const string_t& refit_log_path() const;
 
 private:
     using anys_t = std::vector<std::any>;
 
     // attributes
-    param_spaces_t m_spaces;    ///< hyper-parameter spaces to sample from
-    tensor2d_t     m_params;    ///< tried hyper-parameter values (trial, param)
-    tensor5d_t     m_values;    ///< results (trial, fold, train|valid, errors|losses, statistics e.g. mean|stdev)
-    tensor2d_t     m_optims;    ///< results at the optimum (errors|losses, statistics e.g. mean|stdev)
-    strings_t      m_log_paths; ///< path to detailed logs (trial, fold)
-    anys_t         m_extras;    ///< model specific data (trial, fold)
+    param_spaces_t m_spaces;         ///< hyper-parameter spaces to sample from
+    tensor2d_t     m_params;         ///< tried hyper-parameter values (trial, param)
+    tensor5d_t     m_values;         ///< results (trial, fold, train|valid, errors|losses, statistics e.g. mean|stdev)
+    tensor2d_t     m_optims;         ///< results at the optimum (errors|losses, statistics e.g. mean|stdev)
+    strings_t      m_log_paths;      ///< path to detailed logs (trial, fold)
+    string_t       m_refit_log_path; ///< path to defailed log for the final refitting step
+    anys_t         m_extras;         ///< model specific data (trial, fold)
+    std::any       m_extra;          ///< model specific data for the final refitting step
 };
 } // namespace nano::ml

@@ -93,7 +93,7 @@ public:
     ///
     /// \brief log the current fitting result.
     ///
-    void log(const result_t&, tensor_size_t last_trial, const string_t& prefix, int precision = 8) const;
+    void log(const result_t&, tensor_size_t last_trial, const string_t& prefix) const;
 
 private:
     // attributes

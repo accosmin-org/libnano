@@ -1,13 +1,20 @@
 target_sources(machine
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/nano/linear/accumulator.h
-        ${CMAKE_SOURCE_DIR}/include/nano/linear/enums.h
         ${CMAKE_SOURCE_DIR}/include/nano/linear/function.h
-        ${CMAKE_SOURCE_DIR}/include/nano/linear/model.h
         ${CMAKE_SOURCE_DIR}/include/nano/linear/result.h
         ${CMAKE_SOURCE_DIR}/include/nano/linear/util.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/lasso.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/ridge.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/ordinary.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear/elastic_net.h
+
         accumulator.cpp
         function.cpp
-        model.cpp
         result.cpp
-        util.cpp)
+        util.cpp
+
+        lasso.cpp
+        ridge.cpp
+        ordinary.cpp
+        elastic_net.cpp)

@@ -2,7 +2,6 @@
 #include "fixture/loss.h"
 #include "fixture/solver.h"
 #include "fixture/splitter.h"
-#include <nano/linear/enums.h>
 #include <nano/linear/util.h>
 
 using namespace nano;
@@ -20,10 +19,12 @@ auto make_nonsmooth_solver()
     return make_solver("rqb");
 }
 
-auto make_model(const tensor_size_t batch = 100)
+auto make_model(const string_t& id, const scaling_type scaling, const tensor_size_t batch = 100)
 {
-    auto model                       = linear_model_t{};
-    model.parameter("linear::batch") = batch;
+    auto model = linear_t::all().get(id);
+    UTEST_REQUIRE(model);
+    model->parameter("linear::batch")   = batch;
+    model->parameter("linear::scaling") = scaling;
     return model;
 }
 
@@ -42,8 +43,7 @@ void check_outputs(const dataset_t& dataset, const indices_t& samples, const ten
                   { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
 }
 
-void check_model(const linear_model_t& model, const dataset_t& dataset, const indices_t& samples,
-                 const scalar_t epsilon)
+void check_model(const linear_t& model, const dataset_t& dataset, const indices_t& samples, const scalar_t epsilon)
 {
     const auto outputs = model.predict(dataset, samples);
     check_outputs(dataset, samples, outputs, epsilon);
@@ -58,15 +58,15 @@ void check_model(const linear_model_t& model, const dataset_t& dataset, const in
         str = stream.str();
     }
     {
-        auto               new_model = linear_model_t{};
+        auto               new_model = make_model("ordinary", scaling_type::none);
         std::istringstream stream(str);
-        UTEST_REQUIRE_NOTHROW(new_model.read(stream));
-        const auto new_outputs = model.predict(dataset, samples);
+        UTEST_REQUIRE_NOTHROW(new_model->read(stream));
+        const auto new_outputs = new_model->predict(dataset, samples);
         UTEST_CHECK_CLOSE(outputs, new_outputs, epsilon0<scalar_t>());
     }
 }
 
-void check_importance(const linear_model_t& model, const dataset_t& dataset, const indices_t& relevancy)
+void check_importance(const linear_t& model, const dataset_t& dataset, const indices_t& relevancy)
 {
     const auto importance         = linear::feature_importance(dataset, model.weights());
     const auto sparsity           = linear::sparsity_ratio(importance);
@@ -93,15 +93,12 @@ void check_importance(const linear_model_t& model, const dataset_t& dataset, con
 
 UTEST_BEGIN_MODULE(test_linear_model)
 
-UTEST_CASE(regularization_none)
+UTEST_CASE(ordinary)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
-
-    auto model                                = make_model(21);
-    model.parameter("linear::scaling")        = scaling_type::none;
-    model.parameter("linear::regularization") = linear_regularization::none;
+    const auto model      = make_model("ordinary", scaling_type::none, 21);
 
     const auto param_names = strings_t{};
     for (const auto& loss_id : strings_t{"mse", "mae"})
@@ -111,25 +108,22 @@ UTEST_CASE(regularization_none)
         const auto loss       = make_loss(loss_id);
         const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
-        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto result     = model->fit(dataset, samples, *loss, fit_params);
         const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
-        check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset, datasource.relevant_feature_mask());
+        check_model(*model, dataset, samples, epsilon);
+        check_importance(*model, dataset, datasource.relevant_feature_mask());
     }
 }
 
 // FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
-/*UTEST_CASE(regularization_lasso)
+/*UTEST_CASE(lasso)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
-
-    auto model                                = make_model(50);
-    model.parameter("linear::scaling")        = scaling_type::standard;
-    model.parameter("linear::regularization") = linear_regularization::lasso;
+    const auto model      = make_model("lasso", scaling_type::standard, 50);
 
     const auto param_names = strings_t{"l1reg"};
     for (const auto& loss_id : strings_t{"mse", "mae"})
@@ -148,15 +142,12 @@ UTEST_CASE(regularization_none)
     }
 }*/
 
-UTEST_CASE(regularization_ridge)
+UTEST_CASE(ridge)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
-
-    auto model                                = make_model(100);
-    model.parameter("linear::scaling")        = scaling_type::mean;
-    model.parameter("linear::regularization") = linear_regularization::ridge;
+    const auto model      = make_model("ridge", scaling_type::mean, 100);
 
     const auto param_names = strings_t{"l2reg"};
     for (const auto& loss_id : strings_t{"mse", "mae"})
@@ -166,25 +157,22 @@ UTEST_CASE(regularization_ridge)
         const auto loss       = make_loss(loss_id);
         const auto solver     = loss_id == "mse" ? make_smooth_solver() : make_nonsmooth_solver();
         const auto fit_params = make_fit_params(solver);
-        const auto result     = model.fit(dataset, samples, *loss, fit_params);
+        const auto result     = model->fit(dataset, samples, *loss, fit_params);
         const auto epsilon    = loss_id == "mse" ? 1e-6 : 1e-4;
 
         check_result(result, param_names, 2, epsilon);
-        check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset, datasource.relevant_feature_mask());
+        check_model(*model, dataset, samples, epsilon);
+        check_importance(*model, dataset, datasource.relevant_feature_mask());
     }
 }
 
 // FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
-/*UTEST_CASE(regularization_elasticnet)
+/*UTEST_CASE(elasticnet)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
     const auto samples    = arange(0, dataset.samples());
-
-    auto model                                = make_model(100);
-    model.parameter("linear::scaling")        = scaling_type::minmax;
-    model.parameter("linear::regularization") = linear_regularization::elasticnet;
+    const auto model      = make_model("elasticnet", scaling_type::minmax, 100);
 
     const auto param_names = strings_t{"l1reg", "l2reg"};
     for (const auto& loss_id : strings_t{"mse", "mae"})

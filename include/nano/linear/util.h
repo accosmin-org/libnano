@@ -2,6 +2,7 @@
 
 #include <nano/dataset.h>
 #include <nano/loss.h>
+#include <nano/tuner/space.h>
 
 namespace nano::linear
 {
@@ -35,4 +36,9 @@ NANO_PUBLIC tensor1d_t feature_importance(const dataset_t&, const tensor2d_t& we
 ///     computed as the fraction of the feature weights below the given threshold.
 ///
 NANO_PUBLIC scalar_t sparsity_ratio(const tensor1d_t& feature_importance, scalar_t threshold = 1e-6);
+
+///
+/// \brief return the hyper-parameter values used to tune a linear model.
+///
+NANO_PUBLIC param_space_t make_param_space(string_t name);
 } // namespace nano::linear

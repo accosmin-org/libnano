@@ -98,12 +98,14 @@ target_sources(machine
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/nano/feature.h
         ${CMAKE_SOURCE_DIR}/include/nano/learner.h
+        ${CMAKE_SOURCE_DIR}/include/nano/linear.h
         ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
         ${CMAKE_SOURCE_DIR}/include/nano/task.h
         ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
         ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
         feature.cpp
         learner.cpp
+        linear.cpp
         splitter.cpp
         tuner.cpp
         wlearner.cpp)

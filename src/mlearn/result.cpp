@@ -6,6 +6,16 @@
 using namespace nano;
 using namespace nano::ml;
 
+namespace
+{
+auto make_random_path(const tensor_size_t id)
+{
+    const auto time = std::chrono::steady_clock::now().time_since_epoch().count();
+    const auto path = std::filesystem::temp_directory_path() / scat(time, "_", id, ".log");
+    return path.string();
+}
+} // namespace
+
 result_t::result_t() = default;
 
 result_t::result_t(param_spaces_t param_spaces, const tensor_size_t folds)
@@ -13,6 +23,7 @@ result_t::result_t(param_spaces_t param_spaces, const tensor_size_t folds)
     , m_params(0, static_cast<tensor_size_t>(m_spaces.size()))
     , m_values(make_full_tensor<scalar_t>(make_dims(0, folds, 2, 2, 12), std::numeric_limits<scalar_t>::quiet_NaN()))
     , m_optims(make_full_tensor<scalar_t>(make_dims(2, 12), std::numeric_limits<scalar_t>::quiet_NaN()))
+    , m_refit_log_path(make_random_path(std::numeric_limits<tensor_size_t>::max()))
 {
 }
 
@@ -36,14 +47,14 @@ void result_t::add(const tensor2d_t& params_to_try)
     m_values.slice(0, old_trials) = old_values;
     m_values.slice(old_trials, new_trials).full(std::numeric_limits<scalar_t>::quiet_NaN());
 
-    m_extras.resize(static_cast<size_t>(new_trials * folds));
-
-    for (size_t i = 0; i < static_cast<size_t>(new_trials * folds); ++i)
+    for (tensor_size_t i = 0, size = trials * folds; i < size; ++i)
     {
-        const auto time = std::chrono::steady_clock::now().time_since_epoch().count();
-        const auto path = std::filesystem::temp_directory_path() / scat(time, "_", i, ".log");
-        m_log_paths.emplace_back(path.string());
+        m_extras.emplace_back();
+        m_log_paths.emplace_back(make_random_path(old_trials * folds + i));
     }
+
+    assert(m_extras.size() == static_cast<size_t>(folds * new_trials));
+    assert(m_log_paths.size() == static_cast<size_t>(folds * new_trials));
 }
 
 tensor_size_t result_t::optimum_trial() const
@@ -84,12 +95,14 @@ tensor_size_t result_t::closest_trial(tensor1d_cmap_t params, const tensor_size_
     return best_trial;
 }
 
-void result_t::store(tensor2d_t errors_losses)
+void result_t::store(tensor2d_t errors_losses, std::any extra)
 {
     assert(errors_losses.size<0>() == 2);
 
     ::store_stats(errors_losses.tensor(0), m_optims.tensor(0));
     ::store_stats(errors_losses.tensor(1), m_optims.tensor(1));
+
+    m_extra = std::move(extra);
 }
 
 void result_t::store(const tensor_size_t trial, const tensor_size_t fold, tensor2d_t train_errors_losses,
@@ -173,4 +186,14 @@ const string_t& result_t::log_path(const tensor_size_t trial, const tensor_size_
     assert(trial >= 0 && trial < trials());
 
     return m_log_paths[static_cast<size_t>(trial * folds() + fold)];
+}
+
+const string_t& result_t::refit_log_path() const
+{
+    return m_refit_log_path;
+}
+
+const std::any& result_t::extra() const
+{
+    return m_extra;
 }
