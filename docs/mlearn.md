@@ -15,6 +15,9 @@ The most important concepts related to training and evaluating ML models are map
 * [loss_t](../include/nano/loss.h) - loss function measuring how well the model's predictions match the target.
 * [tuner_t](../include/nano/tuner.h) - strategy to optimize hyper-parameters of models.
 * [splitter_t](../include/nano/splitter.h) - strategy to split samples into training and validation (testing).
+* [linear_t](../include/nano/linear.h) - linear models with various regrularization methods.
+* [wlearner_t](../include/nano/wlearner.h) - weak learner to be combined into strong learners via gradient boosting.
+* [gboost_t](../include/nano/gboost.h) - gradient boosting model.
 
 The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [nonlinear numerical optimization module](nonlinear.md))  to minimize such functions and to yield the optimum parameters of the machine learning model of interest.
 
@@ -116,15 +119,38 @@ std::cout << make_table("loss", loss_t::all());
 The predictions and the targets are represented as 3D tensors for greater flexibility. In the majority of cases these are flatten for typical regression and classification loss functions. But this design allows custom loss functions for structured targets to be usable within the library (e.g. reconstructing color images).
 
 
+#### Hyper-parameter tuning strategies
 
-#### Machine learning models
+The `tuner_t` interface models a strategy to tune hyper-parameters of various ML models. Chosing the right hyper-parameter values is crucial to producing a ML model that generalizes well to unseen data. Another way of improving the generalization is to sample hyper-parameters from an a-priori fixed grid of values covering the extremes (e.g. almost no regularization, very constrained model). By design this builtin grid is model dependant, but fixed across datasets and loss functions. Additionally this simplifies the usage of the library as the users doesn't need to specify a grid to sample from.
 
-The `model_t` interface represents a ML model with the following most important functionalities:
-* training with a given dataset, loss function and solver.
-* automatic tuning of any hyper-parameters using the given tuning strategy (e.g. by fitting a quadratic surrogate function).
-* customizable strategy for splitting samples into training (to optimize parameters) and validation (to evaluate and tune hyper-parameters, e.g. regularization parameters).
-* evaluation on a given dataset and loss function.
-* serialization to and from binary streams, e.g. file.
+The builtin tuning strategies are available from their associated factory with:
+```
+std::cout << make_table("tuner", tuner_t::all());
+// prints something like...
+|--------------|-------------------------------------------------|
+| tuner        | description                                     |
+|--------------|-------------------------------------------------|
+| local-search | local search around the current optimum         |
+| surrogate    | fit and minimize a quadratic surrogate function |
+|--------------|-------------------------------------------------|
+```
+
+
+#### Dataset splitting strategies
+
+The `splitter_t` interface is used for separating a set of samples into `training` and `validation` samples. The former are used for optimizing the parameters of a given ML models (e.g. the coefficients of a linear model), while the latter are used for tuning the regularization hyper-parameters (e.g. the L2-norm penalty of the coefficients of a linear model) to improve generalization. 
+
+The builtin dataset splitting strategies are available from their associated factory with:
+```
+std::cout << make_table("splitter", splitter_t::all());
+// prints something like...
+|----------|------------------------------|
+| splitter | description                  |
+|----------|------------------------------|
+| k-fold   | k-fold cross-validation      |
+| random   | repeated random sub-sampling |
+|----------|------------------------------|
+```
 
 To properly train and evaluate ML models it is advised to divide samples using a nested cross-validation-like strategy in the following categories:
 
@@ -135,6 +161,14 @@ To properly train and evaluate ML models it is advised to divide samples using a
 Note that this process should be repeated multiple times to get an estimation of the performance distribution as ML is a stochastic process.
 
 
-The following ML models are builtin:
-* [linear models](../docs/linear.md)
+#### Machine learning models
+
+The available ML models are generalization of standard models in the following aspects:
+* missing feature values and heterogenous mixing of features types is builtin.
+* training can be performed with any loss function. Note that an appropriate solver needs to be chosen depending on the type of the optimization problem to solve during training (e.g. smooth or non-smooth, unconstrained or constrained).
+* the hyper-parameter are tuned automatically from a-priori chosen fixed parameter grids to reduce the overfitting and simplify usage.
+
+
+See the detailed documentation for the following builtin ML models:
+* [generalized linear models](../docs/linear.md)
 * [gradient boosting models](../docs/gboost.md)
