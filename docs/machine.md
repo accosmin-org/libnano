@@ -17,7 +17,7 @@ The most important concepts related to training and evaluating ML models are map
 * [splitter_t](../include/nano/splitter.h) - strategy to split samples into training and validation (testing).
 * [linear_t](../include/nano/linear.h) - linear models with various regrularization methods.
 * [wlearner_t](../include/nano/wlearner.h) - weak learner to be combined into strong learners via gradient boosting.
-* [gboost_t](../include/nano/gboost.h) - gradient boosting model.
+* [gboost_t](../include/nano/gboost/model.h) - gradient boosting model.
 
 The implementation follows an optimization approach to training machine learning models. As such the loss function and the optional regularization terms form a function of the model's parameters to be minimized. The library uses a `solver_t` instance (see the [nonlinear numerical optimization module](nonlinear.md))  to minimize such functions and to yield the optimum parameters of the machine learning model of interest.
 
@@ -138,7 +138,7 @@ std::cout << make_table("tuner", tuner_t::all());
 
 #### Dataset splitting strategies
 
-The `splitter_t` interface is used for separating a set of samples into `training` and `validation` samples. The former are used for optimizing the parameters of a given ML models (e.g. the coefficients of a linear model), while the latter are used for tuning the regularization hyper-parameters (e.g. the L2-norm penalty of the coefficients of a linear model) to improve generalization. 
+The `splitter_t` interface is used for separating a set of samples into `training` and `validation` samples. The former are used for optimizing the parameters of a given ML models (e.g. the coefficients of a linear model), while the latter are used for tuning the regularization hyper-parameters (e.g. the L2-norm penalty of the coefficients of a linear model) to improve generalization.
 
 The builtin dataset splitting strategies are available from their associated factory with:
 ```
