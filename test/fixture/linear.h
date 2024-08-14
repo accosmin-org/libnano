@@ -15,7 +15,9 @@ template <class tweights, class tbias>
 {
     const auto samples = dataset.samples();
 
-    auto called = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
+    auto all_outputs = tensor4d_t{cat_dims(samples, dataset.target_dims())};
+    auto all_targets = tensor4d_t{cat_dims(samples, dataset.target_dims())};
+    auto all_called  = make_full_tensor<tensor_size_t>(make_dims(samples), 0);
 
     auto iterator = flatten_iterator_t{dataset, arange(0, samples)};
     iterator.batch(11);
@@ -25,12 +27,14 @@ template <class tweights, class tbias>
         {
             for (tensor_size_t i = 0, size = range.size(); i < size; ++i)
             {
-                UTEST_CHECK_CLOSE(targets.vector(i), weights * inputs.vector(i) + bias, epsilon);
-                called(range.begin() + i) = 1;
+                all_called(range.begin() + i)         = 1;
+                all_targets.vector(range.begin() + i) = targets.vector(i);
+                all_outputs.vector(range.begin() + i) = weights * inputs.vector(i) + bias;
             }
         });
 
-    UTEST_CHECK_EQUAL(called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
+    UTEST_CHECK_EQUAL(all_called, make_full_tensor<tensor_size_t>(make_dims(samples), 1));
+    UTEST_CHECK_CLOSE(all_targets, all_outputs, epsilon);
 }
 
 [[maybe_unused]] static void check_fitting(const std::any& extra, const string_t& log_path)
@@ -99,11 +103,14 @@ template <class tweights, class tbias>
 [[maybe_unused]] void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
                                     const scalar_t epsilon)
 {
+    auto all_targets = tensor4d_t{cat_dims(samples.size(), dataset.target_dims())};
+
     auto iterator = flatten_iterator_t{dataset, samples};
     iterator.batch(7);
     iterator.scaling(scaling_type::none);
-    iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets)
-                  { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
+    iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets) { all_targets.slice(range) = targets; });
+
+    UTEST_CHECK_CLOSE(all_targets, outputs, epsilon);
 }
 
 [[maybe_unused]] void check_model(const linear_t& model, const dataset_t& dataset, const indices_t& samples,
