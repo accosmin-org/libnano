@@ -24,12 +24,12 @@ UTEST_BEGIN_MODULE(test_linear_lasso)
         const auto loss       = make_loss(loss_id);
         const auto solver     = make_solver("rqb");
         const auto fit_params = make_fit_params(solver);
-        const auto result     = model.fit(dataset, samples, *loss, fit_params);
-        const auto epsilon    = 1e-4;
+        const auto result     = model->fit(dataset, samples, *loss, fit_params);
+        const auto epsilon    = 1e-6;
 
         check_result(result, param_names, 2, epsilon);
-        check_model(model, dataset, samples, epsilon);
-        check_importance(model, dataset, datasource.relevant_feature_mask());
+        check_model(*model, dataset, samples, epsilon);
+        check_importance(*model, dataset, datasource.relevant_feature_mask());
     }
 }*/
 
