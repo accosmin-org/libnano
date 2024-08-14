@@ -1,9 +1,11 @@
 #include <fixture/configurable.h>
 #include <fixture/dataset.h>
 #include <fixture/learner.h>
+#include <fixture/splitter.h>
 #include <nano/dataset/iterator.h>
 #include <nano/linear.h>
 #include <nano/linear/result.h>
+#include <nano/linear/util.h>
 
 using namespace nano;
 using namespace nano::ml;
@@ -78,4 +80,76 @@ template <class tweights, class tbias>
     check_fitting(result.extra(), result.refit_log_path());
 
     // TODO: the tuning strategy should not fail as well!!!
+}
+
+[[maybe_unused]] auto make_model(const string_t& id, const scaling_type scaling, const tensor_size_t batch = 100)
+{
+    auto model = linear_t::all().get(id);
+    UTEST_REQUIRE(model);
+    model->parameter("linear::batch")   = batch;
+    model->parameter("linear::scaling") = scaling;
+    return model;
+}
+
+[[maybe_unused]] auto make_fit_params(const rsolver_t& solver)
+{
+    return params_t{}.splitter(make_splitter("k-fold", 2)).solver(solver).logger(make_stdout_logger());
+}
+
+[[maybe_unused]] void check_outputs(const dataset_t& dataset, const indices_t& samples, const tensor4d_t& outputs,
+                                    const scalar_t epsilon)
+{
+    auto iterator = flatten_iterator_t{dataset, samples};
+    iterator.batch(7);
+    iterator.scaling(scaling_type::none);
+    iterator.loop([&](tensor_range_t range, size_t, tensor4d_cmap_t targets)
+                  { UTEST_CHECK_CLOSE(targets, outputs.slice(range), epsilon); });
+}
+
+[[maybe_unused]] void check_model(const linear_t& model, const dataset_t& dataset, const indices_t& samples,
+                                  const scalar_t epsilon)
+{
+    const auto outputs = model.predict(dataset, samples);
+    check_outputs(dataset, samples, outputs, epsilon);
+
+    UTEST_CHECK_EQUAL(model.weights().dims(), make_dims(1, dataset.columns()));
+    UTEST_CHECK_EQUAL(model.bias().dims(), make_dims(1));
+
+    string_t str;
+    {
+        std::ostringstream stream;
+        UTEST_REQUIRE_NOTHROW(model.write(stream));
+        str = stream.str();
+    }
+    {
+        auto               new_model = make_model("ordinary", scaling_type::none);
+        std::istringstream stream(str);
+        UTEST_REQUIRE_NOTHROW(new_model->read(stream));
+        const auto new_outputs = new_model->predict(dataset, samples);
+        UTEST_CHECK_CLOSE(outputs, new_outputs, epsilon0<scalar_t>());
+    }
+}
+
+[[maybe_unused]] void check_importance(const linear_t& model, const dataset_t& dataset, const indices_t& relevancy)
+{
+    const auto importance         = linear::feature_importance(dataset, model.weights());
+    const auto sparsity           = linear::sparsity_ratio(importance);
+    const auto expected_revelancy = static_cast<scalar_t>(relevancy.sum()) / static_cast<scalar_t>(dataset.features());
+
+    UTEST_REQUIRE_EQUAL(relevancy.size(), dataset.features());
+    UTEST_REQUIRE_EQUAL(relevancy.size(), importance.size());
+
+    for (tensor_size_t feature = 0, features = dataset.features(); feature < features; ++feature)
+    {
+        if (relevancy(feature) != 0)
+        {
+            UTEST_CHECK_GREATER(importance(feature), 1e-1);
+        }
+        else
+        {
+            UTEST_CHECK_LESS(importance(feature), 1e-6);
+        }
+    }
+
+    UTEST_CHECK_CLOSE(sparsity, 1.0 - expected_revelancy, 1e-15);
 }
