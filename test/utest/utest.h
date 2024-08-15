@@ -113,7 +113,7 @@ struct utest_test_name_t
     ~utest_test_name_t() { utest_test_name.clear(); }
 };
 
-#define UTEST_NAMED_CASE(name) [[maybe_unused]] const auto _ = utest_test_name_t{name};
+#define UTEST_NAMED_CASE(name) [[maybe_unused]] const auto utest_test_name_this = utest_test_name_t{name};
 
 enum class exception_status
 {
