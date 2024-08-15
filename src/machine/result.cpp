@@ -8,10 +8,11 @@ using namespace nano::ml;
 
 namespace
 {
-auto make_random_path(const tensor_size_t id)
+template <typename... targs>
+auto make_random_path(const targs... args)
 {
     const auto time = std::chrono::steady_clock::now().time_since_epoch().count();
-    const auto path = std::filesystem::temp_directory_path() / scat(time, "_", id, ".log");
+    const auto path = std::filesystem::temp_directory_path() / scat(time, '_', args..., ".log");
     return path.string();
 }
 } // namespace
@@ -23,7 +24,7 @@ result_t::result_t(param_spaces_t param_spaces, const tensor_size_t folds)
     , m_params(0, static_cast<tensor_size_t>(m_spaces.size()))
     , m_values(make_full_tensor<scalar_t>(make_dims(0, folds, 2, 2, 12), std::numeric_limits<scalar_t>::quiet_NaN()))
     , m_optims(make_full_tensor<scalar_t>(make_dims(2, 12), std::numeric_limits<scalar_t>::quiet_NaN()))
-    , m_refit_log_path(make_random_path(std::numeric_limits<tensor_size_t>::max()))
+    , m_refit_log_path(make_random_path("refit"))
 {
 }
 
@@ -47,10 +48,13 @@ void result_t::add(const tensor2d_t& params_to_try)
     m_values.slice(0, old_trials) = old_values;
     m_values.slice(old_trials, new_trials).full(std::numeric_limits<scalar_t>::quiet_NaN());
 
-    for (tensor_size_t i = 0, size = trials * folds; i < size; ++i)
+    for (tensor_size_t fold = 0; fold < folds; ++fold)
     {
-        m_extras.emplace_back();
-        m_log_paths.emplace_back(make_random_path(old_trials * folds + i));
+        for (tensor_size_t trial = 0; trial < trials; ++trial)
+        {
+            m_extras.emplace_back();
+            m_log_paths.emplace_back(make_random_path("fold", fold, "_trial", old_trials + trial));
+        }
     }
 
     assert(m_extras.size() == static_cast<size_t>(folds * new_trials));

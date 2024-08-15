@@ -31,7 +31,7 @@ result_t nano::ml::tune(const string_t& prefix, const indices_t& samples, const 
             const auto closest_trial = result.closest_trial(params, old_trials);
 
             const auto& [tr_samples, vd_samples] = splits[static_cast<size_t>(fold)];
-            const auto logger                    = make_file_logger(result.log_path(trial, fold));
+            const auto logger                    = make_file_logger(result.log_path(old_trials + trial, fold));
             const auto closest                   = result.extra(closest_trial, fold);
 
             auto [tr_values, vd_values, extra] = callback(tr_samples, vd_samples, params, closest, logger);

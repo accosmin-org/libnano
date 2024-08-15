@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fixture/configurable.h>
 #include <fixture/dataset.h>
 #include <fixture/learner.h>
@@ -39,6 +40,7 @@ template <class tweights, class tbias>
 
     const auto& pfresult = std::any_cast<linear::result_t>(extra);
 
+    UTEST_CHECK(std::filesystem::exists(log_path));
     UTEST_REQUIRE_EQUAL(pfresult.m_statistics.size(), 3);
 
     const auto fcalls = pfresult.m_statistics(0);
@@ -53,7 +55,9 @@ template <class tweights, class tbias>
     if (old_n_failures != utest_n_failures.load())
     {
         std::ifstream in(log_path);
-        const auto    stream = string_t{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+        UTEST_CHECK(in.is_open());
+        const auto stream = string_t{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+        UTEST_CHECK(!stream.empty());
         std::cout << stream;
     }
 }
