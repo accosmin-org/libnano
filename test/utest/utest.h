@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <nano/tensor/tensor.h>
 #include <string>
 #include <utility>
@@ -22,6 +23,8 @@ static std::string utest_module_name;
 static std::size_t              utest_n_cases    = 0;
 static std::atomic<std::size_t> utest_n_checks   = {0};
 static std::atomic<std::size_t> utest_n_failures = {0};
+
+static std::mutex utest_mutex;
 
 template <class T>
 struct is_pair : std::false_type
@@ -194,6 +197,7 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (!(check))                                                                                                      \
     {                                                                                                                  \
+        const auto _ = std::scoped_lock{utest_mutex};                                                                  \
         UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(check)            \
                                << "} failed!" << RESET_COLOR << std::endl;                                             \
         UTEST_HANDLE_CRITICAL(critical)                                                                                \
@@ -241,6 +245,7 @@ static exception_status check_throw(const toperator& op)
         const auto res_check = (res_left op res_right);                                                                \
         if (!res_check)                                                                                                \
         {                                                                                                              \
+            const auto _ = std::scoped_lock{utest_mutex};                                                              \
             UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {"                                  \
                                    << UTEST_STRINGIFY(left op right) << "} failed {" << res_left << " "                \
                                    << UTEST_STRINGIFY(op) << " " << res_right << "}!" << RESET_COLOR << std::endl;     \
@@ -276,6 +281,7 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (!::nano::close((left), (right), epsilon))                                                                      \
     {                                                                                                                  \
+        const auto _ = std::scoped_lock{utest_mutex};                                                                  \
         UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left ~right)      \
                                << "} failed {" << (left) << " <" << (epsilon) << "> " << (right) << "}!"               \
                                << RESET_COLOR << std::endl;                                                            \
@@ -289,6 +295,7 @@ static exception_status check_throw(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     if (::nano::close((left), (right), epsilon))                                                                       \
     {                                                                                                                  \
+        const auto _ = std::scoped_lock{utest_mutex};                                                                  \
         UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {" << UTEST_STRINGIFY(left !~right)     \
                                << "} failed {" << (left) << " <" << (epsilon) << "> " << (right) << "}!"               \
                                << RESET_COLOR << std::endl;                                                            \
