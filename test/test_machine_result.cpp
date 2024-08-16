@@ -40,6 +40,7 @@ UTEST_CASE(result_optimum)
     auto result = result_t{param_spaces, folds};
     UTEST_CHECK_EQUAL(result.folds(), folds);
     UTEST_CHECK_EQUAL(result.trials(), 0);
+    UTEST_CHECK(!result.refit_log_path().empty());
 
     const auto make_errors_losses = [](const tensor_size_t min, const tensor_size_t max)
     {
@@ -51,6 +52,16 @@ UTEST_CASE(result_optimum)
         }
         return values;
     };
+
+    auto log_path_00 = string_t{};
+    auto log_path_01 = string_t{};
+    auto log_path_02 = string_t{};
+    auto log_path_10 = string_t{};
+    auto log_path_11 = string_t{};
+    auto log_path_12 = string_t{};
+    auto log_path_20 = string_t{};
+    auto log_path_21 = string_t{};
+    auto log_path_22 = string_t{};
 
     {
         const auto closest_trial = result.closest_trial(make_tensor<scalar_t>(make_dims(2), 0.0, 0.99), 0);
@@ -64,6 +75,13 @@ UTEST_CASE(result_optimum)
         UTEST_CHECK_EQUAL(result.folds(), folds);
         UTEST_CHECK_EQUAL(result.trials(), 1);
         UTEST_CHECK_EQUAL(result.optimum_trial(), 0);
+        UTEST_CHECK(!result.log_path(0, 0).empty());
+        UTEST_CHECK(!result.log_path(0, 1).empty());
+        UTEST_CHECK(!result.log_path(0, 2).empty());
+
+        log_path_00 = result.log_path(0, 0);
+        log_path_01 = result.log_path(0, 1);
+        log_path_02 = result.log_path(0, 2);
 
         UTEST_CHECK_EQUAL(std::any_cast<int>(result.extra(0, 0)), 1);
         UTEST_CHECK_EQUAL(std::any_cast<const char*>(result.extra(0, 1)), string_t{"2"});
@@ -93,6 +111,25 @@ UTEST_CASE(result_optimum)
         UTEST_CHECK_EQUAL(result.folds(), folds);
         UTEST_CHECK_EQUAL(result.trials(), 2);
         UTEST_CHECK_EQUAL(result.optimum_trial(), 1);
+
+        UTEST_CHECK(!result.log_path(0, 0).empty());
+        UTEST_CHECK(!result.log_path(0, 1).empty());
+        UTEST_CHECK(!result.log_path(0, 2).empty());
+        UTEST_CHECK(!result.log_path(1, 0).empty());
+        UTEST_CHECK(!result.log_path(1, 1).empty());
+        UTEST_CHECK(!result.log_path(1, 2).empty());
+
+        log_path_10 = result.log_path(1, 0);
+        log_path_11 = result.log_path(1, 1);
+        log_path_12 = result.log_path(1, 2);
+
+        UTEST_CHECK_EQUAL(log_path_00, result.log_path(0, 0));
+        UTEST_CHECK_EQUAL(log_path_01, result.log_path(0, 1));
+        UTEST_CHECK_EQUAL(log_path_02, result.log_path(0, 2));
+
+        UTEST_CHECK_NOT_EQUAL(log_path_00, result.log_path(1, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_01, result.log_path(1, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_02, result.log_path(1, 2));
     }
     {
         result.add(make_tensor<scalar_t>(make_dims(1, 2), 0.5, 1.2));
@@ -102,6 +139,34 @@ UTEST_CASE(result_optimum)
         UTEST_CHECK_EQUAL(result.folds(), folds);
         UTEST_CHECK_EQUAL(result.trials(), 3);
         UTEST_CHECK_EQUAL(result.optimum_trial(), 2);
+
+        UTEST_CHECK(!result.log_path(0, 0).empty());
+        UTEST_CHECK(!result.log_path(0, 1).empty());
+        UTEST_CHECK(!result.log_path(0, 2).empty());
+        UTEST_CHECK(!result.log_path(1, 0).empty());
+        UTEST_CHECK(!result.log_path(1, 1).empty());
+        UTEST_CHECK(!result.log_path(1, 2).empty());
+        UTEST_CHECK(!result.log_path(2, 0).empty());
+        UTEST_CHECK(!result.log_path(2, 1).empty());
+        UTEST_CHECK(!result.log_path(2, 2).empty());
+
+        log_path_20 = result.log_path(2, 0);
+        log_path_21 = result.log_path(2, 1);
+        log_path_22 = result.log_path(2, 2);
+
+        UTEST_CHECK_EQUAL(log_path_00, result.log_path(0, 0));
+        UTEST_CHECK_EQUAL(log_path_01, result.log_path(0, 1));
+        UTEST_CHECK_EQUAL(log_path_02, result.log_path(0, 2));
+        UTEST_CHECK_EQUAL(log_path_10, result.log_path(1, 0));
+        UTEST_CHECK_EQUAL(log_path_11, result.log_path(1, 1));
+        UTEST_CHECK_EQUAL(log_path_12, result.log_path(1, 2));
+
+        UTEST_CHECK_NOT_EQUAL(log_path_00, result.log_path(2, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_01, result.log_path(2, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_02, result.log_path(2, 2));
+        UTEST_CHECK_NOT_EQUAL(log_path_10, result.log_path(2, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_11, result.log_path(2, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_12, result.log_path(2, 2));
     }
     {
         const auto closest_trial = result.closest_trial(make_tensor<scalar_t>(make_dims(2), 0.5, 1.21), 3);
@@ -115,6 +180,39 @@ UTEST_CASE(result_optimum)
         UTEST_CHECK_EQUAL(result.folds(), folds);
         UTEST_CHECK_EQUAL(result.trials(), 4);
         UTEST_CHECK_EQUAL(result.optimum_trial(), 2);
+
+        UTEST_CHECK(!result.log_path(0, 0).empty());
+        UTEST_CHECK(!result.log_path(0, 1).empty());
+        UTEST_CHECK(!result.log_path(0, 2).empty());
+        UTEST_CHECK(!result.log_path(1, 0).empty());
+        UTEST_CHECK(!result.log_path(1, 1).empty());
+        UTEST_CHECK(!result.log_path(1, 2).empty());
+        UTEST_CHECK(!result.log_path(2, 0).empty());
+        UTEST_CHECK(!result.log_path(2, 1).empty());
+        UTEST_CHECK(!result.log_path(2, 2).empty());
+        UTEST_CHECK(!result.log_path(3, 0).empty());
+        UTEST_CHECK(!result.log_path(3, 1).empty());
+        UTEST_CHECK(!result.log_path(3, 2).empty());
+
+        UTEST_CHECK_EQUAL(log_path_00, result.log_path(0, 0));
+        UTEST_CHECK_EQUAL(log_path_01, result.log_path(0, 1));
+        UTEST_CHECK_EQUAL(log_path_02, result.log_path(0, 2));
+        UTEST_CHECK_EQUAL(log_path_10, result.log_path(1, 0));
+        UTEST_CHECK_EQUAL(log_path_11, result.log_path(1, 1));
+        UTEST_CHECK_EQUAL(log_path_12, result.log_path(1, 2));
+        UTEST_CHECK_EQUAL(log_path_20, result.log_path(2, 0));
+        UTEST_CHECK_EQUAL(log_path_21, result.log_path(2, 1));
+        UTEST_CHECK_EQUAL(log_path_22, result.log_path(2, 2));
+
+        UTEST_CHECK_NOT_EQUAL(log_path_00, result.log_path(3, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_01, result.log_path(3, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_02, result.log_path(3, 2));
+        UTEST_CHECK_NOT_EQUAL(log_path_10, result.log_path(3, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_11, result.log_path(3, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_12, result.log_path(3, 2));
+        UTEST_CHECK_NOT_EQUAL(log_path_20, result.log_path(3, 0));
+        UTEST_CHECK_NOT_EQUAL(log_path_21, result.log_path(3, 1));
+        UTEST_CHECK_NOT_EQUAL(log_path_22, result.log_path(3, 2));
     }
 }
 
