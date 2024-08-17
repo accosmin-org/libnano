@@ -30,6 +30,9 @@ UTEST_BEGIN_MODULE(test_linear_lasso)
         check_result(result, param_names, 2, epsilon);
         check_model(*model, dataset, samples, epsilon);
         check_importance(*model, dataset, datasource.relevant_feature_mask());
+
+        UTEST_CHECK_CLOSE(model->bias(), datasource.bias(), epsilon);
+        UTEST_CHECK_CLOSE(model->weights(), datasource.weights(), epsilon);
     }
 }*/
 
