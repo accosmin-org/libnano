@@ -84,3 +84,33 @@ function(make_app app)
     install(TARGETS ${app}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endfunction()
+
+# function to install a project
+function(install_project)
+    install(DIRECTORY include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+
+    install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
+
+    # generate the version file for the config file
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake"
+        VERSION "${PROJECT_VERSION}"
+        COMPATIBILITY AnyNewerVersion)
+
+    # create config file
+    configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+    # install config files
+    install(
+        FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
+endfunction()

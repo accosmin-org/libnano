@@ -11,7 +11,7 @@ if(CCACHE_EXECUTABLE)
     endforeach()
 endif()
 
-project(libnano
+project(NANO
     VERSION 0.0.1
     LANGUAGES CXX
     DESCRIPTION "Eigen-based numerical optimization and machine learning utilities")
@@ -98,34 +98,9 @@ if(NANO_BUILD_TESTS)
 endif()
 
 ##################################################################################################
-# setup installation
+# install cmake targets
 
-install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-
-install(FILES ${CMAKE_BINARY_DIR}/nano/version.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nano)
-
-# generate the version file for the config file
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake"
-    VERSION "${PROJECT_VERSION}"
-    COMPATIBILITY AnyNewerVersion)
-
-# create config file
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
-    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NANO
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-
-# install config files
-install(
-    FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/NANOConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NANO)
+install_project()
 
 ##################################################################################################
 
