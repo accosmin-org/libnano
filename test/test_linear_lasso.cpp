@@ -8,8 +8,7 @@ using namespace nano::ml;
 
 UTEST_BEGIN_MODULE(test_linear_lasso)
 
-// FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
-/*UTEST_CASE(lasso)
+UTEST_CASE(lasso)
 {
     const auto datasource = make_linear_datasource(100, 1, 4, "datasource::linear::relevant", 70);
     const auto dataset    = make_dataset(datasource);
@@ -22,7 +21,7 @@ UTEST_BEGIN_MODULE(test_linear_lasso)
         UTEST_NAMED_CASE(loss_id);
 
         const auto loss       = make_loss(loss_id);
-        const auto solver     = make_solver("rqb");
+        const auto solver     = make_solver("fpba1");
         const auto fit_params = make_fit_params(solver);
         const auto result     = model->fit(dataset, samples, *loss, fit_params);
         const auto epsilon    = 1e-6;
@@ -34,6 +33,6 @@ UTEST_BEGIN_MODULE(test_linear_lasso)
         UTEST_CHECK_CLOSE(model->bias(), datasource.bias(), epsilon);
         UTEST_CHECK_CLOSE(model->weights(), datasource.weights(), epsilon);
     }
-}*/
+}
 
 UTEST_END_MODULE()

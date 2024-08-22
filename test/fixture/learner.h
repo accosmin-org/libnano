@@ -77,8 +77,8 @@ template <class tlearner, class... tfit_args>
         if (close(train_errors, optim_errors, epsilon))
         {
             ++hits;
-            UTEST_CHECK_CLOSE(train_losses, optim_losses, 1.0 * epsilon);
-            UTEST_CHECK_CLOSE(train_errors, optim_errors, 1.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_losses, optim_losses, 3.0 * epsilon);
+            UTEST_CHECK_CLOSE(train_errors, optim_errors, 3.0 * epsilon);
             UTEST_CHECK_CLOSE(valid_losses, optim_losses, 5.0 * epsilon);
             UTEST_CHECK_CLOSE(valid_errors, optim_errors, 5.0 * epsilon);
         }

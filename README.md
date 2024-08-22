@@ -85,7 +85,7 @@ Examples:
 
 5. [Constrained optimization module - TODO](docs/constrained.md)
 
-6. [Machine learning module - TODO](docs/machine.md)
+6. [Machine learning module](docs/machine.md)
 
 7. [Linear models - TODO](docs/linear.md)
 
