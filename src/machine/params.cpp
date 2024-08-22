@@ -14,10 +14,6 @@ params_t::params_t()
 
     // NB: not many folds are needed for tuning!
     m_splitter->parameter("splitter::folds") = 5;
-
-    // NB: the optimization precision can be lowered somewhat for machine learning applications!
-    m_solver->parameter("solver::epsilon")   = 1e-6;
-    m_solver->parameter("solver::max_evals") = 1000;
 }
 
 params_t::params_t(params_t&&) noexcept = default;
