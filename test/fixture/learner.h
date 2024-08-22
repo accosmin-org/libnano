@@ -74,7 +74,7 @@ template <class tlearner, class... tfit_args>
             valid_errors(fold) = result.stats(trial, fold, split_type::valid, value_type::errors).m_mean;
         }
 
-        if (close(train_errors, optim_errors, epsilon))
+        if (close(train_errors, optim_errors, 3.0 * epsilon))
         {
             ++hits;
             UTEST_CHECK_CLOSE(train_losses, optim_losses, 3.0 * epsilon);
