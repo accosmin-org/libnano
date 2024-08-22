@@ -17,67 +17,67 @@ threads=$((cores+1))
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"
 
-function lto {
+function setup_lto {
     export CXXFLAGS="${CXXFLAGS} -flto"
 }
 
-function thinlto {
+function setup_thinlto {
     export CXXFLAGS="${CXXFLAGS} -flto=thin"
 }
 
-function asan {
+function setup_asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract"
     export CXXFLAGS="${CXXFLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
-function lsan {
+function setup_lsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=leak -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
-function usan {
+function setup_usan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
-function msan {
+function setup_msan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
-function tsan {
+function setup_tsan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=thread -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
 
-function gold {
+function setup_gold {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=gold"
 }
 
-function lld {
+function setup_lld {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=lld"
 }
 
-function native {
+function setup_native {
     export CXXFLAGS="${CXXFLAGS} -mtune=native -march=native"
 }
 
-function libcpp {
+function setup_libcpp {
     export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
     export LDFLAGS="${LDFLAGS} -lc++abi"
 }
 
-function coverage {
+function setup_coverage {
     export CXXFLAGS="${CXXFLAGS} -coverage -fno-omit-frame-pointer -Og"
     export LDFLAGS="${LDFLAGS} -coverage"
 }
 
-function llvm_coverage {
+function setup_llvm_coverage {
     export CXXFLAGS="${CXXFLAGS} -fprofile-instr-generate -fcoverage-mapping -Og"
 }
 
-function suffix {
+function setup_suffix {
     installdir=${basedir}/install/$1
     libnanodir=${basedir}/build/libnano/$1
     exampledir=${basedir}/build/example/$1
@@ -85,30 +85,30 @@ function suffix {
     export PATH="${PATH}:${installdir}"
 }
 
-function config {
+function call_config {
     cd ${basedir}
     cmake -H${basedir} -B${libnanodir} ${cmake_options} \
         -DCMAKE_INSTALL_PREFIX=${installdir} || return 1
 }
 
-function build {
+function call_build {
     cd ${libnanodir}
     echo "-- Using ${threads} threads to build"
     cmake --build ${libnanodir} -- -j ${threads} || return 1
 }
 
-function tests {
+function call_test {
     cd ${libnanodir}
     echo "-- Using ${threads} threads to test"
     ctest --output-on-failure -j ${threads} || return 1
 }
 
-function install {
+function call_install {
     cd ${libnanodir}
     cmake --install ${libnanodir} --strip || return 1
 }
 
-function build_example {
+function call_example {
     cd ${basedir}
     cmake -Hexample -B${exampledir} ${cmake_options} \
         -DCMAKE_PREFIX_PATH=${installdir} || return 1
@@ -147,7 +147,7 @@ lcov_options="
     --rc genhtml_branch_coverage=1
     "
 
-function lcov_coverage_init {
+function call_lcov_init {
     cd ${basedir}
 
     local base_output=${basedir}/lcov_base.info
@@ -156,7 +156,7 @@ function lcov_coverage_init {
         --output-file ${base_output} || return 1
 }
 
-function lcov_coverage {
+function call_lcov {
     cd ${basedir}
 
     local output=${basedir}/lcov.info
@@ -182,7 +182,7 @@ function lcov_coverage {
         --output-directory=${html_output} || return 1
 }
 
-function codecov {
+function call_codecov {
     cd ${basedir}
 
     local output=${basedir}/lcov.info
@@ -190,7 +190,7 @@ function codecov {
     bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
 }
 
-function llvm_cov_coverage {
+function call_llvm_cov {
     cd ${basedir}
 
     local output=${basedir}/llvmcov.info
@@ -228,13 +228,13 @@ function llvm_cov_coverage {
         ${objects} > ${basedir}/llvmcov.text
 }
 
-function memcheck {
+function call_memcheck {
     cd ${libnanodir}
     echo "-- Using ${threads} threads to test"
     ctest -T memcheck --output-on-failure -j ${threads} || return 1
 }
 
-function helgrind {
+function call_helgrind {
     cd ${libnanodir}
 
     returncode=0
@@ -259,7 +259,7 @@ function helgrind {
     return ${returncode}
 }
 
-function clang_tidy {
+function call_clang_tidy {
     cd ${libnanodir}
 
     check=$1
@@ -299,52 +299,52 @@ function clang_tidy {
     fi
 }
 
-function clang_tidy_concurrency {
-    clang_tidy "concurrency*"
+function call_clang_tidy_concurrency {
+    call_clang_tidy "concurrency*"
 }
 
-function clang_tidy_misc {
+function call_clang_tidy_misc {
     checks="misc*"
     checks="${checks},-misc-non-private-member-variables-in-classes,-misc-include-cleaner"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_cert {
-    clang_tidy "cert*"
+function call_clang_tidy_cert {
+    call_clang_tidy "cert*"
 }
 
-function clang_tidy_hicpp {
+function call_clang_tidy_hicpp {
     checks="hicpp*"
     checks="${checks},-hicpp-avoid-c-arrays"
     checks="${checks},-hicpp-no-array-decay"
     checks="${checks},-hicpp-signed-bitwise"
     checks="${checks},-hicpp-named-parameter"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_bugprone {
+function call_clang_tidy_bugprone {
     checks="bugprone*"
     checks="${checks},-bugprone-easily-swappable-parameters"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_modernize {
+function call_clang_tidy_modernize {
     checks="modernize*"
     checks="${checks},-modernize-avoid-c-arrays"
     checks="${checks},-modernize-use-trailing-return-type"
     checks="${checks},-modernize-use-nodiscard"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_performance {
-    clang_tidy "performance*"
+function call_clang_tidy_performance {
+    call_clang_tidy "performance*"
 }
 
-function clang_tidy_portability {
-    clang_tidy "portability*"
+function call_clang_tidy_portability {
+    call_clang_tidy "portability*"
 }
 
-function clang_tidy_readability {
+function call_clang_tidy_readability {
     checks="readability*"
     checks="${checks},-readability-magic-numbers"
     checks="${checks},-readability-named-parameter"
@@ -353,38 +353,38 @@ function clang_tidy_readability {
     checks="${checks},-readability-function-cognitive-complexity"
     checks="${checks},-readability-identifier-length"
     checks="${checks},-readability-avoid-nested-conditional-operator"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_clang_analyzer {
-    clang_tidy "clang-analyzer*"
+function call_clang_tidy_clang_analyzer {
+    call_clang_tidy "clang-analyzer*"
 }
 
-function clang_tidy_cppcoreguidelines {
+function call_clang_tidy_cppcoreguidelines {
     checks="cppcoreguidelines*"
     checks="${checks},-cppcoreguidelines-avoid-c-arrays"
     checks="${checks},-cppcoreguidelines-avoid-magic-numbers"
     checks="${checks},-cppcoreguidelines-pro-bounds-pointer-arithmetic"
     checks="${checks},-cppcoreguidelines-pro-bounds-array-to-pointer-decay"
     checks="${checks},-cppcoreguidelines-avoid-const-or-ref-data-members"
-    clang_tidy ${checks}
+    call_clang_tidy ${checks}
 }
 
-function clang_tidy_all {
-    clang_tidy_misc || return 1
-    clang_tidy_cert || return 1
-    clang_tidy_hicpp || return 1
-    clang_tidy_bugprone || return 1
-    clang_tidy_modernize || return 1
-    #clang_tidy_concurrency || return 1
-    clang_tidy_performance || return 1
-    clang_tidy_portability || return 1
-    clang_tidy_readability || return 1
-    clang_tidy_clang_analyzer || return 1
-    clang_tidy_cppcoreguidelines || return 1
+function call_clang_tidy_all {
+    call_clang_tidy_misc || return 1
+    call_clang_tidy_cert || return 1
+    call_clang_tidy_hicpp || return 1
+    call_clang_tidy_bugprone || return 1
+    call_clang_tidy_modernize || return 1
+    #call_clang_tidy_concurrency || return 1
+    call_clang_tidy_performance || return 1
+    call_clang_tidy_portability || return 1
+    call_clang_tidy_readability || return 1
+    call_clang_tidy_clang_analyzer || return 1
+    call_clang_tidy_cppcoreguidelines || return 1
 }
 
-function clang_format {
+function call_clang_format {
     files=$(find \
         ${basedir}/src \
         ${basedir}/test \
@@ -418,7 +418,7 @@ function clang_format {
     fi
 }
 
-function sonar {
+function call_sonar {
     cd ${basedir}
 
     export SONAR_SCANNER_VERSION=5.0.1.3006
@@ -650,48 +650,48 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
-        --lld)                          lld;;
-        --lto)                          lto;;
-        --thinlto)                      thinlto;;
-        --asan)                         asan;;
-        --lsan)                         lsan;;
-        --usan)                         usan;;
-        --tsan)                         tsan;;
-        --msan)                         msan;;
-        --gold)                         gold;;
-        --native)                       native;;
-        --libcpp)                       libcpp;;
-        --coverage)                     coverage;;
-        --llvm-coverage)                llvm_coverage;;
-        --suffix)                       shift; suffix $1;;
-        --config)                       config || exit 1;;
-        --build)                        build || exit 1;;
-        --test)                         tests || exit 1;;
-        --install)                      install || exit 1;;
+        --lld)                          setup_lld;;
+        --lto)                          setup_lto;;
+        --thinlto)                      setup_thinlto;;
+        --asan)                         setup_asan;;
+        --lsan)                         setup_lsan;;
+        --usan)                         setup_usan;;
+        --tsan)                         setup_tsan;;
+        --msan)                         setup_msan;;
+        --gold)                         setup_gold;;
+        --native)                       setup_native;;
+        --libcpp)                       setup_libcpp;;
+        --coverage)                     setup_coverage;;
+        --llvm-coverage)                setup_llvm_coverage;;
+        --suffix)                       shift; setup_suffix $1;;
+        --config)                       call_config || exit 1;;
+        --build)                        call_build || exit 1;;
+        --test)                         call_test || exit 1;;
+        --install)                      call_install || exit 1;;
         --cppcheck)                     call_cppcheck || exit 1;;
-        --lcov)                         lcov_coverage || exit 1;;
-        --lcov-init)                    lcov_coverage_init || exit 1;;
-        --llvm-cov)                     llvm_cov_coverage || exit 1;;
-        --memcheck)                     memcheck || exit 1;;
-        --helgrind)                     helgrind || exit 1;;
+        --lcov)                         call_lcov || exit 1;;
+        --lcov-init)                    call_lcov_init || exit 1;;
+        --llvm-cov)                     call_llvm_cov || exit 1;;
+        --memcheck)                     call_memcheck || exit 1;;
+        --helgrind)                     call_helgrind || exit 1;;
         --clang-suffix)                 shift; clang_suffix=$1;;
-        --clang-tidy-check)             shift; clang_tidy $1 || exit 1;;
-        --clang-tidy-all)               clang_tidy_all || exit 1;;
-        --clang-tidy-misc)              clang_tidy_misc || exit 1;;
-        --clang-tidy-cert)              clang_tidy_cert || exit 1;;
-        --clang-tidy-hicpp)             clang_tidy_hicpp || exit 1;;
-        --clang-tidy-bugprone)          clang_tidy_bugprone || exit 1;;
-        --clang-tidy-modernize)         clang_tidy_modernize || exit 1;;
-        --clang-tidy-concurrency)       clang_tidy_concurrency || exit 1;;
-        --clang-tidy-performance)       clang_tidy_performance || exit 1;;
-        --clang-tidy-portability)       clang_tidy_portability || exit 1;;
-        --clang-tidy-readability)       clang_tidy_readability || exit 1;;
-        --clang-tidy-clang-analyzer)    clang_tidy_clang_analyzer || exit 1;;
-        --clang-tidy-cppcoreguidelines) clang_tidy_cppcoreguidelines || exit 1;;
-        --build-example)                build_example || exit 1;;
-        --clang-format)                 clang_format || exit 1;;
-        --sonar)                        sonar || exit 1;;
-        --codecov)                      codecov || exit 1;;
+        --clang-tidy-check)             shift; call_clang_tidy $1 || exit 1;;
+        --clang-tidy-all)               call_clang_tidy_all || exit 1;;
+        --clang-tidy-misc)              call_clang_tidy_misc || exit 1;;
+        --clang-tidy-cert)              call_clang_tidy_cert || exit 1;;
+        --clang-tidy-hicpp)             call_clang_tidy_hicpp || exit 1;;
+        --clang-tidy-bugprone)          call_clang_tidy_bugprone || exit 1;;
+        --clang-tidy-modernize)         call_clang_tidy_modernize || exit 1;;
+        --clang-tidy-concurrency)       call_clang_tidy_concurrency || exit 1;;
+        --clang-tidy-performance)       call_clang_tidy_performance || exit 1;;
+        --clang-tidy-portability)       call_clang_tidy_portability || exit 1;;
+        --clang-tidy-readability)       call_clang_tidy_readability || exit 1;;
+        --clang-tidy-clang-analyzer)    call_clang_tidy_clang_analyzer || exit 1;;
+        --clang-tidy-cppcoreguidelines) call_clang_tidy_cppcoreguidelines || exit 1;;
+        --build-example)                call_example || exit 1;;
+        --clang-format)                 call_clang_format || exit 1;;
+        --sonar)                        call_sonar || exit 1;;
+        --codecov)                      call_codecov || exit 1;;
         --check-markdown-docs)          check_markdown_docs || exit 1;;
         --check-source-files)           check_source_files || exit 1;;
         -D*)                            cmake_options="${cmake_options} $1";;
