@@ -3,15 +3,6 @@
 
 using namespace nano;
 
-namespace
-{
-template <class tvector>
-bool converged(const scalar_t error, const tvector& sgrad, const scalar_t etol, const scalar_t stol)
-{
-    return (error < etol) && (sgrad.template lpNorm<2>() < stol);
-}
-} // namespace
-
 template <>
 nano::enum_map_t<csearch_status> nano::enum_string()
 {
@@ -42,10 +33,6 @@ csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar
 const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu, const tensor_size_t max_evals,
                                             const scalar_t epsilon, const logger_t& logger)
 {
-    // FIXME: the references do not specify how to choose these thresholds
-    const auto etol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
-    const auto stol = epsilon * std::sqrt(static_cast<scalar_t>(m_function.size()));
-
     auto& t = m_point.m_t;
     t       = 1.0;
     auto tL = 0.0;
@@ -81,6 +68,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  e     = bundle.smeared_e();
         const auto  s     = bundle.smeared_s();
         const auto  delta = bundle.delta(miu / t);
+        const auto  econv = bundle.econverged(epsilon);
+        const auto  sconv = bundle.sconverged(epsilon);
 
         logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
                     ",de=", e, ",ds=", s.lpNorm<2>(), ",dd=", delta, ",bsize=", bundle.size(), ",miu=", miu, ",t=", t,
@@ -91,7 +80,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
             status = csearch_status::failed;
             break;
         }
-        else if (const auto converged = ::converged(e, s, etol, stol); converged)
+        else if (const auto converged = econv && sconv; converged)
         {
             status = csearch_status::converged;
             break;
@@ -120,7 +109,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
             status = csearch_status::descent_step;
             break;
         }
-        else if (!std::isfinite(tR) && (s.lpNorm<2>() <= stol || s.dot(y - x) >= -m_m4 * delta))
+        else if (!std::isfinite(tR) && (sconv || s.dot(y - x) >= -m_m4 * delta))
         {
             status = csearch_status::cutting_plane_step;
             break;
@@ -130,6 +119,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
             t = new_trial();
         }
     }
+
+    logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fy=", m_point.m_fy,
+                ",t=", m_point.m_t, ",status=", m_point.m_status, "\n");
 
     return m_point;
 }

@@ -95,6 +95,18 @@ public:
     ///
     void solve(scalar_t miu, const logger_t&);
 
+    ///
+    /// \brief return true if converged wrt the smeared approximation error, see (1).
+    /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
+    ///
+    bool econverged(scalar_t epsilon) const;
+
+    ///
+    /// \brief return true if converged wrt the smeared sub-gradient, see (1).
+    /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
+    ///
+    bool sconverged(scalar_t epsilon) const;
+
 private:
     tensor_size_t dims() const { return m_bundleS.size<1>(); }
 
