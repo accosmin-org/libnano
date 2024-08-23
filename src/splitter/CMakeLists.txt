@@ -1,6 +1,5 @@
-target_sources(machine
-    PRIVATE
-        kfold.h
-        random.h
-        kfold.cpp
-        random.cpp)
+target_sources(machine PRIVATE
+    kfold.h
+    random.h
+    kfold.cpp
+    random.cpp)

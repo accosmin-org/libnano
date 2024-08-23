@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/solver.h>
+#include <nano/solver/nesterov.h>
 
 namespace nano
 {
@@ -16,12 +17,6 @@ namespace nano
 ///
 /// NB: the momentum for the accelerated schemes is reset adaptively using the function value scheme from (3).
 ///
-
-namespace proximal
-{
-struct sequence1_t;
-struct sequence2_t;
-} // namespace proximal
 
 ///
 /// \brief base class for fast proximal bundle algorithsm (FPBAx).
@@ -49,6 +44,6 @@ public:
 ///
 /// \brief FPBA1 and FPBA2 from (1).
 ///
-using solver_fpba1_t = base_solver_fpba_t<proximal::sequence1_t>;
-using solver_fpba2_t = base_solver_fpba_t<proximal::sequence2_t>;
+using solver_fpba1_t = base_solver_fpba_t<nesterov_sequence1_t>;
+using solver_fpba2_t = base_solver_fpba_t<nesterov_sequence2_t>;
 } // namespace nano

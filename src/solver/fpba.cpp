@@ -5,82 +5,6 @@
 
 using namespace nano;
 
-namespace
-{
-template <class tderived>
-class sequence_t
-{
-public:
-    explicit sequence_t(const solver_state_t& state)
-        : m_x(state.x())
-        , m_y(state.x())
-    {
-    }
-
-    void reset() { m_lambda = 1.0; }
-
-    scalar_t lambda() const { return m_lambda; }
-
-    scalar_t update()
-    {
-        m_lambda = 0.5 * (1.0 + std::sqrt(1.0 + 4.0 * m_lambda * m_lambda));
-        return m_lambda;
-    }
-
-    const vector_t& update(const vector_cmap_t z)
-    {
-        const auto [ak, bk] = static_cast<tderived*>(this)->make_alpha_beta();
-        m_x                 = z + ak * (z - m_y) + bk * (z - m_x);
-        m_y                 = z;
-        return m_x;
-    }
-
-private:
-    // attributes
-    scalar_t m_lambda{1.0}; ///<
-    vector_t m_x;           ///<
-    vector_t m_y;           ///<
-};
-} // namespace
-
-struct proximal::sequence1_t final : public sequence_t<proximal::sequence1_t>
-{
-    explicit sequence1_t(const solver_state_t& state)
-        : sequence_t<proximal::sequence1_t>(state)
-    {
-    }
-
-    auto make_alpha_beta()
-    {
-        const auto curr  = lambda();
-        const auto next  = update();
-        const auto alpha = (curr - 1.0) / next;
-        const auto beta  = 0.0;
-        return std::make_tuple(alpha, beta);
-    }
-
-    static auto str() { return "1"; }
-};
-
-struct proximal::sequence2_t final : public sequence_t<proximal::sequence2_t>
-{
-    explicit sequence2_t(const solver_state_t& state)
-        : sequence_t<proximal::sequence2_t>(state)
-    {
-    }
-
-    auto make_alpha_beta()
-    {
-        const auto curr  = lambda();
-        const auto next  = update();
-        const auto alpha = (curr - 1.0) / next;
-        const auto beta  = curr / next;
-        return std::make_tuple(alpha, beta);
-    }
-
-    static auto str() { return "2"; }
-};
-
 template <class tsequence>
 base_solver_fpba_t<tsequence>::base_solver_fpba_t()
     : solver_t(scat("fpba", tsequence::str()))
@@ -161,5 +85,5 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
     return state;
 }
 
-template class nano::base_solver_fpba_t<proximal::sequence1_t>;
-template class nano::base_solver_fpba_t<proximal::sequence2_t>;
+template class nano::base_solver_fpba_t<nesterov_sequence1_t>;
+template class nano::base_solver_fpba_t<nesterov_sequence2_t>;

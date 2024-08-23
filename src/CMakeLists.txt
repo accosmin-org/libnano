@@ -36,83 +36,77 @@ add_subdirectory(tuner)
 add_subdirectory(wlearner)
 
 # add high-level interface implementations to the associated libraries
-target_sources(core
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/arch.h
-        ${CMAKE_SOURCE_DIR}/include/nano/clonable.h
-        ${CMAKE_SOURCE_DIR}/include/nano/configurable.h
-        ${CMAKE_SOURCE_DIR}/include/nano/critical.h
-        ${CMAKE_SOURCE_DIR}/include/nano/enum.h
-        ${CMAKE_SOURCE_DIR}/include/nano/factory.h
-        ${CMAKE_SOURCE_DIR}/include/nano/loggable.h
-        ${CMAKE_SOURCE_DIR}/include/nano/logger.h
-        ${CMAKE_SOURCE_DIR}/include/nano/main.h
-        ${CMAKE_SOURCE_DIR}/include/nano/parameter.h
-        ${CMAKE_SOURCE_DIR}/include/nano/scalar.h
-        ${CMAKE_SOURCE_DIR}/include/nano/string.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/algorithm.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/base.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/dims.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/eigen.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/index.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/integral.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/numeric.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/pprint.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/range.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/stack.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/storage.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/stream.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/tensor.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tensor/traits.h
-        ${CMAKE_SOURCE_DIR}/include/nano/typed.h
-        logger.cpp
-        configurable.cpp
-        parameter.cpp)
+target_sources(core PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/arch.h
+    ${CMAKE_SOURCE_DIR}/include/nano/clonable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/configurable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/critical.h
+    ${CMAKE_SOURCE_DIR}/include/nano/enum.h
+    ${CMAKE_SOURCE_DIR}/include/nano/factory.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loggable.h
+    ${CMAKE_SOURCE_DIR}/include/nano/logger.h
+    ${CMAKE_SOURCE_DIR}/include/nano/main.h
+    ${CMAKE_SOURCE_DIR}/include/nano/parameter.h
+    ${CMAKE_SOURCE_DIR}/include/nano/scalar.h
+    ${CMAKE_SOURCE_DIR}/include/nano/string.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/algorithm.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/base.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/dims.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/eigen.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/index.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/integral.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/numeric.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/pprint.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/range.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/stack.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/storage.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/stream.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/tensor.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tensor/traits.h
+    ${CMAKE_SOURCE_DIR}/include/nano/typed.h
+    logger.cpp
+    configurable.cpp
+    parameter.cpp)
 
-target_sources(function
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/function.h
-        function.cpp)
+target_sources(function PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/function.h
+    function.cpp)
 
-target_sources(machine
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/dataset.h
-        ${CMAKE_SOURCE_DIR}/include/nano/datasource.h
-        ${CMAKE_SOURCE_DIR}/include/nano/generator.h
-        ${CMAKE_SOURCE_DIR}/include/nano/loss.h
-        dataset.cpp
-        datasource.cpp
-        generator.cpp
-        loss.cpp)
+target_sources(machine PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/dataset.h
+    ${CMAKE_SOURCE_DIR}/include/nano/datasource.h
+    ${CMAKE_SOURCE_DIR}/include/nano/generator.h
+    ${CMAKE_SOURCE_DIR}/include/nano/loss.h
+    dataset.cpp
+    datasource.cpp
+    generator.cpp
+    loss.cpp)
 
-target_sources(solver
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
-        ${CMAKE_SOURCE_DIR}/include/nano/lsearchk.h
-        ${CMAKE_SOURCE_DIR}/include/nano/solver.h
-        lsearch0.cpp
-        lsearchk.cpp
-        solver.cpp)
+target_sources(solver PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
+    ${CMAKE_SOURCE_DIR}/include/nano/lsearchk.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver.h
+    lsearch0.cpp
+    lsearchk.cpp
+    solver.cpp)
 
-target_sources(machine
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/feature.h
-        ${CMAKE_SOURCE_DIR}/include/nano/learner.h
-        ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
-        ${CMAKE_SOURCE_DIR}/include/nano/task.h
-        ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
-        ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
-        feature.cpp
-        learner.cpp
-        splitter.cpp
-        tuner.cpp
-        wlearner.cpp)
+target_sources(machine PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/feature.h
+    ${CMAKE_SOURCE_DIR}/include/nano/learner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
+    ${CMAKE_SOURCE_DIR}/include/nano/task.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
+    feature.cpp
+    learner.cpp
+    splitter.cpp
+    tuner.cpp
+    wlearner.cpp)
 
-target_sources(linear
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/include/nano/linear.h
-        linear.cpp)
+target_sources(linear PRIVATE
+    ${CMAKE_SOURCE_DIR}/include/nano/linear.h
+    linear.cpp)
 
 # link libraries
 target_link_libraries(core
