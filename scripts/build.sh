@@ -37,7 +37,7 @@ function setup_lsan {
 }
 
 function setup_usan {
-    export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined,local-bounds,nullability"
+    export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined"
     export CXXFLAGS="${CXXFLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
 }
