@@ -16,9 +16,9 @@ function(copy_runtime_dlls TARGET)
 endfunction()
 
 # function to configure the given library (e.g. alias, includes, installation)
-function(make_lib projname lib)
+function(make_lib lib)
     add_library(${lib})
-    add_library(${projname}::${lib} ALIAS ${lib})
+    add_library(${CMAKE_PROJECT_NAME}::${lib} ALIAS ${lib})
 
     set_target_properties(${lib}
         PROPERTIES
@@ -45,8 +45,8 @@ function(make_lib projname lib)
     # generate and install export file
     install(EXPORT ${lib}Targets
         FILE ${lib}Targets.cmake
-        NAMESPACE ${projname}::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${projname})
+        NAMESPACE ${CMAKE_PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 endfunction()
 
 # function to create a unit test application

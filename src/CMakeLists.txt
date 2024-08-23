@@ -11,12 +11,12 @@ file(RELATIVE_PATH relDir
 set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 
 # build libraries
-make_lib(NANO core)
-make_lib(NANO function)
-make_lib(NANO program)
-make_lib(NANO solver)
-make_lib(NANO machine)
-make_lib(NANO linear)
+make_lib(core)
+make_lib(function)
+make_lib(program)
+make_lib(solver)
+make_lib(machine)
+make_lib(linear)
 
 add_subdirectory(core)
 add_subdirectory(dataset)
