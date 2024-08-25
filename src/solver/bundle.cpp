@@ -97,13 +97,35 @@ void bundle_t::delete_largest(const tensor_size_t count)
         store_aggregate();
 
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
-        assert(count <= size());
+        [[maybe_unused]] const auto old_size = m_size;
+        assert(count <= m_size);
 
-        m_alphas.slice(0, size()) = m_bundleE.slice(0, size());
-        std::nth_element(m_alphas.begin(), m_alphas.begin() + (size() - count), m_alphas.begin() + size());
+        m_alphas.slice(0, m_size) = m_bundleE.slice(0, m_size);
+        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_size - count), m_alphas.begin() + m_size);
 
-        m_size = remove_if([&, thres = m_alphas(count) - epsilon0<scalar_t>()](const tensor_size_t i)
-                           { return m_bundleE(i) > thres; });
+        auto       deleted   = tensor_size_t{0};
+        const auto threshold = m_alphas(m_size - count);
+
+        m_size = remove_if(
+            [&](const tensor_size_t i)
+            {
+                if (deleted < count)
+                {
+                    const auto ret = m_bundleE(i) >= threshold;
+                    deleted += ret ? 1 : 0;
+                    return ret;
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+        assert(deleted == count);
+        assert(m_size + count == old_size);
+
+        assert(m_alphas.slice(0, m_size).max() <= threshold);
+        assert(m_alphas.slice(m_size, count).min() >= threshold);
 
         append_aggregate();
     }
@@ -119,7 +141,7 @@ void bundle_t::store_aggregate()
 
 void bundle_t::append_aggregate()
 {
-    // NB: the aggregation is stored in the last slot!
+    // NB: load the aggregation from the last slot!
     const auto ilast         = capacity() - 1;
     m_bundleS.tensor(m_size) = m_bundleS.tensor(ilast);
     m_bundleE(m_size)        = m_bundleE(ilast);
