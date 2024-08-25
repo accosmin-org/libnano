@@ -90,6 +90,9 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
     }
 }
 
+#include <iomanip>
+#include <iostream>
+
 void bundle_t::delete_largest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
@@ -99,6 +102,8 @@ void bundle_t::delete_largest(const tensor_size_t count)
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
         [[maybe_unused]] const auto old_size = m_size;
         assert(count <= m_size);
+
+        std::cout << "bundleE(0)=" << m_bundleE.slice(0, m_size) << std::endl;
 
         m_alphas.slice(0, m_size) = m_bundleE.slice(0, m_size);
         std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_size - count), m_alphas.begin() + m_size);
@@ -124,8 +129,12 @@ void bundle_t::delete_largest(const tensor_size_t count)
         assert(deleted == count);
         assert(m_size + count == old_size);
 
-        assert(m_alphas.slice(0, m_size).max() <= threshold);
-        assert(m_alphas.slice(m_size, count).min() >= threshold);
+        std::cout << "bundleE(1)=" << m_bundleE.slice(0, m_size) << std::endl;
+        std::cout << "max=" << m_bundleE.slice(0, m_size) << std::endl;
+        std::cout << "threshold=" << threshold << std::endl;
+        std::cout << std::fixed << std::setprecision(20) << "delta=" << (m_bundleE.slice(0, m_size).max() - threshold)
+                  << std::endl;
+        assert(m_bundleE.slice(0, m_size).max() <= threshold);
 
         append_aggregate();
     }
