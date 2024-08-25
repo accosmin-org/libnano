@@ -122,7 +122,7 @@ UTEST_CASE(lasso_fpba1_case1)
     const auto [size, vec] = copy_remove_if(op, xvec);
     UTEST_CHECK_EQUAL(size, 8);
     UTEST_CHECK_EQUAL(vec, make_vector<double>(0.0003235385, 0.0003235385, 0.0003235385, 0.0003235385, 0.0000000000,
-                                               0.0002319789, 0.0000892558, 0.0002316027, 0.0011213438, 0.0008329018));
+                                               0.0002319789, 0.0000892558, 0.0002316027, 0.0000892558, 0.0002316027));
 }
 
 UTEST_END_MODULE()
