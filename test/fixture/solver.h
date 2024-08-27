@@ -184,6 +184,10 @@ struct solver_description_t
     {
         stream << ",c0=" << state0.constraint_test() << "\n";
     }
+    else
+    {
+        stream << "\n";
+    }
 
     const auto logger = make_stream_logger(stream);
 
