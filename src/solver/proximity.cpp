@@ -60,9 +60,9 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 {
     // see (2): the variation that gives the minimum proximity parameter.
     auto miu = std::numeric_limits<scalar_t>::max();
-    for (const auto alpha1 : {0.0, 0.5, 1.0})
+    for (const auto alpha1 : {0.0, 1.0})
     {
-        for (const auto alpha2 : {0.0, 0.5, 1.0})
+        for (const auto alpha2 : {0.0, 1.0})
         {
             const auto xi = xn1 - xn;
             const auto nu = alpha1 * gn1 + (1.0 - alpha1) * Gn1 - alpha2 * gn - (1.0 - alpha2) * Gn;
@@ -80,7 +80,7 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 void proximity_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(
-        parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e+2, LT, 1e+4, LT, 1e6));
+        parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e+2, LT, 1e+8, LT, 1e+9));
     c.register_parameter(
         parameter_t::make_scalar(scat(prefix, "::prox::min_dot_nuv"), 0.0, LT, epsilon0<scalar_t>(), LT, 1.0));
 }
