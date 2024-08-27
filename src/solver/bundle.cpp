@@ -96,21 +96,19 @@ void bundle_t::delete_largest(const tensor_size_t count)
     {
         store_aggregate();
 
-        m_size = remove_if([&](const tensor_size_t i) { return i < count; });
-
-        /*// NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
+        // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
         [[maybe_unused]] const auto old_size = m_size;
         assert(count <= m_size);
 
         m_alphas.slice(0, m_size) = m_bundleE.slice(0, m_size);
-        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_size - count), m_alphas.begin() + m_size);
+        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_size - count - 1), m_alphas.begin() + m_size);
 
-        const auto threshold = m_alphas(m_size - count);
+        const auto threshold = m_alphas(m_size - count - 1);
 
         m_size = remove_if([&](const tensor_size_t i) { return m_bundleE(i) >= threshold; });
 
         assert(m_size + count <= old_size);
-        assert(m_bundleE.slice(0, m_size).max() <= threshold + std::numeric_limits<scalar_t>::epsilon());*/
+        assert(m_bundleE.slice(0, m_size).max() <= threshold + std::numeric_limits<scalar_t>::epsilon());
 
         append_aggregate();
     }
