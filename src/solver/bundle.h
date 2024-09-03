@@ -10,12 +10,21 @@ namespace nano
 ///
 /// \brief models the bundle of sub-gradients as used by penalized (proximal) bundle algorithms.
 ///
-/// see (1) "Numerical optimization - theoretical and practical aspects", 2nd edition, 2006
-/// see (2) "Variable metric bundle methods: from conceptual to implementable forms", by Lemarechal, Sagastizabal, 1997
+/// see (1) "A doubly stabilized bundle method for nonsmooth convex optimization", by Oliveira, Solodov, 2013
+/// see (2) "Numerical optimization - theoretical and practical aspects", 2nd edition, 2006
+/// see (3) "Variable metric bundle methods: from conceptual to implementable forms", by Lemarechal, Sagastizabal, 1997
+/// see (4) "Dynamical adjustment of the prox-parameter in bundle methods", by Rey, Sagastizabal, 2002
+/// see (5) "Fast proximal algorithms for nonsmooth convex optimization", by Ouorou, 2020
+///
+/// NB: the implementation follows the notation from (1). if the level parameter is infinite,
+///     then this formulation becames the penalized proximal bundle algorithms
+///     (see 2, RQB from 3, mRQB from 4, FPBA1/FPBA2 from 5).
 ///
 /// NB: the bundle is kept small by:
 ///     - first removing all inactive constraints and
 ///     - then the ones with the largest approximation error if needed - see (2).
+///
+/// FIXME: implement removing oldest constraints as well.
 ///
 class NANO_PUBLIC bundle_t
 {

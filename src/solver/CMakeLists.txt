@@ -1,48 +1,48 @@
 target_sources(solver PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/nesterov.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
-    asga.h
-    cgd.h
-    cocob.h
-    ellipsoid.h
-    fpba.h
-    gd.h
-    gsample.h
-    lbfgs.h
-    osga.h
-    pdsgm.h
-    quasi.h
-    rqb.h
-    sgm.h
-    universal.h
     asga.cpp
+    asga.h
     augmented.cpp
     bundle.cpp
+    bundle.h
     cgd.cpp
+    cgd.h
     cocob.cpp
+    cocob.h
     csearch.cpp
+    csearch.h
     ellipsoid.cpp
+    ellipsoid.h
     fpba.cpp
+    fpba.h
     gd.cpp
+    gd.h
     gsample.cpp
+    gsample.h
     lbfgs.cpp
+    lbfgs.h
     lsearch.cpp
     lstep.cpp
     nesterov.cpp
+    nesterov.h
     osga.cpp
+    osga.h
     pdsgm.cpp
+    pdsgm.h
     penalty.cpp
     proximity.cpp
+    proximity.h
     quasi.cpp
+    quasi.h
     rqb.cpp
+    rqb.h
     sgm.cpp
+    sgm.h
     state.cpp
-    universal.cpp)
+    universal.cpp
+    universal.h)

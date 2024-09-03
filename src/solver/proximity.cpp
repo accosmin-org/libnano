@@ -1,4 +1,4 @@
-#include <nano/solver/proximity.h>
+#include <solver/proximity.h>
 
 using namespace nano;
 
@@ -7,7 +7,7 @@ namespace
 scalar_t make_miu0(const solver_state_t& state)
 {
     // see (4)
-    return 5.0 * state.gx().squaredNorm() / (std::abs(state.fx()) + epsilon0<scalar_t>());
+    return 5.0 * state.gx().squaredNorm() / std::max(1.0, std::fabs(state.fx()));
 }
 
 template <class tnu, class txi>
@@ -80,7 +80,7 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
 void proximity_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(
-        parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e+2, LT, 1e+8, LT, 1e+9));
+        parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e-2, LT, 1e+2, LT, 1e+9));
     c.register_parameter(
         parameter_t::make_scalar(scat(prefix, "::prox::min_dot_nuv"), 0.0, LT, epsilon0<scalar_t>(), LT, 1.0));
 }

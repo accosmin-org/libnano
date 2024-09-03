@@ -1,4 +1,4 @@
-#include <nano/solver/bundle.h>
+#include <solver/bundle.h>
 
 using namespace nano;
 
@@ -172,16 +172,10 @@ bundle_t bundle_t::make(const solver_state_t& state, const configurable_t& c, co
 
 bool bundle_t::econverged(const scalar_t epsilon) const
 {
-    // FIXME: the references do not specify how to choose these thresholds
-    const auto tol = epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
-
-    return smeared_e() <= tol;
+    return smeared_e() <= epsilon;
 }
 
 bool bundle_t::sconverged(const scalar_t epsilon) const
 {
-    // FIXME: the references do not specify how to choose these thresholds
-    const auto tol = epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
-
-    return smeared_s().template lpNorm<2>() <= tol;
+    return smeared_s().template lpNorm<2>() <= epsilon;
 }

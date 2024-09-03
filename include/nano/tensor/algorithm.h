@@ -40,7 +40,7 @@ template <class toperator, class... ttensors>
 auto remove_if(const toperator& op, ttensors&&... tensors) ->
     typename std::enable_if_t<(is_tensor_v<std::remove_reference_t<ttensors>> && ...), tensor_size_t>
 {
-    const auto last  = detail::size(std::forward<ttensors>(tensors)...);
+    const auto last = detail::size(std::forward<ttensors>(tensors)...);
 
     auto first = tensor_size_t{0};
     for (; first != last && !op(first); ++first)

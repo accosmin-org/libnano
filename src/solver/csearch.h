@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/solver/bundle.h>
+#include <solver/bundle.h>
 
 namespace nano
 {

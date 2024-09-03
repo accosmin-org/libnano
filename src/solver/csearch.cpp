@@ -1,5 +1,5 @@
-#include <nano/solver/bundle.h>
-#include <nano/solver/csearch.h>
+#include <solver/bundle.h>
+#include <solver/csearch.h>
 
 using namespace nano;
 
