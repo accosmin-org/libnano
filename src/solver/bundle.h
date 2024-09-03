@@ -100,9 +100,24 @@ public:
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy);
 
     ///
-    /// \brief return the solution of the penalized proximal bundle problem.
+    /// \brief return the solution of the doubly stabilized bundle problem (1):
+    ///     argmin_(x, r) r + ||x - x_k||^2 / (2 * tau)
+    ///             s.t.  f(x_j) + <g_j, x - x_j> <= r (for all sub-gradients j in the bundle)
+    ///             s.t.  r <= l_k (the level parameter).
     ///
-    void solve(scalar_t miu, const logger_t&);
+    ///     where x_k is the current proximal stability center.
+    ///
+    void solve(scalar_t tau, scalar_t lk, const logger_t&);
+
+    ///
+    /// \brief return the aggregate linearization error, see (1).
+    ///
+    scalar_t aggregate_error() const;
+
+    ///
+    /// \brief return the aggregate sub-gradient, see (1).
+    ///
+    auto aggregate_gradient() const;
 
     ///
     /// \brief return true if converged wrt the smeared approximation error, see (1).
