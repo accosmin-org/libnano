@@ -1,5 +1,5 @@
-#include <nano/solver/csearch.h>
-#include <nano/solver/proximity.h>
+#include <solver/csearch.h>
+#include <solver/proximity.h>
 #include <solver/rqb.h>
 
 using namespace nano;

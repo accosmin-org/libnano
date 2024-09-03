@@ -1,7 +1,7 @@
-#include <nano/solver/bundle.h>
-#include <nano/solver/csearch.h>
-#include <nano/solver/proximity.h>
+#include <solver/bundle.h>
+#include <solver/csearch.h>
 #include <solver/fpba.h>
+#include <solver/proximity.h>
 
 using namespace nano;
 

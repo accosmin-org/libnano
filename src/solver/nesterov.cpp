@@ -1,4 +1,4 @@
-#include <nano/solver/nesterov.h>
+#include <solver/nesterov.h>
 
 using namespace nano;
 
