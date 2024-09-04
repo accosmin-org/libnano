@@ -65,16 +65,6 @@ public:
     scalar_t fx() const { return m_fx; }
 
     ///
-    /// \brief return the smeared approximation error, see (1).
-    ///
-    auto smeared_e() const { return e().dot(alpha()); }
-
-    ///
-    /// \brief return the smeared sub-gradient, see (1).
-    ///
-    auto smeared_s() const { return S().transpose() * alpha(); }
-
-    ///
     /// \brief return the approximation error, see (1).
     ///
     scalar_t delta(const scalar_t miu) const
@@ -119,6 +109,8 @@ public:
     ///
     auto aggregate_gradient() const;
 
+    scalar_t predicted_descent() const; // v_k^tau
+
     ///
     /// \brief return true if converged wrt the smeared approximation error, see (1).
     /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
@@ -132,29 +124,28 @@ public:
     bool sconverged(scalar_t epsilon) const;
 
 private:
-    tensor_size_t dims() const { return m_bundleS.size<1>(); }
+    tensor_size_t dims() const { return m_x.size(); }
 
-    tensor_size_t capacity() const { return m_alphas.size(); }
+    tensor_size_t capacity() const { return m_bgrads.size(); }
 
-    vector_cmap_t alpha() const { return m_alphas.slice(0, size()); }
+    matrix_cmap_t bgrads() const { return m_bgrads.slice(0, size()); }
 
-    matrix_cmap_t S() const { return m_bundleS.slice(0, size()); }
-
-    vector_cmap_t e() const
+    vector_cmap_t bvdots() const
     {
-        auto e = m_bundleE.slice(0, size());
-        assert(e.min() + epsilon1<scalar_t>() > 0.0);
-        return e;
+        auto bvdots = m_bvdots.slice(0, size());
+        assert(bvdots + epsilon0<scalar_t>() >= 0.0);
+        return bvdots;
     }
 
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
-        return nano::remove_if(op, m_bundleE.slice(0, m_size), m_bundleS.slice(0, m_size), m_alphas.slice(0, m_size));
+        return nano::remove_if(op, m_bvgrads.slice(0, m_size), m_bvdots.slice(0, m_size));
     }
 
     void delete_inactive(scalar_t epsilon);
     void delete_largest(tensor_size_t count);
+    void delete_oldest(tensor_size_t count);
 
     void store_aggregate();
     void append_aggregate();
@@ -163,10 +154,10 @@ private:
     // attributes
     program::solver_t m_solver;  ///< buffer: quadratic program solver
     tensor_size_t     m_size{0}; ///< bundle: number of points
-    matrix_t          m_bundleS; ///< bundle: sub-gradients (size, dims)
-    vector_t          m_bundleE; ///< bundle: linearized errors (size)
-    vector_t          m_alphas;  ///< optimal Lagrange multipliers (size)
-    vector_t          m_x;       ///< proximal center (dims)
+    matrix_t          m_bgrads;  ///< bundle: sub-gradients (g_j, 1)_j of shape (size, dims + 1)
+    vector_t          m_bvdots;  ///< bundle: linearized errors (<g_j, x_j - f_j>,)_j of shape (size,)
+    vector_t          m_optixr;  ///< solution to the quadratic bundle problem: (x, r) of shape (dims + 1,)
+    vector_t          m_x;       ///< proximal/stability center (dims)
     vector_t          m_gx;      ///< function gradient at the proximal center (dims)
     scalar_t          m_fx;      ///< function value at the proximal center
 };
