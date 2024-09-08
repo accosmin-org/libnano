@@ -2,10 +2,19 @@
 
 using namespace nano;
 
+namespace
+{
+auto make_program(const tensor_size_t n)
+{
+    return program::quadratic_program_t{matrix_t::zero(n + 1, n + 1), vector_t::zero(n + 1)};
+}
+} // namespace
+
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
-    : m_bgrads(max_size + 1, state.x().size() + 1)
-    , m_bvdots(max_size + 1)
-    , m_alphas(max_size + 1)
+    : m_program(make_program(state.x().size()))
+    , m_bundleG(max_size + 1, state.x().size())
+    , m_bundleF(max_size + 1)
+    , m_optixr(state.x().size() + 1)
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
@@ -28,58 +37,44 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
-void bundle_t::solve(const scalar_t miu, const logger_t& logger)
+void bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
     assert(size() > 0);
     assert(dims() == m_x.size());
 
-    if (m_size == 1)
+    const auto n = dims();
+    const auto m = size();
+
+    m_program.m_Q.block(n, n) = matrix_t::identity(n, n) / tau;
+    m_program.m_c(n)          = 1.0;
+
+    m_optixr.zero();
+    m_optixr(n) = 1.0;
+
+    m_program.constraint(program::make_less(bundleG(), bundleF()), program::make_less(m_optixr, level));
+
+    const auto x0 = vector_t{vector_t::zero(n)};
+    assert(program.feasible(x0, epsilon1<scalar_t>()));
+
+    const auto solution = m_solver.solve(program, x0, logger);
+    if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
     {
-        m_alphas(0) = 1.0;
+        logger.error(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
+                     "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
+                     "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
     }
-    else if (m_size == 2)
+    // TODO: the quadratic program may be unfeasible, so the level needs to moved towards the stability center
+    if (solution.m_status != solver_status::converged)
     {
-        // NB: can compute analytically the solution for this case!
-        const auto Q = S() * S().transpose();
-        const auto c = miu * e();
-
-        const auto q = Q(0, 0) + Q(1, 1) - Q(0, 1) - Q(1, 0);
-        const auto p = 0.5 * (Q(0, 1) + Q(1, 0)) - Q(1, 1) + c(0) - c(1);
-
-        const auto b = -p / q;
-        const auto a = (std::isfinite(b) && b >= 0.0 && b <= 1.0) ? b : ((0.5 * q + p) > 0.0 ? 0.0 : 1.0);
-
-        m_alphas(0) = a;
-        m_alphas(1) = 1.0 - a;
+        logger.error(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
     }
-    else
-    {
-        const auto Q = S() * S().transpose();
-        const auto c = miu * e();
 
-        const auto lower = program::make_less(m_size, 1.0);
-        const auto upper = program::make_greater(m_size, 0.0);
-        const auto wsum1 = program::make_equality(vector_t::constant(m_size, 1.0), 1.0);
+    m_optixr.segment(0, n) = solution.m_x.segment(0, n) + m_x;
+    m_optixr(n)            = solution.m_x(n);
 
-        const auto program = program::make_quadratic(Q, c, lower, upper, wsum1);
+    // TODO: store lagrangian multiplier associated to the condition r <= level
 
-        const auto x0 = vector_t{vector_t::constant(m_size, 1.0 / static_cast<scalar_t>(m_size))};
-        assert(program.feasible(x0, epsilon1<scalar_t>()));
-
-        const auto solution = m_solver.solve(program, x0, logger);
-        if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
-        {
-            logger.error(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
-                         "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
-                         "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
-        }
-        if (solution.m_status != solver_status::converged)
-        {
-            logger.error(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
-        }
-
-        m_alphas.slice(0, m_size) = solution.m_x;
-    }
+    return xk + 1, delta, epsilon, gk + 1, lagrange multiplier
 }
 
 void bundle_t::delete_inactive(const scalar_t epsilon)

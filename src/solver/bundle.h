@@ -29,6 +29,13 @@ namespace nano
 class NANO_PUBLIC bundle_t
 {
 public:
+    struct solution_t
+    {
+        vector_t m_x;      ///< optimum: stability center
+        scalar_t m_r;      ///< optimum: level
+        scalar_t m_lambda; ///< lagrangian multiplier associated to the condition r <= l_k (level)
+    };
+
     ///
     /// \brief constructor
     ///
@@ -77,7 +84,7 @@ public:
     ///
     /// \brief return the estimated proximal point.
     ///
-    auto proximal(const scalar_t miu) const { return m_x - smeared_s() / miu; }
+    auto proximal() const { return m_x - smeared_s() / miu; }
 
     ///
     /// \brief change the proximity center to the given point and update the bundle.
@@ -97,7 +104,7 @@ public:
     ///
     ///     where x_k is the current proximal stability center.
     ///
-    void solve(scalar_t tau, scalar_t lk, const logger_t&);
+    void solve(scalar_t tau, scalar_t level, const logger_t&);
 
     ///
     /// \brief return the aggregate linearization error, see (1).
@@ -126,21 +133,16 @@ public:
 private:
     tensor_size_t dims() const { return m_x.size(); }
 
-    tensor_size_t capacity() const { return m_bgrads.size(); }
+    tensor_size_t capacity() const { return m_bundlef.size(); }
 
-    matrix_cmap_t bgrads() const { return m_bgrads.slice(0, size()); }
+    matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_size); }
 
-    vector_cmap_t bvdots() const
-    {
-        auto bvdots = m_bvdots.slice(0, size());
-        assert(bvdots + epsilon0<scalar_t>() >= 0.0);
-        return bvdots;
-    }
+    vector_cmap_t bundlef() const { return m_bundlef.slice(0, m_size); }
 
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
-        return nano::remove_if(op, m_bvgrads.slice(0, m_size), m_bvdots.slice(0, m_size));
+        return nano::remove_if(op, bundleG(), bundlef());
     }
 
     void delete_inactive(scalar_t epsilon);
@@ -152,13 +154,16 @@ private:
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
     // attributes
-    program::solver_t m_solver;  ///< buffer: quadratic program solver
-    tensor_size_t     m_size{0}; ///< bundle: number of points
-    matrix_t          m_bgrads;  ///< bundle: sub-gradients (g_j, 1)_j of shape (size, dims + 1)
-    vector_t          m_bvdots;  ///< bundle: linearized errors (<g_j, x_j - f_j>,)_j of shape (size,)
-    vector_t          m_optixr;  ///< solution to the quadratic bundle problem: (x, r) of shape (dims + 1,)
-    vector_t          m_x;       ///< proximal/stability center (dims)
-    vector_t          m_gx;      ///< function gradient at the proximal center (dims)
-    scalar_t          m_fx;      ///< function value at the proximal center
+    using quadratic_program_t = program::quadratic_program_t;
+
+    quadratic_program_t m_program; ///< buffer: quadratic program definition
+    program::solver_t   m_solver;  ///< buffer: quadratic program solver
+    tensor_size_t       m_size{0}; ///< bundle: number of points
+    matrix_t            m_bundleG; ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
+    vector_t            m_bundlef; ///< bundle: function values (-f_j)_j of shape (size,)
+    vector_t            m_optixr;  ///< solution to the quadratic bundle problem: (x, r) of shape (dims + 1,)
+    vector_t            m_x;       ///< proximal/stability center (dims)
+    vector_t            m_gx;      ///< function gradient at the proximal center (dims)
+    scalar_t            m_fx;      ///< function value at the proximal center
 };
 } // namespace nano
