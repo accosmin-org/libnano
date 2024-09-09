@@ -31,9 +31,30 @@ class NANO_PUBLIC bundle_t
 public:
     struct solution_t
     {
-        vector_t m_x;      ///< optimum: stability center
-        scalar_t m_r;      ///< optimum: level
-        scalar_t m_lambda; ///< lagrangian multiplier associated to the condition r <= l_k (level)
+        explicit solution_t(tensor_size_t dims = 0);
+
+        ///
+        /// \brief return true if converged wrt the smeared approximation error, see (1).
+        /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
+        ///
+        bool epsil_converged(scalar_t epsilon) const;
+
+        ///
+        /// \brief return true if converged wrt the smeared sub-gradient, see (1).
+        /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
+        ///
+        bool gnorm_converged(scalar_t epsilon) const;
+
+        ///
+        /// \brief TODO
+        ///
+        bool delta_converged(scalar_t epsilon) const;
+
+        vector_t m_x;           ///< optimum: stability center
+        scalar_t m_r{0.0};      ///< optimum: level
+        scalar_t m_lambda{0.0}; ///< lagrangian multiplier associated to the condition r <= l_k (level)
+        scalar_t m_gnorm{0.0};  ///< L2-norm of smeared gradient
+        scalar_t m_epsil{0.0};  ///<
     };
 
     ///
@@ -54,7 +75,7 @@ public:
     ///
     /// \brief return the current size of the bundle.
     ///
-    tensor_size_t size() const { return m_size; }
+    tensor_size_t size() const { return m_bsize; }
 
     ///
     /// \brief return the proximity center.
@@ -70,21 +91,6 @@ public:
     /// \brief return the function value at the proximity center.
     ///
     scalar_t fx() const { return m_fx; }
-
-    ///
-    /// \brief return the approximation error, see (1).
-    ///
-    scalar_t delta(const scalar_t miu) const
-    {
-        const auto delta = smeared_e() + 1.0 / (2.0 * miu) * smeared_s().squaredNorm();
-        assert(delta + epsilon1<scalar_t>() >= 0.0);
-        return delta;
-    }
-
-    ///
-    /// \brief return the estimated proximal point.
-    ///
-    auto proximal() const { return m_x - smeared_s() / miu; }
 
     ///
     /// \brief change the proximity center to the given point and update the bundle.
@@ -104,31 +110,7 @@ public:
     ///
     ///     where x_k is the current proximal stability center.
     ///
-    void solve(scalar_t tau, scalar_t level, const logger_t&);
-
-    ///
-    /// \brief return the aggregate linearization error, see (1).
-    ///
-    scalar_t aggregate_error() const;
-
-    ///
-    /// \brief return the aggregate sub-gradient, see (1).
-    ///
-    auto aggregate_gradient() const;
-
-    scalar_t predicted_descent() const; // v_k^tau
-
-    ///
-    /// \brief return true if converged wrt the smeared approximation error, see (1).
-    /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
-    ///
-    bool econverged(scalar_t epsilon) const;
-
-    ///
-    /// \brief return true if converged wrt the smeared sub-gradient, see (1).
-    /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
-    ///
-    bool sconverged(scalar_t epsilon) const;
+    const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
 
 private:
     tensor_size_t dims() const { return m_x.size(); }
@@ -156,14 +138,14 @@ private:
     // attributes
     using quadratic_program_t = program::quadratic_program_t;
 
-    quadratic_program_t m_program; ///< buffer: quadratic program definition
-    program::solver_t   m_solver;  ///< buffer: quadratic program solver
-    tensor_size_t       m_size{0}; ///< bundle: number of points
-    matrix_t            m_bundleG; ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
-    vector_t            m_bundlef; ///< bundle: function values (-f_j)_j of shape (size,)
-    vector_t            m_optixr;  ///< solution to the quadratic bundle problem: (x, r) of shape (dims + 1,)
-    vector_t            m_x;       ///< proximal/stability center (dims)
-    vector_t            m_gx;      ///< function gradient at the proximal center (dims)
-    scalar_t            m_fx;      ///< function value at the proximal center
+    quadratic_program_t m_program;  ///< buffer: quadratic program definition
+    program::solver_t   m_solver;   ///< buffer: quadratic program solver
+    tensor_size_t       m_bsize{0}; ///< bundle: number of points
+    matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
+    vector_t            m_bundlef;  ///< bundle: function values (-f_j)_j of shape (size,)
+    solution_t          m_solution; ///< solution to the quadratic program
+    vector_t            m_x;        ///< proximal/stability center (dims)
+    vector_t            m_gx;       ///< function gradient at the proximal center (dims)
+    scalar_t            m_fx;       ///< function value at the proximal center
 };
 } // namespace nano

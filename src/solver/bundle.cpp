@@ -10,6 +10,21 @@ auto make_program(const tensor_size_t n)
 }
 } // namespace
 
+bundle_t::solution_t::solution_t(const tensor_size_t dims)
+    : m_x(dims)
+{
+}
+
+bool bundle_t::solution_t::epsil_converged(const scalar_t epsilon) const
+{
+    return m_epsil < epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
+}
+
+bool bundle_t::solution_t::gnorm_converged(const scalar_t epsilon) const
+{
+    return m_gnorm < epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
+}
+
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     : m_program(make_program(state.x().size()))
     , m_bundleG(max_size + 1, state.x().size())
@@ -37,7 +52,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
-void bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
+const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
     assert(size() > 0);
     assert(dims() == m_x.size());
@@ -69,12 +84,21 @@ void bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& l
         logger.error(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
     }
 
-    m_optixr.segment(0, n) = solution.m_x.segment(0, n) + m_x;
-    m_optixr(n)            = solution.m_x(n);
+    // TODO: handle the case where the level is not given (!std::isfinite())
 
-    // TODO: store lagrangian multiplier associated to the condition r <= level
+    m_solution.m_x = solution.m_x.segment(0, n) + m_x;
+    m_solution.m_r = solution.m_x(n);
+    assert(m_solution.m_r >= 0.0);
 
-    return xk + 1, delta, epsilon, gk + 1, lagrange multiplier
+    m_solution.m_lambda = solution.m_u(n);
+    assert(m_solution.m_lambda >= 0.0);
+
+    const auto miu = solution.m_lambda + 1;
+
+    m_solution.m_gnorm = ((m_x - m_solution.m_x) / (tau * miu)).lpNorm<2>();
+    m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
+
+    return m_solution;
 }
 
 void bundle_t::delete_inactive(const scalar_t epsilon)
