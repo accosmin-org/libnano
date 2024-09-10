@@ -45,11 +45,6 @@ public:
         ///
         bool gnorm_converged(scalar_t epsilon) const;
 
-        ///
-        /// \brief TODO
-        ///
-        bool delta_converged(scalar_t epsilon) const;
-
         vector_t m_x;           ///< optimum: stability center
         scalar_t m_r{0.0};      ///< optimum: level
         scalar_t m_lambda{0.0}; ///< lagrangian multiplier associated to the condition r <= l_k (level)
@@ -117,9 +112,9 @@ private:
 
     tensor_size_t capacity() const { return m_bundlef.size(); }
 
-    matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_size); }
+    matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_bsize); }
 
-    vector_cmap_t bundlef() const { return m_bundlef.slice(0, m_size); }
+    vector_cmap_t bundlef() const { return m_bundlef.slice(0, m_bsize); }
 
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)

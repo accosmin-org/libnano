@@ -59,41 +59,48 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     const auto n = dims();
     const auto m = size();
+    const auto has_level = std::isfinite(level);
 
-    m_program.m_Q.block(n, n) = matrix_t::identity(n, n) / tau;
+    // construct quadratic programming problem
+    m_program.m_Q.block(n, n).diagonal() = 1.0 / tau;
     m_program.m_c(n)          = 1.0;
 
-    m_optixr.zero();
-    m_optixr(n) = 1.0;
+    if (has_level)
+    {
+        // TODO: reuse the allocated weights!
+        auto weights = vector_t{vector_t::zero(n + 1)};
+        weights(n)   = 1.0;
+        m_program.constraint(program::make_less(bundleG(), bundleF()), program::make_less(weights, level));
+    }
+    else
+    {
+        m_program.constraint(program::make_less(bundleG(), bundleF()));
+    }
 
-    m_program.constraint(program::make_less(bundleG(), bundleF()), program::make_less(m_optixr, level));
-
-    const auto x0 = vector_t{vector_t::zero(n)};
+    // solve
+    const auto& x0 = m_x;
     assert(program.feasible(x0, epsilon1<scalar_t>()));
 
     const auto solution = m_solver.solve(program, x0, logger);
     if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
     {
-        logger.error(".bundle: unfeasible solution to the bundle problem:\n\tQ=", Q, "\n\tc=", c,
-                     "\n\tdeviation(eq)=", program.m_eq.deviation(solution.m_x),
-                     "\n\tdeviation(ineq)=", program.m_ineq.deviation(solution.m_x));
+        logger.error("bundle: unfeasible solution, deviation(ineq)=", program.m_ineq.deviation(solution.m_x), ".\n");
     }
-    // TODO: the quadratic program may be unfeasible, so the level needs to moved towards the stability center
-    if (solution.m_status != solver_status::converged)
+    // NB: the quadratic program may be unfeasible, so the level needs to moved towards the stability center!
+    if (solution.m_status != solver_status::converged && !has_level)
     {
-        logger.error(".bundle: failed to solve the bundle problem:\n\tQ=", Q, "\n\tc=", c);
+        logger.error("bundle: failed to solve, status=", solution.m_status, ".\n");
     }
 
-    // TODO: handle the case where the level is not given (!std::isfinite())
-
+    // extract solution and statistics, see (1)
     m_solution.m_x = solution.m_x.segment(0, n) + m_x;
-    m_solution.m_r = solution.m_x(n);
+    m_solution.m_r = has_level ? solution.m_x(n) : 0.0;
     assert(m_solution.m_r >= 0.0);
 
     m_solution.m_lambda = solution.m_u(n);
     assert(m_solution.m_lambda >= 0.0);
 
-    const auto miu = solution.m_lambda + 1;
+    const auto miu = solution.m_lambda + 1.0;
 
     m_solution.m_gnorm = ((m_x - m_solution.m_x) / (tau * miu)).lpNorm<2>();
     m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
