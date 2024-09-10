@@ -58,9 +58,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto& fy     = m_point.m_fy;
 
         // estimate proximal point
-        bundle.solve(miu / t, logger);
+        const auto& prox = bundle.solve(t / miu, std::numeric_limits<scalar_t>::quiet_NaN(), logger);
 
-        y  = bundle.proximal(miu / t);
+        y  = prox.m_x;
         fy = m_function.vgrad(y, gy);
 
         const auto& x     = bundle.x();

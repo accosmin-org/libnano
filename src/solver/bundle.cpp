@@ -101,9 +101,11 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     assert(m_solution.m_lambda >= 0.0);
 
     const auto miu = solution.m_lambda + 1.0;
+    const auto lin = 0.0; // TODO: linear model - max over the bundle!
 
     m_solution.m_gnorm = ((m_x - m_solution.m_x) / (tau * miu)).lpNorm<2>();
     m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
+    m_solution.m_delta = m_fx - (lin + (m_solution.m_x - m_x).squaredNorm() / (2.0 * tau));
 
     return m_solution;
 }
