@@ -111,7 +111,7 @@ public:
 private:
     tensor_size_t dims() const { return m_x.size(); }
 
-    tensor_size_t capacity() const { return m_bundlef.size(); }
+    tensor_size_t capacity() const { return m_bundleH.size(); }
 
     matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_bsize); }
 
