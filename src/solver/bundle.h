@@ -49,8 +49,8 @@ public:
         scalar_t m_r{0.0};      ///< optimum: level
         scalar_t m_lambda{0.0}; ///< lagrangian multiplier associated to the condition r <= l_k (level)
         scalar_t m_gnorm{0.0};  ///< L2-norm of smeared gradient
-        scalar_t m_epsil{0.0};  ///<
-        scalar_t m_delta{0.0};  ///< nominal decrease
+        scalar_t m_epsil{0.0};  ///< aggregate linear error, see (1)
+        scalar_t m_delta{0.0};  ///< nominal decrease, see (2, 3)
     };
 
     ///
@@ -100,11 +100,11 @@ public:
 
     ///
     /// \brief return the solution of the doubly stabilized bundle problem (1):
-    ///     argmin_(x, r) r + ||x - x_k||^2 / (2 * tau)
+    ///     argmin_(x, r) r + ||x - x_k^||^2 / (2 * tau)
     ///             s.t.  f(x_j) + <g_j, x - x_j> <= r (for all sub-gradients j in the bundle)
     ///             s.t.  r <= l_k (the level parameter).
     ///
-    ///     where x_k is the current proximal stability center.
+    ///     where x_k^ is the current proximal stability center.
     ///
     const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
 
@@ -115,12 +115,12 @@ private:
 
     matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_bsize); }
 
-    vector_cmap_t bundlef() const { return m_bundlef.slice(0, m_bsize); }
+    vector_cmap_t bundleH() const { return m_bundleH.slice(0, m_bsize); }
 
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
-        return nano::remove_if(op, bundleG(), bundlef());
+        return nano::remove_if(op, bundleG(), bundleH());
     }
 
     void delete_inactive(scalar_t epsilon);
@@ -138,7 +138,7 @@ private:
     program::solver_t   m_solver;   ///< buffer: quadratic program solver
     tensor_size_t       m_bsize{0}; ///< bundle: number of points
     matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
-    vector_t            m_bundlef;  ///< bundle: function values (-f_j)_j of shape (size,)
+    vector_t            m_bundleH;  ///< bundle: function values (f_j + g_j.dot(x_k^ - x_j))_j of shape (size,)
     solution_t          m_solution; ///< solution to the quadratic program
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)

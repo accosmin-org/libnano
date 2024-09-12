@@ -8,6 +8,17 @@ auto make_program(const tensor_size_t n)
 {
     return program::quadratic_program_t{matrix_t::zero(n + 1, n + 1), vector_t::zero(n + 1)};
 }
+
+template <typename tvectory>
+auto eval_cutting_plane_model(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
+{
+    auto value = std::numeric_limits<scalar_t>::lowest();
+    for (tensor_size_t i = 0, size = h.size(); ++i)
+    {
+        value = std::max(value, h(i) + G.vector(i).dot(y));
+    }
+    return value;
+}
 } // namespace
 
 bundle_t::solution_t::solution_t(const tensor_size_t dims)
@@ -28,8 +39,8 @@ bool bundle_t::solution_t::gnorm_converged(const scalar_t epsilon) const
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     : m_program(make_program(state.x().size()))
     , m_bundleG(max_size + 1, state.x().size())
-    , m_bundleF(max_size + 1)
-    , m_optixr(state.x().size() + 1)
+    , m_bundleH(max_size + 1)
+    , m_solution(state.x().size())
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
@@ -62,22 +73,23 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto has_level = std::isfinite(level);
 
     // construct quadratic programming problem
+    // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
     m_program.m_Q.block(n, n).diagonal() = 1.0 / tau;
     m_program.m_c(n)          = 1.0;
 
     if (has_level)
     {
-        // TODO: reuse the allocated weights!
-        auto weights = vector_t{vector_t::zero(n + 1)};
-        weights(n)   = 1.0;
-        m_program.constraint(program::make_less(bundleG(), bundleF()), program::make_less(weights, level));
+        auto weights                = m_bundleG.vector(capacity() - 1);
+        weights.segment(0, n).array = 0.0;
+        weights(n)                  = 1.0;
+        m_program.constraint(program::make_less(bundleG(), bundleH()), program::make_less(weights, level));
     }
     else
     {
-        m_program.constraint(program::make_less(bundleG(), bundleF()));
+        m_program.constraint(program::make_less(bundleG(), bundleH()));
     }
 
-    // solve
+    // solve for (y, r) => (x = y + x_k^, r)!
     const auto& x0 = m_x;
     assert(program.feasible(x0, epsilon1<scalar_t>()));
 
@@ -93,7 +105,8 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
 
     // extract solution and statistics, see (1)
-    m_solution.m_x = solution.m_x.segment(0, n) + m_x;
+    const auto y   = solution.m_x.segment(0, n);
+    m_solution.m_x = y + m_x;
     m_solution.m_r = has_level ? solution.m_x(n) : 0.0;
     assert(m_solution.m_r >= 0.0);
 
@@ -101,11 +114,13 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     assert(m_solution.m_lambda >= 0.0);
 
     const auto miu = solution.m_lambda + 1.0;
-    const auto lin = 0.0; // TODO: linear model - max over the bundle!
 
-    m_solution.m_gnorm = ((m_x - m_solution.m_x) / (tau * miu)).lpNorm<2>();
+    m_solution.m_gnorm = (-y / (tau * miu)).lpNorm<2>();
     m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
-    m_solution.m_delta = m_fx - (lin + (m_solution.m_x - m_x).squaredNorm() / (2.0 * tau));
+    m_solution.m_delta = m_fx - (eval_cutting_plane(bundleG(), bundleH(), y) + y.squaredNorm() / (2.0 * tau));
+
+    assert(m_solution.m_epsil >= 0.0);
+    assert(m_solution.m_delta >= 0.0);
 
     return m_solution;
 }
@@ -196,14 +211,4 @@ bundle_t bundle_t::make(const solver_state_t& state, const configurable_t& c, co
     const auto max_size = c.parameter(scat(prefix, "::bundle::max_size")).value<tensor_size_t>();
 
     return {state, max_size};
-}
-
-bool bundle_t::econverged(const scalar_t epsilon) const
-{
-    return smeared_e() <= epsilon;
-}
-
-bool bundle_t::sconverged(const scalar_t epsilon) const
-{
-    return smeared_s().template lpNorm<2>() <= epsilon;
 }
