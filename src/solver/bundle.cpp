@@ -76,19 +76,20 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
-    m_program.m_Q.block(n, n).diagonal() = 1.0 / tau;
+    m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
     m_program.m_c(n)          = 1.0;
 
     if (has_level)
     {
-        auto weights                = m_bundleG.vector(capacity() - 1);
-        weights.segment(0, n).array = 0.0;
-        weights(n)                  = 1.0;
-        m_program.constrain(program::make_less(bundleG(), -bundleH()), program::make_less(weights, level));
+        auto weights    = m_bundleG.vector(capacity() - 1);
+        weights.array() = 0.0;
+        weights(n)      = 1.0;
+        m_program.constrain(program::make_less(m_bundleG.slice(0, m), -m_bundleH.slice(0, m)),
+                            program::make_less(weights, level));
     }
     else
     {
-        m_program.constrain(program::make_less(bundleG(), -bundleH()));
+        m_program.constrain(program::make_less(m_bundleG.slice(0, n), -m_bundleH.slice(0, m)));
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!

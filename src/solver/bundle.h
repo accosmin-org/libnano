@@ -113,14 +113,10 @@ private:
 
     tensor_size_t capacity() const { return m_bundleH.size(); }
 
-    matrix_cmap_t bundleG() const { return m_bundleG.slice(0, m_bsize); }
-
-    vector_cmap_t bundleH() const { return m_bundleH.slice(0, m_bsize); }
-
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
-        return nano::remove_if(op, bundleG(), bundleH());
+        return nano::remove_if(op, m_bundleG.slice(0, m_bsize), m_bundleH.slice(0, m_bsize));
     }
 
     void delete_inactive(scalar_t epsilon);
