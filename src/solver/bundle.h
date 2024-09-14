@@ -101,7 +101,7 @@ public:
     ///
     /// \brief return the solution of the doubly stabilized bundle problem (1):
     ///     argmin_(x, r) r + ||x - x_k^||^2 / (2 * tau)
-    ///             s.t.  f(x_j) + <g_j, x - x_j> <= r (for all sub-gradients j in the bundle)
+    ///             s.t.  f_j + <g_j, x - x_j> <= r (for all sub-gradients j in the bundle)
     ///             s.t.  r <= l_k (the level parameter).
     ///
     ///     where x_k^ is the current proximal stability center.
@@ -138,7 +138,7 @@ private:
     program::solver_t   m_solver;   ///< buffer: quadratic program solver
     tensor_size_t       m_bsize{0}; ///< bundle: number of points
     matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
-    vector_t            m_bundleH;  ///< bundle: function values (f_j + g_j.dot(x_k^ - x_j))_j of shape (size,)
+    vector_t            m_bundleH;  ///< bundle: function values (f_j + <g_j, x_k^ - x_j>)_j of shape (size,)
     solution_t          m_solution; ///< solution to the quadratic program
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)

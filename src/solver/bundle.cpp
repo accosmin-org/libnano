@@ -6,14 +6,16 @@ namespace
 {
 auto make_program(const tensor_size_t n)
 {
-    return program::quadratic_program_t{matrix_t::zero(n + 1, n + 1), vector_t::zero(n + 1)};
+    auto Q = matrix_t{matrix_t::zero(n + 1, n + 1)};
+    auto c = vector_t{vector_t::zero(n + 1)};
+    return program::quadratic_program_t{std::move(Q), std::move(c)};
 }
 
 template <typename tvectory>
 auto eval_cutting_plane_model(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
 {
     auto value = std::numeric_limits<scalar_t>::lowest();
-    for (tensor_size_t i = 0, size = h.size(); ++i)
+    for (tensor_size_t i = 0, size = h.size(); i < size; ++i)
     {
         value = std::max(value, h(i) + G.vector(i).dot(y));
     }
@@ -38,7 +40,7 @@ bool bundle_t::solution_t::gnorm_converged(const scalar_t epsilon) const
 
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     : m_program(make_program(state.x().size()))
-    , m_bundleG(max_size + 1, state.x().size())
+    , m_bundleG(max_size + 1, state.x().size() + 1)
     , m_bundleH(max_size + 1)
     , m_solution(state.x().size())
     , m_x(state.x())
@@ -82,11 +84,11 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
         auto weights                = m_bundleG.vector(capacity() - 1);
         weights.segment(0, n).array = 0.0;
         weights(n)                  = 1.0;
-        m_program.constraint(program::make_less(bundleG(), bundleH()), program::make_less(weights, level));
+        m_program.constrain(program::make_less(bundleG(), -bundleH()), program::make_less(weights, level));
     }
     else
     {
-        m_program.constraint(program::make_less(bundleG(), bundleH()));
+        m_program.constrain(program::make_less(bundleG(), -bundleH()));
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
@@ -129,7 +131,7 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
 {
     if (size() > 0)
     {
-        m_size = remove_if([&](const tensor_size_t i) { return m_alphas(i) < epsilon; });
+        m_bsize = remove_if([&](const tensor_size_t i) { return m_alphas(i) < epsilon; });
     }
 }
 
@@ -139,19 +141,22 @@ void bundle_t::delete_largest(const tensor_size_t count)
     {
         store_aggregate();
 
+        m_bsize = remove_id([&](const tensor_size_t i) { return i < count; });
+
+        /* FIXME: what are the bundle indices with the largest error in the new formulation?!
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
-        [[maybe_unused]] const auto old_size = m_size;
-        assert(count <= m_size);
+        [[maybe_unused]] const auto old_size = m_bsize;
+        assert(count <= m_bsize);
 
-        m_alphas.slice(0, m_size) = m_bundleE.slice(0, m_size);
-        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_size - count - 1), m_alphas.begin() + m_size);
+        m_alphas.slice(0, m_bsize) = m_bundleE.slice(0, m_bsize);
+        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_bsize - count - 1), m_alphas.begin() + m_bsize);
 
-        const auto threshold = m_alphas(m_size - count - 1);
+        const auto threshold = m_alphas(m_bsize - count - 1);
 
-        m_size = remove_if([&](const tensor_size_t i) { return m_bundleE(i) >= threshold; });
+        m_bsize = remove_if([&](const tensor_size_t i) { return m_bundleE(i) >= threshold; });
 
-        assert(m_size + count <= old_size);
-        assert(m_bundleE.slice(0, m_size).max() <= threshold + std::numeric_limits<scalar_t>::epsilon());
+        assert(m_bsize + count <= old_size);
+        assert(m_bundleE.slice(0, m_bsize).max() <= threshold + std::numeric_limits<scalar_t>::epsilon()); */
 
         append_aggregate();
     }
@@ -168,10 +173,10 @@ void bundle_t::store_aggregate()
 void bundle_t::append_aggregate()
 {
     // NB: load the aggregation from the last slot!
-    const auto ilast         = capacity() - 1;
-    m_bundleS.tensor(m_size) = m_bundleS.tensor(ilast);
-    m_bundleE(m_size)        = m_bundleE(ilast);
-    ++m_size;
+    const auto ilast          = capacity() - 1;
+    m_bundleH(m_bsize)        = m_bundleH(ilast);
+    m_bundleG.vector(m_bsize) = m_bundleG.vector(ilast);
+    ++m_bsize;
 }
 
 void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy, const bool serious_step)
@@ -182,23 +187,18 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     delete_inactive(epsilon0<scalar_t>());
     delete_largest(2);
 
-    if (serious_step)
+    for (tensor_size_t i = 0; serious_step && i < m_bsize; ++i)
     {
-        for (tensor_size_t i = 0; i < m_size; ++i)
-        {
-            m_bundleE(i) += fy - m_fx - m_bundleS.vector(i).dot(y - m_x);
-        }
-        m_bundleE(m_size)        = 0.0;
-        m_bundleS.tensor(m_size) = gy;
+        m_bundleH(i) += m_bundleG.row(i).segment(0, dims()).dot(y - m_x);
     }
-    else
-    {
-        m_bundleE(m_size)        = m_fx - (fy + gy.dot(m_x - y));
-        m_bundleS.tensor(m_size) = gy;
-    }
-    ++m_size;
 
-    assert(m_size < capacity());
+    m_bundleH(m_bsize)                        = fy + gy.dot(m_x - y);
+    m_bundleG.row(m_bsize).segment(0, dims()) = gy.array();
+    m_bundleG(m_bsize, dims())                = -1.0;
+
+    ++m_bsize;
+
+    assert(m_bsize < capacity());
 }
 
 void bundle_t::config(configurable_t& c, const string_t& prefix)
