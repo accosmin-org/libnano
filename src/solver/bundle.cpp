@@ -12,7 +12,7 @@ auto make_program(const tensor_size_t n)
 }
 
 template <typename tvectory>
-auto eval_cutting_plane_model(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
+auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
 {
     auto value = std::numeric_limits<scalar_t>::lowest();
     for (tensor_size_t i = 0, size = h.size(); i < size; ++i)
@@ -21,10 +21,19 @@ auto eval_cutting_plane_model(matrix_cmap_t G, vector_cmap_t h, const tvectory& 
     }
     return value;
 }
+
+template <typename ty, typename tgy>
+void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_t& x, const ty& y, const tgy& gy, const scalar_t fy)
+{
+    h                       = fy + gy.dot(x - y);
+    g.segment(0, gy.size()) = gy.array();
+    g(gy.size())            = -1.0;
+}
 } // namespace
 
 bundle_t::solution_t::solution_t(const tensor_size_t dims)
     : m_x(dims)
+    , m_ghat(dims)
 {
 }
 
@@ -70,9 +79,12 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     assert(size() > 0);
     assert(dims() == m_x.size());
 
-    const auto n = dims();
-    const auto m = size();
+    const auto n         = dims();
+    const auto m         = size();
     const auto has_level = std::isfinite(level);
+
+    const auto bundleG = m_bundleG.slice(0, m);
+    const auto bundleH = m_bundleH.slice(0, m);
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
@@ -84,22 +96,21 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
         auto weights    = m_bundleG.vector(capacity() - 1);
         weights.array() = 0.0;
         weights(n)      = 1.0;
-        m_program.constrain(program::make_less(m_bundleG.slice(0, m), -m_bundleH.slice(0, m)),
-                            program::make_less(weights, level));
+        m_program.constrain(program::make_inequality(bundleG, -bundleH), program::make_inequality(weights, level));
     }
     else
     {
-        m_program.constrain(program::make_less(m_bundleG.slice(0, n), -m_bundleH.slice(0, m)));
+        m_program.constrain(program::make_inequality(bundleG, -m_bundleH));
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
     const auto& x0 = m_x;
-    assert(program.feasible(x0, epsilon1<scalar_t>()));
+    assert(m_program.feasible(x0, epsilon1<scalar_t>()));
 
-    const auto solution = m_solver.solve(program, x0, logger);
-    if (!program.feasible(solution.m_x, epsilon1<scalar_t>()))
+    const auto solution = m_solver.solve(m_program, x0, logger);
+    if (!m_program.feasible(solution.m_x, epsilon1<scalar_t>()))
     {
-        logger.error("bundle: unfeasible solution, deviation(ineq)=", program.m_ineq.deviation(solution.m_x), ".\n");
+        logger.error("bundle: unfeasible solution, deviation(ineq)=", m_program.m_ineq.deviation(solution.m_x), ".\n");
     }
     // NB: the quadratic program may be unfeasible, so the level needs to moved towards the stability center!
     if (solution.m_status != solver_status::converged && !has_level)
@@ -116,11 +127,15 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_lambda = solution.m_u(n);
     assert(m_solution.m_lambda >= 0.0);
 
-    const auto miu = solution.m_lambda + 1.0;
+    const auto miu = m_solution.m_lambda + 1.0;
 
-    m_solution.m_gnorm = (-y / (tau * miu)).lpNorm<2>();
+    m_solution.m_ghat = -y / (tau * miu);
+    m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
+    assert(m_solution.m_fhat <= m_solution.m_r);
+
+    m_solution.m_gnorm = m_solution.m_ghat.lpNorm<2>();
     m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
-    m_solution.m_delta = m_fx - (eval_cutting_plane(bundleG(), bundleH(), y) + y.squaredNorm() / (2.0 * tau));
+    m_solution.m_delta = m_fx - (m_solution.m_fhat + y.squaredNorm() / (2.0 * tau));
 
     assert(m_solution.m_epsil >= 0.0);
     assert(m_solution.m_delta >= 0.0);
@@ -142,11 +157,11 @@ void bundle_t::delete_largest(const tensor_size_t count)
     {
         store_aggregate();
 
-        m_bsize = remove_id([&](const tensor_size_t i) { return i < count; });
+        m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
 
         /* FIXME: what are the bundle indices with the largest error in the new formulation?!
         // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
-        [[maybe_unused]] const auto old_size = m_bsize;
+        [maybe_unused]] const auto old_size = m_bsize;
         assert(count <= m_bsize);
 
         m_alphas.slice(0, m_bsize) = m_bundleE.slice(0, m_bsize);
@@ -167,8 +182,8 @@ void bundle_t::store_aggregate()
 {
     // NB: stored the aggregation in the last slot!
     const auto ilast        = capacity() - 1;
-    m_bundleE(ilast)        = smeared_e();
-    m_bundleS.tensor(ilast) = smeared_s();
+    write_cutting_plane(m_bundleG.vector(ilast), m_bundleH(ilast), m_x, m_solution.m_x, m_solution.m_ghat,
+                        m_solution.m_fhat);
 }
 
 void bundle_t::append_aggregate()
@@ -193,10 +208,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
         m_bundleH(i) += m_bundleG.row(i).segment(0, dims()).dot(y - m_x);
     }
 
-    m_bundleH(m_bsize)                        = fy + gy.dot(m_x - y);
-    m_bundleG.row(m_bsize).segment(0, dims()) = gy.array();
-    m_bundleG(m_bsize, dims())                = -1.0;
-
+    write_cutting_plane(m_bundleG.vector(m_bsize), m_bundleH(m_bsize), m_x, y, gy, fy);
     ++m_bsize;
 
     assert(m_bsize < capacity());

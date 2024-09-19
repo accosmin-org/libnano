@@ -47,6 +47,8 @@ public:
 
         vector_t m_x;           ///< optimum: stability center
         scalar_t m_r{0.0};      ///< optimum: level
+        vector_t m_ghat;        ///<
+        scalar_t m_fhat{0.0};   ///<
         scalar_t m_lambda{0.0}; ///< lagrangian multiplier associated to the condition r <= l_k (level)
         scalar_t m_gnorm{0.0};  ///< L2-norm of smeared gradient
         scalar_t m_epsil{0.0};  ///< aggregate linear error, see (1)
