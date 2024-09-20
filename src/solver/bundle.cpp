@@ -22,12 +22,17 @@ auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
     return value;
 }
 
-template <typename ty, typename tgy>
-void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_t& x, const ty& y, const tgy& gy, const scalar_t fy)
+void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_t& x, const vector_t& y, const vector_t& gy,
+                         const scalar_t fy)
 {
+    const auto n = x.size();
+    assert(y.size() == n);
+    assert(gy.size() == n);
+    assert(g.size() == n + 1);
+
     h                       = fy + gy.dot(x - y);
-    g.segment(0, gy.size()) = gy.array();
-    g(gy.size())            = -1.0;
+    g.segment(0, n).array() = gy.array();
+    g(n)                    = -1.0;
 }
 } // namespace
 

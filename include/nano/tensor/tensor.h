@@ -155,7 +155,6 @@ public:
     // cppcheck-suppress noExplicitConstructor
     tensor_t(const texpression& expression) // NOLINT(hicpp-explicit-conversions)
     {
-        static_assert(resizable);
         assign(expression);
     }
 
