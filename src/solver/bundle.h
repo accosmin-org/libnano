@@ -29,6 +29,9 @@ namespace nano
 class NANO_PUBLIC bundle_t
 {
 public:
+    ///
+    /// \brief solution to the quadratic optimization proboem from (1).
+    ///
     struct solution_t
     {
         explicit solution_t(tensor_size_t dims = 0);
@@ -45,11 +48,13 @@ public:
         ///
         bool gnorm_converged(scalar_t epsilon) const;
 
+        // attributes
         vector_t m_x;           ///< optimum: stability center
-        scalar_t m_r{0.0};      ///< optimum: level
-        vector_t m_ghat;        ///<
+        scalar_t m_r{0.0};      ///< optimum: level (if applicable)
+        vector_t m_ghat;        ///< aggregated sub-gradient
         scalar_t m_fhat{0.0};   ///<
-        scalar_t m_lambda{0.0}; ///< lagrangian multiplier associated to the condition r <= l_k (level)
+        vector_t m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
+        scalar_t m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
         scalar_t m_gnorm{0.0};  ///< L2-norm of smeared gradient
         scalar_t m_epsil{0.0};  ///< aggregate linear error, see (1)
         scalar_t m_delta{0.0};  ///< nominal decrease, see (2, 3)

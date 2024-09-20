@@ -129,7 +129,10 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_r = has_level ? solution.m_x(n) : 0.0;
     assert(m_solution.m_r >= 0.0);
 
-    m_solution.m_lambda = solution.m_u(n);
+    assert(solution.m_u.size() == (has_level ? (m + 1) : m));
+    m_solution.m_alphas = solution.m_u.segment(0, m);
+    m_solution.m_lambda = has_level ? solution.m_u(m) : 0.0;
+
     assert(m_solution.m_lambda >= 0.0);
 
     const auto miu = m_solution.m_lambda + 1.0;
@@ -152,7 +155,7 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
 {
     if (size() > 0)
     {
-        m_bsize = remove_if([&](const tensor_size_t i) { return m_alphas(i) < epsilon; });
+        m_bsize = remove_if([&](const tensor_size_t i) { return m_solution.m_alphas(i) < epsilon; });
     }
 }
 
