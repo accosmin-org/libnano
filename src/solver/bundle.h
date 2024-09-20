@@ -24,8 +24,6 @@ namespace nano
 ///     - first removing all inactive constraints and
 ///     - then the ones with the largest approximation error if needed - see (2).
 ///
-/// FIXME: implement removing oldest constraints as well.
-///
 class NANO_PUBLIC bundle_t
 {
 public:

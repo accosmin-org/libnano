@@ -159,6 +159,18 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
     }
 }
 
+void bundle_t::delete_oldest(const tensor_size_t count)
+{
+    if (size() + 1 == capacity())
+    {
+        store_aggregate();
+
+        m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
+
+        append_aggregate();
+    }
+}
+
 void bundle_t::delete_largest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
