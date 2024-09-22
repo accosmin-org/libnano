@@ -47,7 +47,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
         if (status == csearch_status::descent_step)
         {
-            Gn1 = bundle.smeared_s();
+            Gn1 = bundle.proxim().m_ghat;
             proximity.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
             Gn = Gn1;
 
@@ -57,7 +57,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         }
         else if (status == csearch_status::cutting_plane_step)
         {
-            Gn = bundle.smeared_s();
+            Gn = bundle.proxim().m_ghat;
 
             bundle.moveto(y, gy, fy);
             assert(fy < state.fx());

@@ -58,42 +58,39 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto& fy     = m_point.m_fy;
 
         // estimate proximal point
-        constexpr auto level = std::numeric_limits<scalar_t>::quiet_NaN();
-        const auto&    prox  = bundle.solve(t / miu, level, logger);
+        constexpr auto level  = std::numeric_limits<scalar_t>::quiet_NaN();
+        const auto&    proxim = bundle.solve(t / miu, level, logger);
 
-        y  = prox.m_x;
+        y  = proxim.m_x;
         fy = m_function.vgrad(y, gy);
 
         const auto& x     = bundle.x();
         const auto  fx    = bundle.fx();
-        const auto  e     = bundle.smeared_e();
-        const auto  s     = bundle.smeared_s();
-        const auto  delta = bundle.delta(miu / t);
-        const auto  econv = bundle.econverged(epsilon);
-        const auto  sconv = bundle.sconverged(epsilon);
+        const auto  econv = proxim.epsil_converged(epsilon);
+        const auto  gconv = proxim.gnorm_converged(epsilon);
 
         logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
-                    ",de=", e, ",ds=", s.lpNorm<2>(), ",dd=", delta, ",bsize=", bundle.size(), ",miu=", miu, ",t=", t,
-                    "[", tL, ",", tR, "]\n");
+                    ",delta=", proxim.m_delta, ",epsil=", proxim.m_epsil, "gnorm=", proxim.m_gnorm,
+                    ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR, "]\n");
 
         if (const auto failed = !std::isfinite(fy); failed)
         {
             status = csearch_status::failed;
             break;
         }
-        else if (const auto converged = econv && sconv; converged)
+        else if (const auto converged = econv && gconv; converged)
         {
             status = csearch_status::converged;
             break;
         }
-        else if (const auto descent = fx - fy >= m_m1 * delta; descent)
+        else if (const auto descent = fx - fy >= m_m1 * proxim.m_delta; descent)
         {
             tL = t;
         }
         else
         {
             tR = t;
-            if (tL < epsilon0<scalar_t>() && e <= m_m3 * delta)
+            if (tL < epsilon0<scalar_t>() && proxim.m_epsil <= m_m3 * proxim.m_delta)
             {
                 status = csearch_status::null_step;
                 break;
@@ -105,12 +102,12 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
             }
         }
 
-        if (gy.dot(y - x) >= -m_m2 * delta)
+        if (gy.dot(y - x) >= -m_m2 * proxim.m_delta)
         {
             status = csearch_status::descent_step;
             break;
         }
-        else if (!std::isfinite(tR) && (sconv || s.dot(y - x) >= -m_m4 * delta))
+        else if (!std::isfinite(tR) && (gconv || proxim.m_ghat.dot(y - x) >= -m_m4 * proxim.m_delta))
         {
             status = csearch_status::cutting_plane_step;
             break;

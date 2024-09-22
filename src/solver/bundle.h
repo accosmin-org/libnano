@@ -113,6 +113,11 @@ public:
     ///
     const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
 
+    ///
+    /// \brief return the solution of the last doubly stabilized bundle problem.
+    ///
+    const solution_t& proxim() const { return m_solution; }
+
 private:
     tensor_size_t dims() const { return m_x.size(); }
 
