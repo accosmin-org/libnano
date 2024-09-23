@@ -22,17 +22,18 @@ auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
     return value;
 }
 
-void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_t& x, const vector_t& y, const vector_t& gy,
-                         const scalar_t fy)
+void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_cmap_t x, const vector_cmap_t y,
+                         const vector_cmap_t gy, const scalar_t fy)
 {
     const auto n = x.size();
+
     assert(y.size() == n);
     assert(gy.size() == n);
     assert(g.size() == n + 1);
 
-    h                       = fy + gy.dot(x - y);
-    g.segment(0, n).array() = gy.array();
-    g(n)                    = -1.0;
+    h               = fy + gy.dot(x - y);
+    g.segment(0, n) = gy.array();
+    g(n)            = -1.0;
 }
 } // namespace
 
@@ -94,7 +95,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
     m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
-    m_program.m_c(n)          = 1.0;
+    m_program.m_c(n)                                   = 1.0;
 
     if (has_level)
     {
@@ -105,7 +106,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
     else
     {
-        m_program.constrain(program::make_inequality(bundleG, -m_bundleH));
+        m_program.constrain(program::make_inequality(bundleG, -bundleH));
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
@@ -201,8 +202,8 @@ void bundle_t::delete_largest(const tensor_size_t count)
 void bundle_t::store_aggregate()
 {
     // NB: stored the aggregation in the last slot!
-    const auto ilast        = capacity() - 1;
-    write_cutting_plane(m_bundleG.vector(ilast), m_bundleH(ilast), m_x, m_solution.m_x, m_solution.m_ghat,
+    const auto ilast = capacity() - 1;
+    write_cutting_plane(m_bundleG.tensor(ilast), m_bundleH(ilast), m_x, m_solution.m_x, m_solution.m_ghat,
                         m_solution.m_fhat);
 }
 
@@ -228,7 +229,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
         m_bundleH(i) += m_bundleG.row(i).segment(0, dims()).dot(y - m_x);
     }
 
-    write_cutting_plane(m_bundleG.vector(m_bsize), m_bundleH(m_bsize), m_x, y, gy, fy);
+    write_cutting_plane(m_bundleG.tensor(m_bsize), m_bundleH(m_bsize), m_x, y, gy, fy);
     ++m_bsize;
 
     assert(m_bsize < capacity());
