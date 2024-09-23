@@ -14,10 +14,15 @@ auto make_program(const tensor_size_t n)
 template <typename tvectory>
 auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
 {
+    const auto m = h.size();
+    const auto n = y.size();
+    assert(G.rows() == m);
+    assert(G.cols() == n + 1);
+
     auto value = std::numeric_limits<scalar_t>::lowest();
-    for (tensor_size_t i = 0, size = h.size(); i < size; ++i)
+    for (tensor_size_t i = 0; i < m; ++i)
     {
-        value = std::max(value, h(i) + G.vector(i).dot(y));
+        value = std::max(value, h(i) + G.vector(i).segment(0, n).dot(y));
     }
     return value;
 }
@@ -110,12 +115,16 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
+    // FIXME: can estimate a reasonable starting point?!
     const auto solution = m_solver.solve(m_program, logger);
+    assert(solution.m_x.size() == n + 1);
+
     if (!m_program.feasible(solution.m_x, epsilon1<scalar_t>()))
     {
         logger.error("bundle: unfeasible solution, deviation(ineq)=", m_program.m_ineq.deviation(solution.m_x), ".\n");
     }
-    // NB: the quadratic program may be unfeasible, so the level needs to moved towards the stability center!
+
+    // NB: the quadratic program may be unfeasible, so the level needs to be moved towards the stability center!
     if (solution.m_status != solver_status::converged && !has_level)
     {
         logger.error("bundle: failed to solve, status=", solution.m_status, ".\n");
