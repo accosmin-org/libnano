@@ -110,10 +110,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
-    const auto& x0 = m_x;
-    assert(m_program.feasible(x0, epsilon1<scalar_t>()));
-
-    const auto solution = m_solver.solve(m_program, x0, logger);
+    const auto solution = m_solver.solve(m_program, logger);
     if (!m_program.feasible(solution.m_x, epsilon1<scalar_t>()))
     {
         logger.error("bundle: unfeasible solution, deviation(ineq)=", m_program.m_ineq.deviation(solution.m_x), ".\n");
