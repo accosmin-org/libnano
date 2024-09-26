@@ -133,14 +133,14 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     // extract solution and statistics, see (1)
     const auto y   = solution.m_x.segment(0, n);
     m_solution.m_x = y + m_x;
-    m_solution.m_r = has_level ? solution.m_x(n) : 0.0;
-    assert(m_solution.m_r >= 0.0);
+    m_solution.m_r = solution.m_x(n);
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);
     m_solution.m_lambda = has_level ? solution.m_u(m) : 0.0;
 
     assert(m_solution.m_lambda >= 0.0);
+    assert(!has_level || m_solution.m_r <= level);
 
     const auto miu = m_solution.m_lambda + 1.0;
 
@@ -152,8 +152,8 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_epsil = (m_fx - m_solution.m_r) - (tau * miu) * square(m_solution.m_gnorm);
     m_solution.m_delta = m_fx - (m_solution.m_fhat + y.squaredNorm() / (2.0 * tau));
 
-    assert(m_solution.m_epsil >= 0.0);
-    assert(m_solution.m_delta >= 0.0);
+    assert(m_solution.m_epsil + epsilon1<scalar_t>() >= 0.0);
+    assert(m_solution.m_delta + epsilon1<scalar_t>() >= 0.0);
 
     return m_solution;
 }
