@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-function_powell_t::function_powell_t(tensor_size_t dims)
+function_powell_t::function_powell_t(const tensor_size_t dims)
     : function_t("powell", std::max(tensor_size_t(4), dims - dims % 4))
 {
     convex(convexity::no);
@@ -45,7 +45,7 @@ scalar_t function_powell_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return fx;
 }
 
-rfunction_t function_powell_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_powell_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_powell_t>(dims);
 }

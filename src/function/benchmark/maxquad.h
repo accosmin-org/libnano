@@ -5,17 +5,18 @@
 namespace nano
 {
 ///
-/// \brief convex non-smooth test function: MAXHILB(x) = max(i, sum(j, xj / (i + j -1)).
+/// \brief convex non-smooth test function: MAXQUAD(x) = max(k, x.dot(A_k*x) - b_k.dot(x)),
+///     where A_k is symmetric (and thus the problem convex).
 ///
-/// see "New limited memory bundle method for large-scale nonsmooth optimization", by Haarala, Miettinen, Makela, 2004
+/// see "A set of nonsmooth optimization test problems" in "Nonsmooth optimization", by Lemarechal, Mifflin, 1978
 ///
-class NANO_PUBLIC function_maxhilb_t final : public function_t
+class NANO_PUBLIC function_maxquad_t final : public function_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit function_maxhilb_t(tensor_size_t dims = 10);
+    explicit function_maxquad_t(tensor_size_t dims = 10, tensor_size_t kdims = 5);
 
     ///
     /// \brief @see clonable_t
@@ -34,6 +35,7 @@ public:
 
 private:
     // attributes
-    matrix_t m_weights; ///<
+    tensor3d_t m_Aks; ///< (5, n, n)
+    tensor2d_t m_bks; ///< (5, n)
 };
 } // namespace nano

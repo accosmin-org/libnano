@@ -6,6 +6,7 @@ namespace nano
 {
 ///
 /// \brief convex non-smooth test function: chained CB3 II.
+///
 /// see "New limited memory bundle method for large-scale nonsmooth optimization", by Haarala, Miettinen, Makela, 2004
 ///
 class NANO_PUBLIC function_chained_cb3II_t final : public function_t

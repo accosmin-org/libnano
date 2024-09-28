@@ -13,6 +13,7 @@
 #include <function/benchmark/kinks.h>
 #include <function/benchmark/maxhilb.h>
 #include <function/benchmark/maxq.h>
+#include <function/benchmark/maxquad.h>
 #include <function/benchmark/powell.h>
 #include <function/benchmark/qing.h>
 #include <function/benchmark/quadratic.h>
@@ -155,6 +156,7 @@ factory_t<function_t>& function_t::all()
     const auto  op      = []()
     {
         manager.add<function_maxq_t>("MAXQ function: f(x) = max(i, x_i^2)");
+        manager.add<function_maxquad_t>("MAXQUAD function: f(x) = max(k, x.dot(A_k*x) - b_k.dot(x))");
         manager.add<function_maxhilb_t>("MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))");
         manager.add<function_chained_lq_t>("chained LQ function (see documentation)");
         manager.add<function_chained_cb3I_t>("chained CB3 I function (see documentation)");

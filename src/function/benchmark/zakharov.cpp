@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-function_zakharov_t::function_zakharov_t(tensor_size_t dims)
+function_zakharov_t::function_zakharov_t(const tensor_size_t dims)
     : function_t("zakharov", dims)
     , m_bias(dims)
 {
@@ -31,7 +31,7 @@ scalar_t function_zakharov_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return u + nano::square(v) + nano::quartic(v);
 }
 
-rfunction_t function_zakharov_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_zakharov_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_zakharov_t>(dims);
 }

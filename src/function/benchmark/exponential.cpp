@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-function_exponential_t::function_exponential_t(tensor_size_t dims)
+function_exponential_t::function_exponential_t(const tensor_size_t dims)
     : function_t("exponential", dims)
 {
     convex(convexity::yes);
@@ -29,7 +29,7 @@ scalar_t function_exponential_t::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
     return fx;
 }
 
-rfunction_t function_exponential_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_exponential_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_exponential_t>(dims);
 }
