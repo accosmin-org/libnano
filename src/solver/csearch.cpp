@@ -70,7 +70,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  gconv = proxim.gnorm_converged(epsilon);
 
         logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
-                    ",delta=", proxim.m_delta, ",epsil=", proxim.m_epsil, "gnorm=", proxim.m_gnorm,
+                    ",delta=", proxim.m_delta, ",epsil=", proxim.m_epsil, ",gnorm=", proxim.m_gnorm,
                     ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR, "]\n");
 
         if (const auto failed = !std::isfinite(fy); failed)
