@@ -1,7 +1,6 @@
 #include <function/benchmark/maxquad.h>
 
 #include <Eigen/Dense>
-#include <iostream>
 
 using namespace nano;
 
@@ -27,14 +26,14 @@ void fill(tensor2d_map_t A, const tensor_size_t k)
         const auto sk = static_cast<scalar_t>(k + 1);
 
         auto sum = 0.0;
-        for (tensor_size_t j = 0; j < i; ++j)
+        for (tensor_size_t j = i + 1; j < dims; ++j)
         {
             const auto sj = static_cast<scalar_t>(j + 1);
 
             const auto val = std::exp(si / sj) * std::cos(si * sj) * sin(sk);
             A(i, j)        = val;
             A(j, i)        = val;
-            sum += 2.0 * val;
+            sum += 2.0 * std::fabs(val);
         }
 
         A(i, i) = si * std::fabs(std::sin(sk)) / static_cast<scalar_t>(dims) + sum;
@@ -68,9 +67,6 @@ function_maxquad_t::function_maxquad_t(const tensor_size_t dims, const tensor_si
     {
         ::fill(m_Aks.tensor(k), k);
         ::fill(m_bks.tensor(k), k);
-
-        std::cout << m_Aks.tensor(k) << std::endl;
-        std::cout << m_bks.tensor(k) << std::endl;
     }
 }
 
