@@ -1,23 +1,9 @@
 #include <function/benchmark/maxquad.h>
 
-#include <Eigen/Dense>
-
 using namespace nano;
 
 namespace
 {
-bool is_psd(matrix_cmap_t tQ)
-{
-    const auto Q = tQ.matrix();
-    if (!Q.isApprox(Q.transpose()))
-    {
-        return false;
-    }
-
-    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
-    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
-}
-
 void fill(tensor2d_map_t A, const tensor_size_t k)
 {
     for (tensor_size_t i = 0, dims = A.rows(); i < dims; ++i)
@@ -25,21 +11,24 @@ void fill(tensor2d_map_t A, const tensor_size_t k)
         const auto si = static_cast<scalar_t>(i + 1);
         const auto sk = static_cast<scalar_t>(k + 1);
 
-        auto sum = 0.0;
         for (tensor_size_t j = i + 1; j < dims; ++j)
         {
             const auto sj = static_cast<scalar_t>(j + 1);
 
-            const auto val = std::exp(si / sj) * std::cos(si * sj) * sin(sk);
-            A(i, j)        = val;
-            A(j, i)        = val;
-            sum += 2.0 * std::fabs(val);
+            A(i, j) = A(j, i) = std::exp(si / sj) * std::cos(si * sj) * sin(sk);
+        }
+
+        auto sum = 0.0;
+        for (tensor_size_t j = 0; j < dims; ++j)
+        {
+            if (i != j)
+            {
+                sum += std::fabs(A(i, j));
+            }
         }
 
         A(i, i) = si * std::fabs(std::sin(sk)) / static_cast<scalar_t>(dims) + sum;
     }
-
-    assert(is_psd(A));
 }
 
 void fill(tensor1d_map_t b, const tensor_size_t k)

@@ -5,8 +5,7 @@
 namespace nano
 {
 ///
-/// \brief convex non-smooth test function: MAXQUAD(x) = max(k, x.dot(A_k*x) - b_k.dot(x)),
-///     where A_k is symmetric (and thus the problem convex).
+/// \brief convex non-smooth test function: MAXQUAD(x) = max(k, x.dot(A_k*x) - b_k.dot(x)), where A_k is PSD.
 ///
 /// see "A set of nonsmooth optimization test problems" in "Nonsmooth optimization", by Lemarechal, Mifflin, 1978
 ///
