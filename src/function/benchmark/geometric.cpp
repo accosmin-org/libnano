@@ -3,7 +3,8 @@
 
 using namespace nano;
 
-function_geometric_optimization_t::function_geometric_optimization_t(tensor_size_t dims, tensor_size_t summands)
+function_geometric_optimization_t::function_geometric_optimization_t(const tensor_size_t dims,
+                                                                     const tensor_size_t summands)
     : function_t("geometric-optimization", dims)
     , m_a(make_random_vector<scalar_t>(summands, -1.0, +1.0, seed_t{42}))
     , m_A(make_random_matrix<scalar_t>(summands, dims, -1.0 / static_cast<scalar_t>(dims),
@@ -32,7 +33,7 @@ scalar_t function_geometric_optimization_t::do_vgrad(vector_cmap_t x, vector_map
     return (a + A * x.vector()).array().exp().sum();
 }
 
-rfunction_t function_geometric_optimization_t::make(tensor_size_t dims, tensor_size_t summands) const
+rfunction_t function_geometric_optimization_t::make(const tensor_size_t dims, const tensor_size_t summands) const
 {
     return std::make_unique<function_geometric_optimization_t>(dims, summands);
 }

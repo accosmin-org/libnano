@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-function_trid_t::function_trid_t(tensor_size_t dims)
+function_trid_t::function_trid_t(const tensor_size_t dims)
     : function_t("trid", dims)
 {
     convex(convexity::yes);
@@ -26,7 +26,7 @@ scalar_t function_trid_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return (x.array() - 1).square().sum() - (x.segment(0, size() - 1).array() * x.segment(1, size() - 1).array()).sum();
 }
 
-rfunction_t function_trid_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_trid_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_trid_t>(dims);
 }

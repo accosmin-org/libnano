@@ -6,6 +6,7 @@ namespace nano
 {
 ///
 /// \brief convex non-smooth test function: MAXHILB(x) = max(i, sum(j, xj / (i + j -1)).
+///
 /// see "New limited memory bundle method for large-scale nonsmooth optimization", by Haarala, Miettinen, Makela, 2004
 ///
 class NANO_PUBLIC function_maxhilb_t final : public function_t

@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-function_axis_ellipsoid_t::function_axis_ellipsoid_t(tensor_size_t dims)
+function_axis_ellipsoid_t::function_axis_ellipsoid_t(const tensor_size_t dims)
     : function_t("axis-ellipsoid", dims)
     , m_bias(dims)
 {
@@ -28,7 +28,7 @@ scalar_t function_axis_ellipsoid_t::do_vgrad(vector_cmap_t x, vector_map_t gx) c
     return (x.array().square() * m_bias.array()).sum();
 }
 
-rfunction_t function_axis_ellipsoid_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_axis_ellipsoid_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_axis_ellipsoid_t>(dims);
 }

@@ -13,6 +13,7 @@ target_sources(function PRIVATE
     linear.h
     maxhilb.h
     maxq.h
+    maxquad.h
     powell.h
     qing.h
     quadratic.h
@@ -38,6 +39,7 @@ target_sources(function PRIVATE
     linear.cpp
     maxhilb.cpp
     maxq.cpp
+    maxquad.cpp
     powell.cpp
     qing.cpp
     quadratic.cpp

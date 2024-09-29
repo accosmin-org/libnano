@@ -6,6 +6,7 @@ namespace nano
 {
 ///
 /// \brief convex non-smooth test function: MAXQ(x) = max(i, x_i^2).
+///
 /// see "New limited memory bundle method for large-scale nonsmooth optimization", by Haarala, Miettinen, Makela, 2004
 ///
 class NANO_PUBLIC function_maxq_t final : public function_t

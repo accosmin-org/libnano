@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-function_quadratic_t::function_quadratic_t(tensor_size_t dims)
+function_quadratic_t::function_quadratic_t(const tensor_size_t dims)
     : function_t("quadratic", dims)
     , m_a(make_random_vector<scalar_t>(dims, -1.0, +1.0, seed_t{42}))
 {
@@ -34,7 +34,7 @@ scalar_t function_quadratic_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return x.dot(a + 0.5 * (A * x.vector()));
 }
 
-rfunction_t function_quadratic_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_quadratic_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_quadratic_t>(dims);
 }

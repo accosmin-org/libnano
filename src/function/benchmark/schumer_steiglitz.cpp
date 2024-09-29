@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-function_schumer_steiglitz_t::function_schumer_steiglitz_t(tensor_size_t dims)
+function_schumer_steiglitz_t::function_schumer_steiglitz_t(const tensor_size_t dims)
     : function_t("schumer-steiglitz", dims)
 {
     convex(convexity::yes);
@@ -24,7 +24,7 @@ scalar_t function_schumer_steiglitz_t::do_vgrad(vector_cmap_t x, vector_map_t gx
     return x.array().square().square().sum();
 }
 
-rfunction_t function_schumer_steiglitz_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_schumer_steiglitz_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_schumer_steiglitz_t>(dims);
 }

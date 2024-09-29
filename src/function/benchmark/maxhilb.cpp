@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-function_maxhilb_t::function_maxhilb_t(tensor_size_t dims)
+function_maxhilb_t::function_maxhilb_t(const tensor_size_t dims)
     : function_t("maxhilb", dims)
     , m_weights(dims, dims)
 {
@@ -38,7 +38,7 @@ scalar_t function_maxhilb_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return fx;
 }
 
-rfunction_t function_maxhilb_t::make(tensor_size_t dims, tensor_size_t) const
+rfunction_t function_maxhilb_t::make(const tensor_size_t dims, tensor_size_t) const
 {
     return std::make_unique<function_maxhilb_t>(dims);
 }
