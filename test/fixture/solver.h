@@ -189,7 +189,7 @@ struct solver_description_t
         stream << "\n";
     }
 
-    const auto logger = make_stream_logger(stream);
+    const auto logger = make_stdout_logger(); // make_stream_logger(stream);
 
     // minimize
     solver.parameter("solver::epsilon")   = config.m_epsilon;
