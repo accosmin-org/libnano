@@ -135,6 +135,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_x    = y + m_x;
     m_solution.m_r    = solution.m_x(n);
     m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
+    assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);

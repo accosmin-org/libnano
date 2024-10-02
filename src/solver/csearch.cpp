@@ -66,8 +66,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         y  = proxim.m_x;
         fy = m_function.vgrad(y, gy);
 
-        const auto ghat  = miu / t * (x - y);
+        const auto ghat  = (miu / t) * (x - y);
         const auto delta = fx - proxim.m_fhat + 0.5 * ghat.dot(y - x);
+        const auto error = fx - fy + gy.dot(y - x);
         const auto epsil = fx - proxim.m_fhat + ghat.dot(y - x);
         const auto gnorm = ghat.lpNorm<2>();
 
@@ -78,8 +79,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                     ",delta=", delta, ",epsil=", epsil, ",gnorm=", gnorm, ",bsize=", bundle.size(), ",miu=", miu,
                     ",t=", t, "[", tL, ",", tR, "]\n");
 
-        assert(epsil + epsilon1<scalar_t>() >= 0.0);
         assert(delta + epsilon1<scalar_t>() >= 0.0);
+        assert(error + epsilon1<scalar_t>() >= 0.0);
+        assert(epsil + epsilon1<scalar_t>() >= 0.0);
 
         if (const auto failed = !std::isfinite(fy); failed)
         {
@@ -98,7 +100,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         else
         {
             tR = t;
-            if (tL < epsilon0<scalar_t>() && epsil <= m_m3 * delta)
+            if (tL < epsilon0<scalar_t>() && error <= m_m3 * delta)
             {
                 status = csearch_status::null_step;
                 break;
