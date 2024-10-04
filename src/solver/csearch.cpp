@@ -97,6 +97,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto test_cutting_plane = gconv || (ghat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
         const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;              // test (34)
 
+        // step (1...) - curve search
         if (const auto failed = !std::isfinite(fy); failed)
         {
             status = csearch_status::failed;
@@ -124,7 +125,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                 break;
             }
             // step (6)
-            new_trial();
+            t = new_trial();
         }
         else
         {
@@ -136,7 +137,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                 break;
             }
             // step (6)
-            new_trial();
+            t = new_trial();
         }
     }
 
