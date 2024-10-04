@@ -74,9 +74,6 @@ void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scala
 {
     const auto serious_step = true;
     append(y, gy, fy, serious_step);
-    m_x  = y;
-    m_gx = gy;
-    m_fx = fy;
 }
 
 void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
@@ -169,7 +166,8 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
 {
     if (size() > 0)
     {
-        m_bsize = remove_if([&](const tensor_size_t i) { return m_solution.m_alphas(i) < epsilon; });
+        (void)epsilon;
+        // m_bsize = remove_if([&](const tensor_size_t i) { return m_solution.m_alphas(i) < epsilon; });
     }
 }
 
@@ -177,11 +175,12 @@ void bundle_t::delete_oldest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
     {
-        store_aggregate();
+        (void)count;
+        /*store_aggregate();
 
         m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
 
-        append_aggregate();
+        append_aggregate();*/
     }
 }
 
@@ -240,6 +239,13 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     for (tensor_size_t i = 0; serious_step && i < m_bsize; ++i)
     {
         m_bundleH(i) += m_bundleG.row(i).segment(0, dims()).dot(y - m_x);
+    }
+
+    if (serious_step)
+    {
+        m_x  = y;
+        m_gx = gy;
+        m_fx = fy;
     }
 
     write_cutting_plane(m_bundleG.tensor(m_bsize), m_bundleH(m_bsize), m_x, y, gy, fy);

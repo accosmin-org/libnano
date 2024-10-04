@@ -86,6 +86,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                     ",delta=", delta, ",error=", error, ",epsil=", epsil, ",gnorm=", gnorm, ",bsize=", bundle.size(),
                     ",miu=", miu, ",t=", t, "[", tL, ",", tR, "]\n");
 
+        assert(proxim.m_fhat <= fx);
         assert(delta + epsilon1<scalar_t>() >= 0.0);
         assert(error + epsilon1<scalar_t>() >= 0.0);
         assert(epsil + epsilon1<scalar_t>() >= 0.0);
