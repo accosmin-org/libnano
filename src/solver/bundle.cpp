@@ -166,8 +166,7 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
 {
     if (size() > 0)
     {
-        (void)epsilon;
-        // m_bsize = remove_if([&](const tensor_size_t i) { return m_solution.m_alphas(i) < epsilon; });
+        m_bsize = remove_if([&](const tensor_size_t i) { return m_solution.m_alphas(i) < epsilon; });
     }
 }
 
