@@ -48,16 +48,6 @@ bundle_t::solution_t::solution_t(const tensor_size_t dims)
 {
 }
 
-bool bundle_t::solution_t::epsil_converged(const scalar_t epsilon) const
-{
-    return m_epsil < epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
-}
-
-bool bundle_t::solution_t::gnorm_converged(const scalar_t epsilon) const
-{
-    return m_gnorm < epsilon * std::sqrt(static_cast<scalar_t>(m_x.size()));
-}
-
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     : m_program(make_program(state.x().size()))
     , m_bundleG(max_size + 1, state.x().size() + 1)
@@ -66,8 +56,19 @@ bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
+    , m_f0(state.fx())
 {
     append(state.x(), state.gx(), state.fx(), true);
+}
+
+scalar_t bundle_t::etol(const scalar_t epsilon) const
+{
+    return epsilon * std::sqrt(static_cast<size_t>(dims()));
+}
+
+scalar_t bundle_t::gtol(const scalar_t epsilon) const
+{
+    return epsilon * std::sqrt(static_cast<size_t>(dims())) * std::max(1.0, m_f0);
 }
 
 void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
@@ -174,12 +175,11 @@ void bundle_t::delete_oldest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
     {
-        (void)count;
-        /*store_aggregate();
+        store_aggregate();
 
         m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
 
-        append_aggregate();*/
+        append_aggregate();
     }
 }
 
@@ -233,7 +233,8 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     assert(dims() == gy.size());
 
     delete_inactive(epsilon0<scalar_t>());
-    delete_largest(2);
+    // delete_largest(2);
+    delete_oldest(2);
 
     for (tensor_size_t i = 0; serious_step && i < m_bsize; ++i)
     {

@@ -34,18 +34,6 @@ public:
     {
         explicit solution_t(tensor_size_t dims = 0);
 
-        ///
-        /// \brief return true if converged wrt the smeared approximation error, see (1).
-        /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
-        ///
-        bool epsil_converged(scalar_t epsilon) const;
-
-        ///
-        /// \brief return true if converged wrt the smeared sub-gradient, see (1).
-        /// FIXME: citation here, but at least use it consistently across proximal bundle algorithms.
-        ///
-        bool gnorm_converged(scalar_t epsilon) const;
-
         // attributes
         vector_t m_x;           ///< optimum: stability center
         scalar_t m_r{0.0};      ///< optimum: level (if applicable)
@@ -94,6 +82,21 @@ public:
     scalar_t fx() const { return m_fx; }
 
     ///
+    /// \brief return the tolerance for error-like statistics, see (1):
+    ///     error/delta/ehat <= epsilon * sqrt(n).
+    ///
+    scalar_t etol(scalar_t epsilon) const;
+
+    ///
+    /// \brief return the tolerance for the smeared gradient:
+    ///     |G_hat| <= epsilon * sqrt(n) * std::max(1, f(x0)).
+    ///
+    /// NB: this is different from any of the given references as (3) doesn't use a specific criterion,
+    ///     while (1) uses `epsilon * sqrt(n)` which doesn't work for badly scaled problems.
+    ///
+    scalar_t gtol(scalar_t epsilon) const;
+
+    ///
     /// \brief change the proximity center to the given point and update the bundle.
     ///
     void moveto(vector_cmap_t y, vector_cmap_t gy, scalar_t fy);
@@ -126,7 +129,10 @@ private:
     template <class toperator>
     tensor_size_t remove_if(const toperator& op)
     {
-        return nano::remove_if(op, m_bundleG.slice(0, m_bsize), m_bundleH.slice(0, m_bsize));
+        auto bundleG = m_bundleG.slice(0, m_bsize);
+        auto bundleH = m_bundleH.slice(0, m_bsize);
+        auto bundleA = m_solution.m_alphas.slice(0, m_bsize);
+        return nano::remove_if(op, bundleG, bundleH, bundleA);
     }
 
     void delete_inactive(scalar_t epsilon);
@@ -149,5 +155,6 @@ private:
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)
     scalar_t            m_fx;       ///< function value at the proximal center
+    scalar_t            m_f0;       ///< function value at the starting point (useful for computing stopping criteria)
 };
 } // namespace nano
