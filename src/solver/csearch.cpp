@@ -38,7 +38,7 @@ csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar
 const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu, const tensor_size_t max_evals,
                                             const scalar_t epsilon, const logger_t& logger)
 {
-    constexpr auto level         = std::numeric_limits<scalar_t>::quiet_NaN();
+    constexpr auto level = std::numeric_limits<scalar_t>::quiet_NaN();
 
     auto& t = m_point.m_t;
     t       = 1.0;
@@ -81,12 +81,13 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto gconv = gnorm <= bundle.gtol(epsilon);
 
         logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
-                    ",delta=", delta, ",error=", error, ",epsil=", epsil, ",gnorm=", gnorm, ",bsize=", bundle.size(),
-                    ",miu=", miu, ",t=", t, "[", tL, ",", tR, "]\n");
+                    ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon), ",gnorm=", gnorm,
+                    "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
+                    "]\n");
 
-        assert(delta + epsilon2<scalar_t>() >= 0.0);
-        assert(error + epsilon2<scalar_t>() >= 0.0);
-        assert(epsil + epsilon2<scalar_t>() >= 0.0);
+        assert(delta + epsilon1<scalar_t>() >= 0.0);
+        assert(error + epsilon1<scalar_t>() >= 0.0);
+        assert(epsil + epsilon1<scalar_t>() >= 0.0);
 
         // compute tests...
         const auto test_converged     = econv && gconv;                              // stopping criterion (35)

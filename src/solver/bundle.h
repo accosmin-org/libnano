@@ -22,7 +22,7 @@ namespace nano
 ///
 /// NB: the bundle is kept small by:
 ///     - first removing all inactive constraints and
-///     - then the ones with the largest approximation error if needed - see (2).
+///     - then the ones with the smallest Lagrange multipliers if needed - see (1, ch 5.1.4).
 ///
 class NANO_PUBLIC bundle_t
 {
@@ -136,8 +136,7 @@ private:
     }
 
     void delete_inactive(scalar_t epsilon);
-    void delete_largest(tensor_size_t count);
-    void delete_oldest(tensor_size_t count);
+    void delete_smallest(tensor_size_t count);
 
     void store_aggregate();
     void append_aggregate();

@@ -171,40 +171,15 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
     }
 }
 
-void bundle_t::delete_oldest(const tensor_size_t count)
+void bundle_t::delete_smallest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
     {
         store_aggregate();
 
+        // see (1), ch 5.1.4 - remove the linearizations with the smallest Lagrange multipliers!
+        // NB: the Lagrange multipliers are already sorted!
         m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
-
-        append_aggregate();
-    }
-}
-
-void bundle_t::delete_largest(const tensor_size_t count)
-{
-    if (size() + 1 == capacity())
-    {
-        store_aggregate();
-
-        m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
-
-        /* FIXME: what are the bundle indices with the largest error in the new formulation?!
-        // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
-        [maybe_unused]] const auto old_size = m_bsize;
-        assert(count <= m_bsize);
-
-        m_alphas.slice(0, m_bsize) = m_bundleE.slice(0, m_bsize);
-        std::nth_element(m_alphas.begin(), m_alphas.begin() + (m_bsize - count - 1), m_alphas.begin() + m_bsize);
-
-        const auto threshold = m_alphas(m_bsize - count - 1);
-
-        m_bsize = remove_if([&](const tensor_size_t i) { return m_bundleE(i) >= threshold; });
-
-        assert(m_bsize + count <= old_size);
-        assert(m_bundleE.slice(0, m_bsize).max() <= threshold + std::numeric_limits<scalar_t>::epsilon()); */
 
         append_aggregate();
     }
@@ -233,8 +208,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     assert(dims() == gy.size());
 
     delete_inactive(epsilon0<scalar_t>());
-    // delete_largest(2);
-    delete_oldest(2);
+    delete_smallest(2);
 
     for (tensor_size_t i = 0; serious_step && i < m_bsize; ++i)
     {
