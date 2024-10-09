@@ -139,6 +139,8 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_alphas = solution.m_u.segment(0, m);
     m_solution.m_lambda = has_level ? solution.m_u(m) : 0.0;
 
+    assert(m_solution.m_alphas.min() >= 0.0);
+
     /*
     assert(m_solution.m_lambda >= 0.0);
     assert(!has_level || m_solution.m_r <= level);
@@ -178,8 +180,22 @@ void bundle_t::delete_smallest(const tensor_size_t count)
         store_aggregate();
 
         // see (1), ch 5.1.4 - remove the linearizations with the smallest Lagrange multipliers!
-        // NB: the Lagrange multipliers are already sorted!
-        m_bsize = remove_if([&](const tensor_size_t i) { return i < count; });
+        // NB: reuse the alphas buffer as it will be re-computed anyway at the next proximal point update!
+        [[maybe_unused]] const auto old_size = m_bsize;
+        assert(count <= m_bsize);
+
+        auto alphas = vector_t{m_solution.m_alphas.segment(0, m_bsize)};
+
+        std::nth_element(alphas.begin(), alphas.begin() + (count - 1), alphas.begin() + m_bsize);
+
+        const auto threshold = alphas(count - 1);
+
+        auto deleted = tensor_size_t{0};
+        m_bsize      = remove_if([&](const tensor_size_t i)
+                            { return m_solution.m_alphas(i) <= threshold && (deleted++ < count); });
+
+        assert(m_bsize + count == old_size);
+        assert(m_solution.m_alphas.slice(0, m_bsize).min() >= threshold);
 
         append_aggregate();
     }
