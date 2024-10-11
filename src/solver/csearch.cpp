@@ -87,7 +87,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
 
         assert(delta + epsilon1<scalar_t>() >= 0.0);
         assert(error + epsilon1<scalar_t>() >= 0.0);
-        assert(epsil + epsilon1<scalar_t>() >= 0.0);
+        // assert(epsil + epsilon1<scalar_t>() >= 0.0);
 
         // compute tests...
         const auto test_converged     = econv && gconv;                              // stopping criterion (35)

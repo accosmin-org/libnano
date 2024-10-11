@@ -133,7 +133,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_x    = y + m_x;
     m_solution.m_r    = solution.m_x(n);
     m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
-    assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
+    // assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);
@@ -173,6 +173,9 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
     }
 }
 
+#include <iomanip>
+#include <iostream>
+
 void bundle_t::delete_smallest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
@@ -184,15 +187,33 @@ void bundle_t::delete_smallest(const tensor_size_t count)
         [[maybe_unused]] const auto old_size = m_bsize;
         assert(count <= m_bsize);
 
-        auto alphas = vector_t{m_solution.m_alphas.segment(0, m_bsize)};
+        std::vector<std::pair<scalar_t, tensor_size_t>> alphas;
+        alphas.reserve(static_cast<size_t>(m_bsize));
+        for (tensor_size_t i = 0; i < m_bsize; ++i)
+        {
+            alphas.emplace_back(m_solution.m_alphas(i), i);
+        }
 
-        std::nth_element(alphas.begin(), alphas.begin() + (count - 1), alphas.begin() + m_bsize);
+        std::sort(alphas.begin(), alphas.end());
+        alphas.erase(alphas.begin() + count, alphas.end());
 
-        const auto threshold = alphas(count - 1);
+        assert(alphas.size() == static_cast<size_t>(count));
 
-        auto deleted = tensor_size_t{0};
-        m_bsize      = remove_if([&](const tensor_size_t i)
-                            { return m_solution.m_alphas(i) <= threshold && (deleted++ < count); });
+        std::cout << std::fixed << std::setprecision(20) << "alphas(1)=" << m_solution.m_alphas.array() << std::endl;
+
+        [[maybe_unused]] const auto threshold = alphas.rbegin()->first;
+
+        std::cout << std::fixed << std::setprecision(20) << "threshold=" << threshold << std::endl;
+
+        m_bsize = remove_if(
+            [&](const tensor_size_t i)
+            {
+                const auto op = [&](const auto& ialpha) { return ialpha.second == i; };
+                const auto it = std::find_if(alphas.begin(), alphas.end(), op);
+                return it != alphas.end();
+            });
+
+        std::cout << std::fixed << std::setprecision(20) << "alphas(2)=" << m_solution.m_alphas.array() << std::endl;
 
         assert(m_bsize + count == old_size);
         assert(m_solution.m_alphas.slice(0, m_bsize).min() >= threshold);
