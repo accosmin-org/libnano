@@ -173,9 +173,6 @@ void bundle_t::delete_inactive(const scalar_t epsilon)
     }
 }
 
-#include <iomanip>
-#include <iostream>
-
 void bundle_t::delete_smallest(const tensor_size_t count)
 {
     if (size() + 1 == capacity())
@@ -198,12 +195,7 @@ void bundle_t::delete_smallest(const tensor_size_t count)
         alphas.erase(alphas.begin() + count, alphas.end());
 
         assert(alphas.size() == static_cast<size_t>(count));
-
-        std::cout << std::fixed << std::setprecision(20) << "alphas(1)=" << m_solution.m_alphas.array() << std::endl;
-
         [[maybe_unused]] const auto threshold = alphas.rbegin()->first;
-
-        std::cout << std::fixed << std::setprecision(20) << "threshold=" << threshold << std::endl;
 
         m_bsize = remove_if(
             [&](const tensor_size_t i)
@@ -212,8 +204,6 @@ void bundle_t::delete_smallest(const tensor_size_t count)
                 const auto it = std::find_if(alphas.begin(), alphas.end(), op);
                 return it != alphas.end();
             });
-
-        std::cout << std::fixed << std::setprecision(20) << "alphas(2)=" << m_solution.m_alphas.array() << std::endl;
 
         assert(m_bsize + count == old_size);
         assert(m_solution.m_alphas.slice(0, m_bsize).min() >= threshold);

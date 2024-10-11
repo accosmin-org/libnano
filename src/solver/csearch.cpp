@@ -85,8 +85,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                     "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
                     "]\n");
 
-        assert(delta + epsilon1<scalar_t>() >= 0.0);
-        assert(error + epsilon1<scalar_t>() >= 0.0);
+        assert(delta >= 0.0);
+        assert(error >= 0.0);
         // assert(epsil + epsilon1<scalar_t>() >= 0.0);
 
         // compute tests...
