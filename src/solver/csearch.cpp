@@ -79,25 +79,28 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto gnorm = ghat.lpNorm<2>();
         const auto econv = epsil <= bundle.etol(epsilon);
         const auto gconv = gnorm <= bundle.gtol(epsilon);
+        const auto dfhat = std::fabs(fx - proxim.m_fhat);
 
-        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
+        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx,
+                    ",fhat=", proxim.m_fhat, ",df=", std::log10(std::fabs(fx - proxim.m_fhat)), ",fy=", fy,
                     ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon), ",gnorm=", gnorm,
                     "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
-                    "]\n");
+                    "].\n");
 
-        assert(delta >= 0.0);
-        assert(error >= 0.0);
-        // assert(epsil + epsilon1<scalar_t>() >= 0.0);
+        assert(delta + epsilon1<scalar_t>() >= 0.0);
+        assert(error + epsilon1<scalar_t>() >= 0.0);
+        assert(fx + epsilon1<scalar_t>() >= proxim.m_fhat);
 
         // compute tests...
-        const auto test_converged     = econv && gconv;                              // stopping criterion (35)
+        const auto test_failed        = !std::isfinite(fy);
+        const auto test_converged     = (dfhat < epsilon) || (econv && gconv);       // stopping criterion (35)
         const auto test_descent       = fy <= fx - m_m1 * delta;                     // descent test (31)
         const auto test_null_step     = error <= m_m3 * delta;                       // null-step test (33)
         const auto test_cutting_plane = gconv || (ghat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
         const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;              // test (34)
 
         // step (1...) - curve search
-        if (const auto failed = !std::isfinite(fy); failed)
+        if (test_failed)
         {
             status = csearch_status::failed;
             break;
@@ -141,7 +144,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
     }
 
     logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fy=", m_point.m_fy,
-                ",t=", m_point.m_t, ",status=", m_point.m_status, "\n");
+                ",t=", m_point.m_t, ",status=", m_point.m_status, ".\n");
 
     return m_point;
 }

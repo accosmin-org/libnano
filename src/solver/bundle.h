@@ -154,6 +154,5 @@ private:
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)
     scalar_t            m_fx;       ///< function value at the proximal center
-    scalar_t            m_f0;       ///< function value at the starting point (useful for computing stopping criteria)
 };
 } // namespace nano

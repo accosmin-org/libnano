@@ -177,9 +177,10 @@ struct solver_description_t
     const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
 
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(19) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
+    stream << std::fixed << std::setprecision(20) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
            << lsearchk_id << "]\n"
            << ":x0=[" << state0.x().transpose() << "],f0=" << state0.fx() << ",g0=" << state0.gradient_test();
+    std::cout << std::fixed << std::setprecision(20);
     if (state0.ceq().size() + state0.cineq().size() > 0)
     {
         stream << ",c0=" << state0.constraint_test() << "\n";

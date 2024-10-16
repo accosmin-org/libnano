@@ -56,7 +56,6 @@ bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
-    , m_f0(state.fx())
 {
     append(state.x(), state.gx(), state.fx(), true);
 }
@@ -68,7 +67,7 @@ scalar_t bundle_t::etol(const scalar_t epsilon) const
 
 scalar_t bundle_t::gtol(const scalar_t epsilon) const
 {
-    return epsilon * std::sqrt(static_cast<size_t>(dims())) * std::max(1.0, m_f0);
+    return epsilon * std::sqrt(static_cast<size_t>(dims()));
 }
 
 void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
@@ -117,7 +116,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto solution = m_solver.solve(m_program, logger);
     assert(solution.m_x.size() == n + 1);
 
-    if (!m_program.feasible(solution.m_x, epsilon1<scalar_t>()))
+    if (!m_program.feasible(solution.m_x, epsilon0<scalar_t>()))
     {
         logger.error("bundle: unfeasible solution, deviation(ineq)=", m_program.m_ineq.deviation(solution.m_x), ".\n");
     }
@@ -133,7 +132,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_x    = y + m_x;
     m_solution.m_r    = solution.m_x(n);
     m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
-    // assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
+    assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);

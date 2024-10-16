@@ -51,16 +51,16 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
             proximity.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
             Gn = Gn1;
 
-            bundle.moveto(y, gy, fy);
             assert(fy < state.fx());
+            bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
         {
             Gn = bundle.proxim().m_ghat;
 
-            bundle.moveto(y, gy, fy);
             assert(fy < state.fx());
+            bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
