@@ -93,22 +93,25 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     const auto bundleG = m_bundleG.slice(0, m);
     const auto bundleH = m_bundleH.slice(0, m);
+    const auto bundleF = m_fx - bundleH.array();
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
     m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
     m_program.m_c(n)                                   = 1.0;
 
+    logger.info("bundleH=", bundleH.array(), ",fx=", m_fx, ",tau=", tau, ".\n");
+
     if (has_level)
     {
         auto weights    = m_bundleG.vector(capacity() - 1);
         weights.array() = 0.0;
         weights(n)      = 1.0;
-        m_program.constrain(program::make_inequality(bundleG, -bundleH), program::make_inequality(weights, level));
+        m_program.constrain(program::make_inequality(bundleG, bundleF), program::make_inequality(weights, level));
     }
     else
     {
-        m_program.constrain(program::make_inequality(bundleG, -bundleH));
+        m_program.constrain(program::make_inequality(bundleG, bundleF));
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
@@ -130,9 +133,9 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     // extract solution and statistics, see (1)
     const auto y      = solution.m_x.segment(0, n);
     m_solution.m_x    = y + m_x;
-    m_solution.m_r    = solution.m_x(n);
+    m_solution.m_r    = solution.m_x(n) + m_fx;
     m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
-    assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
+    assert(m_solution.m_fhat <= m_solution.m_r);
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);

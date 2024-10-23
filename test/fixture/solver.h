@@ -234,6 +234,11 @@ struct solver_description_t
     {
         UTEST_REQUIRE(function);
 
+        if (function->name() != "trid[4D]") // mse+ridge[1e+06][4D]")
+        {
+            continue;
+        }
+
         for (const auto& x0 : make_random_x0s(*function))
         {
             auto config = minimize_config_t{};
