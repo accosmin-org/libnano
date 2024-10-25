@@ -28,7 +28,7 @@ class NANO_PUBLIC bundle_t
 {
 public:
     ///
-    /// \brief solution to the quadratic optimization proboem from (1).
+    /// \brief solution to the quadratic optimization problem from (1).
     ///
     struct solution_t
     {
@@ -37,13 +37,8 @@ public:
         // attributes
         vector_t m_x;           ///< optimum: stability center
         scalar_t m_r{0.0};      ///< optimum: level (if applicable)
-        vector_t m_ghat;        ///< aggregated sub-gradient
-        scalar_t m_fhat{0.0};   ///<
         vector_t m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
         scalar_t m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
-        scalar_t m_gnorm{0.0};  ///< L2-norm of smeared gradient
-        scalar_t m_epsil{0.0};  ///< aggregate linear error, see (1)
-        scalar_t m_delta{0.0};  ///< nominal decrease, see (2, 3)
     };
 
     ///
@@ -82,6 +77,11 @@ public:
     scalar_t fx() const { return m_fx; }
 
     ///
+    /// \brief return the
+    ///
+    scalar_t fhat(const vector_t& x) const;
+
+    ///
     /// \brief return the tolerance for error-like statistics, see (1):
     ///     error/delta/ehat <= epsilon * sqrt(n).
     ///
@@ -89,7 +89,7 @@ public:
 
     ///
     /// \brief return the tolerance for the smeared gradient:
-    ///     |G_hat| <= epsilon * sqrt(n) * std::max(1, f(x0)).
+    ///     |G_hat| <= epsilon * sqrt(n).
     ///
     /// NB: this is different from any of the given references as (3) doesn't use a specific criterion,
     ///     while (1) uses `epsilon * sqrt(n)` which doesn't work for badly scaled problems.
@@ -115,11 +115,6 @@ public:
     ///     where x_k^ is the current proximal stability center.
     ///
     const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
-
-    ///
-    /// \brief return the solution of the last doubly stabilized bundle problem.
-    ///
-    const solution_t& proxim() const { return m_solution; }
 
 private:
     tensor_size_t dims() const { return m_x.size(); }

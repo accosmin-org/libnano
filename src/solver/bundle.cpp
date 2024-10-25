@@ -44,7 +44,6 @@ void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_cmap_t x, con
 
 bundle_t::solution_t::solution_t(const tensor_size_t dims)
     : m_x(dims)
-    , m_ghat(dims)
 {
 }
 
@@ -131,11 +130,9 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
 
     // extract solution and statistics, see (1)
-    const auto y      = solution.m_x.segment(0, n);
-    m_solution.m_x    = y + m_x;
-    m_solution.m_r    = solution.m_x(n) + m_fx;
-    m_solution.m_fhat = eval_cutting_planes(bundleG, bundleH, y);
-    assert(m_solution.m_fhat <= m_solution.m_r);
+    const auto y   = solution.m_x.segment(0, n);
+    m_solution.m_x = y + m_x;
+    m_solution.m_r = solution.m_x(n) + m_fx;
 
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
     m_solution.m_alphas = solution.m_u.segment(0, m);
@@ -143,28 +140,19 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     assert(m_solution.m_alphas.min() >= 0.0);
 
-    /*
-    assert(m_solution.m_lambda >= 0.0);
-    assert(!has_level || m_solution.m_r <= level);
-
-    const auto miu = m_solution.m_lambda + 1.0;
-
-    m_solution.m_ghat = -y / (tau * miu);
-    assert(m_solution.m_fhat <= m_fx);
-    assert(m_solution.m_fhat <= m_solution.m_r + epsilon1<scalar_t>());
-    assert(m_solution.m_fhat <= m_fx - y.dot(y) / (2.0 * tau));
-
-    m_solution.m_gnorm = m_solution.m_ghat.lpNorm<2>();
-    m_solution.m_epsil = m_fx - m_solution.m_r - y.squaredNorm() / tau;
-    m_solution.m_delta = m_fx - m_solution.m_fhat - y.squaredNorm() / (2.0 * tau);
-
-    assert(m_solution.m_epsil + epsilon1<scalar_t>() >= 0.0);
-    assert(m_solution.m_delta + epsilon1<scalar_t>() >= 0.0);*/
-
-    // TODO: these statistics are specific to RQB
-    // TODO: DBSM uses a different strategy to detect descent steps (miu_k_tau instead of delta as for RQB)
-
     return m_solution;
+}
+
+scalar_t bundle_t::fhat(const vector_t& x) const
+{
+    assert(size() > 0);
+    assert(dims() == x.size());
+
+    const auto m       = size();
+    const auto bundleG = m_bundleG.slice(0, m);
+    const auto bundleH = m_bundleH.slice(0, m);
+
+    return eval_cutting_planes(bundleG, bundleH, x - m_x);
 }
 
 void bundle_t::delete_inactive(const scalar_t epsilon)

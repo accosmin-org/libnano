@@ -36,7 +36,8 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto& [t, status, y, gy, fy] = csearch.search(bundle, proximity.miu(), max_evals, epsilon, logger);
+        [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] =
+            csearch.search(bundle, proximity.miu(), max_evals, epsilon, logger);
 
         const auto iter_ok   = status != csearch_status::failed;
         const auto converged = status == csearch_status::converged;
@@ -47,7 +48,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
         if (status == csearch_status::descent_step)
         {
-            Gn1 = bundle.proxim().m_ghat;
+            Gn1 = ghat;
             proximity.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
             Gn = Gn1;
 
@@ -57,7 +58,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         }
         else if (status == csearch_status::cutting_plane_step)
         {
-            Gn = bundle.proxim().m_ghat;
+            Gn = ghat;
 
             assert(fy < state.fx());
             bundle.moveto(y, gy, fy);

@@ -38,6 +38,8 @@ public:
         vector_t       m_y;                              ///<
         vector_t       m_gy;                             ///<
         scalar_t       m_fy{0.0};                        ///<
+        vector_t       m_gyhat;                          ///<
+        scalar_t       m_fyhat{0.0};                     ///<
     };
 
     ///

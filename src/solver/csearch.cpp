@@ -19,6 +19,7 @@ nano::enum_map_t<csearch_status> nano::enum_string()
 csearch_t::point_t::point_t(const tensor_size_t dims)
     : m_y(dims)
     , m_gy(dims)
+    , m_gyhat(dims)
 {
 }
 
@@ -63,32 +64,36 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto&       y      = m_point.m_y;
         auto&       gy     = m_point.m_gy;
         auto&       fy     = m_point.m_fy;
+        auto&       ghat   = m_point.m_gyhat;
+        auto&       fhat   = m_point.m_fyhat;
         const auto& x      = bundle.x();
         const auto  fx     = bundle.fx();
 
         // step (1) - get proximal point, compute statistics
         const auto& proxim = bundle.solve(t / miu, level, logger);
 
-        y  = proxim.m_x;
-        fy = m_function.vgrad(y, gy);
+        y    = proxim.m_x;
+        fy   = m_function.vgrad(y, gy);
+        fhat = bundle.fhat(y);
+        ghat = (miu / t) * (x - y);
 
-        const auto ghat  = (miu / t) * (x - y);
-        const auto delta = fx - proxim.m_fhat + 0.5 * ghat.dot(y - x);
+        assert(fx >= bundle.fhat(x));
+        assert(bundle.fhat(x) >= fhat + 0.5 * (miu / t) * (y - x).squaredNorm());
+
+        const auto delta = fx - fhat + 0.5 * ghat.dot(y - x);
         const auto error = fx - fy + gy.dot(y - x);
-        const auto epsil = fx - proxim.m_fhat + ghat.dot(y - x);
+        const auto epsil = fx - fhat + ghat.dot(y - x);
         const auto gnorm = ghat.lpNorm<2>();
         const auto econv = epsil <= bundle.etol(epsilon);
         const auto gconv = gnorm <= bundle.gtol(epsilon);
 
-        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx,
-                    ",fhat=", proxim.m_fhat, ",df=", std::log10(std::fabs(fx - proxim.m_fhat)), ",fy=", fy,
-                    ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon), ",gnorm=", gnorm,
-                    "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[", tL, ",", tR,
-                    "].\n");
+        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
+                    ",fyhat=", fhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon),
+                    ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[",
+                    tL, ",", tR, "].\n");
 
         assert(delta >= 0.0);
         assert(error >= 0.0);
-        assert(fx >= proxim.m_fhat);
 
         // compute tests...
         const auto test_failed        = !std::isfinite(fy);
