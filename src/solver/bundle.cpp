@@ -100,8 +100,6 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
     m_program.m_c(n)                                   = 1.0;
 
-    logger.info("bundleH=", bundleH.array(), ",fx=", m_fx, ",tau=", tau, ".\n");
-
     if (has_level)
     {
         auto weights    = m_bundleG.vector(capacity() - 1);

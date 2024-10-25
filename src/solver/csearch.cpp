@@ -64,33 +64,34 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         auto&       y      = m_point.m_y;
         auto&       gy     = m_point.m_gy;
         auto&       fy     = m_point.m_fy;
-        auto&       ghat   = m_point.m_gyhat;
-        auto&       fhat   = m_point.m_fyhat;
+        auto&       gyhat  = m_point.m_gyhat;
+        auto&       fyhat  = m_point.m_fyhat;
         const auto& x      = bundle.x();
         const auto  fx     = bundle.fx();
+        const auto  fxhat  = bundle.fhat(x);
 
         // step (1) - get proximal point, compute statistics
         const auto& proxim = bundle.solve(t / miu, level, logger);
 
         y    = proxim.m_x;
         fy   = m_function.vgrad(y, gy);
-        fhat = bundle.fhat(y);
-        ghat = (miu / t) * (x - y);
+        fyhat = bundle.fhat(y);
+        gyhat = (miu / t) * (x - y);
 
-        assert(fx >= bundle.fhat(x));
-        assert(bundle.fhat(x) >= fhat + 0.5 * (miu / t) * (y - x).squaredNorm());
+        assert(fx >= fxhat);
+        assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
 
-        const auto delta = fx - fhat + 0.5 * ghat.dot(y - x);
+        const auto delta = fx - fyhat + 0.5 * gyhat.dot(y - x);
         const auto error = fx - fy + gy.dot(y - x);
-        const auto epsil = fx - fhat + ghat.dot(y - x);
-        const auto gnorm = ghat.lpNorm<2>();
+        const auto epsil = fx - fyhat + gyhat.dot(y - x);
+        const auto gnorm = gyhat.lpNorm<2>();
         const auto econv = epsil <= bundle.etol(epsilon);
         const auto gconv = gnorm <= bundle.gtol(epsilon);
 
-        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fy=", fy,
-                    ",fyhat=", fhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon),
-                    ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[",
-                    tL, ",", tR, "].\n");
+        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fxhat=", fxhat,
+                    ",fy=", fy, ",fyhat=", fyhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/",
+                    bundle.etol(epsilon), ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(),
+                    ",miu=", miu, ",t=", t, "[", tL, ",", tR, "].\n");
 
         assert(delta >= 0.0);
         assert(error >= 0.0);
@@ -100,7 +101,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto test_converged     = econv && gconv;                              // stopping criterion (35)
         const auto test_descent       = fy <= fx - m_m1 * delta;                     // descent test (31)
         const auto test_null_step     = error <= m_m3 * delta;                       // null-step test (33)
-        const auto test_cutting_plane = gconv || (ghat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
+        const auto test_cutting_plane = gconv || (gyhat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
         const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;              // test (34)
 
         // step (1...) - curve search
