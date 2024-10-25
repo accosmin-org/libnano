@@ -27,8 +27,9 @@ auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
     return value;
 }
 
-void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_cmap_t x, const vector_cmap_t y,
-                         const vector_cmap_t gy, const scalar_t fy)
+template <typename tvectory>
+void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_cmap_t x, const vector_cmap_t y, const tvectory& gy,
+                         const scalar_t fy)
 {
     const auto n = x.size();
 
@@ -130,11 +131,11 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     }
 
     // extract solution and statistics, see (1)
-    const auto y   = solution.m_x.segment(0, n);
-    m_solution.m_x = y + m_x;
-    m_solution.m_r = solution.m_x(n) + m_fx;
-
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));
+
+    m_solution.m_x      = solution.m_x.segment(0, n) + m_x;
+    m_solution.m_r      = solution.m_x(n) + m_fx;
+    m_solution.m_tau    = tau;
     m_solution.m_alphas = solution.m_u.segment(0, m);
     m_solution.m_lambda = has_level ? solution.m_u(m) : 0.0;
 
@@ -206,8 +207,9 @@ void bundle_t::store_aggregate()
 {
     // NB: stored the aggregation in the last slot!
     const auto ilast = capacity() - 1;
-    write_cutting_plane(m_bundleG.tensor(ilast), m_bundleH(ilast), m_x, m_solution.m_x, m_solution.m_ghat,
-                        m_solution.m_fhat);
+    const auto fhat  = this->fhat(m_solution.m_x);
+    const auto ghat  = (m_x - m_solution.m_x) / m_solution.m_tau;
+    write_cutting_plane(m_bundleG.tensor(ilast), m_bundleH(ilast), m_x, m_solution.m_x, ghat, fhat);
 }
 
 void bundle_t::append_aggregate()

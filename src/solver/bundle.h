@@ -37,6 +37,7 @@ public:
         // attributes
         vector_t m_x;           ///< optimum: stability center
         scalar_t m_r{0.0};      ///< optimum: level (if applicable)
+        scalar_t m_tau{0.0};    ///< proximal parameter
         vector_t m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
         scalar_t m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
     };
