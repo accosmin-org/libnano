@@ -15,6 +15,7 @@ namespace nano
 /// see (3) "Variable metric bundle methods: from conceptual to implementable forms", by Lemarechal, Sagastizabal, 1997
 /// see (4) "Dynamical adjustment of the prox-parameter in bundle methods", by Rey, Sagastizabal, 2002
 /// see (5) "Fast proximal algorithms for nonsmooth convex optimization", by Ouorou, 2020
+/// see (6) "A NU-algorithm for convex minimization", by Mifflin, Sagastizabal, 2005
 ///
 /// NB: the implementation follows the notation from (1). if the level parameter is infinite,
 ///     then this formulation becames the penalized proximal bundle algorithms
