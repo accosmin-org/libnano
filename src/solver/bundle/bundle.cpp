@@ -1,4 +1,4 @@
-#include <solver/bundle.h>
+#include <solver/bundle/bundle.h>
 
 using namespace nano;
 
@@ -82,6 +82,8 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
     append(y, gy, fy, serious_step);
 }
 
+#include <iostream>
+
 const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
     assert(size() > 0);
@@ -94,6 +96,9 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto bundleG = m_bundleG.slice(0, m);
     const auto bundleH = m_bundleH.slice(0, m);
     const auto bundleF = m_fx - bundleH.array();
+
+    logger.info("bundle: H=", bundleH.array(), ",tau=", tau, ".\n");
+    std::cout << std::flush;
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
@@ -127,6 +132,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     {
         logger.error("bundle: failed to solve, status=", solution.m_status, ".\n");
     }
+    std::cout << std::flush;
 
     // extract solution and statistics, see (1)
     assert(solution.m_u.size() == (has_level ? (m + 1) : m));

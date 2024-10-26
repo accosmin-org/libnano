@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/solver.h>
-#include <solver/nesterov.h>
+#include <solver/bundle/nesterov.h>
 
 namespace nano
 {

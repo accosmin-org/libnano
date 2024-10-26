@@ -1,5 +1,4 @@
-#include <solver/bundle.h>
-#include <solver/csearch.h>
+#include <solver/bundle/csearch.h>
 
 using namespace nano;
 
@@ -73,8 +72,10 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         // step (1) - get proximal point, compute statistics
         const auto& proxim = bundle.solve(t / miu, level, logger);
 
-        y    = proxim.m_x;
-        fy   = m_function.vgrad(y, gy);
+        logger.info("miu=", miu, ",t=", t, ".\n");
+
+        y     = proxim.m_x;
+        fy    = m_function.vgrad(y, gy);
         fyhat = bundle.fhat(y);
         gyhat = (miu / t) * (x - y);
 
@@ -98,11 +99,11 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
 
         // compute tests...
         const auto test_failed        = !std::isfinite(fy);
-        const auto test_converged     = econv && gconv;                              // stopping criterion (35)
-        const auto test_descent       = fy <= fx - m_m1 * delta;                     // descent test (31)
-        const auto test_null_step     = error <= m_m3 * delta;                       // null-step test (33)
+        const auto test_converged     = econv && gconv;                               // stopping criterion (35)
+        const auto test_descent       = fy <= fx - m_m1 * delta;                      // descent test (31)
+        const auto test_null_step     = error <= m_m3 * delta;                        // null-step test (33)
         const auto test_cutting_plane = gconv || (gyhat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
-        const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;              // test (34)
+        const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;               // test (34)
 
         // step (1...) - curve search
         if (test_failed)

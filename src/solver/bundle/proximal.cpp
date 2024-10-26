@@ -1,4 +1,4 @@
-#include <solver/proximity.h>
+#include <solver/bundle/proximal.h>
 
 using namespace nano;
 
@@ -30,22 +30,22 @@ scalar_t make_miu(const scalar_t miu, const scalar_t t, const tnu& nu, const txi
 }
 } // namespace
 
-proximity_t::proximity_t(const solver_state_t& state, const scalar_t miu0_min, const scalar_t miu0_max,
-                         const scalar_t min_dot_nuv)
+proximal_t::proximal_t(const solver_state_t& state, const scalar_t miu0_min, const scalar_t miu0_max,
+                       const scalar_t min_dot_nuv)
     : m_miu(std::clamp(make_miu0(state), miu0_min, miu0_max))
     , m_min_dot_nuv(min_dot_nuv)
 {
 }
 
-scalar_t proximity_t::miu() const
+scalar_t proximal_t::miu() const
 {
     assert(std::isfinite(m_miu));
     assert(m_miu > 0.0);
     return m_miu;
 }
 
-void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
-                         const vector_t& gn1)
+void proximal_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
+                        const vector_t& gn1)
 {
     const auto xi = xn1 - xn;
     const auto nu = gn1 - gn;
@@ -55,10 +55,10 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
     }
 }
 
-void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
-                         const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
+void proximal_t::update(const scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn,
+                        const vector_t& gn1, const vector_t& Gn, const vector_t& Gn1)
 {
-    // see (2): the variation that gives the minimum proximity parameter.
+    // see (2): the variation that gives the minimum proximal parameter.
     auto miu = std::numeric_limits<scalar_t>::max();
     for (const auto alpha1 : {0.0, 1.0})
     {
@@ -77,7 +77,7 @@ void proximity_t::update(const scalar_t t, const vector_t& xn, const vector_t& x
     }
 }
 
-void proximity_t::config(configurable_t& c, const string_t& prefix)
+void proximal_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(
         parameter_t::make_scalar_pair(scat(prefix, "::prox::miu0_range"), 0.0, LT, 1e-2, LT, 1e+2, LT, 1e+9));
@@ -85,7 +85,7 @@ void proximity_t::config(configurable_t& c, const string_t& prefix)
         parameter_t::make_scalar(scat(prefix, "::prox::min_dot_nuv"), 0.0, LT, epsilon0<scalar_t>(), LT, 1.0));
 }
 
-proximity_t proximity_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
+proximal_t proximal_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
 {
     const auto [miu0_min, miu0_max] = c.parameter(scat(prefix, "::prox::miu0_range")).value_pair<scalar_t>();
     const auto min_dot_nuv          = c.parameter(scat(prefix, "::prox::min_dot_nuv")).value<scalar_t>();

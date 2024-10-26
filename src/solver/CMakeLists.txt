@@ -8,14 +8,10 @@ target_sources(solver PRIVATE
     asga.cpp
     asga.h
     augmented.cpp
-    bundle.cpp
-    bundle.h
     cgd.cpp
     cgd.h
     cocob.cpp
     cocob.h
-    csearch.cpp
-    csearch.h
     ellipsoid.cpp
     ellipsoid.h
     fpba.cpp
@@ -28,15 +24,11 @@ target_sources(solver PRIVATE
     lbfgs.h
     lsearch.cpp
     lstep.cpp
-    nesterov.cpp
-    nesterov.h
     osga.cpp
     osga.h
     pdsgm.cpp
     pdsgm.h
     penalty.cpp
-    proximity.cpp
-    proximity.h
     quasi.cpp
     quasi.h
     rqb.cpp
@@ -46,3 +38,5 @@ target_sources(solver PRIVATE
     state.cpp
     universal.cpp
     universal.h)
+
+add_subdirectory(bundle)
