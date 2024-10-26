@@ -50,7 +50,7 @@ void proximal_t::safeguard(const scalar_t miu)
     // see (6): clamping updates to the previous value and to the initial value.
     if (std::isfinite(miu) && miu != std::numeric_limits<scalar_t>::max())
     {
-        m_miu = std::max(10.0 * m_miu, std::max(miu, std::max(0.01 * m_miu0, 0.1 * m_miu)));
+        m_miu = std::clamp(miu, std::max(0.01 * m_miu0, 0.1 * m_miu), 10.0 * m_miu);
     }
 }
 
