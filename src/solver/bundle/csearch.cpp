@@ -79,9 +79,6 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         fyhat = bundle.fhat(y);
         gyhat = (miu / t) * (x - y);
 
-        assert(fx >= fxhat);
-        assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
-
         const auto delta = fx - fyhat + 0.5 * gyhat.dot(y - x);
         const auto error = fx - fy + gy.dot(y - x);
         const auto epsil = fx - fyhat + gyhat.dot(y - x);
@@ -93,6 +90,9 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                     ",fy=", fy, ",fyhat=", fyhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/",
                     bundle.etol(epsilon), ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(),
                     ",miu=", miu, ",t=", t, "[", tL, ",", tR, "].\n");
+
+        assert(fx >= fxhat);
+        assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
 
         assert(delta >= 0.0);
         assert(error >= 0.0);
