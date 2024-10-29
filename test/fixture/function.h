@@ -127,7 +127,7 @@ using namespace nano;
             auto       gx = vector_t{x.size()};
             const auto fz = rfunction->vgrad(z);
             const auto fx = rfunction->vgrad(x, gx);
-            UTEST_CHECK_LESS(fx + gx.dot(z - x), fz + 1e-10);
+            UTEST_CHECK_LESS(fx + gx.dot(z - x), fz + epsilon0<scalar_t>());
         }
     }
 }
