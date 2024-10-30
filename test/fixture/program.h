@@ -76,7 +76,7 @@ struct expected_t
     vector_t      m_xbest;
     scalar_t      m_fbest{std::numeric_limits<scalar_t>::quiet_NaN()};
     vector_t      m_x0;
-    scalar_t      m_epsilon{1e-8};
+    scalar_t      m_epsilon{1e-10};
     solver_status m_status{solver_status::converged};
 };
 
