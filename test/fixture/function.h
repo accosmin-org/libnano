@@ -109,7 +109,8 @@ using namespace nano;
 }
 
 [[maybe_unused]] inline auto check_gradient(const function_t& function, const int trials = 100,
-                                            const scalar_t epsilon = 1e-8)
+                                            const scalar_t central_difference_epsilon = 1e-8,
+                                            const scalar_t convex_subgradient_epsilon = 1e-14)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -119,7 +120,7 @@ using namespace nano;
         const auto z = make_random_x0(*rfunction);
 
         // (sub-)gradient approximation with centering difference
-        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, epsilon), epsilon);
+        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, central_difference_epsilon), central_difference_epsilon);
 
         // (sub-)gradient inequality for convex inequality
         if (rfunction->convex())
@@ -127,7 +128,7 @@ using namespace nano;
             auto       gx = vector_t{x.size()};
             const auto fz = rfunction->vgrad(z);
             const auto fx = rfunction->vgrad(x, gx);
-            UTEST_CHECK_LESS(fx + gx.dot(z - x), fz + epsilon0<scalar_t>());
+            UTEST_CHECK_GREATER_EQUAL(fz - fx + convex_subgradient_epsilon, gx.dot(z - x));
         }
     }
 }
