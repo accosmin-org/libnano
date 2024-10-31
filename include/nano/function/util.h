@@ -12,7 +12,8 @@ NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_
 ///
 /// \brief check if the function is convex along the [x1, x2] line.
 ///
-NANO_PUBLIC bool is_convex(const function_t&, const vector_t& x1, const vector_t& x2, int steps);
+NANO_PUBLIC bool is_convex(const function_t&, const vector_t& x1, const vector_t& x2, int steps,
+                           scalar_t epsilon = epsilon1<scalar_t>());
 
 ///
 /// \brief returns true whether the given quadratic term is convex (aka positive semi-definite).
