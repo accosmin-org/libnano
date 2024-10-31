@@ -236,7 +236,7 @@ static exception_status check_throw(const toperator& op)
 #define UTEST_CHECK_NOTHROW(call)   UTEST_NOTHROW(call, false)
 #define UTEST_REQUIRE_NOTHROW(call) UTEST_NOTHROW(call, true)
 
-#define UTEST_EVALUATE_BINARY_OP(left, right, op, critical)                                                            \
+#define UTEST_EVALUATE_COMPARE_OP(left, right, op, critical)                                                           \
     {                                                                                                                  \
         ++utest_n_checks;                                                                                              \
         const auto res_left  = (left);  /* NOLINT */                                                                   \
@@ -252,27 +252,44 @@ static exception_status check_throw(const toperator& op)
         }                                                                                                              \
     }
 
-#define UTEST_EVALUATE_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP((left), (right), ==, critical);
+#define UTEST_EVALUATE_NUMERIC_OP(left, right, op, critical)                                                           \
+    {                                                                                                                  \
+        ++utest_n_checks;                                                                                              \
+        const auto res_left  = (left);  /* NOLINT */                                                                   \
+        const auto res_right = (right); /* NOLINT */                                                                   \
+        const auto res_check = (res_left op res_right);                                                                \
+        if (!res_check)                                                                                                \
+        {                                                                                                              \
+            const auto _ = std::scoped_lock{utest_mutex};                                                              \
+            UTEST_HANDLE_FAILURE() << (critical ? "critical check" : "check") << " {"                                  \
+                                   << UTEST_STRINGIFY(left op right) << "} failed {" << res_left << " "                \
+                                   << UTEST_STRINGIFY(op) << " " << res_right << "} with difference {"                 \
+                                   << (res_left - res_right) << "}!" << RESET_COLOR << std::endl;                      \
+            UTEST_HANDLE_CRITICAL(critical)                                                                            \
+        }                                                                                                              \
+    }
+
+#define UTEST_EVALUATE_EQUAL(left, right, critical) UTEST_EVALUATE_COMPARE_OP((left), (right), ==, critical);
 #define UTEST_CHECK_EQUAL(left, right)              UTEST_EVALUATE_EQUAL(left, right, false);
 #define UTEST_REQUIRE_EQUAL(left, right)            UTEST_EVALUATE_EQUAL(left, right, true);
 
-#define UTEST_EVALUATE_NOT_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, !=, critical)
+#define UTEST_EVALUATE_NOT_EQUAL(left, right, critical) UTEST_EVALUATE_COMPARE_OP(left, right, !=, critical)
 #define UTEST_CHECK_NOT_EQUAL(left, right)              UTEST_EVALUATE_NOT_EQUAL(left, right, false)
 #define UTEST_REQUIRE_NOT_EQUAL(left, right)            UTEST_EVALUATE_NOT_EQUAL(left, right, true)
 
-#define UTEST_EVALUATE_LESS(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, <, critical)
+#define UTEST_EVALUATE_LESS(left, right, critical) UTEST_EVALUATE_NUMERIC_OP(left, right, <, critical)
 #define UTEST_CHECK_LESS(left, right)              UTEST_EVALUATE_LESS(left, right, false)
 #define UTEST_REQUIRE_LESS(left, right)            UTEST_EVALUATE_LESS(left, right, true)
 
-#define UTEST_EVALUATE_LESS_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, <=, critical)
+#define UTEST_EVALUATE_LESS_EQUAL(left, right, critical) UTEST_EVALUATE_NUMERIC_OP(left, right, <=, critical)
 #define UTEST_CHECK_LESS_EQUAL(left, right)              UTEST_EVALUATE_LESS_EQUAL(left, right, false)
 #define UTEST_REQUIRE_LESS_EQUAL(left, right)            UTEST_EVALUATE_LESS_EQUAL(left, right, true)
 
-#define UTEST_EVALUATE_GREATER(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, >, critical);
+#define UTEST_EVALUATE_GREATER(left, right, critical) UTEST_EVALUATE_NUMERIC_OP(left, right, >, critical);
 #define UTEST_CHECK_GREATER(left, right)              UTEST_EVALUATE_GREATER(left, right, false);
 #define UTEST_REQUIRE_GREATER(left, right)            UTEST_EVALUATE_GREATER(left, right, true);
 
-#define UTEST_EVALUATE_GREATER_EQUAL(left, right, critical) UTEST_EVALUATE_BINARY_OP(left, right, >=, critical);
+#define UTEST_EVALUATE_GREATER_EQUAL(left, right, critical) UTEST_EVALUATE_NUMERIC_OP(left, right, >=, critical);
 #define UTEST_CHECK_GREATER_EQUAL(left, right)              UTEST_EVALUATE_GREATER_EQUAL(left, right, false);
 #define UTEST_REQUIRE_GREATER_EQUAL(left, right)            UTEST_EVALUATE_GREATER_EQUAL(left, right, true);
 
