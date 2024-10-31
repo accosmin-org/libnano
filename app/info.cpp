@@ -43,6 +43,8 @@ int unsafe_main(int argc, const char* argv[])
     // parse the command line
     cmdline_t cmdline("display the registered implementations by type and their parameters");
 
+    cmdline.add("--epsilon", "print thresholds");
+
     cmdline.add("--lsearch0", "regex to select line-search initialization methods", ".+");
     cmdline.add("--lsearchk", "regex to select line-search strategies", ".+");
     cmdline.add("--solver", "regex to select solvers", ".+");
@@ -94,6 +96,19 @@ int unsafe_main(int argc, const char* argv[])
     process_list<datasource_t>("datasource", options);
     process_list<generator_t>("generator", options);
     process_list<wlearner_t>("wlearner", options);
+
+    if (options.has("--epsilon"))
+    {
+        table_t table;
+        table.header() << "scalar" << "epsilon0" << "epsilon1" << "epsilon2" << "epsilon3";
+        table.delim();
+        table.append() << "float" << epsilon0<float>() << epsilon1<float>() << epsilon2<float>() << epsilon3<float>();
+        table.append() << "double" << epsilon0<double>() << epsilon1<double>() << epsilon2<double>()
+                       << epsilon3<double>();
+        table.append() << "long double" << epsilon0<long double>() << epsilon1<long double>() << epsilon2<long double>()
+                       << epsilon3<long double>();
+        std::cout << table;
+    }
 
     // OK
     return EXIT_SUCCESS;

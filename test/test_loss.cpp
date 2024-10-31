@@ -111,6 +111,7 @@ UTEST_CASE(gradient)
                 UTEST_CHECK_LESS(grad_accuracy(function, x), 5 * epsilon2<scalar_t>());
             }
 
+            check_gradient(function);
             check_convexity(function);
         }
     }

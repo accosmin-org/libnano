@@ -50,7 +50,7 @@ void function_t::strong_convexity(const scalar_t strong_convexity)
     m_strong_convexity = strong_convexity;
 }
 
-string_t function_t::name(bool with_size) const
+string_t function_t::name(const bool with_size) const
 {
     return with_size ? scat(type_id(), "[", size(), "D]") : type_id();
 }
@@ -65,7 +65,7 @@ bool function_t::constrain(constraint_t&& constraint)
     return false;
 }
 
-bool function_t::constrain(scalar_t min, scalar_t max, tensor_size_t dimension)
+bool function_t::constrain(const scalar_t min, const scalar_t max, const tensor_size_t dimension)
 {
     if (min < max && dimension >= 0 && dimension < size())
     {
@@ -76,7 +76,7 @@ bool function_t::constrain(scalar_t min, scalar_t max, tensor_size_t dimension)
     return false;
 }
 
-bool function_t::constrain(scalar_t min, scalar_t max)
+bool function_t::constrain(const scalar_t min, const scalar_t max)
 {
     if (min < max)
     {
