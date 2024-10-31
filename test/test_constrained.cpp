@@ -87,7 +87,7 @@ void check_penalty(const function_t& function, const vector_t& x, const bool exp
     }
 }
 
-void check_penalties(const function_t& function, const vector_t& x, bool expected_valid)
+void check_penalties(const function_t& function, const vector_t& x, const bool expected_valid)
 {
     check_penalty<linear_penalty_function_t>(function, x, expected_valid);
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);

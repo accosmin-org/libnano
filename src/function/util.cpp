@@ -54,20 +54,19 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
     return dg;
 }
 
-bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)
+bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps,
+                     const scalar_t epsilon)
 {
     assert(steps > 2);
     assert(x1.size() == function.size());
     assert(x2.size() == function.size());
 
     const auto f1 = function.vgrad(x1);
-    assert(std::isfinite(f1));
-
     const auto f2 = function.vgrad(x2);
-    assert(std::isfinite(f2));
+    const auto dx = (x1 - x2).squaredNorm();
 
-    const auto eps = epsilon1<scalar_t>();
-    const auto dx  = (x1 - x2).squaredNorm();
+    assert(std::isfinite(f1));
+    assert(std::isfinite(f2));
 
     auto tx = vector_t{function.size()};
 
@@ -77,7 +76,7 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
         const auto t2 = 1.0 - t1;
 
         tx = t1 * x1 + t2 * x2;
-        if (function.vgrad(tx) > t1 * f1 + t2 * f2 - t1 * t2 * function.strong_convexity() * 0.5 * dx + eps)
+        if (function.vgrad(tx) > t1 * f1 + t2 * f2 - t1 * t2 * function.strong_convexity() * 0.5 * dx + epsilon)
         {
             return false;
         }
