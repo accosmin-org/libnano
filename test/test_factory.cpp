@@ -5,6 +5,8 @@
 
 using namespace nano;
 
+namespace
+{
 class object_t final : public typed_t, public clonable_t<object_t>
 {
 public:
@@ -36,6 +38,7 @@ std::ostream& operator<<(std::ostream& stream, const strings_t& strings)
     }
     return stream;
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_factory)
 

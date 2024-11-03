@@ -46,3 +46,5 @@ target_sources(solver PRIVATE
     sgm.cpp
     state.cpp
     universal.cpp)
+
+add_subdirectory(gsample)

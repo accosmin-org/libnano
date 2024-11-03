@@ -44,7 +44,7 @@ std::ostream& nano::operator<<(std::ostream& stream, const log_type type)
 #ifdef _WIN32
     ::localtime_s(&buff, &time);
 #else // POSIX
-    ::localtime_r(&time, &buff);
+    [[maybe_unused]] const auto* const _ = ::localtime_r(&time, &buff);
 #endif
     return stream << header_to_color(type) << '[' << std::put_time(&buff, "%F|%T") << ']' << TERMINAL_RESET_COLOR
                   << ' ';
