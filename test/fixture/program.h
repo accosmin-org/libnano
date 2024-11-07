@@ -1,18 +1,20 @@
 #include <Eigen/Dense>
+#include <nano/function/program.h>
 #include <nano/program/solver.h>
+#include <nano/solver/augmented.h>
 #include <utest/utest.h>
 
 using namespace nano;
-using namespace nano::program;
 
-static auto make_permutation(const tensor_size_t m)
+inline auto make_permutation(const tensor_size_t m)
 {
     auto permutation = arange(0, m);
     std::shuffle(permutation.begin(), permutation.end(), make_rng());
     return permutation;
 }
 
-static auto duplicate(const equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1, const scalar_t dep_w2)
+inline auto duplicate(const program::equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1,
+                      const scalar_t dep_w2)
 {
     const auto& A = equality.m_A;
     const auto& b = equality.m_b;
@@ -37,7 +39,7 @@ static auto duplicate(const equality_t<matrix_t, vector_t>& equality, const scal
         A2.row(duplicat_row) = A.row(permuted_row).array() * dep_w1 + A.row(permuted_mix).array() * dep_w2;
     }
 
-    return make_equality(A2, b2);
+    return program::make_equality(A2, b2);
 }
 
 struct expected_t
@@ -81,13 +83,13 @@ struct expected_t
 };
 
 template <class tprogram>
-auto check_solution_(tprogram program, const expected_t& expected)
+auto check_solution_program(tprogram program, const expected_t& expected)
 {
     const auto failures = utest_n_failures.load();
 
     program.reduce();
 
-    auto solver = solver_t{};
+    auto solver = program::solver_t{};
     auto stream = std::ostringstream{};
     auto logger = make_stream_logger(stream);
 
@@ -117,6 +119,43 @@ auto check_solution_(tprogram program, const expected_t& expected)
 }
 
 template <class tprogram>
+auto check_solution_augmented(const tprogram& program, const expected_t& expected)
+{
+    const auto failures = utest_n_failures.load();
+
+    auto solver                         = solver_augmented_lagrangian_t{};
+    solver.parameter("solver::epsilon") = 1e-10;
+
+    auto stream = std::ostringstream{};
+    auto logger = make_stream_logger(stream);
+
+    const auto function = make_function(program);
+    const auto x0       = make_full_tensor<scalar_t>(make_dims(function->size()), 4.0);
+    auto       bstate   = solver.minimize(*function, x0, logger);
+
+    UTEST_CHECK_EQUAL(bstate.status(), expected.m_status);
+    if (expected.m_status == solver_status::converged)
+    {
+        UTEST_CHECK(program.feasible(bstate.x(), expected.m_epsilon));
+        if (expected.m_xbest.size() > 0) // NB: sometimes the solution is not known analytically!
+        {
+            UTEST_CHECK_CLOSE(bstate.x(), expected.m_xbest, expected.m_epsilon);
+        }
+        if (std::isfinite(expected.m_fbest))
+        {
+            UTEST_CHECK_CLOSE(bstate.fx(), expected.m_fbest, expected.m_epsilon);
+        }
+    }
+
+    if (failures != utest_n_failures.load())
+    {
+        std::cout << stream.str();
+    }
+
+    return bstate;
+}
+
+template <class tprogram>
 auto check_solution(const tprogram& program, const expected_t& expected)
 {
     // test duplicated equality constraints
@@ -124,7 +163,11 @@ auto check_solution(const tprogram& program, const expected_t& expected)
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
-        check_solution_(dprogram, expected);
+        check_solution_program(dprogram, expected);
+        if (expected.m_status == solver_status::converged)
+        {
+            check_solution_augmented(dprogram, expected);
+        }
     }
 
     // test linearly dependant equality constraints
@@ -132,9 +175,17 @@ auto check_solution(const tprogram& program, const expected_t& expected)
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
-        check_solution_(dprogram, expected);
+        check_solution_program(dprogram, expected);
+        if (expected.m_status == solver_status::converged)
+        {
+            check_solution_augmented(dprogram, expected);
+        }
     }
 
     // test original program
-    return check_solution_(program, expected);
+    if (expected.m_status == solver_status::converged)
+    {
+        check_solution_augmented(program, expected);
+    }
+    return check_solution_program(program, expected);
 }

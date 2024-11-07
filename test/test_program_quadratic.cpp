@@ -287,7 +287,7 @@ UTEST_CASE(program9)
         const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
-        check_solution_(program, expected_t{}.x0(x0));
+        check_solution_program(program, expected_t{}.x0(x0));
     }
 }
 

@@ -4,11 +4,14 @@
 
 namespace nano
 {
+template <class tlambda>
+inline constexpr bool is_lambda_function_v = std::is_invocable_v<tlambda, vector_cmap_t, vector_cmap_t>;
+
 ///
 /// \brief maps a given lambda to the `function_t` interface.
 ///     fx = lambda(vector_cmap_t x, vector_map_t gx)
 ///
-template <class tlambda>
+template <class tlambda, std::enable_if_t<is_lambda_function_v<tlambda>, bool> = true>
 class NANO_PUBLIC lambda_function_t final : public function_t
 {
 public:
@@ -49,7 +52,7 @@ private:
 ///
 /// \brief create a compatible function_t from the given lambda.
 ///
-template <class tlambda>
+template <class tlambda, std::enable_if_t<is_lambda_function_v<tlambda>, bool> = true>
 auto make_function(const tensor_size_t dims, const convexity convex, const smoothness smooth,
                    const scalar_t strong_convexity, tlambda lambda)
 {

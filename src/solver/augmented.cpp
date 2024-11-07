@@ -32,8 +32,8 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-6, LE, 1e-2));
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.5, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-8, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.50, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
@@ -76,21 +76,20 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto cstate = solver->minimize(penalty_function, bstate.x(), logger);
 
         // check convergence
-        const auto iter_ok   = cstate.valid(); // && cstate.status() == solver_status::converged;
-        const auto converged = iter_ok && ::nano::converged(bstate, cstate, epsilon);
-        const auto improved  = bstate.update_if_better_constrained(cstate, epsilon);
+        const auto iter_ok   = cstate.valid();
+        const auto criterion = make_criterion(cstate, miu, ro);
+        const auto converged = iter_ok && criterion <= epsilon && ::nano::converged(bstate, cstate, epsilon);
+
+        bstate.update_if_better_constrained(cstate, epsilon);
+
         if (done(bstate, iter_ok, converged, logger))
         {
             break;
         }
-        if (improved)
-        {
-            solver->more_precise(epsilonK);
-        }
+        solver->more_precise(epsilonK);
 
         // update penalty parameter
-        const auto old_ro    = ro;
-        const auto criterion = make_criterion(cstate, miu, ro);
+        const auto old_ro = ro;
         if (outer > 0 && criterion > tau * old_criterion)
         {
             ro = gamma * ro;
