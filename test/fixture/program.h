@@ -1,5 +1,5 @@
-#include <Eigen/Dense>
 #include <nano/function/program.h>
+#include <nano/program/benchmark.h>
 #include <nano/program/solver.h>
 #include <nano/solver/augmented.h>
 #include <utest/utest.h>
@@ -42,48 +42,8 @@ inline auto duplicate(const program::equality_t<matrix_t, vector_t>& equality, c
     return program::make_equality(A2, b2);
 }
 
-struct expected_t
-{
-    expected_t() = default;
-
-    explicit expected_t(vector_t xbest)
-        : m_xbest(std::move(xbest))
-    {
-    }
-
-    auto& x0(vector_t x0)
-    {
-        m_x0 = std::move(x0);
-        return *this;
-    }
-
-    auto& status(const solver_status status)
-    {
-        m_status = status;
-        return *this;
-    }
-
-    auto& epsilon(const scalar_t epsilon)
-    {
-        m_epsilon = epsilon;
-        return *this;
-    }
-
-    auto& fbest(const scalar_t fbest)
-    {
-        m_fbest = fbest;
-        return *this;
-    }
-
-    vector_t      m_xbest;
-    scalar_t      m_fbest{std::numeric_limits<scalar_t>::quiet_NaN()};
-    vector_t      m_x0;
-    scalar_t      m_epsilon{1e-8};
-    solver_status m_status{solver_status::converged};
-};
-
 template <class tprogram>
-auto check_solution_program(tprogram program, const expected_t& expected)
+void check_solution_program(tprogram program, const program::expected_t& expected)
 {
     const auto failures = utest_n_failures.load();
 
@@ -104,6 +64,10 @@ auto check_solution_program(tprogram program, const expected_t& expected)
         {
             UTEST_CHECK_CLOSE(bstate.m_x, expected.m_xbest, expected.m_epsilon);
         }
+        if (expected.m_vbest.size() > 0)
+        {
+            UTEST_CHECK_CLOSE(bstate.m_v, expected.m_vbest, expected.m_epsilon);
+        }
         if (std::isfinite(expected.m_fbest))
         {
             UTEST_CHECK_CLOSE(bstate.m_fx, expected.m_fbest, expected.m_epsilon);
@@ -114,13 +78,17 @@ auto check_solution_program(tprogram program, const expected_t& expected)
     {
         std::cout << stream.str();
     }
-
-    return bstate;
 }
 
 template <class tprogram>
-auto check_solution_augmented(const tprogram& program, const expected_t& expected)
+void check_solution_augmented(const tprogram& program, const program::expected_t& expected)
 {
+    // FIXME: It is possible to detect unfeasibility or unboundedness with augmented lagrangian method?!
+    if (expected.m_status != solver_status::converged)
+    {
+        return;
+    }
+
     const auto failures = utest_n_failures.load();
 
     auto solver                         = solver_augmented_lagrangian_t{};
@@ -145,29 +113,36 @@ auto check_solution_augmented(const tprogram& program, const expected_t& expecte
         {
             UTEST_CHECK_CLOSE(bstate.fx(), expected.m_fbest, expected.m_epsilon);
         }
+        // TODO: check the lagrange multipliers as well for the augmented lagrangian solver!
     }
 
     if (failures != utest_n_failures.load())
     {
         std::cout << stream.str();
     }
-
-    return bstate;
 }
 
 template <class tprogram>
-auto check_solution(const tprogram& program, const expected_t& expected)
+void check_solution(const tprogram& program, const program::expected_t& expected)
 {
+    // TODO: move this to std::remove_cvref_t when moving C++20!
+    if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<tprogram>>, program::quadratic_program_t>)
+    {
+        UTEST_REQUIRE(program.convex());
+    }
+
     // test duplicated equality constraints
     if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
-        check_solution_program(dprogram, expected);
-        if (expected.m_status == solver_status::converged)
-        {
-            check_solution_augmented(dprogram, expected);
-        }
+
+        // NB: the Lagrange multipliers are not kept when duplicating equality constraints!
+        auto dexpected    = expected;
+        dexpected.m_vbest = vector_t{};
+
+        check_solution_program(dprogram, dexpected);
+        check_solution_augmented(dprogram, dexpected);
     }
 
     // test linearly dependant equality constraints
@@ -175,17 +150,16 @@ auto check_solution(const tprogram& program, const expected_t& expected)
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
-        check_solution_program(dprogram, expected);
-        if (expected.m_status == solver_status::converged)
-        {
-            check_solution_augmented(dprogram, expected);
-        }
+
+        // NB: the Lagrange multipliers are not kept when adding linearly dependant equality constraints!
+        auto dexpected    = expected;
+        dexpected.m_vbest = vector_t{};
+
+        check_solution_program(dprogram, dexpected);
+        check_solution_augmented(dprogram, dexpected);
     }
 
     // test original program
-    if (expected.m_status == solver_status::converged)
-    {
-        check_solution_augmented(program, expected);
-    }
-    return check_solution_program(program, expected);
+    check_solution_augmented(program, expected);
+    check_solution_program(program, expected);
 }
