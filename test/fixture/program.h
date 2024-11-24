@@ -2,6 +2,7 @@
 #include <nano/program/benchmark.h>
 #include <nano/program/solver.h>
 #include <nano/solver/augmented.h>
+#include <nano/solver/penalty.h>
 #include <utest/utest.h>
 
 using namespace nano;
@@ -43,45 +44,46 @@ inline auto duplicate(const program::equality_t<matrix_t, vector_t>& equality, c
 }
 
 template <class tprogram>
-void check_solution_program(tprogram program, const program::expected_t& expected)
+void check_solution(const tprogram& program, const program::expected_t& expected, const vector_t& x, const scalar_t fx,
+                    const scalar_t kkt)
 {
-    const auto failures = utest_n_failures.load();
-
-    program.reduce();
-
-    auto solver = program::solver_t{};
-    auto stream = std::ostringstream{};
-    auto logger = make_stream_logger(stream);
-
-    auto bstate =
-        (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0, logger) : solver.solve(program, logger);
-
-    UTEST_CHECK_EQUAL(bstate.m_status, expected.m_status);
-    if (expected.m_status == solver_status::converged)
+    // check optimum (if known)
+    if (expected.m_xbest.size() > 0)
     {
-        UTEST_CHECK(program.feasible(bstate.m_x, expected.m_epsilon));
-        if (expected.m_xbest.size() > 0) // NB: sometimes the solution is not known analytically!
-        {
-            UTEST_CHECK_CLOSE(bstate.m_x, expected.m_xbest, expected.m_epsilon);
-        }
-        if (expected.m_vbest.size() > 0)
-        {
-            UTEST_CHECK_CLOSE(bstate.m_v, expected.m_vbest, expected.m_epsilon);
-        }
-        if (std::isfinite(expected.m_fbest))
-        {
-            UTEST_CHECK_CLOSE(bstate.m_fx, expected.m_fbest, expected.m_epsilon);
-        }
+        UTEST_CHECK_CLOSE(x, expected.m_xbest, expected.m_epsilon);
     }
 
-    if (failures != utest_n_failures.load())
+    // check optimum function value (if known)
+    if (std::isfinite(expected.m_fbest))
     {
-        std::cout << stream.str();
+        UTEST_CHECK_CLOSE(fx, expected.m_fbest, expected.m_epsilon);
+    }
+
+    // check KKT optimality conditions (always verifiable for convex problems)
+    UTEST_CHECK(program.feasible(x, expected.m_epsilon));
+    if (std::isfinite(kkt))
+    {
+        UTEST_CHECK_LESS(kkt, expected.m_epsilon);
     }
 }
 
 template <class tprogram>
-void check_solution_augmented(const tprogram& program, const program::expected_t& expected)
+void check_solution_program(tprogram program, const program::expected_t& expected, const logger_t& logger)
+{
+    auto solver = program::solver_t{};
+
+    auto state =
+        (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0, logger) : solver.solve(program, logger);
+
+    UTEST_CHECK_EQUAL(state.m_status, expected.m_status);
+    if (expected.m_status == solver_status::converged)
+    {
+        check_solution(program, expected, state.m_x, state.m_fx, state.m_kkt);
+    }
+}
+
+template <class tprogram>
+void check_solution_augmented(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
 {
     // FIXME: It is possible to detect unfeasibility or unboundedness with augmented lagrangian method?!
     if (expected.m_status != solver_status::converged)
@@ -89,36 +91,41 @@ void check_solution_augmented(const tprogram& program, const program::expected_t
         return;
     }
 
-    const auto failures = utest_n_failures.load();
-
     auto solver                         = solver_augmented_lagrangian_t{};
     solver.parameter("solver::epsilon") = 1e-10;
 
-    auto stream = std::ostringstream{};
-    auto logger = make_stream_logger(stream);
+    const auto function = make_function(program);
+    const auto x0       = make_full_tensor<scalar_t>(make_dims(function->size()), 4.0);
+    auto       state    = solver.minimize(*function, x0, logger);
+
+    UTEST_CHECK_EQUAL(state.status(), expected.m_status);
+    if (expected.m_status == solver_status::converged)
+    {
+        check_solution(program, expected, state.x(), state.fx(), state.kkt_optimality_test());
+    }
+}
+
+template <class tprogram>
+void check_solution_penalty(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
+{
+    // FIXME: It is possible to detect unfeasibility or unboundedness with the penalty method?!
+    if (expected.m_status != solver_status::converged)
+    {
+        return;
+    }
+
+    auto solver                         = solver_quadratic_penalty_t{};
+    solver.parameter("solver::epsilon") = 1e-10;
 
     const auto function = make_function(program);
     const auto x0       = make_full_tensor<scalar_t>(make_dims(function->size()), 4.0);
-    auto       bstate   = solver.minimize(*function, x0, logger);
+    auto       state    = solver.minimize(*function, x0, logger);
 
-    UTEST_CHECK_EQUAL(bstate.status(), expected.m_status);
+    UTEST_CHECK_EQUAL(state.status(), expected.m_status);
     if (expected.m_status == solver_status::converged)
     {
-        UTEST_CHECK(program.feasible(bstate.x(), expected.m_epsilon));
-        if (expected.m_xbest.size() > 0) // NB: sometimes the solution is not known analytically!
-        {
-            UTEST_CHECK_CLOSE(bstate.x(), expected.m_xbest, expected.m_epsilon);
-        }
-        if (std::isfinite(expected.m_fbest))
-        {
-            UTEST_CHECK_CLOSE(bstate.fx(), expected.m_fbest, expected.m_epsilon);
-        }
-        // TODO: check the lagrange multipliers as well for the augmented lagrangian solver!
-    }
-
-    if (failures != utest_n_failures.load())
-    {
-        std::cout << stream.str();
+        // NB: The penalty method doesn't provide an estimation of the Lagrangian multipliers!
+        check_solution(program, expected, state.x(), state.fx(), std::numeric_limits<scalar_t>::quiet_NaN());
     }
 }
 
@@ -137,12 +144,9 @@ void check_solution(const tprogram& program, const program::expected_t& expected
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
 
-        // NB: the Lagrange multipliers are not kept when duplicating equality constraints!
-        auto dexpected    = expected;
-        dexpected.m_vbest = vector_t{};
-
-        check_solution_program(dprogram, dexpected);
-        check_solution_augmented(dprogram, dexpected);
+        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
     }
 
     // test linearly dependant equality constraints
@@ -151,15 +155,13 @@ void check_solution(const tprogram& program, const program::expected_t& expected
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
 
-        // NB: the Lagrange multipliers are not kept when adding linearly dependant equality constraints!
-        auto dexpected    = expected;
-        dexpected.m_vbest = vector_t{};
-
-        check_solution_program(dprogram, dexpected);
-        check_solution_augmented(dprogram, dexpected);
+        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
     }
 
     // test original program
-    check_solution_augmented(program, expected);
-    check_solution_program(program, expected);
+    check_with_logger([&](const logger_t& logger) { check_solution_penalty(program, expected, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_program(program, expected, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_augmented(program, expected, logger); });
 }

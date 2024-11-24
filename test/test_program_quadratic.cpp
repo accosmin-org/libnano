@@ -254,7 +254,8 @@ UTEST_CASE(program9)
         const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
-        check_solution_program(program, expected_t{}.x0(x0));
+        const auto expected = expected_t{}.x0(x0);
+        check_with_logger([&](const logger_t& logger) { check_solution_program(program, expected, logger); });
     }
 }
 

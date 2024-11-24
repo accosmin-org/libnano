@@ -62,9 +62,9 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
 
     auto bstate        = solver_state_t{function, x0};
     auto ro            = make_ro1(bstate);
-    auto old_criterion = scalar_t{0.0};
     auto lambda        = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
     auto miu           = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
+    auto old_criterion = make_criterion(bstate, miu, ro);
 
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
     auto solver           = make_solver(penalty_function, epsilon0, max_evals);
@@ -79,14 +79,15 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto iter_ok   = cstate.valid();
         const auto criterion = make_criterion(cstate, miu, ro);
         const auto converged = iter_ok && criterion <= epsilon && ::nano::converged(bstate, cstate, epsilon);
-
-        bstate.update_if_better_constrained(cstate, epsilon);
-
+        if (iter_ok && criterion < old_criterion)
+        {
+            bstate.update(cstate.x(), lambda, miu);
+            solver->more_precise(epsilonK);
+        }
         if (done(bstate, iter_ok, converged, logger))
         {
             break;
         }
-        solver->more_precise(epsilonK);
 
         // update penalty parameter
         const auto old_ro = ro;

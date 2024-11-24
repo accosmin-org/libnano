@@ -14,12 +14,16 @@ class penalty_function_t;
 class NANO_PUBLIC solver_penalty_t : public solver_t
 {
 public:
+    using solver_t::minimize;
+
     ///
     /// \brief constructor
     ///
     explicit solver_penalty_t(string_t id);
 
-protected:
+    ///
+    /// \brief minimize the given penalty function starting from the initial point x0.
+    ///
     solver_state_t minimize(penalty_function_t&, const vector_t& x0, const logger_t&) const;
 };
 

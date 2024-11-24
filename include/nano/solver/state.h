@@ -26,20 +26,23 @@ public:
     ///
     /// \brief move to another point and returns true if the new point is valid.
     ///
+    /// NB: optionally the Lagrangian multipliers for the equality and the inequality constraints can be given as well
+    /// (if applicable).
+    ///
     template <class tvector>
-    bool update(const tvector& x)
+    bool update(const tvector& x, vector_cmap_t multiplier_equalities = vector_cmap_t{},
+                vector_cmap_t multiplier_inequalities = vector_cmap_t{})
     {
         assert(m_function);
         assert(x.size() == m_x.size());
         assert(x.size() == m_function->size());
         m_x  = x;
         m_fx = m_function->vgrad(m_x, m_gx);
-        update_calls();
-        update_constraints();
-        return valid();
+        return update(m_x, m_gx, m_fx, multiplier_equalities, multiplier_inequalities);
     }
 
-    bool update(vector_cmap_t x, vector_cmap_t gx, scalar_t fx);
+    bool update(vector_cmap_t x, vector_cmap_t gx, scalar_t fx, vector_cmap_t multiplier_equalities = vector_cmap_t{},
+                vector_cmap_t multiplier_inequalities = vector_cmap_t{});
 
     ///
     /// \brief update the number of function value and gradient evaluations.
@@ -50,40 +53,48 @@ public:
     /// \brief try to update the current state and
     ///     returns true if the given function value is smaller than the current one.
     ///
-    /// NB: this is usually called by non-monotonic solvers (e.g. for some non-smooth optimization problems).
+    /// NB: this is usually called by non-monotonic solvers (e.g. for some non-smooth unconstrained optimization
+    /// problems).
     ///
     bool update_if_better(const vector_t& x, scalar_t fx);
     bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
 
     ///
-    /// \brief try to update the current state and
-    ///     returns true if the constraints are approximatively improved.
-    ///
-    /// NB: the function value is re-evaluated at the given point if updated, as the given state
-    ///     can be a modified function (e.g. penalty, augmented lagrangian).
-    ///
-    bool update_if_better_constrained(const solver_state_t&, scalar_t epsilon);
-
-    ///
     /// \brief convergence criterion of the function value:
-    ///     improvement in function value and parameter in the most recent updates.
+    ///     no improvement in function value and parameter in the most recent updates.
     ///
     /// NB: appropriate for non-monotonic solvers (usually non-smooth problems) that call `update_if_better`.
+    /// NB: this criterion is not theoretically motivated.
     ///
     scalar_t value_test(tensor_size_t patience) const;
 
     ///
     /// \brief convergence criterion of the gradient: the gradient magnitude relative to the function value.
     ///
-    /// NB: only appropriate for smooth problems.
+    /// NB: only appropriate for smooth and unconstrained problems.
     ///
     scalar_t gradient_test() const;
     scalar_t gradient_test(vector_cmap_t gx) const;
 
     ///
-    /// \brief convergence criterion of the constraints (if any).
+    /// \brief return the KKT optimality criterion for constrained optimization:
+    /// see (1) ch.5 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
     ///
-    scalar_t constraint_test() const;
+    /// test 1: g_i(x) <= 0 (inequalities satisfied)
+    /// test 2: h_j(x) == 0 (equalities satisfied)
+    /// test 3: lambda_i >= 0 (positive multipliers for the inequalities)
+    /// test 4: lambda_i * g_i(x) == 0
+    /// test 5: grad(f(x)) + sum(lambda_i * grad(g_i(x))) + sum(miu_j * h_j(x)) == 0
+    //
+    /// NB: the optimality test is the maximum of the infinite norm of the 5 vector conditions.
+    /// NB: only appropriate for constrained smooth problems.
+    ///
+    scalar_t kkt_optimality_test1() const;
+    scalar_t kkt_optimality_test2() const;
+    scalar_t kkt_optimality_test3() const;
+    scalar_t kkt_optimality_test4() const;
+    scalar_t kkt_optimality_test5() const;
+    scalar_t kkt_optimality_test() const;
 
     ///
     /// \brief returns true if the current state is valid (e.g. no divergence is detected).
@@ -186,12 +197,12 @@ public:
     }
 
     ///
-    /// \brief returns the values of the equality constraints.
+    /// \brief returns the value of the equality constraints (if any).
     ///
     const vector_t& ceq() const { return m_ceq; }
 
     ///
-    /// \brief returns the values of the inequality constraints.
+    /// \brief returns the value of the inequality constraints (if any).
     ///
     const vector_t& cineq() const { return m_cineq; }
 
@@ -201,17 +212,20 @@ private:
     using scalars_t = std::vector<scalar_t>;
 
     // attributes
-    const function_t* m_function{nullptr};                ///<
-    vector_t          m_x;                                ///< parameter
-    vector_t          m_gx;                               ///< gradient
-    scalar_t          m_fx{0};                            ///< function value
-    vector_t          m_ceq;                              ///< equality constraint values
-    vector_t          m_cineq;                            ///< inequality constraint values
-    solver_status     m_status{solver_status::max_iters}; ///< optimization status
-    tensor_size_t     m_fcalls{0};                        ///< number of function value evaluations so far
-    tensor_size_t     m_gcalls{0};                        ///< number of function gradient evaluations so far
-    scalars_t         m_history_df;                       ///< recent improvements of the function value
-    scalars_t         m_history_dx;                       ///< recent improvements of the parameter
+    const function_t* m_function{nullptr}; ///<
+    vector_t          m_x;                 ///< parameter
+    vector_t          m_gx;                ///< gradient
+    scalar_t          m_fx{0};             ///< function value
+    vector_t          m_ceq;               ///< equality constraint values
+    vector_t          m_cineq;             ///< inequality constraint values
+    vector_t          m_meq;               ///< Lagrange multiplies for equality constraints
+    vector_t          m_mineq;             ///< Lagrange multiplies for inequality constraints
+    vector_t          m_lgx;               ///< gradient of the Lagrangian dual function
+    solver_status     m_status{};          ///< optimization status
+    tensor_size_t     m_fcalls{0};         ///< number of function value evaluations so far
+    tensor_size_t     m_gcalls{0};         ///< number of function gradient evaluations so far
+    scalars_t         m_history_df;        ///< recent improvements of the function value
+    scalars_t         m_history_dx;        ///< recent improvements of the parameter
 };
 
 ///

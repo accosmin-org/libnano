@@ -5,11 +5,6 @@
 namespace nano::program
 {
 ///
-/// \brief return true if the given matrix is positive semi-definite.
-///
-NANO_PUBLIC bool is_psd(matrix_cmap_t);
-
-///
 /// \brief models the general quadratic programs:
 ///     min f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
 ///     s.t A * x = b

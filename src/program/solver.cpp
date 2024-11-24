@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <nano/program/solver.h>
+#include <nano/program/util.h>
 
 using namespace nano;
 using namespace nano::program;
@@ -36,13 +37,20 @@ auto make_smax(const vector_t& u, const vector_t& du)
     return std::min(smax, 1.0);
 }
 
-scalar_t normalize(matrix_t& A, vector_t& b)
+scalar_t normalize(matrix_t& A, vector_t& b, const scalar_t min_norm = 1e-3)
 {
-    const auto denom = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
+    const auto denom = std::max({min_norm, A.lpNorm<2>(), b.lpNorm<2>()});
     A.array() /= denom;
     b.array() /= denom;
     return denom;
 }
+
+struct reducer_t
+{
+    reducer_t() = default;
+
+    reducer_t(matrix_t& A, vector_t& b) { reduce(A, b); }
+};
 } // namespace
 
 struct solver_t::program_t
@@ -65,6 +73,7 @@ struct solver_t::program_t
         , m_b(std::move(b))
         , m_G(std::move(G))
         , m_h(std::move(h))
+        , m_reducer(m_A, m_b)           // remove linear dependant linear constraints (if any)
         , m_mufx(::normalize(m_Q, m_c)) // normalize objective
         , m_lmat(n() + p(), n() + p())
         , m_lvec(n() + p())
@@ -185,6 +194,7 @@ struct solver_t::program_t
     vector_t             m_b;         ///<
     matrix_t             m_G;         ///< inequality constraint: Gx <= h
     vector_t             m_h;         ///<
+    reducer_t            m_reducer;   ///<
     scalar_t             m_mufx{1.0}; ///< scaling coefficient of the objective
     mutable lin_solver_t m_ldlt;      ///< buffers for the linear system of equations coupling (dx, dv)
     mutable matrix_t     m_lmat;      ///<
@@ -343,6 +353,7 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
         state.m_x += s * dx;
         state.m_u += s * du;
         state.m_v += s * dv;
+        state.update(program.m_Q, program.m_c, program.m_A, program.m_b, program.m_G, program.m_h);
 
         const auto curr_eta   = state.m_eta;
         const auto curr_rdual = state.m_rdual.lpNorm<2>();
@@ -389,6 +400,7 @@ solver_state_t solver_t::solve_without_inequality(const program_t& program, cons
     state.m_v   = program.m_lsol.segment(n, p);
     state.m_eta = 0.0;
     program.update(state.m_x, state.m_u, state.m_v, miu, state);
+    state.update(program.m_Q, program.m_c, program.m_A, program.m_b, program.m_G, program.m_h);
 
     const auto valid = std::isfinite(state.residual());
     const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsilon2<scalar_t>());

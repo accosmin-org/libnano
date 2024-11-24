@@ -33,14 +33,6 @@ struct NANO_PUBLIC linear_constrained_t
     bool feasible(vector_cmap_t x, scalar_t epsilon = epsilon0<scalar_t>()) const;
 
     ///
-    /// \brief return true if the equality constraint `Ax = b` is not full row rank.
-    ///
-    /// in this case the constraint is transformed in-place to obtain row-independant linear constraints
-    ///     by performing an appropriate matrix decomposition.
-    ///
-    bool reduce();
-
-    ///
     /// \brief return a strictly feasible point wrt inequality constraints, if possible.
     ///
     std::optional<vector_t> make_strictly_feasible() const;

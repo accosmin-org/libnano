@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <nano/logger.h>
 #include <nano/tensor/tensor.h>
 #include <string>
 #include <utility>
@@ -138,6 +139,22 @@ static exception_status check_throw(const toperator& op)
     catch (...)
     {
         return exception_status::unexpected;
+    }
+}
+
+template <class toperator>
+static void check_with_logger(const toperator& op)
+{
+    const auto failures = utest_n_failures.load();
+
+    auto stream = std::ostringstream{};
+    auto logger = nano::make_stream_logger(stream);
+
+    op(logger);
+
+    if (failures != utest_n_failures.load())
+    {
+        std::cout << stream.str();
     }
 }
 

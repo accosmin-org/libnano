@@ -1,4 +1,4 @@
-#include <nano/program/quadratic.h>
+#include <nano/program/util.h>
 #include <solver/gsample/preconditioner.h>
 
 using namespace nano;

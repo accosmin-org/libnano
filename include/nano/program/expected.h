@@ -41,12 +41,6 @@ struct expected_t
         return *this;
     }
 
-    auto& vbest(vector_t v)
-    {
-        m_vbest = std::move(v);
-        return *this;
-    }
-
     // attributes
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 

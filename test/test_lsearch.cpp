@@ -29,7 +29,7 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
     UTEST_CHECK(state0.has_descent(descent));
 
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(12) << function.name() << " " << lsearch->type_id() << ": x0=["
+    stream << std::setprecision(10) << function.name() << " " << lsearch->type_id() << ": x0=["
            << state0.x().transpose() << "],t0=" << t0 << ",f0=" << state0.fx() << ",g0=" << state0.gradient_test()
            << "\n";
 

@@ -270,19 +270,13 @@ expected_quadratic_program_t nano::program::make_quadratic_program_numopt162(con
     L.diagonal().array() = 1.0;
     U.diagonal().array() = 1.0;
 
-    const auto A = L * U;
-    const auto b = make_random_vector<scalar_t>(neqs);
-
-    auto program = make_quadratic(Q, c, make_equality(A, b));
-
-    const auto muv   = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
-    const auto mux   = std::max({1.0, Q.lpNorm<2>(), c.lpNorm<2>()});
+    const auto A     = L * U;
+    const auto b     = make_random_vector<scalar_t>(neqs);
     const auto invAA = (A * A.transpose()).inverse();
     const auto xbest = x0 + A.transpose() * invAA * (b - A * x0);
-    const auto vbest = -invAA * (b - A * x0) * muv / mux;
 
+    auto program  = make_quadratic(Q, c, make_equality(A, b));
     auto expected = make_expected(xbest, program);
-    expected.vbest(vbest);
 
     return std::make_tuple(std::move(program), std::move(expected));
 }
