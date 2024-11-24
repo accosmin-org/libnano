@@ -1,5 +1,5 @@
-#include <Eigen/Dense>
 #include <nano/program/quadratic.h>
+#include <nano/program/util.h>
 
 using namespace nano;
 using namespace nano::program;
@@ -24,18 +24,6 @@ matrix_t make_Q(const vector_t& q)
     return Q;
 }
 } // namespace
-
-bool nano::program::is_psd(matrix_cmap_t tQ)
-{
-    const auto Q = tQ.matrix();
-    if (!Q.isApprox(Q.transpose()))
-    {
-        return false;
-    }
-
-    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
-    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
-}
 
 quadratic_program_t::quadratic_program_t(matrix_t Q, vector_t c)
     : m_Q(std::move(Q))

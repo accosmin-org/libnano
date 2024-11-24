@@ -40,3 +40,4 @@ target_sources(solver PRIVATE
     universal.h)
 
 add_subdirectory(bundle)
+add_subdirectory(gsample)

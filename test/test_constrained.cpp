@@ -97,8 +97,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
                     const scalar_t fbest, const scalar_t epsilon)
 {
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(16) << function.name() << "\n"
-           << ":x0=[" << x0.transpose() << "]\n";
+    stream << std::setprecision(10) << function.name() << "\n:x0=[" << x0.transpose() << "]\n";
 
     const auto logger = make_stream_logger(stream);
 
@@ -110,8 +109,10 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
     UTEST_CHECK(state.valid());
     UTEST_CHECK_CLOSE(state.x(), xbest, epsilon);
     UTEST_CHECK_CLOSE(state.fx(), fbest, epsilon);
-    UTEST_CHECK_LESS_EQUAL(0.0, state.constraint_test());
-    UTEST_CHECK_LESS(state.constraint_test(), solver.parameter("solver::epsilon").value<scalar_t>());
+    UTEST_CHECK_LESS_EQUAL(0.0, state.kkt_optimality_test1());
+    UTEST_CHECK_LESS_EQUAL(0.0, state.kkt_optimality_test2());
+    UTEST_CHECK_LESS(state.kkt_optimality_test1(), epsilon);
+    UTEST_CHECK_LESS(state.kkt_optimality_test2(), epsilon);
     UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
     UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
     UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
@@ -719,22 +720,26 @@ UTEST_CASE(minimize_objective1)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-2.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 2.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 2.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 1.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     const auto fbest = -2.0;
     const auto xbest = make_vector<scalar_t>(-1.0, -1.0);
@@ -762,17 +767,20 @@ UTEST_CASE(minimize_objective2)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 3.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 3.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     const auto fbest = -5.0;
     const auto xbest = make_vector<scalar_t>(1.0, 0.0);
@@ -799,17 +807,20 @@ UTEST_CASE(minimize_objective3)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(0.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(2.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     const auto fbest = +1.0;
     const auto xbest = make_vector<scalar_t>(1.0);
@@ -837,17 +848,20 @@ UTEST_CASE(minimize_objective4)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
         UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     const auto fbest = -1.0;
     const auto xbest = make_vector<scalar_t>(1.0, 0.0);
@@ -879,17 +893,20 @@ UTEST_CASE(minimize_objective5)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0, -1.0, -1.0, -1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-2.0, 0.0, -2.0, 0.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-3.0, -1.0, -1.0, 1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     const auto fbest = 5.0 / 16.0;
     const auto xbest = make_vector<scalar_t>(1.0, 0.0);
@@ -919,17 +936,20 @@ UTEST_CASE(minimize_objective6)
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 0.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(0.0, -1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0, 1.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, -1.0)};
         UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(1.0, 4.0), 1e-12);
-        UTEST_CHECK_CLOSE(state.constraint_test(), 4.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 4.0, 1e-12);
+        UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
 
     const auto fbest = 0.0;

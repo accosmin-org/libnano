@@ -1,18 +1,21 @@
-#include <Eigen/Dense>
+#include <nano/function/program.h>
+#include <nano/program/benchmark.h>
 #include <nano/program/solver.h>
+#include <nano/solver/augmented.h>
+#include <nano/solver/penalty.h>
 #include <utest/utest.h>
 
 using namespace nano;
-using namespace nano::program;
 
-static auto make_permutation(const tensor_size_t m)
+inline auto make_permutation(const tensor_size_t m)
 {
     auto permutation = arange(0, m);
     std::shuffle(permutation.begin(), permutation.end(), make_rng());
     return permutation;
 }
 
-static auto duplicate(const equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1, const scalar_t dep_w2)
+inline auto duplicate(const program::equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1,
+                      const scalar_t dep_w2)
 {
     const auto& A = equality.m_A;
     const auto& b = equality.m_b;
@@ -37,94 +40,113 @@ static auto duplicate(const equality_t<matrix_t, vector_t>& equality, const scal
         A2.row(duplicat_row) = A.row(permuted_row).array() * dep_w1 + A.row(permuted_mix).array() * dep_w2;
     }
 
-    return make_equality(A2, b2);
+    return program::make_equality(A2, b2);
 }
 
-struct expected_t
+template <class tprogram>
+void check_solution(const tprogram& program, const program::expected_t& expected, const vector_t& x, const scalar_t fx,
+                    const scalar_t kkt)
 {
-    expected_t() = default;
-
-    explicit expected_t(vector_t xbest)
-        : m_xbest(std::move(xbest))
+    // check optimum (if known)
+    if (expected.m_xbest.size() > 0)
     {
+        UTEST_CHECK_CLOSE(x, expected.m_xbest, expected.m_epsilon);
     }
 
-    auto& x0(vector_t x0)
+    // check optimum function value (if known)
+    if (std::isfinite(expected.m_fbest))
     {
-        m_x0 = std::move(x0);
-        return *this;
+        UTEST_CHECK_CLOSE(fx, expected.m_fbest, expected.m_epsilon);
     }
 
-    auto& status(const solver_status status)
+    // check KKT optimality conditions (always verifiable for convex problems)
+    UTEST_CHECK(program.feasible(x, expected.m_epsilon));
+    if (std::isfinite(kkt))
     {
-        m_status = status;
-        return *this;
+        UTEST_CHECK_LESS(kkt, expected.m_epsilon);
     }
-
-    auto& epsilon(const scalar_t epsilon)
-    {
-        m_epsilon = epsilon;
-        return *this;
-    }
-
-    auto& fbest(const scalar_t fbest)
-    {
-        m_fbest = fbest;
-        return *this;
-    }
-
-    vector_t      m_xbest;
-    scalar_t      m_fbest{std::numeric_limits<scalar_t>::quiet_NaN()};
-    vector_t      m_x0;
-    scalar_t      m_epsilon{1e-8};
-    solver_status m_status{solver_status::converged};
-};
+}
 
 template <class tprogram>
-auto check_solution_(tprogram program, const expected_t& expected)
+void check_solution_program(tprogram program, const program::expected_t& expected, const logger_t& logger)
 {
-    const auto failures = utest_n_failures.load();
+    auto solver = program::solver_t{};
 
-    program.reduce();
-
-    auto solver = solver_t{};
-    auto stream = std::ostringstream{};
-    auto logger = make_stream_logger(stream);
-
-    auto bstate =
+    auto state =
         (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0, logger) : solver.solve(program, logger);
 
-    UTEST_CHECK_EQUAL(bstate.m_status, expected.m_status);
+    UTEST_CHECK_EQUAL(state.m_status, expected.m_status);
     if (expected.m_status == solver_status::converged)
     {
-        UTEST_CHECK(program.feasible(bstate.m_x, expected.m_epsilon));
-        if (expected.m_xbest.size() > 0) // NB: sometimes the solution is not known analytically!
-        {
-            UTEST_CHECK_CLOSE(bstate.m_x, expected.m_xbest, expected.m_epsilon);
-        }
-        if (std::isfinite(expected.m_fbest))
-        {
-            UTEST_CHECK_CLOSE(bstate.m_fx, expected.m_fbest, expected.m_epsilon);
-        }
+        check_solution(program, expected, state.m_x, state.m_fx, state.m_kkt);
     }
-
-    if (failures != utest_n_failures.load())
-    {
-        std::cout << stream.str();
-    }
-
-    return bstate;
 }
 
 template <class tprogram>
-auto check_solution(const tprogram& program, const expected_t& expected)
+void check_solution_augmented(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
 {
+    // FIXME: It is possible to detect unfeasibility or unboundedness with augmented lagrangian method?!
+    if (expected.m_status != solver_status::converged)
+    {
+        return;
+    }
+
+    auto solver                         = solver_augmented_lagrangian_t{};
+    solver.parameter("solver::epsilon") = 1e-10;
+
+    const auto function = make_function(program);
+    const auto x0       = make_full_tensor<scalar_t>(make_dims(function->size()), 4.0);
+    auto       state    = solver.minimize(*function, x0, logger);
+
+    UTEST_CHECK_EQUAL(state.status(), expected.m_status);
+    if (expected.m_status == solver_status::converged)
+    {
+        check_solution(program, expected, state.x(), state.fx(), state.kkt_optimality_test());
+    }
+}
+
+template <class tprogram>
+void check_solution_penalty(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
+{
+    // FIXME: It is possible to detect unfeasibility or unboundedness with the penalty method?!
+    if (expected.m_status != solver_status::converged)
+    {
+        return;
+    }
+
+    auto solver                         = solver_quadratic_penalty_t{};
+    solver.parameter("solver::epsilon") = 1e-10;
+
+    const auto function = make_function(program);
+    const auto x0       = make_full_tensor<scalar_t>(make_dims(function->size()), 4.0);
+    auto       state    = solver.minimize(*function, x0, logger);
+
+    UTEST_CHECK_EQUAL(state.status(), expected.m_status);
+    if (expected.m_status == solver_status::converged)
+    {
+        // NB: The penalty method doesn't provide an estimation of the Lagrangian multipliers!
+        check_solution(program, expected, state.x(), state.fx(), std::numeric_limits<scalar_t>::quiet_NaN());
+    }
+}
+
+template <class tprogram>
+void check_solution(const tprogram& program, const program::expected_t& expected)
+{
+    // TODO: move this to std::remove_cvref_t when moving C++20!
+    if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<tprogram>>, program::quadratic_program_t>)
+    {
+        UTEST_REQUIRE(program.convex());
+    }
+
     // test duplicated equality constraints
     if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
-        check_solution_(dprogram, expected);
+
+        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
     }
 
     // test linearly dependant equality constraints
@@ -132,9 +154,14 @@ auto check_solution(const tprogram& program, const expected_t& expected)
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
-        check_solution_(dprogram, expected);
+
+        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
+        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
     }
 
     // test original program
-    return check_solution_(program, expected);
+    check_with_logger([&](const logger_t& logger) { check_solution_penalty(program, expected, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_program(program, expected, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_augmented(program, expected, logger); });
 }

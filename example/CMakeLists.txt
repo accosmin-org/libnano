@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include("${CMAKE_SOURCE_DIR}/../cmake/utils.cmake")
 
-find_package(NANO 0.0.1 REQUIRED COMPONENTS core function program solver)
+find_package(NANO 0.0.1 REQUIRED COMPONENTS core program function solver)
 
 include(CTest)
 enable_testing()

@@ -25,24 +25,18 @@ namespace nano
 ///     to handle functions that are non-Lipschitz locally.
 ///
 
-namespace gs
+namespace gsample
 {
-struct fixed_sampler_t;
-struct adaptive_sampler_t;
-
 class identity_preconditioner_t;
 class lbfgs_preconditioner_t;
-
-struct gs_type_id_t;
-struct ags_type_id_t;
-struct gs_lbfgs_type_id_t;
-struct ags_lbfgs_type_id_t;
-} // namespace gs
+class fixed_sampler_t;
+class adaptive_sampler_t;
+} // namespace gsample
 
 ///
 /// \brief base class for gradient sampling solvers.
 ///
-template <class tsampler, class tpreconditioner, class ttype_id>
+template <class tsampler, class tpreconditioner>
 class NANO_PUBLIC base_solver_gs_t final : public solver_t
 {
 public:
@@ -65,23 +59,22 @@ public:
 ///
 /// \brief gradient sampling: version P-nNGS from (6).
 ///
-using solver_gs_t = base_solver_gs_t<gs::fixed_sampler_t, gs::identity_preconditioner_t, gs::gs_type_id_t>;
+using solver_gs_t = base_solver_gs_t<gsample::fixed_sampler_t, gsample::identity_preconditioner_t>;
 
 ///
 /// \brief gradient sampling with LBFGS-like search direction:
 ///     version P-nNGS from (6) + LBFGS preconditioner from (5).
 ///
-using solver_gs_lbfgs_t = base_solver_gs_t<gs::fixed_sampler_t, gs::lbfgs_preconditioner_t, gs::gs_lbfgs_type_id_t>;
+using solver_gs_lbfgs_t = base_solver_gs_t<gsample::fixed_sampler_t, gsample::lbfgs_preconditioner_t>;
 
 ///
 /// \brief adaptive gradient sampling: version P-nNGS from (6) + AGS sampling from (5).
 ///
-using solver_ags_t = base_solver_gs_t<gs::adaptive_sampler_t, gs::identity_preconditioner_t, gs::ags_type_id_t>;
+using solver_ags_t = base_solver_gs_t<gsample::adaptive_sampler_t, gsample::identity_preconditioner_t>;
 
 ///
 /// \brief adaptive gradient sampling with LBFGS-like search direction:
 ///     version P-nNGS from (6) + AGS sampling from (5) + LBFGS preconditioner from (5).
 ///
-using solver_ags_lbfgs_t =
-    base_solver_gs_t<gs::adaptive_sampler_t, gs::lbfgs_preconditioner_t, gs::ags_lbfgs_type_id_t>;
+using solver_ags_lbfgs_t = base_solver_gs_t<gsample::adaptive_sampler_t, gsample::lbfgs_preconditioner_t>;
 } // namespace nano

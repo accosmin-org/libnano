@@ -169,61 +169,47 @@ struct solver_description_t
 [[maybe_unused]] static auto check_minimize(solver_t& solver, const function_t& function, const vector_t& x0,
                                             const minimize_config_t& config = minimize_config_t{})
 {
-    const auto old_n_failures = utest_n_failures.load();
-    const auto state0         = solver_state_t{function, x0};
+    auto state = solver_state_t{};
 
-    const auto solver_id   = solver.type_id();
-    const auto lsearch0_id = solver.type() == solver_type::line_search ? solver.lsearch0().type_id() : "N/A";
-    const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
+    const auto op = [&](const logger_t& logger)
+    {
+        const auto state0      = solver_state_t{function, x0};
+        const auto solver_id   = solver.type_id();
+        const auto lsearch0_id = solver.type() == solver_type::line_search ? solver.lsearch0().type_id() : "N/A";
+        const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
 
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(20) << function.name() << " " << solver_id << "[" << lsearch0_id << ","
-           << lsearchk_id << "]\n"
-           << ":x0=[" << state0.x().transpose() << "],f0=" << state0.fx() << ",g0=" << state0.gradient_test();
-    std::cout << std::fixed << std::setprecision(20);
-    if (state0.ceq().size() + state0.cineq().size() > 0)
-    {
-        stream << ",c0=" << state0.constraint_test() << "\n";
-    }
-    else
-    {
-        stream << "\n";
-    }
+        logger.info(std::setprecision(10), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id,
+                    "]\n:x0=[", state0.x().transpose(), "],", state0, "\n");
 
-    const auto logger = make_stdout_logger(); // make_stream_logger(stream);
+        // minimize
+        solver.parameter("solver::epsilon")   = config.m_epsilon;
+        solver.parameter("solver::max_evals") = config.m_max_evals;
 
-    // minimize
-    solver.parameter("solver::epsilon")   = config.m_epsilon;
-    solver.parameter("solver::max_evals") = config.m_max_evals;
+        function.clear_statistics();
+        state = solver.minimize(function, x0, logger);
 
-    function.clear_statistics();
-    auto state = solver.minimize(function, x0, logger);
-
-    UTEST_CHECK(state.valid());
-    UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
-    if (function.smooth() && solver.type() == solver_type::line_search)
-    {
-        UTEST_CHECK_LESS(state.gradient_test(), config.m_epsilon);
-    }
-    if (config.m_expected_convergence)
-    {
-        UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
-    }
-    else
-    {
-        UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
-    }
-    UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
-    UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
-    if (function.convex() && std::isfinite(config.m_expected_minimum) && config.m_expected_convergence)
-    {
-        UTEST_CHECK_CLOSE(state.fx(), config.m_expected_minimum, config.m_expected_maximum_deviation);
-    }
-
-    if (old_n_failures != utest_n_failures.load())
-    {
-        std::cout << stream.str();
-    }
+        UTEST_CHECK(state.valid());
+        UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
+        if (function.smooth() && solver.type() == solver_type::line_search)
+        {
+            UTEST_CHECK_LESS(state.gradient_test(), config.m_epsilon);
+        }
+        if (config.m_expected_convergence)
+        {
+            UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
+        }
+        else
+        {
+            UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
+        }
+        UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
+        UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
+        if (function.convex() && std::isfinite(config.m_expected_minimum) && config.m_expected_convergence)
+        {
+            UTEST_CHECK_CLOSE(state.fx(), config.m_expected_minimum, config.m_expected_maximum_deviation);
+        }
+    };
+    check_with_logger(op);
 
     return state;
 }
@@ -248,8 +234,8 @@ struct solver_description_t
                 const auto state = check_minimize(*solver, *function, x0, config);
                 config.expected_minimum(state.fx());
 
-                log_info(std::fixed, std::setprecision(10), function->name(), ": solver=", solver_id,
-                         ",fx=", state.fx(), ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
+                log_info(std::setprecision(10), function->name(), ": solver=", solver_id, ",fx=", state.fx(),
+                         ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
             }
         }
     }

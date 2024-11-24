@@ -143,40 +143,17 @@ UTEST_CASE(program4)
     check_solution(program, expected_t{xbest}.fbest(-7.0 / 3.0));
 }
 
-UTEST_CASE(program5)
+UTEST_CASE(program_numopt162)
 {
-    // see exercise 16.2, "Numerical optimization", Nocedal & Wright, 2nd edition
     for (const tensor_size_t dims : {3, 5, 11})
     {
-        const auto x0 = make_random_vector<scalar_t>(dims);
-        const auto Q  = matrix_t{matrix_t::identity(dims, dims)};
-        const auto c  = vector_t{-x0};
-
         for (const tensor_size_t neqs : {tensor_size_t{1}, dims - 1, dims})
         {
-            auto L = make_random_matrix<scalar_t>(neqs, neqs);
-            auto U = make_random_matrix<scalar_t>(neqs, dims);
+            UTEST_NAMED_CASE(scat("dims=", dims, ",neqs=", neqs));
 
-            L.matrix().triangularView<Eigen::Upper>().setZero();
-            U.matrix().triangularView<Eigen::Lower>().setZero();
+            const auto& [program, expected] = make_quadratic_program_numopt162(dims, neqs);
 
-            L.diagonal().array() = 1.0;
-            U.diagonal().array() = 1.0;
-
-            const auto A = L * U;
-            const auto b = make_random_vector<scalar_t>(neqs);
-
-            const auto program = make_quadratic(Q, c, make_equality(A, b));
-            UTEST_CHECK(program.convex());
-
-            const auto muv   = std::max({1.0, A.lpNorm<2>(), b.lpNorm<2>()});
-            const auto mux   = std::max({1.0, Q.lpNorm<2>(), c.lpNorm<2>()});
-            const auto invAA = (A * A.transpose()).inverse();
-            const auto xbest = vector_t{x0 + A.transpose() * invAA * (b - A * x0)};
-            const auto vbest = vector_t{-invAA * (b - A * x0) * muv / mux};
-            const auto fbest = scalar_t{0.5 * (b - A * x0).dot(invAA * (b - A * x0))} - 0.5 * x0.dot(x0);
-            const auto state = check_solution(program, expected_t{xbest}.fbest(fbest));
-            UTEST_CHECK_CLOSE(state.m_v, vbest, 1e-9);
+            check_solution(program, expected);
         }
     }
 }
@@ -219,25 +196,15 @@ UTEST_CASE(program7)
     check_solution(program, expected_t{xbest}.fbest(-11));
 }
 
-UTEST_CASE(program8)
+UTEST_CASE(program_numopt1625)
 {
-    // see exercise 16.25, "Numerical optimization", Nocedal & Wright, 2nd edition
     for (const tensor_size_t dims : {2, 3, 7})
     {
         UTEST_NAMED_CASE(scat("dims=", dims));
 
-        const auto x0 = make_random_vector<scalar_t>(dims);
-        const auto Q  = matrix_t{matrix_t::identity(dims, dims)};
-        const auto c  = vector_t{-x0};
-        const auto l  = make_random_vector<scalar_t>(dims);
-        const auto u  = vector_t{l.array() + 0.1};
+        const auto& [program, expected] = make_quadratic_program_numopt1625(dims);
 
-        const auto program = make_quadratic(Q, c, make_greater(l), make_less(u));
-        UTEST_CHECK(program.convex());
-
-        const auto xbest = vector_t{x0.array().max(l.array()).min(u.array())};
-        const auto fbest = 0.5 * xbest.dot(xbest) - xbest.dot(x0);
-        check_solution(program, expected_t{xbest}.fbest(fbest));
+        check_solution(program, expected);
     }
 }
 
@@ -287,7 +254,8 @@ UTEST_CASE(program9)
         const auto x0 = vector_t{vector_t::constant(dims, 1.0 / static_cast<scalar_t>(dims))};
         assert(program.feasible(x0, epsilon1<scalar_t>()));
 
-        check_solution_(program, expected_t{}.x0(x0));
+        const auto expected = expected_t{}.x0(x0);
+        check_with_logger([&](const logger_t& logger) { check_solution_program(program, expected, logger); });
     }
 }
 

@@ -6,6 +6,7 @@ make_app(bench_linear NANO::linear)
 make_app(bench_solver NANO::solver)
 make_app(bench_dataset NANO::machine)
 make_app(bench_function NANO::function)
+make_app(bench_program NANO::solver)
 
 find_package(OpenMP QUIET)
 if(OPENMP_FOUND)

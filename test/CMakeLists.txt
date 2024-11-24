@@ -32,8 +32,8 @@ make_test(test_splitter NANO::machine)
 make_test(test_function NANO::function)
 make_test(test_constrained NANO::solver)
 
-make_test(test_program_linear NANO::program)
-make_test(test_program_quadratic NANO::program)
+make_test(test_program_linear NANO::solver)
+make_test(test_program_quadratic NANO::solver)
 make_test(test_program_constraint NANO::program)
 
 make_test(test_lsearch NANO::solver)

@@ -2,10 +2,13 @@
 
 using namespace nano;
 
-inline auto make_solver_ids()
+namespace
+{
+auto make_solver_ids()
 {
     return strings_t{"ellipsoid", "gs", "gs-lbfgs", "ags", "ags-lbfgs"};
 }
+} // namespace
 
 UTEST_BEGIN_MODULE(test_solver_gsample)
 

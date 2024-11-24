@@ -18,6 +18,7 @@ export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 CXX=clang++ bash scripts/build.sh \
     --check-source-files \
     --check-markdown-docs \
+    --clang-suffix -18 \
     --clang-format
 
 ###############################################################################################################
