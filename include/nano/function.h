@@ -142,7 +142,7 @@ public:
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief construct a test function with the given number of free dimensions and summands (if possible).
+    /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
     ///
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
 

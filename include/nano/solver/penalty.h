@@ -5,7 +5,6 @@
 namespace nano
 {
 // TODO: implement the penalty method from "A new exact penalty function", by W. Huyer and A. Neumaier, 2003.
-//
 class penalty_function_t;
 
 ///

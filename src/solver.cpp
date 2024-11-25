@@ -112,6 +112,8 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
     function.clear_statistics();
 
+    // TODO: check compatibility with the function, warn otherwise!
+
     return do_minimize(function, x0, logger);
 }
 
