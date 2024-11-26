@@ -92,9 +92,9 @@ void solver_state_t::update_calls()
 
 void solver_state_t::update_constraints()
 {
-    auto eq    = 0;
-    auto ineq  = 0;
-    auto gc    = vector_t{m_x.size()};
+    auto eq   = 0;
+    auto ineq = 0;
+    auto gc   = vector_t{m_x.size()};
 
     m_lgx = m_gx;
     for (const auto& constraint : m_function->constraints())
