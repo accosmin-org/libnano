@@ -34,8 +34,8 @@ void check_penalty(const function_t& function, const convexity expected_convexit
 {
     if constexpr (std::is_same_v<tpenalty, augmented_lagrangian_function_t>)
     {
-        const auto n_equalities   = count_equalities(function);
-        const auto n_inequalities = count_inequalities(function);
+        const auto n_equalities   = function.n_equalities();
+        const auto n_inequalities = function.n_inequalities();
 
         const vector_t lambda = make_random_tensor<scalar_t>(make_dims(n_equalities), -1.0, +1.0).vector();
         const vector_t miu    = make_random_tensor<scalar_t>(make_dims(n_inequalities), +0.0, +1.0).vector();
@@ -420,8 +420,8 @@ UTEST_CASE(noconstraint_convex_smooth)
 {
     auto constrained = sum_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
     for (auto trial = 0; trial < 100; ++trial)
@@ -434,8 +434,8 @@ UTEST_CASE(noconstraint_convex_nonsmooth)
 {
     auto constrained = sumabsm1_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::yes, smoothness::no, 0.0);
     for (auto trial = 0; trial < 100; ++trial)
@@ -448,8 +448,8 @@ UTEST_CASE(noconstraint_nonconvex_smooth)
 {
     auto constrained = cauchy_function_t{3};
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 0U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::no, smoothness::yes, 0.0);
     for (auto trial = 0; trial < 100; ++trial)
@@ -466,8 +466,8 @@ UTEST_CASE(constrained_box_one)
     UTEST_CHECK(!constrained.constrain(+0.5, -0.5, +3));
     UTEST_CHECK(constrained.constrain(-0.5, +0.5, +2));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 2U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 2);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 2);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(-0.1, -0.1, -0.1), true);
@@ -486,8 +486,8 @@ UTEST_CASE(constrained_box_all)
     UTEST_CHECK(!constrained.constrain(+0.5, -0.5));
     UTEST_CHECK(constrained.constrain(-0.5, +0.5));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 6);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.0), true);
@@ -508,8 +508,8 @@ UTEST_CASE(constrained_box_vector)
     UTEST_CHECK(
         constrained.constrain(make_vector<scalar_t>(-0.5, -0.5, -0.5), make_vector<scalar_t>(+0.5, +0.5, +0.5)));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 6U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 6);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 6);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(-0.2, +0.1, +0.0), true);
@@ -525,8 +525,8 @@ UTEST_CASE(constrained_constant)
     UTEST_CHECK(!constrained.constrain(constant_t{1.0, +3}));
     UTEST_CHECK(constrained.constrain(constant_t{1.0, 2}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::yes, smoothness::no, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 1.0), true);
@@ -543,8 +543,8 @@ UTEST_CASE(constrained_euclidean_ball_inequality)
     UTEST_CHECK(!constrained.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), 0.0}));
     UTEST_CHECK(constrained.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(0.0, 0.0, 0.0), 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 0.0), true);
@@ -559,8 +559,8 @@ UTEST_CASE(constrained_affine_equality)
     UTEST_CHECK(!constrained.constrain(linear_equality_t{make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK(constrained.constrain(linear_equality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::yes, smoothness::no, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.5, 1.5, 1.0), true);
@@ -576,8 +576,8 @@ UTEST_CASE(constrained_affine_inequality)
     UTEST_CHECK(!constrained.constrain(linear_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK(constrained.constrain(linear_inequality_t{make_vector<scalar_t>(1.0, 1.0, 1.0), -3.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::yes, smoothness::no, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.1, 0.2, 0.3), true);
@@ -591,8 +591,8 @@ UTEST_CASE(constrained_cauchy_inequality)
     UTEST_CHECK(!constrained.constrain(functional_inequality_t{std::make_unique<cauchy_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_inequality_t{std::make_unique<cauchy_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::no, smoothness::yes, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 0.0), true);
@@ -609,8 +609,8 @@ UTEST_CASE(constrained_sumabsm1_equality)
     UTEST_CHECK(!constrained.constrain(functional_equality_t{std::make_unique<sumabsm1_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_equality_t{std::make_unique<sumabsm1_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::no, smoothness::no, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 1.0), true);
@@ -626,8 +626,8 @@ UTEST_CASE(constrained_sumabsm1_inequality)
     UTEST_CHECK(!constrained.constrain(functional_inequality_t{std::make_unique<sumabsm1_function_t>(4)}));
     UTEST_CHECK(constrained.constrain(functional_inequality_t{std::make_unique<sumabsm1_function_t>(3)}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::yes, smoothness::no, 0.0);
     check_penalties(constrained, make_vector<scalar_t>(0.0, 0.0, 1.0), true);
@@ -652,8 +652,8 @@ UTEST_CASE(constrained_quadratic2x2_inequality)
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P3x2, q2, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P2x2, q2, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::no, smoothness::yes, 0.0);
 }
@@ -673,8 +673,8 @@ UTEST_CASE(constrained_quadratic3x3_inequality)
     UTEST_CHECK(!constrained.constrain(quadratic_inequality_t{P4x3, q3, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_inequality_t{P3x3, q3, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 0);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 1);
 
     check_penalties(constrained, convexity::yes, smoothness::yes, 0.0);
 }
@@ -694,8 +694,8 @@ UTEST_CASE(constrained_quadratic3x3_equality)
     UTEST_CHECK(!constrained.constrain(quadratic_equality_t{P4x3, q3, 1.0}));
     UTEST_CHECK(constrained.constrain(quadratic_equality_t{P3x3, q3, 1.0}));
     UTEST_CHECK_EQUAL(constrained.constraints().size(), 1U);
-    UTEST_CHECK_EQUAL(count_equalities(constrained), 1);
-    UTEST_CHECK_EQUAL(count_inequalities(constrained), 0);
+    UTEST_CHECK_EQUAL(n_equalities(constrained), 1);
+    UTEST_CHECK_EQUAL(n_inequalities(constrained), 0);
 
     check_penalties(constrained, convexity::no, smoothness::yes, 0.0);
 }

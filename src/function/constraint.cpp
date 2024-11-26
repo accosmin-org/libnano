@@ -338,23 +338,23 @@ bool nano::is_equality(const constraint_t& constraint)
            std::get_if<constraint::euclidean_ball_equality_t>(&constraint) != nullptr;
 }
 
-tensor_size_t nano::count_equalities(const function_t& function)
+tensor_size_t nano::n_equalities(const function_t& function)
 {
-    return count_equalities(function.constraints());
+    return n_equalities(function.constraints());
 }
 
-tensor_size_t nano::count_equalities(const constraints_t& constraints)
+tensor_size_t nano::n_equalities(const constraints_t& constraints)
 {
     const auto op = [](const auto& constraint) { return is_equality(constraint); };
     return std::count_if(std::begin(constraints), std::end(constraints), op);
 }
 
-tensor_size_t nano::count_inequalities(const function_t& function)
+tensor_size_t nano::n_inequalities(const function_t& function)
 {
-    return count_inequalities(function.constraints());
+    return n_inequalities(function.constraints());
 }
 
-tensor_size_t nano::count_inequalities(const constraints_t& constraints)
+tensor_size_t nano::n_inequalities(const constraints_t& constraints)
 {
     const auto op = [](const auto& constraint) { return !is_equality(constraint); };
     return std::count_if(std::begin(constraints), std::end(constraints), op);

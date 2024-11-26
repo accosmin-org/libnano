@@ -181,12 +181,12 @@ NANO_PUBLIC bool is_equality(const constraint_t&);
 ///
 /// \brief returns the number of equality constraints.
 ///
-NANO_PUBLIC tensor_size_t count_equalities(const function_t&);
-NANO_PUBLIC tensor_size_t count_equalities(const constraints_t&);
+NANO_PUBLIC tensor_size_t n_equalities(const function_t&);
+NANO_PUBLIC tensor_size_t n_equalities(const constraints_t&);
 
 ///
 /// \brief returns the number of inequality constraints.
 ///
-NANO_PUBLIC tensor_size_t count_inequalities(const function_t&);
-NANO_PUBLIC tensor_size_t count_inequalities(const constraints_t&);
+NANO_PUBLIC tensor_size_t n_inequalities(const function_t&);
+NANO_PUBLIC tensor_size_t n_inequalities(const constraints_t&);
 } // namespace nano

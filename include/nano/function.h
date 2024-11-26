@@ -111,6 +111,16 @@ public:
     const constraints_t& constraints() const;
 
     ///
+    /// \brief returns the number of equality constraints.
+    ///
+    tensor_size_t n_equalities() const;
+
+    ///
+    /// \brief returns the number of inequality constraints.
+    ///
+    tensor_size_t n_inequalities() const;
+
+    ///
     /// \brief evaluate the function's value at the given point
     ///     (and optionally its gradient or sub-gradient if not smooth).
     ///

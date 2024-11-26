@@ -126,8 +126,8 @@ augmented_lagrangian_function_t::augmented_lagrangian_function_t(const function_
     , m_lambda(lambda)
     , m_miu(miu)
 {
-    assert(m_lambda.size() == count_equalities(function));
-    assert(m_miu.size() == count_inequalities(function));
+    assert(m_lambda.size() == function.n_equalities());
+    assert(m_miu.size() == function.n_inequalities());
 
     convex(::convex(function));
     smooth(::smooth(function));
@@ -145,10 +145,10 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
     auto fx      = function().vgrad(x, gx);
     auto ilambda = tensor_size_t{0};
     auto imiu    = tensor_size_t{0};
+    auto gc      = vector_t{gx.size()};
 
     for (const auto& constraint : function().constraints())
     {
-        auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
         const auto ro = penalty();
         const auto fc = ::nano::vgrad(constraint, x, gc);
         const auto eq = is_equality(constraint);

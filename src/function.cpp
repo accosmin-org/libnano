@@ -119,6 +119,16 @@ const constraints_t& function_t::constraints() const
     return m_constraints;
 }
 
+tensor_size_t function_t::n_equalities() const
+{
+    return ::nano::n_equalities(m_constraints);
+}
+
+tensor_size_t function_t::n_inequalities() const
+{
+    return ::nano::n_inequalities(m_constraints);
+}
+
 scalar_t function_t::vgrad(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());

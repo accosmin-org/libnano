@@ -10,8 +10,8 @@ solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     , m_x(std::move(x0))
     , m_gx(vector_t::zero(m_x.size()))
     , m_fx(m_function->vgrad(m_x, m_gx))
-    , m_ceq(vector_t::constant(::nano::count_equalities(m_function->constraints()), 0.0))
-    , m_cineq(vector_t::constant(::nano::count_inequalities(m_function->constraints()), 0.0))
+    , m_ceq(vector_t::constant(m_function->n_equalities(), 0.0))
+    , m_cineq(vector_t::constant(m_function->n_inequalities(), 0.0))
     , m_meq(vector_t::constant(m_ceq.size(), 0.0))
     , m_mineq(vector_t::constant(m_cineq.size(), 0.0))
     , m_lgx(vector_t::constant(m_x.size(), 0.0))
@@ -94,21 +94,21 @@ void solver_state_t::update_constraints()
 {
     auto eq    = 0;
     auto ineq  = 0;
-    auto cgrad = vector_t{m_x.size()};
+    auto gc    = vector_t{m_x.size()};
 
     m_lgx = m_gx;
     for (const auto& constraint : m_function->constraints())
     {
         if (::nano::is_equality(constraint))
         {
-            m_ceq(eq) = ::vgrad(constraint, m_x, cgrad);
-            m_lgx += m_meq(eq) * cgrad;
+            m_ceq(eq) = ::vgrad(constraint, m_x, gc);
+            m_lgx += m_meq(eq) * gc;
             ++eq;
         }
         else
         {
-            m_cineq(ineq) = ::vgrad(constraint, m_x, cgrad);
-            m_lgx += m_mineq(ineq) * cgrad;
+            m_cineq(ineq) = ::vgrad(constraint, m_x, gc);
+            m_lgx += m_mineq(ineq) * gc;
             ++ineq;
         }
     }
