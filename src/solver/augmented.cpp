@@ -60,7 +60,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     const auto [lambda_min, lambda_max] = parameter("solver::augmented::lambda").value_pair<scalar_t>();
     const auto max_outers               = parameter("solver::augmented::max_outer_iters").value<tensor_size_t>();
 
-    auto bstate        = solver_state_t{function, x0};
+    auto bstate        = solver_state_t{function, x0}; ///< best state
+    auto cstate        = bstate;                       ///< current state
     auto ro            = make_ro1(bstate);
     auto lambda        = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
     auto miu           = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
@@ -73,7 +74,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     {
         // solve augmented lagrangian problem
         penalty_function.penalty(ro);
-        const auto cstate = solver->minimize(penalty_function, bstate.x(), logger);
+        const auto pstate = solver->minimize(penalty_function, bstate.x(), logger);
+        cstate.update(pstate.x(), pstate.gx(), pstate.fx());
 
         // check convergence
         const auto iter_ok   = cstate.valid();

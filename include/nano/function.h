@@ -23,6 +23,13 @@ enum class smoothness : uint8_t
     no
 };
 
+enum class constrained : uint8_t
+{
+    ignore,
+    yest,
+    no
+};
+
 ///
 /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
 ///
@@ -101,7 +108,7 @@ public:
     ///
     /// \brief returns the set of registered constraints.
     ///
-    virtual const constraints_t& constraints() const;
+    const constraints_t& constraints() const;
 
     ///
     /// \brief evaluate the function's value at the given point

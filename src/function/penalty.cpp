@@ -52,7 +52,10 @@ penalty_function_t::penalty_function_t(const function_t& function, const char* c
     : function_t(scat(prefix, function.name()), function.size())
     , m_function(function)
 {
-    strong_convexity(function.strong_convexity()); // NB: cannot estimate the strong convexity coefficient in general!
+    // NB: cannot estimate the strong convexity coefficient in general!
+    strong_convexity(function.strong_convexity());
+
+    // NB: no constraints are needed for the penalty function!
 }
 
 penalty_function_t& penalty_function_t::penalty(scalar_t penalty)
@@ -143,7 +146,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
     auto ilambda = tensor_size_t{0};
     auto imiu    = tensor_size_t{0};
 
-    for (const auto& constraint : constraints())
+    for (const auto& constraint : function().constraints())
     {
         auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
         const auto ro = penalty();
