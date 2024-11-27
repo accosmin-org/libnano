@@ -1,12 +1,8 @@
 #pragma once
 
-#include <nano/configurable.h>
-#include <nano/logger.h>
-#include <nano/program/linear.h>
-#include <nano/program/quadratic.h>
-#include <nano/program/state.h>
+#include <nano/solver.h>
 
-namespace nano::program
+namespace nano
 {
 ///
 /// \brief primal-dual interior-point solver specialized for linear and quadratic programs.
@@ -15,13 +11,13 @@ namespace nano::program
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-class NANO_PUBLIC solver_t final : public configurable_t
+class NANO_PUBLIC interior_point_solver_t final : public configurable_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    solver_t();
+    interior_point_solver_t();
 
     ///
     /// \brief returns the solution of the given linear program.

@@ -1,6 +1,6 @@
 #include <Eigen/Dense>
-#include <nano/program/solver.h>
-#include <nano/program/util.h>
+#include <nano/function/util.h>
+#include <nano/solver/interior.h>
 
 using namespace nano;
 using namespace nano::program;
