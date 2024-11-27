@@ -11,6 +11,14 @@ namespace nano
 template <class tmatrixA, class tvectorb>
 struct equality_t
 {
+    void constrain(function_t& function) const
+    {
+        for (tensor_size_t i = 0; i < m_A.rows(); ++i)
+        {
+            function.constrain(constraint::linear_equality_t{m_A.row(i), -m_b(i)});
+        }
+    }
+
     // attributes
     tmatrixA m_A; ///<
     tvectorb m_b; ///<
@@ -22,6 +30,14 @@ struct equality_t
 template <class tmatrixA, class tvectorb>
 struct inequality_t
 {
+    void constrain(function_t& function) const
+    {
+        for (tensor_size_t i = 0; i < m_A.rows(); ++i)
+        {
+            function.constrain(constraint::linear_inequality_t{m_A.row(i), -m_b(i)});
+        }
+    }
+
     // attributes
     tmatrixA m_A; ///<
     tvectorb m_b; ///<
@@ -134,14 +150,7 @@ template <class... tconstraints>
 auto make_linear_program(string_t id, vector_t c, const tconstraints&... constraints)
 {
     auto program = linear_program_t{std::move(id), std::move(c)};
-    for (tensor_size_t i = 0; i < A.rows(); ++i)
-    {
-        function.constrain(constraint::linear_equality_t{A.row(i), -b(i)});
-    }
-    for (tensor_size_t i = 0; i < G.rows(); ++i)
-    {
-        function.constrain(constraint::linear_inequality_t{G.row(i), -h(i)});
-    }
+    (constraints.constrain(program), ...);
     return program;
 }
 
@@ -152,14 +161,7 @@ template <class... tconstraints>
 auto make_quadratic_program(string_t id, matrix_t Q, vector_t c, const tconstraints&... constraints)
 {
     auto program = quadratic_program_t{std::move(id), std::move(Q), std::move(c)};
-    for (tensor_size_t i = 0; i < A.rows(); ++i)
-    {
-        function.constrain(constraint::linear_equality_t{A.row(i), -b(i)});
-    }
-    for (tensor_size_t i = 0; i < G.rows(); ++i)
-    {
-        function.constrain(constraint::linear_inequality_t{G.row(i), -h(i)});
-    }
+    (constraints.constrain(program), ...);
     return program;
 }
 
@@ -171,14 +173,7 @@ auto make_quadratic_program(string_t id, const vector_t& Q_upper_triangular, vec
                             const tconstraints&... constraints)
 {
     auto program = quadratic_program_t{std::move(id), Q_upper_triangular, std::move(c)};
-    for (tensor_size_t i = 0; i < A.rows(); ++i)
-    {
-        function.constrain(constraint::linear_equality_t{A.row(i), -b(i)});
-    }
-    for (tensor_size_t i = 0; i < G.rows(); ++i)
-    {
-        function.constrain(constraint::linear_inequality_t{G.row(i), -h(i)});
-    }
+    (constraints.constrain(program), ...);
     return program;
 }
 } // namespace nano
