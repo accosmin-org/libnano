@@ -13,7 +13,7 @@ struct equality_t
 {
     void constrain(function_t& function) const
     {
-        for (tensor_size_t i = 0; i < m_A.rows(); ++i)
+        for (tensor_size_t i = 0; i < m_A.rows() && m_A.rows() == b.size(); ++i)
         {
             function.constrain(constraint::linear_equality_t{m_A.row(i), -m_b(i)});
         }
@@ -32,7 +32,7 @@ struct inequality_t
 {
     void constrain(function_t& function) const
     {
-        for (tensor_size_t i = 0; i < m_A.rows(); ++i)
+        for (tensor_size_t i = 0; i < m_A.rows() && m_A.rows() == b.size(); ++i)
         {
             function.constrain(constraint::linear_inequality_t{m_A.row(i), -m_b(i)});
         }

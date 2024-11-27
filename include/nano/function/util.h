@@ -29,4 +29,9 @@ NANO_PUBLIC bool reduce(matrix_t& A, vector_t& b);
 /// NB: the matrix is positive semi-definite (and thus a quadratic convex objective) if all eigen values are positive.
 ///
 NANO_PUBLIC scalar_t min_eigval(matrix_cmap_t);
+
+///
+/// \brief return a strictly feasible point wrt the given inequality constraints `Ax <= b`, if possible.
+///
+std::optional<vector_t> make_strictly_feasible(const matrix_t& A, const vector_t& b);
 } // namespace nano

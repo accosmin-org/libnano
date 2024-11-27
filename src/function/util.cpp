@@ -1,3 +1,4 @@
+#include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <nano/core/numeric.h>
 #include <nano/function/util.h>
@@ -136,4 +137,43 @@ scalar_t nano::min_eigval(matrix_cmap_t P)
 
     const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
     return it->real();
+}
+
+std::optional<vector_t> nano::make_strictly_feasible(const matrix_t& A, const vector_t& b)
+{
+    std::optional<vector_t> ret;
+
+    if (A.rows() == b.size())
+    {
+        const auto ldlt = (A.transpose() * A).ldlt();
+        auto       x    = vector_t{A.cols()};
+        const auto eval = [&](const scalar_t y)
+        {
+            x.vector() = ldlt.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
+            if ((A * x.vector() - b).maxCoeff() < 0.0)
+            {
+                ret = std::move(x);
+                return true;
+            }
+            return false;
+        };
+
+        static constexpr auto gamma  = 0.3;
+        static constexpr auto trials = 100;
+
+        // NB: try both smaller and bigger distances to the edges!
+        auto ym = 1.0;
+        auto yM = 1.0 / gamma;
+        for (auto trial = 0; trial < trials; trial += 2)
+        {
+            if (eval(ym) || eval(yM))
+            {
+                break;
+            }
+            ym *= gamma;
+            yM /= gamma;
+        }
+    }
+
+    return ret;
 }
