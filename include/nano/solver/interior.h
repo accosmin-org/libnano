@@ -11,25 +11,23 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-class NANO_PUBLIC interior_point_solver_t final : public configurable_t
+class NANO_PUBLIC interior_point_solver_t final : public solver_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    interior_point_solver_t();
+    interior_point_solver_t(string_t id);
 
     ///
-    /// \brief returns the solution of the given linear program.
+    /// \brief @see clonable_t
     ///
-    solver_state_t solve(const linear_program_t&, const logger_t&) const;
-    solver_state_t solve(const linear_program_t&, const vector_t& x0, const logger_t&) const;
+    rsolver_t clone() const override;
 
     ///
-    /// \brief returns the solution of the given quadratic program.
+    /// \brief @see solver_t
     ///
-    solver_state_t solve(const quadratic_program_t&, const logger_t&) const;
-    solver_state_t solve(const quadratic_program_t&, const vector_t& x0, const logger_t&) const;
+    solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 
 private:
     struct program_t;

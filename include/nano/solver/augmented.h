@@ -17,8 +17,6 @@ namespace nano
 ///
 /// NB: the augmented lagrangian is solved without any bounds constraints like in the original formulation.
 ///
-/// NB: the stopping criterion is that the past two outer iterations are very similar, which differs from (1).
-///
 class NANO_PUBLIC solver_augmented_lagrangian_t final : public solver_t
 {
 public:
