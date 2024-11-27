@@ -19,47 +19,26 @@ public:
     ///
     /// \brief constructor
     ///
-    quadratic_program_t(matrix_t Q, vector_t c);
+    quadratic_program_t(string_t id, matrix_t Q, vector_t c);
 
     ///
     /// \brief constructor (use the upper triangular representation of a symmetric Q)
     ///
-    quadratic_program_t(const vector_t& Q_upper_triangular, vector_t c);
+    quadratic_program_t(string_t id, const vector_t& Q_upper_triangular, vector_t c);
 
     ///
-    /// \brief returns true if the quadratic program is convex (symmetric and positive semidefinite)
+    /// \brief @see clonable_t
     ///
-    bool convex() const;
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
 private:
     // attributes
     matrix_t m_Q; ///<
     vector_t m_c; ///<
-    matrix_t m_A; ///<
-    vector_t m_b; ///<
-    matrix_t m_G; ///<
-    vector_t m_h; ///<
 };
-
-///
-/// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
-///
-template <class... tconstraints>
-auto make_quadratic(matrix_t Q, vector_t c, const tconstraints&... constraints)
-{
-    auto program = quadratic_program_t{std::move(Q), std::move(c)};
-    program.constrain(constraints...);
-    return program;
-}
-
-///
-/// \brief construct a quadratic program from the given objective and the equality and inequality constraints.
-///
-template <class... tconstraints>
-auto make_quadratic_upper_triangular(const vector_t& Q_upper_triangular, vector_t c, const tconstraints&... constraints)
-{
-    auto program = quadratic_program_t{Q_upper_triangular, std::move(c)};
-    program.constrain(constraints...);
-    return program;
-}
 } // namespace nano

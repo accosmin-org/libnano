@@ -16,12 +16,17 @@ NANO_PUBLIC bool is_convex(const function_t&, const vector_t& x1, const vector_t
                            scalar_t epsilon = epsilon1<scalar_t>());
 
 ///
-/// \brief returns true whether the given quadratic term is convex (aka positive semi-definite).
+/// \brief return true if the equality constraint `Ax = b` is not full row rank.
 ///
-NANO_PUBLIC bool convex(const matrix_t&);
+/// in this case the constraints are transformed in-place to obtain row-independant linear constraints
+///     by performing an appropriate matrix decomposition.
+///
+NANO_PUBLIC bool reduce(matrix_t& A, vector_t& b);
 
 ///
-/// \brief returns the strong convexity factor of a quadratic term, or zero if not convex.
+/// \brief return the minimum eigen value of the given squared matrix.
 ///
-NANO_PUBLIC scalar_t strong_convexity(const matrix_t&);
+/// NB: the matrix is positive semi-definite (and thus a quadratic convex objective) if all eigen values are positive.
+///
+NANO_PUBLIC scalar_t min_eigval(matrix_cmap_t);
 } // namespace nano

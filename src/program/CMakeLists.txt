@@ -10,11 +10,9 @@ target_sources(program PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/program/solver.h
     ${CMAKE_SOURCE_DIR}/include/nano/program/stack.h
     ${CMAKE_SOURCE_DIR}/include/nano/program/state.h
-    ${CMAKE_SOURCE_DIR}/include/nano/program/util.h
     benchmark.cpp
     constrained.cpp
     linear.cpp
     quadratic.cpp
     solver.cpp
-    state.cpp
-    util.cpp)
+    state.cpp)

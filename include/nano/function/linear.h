@@ -36,25 +36,20 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_t(vector_t c);
+    explicit linear_program_t(string_t id, vector_t c);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
 private:
     // attributes
     vector_t m_c; ///<
-    matrix_t m_A; ///<
-    vector_t m_b; ///<
-    matrix_t m_G; ///<
-    vector_t m_h; ///<
 };
-
-///
-/// \brief construct a linear program from the given objective and the equality and inequality constraints.
-///
-template <class... tconstraints>
-auto make_linear(vector_t c, const tconstraints&... constraints)
-{
-    auto program = linear_program_t{std::move(c)};
-    program.constrain(constraints...);
-    return program;
-}
 } // namespace nano::program

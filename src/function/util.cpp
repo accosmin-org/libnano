@@ -1,8 +1,32 @@
 #include <Eigen/Eigenvalues>
 #include <nano/core/numeric.h>
 #include <nano/function/util.h>
+#include <nano/tensor/stack.h>
 
 using namespace nano;
+
+namespace
+{
+void reduce(matrix_t& A)
+{
+    // independant linear constraints
+    const auto dd = A.transpose().fullPivLu();
+    if (dd.rank() == A.rows())
+    {
+        return;
+    }
+
+    // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
+    const auto& P  = dd.permutationP();
+    const auto& LU = dd.matrixLU();
+
+    const auto n = std::min(A.rows(), A.cols());
+    const auto L = LU.leftCols(n).triangularView<Eigen::UnitLower>().toDenseMatrix();
+    const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
+
+    A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
+}
+} // namespace
 
 scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, const scalar_t desired_accuracy)
 {
@@ -85,19 +109,31 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     return true;
 }
 
-bool nano::convex(const matrix_t& P)
+bool nano::reduce(matrix_t& A, vector_t& b)
 {
-    const auto eigenvalues         = P.matrix().eigenvalues();
-    const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
+    assert(A.rows() == b.size());
 
-    return std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue);
+    if (A.rows() == 0)
+    {
+        return false;
+    }
+
+    // NB: need to reduce [A|b] altogether!
+    auto Ab = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
+    ::reduce(Ab);
+
+    A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
+    b = Ab.matrix().col(Ab.cols() - 1);
+    return true;
 }
 
-scalar_t nano::strong_convexity(const matrix_t& P)
+scalar_t nano::min_eigval(matrix_cmap_t P)
 {
+    assert(P.rows() == P.cols());
+
     const auto eigenvalues = P.matrix().eigenvalues();
     const auto peigenvalue = [](const auto& lhs, const auto& rhs) { return lhs.real() < rhs.real(); };
 
     const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
-    return std::max(0.0, it->real());
+    return it->real();
 }
