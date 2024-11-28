@@ -5,7 +5,7 @@
 namespace nano
 {
 template <class tmatrix>
-using is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::rank() == 2U);
+using is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::rank() <= 2U);
 
 template <class tvector>
 using is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::rank() == 1U);
@@ -13,6 +13,52 @@ using is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::ran
 template <class tmatrix, std::enable_if_t<is_matrix_v<tmatrix>, bool> = true>
 struct lhs_multiplied_function_t
 {
+    template <class tlambda>
+    bool call_scalar(const tlambda& lambda) const
+    {
+        const auto& a = m_matrix;
+        const auto& f = m_function;
+
+        if constexpr (is_eigen_v<tmatrix>)
+        {
+            return a.rows() == f.size() && a.cols() == 1 && f.constrain(lambda(a.transpose()));
+        }
+        else
+        {
+            static_assert(tmatrix::rank() == 1U);
+
+            return a.size() == f.size() && f.constrain(lambda(a.transpose()));
+        }
+    }
+
+    template <class tvector, class tlambda, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+    bool call_vector(const tvector& b, const tlambda& lambda) const
+    {
+        const auto& A = m_matrix;
+        const auto& f = m_function;
+
+        if constexpr (is_eigen_v<tmatrix>)
+        {
+            bool ok = A.rows() == b.size() && A.cols() == f.size();
+            for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
+            {
+                ok = f.constrain(lambda(A.row(i), b(i)));
+            }
+            return ok;
+        }
+        else
+        {
+            static_assert(tmatrix::rank() == 2U);
+
+            bool ok = A.rows() == b.size() && A.cols() == f.size();
+            for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
+            {
+                ok = f.constrain(lambda(A.row(i), b(i)));
+            }
+            return ok;
+        }
+    }
+
     // attributes
     const tmatrix& m_matrix;   ///<
     function_t&    m_function; ///<
@@ -28,16 +74,10 @@ auto operator*(const tmatrix& matrix, function_t& function)
 /// \brief register a linear equality constraint: A * x = b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator==(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& b)
+bool operator==(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& vb)
 {
-    const auto& [A, f] = lhs_multiplied_function;
-
-    bool ok = (A.rows() == b.size()) && (A.cols() == function.size());
-    for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
-    {
-        ok = f.constrain(constraint::linear_equality_t{A.row(i), -b(i)});
-    }
-    return ok;
+    const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_equality_t{a, -b}; };
+    return lhs_multiplied_function.call_vector(vb, op);
 }
 
 ///
@@ -46,14 +86,8 @@ bool operator==(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_functio
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator<=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& b)
 {
-    const auto& [A, f] = lhs_multiplied_function;
-
-    bool ok = (A.rows() == b.size()) && (A.cols() == function.size());
-    for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
-    {
-        ok = f.constrain(constraint::linear_inequality_t{A.row(i), -b(i)});
-    }
-    return ok;
+    const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{a, -b}; };
+    return lhs_multiplied_function.call_vector(vb, op);
 }
 
 ///
@@ -62,14 +96,8 @@ bool operator<=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_functio
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator>=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& b)
 {
-    const auto& [A, f] = lhs_multiplied_function;
-
-    bool ok = (A.rows() == b.size()) && (A.cols() == function.size());
-    for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
-    {
-        ok = f.constrain(constraint::linear_inequality_t{-A.row(i), b(i)});
-    }
-    return ok;
+    const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{-a, b}; };
+    return lhs_multiplied_function.call_vector(vb, op);
 }
 
 ///
@@ -78,18 +106,8 @@ bool operator>=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_functio
 template <class tvector>
 bool operator==(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
 {
-    const auto& [a, f] = lhs_multiplied_function;
-
-    if constexpr (is_eigen_v<tvector>)
-    {
-        assert(a.cols() == 1);
-    }
-    else
-    {
-        static_assert(tvectora::rank() == 1U);
-    }
-
-    return (a.rows() == f.size()) && f.constrain(constraint::linear_equality_t{a.transpose(), b});
+    const auto op = [&](const auto& a) { return constraint::linear_equality_t{a, -b}; };
+    return lhs_multiplied_function.call_scalar(op);
 }
 
 ///
@@ -98,18 +116,8 @@ bool operator==(const lhs_multiplied_function_t<tvector>& lhs_multiplied_functio
 template <class tvector>
 bool operator<=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
 {
-    const auto& [a, f] = lhs_multiplied_function;
-
-    if constexpr (is_eigen_v<tvector>)
-    {
-        assert(a.cols() == 1);
-    }
-    else
-    {
-        static_assert(tvectora::rank() == 1U);
-    }
-
-    return (a.rows() == f.size()) && f.constrain(constraint::linear_inequality_t{a.transpose(), -b});
+    const auto op = [&](const auto& a) { return constraint::linear_inequality_t{a, -b}; };
+    return lhs_multiplied_function.call_scalar(op);
 }
 
 ///
@@ -118,18 +126,8 @@ bool operator<=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_functio
 template <class tvector>
 bool operator>=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
 {
-    const auto& [a, f] = lhs_multiplied_function;
-
-    if constexpr (is_eigen_v<tvector>)
-    {
-        assert(a.cols() == 1);
-    }
-    else
-    {
-        static_assert(tvectora::rank() == 1U);
-    }
-
-    return (a.rows() == f.size()) && f.constrain(constraint::linear_inequality_t{-a.transpose(), b});
+    const auto op = [&](const auto& a) { return constraint::linear_inequality_t{-a, b}; };
+    return lhs_multiplied_function.call_scalar(op);
 }
 
 ///
