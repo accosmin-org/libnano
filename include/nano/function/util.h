@@ -24,11 +24,14 @@ NANO_PUBLIC bool is_convex(const function_t&, const vector_t& x1, const vector_t
 NANO_PUBLIC bool reduce(matrix_t& A, vector_t& b);
 
 ///
-/// \brief return the minimum eigen value of the given squared matrix.
+/// \brief returns true whether the given quadratic term is convex (aka positive semi-definite).
 ///
-/// NB: the matrix is positive semi-definite (and thus a quadratic convex objective) if all eigen values are positive.
+NANO_PUBLIC bool convex(const matrix_t&);
+
 ///
-NANO_PUBLIC scalar_t min_eigval(matrix_cmap_t);
+/// \brief returns the strong convexity factor of a quadratic term, or zero if not convex.
+///
+NANO_PUBLIC scalar_t strong_convexity(const matrix_t&);
 
 ///
 /// \brief return a strictly feasible point wrt the given inequality constraints `Ax <= b`, if possible.

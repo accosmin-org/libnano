@@ -101,9 +101,158 @@ public:
     /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
     ///
     bool constrain(constraint_t&&);
-    bool constrain(scalar_t min, scalar_t max);
-    bool constrain(scalar_t min, scalar_t max, tensor_size_t dimension);
-    bool constrain(const vector_t& min, const vector_t& max);
+
+    ///
+    /// \brief register a bound constraint for all dimensions:
+    ///     min <= x[i] <= max.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_range(scalar_t min, scalar_t max);
+
+    ///
+    /// \brief register a bound constraint for the given dimension:
+    ///     min <= x[dimmension] <= max.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_range(scalar_t min, scalar_t max, tensor_size_t dimension);
+
+    ///
+    /// \brief register a bound constraint for all dimensions:
+    ///     min[i] <= x[i] <= max[i].
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_range(const vector_t& min, const vector_t& max);
+
+    ///
+    /// \brief register a one-sided inequality contraint for all dimensions:
+    ///     x[i] <= max.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_less(scalar_t max);
+
+    ///
+    /// \brief register a one-sided inequality contraint for the given dimension:
+    ///     x[dimension] <= max.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_less(scalar_t max, tensor_size_t dimension);
+
+    ///
+    /// \brief register a one-sided inequality contraint for all dimensions:
+    ///     x[i] <= max[i].
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_less(const vector_t& max);
+
+    ///
+    /// \brief register a one-sided inequality contraint for all dimensions:
+    ///     x[i] >= min.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_greater(scalar_t min);
+
+    ///
+    /// \brief register a one-sided inequality contraint for the given dimension:
+    ///     x[dimension] >= min.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_greater(scalar_t min, tensor_size_t dimension);
+
+    ///
+    /// \brief register a one-sided inequality contraint for all dimensions:
+    ///     x[i] >= min[i].
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    bool constrain_greater(const vector_t& min);
+
+    ///
+    /// \brief register a linear equality constraint: A * x = b.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    template <class tmatrixA, class tvectorb,
+              std::enable_if_t<is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>, bool> = true, ///<
+              std::enable_if_t<is_eigen_v<tvectorb> || is_tensor_v<tvectorb>, bool> = true> ///<
+    bool constrain_equality(const tmatrixA& A, const tvectorb& b)
+    {
+        if constexpr (is_tensor_v<tmatrixA>)
+        {
+            static_assert(tmatrixA::rank() == 2U);
+        }
+        if constexpr (is_tensor_v<tvectorb>)
+        {
+            static_assert(tvectorb::rank() == 1U);
+        }
+        return constrain_equalities(A, b);
+    }
+
+    ///
+    /// \brief register a linear equality constraint: a.dot(x) = b.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    template <class tvectora, std::enable_if_t<is_eigen_v<tvectora> || is_tensor_v<tvectora>, bool> = true>
+    bool constrain_equality(const tvectora& a, const scalar_t b)
+    {
+        if constexpr (is_eigen_v<tvectora>)
+        {
+            assert(a.cols() == 1);
+        }
+        else
+        {
+            static_assert(tvectora::rank() == 1U);
+        }
+        return constrain_equalities(a.transpose(), vector_t::constant(1, b));
+    }
+
+    ///
+    /// \brief register a linear inequality constraint: A * x <= b.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    template <class tmatrixA, class tvectorb,
+              std::enable_if_t<is_eigen_v<tmatrixA> || is_tensor_v<tmatrixA>, bool> = true, ///<
+              std::enable_if_t<is_eigen_v<tvectorb> || is_tensor_v<tvectorb>, bool> = true> ///<
+    bool constrain_inequality(const tmatrixA& A, const tvectorb& b)
+    {
+        if constexpr (is_tensor_v<tmatrixA>)
+        {
+            static_assert(tmatrixA::rank() == 2U);
+        }
+        if constexpr (is_tensor_v<tvectorb>)
+        {
+            static_assert(tvectorb::rank() == 1U);
+        }
+        return constrain_inequalities(A, b);
+    }
+
+    ///
+    /// \brief register a linear inequality constraint: a.dot(x) <= b.
+    ///
+    /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
+    ///
+    template <class tvectora, std::enable_if_t<is_eigen_v<tvectora> || is_tensor_v<tvectora>, bool> = true>
+    bool constrain_inequality(const tvectora& a, const scalar_t b)
+    {
+        if constexpr (is_eigen_v<tvectora>)
+        {
+            assert(a.cols() == 1);
+        }
+        else
+        {
+            static_assert(tvectora::rank() == 1U);
+        }
+        return constrain_inequalities(a.transpose(), vector_t::constant(1, b));
+    }
 
     ///
     /// \brief returns the set of registered constraints.
@@ -171,6 +320,28 @@ protected:
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 
 private:
+    template <class tmatrixA, class tvectorb>
+    bool constrain_equalities(const tmatrixA& A, const tvectorb& b)
+    {
+        bool ok = true;
+        for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
+        {
+            ok = (A.rows() == b.size()) && constrain(constraint::linear_equality_t{A.row(i), -b(i)});
+        }
+        return ok;
+    }
+
+    template <class tmatrixA, class tvectorb>
+    bool constrain_inequalities(const tmatrixA& A, const tvectorb& b)
+    {
+        bool ok = true;
+        for (tensor_size_t i = 0; i < A.rows() && ok; ++i)
+        {
+            ok = (A.rows() == b.size()) && constrain(constraint::linear_inequality_t{A.row(i), -b(i)});
+        }
+        return ok;
+    }
+
     // attributes
     tensor_size_t         m_size{0};                    ///< #free dimensions to optimize for
     convexity             m_convexity{convexity::no};   ///< whether the function is convex

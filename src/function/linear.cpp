@@ -4,7 +4,7 @@ using namespace nano;
 
 linear_program_t::linear_program_t(string_t id, vector_t c)
     : function_t(std::move(id), c.size())
-    : m_c(std::move(c))
+    , m_c(std::move(c))
 {
     smooth(smoothness::yes);
     convex(convexity::yes);

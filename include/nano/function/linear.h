@@ -36,7 +36,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_t(string_t id, vector_t c);
+    linear_program_t(string_t id, vector_t c);
 
     ///
     /// \brief @see clonable_t

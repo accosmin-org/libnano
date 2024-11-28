@@ -1,4 +1,3 @@
-#include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <nano/core/numeric.h>
 #include <nano/function/util.h>
@@ -128,15 +127,21 @@ bool nano::reduce(matrix_t& A, vector_t& b)
     return true;
 }
 
-scalar_t nano::min_eigval(matrix_cmap_t P)
+bool nano::convex(const matrix_t& P)
 {
-    assert(P.rows() == P.cols());
+    const auto eigenvalues         = P.matrix().eigenvalues();
+    const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
 
+    return std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue);
+}
+
+scalar_t nano::strong_convexity(const matrix_t& P)
+{
     const auto eigenvalues = P.matrix().eigenvalues();
     const auto peigenvalue = [](const auto& lhs, const auto& rhs) { return lhs.real() < rhs.real(); };
 
     const auto* const it = std::min_element(begin(eigenvalues), end(eigenvalues), peigenvalue);
-    return it->real();
+    return std::max(0.0, it->real());
 }
 
 std::optional<vector_t> nano::make_strictly_feasible(const matrix_t& A, const vector_t& b)
