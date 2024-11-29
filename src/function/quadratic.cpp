@@ -2,7 +2,6 @@
 #include <nano/function/util.h>
 
 using namespace nano;
-using namespace nano::program;
 
 namespace
 {
@@ -34,11 +33,9 @@ quadratic_program_t::quadratic_program_t(string_t id, matrix_t Q, vector_t c)
     assert(m_Q.rows() == m_c.size());
     assert(m_Q.cols() == m_c.size());
 
-    const auto min_eigval = nano::min_eigval(m_Q);
-
     smooth(smoothness::yes);
-    convex(min_eigval >= 0.0 ? convexity::yes : convexity::no);
-    strong_convexity(std::max(min_eigval, 0.0));
+    convex(::convex(m_Q) ? convexity::yes : convexity::no);
+    strong_convexity(::strong_convexity(m_Q));
 }
 
 quadratic_program_t::quadratic_program_t(string_t id, const vector_t& Q_upper_triangular, vector_t c)
