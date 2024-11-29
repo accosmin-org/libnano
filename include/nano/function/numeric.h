@@ -133,7 +133,7 @@ bool operator>=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_functio
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper[i].
 ///
-template <class tvector, std::enable_if_t<is_function_comparable_v<tvector>, bool> = true>
+template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator<=(function_t& function, const tvector& upper)
 {
     bool ok = upper.size() == function.size();
@@ -155,16 +155,17 @@ inline bool operator<=(function_t& function, const scalar_t upper)
 ///
 /// \brief register a one-sided inequality contraint for the given dimension: x[dimension] <= upper.
 ///
-inline bool operator<=(function_t& function, const std::pair<scalar_t, tensor_size_t>& upper_and_dimension)
+inline bool operator<=(const indexed_function_t& ifunction, const scalar_t upper)
 {
-    const auto [upper, dimension] = upper_and_dimension;
+    const auto  dimension = ifunction.m_dimension;
+    const auto& function  = ifunction.m_function;
     return dimension >= 0 && dimension < function.size() && function.constrain(maximum_t{upper, dimension});
 }
 
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower[i].
 ///
-template <class tvector, std::enable_if_t<is_function_comparable_v<tvector>, bool> = true>
+template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator>=(function_t& function, const tvector& lower)
 {
     bool ok = lower.size() == function.size();
@@ -186,9 +187,10 @@ inline bool operator>=(function_t& function, const scalar_t lower)
 ///
 /// \brief register a one-sided inequality contraint for the given dimension: x[dimension] >= lower.
 ///
-inline bool operator>=(function_t& function, const std::pair<scalar_t, tensor_size_t>& lower_and_dimension)
+inline bool operator>=(const indexed_function_t& ifunction, const scalar_t lower)
 {
-    const auto [lower, dimension] = lower_and_dimension;
+    const auto  dimension = ifunction.m_dimension;
+    const auto& function  = ifunction.m_function;
     return dimension >= 0 && dimension < function.size() && function.constrain(minimum_t{lower, dimension});
 }
 } // namespace nano

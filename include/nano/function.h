@@ -30,6 +30,13 @@ enum class constrained : uint8_t
     no
 };
 
+struct indexed_function_t
+{
+    // attributes
+    tensor_size_t m_dimension{-1}; ///<
+    function_t&   m_function;      ///<
+};
+
 ///
 /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
 ///
@@ -159,6 +166,15 @@ public:
     /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
     ///
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+
+    ///
+    /// \brief
+    ///
+    indexed_function_t operator[](const tensor_size_t dimension)
+    {
+        assert(dimension >= 0 && dimension < size());
+        return {dimension, *this};
+    }
 
 protected:
     void convex(convexity);
