@@ -37,4 +37,13 @@ NANO_PUBLIC scalar_t strong_convexity(const matrix_t&);
 /// \brief return a strictly feasible point wrt the given inequality constraints `Ax <= b`, if possible.
 ///
 std::optional<vector_t> make_strictly_feasible(const matrix_t& A, const vector_t& b);
+
+///
+/// \brief return a compact linear representation (A, b, G, h) of the functional constraints (if possible):
+///     Ax = b (gathers all equality constraints) and
+///     Gx <= b (gathers all inequality constraints).
+///
+/// NB: if any constraint is not linear, then std::nullopt is returned.
+///
+std::optional<std::tuple<matrix_t, vector_t, matrix_t, vector_t>> make_linear_constraints(const function_t&);
 } // namespace nano
