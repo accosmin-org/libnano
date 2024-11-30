@@ -128,7 +128,7 @@ public:
     /// \brief evaluate the function's value at the given point
     ///     (and optionally its gradient or sub-gradient if not smooth).
     ///
-    scalar_t vgrad(vector_cmap_t x, vector_map_t gx = vector_map_t{}) const;
+    scalar_t operator()(vector_cmap_t x, vector_map_t gx = vector_map_t{}) const;
 
     ///
     /// \brief returns the number of function evaluation calls registered so far.
@@ -168,7 +168,8 @@ public:
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
 
     ///
-    /// \brief
+    /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
+    ///     lower <= x[dimension] <= upper.
     ///
     indexed_function_t operator[](const tensor_size_t dimension)
     {

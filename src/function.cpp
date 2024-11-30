@@ -90,7 +90,7 @@ tensor_size_t function_t::n_inequalities() const
     return ::nano::n_inequalities(m_constraints);
 }
 
-scalar_t function_t::vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx) const
 {
     assert(x.size() == size());
     assert(gx.size() == 0 || gx.size() == size());

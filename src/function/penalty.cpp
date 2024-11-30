@@ -30,7 +30,7 @@ auto smooth(const function_t& function)
 template <class toperator>
 auto penalty_vgrad(const function_t& function, vector_cmap_t x, vector_map_t gx, const toperator& op)
 {
-    auto fx = function.vgrad(x, gx);
+    auto fx = function(x, gx);
 
     for (const auto& constraint : function.constraints())
     {
@@ -142,7 +142,7 @@ scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t
 {
     assert(x.size() == size());
 
-    auto fx      = function().vgrad(x, gx);
+    auto fx      = function()(x, gx);
     auto ilambda = tensor_size_t{0};
     auto imiu    = tensor_size_t{0};
     auto gc      = vector_t{gx.size()};

@@ -115,7 +115,7 @@ auto vgrad(const constant_t& constraint, vector_cmap_t x, vector_map_t gx)
 
 auto vgrad(const functional_t& constraint, vector_cmap_t x, vector_map_t gx)
 {
-    return constraint.m_function->vgrad(x, gx);
+    return (*constraint.m_function)(x, gx);
 }
 
 bool convex(const euclidean_ball_t&)
