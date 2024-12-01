@@ -45,5 +45,13 @@ std::optional<vector_t> make_strictly_feasible(const matrix_t& A, const vector_t
 ///
 /// NB: if any constraint is not linear, then std::nullopt is returned.
 ///
-std::optional<std::tuple<matrix_t, vector_t, matrix_t, vector_t>> make_linear_constraints(const function_t&);
+struct linear_constraints_t
+{
+    matrix_t m_A; ///<
+    vector_t m_b; ///<
+    matrix_t m_G; ///<
+    vector_t m_h; ///<
+};
+
+std::optional<linear_constraints_t> make_linear_constraints(const function_t&);
 } // namespace nano

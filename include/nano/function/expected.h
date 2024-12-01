@@ -3,10 +3,10 @@
 #include <nano/solver/status.h>
 #include <nano/tensor.h>
 
-namespace nano::program
+namespace nano
 {
 ///
-/// \brief models the expected solution of a linear or quadratic program.
+/// \brief models the expected solution of a numerical optimization problem.
 ///
 struct expected_t
 {
@@ -48,7 +48,7 @@ struct expected_t
     vector_t      m_vbest;                            ///< optimum: lagrange multiplier for the equality constraints
     scalar_t      m_fbest{NaN};                       ///< optimum: criterion
     vector_t      m_x0;                               ///< optional starting point
-    scalar_t      m_epsilon{1e-8};                    ///< precision to
+    scalar_t      m_epsilon{1e-8};                    ///< expected precision (maximum deviation from the solution)
     solver_status m_status{solver_status::converged}; ///< expected solver status
 };
 } // namespace nano::program

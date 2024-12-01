@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-#include <nano/program/benchmark.h>
+#include <function/benchmark/program.h>
 
 using namespace nano;
 using namespace nano::program;

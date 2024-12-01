@@ -1,9 +1,11 @@
 #include <Eigen/Eigenvalues>
 #include <nano/core/numeric.h>
+#include <nano/core/overloaded.h>
 #include <nano/function/util.h>
 #include <nano/tensor/stack.h>
 
 using namespace nano;
+using namespace constraint;
 
 namespace
 {
@@ -25,6 +27,66 @@ void reduce(matrix_t& A)
     const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
 
     A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
+}
+
+auto is_linear_constrained(const function_t& function)
+{
+    auto valid = true;
+    auto neqs   = tensor_size_t{0};
+    auto nineqs = tensor_size_t{0};
+
+    for (const auto& constraint : function.constraints())
+    {
+        std::visit(overloaded{[&](const constant_t&) { ++neqs; },              ///<
+                              [&](const minimum_t&) { ++nineqs; },             ///<
+                              [&](const maximum_t&) { ++nineqs; },             ///<
+                              [&](const linear_equality_t&) { ++neqs; },       ///<
+                              [&](const linear_inequality_t&) { ++nineqs; },   ///<
+                              [&](const euclidean_ball_t&) { valid = false; }, ///<
+                              [&](const quadratic_t&) { valid = false; },      ///<
+                              [&](const functional_t&) { valid = false; }},    ///<
+                   constraint);
+    }
+
+    return std::make_tuple(valid, neqs, nineqs);
+}
+
+void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[maybe_unused]] tensor_size_t& neq,
+            const constant_t& c)
+{
+    lc.m_A.row(ieq).array()    = 0.0;
+    lc.m_A(ieq, c.m_dimension) = 1.0;
+    lc.m_b(ieq++)              = c.m_value;
+}
+
+void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[maybe_unused]] tensor_size_t& ineq,
+            const minimum_t& c)
+{
+    lc.m_G.row(ineq).array()    = 0.0;
+    lc.m_G(ineq, c.m_dimension) = -1.0;
+    lc.m_h(ineq++)              = -c.m_value;
+}
+
+void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[maybe_unused]] tensor_size_t& ineq,
+            const maximum_t& c)
+{
+    lc.m_G.row(ineq).array()    = 0.0;
+    lc.m_G(ineq, c.m_dimension) = 1.0;
+    lc.m_h(ineq++)              = c.m_value;
+}
+
+void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[maybe_unused]] tensor_size_t& ineq,
+            const linear_equality_t& c)
+{
+    lc.m_A.row(ieq) = c.m_q.transpose();
+    lc.m_b(ieq++)   = -c.m_r;
+}
+
+void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[maybe_unused]] tensor_size_t& ineq,
+            const linear_inequality_t& c)
+{
+    lc.m_G.row(ineq) = c.m_q.transpose();
+    lc.m_h(ineq++)   = -c.m_r;
 }
 } // namespace
 
@@ -181,4 +243,39 @@ std::optional<vector_t> nano::make_strictly_feasible(const matrix_t& A, const ve
     }
 
     return ret;
+}
+
+std::optional<linear_constraints_t> nano::make_linear_constraints(const function_t& function)
+{
+    if (const auto [valid, neqs, nineqs] = is_linear_constrained(function); !valid)
+    {
+        return {};
+    }
+
+    else
+    {
+        auto lc = linear_constraints_t{};
+        lc.m_A  = matrix_t{neqs, function.size()};
+        lc.m_b  = vector_t{neqs};
+        lc.m_G  = matrix_t{nineqs, function.size()};
+        lc.m_h  = vector_t{nineqs};
+
+        auto ieq  = tensor_size_t{0};
+        auto ineq = tensor_size_t{0};
+
+        for (const auto& constraint : function.constraints())
+        {
+            std::visit(overloaded{[&](const constant_t& c) { handle(lc, ieq, ineq, c); },          ///<
+                                  [&](const minimum_t& c) { handle(lc, ieq, ineq, c); },           ///<
+                                  [&](const maximum_t& c) { handle(lc, ieq, ineq, c); },           ///<
+                                  [&](const linear_equality_t& c) { handle(lc, ieq, ineq, c); },   ///<
+                                  [&](const linear_inequality_t& c) { handle(lc, ieq, ineq, c); }, ///<
+                                  [&](const euclidean_ball_t&) {},                                 ///<
+                                  [&](const quadratic_t&) {},                                      ///<
+                                  [&](const functional_t&) {}},                                    ///<
+                       constraint);
+        }
+
+        return lc;
+    }
 }
