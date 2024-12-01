@@ -14,3 +14,4 @@ target_sources(function PRIVATE
     util.cpp)
 
 add_subdirectory(benchmark)
+add_subdirectory(program)

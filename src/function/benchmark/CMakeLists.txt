@@ -15,7 +15,6 @@ target_sources(function PRIVATE
     maxq.h
     maxquad.h
     powell.h
-    program.h
     qing.h
     quadratic.h
     rosenbrock.h
@@ -42,7 +41,6 @@ target_sources(function PRIVATE
     maxq.cpp
     maxquad.cpp
     powell.cpp
-    program.cpp
     qing.cpp
     quadratic.cpp
     rosenbrock.cpp

@@ -1,14 +1,10 @@
 #pragma once
 
-#include <nano/program/expected.h>
 #include <nano/program/linear.h>
 #include <nano/program/quadratic.h>
 
 namespace nano::program
 {
-using expected_linear_program_t    = std::tuple<linear_program_t, expected_t>;
-using expected_quadratic_program_t = std::tuple<quadratic_program_t, expected_t>;
-
 ///
 /// \brief test/benchmark linear program from
 ///     exercise 4.8 (b), see "Convex Optimization", by S. Boyd and L. Vanderberghe.
@@ -19,7 +15,24 @@ using expected_quadratic_program_t = std::tuple<quadratic_program_t, expected_t>
 ///     s.t. c = lambda * a
 ///     and  lambda <= 0.0.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48b(tensor_size_t dims, scalar_t lambda);
+class NANO_PUBLIC function_cvx48b_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit function_cvx48b_t(tensor_size_t dims = 10, scalar_t lambda = -1.0);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
