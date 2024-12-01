@@ -2,33 +2,14 @@
 
 #include <nano/factory.h>
 #include <nano/function/constraint.h>
+#include <nano/function/enums.h>
+#include <nano/function/optimum.h>
 #include <nano/string.h>
 
 namespace nano
 {
 class function_t;
 using rfunction_t = std::unique_ptr<function_t>;
-
-enum class convexity : uint8_t
-{
-    ignore,
-    yes,
-    no
-};
-
-enum class smoothness : uint8_t
-{
-    ignore,
-    yes,
-    no
-};
-
-enum class constrained : uint8_t
-{
-    ignore,
-    yest,
-    no
-};
 
 struct indexed_function_t
 {
@@ -166,6 +147,11 @@ public:
     /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
     ///
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+
+    ///
+    /// \brief return the optimum global minimum (if known).
+    ///
+    virtual std::optional<optimum_t> optimum() const { return {}; }
 
     ///
     /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
