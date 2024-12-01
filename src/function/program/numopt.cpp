@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-#include <function/benchmark/program.h>
+#include <function/program/numopt.h>
 
 using namespace nano;
 using namespace nano::program;

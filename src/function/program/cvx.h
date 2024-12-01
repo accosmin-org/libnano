@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/program/linear.h>
-#include <nano/program/quadratic.h>
+#include <nano/function/linear.h>
+#include <nano/function/quadratic.h>
 
 namespace nano::program
 {
@@ -15,13 +15,13 @@ namespace nano::program
 ///     s.t. c = lambda * a
 ///     and  lambda <= 0.0.
 ///
-class NANO_PUBLIC function_cvx48b_t final : public linear_program_t
+class NANO_PUBLIC linear_program_cvx48b_t final : public linear_program_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit function_cvx48b_t(tensor_size_t dims = 10, scalar_t lambda = -1.0);
+    explicit linear_program_cvx48b_t(tensor_size_t dims = 10, scalar_t lambda = -1.0);
 
     ///
     /// \brief @see clonable_t

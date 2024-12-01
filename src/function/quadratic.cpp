@@ -57,3 +57,33 @@ scalar_t quadratic_program_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 
     return x.dot(0.5 * (m_Q * x) + m_c);
 }
+
+void quadratic_program_t::reset(matrix_t Q, vector_t c)
+{
+    assert(c.size() == size());
+    assert(Q.rows() == size());
+    assert(Q.cols() == size());
+
+    m_Q = std::move(Q);
+    m_c = std::move(c);
+}
+
+void quadratic_program_t::xbest(vector_t xbest)
+{
+    assert(xbest.size() == size());
+
+    m_xbest = std::move(xbest);
+}
+
+std::optional<optimum_t> quadratic_program_t::optimum() const
+{
+    if (m_xbest.size() == size())
+    {
+        const auto fbest = m_xbest.dot(0.5 * m_Q * m_xbest + m_c);
+        return {m_xbest, fbest};
+    }
+    else
+    {
+        return {};
+    }
+}

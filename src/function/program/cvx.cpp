@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-#include <function/benchmark/program.h>
+#include <function/program/cvx.h>
 
 using namespace nano;
 using namespace nano::program;
@@ -69,7 +69,7 @@ auto make_sorted_cvx48f(const vector_t& c, const vector_t& d)
 }
 } // namespace
 
-function_cvx48b_t::function_cvx48b_t(const tensor_size_t dims, const scalar_t lambda)
+linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const scalar_t lambda)
     : linear_program_t(scat("cvx48-[lambda=", lambda, "]"), dims)
 {
     assert(lambda <= 0.0);
@@ -78,20 +78,20 @@ function_cvx48b_t::function_cvx48b_t(const tensor_size_t dims, const scalar_t la
     const auto b = urand<scalar_t>(-1.0, +1.0);
     const auto c = lambda * a;
 
-    auto program  = make_linear(c, make_inequality(a, b));
-    auto expected = make_expected(lambda * b);
+    reset((c);
+    (a * (*this)) <= b;
 
-    return std::make_tuple(std::move(program), std::move(expected));
+    xbest(lambda * b);
 }
 
-rfunction_t function_cvx48b_t::clone() const
+rfunction_t linear_program_cvx48b_t::clone() const
 {
-    return std::make_unique<function_cvx48b_t>(*this);
+    return std::make_unique<linear_program_cvx48b_t>(*this);
 }
 
-rfunction_t function_cvx48b_t::make(const tensor_size_t dims, [[maybe_unused]] const tensor_size_t summands) const
+rfunction_t linear_program_cvx48b_t::make(const tensor_size_t dims, [[maybe_unused]] const tensor_size_t summands) const
 {
-    return std::make_unique<function_cvx48b_t>(dims);
+    return std::make_unique<linear_program_cvx48b_t>(dims);
 }
 
 expected_linear_program_t nano::program::make_linear_program_cvx48c(const tensor_size_t dims)

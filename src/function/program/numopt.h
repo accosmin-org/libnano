@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/program/linear.h>
-#include <nano/program/quadratic.h>
+#include <nano/function/linear.h>
+#include <nano/function/quadratic.h>
 
 namespace nano::program
 {
