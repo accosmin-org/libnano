@@ -79,8 +79,7 @@ std::optional<optimum_t> quadratic_program_t::optimum() const
 {
     if (m_xbest.size() == size())
     {
-        const auto fbest = m_xbest.dot(0.5 * m_Q * m_xbest + m_c);
-        return {m_xbest, fbest};
+        return {m_xbest, do_vgrad(m_xbest)};
     }
     else
     {

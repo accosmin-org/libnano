@@ -44,8 +44,7 @@ std::optional<optimum_t> linear_program_t::optimum() const
 {
     if (m_xbest.size() == size())
     {
-        const auto fbest = m_c.dot(m_xbest);
-        return {m_xbest, fbest};
+        return {m_xbest, do_vgrad(m_xbest)};
     }
     else
     {

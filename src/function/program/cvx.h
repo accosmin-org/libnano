@@ -42,7 +42,24 @@ public:
 ///     min  c.dot(x)
 ///     s.t. l <= x <= u.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48c(tensor_size_t dims);
+class NANO_PUBLIC linear_program_cvx48c_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48c_t(tensor_size_t dims = 10);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -52,7 +69,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48c(tensor_size_t d
 ///     min  c.dot(x)
 ///     s.t. 1.dot(x) = 1, x >= 0.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48d_eq(tensor_size_t dims);
+class NANO_PUBLIC linear_program_cvx48d_eq_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48d_eq_t(tensor_size_t dims = 10);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -62,7 +96,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48d_eq(tensor_size_
 ///     min  c.dot(x)
 ///     s.t. 1.dot(x) <= 1, x >= 0.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48d_ineq(tensor_size_t dims);
+class NANO_PUBLIC linear_program_cvx48d_ineq_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48d_ineq_t(tensor_size_t dims = 10);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -73,7 +124,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48d_ineq(tensor_siz
 ///  s.t. 1.dot(x) = alpha, 0 <= x <= 1
 ///  and  alpha is an integer between 0 and n.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48e_eq(tensor_size_t dims, tensor_size_t alpha);
+class NANO_PUBLIC linear_program_cvx48e_eq_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48e_eq_t(tensor_size_t dims = 10, tensor_size_t alpha = 0);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -84,7 +152,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48e_eq(tensor_size_
 ///  s.t. 1.dot(x) <= alpha, 0 <= x <= 1
 ///  and  alpha is an integer between 0 and n.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48e_ineq(tensor_size_t dims, tensor_size_t alpha);
+class NANO_PUBLIC linear_program_cvx48e_ineq_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48e_ineq_t(tensor_size_t dims = 10, tensor_size_t alpha = 0);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -95,7 +180,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48e_ineq(tensor_siz
 ///  s.t. d.dot(x) = alpha * 1.dot(d), 0 <= x <= 1
 ///  and  d > 0 and 0 <= alpha <= 1.
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48f(tensor_size_t dims, scalar_t alpha);
+class NANO_PUBLIC linear_program_cvx48f_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx48f_t(tensor_size_t dims = 10, scalar_t alpha = 0.5);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -106,7 +208,24 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx48f(tensor_size_t d
 ///  s.t. Ax <= b
 ///  and  A is square and nonsingular and A^T * c <= 0 (to be feasible).
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx49(tensor_size_t dims);
+class NANO_PUBLIC linear_program_cvx49_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx49_t(tensor_size_t dims = 10);
+
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 
 ///
 /// \brief test/benchmark linear program from
@@ -120,17 +239,22 @@ NANO_PUBLIC expected_linear_program_t make_linear_program_cvx49(tensor_size_t di
 /// NB: b is generated as A * x, where x has all positive components (thus a feasible program)
 ///     if `feasible` is true, otherwise x has some negative components (thus an unfeasible program).
 ///
-NANO_PUBLIC expected_linear_program_t make_linear_program_cvx410(tensor_size_t dims, bool feasible);
+class NANO_PUBLIC linear_program_cvx410_t final : public linear_program_t
+{
+public:
+    ///
+    /// \brief constructor
+    ///
+    explicit linear_program_cvx410_t(tensor_size_t dims = 10, bool feasible = true);
 
-///
-/// \brief test/benchmark quadratic program from
-///     exercise 16.2, "Numerical optimization", Nocedal & Wright, 2nd edition
-///
-NANO_PUBLIC expected_quadratic_program_t make_quadratic_program_numopt162(tensor_size_t dims, tensor_size_t neqs);
+    ///
+    /// \brief @see clonable_t
+    ///
+    rfunction_t clone() const override;
 
-///
-/// \brief test/benchmark quadratic program from
-///     exercise 16.25, "Numerical optimization", Nocedal & Wright, 2nd edition
-///
-NANO_PUBLIC expected_quadratic_program_t make_quadratic_program_numopt1625(tensor_size_t dims);
+    ///
+    /// \brief @see function_t
+    ///
+    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+};
 } // namespace nano::program
