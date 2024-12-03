@@ -6,16 +6,16 @@ namespace nano
 {
 ///
 /// \brief models the general quadratic programs:
-///     min f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
-///     s.t A * x = b
-///     and G * x <= h.
+///     min  f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
+///     s.t. A * x = b
+///     and  G * x <= h.
 ///
 /// NB: the equality and the inequality constraints are optional.
 ///
 /// see (1) "Convex Optimization", by S. Boyd and L. Vanderberghe, 2004.
 /// see (2) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-class NANO_PUBLIC quadratic_program_t final : public function_t
+class NANO_PUBLIC quadratic_program_t : public function_t
 {
 public:
     ///
