@@ -2,7 +2,6 @@
 #include <function/program/cvx.h>
 
 using namespace nano;
-using namespace nano::program;
 
 namespace
 {

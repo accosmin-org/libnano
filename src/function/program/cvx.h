@@ -3,7 +3,7 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 
-namespace nano::program
+namespace nano
 {
 ///
 /// \brief test/benchmark linear program from
