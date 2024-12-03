@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <function/program/cvx.h>
+#include <nano/core/scat.h>
 
 using namespace nano;
 
@@ -26,7 +27,9 @@ auto make_xbest_cvx48d(const vector_t& c)
 
 auto make_xbest_cvx48e_eq(const std::vector<std::pair<scalar_t, tensor_size_t>>& v, const tensor_size_t alpha)
 {
-    auto xbest = make_full_vector<scalar_t>(v.size(), 0.0);
+    const auto dims = static_cast<tensor_size_t>(v.size());
+
+    auto xbest = make_full_vector<scalar_t>(dims, 0.0);
     for (tensor_size_t i = 0; i < alpha; ++i)
     {
         const auto [value, index] = v[static_cast<size_t>(i)];
@@ -37,8 +40,10 @@ auto make_xbest_cvx48e_eq(const std::vector<std::pair<scalar_t, tensor_size_t>>&
 
 auto make_xbest_cvx48e_ineq(const std::vector<std::pair<scalar_t, tensor_size_t>>& v, const tensor_size_t alpha)
 {
-    auto xbest = make_full_vector<scalar_t>(v.size(), 0.0);
-    for (tensor_size_t i = 0, count = 0; i < v.size() && count < alpha; ++i)
+    const auto dims = static_cast<tensor_size_t>(v.size());
+
+    auto xbest = make_full_vector<scalar_t>(dims, 0.0);
+    for (tensor_size_t i = 0, count = 0; i < dims && count < alpha; ++i)
     {
         const auto [value, index] = v[static_cast<size_t>(i)];
         if (value <= 0.0)

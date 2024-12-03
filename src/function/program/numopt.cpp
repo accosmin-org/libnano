@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <function/program/numopt.h>
+#include <nano/core/scat.h>
 
 using namespace nano;
 
