@@ -4,19 +4,13 @@
 #include <nano/function/constraint.h>
 #include <nano/function/enums.h>
 #include <nano/function/optimum.h>
+#include <nano/function/variable.h>
 #include <nano/string.h>
 
 namespace nano
 {
 class function_t;
 using rfunction_t = std::unique_ptr<function_t>;
-
-struct indexed_function_t
-{
-    // attributes
-    tensor_size_t m_dimension{-1}; ///<
-    function_t&   m_function;      ///<
-};
 
 ///
 /// \brief generic multi-dimensional function typically used as the objective of a numerical optimization problem.
@@ -155,9 +149,17 @@ public:
 
     ///
     /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
+    ///     lower <= x <= upper or
+    ///     A * x == b or
+    ///     G * x <= x.
+    ///
+    function_variable_t variable() { return {*this}; }
+
+    ///
+    /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
     ///     lower <= x[dimension] <= upper.
     ///
-    indexed_function_t operator[](const tensor_size_t dimension)
+    function_variable_dimension_t variable(const tensor_size_t dimension)
     {
         assert(dimension >= 0 && dimension < size());
         return {dimension, *this};

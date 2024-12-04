@@ -61,7 +61,7 @@ struct lhs_multiplied_function_t
 
     // attributes
     const tmatrix& m_matrix;   ///<
-    function_t&    m_function; ///<
+    function_variable_t m_variable; ///<
 };
 
 template <class tmatrix>

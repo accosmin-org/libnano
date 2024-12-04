@@ -7,6 +7,7 @@ target_sources(function PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/function/penalty.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/quadratic.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/util.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/variable.h
     constraint.cpp
     linear.cpp
     penalty.cpp
