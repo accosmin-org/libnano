@@ -10,8 +10,12 @@ using is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::ran
 template <class tvector>
 using is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::rank() == 1U);
 
+///
+/// \brief proxy object to model the left-handside multiplication of a matrix or vector with the variable of a function,
+///     useful for easily defining constraints.
+///
 template <class tmatrix, std::enable_if_t<is_matrix_v<tmatrix>, bool> = true>
-struct lhs_multiplied_function_t
+struct lhs_multiplied_variable_t
 {
     template <class tlambda>
     bool call_scalar(const tlambda& lambda) const
@@ -65,69 +69,69 @@ struct lhs_multiplied_function_t
 };
 
 template <class tmatrix>
-auto operator*(const tmatrix& matrix, function_t& function)
+auto operator*(const tmatrix& matrix, const function_variable_t variable)
 {
-    return lhs_multiplied_function_t<tmatrix>{matrix, function};
+    return lhs_multiplied_variable_t<tmatrix>{matrix, variable};
 }
 
 ///
 /// \brief register a linear equality constraint: A * x = b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator==(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& vb)
+bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_equality_t{a, -b}; };
-    return lhs_multiplied_function.call_vector(vb, op);
+    return lhs_multiplied_variable.call_vector(vb, op);
 }
 
 ///
 /// \brief register a linear equality constraint: A * x <= b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& b)
+bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& b)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{a, -b}; };
-    return lhs_multiplied_function.call_vector(vb, op);
+    return lhs_multiplied_variable.call_vector(vb, op);
 }
 
 ///
 /// \brief register a linear equality constraint: A * x >= b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(const lhs_multiplied_function_t<tmatrix>& lhs_multiplied_function, const tvectorb& b)
+bool operator>=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& b)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{-a, b}; };
-    return lhs_multiplied_function.call_vector(vb, op);
+    return lhs_multiplied_variable.call_vector(vb, op);
 }
 
 ///
 /// \brief register a linear equality constraint: a.dot(x) = b.
 ///
 template <class tvector>
-bool operator==(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
+bool operator==(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_equality_t{a, -b}; };
-    return lhs_multiplied_function.call_scalar(op);
+    return lhs_multiplied_variable.call_scalar(op);
 }
 
 ///
 /// \brief register a linear equality constraint: a.dot(x) <= b.
 ///
 template <class tvector>
-bool operator<=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
+bool operator<=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{a, -b}; };
-    return lhs_multiplied_function.call_scalar(op);
+    return lhs_multiplied_variable.call_scalar(op);
 }
 
 ///
 /// \brief register a linear equality constraint: a.dot(x) >= b.
 ///
 template <class tvector>
-bool operator>=(const lhs_multiplied_function_t<tvector>& lhs_multiplied_function, const scalar_t b)
+bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{-a, b}; };
-    return lhs_multiplied_function.call_scalar(op);
+    return lhs_multiplied_variable.call_scalar(op);
 }
 
 ///

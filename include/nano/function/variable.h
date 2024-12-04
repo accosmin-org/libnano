@@ -7,7 +7,8 @@ namespace nano
 class function_t;
 
 ///
-/// \brief proxy object to model the variable of a function, useful for easily defining constraints.
+/// \brief proxy object to model the variable of a function,
+///     useful for easily defining constraints.
 ///
 struct function_variable_t
 {
@@ -16,7 +17,8 @@ struct function_variable_t
 };
 
 ///
-/// \brief proxy object to model the variable of a function, useful for easily defining per-dimension constraints.
+/// \brief proxy object to model the variable of a function,
+///     useful for easily defining per-dimension constraints.
 ///
 struct function_variable_dimension_t
 {
