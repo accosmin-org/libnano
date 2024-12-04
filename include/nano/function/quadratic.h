@@ -38,19 +38,12 @@ public:
     ///
     scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
-    ///
-    /// \brief @see function_t
-    ///
-    std::optional<optimum_t> optimum() const override;
-
 protected:
     void reset(matrix_t, vector_t);
-    void xbest(vector_t);
 
 private:
     // attributes
     matrix_t m_Q; ///<
     vector_t m_c; ///<
-    vector_t m_xbest;      ///<
 };
 } // namespace nano

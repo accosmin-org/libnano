@@ -121,6 +121,26 @@ rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
     return rfunction_t{};
 }
 
+void function_t::optimum(vector_t optimum)
+{
+    assert(optimum.size() == size());
+
+    m_optimum = std::move(optimum);
+}
+
+std::optional<optimum_t> function_t::optimum() const
+{
+    if (m_optimum.size() == size())
+    {
+        const auto fbest = do_vgrad(m_optimum, vector_map_t{});
+        return optimum_t{m_optimum, fbest};
+    }
+    else
+    {
+        return {};
+    }
+}
+
 factory_t<function_t>& function_t::all()
 {
     static auto manager = factory_t<function_t>{};

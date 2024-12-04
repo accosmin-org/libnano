@@ -32,23 +32,3 @@ void linear_program_t::reset(vector_t c)
 
     m_c = std::move(c);
 }
-
-void linear_program_t::xbest(vector_t xbest)
-{
-    assert(xbest.size() == size());
-
-    m_xbest = std::move(xbest);
-}
-
-std::optional<optimum_t> linear_program_t::optimum() const
-{
-    if (m_xbest.size() == size())
-    {
-        const auto fbest = do_vgrad(m_xbest, vector_map_t{});
-        return optimum_t{m_xbest, fbest};
-    }
-    else
-    {
-        return {};
-    }
-}

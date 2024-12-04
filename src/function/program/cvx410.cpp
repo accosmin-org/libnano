@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-#include <function/program/cvx10.h>
+#include <function/program/cvx410.h>
 #include <nano/core/scat.h>
 
 using namespace nano;
@@ -18,11 +18,10 @@ linear_program_cvx410_t::linear_program_cvx48f_t(const tensor_size_t dims, const
         const auto b = A * x;
 
         reset(c);
+        optimum(x);
 
-        (A * (*this)) == b;
-        (*this) >= 0.0;
-
-        xbest(x);
+        A* variable() == b;
+        variable() >= 0.0;
     }
     else
     {
@@ -31,11 +30,12 @@ linear_program_cvx410_t::linear_program_cvx48f_t(const tensor_size_t dims, const
         const auto b = A * x;
 
         reset(c);
+        optimum(x);
 
-        (A * (*this)) == b;
-        (*this) >= 0.0;
+        A* variable() == b;
+        variable() >= 0.0;
 
-        xbest(x);
+    TODO:
         expected.status(solver_status::unfeasible);
     }
 }

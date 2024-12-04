@@ -145,7 +145,7 @@ public:
     ///
     /// \brief return the optimum global minimum (if known).
     ///
-    virtual std::optional<optimum_t> optimum() const { return {}; }
+    std::optional<optimum_t> optimum() const;
 
     ///
     /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
@@ -166,6 +166,7 @@ public:
     }
 
 protected:
+    void optimum(vector_t);
     void convex(convexity);
     void smooth(smoothness);
     void strong_convexity(scalar_t);
@@ -181,5 +182,6 @@ private:
     constraints_t         m_constraints;                ///< optional equality and inequality constraints
     mutable tensor_size_t m_fcalls{0};                  ///< number of function value evaluations
     mutable tensor_size_t m_gcalls{0};                  ///< number of function gradient evaluations
+    vector_t              m_optimum;                    ///< optimum solution (if unique and known)
 };
 } // namespace nano

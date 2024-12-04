@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-linear_program_cvx49_t::linear_program_cvx48f_t(const tensor_size_t dims)
+linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     : linear_program_t("cvx49", dims)
 {
     const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0);
@@ -12,10 +12,9 @@ linear_program_cvx49_t::linear_program_cvx48f_t(const tensor_size_t dims)
     const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
     reset(c);
+    optimum(b);
 
-    (A * (*this)) <= b;
-
-    xbest(b);
+    A* variable() <= b;
 }
 
 rfunction_t linear_program_cvx49_t::clone() const
