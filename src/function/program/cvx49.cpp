@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/cvx49.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 

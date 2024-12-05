@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/numopt162.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 
@@ -29,10 +30,9 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     const auto xbest = x0 + A.transpose() * invAA * (b - A * x0);
 
     reset(Q, c);
+    optimum(xbest);
 
-    (A * (*this)) == b;
-
-    this->xbest(xbest);
+    A* variable() == b;
 }
 
 rfunction_t quadratic_program_numopt162_t::clone() const

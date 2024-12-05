@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/cvx48b.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 
@@ -14,9 +15,9 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
     const auto c = lambda * a;
 
     reset((c);
-    (a * (*this)) <= b;
+    optimum(lambda * b);
 
-    xbest(lambda * b);
+    a * variable() <= b;
 }
 
 rfunction_t linear_program_cvx48b_t::clone() const

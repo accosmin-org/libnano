@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/cvx48e.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 
@@ -61,12 +62,11 @@ linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims,
     const auto h = static_cast<scalar_t>(alpha);
 
     reset(c);
+    optimum(make_xbest_48e_eq(v, alpha));
 
-    (a * (*this)) == h;
-    (*this) >= 0.0;
-    (*this) <= 1.0;
-
-    xbest(make_xbest_48e_eq(v, alpha));
+    a* variable() == h;
+    variable() >= 0.0;
+    variable() <= 1.0;
 }
 
 rfunction_t linear_program_cvx48e_eq_t::clone() const
@@ -92,12 +92,11 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     const auto h = static_cast<scalar_t>(alpha);
 
     reset(c);
+    optimum(make_xbest_48e_ineq(v, alpha));
 
-    (a * (*this)) <= h;
-    (*this) >= 0.0;
-    (*this) <= 1.0;
-
-    xbest(make_xbest_48e_ineq(v, alpha));
+    a* variable() <= h;
+    variable() >= 0.0;
+    variable() <= 1.0;
 }
 
 rfunction_t linear_program_cvx48e_ineq_t::clone() const

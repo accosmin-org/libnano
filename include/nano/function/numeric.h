@@ -78,7 +78,7 @@ auto operator*(const tmatrix& matrix, const function_variable_t variable)
 /// \brief register a linear equality constraint: A * x = b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& vb)
+bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_equality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -88,7 +88,7 @@ bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variabl
 /// \brief register a linear equality constraint: A * x <= b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& b)
+bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -98,7 +98,7 @@ bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variabl
 /// \brief register a linear equality constraint: A * x >= b.
 ///
 template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvectorb& b)
+bool operator>=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{-a, b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -138,12 +138,12 @@ bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variabl
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper[i].
 ///
 template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(function_t& function, const tvector& upper)
+bool operator<=(const function_variable_t& variable, const tvector& upper)
 {
-    bool ok = upper.size() == function.size();
+    bool ok = upper.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < upper.size() && ok; ++i)
     {
-        ok = function.constrain(constraint::maximum_t{upper(i), i});
+        ok = variable.m_function.constrain(constraint::maximum_t{upper(i), i});
     }
     return ok;
 }
@@ -151,31 +151,30 @@ bool operator<=(function_t& function, const tvector& upper)
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper.
 ///
-inline bool operator<=(function_t& function, const scalar_t upper)
+inline bool operator<=(const function_variable_t& variable, const scalar_t upper)
 {
-    return function <= vector_t::constant(function.size(), upper);
+    return variable <= vector_t::constant(variable.m_function.size(), upper);
 }
 
 ///
 /// \brief register a one-sided inequality contraint for the given dimension: x[dimension] <= upper.
 ///
-inline bool operator<=(const indexed_function_t& ifunction, const scalar_t upper)
+inline bool operator<=(const function_variable_dimension_t& ivariable, const scalar_t upper)
 {
-    const auto  dimension = ifunction.m_dimension;
-    const auto& function  = ifunction.m_function;
-    return dimension >= 0 && dimension < function.size() && function.constrain(maximum_t{upper, dimension});
+    return dimension >= 0 && dimension < ivariable.m_function.size() &&
+           ivariable.m_function.constrain(maximum_t{upper, dimension});
 }
 
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower[i].
 ///
 template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(function_t& function, const tvector& lower)
+bool operator>=(const function_variable_t& variable, const tvector& lower)
 {
-    bool ok = lower.size() == function.size();
+    bool ok = lower.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < lower.size() && ok; ++i)
     {
-        ok = function.constrain(constraint::minimum_t{lower(i), i});
+        ok = variable.m_function.constrain(constraint::minimum_t{lower(i), i});
     }
     return ok;
 }
@@ -183,18 +182,17 @@ bool operator>=(function_t& function, const tvector& lower)
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower.
 ///
-inline bool operator>=(function_t& function, const scalar_t lower)
+inline bool operator>=(const function_variable_t& variable, const scalar_t lower)
 {
-    return function >= vector_t::constant(function.size(), lower);
+    return variable >= vector_t::constant(variable.m_function.size(), lower);
 }
 
 ///
 /// \brief register a one-sided inequality contraint for the given dimension: x[dimension] >= lower.
 ///
-inline bool operator>=(const indexed_function_t& ifunction, const scalar_t lower)
+inline bool operator>=(const function_variable_dimension_t& ivariable, const scalar_t lower)
 {
-    const auto  dimension = ifunction.m_dimension;
-    const auto& function  = ifunction.m_function;
-    return dimension >= 0 && dimension < function.size() && function.constrain(minimum_t{lower, dimension});
+    return dimension >= 0 && dimension < ivariable.m_function.size() &&
+           ivariable.m_function.constrain(minimum_t{lower, dimension});
 }
 } // namespace nano

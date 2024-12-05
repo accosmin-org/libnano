@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/numopt1625.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 
@@ -14,11 +15,10 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
     const auto u  = l.array() + 0.1;
 
     reset(Q, c);
+    optimum(x0.array().max(l.array()).min(u.array()));
 
-    (*this) >= l;
-    (*this) <= u;
-
-    this->xbest(x0.array().max(l.array()).min(u.array()));
+    l <= variable();
+    variable() <= u;
 }
 
 rfunction_t quadratic_program_numopt1625_t::clone() const

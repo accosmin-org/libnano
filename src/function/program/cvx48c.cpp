@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <function/program/cvx48c.h>
 #include <nano/core/scat.h>
+#include <nano/function/numeric.h>
 
 using namespace nano;
 
@@ -12,11 +13,10 @@ linear_program_cvx48c_t::linear_program_cvx48c_t(const tensor_size_t dims)
     const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
 
     reset(c);
+    optimum(l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign());
 
-    l <= (*this);
-    (*this) <= u;
-
-    xbest(l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign());
+    l <= variable();
+    variable() <= u;
 }
 
 rfunction_t linear_program_cvx48c_t::clone() const
