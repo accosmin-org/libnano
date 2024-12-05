@@ -3,7 +3,6 @@
 #include <nano/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/function/enums.h>
-#include <nano/function/numeric.h>
 #include <nano/function/optimum.h>
 #include <nano/function/variable.h>
 #include <nano/string.h>

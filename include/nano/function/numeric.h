@@ -5,10 +5,10 @@
 namespace nano
 {
 template <class tmatrix>
-using is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::rank() <= 2U);
+inline constexpr bool is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::rank() <= 2U);
 
 template <class tvector>
-using is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::rank() == 1U);
+inline constexpr bool is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::rank() == 1U);
 
 ///
 /// \brief proxy object to model the left-handside multiplication of a matrix or vector with the variable of a function,
@@ -21,7 +21,7 @@ struct lhs_multiplied_variable_t
     bool call_scalar(const tlambda& lambda) const
     {
         const auto& a = m_matrix;
-        const auto& f = m_function;
+        const auto& f = m_variable.m_function;
 
         if constexpr (is_eigen_v<tmatrix>)
         {
@@ -39,7 +39,7 @@ struct lhs_multiplied_variable_t
     bool call_vector(const tvector& b, const tlambda& lambda) const
     {
         const auto& A = m_matrix;
-        const auto& f = m_function;
+        const auto& f = m_variable.m_function;
 
         if constexpr (is_eigen_v<tmatrix>)
         {
@@ -64,7 +64,7 @@ struct lhs_multiplied_variable_t
     }
 
     // attributes
-    const tmatrix& m_matrix;   ///<
+    const tmatrix&      m_matrix;   ///<
     function_variable_t m_variable; ///<
 };
 
