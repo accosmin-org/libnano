@@ -5,7 +5,7 @@
 
 using namespace nano;
 
-linear_program_cvx410_t::linear_program_cvx48f_t(const tensor_size_t dims, const bool feasible)
+linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const bool feasible)
     : linear_program_t(scat("cvx410-[", feasible ? "feasible" : "unfeasible", "]"), dims)
 {
     const auto D = make_random_matrix<scalar_t>(dims, dims);
@@ -21,7 +21,7 @@ linear_program_cvx410_t::linear_program_cvx48f_t(const tensor_size_t dims, const
         reset(c);
         optimum(x);
 
-        A* variable() == b;
+        (A * variable()) == b;
         variable() >= 0.0;
     }
     else
@@ -33,11 +33,10 @@ linear_program_cvx410_t::linear_program_cvx48f_t(const tensor_size_t dims, const
         reset(c);
         optimum(x);
 
-        A* variable() == b;
+        (A * variable()) == b;
         variable() >= 0.0;
 
-    TODO:
-        expected.status(solver_status::unfeasible);
+        // TODO: expected.status(solver_status::unfeasible); !!!
     }
 }
 

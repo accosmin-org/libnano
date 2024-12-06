@@ -37,7 +37,7 @@ linear_program_cvx48d_eq_t::linear_program_cvx48d_eq_t(const tensor_size_t dims)
     reset(c);
     optimum(make_xbest_cvx48d(c));
 
-    A* variable() == b;
+    (A * variable()) == b;
     variable() >= 0.0;
 }
 
@@ -64,8 +64,8 @@ linear_program_cvx48d_ineq_t::linear_program_cvx48d_ineq_t(const tensor_size_t d
     reset(c);
     optimum(c.min() < 0.0 ? make_xbest_cvx48d(c) : make_full_vector<scalar_t>(dims, 0.0));
 
-    A* variable() <= b;
-    N* variable() <= z;
+    (A * variable()) <= b;
+    (N * variable()) <= z;
     variable() >= 0.0;
 }
 

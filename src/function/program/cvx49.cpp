@@ -5,6 +5,14 @@
 
 using namespace nano;
 
+using Type = Eigen::CwiseNullaryOp<              ///<
+    Eigen::internal::scalar_constant_op<double>, ///<
+    Eigen::Matrix<double, -1, 1>>;               ///<
+
+static_assert(is_eigen_v<Type>);
+static_assert(!is_tensor_v<Type>);
+static_assert(is_vector_v<Type>);
+
 linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     : linear_program_t("cvx49", dims)
 {
@@ -15,7 +23,7 @@ linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     reset(c);
     optimum(b);
 
-    A* variable() <= b;
+    //(A * variable()) <= b;
 }
 
 rfunction_t linear_program_cvx49_t::clone() const

@@ -32,7 +32,7 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     reset(Q, c);
     optimum(xbest);
 
-    A* variable() == b;
+    (A * variable()) == b;
 }
 
 rfunction_t quadratic_program_numopt162_t::clone() const

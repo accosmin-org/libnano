@@ -18,7 +18,8 @@ auto make_sorted_cvx48f(const vector_t& c, const vector_t& d)
     return values;
 }
 
-auto make_xbest_cvx48f(const std::vector<std::pair<scalar_t, tensor_size_t>>& v, const scalar_t alpha)
+auto make_xbest_cvx48f(const vector_t& d, const std::vector<std::pair<scalar_t, tensor_size_t>>& v,
+                       const scalar_t alpha)
 {
     const auto dims = static_cast<tensor_size_t>(v.size());
 
@@ -54,9 +55,9 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scala
     alpha = alpha * d.sum();
 
     reset(c);
-    optimum(make_xbest_cvx48f());
+    optimum(make_xbest_cvx48f(d, v, alpha));
 
-    d* variable() == alpha;
+    (d * variable()) == alpha;
     variable() >= 0.0;
     variable() <= 1.0;
 }

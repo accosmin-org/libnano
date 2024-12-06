@@ -4,12 +4,12 @@
 
 namespace nano
 {
-template <class tmatrix>
-inline constexpr bool is_matrix_v = is_eigen_v<tmatrix> || (is_tensor_v<tmatrix> && tmatrix::rank() <= 2U);
+template <class T>
+inline constexpr bool is_matrix_v = is_eigen_v<T> || (is_tensor_v<T> && T::rank() <= 2U);
 
-template <class tvector>
-inline constexpr bool is_vector_v = is_eigen_v<tvector> || (is_tensor_v<tvector> && tvector::rank() == 1U);
-
+template <class T>
+inline constexpr bool is_vector_v = is_eigen_v<T> || (is_tensor_v<T> && T::rank() == 1U);
+/*
 ///
 /// \brief proxy object to model the left-handside multiplication of a matrix or vector with the variable of a function,
 ///     useful for easily defining constraints.
@@ -68,17 +68,20 @@ struct lhs_multiplied_variable_t
     function_variable_t m_variable; ///<
 };
 
-template <class tmatrix>
-auto operator*(const tmatrix& matrix, const function_variable_t variable)
+template <class ttensor, ///<
+          std::enable_if_t<is_matrix_v<ttensor> || is_vector_v<ttensor>, bool> = true>
+auto operator*(const ttensor& tensor, const function_variable_t& variable)
 {
-    return lhs_multiplied_variable_t<tmatrix>{matrix, variable};
+    return lhs_multiplied_variable_t<ttensor>{tensor, variable};
 }
 
 ///
 /// \brief register a linear equality constraint: A * x = b.
 ///
-template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
+template <class ttensor, class tvector, ///<
+          std::enable_if_t<is_matrix_v<ttensor> || is_vector_v<ttensor>, bool> = true,
+          std::enable_if_t<is_vector_v<tvector>, bool>                         = true>
+bool operator==(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_equality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -87,8 +90,10 @@ bool operator==(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variabl
 ///
 /// \brief register a linear equality constraint: A * x <= b.
 ///
-template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
+template <class ttensor, class tvector, ///<
+          std::enable_if_t<is_matrix_v<ttensor> || is_vector_v<ttensor>, bool> = true,
+          std::enable_if_t<is_vector_v<tvector>, bool>                         = true>
+bool operator<=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -97,8 +102,10 @@ bool operator<=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variabl
 ///
 /// \brief register a linear equality constraint: A * x >= b.
 ///
-template <class tmatrix, class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variable, const tvector& vb)
+template <class ttensor, class tvector, ///<
+          std::enable_if_t<is_matrix_v<ttensor> || is_vector_v<ttensor>, bool> = true,
+          std::enable_if_t<is_vector_v<tvector>, bool>                         = true>
+bool operator>=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{-a, b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -107,7 +114,8 @@ bool operator>=(const lhs_multiplied_variable_t<tmatrix>& lhs_multiplied_variabl
 ///
 /// \brief register a linear equality constraint: a.dot(x) = b.
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+template <class tvector, ///<
+          std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator==(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_equality_t{a, -b}; };
@@ -117,7 +125,8 @@ bool operator==(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variabl
 ///
 /// \brief register a linear equality constraint: a.dot(x) <= b.
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+template <class tvector, ///<
+          std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator<=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{a, -b}; };
@@ -127,7 +136,8 @@ bool operator<=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variabl
 ///
 /// \brief register a linear equality constraint: a.dot(x) >= b.
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+template <class tvector, ///<
+          std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{-a, b}; };
@@ -137,7 +147,8 @@ bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variabl
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+template <class tvector, ///<
+          std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator<=(const function_variable_t& variable, const tvector& upper)
 {
     bool ok = upper.size() == variable.m_function.size();
@@ -161,14 +172,15 @@ inline bool operator<=(const function_variable_t& variable, const scalar_t upper
 ///
 inline bool operator<=(const function_variable_dimension_t& ivariable, const scalar_t upper)
 {
-    return dimension >= 0 && dimension < ivariable.m_function.size() &&
-           ivariable.m_function.constrain(maximum_t{upper, dimension});
+    return ivariable.m_dimension >= 0 && ivariable.m_dimension < ivariable.m_function.size() &&
+           ivariable.m_function.constrain(constraint::maximum_t{upper, ivariable.m_dimension});
 }
 
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
+template <class tvector, ///<
+          std::enable_if_t<is_vector_v<tvector>, bool> = true>
 bool operator>=(const function_variable_t& variable, const tvector& lower)
 {
     bool ok = lower.size() == variable.m_function.size();
@@ -192,7 +204,8 @@ inline bool operator>=(const function_variable_t& variable, const scalar_t lower
 ///
 inline bool operator>=(const function_variable_dimension_t& ivariable, const scalar_t lower)
 {
-    return dimension >= 0 && dimension < ivariable.m_function.size() &&
-           ivariable.m_function.constrain(minimum_t{lower, dimension});
+    return ivariable.m_dimension >= 0 && ivariable.m_dimension < ivariable.m_function.size() &&
+           ivariable.m_function.constrain(constraint::minimum_t{lower, ivariable.m_dimension});
 }
+*/
 } // namespace nano

@@ -17,7 +17,7 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
     reset((c);
     optimum(lambda * b);
 
-    a * variable() <= b;
+    (a * variable()) <= b;
 }
 
 rfunction_t linear_program_cvx48b_t::clone() const

@@ -64,7 +64,7 @@ linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims,
     reset(c);
     optimum(make_xbest_48e_eq(v, alpha));
 
-    a* variable() == h;
+    (a * variable()) == h;
     variable() >= 0.0;
     variable() <= 1.0;
 }
@@ -94,7 +94,7 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     reset(c);
     optimum(make_xbest_48e_ineq(v, alpha));
 
-    a* variable() <= h;
+    (a * variable()) <= h;
     variable() >= 0.0;
     variable() <= 1.0;
 }
