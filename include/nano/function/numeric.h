@@ -1,14 +1,10 @@
 #pragma once
 
 #include <nano/function.h>
+#include <nano/function/traits.h>
 
 namespace nano
 {
-template <class T>
-inline constexpr bool is_matrix_v = is_eigen_v<T> || (is_tensor_v<T> && T::rank() <= 2U);
-
-template <class T>
-inline constexpr bool is_vector_v = is_eigen_v<T> || (is_tensor_v<T> && T::rank() == 1U);
 /*
 ///
 /// \brief proxy object to model the left-handside multiplication of a matrix or vector with the variable of a function,
