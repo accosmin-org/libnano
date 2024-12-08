@@ -5,6 +5,141 @@
 using namespace nano;
 using namespace nano::program;
 
+namespace nano::program
+{
+///
+/// \brief the state of a primal-dual interior-point solver.
+///
+/// NB: the KKT optimality test as the maximum of the infinite norm of the 5 vector conditions from:
+/// see (1) ch.5 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
+///
+/// test 1: g_i(x) <= 0 (inequalities satisfied)
+/// test 2: h_j(x) == 0 (equalities satisfied)
+/// test 3: lambda_i >= 0 (positive multipliers for the inequalities)
+/// test 4: lambda_i * g_i(x) == 0
+/// test 5: grad(f(x)) + sum(lambda_i * grad(g_i(x))) + sum(miu_j * h_j(x)) == 0
+///
+struct NANO_PUBLIC solver_state_t
+{
+    ///
+    /// \brief default constructor
+    ///
+    solver_state_t();
+
+    ///
+    /// \brief constructor
+    ///
+    solver_state_t(tensor_size_t n, tensor_size_t n_ineqs, tensor_size_t n_eqs);
+
+    ///
+    /// \brief return the cumulated residual.
+    ///
+    scalar_t residual() const;
+
+    ///
+    /// \brief compute and store the KKT optimality test for the given linear/quadratic program.
+    ///
+    void update(const matrix_t& Q, const vector_t& c, const matrix_t& A, const vector_t& b, const matrix_t& G,
+                const vector_t& h);
+
+    static constexpr auto max = std::numeric_limits<scalar_t>::max();
+    static constexpr auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
+
+    // attributes
+    int           m_iters{0};                         ///< number of iterations
+    scalar_t      m_fx{nan};                          ///< objective
+    vector_t      m_x;                                ///< solution (primal problem)
+    vector_t      m_u;                                ///< Lagrange multipliers (inequality constraints)
+    vector_t      m_v;                                ///< Lagrange multipliers (equality constraints)
+    scalar_t      m_eta{nan};                         ///< surrogate duality gap
+    vector_t      m_rdual;                            ///< dual residual
+    vector_t      m_rcent;                            ///< central residual
+    vector_t      m_rprim;                            ///< primal residual
+    scalar_t      m_kkt{0};                           ///< KKT optimality test
+    solver_status m_status{solver_status::max_iters}; ///< optimization status
+    scalar_t      m_ldlt_rcond{0};                    ///< LDLT decomp: reciprocal condition number
+    bool          m_ldlt_positive{false};             ///< LDLT decomp: positive semidefinite?, otherwise unstable
+};
+
+///
+/// \brief pretty print the given solver state.
+///
+NANO_PUBLIC std::ostream& operator<<(std::ostream&, const solver_state_t&);
+#include <nano/program/state.h>
+
+using namespace nano;
+using namespace nano::program;
+
+solver_state_t::solver_state_t() = default;
+
+solver_state_t::solver_state_t(const tensor_size_t n, const tensor_size_t n_ineqs, const tensor_size_t n_eqs)
+    : m_x(vector_t::constant(n, nan))
+    , m_u(vector_t::constant(n_ineqs, nan))
+    , m_v(vector_t::constant(n_eqs, nan))
+    , m_rdual(vector_t::constant(n, nan))
+    , m_rcent(vector_t::constant(n_ineqs, nan))
+    , m_rprim(vector_t::constant(n_eqs, nan))
+{
+}
+
+scalar_t solver_state_t::residual() const
+{
+    return std::sqrt(m_rdual.dot(m_rdual) + m_rcent.dot(m_rcent) + m_rprim.dot(m_rprim));
+}
+
+void solver_state_t::update(const matrix_t& Q, const vector_t& c, const matrix_t& A, const vector_t& b,
+                            const matrix_t& G, const vector_t& h)
+{
+    m_kkt = 0.0;
+
+    // test 1
+    if (G.size() > 0)
+    {
+        m_kkt = std::max(m_kkt, (G * m_x - h).array().max(0.0).matrix().lpNorm<Eigen::Infinity>());
+    }
+
+    // test 2
+    if (A.size() > 0)
+    {
+        m_kkt = std::max(m_kkt, (A * m_x - b).lpNorm<Eigen::Infinity>());
+    }
+
+    // test 3
+    if (G.size() > 0)
+    {
+        m_kkt = std::max(m_kkt, (-m_u.array()).max(0.0).matrix().lpNorm<Eigen::Infinity>());
+    }
+
+    // test 4
+    if (G.size() > 0)
+    {
+        m_kkt = std::max(m_kkt, (m_u.array() * (G * m_x - h).array()).matrix().lpNorm<Eigen::Infinity>());
+    }
+
+    // test 5
+    if (Q.size() > 0)
+    {
+        const auto lgrad = Q * m_x + c + A.transpose() * m_v + G.transpose() * m_u;
+        m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
+    }
+    else
+    {
+        const auto lgrad = c + A.transpose() * m_v + G.transpose() * m_u;
+        m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
+    }
+}
+
+std::ostream& nano::program::operator<<(std::ostream& stream, const solver_state_t& state)
+{
+    return stream << "i=" << state.m_iters << ",fx=" << state.m_fx << ",eta=" << state.m_eta
+                  << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
+                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
+                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",kkt=" << state.m_kkt
+                  << ",rcond=" << state.m_ldlt_rcond << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status
+                  << "]";
+}
+} // namespace nano::program
+
 namespace
 {
 template <class tprogram>
