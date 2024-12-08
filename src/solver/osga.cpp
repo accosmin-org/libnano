@@ -102,7 +102,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
         }
 
         x            = xb + alpha * (u - xb);
-        const auto f = function.vgrad(x, g);
+        const auto f = function(x, g);
         g            = g - miu * proxy.gQ(x);
 
         h_hat                = h + alpha * (g - h);
@@ -113,7 +113,7 @@ solver_state_t solver_osga_t::do_minimize(const function_t& function, const vect
 
         u_prime            = proxy.U(gamma_hat - fb_prime, h_hat);
         x_prime            = xb + alpha * (u_prime - xb);
-        const auto f_prime = function.vgrad(x_prime);
+        const auto f_prime = function(x_prime);
 
         const auto& xb_hat = (f_prime < fb_prime) ? x_prime : xb_prime;
         const auto& fb_hat = (f_prime < fb_prime) ? f_prime : fb_prime;
