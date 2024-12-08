@@ -8,13 +8,12 @@ target_sources(function PRIVATE
     cvx410.h
     numopt162.h
     numopt1625.h
-    #cvx48b.cpp
-    #cvx48c.cpp
-    #cvx48d.cpp
-    #cvx48e.cpp
-    #cvx48f.cpp
+    cvx48b.cpp
+    cvx48c.cpp
+    cvx48d.cpp
+    cvx48e.cpp
+    cvx48f.cpp
     cvx49.cpp
-    #cvx410.cpp
-    # numopt162.cpp
-    #numopt1625.cpp
-)
+    cvx410.cpp
+    numopt162.cpp
+    numopt1625.cpp)

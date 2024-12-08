@@ -1,20 +1,11 @@
-#include <Eigen/Dense>
 #include <function/program/cvx49.h>
-#include <nano/core/scat.h>
-#include <nano/function/numeric.h>
+#include <nano/critical.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
-using Type = Eigen::CwiseNullaryOp<              ///<
-    Eigen::internal::scalar_constant_op<double>, ///<
-    Eigen::Matrix<double, -1, 1>>;               ///<
-
-static_assert(is_eigen_v<Type>);
-static_assert(!is_tensor_v<Type>);
-static_assert(is_vector_v<Type>);
-
 linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
-    : linear_program_t("cvx49", dims)
+    : linear_program_t("cvx49", vector_t::zero(dims))
 {
     const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0);
     const auto A = matrix_t::identity(dims, dims);
@@ -23,7 +14,7 @@ linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     reset(c);
     optimum(b);
 
-    //(A * variable()) <= b;
+    critical0((A * variable()) <= b);
 }
 
 rfunction_t linear_program_cvx49_t::clone() const

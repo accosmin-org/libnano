@@ -1,12 +1,13 @@
-#include <Eigen/Dense>
 #include <function/program/cvx410.h>
 #include <nano/core/scat.h>
-#include <nano/function/numeric.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
 linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const bool feasible)
-    : linear_program_t(scat("cvx410-[", feasible ? "feasible" : "unfeasible", "]"), dims)
+    : linear_program_t(scat("cvx410-[", feasible ? "feasible" : "unfeasible", "]"), vector_t::zero(dims))
 {
     const auto D = make_random_matrix<scalar_t>(dims, dims);
     const auto A = D.transpose() * D + matrix_t::identity(dims, dims);
@@ -21,8 +22,8 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
         reset(c);
         optimum(x);
 
-        (A * variable()) == b;
-        variable() >= 0.0;
+        critical0(variable() >= 0.0);
+        critical0((A * variable()) == b);
     }
     else
     {
@@ -31,12 +32,9 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
         const auto b = A * x;
 
         reset(c);
-        optimum(x);
 
-        (A * variable()) == b;
-        variable() >= 0.0;
-
-        // TODO: expected.status(solver_status::unfeasible); !!!
+        critical0(variable() >= 0.0);
+        critical0((A * variable()) == b);
     }
 }
 

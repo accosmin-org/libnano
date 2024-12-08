@@ -1,6 +1,8 @@
-#include <Eigen/Dense>
 #include <function/program/cvx48f.h>
 #include <nano/core/scat.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
@@ -43,10 +45,10 @@ auto make_xbest_cvx48f(const vector_t& d, const std::vector<std::pair<scalar_t, 
 } // namespace
 
 linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scalar_t alpha)
-    : linear_program_t(scat("cvx48f[alpha=", alpha, "]"), dims)
+    : linear_program_t(scat("cvx48f[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    assert(alpha >= 0.0);
-    assert(alpha <= 1.0);
+    critical0(alpha >= 0.0);
+    critical0(alpha <= 1.0);
 
     const auto d = make_random_vector<scalar_t>(dims, 1.0, +2.0);
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
@@ -57,9 +59,9 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scala
     reset(c);
     optimum(make_xbest_cvx48f(d, v, alpha));
 
-    (d * variable()) == alpha;
-    variable() >= 0.0;
-    variable() <= 1.0;
+    critical0((d * variable()) == alpha);
+    critical0(variable() >= 0.0);
+    critical0(variable() <= 1.0);
 }
 
 rfunction_t linear_program_cvx48f_t::clone() const

@@ -1,7 +1,7 @@
-#include <Eigen/Dense>
 #include <function/program/cvx48d.h>
-#include <nano/core/scat.h>
-#include <nano/function/numeric.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
@@ -28,7 +28,7 @@ auto make_xbest_cvx48d(const vector_t& c)
 } // namespace
 
 linear_program_cvx48d_eq_t::linear_program_cvx48d_eq_t(const tensor_size_t dims)
-    : linear_program_t("cvx48d-eq", dims)
+    : linear_program_t("cvx48d-eq", vector_t::zero(dims))
 {
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto A = vector_t::constant(dims, 1.0);
@@ -37,8 +37,8 @@ linear_program_cvx48d_eq_t::linear_program_cvx48d_eq_t(const tensor_size_t dims)
     reset(c);
     optimum(make_xbest_cvx48d(c));
 
-    (A * variable()) == b;
-    variable() >= 0.0;
+    critical0((A * variable()) == b);
+    critical0(variable() >= 0.0);
 }
 
 rfunction_t linear_program_cvx48d_eq_t::clone() const
@@ -53,7 +53,7 @@ rfunction_t linear_program_cvx48d_eq_t::make(const tensor_size_t                
 }
 
 linear_program_cvx48d_ineq_t::linear_program_cvx48d_ineq_t(const tensor_size_t dims)
-    : linear_program_t("cvx48d-ineq", dims)
+    : linear_program_t("cvx48d-ineq", vector_t::zero(dims))
 {
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto A = vector_t::constant(dims, 1.0);
@@ -64,9 +64,9 @@ linear_program_cvx48d_ineq_t::linear_program_cvx48d_ineq_t(const tensor_size_t d
     reset(c);
     optimum(c.min() < 0.0 ? make_xbest_cvx48d(c) : make_full_vector<scalar_t>(dims, 0.0));
 
-    (A * variable()) <= b;
-    (N * variable()) <= z;
-    variable() >= 0.0;
+    critical0((A * variable()) <= b);
+    critical0((N * variable()) <= z);
+    critical0(variable() >= 0.0);
 }
 
 rfunction_t linear_program_cvx48d_ineq_t::clone() const

@@ -1,15 +1,16 @@
-#include <Eigen/Dense>
 #include <function/program/numopt162.h>
 #include <nano/core/scat.h>
-#include <nano/function/numeric.h>
+#include <nano/critical.h>
+#include <nano/function/cuts.h>
 
 using namespace nano;
 
 quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t dims, const tensor_size_t neqs)
-    : quadratic_program_numopt162_t(scat("numopt162[neqs=", neqs, "]"), dims)
+    : quadratic_program_t(scat("numopt162[neqs=", neqs, "]"), matrix_t{matrix_t::zero(dims, dims)},
+                          vector_t::zero(dims))
 {
-    assert(neqs >= 1);
-    assert(neqs <= dims);
+    critical0(neqs >= 1);
+    critical0(neqs <= dims);
 
     const auto x0 = make_random_vector<scalar_t>(dims);
     const auto Q  = matrix_t::identity(dims, dims);
@@ -32,7 +33,7 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     reset(Q, c);
     optimum(xbest);
 
-    (A * variable()) == b;
+    critical0((A * variable()) == b);
 }
 
 rfunction_t quadratic_program_numopt162_t::clone() const

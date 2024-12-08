@@ -1,12 +1,11 @@
-#include <Eigen/Dense>
 #include <function/program/numopt1625.h>
-#include <nano/core/scat.h>
-#include <nano/function/numeric.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
 
 using namespace nano;
 
 quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size_t dims)
-    : quadratic_program_numopt1625_t("numopt1625", dims)
+    : quadratic_program_t("numopt1625", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
     const auto x0 = make_random_vector<scalar_t>(dims);
     const auto Q  = matrix_t::identity(dims, dims);
@@ -17,8 +16,8 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
     reset(Q, c);
     optimum(x0.array().max(l.array()).min(u.array()));
 
-    l <= variable();
-    variable() <= u;
+    critical0(l <= variable());
+    critical0(variable() <= u);
 }
 
 rfunction_t quadratic_program_numopt1625_t::clone() const
