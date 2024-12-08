@@ -35,11 +35,11 @@ UTEST_CASE(lambda)
         for (auto trial = 0; trial < 10; ++trial)
         {
             const auto x = make_random_vector<scalar_t>(dims);
-            UTEST_CHECK_CLOSE(sphere_function.vgrad(x), lambda_function.vgrad(x), 1e-14);
+            UTEST_CHECK_CLOSE(sphere_function(x), lambda_function(x), 1e-14);
 
             auto g1 = make_random_vector<scalar_t>(dims);
             auto g2 = make_random_vector<scalar_t>(dims);
-            UTEST_CHECK_CLOSE(sphere_function.vgrad(x, g1), lambda_function.clone()->vgrad(x, g2), 1e-14);
+            UTEST_CHECK_CLOSE(sphere_function(x, g1), lambda_function.clone()->operator()(x, g2), 1e-14);
             UTEST_CHECK_CLOSE(g1, g2, 1e-14);
         }
     }
@@ -53,13 +53,13 @@ UTEST_CASE(stats)
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
 
         const auto x = make_random_x0(*function);
-        function->vgrad(x);
+        function->operator()(x);
 
         UTEST_CHECK_EQUAL(function->fcalls(), 1);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
 
         vector_t gx(x.size());
-        function->vgrad(x, gx);
+        function->operator()(x, gx);
 
         UTEST_CHECK_EQUAL(function->fcalls(), 2);
         UTEST_CHECK_EQUAL(function->gcalls(), 1);
