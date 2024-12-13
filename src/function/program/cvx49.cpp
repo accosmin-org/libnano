@@ -14,7 +14,7 @@ linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     reset(c);
     optimum(b);
 
-    critical0((A * variable()) <= b);
+    critical((A * variable()) <= b);
 }
 
 rfunction_t linear_program_cvx49_t::clone() const

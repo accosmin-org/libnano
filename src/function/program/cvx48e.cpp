@@ -54,8 +54,8 @@ auto make_sorted_cvx48e(const vector_t& c)
 linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims, const tensor_size_t alpha)
     : linear_program_t(scat("cvx48e-eq[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    critical0(alpha >= 0);
-    critical0(alpha <= dims);
+    critical(alpha >= 0);
+    critical(alpha <= dims);
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto a = make_full_vector<scalar_t>(dims, 1.0);
@@ -65,9 +65,9 @@ linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims,
     reset(c);
     optimum(make_xbest_cvx48e_eq(v, alpha));
 
-    critical0((a * variable()) == h);
-    critical0(variable() >= 0.0);
-    critical0(variable() <= 1.0);
+    critical((a * variable()) == h);
+    critical(variable() >= 0.0);
+    critical(variable() <= 1.0);
 }
 
 rfunction_t linear_program_cvx48e_eq_t::clone() const
@@ -84,8 +84,8 @@ rfunction_t linear_program_cvx48e_eq_t::make(const tensor_size_t                
 linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t dims, const tensor_size_t alpha)
     : linear_program_t(scat("cvx48e-ineq[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    critical0(alpha >= 0);
-    critical0(alpha <= dims);
+    critical(alpha >= 0);
+    critical(alpha <= dims);
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto a = make_full_vector<scalar_t>(dims, 1.0);
@@ -95,9 +95,9 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     reset(c);
     optimum(make_xbest_cvx48e_ineq(v, alpha));
 
-    critical0((a * variable()) <= h);
-    critical0(variable() >= 0.0);
-    critical0(variable() <= 1.0);
+    critical((a * variable()) <= h);
+    critical(variable() >= 0.0);
+    critical(variable() <= 1.0);
 }
 
 rfunction_t linear_program_cvx48e_ineq_t::clone() const

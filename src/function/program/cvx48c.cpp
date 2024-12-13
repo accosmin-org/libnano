@@ -15,8 +15,8 @@ linear_program_cvx48c_t::linear_program_cvx48c_t(const tensor_size_t dims)
     reset(c);
     optimum(l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign());
 
-    critical0(l <= variable());
-    critical0(variable() <= u);
+    critical(l <= variable());
+    critical(variable() <= u);
 }
 
 rfunction_t linear_program_cvx48c_t::clone() const

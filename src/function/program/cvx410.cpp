@@ -22,8 +22,8 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
         reset(c);
         optimum(x);
 
-        critical0(variable() >= 0.0);
-        critical0((A * variable()) == b);
+        critical(variable() >= 0.0);
+        critical((A * variable()) == b);
     }
     else
     {
@@ -33,8 +33,8 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
 
         reset(c);
 
-        critical0(variable() >= 0.0);
-        critical0((A * variable()) == b);
+        critical(variable() >= 0.0);
+        critical((A * variable()) == b);
     }
 }
 

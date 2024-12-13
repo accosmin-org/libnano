@@ -37,8 +37,8 @@ linear_program_cvx48d_eq_t::linear_program_cvx48d_eq_t(const tensor_size_t dims)
     reset(c);
     optimum(make_xbest_cvx48d(c));
 
-    critical0((A * variable()) == b);
-    critical0(variable() >= 0.0);
+    critical((A * variable()) == b);
+    critical(variable() >= 0.0);
 }
 
 rfunction_t linear_program_cvx48d_eq_t::clone() const
@@ -64,9 +64,9 @@ linear_program_cvx48d_ineq_t::linear_program_cvx48d_ineq_t(const tensor_size_t d
     reset(c);
     optimum(c.min() < 0.0 ? make_xbest_cvx48d(c) : make_full_vector<scalar_t>(dims, 0.0));
 
-    critical0((A * variable()) <= b);
-    critical0((N * variable()) <= z);
-    critical0(variable() >= 0.0);
+    critical((A * variable()) <= b);
+    critical((N * variable()) <= z);
+    critical(variable() >= 0.0);
 }
 
 rfunction_t linear_program_cvx48d_ineq_t::clone() const

@@ -16,8 +16,8 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
     reset(Q, c);
     optimum(x0.array().max(l.array()).min(u.array()));
 
-    critical0(l <= variable());
-    critical0(variable() <= u);
+    critical(l <= variable());
+    critical(variable() <= u);
 }
 
 rfunction_t quadratic_program_numopt1625_t::clone() const

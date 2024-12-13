@@ -47,8 +47,8 @@ auto make_xbest_cvx48f(const vector_t& d, const std::vector<std::pair<scalar_t, 
 linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scalar_t alpha)
     : linear_program_t(scat("cvx48f[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    critical0(alpha >= 0.0);
-    critical0(alpha <= 1.0);
+    critical(alpha >= 0.0);
+    critical(alpha <= 1.0);
 
     const auto d = make_random_vector<scalar_t>(dims, 1.0, +2.0);
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
@@ -59,9 +59,9 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scala
     reset(c);
     optimum(make_xbest_cvx48f(d, v, alpha));
 
-    critical0((d * variable()) == alpha);
-    critical0(variable() >= 0.0);
-    critical0(variable() <= 1.0);
+    critical((d * variable()) == alpha);
+    critical(variable() >= 0.0);
+    critical(variable() <= 1.0);
 }
 
 rfunction_t linear_program_cvx48f_t::clone() const

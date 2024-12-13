@@ -9,8 +9,8 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     : quadratic_program_t(scat("numopt162[neqs=", neqs, "]"), matrix_t{matrix_t::zero(dims, dims)},
                           vector_t::zero(dims))
 {
-    critical0(neqs >= 1);
-    critical0(neqs <= dims);
+    critical(neqs >= 1);
+    critical(neqs <= dims);
 
     const auto x0 = make_random_vector<scalar_t>(dims);
     const auto Q  = matrix_t::identity(dims, dims);
@@ -33,7 +33,7 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     reset(Q, c);
     optimum(xbest);
 
-    critical0((A * variable()) == b);
+    critical((A * variable()) == b);
 }
 
 rfunction_t quadratic_program_numopt162_t::clone() const
