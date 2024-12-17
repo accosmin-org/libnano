@@ -45,7 +45,7 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
         // nesterov's momentum on the proximity center
         const auto& x  = sequence.update(z);
-        const auto  fx = function.vgrad(x, gx);
+        const auto  fx = function(x, gx);
         bundle.moveto(x, gx, fx);
 
         // update best point and reset momentum if no improvement
