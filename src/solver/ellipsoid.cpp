@@ -66,7 +66,7 @@ solver_state_t solver_ellipsoid_t::do_minimize(const function_t& function, const
                            (Hm - 2 * (1 + n * alpha) / (n + 1) / (1 + alpha) * (Hm * gv * gv.transpose() * Hm) / gHg);
         }
 
-        f = function.vgrad(x, g);
+        f = function(x, g);
         state.update_if_better(x, g, f);
 
         const auto iter_ok   = std::isfinite(f);

@@ -37,7 +37,7 @@ public:
         assert(x.size() == m_x.size());
         assert(x.size() == m_function->size());
         m_x  = x;
-        m_fx = m_function->vgrad(m_x, m_gx);
+        m_fx = m_function->operator()(m_x, m_gx);
         return update(m_x, m_gx, m_fx, multiplier_equalities, multiplier_inequalities);
     }
 

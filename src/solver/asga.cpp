@@ -86,11 +86,11 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
 
             const auto alphak = sk1 / Sk1;
             yk                = alphak * zk + (1.0 - alphak) * xk;
-            const auto fyk    = function.vgrad(yk, gyk);
+            const auto fyk    = function(yk, gyk);
 
             zk1  = (x0 + sum_skgyk + sk1 * (miu * yk - gyk)) / (1.0 + miu * Sk1);
             xk1  = alphak * zk1 + (1.0 - alphak) * xk;
-            fxk1 = function.vgrad(xk1, gxk1);
+            fxk1 = function(xk1, gxk1);
 
             iter_ok = std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk) &&
                       lsearch_done(xk1, fxk1, yk, fyk, gyk, Lk1, alphak, epsilon);
@@ -170,11 +170,11 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
 
             const auto alphak = sk1 / Sk1;
             xk1               = alphak * vk + (1.0 - alphak) * yk;
-            const auto fxk1   = function.vgrad(xk1, gxk1);
+            const auto fxk1   = function(xk1, gxk1);
 
             uk1  = (vk + sk1 * (miu * xk1 - gxk1)) / (1.0 + miu * sk1);
             yk1  = alphak * uk1 + (1.0 - alphak) * yk;
-            fyk1 = function.vgrad(yk1, gyk1);
+            fyk1 = function(yk1, gyk1);
 
             iter_ok = std::isfinite(Lk1) && std::isfinite(fxk1) && std::isfinite(fyk1) &&
                       lsearch_done(yk1, fyk1, xk1, fxk1, gxk1, Lk1, alphak, epsilon);

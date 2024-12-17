@@ -8,8 +8,16 @@ class solver_t;
 using rsolver_t  = std::unique_ptr<solver_t>;
 using rsolvers_t = std::vector<rsolver_t>;
 
+// TODO: classes of solver convergence criterion:
+// * none
+// * small steps
+// * smooth gradient test
+// * convex smooth constrained KKT optimality test
+
 ///
-/// \brief classifies numerical optimization algorithms (solvers).
+/// \brief classifies numerical optimization algorithms (solvers)
+///     based on the function type they can minimize and
+///     the available theoretical convergence guarantees.
 ///
 enum class solver_type : uint8_t
 {

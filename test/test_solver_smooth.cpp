@@ -91,7 +91,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
                         log_info(std::setprecision(10), function->name(), ": solver=", solver_id,
                                  ",lsearch0=", lsearch0_id, ",lsearchk=", lsearchk_id, ",fx=", state.fx(),
-                                 ",calls=", state.fcalls(), "|", state.gcalls(), ".");
+                                 ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
                     }
                 }
             }
@@ -121,7 +121,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 
                 log_info(std::setprecision(10), function->name(), ": solver=", solver_id,
                          ",lsearch0=cgdescent,lsearchk=cgdescent,fx=", state.fx(), ",calls=", state.fcalls(), "|",
-                         state.gcalls(), ".");
+                         state.gcalls(), ".\n");
             }
         }
     }

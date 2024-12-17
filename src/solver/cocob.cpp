@@ -50,7 +50,7 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         const auto beta = (theta.array() / (G + L).array()).tanh() / L.array();
         x               = x0.array() + beta * (L + reward).array();
 
-        const auto fx = function.vgrad(x, gx);
+        const auto fx = function(x, gx);
         state.update_if_better(x, gx, fx);
 
         const auto iter_ok   = std::isfinite(fx);
