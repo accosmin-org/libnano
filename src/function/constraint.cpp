@@ -135,7 +135,7 @@ bool convex(const constant_t&)
 
 bool convex(const quadratic_t& constraint)
 {
-    return nano::convex(constraint.m_P);
+    return nano::is_convex(constraint.m_P);
 }
 
 bool convex(const functional_t& constraint)

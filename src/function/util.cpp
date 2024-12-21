@@ -189,7 +189,7 @@ bool nano::reduce(matrix_t& A, vector_t& b)
     return true;
 }
 
-bool nano::convex(const matrix_t& P)
+bool nano::is_convex(const matrix_t& P)
 {
     const auto eigenvalues         = P.matrix().eigenvalues();
     const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };

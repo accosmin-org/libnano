@@ -34,7 +34,7 @@ quadratic_program_t::quadratic_program_t(string_t id, matrix_t Q, vector_t c)
     assert(m_Q.cols() == m_c.size());
 
     smooth(smoothness::yes);
-    convex(::convex(m_Q) ? convexity::yes : convexity::no);
+    convex(::is_convex(m_Q) ? convexity::yes : convexity::no);
     strong_convexity(::strong_convexity(m_Q));
 }
 
@@ -66,4 +66,12 @@ void quadratic_program_t::reset(matrix_t Q, vector_t c)
 
     m_Q = std::move(Q);
     m_c = std::move(c);
+}
+
+void quadratic_program_t::reset(matrix_t Q)
+{
+    assert(Q.rows() == size());
+    assert(Q.cols() == size());
+
+    m_Q = std::move(Q);
 }

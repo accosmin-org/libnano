@@ -38,8 +38,11 @@ public:
     ///
     scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
 
-protected:
-    void reset(matrix_t, vector_t);
+    ///
+    /// \brief change the objective with a compatible one and keep the constraints.
+    ///
+    void reset(matrix_t Q, vector_t c);
+    void reset(matrix_t Q);
 
 private:
     // attributes
