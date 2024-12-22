@@ -11,13 +11,13 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-class NANO_PUBLIC interior_point_solver_t final : public solver_t
+class NANO_PUBLIC ipm_solver_t final : public solver_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    interior_point_solver_t(string_t id);
+    ipm_solver_t();
 
     ///
     /// \brief @see clonable_t
@@ -32,9 +32,8 @@ public:
 private:
     struct program_t;
 
-    static void done(const program_t&, solver_state_t&, scalar_t epsilon, const logger_t&);
-
-    solver_state_t solve_without_inequality(const program_t&, const logger_t&) const;
-    solver_state_t solve_with_inequality(const program_t&, const vector_t&, const logger_t&) const;
+    solver_state_t do_minimize(const program_t&, const vector_t& x0, const logger_t&) const;
+    solver_state_t do_mimimize_with_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
+    solver_state_t do_minimize_without_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
 };
 } // namespace nano::program

@@ -2,7 +2,6 @@ target_sources(solver PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/interior.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/nesterov.h
@@ -17,6 +16,7 @@ target_sources(solver PRIVATE
     fpba.h
     gd.h
     gsample.h
+    interior.h
     lbfgs.h
     osga.h
     pdsgm.h

@@ -1,46 +1,68 @@
 #include <Eigen/Dense>
+#include <nano/function/linear.h>
+#include <nano/function/quadratic.h>
 #include <nano/function/util.h>
-#include <nano/solver/interior.h>
+#include <solver/interior.h>
 
 using namespace nano;
-using namespace nano::program;
 
-namespace nano::program
+namespace
 {
-///
-/// \brief the state of a primal-dual interior-point solver.
-///
-/// NB: the KKT optimality test as the maximum of the infinite norm of the 5 vector conditions from:
-/// see (1) ch.5 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
-///
-/// test 1: g_i(x) <= 0 (inequalities satisfied)
-/// test 2: h_j(x) == 0 (equalities satisfied)
-/// test 3: lambda_i >= 0 (positive multipliers for the inequalities)
-/// test 4: lambda_i * g_i(x) == 0
-/// test 5: grad(f(x)) + sum(lambda_i * grad(g_i(x))) + sum(miu_j * h_j(x)) == 0
-///
-struct NANO_PUBLIC solver_state_t
+struct state_t
 {
-    ///
-    /// \brief default constructor
-    ///
-    solver_state_t();
+    state_t(const tensor_size_t n, const tensor_size_t n_ineqs, const tensor_size_t n_eqs)
+        : m_x(vector_t::constant(n, nan))
+        , m_u(vector_t::constant(n_ineqs, nan))
+        , m_v(vector_t::constant(n_eqs, nan))
+        , m_rdual(vector_t::constant(n, nan))
+        , m_rcent(vector_t::constant(n_ineqs, nan))
+        , m_rprim(vector_t::constant(n_eqs, nan))
+    {
+    }
 
-    ///
-    /// \brief constructor
-    ///
-    solver_state_t(tensor_size_t n, tensor_size_t n_ineqs, tensor_size_t n_eqs);
+    scalar_t residual() const { return std::sqrt(m_rdual.dot(m_rdual) + m_rcent.dot(m_rcent) + m_rprim.dot(m_rprim)); }
 
-    ///
-    /// \brief return the cumulated residual.
-    ///
-    scalar_t residual() const;
-
-    ///
-    /// \brief compute and store the KKT optimality test for the given linear/quadratic program.
-    ///
     void update(const matrix_t& Q, const vector_t& c, const matrix_t& A, const vector_t& b, const matrix_t& G,
-                const vector_t& h);
+                const vector_t& h)
+    {
+        m_kkt = 0.0;
+
+        // test 1
+        if (G.size() > 0)
+        {
+            m_kkt = std::max(m_kkt, (G * m_x - h).array().max(0.0).matrix().lpNorm<Eigen::Infinity>());
+        }
+
+        // test 2
+        if (A.size() > 0)
+        {
+            m_kkt = std::max(m_kkt, (A * m_x - b).lpNorm<Eigen::Infinity>());
+        }
+
+        // test 3
+        if (G.size() > 0)
+        {
+            m_kkt = std::max(m_kkt, (-m_u.array()).max(0.0).matrix().lpNorm<Eigen::Infinity>());
+        }
+
+        // test 4
+        if (G.size() > 0)
+        {
+            m_kkt = std::max(m_kkt, (m_u.array() * (G * m_x - h).array()).matrix().lpNorm<Eigen::Infinity>());
+        }
+
+        // test 5
+        if (Q.size() > 0)
+        {
+            const auto lgrad = Q * m_x + c + A.transpose() * m_v + G.transpose() * m_u;
+            m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
+        }
+        else
+        {
+            const auto lgrad = c + A.transpose() * m_v + G.transpose() * m_u;
+            m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
+        }
+    }
 
     static constexpr auto max = std::numeric_limits<scalar_t>::max();
     static constexpr auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
@@ -61,75 +83,7 @@ struct NANO_PUBLIC solver_state_t
     bool          m_ldlt_positive{false};             ///< LDLT decomp: positive semidefinite?, otherwise unstable
 };
 
-///
-/// \brief pretty print the given solver state.
-///
-NANO_PUBLIC std::ostream& operator<<(std::ostream&, const solver_state_t&);
-#include <nano/program/state.h>
-
-using namespace nano;
-using namespace nano::program;
-
-solver_state_t::solver_state_t() = default;
-
-solver_state_t::solver_state_t(const tensor_size_t n, const tensor_size_t n_ineqs, const tensor_size_t n_eqs)
-    : m_x(vector_t::constant(n, nan))
-    , m_u(vector_t::constant(n_ineqs, nan))
-    , m_v(vector_t::constant(n_eqs, nan))
-    , m_rdual(vector_t::constant(n, nan))
-    , m_rcent(vector_t::constant(n_ineqs, nan))
-    , m_rprim(vector_t::constant(n_eqs, nan))
-{
-}
-
-scalar_t solver_state_t::residual() const
-{
-    return std::sqrt(m_rdual.dot(m_rdual) + m_rcent.dot(m_rcent) + m_rprim.dot(m_rprim));
-}
-
-void solver_state_t::update(const matrix_t& Q, const vector_t& c, const matrix_t& A, const vector_t& b,
-                            const matrix_t& G, const vector_t& h)
-{
-    m_kkt = 0.0;
-
-    // test 1
-    if (G.size() > 0)
-    {
-        m_kkt = std::max(m_kkt, (G * m_x - h).array().max(0.0).matrix().lpNorm<Eigen::Infinity>());
-    }
-
-    // test 2
-    if (A.size() > 0)
-    {
-        m_kkt = std::max(m_kkt, (A * m_x - b).lpNorm<Eigen::Infinity>());
-    }
-
-    // test 3
-    if (G.size() > 0)
-    {
-        m_kkt = std::max(m_kkt, (-m_u.array()).max(0.0).matrix().lpNorm<Eigen::Infinity>());
-    }
-
-    // test 4
-    if (G.size() > 0)
-    {
-        m_kkt = std::max(m_kkt, (m_u.array() * (G * m_x - h).array()).matrix().lpNorm<Eigen::Infinity>());
-    }
-
-    // test 5
-    if (Q.size() > 0)
-    {
-        const auto lgrad = Q * m_x + c + A.transpose() * m_v + G.transpose() * m_u;
-        m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
-    }
-    else
-    {
-        const auto lgrad = c + A.transpose() * m_v + G.transpose() * m_u;
-        m_kkt            = std::max(m_kkt, lgrad.lpNorm<Eigen::Infinity>());
-    }
-}
-
-std::ostream& nano::program::operator<<(std::ostream& stream, const solver_state_t& state)
+std::ostream& operator<<(std::ostream& stream, const state_t& state)
 {
     return stream << "i=" << state.m_iters << ",fx=" << state.m_fx << ",eta=" << state.m_eta
                   << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
@@ -138,10 +92,7 @@ std::ostream& nano::program::operator<<(std::ostream& stream, const solver_state
                   << ",rcond=" << state.m_ldlt_rcond << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status
                   << "]";
 }
-} // namespace nano::program
 
-namespace
-{
 template <class tprogram>
 vector_t make_x0(const tprogram& program)
 {
@@ -188,16 +139,15 @@ struct reducer_t
 };
 } // namespace
 
-struct solver_t::program_t
+struct ipm_solver_t::program_t
 {
-    explicit program_t(const linear_program_t& program)
-        : program_t(matrix_t{}, program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A, program.m_ineq.m_b)
+    explicit program_t(const linear_program_t& program, const linear_constraints_t& constraints)
+        : program_t(matrix_t{}, program.c(), constraints.m_A, constraints.m_b, constraints.m_G, constraints.m_h)
     {
     }
 
-    explicit program_t(const quadratic_program_t& program)
-        : program_t(program.m_Q, program.m_c, program.m_eq.m_A, program.m_eq.m_b, program.m_ineq.m_A,
-                    program.m_ineq.m_b)
+    explicit program_t(const quadratic_program_t& program, const linear_constraints_t& constraints)
+        : program_t(program.Q(), program.c(), constraints.m_A, constraints.m_b, constraints.m_G, constraints.m_h)
     {
     }
 
@@ -337,44 +287,57 @@ struct solver_t::program_t
     mutable vector_t     m_lsol;      ///<
 };
 
-solver_t::solver_t()
+ipm_solver_t::ipm_solver_t()
+    : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::s0", 0.0, LT, 0.999, LE, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::alpha", 0.0, LT, 1e-2, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::beta", 0.0, LT, 0.9, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::epsilon", 0.0, LE, 1e-10, LE, 1e-3));
-    register_parameter(parameter_t::make_scalar("solver::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
-    register_parameter(parameter_t::make_integer("solver::max_iters", 10, LE, 300, LE, 1000));
-    register_parameter(parameter_t::make_integer("solver::max_lsearch_iters", 10, LE, 50, LE, 1000));
+    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.999, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
+    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-2, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.9, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
+    register_parameter(parameter_t::make_integer("solver::ipm::max_iters", 10, LE, 300, LE, 1000));
+    register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
 }
 
-solver_state_t solver_t::solve(const linear_program_t& program, const logger_t& logger) const
+rsolver_t ipm_solver_t::clone() const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
-                                   : solve_with_inequality(program_t{program}, make_x0(program), logger);
+    return std::make_unique<ipm_solver_t>(*this);
 }
 
-solver_state_t solver_t::solve(const quadratic_program_t& program, const logger_t& logger) const
+solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
-                                   : solve_with_inequality(program_t{program}, make_x0(program), logger);
+    if (const auto lconstraints = make_linear_constraints(function); !lconstraints)
+    {
+        critical0("interior point solver can only solve linearly-constrained functions!");
+    }
+    else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
+    {
+        return do_minimize(program_t{*lprogram, *lconstraints}, x0, logger);
+    }
+    else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
+    {
+        return do_minimize(program_t{*qprogram, *lconstraints}, x0, logger);
+    }
+    else
+    {
+        critical0("interior point solver can only solve linear and quadratic programs!");
+    }
 }
 
-solver_state_t solver_t::solve(const linear_program_t& program, const vector_t& x0, const logger_t& logger) const
+solver_state_t ipm_solver_t::do_minimize(const program_t& program, const vector_t& x0, const logger_t& logger) const
 {
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
-                                   : solve_with_inequality(program_t{program}, x0, logger);
+    if (program.m() > 0)
+    {
+        return do_minimize_with_inequality(program, x0, logger);
+    }
+    else
+    {
+        return do_minimize_without_inequality(program, x0, logger);
+    }
 }
 
-solver_state_t solver_t::solve(const quadratic_program_t& program, const vector_t& x0, const logger_t& logger) const
-{
-    return !program.m_ineq.valid() ? solve_without_inequality(program_t{program}, logger)
-                                   : solve_with_inequality(program_t{program}, x0, logger);
-}
-
-solver_state_t solver_t::solve_with_inequality(const program_t& program, const vector_t& x0,
-                                               const logger_t& logger) const
+solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& program, const vector_t& x0,
+                                                         const logger_t& logger) const
 {
     const auto s0                = parameter("solver::s0").value<scalar_t>();
     const auto miu               = parameter("solver::miu").value<scalar_t>();
@@ -517,7 +480,8 @@ solver_state_t solver_t::solve_with_inequality(const program_t& program, const v
     return state;
 }
 
-solver_state_t solver_t::solve_without_inequality(const program_t& program, const logger_t& logger) const
+solver_state_t ipm_solver_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
+                                                            const logger_t& logger) const
 {
     const auto miu = parameter("solver::miu").value<scalar_t>();
 

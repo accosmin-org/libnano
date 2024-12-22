@@ -44,6 +44,13 @@ public:
     void reset(matrix_t Q, vector_t c);
     void reset(matrix_t Q);
 
+    ///
+    /// \brief return the objective's parameters (need explicitly by some solvers).
+    ///
+    const matrix_t& Q() const { return m_Q; }
+
+    const vector_t& c() const { return m_c; }
+
 private:
     // attributes
     matrix_t m_Q; ///<
