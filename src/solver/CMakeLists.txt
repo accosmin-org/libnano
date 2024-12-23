@@ -50,3 +50,4 @@ target_sources(solver PRIVATE
     universal.cpp)
 
 add_subdirectory(gsample)
+add_subdirectory(interior)

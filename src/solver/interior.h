@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/solver.h>
+#include <solver/interior/program.h>
 
 namespace nano
 {
@@ -30,8 +31,6 @@ public:
     solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 
 private:
-    struct program_t;
-
     solver_state_t do_minimize(const program_t&, const vector_t& x0, const logger_t&) const;
     solver_state_t do_mimimize_with_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
     solver_state_t do_minimize_without_inequality(const program_t&, const vector_t& x0, const logger_t&) const;

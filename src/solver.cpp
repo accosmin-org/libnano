@@ -121,7 +121,13 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool conver
 {
     state.update_calls();
 
-    if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
+    if (state.status() == solver_status::unfeasible || state.status() == solver_status::unbounded)
+    {
+        // unfeasible constrained problem
+        logger.info("[solver-", type_id(), "]: ", state, ".\n");
+        return true;
+    }
+    else if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
     {
         // either converged or failed
         state.status(converged ? solver_status::converged : solver_status::failed);
