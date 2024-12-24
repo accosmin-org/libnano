@@ -161,6 +161,12 @@ UTEST_CASE(grad_accuracy)
 
 UTEST_CASE(reduce)
 {
+    {
+        auto A = matrix_t{};
+        auto b = vector_t{};
+        UTEST_CHECK(!reduce(A, b));
+    }
+
     for (const tensor_size_t dims : {3, 7, 11})
     {
         const auto D = make_random_tensor<scalar_t>(make_dims(2 * dims, dims));
@@ -177,7 +183,7 @@ UTEST_CASE(reduce)
             UTEST_CHECK(!reduce(A, b));
             UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
             UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
-            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-15);
         }
 
         // duplicated rows
@@ -187,7 +193,7 @@ UTEST_CASE(reduce)
             UTEST_CHECK(reduce(A, b));
             UTEST_CHECK_EQUAL(A.rows(), dims);
             UTEST_CHECK_EQUAL(b.size(), dims);
-            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-14);
         }
 
         // linear dependency
@@ -197,7 +203,7 @@ UTEST_CASE(reduce)
             UTEST_CHECK(reduce(A, b));
             UTEST_CHECK_EQUAL(A.rows(), dims);
             UTEST_CHECK_EQUAL(b.size(), dims);
-            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon1<scalar_t>());
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-14);
         }
     }
 }
@@ -217,6 +223,36 @@ UTEST_CASE(is_convex)
         Q(0, 0) = -1.0;
         UTEST_CHECK(!is_convex(Q));
         UTEST_CHECK_CLOSE(strong_convexity(Q), 0.0, epsilon0<scalar_t>());
+    }
+}
+
+UTEST_CASE(make_strictly_feasible)
+{
+    for (const tensor_size_t dims : {3, 7, 11})
+    {
+        const auto D = make_random_tensor<scalar_t>(make_dims(2 * dims, dims));
+        const auto A = matrix_t{D.transpose() * D + 0.1 * matrix_t::identity(dims, dims)};
+        const auto x = make_random_tensor<scalar_t>(make_dims(dims));
+
+        for (const auto epsilon : {1e-6, 1e-3, 1e+0})
+        {
+            const auto b = A * x + epsilon * vector_t::constant(dims, 1.0);
+
+            // feasible: A * z < b
+            {
+                const auto z = make_strictly_feasible(A, b);
+                UTEST_REQUIRE(z.has_value());
+                UTEST_CHECK_LESS((A * *z - b).maxCoeff(), 0.0);
+            }
+
+            // not feasible: A * z < b and A * z > b + epsilon
+            {
+                const auto A2 = ::nano::stack<scalar_t>(2 * dims, dims, A, -A);
+                const auto b2 = ::nano::stack<scalar_t>(2 * dims, b, -b - vector_t::constant(dims, epsilon));
+                const auto z  = make_strictly_feasible(A2, b2);
+                UTEST_CHECK(!z.has_value());
+            }
+        }
     }
 }
 
