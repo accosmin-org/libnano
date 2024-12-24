@@ -1,3 +1,4 @@
+#include <Eigen/Dense>
 #include <function/program/numopt162.h>
 #include <nano/core/scat.h>
 #include <nano/critical.h>
