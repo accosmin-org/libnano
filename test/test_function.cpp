@@ -202,7 +202,24 @@ UTEST_CASE(reduce)
     }
 }
 
-// TODO: add tests for the function_t utilities (is_convex, strong_convexity, make_strictly_feasible,
-// make_linear_constraints.)
+UTEST_CASE(is_convex)
+{
+    for (const tensor_size_t dims : {3, 7, 11})
+    {
+        auto Q = matrix_t{matrix_t::identity(dims, dims)};
+
+        UTEST_CHECK(is_convex(Q));
+        UTEST_CHECK_CLOSE(strong_convexity(Q), 1.0, epsilon0<scalar_t>());
+
+        UTEST_CHECK(is_convex(2.0 * Q));
+        UTEST_CHECK_CLOSE(strong_convexity(Q), 1.0, epsilon0<scalar_t>());
+
+        Q(0, 0) = -1.0;
+        UTEST_CHECK(!is_convex(Q));
+        UTEST_CHECK_CLOSE(strong_convexity(Q), 0.0, epsilon0<scalar_t>());
+    }
+}
+
+// TODO: add tests for the function_t utilities (make_strictly_feasible, make_linear_constraints)
 
 UTEST_END_MODULE()
