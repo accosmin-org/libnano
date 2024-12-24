@@ -9,13 +9,13 @@ using namespace constraint;
 
 namespace
 {
-void reduce(matrix_t& A)
+bool reduce(matrix_t& A)
 {
     // independant linear constraints
     const auto dd = A.transpose().fullPivLu();
     if (dd.rank() == A.rows())
     {
-        return;
+        return false;
     }
 
     // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
@@ -27,6 +27,7 @@ void reduce(matrix_t& A)
     const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
 
     A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
+    return true;
 }
 
 auto is_linear_constrained(const function_t& function)
@@ -182,11 +183,11 @@ bool nano::reduce(matrix_t& A, vector_t& b)
 
     // NB: need to reduce [A|b] altogether!
     auto Ab = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
-    ::reduce(Ab);
+    const auto reduced = ::reduce(Ab);
 
     A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
     b = Ab.matrix().col(Ab.cols() - 1);
-    return true;
+    return reduced;
 }
 
 bool nano::is_convex(const matrix_t& P)

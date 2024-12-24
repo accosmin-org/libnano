@@ -1,6 +1,8 @@
 #include "fixture/function.h"
 #include <function/benchmark/sphere.h>
 #include <nano/function/lambda.h>
+#include <nano/function/util.h>
+#include <nano/tensor/stack.h>
 #include <unordered_map>
 
 using namespace nano;
@@ -157,6 +159,50 @@ UTEST_CASE(grad_accuracy)
     }
 }
 
-// TODO: add tests for the function_t utilities (reduce, convex Q etc.)
+UTEST_CASE(reduce)
+{
+    for (const tensor_size_t dims : {3, 7, 11})
+    {
+        const auto D = make_random_tensor<scalar_t>(make_dims(2 * dims, dims));
+        const auto Q = matrix_t{D.transpose() * D + 0.1 * matrix_t::identity(dims, dims)};
+        const auto x = make_random_tensor<scalar_t>(make_dims(dims));
+
+        // full rank
+        {
+            auto A = matrix_t{Q};
+            auto b = vector_t{Q * x};
+
+            const auto expected_A = A;
+            const auto expected_b = b;
+            UTEST_CHECK(!reduce(A, b));
+            UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon0<scalar_t>());
+        }
+
+        // duplicated rows
+        {
+            auto A = ::nano::stack<scalar_t>(2 * dims, dims, Q, Q);
+            auto b = ::nano::stack<scalar_t>(2 * dims, Q * x, Q * x);
+            UTEST_CHECK(reduce(A, b));
+            UTEST_CHECK_EQUAL(A.rows(), dims);
+            UTEST_CHECK_EQUAL(b.size(), dims);
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon0<scalar_t>());
+        }
+
+        // linear dependency
+        {
+            auto A = ::nano::stack<scalar_t>(2 * dims, dims, Q, 2.0 * Q);
+            auto b = ::nano::stack<scalar_t>(2 * dims, Q * x, 2.0 * (Q * x));
+            UTEST_CHECK(reduce(A, b));
+            UTEST_CHECK_EQUAL(A.rows(), dims);
+            UTEST_CHECK_EQUAL(b.size(), dims);
+            UTEST_CHECK_CLOSE(vector_t{A * x}, b, epsilon1<scalar_t>());
+        }
+    }
+}
+
+// TODO: add tests for the function_t utilities (is_convex, strong_convexity, make_strictly_feasible,
+// make_linear_constraints.)
 
 UTEST_END_MODULE()
