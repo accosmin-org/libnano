@@ -32,7 +32,7 @@ public:
 
 private:
     solver_state_t do_minimize(const program_t&, const vector_t& x0, const logger_t&) const;
-    solver_state_t do_mimimize_with_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
+    solver_state_t do_minimize_with_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
     solver_state_t do_minimize_without_inequality(const program_t&, const vector_t& x0, const logger_t&) const;
 };
 } // namespace nano::program

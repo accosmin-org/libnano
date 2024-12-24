@@ -6,7 +6,7 @@ namespace nano
 {
 struct state_t
 {
-    state_t(vector_t x0, vector_t u0, vector_v0)
+    state_t(vector_t x0, vector_t u0, vector_t v0)
         : m_x(std::move(x0))
         , m_u(std::move(u0))
         , m_v(std::move(v0))
@@ -48,14 +48,4 @@ struct state_t
     scalar_t m_ldlt_rcond{0};        ///< LDLT decomp: reciprocal condition number
     bool     m_ldlt_positive{false}; ///< LDLT decomp: positive semidefinite?, otherwise unstable
 };
-
-std::ostream& operator<<(std::ostream& stream, const state_t& state)
-{
-    return stream << "i=" << state.m_iters << ",fx=" << state.m_fx << ",eta=" << state.m_eta
-                  << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",kkt=" << state.m_kkt
-                  << ",rcond=" << state.m_ldlt_rcond << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status
-                  << "]";
-}
 } // namespace

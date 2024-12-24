@@ -27,13 +27,42 @@ program_t::program_t(const function_t* function, matrix_t Q, vector_t c, linear_
     m_lmat.block(n, n, p, p).array() = 0.0;
 }
 
-bool program_t::feasible(const solver_state_t& state) const
+void program_t::update(const scalar_t s, const scalar_t miu, state_t& state) const
 {
-    const auto& A = m_A;
-    const auto& b = m_b;
-    const auto& G = m_G;
-    const auto& h = m_h;
+    const auto m = this->m();
+    const auto p = this->p();
+    const auto x = state.m_x + s * state.m_dx;
+    const auto u = state.m_u + s * state.m_du;
+    const auto v = state.m_v + s * state.m_dv;
 
-    return (A.rows() == 0 || (A * state.m_x - b).lpNorm<2>() < epsilon2<scalar_t>()) &&
-           (G.rows() == 0 || (G * state.m_x - h).maxCoeff() < epsilon2<scalar_t>());
+    // objective
+    if (!m_Q.size())
+    {
+        state.m_rdual = m_c;
+    }
+    else
+    {
+        state.m_rdual = Q() * x + m_c;
+    }
+
+    // surrogate duality gap
+    if (m > 0)
+    {
+        state.m_eta = -u.dot(m_G * x - m_h);
+    }
+
+    // residual contributions of linear equality constraints
+    if (p > 0)
+    {
+        state.m_rdual += m_A.transpose() * v;
+        state.m_rprim = m_A * x - m_b;
+    }
+
+    // residual contributions of linear inequality constraints
+    if (m > 0)
+    {
+        const auto sm = static_cast<scalar_t>(m);
+        state.m_rdual += m_G.transpose() * u;
+        state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
+    }
 }

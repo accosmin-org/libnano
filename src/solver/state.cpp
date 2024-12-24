@@ -240,6 +240,11 @@ scalar_t solver_state_t::kkt_optimality_test() const
                      kkt_optimality_test5()});
 }
 
+scalar_t solver_state_t::feasibility_test() const
+{
+    return std::max({kkt_optimality_test1(), kkt_optimality_test2()});
+}
+
 std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state)
 {
     stream << "calls=" << state.fcalls() << "|" << state.gcalls();

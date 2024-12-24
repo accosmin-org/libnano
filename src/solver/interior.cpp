@@ -1,3 +1,4 @@
+#include <nano/critical.h>
 #include <nano/function/util.h>
 #include <solver/interior.h>
 #include <solver/interior/state.h>
@@ -28,7 +29,7 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
     {
         state.status(solver_status::converged);
     }
-    else if (std::max({state.kkt_optimality_test1(), state.kkt_optimality_test2()}) < epsilon)
+    else if (state.feasibility_test() < epsilon)
     {
         // FIXME: this is an heuristic, to search for a theoretically sound method
         // to detect unboundness and unfeasibility!
@@ -70,11 +71,11 @@ solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vecto
     }
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        return do_minimize(program_t{*lprogram, std::move(lconstraints.value())}, x0, logger);
+        return do_minimize(program_t{*lprogram, lconstraints.value()}, x0, logger);
     }
     else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
     {
-        return do_minimize(program_t{*qprogram, std::move(lconstraints.value())}, x0, logger);
+        return do_minimize(program_t{*qprogram, lconstraints.value()}, x0, logger);
     }
     else
     {
@@ -94,7 +95,7 @@ solver_state_t ipm_solver_t::do_minimize(const program_t& program, const vector_
     }
 }
 
-solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& program, const vector_t& x0,
+solver_state_t ipm_solver_t::do_minimize_with_inequality(const program_t& program, const vector_t& x0,
                                                          const logger_t& logger) const
 {
     const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
@@ -110,7 +111,6 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
     const auto& h = program.m_h;
     const auto  n = program.n();
     const auto  p = program.p();
-    const auto  m = program.m();
 
     auto state = solver_state_t{*program.m_function, x0};
 
@@ -125,10 +125,10 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
     }
 
     // the state of the primal-dual interior point iterations
-    auto ipmst = state_t{x0, -1.0 / (G * x - h).array(), vector_t::zero(p)};
+    auto ipmst = state_t{x0, -1.0 / (G * x0 - h).array(), vector_t::zero(p)};
 
     // update residuals
-    program.update(ipmst.m_x, ipmst.m_u, ipmst.m_v, miu, ipmst);
+    program.update(0.0, miu, ipmst);
 
     // primal-dual interior-point solver...
     for (ipmst.m_iters = 0; ipmst.m_iters < max_iters; ++ipmst.m_iters)
@@ -144,7 +144,7 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
 
         ipmst.m_dx            = program.m_lsol.segment(0, n);
         ipmst.m_dv            = program.m_lsol.segment(n, p);
-        ipmst.m_du            = (ipmst.m_rcent.array() - ipmst.m_u.array() * (G * dx).array()) / Gxh.array();
+        ipmst.m_du            = (ipmst.m_rcent.array() - ipmst.m_u.array() * (G * ipmst.m_dx).array()) / Gxh.array();
         ipmst.m_ldlt_rcond    = program.m_ldlt.rcond();
         ipmst.m_ldlt_positive = program.m_ldlt.isPositive();
 
@@ -158,11 +158,11 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
         }
 
         // backtracking line-search: stage 1
-        auto s    = s0 * make_smax(state.m_u, du);
+        auto s    = s0 * make_smax(ipmst.m_u, ipmst.m_du);
         auto iter = tensor_size_t{0};
         for (iter = 0; iter < max_lsearch_iters; ++iter)
         {
-            if ((G * (state.m_x + s * dx) - h).maxCoeff() < 0.0)
+            if ((G * (ipmst.m_x + s * ipmst.m_dx) - h).maxCoeff() < 0.0)
             {
                 break;
             }
@@ -180,11 +180,11 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
         }
 
         // backtracking line-search: stage 2
-        const auto r0 = state.residual();
+        const auto r0 = ipmst.residual();
         for (iter = 0; iter < max_lsearch_iters; ++iter)
         {
-            program.update(state.m_x + s * dx, state.m_u + s * du, state.m_v + s * dv, miu, state);
-            if (state.residual() <= (1.0 - alpha * s) * r0)
+            program.update(s, miu, ipmst);
+            if (ipmst.residual() <= (1.0 - alpha * s) * r0)
             {
                 break;
             }
@@ -195,11 +195,6 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
         }
         if (iter == max_lsearch_iters)
         {
-            // NB: revert to previous state if the residual didn't improve!
-            if (ipmst.residual() > r0)
-            {
-                program.update(ipmst.m_x, ipmst.m_u, ipmst.m_v, miu, state);
-            }
             const auto iter_ok   = state.valid();
             const auto converged = ::converged(state, epsilon);
             done(state, iter_ok, converged, logger);
@@ -212,9 +207,9 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
         ipmst.m_v += s * ipmst.m_dv;
         state.update(ipmst.m_x, ipmst.m_dv, ipmst.m_du);
 
-        const auto curr_eta   = state.m_eta;
-        const auto curr_rdual = state.m_rdual.lpNorm<2>();
-        const auto curr_rprim = state.m_rprim.lpNorm<2>();
+        const auto curr_eta   = ipmst.m_eta;
+        const auto curr_rdual = ipmst.m_rdual.lpNorm<2>();
+        const auto curr_rprim = ipmst.m_rprim.lpNorm<2>();
 
         // check stopping criteria
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
@@ -240,6 +235,14 @@ solver_state_t ipm_solver_t::do_mimimize_with_inequality(const program_t& progra
             const auto converged = false;
             done(state, iter_ok, converged, logger);
         }
+
+        // FIXME: solver_t;:done(state, iter_ok, converged, logger, args...)
+        /*return stream << "i=" << state.m_iters << ",fx=" << state.m_fx << ",eta=" << state.m_eta
+                  << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
+                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
+                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",kkt=" << state.m_kkt
+                  << ",rcond=" << state.m_ldlt_rcond << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status
+                  << "]";*/
     }
 
     return state;

@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
-#include <solver/program/state.h>
+#include <solver/interior/state.h>
 
 namespace nano
 {
@@ -26,8 +26,6 @@ struct program_t
     tensor_size_t p() const { return m_A.rows(); }
 
     tensor_size_t m() const { return m_G.rows(); }
-
-    bool feasible(const state_t& state) const;
 
     const matrix_t& Q() const
     {
@@ -61,45 +59,7 @@ struct program_t
         return m_lsol;
     }
 
-    template <class tvector>
-    void update(const tvector& x, const tvector& u, const tvector& v, const scalar_t miu, state_t& state) const
-    {
-        const auto m = this->m();
-        const auto p = this->p();
-
-        // objective
-        if (!m_Q.size())
-        {
-            state.m_fx    = x.dot(m_c.vector());
-            state.m_rdual = m_c;
-        }
-        else
-        {
-            state.m_fx    = 0.5 * x.dot(Q() * x) + x.dot(m_c.vector());
-            state.m_rdual = Q() * x + m_c;
-        }
-
-        // surrogate duality gap
-        if (m > 0)
-        {
-            state.m_eta = -u.dot(m_G * x - m_h);
-        }
-
-        // residual contributions of linear equality constraints
-        if (p > 0)
-        {
-            state.m_rdual += m_A.transpose() * v;
-            state.m_rprim = m_A * x - m_b;
-        }
-
-        // residual contributions of linear inequality constraints
-        if (m > 0)
-        {
-            const auto sm = static_cast<scalar_t>(m);
-            state.m_rdual += m_G.transpose() * u;
-            state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
-        }
-    }
+    void update(const scalar_t s, const scalar_t miu, state_t& state) const;
 
     using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
 

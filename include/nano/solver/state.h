@@ -97,6 +97,12 @@ public:
     scalar_t kkt_optimality_test() const;
 
     ///
+    /// \brief feasability test: the maximum deviation from the constraints given by the first two KKT optimality
+    /// conditions.
+    ///
+    scalar_t feasibility_test() const;
+
+    ///
     /// \brief returns true if the current state is valid (e.g. no divergence is detected).
     ///
     bool valid() const;
