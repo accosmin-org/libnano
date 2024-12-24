@@ -157,4 +157,6 @@ UTEST_CASE(grad_accuracy)
     }
 }
 
+// TODO: add tests for the function_t utilities (reduce, convex Q etc.)
+
 UTEST_END_MODULE()

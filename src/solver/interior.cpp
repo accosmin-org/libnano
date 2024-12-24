@@ -205,7 +205,7 @@ solver_state_t ipm_solver_t::do_minimize_with_inequality(const program_t& progra
         ipmst.m_x += s * ipmst.m_dx;
         ipmst.m_u += s * ipmst.m_du;
         ipmst.m_v += s * ipmst.m_dv;
-        state.update(ipmst.m_x, ipmst.m_dv, ipmst.m_du);
+        state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
         const auto curr_eta   = ipmst.m_eta;
         const auto curr_rdual = ipmst.m_rdual.lpNorm<2>();
@@ -251,29 +251,29 @@ solver_state_t ipm_solver_t::do_minimize_with_inequality(const program_t& progra
 solver_state_t ipm_solver_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
                                                             const logger_t& logger) const
 {
-    const auto miu = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto miu     = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
 
     const auto& c = program.m_c;
     const auto& b = program.m_b;
     const auto  n = program.n();
     const auto  p = program.p();
 
+    auto state = solver_state_t{*program.m_function, x0};
+    auto ipmst = state_t{x0, vector_t{}, vector_t::zero(p)};
+
+    done(state, state.valid(), false, logger);
+
     // NB: solve directly the KKT-based system of linear equations coupling (x, v)
     program.solve(matrix_t::zero(n, n), c, -b);
+    ipmst.m_x   = program.m_lsol.segment(0, n);
+    ipmst.m_v   = program.m_lsol.segment(n, p);
+    ipmst.m_eta = 0.0;
 
-    // current solver state
-    auto state  = solver_state_t{n, 0, p};
-    state.m_x   = program.m_lsol.segment(0, n);
-    state.m_v   = program.m_lsol.segment(n, p);
-    state.m_eta = 0.0;
-    program.update(state.m_x, state.m_u, state.m_v, miu, state);
-    state.update(program.m_Q, program.m_c, program.m_A, program.m_b, program.m_G, program.m_h);
+    program.update(0.0, miu, ipmst);
+    state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
-    const auto valid = std::isfinite(state.residual());
-    const auto aprox = (program.m_lmat * program.m_lsol).isApprox(program.m_lvec.vector(), epsilon2<scalar_t>());
-    state.m_status =
-        (valid && aprox) ? solver_status::converged : (!valid ? solver_status::failed : solver_status::unfeasible);
+    done(state, state.valid(), ::converged(state, epsilon), logger);
 
-    logger.info("[program]: ", state, ".\n");
     return state;
 }
