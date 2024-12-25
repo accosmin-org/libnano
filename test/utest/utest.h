@@ -124,21 +124,22 @@ enum class exception_status
 };
 
 template <class texception, class toperator>
-static exception_status check_throw(const toperator& op)
+static std::tuple<exception_status, nano::string_t> check_throw(const toperator& op)
 {
     try
     {
         op();
-        return exception_status::none;
+        return std::make_tuple(exception_status::none, nano::string_t{});
     }
     catch (const std::exception& e)
     {
-        return dynamic_cast<const texception*>(&e) != nullptr ? exception_status::expected
-                                                              : exception_status::unexpected;
+        const auto status =
+            dynamic_cast<const texception*>(&e) != nullptr ? exception_status::expected : exception_status::unexpected;
+        return std::make_tuple(status, nano::string_t{e.what()});
     }
     catch (...)
     {
-        return exception_status::unexpected;
+        return std::make_tuple(exception_status::unexpected, nano::string_t{"unexpected"});
     }
 }
 
@@ -223,7 +224,7 @@ static void check_with_logger(const toperator& op)
 
 #define UTEST_THROW(call, exception, critical)                                                                         \
     ++utest_n_checks;                                                                                                  \
-    switch (check_throw<exception>([&]() { (void)(call); }))                                                           \
+    switch (const auto& [status, message] = check_throw<exception>([&]() { (void)(call); }); status)                   \
     {                                                                                                                  \
     case exception_status::none:                                                                                       \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} does not throw!" << RESET_COLOR              \
@@ -233,7 +234,8 @@ static void check_with_logger(const toperator& op)
     case exception_status::expected: break;                                                                            \
     case exception_status::unexpected:                                                                                 \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} does not throw {"                            \
-                               << UTEST_STRINGIFY(exception) << "}!" << RESET_COLOR << std::endl;                      \
+                               << UTEST_STRINGIFY(exception) << "}, but another exception with mesage {" << message    \
+                               << "}!" << RESET_COLOR << std::endl;                                                    \
         UTEST_HANDLE_CRITICAL(critical);                                                                               \
         break;                                                                                                         \
     }
@@ -242,12 +244,13 @@ static void check_with_logger(const toperator& op)
 
 #define UTEST_NOTHROW(call, critical)                                                                                  \
     ++utest_n_checks;                                                                                                  \
-    switch (check_throw<std::exception>([&]() { (void)(call); }))                                                      \
+    switch (const auto& [status, message] = check_throw<std::exception>([&]() { (void)(call); }); status)              \
     {                                                                                                                  \
     case exception_status::none: break;                                                                                \
     case exception_status::expected:                                                                                   \
     case exception_status::unexpected:                                                                                 \
-        UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} throws!" << RESET_COLOR << std::endl;        \
+        UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} throws message {" << message << "}!"         \
+                               << RESET_COLOR << std::endl;                                                            \
         UTEST_HANDLE_CRITICAL(critical)                                                                                \
     }
 #define UTEST_CHECK_NOTHROW(call)   UTEST_NOTHROW(call, false)
