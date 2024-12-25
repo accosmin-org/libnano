@@ -295,7 +295,7 @@ scalar_stats_t scalar_stats_t::make_targets_stats(const dataset_t& dataset, indi
     const auto& target = dataset.target();
     if (!target.valid())
     {
-        critical0("scalar statistics cannot be computed for targets of unsupervised datasets!");
+        raise("scalar statistics cannot be computed for targets of unsupervised datasets!");
     }
 
     scalar_stats_t stats{::nano::size(dataset.target_dims())};
@@ -347,7 +347,7 @@ scalar_stats_t scalar_stats_t::make_feature_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("scalar statistics cannot be computed for categorical feature: ", feature, "!");
+        raise("scalar statistics cannot be computed for categorical feature: ", feature, "!");
     }
 
     ::done(stats, make_full_tensor<uint8_t>(make_dims(stats.m_min.size()), 0x01));
@@ -465,7 +465,7 @@ xclass_stats_t xclass_stats_t::make_targets_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("class statstics cannot be computed for continuous target: ", target, "!");
+        raise("class statstics cannot be computed for continuous target: ", target, "!");
     }
 }
 
@@ -486,6 +486,6 @@ xclass_stats_t xclass_stats_t::make_feature_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("class statstics cannot be computed for continuous feature: ", feature, "!");
+        raise("class statstics cannot be computed for continuous feature: ", feature, "!");
     }
 }

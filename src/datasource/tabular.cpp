@@ -106,8 +106,8 @@ void tabular_datasource_t::parse(const csv_t& csv, const string_t& line, tensor_
             }
             catch (const std::exception&)
             {
-                critical0("datasource[", type_id(), "]: invalid line [", line, "]@", csv.m_path, ":", line_index,
-                          ", invalid token [", token, "] for feature (", feature, ")!");
+                raise("datasource[", type_id(), "]: invalid line [", line, "]@", csv.m_path, ":", line_index,
+                      ", invalid token [", token, "] for feature (", feature, ")!");
             }
         }
     }

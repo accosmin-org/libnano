@@ -58,7 +58,7 @@ solver_t::solver_t(const solver_t& other)
 void solver_t::lsearch0(const string_t& id)
 {
     auto lsearch0 = lsearch0_t::all().get(id);
-    critical(!lsearch0, "invalid lsearch0 id <", id, ">!");
+    critical(lsearch0, "invalid lsearch0 id <", id, ">!");
 
     m_lsearch0 = std::move(lsearch0);
 }
@@ -71,7 +71,7 @@ void solver_t::lsearch0(const lsearch0_t& lsearch0)
 void solver_t::lsearchk(const string_t& id)
 {
     auto lsearchk = lsearchk_t::all().get(id);
-    critical(!lsearchk, "invalid lsearchk id <", id, ">!");
+    critical(lsearchk, "invalid lsearchk id <", id, ">!");
 
     m_lsearchk = std::move(lsearchk);
 }
@@ -107,7 +107,7 @@ lsearch_t solver_t::make_lsearch() const
 
 solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
-    critical(function.size() != x0.size(), "solver: incompatible initial point (", x0.size(),
+    critical(function.size() == x0.size(), "solver: incompatible initial point (", x0.size(),
              " dimensions), expecting ", function.size(), " dimensions!");
 
     function.clear_statistics();

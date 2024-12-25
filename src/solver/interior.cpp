@@ -67,7 +67,7 @@ solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vecto
 {
     if (const auto lconstraints = make_linear_constraints(function); !lconstraints)
     {
-        critical0("interior point solver can only solve linearly-constrained functions!");
+        raise("interior point solver can only solve linearly-constrained functions!");
     }
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
@@ -79,7 +79,7 @@ solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vecto
     }
     else
     {
-        critical0("interior point solver can only solve linear and quadratic programs!");
+        raise("interior point solver can only solve linear and quadratic programs!");
     }
 }
 

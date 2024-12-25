@@ -1,11 +1,26 @@
 #include "fixture/function.h"
 #include <function/benchmark/sphere.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 #include <nano/function/lambda.h>
 #include <nano/function/util.h>
 #include <nano/tensor/stack.h>
 #include <unordered_map>
 
 using namespace nano;
+
+namespace
+{
+scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
+{
+    if (gx.size() == x.size())
+    {
+        gx = 2 * x;
+    }
+    return x.dot(x);
+}
+} // namespace
 
 UTEST_BEGIN_MODULE(test_function)
 
@@ -18,15 +33,6 @@ UTEST_CASE(name)
 
 UTEST_CASE(lambda)
 {
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
-    {
-        if (gx.size() == x.size())
-        {
-            gx = 2 * x;
-        }
-        return x.dot(x);
-    };
-
     for (tensor_size_t dims = 1; dims < 5; ++dims)
     {
         const auto sphere_function = function_sphere_t{dims};
@@ -256,6 +262,118 @@ UTEST_CASE(make_strictly_feasible)
     }
 }
 
-// TODO: add tests for the function_t utilities (make_strictly_feasible, make_linear_constraints)
+UTEST_CASE(make_linear_constraints)
+{
+    auto function = make_function(3, convexity::yes, smoothness::yes, 2.0, lambda);
+    {
+        const auto lconstraints = make_linear_constraints(function);
+        UTEST_REQUIRE(lconstraints.has_value());
+
+        const auto& [A, b, G, h] = lconstraints.value();
+        const auto expected_A    = matrix_t{0, 3};
+        const auto expected_b    = vector_t{0};
+        const auto expected_G    = matrix_t{0, 3};
+        const auto expected_h    = vector_t{0};
+
+        UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(G, expected_G, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(h, expected_h, epsilon0<scalar_t>());
+    }
+    critical(function.variable() >= 2.0);
+    {
+        const auto lconstraints = make_linear_constraints(function);
+        UTEST_REQUIRE(lconstraints.has_value());
+
+        const auto& [A, b, G, h] = lconstraints.value();
+        const auto expected_A    = matrix_t{0, 3};
+        const auto expected_b    = vector_t{0};
+        // clang-format off
+        const auto expected_G    = make_tensor<scalar_t>(
+            make_dims(3, 3),
+            -1, 0, 0,
+            0, -1, 0,
+            0, 0, -1);
+        const auto expected_h    = make_tensor<scalar_t>(make_dims(3),
+            -2,
+            -2,
+            -2);
+        // clang-format on
+
+        UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(G, expected_G, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(h, expected_h, epsilon0<scalar_t>());
+    }
+    critical(function.variable() <= 3.7);
+    {
+        const auto lconstraints = make_linear_constraints(function);
+        UTEST_REQUIRE(lconstraints.has_value());
+
+        const auto& [A, b, G, h] = lconstraints.value();
+        const auto expected_A    = matrix_t{0, 3};
+        const auto expected_b    = vector_t{0};
+        // clang-format off
+        const auto expected_G    = make_tensor<scalar_t>(
+            make_dims(6, 3),
+            -1, +0, +0,
+            +0, -1, +0,
+            +0, +0, -1,
+            +1, +0, +0,
+            +0, +1, +0,
+            +0, +0, +1);
+        const auto expected_h    = make_tensor<scalar_t>(make_dims(6),
+            -2.0,
+            -2.0,
+            -2.0,
+            +3.7,
+            +3.7,
+            +3.7);
+        // clang-format on
+
+        UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(G, expected_G, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(h, expected_h, epsilon0<scalar_t>());
+    }
+    critical(vector_t::constant(3, 1.0) * function.variable() == 12.0);
+    {
+        const auto lconstraints = make_linear_constraints(function);
+        UTEST_REQUIRE(lconstraints.has_value());
+
+        const auto& [A, b, G, h] = lconstraints.value();
+        const auto expected_A    = matrix_t{0, 3};
+        const auto expected_b    = vector_t{0};
+        // clang-format off
+        const auto expected_G    = make_tensor<scalar_t>(
+            make_dims(7, 3),
+            -1, +0, +0,
+            +0, -1, +0,
+            +0, +0, -1,
+            +1, +0, +0,
+            +0, +1, +0,
+            +0, +0, +1,
+            +1, +1, +1);
+        const auto expected_h    = make_tensor<scalar_t>(make_dims(7),
+            -2.0,
+            -2.0,
+            -2.0,
+            +3.7,
+            +3.7,
+            +3.7,
+            12.0);
+        // clang-format on
+
+        UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(G, expected_G, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(h, expected_h, epsilon0<scalar_t>());
+    }
+    critical(function.constrain(constraint::euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0, 0.0), 30.0}));
+    {
+        const auto lconstraints = make_linear_constraints(function);
+        UTEST_REQUIRE(!lconstraints.has_value());
+    }
+}
 
 UTEST_END_MODULE()

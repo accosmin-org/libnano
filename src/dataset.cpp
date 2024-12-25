@@ -376,7 +376,7 @@ tensor4d_map_t dataset_t::targets(indices_cmap_t samples, tensor4d_t& buffer) co
 
     if (m_datasource.type() == task_type::unsupervised)
     {
-        critical0("dataset: targets are not available for unsupervised datasets!");
+        raise("dataset: targets are not available for unsupervised datasets!");
     }
 
     return m_datasource.visit_target(
