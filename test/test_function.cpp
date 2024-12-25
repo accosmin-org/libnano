@@ -342,26 +342,28 @@ UTEST_CASE(make_linear_constraints)
         UTEST_REQUIRE(lconstraints.has_value());
 
         const auto& [A, b, G, h] = lconstraints.value();
-        const auto expected_A    = matrix_t{0, 3};
-        const auto expected_b    = vector_t{0};
         // clang-format off
+        const auto expected_A    = make_tensor<scalar_t>(
+            make_dims(1, 3),
+            +1, +1, +1);
+        const auto expected_b    = make_tensor<scalar_t>(
+            make_dims(1),
+            12.0);
         const auto expected_G    = make_tensor<scalar_t>(
-            make_dims(7, 3),
+            make_dims(6, 3),
             -1, +0, +0,
             +0, -1, +0,
             +0, +0, -1,
             +1, +0, +0,
             +0, +1, +0,
-            +0, +0, +1,
-            +1, +1, +1);
-        const auto expected_h    = make_tensor<scalar_t>(make_dims(7),
+            +0, +0, +1);
+        const auto expected_h    = make_tensor<scalar_t>(make_dims(6),
             -2.0,
             -2.0,
             -2.0,
             +3.7,
             +3.7,
-            +3.7,
-            12.0);
+            +3.7);
         // clang-format on
 
         UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
