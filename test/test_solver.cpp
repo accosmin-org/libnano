@@ -66,15 +66,15 @@ UTEST_CASE(state_update_if_better)
 
     auto state = solver_state_t{function, x1};
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x1), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), std::numeric_limits<scalar_t>::max(), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), std::numeric_limits<scalar_t>::max(), 1e-12);
 
-    UTEST_CHECK(!state.update_if_better(x2, function.vgrad(x2)));
+    UTEST_CHECK(!state.update_if_better(x2, function(x2)));
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x1), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), std::numeric_limits<scalar_t>::max(), 1e-12);
@@ -83,17 +83,17 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK(!state.update_if_better(x2, std::numeric_limits<scalar_t>::quiet_NaN()));
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x1), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(3), std::numeric_limits<scalar_t>::max(), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(4), std::numeric_limits<scalar_t>::max(), 1e-12);
 
-    UTEST_CHECK(!state.update_if_better(x1, function.vgrad(x1)));
+    UTEST_CHECK(!state.update_if_better(x1, function(x1)));
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x1), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), 0.0, 1e-12);
@@ -101,10 +101,10 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(4), std::numeric_limits<scalar_t>::max(), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(5), std::numeric_limits<scalar_t>::max(), 1e-12);
 
-    UTEST_CHECK(state.update_if_better(x09, function.vgrad(x09)));
+    UTEST_CHECK(state.update_if_better(x09, function(x09)));
 
     UTEST_CHECK_CLOSE(state.x(), x09, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x09), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x09), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.38, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), 0.38, 1e-12);
@@ -112,10 +112,10 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(4), 0.38, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(5), 0.38, 1e-12);
 
-    UTEST_CHECK(state.update_if_better(x0, function.vgrad(x0)));
+    UTEST_CHECK(state.update_if_better(x0, function(x0)));
 
     UTEST_CHECK_CLOSE(state.x(), x0, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x0), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 1.62, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), 1.62, 1e-12);
@@ -123,10 +123,10 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(4), 1.62, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(5), 1.62, 1e-12);
 
-    UTEST_CHECK(!state.update_if_better(x0, function.vgrad(x0)));
+    UTEST_CHECK(!state.update_if_better(x0, function(x0)));
 
     UTEST_CHECK_CLOSE(state.x(), x0, 1e-12);
-    UTEST_CHECK_CLOSE(state.fx(), function.vgrad(x0), 1e-12);
+    UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(2), 1.62, 1e-12);

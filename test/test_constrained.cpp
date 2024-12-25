@@ -74,8 +74,8 @@ void check_penalty(const function_t& function, const vector_t& x, const bool exp
 
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
-        const auto fx = function.vgrad(x);
-        const auto qx = penalty_function.penalty(penalty).vgrad(x);
+        const auto fx = function(x);
+        const auto qx = penalty_function.penalty(penalty)(x);
         if (expected_valid)
         {
             UTEST_CHECK_CLOSE(fx, qx, 1e-16);
