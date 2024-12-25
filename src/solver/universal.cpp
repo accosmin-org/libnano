@@ -114,8 +114,8 @@ solver_state_t solver_dgm_t::do_minimize(const function_t& function, const vecto
         auto converged = false;
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++k)
         {
-            xk1     = gphi - gxk / M;
-            fxk1    = function(xk1, gxk1);
+            xk1  = gphi - gxk / M;
+            fxk1 = function(xk1, gxk1);
             iter_ok =
                 std::isfinite(fxk1) && function(yk = xk1 - gxk1 / M) <= fxk1 - 0.5 * gxk1.dot(gxk1) / M + 0.5 * epsilon;
             M *= 2.0;

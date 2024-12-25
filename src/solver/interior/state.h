@@ -48,4 +48,4 @@ struct state_t
     scalar_t m_ldlt_rcond{0};        ///< LDLT decomp: reciprocal condition number
     bool     m_ldlt_positive{false}; ///< LDLT decomp: positive semidefinite?, otherwise unstable
 };
-} // namespace
+} // namespace nano

@@ -69,8 +69,8 @@ void bundle_t::solve(const scalar_t miu, const logger_t& logger)
 
         auto solver = solver_t::all().get("ipm");
 
-        const auto x0 = vector_t{vector_t::constant(m_size, 1.0 / static_cast<scalar_t>(m_size))};
-        const auto solution = solver->minimize(program, x0, logger);
+        const auto x0             = vector_t{vector_t::constant(m_size, 1.0 / static_cast<scalar_t>(m_size))};
+        const auto solution       = solver->minimize(program, x0, logger);
         m_alphas.slice(0, m_size) = solution.x();
     }
 }

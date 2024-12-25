@@ -13,7 +13,7 @@ class function_t;
 struct function_variable_t
 {
     // attributes
-    function_t&   m_function;      ///<
+    function_t& m_function; ///<
 };
 
 ///
@@ -26,4 +26,4 @@ struct function_variable_dimension_t
     tensor_size_t m_dimension{-1}; ///<
     function_t&   m_function;      ///<
 };
-}
+} // namespace nano

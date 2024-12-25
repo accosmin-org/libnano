@@ -2,6 +2,7 @@ target_sources(function PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/function/bounds.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/constraint.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/cuts.h
+    ${CMAKE_SOURCE_DIR}/include/nano/function/enums.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/lambda.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/linear.h
     ${CMAKE_SOURCE_DIR}/include/nano/function/optimum.h

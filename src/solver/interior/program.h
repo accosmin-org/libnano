@@ -65,15 +65,15 @@ struct program_t
 
     // attributes
     const function_t*    m_function{nullptr}; ///< original function to minimize
-    matrix_t             m_Q;         ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
-    vector_t             m_c;         ///<
-    matrix_t             m_A;         ///< equality constraint: A * x = b
-    vector_t             m_b;         ///<
-    matrix_t             m_G;         ///< inequality constraint: Gx <= h
-    vector_t             m_h;         ///<
-    mutable lin_solver_t m_ldlt;      ///< buffers for the linear system of equations coupling (dx, dv)
-    mutable matrix_t     m_lmat;      ///<
-    mutable vector_t     m_lvec;      ///<
-    mutable vector_t     m_lsol;      ///<
+    matrix_t             m_Q;                 ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
+    vector_t             m_c;                 ///<
+    matrix_t             m_A;                 ///< equality constraint: A * x = b
+    vector_t             m_b;                 ///<
+    matrix_t             m_G;                 ///< inequality constraint: Gx <= h
+    vector_t             m_h;                 ///<
+    mutable lin_solver_t m_ldlt;              ///< buffers for the linear system of equations coupling (dx, dv)
+    mutable matrix_t     m_lmat;              ///<
+    mutable vector_t     m_lvec;              ///<
+    mutable vector_t     m_lsol;              ///<
 };
 } // namespace nano

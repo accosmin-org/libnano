@@ -28,10 +28,10 @@ struct sampler_t
     static quadratic_program_t make_program(tensor_size_t p);
 
     // attributes
-    matrix_t          m_X;        ///< buffer of sample points (p, n)
-    matrix_t          m_G;        ///< buffer of sample gradients (p, n)
-    tensor_size_t     m_psize{0}; ///< current number of samples
-    rsolver_t         m_solver;   ///< solver for the quadratic program to compute the sample gradient
+    matrix_t      m_X;        ///< buffer of sample points (p, n)
+    matrix_t      m_G;        ///< buffer of sample gradients (p, n)
+    tensor_size_t m_psize{0}; ///< current number of samples
+    rsolver_t     m_solver;   ///< solver for the quadratic program to compute the sample gradient
 };
 
 class fixed_sampler_t final : public sampler_t

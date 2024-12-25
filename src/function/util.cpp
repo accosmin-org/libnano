@@ -32,7 +32,7 @@ bool reduce(matrix_t& A)
 
 auto is_linear_constrained(const function_t& function)
 {
-    auto valid = true;
+    auto valid  = true;
     auto neqs   = tensor_size_t{0};
     auto nineqs = tensor_size_t{0};
 
@@ -182,7 +182,7 @@ bool nano::reduce(matrix_t& A, vector_t& b)
     }
 
     // NB: need to reduce [A|b] altogether!
-    auto Ab = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
+    auto       Ab      = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
     const auto reduced = ::reduce(Ab);
 
     A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
