@@ -116,7 +116,7 @@ void check_value(const function_t& function, const ttmatrix& tmatrix, const toma
 {
     const auto values = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
 
-    UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), values.mean(), epsilon);
+    UTEST_CHECK_CLOSE(function(make_full_vector<scalar_t>(function.size(), 0.0)), values.mean(), epsilon);
 }
 } // namespace
 

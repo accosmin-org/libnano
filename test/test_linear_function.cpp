@@ -44,7 +44,7 @@ void check_vgrad(const linear::function_t& function, const flatten_iterator_t& i
 
         tensor1d_t values(samples);
         loss.value(targets, outputs, values);
-        UTEST_CHECK_CLOSE(function.vgrad(x), values.vector().mean(), epsilon1<scalar_t>());
+        UTEST_CHECK_CLOSE(function(x), values.vector().mean(), epsilon1<scalar_t>());
     }
 }
 
