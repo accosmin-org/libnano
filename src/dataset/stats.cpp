@@ -1,5 +1,4 @@
 #include <nano/core/numeric.h>
-#include <nano/critical.h>
 #include <nano/dataset.h>
 #include <nano/dataset/stats.h>
 

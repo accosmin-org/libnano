@@ -110,11 +110,8 @@ auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscal
     uint32_t minLE = 0U;
     uint32_t maxLE = 0U;
 
-    critical(::nano::read(stream, value) &&     // LCOV_EXCL_LINE
-                 ::nano::read(stream, min) &&   // LCOV_EXCL_LINE
-                 ::nano::read(stream, max) &&   // LCOV_EXCL_LINE
-                 ::nano::read(stream, minLE) && // LCOV_EXCL_LINE
-                 ::nano::read(stream, maxLE),   // LCOV_EXCL_LINE
+    critical(::nano::read(stream, value) && ::nano::read(stream, min) && ::nano::read(stream, max) &&
+                 ::nano::read(stream, minLE) && ::nano::read(stream, maxLE),
              "parameter (", name, "): failed to read from stream!");
 
     return parameter_t::range_t<tscalar>{value, min, max, make_comp(minLE), make_comp(maxLE)};
@@ -131,13 +128,9 @@ auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<
     uint32_t maxLE   = 0U;
     uint32_t valueLE = 0U;
 
-    critical(::nano::read(stream, value1) &&     // LCOV_EXCL_LINE
-                 ::nano::read(stream, value2) && // LCOV_EXCL_LINE
-                 ::nano::read(stream, min) &&    // LCOV_EXCL_LINE
-                 ::nano::read(stream, max) &&    // LCOV_EXCL_LINE
-                 ::nano::read(stream, minLE) &&  // LCOV_EXCL_LINE
-                 ::nano::read(stream, maxLE) &&  // LCOV_EXCL_LINE
-                 ::nano::read(stream, valueLE),  // LCOV_EXCL_LINE
+    critical(::nano::read(stream, value1) && ::nano::read(stream, value2) && ::nano::read(stream, min) &&
+                 ::nano::read(stream, max) && ::nano::read(stream, minLE) && ::nano::read(stream, maxLE) &&
+                 ::nano::read(stream, valueLE),
              "parameter (", name, "): failed to read from stream!");
 
     return parameter_t::pair_range_t<tscalar>{value1,          value2, min, max, make_comp(minLE), make_comp(valueLE),
@@ -147,26 +140,19 @@ auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<
 template <class tscalar>
 void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
 {
-    critical(::nano::write(stream, type) && ::nano::write(stream, name) &&
-                 ::nano::write(stream, param.m_value) &&              // LCOV_EXCL_LINE
-                 ::nano::write(stream, param.m_min) &&                // LCOV_EXCL_LINE
-                 ::nano::write(stream, param.m_max) &&                // LCOV_EXCL_LINE
-                 ::nano::write(stream, make_flag(param.m_mincomp)) && // LCOV_EXCL_LINE
-                 ::nano::write(stream, make_flag(param.m_maxcomp)),   // LCOV_EXCL_LINE
+    critical(::nano::write(stream, type) && ::nano::write(stream, name) && ::nano::write(stream, param.m_value) &&
+                 ::nano::write(stream, param.m_min) && ::nano::write(stream, param.m_max) &&
+                 ::nano::write(stream, make_flag(param.m_mincomp)) && ::nano::write(stream, make_flag(param.m_maxcomp)),
              "parameter (", name, "): failed to write to stream!");
 }
 
 template <class tscalar>
 void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::pair_range_t<tscalar>& param)
 {
-    critical(::nano::write(stream, type) && ::nano::write(stream, name) &&
-                 ::nano::write(stream, param.m_value1) &&             // LCOV_EXCL_LINE
-                 ::nano::write(stream, param.m_value2) &&             // LCOV_EXCL_LINE
-                 ::nano::write(stream, param.m_min) &&                // LCOV_EXCL_LINE
-                 ::nano::write(stream, param.m_max) &&                // LCOV_EXCL_LINE
-                 ::nano::write(stream, make_flag(param.m_mincomp)) && // LCOV_EXCL_LINE
-                 ::nano::write(stream, make_flag(param.m_maxcomp)) && // LCOV_EXCL_LINE
-                 ::nano::write(stream, make_flag(param.m_valcomp)),   // LCOV_EXCL_LINE
+    critical(::nano::write(stream, type) && ::nano::write(stream, name) && ::nano::write(stream, param.m_value1) &&
+                 ::nano::write(stream, param.m_value2) && ::nano::write(stream, param.m_min) &&
+                 ::nano::write(stream, param.m_max) && ::nano::write(stream, make_flag(param.m_mincomp)) &&
+                 ::nano::write(stream, make_flag(param.m_maxcomp)) && ::nano::write(stream, make_flag(param.m_valcomp)),
              "parameter (", name, "): failed to write to stream!");
 }
 
@@ -353,9 +339,8 @@ std::istream& parameter_t::read(std::istream& stream)
     {
         string_t  value;
         strings_t domain;
-        critical(::nano::read(stream, value) &&    // LCOV_EXCL_LINE
-                     ::nano::read(stream, domain), // LCOV_EXCL_LINE
-                 "parameter (", m_name, "): failed to read from stream!");
+        critical(::nano::read(stream, value) && ::nano::read(stream, domain), "parameter (", m_name,
+                 "): failed to read from stream!");
         m_storage = enum_t{value, domain};
     }
     break;
@@ -388,11 +373,9 @@ std::ostream& parameter_t::write(std::ostream& stream) const
                           {
                               const int32_t type = 0;
                               critical(::nano::write(stream, type) && ::nano::write(stream, m_name) &&
-                                           ::nano::write(stream, param.m_value) && // LCOV_EXCL_LINE
-                                           ::nano::write(stream, param.m_domain),  // LCOV_EXCL_LINE
-                                       "parameter (",
-                                       m_name,
-                                       "): failed to write to stream!");
+                                           ::nano::write(stream, param.m_value) &&
+                                           ::nano::write(stream, param.m_domain),
+                                       "parameter (", m_name, "): failed to write to stream!");
                           },
                           [&](const irange_t& param) { ::write(m_name, stream, 1, param); },
                           [&](const frange_t& param) { ::write(m_name, stream, 2, param); },
