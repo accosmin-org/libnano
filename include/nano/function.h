@@ -161,7 +161,6 @@ public:
     ///
     function_variable_dimension_t variable(const tensor_size_t dimension)
     {
-        assert(dimension >= 0 && dimension < size());
         return {dimension, *this};
     }
 

@@ -294,7 +294,7 @@ UTEST_CASE(make_linear_constraints)
             -1, 0, 0,
             0, -1, 0,
             0, 0, -1);
-        const auto expected_h    = make_tensor<scalar_t>(make_dims(3),
+        const auto expected_h    = make_vector<scalar_t>(
             -2,
             -2,
             -2);
@@ -322,7 +322,7 @@ UTEST_CASE(make_linear_constraints)
             +1, +0, +0,
             +0, +1, +0,
             +0, +0, +1);
-        const auto expected_h    = make_tensor<scalar_t>(make_dims(6),
+        const auto expected_h    = make_vector<scalar_t>(
             -2.0,
             -2.0,
             -2.0,
@@ -346,8 +346,7 @@ UTEST_CASE(make_linear_constraints)
         const auto expected_A    = make_tensor<scalar_t>(
             make_dims(1, 3),
             +1, +1, +1);
-        const auto expected_b    = make_tensor<scalar_t>(
-            make_dims(1),
+        const auto expected_b    = make_vector<scalar_t>(
             12.0);
         const auto expected_G    = make_tensor<scalar_t>(
             make_dims(6, 3),
@@ -357,7 +356,7 @@ UTEST_CASE(make_linear_constraints)
             +1, +0, +0,
             +0, +1, +0,
             +0, +0, +1);
-        const auto expected_h    = make_tensor<scalar_t>(make_dims(6),
+        const auto expected_h    = make_vector<scalar_t>(
             -2.0,
             -2.0,
             -2.0,
