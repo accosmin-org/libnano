@@ -97,8 +97,8 @@ public:
     scalar_t kkt_optimality_test() const;
 
     ///
-    /// \brief feasability test: the maximum deviation from the constraints given by the first two KKT optimality
-    /// conditions.
+    /// \brief feasability test: the maximum deviation across all equality and inequality constraints
+    /// as given by the first two KKT optimality conditions.
     ///
     scalar_t feasibility_test() const;
 

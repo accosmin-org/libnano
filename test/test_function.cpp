@@ -232,7 +232,7 @@ UTEST_CASE(is_convex)
     }
 }
 
-UTEST_CASE(make_strictly_feasible)
+UTEST_CASE(make_strictly_feasible_linear)
 {
     for (const tensor_size_t dims : {3, 7, 11})
     {
@@ -244,14 +244,14 @@ UTEST_CASE(make_strictly_feasible)
         {
             const auto b = A * x + epsilon * vector_t::constant(dims, 1.0);
 
-            // feasible: A * z < b
+            // feasible: (A * z) < b = (A * x + epsilon)
             {
                 const auto z = make_strictly_feasible(A, b);
                 UTEST_REQUIRE(z.has_value());
                 UTEST_CHECK_LESS((A * *z - b).maxCoeff(), 0.0);
             }
 
-            // not feasible: A * z < b and A * z > b + epsilon
+            // not feasible: (A * z) < b and (A * z) > b + epsilon
             {
                 const auto A2 = ::nano::stack<scalar_t>(2 * dims, dims, A, -A);
                 const auto b2 = ::nano::stack<scalar_t>(2 * dims, b, -b - vector_t::constant(dims, epsilon));
@@ -260,6 +260,54 @@ UTEST_CASE(make_strictly_feasible)
             }
         }
     }
+}
+
+UTEST_CASE(make_strictly_feasible_inequalities)
+{
+    for (const tensor_size_t dims : {2, 3, 5})
+    {
+        for (const tensor_size_t ineqs : {dims - 1, dims, dims + 1, dims * 2})
+        {
+            for (auto test = 0; test < 100; ++test)
+            {
+                const auto A = make_random_matrix<scalar_t>(ineqs, dims);
+                const auto b = make_random_vector<scalar_t>(ineqs);
+                const auto z = make_strictly_feasible(A, b);
+
+                // NB: it is guaranteed to always have a feasible point!
+                if (ineqs <= dims)
+                {
+                    UTEST_REQUIRE(z);
+                    UTEST_CHECK_LESS((A * *z - b).maxCoeff(), 0.0);
+                }
+
+                // NB: some random hyper-plane splits may not always have a feasible point!
+                else if (z)
+                {
+                    UTEST_CHECK_LESS((A * *z - b).maxCoeff(), 0.0);
+                }
+            }
+        }
+    }
+}
+
+UTEST_CASE(make_strictly_feasible_bundle)
+{
+    // NB: generating a strictly feasible point fails for the FPBA solvers generated for the `chained_cb3I[4D]` problem.
+    const auto A = make_matrix<scalar_t>(
+        5, -13.0791713343359675, 11.0223780863932728, -4.4019980261743887, -2.5763086376600111, -1.0000000000000000,
+        7215.0982713243365652, -9299047.8599894158542156, 9299623.7717038244009018, 6.5763086376600093,
+        -1.0000000000000000, 7214.4055358504474498, -3412548.2061092313379049, 3412971.5455180155113339,
+        6.5763076510207092, -1.0000000000000000, 7211.3160869768435077, -1247120.8129310656804591,
+        1247420.0596358175389469, 6.5763032495401736, -1.0000000000000000, 7199.5211198816032265,
+        -450621.4467068934463896, 450821.7497615875909105, 6.5762864247748309, -1.0000000000000000);
+
+    const auto b = make_vector<scalar_t>(-1.4491983618949895, 133530540.3222339451313019, 45624197.2596000581979752,
+                                         15460162.1538065522909164, 5169566.8448949512094259);
+
+    const auto z = make_strictly_feasible(A, b);
+    UTEST_REQUIRE(z);
+    UTEST_CHECK_LESS((A * *z - b).maxCoeff(), 0.0);
 }
 
 UTEST_CASE(make_linear_constraints)
