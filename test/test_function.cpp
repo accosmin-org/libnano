@@ -229,6 +229,26 @@ UTEST_CASE(is_convex)
         Q(0, 0) = -1.0;
         UTEST_CHECK(!is_convex(Q));
         UTEST_CHECK_CLOSE(strong_convexity(Q), 0.0, epsilon0<scalar_t>());
+
+        Q = matrix_t::zero(dims, dims);
+        UTEST_CHECK(is_convex(Q));
+
+        Q = -matrix_t::identity(dims, dims);
+        UTEST_CHECK(!is_convex(Q));
+
+        const auto D = make_random_matrix<scalar_t>(dims, dims);
+        Q            = D.transpose() * D;
+        UTEST_CHECK(is_convex(Q));
+
+        Q = D.transpose() * D + matrix_t::identity(dims, dims);
+        UTEST_CHECK(is_convex(Q));
+
+        Q = -D.transpose() * D - matrix_t::identity(dims, dims);
+        UTEST_CHECK(!is_convex(Q));
+
+        Q = matrix_t::identity(dims, dims);
+        Q(0, 1) += 1.0;
+        UTEST_CHECK(!is_convex(Q));
     }
 }
 

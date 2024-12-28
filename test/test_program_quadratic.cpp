@@ -1,63 +1,9 @@
 #include <fixture/program.h>
 
-#include <Eigen/Dense>
-
 using namespace nano;
 using namespace nano::program;
 
 UTEST_BEGIN_MODULE(test_program_quadratic)
-
-UTEST_CASE(program)
-{
-    for (const tensor_size_t dims : {2, 3, 5})
-    {
-        const auto D = make_random_matrix<scalar_t>(dims, dims);
-        const auto c = make_random_vector<scalar_t>(dims);
-        {
-            const auto Q = matrix_t{matrix_t::zero(dims, dims)};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(program.convex());
-        }
-        {
-            const auto Q = matrix_t{matrix_t::identity(dims, dims)};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(program.convex());
-        }
-        {
-            const auto Q = matrix_t{-matrix_t::identity(dims, dims)};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(!program.convex());
-        }
-        {
-            const auto Q = matrix_t{D.transpose() * D};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(program.convex());
-        }
-        {
-            const auto Q = matrix_t{D.transpose() * D + matrix_t::identity(dims, dims)};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(program.convex());
-        }
-        {
-            const auto Q = matrix_t{-D.transpose() * D - matrix_t::identity(dims, dims)};
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(!program.convex());
-        }
-        {
-            auto Q = matrix_t{matrix_t::identity(dims, dims)};
-            Q(0, 1) += 1.0;
-
-            const auto program = quadratic_program_t{Q, c};
-            UTEST_CHECK(!program.convex());
-        }
-    }
-}
 
 UTEST_CASE(program1)
 {

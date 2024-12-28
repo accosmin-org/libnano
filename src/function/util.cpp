@@ -192,10 +192,14 @@ bool nano::reduce(matrix_t& A, vector_t& b)
 
 bool nano::is_convex(const matrix_t& P)
 {
-    const auto eigenvalues         = P.matrix().eigenvalues();
-    const auto positive_eigenvalue = [](const auto& eigenvalue) { return eigenvalue.real() >= 0.0; };
+    const auto Q = P.matrix();
+    if (!Q.isApprox(Q.transpose()))
+    {
+        return false;
+    }
 
-    return std::all_of(begin(eigenvalues), end(eigenvalues), positive_eigenvalue);
+    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
+    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
 }
 
 scalar_t nano::strong_convexity(const matrix_t& P)
