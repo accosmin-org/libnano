@@ -1,4 +1,5 @@
-#include <nano/function/program.h>
+#include <nano/function/linear.h>
+#include <nano/function/quadratic.h>
 #include <nano/program/benchmark.h>
 #include <nano/program/solver.h>
 #include <nano/solver/augmented.h>

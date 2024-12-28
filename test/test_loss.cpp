@@ -1,5 +1,5 @@
-#include "fixture/function.h"
-#include "fixture/loss.h"
+#include <fixture/function.h>
+#include <fixture/loss.h>
 #include <nano/core/numeric.h>
 #include <nano/core/random.h>
 #include <nano/function.h>
