@@ -321,4 +321,36 @@ UTEST_CASE(feasible_convex_hull_center)
     }
 }
 
+UTEST_CASE(feasible_numopt131)
+{
+    // see example 13.1, "Numerical optimization", Nocedal & Wright, 2nd edition
+    const auto c = make_vector<scalar_t>(-4, -2, 0, 0);
+    const auto A = make_matrix<scalar_t>(2, 1, 1, 1, 0, 2, 0.5, 0, 1);
+    const auto b = make_vector<scalar_t>(5, 8);
+
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+
+    check_feasible(function, 11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
+    check_feasible(function, 0.0, 4.0, 1.0, 6.0);
+    check_feasible(function, 2.0, 2.0, 1.0, 3.0);
+}
+
+UTEST_CASE(feasible_numopt141)
+{
+    // see exercise 14.1, "Numerical optimization", Nocedal & Wright, 2nd edition
+    const auto c = make_vector<scalar_t>(1, 0);
+    const auto A = make_matrix<scalar_t>(1, 1, 1);
+    const auto b = make_vector<scalar_t>(1);
+
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+
+    check_feasible(function, 0.0, 1.0);
+    check_feasible(function, 1.0, 0.0);
+    check_feasible(function, 0.1, 0.9);
+}
+
 UTEST_END_MODULE()

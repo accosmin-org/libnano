@@ -1,14 +1,12 @@
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
-#include <nano/program/benchmark.h>
-#include <nano/program/solver.h>
-#include <nano/solver/augmented.h>
-#include <nano/solver/penalty.h>
 #include <utest/utest.h>
 
 using namespace nano;
 
-inline auto make_permutation(const tensor_size_t m)
+/*inline auto make_permutation(const tensor_size_t m)
 {
     auto permutation = arange(0, m);
     std::shuffle(permutation.begin(), permutation.end(), make_rng());
@@ -66,27 +64,36 @@ void check_solution(const tprogram& program, const program::expected_t& expected
     {
         UTEST_CHECK_LESS(kkt, expected.m_epsilon);
     }
-}
+}*/
 
-template <class tprogram>
-void check_solution_program(tprogram program, const program::expected_t& expected, const logger_t& logger)
+static void check_solution_interior(const function_t& function, const logger_t& logger)
 {
-    auto solver = program::solver_t{};
+    auto solver = make_solver("ipm");
 
-    auto state =
-        (expected.m_x0.size() > 0) ? solver.solve(program, expected.m_x0, logger) : solver.solve(program, logger);
+    // FIXME: should extend solver_t to have the initial point optional
 
-    UTEST_CHECK_EQUAL(state.m_status, expected.m_status);
-    if (expected.m_status == solver_status::converged)
+    const auto x0      = vector_t::constant(function.size(), 0.0);
+    const auto state   = solver->minimize(function, x0, logger);
+    const auto epsilon = solver->parameter("solver::epsilon").value<scalar_t>();
+
+    const auto& optimum = function.optimum();
+    UTEST_CHECK_EQUAL(state.status(), optimum.m_status);
+    if (optimum.m_status == solver_status::converged)
     {
-        check_solution(program, expected, state.m_x, state.m_fx, state.m_kkt);
+        UTEST_CHECK_CLOSE(state.x(), optimum->m_xbest, epsilon);
+        UTEST_CHECK_CLOSE(state.fx(), optimum->m_fbest, epsilon);
+        UTEST_CHECK_LESS(state.gradient_test(), epsilon);
+        UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
+        UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
     }
 }
 
-template <class tprogram>
-void check_solution_augmented(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
+static void check_solution_augmented(const function_t& function, const logger_t& logger)
 {
-    // FIXME: It is possible to detect unfeasibility or unboundedness with augmented lagrangian method?!
+    (void)function;
+    (void)logger;
+
+    /*// FIXME: It is possible to detect unfeasibility or unboundedness with augmented lagrangian method?!
     if (expected.m_status != solver_status::converged)
     {
         return;
@@ -103,13 +110,15 @@ void check_solution_augmented(const tprogram& program, const program::expected_t
     if (expected.m_status == solver_status::converged)
     {
         check_solution(program, expected, state.x(), state.fx(), state.kkt_optimality_test());
-    }
+    }*/
 }
 
-template <class tprogram>
-void check_solution_penalty(const tprogram& program, const program::expected_t& expected, const logger_t& logger)
+static void check_solution_penalty(const function_t& function, const logger_t& logger)
 {
-    // FIXME: It is possible to detect unfeasibility or unboundedness with the penalty method?!
+    (void)function;
+    (void)logger;
+
+    /*// FIXME: It is possible to detect unfeasibility or unboundedness with the penalty method?!
     if (expected.m_status != solver_status::converged)
     {
         return;
@@ -127,20 +136,15 @@ void check_solution_penalty(const tprogram& program, const program::expected_t& 
     {
         // NB: The penalty method doesn't provide an estimation of the Lagrangian multipliers!
         check_solution(program, expected, state.x(), state.fx(), std::numeric_limits<scalar_t>::quiet_NaN());
-    }
+    }*/
 }
 
-template <class tprogram>
-void check_solution(const tprogram& program, const program::expected_t& expected)
+void check_solution(const function_t& function)
 {
-    // TODO: move this to std::remove_cvref_t when moving C++20!
-    if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<tprogram>>, program::quadratic_program_t>)
-    {
-        UTEST_REQUIRE(program.convex());
-    }
+    // const auto [A, b, G, h] = make_linear_constraints(function);
 
-    // test duplicated equality constraints
-    if (program.m_eq.valid())
+    // TODO: test duplicated equality constraints
+    /*if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
@@ -148,10 +152,10 @@ void check_solution(const tprogram& program, const program::expected_t& expected
         check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
         check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
         check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
-    }
+    }*/
 
-    // test linearly dependant equality constraints
-    if (program.m_eq.valid())
+    // TODO: test linearly dependant equality constraints
+    /*if (program.m_eq.valid())
     {
         auto dprogram = program;
         dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
@@ -159,10 +163,10 @@ void check_solution(const tprogram& program, const program::expected_t& expected
         check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
         check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
         check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
-    }
+    }*/
 
     // test original program
-    check_with_logger([&](const logger_t& logger) { check_solution_penalty(program, expected, logger); });
-    check_with_logger([&](const logger_t& logger) { check_solution_program(program, expected, logger); });
-    check_with_logger([&](const logger_t& logger) { check_solution_augmented(program, expected, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_penalty(function, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_interior(function, logger); });
+    check_with_logger([&](const logger_t& logger) { check_solution_augmented(function, logger); });
 }

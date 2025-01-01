@@ -1,7 +1,6 @@
 #include <fixture/program.h>
 
 using namespace nano;
-using namespace nano::program;
 
 UTEST_BEGIN_MODULE(test_program_quadratic)
 

@@ -7,6 +7,7 @@
 #include <solver/fpba.h>
 #include <solver/gd.h>
 #include <solver/gsample.h>
+#include <solver/ipm.h>
 #include <solver/lbfgs.h>
 #include <solver/osga.h>
 #include <solver/pdsgm.h>
@@ -183,6 +184,7 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_rqb_t>("reversal quasi-newton bundle algorithm (RQB)");
         manager.add<solver_fpba1_t>("fast proximal bundle algorithm (FPBA1)");
         manager.add<solver_fpba2_t>("fast proximal bundle algorithm (FPBA2)");
+        manager.add<solver_ipm_t>("primal-dual interior point method for linear and quadratic programs (IPM)");
     };
 
     static std::once_flag flag;

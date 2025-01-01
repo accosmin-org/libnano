@@ -46,7 +46,7 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
 }
 } // namespace
 
-ipm_solver_t::ipm_solver_t()
+solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.999, LE, 1.0));
@@ -58,12 +58,12 @@ ipm_solver_t::ipm_solver_t()
     register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
 }
 
-rsolver_t ipm_solver_t::clone() const
+rsolver_t solver_ipm_t::clone() const
 {
-    return std::make_unique<ipm_solver_t>(*this);
+    return std::make_unique<solver_ipm_t>(*this);
 }
 
-solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     if (const auto lconstraints = make_linear_constraints(function); !lconstraints)
     {
@@ -75,6 +75,7 @@ solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vecto
     }
     else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
     {
+        critical(is_convex(qprogram->Q()), "interior point solver can only solver convex quadratic programs!");
         return do_minimize(program_t{*qprogram, lconstraints.value()}, x0, logger);
     }
     else
@@ -83,7 +84,7 @@ solver_state_t ipm_solver_t::do_minimize(const function_t& function, const vecto
     }
 }
 
-solver_state_t ipm_solver_t::do_minimize(const program_t& program, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(const program_t& program, const vector_t& x0, const logger_t& logger) const
 {
     if (program.m() > 0)
     {
@@ -95,7 +96,7 @@ solver_state_t ipm_solver_t::do_minimize(const program_t& program, const vector_
     }
 }
 
-solver_state_t ipm_solver_t::do_minimize_with_inequality(const program_t& program, const vector_t& x0,
+solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& program, const vector_t& x0,
                                                          const logger_t& logger) const
 {
     const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
@@ -248,7 +249,7 @@ solver_state_t ipm_solver_t::do_minimize_with_inequality(const program_t& progra
     return state;
 }
 
-solver_state_t ipm_solver_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
+solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
                                                             const logger_t& logger) const
 {
     const auto miu     = parameter("solver::ipm::miu").value<scalar_t>();

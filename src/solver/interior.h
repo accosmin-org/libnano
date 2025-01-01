@@ -12,13 +12,13 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-class NANO_PUBLIC ipm_solver_t final : public solver_t
+class NANO_PUBLIC solver_ipm_t final : public solver_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    ipm_solver_t();
+    solver_ipm_t();
 
     ///
     /// \brief @see clonable_t

@@ -65,16 +65,6 @@ bool function_t::constrain(constraint_t&& constraint)
     return false;
 }
 
-bool function_t::valid(const vector_t& x) const
-{
-    assert(x.size() == size());
-
-    const auto op = [&](const constraint_t& constraint)
-    { return ::nano::valid(constraint, x) < std::numeric_limits<scalar_t>::epsilon(); };
-
-    return std::all_of(m_constraints.begin(), m_constraints.end(), op);
-}
-
 const constraints_t& function_t::constraints() const
 {
     return m_constraints;
@@ -121,24 +111,22 @@ rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
     return rfunction_t{};
 }
 
-void function_t::optimum(vector_t optimum)
+bool function_t::optimum(vector_t xbest, const solver_status status)
 {
-    assert(optimum.size() == size());
+    if (xbest.size() != size())
+    {
+        return false;
+    }
 
-    m_optimum = std::move(optimum);
+    m_optimum.m_xbest = std::move(xbest);
+    m_optimum.m_fbest = do_vgrad(m_optimum.m_xbest, vector_map_t{});
+    m_optimum.m_status = status;
+    return true;
 }
 
-std::optional<optimum_t> function_t::optimum() const
+const optimum_t& function_t::optimum() const
 {
-    if (m_optimum.size() == size())
-    {
-        const auto fbest = do_vgrad(m_optimum, vector_map_t{});
-        return optimum_t{m_optimum, fbest};
-    }
-    else
-    {
-        return {};
-    }
+    return m_optimum;
 }
 
 factory_t<function_t>& function_t::all()

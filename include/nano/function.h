@@ -73,11 +73,6 @@ public:
     scalar_t strong_convexity() const { return m_strong_convexity; }
 
     ///
-    /// \brief returns true if the given point satisfies all the stored constraints.
-    ///
-    bool valid(const vector_t& x) const;
-
-    ///
     /// \brief register a constraint.
     ///
     /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
@@ -143,9 +138,14 @@ public:
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
 
     ///
-    /// \brief return the optimum global minimum (if known).
+    /// \brief change the global minimum.
     ///
-    std::optional<optimum_t> optimum() const;
+    bool optimum(vector_t, solver_status status = solver_status::converged);
+
+    ///
+    /// \brief return the global minimum (if known).
+    ///
+    const optimum_t& optimum() const;
 
     ///
     /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
@@ -165,7 +165,6 @@ public:
     }
 
 protected:
-    void optimum(vector_t);
     void convex(convexity);
     void smooth(smoothness);
     void strong_convexity(scalar_t);
@@ -181,6 +180,6 @@ private:
     constraints_t         m_constraints;                ///< optional equality and inequality constraints
     mutable tensor_size_t m_fcalls{0};                  ///< number of function value evaluations
     mutable tensor_size_t m_gcalls{0};                  ///< number of function gradient evaluations
-    vector_t              m_optimum;                    ///< optimum solution (if unique and known)
+    optimum_t             m_optimum;                    ///< optimum solution (if unique and known)
 };
 } // namespace nano

@@ -49,6 +49,9 @@ public:
     ///
     const matrix_t& Q() const { return m_Q; }
 
+    ///
+    /// \brief return the objective's parameters (need explicitly by some solvers).
+    ///
     const vector_t& c() const { return m_c; }
 
 private:
