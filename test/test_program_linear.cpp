@@ -20,16 +20,20 @@ UTEST_CASE(program1)
     check_solution(function);
 }
 
-/*UTEST_CASE(program2)
+UTEST_CASE(program2)
 {
     // see exercise 14.1, "Numerical optimization", Nocedal & Wright, 2nd edition
     const auto c = make_vector<scalar_t>(1, 0);
     const auto A = make_matrix<scalar_t>(1, 1, 1);
     const auto b = make_vector<scalar_t>(1);
+    const auto x = make_vector<scalar_t>(0.0, 1.0);
 
-    const auto program = make_linear(c, make_equality(A, b), make_greater(2, 0.0));
-    const auto xbest = make_vector<scalar_t>(0.0, 1.0);
-    check_solution(program, expected_t{xbest}.fbest(xbest.dot(c)));
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+    UTEST_REQUIRE(function.optimum(x));
+
+    check_solution(function);
 }
 
 UTEST_CASE(program3)
@@ -39,8 +43,12 @@ UTEST_CASE(program3)
     const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
     const auto b = make_vector<scalar_t>(2);
 
-    const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::unbounded));
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unbounded));
+
+    check_solution(function);
 }
 
 UTEST_CASE(program4)
@@ -50,11 +58,15 @@ UTEST_CASE(program4)
     const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
     const auto b = make_vector<scalar_t>(-1, -1);
 
-    const auto program = make_linear(c, make_equality(A, b), make_greater(2, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::unfeasible));
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
+
+    check_solution(function);
 }
 
-UTEST_CASE(program5)
+/*UTEST_CASE(program5)
 {
     // NB: unfeasible program!
     const auto c = make_vector<scalar_t>(-1, 0, 0);

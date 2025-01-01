@@ -143,7 +143,7 @@ public:
     virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
 
     ///
-    /// \brief change the global minimum.
+    /// \brief change the global minimum (if known) and set the expected convergence status.
     ///
     bool optimum(vector_t, solver_status status = solver_status::converged);
 

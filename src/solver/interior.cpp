@@ -33,13 +33,13 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
     {
         // FIXME: this is an heuristic, to search for a theoretically sound method
         // to detect unboundness and unfeasibility!
-        state.status(solver_status::unfeasible);
+        state.status(solver_status::unbounded);
     }
     else
     {
         // FIXME: this is an heuristic, to search for a theoretically sound method
         // to detect unboundness and unfeasibility!
-        state.status(solver_status::unbounded);
+        state.status(solver_status::unfeasible);
     }
 
     return state.status() == solver_status::converged;
