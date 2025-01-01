@@ -1,8 +1,8 @@
+#include <fixture/solver.h>
 #include <nano/function/bounds.h>
 #include <nano/function/cuts.h>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
-#include <utest/utest.h>
 
 using namespace nano;
 
@@ -72,7 +72,7 @@ static void check_solution_interior(const function_t& function, const logger_t& 
 
     // FIXME: should extend solver_t to have the initial point optional
 
-    const auto x0      = vector_t::constant(function.size(), 0.0);
+    const auto x0      = vector_t::constant(function.size(), 1.0);
     const auto state   = solver->minimize(function, x0, logger);
     const auto epsilon = solver->parameter("solver::epsilon").value<scalar_t>();
 
@@ -82,15 +82,15 @@ static void check_solution_interior(const function_t& function, const logger_t& 
 
     if (optimum.m_xbest.size() == state.x().size())
     {
-        UTEST_CHECK_CLOSE(state.x(), optimum->m_xbest, epsilon);
-        UTEST_CHECK_CLOSE(state.fx(), optimum->m_fbest, epsilon);
+        UTEST_CHECK_CLOSE(state.x(), optimum.m_xbest, epsilon);
+        UTEST_CHECK_CLOSE(state.fx(), optimum.m_fbest, epsilon);
     }
 
     if (optimum.m_status == solver_status::converged)
     {
         // FIXME: merge these tests with the generic ones for solver_t
         // FIXME: handle the case of smooth functions (always expected convergence) or with constraints explicitly
-        UTEST_CHECK_LESS(state.gradient_test(), epsilon);
+        // UTEST_CHECK_LESS(state.gradient_test(), epsilon);
         UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
         UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
     }

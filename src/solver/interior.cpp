@@ -212,6 +212,11 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto curr_rdual = ipmst.m_rdual.lpNorm<2>();
         const auto curr_rprim = ipmst.m_rprim.lpNorm<2>();
 
+        logger.info("i=", ipmst.m_iters, ",eta=", ipmst.m_eta, ",rdual=", ipmst.m_rdual.lpNorm<Eigen::Infinity>(),
+                    ",rcent=", ipmst.m_rcent.lpNorm<Eigen::Infinity>(),
+                    ",rprim=", ipmst.m_rprim.lpNorm<Eigen::Infinity>(), ",rcond=", ipmst.m_ldlt_rcond,
+                    ipmst.m_ldlt_positive ? "(+)" : "(-)", ".\n");
+
         // check stopping criteria
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
         {
@@ -236,14 +241,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
             const auto converged = false;
             done(state, iter_ok, converged, logger);
         }
-
-        // FIXME: solver_t;:done(state, iter_ok, converged, logger, args...)
-        /*return stream << "i=" << state.m_iters << ",fx=" << state.m_fx << ",eta=" << state.m_eta
-                  << ",rdual=" << state.m_rdual.lpNorm<Eigen::Infinity>()
-                  << ",rcent=" << state.m_rcent.lpNorm<Eigen::Infinity>()
-                  << ",rprim=" << state.m_rprim.lpNorm<Eigen::Infinity>() << ",kkt=" << state.m_kkt
-                  << ",rcond=" << state.m_ldlt_rcond << (state.m_ldlt_positive ? "(+)" : "(-)") << "[" << state.m_status
-                  << "]";*/
     }
 
     return state;
