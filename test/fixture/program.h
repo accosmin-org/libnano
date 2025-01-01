@@ -78,13 +78,21 @@ static void check_solution_interior(const function_t& function, const logger_t& 
 
     const auto& optimum = function.optimum();
     UTEST_CHECK_EQUAL(state.status(), optimum.m_status);
-    if (optimum.m_status == solver_status::converged)
+    UTEST_CHECK(optimum.m_xbest.size() == 0 || optimum.m_xbest.size() == state.x().size());
+
+    if (optimum.m_xbest.size() == state.x().size())
     {
         UTEST_CHECK_CLOSE(state.x(), optimum->m_xbest, epsilon);
         UTEST_CHECK_CLOSE(state.fx(), optimum->m_fbest, epsilon);
+    }
+
+    if (optimum.m_status == solver_status::converged)
+    {
+        // FIXME: merge these tests with the generic ones for solver_t
+        // FIXME: handle the case of smooth functions (always expected convergence) or with constraints explicitly
         UTEST_CHECK_LESS(state.gradient_test(), epsilon);
-        UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
         UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
+        UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
     }
 }
 

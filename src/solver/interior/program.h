@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
+#include <nano/function/util.h>
 #include <solver/interior/state.h>
 
 namespace nano

@@ -85,6 +85,11 @@ public:
     const constraints_t& constraints() const;
 
     ///
+    /// \brief returns true if the given point satisfies all the stored constraints.
+    ///
+    bool valid(const vector_t& x) const;
+
+    ///
     /// \brief returns the number of equality constraints.
     ///
     tensor_size_t n_equalities() const;

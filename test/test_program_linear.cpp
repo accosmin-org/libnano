@@ -15,7 +15,7 @@ UTEST_CASE(program1)
     auto function = linear_program_t{"lp", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(x));
+    UTEST_REQUIRE(function.optimum(x), solver_status::converged);
 
     check_solution(function);
 }

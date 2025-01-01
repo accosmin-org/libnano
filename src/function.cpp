@@ -70,6 +70,14 @@ const constraints_t& function_t::constraints() const
     return m_constraints;
 }
 
+bool function_t::valid(const vector_t& x) const
+{
+    const auto op = [&](const constraint_t& constraint)
+    { return ::nano::valid(constraint, x) < std::numeric_limits<scalar_t>::epsilon(); };
+
+    return x.size() == size() && std::all_of(m_constraints.begin(), m_constraints.end(), op);
+}
+
 tensor_size_t function_t::n_equalities() const
 {
     return ::nano::n_equalities(m_constraints);

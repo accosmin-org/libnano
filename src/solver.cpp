@@ -7,7 +7,7 @@
 #include <solver/fpba.h>
 #include <solver/gd.h>
 #include <solver/gsample.h>
-#include <solver/ipm.h>
+#include <solver/interior.h>
 #include <solver/lbfgs.h>
 #include <solver/osga.h>
 #include <solver/pdsgm.h>
