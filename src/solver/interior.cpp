@@ -63,18 +63,18 @@ rsolver_t solver_ipm_t::clone() const
 
 solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
-    if (const auto lconstraints = make_linear_constraints(function); !lconstraints)
+    if (auto lconstraints = make_linear_constraints(function); !lconstraints)
     {
         raise("interior point solver can only solve linearly-constrained functions!");
     }
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        return do_minimize(program_t{*lprogram, lconstraints.value()}, x0, logger);
+        return do_minimize(program_t{*lprogram, std::move(lconstraints).value()}, x0, logger);
     }
     else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solver convex quadratic programs!");
-        return do_minimize(program_t{*qprogram, lconstraints.value()}, x0, logger);
+        return do_minimize(program_t{*qprogram, std::move(lconstraints).value()}, x0, logger);
     }
     else
     {
