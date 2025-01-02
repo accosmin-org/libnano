@@ -1,5 +1,6 @@
 #include <fixture/program.h>
 #include <function/program/cvx48b.h>
+#include <function/program/cvx48c.h>
 
 using namespace nano;
 
@@ -13,7 +14,7 @@ UTEST_CASE(program1)
     const auto b = make_vector<scalar_t>(5, 8);
     const auto x = make_vector<scalar_t>(11.0 / 3.0, 4.0 / 3.0, 0.0, 0.0);
 
-    auto function = linear_program_t{"lp", c};
+    auto function = linear_program_t{"lp1", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
@@ -29,7 +30,7 @@ UTEST_CASE(program2)
     const auto b = make_vector<scalar_t>(1);
     const auto x = make_vector<scalar_t>(0.0, 1.0);
 
-    auto function = linear_program_t{"lp", c};
+    auto function = linear_program_t{"lp2", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
@@ -44,7 +45,7 @@ UTEST_CASE(program3)
     const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
     const auto b = make_vector<scalar_t>(2);
 
-    auto function = linear_program_t{"lp", c};
+    auto function = linear_program_t{"lp3", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unbounded));
@@ -59,7 +60,7 @@ UTEST_CASE(program4)
     const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
     const auto b = make_vector<scalar_t>(-1, -1);
 
-    auto function = linear_program_t{"lp", c};
+    auto function = linear_program_t{"lp4", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
@@ -74,7 +75,7 @@ UTEST_CASE(program5)
     const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
-    auto function = linear_program_t{"lp", c};
+    auto function = linear_program_t{"lp5", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
@@ -88,8 +89,6 @@ UTEST_CASE(program_cvx48b)
     {
         for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
         {
-            UTEST_NAMED_CASE(scat("dims=", dims, ",lambda=", lambda));
-
             const auto function = linear_program_cvx48b_t{dims, lambda};
 
             check_solution(function);
@@ -97,19 +96,17 @@ UTEST_CASE(program_cvx48b)
     }
 }
 
-/*UTEST_CASE(program_cvx48c)
+UTEST_CASE(program_cvx48c)
 {
     for (const tensor_size_t dims : {1, 7, 11})
     {
-        UTEST_NAMED_CASE(scat("dims=", dims));
+        const auto function = linear_program_cvx48c_t{dims};
 
-        const auto& [program, expected] = make_linear_program_cvx48c(dims);
-
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
 
-UTEST_CASE(program_cvx48d_eq)
+/*UTEST_CASE(program_cvx48d_eq)
 {
     for (const tensor_size_t dims : {2, 4, 9})
     {

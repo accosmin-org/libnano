@@ -68,6 +68,8 @@ void check_solution(const tprogram& program, const program::expected_t& expected
 
 static void check_solution_interior(const function_t& function, const logger_t& logger)
 {
+    UTEST_NAMED_CASE(function.name());
+
     auto solver = make_solver("ipm");
 
     // FIXME: should extend solver_t to have the initial point optional
