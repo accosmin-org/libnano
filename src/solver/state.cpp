@@ -248,7 +248,11 @@ scalar_t solver_state_t::feasibility_test() const
 std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state)
 {
     stream << "calls=" << state.fcalls() << "|" << state.gcalls();
-    stream << ",f=" << state.fx() << ",g=" << state.gradient_test();
+    stream << ",f=" << state.fx();
+    if (m_function->smooth())
+    {
+        stream << ",g=" << state.gradient_test();
+    }
     if (state.ceq().size() + state.cineq().size() > 0)
     {
         stream << ",kkt=(" << state.kkt_optimality_test1() << "," << state.kkt_optimality_test2() << ","

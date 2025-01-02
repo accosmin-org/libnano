@@ -31,14 +31,12 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
     }
     else if (state.feasibility_test() < epsilon)
     {
-        // FIXME: this is an heuristic, to search for a theoretically sound method
-        // to detect unboundness and unfeasibility!
+        // FIXME: this is an heuristic, to search for a theoretically sound method to detect unboundness!
         state.status(solver_status::unbounded);
     }
     else
     {
-        // FIXME: this is an heuristic, to search for a theoretically sound method
-        // to detect unboundness and unfeasibility!
+        // FIXME: this is an heuristic, to search for a theoretically sound method to detect unfeasibility!
         state.status(solver_status::unfeasible);
     }
 
