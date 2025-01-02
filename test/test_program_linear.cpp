@@ -1,6 +1,8 @@
 #include <fixture/program.h>
 #include <function/program/cvx48b.h>
 #include <function/program/cvx48c.h>
+#include <function/program/cvx48d.h>
+#include <function/program/cvx48e.h>
 
 using namespace nano;
 
@@ -106,15 +108,13 @@ UTEST_CASE(program_cvx48c)
     }
 }
 
-/*UTEST_CASE(program_cvx48d_eq)
+UTEST_CASE(program_cvx48d_eq)
 {
     for (const tensor_size_t dims : {2, 4, 9})
     {
-        UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()==1"));
+        const auto function = linear_program_cvx48d_eq_t{dims};
 
-        const auto& [program, expected] = make_linear_program_cvx48d_eq(dims);
-
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
 
@@ -122,11 +122,9 @@ UTEST_CASE(program_cvx48d_ineq)
 {
     for (const tensor_size_t dims : {2, 5, 8})
     {
-        UTEST_NAMED_CASE(scat("dims=", dims, ",x.sum()<=1"));
+        const auto function = linear_program_cvx48d_ineq_t{dims};
 
-        const auto& [program, expected] = make_linear_program_cvx48d_ineq(dims);
-
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
 
@@ -136,11 +134,9 @@ UTEST_CASE(program_cvx48e_eq)
     {
         for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
         {
-            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha, ",x.sum()==alpha"));
+            const auto function = linear_program_cvx48e_eq_t{dims, alpha};
 
-            const auto& [program, expected] = make_linear_program_cvx48e_eq(dims, alpha);
-
-            check_solution(program, expected);
+            check_solution(function);
         }
     }
 }
@@ -151,16 +147,14 @@ UTEST_CASE(program_cvx48e_ineq)
     {
         for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
         {
-            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha, ",x.sum()<=alpha"));
+            const auto function = linear_program_cvx48e_ineq_t{dims, alpha};
 
-            const auto& [program, expected] = make_linear_program_cvx48e_ineq(dims, alpha);
-
-            check_solution(program, expected);
+            check_solution(function);
         }
     }
 }
 
-UTEST_CASE(program_cvx48f)
+/*UTEST_CASE(program_cvx48f)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {

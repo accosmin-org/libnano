@@ -72,8 +72,6 @@ static void check_solution_interior(const function_t& function, const logger_t& 
 
     auto solver = make_solver("ipm");
 
-    // FIXME: should extend solver_t to have the initial point optional
-
     const auto x0      = vector_t::constant(function.size(), 1.0);
     const auto state   = solver->minimize(function, x0, logger);
     const auto epsilon = solver->parameter("solver::epsilon").value<scalar_t>();
@@ -85,6 +83,10 @@ static void check_solution_interior(const function_t& function, const logger_t& 
     if (optimum.m_xbest.size() == state.x().size())
     {
         UTEST_CHECK_CLOSE(state.x(), optimum.m_xbest, epsilon);
+    }
+
+    if (std::isfinite(optimum.m_fbest))
+    {
         UTEST_CHECK_CLOSE(state.fx(), optimum.m_fbest, epsilon);
     }
 
