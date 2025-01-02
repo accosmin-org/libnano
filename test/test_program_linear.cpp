@@ -48,7 +48,7 @@ UTEST_CASE(program3)
     auto function = linear_program_t{"lp3", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unbounded));
+    UTEST_REQUIRE(function.optimum(solver_status::unbounded));
 
     check_solution(function);
 }
@@ -63,7 +63,7 @@ UTEST_CASE(program4)
     auto function = linear_program_t{"lp4", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
+    UTEST_REQUIRE(function.optimum(solver_status::unfeasible));
 
     check_solution(function);
 }
@@ -78,7 +78,7 @@ UTEST_CASE(program5)
     auto function = linear_program_t{"lp5", c};
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
+    UTEST_REQUIRE(function.optimum(solver_status::unfeasible));
 
     check_solution(function);
 }

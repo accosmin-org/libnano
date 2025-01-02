@@ -249,7 +249,7 @@ std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state
 {
     stream << "calls=" << state.fcalls() << "|" << state.gcalls();
     stream << ",f=" << state.fx();
-    if (m_function->smooth())
+    if (state.function().smooth())
     {
         stream << ",g=" << state.gradient_test();
     }

@@ -119,26 +119,39 @@ rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
     return rfunction_t{};
 }
 
-bool function_t::optimum(vector_t xbest, const solver_status status)
+bool function_t::optimum(vector_t xbest)
 {
-    if (xbest.size() == size())
+    if (xbest.size() != size())
     {
-        m_optimum.m_status = status;
+        return false;
+    }
+    else
+    {
+        m_optimum.m_status = solver_status::converged;
         m_optimum.m_xbest  = std::move(xbest);
         m_optimum.m_fbest  = do_vgrad(m_optimum.m_xbest, vector_map_t{});
         return true;
     }
-    else if (xbest.size() == 0)
-    {
-        m_optimum.m_status = status;
-        m_optimum.m_xbest  = std::move(xbest);
-        m_optimum.m_fbest  = optimum_t::NaN;
-        return true;
-    }
-    else
+}
+
+bool function_t::optimum(const scalar_t fbest)
+{
+    if (!std::isfinite(fbest))
     {
         return false;
     }
+    else
+    {
+        m_optimum.m_status = solver_status::converged;
+        m_optimum.m_fbest  = fbest;
+        return true;
+    }
+}
+
+bool function_t::optimum(const solver_status status)
+{
+    m_optimum.m_status = status;
+    return true;
 }
 
 const optimum_t& function_t::optimum() const

@@ -145,7 +145,9 @@ public:
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
     ///
-    bool optimum(vector_t, solver_status status = solver_status::converged);
+    bool optimum(vector_t);
+    bool optimum(scalar_t);
+    bool optimum(solver_status);
 
     ///
     /// \brief return the global minimum (if known).

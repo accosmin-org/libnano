@@ -159,6 +159,10 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false))
             .nonsmooth_config(minimize_config_t{}.max_evals(500).expected_convergence(false));
     }
+    else if (solver_id == "ipm")
+    {
+        return solver_description_t{};
+    }
     else
     {
         assert(false);
