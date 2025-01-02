@@ -88,6 +88,18 @@ solver_state_t solver_ipm_t::do_minimize(const program_t& program, const vector_
 {
     if (program.m() > 0)
     {
+        const auto& G = program.m_G;
+        const auto& h = program.m_h;
+
+        // the starting point must be strictly feasible wrt inequality constraints
+        if ((G * x0 - h).maxCoeff() >= 0.0)
+        {
+            if (const auto x00 = make_strictly_feasible(G, h); x00)
+            {
+                return do_minimize_with_inequality(program, x00.value(), logger);
+            }
+        }
+
         return do_minimize_with_inequality(program, x0, logger);
     }
     else

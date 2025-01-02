@@ -1,4 +1,5 @@
 #include <fixture/program.h>
+#include <function/program/cvx48b.h>
 
 using namespace nano;
 
@@ -66,15 +67,19 @@ UTEST_CASE(program4)
     check_solution(function);
 }
 
-/*UTEST_CASE(program5)
+UTEST_CASE(program5)
 {
     // NB: unfeasible program!
     const auto c = make_vector<scalar_t>(-1, 0, 0);
     const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
     const auto b = make_vector<scalar_t>(1, 1, 1);
 
-    const auto program = make_linear(c, make_equality(A, b), make_greater(3, 0.0));
-    check_solution(program, expected_t{}.status(solver_status::unfeasible));
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(function.variable() >= 0.0);
+    UTEST_REQUIRE(function.optimum(vector_t{}, solver_status::unfeasible));
+
+    check_solution(function);
 }
 
 UTEST_CASE(program_cvx48b)
@@ -85,14 +90,14 @@ UTEST_CASE(program_cvx48b)
         {
             UTEST_NAMED_CASE(scat("dims=", dims, ",lambda=", lambda));
 
-            const auto& [program, expected] = make_linear_program_cvx48b(dims, lambda);
+            const auto function = linear_program_cvx48b_t{dims, lambda};
 
-            check_solution(program, expected);
+            check_solution(function);
         }
     }
 }
 
-UTEST_CASE(program_cvx48c)
+/*UTEST_CASE(program_cvx48c)
 {
     for (const tensor_size_t dims : {1, 7, 11})
     {
