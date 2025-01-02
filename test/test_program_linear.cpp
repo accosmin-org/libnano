@@ -1,8 +1,11 @@
 #include <fixture/program.h>
+#include <function/program/cvx410.h>
 #include <function/program/cvx48b.h>
 #include <function/program/cvx48c.h>
 #include <function/program/cvx48d.h>
 #include <function/program/cvx48e.h>
+#include <function/program/cvx48f.h>
+#include <function/program/cvx49.h>
 
 using namespace nano;
 
@@ -145,7 +148,7 @@ UTEST_CASE(program_cvx48e_ineq)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        for (tensor_size_t alpha = 1; alpha <= dims; ++alpha)
+        for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
         {
             const auto function = linear_program_cvx48e_ineq_t{dims, alpha};
 
@@ -154,17 +157,15 @@ UTEST_CASE(program_cvx48e_ineq)
     }
 }
 
-/*UTEST_CASE(program_cvx48f)
+UTEST_CASE(program_cvx48f)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
         for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
         {
-            UTEST_NAMED_CASE(scat("dims=", dims, ",alpha=", alpha));
+            const auto function = linear_program_cvx48f_t{dims, alpha};
 
-            const auto& [program, expected] = make_linear_program_cvx48f(dims, alpha);
-
-            check_solution(program, expected);
+            check_solution(function);
         }
     }
 }
@@ -173,11 +174,9 @@ UTEST_CASE(program_cvx49)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        UTEST_NAMED_CASE(scat("dims=", dims));
+        const auto function = linear_program_cvx49_t{dims};
 
-        const auto& [program, expected] = make_linear_program_cvx49(dims);
-
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
 
@@ -185,12 +184,10 @@ UTEST_CASE(program_cvx410)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        UTEST_NAMED_CASE(scat("feasible(dims=", dims, ")"));
+        const auto feasible = true;
+        const auto function = linear_program_cvx410_t{dims, feasible};
 
-        const auto feasible             = true;
-        const auto& [program, expected] = make_linear_program_cvx410(dims, feasible);
-
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
 
@@ -200,12 +197,11 @@ UTEST_CASE(program_cvx410_unfeasible)
     {
         UTEST_NAMED_CASE(scat("unfeasible(dims=", dims, ")"));
 
-        const auto feasible             = false;
-        const auto& [program, expected] = make_linear_program_cvx410(dims, feasible);
+        const auto feasible = false;
+        const auto function = linear_program_cvx410_t{dims, feasible};
 
-        check_solution(program, expected);
+        check_solution(function);
     }
 }
-*/
 
 UTEST_END_MODULE()

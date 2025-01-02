@@ -6,7 +6,7 @@
 using namespace nano;
 
 linear_program_cvx48c_t::linear_program_cvx48c_t(const tensor_size_t dims)
-    : linear_program_t("cvx48bc", vector_t::zero(dims))
+    : linear_program_t("cvx48c", vector_t::zero(dims))
 {
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
