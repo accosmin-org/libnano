@@ -144,18 +144,30 @@ static std::tuple<exception_status, nano::string_t> check_throw(const toperator&
 }
 
 template <class toperator>
-static void check_with_logger(const toperator& op)
+static auto check_with_logger(const toperator& op)
 {
     const auto failures = utest_n_failures.load();
 
     auto stream = std::ostringstream{};
     auto logger = nano::make_stream_logger(stream);
 
-    op(logger);
-
-    if (failures != utest_n_failures.load())
+    constexpr auto returns_void = std::is_void_v<std::invoke_result_t<decltype(op), const nano::logger_t&>>;
+    if constexpr (returns_void)
     {
-        std::cout << stream.str();
+        op(logger);
+        if (failures != utest_n_failures.load())
+        {
+            std::cout << stream.str();
+        }
+    }
+    else
+    {
+        auto result = op(logger);
+        if (failures != utest_n_failures.load())
+        {
+            std::cout << stream.str();
+        }
+        return result;
     }
 }
 
