@@ -14,14 +14,21 @@ class NANO_PUBLIC solver_state_t
 {
 public:
     ///
-    /// \brief default constructor
-    ///
-    solver_state_t();
-
-    ///
     /// \brief constructor
     ///
     solver_state_t(const function_t&, vector_t x0);
+
+    ///
+    /// \brief enable moving.
+    ///
+    solver_state_t(solver_state_t&&)                     = default;
+    solver_state_t& operator=(solver_state_t&&) noexcept = default;
+
+    ///
+    /// \brief enable copying.
+    ///
+    solver_state_t(const solver_state_t&);
+    solver_state_t& operator=(const solver_state_t&);
 
     ///
     /// \brief move to another point and returns true if the new point is valid.
@@ -33,11 +40,9 @@ public:
     bool update(const tvector& x, vector_cmap_t multiplier_equalities = vector_cmap_t{},
                 vector_cmap_t multiplier_inequalities = vector_cmap_t{})
     {
-        assert(m_function);
         assert(x.size() == m_x.size());
-        assert(x.size() == m_function->size());
         m_x  = x;
-        m_fx = m_function->operator()(m_x, m_gx);
+        m_fx = m_function(m_x, m_gx);
         return update(m_x, m_gx, m_fx, multiplier_equalities, multiplier_inequalities);
     }
 
@@ -196,11 +201,7 @@ public:
     ///
     /// \brief returns the function to minimize.
     ///
-    const function_t& function() const
-    {
-        assert(m_function != nullptr);
-        return *m_function;
-    }
+    const function_t& function() const { return m_function; }
 
     ///
     /// \brief returns the value of the equality constraints (if any).
@@ -218,20 +219,20 @@ private:
     using scalars_t = std::vector<scalar_t>;
 
     // attributes
-    const function_t* m_function{nullptr}; ///<
-    vector_t          m_x;                 ///< parameter
-    vector_t          m_gx;                ///< gradient
-    scalar_t          m_fx{0};             ///< function value
-    vector_t          m_ceq;               ///< equality constraint values
-    vector_t          m_cineq;             ///< inequality constraint values
-    vector_t          m_meq;               ///< Lagrange multiplies for equality constraints
-    vector_t          m_mineq;             ///< Lagrange multiplies for inequality constraints
-    vector_t          m_lgx;               ///< gradient of the Lagrangian dual function
-    solver_status     m_status{};          ///< optimization status
-    tensor_size_t     m_fcalls{0};         ///< number of function value evaluations so far
-    tensor_size_t     m_gcalls{0};         ///< number of function gradient evaluations so far
-    scalars_t         m_history_df;        ///< recent improvements of the function value
-    scalars_t         m_history_dx;        ///< recent improvements of the parameter
+    const function_t& m_function;   ///< objective
+    vector_t          m_x;          ///< parameter
+    vector_t          m_gx;         ///< gradient
+    scalar_t          m_fx{0};      ///< function value
+    vector_t          m_ceq;        ///< equality constraint values
+    vector_t          m_cineq;      ///< inequality constraint values
+    vector_t          m_meq;        ///< Lagrange multiplies for equality constraints
+    vector_t          m_mineq;      ///< Lagrange multiplies for inequality constraints
+    vector_t          m_lgx;        ///< gradient of the Lagrangian dual function
+    solver_status     m_status{};   ///< optimization status
+    tensor_size_t     m_fcalls{0};  ///< number of function value evaluations so far
+    tensor_size_t     m_gcalls{0};  ///< number of function gradient evaluations so far
+    scalars_t         m_history_df; ///< recent improvements of the function value
+    scalars_t         m_history_dx; ///< recent improvements of the parameter
 };
 
 ///

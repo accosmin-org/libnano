@@ -98,9 +98,9 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
         return cstate;
     }
 
+    auto pstate  = cstate;     // previous state
+    auto descent = vector_t{}; // descent direction
     auto lsearch = make_lsearch();
-    auto pstate  = solver_state_t{}; // previous state
-    auto descent = vector_t{};       // descent direction
 
     // current approximation of the Hessian's inverse
     matrix_t H = matrix_t::identity(function.size(), function.size());

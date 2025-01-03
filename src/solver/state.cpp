@@ -3,29 +3,66 @@
 
 using namespace nano;
 
-solver_state_t::solver_state_t() = default;
-
 solver_state_t::solver_state_t(const function_t& function, vector_t x0)
-    : m_function(&function)
+    : m_function(function)
     , m_x(std::move(x0))
     , m_gx(vector_t::zero(m_x.size()))
-    , m_fx(m_function->operator()(m_x, m_gx))
-    , m_ceq(vector_t::constant(m_function->n_equalities(), 0.0))
-    , m_cineq(vector_t::constant(m_function->n_inequalities(), 0.0))
+    , m_fx(m_function(m_x, m_gx))
+    , m_ceq(vector_t::constant(m_function.n_equalities(), 0.0))
+    , m_cineq(vector_t::constant(m_function.n_inequalities(), 0.0))
     , m_meq(vector_t::constant(m_ceq.size(), 0.0))
     , m_mineq(vector_t::constant(m_cineq.size(), 0.0))
     , m_lgx(vector_t::constant(m_x.size(), 0.0))
 {
+    assert(x0.size() == m_function.size());
+
     update_calls();
     update_constraints();
+}
+
+solver_state_t::solver_state_t(const solver_state_t& other)
+    : m_function(other.m_function)
+    , m_x(other.m_x)
+    , m_gx(other.m_gx)
+    , m_fx(other.m_fx)
+    , m_ceq(other.m_ceq)
+    , m_cineq(other.m_cineq)
+    , m_meq(other.m_meq)
+    , m_mineq(other.m_mineq)
+    , m_lgx(other.m_lgx)
+    , m_status(other.m_status)
+    , m_fcalls(other.m_fcalls)
+    , m_gcalls(other.m_gcalls)
+    , m_history_df(other.m_history_df)
+    , m_history_dx(other.m_history_dx)
+{
+}
+
+solver_state_t& solver_state_t::operator=(const solver_state_t& other)
+{
+    if (this != &other && &m_function == &other.m_function)
+    {
+        m_x          = other.m_x;
+        m_gx         = other.m_gx;
+        m_fx         = other.m_fx;
+        m_ceq        = other.m_ceq;
+        m_cineq      = other.m_cineq;
+        m_meq        = other.m_meq;
+        m_mineq      = other.m_mineq;
+        m_lgx        = other.m_lgx;
+        m_status     = other.m_status;
+        m_fcalls     = other.m_fcalls;
+        m_gcalls     = other.m_gcalls;
+        m_history_df = other.m_history_df;
+        m_history_dx = other.m_history_dx;
+    }
+    return *this;
 }
 
 bool solver_state_t::update(const vector_cmap_t x, const vector_cmap_t gx, const scalar_t fx,
                             const vector_cmap_t multiplier_equalities, const vector_cmap_t multiplier_inequalities)
 {
-    assert(m_function);
     assert(x.size() == m_x.size());
-    assert(x.size() == m_function->size());
     assert(gx.size() == m_x.size());
     assert(multiplier_equalities.size() == 0 || multiplier_equalities.size() == m_meq.size());
     assert(multiplier_inequalities.size() == 0 || multiplier_inequalities.size() == m_mineq.size());
@@ -86,8 +123,8 @@ bool solver_state_t::update_if_better(const vector_t& x, const scalar_t fx)
 
 void solver_state_t::update_calls()
 {
-    m_fcalls = m_function->fcalls();
-    m_gcalls = m_function->gcalls();
+    m_fcalls = m_function.fcalls();
+    m_gcalls = m_function.gcalls();
 }
 
 void solver_state_t::update_constraints()
@@ -97,7 +134,7 @@ void solver_state_t::update_constraints()
     auto gc   = vector_t{m_x.size()};
 
     m_lgx = m_gx;
-    for (const auto& constraint : m_function->constraints())
+    for (const auto& constraint : m_function.constraints())
     {
         if (::nano::is_equality(constraint))
         {

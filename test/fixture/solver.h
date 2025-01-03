@@ -173,8 +173,6 @@ struct solver_description_t
 [[maybe_unused]] static auto check_minimize(solver_t& solver, const function_t& function, const vector_t& x0,
                                             const minimize_config_t& config = minimize_config_t{})
 {
-    auto state = solver_state_t{};
-
     const auto op = [&](const logger_t& logger)
     {
         const auto state0      = solver_state_t{function, x0};
@@ -190,7 +188,7 @@ struct solver_description_t
         solver.parameter("solver::max_evals") = config.m_max_evals;
 
         function.clear_statistics();
-        state = solver.minimize(function, x0, logger);
+        auto state = solver.minimize(function, x0, logger);
 
         UTEST_CHECK(state.valid());
         UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
@@ -212,10 +210,10 @@ struct solver_description_t
         {
             UTEST_CHECK_CLOSE(state.fx(), config.m_expected_minimum, config.m_expected_maximum_deviation);
         }
-    };
-    check_with_logger(op);
 
-    return state;
+        return state;
+    };
+    return check_with_logger(op);
 }
 
 [[maybe_unused]] static void check_solvers(const rsolvers_t& solvers, const rfunctions_t& functions)
