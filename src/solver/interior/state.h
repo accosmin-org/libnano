@@ -34,16 +34,16 @@ struct state_t
     }
 
     // attributes
-    int      m_iters{0};             ///< number of iterations
-    vector_t m_x;                    ///< solution (primal problem)
-    vector_t m_u;                    ///< Lagrange multipliers (inequality constraints)
-    vector_t m_v;                    ///< Lagrange multipliers (equality constraints)
-    vector_t m_dx;                   ///<
-    vector_t m_du;                   ///<
-    vector_t m_dv;                   ///<
-    scalar_t m_eta{0.0};             ///< surrogate duality gap
-    vector_t m_rdual;                ///< dual residual
-    vector_t m_rcent;                ///< central residual
-    vector_t m_rprim;                ///< primal residual
+    int      m_iters{0}; ///< number of iterations
+    vector_t m_x;        ///< solution (primal problem)
+    vector_t m_u;        ///< Lagrange multipliers (inequality constraints)
+    vector_t m_v;        ///< Lagrange multipliers (equality constraints)
+    vector_t m_dx;       ///<
+    vector_t m_du;       ///<
+    vector_t m_dv;       ///<
+    scalar_t m_eta{0.0}; ///< surrogate duality gap
+    vector_t m_rdual;    ///< dual residual
+    vector_t m_rcent;    ///< central residual
+    vector_t m_rprim;    ///< primal residual
 };
 } // namespace nano

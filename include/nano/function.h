@@ -166,10 +166,7 @@ public:
     /// \brief construct an dimension-based indexed function useful for registering bound constraints like:
     ///     lower <= x[dimension] <= upper.
     ///
-    function_variable_dimension_t variable(const tensor_size_t dimension)
-    {
-        return {dimension, *this};
-    }
+    function_variable_dimension_t variable(const tensor_size_t dimension) { return {dimension, *this}; }
 
 protected:
     void convex(convexity);
