@@ -6,7 +6,7 @@
 using namespace nano;
 
 linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const scalar_t lambda)
-    : linear_program_t(scat("cvx48b-[lambda=", lambda, "]"), vector_t::zero(dims))
+    : linear_program_t(scat("cvx48b[lambda=", lambda, "]"), vector_t::zero(dims))
 {
     const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
     const auto b = urand<scalar_t>(-1.0, +1.0);

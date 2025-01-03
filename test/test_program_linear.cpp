@@ -195,8 +195,6 @@ UTEST_CASE(program_cvx410_unfeasible)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        UTEST_NAMED_CASE(scat("unfeasible(dims=", dims, ")"));
-
         const auto feasible = false;
         const auto function = linear_program_cvx410_t{dims, feasible};
 

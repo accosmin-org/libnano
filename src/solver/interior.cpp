@@ -47,10 +47,10 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.999, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-2, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.9, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
     register_parameter(parameter_t::make_integer("solver::ipm::max_iters", 10, LE, 100, LE, 1000));
     register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
@@ -86,8 +86,8 @@ solver_state_t solver_ipm_t::do_minimize(const program_t& program, const vector_
 {
     if (program.m() > 0)
     {
-        const auto& G = program.m_G;
-        const auto& h = program.m_h;
+        const auto& G = program.G();
+        const auto& h = program.h();
 
         // the starting point must be strictly feasible wrt inequality constraints
         if ((G * x0 - h).maxCoeff() >= 0.0)
@@ -118,12 +118,12 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto max_iters         = parameter("solver::ipm::max_iters").value<tensor_size_t>();
     const auto max_lsearch_iters = parameter("solver::ipm::max_lsearch_iters").value<tensor_size_t>();
 
-    const auto& G = program.m_G;
-    const auto& h = program.m_h;
+    const auto& G = program.G();
+    const auto& h = program.h();
     const auto  n = program.n();
     const auto  p = program.p();
 
-    auto state = solver_state_t{*program.m_function, x0};
+    auto state = solver_state_t{program.function(), x0};
 
     // the starting point must be strictly feasible wrt inequality constraints
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
@@ -149,18 +149,17 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto prev_rprim = ipmst.m_rprim.lpNorm<2>();
 
         // solve primal-dual linear system of equations to get (dx, du, dv)
-        const auto Gxh = G * ipmst.m_x - h;
-        program.solve(G.transpose() * (ipmst.m_u.array() / Gxh.array()).matrix().asDiagonal() * G.matrix(),
-                      ipmst.m_rdual + G.transpose() * (ipmst.m_rcent.array() / Gxh.array()).matrix(), ipmst.m_rprim);
+        const auto  Gxh   = G * ipmst.m_x - h;
+        const auto  hess  = G.transpose() * (ipmst.m_u.array() / Gxh.array()).matrix().asDiagonal() * G.matrix();
+        const auto  rdual = ipmst.m_rdual + G.transpose() * (ipmst.m_rcent.array() / Gxh.array()).matrix();
+        const auto& sol   = program.solve(hess, rdual, ipmst.m_rprim);
 
-        ipmst.m_dx            = program.m_lsol.segment(0, n);
-        ipmst.m_dv            = program.m_lsol.segment(n, p);
-        ipmst.m_du            = (ipmst.m_rcent.array() - ipmst.m_u.array() * (G * ipmst.m_dx).array()) / Gxh.array();
-        ipmst.m_ldlt_rcond    = program.m_ldlt.rcond();
-        ipmst.m_ldlt_positive = program.m_ldlt.isPositive();
+        ipmst.m_dx = sol.segment(0, n);
+        ipmst.m_dv = sol.segment(n, p);
+        ipmst.m_du = (ipmst.m_rcent.array() - ipmst.m_u.array() * (G * ipmst.m_dx).array()) / Gxh.array();
 
         // stop if the linear system of equations is not stable
-        if (!ipmst.isfinite())
+        if (!ipmst.valid() || !program.valid())
         {
             const auto iter_ok   = state.valid();
             const auto converged = ::converged(state, epsilon);
@@ -222,11 +221,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto curr_rdual = ipmst.m_rdual.lpNorm<2>();
         const auto curr_rprim = ipmst.m_rprim.lpNorm<2>();
 
-        logger.info("i=", ipmst.m_iters, ",eta=", ipmst.m_eta, ",rdual=", ipmst.m_rdual.lpNorm<Eigen::Infinity>(),
-                    ",rcent=", ipmst.m_rcent.lpNorm<Eigen::Infinity>(),
-                    ",rprim=", ipmst.m_rprim.lpNorm<Eigen::Infinity>(), ",rcond=", ipmst.m_ldlt_rcond,
-                    ipmst.m_ldlt_positive ? "(+)" : "(-)", ".\n");
-
         // check stopping criteria
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
         {
@@ -238,7 +232,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         }
         else if (std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
         {
-            // very precise convergence detected, check global convergence criterion!
+            // stalling has been detected, check global convergence criterion!
             const auto iter_ok   = state.valid();
             const auto converged = ::converged(state, epsilon);
             done(state, iter_ok, converged, logger);
@@ -262,21 +256,21 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     const auto miu     = parameter("solver::ipm::miu").value<scalar_t>();
     const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
 
-    const auto& c = program.m_c;
-    const auto& b = program.m_b;
+    const auto& c = program.c();
+    const auto& b = program.b();
     const auto  n = program.n();
     const auto  p = program.p();
 
-    auto state = solver_state_t{*program.m_function, x0};
+    auto state = solver_state_t{program.function(), x0};
     auto ipmst = state_t{x0, vector_t{}, vector_t::zero(p)};
 
     done(state, state.valid(), false, logger);
 
     // NB: solve directly the KKT-based system of linear equations coupling (x, v)
-    program.solve(matrix_t::zero(n, n), c, -b);
-    ipmst.m_x   = program.m_lsol.segment(0, n);
-    ipmst.m_v   = program.m_lsol.segment(n, p);
-    ipmst.m_eta = 0.0;
+    const auto& sol = program.solve(matrix_t::zero(n, n), c, -b);
+    ipmst.m_x       = sol.segment(0, n);
+    ipmst.m_v       = sol.segment(n, p);
+    ipmst.m_eta     = 0.0;
 
     program.update(0.0, miu, ipmst);
     state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);

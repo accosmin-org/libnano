@@ -19,9 +19,10 @@ struct state_t
     {
     }
 
-    bool isfinite() const
+    bool valid() const
     {
-        return std::isfinite(m_ldlt_rcond) && m_dx.all_finite() && m_dv.all_finite() && m_du.all_finite();
+        return m_dx.all_finite() && m_dv.all_finite() && m_du.all_finite() && std::isfinite(m_eta) &&
+               m_rdual.all_finite() && m_rcent.all_finite() && m_rprim.all_finite();
     }
 
     scalar_t residual() const
@@ -44,8 +45,5 @@ struct state_t
     vector_t m_rdual;                ///< dual residual
     vector_t m_rcent;                ///< central residual
     vector_t m_rprim;                ///< primal residual
-    scalar_t m_kkt{0};               ///< KKT optimality test
-    scalar_t m_ldlt_rcond{0};        ///< LDLT decomp: reciprocal condition number
-    bool     m_ldlt_positive{false}; ///< LDLT decomp: positive semidefinite?, otherwise unstable
 };
 } // namespace nano

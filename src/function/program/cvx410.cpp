@@ -7,7 +7,7 @@
 using namespace nano;
 
 linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const bool feasible)
-    : linear_program_t(scat("cvx410-[", feasible ? "feasible" : "unfeasible", "]"), vector_t::zero(dims))
+    : linear_program_t(scat("cvx410-", feasible ? "feasible" : "unfeasible"), vector_t::zero(dims))
 {
     const auto D = make_random_matrix<scalar_t>(dims, dims);
     const auto A = D.transpose() * D + matrix_t::identity(dims, dims);
