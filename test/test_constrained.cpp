@@ -712,7 +712,7 @@ UTEST_CASE(minimize_objective1)
         return x.sum();
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
-    function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)});
+    UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)}));
 
     check_gradient(function);
     check_convexity(function);
@@ -759,7 +759,7 @@ UTEST_CASE(minimize_objective2)
         return -5.0 * x(0) * x(0) + x(1) * x(1);
     };
     auto function = make_function(2, convexity::no, smoothness::yes, 0.0, lambda);
-    function.constrain(constant_t{1.0, 0});
+    UTEST_CHECK(function.constrain(constant_t{1.0, 0}));
 
     check_gradient(function);
     check_convexity(function);
@@ -799,7 +799,7 @@ UTEST_CASE(minimize_objective3)
         return x.sum();
     };
     auto function = make_function(1, convexity::yes, smoothness::yes, 0.0, lambda);
-    function.constrain(minimum_t{1.0, 0});
+    UTEST_CHECK(function.constrain(minimum_t{1.0, 0}));
 
     check_gradient(function);
     check_convexity(function);
@@ -840,7 +840,7 @@ UTEST_CASE(minimize_objective4)
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 4.0, lambda);
-    function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0});
+    UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}));
 
     check_gradient(function);
     check_convexity(function);
@@ -882,10 +882,10 @@ UTEST_CASE(minimize_objective5)
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
-    function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, -1.0), -1.0});
-    function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, +1.0), -1.0});
-    function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0});
-    function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, +1.0), -1.0});
+    UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, -1.0), -1.0}));
+    UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, +1.0), -1.0}));
+    UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0}));
+    UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, +1.0), -1.0}));
 
     check_gradient(function);
     check_convexity(function);
@@ -927,8 +927,8 @@ UTEST_CASE(minimize_objective6)
         return x(0);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
-    function.constrain(minimum_t{0.0, 1});
-    function.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 0.0), 1.0});
+    UTEST_CHECK(function.constrain(minimum_t{0.0, 1}));
+    UTEST_CHECK(function.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 0.0), 1.0}));
 
     check_gradient(function);
     check_convexity(function);
@@ -972,12 +972,12 @@ UTEST_CASE(minimize_objective7)
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };
     auto function = make_function(3, convexity::yes, smoothness::yes, 0.0, lambda);
-    function.constrain(minimum_t{-1.0, 0});
-    function.constrain(minimum_t{-1.0, 1});
-    function.constrain(minimum_t{-1.0, 2});
-    function.constrain(maximum_t{+1.0, 0});
-    function.constrain(maximum_t{+1.0, 1});
-    function.constrain(maximum_t{+1.0, 2});
+    UTEST_CHECK(function.constrain(minimum_t{-1.0, 0}));
+    UTEST_CHECK(function.constrain(minimum_t{-1.0, 1}));
+    UTEST_CHECK(function.constrain(minimum_t{-1.0, 2}));
+    UTEST_CHECK(function.constrain(maximum_t{+1.0, 0}));
+    UTEST_CHECK(function.constrain(maximum_t{+1.0, 1}));
+    UTEST_CHECK(function.constrain(maximum_t{+1.0, 2}));
 
     check_gradient(function);
     check_convexity(function);

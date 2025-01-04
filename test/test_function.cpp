@@ -438,7 +438,8 @@ UTEST_CASE(make_linear_constraints)
         UTEST_CHECK_CLOSE(G, expected_G, epsilon0<scalar_t>());
         UTEST_CHECK_CLOSE(h, expected_h, epsilon0<scalar_t>());
     }
-    critical(function.constrain(constraint::euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0, 0.0), 30.0}));
+    UTEST_REQUIRE(
+        function.constrain(constraint::euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0, 0.0), 30.0}));
     {
         const auto lconstraints = make_linear_constraints(function);
         UTEST_REQUIRE(!lconstraints.has_value());

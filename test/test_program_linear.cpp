@@ -8,8 +8,33 @@
 #include <function/program/cvx49.h>
 
 using namespace nano;
+using namespace constraint;
 
 UTEST_BEGIN_MODULE(test_program_linear)
+
+UTEST_CASE(constrain)
+{
+    const auto c = vector_t::zero(3);
+    const auto a = vector_t::zero(3);
+    const auto b = vector_t::zero(2);
+    const auto A = matrix_t::zero(2, 3);
+
+    auto function = linear_program_t{"lp", c};
+    UTEST_REQUIRE(A * function.variable() == b);
+    UTEST_REQUIRE(A * function.variable() >= b);
+    UTEST_REQUIRE(A * function.variable() <= b);
+    UTEST_REQUIRE(a * function.variable() == 1.0);
+    UTEST_REQUIRE(a * function.variable() >= 1.0);
+    UTEST_REQUIRE(a * function.variable() <= 1.0);
+    UTEST_REQUIRE(function.variable() >= 1.0);
+    UTEST_REQUIRE(function.variable() <= 1.0);
+    UTEST_REQUIRE(!function.constrain(functional_equality_t{function}));
+    UTEST_REQUIRE(!function.constrain(functional_inequality_t{function}));
+    UTEST_REQUIRE(!function.constrain(euclidean_ball_equality_t{vector_t::zero(3), 0.0}));
+    UTEST_REQUIRE(!function.constrain(euclidean_ball_inequality_t{vector_t::zero(3), 0.0}));
+    UTEST_REQUIRE(!function.constrain(quadratic_equality_t{matrix_t::zero(3, 3), vector_t::zero(3), 0.0}));
+    UTEST_REQUIRE(!function.constrain(quadratic_inequality_t{matrix_t::zero(3, 3), vector_t::zero(3), 0.0}));
+}
 
 UTEST_CASE(program1)
 {

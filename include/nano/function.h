@@ -73,11 +73,11 @@ public:
     scalar_t strong_convexity() const { return m_strong_convexity; }
 
     ///
-    /// \brief register a constraint.
+    /// \brief register a new constraint.
     ///
     /// NB: returns false if the constraint is neither valid nor compatible with the objective function.
     ///
-    bool constrain(constraint_t&&);
+    virtual bool constrain(constraint_t&&);
 
     ///
     /// \brief returns the set of registered constraints.
