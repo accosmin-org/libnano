@@ -24,6 +24,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -40,6 +41,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -55,6 +57,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(solver_status::unbounded));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -70,6 +73,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(solver_status::unfeasible));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -85,6 +89,7 @@ UTEST_CASE(program5)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(solver_status::unfeasible));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -96,6 +101,7 @@ UTEST_CASE(program_cvx48b)
         {
             const auto function = linear_program_cvx48b_t{dims, lambda};
 
+            check_convexity(function);
             check_solution(function);
         }
     }
@@ -107,6 +113,7 @@ UTEST_CASE(program_cvx48c)
     {
         const auto function = linear_program_cvx48c_t{dims};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
@@ -117,6 +124,7 @@ UTEST_CASE(program_cvx48d_eq)
     {
         const auto function = linear_program_cvx48d_eq_t{dims};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
@@ -127,6 +135,7 @@ UTEST_CASE(program_cvx48d_ineq)
     {
         const auto function = linear_program_cvx48d_ineq_t{dims};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
@@ -139,6 +148,7 @@ UTEST_CASE(program_cvx48e_eq)
         {
             const auto function = linear_program_cvx48e_eq_t{dims, alpha};
 
+            check_convexity(function);
             check_solution(function);
         }
     }
@@ -152,6 +162,7 @@ UTEST_CASE(program_cvx48e_ineq)
         {
             const auto function = linear_program_cvx48e_ineq_t{dims, alpha};
 
+            check_convexity(function);
             check_solution(function);
         }
     }
@@ -165,6 +176,7 @@ UTEST_CASE(program_cvx48f)
         {
             const auto function = linear_program_cvx48f_t{dims, alpha};
 
+            check_convexity(function);
             check_solution(function);
         }
     }
@@ -176,6 +188,7 @@ UTEST_CASE(program_cvx49)
     {
         const auto function = linear_program_cvx49_t{dims};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
@@ -187,6 +200,7 @@ UTEST_CASE(program_cvx410)
         const auto feasible = true;
         const auto function = linear_program_cvx410_t{dims, feasible};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
@@ -198,6 +212,7 @@ UTEST_CASE(program_cvx410_unfeasible)
         const auto feasible = false;
         const auto function = linear_program_cvx410_t{dims, feasible};
 
+        check_convexity(function);
         check_solution(function);
     }
 }

@@ -19,6 +19,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -35,6 +36,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -51,6 +53,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -67,6 +70,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -78,6 +82,7 @@ UTEST_CASE(program_numopt162)
         {
             const auto function = quadratic_program_numopt162_t{dims, neqs};
 
+            check_convexity(function);
             check_solution(function);
         }
     }
@@ -96,6 +101,7 @@ UTEST_CASE(program6)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -112,6 +118,7 @@ UTEST_CASE(program7)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
+    check_convexity(function);
     check_solution(function);
 }
 
@@ -121,6 +128,7 @@ UTEST_CASE(program_numopt1625)
     {
         const auto function = quadratic_program_numopt1625_t{dims};
 
+        check_convexity(function);
         check_solution(function);
     }
 }
