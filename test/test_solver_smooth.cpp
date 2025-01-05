@@ -43,7 +43,7 @@ UTEST_BEGIN_MODULE(test_solver_smooth)
 
 UTEST_CASE(default_solvers)
 {
-    check_solvers_on_smooth_functions(make_solver_ids(), 1, 4);
+    check_solvers(make_solver_ids(), function_t::make({1, 4, convexity::yes, smoothness::yes, 100}));
 }
 
 UTEST_CASE(best_solvers_with_lsearches_on_smooth)

@@ -254,31 +254,3 @@ struct solver_description_t
 
     check_solvers(solvers, functions);
 }
-
-[[maybe_unused]] static void check_solvers_on_smooth_functions(const strings_t&    solver_ids,
-                                                               const tensor_size_t min_dims = 4,
-                                                               const tensor_size_t max_dims = 4)
-{
-    check_solvers(solver_ids, function_t::make({min_dims, max_dims, convexity::yes, smoothness::yes, 100}));
-}
-
-[[maybe_unused]] static void check_solvers_on_nonsmooth_functions(const strings_t&    solver_ids,
-                                                                  const tensor_size_t min_dims = 4,
-                                                                  const tensor_size_t max_dims = 4)
-{
-    check_solvers(solver_ids, function_t::make({min_dims, max_dims, convexity::yes, smoothness::no, 100}));
-}
-
-[[maybe_unused]] static void check_solvers_on_smooth_functions(const rsolvers_t&   solvers,
-                                                               const tensor_size_t min_dims = 4,
-                                                               const tensor_size_t max_dims = 4)
-{
-    check_solvers(solvers, function_t::make({min_dims, max_dims, convexity::yes, smoothness::yes, 100}));
-}
-
-[[maybe_unused]] static void check_solvers_on_nonsmooth_functions(const rsolvers_t&   solvers,
-                                                                  const tensor_size_t min_dims = 4,
-                                                                  const tensor_size_t max_dims = 4)
-{
-    check_solvers(solvers, function_t::make({min_dims, max_dims, convexity::yes, smoothness::no, 100}));
-}
