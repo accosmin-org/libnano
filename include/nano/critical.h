@@ -12,7 +12,7 @@ namespace nano
 template <class... tmessage>
 [[noreturn]] void raise(const tmessage&... message)
 {
-    throw std::runtime_error(scat("critical check failed: ", message..., "!"));
+    throw std::runtime_error(scat("critical check failed: ", message...));
 }
 
 ///
