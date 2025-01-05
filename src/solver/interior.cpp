@@ -73,12 +73,12 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     }
     else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
     {
-        critical(is_convex(qprogram->Q()), "interior point solver can only solver convex quadratic programs!");
+        critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
         return do_minimize(program_t{*qprogram, std::move(lconstraints).value()}, x0, logger);
     }
     else
     {
-        raise("interior point solver can only solve linear and quadratic programs!");
+        raise("interior point solver can only solve linear and convex quadratic programs!");
     }
 }
 
