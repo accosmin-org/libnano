@@ -236,6 +236,7 @@ UTEST_CASE(minimum)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -253,6 +254,7 @@ UTEST_CASE(maximum)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -270,6 +272,7 @@ UTEST_CASE(constant)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_linear(constraint));
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -287,6 +290,7 @@ UTEST_CASE(euclidean_ball_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
@@ -304,6 +308,7 @@ UTEST_CASE(euclidean_ball_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0, 1e-15);
 
@@ -321,6 +326,7 @@ UTEST_CASE(linear_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_linear(constraint));
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -338,6 +344,7 @@ UTEST_CASE(linear_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -355,6 +362,7 @@ UTEST_CASE(quadratic_equality)
 
     UTEST_CHECK(!::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -374,6 +382,7 @@ UTEST_CASE(quadratic_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 2.0 - std::sqrt(2.0), 1e-15);
 
@@ -393,6 +402,7 @@ UTEST_CASE(functional_equality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(!::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 
@@ -408,6 +418,7 @@ UTEST_CASE(functional_inequality)
 
     UTEST_CHECK(::nano::convex(constraint));
     UTEST_CHECK(!::nano::smooth(constraint));
+    UTEST_CHECK(!::nano::is_linear(constraint));
     UTEST_CHECK(!::nano::is_equality(constraint));
     UTEST_CHECK_CLOSE(::nano::strong_convexity(constraint), 0.0, 1e-15);
 

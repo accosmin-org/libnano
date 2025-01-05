@@ -185,6 +185,11 @@ NANO_PUBLIC bool compatible(const constraint_t&, const function_t&);
 NANO_PUBLIC bool is_equality(const constraint_t&);
 
 ///
+/// \brief returns true if the given constraint is a linear (equality or inequality) constraint.
+///
+NANO_PUBLIC bool is_linear(const constraint_t&);
+
+///
 /// \brief returns the number of equality constraints.
 ///
 NANO_PUBLIC tensor_size_t n_equalities(const function_t&);

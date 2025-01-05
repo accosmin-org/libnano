@@ -331,11 +331,31 @@ bool nano::compatible(const constraint_t& constraint, const function_t& function
 
 bool nano::is_equality(const constraint_t& constraint)
 {
-    return std::get_if<constraint::constant_t>(&constraint) != nullptr ||
-           std::get_if<constraint::linear_equality_t>(&constraint) != nullptr ||
-           std::get_if<constraint::quadratic_equality_t>(&constraint) != nullptr ||
-           std::get_if<constraint::functional_equality_t>(&constraint) != nullptr ||
-           std::get_if<constraint::euclidean_ball_equality_t>(&constraint) != nullptr;
+    return std::visit(overloaded{[](const constant_t&) { return true; },                   ///<
+                                 [](const minimum_t&) { return false; },                   ///<
+                                 [](const maximum_t&) { return false; },                   ///<
+                                 [](const linear_equality_t&) { return true; },            ///<
+                                 [](const linear_inequality_t&) { return false; },         ///<
+                                 [](const euclidean_ball_equality_t&) { return true; },    ///<
+                                 [](const euclidean_ball_inequality_t&) { return false; }, ///<
+                                 [](const quadratic_equality_t&) { return true; },         ///<
+                                 [](const quadratic_inequality_t&) { return false; },      ///<
+                                 [](const functional_equality_t&) { return true; },        ///<
+                                 [](const functional_inequality_t&) { return false; }},    ///<
+                      constraint);
+}
+
+bool nano::is_linear(const constraint_t& constraint)
+{
+    return std::visit(overloaded{[](const constant_t&) { return true; },          ///<
+                                 [](const minimum_t&) { return true; },           ///<
+                                 [](const maximum_t&) { return true; },           ///<
+                                 [](const linear_equality_t&) { return true; },   ///<
+                                 [](const linear_inequality_t&) { return true; }, ///<
+                                 [](const euclidean_ball_t&) { return false; },   ///<
+                                 [](const quadratic_t&) { return false; },        ///<
+                                 [](const functional_t&) { return false; }},      ///<
+                      constraint);
 }
 
 tensor_size_t nano::n_equalities(const function_t& function)

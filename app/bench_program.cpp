@@ -1,11 +1,9 @@
 #include <nano/core/cmdline.h>
 #include <nano/main.h>
-#include <nano/program/benchmark.h>
 #include <nano/solver/augmented.h>
 #include <nano/solver/penalty.h>
 
 using namespace nano;
-using namespace nano::program;
 
 namespace
 {

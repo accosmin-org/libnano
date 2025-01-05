@@ -80,14 +80,5 @@ void quadratic_program_t::reset(matrix_t Q)
 
 bool quadratic_program_t::constrain(constraint_t&& constraint)
 {
-    return std::visit(overloaded{[](const constant_t&) { return true; },          ///<
-                                 [](const minimum_t&) { return true; },           ///<
-                                 [](const maximum_t&) { return true; },           ///<
-                                 [](const linear_equality_t&) { return true; },   ///<
-                                 [](const linear_inequality_t&) { return true; }, ///<
-                                 [](const euclidean_ball_t&) { return false; },   ///<
-                                 [](const quadratic_t&) { return false; },        ///<
-                                 [](const functional_t&) { return false; }},      ///<
-                      constraint) &&
-           function_t::constrain(std::move(constraint));
+    return is_linear(constraint) && function_t::constrain(std::move(constraint));
 }
