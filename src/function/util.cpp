@@ -190,16 +190,21 @@ bool nano::reduce(matrix_t& A, vector_t& b)
     return reduced;
 }
 
-bool nano::is_convex(const matrix_t& P)
+bool nano::is_convex(const matrix_t& P, const scalar_t tol)
 {
     const auto Q = P.matrix();
     if (!Q.isApprox(Q.transpose()))
     {
         return false;
     }
+    else
+    {
+        const auto Qmax = std::max(1.0, Q.diagonal().array().maxCoeff());
+        const auto Qtol = Q / Qmax + tol * matrix_t::identity(Q.rows(), Q.cols());
+        const auto ldlt = Qtol.selfadjointView<Eigen::Upper>().ldlt();
 
-    const auto ldlt = Q.selfadjointView<Eigen::Upper>().ldlt();
-    return ldlt.info() != Eigen::NumericalIssue && ldlt.isPositive();
+        return ldlt.info() == Eigen::Success && ldlt.isPositive();
+    }
 }
 
 scalar_t nano::strong_convexity(const matrix_t& P)
