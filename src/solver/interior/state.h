@@ -34,7 +34,6 @@ struct state_t
     }
 
     // attributes
-    int      m_iters{0}; ///< number of iterations
     vector_t m_x;        ///< solution (primal problem)
     vector_t m_u;        ///< Lagrange multipliers (inequality constraints)
     vector_t m_v;        ///< Lagrange multipliers (equality constraints)

@@ -52,7 +52,6 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-2, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LE, 1e-16, LE, 1e-3));
-    register_parameter(parameter_t::make_integer("solver::ipm::max_iters", 10, LE, 100, LE, 1000));
     register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
 }
 
@@ -114,8 +113,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
     const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
+    const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
-    const auto max_iters         = parameter("solver::ipm::max_iters").value<tensor_size_t>();
     const auto max_lsearch_iters = parameter("solver::ipm::max_lsearch_iters").value<tensor_size_t>();
 
     const auto& G = program.G();
@@ -123,7 +122,9 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto  n = program.n();
     const auto  p = program.p();
 
-    auto state = solver_state_t{program.function(), x0};
+    const auto& function = program.function();
+
+    auto state = solver_state_t{function, x0};
 
     // the starting point must be strictly feasible wrt inequality constraints
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
@@ -142,7 +143,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     program.update(0.0, miu, ipmst);
 
     // primal-dual interior-point solver...
-    for (ipmst.m_iters = 0; ipmst.m_iters < max_iters; ++ipmst.m_iters)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto prev_eta   = ipmst.m_eta;
         const auto prev_rdual = ipmst.m_rdual.lpNorm<2>();
