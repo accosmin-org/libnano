@@ -32,7 +32,7 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
         const auto b = A * x;
 
         reset(c);
-        optimum(solver_status::unfeasible);
+        optimum(optimum_t::status::unfeasible);
 
         critical(variable() >= 0.0);
         critical((A * variable()) == b);

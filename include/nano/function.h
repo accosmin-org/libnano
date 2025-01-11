@@ -147,7 +147,7 @@ public:
     ///
     bool optimum(vector_t);
     bool optimum(scalar_t);
-    bool optimum(solver_status);
+    bool optimum(optimum_t::status);
 
     ///
     /// \brief return the global minimum (if known).

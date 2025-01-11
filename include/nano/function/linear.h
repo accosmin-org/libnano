@@ -54,14 +54,14 @@ public:
     bool constrain(constraint_t&&) override;
 
     ///
-    /// \brief change the objective with a compatible one and keep the constraints.
-    ///
-    void reset(vector_t c);
-
-    ///
     /// \brief return the objective's parameters (need explicitly by some solvers).
     ///
     const vector_t& c() const { return m_c; }
+
+    ///
+    /// \brief change the objective with a compatible one and keep the constraints.
+    ///
+    void reset(vector_t c);
 
 private:
     // attributes

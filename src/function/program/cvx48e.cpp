@@ -96,7 +96,7 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     if (alpha == 0)
     {
         // NB: not strictly feasible in this case!
-        optimum(solver_status::unfeasible);
+        optimum(optimum_t::status::unfeasible);
     }
     else
     {

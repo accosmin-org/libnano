@@ -127,7 +127,7 @@ bool function_t::optimum(vector_t xbest)
     }
     else
     {
-        m_optimum.m_status = solver_status::converged;
+        m_optimum.m_status = optimum_t::status::solvable;
         m_optimum.m_xbest  = std::move(xbest);
         m_optimum.m_fbest  = do_vgrad(m_optimum.m_xbest, vector_map_t{});
         return true;
@@ -142,13 +142,13 @@ bool function_t::optimum(const scalar_t fbest)
     }
     else
     {
-        m_optimum.m_status = solver_status::converged;
+        m_optimum.m_status = optimum_t::status::solvable;
         m_optimum.m_fbest  = fbest;
         return true;
     }
 }
 
-bool function_t::optimum(const solver_status status)
+bool function_t::optimum(const optimum_t::status status)
 {
     m_optimum.m_status = status;
     return true;

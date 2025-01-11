@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/solver/status.h>
 #include <nano/tensor.h>
 
 namespace nano
@@ -10,11 +9,18 @@ namespace nano
 ///
 struct optimum_t
 {
+    enum class status : uint8_t
+    {
+        solvable,
+        unfeasible,
+        unbounded,
+    };
+
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
     // attributes
-    vector_t      m_xbest;                            ///< optimum: solution
-    scalar_t      m_fbest{NaN};                       ///< optimum: function value
-    solver_status m_status{solver_status::converged}; ///< expected convergence status
+    vector_t m_xbest;                    ///< optimum: solution
+    scalar_t m_fbest{NaN};               ///< optimum: function value
+    status   m_status{status::solvable}; ///< expected convergence status
 };
 } // namespace nano
