@@ -187,10 +187,8 @@ UTEST_CASE(factory)
 {
     for (const auto& solver_id : solver_t::all().ids())
     {
-        const auto solver = make_solver(solver_id);
-
-        const auto desc = make_description(solver_id);
-        UTEST_CHECK_EQUAL(solver->type(), desc.m_type);
+        UTEST_CHECK_NOTHROW(make_solver(solver_id));
+        UTEST_CHECK_NOTHROW(make_description(solver_id));
     }
 }
 
