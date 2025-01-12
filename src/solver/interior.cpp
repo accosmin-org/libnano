@@ -146,8 +146,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         const auto prev_eta   = ipmst.m_eta;
-        const auto prev_rdual = ipmst.m_rdual.lpNorm<2>();
-        const auto prev_rprim = ipmst.m_rprim.lpNorm<2>();
+        const auto prev_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
+        const auto prev_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
 
         // solve primal-dual linear system of equations to get (dx, du, dv)
         const auto  Gxh   = G * ipmst.m_x - h;
@@ -219,8 +219,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
         const auto curr_eta   = ipmst.m_eta;
-        const auto curr_rdual = ipmst.m_rdual.lpNorm<2>();
-        const auto curr_rprim = ipmst.m_rprim.lpNorm<2>();
+        const auto curr_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
+        const auto curr_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
 
         // check stopping criteria
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
