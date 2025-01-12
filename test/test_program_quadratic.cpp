@@ -1,9 +1,21 @@
-#include <fixture/program.h>
+#include <fixture/solver.h>
 #include <function/program/numopt162.h>
 #include <function/program/numopt1625.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
+#include <nano/function/linear.h>
+#include <nano/function/quadratic.h>
 
 using namespace nano;
 using namespace constraint;
+
+namespace
+{
+strings_t make_solver_ids()
+{
+    return {"ipm"}; // TODO: add penalty and augmented lagrangian
+}
+} // namespace
 
 UTEST_BEGIN_MODULE(test_program_quadratic)
 
@@ -46,7 +58,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program2)
@@ -63,7 +75,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program3)
@@ -80,7 +92,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program4)
@@ -97,7 +109,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program_numopt162)
@@ -109,7 +121,7 @@ UTEST_CASE(program_numopt162)
             const auto function = quadratic_program_numopt162_t{dims, neqs};
 
             check_convexity(function);
-            check_solution(function);
+            check_minimize(make_solver_ids(), function);
         }
     }
 }
@@ -128,7 +140,7 @@ UTEST_CASE(program6)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program7)
@@ -145,7 +157,7 @@ UTEST_CASE(program7)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_solution(function);
+    check_minimize(make_solver_ids(), function);
 }
 
 UTEST_CASE(program_numopt1625)
@@ -155,7 +167,7 @@ UTEST_CASE(program_numopt1625)
         const auto function = quadratic_program_numopt1625_t{dims};
 
         check_convexity(function);
-        check_solution(function);
+        check_minimize(make_solver_ids(), function);
     }
 }
 

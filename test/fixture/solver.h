@@ -154,7 +154,10 @@ struct solver_description_t
         UTEST_CHECK(state.valid());
         UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
         UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
-        UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
+        if (function.constraints().empty())
+        {
+            UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
+        }
 
         const auto& optimum = function.optimum();
         // clang-format off
@@ -198,7 +201,7 @@ struct solver_description_t
                 // convergence reached, check the expected convergence criterio
                 const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
 
-                /* FIXME: depends on the solver type and if the function with constraints is convex, smooth etc.
+                // FIXME: depends on the solver type and if the function with constraints is convex, smooth etc.
                 if (function.smooth() && function.constraints().empty())
                 {
                     UTEST_CHECK_LESS(state.gradient_test(), epsilon);
@@ -207,7 +210,7 @@ struct solver_description_t
                 {
                     UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
                     UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
-                }*/
+                }
             }
             else
             {
@@ -222,34 +225,40 @@ struct solver_description_t
     return check_with_logger(op);
 }
 
-[[maybe_unused]] static void check_solvers(const rsolvers_t& solvers, const rfunctions_t& functions)
+[[maybe_unused]] static void check_minimize(const rsolvers_t& solvers, const function_t& function)
 {
-    for (const auto& function : functions)
+    for (const auto& x0 : make_random_x0s(function))
     {
-        UTEST_REQUIRE(function);
-
-        for (const auto& x0 : make_random_x0s(*function))
+        auto expected_minimum = std::numeric_limits<scalar_t>::quiet_NaN();
+        for (const auto& solver : solvers)
         {
-            auto config = minimize_config_t{};
-            for (const auto& solver : solvers)
-            {
-                const auto& solver_id = solver->type_id();
-                UTEST_NAMED_CASE(scat(function->name(), "/", solver_id));
+            const auto& solver_id = solver->type_id();
+            UTEST_NAMED_CASE(scat(function.name(), "/", solver_id));
 
-                const auto descr = make_description(solver_id);
-                config.config(function->smooth() ? descr.m_smooth_config : descr.m_nonsmooth_config);
+            const auto descr = make_description(solver_id);
 
-                const auto state = check_minimize(*solver, *function, x0, config);
-                config.expected_minimum(state.fx());
+            auto config = function.smooth() ? descr.m_smooth_config : descr.m_nonsmooth_config;
+            config.expected_minimum(expected_minimum);
 
-                log_info(std::setprecision(10), function->name(), ": solver=", solver_id, ",fx=", state.fx(),
-                         ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
-            }
+            const auto state = check_minimize(*solver, function, x0, config);
+            expected_minimum = state.fx();
+
+            log_info(std::setprecision(10), function.name(), ": solver=", solver_id, ",fx=", state.fx(),
+                     ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
         }
     }
 }
 
-[[maybe_unused]] static void check_solvers(const strings_t& solver_ids, const rfunctions_t& functions)
+[[maybe_unused]] static void check_minimize(const rsolvers_t& solvers, const rfunctions_t& functions)
+{
+    for (const auto& function : functions)
+    {
+        UTEST_REQUIRE(function);
+        check_minimize(solvers, *function);
+    }
+}
+
+[[maybe_unused]] static void check_minimize(const strings_t& solver_ids, const rfunctions_t& functions)
 {
     auto solvers = rsolvers_t{};
     solvers.reserve(solver_ids.size());
@@ -258,5 +267,17 @@ struct solver_description_t
         solvers.emplace_back(make_solver(solver_id));
     }
 
-    check_solvers(solvers, functions);
+    check_minimize(solvers, functions);
+}
+
+[[maybe_unused]] static void check_minimize(const strings_t& solver_ids, const function_t& function)
+{
+    auto solvers = rsolvers_t{};
+    solvers.reserve(solver_ids.size());
+    for (const auto& solver_id : solver_ids)
+    {
+        solvers.emplace_back(make_solver(solver_id));
+    }
+
+    check_minimize(solvers, function);
 }
