@@ -8,45 +8,6 @@ class solver_t;
 using rsolver_t  = std::unique_ptr<solver_t>;
 using rsolvers_t = std::vector<rsolver_t>;
 
-// TODO: classes of solver convergence criterion:
-// * none
-// * small steps
-// * smooth gradient test
-// * convex smooth constrained KKT optimality test
-
-///
-/// \brief classifies numerical optimization algorithms (solvers)
-///     based on the function type they can minimize and
-///     the available theoretical convergence guarantees.
-///
-enum class solver_type : uint8_t
-{
-    ///< descent is guaranteed at each step using line-search along a descent direction.
-    ///< the constraints (if any) are ignored.
-    ///< recommended for smooth unconstrained optimization problems.
-    line_search,
-
-    ///< descent is not guaranteed at each step.
-    ///< the constraints (if any) and the line-search utilities are ignored.
-    ///< recommended for non-smooth unconstrained optimization problems.
-    non_monotonic,
-
-    ///< handles the given constrains.
-    ///< typically consists of solving a related unconstrained optimization in a loop.
-    ///< recommended for constrained optimization problems.
-    constrained,
-};
-
-template <>
-inline enum_map_t<solver_type> enum_string()
-{
-    return {
-        {  solver_type::line_search,   "line_search"},
-        {solver_type::non_monotonic, "non_monotonic"},
-        {  solver_type::constrained,   "constrained"}
-    };
-}
-
 ///
 /// \brief interface for numerical optimization algorithms.
 ///
@@ -110,11 +71,6 @@ public:
     void more_precise(scalar_t epsilon_factor);
 
     ///
-    /// \brief returns the type of the optimization method.
-    ///
-    solver_type type() const;
-
-    ///
     /// \brief return the line-search initialization method.
     ///
     const lsearch0_t& lsearch0() const { return *m_lsearch0; }
@@ -125,7 +81,6 @@ public:
     const lsearchk_t& lsearchk() const { return *m_lsearchk; }
 
 protected:
-    void type(solver_type);
     bool done(solver_state_t&, bool iter_ok, bool converged, const logger_t&) const;
 
     lsearch_t        make_lsearch() const;
@@ -135,8 +90,7 @@ protected:
 
 private:
     // attributes
-    rlsearch0_t m_lsearch0;                       ///<
-    rlsearchk_t m_lsearchk;                       ///<
-    solver_type m_type{solver_type::line_search}; ///<
+    rlsearch0_t m_lsearch0; ///<
+    rlsearchk_t m_lsearchk; ///<
 };
 } // namespace nano

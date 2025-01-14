@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/function.h>
+#include <nano/solver/convergence.h>
 #include <nano/solver/status.h>
 
 namespace nano
@@ -16,7 +17,7 @@ public:
     ///
     /// \brief constructor
     ///
-    solver_state_t(const function_t&, vector_t x0);
+    solver_state_t(const function_t&, vector_t x0, solver_convergence);
 
     ///
     /// \brief enable moving.
@@ -199,6 +200,11 @@ public:
     solver_status status() const { return m_status; }
 
     ///
+    /// \brief returns the optimization convergence criterion.
+    ///
+    solver_convergence convergence() const { return m_convergence; }
+
+    ///
     /// \brief returns the function to minimize.
     ///
     const function_t& function() const { return m_function; }
@@ -219,20 +225,21 @@ private:
     using scalars_t = std::vector<scalar_t>;
 
     // attributes
-    const function_t& m_function;   ///< objective
-    vector_t          m_x;          ///< parameter
-    vector_t          m_gx;         ///< gradient
-    scalar_t          m_fx{0};      ///< function value
-    vector_t          m_ceq;        ///< equality constraint values
-    vector_t          m_cineq;      ///< inequality constraint values
-    vector_t          m_meq;        ///< Lagrange multiplies for equality constraints
-    vector_t          m_mineq;      ///< Lagrange multiplies for inequality constraints
-    vector_t          m_lgx;        ///< gradient of the Lagrangian dual function
-    solver_status     m_status{};   ///< optimization status
-    tensor_size_t     m_fcalls{0};  ///< number of function value evaluations so far
-    tensor_size_t     m_gcalls{0};  ///< number of function gradient evaluations so far
-    scalars_t         m_history_df; ///< recent improvements of the function value
-    scalars_t         m_history_dx; ///< recent improvements of the parameter
+    const function_t&  m_function;      ///< objective
+    vector_t           m_x;             ///< parameter
+    vector_t           m_gx;            ///< gradient
+    scalar_t           m_fx{0};         ///< function value
+    vector_t           m_ceq;           ///< equality constraint values
+    vector_t           m_cineq;         ///< inequality constraint values
+    vector_t           m_meq;           ///< Lagrange multiplies for equality constraints
+    vector_t           m_mineq;         ///< Lagrange multiplies for inequality constraints
+    vector_t           m_lgx;           ///< gradient of the Lagrangian dual function
+    solver_status      m_status{};      ///< optimization status
+    solver_convergence m_convergence{}; ///< optimization convergence criterion
+    tensor_size_t      m_fcalls{0};     ///< number of function value evaluations so far
+    tensor_size_t      m_gcalls{0};     ///< number of function gradient evaluations so far
+    scalars_t          m_history_df;    ///< recent improvements of the function value
+    scalars_t          m_history_dx;    ///< recent improvements of the parameter
 };
 
 ///
