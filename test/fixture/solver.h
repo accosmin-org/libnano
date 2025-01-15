@@ -198,18 +198,28 @@ struct solver_description_t
             // solvable problem
             if (state.status() == solver_status::converged)
             {
-                // convergence reached, check the expected convergence criterio
+                // convergence reached, check the expected convergence criterion
                 const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
 
-                // FIXME: depends on the solver type and if the function with constraints is convex, smooth etc.
-                if (function.smooth() && function.constraints().empty())
+                switch (state.convergence())
                 {
-                    UTEST_CHECK_LESS(state.gradient_test(), epsilon);
+                case solver_convergence::value_test:
+                {
+                    const auto patience = solver.parameter("solver::patience").value<tensor_size_t>();
+                    UTEST_CHECK_LESS(state.value_test(patience), epsilon);
+                    break;
                 }
-                else if (function.smooth() && !function.constraints().empty())
-                {
+
+                case solver_convergence::gradient_test: UTEST_CHECK_LESS(state.gradient_test(), epsilon); break;
+
+                case solver_convergence::kkt_optimality_test:
                     UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
                     UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
+                    break;
+
+                default:
+                    // NB: either no stopping criterion or a specific one!
+                    break;
                 }
             }
             else

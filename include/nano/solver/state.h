@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nano/function.h>
-#include <nano/solver/convergence.h>
 #include <nano/solver/status.h>
 
 namespace nano
@@ -234,12 +233,12 @@ private:
     vector_t           m_meq;           ///< Lagrange multiplies for equality constraints
     vector_t           m_mineq;         ///< Lagrange multiplies for inequality constraints
     vector_t           m_lgx;           ///< gradient of the Lagrangian dual function
-    solver_status      m_status{};      ///< optimization status
-    solver_convergence m_convergence{}; ///< optimization convergence criterion
     tensor_size_t      m_fcalls{0};     ///< number of function value evaluations so far
     tensor_size_t      m_gcalls{0};     ///< number of function gradient evaluations so far
     scalars_t          m_history_df;    ///< recent improvements of the function value
     scalars_t          m_history_dx;    ///< recent improvements of the parameter
+    solver_status      m_status{};      ///< optimization status
+    solver_convergence m_convergence{}; ///< optimization convergence criterion
 };
 
 ///

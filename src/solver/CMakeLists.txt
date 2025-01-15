@@ -1,7 +1,6 @@
 target_sources(solver PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/convergence.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
