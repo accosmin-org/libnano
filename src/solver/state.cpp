@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-solver_state_t::solver_state_t(const function_t& function, vector_t x0, const solver_convergence convergence)
+solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     : m_function(function)
     , m_x(std::move(x0))
     , m_gx(vector_t::zero(m_x.size()))
@@ -13,7 +13,6 @@ solver_state_t::solver_state_t(const function_t& function, vector_t x0, const so
     , m_meq(vector_t::constant(m_ceq.size(), 0.0))
     , m_mineq(vector_t::constant(m_cineq.size(), 0.0))
     , m_lgx(vector_t::constant(m_x.size(), 0.0))
-    , m_convergence(convergence)
 {
     assert(x0.size() == m_function.size());
 

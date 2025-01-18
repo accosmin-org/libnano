@@ -52,7 +52,6 @@ solver_t::solver_t(const solver_t& other)
     , clonable_t(other)
     , m_lsearch0(other.lsearch0().clone())
     , m_lsearchk(other.lsearchk().clone())
-    , m_type(other.type())
 {
 }
 
@@ -80,16 +79,6 @@ void solver_t::lsearchk(const string_t& id)
 void solver_t::lsearchk(const lsearchk_t& lsearchk)
 {
     m_lsearchk = lsearchk.clone();
-}
-
-void solver_t::type(const solver_type type)
-{
-    m_type = type;
-}
-
-solver_type solver_t::type() const
-{
-    return m_type;
 }
 
 lsearch_t solver_t::make_lsearch() const

@@ -196,38 +196,41 @@ struct solver_description_t
 
         default:
             // solvable problem
-            if (state.status() == solver_status::converged)
+            // if convergence reached, check the expected convergence criterion
+            switch (state.status())
             {
-                // convergence reached, check the expected convergence criterion
-                const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
-
-                switch (state.convergence())
-                {
-                case solver_convergence::value_test:
-                {
-                    const auto patience = solver.parameter("solver::patience").value<tensor_size_t>();
-                    UTEST_CHECK_LESS(state.value_test(patience), epsilon);
-                    break;
-                }
-
-                case solver_convergence::gradient_test: UTEST_CHECK_LESS(state.gradient_test(), epsilon); break;
-
-                case solver_convergence::kkt_optimality_test:
-                    UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
-                    UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
-                    break;
-
-                default:
-                    // NB: either no stopping criterion or a specific one!
-                    break;
-                }
+            case solver_status::value_test:
+            {
+                const auto epsilon  = solver.parameter("solver::epsilon").value<scalar_t>();
+                const auto patience = solver.parameter("solver::patience").value<tensor_size_t>();
+                UTEST_CHECK_LESS(state.value_test(patience), epsilon);
+                break;
             }
-            else
+
+            case solver_convergence::gradient_test:
             {
+                const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
+                UTEST_CHECK_LESS(state.gradient_test(), epsilon);
+                break;
+            }
+
+            case solver_convergence::kkt_optimality_test:
+            {
+                const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
+                UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
+                UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
+                break;
+            }
+
+            case solver_convergence::specific_test:
+                // NB: either no stopping criterion or a specific one!
+                break;
+
+            default:
                 // convergence not reached, expecting maximum iterations status without any failure
                 UTEST_CHECK_EQUAL(state.status(), solver_status::max_iters);
+                break;
             }
-            break;
         }
 
         return state;
