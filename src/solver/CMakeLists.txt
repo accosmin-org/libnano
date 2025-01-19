@@ -9,6 +9,7 @@ target_sources(solver PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/track.h
     asga.h
     cgd.h
     cocob.h
@@ -47,6 +48,7 @@ target_sources(solver PRIVATE
     rqb.cpp
     sgm.cpp
     state.cpp
+    track.cpp
     universal.cpp)
 
 add_subdirectory(gsample)

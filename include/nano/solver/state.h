@@ -2,6 +2,7 @@
 
 #include <nano/function.h>
 #include <nano/solver/status.h>
+#include <nano/solver/track.h>
 
 namespace nano
 {
@@ -63,6 +64,11 @@ public:
     ///
     bool update_if_better(const vector_t& x, scalar_t fx);
     bool update_if_better(const vector_t& x, const vector_t& gx, scalar_t fx);
+
+    ///
+    /// \brief update history of updates.
+    ///
+    void update_history();
 
     ///
     /// \brief convergence criterion of the function value:
@@ -219,31 +225,23 @@ private:
     using scalars_t = std::vector<scalar_t>;
 
     // attributes
-    const function_t&  m_function;      ///< objective
-    vector_t           m_x;             ///< parameter
-    vector_t           m_gx;            ///< gradient
-    scalar_t           m_fx{0};         ///< function value
-    vector_t           m_ceq;           ///< equality constraint values
-    vector_t           m_cineq;         ///< inequality constraint values
-    vector_t           m_meq;           ///< Lagrange multiplies for equality constraints
-    vector_t           m_mineq;         ///< Lagrange multiplies for inequality constraints
-    vector_t           m_lgx;           ///< gradient of the Lagrangian dual function
-    solver_status      m_status{};      ///< optimization status
-    tensor_size_t      m_fcalls{0};     ///< number of function value evaluations so far
-    tensor_size_t      m_gcalls{0};     ///< number of function gradient evaluations so far
-    scalars_t          m_history_df;    ///< recent improvements of the function value
-    scalars_t          m_history_dx;    ///< recent improvements of the parameter
+    const function_t& m_function;  ///< objective
+    vector_t          m_x;         ///< parameter
+    vector_t          m_gx;        ///< gradient
+    scalar_t          m_fx{0};     ///< function value
+    vector_t          m_ceq;       ///< equality constraint values
+    vector_t          m_cineq;     ///< inequality constraint values
+    vector_t          m_meq;       ///< Lagrange multiplies for equality constraints
+    vector_t          m_mineq;     ///< Lagrange multiplies for inequality constraints
+    vector_t          m_lgx;       ///< gradient of the Lagrangian dual function
+    solver_status     m_status{};  ///< optimization status
+    tensor_size_t     m_fcalls{0}; ///< number of function value evaluations so far
+    tensor_size_t     m_gcalls{0}; ///< number of function gradient evaluations so far
+    solver_track_t    m_track;     ///< history of updates
 };
 
 ///
 /// \brief pretty print the given solver state.
 ///
 NANO_PUBLIC std::ostream& operator<<(std::ostream&, const solver_state_t&);
-
-///
-/// \brief convergence test that checks two consecutive (best) states are close enough.
-///
-/// NB: appropriate for non-smooth or constrained problems.
-///
-NANO_PUBLIC bool converged(const solver_state_t& best_state, const solver_state_t& current_state, scalar_t epsilon);
 } // namespace nano
