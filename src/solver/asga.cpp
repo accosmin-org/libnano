@@ -20,14 +20,11 @@ auto lsearch_done(const vector_t& y, scalar_t fy, const vector_t& x, const scala
 solver_asga_t::solver_asga_t(string_t id)
     : solver_t(std::move(id))
 {
-    type(solver_type::non_monotonic);
-
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
 
     register_parameter(parameter_t::make_scalar("solver::asga::L0", 0.0, LT, 1e+0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::asga::gamma1", 1.0, LT, 4.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::asga::gamma2", 0.0, LT, 0.9, LT, 1.0));
-    register_parameter(parameter_t::make_integer("solver::asga::patience", 10, LE, 1000, LE, 1e+6));
     register_parameter(parameter_t::make_integer("solver::asga::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
 
@@ -43,17 +40,19 @@ rsolver_t solver_asga2_t::clone() const
 
 solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
+    warn_nonconvex(function, logger);
+    warn_constrained(function, logger);
+
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto L0                = parameter("solver::asga::L0").value<scalar_t>();
     const auto gamma1            = parameter("solver::asga::gamma1").value<scalar_t>();
     const auto gamma2            = parameter("solver::asga::gamma2").value<scalar_t>();
-    const auto patience          = parameter("solver::asga::patience").value<tensor_size_t>();
     const auto lsearch_max_iters = parameter("solver::asga::lsearch_max_iters").value<int>();
     const auto miu               = function.strong_convexity();
 
     auto state = solver_state_t{function, x0};
-    if (state.gradient_test() < std::numeric_limits<scalar_t>::epsilon())
+    if (done_gradient_test(state, true, logger))
     {
         return state;
     }
@@ -98,8 +97,7 @@ solver_state_t solver_asga2_t::do_minimize(const function_t& function, const vec
 
         state.update_if_better(xk1, gxk1, fxk1);
 
-        const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged, logger))
+        if (done_value_test(state, iter_ok, logger))
         {
             break;
         }
@@ -127,17 +125,19 @@ rsolver_t solver_asga4_t::clone() const
 
 solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
+    warn_nonconvex(function, logger);
+    warn_constrained(function, logger);
+
     const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto L0                = parameter("solver::asga::L0").value<scalar_t>();
     const auto gamma1            = parameter("solver::asga::gamma1").value<scalar_t>();
     const auto gamma2            = parameter("solver::asga::gamma2").value<scalar_t>();
-    const auto patience          = parameter("solver::asga::patience").value<tensor_size_t>();
     const auto lsearch_max_iters = parameter("solver::asga::lsearch_max_iters").value<int>();
     const auto miu               = function.strong_convexity();
 
     auto state = solver_state_t{function, x0};
-    if (state.gradient_test() < std::numeric_limits<scalar_t>::epsilon())
+    if (done_gradient_test(state, true, logger))
     {
         return state;
     }
@@ -182,8 +182,7 @@ solver_state_t solver_asga4_t::do_minimize(const function_t& function, const vec
 
         state.update_if_better(yk1, gyk1, fyk1);
 
-        const auto converged = state.value_test(patience) < epsilon;
-        if (solver_t::done(state, iter_ok, converged, logger))
+        if (done_value_test(state, iter_ok, logger))
         {
             break;
         }

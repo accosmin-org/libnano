@@ -28,7 +28,7 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     {
         if (g.lpNorm<Eigen::Infinity>() < std::numeric_limits<scalar_t>::epsilon())
         {
-            solver_t::done(state, true, solver_status::gradient_test, logger);
+            solver_t::done_gradient_test(state, true, logger);
             break;
         }
 

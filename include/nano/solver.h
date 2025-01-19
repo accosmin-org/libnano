@@ -84,6 +84,7 @@ protected:
     bool done_value_test(solver_state_t&, bool iter_ok, const logger_t&) const;
     bool done_gradient_test(solver_state_t&, bool iter_ok, const logger_t&) const;
     bool done_specific_test(solver_state_t&, bool iter_ok, bool converged, const logger_t&) const;
+    bool done_kkt_optimality_test(solver_state_t&, bool iter_ok, const logger_t&) const;
 
     void warn_nonconvex(const function_t&, const logger_t&) const;
     void warn_nonsmooth(const function_t&, const logger_t&) const;

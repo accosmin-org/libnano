@@ -20,7 +20,7 @@ struct sampler_t
         const auto x0    = vector_t::constant(m_psize, 1.0 / static_cast<scalar_t>(m_psize));
         const auto state = m_solver->minimize(program, x0, logger);
         // FIXME: this cannot be guaranteed, better to show a warning!
-        assert(state.status() == solver_status::converged);
+        // assert(state.status() == solver_status::converged);
         g = G.transpose() * state.x();
         g = W * g;
     }

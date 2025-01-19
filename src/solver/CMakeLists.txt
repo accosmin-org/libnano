@@ -1,16 +1,15 @@
 target_sources(solver PRIVATE
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/bundle.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/csearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/nesterov.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/proximity.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/track.h
     asga.h
+    augmented.h
     cgd.h
     cocob.h
     ellipsoid.h
@@ -21,6 +20,7 @@ target_sources(solver PRIVATE
     lbfgs.h
     osga.h
     pdsgm.h
+    penalty.h
     quasi.h
     rqb.h
     sgm.h

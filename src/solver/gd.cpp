@@ -5,7 +5,6 @@ using namespace nano;
 solver_gd_t::solver_gd_t()
     : solver_t("gd")
 {
-    type(solver_type::line_search);
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
 }
 
@@ -30,7 +29,7 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
         descent = -state.gx();
 
         // line-search
-        const auto iter_ok   = lsearch.get(state, descent, logger);
+        const auto iter_ok = lsearch.get(state, descent, logger);
         if (solver_t::done_gradient_test(state, iter_ok, logger))
         {
             break;

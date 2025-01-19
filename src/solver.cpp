@@ -1,6 +1,7 @@
 #include <mutex>
 #include <nano/critical.h>
 #include <solver/asga.h>
+#include <solver/augmented.h>
 #include <solver/cgd.h>
 #include <solver/cocob.h>
 #include <solver/ellipsoid.h>
@@ -11,6 +12,7 @@
 #include <solver/lbfgs.h>
 #include <solver/osga.h>
 #include <solver/pdsgm.h>
+#include <solver/penalty.h>
 #include <solver/quasi.h>
 #include <solver/rqb.h>
 #include <solver/sgm.h>
@@ -24,7 +26,7 @@ template <class tsolver>
 rsolver_t make_solver(const scalar_t epsilon, const tensor_size_t max_evals)
 {
     auto solver = std::make_unique<tsolver>();
-    if (epsilon < 1e-7 && solver->type() == solver_type::line_search)
+    if (epsilon < 1e-7)
     {
         // NB: CG-DESCENT line-search gives higher precision than default More&Thuente line-search.
         solver->lsearchk("cgdescent");
@@ -42,7 +44,7 @@ solver_t::solver_t(string_t id)
     lsearchk("cgdescent");
 
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-8, LE, 1e-1));
-    register_parameter(parameter_t::make_integer("solver::patience", 10, LE, 100, LE, 1e+6));
+    register_parameter(parameter_t::make_integer("solver::patience", 1, LE, 100, LE, 1e+6));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
     register_parameter(parameter_t::make_scalar_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
@@ -154,6 +156,11 @@ bool solver_t::done_gradient_test(solver_state_t& state, const bool iter_ok, con
         const auto converged = state.gradient_test() < epsilon;
         return done(state, iter_ok, converged ? solver_status::gradient_test : state.status(), logger);
     }
+    else if (state.gx().lpNorm<Eigen::Infinity>() < std::numeric_limits<scalar_t>::epsilon())
+    {
+        // NB: by chance the gradient can become very small even for non-smooth problems!
+        return done(state, iter_ok, solver_status::gradient_test, logger);
+    }
     else
     {
         // NB: fallback to heuristic value test if the function is non-smooth!
@@ -169,6 +176,17 @@ bool solver_t::done_specific_test(solver_state_t& state, const bool iter_ok, con
     state.update_history();
 
     return done(state, iter_ok, converged ? solver_status::specific_test : state.status(), logger);
+}
+
+bool solver_t::done_kkt_optimality_test(solver_state_t& state, const bool iter_ok, const logger_t& logger) const
+{
+    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
+
+    state.update_calls();
+    state.update_history();
+
+    const auto converged = state.kkt_optimality_test() < epsilon;
+    return done(state, iter_ok, converged ? solver_status::kkt_optimality_test : state.status(), logger);
 }
 
 void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger) const
@@ -237,6 +255,9 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_fpba1_t>("fast proximal bundle algorithm (FPBA1)");
         manager.add<solver_fpba2_t>("fast proximal bundle algorithm (FPBA2)");
         manager.add<solver_ipm_t>("primal-dual interior point method for linear and quadratic programs (IPM)");
+        manager.add<solver_linear_penalty_t>("linear penalty method for constrained problems");
+        manager.add<solver_quadratic_penalty_t>("quadratic penalty method for constrained problems");
+        manager.add<solver_augmented_lagrangian_t>("augmented lagrangian method for constrained problems");
     };
 
     static std::once_flag flag;
