@@ -42,6 +42,7 @@ solver_t::solver_t(string_t id)
     lsearchk("cgdescent");
 
     register_parameter(parameter_t::make_scalar("solver::epsilon", 0, LT, 1e-8, LE, 1e-1));
+    register_parameter(parameter_t::make_integer("solver::patience", 10, LE, 100, LE, 1e+6));
     register_parameter(parameter_t::make_integer("solver::max_evals", 10, LE, 1000, LE, 1e+9));
     register_parameter(parameter_t::make_scalar_pair("solver::tolerance", 0, LT, 1e-4, LT, 0.1, LT, 1));
 }
@@ -102,25 +103,21 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
     function.clear_statistics();
 
-    // TODO: check compatibility with the function, warn otherwise!
-
     return do_minimize(function, x0, logger);
 }
 
-bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool converged, const logger_t& logger) const
+bool solver_t::done(solver_state_t& state, const bool iter_ok, const solver_status status, const logger_t& logger) const
 {
-    state.update_calls();
-
     if (state.status() == solver_status::unfeasible || state.status() == solver_status::unbounded)
     {
         // unfeasible constrained problem
         logger.info("[solver-", type_id(), "]: ", state, ".\n");
         return true;
     }
-    else if (const auto step_ok = iter_ok && state.valid(); converged || !step_ok)
+    else if (const auto step_ok = iter_ok && state.valid(); status != state.status() || !step_ok)
     {
         // either converged or failed
-        state.status(converged ? solver_status::converged : solver_status::failed);
+        state.status(!step_ok ? solver_status::failed : status);
         logger.info("[solver-", type_id(), "]: ", state, ".\n");
         return true;
     }
@@ -129,6 +126,72 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const bool conver
         // OK, go on with the optimization
         logger.info("[solver-", type_id(), "]: ", state, ".\n");
         return false;
+    }
+}
+
+bool solver_t::done_value_test(solver_state_t& state, const bool iter_ok, const logger_t& logger) const
+{
+    const auto epsilon  = parameter("solver::epsilon").value<scalar_t>();
+    const auto patience = parameter("solver::patience").value<tensor_size_t>();
+
+    state.update_calls();
+    state.update_history();
+
+    const auto converged = state.value_test(patience) < epsilon;
+    return done(state, iter_ok, converged ? solver_status::value_test : state.status(), logger);
+}
+
+bool solver_t::done_gradient_test(solver_state_t& state, const bool iter_ok, const logger_t& logger) const
+{
+    const auto epsilon  = parameter("solver::epsilon").value<scalar_t>();
+    const auto patience = parameter("solver::patience").value<tensor_size_t>();
+
+    state.update_calls();
+    state.update_history();
+
+    if (state.function().smooth())
+    {
+        const auto converged = state.gradient_test() < epsilon;
+        return done(state, iter_ok, converged ? solver_status::gradient_test : state.status(), logger);
+    }
+    else
+    {
+        // NB: fallback to heuristic value test if the function is non-smooth!
+        const auto converged = state.value_test(patience) < epsilon;
+        return done(state, iter_ok, converged ? solver_status::value_test : state.status(), logger);
+    }
+}
+
+bool solver_t::done_specific_test(solver_state_t& state, const bool iter_ok, const bool converged,
+                                  const logger_t& logger) const
+{
+    state.update_calls();
+    state.update_history();
+
+    return done(state, iter_ok, converged ? solver_status::specific_test : state.status(), logger);
+}
+
+void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger) const
+{
+    if (!function.convex())
+    {
+        logger.warn("[solver-", type_id(), "]: doesn't support non-convex functions!\n");
+    }
+}
+
+void solver_t::warn_nonsmooth(const function_t& function, const logger_t& logger) const
+{
+    if (!function.smooth())
+    {
+        logger.warn("[solver-", type_id(), "]: doesn't support non-smooth functions!\n");
+    }
+}
+
+void solver_t::warn_constrained(const function_t& function, const logger_t& logger) const
+{
+    if (!function.constraints().empty())
+    {
+        logger.warn("[solver-", type_id(), "]: ignoring constraints!\n");
     }
 }
 

@@ -222,8 +222,6 @@ public:
 private:
     void update_constraints();
 
-    using scalars_t = std::vector<scalar_t>;
-
     // attributes
     const function_t& m_function;  ///< objective
     vector_t          m_x;         ///< parameter

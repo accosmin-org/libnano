@@ -195,8 +195,7 @@ struct solver_description_t
             break;
 
         default:
-            // solvable problem
-            // if convergence reached, check the expected convergence criterion
+            // solvable problem, check the expected convergence criterion if convergence reached
             switch (state.status())
             {
             case solver_status::value_test:
@@ -223,11 +222,12 @@ struct solver_description_t
             }
 
             case solver_convergence::specific_test:
-                // NB: either no stopping criterion or a specific one!
+                // NB: either no stopping criterion or a specific one, at least it shouldn't fail!
+                UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
                 break;
 
             default:
-                // convergence not reached, expecting maximum iterations status without any failure
+                // NB: convergence not reached, expecting maximum iterations status without any failure!
                 UTEST_CHECK_EQUAL(state.status(), solver_status::max_iters);
                 break;
             }

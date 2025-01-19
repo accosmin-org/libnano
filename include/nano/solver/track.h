@@ -37,6 +37,8 @@ public:
     scalar_t value_test_constrained(tensor_size_t patience) const;
 
 private:
+    using scalars_t = std::vector<scalar_t>;
+
     // attributes
     vector_t  m_prev_x;     ///< previous point
     scalar_t  m_prev_fx;    ///< previous function value

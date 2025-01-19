@@ -62,8 +62,8 @@ scalar_t solver_track_t::value_test_constrained(const tensor_size_t patience) co
 {
     assert(m_history_df.size() == m_history_dx.size());
 
-    const auto size  = m_history_dx.size();
-    const auto begin = size >= static_cast<size_t>(patience) ? (size - static_cast<size_t>(patience)) ? size_t{0U};
+    const auto size  = static_cast<tensor_size_t>(m_history_dx.size());
+    const auto begin = size >= patience ? (size - patience) : tensor_size_t{0};
 
     const auto itmax = std::max_element(m_history_dx.begin() + begin, m_history_dx.end());
     if (itmax != m_history_dx.end())
