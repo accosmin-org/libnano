@@ -206,14 +206,14 @@ struct solver_description_t
                 break;
             }
 
-            case solver_convergence::gradient_test:
+            case solver_status::gradient_test:
             {
                 const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
                 UTEST_CHECK_LESS(state.gradient_test(), epsilon);
                 break;
             }
 
-            case solver_convergence::kkt_optimality_test:
+            case solver_status::kkt_optimality_test:
             {
                 const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
                 UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
@@ -221,7 +221,7 @@ struct solver_description_t
                 break;
             }
 
-            case solver_convergence::specific_test:
+            case solver_status::specific_test:
                 // NB: either no stopping criterion or a specific one, at least it shouldn't fail!
                 UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
                 break;
@@ -248,9 +248,9 @@ struct solver_description_t
             const auto& solver_id = solver->type_id();
             UTEST_NAMED_CASE(scat(function.name(), "/", solver_id));
 
-            const auto descr = make_description(solver_id);
+            const auto description = make_description(solver_id);
 
-            auto config = function.smooth() ? descr.m_smooth_config : descr.m_nonsmooth_config;
+            auto config = function.smooth() ? description.m_smooth_config : description.m_nonsmooth_config;
             config.expected_minimum(expected_minimum);
 
             const auto state = check_minimize(*solver, function, x0, config);

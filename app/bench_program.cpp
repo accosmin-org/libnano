@@ -1,7 +1,6 @@
 #include <nano/core/cmdline.h>
 #include <nano/main.h>
-#include <nano/solver/augmented.h>
-#include <nano/solver/penalty.h>
+#include <nano/solver.h>
 
 using namespace nano;
 
@@ -25,7 +24,7 @@ struct result_t
 
     scalar_t      m_value{0.0};
     scalar_t      m_kkt{0.0};
-    solver_status m_status{solver_status::converged};
+    solver_status m_status{solver_status::failed};
     tensor_size_t m_fcalls{0};
     tensor_size_t m_gcalls{0};
     int64_t       m_milliseconds{0};
