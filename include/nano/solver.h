@@ -81,6 +81,7 @@ public:
     const lsearchk_t& lsearchk() const { return *m_lsearchk; }
 
 protected:
+    bool done(solver_state_t&, bool iter_ok, solver_status, const logger_t&) const;
     bool done_value_test(solver_state_t&, bool iter_ok, const logger_t&) const;
     bool done_gradient_test(solver_state_t&, bool iter_ok, const logger_t&) const;
     bool done_specific_test(solver_state_t&, bool iter_ok, bool converged, const logger_t&) const;
@@ -96,8 +97,6 @@ protected:
     virtual solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const = 0;
 
 private:
-    bool done(solver_state_t&, bool iter_ok, solver_status, const logger_t&) const;
-
     // attributes
     rlsearch0_t m_lsearch0; ///<
     rlsearchk_t m_lsearchk; ///<

@@ -23,11 +23,11 @@ auto make_smax(const vector_t& u, const vector_t& du)
     return std::min(smax, 1.0);
 }
 
-bool converged(solver_state_t& state, const scalar_t epsilon)
+void converged(solver_state_t& state, const scalar_t epsilon)
 {
     if (state.kkt_optimality_test() < epsilon)
     {
-        state.status(solver_status::converged);
+        state.status(solver_status::kkt_optimality_test);
     }
     else if (state.feasibility_test() < epsilon)
     {
@@ -39,8 +39,6 @@ bool converged(solver_state_t& state, const scalar_t epsilon)
         // FIXME: this is an heuristic, to search for a theoretically sound method to detect unfeasibility!
         state.status(solver_status::unfeasible);
     }
-
-    return state.status() == solver_status::converged;
 }
 } // namespace
 
@@ -129,10 +127,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     // the starting point must be strictly feasible wrt inequality constraints
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
     {
-        const auto iter_ok   = true;
-        const auto converged = false;
         state.status(solver_status::unfeasible);
-        solver_t::done(state, iter_ok, converged, logger);
+        done(state, state.valid(), state.status(), logger);
         return state;
     }
 
@@ -162,9 +158,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         // stop if the linear system of equations is not stable
         if (!ipmst.valid() || !program.valid())
         {
-            const auto iter_ok   = state.valid();
-            const auto converged = ::converged(state, epsilon);
-            done(state, iter_ok, converged, logger);
             break;
         }
 
@@ -184,9 +177,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         }
         if (iter == max_lsearch_iters)
         {
-            const auto iter_ok   = state.valid();
-            const auto converged = ::converged(state, epsilon);
-            done(state, iter_ok, converged, logger);
             break;
         }
 
@@ -206,9 +196,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         }
         if (iter == max_lsearch_iters)
         {
-            const auto iter_ok   = state.valid();
-            const auto converged = ::converged(state, epsilon);
-            done(state, iter_ok, converged, logger);
             break;
         }
 
@@ -226,27 +213,23 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
         {
             // numerical instabilities
-            const auto iter_ok   = state.valid();
-            const auto converged = false;
-            done(state, iter_ok, converged, logger);
             break;
         }
         else if (std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
         {
             // stalling has been detected, check global convergence criterion!
-            const auto iter_ok   = state.valid();
-            const auto converged = ::converged(state, epsilon);
-            done(state, iter_ok, converged, logger);
             break;
         }
         else
         {
             // not converged, continue the iterations
-            const auto iter_ok   = state.valid();
-            const auto converged = false;
-            done(state, iter_ok, converged, logger);
+            done(state, state.valid(), state.status(), logger);
         }
     }
+
+    // final convergence decision
+    ::converged(state, epsilon);
+    done(state, state.valid(), state.status(), logger);
 
     return state;
 }
@@ -265,7 +248,7 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     auto state = solver_state_t{program.function(), x0};
     auto ipmst = state_t{x0, vector_t{}, vector_t::zero(p)};
 
-    done(state, state.valid(), false, logger);
+    done(state, state.valid(), state.status(), logger);
 
     // NB: solve directly the KKT-based system of linear equations coupling (x, v)
     const auto& sol = program.solve(matrix_t::zero(n, n), c, -b);
@@ -276,7 +259,9 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     program.update(0.0, miu, ipmst);
     state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
-    done(state, state.valid(), ::converged(state, epsilon), logger);
+    // final convergence decision
+    ::converged(state, epsilon);
+    done(state, state.valid(), state.status(), logger);
 
     return state;
 }
