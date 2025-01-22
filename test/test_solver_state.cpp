@@ -30,7 +30,7 @@ void check_unfeasible(const function_t& function, const tscalars... point)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_solver)
+UTEST_BEGIN_MODULE(test_solver_state)
 
 UTEST_CASE(state_str)
 {
