@@ -30,7 +30,7 @@ auto make_solver_ids()
     {
         const auto solver = make_solver(solver_id);
         UTEST_REQUIRE(solver);
-        if (solver->type() == solver_type::line_search)
+        if (solver->has_lsearch())
         {
             solver_ids.push_back(solver_id);
         }

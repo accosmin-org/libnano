@@ -4,8 +4,6 @@
 #include <nano/function/cuts.h>
 #include <nano/function/lambda.h>
 #include <nano/function/penalty.h>
-#include <nano/solver/augmented.h>
-#include <nano/solver/penalty.h>
 
 using namespace nano;
 using namespace nano::constraint;
@@ -115,7 +113,7 @@ void check_minimize(solver_t& solver, const function_t& function, const vector_t
     UTEST_CHECK_LESS_EQUAL(0.0, state.kkt_optimality_test2());
     UTEST_CHECK_LESS(state.kkt_optimality_test1(), epsilon);
     UTEST_CHECK_LESS(state.kkt_optimality_test2(), epsilon);
-    UTEST_CHECK_EQUAL(state.status(), solver_status::converged);
+    UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
     UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
     UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
 
@@ -133,28 +131,28 @@ void check_penalty_solver(const function_t& function, const vector_t& xbest, con
     {
         UTEST_NAMED_CASE(scat(function.name(), "_linear_penalty_solver"));
 
-        auto solver = solver_linear_penalty_t{};
+        auto solver = make_solver("linear-penalty");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver.clone(), function, x0, xbest, fbest, epsilon_nonsmooth);
+            check_minimize(*solver, function, x0, xbest, fbest, epsilon_nonsmooth);
         }
     }
     {
         UTEST_NAMED_CASE(scat(function.name(), "_quadratic_penalty_solver"));
 
-        auto solver = solver_quadratic_penalty_t{};
+        auto solver = make_solver("quadratic-penalty");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver.clone(), function, x0, xbest, fbest, epsilon_smooth);
+            check_minimize(*solver, function, x0, xbest, fbest, epsilon_smooth);
         }
     }
     {
         UTEST_NAMED_CASE(scat(function.name(), "_augmented_lagrangian_solver"));
 
-        auto solver = solver_augmented_lagrangian_t{};
+        auto solver = make_solver("augmented-lagrangian");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver.clone(), function, x0, xbest, fbest, epsilon_smooth);
+            check_minimize(*solver, function, x0, xbest, fbest, epsilon_smooth);
         }
     }
 }

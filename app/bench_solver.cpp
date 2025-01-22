@@ -29,7 +29,7 @@ struct result_t
 
     scalar_t      m_value{0.0};
     scalar_t      m_gnorm{0.0};
-    solver_status m_status{solver_status::converged};
+    solver_status m_status{solver_status::failed};
     tensor_size_t m_fcalls{0};
     tensor_size_t m_gcalls{0};
     int64_t       m_milliseconds{0};
@@ -103,7 +103,7 @@ auto relative_precision(const result_t& result, const result_t& best_result, con
 
 auto make_solver_name(const rsolver_t& solver)
 {
-    return solver->type() == solver_type::line_search
+    return solver->has_lsearch()
              ? scat(solver->type_id(), " [", solver->lsearch0().type_id(), ",", solver->lsearchk().type_id(), "]")
              : solver->type_id();
 }
@@ -253,7 +253,7 @@ int unsafe_main(int argc, const char* argv[])
     using namespace nano;
 
     // parse the command line
-    cmdline_t cmdline("benchmark solvers");
+    cmdline_t cmdline("benchmark solvers on unconstrained nonlinear problems");
     cmdline.add("--solver", "regex to select solvers", ".+");
     cmdline.add("--function", "regex to select test functions", ".+");
     cmdline.add("--lsearch0", "regex to select line-search initialization methods", "quadratic");
@@ -303,7 +303,7 @@ int unsafe_main(int argc, const char* argv[])
     for (const auto& solver_id : solver_ids)
     {
         auto solver = solver_t::all().get(solver_id);
-        if (solver->type() == solver_type::line_search)
+        if (solver->has_lsearch())
         {
             for (const auto& lsearch0_id : lsearch0_ids)
             {

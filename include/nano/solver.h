@@ -54,13 +54,13 @@ public:
     solver_state_t minimize(const function_t&, const vector_t& x0, const logger_t&) const;
 
     ///
-    /// \brief set the line-search initialization method.
+    /// \brief change the line-search initialization method.
     ///
     void lsearch0(const lsearch0_t&);
     void lsearch0(const string_t& id);
 
     ///
-    /// \brief set the line-search strategy method.
+    /// \brief change the line-search strategy method.
     ///
     void lsearchk(const lsearchk_t&);
     void lsearchk(const string_t& id);
@@ -71,14 +71,19 @@ public:
     void more_precise(scalar_t epsilon_factor);
 
     ///
-    /// \brief return the line-search initialization method.
+    /// \brief returns the line-search initialization method.
     ///
     const lsearch0_t& lsearch0() const { return *m_lsearch0; }
 
     ///
-    /// \brief return the the line-search strategy method.
+    /// \brief returns the line-search strategy method.
     ///
     const lsearchk_t& lsearchk() const { return *m_lsearchk; }
+
+    ///
+    /// \brief returns true if the solver supports line-search.
+    ///
+    virtual bool has_lsearch() const;
 
 protected:
     bool done(solver_state_t&, bool iter_ok, solver_status, const logger_t&) const;

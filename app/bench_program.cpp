@@ -248,7 +248,7 @@ int unsafe_main(int argc, const char* argv[])
     using namespace nano;
 
     // parse the command line
-    cmdline_t cmdline("benchmark solvers");
+    cmdline_t cmdline("benchmark solvers on linear and quadratic convex programs");
     cmdline.add("--min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("--max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("--trials", "number of random trials for each test function", "100");

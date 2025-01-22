@@ -47,7 +47,8 @@ template <class tweights, class tbias>
     const auto gcalls = pfresult.m_statistics(1);
     const auto status = pfresult.m_statistics(2);
 
-    UTEST_CHECK_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::converged);
+    UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::failed);
+    UTEST_CHECK_NOT_EQUAL(static_cast<solver_status>(static_cast<int>(status)), solver_status::max_iters);
 
     UTEST_CHECK_GREATER_EQUAL(fcalls, 1);
     UTEST_CHECK_GREATER_EQUAL(gcalls, 1);

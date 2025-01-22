@@ -85,6 +85,11 @@ solver_quasi_t::solver_quasi_t(string_t id)
     register_parameter(parameter_t::make_enum("solver::quasi::initialization", quasi_initialization::identity));
 }
 
+bool solver_quasi_t::has_lsearch() const
+{
+    return true;
+}
+
 solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     solver_t::warn_nonsmooth(function, logger);

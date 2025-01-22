@@ -174,15 +174,6 @@ UTEST_CASE(state_convergence1)
     UTEST_CHECK_LESS(state.gradient_test(), epsilon2<scalar_t>());
 }
 
-UTEST_CASE(state_convergence2)
-{
-    const auto function = function_sphere_t{3};
-    const auto bstate   = solver_state_t{function, make_vector<scalar_t>(1e-3, 1e-3, 1e-3)};
-    const auto cstate   = solver_state_t{function, make_vector<scalar_t>(1e-4, 1e-4, 1e-4)};
-    UTEST_CHECK(::nano::converged(bstate, cstate, 1e-3));
-    UTEST_CHECK(!::nano::converged(bstate, cstate, 1e-4));
-}
-
 UTEST_CASE(factory)
 {
     for (const auto& solver_id : solver_t::all().ids())

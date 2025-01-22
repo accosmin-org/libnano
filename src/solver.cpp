@@ -266,6 +266,11 @@ factory_t<solver_t>& solver_t::all()
     return manager;
 }
 
+bool solver_t::has_lsearch() const
+{
+    return false;
+}
+
 rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals)
 {
     // FIXME: should use RQB or some other proximal bundle method

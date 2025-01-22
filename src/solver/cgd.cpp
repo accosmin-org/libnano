@@ -74,6 +74,11 @@ solver_cgd_t::solver_cgd_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::cgd::orthotest", 0, LT, 0.1, LT, 1));
 }
 
+bool solver_cgd_t::has_lsearch() const
+{
+    return true;
+}
+
 solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     solver_t::warn_nonsmooth(function, logger);

@@ -6,7 +6,7 @@
 
 using namespace nano;
 
-[[maybe_unused]] inline auto make_solver(const string_t& name = "lbfgs")
+[[maybe_unused]] inline auto make_solver(const string_t& name)
 {
     auto solver = solver_t::all().get(name);
     UTEST_REQUIRE(solver);
@@ -141,8 +141,8 @@ struct solver_description_t
     {
         const auto state0      = solver_state_t{function, x0};
         const auto solver_id   = solver.type_id();
-        const auto lsearch0_id = solver.type() == solver_type::line_search ? solver.lsearch0().type_id() : "N/A";
-        const auto lsearchk_id = solver.type() == solver_type::line_search ? solver.lsearchk().type_id() : "N/A";
+        const auto lsearch0_id = solver.has_lsearch() ? solver.lsearch0().type_id() : "N/A";
+        const auto lsearchk_id = solver.has_lsearch() ? solver.lsearchk().type_id() : "N/A";
 
         logger.info(std::setprecision(10), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id,
                     "]\n:x0=[", state0.x().transpose(), "],", state0, "\n");

@@ -13,6 +13,11 @@ rsolver_t solver_gd_t::clone() const
     return std::make_unique<solver_gd_t>(*this);
 }
 
+bool solver_gd_t::has_lsearch() const
+{
+    return true;
+}
+
 solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     solver_t::warn_nonsmooth(function, logger);
