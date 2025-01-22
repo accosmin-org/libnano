@@ -95,6 +95,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(2), std::numeric_limits<scalar_t>::max(), 1e-12);
 
     UTEST_CHECK(!state.update_if_better(x2, function(x2)));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
@@ -104,6 +105,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(3), std::numeric_limits<scalar_t>::max(), 1e-12);
 
     UTEST_CHECK(!state.update_if_better(x2, std::numeric_limits<scalar_t>::quiet_NaN()));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
@@ -114,6 +116,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(4), std::numeric_limits<scalar_t>::max(), 1e-12);
 
     UTEST_CHECK(!state.update_if_better(x1, function(x1)));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x1, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x1), 1e-12);
@@ -125,6 +128,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(5), std::numeric_limits<scalar_t>::max(), 1e-12);
 
     UTEST_CHECK(state.update_if_better(x09, function(x09)));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x09, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x09), 1e-12);
@@ -136,6 +140,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(5), 0.38, 1e-12);
 
     UTEST_CHECK(state.update_if_better(x0, function(x0)));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x0, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
@@ -147,6 +152,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(5), 1.62, 1e-12);
 
     UTEST_CHECK(!state.update_if_better(x0, function(x0)));
+    state.update_history();
 
     UTEST_CHECK_CLOSE(state.x(), x0, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
@@ -158,7 +164,7 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.value_test(5), 1.62, 1e-12);
 }
 
-UTEST_CASE(state_convergence0)
+UTEST_CASE(state_gradient_test0)
 {
     const auto function = function_sphere_t{7};
     const auto state    = solver_state_t{function, make_vector<scalar_t>(0, 0, 0, 0, 0, 0, 0)};
@@ -166,7 +172,7 @@ UTEST_CASE(state_convergence0)
     UTEST_CHECK_LESS(state.gradient_test(), epsilon0<scalar_t>());
 }
 
-UTEST_CASE(state_convergence1)
+UTEST_CASE(state_gradient_test1)
 {
     const auto function = function_sphere_t{7};
     const auto state    = solver_state_t{function, make_random_x0(function, epsilon1<scalar_t>())};
