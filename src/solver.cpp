@@ -224,7 +224,6 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_gs_lbfgs_t>("gradient sampling with LBFGS-like updates (P-nNGS + LBFGS)");
         manager.add<solver_ags_lbfgs_t>("adaptive gradient sampling with LBFGS-like updates (P-nNGS + AGS + LBFGS)");
         manager.add<solver_sgm_t>("sub-gradient method");
-        manager.add<solver_cgd_pr_t>("conjugate gradient descent (default)");
         manager.add<solver_cgd_n_t>("conjugate gradient descent (N+)");
         manager.add<solver_cgd_hs_t>("conjugate gradient descent (HS+)");
         manager.add<solver_cgd_fr_t>("conjugate gradient descent (FR)");

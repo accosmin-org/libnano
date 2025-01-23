@@ -25,17 +25,15 @@ auto make_best_smooth_solver_ids()
 
 auto make_solver_ids()
 {
-    auto solver_ids = strings_t{"ellipsoid"};
-    for (const auto& solver_id : solver_t::all().ids())
-    {
-        const auto solver = make_solver(solver_id);
-        UTEST_REQUIRE(solver);
-        if (solver->has_lsearch())
-        {
-            solver_ids.push_back(solver_id);
-        }
-    }
-    return solver_ids;
+    return strings_t{
+        // clang-format off
+        "ellipsoid",
+        "gd",
+        "cgd-n", "cgd-hs", "cgd-fr", "cgd-pr", "cgd-cd", "cgd-ls", "cgd-dy", "cgd-dycd", "cgd-dyhs", "cgd-frpr",
+        "lbfgs",
+        "sr1", "dfp", "bfgs", "hoshino", "fletcher"
+        // clang-format on
+    };
 }
 } // namespace
 

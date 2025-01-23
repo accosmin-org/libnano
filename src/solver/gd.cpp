@@ -26,6 +26,12 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     auto state = solver_state_t{function, x0};
+    if (state.gx().lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
+    {
+        solver_t::done_gradient_test(state, state.valid(), logger);
+        return state;
+    }
+
     auto lsearch = make_lsearch();
     auto descent = vector_t{function.size()};
 

@@ -99,6 +99,12 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
     const auto init      = parameter("solver::quasi::initialization").value<quasi_initialization>();
 
     auto cstate = solver_state_t{function, x0}; // current state
+    if (cstate.gx().lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
+    {
+        solver_t::done_gradient_test(cstate, cstate.valid(), logger);
+        return cstate;
+    }
+
     auto pstate  = cstate;     // previous state
     auto descent = vector_t{}; // descent direction
     auto lsearch = make_lsearch();
