@@ -93,38 +93,8 @@ void check_penalties(const function_t& function, const vector_t& x, const bool e
     check_penalty<quadratic_penalty_function_t>(function, x, expected_valid);
 }
 
-void check_minimize(solver_t& solver, const function_t& function, const vector_t& x0, const vector_t& xbest,
-                    const scalar_t fbest, const scalar_t epsilon)
-{
-    std::stringstream stream;
-    stream << std::setprecision(10) << function.name() << "\n:x0=[" << x0.transpose() << "]\n";
-
-    const auto logger = make_stream_logger(stream);
-
-    function.clear_statistics();
-    const auto state = solver.minimize(function, x0, logger);
-
-    const auto old_n_failures = utest_n_failures.load();
-
-    UTEST_CHECK(state.valid());
-    UTEST_CHECK_CLOSE(state.x(), xbest, epsilon);
-    UTEST_CHECK_CLOSE(state.fx(), fbest, epsilon);
-    UTEST_CHECK_LESS_EQUAL(0.0, state.kkt_optimality_test1());
-    UTEST_CHECK_LESS_EQUAL(0.0, state.kkt_optimality_test2());
-    UTEST_CHECK_LESS(state.kkt_optimality_test1(), epsilon);
-    UTEST_CHECK_LESS(state.kkt_optimality_test2(), epsilon);
-    UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
-    UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
-    UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
-
-    if (old_n_failures != utest_n_failures.load())
-    {
-        std::cout << stream.str() << "\n";
-    }
-}
-
-void check_penalty_solver(const function_t& function, const vector_t& xbest, const scalar_t fbest,
-                          const scalar_t epsilon_nonsmooth, const scalar_t epsilon_smooth = 1e-6)
+void check_penalty_solver(const function_t& function, const scalar_t epsilon_nonsmooth,
+                          const scalar_t epsilon_smooth = 1e-6)
 {
     if (linear_penalty_function_t{function}.convex())
     // NB: cannot solve non-convex non-smooth problems precisely!
@@ -134,7 +104,7 @@ void check_penalty_solver(const function_t& function, const vector_t& xbest, con
         auto solver = make_solver("linear-penalty");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver, function, x0, xbest, fbest, epsilon_nonsmooth);
+            check_minimize(*solver, function, x0, minimize_config_t{}.expected_maximum_deviation(epsilon_nonsmooth));
         }
     }
     {
@@ -143,7 +113,7 @@ void check_penalty_solver(const function_t& function, const vector_t& xbest, con
         auto solver = make_solver("quadratic-penalty");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver, function, x0, xbest, fbest, epsilon_smooth);
+            check_minimize(*solver, function, x0, minimize_config_t{}.expected_maximum_deviation(epsilon_smooth));
         }
     }
     {
@@ -152,7 +122,7 @@ void check_penalty_solver(const function_t& function, const vector_t& xbest, con
         auto solver = make_solver("augmented-lagrangian");
         for (const auto& x0 : make_random_x0s(function, 5.0))
         {
-            check_minimize(*solver, function, x0, xbest, fbest, epsilon_smooth);
+            check_minimize(*solver, function, x0, minimize_config_t{}.expected_maximum_deviation(epsilon_smooth));
         }
     }
 }
@@ -721,6 +691,7 @@ UTEST_CASE(minimize_objective1)
         return x.sum();
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(-1.0, -1.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)}));
 
     check_gradient(function);
@@ -750,9 +721,7 @@ UTEST_CASE(minimize_objective1)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
-    const auto fbest = -2.0;
-    const auto xbest = make_vector<scalar_t>(-1.0, -1.0);
-    check_penalty_solver(function, xbest, fbest, 1e-4);
+    check_penalty_solver(function, 1e-4);
 }
 
 UTEST_CASE(minimize_objective2)
@@ -768,6 +737,7 @@ UTEST_CASE(minimize_objective2)
         return -5.0 * x(0) * x(0) + x(1) * x(1);
     };
     auto function = make_function(2, convexity::no, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(constant_t{1.0, 0}));
 
     check_gradient(function);
@@ -791,9 +761,7 @@ UTEST_CASE(minimize_objective2)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
-    const auto fbest = -5.0;
-    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-4);
+    check_penalty_solver(function, 1e-4);
 }
 
 UTEST_CASE(minimize_objective3)
@@ -808,6 +776,7 @@ UTEST_CASE(minimize_objective3)
         return x.sum();
     };
     auto function = make_function(1, convexity::yes, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0)));
     UTEST_CHECK(function.constrain(minimum_t{1.0, 0}));
 
     check_gradient(function);
@@ -831,9 +800,7 @@ UTEST_CASE(minimize_objective3)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
-    const auto fbest = +1.0;
-    const auto xbest = make_vector<scalar_t>(1.0);
-    check_penalty_solver(function, xbest, fbest, 1e-4);
+    check_penalty_solver(function, 1e-4);
 }
 
 UTEST_CASE(minimize_objective4)
@@ -849,6 +816,7 @@ UTEST_CASE(minimize_objective4)
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 4.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}));
 
     check_gradient(function);
@@ -872,9 +840,7 @@ UTEST_CASE(minimize_objective4)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
-    const auto fbest = -1.0;
-    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-4);
+    check_penalty_solver(function, 1e-4);
 }
 
 UTEST_CASE(minimize_objective5)
@@ -891,6 +857,7 @@ UTEST_CASE(minimize_objective5)
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, -1.0), -1.0}));
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(-1.0, +1.0), -1.0}));
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0}));
@@ -917,9 +884,7 @@ UTEST_CASE(minimize_objective5)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
-    const auto fbest = 5.0 / 16.0;
-    const auto xbest = make_vector<scalar_t>(1.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-2);
+    check_penalty_solver(function, 1e-2);
 }
 
 UTEST_CASE(minimize_objective6)
@@ -936,6 +901,7 @@ UTEST_CASE(minimize_objective6)
         return x(0);
     };
     auto function = make_function(2, convexity::yes, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(0.0, 0.0)));
     UTEST_CHECK(function.constrain(minimum_t{0.0, 1}));
     UTEST_CHECK(function.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 0.0), 1.0}));
 
@@ -960,10 +926,7 @@ UTEST_CASE(minimize_objective6)
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 4.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
-
-    const auto fbest = 0.0;
-    const auto xbest = make_vector<scalar_t>(0.0, 0.0);
-    check_penalty_solver(function, xbest, fbest, 1e-1);
+    check_penalty_solver(function, 1e-1);
 }
 
 UTEST_CASE(minimize_objective7)
@@ -981,6 +944,7 @@ UTEST_CASE(minimize_objective7)
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };
     auto function = make_function(3, convexity::yes, smoothness::yes, 0.0, lambda);
+    UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.5, -1.0)));
     UTEST_CHECK(function.constrain(minimum_t{-1.0, 0}));
     UTEST_CHECK(function.constrain(minimum_t{-1.0, 1}));
     UTEST_CHECK(function.constrain(minimum_t{-1.0, 2}));
@@ -991,10 +955,7 @@ UTEST_CASE(minimize_objective7)
     check_gradient(function);
     check_convexity(function);
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
-
-    const auto fbest = -21.625;
-    const auto xbest = make_vector<scalar_t>(1.0, 0.5, -1.0);
-    check_penalty_solver(function, xbest, fbest, 1e-1);
+    check_penalty_solver(function, 1e-1);
 }
 
 UTEST_END_MODULE()
