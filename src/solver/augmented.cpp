@@ -74,17 +74,18 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         const auto pstate = solver->minimize(penalty_function, bstate.x(), logger);
         cstate.update(pstate.x(), pstate.gx(), pstate.fx());
 
-        // check convergence
-        const auto iter_ok = cstate.valid();
-        if (done_kkt_optimality_test(cstate, iter_ok, logger))
-        {
-            break;
-        }
-
         const auto criterion = make_criterion(cstate, miu, ro);
         if (criterion < old_criterion)
         {
             bstate.update(cstate.x(), lambda, miu);
+
+            // check convergence
+            const auto iter_ok = bstate.valid();
+            if (done_kkt_optimality_test(bstate, iter_ok, logger))
+            {
+                break;
+            }
+
             solver->more_precise(epsilonK);
         }
 
