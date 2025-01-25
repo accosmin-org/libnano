@@ -6,7 +6,7 @@ namespace
 {
 auto make_solver_ids()
 {
-    return strings_t{"ellipsoid", "sgm", "cocob", "sda", "wda", "pgm", "dgm", "fgm", "asga2", "asga4"};
+    return strings_t{"ellipsoid", "sgm", "cocob", "sda", "wda", "pgm", "dgm", "fgm", "asga2", "asga4", "osga"};
 }
 } // namespace
 
