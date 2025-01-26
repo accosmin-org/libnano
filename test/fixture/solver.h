@@ -30,15 +30,22 @@ struct minimize_config_t
         return *this;
     }
 
-    auto& expecting_failure()
+    auto& expected_failure()
     {
         m_expected_failure = true;
+        return *this;
+    }
+
+    auto& max_evals(const tensor_size_t max_evals)
+    {
+        m_max_evals = max_evals;
         return *this;
     }
 
     scalar_t m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
     scalar_t m_expected_maximum_deviation{1e-6};
     bool     m_expected_failure{false};
+    tensor_size_t m_max_evals{1000};
 };
 
 struct solver_description_t
@@ -124,8 +131,8 @@ struct solver_description_t
         // - either no theoretical or practical stopping criterion
         // - very slow convergence rate for both non-smooth and hard smooth problems
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e+1).expecting_failure())
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e+3).expecting_failure());
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e+1).expected_failure().max_evals(300))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e+3).expected_failure().max_evals(300));
     }
     else if (solver_id == "ipm" || solver_id == "augmented-lagrangian")
     {
