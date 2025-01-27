@@ -42,9 +42,9 @@ struct minimize_config_t
         return *this;
     }
 
-    scalar_t m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
-    scalar_t m_expected_maximum_deviation{1e-6};
-    bool     m_expected_failure{false};
+    scalar_t      m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
+    scalar_t      m_expected_maximum_deviation{1e-6};
+    bool          m_expected_failure{false};
     tensor_size_t m_max_evals{0};
 };
 

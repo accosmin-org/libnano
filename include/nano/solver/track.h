@@ -45,4 +45,4 @@ private:
     scalars_t m_history_dx; ///< history of point differences across iterates
     scalars_t m_history_df; ///< history of function value differences across iterates
 };
-}
+} // namespace nano

@@ -127,8 +127,8 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
         }
 
         // line-search
-        pstate               = cstate;
-        const auto iter_ok   = lsearch.get(cstate, descent, logger);
+        pstate             = cstate;
+        const auto iter_ok = lsearch.get(cstate, descent, logger);
         if (solver_t::done_gradient_test(cstate, iter_ok, logger))
         {
             break;

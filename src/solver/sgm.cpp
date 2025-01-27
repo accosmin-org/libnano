@@ -21,8 +21,8 @@ solver_state_t solver_sgm_t::do_minimize(const function_t& function, const vecto
     const auto power     = parameter("solver::sgm::power").value<scalar_t>();
 
     auto state = solver_state_t{function, x0};
-    auto x = state.x();
-    auto g = state.gx();
+    auto x     = state.x();
+    auto g     = state.gx();
 
     for (auto iteration = 0; function.fcalls() + function.gcalls() < max_evals; ++iteration)
     {

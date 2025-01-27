@@ -81,10 +81,10 @@ void check_minimizer(const function_t& function, const vector_t& optimum)
 {
     const auto* const solver_id = function.smooth() ? "lbfgs" : "ellipsoid";
 
-    const auto config  = minimize_config_t{};
-    const auto solver  = make_solver(solver_id);
+    const auto config                      = minimize_config_t{};
+    const auto solver                      = make_solver(solver_id);
     solver->parameter("solver::max_evals") = 10000;
-    const auto state   = check_minimize(*solver, function, make_random_x0(function), config);
+    const auto state                       = check_minimize(*solver, function, make_random_x0(function), config);
     UTEST_CHECK_CLOSE(state.fx(), 0.0, 1e-6);
     UTEST_CHECK_CLOSE(state.x(), optimum, 1e-7);
 }

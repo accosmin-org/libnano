@@ -51,7 +51,7 @@ solver_state_t solver_cocob_t::do_minimize(const function_t& function, const vec
         const auto fx = function(x, gx);
         state.update_if_better(x, gx, fx);
 
-        const auto iter_ok   = std::isfinite(fx);
+        const auto iter_ok = std::isfinite(fx);
         if (solver_t::done_value_test(state, iter_ok, logger))
         {
             break;

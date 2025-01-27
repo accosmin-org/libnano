@@ -87,14 +87,14 @@ solver_state_t solver_cgd_t::do_minimize(const function_t& function, const vecto
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto orthotest = parameter("solver::cgd::orthotest").value<scalar_t>();
 
-    auto cstate   = solver_state_t{function, x0}; // current state
+    auto cstate = solver_state_t{function, x0}; // current state
     if (cstate.gx().lpNorm<Eigen::Infinity>() < epsilon0<scalar_t>())
     {
         solver_t::done_gradient_test(cstate, cstate.valid(), logger);
         return cstate;
     }
 
-    auto pstate   = cstate;                       // previous state
+    auto pstate   = cstate; // previous state
     auto lsearch  = make_lsearch();
     auto cdescent = vector_t{}; // current descent direction
     auto pdescent = vector_t{}; // previous descent direction

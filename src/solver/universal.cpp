@@ -44,8 +44,8 @@ solver_state_t solver_pgm_t::do_minimize(const function_t& function, const vecto
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // 1. line-search
-        auto M         = L;
-        auto iter_ok   = false;
+        auto M       = L;
+        auto iter_ok = false;
         for (tensor_size_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++k)
         {
             xk1     = xk - gxk / M;
@@ -107,8 +107,8 @@ solver_state_t solver_dgm_t::do_minimize(const function_t& function, const vecto
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // 1. line-search
-        auto M         = L;
-        auto iter_ok   = false;
+        auto M       = L;
+        auto iter_ok = false;
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1); ++k)
         {
             xk1  = gphi - gxk / M;
@@ -174,8 +174,8 @@ solver_state_t solver_fgm_t::do_minimize(const function_t& function, const vecto
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // 2. line-search
-        auto M         = L;
-        auto iter_ok   = false;
+        auto M       = L;
+        auto iter_ok = false;
         for (int64_t k = 0; k < lsearch_max_iterations && !iter_ok && std::isfinite(fxk1) && std::isfinite(fyk1); ++k)
         {
             ak1            = (1.0 + std::sqrt(1.0 + 4.0 * M * Ak)) / (2.0 * M);
