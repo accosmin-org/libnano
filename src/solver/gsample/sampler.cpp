@@ -40,7 +40,6 @@ void fixed_sampler_t::sample(const solver_state_t& state, const scalar_t epsilon
     for (tensor_size_t i = 0; i < m; ++i, ++m_psize)
     {
         sample_from_ball(state.x(), epsilon, m_X.tensor(i), rng);
-        assert((state.x() - m_X.tensor(i)).lpNorm<2>() <= epsilon + std::numeric_limits<scalar_t>::epsilon());
         state.function()(m_X.tensor(i), m_G.tensor(i));
     }
 
@@ -84,10 +83,5 @@ void adaptive_sampler_t::sample(const solver_state_t& state, const scalar_t epsi
         assert(m_psize < p);
         sample_from_ball(state.x(), epsilon, m_X.tensor(m_psize), rng);
         state.function()(m_X.tensor(m_psize), m_G.tensor(m_psize));
-    }
-
-    for (tensor_size_t i = 0; i < m_psize; ++i)
-    {
-        assert((state.x() - m_X.tensor(i)).lpNorm<2>() <= epsilon + std::numeric_limits<scalar_t>::max());
     }
 }

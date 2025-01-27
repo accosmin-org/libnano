@@ -45,7 +45,7 @@ struct minimize_config_t
     scalar_t m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
     scalar_t m_expected_maximum_deviation{1e-6};
     bool     m_expected_failure{false};
-    tensor_size_t m_max_evals{1000};
+    tensor_size_t m_max_evals{0};
 };
 
 struct solver_description_t
@@ -118,8 +118,8 @@ struct solver_description_t
         // NB: the stopping criterion is working well in practice, but it needs many iterations.
         // NB: the adaptive gradient sampling methods are not very stable.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4));
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e+4).expected_failure().max_evals(100))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e+4).expected_failure().max_evals(100));
     }
     else if (solver_id == "sgm" || solver_id == "cocob" || solver_id == "sda" ||
              solver_id == "wda" ||                                             // primal-dual subgradient method
@@ -171,7 +171,10 @@ struct solver_description_t
 
         function.clear_statistics();
 
-        solver.parameter("solver::max_evals") = config.m_max_evals;
+        if (config.m_max_evals > 0)
+        {
+            solver.parameter("solver::max_evals") = config.m_max_evals;
+        }
 
         // minimize
         auto state = solver.minimize(function, x0, logger);

@@ -34,6 +34,9 @@ struct sampler_t
     rsolver_t     m_solver;   ///< solver for the quadratic program to compute the sample gradient
 };
 
+///
+/// \brief fixed gradient sampling: the number of sampled gradients is fixed and greater than the number of dimensions.
+///
 class fixed_sampler_t final : public sampler_t
 {
 public:
@@ -54,6 +57,10 @@ private:
     quadratic_program_t m_program;
 };
 
+///
+/// \brief adaptive gradient sampling: the number of sampled gradients varies from iteration to iteration up
+/// to a maximum fixed size, but it is typically much smaller than the number of dimensions.
+///
 class adaptive_sampler_t final : public sampler_t
 {
 public:

@@ -55,7 +55,7 @@ public:
 
 private:
     // attributes
-    scalar_t       m_beta{1e-8};
+    scalar_t       m_beta{0.0};
     scalar_t       m_gamma{0.5};
     tensor_size_t  m_max_iters{50};
     perturbation_t m_perturbation;

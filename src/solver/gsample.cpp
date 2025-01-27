@@ -67,9 +67,7 @@ solver_state_t base_solver_gs_t<tsampler, tpreconditioner>::do_minimize(const fu
 
         // check convergence
         const auto iter_ok   = g.all_finite() && epsilonk > std::numeric_limits<scalar_t>::epsilon();
-        const auto converged = state.gradient_test(g) < epsilonk && epsilonk < epsilon;
-        logger.info("[solver-", type_id(), "]: g=", g.lpNorm<Eigen::Infinity>(), ", epsilonk=", epsilonk,
-                    ", epsilon=", epsilon, "\n");
+        const auto converged = state.gradient_test(g) < std::max(sqrt(epsilon), epsilonk) && epsilonk < epsilon;
         if (solver_t::done_specific_test(state, iter_ok, converged, logger))
         {
             break;
