@@ -171,6 +171,8 @@ struct solver_description_t
 
         function.clear_statistics();
 
+        solver.parameter("solver::max_evals") = config.m_max_evals;
+
         // minimize
         auto state = solver.minimize(function, x0, logger);
         UTEST_CHECK(state.valid());
