@@ -6,6 +6,9 @@ using namespace nano;
 
 namespace nano::gsample
 {
+///
+/// \brief identity preconditioner: W = H = I(n, n).
+///
 class identity_preconditioner_t
 {
 public:
@@ -29,6 +32,9 @@ private:
     storage_t m_H; ///<
 };
 
+///
+/// \brief LBFGS-like preconditioner.
+///
 class lbfgs_preconditioner_t
 {
 public:
