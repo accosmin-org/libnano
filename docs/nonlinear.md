@@ -48,16 +48,16 @@ public:
         return std::make_unique<objective_t>(*this);
     }
 
-    scalar_t do_vgrad(const vector_t& x, vector_t* gx = nullptr) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
     {
         assert(size() == x.size());
         assert(size() == m_b.size());
 
         const auto dx = 1 + (x - m_b).dot(x - m_b) / 2;
 
-        if (gx != nullptr)
+        if (gx.size() == x.size())
         {
-            *gx = (x - m_b) / dx;
+            gx = (x - m_b) / dx;
         }
 
         return std::log(dx);
@@ -65,7 +65,7 @@ public:
 
 private:
 
-    vector_t    m_b;
+    vector_t m_b;
 };
 ```
 

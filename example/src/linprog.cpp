@@ -1,9 +1,12 @@
 #include <iomanip>
 #include <iostream>
-#include <nano/program/solver.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
+#include <nano/function/linear.h>
+#include <nano/solver.h>
 
 using namespace nano;
-using namespace nano::program;
 
 int main(const int, char*[])
 {
@@ -24,19 +27,23 @@ int main(const int, char*[])
     const auto xbest    = make_vector<scalar_t>(1, 2, 0);
 
     // solve the linear program
-    auto solver                           = solver_t{};
-    solver.parameter("solver::epsilon")   = 1e-12;
-    solver.parameter("solver::max_iters") = 100;
+    auto solver = solver_t::all().get("ipm");
+    assert(solver != nullptr);
+    solver->parameter("solver::epsilon")   = 1e-12;
+    solver->parameter("solver::max_evals") = 100;
 
-    const auto program = make_linear(c, make_equality(A, b), make_greater(c.size(), 0.0));
-    const auto logger  = make_stdout_logger();
-    const auto state   = solver.solve(program, logger);
+    auto program = linear_program_t{"lp", c};
+    critical(A * program.variable() == b);
+    critical(program.variable() >= 0.0);
 
-    std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;
+    const auto logger = make_stdout_logger();
+    const auto state  = solver->minimize(program, make_random_vector<scalar_t>(program.size()), logger);
 
-    assert(state.m_status == solver_status::converged);
-    assert(close(state.m_x, xbest, 1e-10));
+    std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.x().transpose() << std::endl;
 
-    const auto error = (state.m_x - xbest).lpNorm<Eigen::Infinity>();
+    assert(state.status() == solver_status::kkt_optimality_test);
+    assert(close(state.x(), xbest, 1e-10));
+
+    const auto error = (state.x() - xbest).lpNorm<Eigen::Infinity>();
     return error < 1e-10 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,9 +1,12 @@
 #include <iomanip>
 #include <iostream>
-#include <nano/program/solver.h>
+#include <nano/critical.h>
+#include <nano/function/bounds.h>
+#include <nano/function/cuts.h>
+#include <nano/function/quadratic.h>
+#include <nano/solver.h>
 
 using namespace nano;
-using namespace nano::program;
 
 int main(const int, char*[])
 {
@@ -30,20 +33,25 @@ int main(const int, char*[])
     const auto xbest      = make_vector<scalar_t>(3, 4.5);
 
     // solve the quadratic program
-    auto solver                           = solver_t{};
-    solver.parameter("solver::epsilon")   = 1e-12;
-    solver.parameter("solver::max_iters") = 100;
+    auto solver = solver_t::all().get("ipm");
+    assert(solver != nullptr);
+    solver->parameter("solver::epsilon")   = 1e-12;
+    solver->parameter("solver::max_evals") = 100;
 
-    const auto program =
-        make_quadratic(Q, c, make_equality(A, b), make_inequality(G, h), make_greater(l), make_less(u));
+    auto program = quadratic_program_t{"qp", Q, c};
+    critical(A * program.variable() == b);
+    critical(G * program.variable() <= h);
+    critical(l <= program.variable());
+    critical(program.variable() <= u);
+
     const auto logger = make_stdout_logger();
-    const auto state  = solver.solve(program, logger);
+    const auto state  = solver->minimize(program, make_random_vector<scalar_t>(program.size()), logger);
 
-    std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.m_x.transpose() << std::endl;
+    std::cout << std::fixed << std::setprecision(12) << "solution: x=" << state.x().transpose() << std::endl;
 
-    assert(state.m_status == solver_status::converged);
-    assert(close(state.m_x, xbest, 1e-10));
+    assert(state.status() == solver_status::kkt_optimality_test);
+    assert(close(state.x(), xbest, 1e-10));
 
-    const auto error = (state.m_x - xbest).lpNorm<Eigen::Infinity>();
+    const auto error = (state.x() - xbest).lpNorm<Eigen::Infinity>();
     return error < 1e-10 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

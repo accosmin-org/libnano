@@ -73,14 +73,14 @@ int main(const int, char*[])
     {
         const auto x0 = make_random_vector<scalar_t>(objective.size());
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0) << "...\n";
+                  << "]: f0=" << objective(x0) << "...\n";
 
         // minimize
         const auto state = solver->minimize(objective, x0, make_stdout_logger());
         const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0) << ",x-x*=" << error << "," << state << ".\n";
+                  << "]: f0=" << objective(x0) << ",x-x*=" << error << "," << state << ".\n";
 
         if (error > 1e-7)
         {

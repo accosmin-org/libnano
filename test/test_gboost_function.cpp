@@ -1,6 +1,6 @@
-#include "fixture/dataset.h"
-#include "fixture/loss.h"
-#include "fixture/solver.h"
+#include <fixture/dataset.h>
+#include <fixture/loss.h>
+#include <fixture/solver.h>
 #include <nano/gboost/function.h>
 #include <nano/generator/elemwise_identity.h>
 
@@ -105,7 +105,7 @@ auto make_datasource(const tensor_size_t samples = 100, const tensor_size_t isiz
 
 void check_optimum(const function_t& function, const vector_t& expected_optimum)
 {
-    const auto solver = make_solver();
+    const auto solver = make_solver("lbfgs");
     const auto state  = check_minimize(*solver, function, vector_t::zero(function.size()));
     UTEST_CHECK_CLOSE(state.x(), expected_optimum, 1e+2 * solver->parameter("solver::epsilon").value<scalar_t>());
 }
@@ -116,7 +116,7 @@ void check_value(const function_t& function, const ttmatrix& tmatrix, const toma
 {
     const auto values = 0.5 * (tmatrix - omatrix).array().square().rowwise().sum();
 
-    UTEST_CHECK_CLOSE(function.vgrad(make_full_vector<scalar_t>(function.size(), 0.0)), values.mean(), epsilon);
+    UTEST_CHECK_CLOSE(function(make_full_vector<scalar_t>(function.size(), 0.0)), values.mean(), epsilon);
 }
 } // namespace
 

@@ -34,14 +34,13 @@ make_test(test_constrained NANO::solver)
 
 make_test(test_program_linear NANO::solver)
 make_test(test_program_quadratic NANO::solver)
-make_test(test_program_constraint NANO::program)
 
 make_test(test_lsearch NANO::solver)
-make_test(test_solver NANO::solver)
+make_test(test_solver_state NANO::solver)
 make_test(test_solver_smooth NANO::solver)
 make_test(test_solver_bundle NANO::solver)
 make_test(test_solver_gsample NANO::solver)
-make_test(test_solver_unreliable NANO::solver)
+make_test(test_solver_nonlinear NANO::solver)
 
 make_test(test_datasource_mask NANO::machine)
 make_test(test_datasource_memory NANO::machine)
