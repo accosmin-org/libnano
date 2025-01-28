@@ -8,6 +8,7 @@
 #include <nano/logger.h>
 #include <nano/tensor/tensor.h>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -116,7 +117,7 @@ struct utest_test_name_t
 
 #define UTEST_NAMED_CASE(name) [[maybe_unused]] const auto utest_test_name_this = utest_test_name_t{name};
 
-enum class exception_status
+enum class exception_status : uint8_t
 {
     none,
     expected,
