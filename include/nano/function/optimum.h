@@ -12,7 +12,7 @@ struct optimum_t
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
 
     // attributes
-    vector_t m_xbest;                    ///< optimum: solution
-    scalar_t m_fbest{NaN};               ///< optimum: function value
+    vector_t m_xbest;      ///< optimum: solution
+    scalar_t m_fbest{NaN}; ///< optimum: function value
 };
 } // namespace nano

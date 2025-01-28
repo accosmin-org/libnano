@@ -217,7 +217,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
 solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
                                                             const logger_t& logger) const
 {
-    const auto miu     = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto miu = parameter("solver::ipm::miu").value<scalar_t>();
 
     const auto& c = program.c();
     const auto& b = program.b();

@@ -127,8 +127,8 @@ bool function_t::optimum(vector_t xbest)
     }
     else
     {
-        m_optimum.m_xbest  = std::move(xbest);
-        m_optimum.m_fbest  = do_vgrad(m_optimum.m_xbest, vector_map_t{});
+        m_optimum.m_xbest = std::move(xbest);
+        m_optimum.m_fbest = do_vgrad(m_optimum.m_xbest, vector_map_t{});
         return true;
     }
 }
@@ -141,7 +141,7 @@ bool function_t::optimum(const scalar_t fbest)
     }
     else
     {
-        m_optimum.m_fbest  = fbest;
+        m_optimum.m_fbest = fbest;
         return true;
     }
 }
