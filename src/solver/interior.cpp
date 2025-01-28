@@ -22,24 +22,6 @@ auto make_smax(const vector_t& u, const vector_t& du)
 
     return std::min(smax, 1.0);
 }
-
-void converged(solver_state_t& state, const scalar_t epsilon)
-{
-    if (state.kkt_optimality_test() < epsilon)
-    {
-        state.status(solver_status::kkt_optimality_test);
-    }
-    else if (state.feasibility_test() < epsilon)
-    {
-        // FIXME: this is an heuristic, to search for a theoretically sound method to detect unboundness!
-        state.status(solver_status::unbounded);
-    }
-    else
-    {
-        // FIXME: this is an heuristic, to search for a theoretically sound method to detect unfeasibility!
-        state.status(solver_status::unfeasible);
-    }
-}
 } // namespace
 
 solver_ipm_t::solver_ipm_t()
@@ -110,7 +92,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
     const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
     const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
-    const auto epsilon           = parameter("solver::epsilon").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
     const auto max_lsearch_iters = parameter("solver::ipm::max_lsearch_iters").value<tensor_size_t>();
@@ -228,8 +209,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     }
 
     // final convergence decision
-    ::converged(state, epsilon);
-    done(state, state.valid(), state.status(), logger);
+    done_kkt_optimality_test(state, state.valid(), logger);
 
     return state;
 }
@@ -238,7 +218,6 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
                                                             const logger_t& logger) const
 {
     const auto miu     = parameter("solver::ipm::miu").value<scalar_t>();
-    const auto epsilon = parameter("solver::epsilon").value<scalar_t>();
 
     const auto& c = program.c();
     const auto& b = program.b();
@@ -260,8 +239,7 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
     // final convergence decision
-    ::converged(state, epsilon);
-    done(state, state.valid(), state.status(), logger);
+    done_kkt_optimality_test(state, state.valid(), logger);
 
     return state;
 }

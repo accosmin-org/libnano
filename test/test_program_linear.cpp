@@ -151,54 +151,6 @@ UTEST_CASE(program2)
     check_minimize(make_solver_ids(), function);
 }
 
-UTEST_CASE(program3)
-{
-    // NB: unbounded program!
-    const auto c = make_vector<scalar_t>(-1, 0, 0);
-    const auto A = make_matrix<scalar_t>(1, 0, 1, 1);
-    const auto b = make_vector<scalar_t>(2);
-
-    auto function = linear_program_t{"lp3", c};
-    UTEST_REQUIRE(A * function.variable() == b);
-    UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(optimum_t::status::unbounded));
-
-    check_convexity(function);
-    check_minimize(make_solver_ids(), function);
-}
-
-UTEST_CASE(program4)
-{
-    // NB: unfeasible program!
-    const auto c = make_vector<scalar_t>(-1, 0);
-    const auto A = make_matrix<scalar_t>(2, 0, 1, 1, 0);
-    const auto b = make_vector<scalar_t>(-1, -1);
-
-    auto function = linear_program_t{"lp4", c};
-    UTEST_REQUIRE(A * function.variable() == b);
-    UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(optimum_t::status::unfeasible));
-
-    check_convexity(function);
-    check_minimize(make_solver_ids(), function);
-}
-
-UTEST_CASE(program5)
-{
-    // NB: unfeasible program!
-    const auto c = make_vector<scalar_t>(-1, 0, 0);
-    const auto A = make_matrix<scalar_t>(3, 0, 1, 1, 0, 0, 1, 0, 1, 0);
-    const auto b = make_vector<scalar_t>(1, 1, 1);
-
-    auto function = linear_program_t{"lp5", c};
-    UTEST_REQUIRE(A * function.variable() == b);
-    UTEST_REQUIRE(function.variable() >= 0.0);
-    UTEST_REQUIRE(function.optimum(optimum_t::status::unfeasible));
-
-    check_convexity(function);
-    check_minimize(make_solver_ids(), function);
-}
-
 UTEST_CASE(program_cvx48b)
 {
     for (const tensor_size_t dims : {1, 7, 11})
@@ -264,7 +216,7 @@ UTEST_CASE(program_cvx48e_ineq)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
+        for (tensor_size_t alpha = 1; alpha <= dims; ++alpha)
         {
             const auto function = linear_program_cvx48e_ineq_t{dims, alpha};
 
@@ -303,20 +255,7 @@ UTEST_CASE(program_cvx410)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        const auto feasible = true;
-        const auto function = linear_program_cvx410_t{dims, feasible};
-
-        check_convexity(function);
-        check_minimize(make_solver_ids(), function);
-    }
-}
-
-UTEST_CASE(program_cvx410_unfeasible)
-{
-    for (const tensor_size_t dims : {2, 3, 5})
-    {
-        const auto feasible = false;
-        const auto function = linear_program_cvx410_t{dims, feasible};
+        const auto function = linear_program_cvx410_t{dims};
 
         check_convexity(function);
         check_minimize(make_solver_ids(), function);

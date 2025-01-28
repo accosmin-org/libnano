@@ -208,59 +208,44 @@ struct solver_description_t
             UTEST_CHECK_CLOSE(state.fx(), config.m_expected_minimum, config.m_expected_maximum_deviation);
         }
 
-        // check convergence status
-        switch (optimum.m_status)
+        // check the expected convergence criterion if convergence reached
+        switch (state.status())
         {
-        case optimum_t::status::unfeasible:
-            // unfeasible problem
-            UTEST_CHECK_EQUAL(state.status(), solver_status::unfeasible);
+        case solver_status::value_test:
+        {
+            const auto epsilon  = solver.parameter("solver::epsilon").value<scalar_t>();
+            const auto patience = solver.parameter("solver::patience").value<tensor_size_t>();
+            UTEST_CHECK_LESS(state.value_test(patience), epsilon);
             break;
+        }
 
-        case optimum_t::status::unbounded:
-            // unbounded problem
-            UTEST_CHECK_EQUAL(state.status(), solver_status::unbounded);
+        case solver_status::gradient_test:
+        {
+            const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
+            UTEST_CHECK_LESS(state.gradient_test(), epsilon);
+            break;
+        }
+
+        case solver_status::kkt_optimality_test:
+        {
+            const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
+            UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
+            UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
+            break;
+        }
+
+        case solver_status::specific_test:
+            // NB: either no stopping criterion or a specific one, at least it shouldn't fail!
+            UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
             break;
 
         default:
-            // solvable problem, check the expected convergence criterion if convergence reached
-            switch (state.status())
+            // NB: convergence not reached, expecting maximum iterations status without any failure!
+            if (!config.m_expected_failure)
             {
-            case solver_status::value_test:
-            {
-                const auto epsilon  = solver.parameter("solver::epsilon").value<scalar_t>();
-                const auto patience = solver.parameter("solver::patience").value<tensor_size_t>();
-                UTEST_CHECK_LESS(state.value_test(patience), epsilon);
-                break;
+                UTEST_CHECK_EQUAL(state.status(), solver_status::max_iters);
             }
-
-            case solver_status::gradient_test:
-            {
-                const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
-                UTEST_CHECK_LESS(state.gradient_test(), epsilon);
-                break;
-            }
-
-            case solver_status::kkt_optimality_test:
-            {
-                const auto epsilon = solver.parameter("solver::epsilon").value<scalar_t>();
-                UTEST_CHECK_LESS(state.feasibility_test(), epsilon);
-                UTEST_CHECK_LESS(state.kkt_optimality_test(), epsilon);
-                break;
-            }
-
-            case solver_status::specific_test:
-                // NB: either no stopping criterion or a specific one, at least it shouldn't fail!
-                UTEST_CHECK_NOT_EQUAL(state.status(), solver_status::failed);
-                break;
-
-            default:
-                // NB: convergence not reached, expecting maximum iterations status without any failure!
-                if (!config.m_expected_failure)
-                {
-                    UTEST_CHECK_EQUAL(state.status(), solver_status::max_iters);
-                }
-                break;
-            }
+            break;
         }
 
         return state;

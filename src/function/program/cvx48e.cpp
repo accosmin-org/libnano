@@ -84,7 +84,7 @@ rfunction_t linear_program_cvx48e_eq_t::make(const tensor_size_t                
 linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t dims, const tensor_size_t alpha)
     : linear_program_t(scat("cvx48e-ineq[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    critical(alpha >= 0);
+    critical(alpha > 0);
     critical(alpha <= dims);
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
@@ -93,15 +93,7 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     const auto h = static_cast<scalar_t>(alpha);
 
     reset(c);
-    if (alpha == 0)
-    {
-        // NB: not strictly feasible in this case!
-        optimum(optimum_t::status::unfeasible);
-    }
-    else
-    {
-        optimum(make_xbest_cvx48e_ineq(v, alpha));
-    }
+    optimum(make_xbest_cvx48e_ineq(v, alpha));
 
     critical((a * variable()) <= h);
     critical(variable() >= 0.0);

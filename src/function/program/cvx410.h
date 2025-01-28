@@ -13,8 +13,7 @@ namespace nano
 ///  s.t. Ax = b, x >= 0
 ///  and  the linear equality has exactly one solution (in this case A = D^t * D + I).
 ///
-/// NB: b is generated as A * x, where x has all positive components (thus a feasible program)
-///     if `feasible` is true, otherwise x has some negative components (thus an unfeasible program).
+/// NB: b is generated as A * x, where x has all positive components (thus a feasible program).
 ///
 class NANO_PUBLIC linear_program_cvx410_t final : public linear_program_t
 {
@@ -22,7 +21,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_cvx410_t(tensor_size_t dims = 10, bool feasible = true);
+    explicit linear_program_cvx410_t(tensor_size_t dims = 10);
 
     ///
     /// \brief @see clonable_t
