@@ -10,12 +10,12 @@ struct state_t
         : m_x(std::move(x0))
         , m_u(std::move(u0))
         , m_v(std::move(v0))
-        , m_dx(vector_t::constant(x0.size(), 0.0))
-        , m_du(vector_t::constant(u0.size(), 0.0))
-        , m_dv(vector_t::constant(v0.size(), 0.0))
-        , m_rdual(vector_t::constant(x0.size(), 0.0))
-        , m_rcent(vector_t::constant(u0.size(), 0.0))
-        , m_rprim(vector_t::constant(v0.size(), 0.0))
+        , m_dx(vector_t::constant(m_x.size(), 0.0))
+        , m_du(vector_t::constant(m_u.size(), 0.0))
+        , m_dv(vector_t::constant(m_v.size(), 0.0))
+        , m_rdual(vector_t::constant(m_x.size(), 0.0))
+        , m_rcent(vector_t::constant(m_u.size(), 0.0))
+        , m_rprim(vector_t::constant(m_v.size(), 0.0))
     {
     }
 

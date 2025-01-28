@@ -29,8 +29,8 @@ const parameter_t* find_param(const parameters_t& parameters, const std::string_
 
 void configurable_t::register_parameter(parameter_t parameter)
 {
-    critical(!parameter_if(parameter.name()), "configurable: cannot register duplicated parameter (", parameter.name(),
-             ")!");
+    critical(parameter_if(parameter.name()) == nullptr, "configurable: cannot register duplicated parameter (",
+             parameter.name(), ")!");
 
     m_parameters.emplace_back(std::move(parameter));
 }

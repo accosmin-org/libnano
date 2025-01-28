@@ -190,15 +190,12 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto curr_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
         const auto curr_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
 
-        // check stopping criteria
-        if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim))
+        // check stopping criteria:
+        //  * numerical instabilities
+        //  * stalling has been detected
+        if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim) ||
+            std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
         {
-            // numerical instabilities
-            break;
-        }
-        else if (std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
-        {
-            // stalling has been detected, check global convergence criterion!
             break;
         }
         else

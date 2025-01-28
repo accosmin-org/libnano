@@ -15,28 +15,13 @@ solver_state_t::solver_state_t(const function_t& function, vector_t x0)
     , m_lgx(vector_t::constant(m_x.size(), 0.0))
     , m_track(m_x, m_fx)
 {
-    assert(x0.size() == m_function.size());
+    assert(m_x.size() == m_function.size());
 
     update_calls();
     update_constraints();
 }
 
-solver_state_t::solver_state_t(const solver_state_t& other)
-    : m_function(other.m_function)
-    , m_x(other.m_x)
-    , m_gx(other.m_gx)
-    , m_fx(other.m_fx)
-    , m_ceq(other.m_ceq)
-    , m_cineq(other.m_cineq)
-    , m_meq(other.m_meq)
-    , m_mineq(other.m_mineq)
-    , m_lgx(other.m_lgx)
-    , m_status(other.m_status)
-    , m_fcalls(other.m_fcalls)
-    , m_gcalls(other.m_gcalls)
-    , m_track(other.m_track)
-{
-}
+solver_state_t::solver_state_t(const solver_state_t& other) = default;
 
 solver_state_t& solver_state_t::operator=(const solver_state_t& other)
 {

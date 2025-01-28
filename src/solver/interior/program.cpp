@@ -53,7 +53,7 @@ void program_t::update(const scalar_t s, const scalar_t miu, state_t& state) con
     const auto v = state.m_v + s * state.m_dv;
 
     // objective
-    if (!m_Q.size())
+    if (m_Q.size() == 0)
     {
         state.m_rdual = m_c;
     }

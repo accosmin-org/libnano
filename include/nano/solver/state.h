@@ -32,6 +32,11 @@ public:
     solver_state_t& operator=(const solver_state_t&);
 
     ///
+    /// \brief destructor
+    ///
+    ~solver_state_t() = default;
+
+    ///
     /// \brief move to another point and returns true if the new point is valid.
     ///
     /// NB: optionally the Lagrangian multipliers for the equality and the inequality constraints can be given as well
