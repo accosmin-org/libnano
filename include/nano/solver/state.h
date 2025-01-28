@@ -23,7 +23,7 @@ public:
     /// \brief enable moving.
     ///
     solver_state_t(solver_state_t&&)                     = default;
-    solver_state_t& operator=(solver_state_t&&) noexcept = default;
+    solver_state_t& operator=(solver_state_t&&) noexcept = delete;
 
     ///
     /// \brief enable copying.
