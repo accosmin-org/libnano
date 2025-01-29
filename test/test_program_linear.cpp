@@ -18,77 +18,8 @@ namespace
 {
 strings_t make_solver_ids()
 {
-    return {"ipm"}; // TODO: add penalty and augmented lagrangian
+    return {"ipm", "augmented-lagrangian"}; // TODO: add penalty methods!
 }
-
-// TODO: test with duplicated and linearly dependant linear constraints
-/*inline auto make_permutation(const tensor_size_t m)
-{
-    auto permutation = arange(0, m);
-    std::shuffle(permutation.begin(), permutation.end(), make_rng());
-    return permutation;
-}
-
-inline auto duplicate(const program::equality_t<matrix_t, vector_t>& equality, const scalar_t dep_w1,
-                      const scalar_t dep_w2)
-{
-    const auto& A = equality.m_A;
-    const auto& b = equality.m_b;
-
-    const auto m = A.rows();
-    const auto n = A.cols();
-
-    auto b2 = vector_t{2 * m};
-    auto A2 = matrix_t{2 * m, n};
-
-    const auto permutation = make_permutation(m);
-    for (tensor_size_t row = 0; row < m; ++row)
-    {
-        const auto permuted_row = permutation(row);
-        const auto permuted_mix = (permuted_row + 1) % m;
-        const auto duplicat_row = 2 * m - 1 - row;
-
-        b2(row)          = b(permuted_row);
-        b2(duplicat_row) = b(permuted_row) * dep_w1 + b(permuted_mix) * dep_w2;
-
-        A2.row(row)          = A.row(permuted_row);
-        A2.row(duplicat_row) = A.row(permuted_row).array() * dep_w1 + A.row(permuted_mix).array() * dep_w2;
-    }
-
-    return program::make_equality(A2, b2);
-}
-
-void check_solution(const function_t& function)
-{
-    // const auto [A, b, G, h] = make_linear_constraints(function);
-
-    // TODO: test duplicated equality constraints
-    if (program.m_eq.valid())
-    {
-        auto dprogram = program;
-        dprogram.m_eq = duplicate(program.m_eq, 1.0, 0.0);
-
-        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
-        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
-        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
-    }
-
-    // TODO: test linearly dependant equality constraints
-    if (program.m_eq.valid())
-    {
-        auto dprogram = program;
-        dprogram.m_eq = duplicate(program.m_eq, 0.2, 1.1);
-
-        check_with_logger([&](const logger_t& logger) { check_solution_penalty(dprogram, expected, logger); });
-        check_with_logger([&](const logger_t& logger) { check_solution_program(dprogram, expected, logger); });
-        check_with_logger([&](const logger_t& logger) { check_solution_augmented(dprogram, expected, logger); });
-    }
-
-    // test original program
-    check_with_logger([&](const logger_t& logger) { check_solution_penalty(function, logger); });
-    check_with_logger([&](const logger_t& logger) { check_solution_interior(function, logger); });
-    check_with_logger([&](const logger_t& logger) { check_solution_augmented(function, logger); });
-}*/
 } // namespace
 
 UTEST_BEGIN_MODULE(test_program_linear)

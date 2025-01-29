@@ -102,5 +102,6 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         miu.array()    = (miu.array() + old_ro * cstate.cineq().array()).max(0.0).min(miu_max);
     }
 
+    bstate.update_calls();
     return bstate;
 }
