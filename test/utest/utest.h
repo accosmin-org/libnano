@@ -125,22 +125,22 @@ enum class exception_status : uint8_t
 };
 
 template <class texception, class toperator>
-static std::tuple<exception_status, nano::string_t> check_throw(const toperator& op)
+static std::tuple<exception_status, std::string> check_throw(const toperator& op)
 {
     try
     {
         op();
-        return std::make_tuple(exception_status::none, nano::string_t{});
+        return std::make_tuple(exception_status::none, std::string{});
     }
     catch (const std::exception& e)
     {
         const auto status =
             dynamic_cast<const texception*>(&e) != nullptr ? exception_status::expected : exception_status::unexpected;
-        return std::make_tuple(status, nano::string_t{e.what()});
+        return std::make_tuple(status, std::string{e.what()});
     }
     catch (...)
     {
-        return std::make_tuple(exception_status::unexpected, nano::string_t{"unexpected"});
+        return std::make_tuple(exception_status::unexpected, std::string{"unexpected"});
     }
 }
 
