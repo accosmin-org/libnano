@@ -134,14 +134,7 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e+1).expected_failure().max_evals(300))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e+3).expected_failure().max_evals(300));
     }
-    else if (solver_id == "ipm")
-    {
-        // NB: methods that can solve linear and quadratic convex programs very reliable.
-        return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-8))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
-    }
-    else if (solver_id == "augmented-lagrangian")
+    else if (solver_id == "ipm" || solver_id == "augmented-lagrangian")
     {
         // NB: methods that can solve linear and quadratic convex programs very reliable.
         return solver_description_t{}
