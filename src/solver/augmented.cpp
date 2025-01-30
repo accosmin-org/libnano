@@ -75,7 +75,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         cstate.update(pstate.x(), pstate.gx(), pstate.fx());
 
         const auto criterion = make_criterion(cstate, miu, ro);
-        if (criterion < old_criterion)
+        if (criterion < old_criterion + nano::epsilon0<scalar_t>())
         {
             bstate.update(cstate.x(), lambda, miu);
 

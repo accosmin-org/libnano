@@ -13,7 +13,7 @@ namespace
 {
 strings_t make_solver_ids()
 {
-    return {"ipm"}; //, "augmented-lagrangian"}; // TODO: add penalty and augmented lagrangian
+    return {"ipm", "augmented-lagrangian"}; // TODO: add penalty and augmented lagrangian
 }
 } // namespace
 
