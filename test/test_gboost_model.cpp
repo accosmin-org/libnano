@@ -189,7 +189,7 @@ template <class... targs>
 auto make_gbooster_to_fit(const targs... args)
 {
     auto model = make_gbooster();
-    model.config(args...);
+    config(model, args...);
     return model;
 }
 } // namespace
