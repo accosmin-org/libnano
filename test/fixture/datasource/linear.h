@@ -11,7 +11,7 @@ template <class... targs>
     datasource.parameter("datasource::linear::samples")  = samples;
     datasource.parameter("datasource::linear::targets")  = targets;
     datasource.parameter("datasource::linear::features") = features;
-    datasource.config(args...);
+    config(datasource, args...);
     UTEST_REQUIRE_NOTHROW(datasource.load());
     return datasource;
 }

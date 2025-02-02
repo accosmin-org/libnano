@@ -114,9 +114,9 @@ void function_t::clear_statistics() const
     m_gcalls = 0;
 }
 
-rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
+bool function_t::resize(tensor_size_t)
 {
-    return rfunction_t{};
+    return false;
 }
 
 bool function_t::optimum(vector_t xbest)
@@ -220,6 +220,9 @@ factory_t<function_t>& function_t::all()
         manager.add<function_enet_logistic_t>("logistic regression with ridge-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_logistic_t>("logistic regression with lasso-like regularization", 10, 1.0, 0.0);
         manager.add<function_enet_logistic_t>("logistic regression with elastic net-like regularization", 10, 1.0, 1.0);
+
+        // TODO: add linear and quadratic program test functions here!
+        // TODO: configurable test functions (ML + linear and quadratic programs) - regularization params, summands etc.
     };
 
     static std::once_flag flag;
@@ -246,11 +249,13 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
         for (const auto& id : ids)
         {
             auto function = factory.get(id);
+            assert(function != nullptr);
 
             if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
                 (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
             {
-                functions.push_back(function->make(dims, config.m_summands));
+                function->resize(dims);
+                functions.push_back(std::move(function));
             }
         }
 
