@@ -132,15 +132,14 @@ public:
         tensor_size_t m_max_dims{8};                    ///<
         convexity     m_convexity{convexity::ignore};   ///<
         smoothness    m_smoothness{smoothness::ignore}; ///<
-        tensor_size_t m_summands{1000};                 ///<
     };
 
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
+    /// \brief resize to the given number of free dimensions and return true if possible.
     ///
-    virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+    virtual bool resize(tensor_size_t dims);
 
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
