@@ -363,7 +363,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto blas2    = options.has("--blas2");
     const auto blas3    = options.has("--blas3");
 
-    critical(!blas1 && !blas2 && !blas3 && !copy, "no benchmark set was chosen");
+    critical(blas1 || blas2 || blas3 || copy, "no benchmark set was chosen");
 
     table_t table;
     if (copy)

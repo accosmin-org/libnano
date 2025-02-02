@@ -291,10 +291,10 @@ int unsafe_main(int argc, const char* argv[])
     const auto lsearchk_ids = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
 
     const auto solver_ids = solver_t::all().ids(sregex);
-    critical(solver_ids.empty(), "at least a solver needs to be selected!");
+    critical(!solver_ids.empty(), "at least a solver needs to be selected!");
 
     const auto functions = function_t::make({min_dims, max_dims, convex, smooth}, fregex);
-    critical(functions.empty(), "at least a function needs to be selected!");
+    critical(!functions.empty(), "at least a function needs to be selected!");
 
     auto rconfig = cmdconfig_t{options};
 
