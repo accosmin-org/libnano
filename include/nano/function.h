@@ -1,11 +1,11 @@
 #pragma once
 
+#include <nano/configurable.h>
 #include <nano/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/function/enums.h>
 #include <nano/function/optimum.h>
 #include <nano/function/variable.h>
-#include <nano/string.h>
 
 namespace nano
 {
@@ -25,7 +25,7 @@ using rfunction_t = std::unique_ptr<function_t>;
 /// NB: the (sub-)gradient of the function must be implemented.
 /// NB: the functions can be convex or non-convex and smooth or non-smooth.
 ///
-class NANO_PUBLIC function_t : public typed_t, public clonable_t<function_t>
+class NANO_PUBLIC function_t : public typed_t, public configurable_t, public clonable_t<function_t>
 {
 public:
     ///
@@ -170,6 +170,7 @@ protected:
     void convex(convexity);
     void smooth(smoothness);
     void strong_convexity(scalar_t);
+    void rename(string_t id, tensor_size_t size);
 
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 

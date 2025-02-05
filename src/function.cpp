@@ -50,6 +50,12 @@ void function_t::strong_convexity(const scalar_t strong_convexity)
     m_strong_convexity = strong_convexity;
 }
 
+void function_t::rename(string_t id, const tensor_size_t size)
+{
+    typed_t::rename(std::move(id));
+    m_size = size;
+}
+
 string_t function_t::name(const bool with_size) const
 {
     return with_size ? scat(type_id(), "[", size(), "D]") : type_id();
