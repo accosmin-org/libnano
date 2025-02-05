@@ -1,11 +1,11 @@
 #pragma once
 
+#include <nano/configurable.h>
 #include <nano/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/function/enums.h>
 #include <nano/function/optimum.h>
 #include <nano/function/variable.h>
-#include <nano/string.h>
 
 namespace nano
 {
@@ -25,7 +25,7 @@ using rfunction_t = std::unique_ptr<function_t>;
 /// NB: the (sub-)gradient of the function must be implemented.
 /// NB: the functions can be convex or non-convex and smooth or non-smooth.
 ///
-class NANO_PUBLIC function_t : public typed_t, public clonable_t<function_t>
+class NANO_PUBLIC function_t : public typed_t, public configurable_t, public clonable_t<function_t>
 {
 public:
     ///
@@ -132,15 +132,14 @@ public:
         tensor_size_t m_max_dims{8};                    ///<
         convexity     m_convexity{convexity::ignore};   ///<
         smoothness    m_smoothness{smoothness::ignore}; ///<
-        tensor_size_t m_summands{1000};                 ///<
     };
 
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
+    /// \brief resize to the given number of free dimensions and return true if possible.
     ///
-    virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+    virtual bool resize(tensor_size_t dims);
 
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
@@ -171,6 +170,7 @@ protected:
     void convex(convexity);
     void smooth(smoothness);
     void strong_convexity(scalar_t);
+    void rename(string_t id, tensor_size_t size);
 
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 

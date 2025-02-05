@@ -7,8 +7,8 @@ namespace nano
 {
 ///
 /// \brief empirical risk minimization of loss functions with elastic net regularization:
-///     f(x) = 1/2N * sum(loss(W * input_i + b, target_i), i=1,N) + alpha1 * |W| + alpha2/2 * ||W||^2,
-///     where x=[W|b].
+///     f(x)    = 1/(2N) * sum(loss(W * input_i + b, target_i), i=1,N) + alpha1 * |W| + alpha2/2 * ||W||^2,
+///     where x = [W|b].
 ///
 template <class tloss>
 class NANO_PUBLIC function_enet_t final : public function_t, private tloss
@@ -17,8 +17,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_enet_t(tensor_size_t dims = 10, scalar_t alpha1 = 1.0, scalar_t alpha2 = 1.0,
-                             tensor_size_t summands = 100);
+    explicit function_enet_t(tensor_size_t dims = 10);
 
     ///
     /// \brief @see clonable_t
@@ -33,33 +32,31 @@ public:
     ///
     /// \brief @see function_t
     ///
-    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    bool resize(tensor_size_t dims) override;
 
 private:
     // attributes
-    scalar_t m_alpha1{1.0}; ///< regularization term: L1-norm of the weights
-    scalar_t m_alpha2{1.0}; ///< regularization term: squared L2-norm of the weights
+    linear_model_t m_model; ///<
 };
 
 ///
 /// \brief mean-squared-error (MSE) loss.
 ///
-class NANO_PUBLIC loss_mse_t : public synthetic_scalar_t
+class NANO_PUBLIC loss_mse_t
 {
 public:
-    static constexpr auto convex   = true;
-    static constexpr auto smooth   = true;
-    static constexpr auto basename = "mse";
+    static constexpr auto convex     = true;
+    static constexpr auto smooth     = true;
+    static constexpr auto basename   = "mse";
+    static constexpr auto regression = true;
 
-    using synthetic_scalar_t::synthetic_scalar_t;
-
-    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, delta);
+            model.vgrad(gx, delta);
         }
 
         return 0.5 * delta.squaredNorm() / static_cast<scalar_t>(outputs.rows());
@@ -69,22 +66,21 @@ public:
 ///
 /// \brief mean-absolute-error (MAE) loss.
 ///
-class NANO_PUBLIC loss_mae_t : public synthetic_scalar_t
+class NANO_PUBLIC loss_mae_t
 {
 public:
-    static constexpr auto convex   = true;
-    static constexpr auto smooth   = false;
-    static constexpr auto basename = "mae";
+    static constexpr auto convex     = true;
+    static constexpr auto smooth     = false;
+    static constexpr auto basename   = "mae";
+    static constexpr auto regression = true;
 
-    using synthetic_scalar_t::synthetic_scalar_t;
-
-    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, delta.array().sign().matrix());
+            model.vgrad(gx, delta.array().sign().matrix());
         }
 
         return delta.array().abs().sum() / static_cast<scalar_t>(outputs.rows());
@@ -94,22 +90,21 @@ public:
 ///
 /// \brief cauchy loss.
 ///
-class NANO_PUBLIC loss_cauchy_t : public synthetic_scalar_t
+class NANO_PUBLIC loss_cauchy_t
 {
 public:
-    static constexpr auto convex   = false;
-    static constexpr auto smooth   = false;
-    static constexpr auto basename = "cauchy";
+    static constexpr auto convex     = false;
+    static constexpr auto smooth     = false;
+    static constexpr auto basename   = "cauchy";
+    static constexpr auto regression = true;
 
-    using synthetic_scalar_t::synthetic_scalar_t;
-
-    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto delta = outputs - targets;
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, (2.0 * delta.array() / (1.0 + delta.array().square())).matrix());
+            model.vgrad(gx, (2.0 * delta.array() / (1.0 + delta.array().square())).matrix());
         }
 
         return (delta.array().square() + 1.0).log().sum() / static_cast<scalar_t>(outputs.rows());
@@ -119,22 +114,21 @@ public:
 ///
 /// \brief hinge loss (linear SVM).
 ///
-class NANO_PUBLIC loss_hinge_t : public synthetic_sclass_t
+class NANO_PUBLIC loss_hinge_t
 {
 public:
-    static constexpr auto convex   = true;
-    static constexpr auto smooth   = false;
-    static constexpr auto basename = "hinge";
+    static constexpr auto convex     = true;
+    static constexpr auto smooth     = false;
+    static constexpr auto basename   = "hinge";
+    static constexpr auto regression = false;
 
-    using synthetic_sclass_t::synthetic_sclass_t;
-
-    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto edges = -outputs.array() * targets.array();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix());
+            model.vgrad(gx, (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix());
         }
 
         return (1.0 + edges).max(0.0).sum() / static_cast<scalar_t>(outputs.rows());
@@ -144,22 +138,21 @@ public:
 ///
 /// \brief logistic loss (binary classification).
 ///
-class NANO_PUBLIC loss_logistic_t : public synthetic_sclass_t
+class NANO_PUBLIC loss_logistic_t
 {
 public:
-    static constexpr auto convex   = true;
-    static constexpr auto smooth   = true;
-    static constexpr auto basename = "logistic";
+    static constexpr auto convex     = true;
+    static constexpr auto smooth     = true;
+    static constexpr auto basename   = "logistic";
+    static constexpr auto regression = false;
 
-    using synthetic_sclass_t::synthetic_sclass_t;
-
-    scalar_t vgrad(matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
     {
         const auto edges = (-outputs.array() * targets.array()).exp();
 
         if (gx.size() > 0)
         {
-            synthetic_linear_t::vgrad(gx, ((-targets.array() * edges) / (1.0 + edges)).matrix());
+            model.vgrad(gx, ((-targets.array() * edges) / (1.0 + edges)).matrix());
         }
 
         return (1.0 + edges).log().sum() / static_cast<scalar_t>(outputs.rows());
