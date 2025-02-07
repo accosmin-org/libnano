@@ -25,9 +25,6 @@ public:
     ///
     const string_t& type_id() const { return m_type_id; }
 
-protected:
-    void rename(string_t type_id) { m_type_id = std::move(type_id); }
-
 private:
     // attributes
     string_t m_type_id; ///< type ID

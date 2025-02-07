@@ -5,22 +5,22 @@ using namespace nano;
 
 namespace
 {
-auto make_suffix(const scalar_t alpha1, const scalar_t alpha2)
+auto make_suffix(const scalar_t alpha1, const scalar_t alpha2, const scalar_t sratio)
 {
     assert(alpha1 >= 0.0);
     assert(alpha2 >= 0.0);
 
     if (alpha1 == 0.0)
     {
-        return scat("ridge[", alpha2, "]");
+        return scat("ridge[", alpha2, "]x", sratio);
     }
     else if (alpha2 == 0.0)
     {
-        return scat("lasso[", alpha1, "]");
+        return scat("lasso[", alpha1, "]x", sratio);
     }
     else
     {
-        return scat("elasticnet[", alpha1, ",", alpha2, "]");
+        return scat("elasticnet[", alpha1, ",", alpha2, "]x", sratio);
     }
 }
 
@@ -38,21 +38,33 @@ auto make_outputs(const tensor_size_t)
 {
     return tensor_size_t{1};
 }
+
+auto make_samples(const tensor_size_t dims, const scalar_t sample_ratio)
+{
+    return static_cast<tensor_size_t>(std::max(sample_ratio * static_cast<scalar_t>(dims), 10.0));
+}
 } // namespace
 
 template <class tloss>
-function_enet_t<tloss>::function_enet_t(const tensor_size_t dims)
-    : function_t(scat(tloss::basename, "+", make_suffix(0.0, 0.0)), ::make_size(dims))
-    , m_model(100, make_outputs(dims), make_inputs(dims), 1, tloss::regression)
+function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t alpha1, const scalar_t alpha2,
+                                        const scalar_t sample_ratio, const tensor_size_t modulo_correlated)
+    : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2, 10.0)), ::make_size(dims))
+    , m_model(make_samples(dims, sample_ratio), make_outputs(dims), make_inputs(dims), modulo_correlated,
+              tloss::regression)
 {
     register_parameter(parameter_t::make_scalar("enet::alpha1", 0.0, LE, 0.0, LE, 1e+8));
     register_parameter(parameter_t::make_scalar("enet::alpha2", 0.0, LE, 0.0, LE, 1e+8));
-    register_parameter(parameter_t::make_scalar("enet::sample_ratio", 0.1, LE, 10.0, LE, 1e+3));
-    register_parameter(parameter_t::make_integer("enet::modulo_correlated", 1, LE, 1, LE, 100));
+    register_parameter(parameter_t::make_scalar("enet::sratio", 0.1, LE, 10.0, LE, 1e+3));
+    register_parameter(parameter_t::make_integer("enet::modulo", 1, LE, 1, LE, 100));
+
+    parameter("enet::alpha1") = alpha1;
+    parameter("enet::alpha2") = alpha1;
+    parameter("enet::sratio") = sample_ratio;
+    parameter("enet::modulo") = modulo_correlated;
 
     function_t::convex(tloss::convex ? convexity::yes : convexity::no);
-    function_t::smooth(tloss::smooth ? smoothness::yes : smoothness::no);
-    strong_convexity(0.0);
+    function_t::smooth((alpha1 == 0.0 && tloss::smooth) ? smoothness::yes : smoothness::no);
+    function_t::strong_convexity(alpha2);
 }
 
 template <class tloss>
@@ -79,22 +91,14 @@ scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
 }
 
 template <class tloss>
-bool function_enet_t<tloss>::resize(const tensor_size_t dims)
+rfunction_t function_enet_t<tloss>::make(const tensor_size_t dims)
 {
     const auto alpha1 = parameter("enet::alpha1").value<scalar_t>();
     const auto alpha2 = parameter("enet::alpha2").value<scalar_t>();
-    const auto sratio = parameter("enet::sample_ratio").value<scalar_t>();
-    const auto modulo = parameter("enet::modulo_correlated").value<tensor_size_t>();
+    const auto sratio = parameter("enet::sratio").value<scalar_t>();
+    const auto modulo = parameter("enet::modulo").value<tensor_size_t>();
 
-    const auto samples = static_cast<tensor_size_t>(std::max(sratio * static_cast<scalar_t>(dims), 10.0));
-
-    function_t::rename(scat(tloss::basename, "+", make_suffix(alpha1, alpha2)), make_size(dims));
-    function_t::smooth((alpha1 == 0.0 && tloss::smooth) ? smoothness::yes : smoothness::no);
-    function_t::strong_convexity(alpha2);
-
-    m_model = linear_model_t{samples, make_outputs(dims), make_inputs(dims), modulo, tloss::regression};
-
-    return true;
+    return std::make_unique<function_enet_t<tloss>>(dims, alpha1, alpha2, sratio, modulo);
 }
 
 template class nano::function_enet_t<nano::loss_mse_t>;

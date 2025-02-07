@@ -87,6 +87,18 @@ public:
     ///
     int32_t patch_version() const { return m_patch_version; }
 
+    ///
+    /// \brief configure the object with the given pairs of parameter names and values.
+    ///
+    configurable_t& config() { return *this; }
+
+    template <class targ, class... targs>
+    configurable_t& config(const char* const param_name, const targ value, const targs... args)
+    {
+        parameter(param_name) = value;
+        return config(args...);
+    }
+
 private:
     // attributes
     int32_t      m_major_version{::nano::major_version}; ///<
@@ -94,22 +106,4 @@ private:
     int32_t      m_patch_version{::nano::patch_version}; ///<
     parameters_t m_parameters;                           ///<
 };
-
-///
-/// \brief configure the object with the given pairs of parameter names and values.
-///
-template <class tconfigurable>
-tconfigurable& config(tconfigurable& object)
-{
-    static_assert(std::is_base_of_v<configurable_t, tconfigurable>);
-    return object;
-}
-
-template <class tconfigurable, class targ, class... targs>
-tconfigurable& config(tconfigurable& object, const char* const param_name, const targ value, const targs... args)
-{
-    static_assert(std::is_base_of_v<configurable_t, tconfigurable>);
-    object.parameter(param_name) = value;
-    return config(object, args...);
-}
 } // namespace nano

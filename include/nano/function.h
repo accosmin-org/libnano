@@ -137,9 +137,9 @@ public:
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief resize to the given number of free dimensions and return true if possible.
+    /// \brief return a clone resize to the given number of free dimensions and return true if possible.
     ///
-    virtual bool resize(tensor_size_t dims);
+    virtual rfunction_t make(tensor_size_t dims);
 
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
@@ -170,7 +170,6 @@ protected:
     void convex(convexity);
     void smooth(smoothness);
     void strong_convexity(scalar_t);
-    void rename(string_t id, tensor_size_t size);
 
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 

@@ -17,7 +17,8 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_enet_t(tensor_size_t dims = 10);
+    explicit function_enet_t(tensor_size_t dims = 10, scalar_t alpha1 = 0.0, scalar_t alpha2 = 0.0,
+                             scalar_t sample_ratio = 10.0, tensor_size_t modulo_correlated = 1);
 
     ///
     /// \brief @see clonable_t
@@ -32,7 +33,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    bool resize(tensor_size_t dims) override;
+    rfunction_t make(tensor_size_t dims) override;
 
 private:
     // attributes
