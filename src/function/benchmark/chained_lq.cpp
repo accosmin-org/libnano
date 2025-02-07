@@ -58,7 +58,7 @@ scalar_t function_chained_lq_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return fx;
 }
 
-rfunction_t function_chained_lq_t::make(const tensor_size_t dims, tensor_size_t) const
+rfunction_t function_chained_lq_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<function_chained_lq_t>(dims);
 }

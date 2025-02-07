@@ -50,12 +50,6 @@ void function_t::strong_convexity(const scalar_t strong_convexity)
     m_strong_convexity = strong_convexity;
 }
 
-void function_t::rename(string_t id, const tensor_size_t size)
-{
-    typed_t::rename(std::move(id));
-    m_size = size;
-}
-
 string_t function_t::name(const bool with_size) const
 {
     return with_size ? scat(type_id(), "[", size(), "D]") : type_id();
@@ -120,9 +114,9 @@ void function_t::clear_statistics() const
     m_gcalls = 0;
 }
 
-bool function_t::resize(tensor_size_t)
+rfunction_t function_t::make(tensor_size_t) const
 {
-    return false;
+    return rfunction_t{};
 }
 
 bool function_t::optimum(vector_t xbest)
@@ -260,8 +254,7 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
             if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
                 (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
             {
-                function->resize(dims);
-                functions.push_back(std::move(function));
+                functions.emplace_back(function->make(dims));
             }
         }
 

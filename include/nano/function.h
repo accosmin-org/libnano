@@ -137,9 +137,9 @@ public:
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief return a clone resize to the given number of free dimensions and return true if possible.
+    /// \brief return a clone with the given number of free dimensions if possible, otherwise a nullptr.
     ///
-    virtual rfunction_t make(tensor_size_t dims);
+    virtual rfunction_t make(tensor_size_t dims) const;
 
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
