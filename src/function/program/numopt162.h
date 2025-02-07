@@ -19,7 +19,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit quadratic_program_numopt162_t(tensor_size_t dims = 10, tensor_size_t neqs = 10);
+    explicit quadratic_program_numopt162_t(tensor_size_t dims = 10, scalar_t neqs_dims_ratio = 1.0);
 
     ///
     /// \brief @see clonable_t
@@ -29,6 +29,6 @@ public:
     ///
     /// \brief @see function_t
     ///
-    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    rfunction_t make(tensor_size_t dims) const override;
 };
 } // namespace nano

@@ -19,7 +19,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_cvx48e_eq_t(tensor_size_t dims = 10, tensor_size_t alpha = 0);
+    explicit linear_program_cvx48e_eq_t(tensor_size_t dims = 10, scalar_t alpha_dims_ratio = 0.0);
 
     ///
     /// \brief @see clonable_t
@@ -29,7 +29,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    rfunction_t make(tensor_size_t dims) const override;
 };
 
 ///
@@ -47,7 +47,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_cvx48e_ineq_t(tensor_size_t dims = 10, tensor_size_t alpha = 0);
+    explicit linear_program_cvx48e_ineq_t(tensor_size_t dims = 10, scalar_t alpha_dims_ratio = 0.0);
 
     ///
     /// \brief @see clonable_t
@@ -57,6 +57,6 @@ public:
     ///
     /// \brief @see function_t
     ///
-    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    rfunction_t make(tensor_size_t dims) const override;
 };
 } // namespace nano
