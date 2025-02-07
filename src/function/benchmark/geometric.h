@@ -16,7 +16,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_geometric_optimization_t(tensor_size_t dims = 10 = 16);
+    explicit function_geometric_optimization_t(tensor_size_t dims = 10, scalar_t sample_ratio = 10.0);
 
     ///
     /// \brief @see clonable_t

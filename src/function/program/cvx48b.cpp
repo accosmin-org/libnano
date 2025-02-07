@@ -10,7 +10,7 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
 {
     register_parameter(parameter_t::make_scalar("cvx48b::lambda", -1e+10, LE, -1.0, LT, 0.0));
 
-    parameter("cvx48b::lambda") = alpha1;
+    parameter("cvx48b::lambda") = lambda;
 
     const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
     const auto b = urand<scalar_t>(-1.0, +1.0);

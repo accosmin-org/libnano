@@ -91,7 +91,7 @@ scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
 }
 
 template <class tloss>
-rfunction_t function_enet_t<tloss>::make(const tensor_size_t dims)
+rfunction_t function_enet_t<tloss>::make(const tensor_size_t dims) const
 {
     const auto alpha1 = parameter("enet::alpha1").value<scalar_t>();
     const auto alpha2 = parameter("enet::alpha2").value<scalar_t>();
