@@ -18,9 +18,9 @@ function_geometric_optimization_t::function_geometric_optimization_t(const tenso
     , m_A(make_random_matrix<scalar_t>(make_samples(dims, sample_ratio), dims, -1.0 / static_cast<scalar_t>(dims),
                                        +1.0 / static_cast<scalar_t>(dims), seed_t{42}))
 {
-    register_parameter(parameter_t::make_scalar("geometric-optimization::sratio", 0.1, LE, 10.0, LE, 1e+3));
+    register_parameter(parameter_t::make_scalar("geometric::sratio", 0.1, LE, 10.0, LE, 1e+3));
 
-    parameter("geometric-optimization::sratio") = sample_ratio;
+    parameter("geometric::sratio") = sample_ratio;
 
     convex(convexity::yes);
     smooth(smoothness::yes);
@@ -46,7 +46,7 @@ scalar_t function_geometric_optimization_t::do_vgrad(vector_cmap_t x, vector_map
 
 rfunction_t function_geometric_optimization_t::make(const tensor_size_t dims) const
 {
-    const auto sratio = parameter("enet::sratio").value<scalar_t>();
+    const auto sratio = parameter("geometric::sratio").value<scalar_t>();
 
     return std::make_unique<function_geometric_optimization_t>(dims, sratio);
 }
