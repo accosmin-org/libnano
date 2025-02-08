@@ -75,8 +75,8 @@ rfunction_t function_enet_t<tloss>::clone() const
 template <class tloss>
 scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    const auto alpha1 = parameter("enet::alpha1").value<scalar_t>();
-    const auto alpha2 = parameter("enet::alpha2").value<scalar_t>();
+    const auto alpha1 = parameter("enet::alpha1").template value<scalar_t>();
+    const auto alpha2 = parameter("enet::alpha2").template value<scalar_t>();
 
     auto fx = tloss::vgrad(m_model, m_model.outputs(x), m_model.targets(), gx);
 
@@ -92,10 +92,10 @@ scalar_t function_enet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
 template <class tloss>
 rfunction_t function_enet_t<tloss>::make(const tensor_size_t dims) const
 {
-    const auto alpha1 = parameter("enet::alpha1").value<scalar_t>();
-    const auto alpha2 = parameter("enet::alpha2").value<scalar_t>();
-    const auto sratio = parameter("enet::sratio").value<scalar_t>();
-    const auto modulo = parameter("enet::modulo").value<tensor_size_t>();
+    const auto alpha1 = parameter("enet::alpha1").template value<scalar_t>();
+    const auto alpha2 = parameter("enet::alpha2").template value<scalar_t>();
+    const auto sratio = parameter("enet::sratio").template value<scalar_t>();
+    const auto modulo = parameter("enet::modulo").template value<tensor_size_t>();
 
     return std::make_unique<function_enet_t<tloss>>(dims, alpha1, alpha2, sratio, modulo);
 }
