@@ -57,7 +57,7 @@ function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t
     register_parameter(parameter_t::make_integer("enet::modulo", 1, LE, 1, LE, 100));
 
     parameter("enet::alpha1") = alpha1;
-    parameter("enet::alpha2") = alpha1;
+    parameter("enet::alpha2") = alpha2;
     parameter("enet::sratio") = sratio;
     parameter("enet::modulo") = modulo;
 
