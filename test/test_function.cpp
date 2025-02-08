@@ -38,7 +38,7 @@ UTEST_CASE(lambda)
         const auto sphere_function = function_sphere_t{dims};
         const auto lambda_function = make_function(dims, convexity::yes, smoothness::yes, 2.0, lambda);
 
-        UTEST_CHECK(lambda_function.make(0, 0) == nullptr);
+        UTEST_CHECK(lambda_function.make(0) == nullptr);
 
         for (auto trial = 0; trial < 10; ++trial)
         {
@@ -55,7 +55,7 @@ UTEST_CASE(lambda)
 
 UTEST_CASE(stats)
 {
-    for (const auto& function : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
+    for (const auto& function : function_t::make({2, 4, convexity::ignore, smoothness::ignore}))
     {
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
@@ -89,7 +89,7 @@ UTEST_CASE(select)
             auto counts_per_smoothness = std::unordered_map<bool, int>{};
             auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
 
-            for (const auto& function : function_t::make({4, 16, convex, smooth, 5}))
+            for (const auto& function : function_t::make({4, 16, convex, smooth}))
             {
                 ++total;
 
@@ -135,7 +135,7 @@ UTEST_CASE(select)
 
 UTEST_CASE(convexity)
 {
-    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());
@@ -152,7 +152,7 @@ UTEST_CASE(convexity)
 
 UTEST_CASE(grad_accuracy)
 {
-    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());

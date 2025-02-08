@@ -8,7 +8,7 @@ namespace
 {
 auto make_functions()
 {
-    return function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
+    return function_t::make({1, 16, convexity::ignore, smoothness::yes}, std::regex(".+"));
 }
 
 void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,

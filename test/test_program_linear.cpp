@@ -133,7 +133,7 @@ UTEST_CASE(program_cvx48e_eq)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        for (tensor_size_t alpha = 0; alpha <= dims; ++alpha)
+        for (const auto alpha : {0.0, 0.5, 1.0})
         {
             const auto function = linear_program_cvx48e_eq_t{dims, alpha};
 
@@ -147,7 +147,7 @@ UTEST_CASE(program_cvx48e_ineq)
 {
     for (const tensor_size_t dims : {2, 3, 5})
     {
-        for (tensor_size_t alpha = 1; alpha <= dims; ++alpha)
+        for (const auto alpha : {0.0, 0.5, 1.0})
         {
             const auto function = linear_program_cvx48e_ineq_t{dims, alpha};
 

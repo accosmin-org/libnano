@@ -22,12 +22,12 @@ UTEST_BEGIN_MODULE(test_solver_bundle)
 
 UTEST_CASE(smooth_bundle)
 {
-    check_minimize(make_solvers(), function_t::make({4, 4, convexity::yes, smoothness::yes, 100}));
+    check_minimize(make_solvers(), function_t::make({4, 4, convexity::yes, smoothness::yes}));
 }
 
 UTEST_CASE(nonsmooth_bundle)
 {
-    check_minimize(make_solvers(), function_t::make({4, 4, convexity::yes, smoothness::no, 100}));
+    check_minimize(make_solvers(), function_t::make({4, 4, convexity::yes, smoothness::no}));
 }
 
 UTEST_END_MODULE()
