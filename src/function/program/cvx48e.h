@@ -42,9 +42,9 @@ public:
 /// minimize a linear function over a unit box with a total budget constraint:
 ///  min  c.dot(x)
 ///  s.t. 1.dot(x) <= alpha, 0 <= x <= 1
-///  and  alpha is an integer between 0 and n.
+///  and  alpha is an integer between 1 and n.
 ///
-/// NB: the implementation scales `alpha` to the number of dimensions `n`, resulting in [0, 1].
+/// NB: the implementation scales `alpha` to the number of dimensions `n`, resulting in (0, 1].
 ///
 class NANO_PUBLIC linear_program_cvx48e_ineq_t final : public linear_program_t
 {
