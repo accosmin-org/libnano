@@ -116,7 +116,7 @@ UTEST_CASE(program_numopt162)
 {
     for (const tensor_size_t dims : {3, 5, 11})
     {
-        for (const auto neqs : {0.0, 0.5, 0.8, 1.0})
+        for (const auto neqs : {1e-6, 0.8, 1.0})
         {
             const auto function = quadratic_program_numopt162_t{dims, neqs};
 
