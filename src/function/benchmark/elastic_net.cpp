@@ -5,22 +5,22 @@ using namespace nano;
 
 namespace
 {
-auto make_suffix(const scalar_t alpha1, const scalar_t alpha2, const scalar_t sratio)
+auto make_suffix(const scalar_t alpha1, const scalar_t alpha2, const scalar_t sratio, const tensor_size_t modulo)
 {
     assert(alpha1 >= 0.0);
     assert(alpha2 >= 0.0);
 
     if (alpha1 == 0.0)
     {
-        return scat("ridge[", alpha2, "]x", sratio);
+        return scat("ridge[", alpha2, "]x", sratio, "%", modulo);
     }
     else if (alpha2 == 0.0)
     {
-        return scat("lasso[", alpha1, "]x", sratio);
+        return scat("lasso[", alpha1, "]x", sratio, "%", modulo);
     }
     else
     {
-        return scat("elasticnet[", alpha1, ",", alpha2, "]x", sratio);
+        return scat("elasticnet[", alpha1, ",", alpha2, "]x", sratio, "%", modulo);
     }
 }
 
@@ -39,18 +39,17 @@ auto make_outputs(const tensor_size_t)
     return tensor_size_t{1};
 }
 
-auto make_samples(const tensor_size_t dims, const scalar_t sample_ratio)
+auto make_samples(const tensor_size_t dims, const scalar_t sratio)
 {
-    return static_cast<tensor_size_t>(std::max(sample_ratio * static_cast<scalar_t>(dims), 10.0));
+    return static_cast<tensor_size_t>(std::max(sratio * static_cast<scalar_t>(dims), 10.0));
 }
 } // namespace
 
 template <class tloss>
 function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t alpha1, const scalar_t alpha2,
-                                        const scalar_t sample_ratio, const tensor_size_t modulo_correlated)
-    : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2, 10.0)), ::make_size(dims))
-    , m_model(make_samples(dims, sample_ratio), make_outputs(dims), make_inputs(dims), modulo_correlated,
-              tloss::regression)
+                                        const scalar_t sratio, const tensor_size_t modulo)
+    : function_t(scat(tloss::basename, "+", make_suffix(alpha1, alpha2, sratio, modulo)), ::make_size(dims))
+    , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), modulo, tloss::regression)
 {
     register_parameter(parameter_t::make_scalar("enet::alpha1", 0.0, LE, 0.0, LE, 1e+8));
     register_parameter(parameter_t::make_scalar("enet::alpha2", 0.0, LE, 0.0, LE, 1e+8));
@@ -59,8 +58,8 @@ function_enet_t<tloss>::function_enet_t(const tensor_size_t dims, const scalar_t
 
     parameter("enet::alpha1") = alpha1;
     parameter("enet::alpha2") = alpha1;
-    parameter("enet::sratio") = sample_ratio;
-    parameter("enet::modulo") = modulo_correlated;
+    parameter("enet::sratio") = sratio;
+    parameter("enet::modulo") = modulo;
 
     function_t::convex(tloss::convex ? convexity::yes : convexity::no);
     function_t::smooth((alpha1 == 0.0 && tloss::smooth) ? smoothness::yes : smoothness::no);

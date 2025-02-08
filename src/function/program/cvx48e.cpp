@@ -38,6 +38,11 @@ auto make_xbest_cvx48e_ineq(const std::vector<std::pair<scalar_t, tensor_size_t>
     return xbest;
 }
 
+auto make_alpha(const tensor_size_t dims, const scalar_t alpha)
+{
+    return static_cast<tensor_size_t>(alpha * static_cast<scalar_t>(dims));
+}
+
 auto make_sorted_cvx48e(const vector_t& c)
 {
     std::vector<std::pair<scalar_t, tensor_size_t>> values;
@@ -51,21 +56,20 @@ auto make_sorted_cvx48e(const vector_t& c)
 }
 } // namespace
 
-linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims, const scalar_t alpha_dims_ratio)
-    : linear_program_t(scat("cvx48e-eq[alpha=", alpha_dims_ratio, "]"), vector_t::zero(dims))
+linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims, const scalar_t alpha)
+    : linear_program_t(scat("cvx48e-eq[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    register_parameter(parameter_t::make_scalar("cvx48e-eq::alpha_ratio", 0.0, LE, 0.0, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("cvx48e-eq::alpha", 0.0, LE, 0.0, LE, 1.0));
 
-    parameter("cvx48e-eq::alpha_ratio") = alpha_dims_ratio;
+    parameter("cvx48e-eq::alpha") = alpha;
 
-    const auto alpha = static_cast<tensor_size_t>(alpha_dims_ratio * static_cast<scalar_t>(dims));
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto a = make_full_vector<scalar_t>(dims, 1.0);
     const auto v = make_sorted_cvx48e(c);
-    const auto h = static_cast<scalar_t>(alpha);
+    const auto h = static_cast<scalar_t>(make_alpha(dims, alpha));
 
     reset(c);
-    optimum(make_xbest_cvx48e_eq(v, alpha));
+    optimum(make_xbest_cvx48e_eq(v, make_alpha(dims, alpha)));
 
     critical((a * variable()) == h);
     critical(variable() >= 0.0);
@@ -79,26 +83,25 @@ rfunction_t linear_program_cvx48e_eq_t::clone() const
 
 rfunction_t linear_program_cvx48e_eq_t::make(const tensor_size_t dims) const
 {
-    const auto alpha_dims_ratio = parameter("cvx48e-eq::alpha_ratio").value<scalar_t>();
+    const auto alpha = parameter("cvx48e-eq::alpha").value<scalar_t>();
 
-    return std::make_unique<linear_program_cvx48e_eq_t>(dims, alpha_dims_ratio);
+    return std::make_unique<linear_program_cvx48e_eq_t>(dims, alpha);
 }
 
-linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t dims, const scalar_t alpha_dims_ratio)
-    : linear_program_t(scat("cvx48e-ineq[alpha=", alpha_dims_ratio, "]"), vector_t::zero(dims))
+linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t dims, const scalar_t alpha)
+    : linear_program_t(scat("cvx48e-ineq[alpha=", alpha, "]"), vector_t::zero(dims))
 {
-    register_parameter(parameter_t::make_scalar("cvx48e-ineq::alpha_ratio", 0.0, LE, 0.0, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("cvx48e-ineq::alpha", 0.0, LE, 0.0, LE, 1.0));
 
-    parameter("cvx48e-ineq::alpha_ratio") = alpha_dims_ratio;
+    parameter("cvx48e-ineq::alpha") = alpha;
 
-    const auto alpha = static_cast<tensor_size_t>(alpha_dims_ratio * static_cast<scalar_t>(dims));
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto a = make_full_vector<scalar_t>(dims, 1.0);
     const auto v = make_sorted_cvx48e(c);
-    const auto h = static_cast<scalar_t>(alpha);
+    const auto h = static_cast<scalar_t>(make_alpha(dims, alpha));
 
     reset(c);
-    optimum(make_xbest_cvx48e_ineq(v, alpha));
+    optimum(make_xbest_cvx48e_ineq(v, make_alpha(dims, alpha)));
 
     critical((a * variable()) <= h);
     critical(variable() >= 0.0);
@@ -112,7 +115,7 @@ rfunction_t linear_program_cvx48e_ineq_t::clone() const
 
 rfunction_t linear_program_cvx48e_ineq_t::make(const tensor_size_t dims) const
 {
-    const auto alpha_dims_ratio = parameter("cvx48e-ineq::alpha_ratio").value<scalar_t>();
+    const auto alpha = parameter("cvx48e-ineq::alpha").value<scalar_t>();
 
-    return std::make_unique<linear_program_cvx48e_ineq_t>(dims, alpha_dims_ratio);
+    return std::make_unique<linear_program_cvx48e_ineq_t>(dims, alpha);
 }

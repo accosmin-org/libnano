@@ -6,31 +6,37 @@
 
 using namespace nano;
 
-quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t dims, const scalar_t neqs_dims_ratio)
-    : quadratic_program_t(scat("numopt162[neqs=", neqs_dims_ratio, "]"), matrix_t{matrix_t::zero(dims, dims)},
+namespace
+{
+auto make_neqs(const tensor_size_t dims, const scalar_t neqs)
+{
+    return std::max(tensor_size_t{1}, static_cast<tensor_size_t>(neqs * static_cast<scalar_t>(dims)));
+}
+} // namespace
+
+quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t dims, const scalar_t neqs)
+    : quadratic_program_t(scat("numopt162[neqs=", neqs, "]"), matrix_t{matrix_t::zero(dims, dims)},
                           vector_t::zero(dims))
 {
-    register_parameter(parameter_t::make_scalar("numopt162::neqs_ratio", 0.0, LT, 0.5, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("numopt162::neqs", 0.0, LT, 0.5, LE, 1.0));
 
-    parameter("numopt162::neqs_ratio") = neqs_dims_ratio;
+    parameter("numopt162::neqs") = neqs;
 
-    const auto neqs = static_cast<tensor_size_t>(neqs_dims_ratio * static_cast<scalar_t>(dims));
+    const auto x0    = make_random_vector<scalar_t>(dims);
+    const auto Q     = matrix_t::identity(dims, dims);
+    const auto c     = -x0;
+    const auto Arows = make_neqs(dims, neqs);
 
-    const auto x0 = make_random_vector<scalar_t>(dims);
-    const auto Q  = matrix_t::identity(dims, dims);
-    const auto c  = -x0;
-
-    auto L = make_random_matrix<scalar_t>(neqs, neqs);
-    auto U = make_random_matrix<scalar_t>(neqs, dims);
+    auto L = make_random_matrix<scalar_t>(Arows, Arows);
+    auto U = make_random_matrix<scalar_t>(Arows, dims);
 
     L.matrix().triangularView<Eigen::Upper>().setZero();
     U.matrix().triangularView<Eigen::Lower>().setZero();
-
     L.diagonal().array() = 1.0;
     U.diagonal().array() = 1.0;
 
     const auto A     = L * U;
-    const auto b     = make_random_vector<scalar_t>(neqs);
+    const auto b     = make_random_vector<scalar_t>(Arows);
     const auto invAA = (A * A.transpose()).inverse();
     const auto xbest = x0 + A.transpose() * invAA * (b - A * x0);
 
@@ -47,7 +53,7 @@ rfunction_t quadratic_program_numopt162_t::clone() const
 
 rfunction_t quadratic_program_numopt162_t::make(const tensor_size_t dims) const
 {
-    const auto neqs_dims_ratio = parameter("numopt162::neqs_ratio").value<scalar_t>();
+    const auto neqs = parameter("numopt162::neqs").value<scalar_t>();
 
-    return std::make_unique<quadratic_program_numopt162_t>(dims, neqs_dims_ratio);
+    return std::make_unique<quadratic_program_numopt162_t>(dims, neqs);
 }
