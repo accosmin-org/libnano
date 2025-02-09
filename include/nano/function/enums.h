@@ -21,7 +21,7 @@ enum class smoothness : uint8_t
 enum class constrained : uint8_t
 {
     ignore,
-    yest,
+    yes,
     no
 };
 } // namespace nano

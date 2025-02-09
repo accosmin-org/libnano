@@ -86,7 +86,7 @@ UTEST_CASE(program_cvx48b)
 {
     for (const tensor_size_t dims : {1, 7, 11})
     {
-        for (const auto lambda : {-1.0, -1.42, -4.2, -42.1})
+        for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
         {
             const auto function = linear_program_cvx48b_t{dims, lambda};
 
