@@ -25,6 +25,17 @@
 #include <function/benchmark/styblinski_tang.h>
 #include <function/benchmark/trid.h>
 #include <function/benchmark/zakharov.h>
+
+#include <function/program/cvx410.h>
+#include <function/program/cvx48b.h>
+#include <function/program/cvx48c.h>
+#include <function/program/cvx48d.h>
+#include <function/program/cvx48e.h>
+#include <function/program/cvx48f.h>
+#include <function/program/cvx49.h>
+#include <function/program/numopt162.h>
+#include <function/program/numopt1625.h>
+
 #include <nano/core/strutil.h>
 
 using namespace nano;
@@ -220,9 +231,6 @@ factory_t<function_t>& function_t::all()
         manager.add<function_enet_logistic_t>("logistic regression with ridge-like regularization", 10, 0.0, 1.0);
         manager.add<function_enet_logistic_t>("logistic regression with lasso-like regularization", 10, 1.0, 0.0);
         manager.add<function_enet_logistic_t>("logistic regression with elastic net-like regularization", 10, 1.0, 1.0);
-
-        // TODO: add linear and quadratic program test functions here!
-        // TODO: configurable test functions (ML + linear and quadratic programs) - regularization params, summands etc.
     };
 
     static std::once_flag flag;
@@ -233,9 +241,6 @@ factory_t<function_t>& function_t::all()
 
 rfunctions_t function_t::make(const function_t::config_t& config, const std::regex& id_regex)
 {
-    const auto convexity  = config.m_convexity;
-    const auto smoothness = config.m_smoothness;
-
     const auto min_dims = std::min(config.m_min_dims, config.m_max_dims);
     const auto max_dims = std::max(config.m_min_dims, config.m_max_dims);
     assert(min_dims >= 1);
@@ -251,8 +256,15 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
             auto function = factory.get(id);
             assert(function != nullptr);
 
-            if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
-                (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
+            const auto is_convex       = function->convex();
+            const auto is_smooth       = function->smooth();
+
+            const auto has_constraints = !(function->constraints().empty());
+
+            if ((config.m_convexity == convexity::ignore || is_convex == (config.m_convexity == convexity::yes)) &&
+                (config.m_smoothness == smoothness::ignore || is_smooth == (config.m_smoothness == smoothness::yes)) &&
+                (config.m_constrained == constrained::ignore ||
+                 has_constraints == (config.m_constrained == constrained::yes)))
             {
                 functions.emplace_back(function->make(dims));
             }

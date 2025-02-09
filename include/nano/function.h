@@ -132,6 +132,7 @@ public:
         tensor_size_t m_max_dims{8};                    ///<
         convexity     m_convexity{convexity::ignore};   ///<
         smoothness    m_smoothness{smoothness::ignore}; ///<
+        constrained   m_constrained{constrained::no};   ///<
     };
 
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
