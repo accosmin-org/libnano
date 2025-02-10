@@ -31,8 +31,8 @@ CXX=g++ bash scripts/build.sh --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
 CXX=g++ bash scripts/build.sh --suffix gcc-release -DCMAKE_BUILD_TYPE=Release \
     ${cmake_options} --config --build --test --install --build-example
 
-CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    ${cmake_options} --config --build --test --install --build-example
+#CXX=g++ bash scripts/build.sh --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+#    ${cmake_options} --config --build --test --install --build-example
 
 #CXX=g++ bash scripts/build.sh --suffix gcc-release-lto -DCMAKE_BUILD_TYPE=Release --lto \
 #    ${cmake_options} --config --build --test --install --build-example
@@ -47,8 +47,8 @@ CXX=clang++ bash scripts/build.sh --suffix clang-debug -DCMAKE_BUILD_TYPE=Debug 
 CXX=clang++ bash scripts/build.sh --suffix clang-release -DCMAKE_BUILD_TYPE=Release \
     ${cmake_options} --config --build --test --install --build-example
 
-CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --thinlto \
-    ${cmake_options} --config --build --test --install --build-example
+# CXX=clang++ bash scripts/build.sh --suffix clang-release-thinlto -DCMAKE_BUILD_TYPE=Release --thinlto \
+#    ${cmake_options} --config --build --test --install --build-example
 
 ###############################################################################################################
 # static analysis:
