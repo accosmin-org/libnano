@@ -197,40 +197,19 @@ factory_t<function_t>& function_t::all()
         manager.add<function_geometric_optimization_t>(
             "generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))");
 
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+0);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+2);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+4);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+6);
+        manager.add<function_enet_mse_t>("mean squared error (MSE) with elastic net-like regularization");
+        manager.add<function_enet_mae_t>("mean absolute error (MAE) with elastic net regularization");
+        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
+        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
+        manager.add<function_enet_logistic_t>("logistic loss (logistic regression) with elastic net regularization");
 
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+0, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+2, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+4, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+6, 0.0);
+        manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
+        manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
 
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+0, 1e+0);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+2, 1e+2);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+4, 1e+4);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+6, 1e+6);
-
-        manager.add<function_enet_mae_t>("mean absolute error with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_mae_t>("mean absolute error with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_mae_t>("mean absolute error with elastic net-like regularization", 10, 1.0, 1.0);
-
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with elastic net-like regularization", 10, 1.0,
-                                           1.0);
-
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with ridge-like regularization", 10, 0.0,
-                                            1.0);
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with lasso-like regularization", 10, 1.0,
-                                            0.0);
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with elastic net-like regularization", 10,
-                                            1.0, 1.0);
-
-        manager.add<function_enet_logistic_t>("logistic regression with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_logistic_t>("logistic regression with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_logistic_t>("logistic regression with elastic net-like regularization", 10, 1.0, 1.0);
+        // TODO: fix type_id for configuration benchmark functions
+        // TODO: override function_t::name() to compose a detailed name
+        // TODO: separate lasso, ridge, enet interfaces
+        // TODO: change fixture to update alpha1, alpha2 ... for testing solvers...
     };
 
     static std::once_flag flag;
