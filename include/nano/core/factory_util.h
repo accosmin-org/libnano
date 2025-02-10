@@ -16,6 +16,7 @@ table_t make_table(const string_t& name, const factory_t<tobject>& factory, cons
     table_t table;
     table.header() << name << "description";
     table.delim();
+
     for (const auto& id : ids)
     {
         table.append() << id << factory.description(id);
@@ -32,18 +33,22 @@ table_t make_table_with_params(const string_t& name, const factory_t<tobject>& f
     const auto ids = factory.ids(std::regex(regex));
 
     table_t table;
-    table.header() << name << "parameter"
-                   << "value"
-                   << "domain";
+    table.header() << name << "parameter" << "value" << "domain";
+
     for (const auto& id : ids)
     {
         table.delim();
         table.append() << id << colspan(3) << factory.description(id);
-        table.delim();
+
         const auto configurable = factory.get(id);
+        if (!configurable->parameters().empty())
+        {
+            table.delim();
+        }
+
         for (const auto& param : configurable->parameters())
         {
-            table.append() << id << param.name() << param.value() << param.domain();
+            table.append() << "|... " << param.name() << param.value() << param.domain();
         }
     }
     return table;
