@@ -1,4 +1,4 @@
-#include <function/benchmark/linear.h>
+#include <function/mlearn/linear.h>
 
 using namespace nano;
 

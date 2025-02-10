@@ -6,11 +6,9 @@ target_sources(function PRIVATE
     chained_lq.h
     chung_reynolds.h
     dixon_price.h
-    elastic_net.h
     exponential.h
     geometric.h
     kinks.h
-    linear.h
     maxhilb.h
     maxq.h
     maxquad.h
@@ -32,11 +30,9 @@ target_sources(function PRIVATE
     chained_lq.cpp
     chung_reynolds.cpp
     dixon_price.cpp
-    elastic_net.cpp
     exponential.cpp
     geometric.cpp
     kinks.cpp
-    linear.cpp
     maxhilb.cpp
     maxq.cpp
     maxquad.cpp

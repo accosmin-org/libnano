@@ -7,7 +7,6 @@
 #include <function/benchmark/chained_lq.h>
 #include <function/benchmark/chung_reynolds.h>
 #include <function/benchmark/dixon_price.h>
-#include <function/benchmark/elastic_net.h>
 #include <function/benchmark/exponential.h>
 #include <function/benchmark/geometric.h>
 #include <function/benchmark/kinks.h>
@@ -35,6 +34,10 @@
 #include <function/program/cvx49.h>
 #include <function/program/numopt162.h>
 #include <function/program/numopt1625.h>
+
+#include <function/mlearn/elasticnet.h>
+#include <function/mlearn/lasso.h>
+#include <function/mlearn/ridge.h>
 
 #include <nano/core/strutil.h>
 
@@ -197,18 +200,29 @@ factory_t<function_t>& function_t::all()
         manager.add<function_geometric_optimization_t>(
             "generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))");
 
-        manager.add<function_enet_mse_t>("mean squared error (MSE) with elastic net-like regularization");
-        manager.add<function_enet_mae_t>("mean absolute error (MAE) with elastic net regularization");
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
-        manager.add<function_enet_logistic_t>("logistic loss (logistic regression) with elastic net regularization");
+        manager.add<function_lasso_mse_t>("mean squared error (MSE) with lasso regularization");
+        manager.add<function_lasso_mae_t>("mean absolute error (MAE) with lasso regularization");
+        manager.add<function_lasso_hinge_t>("hinge loss (linear SVM) with lasso regularization");
+        manager.add<function_lasso_cauchy_t>("cauchy loss (robust regression) with lasso regularization");
+        manager.add<function_lasso_logistic_t>("logistic loss (logistic regression) with lasso regularization");
 
-        manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
-        manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
+        manager.add<function_ridge_mse_t>("mean squared error (MSE) with ridge regularization");
+        manager.add<function_ridge_mae_t>("mean absolute error (MAE) with ridge regularization");
+        manager.add<function_ridge_hinge_t>("hinge loss (linear SVM) with ridge regularization");
+        manager.add<function_ridge_cauchy_t>("cauchy loss (robust regression) with ridge regularization");
+        manager.add<function_ridge_logistic_t>("logistic loss (logistic regression) with ridge regularization");
+
+        manager.add<function_elasticnet_mse_t>("mean squared error (MSE) with elastic net regularization");
+        manager.add<function_elasticnet_mae_t>("mean absolute error (MAE) with elastic net regularization");
+        manager.add<function_elasticnet_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
+        manager.add<function_elasticnet_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
+        manager.add<function_elasticnet_logistic_t>(
+            "logistic loss (logistic regression) with elastic net regularization");
+
+        // manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
+        // manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
 
         // TODO: fix type_id for configuration benchmark functions
-        // TODO: override function_t::name() to compose a detailed name
-        // TODO: separate lasso, ridge, enet interfaces
         // TODO: change fixture to update alpha1, alpha2 ... for testing solvers...
     };
 
@@ -235,8 +249,8 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
             auto function = factory.get(id);
             assert(function != nullptr);
 
-            const auto is_convex       = function->convex();
-            const auto is_smooth       = function->smooth();
+            const auto is_convex = function->convex();
+            const auto is_smooth = function->smooth();
 
             const auto has_constraints = !(function->constraints().empty());
 

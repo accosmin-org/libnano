@@ -41,7 +41,7 @@ public:
     ///
     /// \brief function name to identify it in tests and benchmarks.
     ///
-    string_t name(bool with_size = true) const;
+    virtual string_t name(bool with_size = true) const;
 
     ///
     /// \brief returns the number of dimensions.
