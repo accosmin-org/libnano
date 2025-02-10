@@ -15,8 +15,7 @@ auto make_neqs(const tensor_size_t dims, const scalar_t neqs)
 } // namespace
 
 quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t dims, const scalar_t neqs)
-    : quadratic_program_t(scat("numopt162[neqs=", neqs, "]"), matrix_t{matrix_t::zero(dims, dims)},
-                          vector_t::zero(dims))
+    : quadratic_program_t("numopt162", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
     register_parameter(parameter_t::make_scalar("numopt162::neqs", 0.0, LT, 0.5, LE, 1.0));
 
@@ -49,6 +48,13 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
 rfunction_t quadratic_program_numopt162_t::clone() const
 {
     return std::make_unique<quadratic_program_numopt162_t>(*this);
+}
+
+string_t quadratic_program_numopt162_t::do_name() const
+{
+    const auto neqs = parameter("numopt162::neqs").value<scalar_t>();
+
+    return scat(type_id(), "[neqs=", neqs, "]");
 }
 
 rfunction_t quadratic_program_numopt162_t::make(const tensor_size_t dims) const

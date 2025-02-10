@@ -41,7 +41,7 @@ public:
     ///
     /// \brief function name to identify it in tests and benchmarks.
     ///
-    virtual string_t name(bool with_size = true) const;
+    string_t name(bool with_size = true) const;
 
     ///
     /// \brief returns the number of dimensions.
@@ -172,6 +172,7 @@ protected:
     void smooth(smoothness);
     void strong_convexity(scalar_t);
 
+    virtual string_t do_name() const;
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 
 private:

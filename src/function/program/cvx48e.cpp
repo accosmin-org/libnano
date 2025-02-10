@@ -57,7 +57,7 @@ auto make_sorted_cvx48e(const vector_t& c)
 } // namespace
 
 linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims, const scalar_t alpha)
-    : linear_program_t(scat("cvx48e-eq[alpha=", alpha, "]"), vector_t::zero(dims))
+    : linear_program_t("cvx48e-eq", vector_t::zero(dims))
 {
     register_parameter(parameter_t::make_scalar("cvx48e-eq::alpha", 0.0, LE, 0.0, LE, 1.0));
 
@@ -81,6 +81,13 @@ rfunction_t linear_program_cvx48e_eq_t::clone() const
     return std::make_unique<linear_program_cvx48e_eq_t>(*this);
 }
 
+string_t linear_program_cvx48e_eq_t::do_name() const
+{
+    const auto alpha = parameter("cvx48e-eq::alpha").value<scalar_t>();
+
+    return scat(type_id(), "[alpha=", alpha, "]");
+}
+
 rfunction_t linear_program_cvx48e_eq_t::make(const tensor_size_t dims) const
 {
     const auto alpha = parameter("cvx48e-eq::alpha").value<scalar_t>();
@@ -89,7 +96,7 @@ rfunction_t linear_program_cvx48e_eq_t::make(const tensor_size_t dims) const
 }
 
 linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t dims, const scalar_t alpha)
-    : linear_program_t(scat("cvx48e-ineq[alpha=", alpha, "]"), vector_t::zero(dims))
+    : linear_program_t("cvx48e-ineq", vector_t::zero(dims))
 {
     register_parameter(parameter_t::make_scalar("cvx48e-ineq::alpha", 0.0, LT, 1.0, LE, 1.0));
 
@@ -111,6 +118,13 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
 rfunction_t linear_program_cvx48e_ineq_t::clone() const
 {
     return std::make_unique<linear_program_cvx48e_ineq_t>(*this);
+}
+
+string_t linear_program_cvx48e_ineq_t::do_name() const
+{
+    const auto alpha = parameter("cvx48e-ineq::alpha").value<scalar_t>();
+
+    return scat(type_id(), "[alpha=", alpha, "]");
 }
 
 rfunction_t linear_program_cvx48e_ineq_t::make(const tensor_size_t dims) const

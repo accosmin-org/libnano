@@ -31,7 +31,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    string_t name(bool with_size = true) const override;
+    string_t do_name() const override;
 
     ///
     /// \brief @see function_t

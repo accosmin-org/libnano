@@ -52,15 +52,13 @@ rfunction_t function_ridge_t<tloss>::clone() const
 }
 
 template <class tloss>
-string_t function_ridge_t<tloss>::name(const bool with_size) const
+string_t function_ridge_t<tloss>::do_name() const
 {
     const auto alpha2 = parameter("ridge::alpha2").template value<scalar_t>();
     const auto sratio = parameter("ridge::sratio").template value<scalar_t>();
     const auto modulo = parameter("ridge::modulo").template value<tensor_size_t>();
 
-    const auto name = scat(type_id(), "[alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, "]");
-
-    return with_size ? scat(name, "[", size(), "D]") : name;
+    return scat(type_id(), "[alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, "]");
 }
 
 template <class tloss>

@@ -32,6 +32,11 @@ public:
     ///
     /// \brief @see function_t
     ///
+    string_t do_name() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
     rfunction_t make(tensor_size_t dims) const override;
 };
 } // namespace nano

@@ -55,17 +55,14 @@ rfunction_t function_elasticnet_t<tloss>::clone() const
 }
 
 template <class tloss>
-string_t function_elasticnet_t<tloss>::name(const bool with_size) const
+string_t function_elasticnet_t<tloss>::do_name() const
 {
     const auto alpha1 = parameter("elasticnet::alpha1").template value<scalar_t>();
     const auto alpha2 = parameter("elasticnet::alpha2").template value<scalar_t>();
     const auto sratio = parameter("elasticnet::sratio").template value<scalar_t>();
     const auto modulo = parameter("elasticnet::modulo").template value<tensor_size_t>();
 
-    const auto name =
-        scat(type_id(), "[alpha1=", alpha1, ",alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, "]");
-
-    return with_size ? scat(name, "[", size(), "D]") : name;
+    return scat(type_id(), "[alpha1=", alpha1, ",alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, "]");
 }
 
 template <class tloss>

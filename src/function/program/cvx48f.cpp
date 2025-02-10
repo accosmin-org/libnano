@@ -45,7 +45,7 @@ auto make_xbest_cvx48f(const vector_t& d, const std::vector<std::pair<scalar_t, 
 } // namespace
 
 linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scalar_t alpha)
-    : linear_program_t(scat("cvx48f[alpha=", alpha, "]"), vector_t::zero(dims))
+    : linear_program_t("cvx48f", vector_t::zero(dims))
 {
     register_parameter(parameter_t::make_scalar("cvx48f::alpha", 0.0, LE, 0.0, LE, 1.0));
 
@@ -68,6 +68,13 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scala
 rfunction_t linear_program_cvx48f_t::clone() const
 {
     return std::make_unique<linear_program_cvx48f_t>(*this);
+}
+
+string_t linear_program_cvx48f_t::do_name() const
+{
+    const auto alpha = parameter("cvx48f::alpha").value<scalar_t>();
+
+    return scat(type_id(), "[alpha=", alpha, "]");
 }
 
 rfunction_t linear_program_cvx48f_t::make(const tensor_size_t dims) const

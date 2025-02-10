@@ -32,6 +32,11 @@ public:
     ///
     /// \brief @see function_t
     ///
+    string_t do_name() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
     rfunction_t make(tensor_size_t dims) const override;
 };
 
@@ -52,12 +57,17 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit linear_program_cvx48e_ineq_t(tensor_size_t dims = 10, scalar_t alpha = 0.0);
+    explicit linear_program_cvx48e_ineq_t(tensor_size_t dims = 10, scalar_t alpha = 1e-6);
 
     ///
     /// \brief @see clonable_t
     ///
     rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    string_t do_name() const override;
 
     ///
     /// \brief @see function_t

@@ -66,7 +66,12 @@ void function_t::strong_convexity(const scalar_t strong_convexity)
 
 string_t function_t::name(const bool with_size) const
 {
-    return with_size ? scat(type_id(), "[", size(), "D]") : type_id();
+    return with_size ? scat(do_name(), "[", size(), "D]") : do_name();
+}
+
+string_t function_t::do_name() const
+{
+    return type_id();
 }
 
 bool function_t::constrain(constraint_t&& constraint)
@@ -219,11 +224,27 @@ factory_t<function_t>& function_t::all()
         manager.add<function_elasticnet_logistic_t>(
             "logistic loss (logistic regression) with elastic net regularization");
 
-        // manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
-        // manager.add<linear_program_cvx48b_t>("linear program, exercise 4.8 (b), 'Convex Optimization'");
+        manager.add<linear_program_cvx48b_t>("linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48c_t>("linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48d_eq_t>(
+            "linear program: ex. 4.8(d) - equality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48d_ineq_t>(
+            "linear program: ex. 4.8(d) - inequality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48e_eq_t>(
+            "linear program: ex. 4.8(e) - equality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48e_ineq_t>(
+            "linear program: ex. 4.8(e) - inequality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48f_t>("linear program: ex. 4.8(f), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx49_t>("linear program: ex. 4.9, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx410_t>("linear program: ex. 4.10, 'Convex Optimization', 2nd edition");
 
-        // TODO: fix type_id for configuration benchmark functions
-        // TODO: change fixture to update alpha1, alpha2 ... for testing solvers...
+        manager.add<quadratic_program_numopt162_t>(
+            "quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition");
+        manager.add<quadratic_program_numopt1625_t>(
+            "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
+
+        // TODO: change fixture for nonlinear solvers: to generate cases with different alpha1, alpha2 ...
+        // TODO: change fixture for linear and quadratic programs: different alpha, lambda ...
     };
 
     static std::once_flag flag;
