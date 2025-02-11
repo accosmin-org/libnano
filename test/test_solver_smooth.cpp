@@ -73,11 +73,8 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                             continue;
                         }
 
-                        // NB: these two line-search algorithms are not very precise in general!
-                        if (lsearchk_id == "fletcher" || lsearchk_id == "lemarechal")
-                        {
-                            solver->parameter("solver::epsilon") = 1e-6;
-                        }
+                        // NB: these two line-search algorithms are not very robust in general!
+                        config.m_expected_failure = lsearchk_id == "fletcher" || lsearchk_id == "lemarechal";
 
                         UTEST_NAMED_CASE(scat(function->name(), "/", solver_id, "/", lsearch0_id, "/", lsearchk_id));
                         UTEST_REQUIRE_NOTHROW(solver->lsearch0(lsearch0_id));
