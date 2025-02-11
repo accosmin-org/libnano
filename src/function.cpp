@@ -242,9 +242,6 @@ factory_t<function_t>& function_t::all()
             "quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition");
         manager.add<quadratic_program_numopt1625_t>(
             "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
-
-        // TODO: change fixture for nonlinear solvers: to generate cases with different alpha1, alpha2 ...
-        // TODO: change fixture for linear and quadratic programs: different alpha, lambda ...
     };
 
     static std::once_flag flag;
@@ -275,12 +272,52 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
 
             const auto has_constraints = !(function->constraints().empty());
 
-            if ((config.m_convexity == convexity::ignore || is_convex == (config.m_convexity == convexity::yes)) &&
-                (config.m_smoothness == smoothness::ignore || is_smooth == (config.m_smoothness == smoothness::yes)) &&
-                (config.m_constrained == constrained::ignore ||
-                 has_constraints == (config.m_constrained == constrained::yes)))
+            if (has_constraints)
             {
-                functions.emplace_back(function->make(dims));
+                // TODO: change fixture for linear and quadratic programs: different alpha, lambda ...
+                // (config.m_constrained == constrained::ignore ||
+                //  has_constraints == (config.m_constrained == constrained::yes)))
+                continue;
+            }
+
+            else if ((config.m_convexity == convexity::ignore || is_convex == (config.m_convexity == convexity::yes)) &&
+                     (config.m_smoothness == smoothness::ignore ||
+                      is_smooth == (config.m_smoothness == smoothness::yes)))
+            {
+                // NB: generate different regularization parameters for various linear ML models
+                // to assess the difficulty of the resulting numerical optimization problems.
+                if (function->parameter_if("lasso::alpha1") != nullptr)
+                {
+                    for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
+                    {
+                        function->config("lasso::alpha1", alpha1);
+                        functions.emplace_back(function->make(dims));
+                    }
+                }
+
+                else if (function->parameter_if("ridge::alpha2") != nullptr)
+                {
+                    for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
+                    {
+                        function->config("ridge::alpha2", alpha2);
+                        functions.emplace_back(function->make(dims));
+                    }
+                }
+
+                else if (function->parameter_if("elasticnet::alpha1") != nullptr)
+                {
+                    for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
+                    {
+                        function->config("elasticnet::alpha1", alpha12);
+                        function->config("elasticnet::alpha2", alpha12);
+                        functions.emplace_back(function->make(dims));
+                    }
+                }
+
+                else
+                {
+                    functions.emplace_back(function->make(dims));
+                }
             }
         }
 

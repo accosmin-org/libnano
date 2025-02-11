@@ -77,11 +77,6 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
                         if (lsearchk_id == "fletcher" || lsearchk_id == "lemarechal")
                         {
                             solver->parameter("solver::epsilon") = 1e-6;
-
-                            if (function->name() == "mse+ridge[1e+06][4D]")
-                            {
-                                solver->parameter("solver::epsilon") = 1e-5;
-                            }
                         }
 
                         UTEST_NAMED_CASE(scat(function->name(), "/", solver_id, "/", lsearch0_id, "/", lsearchk_id));

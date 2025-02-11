@@ -20,7 +20,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_lasso_t(tensor_size_t dims = 10, scalar_t alpha1 = 0.0, scalar_t sratio = 10.0,
+    explicit function_lasso_t(tensor_size_t dims = 10, scalar_t alpha1 = 1.0, scalar_t sratio = 10.0,
                               tensor_size_t modulo = 1);
 
     ///
