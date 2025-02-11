@@ -154,15 +154,15 @@ UTEST_CASE(make_table_with_params_some)
                                    "|-----------|-------------------------------|----------|---------------------|\n"
                                    "| linear    | linearly interpolate the previous line-search step size        |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n"
-                                   "| linear    | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
-                                   "| linear    | lsearch0::linear::beta        | 10       | 1 < 10 < 1e+06      |\n"
-                                   "| linear    | lsearch0::linear::alpha       | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "| |...      | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| |...      | lsearch0::linear::beta        | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| |...      | lsearch0::linear::alpha       | 1.01     | 1 < 1.01 < 1e+06    |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n"
                                    "| quadratic | quadratically interpolate the previous line-search step size   |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n"
-                                   "| quadratic | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
-                                   "| quadratic | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
-                                   "| quadratic | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "| |...      | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| |...      | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| |...      | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n");
 }
 
@@ -174,9 +174,9 @@ UTEST_CASE(make_table_with_params_only)
                                    "|-----------|-------------------------------|----------|---------------------|\n"
                                    "| quadratic | quadratically interpolate the previous line-search step size   |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n"
-                                   "| quadratic | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
-                                   "| quadratic | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
-                                   "| quadratic | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
+                                   "| |...      | lsearch0::epsilon             | 1e-06    | 0 < 1e-06 < 1       |\n"
+                                   "| |...      | lsearch0::quadratic::beta     | 10       | 1 < 10 < 1e+06      |\n"
+                                   "| |...      | lsearch0::quadratic::alpha    | 1.01     | 1 < 1.01 < 1e+06    |\n"
                                    "|-----------|-------------------------------|----------|---------------------|\n");
 }
 
