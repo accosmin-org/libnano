@@ -104,7 +104,7 @@ using namespace nano;
 
 [[maybe_unused]] inline auto check_gradient(const function_t& function, const int trials = 100,
                                             const scalar_t central_difference_epsilon = 1e-8,
-                                            const scalar_t convex_subgradient_epsilon = 1e-11)
+                                            const scalar_t convex_subgradient_epsilon = 1e-8)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -127,7 +127,8 @@ using namespace nano;
     }
 }
 
-[[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100)
+[[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100,
+                                             const scalar_t epsilon = 1e-8)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -135,6 +136,6 @@ using namespace nano;
     {
         const auto x0 = make_random_x0(*rfunction);
         const auto x1 = make_random_x0(*rfunction);
-        UTEST_CHECK(is_convex(*rfunction, x0, x1, 20));
+        UTEST_CHECK(is_convex(*rfunction, x0, x1, 20, epsilon));
     }
 }

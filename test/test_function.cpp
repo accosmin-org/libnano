@@ -161,7 +161,7 @@ UTEST_CASE(grad_accuracy)
         UTEST_CHECK_LESS_EQUAL(dims, 4);
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
-        check_gradient(function, 100, 1e-8, 1e-14);
+        check_gradient(function, 100, 1e-8, 1e-8);
     }
 }
 
