@@ -26,7 +26,7 @@ NANO_PUBLIC bool reduce(matrix_t& A, vector_t& b);
 ///
 /// \brief returns true whether the given quadratic term is convex (aka positive semi-definite).
 ///
-NANO_PUBLIC bool is_convex(const matrix_t&, scalar_t tol = 1e-8);
+NANO_PUBLIC bool is_convex(const matrix_t&, scalar_t tol = 1e-10);
 
 ///
 /// \brief returns the strong convexity factor of a quadratic term, or zero if not convex.
