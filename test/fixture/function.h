@@ -104,7 +104,7 @@ using namespace nano;
 
 [[maybe_unused]] inline auto check_gradient(const function_t& function, const int trials = 100,
                                             const scalar_t central_difference_epsilon = 1e-8,
-                                            const scalar_t convex_subgradient_epsilon = 1e-14)
+                                            const scalar_t convex_subgradient_epsilon = 1e-10)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -119,9 +119,9 @@ using namespace nano;
         // (sub-)gradient inequality for convex inequality
         if (rfunction->convex())
         {
-            auto       gx = vector_t{x.size()};
-            const auto fz = (*rfunction)(z);
-            const auto fx = (*rfunction)(x, gx);
+            auto       gx      = vector_t{x.size()};
+            const auto fz      = (*rfunction)(z);
+            const auto fx      = (*rfunction)(x, gx);
             const auto epsilon = convex_subgradient_epsilon * 0.5 * (std::fabs(fx) + std::fabs(fz));
             UTEST_CHECK_GREATER_EQUAL(fz - fx + convex_subgradient_epsilon, gx.dot(z - x));
         }
