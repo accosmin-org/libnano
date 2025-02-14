@@ -123,16 +123,13 @@ public:
     ///
     /// \brief construct test functions having:
     ///     - the number of dimensions within the given range,
-    ///     - the given number of summands and
-    ///     - the given requirements in terms of smoothness and convexity.
+    ///     - the given requirements in terms of smoothness, convexity and constraints.
     ///
     struct config_t
     {
         tensor_size_t m_min_dims{2};                    ///<
         tensor_size_t m_max_dims{8};                    ///<
-        convexity     m_convexity{convexity::ignore};   ///<
-        smoothness    m_smoothness{smoothness::ignore}; ///<
-        constrained   m_constrained{constrained::no};   ///<
+        function_type m_function_type{function_type::convex_smooth}; ///<
     };
 
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));

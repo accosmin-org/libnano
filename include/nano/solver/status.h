@@ -43,7 +43,7 @@ template <>
 inline enum_map_t<solver_status> enum_string<solver_status>()
 {
     return {
-        {          solver_status::max_iters,           "max_iters"},
+        {          solver_status::max_iters,           "max-iters"},
         {             solver_status::failed,              "failed"},
         {         solver_status::unfeasible,          "unfeasible"},
         {          solver_status::unbounded,           "unbounded"},

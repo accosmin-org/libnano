@@ -14,12 +14,12 @@ UTEST_BEGIN_MODULE(test_solver_nonlinear)
 
 UTEST_CASE(smooth)
 {
-    check_minimize(make_solver_ids(), function_t::make({4, 4, convexity::yes, smoothness::yes}));
+    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex_smooth}));
 }
 
 UTEST_CASE(nonsmooth)
 {
-    check_minimize(make_solver_ids(), function_t::make({4, 4, convexity::yes, smoothness::no}));
+    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex}));
 }
 
 UTEST_END_MODULE()

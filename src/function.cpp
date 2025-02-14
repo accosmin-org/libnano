@@ -43,6 +43,49 @@
 
 using namespace nano;
 
+namespace
+{
+void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions)
+{
+    // NB: generate different regularization parameters for various linear ML models
+    // to assess the difficulty of the resulting numerical optimization problems.
+    if (function->parameter_if("lasso::alpha1") != nullptr)
+    {
+        for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("lasso::alpha1", alpha1);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("ridge::alpha2") != nullptr)
+    {
+        for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("ridge::alpha2", alpha2);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("elasticnet::alpha1") != nullptr)
+    {
+        for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("elasticnet::alpha1", alpha12);
+            function->config("elasticnet::alpha2", alpha12);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    // TODO: generate different versions of linear and quadratic programs
+
+    else
+    {
+        functions.emplace_back(function->make(dims));
+    }
+}
+} // namespace
+
 function_t::function_t(string_t id, tensor_size_t size)
     : typed_t(std::move(id))
     , m_size(size)
@@ -267,57 +310,44 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
             auto function = factory.get(id);
             assert(function != nullptr);
 
-            const auto is_convex = function->convex();
-            const auto is_smooth = function->smooth();
-
-            const auto has_constraints = !(function->constraints().empty());
-
-            if (has_constraints)
+            switch (config.m_function_type)
             {
-                // TODO: change fixture for linear and quadratic programs: different alpha, lambda ...
-                // (config.m_constrained == constrained::ignore ||
-                //  has_constraints == (config.m_constrained == constrained::yes)))
-                continue;
-            }
-
-            else if ((config.m_convexity == convexity::ignore || is_convex == (config.m_convexity == convexity::yes)) &&
-                     (config.m_smoothness == smoothness::ignore ||
-                      is_smooth == (config.m_smoothness == smoothness::yes)))
-            {
-                // NB: generate different regularization parameters for various linear ML models
-                // to assess the difficulty of the resulting numerical optimization problems.
-                if (function->parameter_if("lasso::alpha1") != nullptr)
+            case function_type::convex:
+                if (function->convex() && function->constraints().empty())
                 {
-                    for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
-                    {
-                        function->config("lasso::alpha1", alpha1);
-                        functions.emplace_back(function->make(dims));
-                    }
+                    make_function(function, dims, functions);
                 }
+                break;
 
-                else if (function->parameter_if("ridge::alpha2") != nullptr)
+            case function_type::smooth:
+                if (function->smooth() && function->constraints().empty())
                 {
-                    for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
-                    {
-                        function->config("ridge::alpha2", alpha2);
-                        functions.emplace_back(function->make(dims));
-                    }
+                    make_function(function, dims, functions);
                 }
+                break;
 
-                else if (function->parameter_if("elasticnet::alpha1") != nullptr)
+            case function_type::convex_smooth:
+                if (function->convex() && function->smooth() && function->constraints().empty())
                 {
-                    for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
-                    {
-                        function->config("elasticnet::alpha1", alpha12);
-                        function->config("elasticnet::alpha2", alpha12);
-                        functions.emplace_back(function->make(dims));
-                    }
+                    make_function(function, dims, functions);
                 }
+                break;
 
-                else
+            case function_type::linear_program:
+                if (dynamic_cast<const linear_program_t*>(function.get()) != nullptr)
                 {
-                    functions.emplace_back(function->make(dims));
+                    make_function(function, dims, functions);
                 }
+                break;
+
+            case function_type::quadratic_program:
+                if (dynamic_cast<const quadratic_program_t*>(function.get()) != nullptr)
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::any: functions.emplace_back(function->make(dims)); break;
             }
         }
 

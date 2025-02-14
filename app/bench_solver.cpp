@@ -13,6 +13,15 @@ using namespace nano;
 
 namespace
 {
+enum class mode
+{
+    smooth,
+    convex,
+    convex_smooth,
+    linear_program,
+    quadratic_program,
+};
+
 struct result_t
 {
     result_t() = default;
@@ -261,9 +270,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("--min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("--max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("--trials", "number of random trials for each test function", "100");
-    cmdline.add("--convex", "use only convex test functions");
-    cmdline.add("--smooth", "use only smooth test functions");
-    cmdline.add("--non-smooth", "use only non-smooth test functions");
+    cmdline.add("--function-type", scat("function type, one of [", enum_values<function_type>(), "]"), "convex-smooth");
     cmdline.add("--log-dir", "directory to log the optimization trajectories");
 
     const auto options = cmdline.process(argc, argv);
@@ -276,10 +283,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto min_dims = options.get<tensor_size_t>("--min-dims");
     const auto max_dims = options.get<tensor_size_t>("--max-dims");
     const auto trials   = options.get<size_t>("--trials");
-
-    const auto convex = options.has("--convex") ? convexity::yes : convexity::ignore;
-    const auto smooth =
-        options.has("--smooth") ? smoothness::yes : (options.has("--non-smooth") ? smoothness::no : smoothness::ignore);
+    const auto fun_type = nano::from_string<function_type>(options.get<string_t>("--function-type"));
 
     const auto log_dir = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
     const auto fregex  = std::regex(options.get<string_t>("--function"));
@@ -293,7 +297,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto solver_ids = solver_t::all().ids(sregex);
     critical(!solver_ids.empty(), "at least a solver needs to be selected!");
 
-    const auto functions = function_t::make({min_dims, max_dims, convex, smooth}, fregex);
+    const auto functions = function_t::make({min_dims, max_dims, fun_type}, fregex);
     critical(!functions.empty(), "at least a function needs to be selected!");
 
     auto rconfig = cmdconfig_t{options};

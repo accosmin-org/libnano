@@ -41,12 +41,12 @@ UTEST_BEGIN_MODULE(test_solver_smooth)
 
 UTEST_CASE(default_solvers)
 {
-    check_minimize(make_solver_ids(), function_t::make({1, 4, convexity::yes, smoothness::yes}));
+    check_minimize(make_solver_ids(), function_t::make({1, 4, function_type::convex_smooth}));
 }
 
 UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 {
-    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes}))
+    for (const auto& function : function_t::make({4, 4, function_type::smooth}))
     {
         UTEST_REQUIRE(function);
 
@@ -95,7 +95,7 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
 UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 {
-    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes}))
+    for (const auto& function : function_t::make({4, 4, function_type::smooth}))
     {
         UTEST_REQUIRE(function);
 
@@ -125,7 +125,7 @@ UTEST_CASE(best_solvers_with_cgdescent_very_accurate_on_smooth)
 
 UTEST_CASE(best_solvers_with_tolerances_on_smooth)
 {
-    for (const auto& function : function_t::make({4, 4, convexity::ignore, smoothness::yes}))
+    for (const auto& function : function_t::make({4, 4, function_type::smooth}))
     {
         UTEST_REQUIRE(function);
 
@@ -152,7 +152,7 @@ UTEST_CASE(best_solvers_with_tolerances_on_smooth)
 
 UTEST_CASE(quasi_bfgs_with_initializations)
 {
-    for (const auto& function : function_t::make({4, 4, convexity::yes, smoothness::yes}))
+    for (const auto& function : function_t::make({4, 4, function_type::convex_smooth}))
     {
         UTEST_REQUIRE(function);
 
