@@ -127,8 +127,8 @@ public:
     ///
     struct config_t
     {
-        tensor_size_t m_min_dims{2};                    ///<
-        tensor_size_t m_max_dims{8};                    ///<
+        tensor_size_t m_min_dims{2};                                 ///<
+        tensor_size_t m_max_dims{8};                                 ///<
         function_type m_function_type{function_type::convex_smooth}; ///<
     };
 

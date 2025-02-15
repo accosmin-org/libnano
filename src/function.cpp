@@ -390,9 +390,7 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
                 }
                 break;
 
-            case function_type::any:
-                functions.emplace_back(function->make(dims));
-                break;
+            case function_type::any: functions.emplace_back(function->make(dims)); break;
             }
         }
 
