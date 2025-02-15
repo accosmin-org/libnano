@@ -221,7 +221,7 @@ static auto check_with_logger(const toperator& op)
     }
 #define UTEST_HANDLE_FAILURE()                                                                                         \
     ++utest_n_failures;                                                                                                \
-    std::cout << ERROR_COLOR << __FILE__ << ":" << __LINE__ << utest_location_t{} << ": "
+    std::cout << ERROR_COLOR << __FILE__ << ":" << __LINE__ << utest_location_t{} << ":\n"
 
 #define UTEST_EVALUATE(check, critical)                                                                                \
     ++utest_n_checks;                                                                                                  \

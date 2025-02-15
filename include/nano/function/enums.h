@@ -37,7 +37,7 @@ inline enum_map_t<function_type> enum_string()
         {              function_type::any,               "any"},
         {           function_type::convex,            "convex"},
         {           function_type::smooth,            "smooth"},
-        {    function_type::convex_smooth,     "convex-convex"},
+        {    function_type::convex_smooth,     "convex-smooth"},
         {   function_type::linear_program,    "linear-program"},
         {function_type::quadratic_program, "quadratic-program"},
     };
