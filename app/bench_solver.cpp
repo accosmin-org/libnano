@@ -13,22 +13,16 @@ using namespace nano;
 
 namespace
 {
-enum class mode
-{
-    smooth,
-    convex,
-    convex_smooth,
-    linear_program,
-    quadratic_program,
-};
-
 struct result_t
 {
     result_t() = default;
 
     result_t(const solver_state_t& state, const int64_t milliseconds)
         : m_value(state.fx())
-        , m_gnorm(state.gradient_test())
+        , m_gtest(state.gradient_test())
+        , m_ktest(state.kkt_optimality_test())
+        , m_etest(state.kkt_optimality_test2())
+        , m_itest(state.kkt_optimality_test1())
         , m_status(state.status())
         , m_fcalls(state.fcalls())
         , m_gcalls(state.gcalls())
@@ -36,67 +30,112 @@ struct result_t
     {
     }
 
-    scalar_t      m_value{0.0};
-    scalar_t      m_gnorm{0.0};
-    solver_status m_status{solver_status::failed};
-    tensor_size_t m_fcalls{0};
-    tensor_size_t m_gcalls{0};
-    int64_t       m_milliseconds{0};
+    scalar_t      m_value{0.0};                    ///< objective value
+    scalar_t      m_gtest{0.0};                    ///< gradient test
+    scalar_t      m_ktest{0.0};                    ///< kkt optimality test
+    scalar_t      m_etest{0.0};                    ///< equality contraints violation
+    scalar_t      m_itest{0.0};                    ///< inequality constraints violation
+    solver_status m_status{solver_status::failed}; ///<
+    tensor_size_t m_fcalls{0};                     ///<
+    tensor_size_t m_gcalls{0};                     ///<
+    int64_t       m_milliseconds{0};               ///<
 };
 
 struct solver_stats_t
 {
     explicit solver_stats_t(const size_t trials)
-        : m_values(static_cast<tensor_size_t>(trials))
-        , m_gnorms(static_cast<tensor_size_t>(trials))
-        , m_errors(static_cast<tensor_size_t>(trials))
-        , m_maxits(static_cast<tensor_size_t>(trials))
-        , m_fcalls(static_cast<tensor_size_t>(trials))
-        , m_gcalls(static_cast<tensor_size_t>(trials))
-        , m_millis(static_cast<tensor_size_t>(trials))
-        , m_ranks(static_cast<tensor_size_t>(trials))
-        , m_precisions(static_cast<tensor_size_t>(trials))
+        : m_stats(12, static_cast<tensor_size_t>(trials))
     {
     }
 
-    void update(size_t trial, const result_t& result, scalar_t precision, ptrdiff_t rank)
+    // clang-format off
+
+    ///< objective values
+    auto values() { return m_stats.tensor(0); }
+    auto values() const { return m_stats.tensor(0); }
+
+    ///< gradient tests
+    auto gtests() { return m_stats.tensor(1); }
+    auto gtests() const { return m_stats.tensor(1); }
+
+    ///< kkt optimality tests
+    auto ktests() { return m_stats.tensor(2); }
+    auto ktests() const { return m_stats.tensor(2); }
+
+    ///< equality constraints violations
+    auto etests() { return m_stats.tensor(3); }
+    auto etests() const { return m_stats.tensor(3); }
+
+    ///< inequality constraints violations
+    auto itests() { return m_stats.tensor(4); }
+    auto itests() const { return m_stats.tensor(4); }
+
+    ///< #internal errors (e.g. line-search failed)
+    auto errors() { return m_stats.tensor(5); }
+    auto errors() const { return m_stats.tensor(5); }
+
+    ///< #maximum iterations reached (without convergence)
+    auto maxits() { return m_stats.tensor(6); }
+    auto maxits() const { return m_stats.tensor(6); }
+
+    ///< #function value calls
+    auto fcalls() { return m_stats.tensor(7); }
+    auto fcalls() const { return m_stats.tensor(7); }
+
+    ///< #gradient calls
+    auto gcalls() { return m_stats.tensor(8); }
+    auto gcalls() const { return m_stats.tensor(8); }
+
+    ///< number of milliseconds
+    auto millis() { return m_stats.tensor(9); }
+    auto millis() const { return m_stats.tensor(9); }
+
+    ///< rank as ordered by the function value
+    auto ranks() { return m_stats.tensor(10); }
+    auto ranks() const { return m_stats.tensor(10); }
+
+    ///< relative precision to the best solver
+    auto precisions() { return m_stats.tensor(11); }
+    auto precisions() const { return m_stats.tensor(11); }
+
+    // clang-format on
+
+    void update(const size_t trial, const result_t& result, const scalar_t precision, const ptrdiff_t rank)
     {
         const auto itrial    = static_cast<tensor_size_t>(trial);
-        m_values(itrial)     = result.m_value;
-        m_gnorms(itrial)     = result.m_gnorm;
-        m_errors(itrial)     = (result.m_status == solver_status::failed) ? 1.0 : 0.0;
-        m_maxits(itrial)     = (result.m_status == solver_status::max_iters) ? 1.0 : 0.0;
-        m_fcalls(itrial)     = static_cast<scalar_t>(result.m_fcalls);
-        m_gcalls(itrial)     = static_cast<scalar_t>(result.m_gcalls);
-        m_millis(itrial)     = static_cast<scalar_t>(result.m_milliseconds);
-        m_ranks(itrial)      = static_cast<scalar_t>(rank);
-        m_precisions(itrial) = precision;
+        values()(itrial)     = result.m_value;
+        gtests()(itrial)     = result.m_gtest;
+        ktests()(itrial)     = result.m_ktest;
+        etests()(itrial)     = result.m_etest;
+        itests()(itrial)     = result.m_itest;
+        errors()(itrial)     = (result.m_status == solver_status::failed) ? 1.0 : 0.0;
+        maxits()(itrial)     = (result.m_status == solver_status::max_iters) ? 1.0 : 0.0;
+        fcalls()(itrial)     = static_cast<scalar_t>(result.m_fcalls);
+        gcalls()(itrial)     = static_cast<scalar_t>(result.m_gcalls);
+        millis()(itrial)     = static_cast<scalar_t>(result.m_milliseconds);
+        ranks()(itrial)      = static_cast<scalar_t>(rank);
+        precisions()(itrial) = precision;
     }
 
-    void update(size_t trial, const solver_stats_t& stats)
+    void update(const size_t trial, const solver_stats_t& stats)
     {
         const auto itrial    = static_cast<tensor_size_t>(trial);
-        m_values(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
-        m_gnorms(itrial)     = stats.m_gnorms.mean();
-        m_errors(itrial)     = stats.m_errors.sum();
-        m_maxits(itrial)     = stats.m_maxits.sum();
-        m_fcalls(itrial)     = stats.m_fcalls.mean();
-        m_gcalls(itrial)     = stats.m_gcalls.mean();
-        m_millis(itrial)     = stats.m_millis.mean();
-        m_ranks(itrial)      = stats.m_ranks.mean();
-        m_precisions(itrial) = stats.m_precisions.mean();
+        values()(itrial)     = std::numeric_limits<scalar_t>::quiet_NaN();
+        gtests()(itrial)     = stats.gtests().mean();
+        ktests()(itrial)     = stats.ktests().mean();
+        etests()(itrial)     = stats.etests().mean();
+        itests()(itrial)     = stats.itests().mean();
+        errors()(itrial)     = stats.errors().sum();
+        maxits()(itrial)     = stats.maxits().sum();
+        fcalls()(itrial)     = stats.fcalls().mean();
+        gcalls()(itrial)     = stats.gcalls().mean();
+        millis()(itrial)     = stats.millis().mean();
+        ranks()(itrial)      = stats.ranks().mean();
+        precisions()(itrial) = stats.precisions().mean();
     }
 
     // attributes
-    tensor1d_t m_values;     ///< function values
-    tensor1d_t m_gnorms;     ///< gradient norms
-    tensor1d_t m_errors;     ///< #internal errors (e.g. line-search failed)
-    tensor1d_t m_maxits;     ///< #maximum iterations reached (without convergence)
-    tensor1d_t m_fcalls;     ///< #function value calls
-    tensor1d_t m_gcalls;     ///< #gradient calls
-    tensor1d_t m_millis;     ///< number of milliseconds
-    tensor1d_t m_ranks;      ///< rank as ordered by the function value
-    tensor1d_t m_precisions; ///< relative precision to the best solver
+    tensor2d_t m_stats; ///< statistics (statistic index, #trials)
 };
 
 auto relative_precision(const scalar_t value, const scalar_t best_value, const scalar_t epsilon)
@@ -151,15 +190,15 @@ void print_table(const string_t& table_name, const solvers_t& solvers, const std
         const auto  solver_name = make_solver_name(solvers[isolver]);
 
         auto& row = table.append();
-        row << solver_name << scat(std::fixed, std::setprecision(4), stat.m_precisions.mean())
-            << scat(std::fixed, std::setprecision(2), stat.m_ranks.mean());
-        print_scalar(row, stat.m_values.mean());
-        print_scalar(row, stat.m_gnorms.mean());
-        print_integer(row, stat.m_errors.sum());
-        print_integer(row, stat.m_maxits.sum());
-        print_integer(row, stat.m_fcalls.mean());
-        print_integer(row, stat.m_gcalls.mean());
-        print_integer(row, stat.m_millis.mean());
+        row << solver_name << scat(std::fixed, std::setprecision(4), stat.precisions().mean())
+            << scat(std::fixed, std::setprecision(2), stat.ranks().mean());
+        print_scalar(row, stat.values().mean());
+        print_scalar(row, stat.gtests().mean());
+        print_integer(row, stat.errors().sum());
+        print_integer(row, stat.maxits().sum());
+        print_integer(row, stat.fcalls().mean());
+        print_integer(row, stat.gcalls().mean());
+        print_integer(row, stat.millis().mean());
     }
 
     assert(table.rows() == solvers.size() + 2U);
@@ -239,7 +278,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
         {
             const auto& result = results[trial * solvers.size() + isolver];
             assert(std::isfinite(result.m_value));
-            assert(std::isfinite(result.m_gnorm));
+            assert(std::isfinite(result.m_gtest));
 
             const auto epsilon   = solvers[isolver]->parameter("solver::epsilon").value<scalar_t>();
             const auto precision = relative_precision(result, best_result, epsilon);
@@ -270,7 +309,9 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("--min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("--max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("--trials", "number of random trials for each test function", "100");
-    cmdline.add("--function-type", scat("function type, one of [", enum_values<function_type>(), "]"), "convex-smooth");
+    cmdline.add("--function-type",
+                "function type, one of [convex, smooth, convex-smooth, linear-program, quadratic-program]",
+                "convex-smooth");
     cmdline.add("--log-dir", "directory to log the optimization trajectories");
 
     const auto options = cmdline.process(argc, argv);
@@ -284,15 +325,23 @@ int unsafe_main(int argc, const char* argv[])
     const auto max_dims = options.get<tensor_size_t>("--max-dims");
     const auto trials   = options.get<size_t>("--trials");
     const auto fun_type = nano::from_string<function_type>(options.get<string_t>("--function-type"));
-
     const auto log_dir = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
     const auto fregex  = std::regex(options.get<string_t>("--function"));
     const auto sregex  = std::regex(options.get<string_t>("--solver"));
     const auto l0regex = std::regex(options.get<string_t>("--lsearch0"));
     const auto lkregex = std::regex(options.get<string_t>("--lsearchk"));
-
     const auto lsearch0_ids = options.has("--lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
     const auto lsearchk_ids = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
+
+    // clang-format off
+    critical(
+        fun_type == function_type::convex ||
+        fun_type == function_type::smooth ||
+        fun_type == function_type::convex_smooth ||
+        fun_type == function_type::linear_program ||
+        fun_type == function_type::quadratic_program,
+        "unsupported function type!");
+    // clang-format on
 
     const auto solver_ids = solver_t::all().ids(sregex);
     critical(!solver_ids.empty(), "at least a solver needs to be selected!");
