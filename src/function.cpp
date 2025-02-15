@@ -77,7 +77,50 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
         }
     }
 
-    // TODO: generate different versions of linear and quadratic programs
+    else if (function->parameter_if("cvx48b::lambda") != nullptr)
+    {
+        for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
+        {
+            function->config("cvx48b::lambda", lambda);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48e_eq::alpha") != nullptr)
+    {
+        for (const auto alpha : {0.0, 0.5, 1.0})
+        {
+            function->config("cvx48e_eq::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48e_ineq::alpha") != nullptr)
+    {
+        for (const auto alpha : {1e-6, 0.5, 1.0})
+        {
+            function->config("cvx48e_ineq::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48f::alpha") != nullptr)
+    {
+        for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
+        {
+            function->config("cvx48f::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("numopt162::neqs") != nullptr)
+    {
+        for (const auto neqs : {1e-6, 0.8, 1.0})
+        {
+            function->config("numopt162::neqs", neqs);
+            functions.emplace_back(function->make(dims));
+        }
+    }
 
     else
     {
@@ -347,7 +390,9 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
                 }
                 break;
 
-            case function_type::any: functions.emplace_back(function->make(dims)); break;
+            case function_type::any:
+                functions.emplace_back(function->make(dims));
+                break;
             }
         }
 

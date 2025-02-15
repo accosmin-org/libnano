@@ -1,6 +1,4 @@
 #include <fixture/solver.h>
-#include <function/program/numopt162.h>
-#include <function/program/numopt1625.h>
 #include <nano/function/bounds.h>
 #include <nano/function/cuts.h>
 #include <nano/function/linear.h>
@@ -112,21 +110,7 @@ UTEST_CASE(program4)
     check_minimize(make_solver_ids(), function);
 }
 
-UTEST_CASE(program_numopt162)
-{
-    for (const tensor_size_t dims : {3, 5, 11})
-    {
-        for (const auto neqs : {1e-6, 0.8, 1.0})
-        {
-            const auto function = quadratic_program_numopt162_t{dims, neqs};
-
-            check_convexity(function);
-            check_minimize(make_solver_ids(), function);
-        }
-    }
-}
-
-UTEST_CASE(program6)
+UTEST_CASE(program5)
 {
     // see exercise 16.11, "Numerical optimization", Nocedal & Wright, 2nd edition
     const auto q = make_vector<scalar_t>(2, -2, 4);
@@ -143,7 +127,7 @@ UTEST_CASE(program6)
     check_minimize(make_solver_ids(), function);
 }
 
-UTEST_CASE(program7)
+UTEST_CASE(program6)
 {
     // see exercise 16.17, "Numerical optimization", Nocedal & Wright, 2nd edition
     const auto q = make_vector<scalar_t>(2, 0, 2);
@@ -160,14 +144,12 @@ UTEST_CASE(program7)
     check_minimize(make_solver_ids(), function);
 }
 
-UTEST_CASE(program_numopt1625)
+UTEST_CASE(factory)
 {
-    for (const tensor_size_t dims : {2, 3, 7})
+    for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
-        const auto function = quadratic_program_numopt1625_t{dims};
-
-        check_convexity(function);
-        check_minimize(make_solver_ids(), function);
+        check_convexity(*function);
+        check_minimize(make_solver_ids(), *function);
     }
 }
 
