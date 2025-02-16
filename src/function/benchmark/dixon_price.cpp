@@ -37,7 +37,7 @@ scalar_t function_dixon_price_t::do_vgrad(vector_cmap_t x, vector_map_t gx) cons
            (m_bias.segment(1, size() - 1).array() * (2 * xsegm1.array().square() - xsegm0.array()).square()).sum();
 }
 
-rfunction_t function_dixon_price_t::make(const tensor_size_t dims, tensor_size_t) const
+rfunction_t function_dixon_price_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<function_dixon_price_t>(dims);
 }

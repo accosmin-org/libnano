@@ -6,8 +6,12 @@
 using namespace nano;
 
 linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const scalar_t lambda)
-    : linear_program_t(scat("cvx48b[lambda=", lambda, "]"), vector_t::zero(dims))
+    : linear_program_t("cvx48b", vector_t::zero(dims))
 {
+    register_parameter(parameter_t::make_scalar("cvx48b::lambda", -1e+10, LE, -1.0, LT, 0.0));
+
+    parameter("cvx48b::lambda") = lambda;
+
     const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0);
     const auto b = urand<scalar_t>(-1.0, +1.0);
     const auto c = lambda * a;
@@ -24,7 +28,16 @@ rfunction_t linear_program_cvx48b_t::clone() const
     return std::make_unique<linear_program_cvx48b_t>(*this);
 }
 
-rfunction_t linear_program_cvx48b_t::make(const tensor_size_t dims, [[maybe_unused]] const tensor_size_t summands) const
+string_t linear_program_cvx48b_t::do_name() const
 {
-    return std::make_unique<linear_program_cvx48b_t>(dims);
+    const auto lambda = parameter("cvx48b::lambda").value<scalar_t>();
+
+    return scat(type_id(), "[lambda=", lambda, "]");
+}
+
+rfunction_t linear_program_cvx48b_t::make(const tensor_size_t dims) const
+{
+    const auto lambda = parameter("cvx48b::lambda").value<scalar_t>();
+
+    return std::make_unique<linear_program_cvx48b_t>(dims, lambda);
 }

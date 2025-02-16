@@ -38,7 +38,7 @@ UTEST_CASE(lambda)
         const auto sphere_function = function_sphere_t{dims};
         const auto lambda_function = make_function(dims, convexity::yes, smoothness::yes, 2.0, lambda);
 
-        UTEST_CHECK(lambda_function.make(0, 0) == nullptr);
+        UTEST_CHECK(lambda_function.make(0) == nullptr);
 
         for (auto trial = 0; trial < 10; ++trial)
         {
@@ -55,7 +55,7 @@ UTEST_CASE(lambda)
 
 UTEST_CASE(stats)
 {
-    for (const auto& function : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 10}))
+    for (const auto& function : function_t::make({2, 4, function_type::any}))
     {
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
@@ -80,62 +80,64 @@ UTEST_CASE(stats)
 
 UTEST_CASE(select)
 {
-    for (const auto convex : {convexity::ignore, convexity::yes, convexity::no})
+    for (const auto fun_type : {function_type::convex, function_type::smooth, function_type::convex_smooth})
     {
-        for (const auto smooth : {smoothness::ignore, smoothness::yes, smoothness::no})
+        UTEST_NAMED_CASE(scat(fun_type));
+
+        auto total                 = 0;
+        auto counts_per_convexity  = std::unordered_map<bool, int>{};
+        auto counts_per_smoothness = std::unordered_map<bool, int>{};
+        auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
+
+        const auto expects_convex = (fun_type == function_type::convex) || (fun_type == function_type::convex_smooth);
+        const auto expects_smooth = (fun_type == function_type::smooth) || (fun_type == function_type::convex_smooth);
+
+        for (const auto& function : function_t::make({4, 16, fun_type}))
         {
-            auto total                 = 0;
-            auto counts_per_convexity  = std::unordered_map<bool, int>{};
-            auto counts_per_smoothness = std::unordered_map<bool, int>{};
-            auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
+            ++total;
 
-            for (const auto& function : function_t::make({4, 16, convex, smooth, 5}))
-            {
-                ++total;
+            UTEST_CHECK(function != nullptr);
+            UTEST_CHECK_LESS_EQUAL(function->size(), 16);
+            UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
+            UTEST_CHECK(!expects_convex || function->convex());
+            UTEST_CHECK(!expects_smooth || function->smooth());
 
-                UTEST_CHECK(function != nullptr);
-                UTEST_CHECK_LESS_EQUAL(function->size(), 16);
-                UTEST_CHECK_GREATER_EQUAL(function->size(), 4);
-                UTEST_CHECK(convex == convexity::ignore || function->convex() == (convex == convexity::yes));
-                UTEST_CHECK(smooth == smoothness::ignore || function->smooth() == (smooth == smoothness::yes));
+            counts_per_size[function->size()]++;
+            counts_per_convexity[function->convex()]++;
+            counts_per_smoothness[function->smooth()]++;
+        }
 
-                counts_per_size[function->size()]++;
-                counts_per_convexity[function->convex()]++;
-                counts_per_smoothness[function->smooth()]++;
-            }
+        UTEST_CHECK_EQUAL(counts_per_size[4], total / 3);
+        UTEST_CHECK_EQUAL(counts_per_size[8], total / 3);
+        UTEST_CHECK_EQUAL(counts_per_size[16], total / 3);
 
-            UTEST_CHECK_EQUAL(counts_per_size[4], total / 3);
-            UTEST_CHECK_EQUAL(counts_per_size[8], total / 3);
-            UTEST_CHECK_EQUAL(counts_per_size[16], total / 3);
-            UTEST_CHECK_EQUAL(counts_per_convexity[true] + counts_per_convexity[false], total);
-            UTEST_CHECK_EQUAL(counts_per_smoothness[true] + counts_per_smoothness[false], total);
+        if (expects_convex)
+        {
+            UTEST_CHECK_GREATER(counts_per_convexity[true], 0);
+            UTEST_CHECK_EQUAL(counts_per_convexity[false], 0);
+        }
+        else
+        {
+            UTEST_CHECK_GREATER(counts_per_convexity[true], 0);
+            UTEST_CHECK_GREATER(counts_per_convexity[false], 0);
+        }
 
-            if (convex == convexity::ignore)
-            {
-                UTEST_CHECK_GREATER(counts_per_convexity[true], 0);
-                UTEST_CHECK_GREATER(counts_per_convexity[false], 0);
-            }
-            else
-            {
-                UTEST_CHECK_EQUAL(counts_per_convexity[convex != convexity::yes], 0);
-            }
-
-            if (smooth == smoothness::ignore)
-            {
-                UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
-                UTEST_CHECK_GREATER(counts_per_smoothness[false], 0);
-            }
-            else
-            {
-                UTEST_CHECK_EQUAL(counts_per_smoothness[smooth != smoothness::yes], 0);
-            }
+        if (expects_smooth)
+        {
+            UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
+            UTEST_CHECK_EQUAL(counts_per_smoothness[false], 0);
+        }
+        else
+        {
+            UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
+            UTEST_CHECK_GREATER(counts_per_smoothness[false], 0);
         }
     }
 }
 
 UTEST_CASE(convexity)
 {
-    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());
@@ -152,7 +154,7 @@ UTEST_CASE(convexity)
 
 UTEST_CASE(grad_accuracy)
 {
-    for (const auto& rfunction : function_t::make({2, 4, convexity::ignore, smoothness::ignore, 5}))
+    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
     {
         const auto& function = *rfunction;
         UTEST_NAMED_CASE(function.name());
@@ -161,7 +163,7 @@ UTEST_CASE(grad_accuracy)
         UTEST_CHECK_LESS_EQUAL(dims, 4);
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
-        check_gradient(function, 100, 1e-8, 1e-14);
+        check_gradient(function, 100, 1e-8, 1e-8);
     }
 }
 

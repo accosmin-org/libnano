@@ -162,14 +162,17 @@ auto make_stats_datasource(const size_t target)
 
     switch (target)
     {
-    case 0U: sclass_data(2) = 0; break;
+    case 0U:
+        sclass_data(2) = 0;
+        break;
     case 3U:
         struct_data(0) = 0;
         struct_data(1) = 0;
         struct_data(2) = 0;
         struct_data(3) = 0;
         break;
-    default: break;
+    default:
+        break;
     }
 
     auto datasource = stats_datasource_t{std::move(sclass_data), std::move(mclass_data), std::move(scalar_data),

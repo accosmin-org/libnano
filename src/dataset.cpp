@@ -94,9 +94,15 @@ void dataset_t::update()
         {
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
-            case feature_type::sclass: total_columns += feature.classes() - 1; break;
-            case feature_type::mclass: total_columns += feature.classes(); break;
-            default: total_columns += size(feature.dims()); break;
+            case feature_type::sclass:
+                total_columns += feature.classes() - 1;
+                break;
+            case feature_type::mclass:
+                total_columns += feature.classes();
+                break;
+            default:
+                total_columns += size(feature.dims());
+                break;
             }
         }
         ++generators;
@@ -124,7 +130,9 @@ void dataset_t::update()
             tensor_size_t columns = 0;
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
-            case feature_type::sclass: columns = feature.classes() - 1; break;
+            case feature_type::sclass:
+                columns = feature.classes() - 1;
+                break;
             case feature_type::mclass:
                 dim1    = feature.classes();
                 columns = feature.classes();
@@ -354,7 +362,8 @@ tensor3d_dims_t dataset_t::target_dims() const
 {
     switch (m_datasource.type())
     {
-    case task_type::unsupervised: return make_dims(0, 0, 0);
+    case task_type::unsupervised:
+        return make_dims(0, 0, 0);
 
     default:
         return m_datasource.visit_target(
@@ -362,9 +371,12 @@ tensor3d_dims_t dataset_t::target_dims() const
             {
                 switch (feature.type())
                 {
-                case feature_type::sclass: return make_dims(feature.classes(), 1, 1); // NOLINT(bugprone-branch-clone)
-                case feature_type::mclass: return make_dims(feature.classes(), 1, 1);
-                default: return feature.dims();
+                case feature_type::sclass:
+                    return make_dims(feature.classes(), 1, 1); // NOLINT(bugprone-branch-clone)
+                case feature_type::mclass:
+                    return make_dims(feature.classes(), 1, 1);
+                default:
+                    return feature.dims();
                 }
             });
     }

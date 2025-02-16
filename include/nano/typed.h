@@ -6,8 +6,8 @@
 namespace nano
 {
 ///
-/// \brief interface for objects that can be identified with an ID, useful within factories to identify specific
-/// interface implementations.
+/// \brief interface for objects that can be identified with an ID,
+///     useful within factories to identify specific interface implementations.
 ///
 class NANO_PUBLIC typed_t
 {

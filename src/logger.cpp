@@ -19,9 +19,12 @@ const char* header_to_color(const log_type type)
 {
     switch (type)
     {
-    case log_type::info: return TERMINAL_COLOR_GREEN;
-    case log_type::warn: return TERMINAL_COLOR_YELLOW;
-    default: return TERMINAL_COLOR_RED;
+    case log_type::info:
+        return TERMINAL_COLOR_GREEN;
+    case log_type::warn:
+        return TERMINAL_COLOR_YELLOW;
+    default:
+        return TERMINAL_COLOR_RED;
     }
 }
 

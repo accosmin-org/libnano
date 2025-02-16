@@ -7,7 +7,6 @@
 #include <function/benchmark/chained_lq.h>
 #include <function/benchmark/chung_reynolds.h>
 #include <function/benchmark/dixon_price.h>
-#include <function/benchmark/elastic_net.h>
 #include <function/benchmark/exponential.h>
 #include <function/benchmark/geometric.h>
 #include <function/benchmark/kinks.h>
@@ -25,9 +24,110 @@
 #include <function/benchmark/styblinski_tang.h>
 #include <function/benchmark/trid.h>
 #include <function/benchmark/zakharov.h>
+
+#include <function/program/cvx410.h>
+#include <function/program/cvx48b.h>
+#include <function/program/cvx48c.h>
+#include <function/program/cvx48d.h>
+#include <function/program/cvx48e.h>
+#include <function/program/cvx48f.h>
+#include <function/program/cvx49.h>
+#include <function/program/numopt162.h>
+#include <function/program/numopt1625.h>
+
+#include <function/mlearn/elasticnet.h>
+#include <function/mlearn/lasso.h>
+#include <function/mlearn/ridge.h>
+
 #include <nano/core/strutil.h>
 
 using namespace nano;
+
+namespace
+{
+void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions)
+{
+    // NB: generate different regularization parameters for various linear ML models
+    // to assess the difficulty of the resulting numerical optimization problems.
+    if (function->parameter_if("lasso::alpha1") != nullptr)
+    {
+        for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("lasso::alpha1", alpha1);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("ridge::alpha2") != nullptr)
+    {
+        for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("ridge::alpha2", alpha2);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("elasticnet::alpha1") != nullptr)
+    {
+        for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
+        {
+            function->config("elasticnet::alpha1", alpha12);
+            function->config("elasticnet::alpha2", alpha12);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48b::lambda") != nullptr)
+    {
+        for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
+        {
+            function->config("cvx48b::lambda", lambda);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48e-eq::alpha") != nullptr)
+    {
+        for (const auto alpha : {0.0, 0.5, 1.0})
+        {
+            function->config("cvx48e-eq::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48e-ineq::alpha") != nullptr)
+    {
+        for (const auto alpha : {1e-6, 0.5, 1.0})
+        {
+            function->config("cvx48e-ineq::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("cvx48f::alpha") != nullptr)
+    {
+        for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
+        {
+            function->config("cvx48f::alpha", alpha);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("numopt162::neqs") != nullptr)
+    {
+        for (const auto neqs : {1e-6, 0.8, 1.0})
+        {
+            function->config("numopt162::neqs", neqs);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else
+    {
+        functions.emplace_back(function->make(dims));
+    }
+}
+} // namespace
 
 function_t::function_t(string_t id, tensor_size_t size)
     : typed_t(std::move(id))
@@ -52,7 +152,12 @@ void function_t::strong_convexity(const scalar_t strong_convexity)
 
 string_t function_t::name(const bool with_size) const
 {
-    return with_size ? scat(type_id(), "[", size(), "D]") : type_id();
+    return with_size ? scat(do_name(), "[", size(), "D]") : do_name();
+}
+
+string_t function_t::do_name() const
+{
+    return type_id();
 }
 
 bool function_t::constrain(constraint_t&& constraint)
@@ -114,7 +219,7 @@ void function_t::clear_statistics() const
     m_gcalls = 0;
 }
 
-rfunction_t function_t::make(tensor_size_t, tensor_size_t) const
+rfunction_t function_t::make(tensor_size_t) const
 {
     return rfunction_t{};
 }
@@ -186,40 +291,43 @@ factory_t<function_t>& function_t::all()
         manager.add<function_geometric_optimization_t>(
             "generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))");
 
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+0);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+2);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+4);
-        manager.add<function_enet_mse_t>("mean squared error with ridge-like regularization", 10, 0.0, 1e+6);
+        manager.add<function_lasso_mse_t>("mean squared error (MSE) with lasso regularization");
+        manager.add<function_lasso_mae_t>("mean absolute error (MAE) with lasso regularization");
+        manager.add<function_lasso_hinge_t>("hinge loss (linear SVM) with lasso regularization");
+        manager.add<function_lasso_cauchy_t>("cauchy loss (robust regression) with lasso regularization");
+        manager.add<function_lasso_logistic_t>("logistic loss (logistic regression) with lasso regularization");
 
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+0, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+2, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+4, 0.0);
-        manager.add<function_enet_mse_t>("mean squared error with lasso-like regularization", 10, 1e+6, 0.0);
+        manager.add<function_ridge_mse_t>("mean squared error (MSE) with ridge regularization");
+        manager.add<function_ridge_mae_t>("mean absolute error (MAE) with ridge regularization");
+        manager.add<function_ridge_hinge_t>("hinge loss (linear SVM) with ridge regularization");
+        manager.add<function_ridge_cauchy_t>("cauchy loss (robust regression) with ridge regularization");
+        manager.add<function_ridge_logistic_t>("logistic loss (logistic regression) with ridge regularization");
 
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+0, 1e+0);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+2, 1e+2);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+4, 1e+4);
-        manager.add<function_enet_mse_t>("mean squared error with elastic net-like regularization", 10, 1e+6, 1e+6);
+        manager.add<function_elasticnet_mse_t>("mean squared error (MSE) with elastic net regularization");
+        manager.add<function_elasticnet_mae_t>("mean absolute error (MAE) with elastic net regularization");
+        manager.add<function_elasticnet_hinge_t>("hinge loss (linear SVM) with elastic net regularization");
+        manager.add<function_elasticnet_cauchy_t>("cauchy loss (robust regression) with elastic net regularization");
+        manager.add<function_elasticnet_logistic_t>(
+            "logistic loss (logistic regression) with elastic net regularization");
 
-        manager.add<function_enet_mae_t>("mean absolute error with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_mae_t>("mean absolute error with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_mae_t>("mean absolute error with elastic net-like regularization", 10, 1.0, 1.0);
+        manager.add<linear_program_cvx48b_t>("linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48c_t>("linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48d_eq_t>(
+            "linear program: ex. 4.8(d) - equality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48d_ineq_t>(
+            "linear program: ex. 4.8(d) - inequality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48e_eq_t>(
+            "linear program: ex. 4.8(e) - equality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48e_ineq_t>(
+            "linear program: ex. 4.8(e) - inequality case, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx48f_t>("linear program: ex. 4.8(f), 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx49_t>("linear program: ex. 4.9, 'Convex Optimization', 2nd edition");
+        manager.add<linear_program_cvx410_t>("linear program: ex. 4.10, 'Convex Optimization', 2nd edition");
 
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_hinge_t>("hinge loss (linear SVM) with elastic net-like regularization", 10, 1.0,
-                                           1.0);
-
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with ridge-like regularization", 10, 0.0,
-                                            1.0);
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with lasso-like regularization", 10, 1.0,
-                                            0.0);
-        manager.add<function_enet_cauchy_t>("cauchy loss (robust regression) with elastic net-like regularization", 10,
-                                            1.0, 1.0);
-
-        manager.add<function_enet_logistic_t>("logistic regression with ridge-like regularization", 10, 0.0, 1.0);
-        manager.add<function_enet_logistic_t>("logistic regression with lasso-like regularization", 10, 1.0, 0.0);
-        manager.add<function_enet_logistic_t>("logistic regression with elastic net-like regularization", 10, 1.0, 1.0);
+        manager.add<quadratic_program_numopt162_t>(
+            "quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition");
+        manager.add<quadratic_program_numopt1625_t>(
+            "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
     };
 
     static std::once_flag flag;
@@ -230,9 +338,6 @@ factory_t<function_t>& function_t::all()
 
 rfunctions_t function_t::make(const function_t::config_t& config, const std::regex& id_regex)
 {
-    const auto convexity  = config.m_convexity;
-    const auto smoothness = config.m_smoothness;
-
     const auto min_dims = std::min(config.m_min_dims, config.m_max_dims);
     const auto max_dims = std::max(config.m_min_dims, config.m_max_dims);
     assert(min_dims >= 1);
@@ -246,11 +351,48 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
         for (const auto& id : ids)
         {
             auto function = factory.get(id);
+            assert(function != nullptr);
 
-            if ((convexity == convexity::ignore || (function->convex() == (convexity == convexity::yes))) &&
-                (smoothness == smoothness::ignore || (function->smooth() == (smoothness == smoothness::yes))))
+            switch (config.m_function_type)
             {
-                functions.push_back(function->make(dims, config.m_summands));
+            case function_type::convex:
+                if (function->convex() && function->constraints().empty())
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::smooth:
+                if (function->smooth() && function->constraints().empty())
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::convex_smooth:
+                if (function->convex() && function->smooth() && function->constraints().empty())
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::linear_program:
+                if (dynamic_cast<const linear_program_t*>(function.get()) != nullptr)
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::quadratic_program:
+                if (dynamic_cast<const quadratic_program_t*>(function.get()) != nullptr)
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
+            case function_type::any:
+                functions.emplace_back(function->make(dims));
+                break;
             }
         }
 

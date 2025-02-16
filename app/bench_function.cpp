@@ -67,7 +67,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto min_dims = options.get<tensor_size_t>("--min-dims");
     const auto max_dims = options.get<tensor_size_t>("--max-dims");
     const auto fregex   = std::regex(options.get<string_t>("--function"));
-    const auto fconfig = function_t::config_t{min_dims, max_dims, convexity::ignore, smoothness::ignore};
+    const auto fconfig  = function_t::config_t{min_dims, max_dims, function_type::any};
 
     table_t table;
     table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";

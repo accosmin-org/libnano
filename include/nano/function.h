@@ -1,11 +1,11 @@
 #pragma once
 
+#include <nano/configurable.h>
 #include <nano/factory.h>
 #include <nano/function/constraint.h>
 #include <nano/function/enums.h>
 #include <nano/function/optimum.h>
 #include <nano/function/variable.h>
-#include <nano/string.h>
 
 namespace nano
 {
@@ -25,7 +25,7 @@ using rfunction_t = std::unique_ptr<function_t>;
 /// NB: the (sub-)gradient of the function must be implemented.
 /// NB: the functions can be convex or non-convex and smooth or non-smooth.
 ///
-class NANO_PUBLIC function_t : public typed_t, public clonable_t<function_t>
+class NANO_PUBLIC function_t : public typed_t, public configurable_t, public clonable_t<function_t>
 {
 public:
     ///
@@ -123,24 +123,21 @@ public:
     ///
     /// \brief construct test functions having:
     ///     - the number of dimensions within the given range,
-    ///     - the given number of summands and
-    ///     - the given requirements in terms of smoothness and convexity.
+    ///     - the given requirements in terms of smoothness, convexity and constraints.
     ///
     struct config_t
     {
-        tensor_size_t m_min_dims{2};                    ///<
-        tensor_size_t m_max_dims{8};                    ///<
-        convexity     m_convexity{convexity::ignore};   ///<
-        smoothness    m_smoothness{smoothness::ignore}; ///<
-        tensor_size_t m_summands{1000};                 ///<
+        tensor_size_t m_min_dims{2};                                 ///<
+        tensor_size_t m_max_dims{8};                                 ///<
+        function_type m_function_type{function_type::convex_smooth}; ///<
     };
 
     static rfunctions_t make(const config_t&, const std::regex& id_regex = std::regex(".+"));
 
     ///
-    /// \brief construct a test function with the given number of free dimensions and summands (if applicable).
+    /// \brief return a clone with the given number of free dimensions if possible, otherwise a nullptr.
     ///
-    virtual rfunction_t make(tensor_size_t dims, tensor_size_t summands) const;
+    virtual rfunction_t make(tensor_size_t dims) const;
 
     ///
     /// \brief change the global minimum (if known) and set the expected convergence status.
@@ -172,6 +169,7 @@ protected:
     void smooth(smoothness);
     void strong_convexity(scalar_t);
 
+    virtual string_t do_name() const;
     virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
 
 private:

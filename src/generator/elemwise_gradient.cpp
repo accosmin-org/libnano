@@ -50,10 +50,18 @@ feature_t elemwise_gradient_t::feature(const tensor_size_t ifeature) const
     auto suffix = scat(m_type);
     switch (mapped_mode(ifeature))
     {
-    case gradient3x3_mode::gradx: suffix += "::gx"; break;
-    case gradient3x3_mode::grady: suffix += "::gy"; break;
-    case gradient3x3_mode::magnitude: suffix += "::gg"; break;
-    default: suffix += "::theta"; break;
+    case gradient3x3_mode::gradx:
+        suffix += "::gx";
+        break;
+    case gradient3x3_mode::grady:
+        suffix += "::gy";
+        break;
+    case gradient3x3_mode::magnitude:
+        suffix += "::gg";
+        break;
+    default:
+        suffix += "::theta";
+        break;
     }
 
     const auto channel = mapped_channel(ifeature);

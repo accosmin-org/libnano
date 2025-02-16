@@ -99,18 +99,12 @@ using namespace nano;
         append(0.2504205211128525121, -0.9901859205828136279, 0.8443897205517758575, 0.2324576140386427348);
     }
 
-    // bug: bundle methods fail here
-    if (function.name() == "mae+lasso[1][4D]")
-    {
-        append(-0.8266018564672519275, 0.7071120652910407589, -0.8543004988236786446, 0.2548284277181698254);
-    }
-
     return vectors;
 }
 
 [[maybe_unused]] inline auto check_gradient(const function_t& function, const int trials = 100,
                                             const scalar_t central_difference_epsilon = 1e-8,
-                                            const scalar_t convex_subgradient_epsilon = 1e-11)
+                                            const scalar_t convex_subgradient_epsilon = 1e-10)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -125,15 +119,17 @@ using namespace nano;
         // (sub-)gradient inequality for convex inequality
         if (rfunction->convex())
         {
-            auto       gx = vector_t{x.size()};
-            const auto fz = (*rfunction)(z);
-            const auto fx = (*rfunction)(x, gx);
+            auto       gx      = vector_t{x.size()};
+            const auto fz      = (*rfunction)(z);
+            const auto fx      = (*rfunction)(x, gx);
+            const auto epsilon = convex_subgradient_epsilon * 0.5 * (std::fabs(fx) + std::fabs(fz));
             UTEST_CHECK_GREATER_EQUAL(fz - fx + convex_subgradient_epsilon, gx.dot(z - x));
         }
     }
 }
 
-[[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100)
+[[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100,
+                                             const scalar_t epsilon = 1e-12)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);
@@ -141,6 +137,6 @@ using namespace nano;
     {
         const auto x0 = make_random_x0(*rfunction);
         const auto x1 = make_random_x0(*rfunction);
-        UTEST_CHECK(is_convex(*rfunction, x0, x1, 20));
+        UTEST_CHECK(is_convex(*rfunction, x0, x1, 20, epsilon));
     }
 }

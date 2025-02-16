@@ -19,3 +19,4 @@ target_sources(function PRIVATE
 
 add_subdirectory(benchmark)
 add_subdirectory(program)
+add_subdirectory(mlearn)

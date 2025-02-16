@@ -46,9 +46,11 @@ scalar_t param_space_t::to_surrogate(const scalar_t value) const
 
     switch (m_type)
     {
-    case type::linear: return (value - m_min) / (m_max - m_min);
+    case type::linear:
+        return (value - m_min) / (m_max - m_min);
 
-    default: return std::log10(value);
+    default:
+        return std::log10(value);
     }
 }
 
@@ -56,9 +58,11 @@ scalar_t param_space_t::from_surrogate(const scalar_t value) const
 {
     switch (m_type)
     {
-    case type::linear: return std::clamp(m_min + value * (m_max - m_min), m_min, m_max);
+    case type::linear:
+        return std::clamp(m_min + value * (m_max - m_min), m_min, m_max);
 
-    default: return std::clamp(std::pow(10.0, value), m_min, m_max);
+    default:
+        return std::clamp(std::pow(10.0, value), m_min, m_max);
     }
 }
 

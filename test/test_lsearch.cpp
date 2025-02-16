@@ -8,7 +8,7 @@ namespace
 {
 auto make_functions()
 {
-    return function_t::make({1, 16, convexity::ignore, smoothness::yes, 10}, std::regex(".+"));
+    return function_t::make({1, 16, function_type::smooth}, std::regex(".+"));
 }
 
 void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t& x0, const scalar_t t0,
@@ -48,7 +48,9 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
 
     switch (lsearch->type())
     {
-    case lsearch_type::armijo: UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1)); break;
+    case lsearch_type::armijo:
+        UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1));
+        break;
 
     case lsearch_type::wolfe:
         UTEST_CHECK(state.has_armijo(state0, descent, step_size, c1));
@@ -66,7 +68,8 @@ void test(const rlsearchk_t& lsearch, const function_t& function, const vector_t
                      state.has_approx_wolfe(state0, descent, c1, c2)));
         break;
 
-    default: break;
+    default:
+        break;
     }
 
     if (old_n_failures != utest_n_failures.load())

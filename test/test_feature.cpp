@@ -137,8 +137,12 @@ UTEST_CASE(compare)
         auto feature = feature_t{name};
         switch (type)
         {
-        case feature_type::sclass: feature.sclass(strings_t{"cate0", "cate1", "cate2"}); break;
-        default: feature.mclass(strings_t{"cate0", "cate1", "cate2"}); break;
+        case feature_type::sclass:
+            feature.sclass(strings_t{"cate0", "cate1", "cate2"});
+            break;
+        default:
+            feature.mclass(strings_t{"cate0", "cate1", "cate2"});
+            break;
         }
         UTEST_CHECK_EQUAL(feature.type(), type);
         return feature;

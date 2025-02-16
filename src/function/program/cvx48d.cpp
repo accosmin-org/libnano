@@ -46,8 +46,7 @@ rfunction_t linear_program_cvx48d_eq_t::clone() const
     return std::make_unique<linear_program_cvx48d_eq_t>(*this);
 }
 
-rfunction_t linear_program_cvx48d_eq_t::make(const tensor_size_t                  dims,
-                                             [[maybe_unused]] const tensor_size_t summands) const
+rfunction_t linear_program_cvx48d_eq_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<linear_program_cvx48d_eq_t>(dims);
 }
@@ -74,8 +73,7 @@ rfunction_t linear_program_cvx48d_ineq_t::clone() const
     return std::make_unique<linear_program_cvx48d_ineq_t>(*this);
 }
 
-rfunction_t linear_program_cvx48d_ineq_t::make(const tensor_size_t                  dims,
-                                               [[maybe_unused]] const tensor_size_t summands) const
+rfunction_t linear_program_cvx48d_ineq_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<linear_program_cvx48d_ineq_t>(dims);
 }

@@ -69,6 +69,7 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("--list-generator", "list the available feature generation methods");
     cmdline.add("--list-wlearner", "list the available weak learners");
 
+    cmdline.add("--list-function-params", "list the parameters of the selected benchmark functions");
     cmdline.add("--list-lsearch0-params", "list the parameters of the selected line-search initialization methods");
     cmdline.add("--list-lsearchk-params", "list the parameters of the selected line-search strategies");
     cmdline.add("--list-solver-params", "list the parameters of the selected solvers");

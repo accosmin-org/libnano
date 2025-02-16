@@ -90,13 +90,13 @@ public:
     ///
     /// \brief configure the object with the given pairs of parameter names and values.
     ///
-    void config() {}
+    configurable_t& config() { return *this; }
 
     template <class targ, class... targs>
-    void config(const char* const param_name, const targ value, const targs... args)
+    configurable_t& config(const char* const param_name, const targ value, const targs... args)
     {
         parameter(param_name) = value;
-        config(args...);
+        return config(args...);
     }
 
 private:

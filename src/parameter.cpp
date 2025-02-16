@@ -344,10 +344,18 @@ std::istream& parameter_t::read(std::istream& stream)
         m_storage = enum_t{value, domain};
     }
     break;
-    case 1: m_storage = ::read(m_name, stream, irange_t{}); break;
-    case 2: m_storage = ::read(m_name, stream, frange_t{}); break;
-    case 3: m_storage = ::read(m_name, stream, iprange_t{}); break;
-    case 4: m_storage = ::read(m_name, stream, fprange_t{}); break;
+    case 1:
+        m_storage = ::read(m_name, stream, irange_t{});
+        break;
+    case 2:
+        m_storage = ::read(m_name, stream, frange_t{});
+        break;
+    case 3:
+        m_storage = ::read(m_name, stream, iprange_t{});
+        break;
+    case 4:
+        m_storage = ::read(m_name, stream, fprange_t{});
+        break;
     case 5:
     {
         string_t value;
@@ -355,7 +363,8 @@ std::istream& parameter_t::read(std::istream& stream)
         m_storage = value;
     }
     break;
-    default: raise("parameter (", m_name, "): failed to read from stream (type=", type, ")!");
+    default:
+        raise("parameter (", m_name, "): failed to read from stream (type=", type, ")!");
     }
 
     return stream;

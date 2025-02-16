@@ -142,7 +142,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
 }
 
 bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps,
-                     const scalar_t epsilon)
+                     scalar_t epsilon)
 {
     assert(steps > 2);
     assert(x1.size() == function.size());
@@ -151,6 +151,8 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     const auto f1 = function(x1);
     const auto f2 = function(x2);
     const auto dx = (x1 - x2).squaredNorm();
+
+    epsilon *= 0.5 * (std::fabs(f1) + std::fabs(f2));
 
     assert(std::isfinite(f1));
     assert(std::isfinite(f2));
