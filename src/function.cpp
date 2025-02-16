@@ -86,20 +86,20 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
         }
     }
 
-    else if (function->parameter_if("cvx48e_eq::alpha") != nullptr)
+    else if (function->parameter_if("cvx48e-eq::alpha") != nullptr)
     {
         for (const auto alpha : {0.0, 0.5, 1.0})
         {
-            function->config("cvx48e_eq::alpha", alpha);
+            function->config("cvx48e-eq::alpha", alpha);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("cvx48e_ineq::alpha") != nullptr)
+    else if (function->parameter_if("cvx48e-ineq::alpha") != nullptr)
     {
         for (const auto alpha : {1e-6, 0.5, 1.0})
         {
-            function->config("cvx48e_ineq::alpha", alpha);
+            function->config("cvx48e-ineq::alpha", alpha);
             functions.emplace_back(function->make(dims));
         }
     }
