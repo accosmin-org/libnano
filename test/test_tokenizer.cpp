@@ -25,7 +25,8 @@ UTEST_CASE(split_str)
             UTEST_CHECK_EQUAL(tokenizer.pos(), 17);
             break;
 
-        default: UTEST_CHECK(false);
+        default:
+            UTEST_CHECK(false);
         }
     }
 }
@@ -47,7 +48,8 @@ UTEST_CASE(split_char)
             UTEST_CHECK_EQUAL(tokenizer.pos(), 3);
             break;
 
-        default: UTEST_CHECK(false);
+        default:
+            UTEST_CHECK(false);
         }
     }
 }
@@ -59,9 +61,12 @@ UTEST_CASE(split_none)
     {
         switch (tokenizer.count())
         {
-        case 1: UTEST_CHECK_EQUAL(tokenizer.get(), "= -token1 token2 something "); break;
+        case 1:
+            UTEST_CHECK_EQUAL(tokenizer.get(), "= -token1 token2 something ");
+            break;
 
-        default: UTEST_CHECK(false);
+        default:
+            UTEST_CHECK(false);
         }
     }
 }

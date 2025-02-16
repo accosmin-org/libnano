@@ -104,9 +104,12 @@ task_type feature_t::task() const
     {
         switch (m_type)
         {
-        case feature_type::sclass: return task_type::sclassification;
-        case feature_type::mclass: return task_type::mclassification;
-        default: return task_type::regression;
+        case feature_type::sclass:
+            return task_type::sclassification;
+        case feature_type::mclass:
+            return task_type::mclassification;
+        default:
+            return task_type::regression;
         }
     }
 }

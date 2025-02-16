@@ -64,6 +64,7 @@ scalar_t lsearch_step_t::interpolate(const lsearch_step_t& u, const lsearch_step
         }
         [[fallthrough]];
 
-    default: return tb;
+    default:
+        return tb;
     }
 }

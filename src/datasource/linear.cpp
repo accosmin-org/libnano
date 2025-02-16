@@ -14,10 +14,18 @@ features_t make_features(const tensor_size_t n_features, const tensor_size_t n_t
         feature_t feature;
         switch (ifeature % 4)
         {
-        case 0: feature = feature_t{scat("scalar", ifeature)}.scalar(); break;
-        case 1: feature = feature_t{scat("sclass", ifeature)}.sclass(3U); break;
-        case 2: feature = feature_t{scat("mclass", ifeature)}.mclass(4U); break;
-        default: feature = feature_t{scat("struct", ifeature)}.scalar(feature_type::float64, make_dims(2, 1, 3)); break;
+        case 0:
+            feature = feature_t{scat("scalar", ifeature)}.scalar();
+            break;
+        case 1:
+            feature = feature_t{scat("sclass", ifeature)}.sclass(3U);
+            break;
+        case 2:
+            feature = feature_t{scat("mclass", ifeature)}.mclass(4U);
+            break;
+        default:
+            feature = feature_t{scat("struct", ifeature)}.scalar(feature_type::float64, make_dims(2, 1, 3));
+            break;
         }
         features.push_back(feature);
     }

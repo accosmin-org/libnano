@@ -144,9 +144,21 @@ auto relative_precision(const scalar_t value, const scalar_t best_value, const s
     return std::log10(std::max(value - best_value, epsilon));
 }
 
-auto relative_precision(const result_t& result, const result_t& best_result, const scalar_t epsilon)
+auto relative_precision(const result_t& result, const result_t& best_result, const scalar_t epsilon,
+                        const function_type fun_type)
 {
-    return relative_precision(result.m_value, best_result.m_value, epsilon);
+    switch (fun_type)
+    {
+    case function_type::smooth:
+    case function_type::convex_smooth:
+        return relative_precision(result.m_gtest, best_result.m_gtest, epsilon);
+
+    case function_type::convex:
+        return relative_precision(result.m_value, best_result.m_value, epsilon);
+
+    default:
+        return relative_precision(result.m_ktest, best_result.m_ktest, epsilon);
+    }
 }
 
 auto make_solver_name(const rsolver_t& solver)
@@ -170,16 +182,29 @@ auto& print_integer(row_t& row, const scalar_t value)
     return std::isfinite(value) ? (row << static_cast<size_t>(value)) : (row << "N/A");
 }
 
-void print_table(const string_t& table_name, const solvers_t& solvers, const std::vector<solver_stats_t>& stats)
+void print_table(string_t table_name, const solvers_t& solvers, const std::vector<solver_stats_t>& stats,
+                 const function_type fun_type)
 {
     // gather statistics per solver
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
+    // clang-format off
+    const auto has_gtest =
+        (fun_type == function_type::convex) ||
+        (fun_type == function_type::smooth) ||
+        (fun_type == function_type::convex_smooth);
+    // clang-format on
+
+    if (table_name.size() > 32U)
+    {
+        table_name = table_name.substr(0U, 24U) + "..." + table_name.substr(table_name.size() - 5U, 5U);
+    }
+
     // display per-function statistics
     table_t table;
     table.header() << align(table_name, 32) << align("precision", 9) << align("rank", 4) << align("value", 12)
-                   << align("gnorm", 12) << "errors"
+                   << align(has_gtest ? "grad test" : "kkt test", 12) << "errors"
                    << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls)
                    << align("[ms]", 5);
     table.delim();
@@ -193,7 +218,7 @@ void print_table(const string_t& table_name, const solvers_t& solvers, const std
         row << solver_name << scat(std::fixed, std::setprecision(4), stat.precisions().mean())
             << scat(std::fixed, std::setprecision(2), stat.ranks().mean());
         print_scalar(row, stat.values().mean());
-        print_scalar(row, stat.gtests().mean());
+        print_scalar(row, (has_gtest ? stat.gtests() : stat.ktests()).mean());
         print_integer(row, stat.errors().sum());
         print_integer(row, stat.maxits().sum());
         print_integer(row, stat.fcalls().mean());
@@ -246,7 +271,7 @@ auto minimize_all(parallel::pool_t& pool, const function_t& function, const solv
 }
 
 auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
-               const string_t& log_dir)
+               const string_t& log_dir, const function_type fun_type)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
@@ -264,8 +289,23 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
         const auto* const begin = &results[trial * solvers.size()];
         const auto* const end   = &results[trial * solvers.size() + solvers.size()];
 
-        const auto& best_result =
-            *std::min_element(begin, end, [](const auto& lhs, const auto& rhs) { return lhs.m_value < rhs.m_value; });
+        const auto op = [&](const auto& lhs, const auto& rhs)
+        {
+            switch (fun_type)
+            {
+            case function_type::smooth:
+            case function_type::convex_smooth:
+                return lhs.m_gtest < rhs.m_gtest;
+
+            case function_type::convex:
+                return lhs.m_value < rhs.m_value;
+
+            default:
+                return lhs.m_ktest < rhs.m_ktest;
+            }
+        };
+
+        const auto& best_result = *std::min_element(begin, end, op);
 
         for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
         {
@@ -281,7 +321,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
             assert(std::isfinite(result.m_gtest));
 
             const auto epsilon   = solvers[isolver]->parameter("solver::epsilon").value<scalar_t>();
-            const auto precision = relative_precision(result, best_result, epsilon);
+            const auto precision = relative_precision(result, best_result, epsilon, fun_type);
 
             const auto find = [&](const auto& v) { return v.second == isolver; };
             const auto rank = (std::find_if(ranks.begin(), ranks.end(), find) - ranks.begin()) + 1;
@@ -291,7 +331,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
     }
 
     // display per-function statistics
-    print_table(function.name(), solvers, stats);
+    print_table(function.name(), solvers, stats, fun_type);
 
     return stats;
 }
@@ -391,7 +431,7 @@ int unsafe_main(int argc, const char* argv[])
     for (size_t ifunction = 0U; ifunction < functions.size(); ++ifunction)
     {
         const auto& function = functions[ifunction];
-        const auto  funstats = benchmark(thread_pool, *function, solvers, trials, log_dir);
+        const auto  funstats = benchmark(thread_pool, *function, solvers, trials, log_dir, fun_type);
         for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
         {
             const auto& stats = funstats[isolver];
@@ -400,7 +440,7 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // display global statistics
-    print_table("solver", solvers, solver_stats);
+    print_table("solver", solvers, solver_stats, fun_type);
 
     // OK
     return EXIT_SUCCESS;

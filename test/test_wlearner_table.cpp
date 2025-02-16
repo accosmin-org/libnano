@@ -221,11 +221,16 @@ private:
 
         switch (feature(expected_feature()).type())
         {
-        case feature_type::sclass: do_load_sclass(); break;
+        case feature_type::sclass:
+            do_load_sclass();
+            break;
 
-        case feature_type::mclass: do_load_mclass(); break;
+        case feature_type::mclass:
+            do_load_mclass();
+            break;
 
-        default: assert(false);
+        default:
+            assert(false);
         }
     }
 

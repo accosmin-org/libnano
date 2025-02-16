@@ -244,7 +244,8 @@ static auto check_with_logger(const toperator& op)
                                << std::endl;                                                                           \
         UTEST_HANDLE_CRITICAL(critical);                                                                               \
         break;                                                                                                         \
-    case exception_status::expected: break;                                                                            \
+    case exception_status::expected:                                                                                   \
+        break;                                                                                                         \
     case exception_status::unexpected:                                                                                 \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} does not throw {"                            \
                                << UTEST_STRINGIFY(exception) << "}, but another exception with mesage {" << message    \
@@ -259,7 +260,8 @@ static auto check_with_logger(const toperator& op)
     ++utest_n_checks;                                                                                                  \
     switch (const auto& [status, message] = check_throw<std::exception>([&]() { (void)(call); }); status)              \
     {                                                                                                                  \
-    case exception_status::none: break;                                                                                \
+    case exception_status::none:                                                                                       \
+        break;                                                                                                         \
     case exception_status::expected:                                                                                   \
     case exception_status::unexpected:                                                                                 \
         UTEST_HANDLE_FAILURE() << "call {" << UTEST_STRINGIFY(call) << "} throws message {" << message << "}!"         \

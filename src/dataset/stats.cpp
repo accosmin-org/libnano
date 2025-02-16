@@ -70,7 +70,8 @@ auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling)
             b.array() = -stats.m_mean.array() * stats.m_div_stdev.array();
             break;
 
-        default: break;
+        default:
+            break;
         }
     }
 
@@ -394,7 +395,8 @@ void scalar_stats_t::scale(const scaling_type scaling, tensor2d_map_t values) co
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type");
+    default:
+        throw std::runtime_error("unhandled scaling type");
     }
 }
 
@@ -411,7 +413,8 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
 
     switch (scaling)
     {
-    case scaling_type::none: break;
+    case scaling_type::none:
+        break;
 
     case scaling_type::mean:
         for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
@@ -437,7 +440,8 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type");
+    default:
+        throw std::runtime_error("unhandled scaling type");
     }
 }
 
