@@ -31,7 +31,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
     register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-6, LE, 1e-2));
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.50, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.30, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
@@ -63,21 +63,26 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto lambda        = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
     auto miu           = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
     auto old_criterion = make_criterion(bstate, miu, ro);
+    auto old_kkt       = std::numeric_limits<scalar_t>::max();
 
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
     auto solver           = make_solver(penalty_function, epsilon0, max_evals);
 
-    for (tensor_size_t outer = 0; outer < max_outers; ++outer)
+    for (tensor_size_t outer = 0; outer < max_outers && (function.fcalls() + function.gcalls()) < max_evals; ++outer)
     {
         // solve augmented lagrangian problem
         penalty_function.penalty(ro);
         const auto pstate = solver->minimize(penalty_function, bstate.x(), logger);
-        cstate.update(pstate.x(), pstate.gx(), pstate.fx());
 
+        cstate.update(pstate.x(), lambda, miu);
+
+        const auto kkt       = cstate.kkt_optimality_test();
         const auto criterion = make_criterion(cstate, miu, ro);
-        if (criterion < old_criterion + nano::epsilon0<scalar_t>())
+
+        if (kkt < old_kkt)
         {
-            bstate.update(cstate.x(), lambda, miu);
+            old_kkt = kkt;
+            bstate  = cstate;
 
             // check convergence
             const auto iter_ok = bstate.valid();
