@@ -12,8 +12,8 @@ auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const s
     const auto& g = state.cineq();
     const auto  G = g.array().max(0.0).matrix();
 
-    const auto ro = 2.0 * std::fabs(f) / std::max(h.dot(h) + G.dot(G), 1e-6);
-    return std::clamp(ro, ro_min, ro_max);
+    const auto ro = 2.0 * std::fabs(f) / (h.dot(h) + G.dot(G));
+    return std::isfinite(ro) ? std::clamp(ro, ro_min, ro_max) : ro_min;
 }
 
 auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
@@ -30,7 +30,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-8, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-6, LE, 1e-2));
     register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.50, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
