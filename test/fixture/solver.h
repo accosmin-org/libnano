@@ -146,7 +146,7 @@ struct solver_description_t
         // NB: methods that are not very efficient in solving linear and quadratic convex programs.
         // NB: no theoretically motivated stopping criterion.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-5))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
     }
     else

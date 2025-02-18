@@ -1,3 +1,4 @@
+#include <nano/critical.h>
 #include <nano/function/penalty.h>
 #include <solver/augmented.h>
 
@@ -12,8 +13,8 @@ auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const s
     const auto& g = state.cineq();
     const auto  G = g.array().max(0.0).matrix();
 
-    const auto ro = 2.0 * std::fabs(f) / (h.dot(h) + G.dot(G));
-    return std::isfinite(ro) ? std::clamp(ro, ro_min, ro_max) : ro_min;
+    const auto ro = 2.0 * std::fabs(f) / std::max(h.dot(h) + G.dot(G), 1e-6);
+    return std::clamp(ro, ro_min, ro_max);
 }
 
 auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
@@ -30,14 +31,17 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmax = std::numeric_limits<scalar_t>::max();
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-6, LE, 1e-2));
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.30, LE, 1.0));
+    register_parameter(parameter_t::make_string("solver::augmented::base_solver_id", "lbfgs"));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-4, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.20, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
     register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters", 10, LE, 100, LE, 1000));
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
+
+    parameter("solver::max_evals") = 100 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
 rsolver_t solver_augmented_lagrangian_t::clone() const
@@ -49,6 +53,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
                                                           const logger_t& logger) const
 {
     const auto max_evals                = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto base_solver_id           = parameter("solver::augmented::base_solver_id").value<string_t>();
     const auto epsilon0                 = parameter("solver::augmented::epsilon0").value<scalar_t>();
     const auto epsilonK                 = parameter("solver::augmented::epsilonK").value<scalar_t>();
     const auto tau                      = parameter("solver::augmented::tau").value<scalar_t>();
@@ -57,16 +62,18 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     const auto [lambda_min, lambda_max] = parameter("solver::augmented::lambda").value_pair<scalar_t>();
     const auto max_outers               = parameter("solver::augmented::max_outer_iters").value<tensor_size_t>();
 
-    auto bstate        = solver_state_t{function, x0}; ///< best state
-    auto cstate        = bstate;                       ///< current state
-    auto ro            = make_ro1(bstate);
-    auto lambda        = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
-    auto miu           = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
-    auto old_criterion = make_criterion(bstate, miu, ro);
-    auto old_kkt       = std::numeric_limits<scalar_t>::max();
-
+    auto bstate           = solver_state_t{function, x0}; ///< best state
+    auto cstate           = bstate;                       ///< current state
+    auto ro               = make_ro1(bstate);
+    auto lambda           = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
+    auto miu              = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
+    auto old_kkt          = std::numeric_limits<scalar_t>::max();
+    auto old_criterion    = make_criterion(bstate, miu, ro);
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
-    auto solver           = make_solver(penalty_function, epsilon0, max_evals);
+    auto solver           = solver_t::all().get(base_solver_id);
+
+    critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
+    solver->parameter("solver::epsilon") = epsilon0;
 
     for (tensor_size_t outer = 0; outer < max_outers && (function.fcalls() + function.gcalls()) < max_evals; ++outer)
     {
@@ -76,10 +83,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
 
         cstate.update(pstate.x(), lambda, miu);
 
-        const auto kkt       = cstate.kkt_optimality_test();
-        const auto criterion = make_criterion(cstate, miu, ro);
-
-        if (kkt < old_kkt)
+        if (const auto kkt = cstate.kkt_optimality_test(); kkt < old_kkt)
         {
             old_kkt = kkt;
             bstate  = cstate;
@@ -95,7 +99,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         }
 
         // update penalty parameter
-        const auto old_ro = ro;
+        const auto old_ro    = ro;
+        const auto criterion = make_criterion(cstate, miu, ro);
         if (outer > 0 && criterion > tau * old_criterion)
         {
             ro = gamma * ro;
