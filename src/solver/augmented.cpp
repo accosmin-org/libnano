@@ -32,8 +32,8 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     static constexpr auto fmin = std::numeric_limits<scalar_t>::lowest();
 
     register_parameter(parameter_t::make_string("solver::augmented::base_solver_id", "lbfgs"));
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-4, LE, 1e-2));
-    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.20, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilon0", 0.0, LT, 1e-8, LE, 1e-2));
+    register_parameter(parameter_t::make_scalar("solver::augmented::epsilonK", 0.0, LT, 0.90, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
