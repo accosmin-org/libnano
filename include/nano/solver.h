@@ -96,8 +96,7 @@ protected:
     void warn_nonsmooth(const function_t&, const logger_t&) const;
     void warn_constrained(const function_t&, const logger_t&) const;
 
-    lsearch_t        make_lsearch() const;
-    static rsolver_t make_solver(const function_t&, scalar_t epsilon, tensor_size_t max_evals);
+    lsearch_t make_lsearch() const;
 
     virtual solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const = 0;
 

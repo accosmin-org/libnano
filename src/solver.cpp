@@ -270,16 +270,9 @@ bool solver_t::has_lsearch() const
     return false;
 }
 
-rsolver_t solver_t::make_solver(const function_t& function, const scalar_t epsilon, const tensor_size_t max_evals)
-{
-    // FIXME: should use RQB or some other proximal bundle method
-    return function.smooth() ? ::make_solver<solver_lbfgs_t>(epsilon, max_evals)
-                             : ::make_solver<solver_osga_t>(epsilon, max_evals);
-}
-
 void solver_t::more_precise(const scalar_t epsilon_factor)
 {
-    assert(0.0 < epsilon_factor && epsilon_factor < 1.0);
+    assert(0.0 <= epsilon_factor && epsilon_factor <= 1.0);
 
     parameter("solver::epsilon") = parameter("solver::epsilon").value<scalar_t>() * epsilon_factor;
 }

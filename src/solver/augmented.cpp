@@ -37,11 +37,10 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
-    register_parameter(parameter_t::make_integer("solver::augmented::max_outer_iters", 10, LE, 100, LE, 1000));
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
 
-    parameter("solver::max_evals") = 100 * parameter("solver::max_evals").value<tensor_size_t>();
+    parameter("solver::max_evals") = 20 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
 rsolver_t solver_augmented_lagrangian_t::clone() const
@@ -60,7 +59,6 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     const auto gamma                    = parameter("solver::augmented::gamma").value<scalar_t>();
     const auto miu_max                  = parameter("solver::augmented::miu_max").value<scalar_t>();
     const auto [lambda_min, lambda_max] = parameter("solver::augmented::lambda").value_pair<scalar_t>();
-    const auto max_outers               = parameter("solver::augmented::max_outer_iters").value<tensor_size_t>();
 
     auto bstate           = solver_state_t{function, x0}; ///< best state
     auto cstate           = bstate;                       ///< current state
@@ -71,11 +69,12 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto old_criterion    = make_criterion(bstate, miu, ro);
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
     auto solver           = solver_t::all().get(base_solver_id);
+    auto outer            = 0;
 
     critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
     solver->parameter("solver::epsilon") = epsilon0;
 
-    for (tensor_size_t outer = 0; outer < max_outers && (function.fcalls() + function.gcalls()) < max_evals; ++outer)
+    while (function.fcalls() + function.gcalls() < max_evals)
     {
         // solve augmented lagrangian problem
         penalty_function.penalty(ro);
@@ -105,6 +104,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         {
             ro = gamma * ro;
         }
+        ++outer;
         old_criterion = criterion;
 
         // update lagrange multipliers
