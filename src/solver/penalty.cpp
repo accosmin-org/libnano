@@ -29,11 +29,12 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
     auto penalty = penalty0;
     auto bstate  = solver_state_t{penalty_function.function(), x0};
     auto solver  = solver_t::all().get(base_solver_id);
+    auto outer   = 0;
 
     critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
     solver->parameter("solver::epsilon") = epsilon0;
 
-    while (penalty_function.fcalls() + penalty_function.gcalls() < max_evals)
+    while (penalty_function.fcalls() + penalty_function.gcalls() < max_evals && (outer++) < 1000)
     {
         // solve the penalty problem
         penalty_function.penalty(penalty);

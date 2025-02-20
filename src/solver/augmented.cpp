@@ -76,7 +76,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
     solver->parameter("solver::epsilon") = epsilon0;
 
-    while (function.fcalls() + function.gcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() < max_evals && (outer++) < 1000)
     {
         // solve augmented lagrangian problem
         penalty_function.penalty(ro);
@@ -119,7 +119,6 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         {
             ro = gamma * ro;
         }
-        ++outer;
         old_criterion = criterion;
 
         // update lagrange multipliers
