@@ -91,6 +91,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
             maybe_unbounded)
         // clang-format on
         {
+            logger.warn("[solver-", type_id(), "]: potentially unbounded problem, increasing penalty!\n");
             ro = gamma * ro;
             continue;
         }
