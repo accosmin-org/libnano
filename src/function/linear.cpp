@@ -8,6 +8,7 @@ linear_program_t::linear_program_t(string_t id, vector_t c)
     : function_t(std::move(id), c.size())
     , m_c(std::move(c))
 {
+    normalize();
     smooth(smoothness::yes);
     convex(convexity::yes);
     strong_convexity(0.0);
@@ -33,9 +34,16 @@ void linear_program_t::reset(vector_t c)
     assert(c.size() == size());
 
     m_c = std::move(c);
+    normalize();
 }
 
 bool linear_program_t::constrain(constraint_t&& constraint)
 {
     return is_linear(constraint) && function_t::constrain(std::move(constraint));
+}
+
+void linear_program_t::normalize()
+{
+    const auto div = 1.0 + m_c.dot(m_c);
+    m_c.array() /= div;
 }

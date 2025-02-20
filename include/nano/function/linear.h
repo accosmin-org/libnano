@@ -64,6 +64,8 @@ public:
     void reset(vector_t c);
 
 private:
+    void normalize();
+
     // attributes
     vector_t m_c; ///<
 };
