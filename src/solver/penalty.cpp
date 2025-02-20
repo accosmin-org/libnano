@@ -13,7 +13,7 @@ solver_penalty_t::solver_penalty_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 10.0, LE, 1e+3));
 
     parameter("solver::patience")  = 2;
-    parameter("solver::max_evals") = 20 * parameter("solver::max_evals").value<tensor_size_t>();
+    parameter("solver::max_evals") = 50 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
 solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, const vector_t& x0,

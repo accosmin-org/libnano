@@ -37,10 +37,11 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
+    register_parameter(parameter_t::make_scalar("solver::augmented::radius", 0.0, LT, 1e+6, LT, fmax));
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
 
-    parameter("solver::max_evals") = 20 * parameter("solver::max_evals").value<tensor_size_t>();
+    parameter("solver::max_evals") = 50 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
 rsolver_t solver_augmented_lagrangian_t::clone() const
@@ -58,6 +59,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     const auto tau                      = parameter("solver::augmented::tau").value<scalar_t>();
     const auto gamma                    = parameter("solver::augmented::gamma").value<scalar_t>();
     const auto miu_max                  = parameter("solver::augmented::miu_max").value<scalar_t>();
+    const auto radius                   = parameter("solver::augmented::radius").value<scalar_t>();
     const auto [lambda_min, lambda_max] = parameter("solver::augmented::lambda").value_pair<scalar_t>();
 
     auto bstate           = solver_state_t{function, x0}; ///< best state
@@ -80,8 +82,21 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         penalty_function.penalty(ro);
         const auto pstate = solver->minimize(penalty_function, bstate.x(), logger);
 
-        cstate.update(pstate.x(), lambda, miu);
+        // NB: sometimes the augmented lagrangian problem is unbounded below, so increase regularization!
+        // clang-format off
+        if (const auto maybe_unbounded =
+            !pstate.valid() ||
+            (pstate.status() == solver_status::failed) ||
+            (pstate.x() - bstate.x()).lpNorm<Eigen::Infinity>() > radius;
+            maybe_unbounded)
+        // clang-format on
+        {
+            ro = gamma * ro;
+            continue;
+        }
 
+        // update best state (if KKT optimality criterion is improved)
+        cstate.update(pstate.x(), lambda, miu);
         if (const auto kkt = cstate.kkt_optimality_test(); kkt < old_kkt)
         {
             old_kkt = kkt;
