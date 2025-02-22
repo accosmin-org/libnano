@@ -372,7 +372,6 @@ tensor3d_dims_t dataset_t::target_dims() const
                 switch (feature.type())
                 {
                 case feature_type::sclass:
-                    return make_dims(feature.classes(), 1, 1); // NOLINT(bugprone-branch-clone)
                 case feature_type::mclass:
                     return make_dims(feature.classes(), 1, 1);
                 default:

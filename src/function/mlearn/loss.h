@@ -15,7 +15,7 @@ public:
     static constexpr auto basename   = "mse";
     static constexpr auto regression = true;
 
-    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    static scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx)
     {
         const auto delta = outputs - targets;
 
@@ -39,7 +39,7 @@ public:
     static constexpr auto basename   = "mae";
     static constexpr auto regression = true;
 
-    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    static scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx)
     {
         const auto delta = outputs - targets;
 
@@ -63,7 +63,7 @@ public:
     static constexpr auto basename   = "cauchy";
     static constexpr auto regression = true;
 
-    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    static scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx)
     {
         const auto delta = outputs - targets;
 
@@ -87,7 +87,7 @@ public:
     static constexpr auto basename   = "hinge";
     static constexpr auto regression = false;
 
-    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    static scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx)
     {
         const auto edges = -outputs.array() * targets.array();
 
@@ -111,7 +111,7 @@ public:
     static constexpr auto basename   = "logistic";
     static constexpr auto regression = false;
 
-    scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx) const
+    static scalar_t vgrad(const linear_model_t& model, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx)
     {
         const auto edges = (-outputs.array() * targets.array()).exp();
 
