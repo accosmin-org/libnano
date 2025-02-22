@@ -74,7 +74,7 @@ with the obvious solution `(1, 2, 0)`.
 
 #### Solution
 
-The linear and the quadratic programs are solved typically with variations of either the simplex method or the `primal-dual interior point method`. Libnano implements the latter as described in the references above. This variation is relatively easy to code and understand and it can be easily tuned for specific applications.
+The linear and the quadratic programs are solved typically with variations of either the simplex method or the `primal-dual interior point method`. Libnano implements the latter as described in the references above. This variation is relatively easy to code and understand and it can be easily tuned for specific applications. Additionally the method implements the KKT optimality test which can be used for verifying the solution.
 
 The following example code extracted from the [linear programming example](../example/src/linprog.cpp) shows how to solve the linear program defined above:
 ```
@@ -96,7 +96,7 @@ assert(state.status() == solver_status::kkt_optimality_test);
 assert(close(state.x(), xbest, 1e-10));
 ```
 
-Please refer to the [quadratic programming example](../example/src/quadprog.cpp) for a similar example on how to solve quadratic programs.
+Please refer to the [quadratic programming example](../example/src/quadprog.cpp) for an example on how to solve quadratic programs.
 
 
 #### Hints
@@ -113,9 +113,9 @@ Please refer to the [quadratic programming example](../example/src/quadprog.cpp)
 The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on linear and quadratic programs of various dimensions. See bellow several such experiments.
 
 
-##### Compare solvers
+##### Compare solvers on linear programs
 
-The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size.
+The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size:.
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type linear-program \
     --solver "ipm|augmented-lagrangian" --trials 128 | tail -n 6
