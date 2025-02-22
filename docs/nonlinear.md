@@ -195,7 +195,7 @@ A working example for constructing and minimizing an objective function can be f
 Additionally the command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on standard numerical optimization test problems and typical machine learning problems. See bellow several such experiments.
 
 
-#### Compare solvers on convex smooth problems
+##### Compare solvers on convex smooth problems
 
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
@@ -213,7 +213,7 @@ Additionally the command line utility [app/bench_solver](../app/bench_solver.cpp
 The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are fairly close. The steepest gradient descent method needs as expected many more iterations to converge. Note that BFGS scales quadratically with the problem size, while CGD and L-BFGS scale linearly and are thus recommended for very large problems.
 
 
-#### Compare line-search methods on convex smooth problems
+##### Compare line-search methods on convex smooth problems
 
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
@@ -257,7 +257,7 @@ Very precise solutions can be obtained efficiently using the CG-descent line-sea
 Notice that the CG-descent line-search method is the only one that doesn't fail to reach such a precision and also with around 3 times fewer function calls.
 
 
-#### Compare solvers on convex non-smooth problems
+##### Compare solvers on convex non-smooth problems
 
 The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge for non-smooth problems. As such non-monotonic solvers may be more appropriate in this case.
 
@@ -288,10 +288,10 @@ The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge f
 Indeed the monotonic solvers are not converging, but surprisingly they produce the most accurate solutions by at least an order of magnitude in the worst case. Out of the non-monotonic solvers only OSGA produces reasonable accurate solutions. The rest of non-monotonic solvers don't seem capable of converging fast enough for practical applications. Note that it is very difficult to have a practical and reliable stopping criterion for general convex non-smooth problems.
 
 
-##### TODO: Add the bundle methods and the gradient sampling methods to the comparison.
+###### TODO: Add the bundle methods and the gradient sampling methods to the comparison.
 
 
-#### Tune the L-BFGS history size on convex smooth problems
+##### Tune the L-BFGS history size on convex smooth problems
 
 The limited-memory quasi-Newton (L-BFGS) method uses a small number of last known gradients to build a low-rank inverse of the Hessian matrix. This results in much more efficient iterations than quasi-Newton methods, but at a lower convergence rate and potential larger number of iterations. However it is not clear from the literature what is the optimum number of last gradients to use. The benchmark program allows to measure the impact of this parameter on the number of iterations until convergence.
 

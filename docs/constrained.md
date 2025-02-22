@@ -3,7 +3,14 @@
 
 #### Introduction
 
+In addition to linear and quadratic programs, libnano can construct generic
 TODO: augmented lagrangian method
 
 
-TODO: penalty methods
+TODO: external penalty methods
+
+
+#### Examples
+
+
+##### TODO:

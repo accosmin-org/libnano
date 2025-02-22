@@ -106,3 +106,32 @@ Please refer to the [quadratic programming example](../example/src/quadprog.cpp)
 * Convexity can be checked for quadratic problems using the `is_convex(Q)` function.
 
 * If the number of equality constraints is larger than the number of variables or the constraints may be linear dependent, then it is better to call `reduce(A, b)` to transform the equality constraints `A` in a full row-rank matrix. This speeds-up the solver and often improves accuracy.
+
+
+#### Examples
+
+The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on linear and quadratic programs of various dimensions. See bellow several such experiments.
+
+
+##### Compare solvers
+
+The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size.
+```
+./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type linear-program \
+    --solver "ipm|augmented-lagrangian" --trials 128 | tail -n 6
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | kkt test     | errors | maxits | fcalls | gcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| ipm                              | -8.0000   | 1.62 | N/A          | 1.30231e-13  | 0      | 0      | 29     | 29     | 13    |
+| augmented-lagrangian             | -7.8905   | 1.38 | N/A          | 8.40402e-08  | 0      | 128    | 1682   | 1682   | 28    |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+```
+
+The primal-dual interior point method is significantly more accurate and requires far fewer iterations. Note that the KKT optimality test is used as the stopping criterion as both methods supports this criterion.
+
+
+##### TODO: Add the benchmark for quadratic programs once
+
+##### TODO: Also compare with penalty methods
+
+##### TODO: Compare solvers for large programs (1K, 10K dimensions)
