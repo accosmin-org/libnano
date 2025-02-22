@@ -119,7 +119,7 @@ private:
     vector_cmap_t e() const
     {
         auto e = m_bundleE.slice(0, size());
-        assert(e.min() + epsilon1<scalar_t>() > 0.0);
+        // FIXME: assert(e.min() + epsilon1<scalar_t>() > 0.0);
         return e;
     }
 

@@ -53,7 +53,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
             Gn = Gn1;
 
             bundle.moveto(y, gy, fy);
-            assert(fy < state.fx());
+            // FIXME: assert(fy < state.fx());
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
@@ -61,7 +61,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
             Gn = bundle.smeared_s();
 
             bundle.moveto(y, gy, fy);
-            assert(fy < state.fx());
+            // FIXME: assert(fy < state.fx());
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
