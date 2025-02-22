@@ -59,8 +59,8 @@ int main(const int, char*[])
 
     // construct a solver_t object to minimize the objective function
     // NB: this may be not needed as the default configuration will minimize the objective as well!
-    // NB: can also use the factory to get the default solver: `solver_t::all().get("lbfgs")`!
-    auto solver                                 = solver_t::all().get("lbfgs");
+    auto solver = solver_t::all().get("lbfgs");
+    assert(solver != nullptr);
     solver->parameter("solver::lbfgs::history") = 20;
     solver->parameter("solver::epsilon")        = 1e-8;
     solver->parameter("solver::max_evals")      = 100;
