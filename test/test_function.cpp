@@ -80,7 +80,17 @@ UTEST_CASE(stats)
 
 UTEST_CASE(select)
 {
-    for (const auto fun_type : {function_type::convex, function_type::smooth, function_type::convex_smooth})
+    // clang-format off
+    const auto types =
+    {
+        function_type::convex,
+        function_type::smooth,
+        function_type::convex_smooth,
+        function_type::convex_nonsmooth
+    };
+    // clang-format on
+
+    for (const auto fun_type : types)
     {
         UTEST_NAMED_CASE(scat(fun_type));
 
@@ -89,8 +99,16 @@ UTEST_CASE(select)
         auto counts_per_smoothness = std::unordered_map<bool, int>{};
         auto counts_per_size       = std::unordered_map<tensor_size_t, int>{};
 
-        const auto expects_convex = (fun_type == function_type::convex) || (fun_type == function_type::convex_smooth);
-        const auto expects_smooth = (fun_type == function_type::smooth) || (fun_type == function_type::convex_smooth);
+        // clang-format off
+        const auto expects_convex =
+            (fun_type == function_type::convex) ||
+            (fun_type == function_type::convex_smooth) ||
+            (fun_type == function_type::convex_nonsmooth);
+
+        const auto expects_smooth =
+            (fun_type == function_type::smooth) ||
+            (fun_type == function_type::convex_smooth);
+        // clang-format on
 
         for (const auto& function : function_t::make({4, 16, fun_type}))
         {
@@ -126,6 +144,11 @@ UTEST_CASE(select)
         {
             UTEST_CHECK_GREATER(counts_per_smoothness[true], 0);
             UTEST_CHECK_EQUAL(counts_per_smoothness[false], 0);
+        }
+        else if (fun_type == function_type::convex_nonsmooth)
+        {
+            UTEST_CHECK_EQUAL(counts_per_smoothness[true], 0);
+            UTEST_CHECK_GREATER(counts_per_smoothness[false], 0);
         }
         else
         {

@@ -376,6 +376,13 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
                 }
                 break;
 
+            case function_type::convex_nonsmooth:
+                if (function->convex() && !function->smooth() && function->constraints().empty())
+                {
+                    make_function(function, dims, functions);
+                }
+                break;
+
             case function_type::linear_program:
                 if (dynamic_cast<const linear_program_t*>(function.get()) != nullptr)
                 {
