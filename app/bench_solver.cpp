@@ -149,11 +149,10 @@ auto relative_precision(const result_t& result, const result_t& best_result, con
 {
     switch (fun_type)
     {
+    case function_type::convex:
     case function_type::smooth:
     case function_type::convex_smooth:
-        return relative_precision(result.m_gtest, best_result.m_gtest, epsilon);
-
-    case function_type::convex:
+    case function_type::convex_nonsmooth:
         return relative_precision(result.m_value, best_result.m_value, epsilon);
 
     default:
@@ -189,13 +188,6 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
-    // clang-format off
-    const auto has_gtest =
-        (fun_type == function_type::convex) ||
-        (fun_type == function_type::smooth) ||
-        (fun_type == function_type::convex_smooth);
-    // clang-format on
-
     if (table_name.size() > 32U)
     {
         table_name = table_name.substr(0U, 24U) + "..." + table_name.substr(table_name.size() - 5U, 5U);
@@ -203,10 +195,25 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
 
     // display per-function statistics
     table_t table;
-    table.header() << align(table_name, 32) << align("precision", 9) << align("rank", 4) << align("value", 12)
-                   << align(has_gtest ? "grad test" : "kkt test", 12) << "errors"
-                   << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls)
-                   << align("[ms]", 5);
+    auto&   header = table.header();
+    header << align(table_name, 32) << align("precision", 9) << align("rank", 4) << align("value", 12);
+    switch (fun_type)
+    {
+    case function_type::smooth:
+    case function_type::convex_smooth:
+        header << align("grad test", 12);
+        break;
+
+    case function_type::linear_program:
+    case function_type::quadratic_program:
+        header << align("kkt test", 12);
+        break;
+
+    default:
+        break;
+    }
+    header << "errors"
+           << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls) << align("[ms]", 5);
     table.delim();
 
     for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
@@ -218,7 +225,23 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
         row << solver_name << scat(std::fixed, std::setprecision(4), stat.precisions().mean())
             << scat(std::fixed, std::setprecision(2), stat.ranks().mean());
         print_scalar(row, stat.values().mean());
-        print_scalar(row, (has_gtest ? stat.gtests() : stat.ktests()).mean());
+
+        switch (fun_type)
+        {
+        case function_type::smooth:
+        case function_type::convex_smooth:
+            print_scalar(row, stat.gtests().mean());
+            break;
+
+        case function_type::linear_program:
+        case function_type::quadratic_program:
+            print_scalar(row, stat.ktests().mean());
+            break;
+
+        default:
+            break;
+        }
+
         print_integer(row, stat.errors().sum());
         print_integer(row, stat.maxits().sum());
         print_integer(row, stat.fcalls().mean());
@@ -226,9 +249,9 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
         print_integer(row, stat.millis().mean());
     }
 
+    // NB: sort solvers by the average precision!
     assert(table.rows() == solvers.size() + 2U);
-
-    table.sort(nano::make_less_from_string<scalar_t>(), {1}); // NB: sort solvers by the average precision!
+    table.sort(nano::make_less_from_string<scalar_t>(), {1});
     std::cout << table;
 }
 
@@ -349,9 +372,10 @@ int unsafe_main(int argc, const char* argv[])
     cmdline.add("--min-dims", "minimum number of dimensions for each test function (if feasible)", "4");
     cmdline.add("--max-dims", "maximum number of dimensions for each test function (if feasible)", "16");
     cmdline.add("--trials", "number of random trials for each test function", "100");
-    cmdline.add("--function-type",
-                "function type, one of [convex, smooth, convex-smooth, linear-program, quadratic-program]",
-                "convex-smooth");
+    cmdline.add(
+        "--function-type",
+        "function type, one of [convex, smooth, convex-smooth, convex-nonsmooth, linear-program, quadratic-program]",
+        "convex-smooth");
     cmdline.add("--log-dir", "directory to log the optimization trajectories");
 
     const auto options = cmdline.process(argc, argv);
@@ -378,6 +402,7 @@ int unsafe_main(int argc, const char* argv[])
         fun_type == function_type::convex ||
         fun_type == function_type::smooth ||
         fun_type == function_type::convex_smooth ||
+        fun_type == function_type::convex_nonsmooth ||
         fun_type == function_type::linear_program ||
         fun_type == function_type::quadratic_program,
         "unsupported function type!");

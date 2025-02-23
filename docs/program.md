@@ -118,16 +118,17 @@ The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful f
 The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size:.
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type linear-program \
-    --solver "ipm|augmented-lagrangian" --trials 128 | tail -n 6
+    --solver "ipm|augmented-lagrangian|quadratic-penalty" --trials 128 | tail -n 6
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | kkt test     | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| ipm                              | -8.0000   | 1.62 | N/A          | 1.30231e-13  | 0      | 0      | 29     | 29     | 13    |
-| augmented-lagrangian             | -7.8905   | 1.38 | N/A          | 8.40402e-08  | 0      | 128    | 1682   | 1682   | 28    |
+| ipm                              | -8.0000   | 2.38 | N/A          | 1.93716e-13  | 0      | 0      | 30     | 30     | 11    |
+| augmented-lagrangian             | -7.9247   | 2.06 | N/A          | 2.06251e-08  | 0      | 128    | 1617   | 1617   | 30    |
+| quadratic-penalty                | -1.0985   | 1.56 | N/A          | 0.136386     | 0      | 0      | 3303   | 3303   | 46    |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 
-The primal-dual interior point method is significantly more accurate and requires far fewer iterations. Note that the KKT optimality test is used as the stopping criterion as both methods supports this criterion.
+The primal-dual interior point method is significantly more accurate and requires far fewer iterations. Note that the KKT optimality test is used as the stopping criterion in this case.
 
 
 ##### TODO: Add the benchmark for quadratic programs once
