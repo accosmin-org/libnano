@@ -11,7 +11,7 @@ namespace
 {
 strings_t make_solver_ids()
 {
-    return {"ipm", "augmented-lagrangian", "quadratic-penalty"}; // TODO: add linear penalty method!
+    return {"ipm"};
 }
 } // namespace
 
