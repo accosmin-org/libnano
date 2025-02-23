@@ -321,6 +321,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
                 return lhs.m_gtest < rhs.m_gtest;
 
             case function_type::convex:
+            case function_type::convex_nonsmooth:
                 return lhs.m_value < rhs.m_value;
 
             default:
