@@ -29,6 +29,9 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     auto L = make_random_matrix<scalar_t>(Arows, Arows);
     auto U = make_random_matrix<scalar_t>(Arows, dims);
 
+    L.array() /= static_cast<scalar_t>(L.size());
+    U.array() /= static_cast<scalar_t>(U.size());
+
     L.matrix().triangularView<Eigen::Upper>().setZero();
     U.matrix().triangularView<Eigen::Lower>().setZero();
     L.diagonal().array() = 1.0;

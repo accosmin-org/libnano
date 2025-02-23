@@ -113,26 +113,35 @@ Please refer to the [quadratic programming example](../example/src/quadprog.cpp)
 The command line utility [app/bench_solver](../app/bench_solver.cpp) is useful for benchmarking the builtin optimization algorithms on linear and quadratic programs of various dimensions. See bellow several such experiments.
 
 
-##### Compare solvers on linear programs
+##### Compare solvers on linear and quadratic programs
 
-The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size:.
+The most efficient solvers - the primal dual interior point method and the augmented lagrangian methods, can be evaluated on the builtin randomly generated linear programs for a given dimension size:
 ```
 ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type linear-program \
     --solver "ipm|augmented-lagrangian|quadratic-penalty" --trials 128 | tail -n 6
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 | solver                           | precision | rank | value        | kkt test     | errors | maxits | fcalls | gcalls | [ms]  |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| ipm                              | -8.0000   | 2.38 | N/A          | 1.93716e-13  | 0      | 0      | 30     | 30     | 11    |
-| augmented-lagrangian             | -7.9247   | 2.06 | N/A          | 2.06251e-08  | 0      | 128    | 1617   | 1617   | 30    |
-| quadratic-penalty                | -1.0985   | 1.56 | N/A          | 0.136386     | 0      | 0      | 3303   | 3303   | 46    |
+| ipm                              | -8.0000   | 2.54 | N/A          | 9.12434e-14  | 0      | 0      | 30     | 30     | 12    |
+| augmented-lagrangian             | -7.9051   | 1.89 | N/A          | 4.30606e-08  | 0      | 130    | 1683   | 1683   | 30    |
+| quadratic-penalty                | -1.0973   | 1.57 | N/A          | 0.136795     | 0      | 0      | 3393   | 3393   | 46    |
 |----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
 ```
 
-The primal-dual interior point method is significantly more accurate and requires far fewer iterations. Note that the KKT optimality test is used as the stopping criterion in this case.
+The primal-dual interior point method is significantly more accurate and requires far fewer iterations. Note that the KKT optimality test is used as the stopping criterion in this case, except for the external penalty method which doesn't have a theoretically motivated stopping criterion.
 
+Similar results can be obtained for quadratic programs:
+```
+./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type quadratic-program \
+    --solver "ipm|augmented-lagrangian|quadratic-penalty" --trials 128 | tail -n 7
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | kkt test     | errors | maxits | fcalls | gcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+| ipm                              | -8.0000   | 3.00 | N/A          | 4.64906e-16  | 0      | 0      | 7      | 7      | 2     |
+| augmented-lagrangian             | -8.0000   | 1.04 | N/A          | 3.89189e-09  | 0      | 0      | 62     | 62     | 0     |
+| quadratic-penalty                | -1.0629   | 1.96 | N/A          | 0.138791     | 0      | 0      | 977    | 977    | 13    |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+```
 
-##### TODO: Add the benchmark for quadratic programs once
-
-##### TODO: Also compare with penalty methods
 
 ##### TODO: Compare solvers for large programs (1K, 10K dimensions)
