@@ -13,7 +13,7 @@ function_quadratic_t::function_quadratic_t(const tensor_size_t dims)
 
     convex(convexity::yes);
     smooth(smoothness::yes);
-    strong_convexity(nano::strong_convexity(m_A));
+    strong_convexity(::strong_convexity(m_A));
 }
 
 rfunction_t function_quadratic_t::clone() const
@@ -34,7 +34,7 @@ scalar_t function_quadratic_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return x.dot(a + 0.5 * (A * x.vector()));
 }
 
-rfunction_t function_quadratic_t::make(const tensor_size_t dims, tensor_size_t) const
+rfunction_t function_quadratic_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<function_quadratic_t>(dims);
 }

@@ -185,18 +185,30 @@ private:
                  : (feature.classes() <= maxu16) ? op(feature, m_storage_u16.slice(range).reshape(-1), mask)
                  : (feature.classes() <= maxu32) ? op(feature, m_storage_u32.slice(range).reshape(-1), mask)
                                                  : op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-        case feature_type::mclass: return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
-        case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int8: return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int16: return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int32: return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int64: return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint8: return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint16: return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint32: return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint64: return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
-        default: critical0("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
+        case feature_type::mclass:
+            return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
+        case feature_type::float32:
+            return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::float64:
+            return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int8:
+            return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int16:
+            return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int32:
+            return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int64:
+            return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint8:
+            return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint16:
+            return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint32:
+            return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint64:
+            return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
+        default:
+            raise("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
         }
         return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
     }
@@ -218,18 +230,30 @@ private:
                  : (feature.classes() <= maxu16) ? op(feature, m_storage_u16.slice(range).reshape(-1), mask)
                  : (feature.classes() <= maxu32) ? op(feature, m_storage_u32.slice(range).reshape(-1), mask)
                                                  : op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-        case feature_type::mclass: return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
-        case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int8: return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int16: return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int32: return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::int64: return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint8: return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint16: return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint32: return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
-        case feature_type::uint64: return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
-        default: critical0("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
+        case feature_type::mclass:
+            return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
+        case feature_type::float32:
+            return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::float64:
+            return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int8:
+            return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int16:
+            return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int32:
+            return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::int64:
+            return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint8:
+            return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint16:
+            return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint32:
+            return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
+        case feature_type::uint64:
+            return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
+        default:
+            raise("in-memory dataset: unhandled feature type (", static_cast<int>(feature.type()), ")!");
         }
         return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
     }

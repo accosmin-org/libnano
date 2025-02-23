@@ -104,9 +104,12 @@ task_type feature_t::task() const
     {
         switch (m_type)
         {
-        case feature_type::sclass: return task_type::sclassification;
-        case feature_type::mclass: return task_type::mclassification;
-        default: return task_type::regression;
+        case feature_type::sclass:
+            return task_type::sclassification;
+        case feature_type::mclass:
+            return task_type::mclassification;
+        default:
+            return task_type::regression;
         }
     }
 }
@@ -114,8 +117,8 @@ task_type feature_t::task() const
 std::istream& feature_t::read(std::istream& stream)
 {
     string_t type;
-    critical(!::nano::read(stream, type) || !::nano::read(stream, m_dims) || !::nano::read(stream, m_name) ||
-                 !::nano::read(stream, m_labels),
+    critical(::nano::read(stream, type) && ::nano::read(stream, m_dims) && ::nano::read(stream, m_name) &&
+                 ::nano::read(stream, m_labels),
              "feature (", m_name, "): failed to read from stream!");
 
     m_type = from_string<feature_type>(type);
@@ -125,8 +128,8 @@ std::istream& feature_t::read(std::istream& stream)
 
 std::ostream& feature_t::write(std::ostream& stream) const
 {
-    critical(!::nano::write(stream, scat(m_type)) || !::nano::write(stream, m_dims) || !::nano::write(stream, m_name) ||
-                 !::nano::write(stream, m_labels),
+    critical(::nano::write(stream, scat(m_type)) && ::nano::write(stream, m_dims) && ::nano::write(stream, m_name) &&
+                 ::nano::write(stream, m_labels),
              "feature (", m_name, "): failed to write to stream!");
 
     return stream;

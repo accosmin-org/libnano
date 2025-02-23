@@ -73,9 +73,15 @@ template <template <class, size_t> class tstorage, class tscalar, size_t trank>
     tensor_t<tstorage, tscalar, trank> expected_dropped = expected.indexed(samples);
     switch (dataset.feature(expected_feature).type())
     {
-    case feature_type::sclass: expected_dropped.full(-1); break; // NOLINT(bugprone-branch-clone)
-    case feature_type::mclass: expected_dropped.full(-1); break;
-    default: expected_dropped.full(static_cast<tscalar>(NaN)); break;
+    case feature_type::sclass:
+        expected_dropped.full(-1);
+        break; // NOLINT(bugprone-branch-clone)
+    case feature_type::mclass:
+        expected_dropped.full(-1);
+        break;
+    default:
+        expected_dropped.full(static_cast<tscalar>(NaN));
+        break;
     }
     checker(expected_dropped);
 

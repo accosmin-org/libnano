@@ -1,5 +1,4 @@
 #include <nano/core/numeric.h>
-#include <nano/critical.h>
 #include <nano/dataset.h>
 #include <nano/dataset/stats.h>
 
@@ -71,7 +70,8 @@ auto make_scaling(const scalar_stats_t& stats, const scaling_type scaling)
             b.array() = -stats.m_mean.array() * stats.m_div_stdev.array();
             break;
 
-        default: break;
+        default:
+            break;
         }
     }
 
@@ -295,7 +295,7 @@ scalar_stats_t scalar_stats_t::make_targets_stats(const dataset_t& dataset, indi
     const auto& target = dataset.target();
     if (!target.valid())
     {
-        critical0("scalar statistics cannot be computed for targets of unsupervised datasets!");
+        raise("scalar statistics cannot be computed for targets of unsupervised datasets!");
     }
 
     scalar_stats_t stats{::nano::size(dataset.target_dims())};
@@ -347,7 +347,7 @@ scalar_stats_t scalar_stats_t::make_feature_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("scalar statistics cannot be computed for categorical feature: ", feature, "!");
+        raise("scalar statistics cannot be computed for categorical feature: ", feature, "!");
     }
 
     ::done(stats, make_full_tensor<uint8_t>(make_dims(stats.m_min.size()), 0x01));
@@ -395,7 +395,8 @@ void scalar_stats_t::scale(const scaling_type scaling, tensor2d_map_t values) co
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type");
+    default:
+        throw std::runtime_error("unhandled scaling type");
     }
 }
 
@@ -412,7 +413,8 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
 
     switch (scaling)
     {
-    case scaling_type::none: break;
+    case scaling_type::none:
+        break;
 
     case scaling_type::mean:
         for (tensor_size_t sample = 0, samples = values.size<0>(); sample < samples; ++sample)
@@ -438,7 +440,8 @@ void scalar_stats_t::upscale(scaling_type scaling, tensor2d_map_t values) const
         }
         break;
 
-    default: throw std::runtime_error("unhandled scaling type");
+    default:
+        throw std::runtime_error("unhandled scaling type");
     }
 }
 
@@ -465,7 +468,7 @@ xclass_stats_t xclass_stats_t::make_targets_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("class statstics cannot be computed for continuous target: ", target, "!");
+        raise("class statstics cannot be computed for continuous target: ", target, "!");
     }
 }
 
@@ -486,6 +489,6 @@ xclass_stats_t xclass_stats_t::make_feature_stats(const dataset_t& dataset, indi
     }
     else
     {
-        critical0("class statstics cannot be computed for continuous feature: ", feature, "!");
+        raise("class statstics cannot be computed for continuous feature: ", feature, "!");
     }
 }

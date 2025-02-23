@@ -20,8 +20,7 @@ void scat(std::ostringstream& stream, const tvalue& value)
 {
     if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
     {
-        // FIXME: make it constexpr!
-        static const auto enum_strings = enum_string<tvalue>();
+        static auto enum_strings = enum_string<tvalue>();
         for (const auto& elem : enum_strings)
         {
             if (elem.first == value)

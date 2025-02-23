@@ -141,73 +141,146 @@ bash scripts/build.sh --suffix debug -DCMAKE_BUILD_TYPE=Debug -GNinja \
 NB: Use the ```--native``` flag when compiling for ```Release``` builds to maximize performance on a given machine. This is because Eigen3 uses vectorization internally for the linear algebra operations. Please note that the resulting binaries may not be usable on another platform.
 
 
-### Library design
+#### Library design
 
-The library is designed by mapping all relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/debug``` using one of the example above.
+The library is designed by mapping all relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/gcc-release``` using one of the example above.
 
 Examples:
 * list the available numerical optimization algorithms (solvers):
 ```
-./build/libnano/debug/app/info --list-solver
-|-----------|---------------------------------------------------------------------|
-| solver    | description                                                         |
-|-----------|---------------------------------------------------------------------|
-| asga2     | accelerated sub-gradient algorithm (ASGA-2)                         |
-| asga4     | accelerated sub-gradient algorithm (ASGA-4)                         |
-| bfgs      | quasi-newton method (BFGS)                                          |
-| cgd-cd    | conjugate gradient descent (CD)                                     |
-| cgd-dy    | conjugate gradient descent (DY)                                     |
-| cgd-dycd  | conjugate gradient descent (DYCD)                                   |
-| cgd-dyhs  | conjugate gradient descent (DYHS)                                   |
-| cgd-fr    | conjugate gradient descent (FR)                                     |
-| cgd-frpr  | conjugate gradient descent (FRPR)                                   |
-| cgd-hs    | conjugate gradient descent (HS+)                                    |
-| cgd-ls    | conjugate gradient descent (LS+)                                    |
-| cgd-n     | conjugate gradient descent (N+)                                     |
-| cgd-pr    | conjugate gradient descent (default)                                |
-| cocob     | continuous coin betting (COCOB)                                     |
-| dfp       | quasi-newton method (DFP)                                           |
-| dgm       | universal dual gradient method (DGM)                                |
-| ellipsoid | ellipsoid method                                                    |
-| fgm       | universal fast gradient method (FGM)                                |
-| fletcher  | quasi-newton method (Fletcher's switch)                             |
-| gd        | gradient descent                                                    |
-| hoshino   | quasi-newton method (Hoshino formula)                               |
-| lbfgs     | limited-memory BFGS                                                 |
-| osga      | optimal sub-gradient algorithm (OSGA)                               |
-| pgm       | universal primal gradient method (PGM)                              |
-| sda       | simple dual averages (variant of primal-dual subgradient methods)   |
-| sgm       | sub-gradient method                                                 |
-| sr1       | quasi-newton method (SR1)                                           |
-| wda       | weighted dual averages (variant of primal-dual subgradient methods) |
-|-----------|---------------------------------------------------------------------|
+./build/libnano/gcc-release/app/info --list-solver
+|----------------------|---------------------------------------------------------------------------|
+| solver               | description                                                               |
+|----------------------|---------------------------------------------------------------------------|
+| gd                   | gradient descent                                                          |
+| gs                   | gradient sampling (P-nNGS)                                                |
+| ags                  | adaptive gradient sampling (P-nNGS + AGS)                                 |
+| gs-lbfgs             | gradient sampling with LBFGS-like updates (P-nNGS + LBFGS)                |
+| ags-lbfgs            | adaptive gradient sampling with LBFGS-like updates (P-nNGS + AGS + LBFGS) |
+| sgm                  | sub-gradient method                                                       |
+| cgd-n                | conjugate gradient descent (N+)                                           |
+| cgd-hs               | conjugate gradient descent (HS+)                                          |
+| cgd-fr               | conjugate gradient descent (FR)                                           |
+| cgd-pr               | conjugate gradient descent (PR+)                                          |
+| cgd-cd               | conjugate gradient descent (CD)                                           |
+| cgd-ls               | conjugate gradient descent (LS+)                                          |
+| cgd-dy               | conjugate gradient descent (DY)                                           |
+| cgd-dycd             | conjugate gradient descent (DYCD)                                         |
+| cgd-dyhs             | conjugate gradient descent (DYHS)                                         |
+| cgd-frpr             | conjugate gradient descent (FRPR)                                         |
+| osga                 | optimal sub-gradient algorithm (OSGA)                                     |
+| lbfgs                | limited-memory BFGS                                                       |
+| dfp                  | quasi-newton method (DFP)                                                 |
+| sr1                  | quasi-newton method (SR1)                                                 |
+| bfgs                 | quasi-newton method (BFGS)                                                |
+| hoshino              | quasi-newton method (Hoshino formula)                                     |
+| fletcher             | quasi-newton method (Fletcher's switch)                                   |
+| ellipsoid            | ellipsoid method                                                          |
+| asga2                | accelerated sub-gradient algorithm (ASGA-2)                               |
+| asga4                | accelerated sub-gradient algorithm (ASGA-4)                               |
+| cocob                | continuous coin betting (COCOB)                                           |
+| sda                  | simple dual averages (variant of primal-dual subgradient methods)         |
+| wda                  | weighted dual averages (variant of primal-dual subgradient methods)       |
+| pgm                  | universal primal gradient method (PGM)                                    |
+| dgm                  | universal dual gradient method (DGM)                                      |
+| fgm                  | universal fast gradient method (FGM)                                      |
+| rqb                  | reversal quasi-newton bundle algorithm (RQB)                              |
+| fpba1                | fast proximal bundle algorithm (FPBA1)                                    |
+| fpba2                | fast proximal bundle algorithm (FPBA2)                                    |
+| ipm                  | primal-dual interior point method for linear and quadratic programs (IPM) |
+| linear-penalty       | linear penalty method for constrained problems                            |
+| quadratic-penalty    | quadratic penalty method for constrained problems                         |
+| augmented-lagrangian | augmented lagrangian method for constrained problems                      |
+|----------------------|---------------------------------------------------------------------------|
 ```
 
 * list the name, the default value and the domain of all parameters of some solvers of interest:
 ```
-./build/libnano/debug/app/info --list-solver-params --solver "lbfgs|bfgs|cgd-pr"
+./build/libnano/gcc-release/app/info --list-solver-params --solver "lbfgs|bfgs|cgd-pr"
 |--------|-------------------------------|--------------|--------------------------|
 | solver | parameter                     | value        | domain                   |
 |--------|-------------------------------|--------------|--------------------------|
-| bfgs   | quasi-newton method (BFGS)                                              |
+| cgd-pr | conjugate gradient descent (PR+)                                        |
 |--------|-------------------------------|--------------|--------------------------|
-| bfgs   | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
-| bfgs   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
-| bfgs   | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
-| bfgs   | solver::quasi::initialization | identity     | identity,scaled          |
-|--------|-------------------------------|--------------|--------------------------|
-| cgd-pr | conjugate gradient descent (default)                                    |
-|--------|-------------------------------|--------------|--------------------------|
-| cgd-pr | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
-| cgd-pr | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
-| cgd-pr | solver::tolerance             | (0.0001,0.1) | 0 < 0.0001 < 0.1 < 1     |
-| cgd-pr | solver::cgd::orthotest        | 0.1          | 0 < 0.1 < 1              |
+| |...   | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| |...   | solver::patience              | 100          | 1 <= 100 <= 1000000      |
+| |...   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| |...   | solver::tolerance             | (0.0001,0.1) | 0 < 0.0001 < 0.1 < 1     |
+| |...   | solver::cgd::orthotest        | 0.1          | 0 < 0.1 < 1              |
 |--------|-------------------------------|--------------|--------------------------|
 | lbfgs  | limited-memory BFGS                                                     |
 |--------|-------------------------------|--------------|--------------------------|
-| lbfgs  | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
-| lbfgs  | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
-| lbfgs  | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
-| lbfgs  | solver::lbfgs::history        | 20           | 1 <= 20 <= 1000          |
+| |...   | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| |...   | solver::patience              | 100          | 1 <= 100 <= 1000000      |
+| |...   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| |...   | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
+| |...   | solver::lbfgs::history        | 20           | 1 <= 20 <= 1000          |
 |--------|-------------------------------|--------------|--------------------------|
+| bfgs   | quasi-newton method (BFGS)                                              |
+|--------|-------------------------------|--------------|--------------------------|
+| |...   | solver::epsilon               | 1e-08        | 0 < 1e-08 <= 0.1         |
+| |...   | solver::patience              | 100          | 1 <= 100 <= 1000000      |
+| |...   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
+| |...   | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
+| |...   | solver::quasi::initialization | identity     | identity,scaled          |
+|--------|-------------------------------|--------------|--------------------------|
+```
+
+* list the available benchmark test functions useful for comparing numerical optimization methods (solvers):
+```
+./build/libnano/gcc-release/app/info --list-function
+|------------------------|-------------------------------------------------------------------------------------|
+| function               | description                                                                         |
+|------------------------|-------------------------------------------------------------------------------------|
+| maxq                   | MAXQ function: f(x) = max(i, x_i^2)                                                 |
+| maxquad                | MAXQUAD function: f(x) = max(k, x.dot(A_k*x) - b_k.dot(x))                          |
+| maxhilb                | MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))                            |
+| chained_lq             | chained LQ function (see documentation)                                             |
+| chained_cb3I           | chained CB3 I function (see documentation)                                          |
+| chained_cb3II          | chained CB3 II function (see documentation)                                         |
+| trid                   | Trid function: https://www.sfu.ca/~ssurjano/trid.html                               |
+| qing                   | Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html                  |
+| kinks                  | random kinks: f(x) = sum(|x - K_i|, i)                                              |
+| cauchy                 | Cauchy function: f(x) = log(1 + x.dot(x))                                           |
+| sargan                 | Sargan function: http://infinity77.net/global_optimization/test_functions_nd_S.html |
+| powell                 | Powell function: https://www.sfu.ca/~ssurjano/powell.html                           |
+| sphere                 | sphere function: f(x) = x.dot(x)                                                    |
+| zakharov               | Zakharov function: https://www.sfu.ca/~ssurjano/zakharov.html                       |
+| quadratic              | random quadratic function: f(x) = x.dot(a) + x * A * x, where A is PD               |
+| rosenbrock             | Rosenbrock function: https://en.wikipedia.org/wiki/Test_functions_for_optimization  |
+| exponential            | exponential function: f(x) = exp(1 + x.dot(x) / D)                                  |
+| dixon-price            | Dixon-Price function: https://www.sfu.ca/~ssurjano/dixonpr.html                     |
+| chung-reynolds         | Chung-Reynolds function: f(x) = (x.dot(x))^2                                        |
+| axis-ellipsoid         | axis-parallel hyper-ellipsoid function: f(x) = sum(i*x+i^2, i=1,D)                  |
+| styblinski-tang        | Styblinski-Tang function: https://www.sfu.ca/~ssurjano/stybtang.html                |
+| schumer-steiglitz      | Schumer-Steiglitz No. 02 function: f(x) = sum(x_i^4, i=1,D)                         |
+| rotated-ellipsoid      | rotated hyper-ellipsoid function: https://www.sfu.ca/~ssurjano/rothyp.html          |
+| geometric-optimization | generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))   |
+| mse+lasso              | mean squared error (MSE) with lasso regularization                                  |
+| mae+lasso              | mean absolute error (MAE) with lasso regularization                                 |
+| hinge+lasso            | hinge loss (linear SVM) with lasso regularization                                   |
+| cauchy+lasso           | cauchy loss (robust regression) with lasso regularization                           |
+| logistic+lasso         | logistic loss (logistic regression) with lasso regularization                       |
+| mse+ridge              | mean squared error (MSE) with ridge regularization                                  |
+| mae+ridge              | mean absolute error (MAE) with ridge regularization                                 |
+| hinge+ridge            | hinge loss (linear SVM) with ridge regularization                                   |
+| cauchy+ridge           | cauchy loss (robust regression) with ridge regularization                           |
+| logistic+ridge         | logistic loss (logistic regression) with ridge regularization                       |
+| mse+elasticnet         | mean squared error (MSE) with elastic net regularization                            |
+| mae+elasticnet         | mean absolute error (MAE) with elastic net regularization                           |
+| hinge+elasticnet       | hinge loss (linear SVM) with elastic net regularization                             |
+| cauchy+elasticnet      | cauchy loss (robust regression) with elastic net regularization                     |
+| logistic+elasticnet    | logistic loss (logistic regression) with elastic net regularization                 |
+| cvx48b                 | linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition                      |
+| cvx48c                 | linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition                      |
+| cvx48d-eq              | linear program: ex. 4.8(d) - equality case, 'Convex Optimization', 2nd edition      |
+| cvx48d-ineq            | linear program: ex. 4.8(d) - inequality case, 'Convex Optimization', 2nd edition    |
+| cvx48e-eq              | linear program: ex. 4.8(e) - equality case, 'Convex Optimization', 2nd edition      |
+| cvx48e-ineq            | linear program: ex. 4.8(e) - inequality case, 'Convex Optimization', 2nd edition    |
+| cvx48f                 | linear program: ex. 4.8(f), 'Convex Optimization', 2nd edition                      |
+| cvx49                  | linear program: ex. 4.9, 'Convex Optimization', 2nd edition                         |
+| cvx410                 | linear program: ex. 4.10, 'Convex Optimization', 2nd edition                        |
+| numopt162              | quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition                  |
+| numopt1625             | quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition                 |
+|------------------------|-------------------------------------------------------------------------------------|
 ```

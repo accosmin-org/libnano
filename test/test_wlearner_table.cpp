@@ -1,4 +1,4 @@
-#include "fixture/wlearner.h"
+#include <fixture/wlearner.h>
 #include <nano/wlearner/affine.h>
 #include <nano/wlearner/dtree.h>
 #include <nano/wlearner/table.h>
@@ -221,11 +221,16 @@ private:
 
         switch (feature(expected_feature()).type())
         {
-        case feature_type::sclass: do_load_sclass(); break;
+        case feature_type::sclass:
+            do_load_sclass();
+            break;
 
-        case feature_type::mclass: do_load_mclass(); break;
+        case feature_type::mclass:
+            do_load_mclass();
+            break;
 
-        default: assert(false);
+        default:
+            assert(false);
         }
     }
 

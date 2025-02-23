@@ -7,7 +7,7 @@ nano::enum_map_t<csearch_status> nano::enum_string()
 {
     return {
         {            csearch_status::failed,             "failed"},
-        {         csearch_status::max_iters,          "max_iters"},
+        {         csearch_status::max_iters,          "max-iters"},
         {         csearch_status::converged,          "converged"},
         {         csearch_status::null_step,          "null step"},
         {      csearch_status::descent_step,       "descent step"},

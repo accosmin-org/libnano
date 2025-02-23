@@ -16,7 +16,7 @@ using enum_map_t = std::vector<std::pair<tenum, const char*>>;
 /// \brief maps all possible values of an enum to string.
 ///
 template <class tenum>
-enum_map_t<tenum> enum_string(); // FIXME: make it constexpr!
+enum_map_t<tenum> enum_string();
 
 ///
 /// \brief stream enum using its associated string representation.

@@ -39,7 +39,7 @@ scalar_t function_rosenbrock_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return fx;
 }
 
-rfunction_t function_rosenbrock_t::make(const tensor_size_t dims, tensor_size_t) const
+rfunction_t function_rosenbrock_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<function_rosenbrock_t>(dims);
 }

@@ -139,7 +139,7 @@ int unsafe_main(int argc, const char* argv[])
     for (const auto& id : datasource_t::all().ids(dregex))
     {
         const auto rdatasource = datasource_t::all().get(id);
-        critical(!rdatasource, "invalid data source (", id, ")!");
+        critical(rdatasource, "invalid data source (", id, ")!");
 
         rconfig.setup(*rdatasource);
 

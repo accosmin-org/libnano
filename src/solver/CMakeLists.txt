@@ -1,13 +1,13 @@
 target_sources(solver PRIVATE
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/augmented.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lsearch.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/lstep.h
-    ${CMAKE_SOURCE_DIR}/include/nano/solver/penalty.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/state.h
     ${CMAKE_SOURCE_DIR}/include/nano/solver/status.h
+    ${CMAKE_SOURCE_DIR}/include/nano/solver/track.h
     asga.cpp
     asga.h
     augmented.cpp
+    augmented.h
     cgd.cpp
     cgd.h
     cocob.cpp
@@ -20,6 +20,8 @@ target_sources(solver PRIVATE
     gd.h
     gsample.cpp
     gsample.h
+    interior.cpp
+    interior.h
     lbfgs.cpp
     lbfgs.h
     lsearch.cpp
@@ -29,6 +31,7 @@ target_sources(solver PRIVATE
     pdsgm.cpp
     pdsgm.h
     penalty.cpp
+    penalty.h
     quasi.cpp
     quasi.h
     rqb.cpp
@@ -36,8 +39,10 @@ target_sources(solver PRIVATE
     sgm.cpp
     sgm.h
     state.cpp
+    track.cpp
     universal.cpp
     universal.h)
 
 add_subdirectory(bundle)
 add_subdirectory(gsample)
+add_subdirectory(interior)

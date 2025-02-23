@@ -16,7 +16,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_geometric_optimization_t(tensor_size_t dims = 10, tensor_size_t summands = 16);
+    explicit function_geometric_optimization_t(tensor_size_t dims = 10, scalar_t sample_ratio = 10.0);
 
     ///
     /// \brief @see clonable_t
@@ -31,7 +31,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    rfunction_t make(tensor_size_t dims, tensor_size_t summands) const override;
+    rfunction_t make(tensor_size_t dims) const override;
 
 private:
     // attributes

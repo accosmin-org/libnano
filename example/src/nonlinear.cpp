@@ -59,8 +59,8 @@ int main(const int, char*[])
 
     // construct a solver_t object to minimize the objective function
     // NB: this may be not needed as the default configuration will minimize the objective as well!
-    // NB: can also use the factory to get the default solver: `solver_t::all().get("lbfgs")`!
-    auto solver                                 = solver_t::all().get("lbfgs");
+    auto solver = solver_t::all().get("lbfgs");
+    assert(solver != nullptr);
     solver->parameter("solver::lbfgs::history") = 20;
     solver->parameter("solver::epsilon")        = 1e-8;
     solver->parameter("solver::max_evals")      = 100;
@@ -73,14 +73,14 @@ int main(const int, char*[])
     {
         const auto x0 = make_random_vector<scalar_t>(objective.size());
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0) << "...\n";
+                  << "]: f0=" << objective(x0) << "...\n";
 
         // minimize
         const auto state = solver->minimize(objective, x0, make_stdout_logger());
         const auto error = (state.x() - objective.b()).lpNorm<Eigen::Infinity>();
 
         std::cout << std::fixed << std::setprecision(12) << "minimize[" << (trial + 1) << "/" << trials
-                  << "]: f0=" << objective.vgrad(x0) << ",x-x*=" << error << "," << state << ".\n";
+                  << "]: f0=" << objective(x0) << ",x-x*=" << error << "," << state << ".\n";
 
         if (error > 1e-7)
         {

@@ -24,12 +24,12 @@ public:
         const auto df = m_beta * g.dot(H * g);
 
         auto t = 1.0;
-        if (auto fx = function.vgrad(x = state.x() - t * d); fx < state.fx() - t * df)
+        if (auto fx = function(x = state.x() - t * d); fx < state.fx() - t * df)
         {
             // doubling phase
             for (auto iters = 0; iters < m_max_iters; ++iters)
             {
-                if (t /= m_gamma, fx = function.vgrad(x = state.x() - t * d); fx >= state.fx() - t * df)
+                if (t /= m_gamma, fx = function(x = state.x() - t * d); fx >= state.fx() - t * df)
                 {
                     t *= m_gamma;
                     state.update(x = state.x() - t * d);
@@ -42,7 +42,7 @@ public:
             // bisection phase
             for (auto iters = 0; iters < m_max_iters; ++iters)
             {
-                if (t *= m_gamma, fx = function.vgrad(x = state.x() - t * d); fx < state.fx() - t * df)
+                if (t *= m_gamma, fx = function(x = state.x() - t * d); fx < state.fx() - t * df)
                 {
                     state.update(x = state.x() - t * d);
                     return t;
@@ -55,7 +55,7 @@ public:
 
 private:
     // attributes
-    scalar_t       m_beta{1e-8};
+    scalar_t       m_beta{0.0};
     scalar_t       m_gamma{0.5};
     tensor_size_t  m_max_iters{50};
     perturbation_t m_perturbation;

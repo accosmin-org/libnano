@@ -83,7 +83,7 @@ Examples:
 
 4. [Linear and quadratic programming](docs/program.md)
 
-5. [Constrained optimization module - TODO](docs/constrained.md)
+5. [Constrained optimization module](docs/constrained.md)
 
 6. [Machine learning module](docs/machine.md)
 

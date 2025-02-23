@@ -1,4 +1,4 @@
-#include "fixture/solver.h"
+#include <fixture/solver.h>
 
 using namespace nano;
 
@@ -14,12 +14,12 @@ UTEST_BEGIN_MODULE(test_solver_gsample)
 
 UTEST_CASE(smooth)
 {
-    check_solvers_on_smooth_functions(make_solver_ids());
+    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex_smooth}));
 }
 
 UTEST_CASE(nonsmooth)
 {
-    check_solvers_on_nonsmooth_functions(make_solver_ids());
+    check_minimize(make_solver_ids(), function_t::make({4, 4, function_type::convex}));
 }
 
 UTEST_END_MODULE()

@@ -9,9 +9,13 @@ double nano::wlearner::make_score(const wlearner_criterion criterion, double rss
 
     switch (criterion)
     {
-    case wlearner_criterion::aic: return AIC(rss, k, n);
-    case wlearner_criterion::aicc: return AICc(rss, k, n);
-    case wlearner_criterion::bic: return BIC(rss, k, n);
-    default: return rss;
+    case wlearner_criterion::aic:
+        return AIC(rss, k, n);
+    case wlearner_criterion::aicc:
+        return AICc(rss, k, n);
+    case wlearner_criterion::bic:
+        return BIC(rss, k, n);
+    default:
+        return rss;
     }
 }

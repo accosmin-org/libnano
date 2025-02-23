@@ -27,7 +27,7 @@ scalar_t function_sargan_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return 0.6 * x2sum + 0.4 * nano::square(x2sum);
 }
 
-rfunction_t function_sargan_t::make(const tensor_size_t dims, tensor_size_t) const
+rfunction_t function_sargan_t::make(const tensor_size_t dims) const
 {
     return std::make_unique<function_sargan_t>(dims);
 }
