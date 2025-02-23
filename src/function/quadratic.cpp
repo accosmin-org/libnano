@@ -88,7 +88,7 @@ bool quadratic_program_t::constrain(constraint_t&& constraint)
 
 void quadratic_program_t::normalize()
 {
-    const auto div = std::max(1.0, m_Q.diagonal().array().abs().maxCoeff());
+    const auto div = std::max(1.0, m_Q.lpNorm<2>());
     m_c.array() /= div;
     m_Q.array() /= div;
 }

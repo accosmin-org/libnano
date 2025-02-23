@@ -27,6 +27,8 @@ namespace nano
 ///
 /// NB: the equality and the inequality constraints are optional.
 ///
+/// NB: the objective is automatically scaled by (1 + ||c||) to improve numerical robustness of the associated solvers.
+///
 /// see (1) "Convex Optimization", by S. Boyd and L. Vanderberghe, 2004.
 /// see (2) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
