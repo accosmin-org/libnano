@@ -12,7 +12,10 @@ solver_penalty_t::solver_penalty_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::penalty::eta", 1.0, LT, 5.0, LE, 1e+3));
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 10.0, LE, 1e+3));
 
+    // NB: stops if no significant improvement in two outer iterations!
     parameter("solver::patience")  = 2;
+
+    // NB: more iterations are needed by default!
     parameter("solver::max_evals") = 50 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
@@ -31,7 +34,7 @@ solver_state_t solver_penalty_t::minimize(penalty_function_t& penalty_function, 
     auto solver  = solver_t::all().get(base_solver_id);
     auto outer   = 0;
 
-    critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
+    critical(solver != nullptr, scat("[solver-", type_id(), "]: invalid solver id <", base_solver_id, ">!"));
     solver->parameter("solver::epsilon") = epsilon0;
 
     while (penalty_function.fcalls() + penalty_function.gcalls() < max_evals && (outer++) < 1000)

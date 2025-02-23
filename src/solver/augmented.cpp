@@ -41,6 +41,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
 
+    // NB: more iterations are needed by default!
     parameter("solver::max_evals") = 50 * parameter("solver::max_evals").value<tensor_size_t>();
 }
 
@@ -73,7 +74,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto solver           = solver_t::all().get(base_solver_id);
     auto outer            = 0;
 
-    critical(solver != nullptr, scat("invalid solver id <", base_solver_id, ">!"));
+    critical(solver != nullptr, scat("[solver-", type_id(), "]: invalid solver id <", base_solver_id, ">!"));
     solver->parameter("solver::epsilon") = epsilon0;
 
     while (function.fcalls() + function.gcalls() < max_evals && (outer++) < 1000)
