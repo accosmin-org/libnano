@@ -36,6 +36,9 @@ public:
 /// NB: the penalty function is exact,
 ///     but it is not smooth and thus the optimization is typically not very precise.
 ///
+/// NB: the penalty term is increased initially until the solution is finite,
+///     because for some problems the penalty function may not be lower-bounded for low penalty terms.
+///
 class NANO_PUBLIC solver_linear_penalty_t final : public solver_penalty_t
 {
 public:
@@ -65,6 +68,9 @@ public:
 ///
 /// NB: the penalty function is not exact,
 ///     but it is smooth and thus the optimization is typically very precise.
+///
+/// NB: the penalty term is increased initially until the solution is finite,
+///     because for some problems the penalty function may not be lower-bounded for low penalty terms.
 ///
 class NANO_PUBLIC solver_quadratic_penalty_t final : public solver_penalty_t
 {

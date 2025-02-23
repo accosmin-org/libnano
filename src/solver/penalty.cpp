@@ -13,7 +13,7 @@ solver_penalty_t::solver_penalty_t(string_t id)
     register_parameter(parameter_t::make_scalar("solver::penalty::penalty0", 0.0, LT, 10.0, LE, 1e+3));
 
     // NB: stops if no significant improvement in two outer iterations!
-    parameter("solver::patience")  = 2;
+    parameter("solver::patience") = 2;
 
     // NB: more iterations are needed by default!
     parameter("solver::max_evals") = 50 * parameter("solver::max_evals").value<tensor_size_t>();

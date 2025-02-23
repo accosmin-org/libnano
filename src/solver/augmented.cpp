@@ -6,7 +6,7 @@ using namespace nano;
 
 namespace
 {
-auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-6, const scalar_t ro_max = 10.0)
+auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-1, const scalar_t ro_max = 10.0)
 {
     const auto  f = state.fx();
     const auto& h = state.ceq();
@@ -37,6 +37,7 @@ solver_augmented_lagrangian_t::solver_augmented_lagrangian_t()
     register_parameter(parameter_t::make_scalar("solver::augmented::tau", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::augmented::gamma", 1.0, LT, 10.0, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::miu_max", 0.0, LT, 1e+20, LT, fmax));
+    register_parameter(parameter_t::make_scalar("solver::augmented::ro_min", 0.0, LT, 1e-1, LT, fmax));
     register_parameter(parameter_t::make_scalar("solver::augmented::radius", 0.0, LT, 1e+6, LT, fmax));
     register_parameter(
         parameter_t::make_scalar_pair("solver::augmented::lambda", fmin, LT, -1e+20, LT, +1e+20, LT, fmax));
@@ -59,13 +60,14 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     const auto epsilonK                 = parameter("solver::augmented::epsilonK").value<scalar_t>();
     const auto tau                      = parameter("solver::augmented::tau").value<scalar_t>();
     const auto gamma                    = parameter("solver::augmented::gamma").value<scalar_t>();
+    const auto ro_min                   = parameter("solver::augmented::ro_min").value<scalar_t>();
     const auto miu_max                  = parameter("solver::augmented::miu_max").value<scalar_t>();
     const auto radius                   = parameter("solver::augmented::radius").value<scalar_t>();
     const auto [lambda_min, lambda_max] = parameter("solver::augmented::lambda").value_pair<scalar_t>();
 
     auto bstate           = solver_state_t{function, x0}; ///< best state
     auto cstate           = bstate;                       ///< current state
-    auto ro               = make_ro1(bstate);
+    auto ro               = make_ro1(bstate, ro_min, ro_min * 1e+2);
     auto lambda           = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
     auto miu              = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
     auto old_kkt          = std::numeric_limits<scalar_t>::max();
