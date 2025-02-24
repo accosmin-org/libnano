@@ -39,8 +39,10 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    m_ldlt.compute(m_lmat.matrix());
-    m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
+    const auto div = m_lmat.squaredNorm();
+
+    m_ldlt.compute(m_lmat.matrix() / div);
+    m_lsol.vector() = m_ldlt.solve(m_lvec.vector() / div);
     return m_lsol;
 }
 

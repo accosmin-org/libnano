@@ -44,6 +44,7 @@ bool linear_program_t::constrain(constraint_t&& constraint)
 
 void linear_program_t::normalize()
 {
-    const auto div = 1.0 + m_c.lpNorm<2>();
+    const auto div = m_c.squaredNorm();
+
     m_c.array() /= div;
 }
