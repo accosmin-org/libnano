@@ -88,8 +88,4 @@ bool quadratic_program_t::constrain(constraint_t&& constraint)
 
 void quadratic_program_t::normalize()
 {
-    const auto div = m_Q.squaredNorm();
-
-    m_c.array() /= div;
-    m_Q.array() /= div;
 }

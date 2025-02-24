@@ -17,7 +17,7 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
     const auto c = lambda * a;
 
     reset(c);
-    optimum(lambda * b / c.squaredNorm());
+    optimum(lambda * b);
 
     critical(lambda <= 0.0);
     critical((a * variable()) <= b);
