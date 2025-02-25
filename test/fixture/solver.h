@@ -138,7 +138,7 @@ struct solver_description_t
     {
         // NB: methods that can solve linear and quadratic convex programs very reliable.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-8))
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(5e-9))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
     }
     else if (solver_id == "augmented-lagrangian")
