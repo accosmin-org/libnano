@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nano/logger.h>
-#include <nano/program/solver.h>
 #include <nano/solver/state.h>
 #include <nano/tensor/algorithm.h>
 
@@ -64,22 +63,23 @@ public:
     tensor_size_t size() const { return m_bsize; }
 
     ///
-    /// \brief return the proximity center.
+    /// \brief return the stability center.
     ///
     const vector_t& x() const { return m_x; }
 
     ///
-    /// \brief return the sub-gradient at the proximity center.
+    /// \brief return the sub-gradient at the stability center.
     ///
     const vector_t& gx() const { return m_gx; }
 
     ///
-    /// \brief return the function value at the proximity center.
+    /// \brief return the function value at the stability center.
     ///
     scalar_t fx() const { return m_fx; }
 
     ///
-    /// \brief return the
+    /// \brief evaluate the cutting plange model at the given point
+    ///     (maximum over the linearizations in the bundle).
     ///
     scalar_t fhat(const vector_t& x) const;
 
@@ -140,10 +140,6 @@ private:
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
     // attributes
-    using quadratic_program_t = program::quadratic_program_t;
-
-    quadratic_program_t m_program;  ///< buffer: quadratic program definition
-    program::solver_t   m_solver;   ///< buffer: quadratic program solver
     tensor_size_t       m_bsize{0}; ///< bundle: number of points
     matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
     vector_t            m_bundleH;  ///< bundle: function values (f_j + <g_j, x_k^ - x_j>)_j of shape (size,)

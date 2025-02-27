@@ -99,6 +99,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
+    // TODO: update Q in-place in quadratic program
     m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
     m_program.m_c(n)                                   = 1.0;
 
@@ -216,6 +217,7 @@ void bundle_t::append_aggregate()
 {
     // NB: load the aggregation from the last slot!
     const auto ilast          = capacity() - 1;
+    assert(m_bsize + 1 < ilast);
     m_bundleH(m_bsize)        = m_bundleH(ilast);
     m_bundleG.vector(m_bsize) = m_bundleG.vector(ilast);
     ++m_bsize;
