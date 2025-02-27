@@ -39,7 +39,8 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     const auto invAA = (A * A.transpose()).inverse();
     const auto xbest = x0 + A.transpose() * invAA * (b - A * x0);
 
-    reset(Q, c);
+    this->Q() = Q;
+    this->c() = c;
     optimum(xbest);
 
     critical((A * variable()) == b);

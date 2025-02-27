@@ -16,7 +16,7 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
     const auto b = urand<scalar_t>(-1.0, +1.0);
     const auto c = lambda * a;
 
-    reset(c);
+    this->c() = c;
     optimum(lambda * b);
 
     critical(lambda <= 0.0);

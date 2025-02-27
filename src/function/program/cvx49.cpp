@@ -11,7 +11,7 @@ linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims)
     const auto A = matrix_t::identity(dims, dims);
     const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0);
 
-    reset(c);
+    this->c() = c;
     optimum(b);
 
     critical((A * variable()) <= b);

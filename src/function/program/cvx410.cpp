@@ -17,7 +17,7 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims)
     const auto x = make_random_vector<scalar_t>(dims, +1.0, +2.0);
     const auto b = A * x;
 
-    reset(c);
+    this->c() = c;
     optimum(x);
 
     critical(variable() >= 0.0);
