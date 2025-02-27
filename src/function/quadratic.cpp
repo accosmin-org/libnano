@@ -35,7 +35,6 @@ quadratic_program_t::quadratic_program_t(string_t id, matrix_t Q, vector_t c)
     assert(m_Q.rows() == m_c.size());
     assert(m_Q.cols() == m_c.size());
 
-    normalize();
     smooth(smoothness::yes);
     convex(::is_convex(m_Q) ? convexity::yes : convexity::no);
     strong_convexity(::strong_convexity(m_Q));
@@ -61,31 +60,7 @@ scalar_t quadratic_program_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return x.dot(0.5 * (m_Q * x) + m_c);
 }
 
-void quadratic_program_t::reset(matrix_t Q, vector_t c)
-{
-    assert(c.size() == size());
-    assert(Q.rows() == size());
-    assert(Q.cols() == size());
-
-    m_Q = std::move(Q);
-    m_c = std::move(c);
-    normalize();
-}
-
-void quadratic_program_t::reset(matrix_t Q)
-{
-    assert(Q.rows() == size());
-    assert(Q.cols() == size());
-
-    m_Q = std::move(Q);
-    normalize();
-}
-
 bool quadratic_program_t::constrain(constraint_t&& constraint)
 {
     return is_linear(constraint) && function_t::constrain(std::move(constraint));
-}
-
-void quadratic_program_t::normalize()
-{
 }

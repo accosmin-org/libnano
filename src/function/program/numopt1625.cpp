@@ -13,7 +13,8 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
     const auto l  = make_random_vector<scalar_t>(dims);
     const auto u  = l.array() + 0.1;
 
-    reset(Q, c);
+    this->Q() = Q;
+    this->c() = c;
     optimum(x0.array().max(l.array()).min(u.array()));
 
     critical(l <= variable());

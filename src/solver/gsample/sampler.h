@@ -15,7 +15,7 @@ struct sampler_t
     void descent(quadratic_program_t& program, const tmatrix& W, vector_t& g, const logger_t& logger)
     {
         const auto G = m_G.slice(0, m_psize);
-        program.reset(G * W * G.transpose());
+        program.Q()  = G * W * G.transpose();
 
         const auto x0    = vector_t::constant(m_psize, 1.0 / static_cast<scalar_t>(m_psize));
         const auto state = m_solver->minimize(program, x0, logger);

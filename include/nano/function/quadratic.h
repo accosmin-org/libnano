@@ -44,24 +44,28 @@ public:
     bool constrain(constraint_t&&) override;
 
     ///
-    /// \brief change the objective with a compatible one and keep the constraints.
-    ///
-    void reset(matrix_t Q, vector_t c);
-    void reset(matrix_t Q);
-
-    ///
-    /// \brief return the objective's parameters (need explicitly by some solvers).
+    /// \brief return the objective's parameters (needed by some solvers).
     ///
     const matrix_t& Q() const { return m_Q; }
 
     ///
-    /// \brief return the objective's parameters (need explicitly by some solvers).
+    /// \brief return the objective's parameters (needed by some solvers).
     ///
     const vector_t& c() const { return m_c; }
 
-private:
-    void normalize();
+    ///
+    /// \brief return a mutable view of the objective's parameters
+    ///     (needed when objective is defined a-posteriori or changed at runtime).
+    ///
+    matrix_map_t Q() { return m_Q.tensor(); }
 
+    ///
+    /// \brief return a mutable view of the objective's parameters
+    ///     (needed when objective is defined a-posteriori or changed at runtime).
+    ///
+    vector_map_t c() { return m_c.tensor(); }
+
+private:
     // attributes
     matrix_t m_Q; ///<
     vector_t m_c; ///<

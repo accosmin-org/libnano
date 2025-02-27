@@ -57,7 +57,7 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, scala
 
     alpha = alpha * d.sum();
 
-    reset(c);
+    this->c() = c;
     optimum(make_xbest_cvx48f(d, v, alpha));
 
     critical((d * variable()) == alpha);

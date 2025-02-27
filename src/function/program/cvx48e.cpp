@@ -68,7 +68,7 @@ linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims,
     const auto v = make_sorted_cvx48e(c);
     const auto h = static_cast<scalar_t>(make_alpha(dims, alpha, 0));
 
-    reset(c);
+    this->c() = c;
     optimum(make_xbest_cvx48e_eq(v, make_alpha(dims, alpha, 0)));
 
     critical((a * variable()) == h);
@@ -107,7 +107,7 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
     const auto v = make_sorted_cvx48e(c);
     const auto h = static_cast<scalar_t>(make_alpha(dims, alpha, 1));
 
-    reset(c);
+    this->c() = c;
     optimum(make_xbest_cvx48e_ineq(v, make_alpha(dims, alpha, 1)));
 
     critical((a * variable()) <= h);

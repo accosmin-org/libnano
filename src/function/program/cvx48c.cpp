@@ -12,7 +12,7 @@ linear_program_cvx48c_t::linear_program_cvx48c_t(const tensor_size_t dims)
     const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0);
     const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0);
 
-    reset(c);
+    this->c() = c;
     optimum(l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign());
 
     critical(l <= variable());
