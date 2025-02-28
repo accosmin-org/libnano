@@ -224,6 +224,16 @@ public:
     ///
     const vector_t& cineq() const { return m_cineq; }
 
+    ///
+    /// \brief returns the Lagrange multipliers for the equality constraints (if any).
+    ///
+    const vector_t& meq() const { return m_meq; }
+
+    ///
+    /// \brief returns the Lagrange multipliers for the inequality constraints (if any).
+    ///
+    const vector_t& mineq() const { return m_mineq; }
+
 private:
     void update_constraints();
 

@@ -75,7 +75,7 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         logger.info("miu=", miu, ",t=", t, ".\n");
 
         y     = proxim.m_x;
-        fy    = m_function.vgrad(y, gy);
+        fy    = m_function(y, gy);
         fyhat = bundle.fhat(y);
         gyhat = (miu / t) * (x - y);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <nano/logger.h>
-#include <nano/solver/state.h>
+#include <nano/function/quadratic.h>
+#include <nano/solver.h>
 #include <nano/tensor/algorithm.h>
 
 namespace nano
@@ -35,11 +35,12 @@ public:
         explicit solution_t(tensor_size_t dims = 0);
 
         // attributes
-        vector_t m_x;           ///< optimum: stability center
-        scalar_t m_r{0.0};      ///< optimum: level (if applicable)
-        scalar_t m_tau{0.0};    ///< proximal parameter
-        vector_t m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
-        scalar_t m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
+        vector_t m_x;            ///< optimum: stability center
+        scalar_t m_r{0.0};       ///< optimum: level (if applicable)
+        scalar_t m_tau{0.0};     ///< proximal parameter
+        vector_t m_alphas;       ///< Lagrangian multiplier associated to the bundle inequalities
+        scalar_t m_lambda{0.0};  ///< Lagrangian multiplier associated to the level inequality (if applicable)
+        bool     m_valid{false}; ///< indicates if the post-conditions of the solution are satisfied
     };
 
     ///
@@ -116,6 +117,8 @@ public:
     ///
     ///     where x_k^ is the current proximal stability center.
     ///
+    /// NB: a convex quadratic program.
+    ///
     const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
 
 private:
@@ -140,6 +143,8 @@ private:
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
 
     // attributes
+    quadratic_program_t m_program;  ///< quadratic program
+    rsolver_t           m_solver;   ///< solver for the quadratic program
     tensor_size_t       m_bsize{0}; ///< bundle: number of points
     matrix_t            m_bundleG;  ///< bundle: sub-gradients (g_j, -1)_j of shape (size, dims + 1)
     vector_t            m_bundleH;  ///< bundle: function values (f_j + <g_j, x_k^ - x_j>)_j of shape (size,)
@@ -147,5 +152,6 @@ private:
     vector_t            m_x;        ///< proximal/stability center (dims)
     vector_t            m_gx;       ///< function gradient at the proximal center (dims)
     scalar_t            m_fx;       ///< function value at the proximal center
+    vector_t            m_wlevel;   ///< left-side inequality constraint for the level
 };
 } // namespace nano

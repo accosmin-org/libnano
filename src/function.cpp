@@ -175,6 +175,11 @@ const constraints_t& function_t::constraints() const
     return m_constraints;
 }
 
+void function_t::clear_constraints()
+{
+    m_constraints.clear();
+}
+
 bool function_t::valid(const vector_t& x) const
 {
     const auto op = [&](const constraint_t& constraint)

@@ -1,3 +1,5 @@
+#include <nano/critical.h>
+#include <nano/function/cuts.h>
 #include <solver/bundle/bundle.h>
 
 using namespace nano;
@@ -8,7 +10,7 @@ auto make_program(const tensor_size_t n)
 {
     auto Q = matrix_t{matrix_t::zero(n + 1, n + 1)};
     auto c = vector_t{vector_t::zero(n + 1)};
-    return program::quadratic_program_t{std::move(Q), std::move(c)};
+    return quadratic_program_t{"qp", std::move(Q), std::move(c)};
 }
 
 template <typename tvectory>
@@ -28,8 +30,8 @@ auto eval_cutting_planes(matrix_cmap_t G, vector_cmap_t h, const tvectory& y)
 }
 
 template <typename tvectory>
-void write_cutting_plane(vector_map_t g, scalar_t& h, const vector_cmap_t x, const vector_cmap_t y, const tvectory& gy,
-                         const scalar_t fy)
+void write_cutting_plane(const vector_map_t g, scalar_t& h, const vector_cmap_t x, const vector_cmap_t y,
+                         const tvectory& gy, const scalar_t fy)
 {
     const auto n = x.size();
 
@@ -50,12 +52,14 @@ bundle_t::solution_t::solution_t(const tensor_size_t dims)
 
 bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
     : m_program(make_program(state.x().size()))
+    , m_solver(solver_t::all().get("ipm"))
     , m_bundleG(max_size + 1, state.x().size() + 1)
     , m_bundleH(max_size + 1)
     , m_solution(state.x().size())
     , m_x(state.x())
     , m_gx(state.gx())
     , m_fx(state.fx())
+    , m_wlevel(vector_t::zero(state.x().size() + 1))
 {
     append(state.x(), state.gx(), state.fx(), true);
 }
@@ -99,48 +103,43 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
-    // TODO: update Q in-place in quadratic program
-    m_program.m_Q.block(0, 0, n, n).diagonal().array() = 1.0 / tau;
-    m_program.m_c(n)                                   = 1.0;
+    m_program.Q().block(0, 0, n, n).diagonal().array() = 1.0 / tau;
+    m_program.c()(n)                                   = 1.0;
 
+    m_program.clear_constraints();
+    critical(bundleG * m_program.variable() <= bundleF);
     if (has_level)
     {
-        auto weights    = m_bundleG.vector(capacity() - 1);
-        weights.array() = 0.0;
-        weights(n)      = 1.0;
-        m_program.constrain(program::make_inequality(bundleG, bundleF), program::make_inequality(weights, level));
-    }
-    else
-    {
-        m_program.constrain(program::make_inequality(bundleG, bundleF));
+        m_wlevel(n) = 1.0;
+        critical(m_wlevel * m_program.variable() <= level);
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
-    // FIXME: can estimate a reasonable starting point?!
-    const auto solution = m_solver.solve(m_program, logger);
-    assert(solution.m_x.size() == n + 1);
+    const auto solution = m_solver->minimize(m_program, m_wlevel, logger);
 
-    if (!m_program.feasible(solution.m_x, epsilon0<scalar_t>()))
-    {
-        logger.error("bundle: unfeasible solution, deviation(ineq)=", m_program.m_ineq.deviation(solution.m_x), ".\n");
-    }
+    const auto& x = solution.x();
+    const auto& u = solution.mineq();
+
+    assert(x.size() == n + 1);
+    assert(u.size() == (has_level ? (m + 1) : m));
 
     // NB: the quadratic program may be unfeasible, so the level needs to be moved towards the stability center!
-    if (solution.m_status != solver_status::converged && !has_level)
+    if (solution.status() != solver_status::kkt_optimality_test && !has_level)
     {
-        logger.error("bundle: failed to solve, status=", solution.m_status, ".\n");
+        logger.error("bundle: failed to solve, status=", solution.status(), ".\n");
     }
 
     // extract solution and statistics, see (1)
-    assert(solution.m_u.size() == (has_level ? (m + 1) : m));
-
-    m_solution.m_x      = solution.m_x.segment(0, n) + m_x;
-    m_solution.m_r      = solution.m_x(n) + m_fx;
+    m_solution.m_x      = x.segment(0, n) + m_x;
+    m_solution.m_r      = x(n) + m_fx;
     m_solution.m_tau    = tau;
-    m_solution.m_alphas = solution.m_u.segment(0, m);
-    m_solution.m_lambda = has_level ? solution.m_u(m) : 0.0;
+    m_solution.m_alphas = u.segment(0, m);
+    m_solution.m_lambda = has_level ? u(m) : 0.0;
 
-    assert(m_solution.m_alphas.min() >= 0.0);
+    // verify post-conditions, see (1), eq. 12
+    const auto fhat_k0 = fhat(m_x);
+    const auto fhat_k1 = fhat(m_solution.m_x);
+    m_solution.m_valid = m_fx >= fhat_k0 && fhat_k0 >= fhat_k1 + 0.5 / tau * (m_solution.m_x - m_x).squaredNorm();
 
     return m_solution;
 }

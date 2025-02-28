@@ -85,6 +85,11 @@ public:
     const constraints_t& constraints() const;
 
     ///
+    /// \brief clear constraints (if any).
+    ///
+    void clear_constraints();
+
+    ///
     /// \brief returns true if the given point satisfies all the stored constraints.
     ///
     bool valid(const vector_t& x) const;
