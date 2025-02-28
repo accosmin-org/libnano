@@ -58,25 +58,30 @@ class logger_t::impl_t
 public:
     impl_t() = default;
 
-    explicit impl_t(std::ostream& stream)
+    explicit impl_t(std::ostream& stream, string_t prefix = string_t{})
         : m_storage(&stream)
+        , m_prefix(std::move(prefix))
     {
     }
 
-    explicit impl_t(string_t path)
+    explicit impl_t(string_t path, string_t prefix = string_t{})
         : m_path(make_path(std::move(path)))
         , m_storage(std::ofstream{m_path})
+        , m_prefix(std::move(prefix))
     {
     }
 
-    explicit impl_t(std::ostream* stream, string_t path)
+    explicit impl_t(std::ostream* stream, string_t path, string_t prefix = string_t{})
         : m_path(std::move(path))
+        , m_prefix(std::move(prefix))
     {
         if (stream != nullptr)
         {
             m_storage = stream;
         }
     }
+
+    const string_t& prefix() const { return m_prefix; }
 
     const std::filesystem::path& path() const { return m_path; }
 
@@ -90,12 +95,15 @@ public:
                           m_storage);
     }
 
+    void prefix(string_t prefix) { m_prefix = std::move(prefix); }
+
 private:
     using storage_t = std::variant<std::monostate, std::ostream*, std::ofstream>;
 
     // attributes
     std::filesystem::path m_path;
     storage_t             m_storage;
+    string_t              m_prefix;
 };
 
 logger_t::logger_t()
@@ -116,7 +124,7 @@ logger_t::logger_t(string_t path)
 logger_t::logger_t(logger_t&&) noexcept = default;
 
 logger_t::logger_t(const logger_t& other)
-    : m_pimpl(std::make_unique<impl_t>(other.stream(), other.m_pimpl->path().string()))
+    : m_pimpl(std::make_unique<impl_t>(other.stream(), other.m_pimpl->path().string(), other.m_pimpl->prefix()))
 {
 }
 
@@ -126,12 +134,23 @@ logger_t& logger_t::operator=(const logger_t& other)
 {
     if (this != &other)
     {
-        m_pimpl = std::make_unique<impl_t>(other.stream(), other.m_pimpl->path().string());
+        m_pimpl = std::make_unique<impl_t>(other.stream(), other.m_pimpl->path().string(), other.m_pimpl->prefix());
     }
     return *this;
 }
 
 logger_t::~logger_t() = default;
+
+const string_t& logger_t::prefix() const
+{
+    return m_pimpl->prefix();
+}
+
+const logger_t& logger_t::prefix(string_t prefix) const
+{
+    m_pimpl->prefix(std::move(prefix));
+    return *this;
+}
 
 logger_t logger_t::fork(const string_t& filename) const
 {

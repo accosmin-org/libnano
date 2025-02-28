@@ -153,7 +153,7 @@ void params_t::log(const result_t& result, const tensor_size_t last_trial, const
     {
         assert(spaces.size() == static_cast<size_t>(params.size()));
 
-        m_logger.log(log_type::info, "[", prefix, "]: ");
+        m_logger.info("[", prefix, "]: ");
         for (size_t i = 0U, size = spaces.size(); i < size; ++i)
         {
             m_logger.log(spaces[i].name(), "=", params(static_cast<tensor_size_t>(i)), ",");
