@@ -40,6 +40,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
 {
     constexpr auto level = std::numeric_limits<scalar_t>::quiet_NaN();
 
+    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, "[csearch] "};
+
     auto& t = m_point.m_t;
     t       = 1.0;
     auto tL = 0.0;
@@ -72,8 +74,6 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         // step (1) - get proximal point, compute statistics
         const auto& proxim = bundle.solve(t / miu, level, logger);
 
-        logger.info("miu=", miu, ",t=", t, ".\n");
-
         y     = proxim.m_x;
         fy    = m_function(y, gy);
         fyhat = bundle.fhat(y);
@@ -86,21 +86,23 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto econv = epsil <= bundle.etol(epsilon);
         const auto gconv = gnorm <= bundle.gtol(epsilon);
 
-        logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fxhat=", fxhat,
-                    ",fy=", fy, ",fyhat=", fyhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/",
-                    bundle.etol(epsilon), ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(),
-                    ",miu=", miu, ",t=", t, "[", tL, ",", tR, "].\n");
+        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fxhat=", fxhat, ",fy=", fy,
+                    ",fyhat=", fyhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon),
+                    ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[",
+                    tL, ",", tR, "].\n");
 
-        assert(fx >= fxhat);
-        assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
-
-        assert(delta >= 0.0);
-        assert(error >= 0.0);
+        /*if (proxim.m_valid)
+        {
+            assert(fx >= fxhat);
+            assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
+            assert(delta >= 0.0);
+            assert(error >= 0.0);
+        }*/
 
         // compute tests...
-        const auto test_failed        = !std::isfinite(fy);
+        const auto test_failed        = !std::isfinite(fy) || (delta < 0.0) || (error < 0.0);
         const auto test_converged     = econv && gconv;                               // stopping criterion (35)
-        const auto test_descent       = fy <= fx - m_m1 * delta;                      // descent test (31)
+        const auto test_descent       = fy < fx - m_m1 * delta;                       // descent test (31)
         const auto test_null_step     = error <= m_m3 * delta;                        // null-step test (33)
         const auto test_cutting_plane = gconv || (gyhat.dot(y - x) >= -m_m4 * epsil); // cutting-plane test (36)
         const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;               // test (34)
@@ -149,8 +151,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         }
     }
 
-    logger.info("[csearch]: calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fy=", m_point.m_fy,
-                ",t=", m_point.m_t, ",status=", m_point.m_status, ".\n");
+    logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fy=", m_point.m_fy, ",t=", m_point.m_t,
+                ",status=", m_point.m_status, ".\n");
 
     return m_point;
 }

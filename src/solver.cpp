@@ -105,7 +105,7 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
     function.clear_statistics();
 
-    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[solver-", type_id(), "]: ")};
+    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[solver-", type_id(), "] ")};
 
     return do_minimize(function, x0, logger);
 }

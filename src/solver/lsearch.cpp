@@ -15,7 +15,7 @@ bool lsearch_t::get(solver_state_t& state, const vector_t& descent, const logger
 
     const auto init_step_size = m_lsearch0->get(state, descent, m_last_step_size);
     {
-        [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[lsearch0-", m_lsearch0->type_id(), "]: ")};
+        [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[lsearch0-", m_lsearch0->type_id(), "] ")};
 
         logger.info("t=", init_step_size, ",f=", state.fx(), ",g=", state.gradient_test(), ".\n");
     }

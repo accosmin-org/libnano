@@ -38,7 +38,7 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
-    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[lsearchk-", type_id(), "]: ")};
+    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[lsearchk-", type_id(), "] ")};
 
     // check descent direction
     if (!state.has_descent(descent))

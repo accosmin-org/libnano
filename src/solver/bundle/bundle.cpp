@@ -99,8 +99,6 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto bundleH = m_bundleH.slice(0, m);
     const auto bundleF = m_fx - bundleH.array();
 
-    logger.info("bundle: H=", bundleH.array(), ",tau=", tau, ".\n");
-
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
     m_program.Q().block(0, 0, n, n).diagonal().array() = 1.0 / tau;
@@ -136,10 +134,15 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_solution.m_alphas = u.segment(0, m);
     m_solution.m_lambda = has_level ? u(m) : 0.0;
 
-    // verify post-conditions, see (1), eq. 12
+    // verify post-conditions, see (1), eq. 12 and eq. 14 (and step 2.2 of the algorithm)
     const auto fhat_k0 = fhat(m_x);
     const auto fhat_k1 = fhat(m_solution.m_x);
-    m_solution.m_valid = m_fx >= fhat_k0 && fhat_k0 >= fhat_k1 + 0.5 / tau * (m_solution.m_x - m_x).squaredNorm();
+    // clang-format off
+    m_solution.m_valid =
+        m_fx >= fhat_k0 &&
+        fhat_k0 >= fhat_k1 + 0.5 / tau * (m_solution.m_x - m_x).squaredNorm() &&
+        m_fx >= m_solution.m_r + (m_solution.m_x - m_x).squaredNorm() / (tau * (1.0 + m_solution.m_lambda));
+    // clang-format on
 
     return m_solution;
 }

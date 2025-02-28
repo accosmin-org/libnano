@@ -49,19 +49,21 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
         if (status == csearch_status::descent_step)
         {
+            assert(fy < state.fx());
+
             Gn1 = ghat;
             proximal.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
             Gn = Gn1;
 
-            assert(fy < state.fx());
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
         {
+            assert(fy < state.fx());
+
             Gn = ghat;
 
-            assert(fy < state.fx());
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
