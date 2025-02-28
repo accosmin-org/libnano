@@ -105,6 +105,8 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
 
     function.clear_statistics();
 
+    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[solver-", type_id(), "]: ")};
+
     return do_minimize(function, x0, logger);
 }
 
@@ -113,20 +115,20 @@ bool solver_t::done(solver_state_t& state, const bool iter_ok, const solver_stat
     if (state.status() == solver_status::unfeasible || state.status() == solver_status::unbounded)
     {
         // unfeasible constrained problem
-        logger.info("[solver-", type_id(), "]: ", state, ".\n");
+        logger.info(state, ".\n");
         return true;
     }
     else if (const auto step_ok = iter_ok && state.valid(); status != state.status() || !step_ok)
     {
         // either converged or failed
         state.status(!step_ok ? solver_status::failed : status);
-        logger.info("[solver-", type_id(), "]: ", state, ".\n");
+        logger.info(state, ".\n");
         return true;
     }
     else
     {
         // OK, go on with the optimization
-        logger.info("[solver-", type_id(), "]: ", state, ".\n");
+        logger.info(state, ".\n");
         return false;
     }
 }
@@ -193,7 +195,7 @@ void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger
 {
     if (!function.convex())
     {
-        logger.warn("[solver-", type_id(), "]: doesn't support non-convex functions!\n");
+        logger.warn("doesn't support non-convex functions!\n");
     }
 }
 
@@ -201,7 +203,7 @@ void solver_t::warn_nonsmooth(const function_t& function, const logger_t& logger
 {
     if (!function.smooth())
     {
-        logger.warn("[solver-", type_id(), "]: doesn't support non-smooth functions!\n");
+        logger.warn("doesn't support non-smooth functions!\n");
     }
 }
 
@@ -209,7 +211,7 @@ void solver_t::warn_constrained(const function_t& function, const logger_t& logg
 {
     if (!function.constraints().empty())
     {
-        logger.warn("[solver-", type_id(), "]: ignoring constraints!\n");
+        logger.warn("ignoring constraints!\n");
     }
 }
 

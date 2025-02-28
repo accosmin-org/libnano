@@ -116,7 +116,7 @@ cmdconfig_t::~cmdconfig_t()
     {
         if (count == 0)
         {
-            m_logger.log(log_type::warn, "parameter '", param_name, "' was not used.\n");
+            m_logger.warn("parameter '", param_name, "' was not used.\n");
         }
     }
 }

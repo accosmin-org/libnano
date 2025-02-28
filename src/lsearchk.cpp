@@ -38,11 +38,12 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
 {
     const auto max_iterations = parameter("lsearchk::max_iterations").value<int>();
 
+    [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, scat("[lsearchk-", type_id(), "]: ")};
+
     // check descent direction
     if (!state.has_descent(descent))
     {
-        logger.error("[lsearchk-", type_id(), "]: t=", step_size, ",dg=", state.dg(descent),
-                     "... not a descent direction!\n");
+        logger.error("t=", step_size, ",dg=", state.dg(descent), "... not a descent direction!\n");
         return {false, step_size};
     }
 
@@ -53,14 +54,14 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     for (int i = 0; i < max_iterations && !update(state, state0, descent, step_size, logger); ++i)
     {
         step_size *= 0.3;
-        logger.warn("[lsearchk-", type_id(), "]: t=", step_size, "... initial step length is too large!\n");
+        logger.warn("t=", step_size, "... initial step length is too large!\n");
     }
 
     // adjust the initial step if the function value is too close (e.g. badly conditioned function)
     for (int i = 0; i < max_iterations && std::fabs(state.fx() - state0.fx()) < epsilon1<scalar_t>(); ++i)
     {
         step_size *= 3.0;
-        logger.warn("[lsearchk-", type_id(), "]: t=", step_size, "... initial step length is too small!\n");
+        logger.warn("t=", step_size, "... initial step length is too small!\n");
         if (!update(state, state0, descent, step_size, logger))
         {
             return {false, step_size};
@@ -79,7 +80,7 @@ bool lsearchk_t::update(solver_state_t& state, const solver_state_t& state0, con
     const auto ok       = state.update(state0.x() + step_size * descent);
     const auto [c1, c2] = parameter("lsearchk::tolerance").value_pair<scalar_t>();
 
-    logger.info("[lsearchk-", type_id(), "]: t=", step_size, ",f=", state.fx(), ",g=", state.gradient_test(),
+    logger.info("t=", step_size, ",f=", state.fx(), ",g=", state.gradient_test(),
                 ",armijo=", state.has_armijo(state0, descent, step_size, c1),
                 ",wolfe=", state.has_wolfe(state0, descent, c2),
                 ",swolfe=", state.has_strong_wolfe(state0, descent, c2), ".\n");

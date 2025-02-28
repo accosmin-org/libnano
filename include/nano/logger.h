@@ -62,6 +62,16 @@ public:
     ~logger_t();
 
     ///
+    /// \brief return the current logging prefix.
+    ///
+    const string_t& prefix() const;
+
+    ///
+    /// \brief set a prefix to use for all information, warning and errors logging level calls.
+    ///
+    const logger_t& prefix(string_t prefix) const;
+
+    ///
     /// \brief create a logger to the file path: `current_parent_directory` / `filename`.
     ///
     logger_t fork(const string_t& filename) const;
@@ -91,7 +101,7 @@ public:
     template <class... targs>
     const logger_t& info(const targs&... args) const
     {
-        return log(log_type::info, args...);
+        return log(log_type::info, prefix(), args...);
     }
 
     ///
@@ -100,7 +110,7 @@ public:
     template <class... targs>
     const logger_t& warn(const targs&... args) const
     {
-        return log(log_type::warn, args...);
+        return log(log_type::warn, prefix(), args...);
     }
 
     ///
@@ -109,7 +119,7 @@ public:
     template <class... targs>
     const logger_t& error(const targs&... args) const
     {
-        return log(log_type::error, args...);
+        return log(log_type::error, prefix(), args...);
     }
 
 private:
@@ -117,7 +127,7 @@ private:
 
     // attributes
     class impl_t;
-    std::unique_ptr<impl_t> m_pimpl; ///< implementation details
+    std::unique_ptr<impl_t> m_pimpl;  ///< implementation details
 };
 
 ///
@@ -142,4 +152,30 @@ NANO_PUBLIC logger_t make_stream_logger(std::ostream&);
 /// NB: the parent directories are created recursively if needed.
 ///
 NANO_PUBLIC logger_t make_file_logger(string_t path);
+
+///
+/// \brief RAII utility to append a particular logging prefix in the current scope.
+///
+class logger_prefix_scope_t
+{
+public:
+    logger_prefix_scope_t(const logger_t& logger, string_t prefix)
+        : m_logger(logger)
+        , m_prefix(logger.prefix())
+    {
+        m_logger.prefix(m_prefix + std::move(prefix));
+    }
+
+    logger_prefix_scope_t(logger_prefix_scope_t&&)      = delete;
+    logger_prefix_scope_t(const logger_prefix_scope_t&) = delete;
+
+    logger_prefix_scope_t& operator=(logger_prefix_scope_t&&)      = delete;
+    logger_prefix_scope_t& operator=(const logger_prefix_scope_t&) = delete;
+
+    ~logger_prefix_scope_t() { m_logger.prefix(std::move(m_prefix)); }
+
+private:
+    const logger_t& m_logger;
+    string_t        m_prefix;
+};
 } // namespace nano

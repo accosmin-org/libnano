@@ -159,4 +159,34 @@ third line: final result=xyz
     UTEST_CHECK_EQUAL(read_file(fixture.root() / "fold=2" / "temp7.log"), "fold=2: error=10.0\n");
 }
 
+UTEST_CASE(prefix)
+{
+    auto stream = std::ostringstream{};
+    auto logger = make_stream_logger(stream);
+
+    UTEST_CHECK_EQUAL(stream.str(), "");
+
+    logger.log(logger.prefix(), "test\n");
+    UTEST_CHECK_EQUAL(logger.prefix(), "");
+    UTEST_CHECK_EQUAL(stream.str(), "test\n");
+
+    logger.prefix("base_prefix: ");
+    logger.log(logger.prefix(), "test2\n");
+    UTEST_CHECK_EQUAL(logger.prefix(), "base_prefix: ");
+    UTEST_CHECK_EQUAL(stream.str(), "test\nbase_prefix: test2\n");
+
+    {
+        [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, "detailed_prefix: "};
+
+        logger.log(logger.prefix(), "test3\n");
+        UTEST_CHECK_EQUAL(logger.prefix(), "base_prefix: detailed_prefix: ");
+        UTEST_CHECK_EQUAL(stream.str(), "test\nbase_prefix: test2\nbase_prefix: detailed_prefix: test3\n");
+    }
+
+    logger.log(logger.prefix(), "test4\n");
+    UTEST_CHECK_EQUAL(logger.prefix(), "base_prefix: ");
+    UTEST_CHECK_EQUAL(stream.str(),
+                      "test\nbase_prefix: test2\nbase_prefix: detailed_prefix: test3\nbase_prefix: test4\n");
+}
+
 UTEST_END_MODULE()
