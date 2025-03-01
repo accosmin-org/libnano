@@ -66,12 +66,12 @@ bundle_t::bundle_t(const solver_state_t& state, const tensor_size_t max_size)
 
 scalar_t bundle_t::etol(const scalar_t epsilon) const
 {
-    return epsilon * std::sqrt(static_cast<size_t>(dims()));
+    return epsilon * (1.0 + std::fabs(m_fx));
 }
 
 scalar_t bundle_t::gtol(const scalar_t epsilon) const
 {
-    return epsilon * std::sqrt(static_cast<size_t>(dims()));
+    return epsilon * 1e+2 * (1.0 + std::fabs(m_fx));
 }
 
 void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
@@ -111,6 +111,8 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
         m_wlevel(n) = 1.0;
         critical(m_wlevel * m_program.variable() <= level);
     }
+
+    logger.info("tau=", tau, ",Q=", m_program.Q(), ",G=", bundleG, ",F=", bundleF, ".\n");
 
     // solve for (y, r) => (x = y + x_k^, r)!
     const auto solution = m_solver->minimize(m_program, m_wlevel, logger);

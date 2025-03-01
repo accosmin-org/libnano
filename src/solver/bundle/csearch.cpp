@@ -91,14 +91,6 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
                     ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[",
                     tL, ",", tR, "].\n");
 
-        /*if (proxim.m_valid)
-        {
-            assert(fx >= fxhat);
-            assert(fxhat >= fyhat + 0.5 * (miu / t) * (y - x).squaredNorm());
-            assert(delta >= 0.0);
-            assert(error >= 0.0);
-        }*/
-
         // compute tests...
         const auto test_failed        = !std::isfinite(fy) || (delta < 0.0) || (error < 0.0);
         const auto test_converged     = econv && gconv;                               // stopping criterion (35)
@@ -108,14 +100,14 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto test_sufficient    = gy.dot(y - x) >= -m_m2 * delta;               // test (34)
 
         // step (1...) - curve search
-        if (test_failed)
-        {
-            status = csearch_status::failed;
-            break;
-        }
-        else if (test_converged)
+        if (test_converged)
         {
             status = csearch_status::converged;
+            break;
+        }
+        else if (test_failed)
+        {
+            status = csearch_status::failed;
             break;
         }
         else if (test_descent)
