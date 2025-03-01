@@ -110,7 +110,7 @@ solver_state_t solver_t::minimize(const function_t& function, const vector_t& x0
     return do_minimize(function, x0, logger);
 }
 
-bool solver_t::done(solver_state_t& state, const bool iter_ok, const solver_status status, const logger_t& logger) const
+bool solver_t::done(solver_state_t& state, const bool iter_ok, const solver_status status, const logger_t& logger)
 {
     if (state.status() == solver_status::unfeasible || state.status() == solver_status::unbounded)
     {
@@ -191,7 +191,7 @@ bool solver_t::done_kkt_optimality_test(solver_state_t& state, const bool iter_o
     return done(state, iter_ok, converged ? solver_status::kkt_optimality_test : state.status(), logger);
 }
 
-void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger) const
+void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger)
 {
     if (!function.convex())
     {
@@ -199,7 +199,7 @@ void solver_t::warn_nonconvex(const function_t& function, const logger_t& logger
     }
 }
 
-void solver_t::warn_nonsmooth(const function_t& function, const logger_t& logger) const
+void solver_t::warn_nonsmooth(const function_t& function, const logger_t& logger)
 {
     if (!function.smooth())
     {
@@ -207,7 +207,7 @@ void solver_t::warn_nonsmooth(const function_t& function, const logger_t& logger
     }
 }
 
-void solver_t::warn_constrained(const function_t& function, const logger_t& logger) const
+void solver_t::warn_constrained(const function_t& function, const logger_t& logger)
 {
     if (!function.constraints().empty())
     {
