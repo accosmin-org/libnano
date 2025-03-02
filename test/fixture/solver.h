@@ -42,10 +42,20 @@ struct minimize_config_t
         return *this;
     }
 
-    scalar_t      m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
-    scalar_t      m_expected_maximum_deviation{1e-6};
-    bool          m_expected_failure{false};
-    tensor_size_t m_max_evals{0};
+    auto& expected_status(const solver_status status)
+    {
+        m_expected_status = status;
+        return *this;
+    }
+
+    using opt_solver_status_t = std::optional<solver_status>;
+
+    // attributes
+    scalar_t            m_expected_minimum{std::numeric_limits<scalar_t>::quiet_NaN()};
+    scalar_t            m_expected_maximum_deviation{1e-6};
+    bool                m_expected_failure{false};
+    opt_solver_status_t m_expected_status{};
+    tensor_size_t       m_max_evals{0};
 };
 
 struct solver_description_t
@@ -138,7 +148,8 @@ struct solver_description_t
     {
         // NB: methods that can solve linear and quadratic convex programs very reliable.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(5e-9))
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(5e-9).expected_status(
+                solver_status::kkt_optimality_test))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
     }
     else if (solver_id == "augmented-lagrangian")
@@ -216,6 +227,10 @@ struct solver_description_t
         }
 
         // check the expected convergence criterion if convergence reached
+        if (config.m_expected_status.has_value())
+        {
+            UTEST_CHECK_EQUAL(state.status(), config.m_expected_status.value());
+        }
         switch (state.status())
         {
         case solver_status::value_test:
