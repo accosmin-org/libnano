@@ -110,8 +110,8 @@ struct solver_description_t
         // NB: the ellipsoid method is very precise (used as a reference) and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6));
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000));
     }
     else if (solver_id == "rqb" || solver_id == "fpba1" || solver_id == "fpba2")
     {
@@ -119,7 +119,7 @@ struct solver_description_t
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{}
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-2));
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6));
     }
     else if (solver_id == "gs" || solver_id == "gs-lbfgs" || solver_id == "ags" || solver_id == "ags-lbfgs")
     {

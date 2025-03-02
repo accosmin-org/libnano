@@ -27,12 +27,9 @@ struct state_t
 
     scalar_t residual() const
     {
-        return m_rdual.lpNorm<Eigen::Infinity>() + m_rcent.lpNorm<Eigen::Infinity>() +
-               m_rprim.lpNorm<Eigen::Infinity>();
-        const auto rdual2 = m_rdual.dot(m_rdual);
-        const auto rcent2 = m_rcent.dot(m_rcent);
-        const auto rprim2 = m_rprim.dot(m_rprim);
-        return std::sqrt(rdual2 + rcent2 + rprim2);
+        return m_rdual.lpNorm<Eigen::Infinity>() + ///<
+               m_rcent.lpNorm<Eigen::Infinity>() + ///<
+               m_rprim.lpNorm<Eigen::Infinity>();  ///<
     }
 
     // attributes
