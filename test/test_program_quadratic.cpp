@@ -144,6 +144,60 @@ UTEST_CASE(program6)
     check_minimize(make_solver_ids(), function);
 }
 
+UTEST_CASE(bundle_case0)
+{
+    // clang-format off
+    const auto Q = make_matrix<scalar_t>(5,
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0);
+    const auto c = make_vector<scalar_t>(0, 0, 0, 0, 625.0);
+    const auto G = make_matrix<scalar_t>(3,
+        -0.00014353301163777320648, -8.2849464293226782207e-05, 0.00015109222548321000752, 3.7447177848252078335e-05, -1,
+        -2.5466140562675764974e-06, -1.4699448434609828959e-06, 2.680732333404427623e-06, 6.6440122998724819222e-07, -1,
+        -1.0682720741105252288e-06, -6.1662308934775684817e-07, 1.1245329785614741871e-06, 2.78707830993565414e-07, -1);
+    const auto h = make_vector<scalar_t>(
+        4.8529937564564530991e-06,
+        3.2332731948977429066e-09,
+        0);
+    const auto Gscale = 1.0 + G.array().abs().maxCoeff();
+    // clang-format on
+
+    auto function = quadratic_program_t{"qp", Q, c};
+    UTEST_REQUIRE((G / Gscale) * function.variable() <= (h / Gscale));
+
+    check_convexity(function);
+    check_minimize(make_solver_ids(), function);
+}
+
+UTEST_CASE(bundle_case1)
+{
+    // clang-format off
+    const auto Q = make_matrix<scalar_t>(5,
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0);
+    const auto c = make_vector<scalar_t>(0, 0, 0, 0, 100.0);
+    const auto G = make_matrix<scalar_t>(2,
+        0.012945828710536660261, 0.012945828710536658526, 0.01294582871053666373, 0.0129458287105366672, -1,
+        -999999.9926269260468, -999999.9926269260468, -999999.9926269260468, -999999.9926269260468, -1);
+    const auto h = make_vector<scalar_t>(
+        0,
+        6.2111205068049457623e-11);
+    const auto Gscale = 1.0 + G.array().abs().maxCoeff();
+    // clang-format on
+
+    auto function = quadratic_program_t{"qp", Q, c};
+    UTEST_REQUIRE((G / Gscale) * function.variable() <= (h / Gscale));
+
+    check_convexity(function);
+    check_minimize(make_solver_ids(), function);
+}
+
 UTEST_CASE(factory)
 {
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
