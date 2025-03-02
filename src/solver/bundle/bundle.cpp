@@ -2,6 +2,8 @@
 #include <nano/function/cuts.h>
 #include <solver/bundle/bundle.h>
 
+#include <iomanip>
+
 using namespace nano;
 
 namespace
@@ -113,8 +115,6 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
         critical(m_wlevel * m_program.variable() <= level);
     }
 
-    logger.info("tau=", tau, ",Q=", m_program.Q(), ",c=", m_program.c(), ",G=", bundleG, ",F=", bundleF, ".\n");
-
     // solve for (y, r) => (x = y + x_k^, r)!
     const auto solution = m_solver->minimize(m_program, m_wlevel, logger);
 
@@ -128,6 +128,9 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     if (solution.status() != solver_status::kkt_optimality_test && !has_level)
     {
         logger.error("bundle: failed to solve, status=", solution.status(), ".\n");
+
+        logger.error(std::setprecision(20), "tau=", tau, ",Q=", m_program.Q(), ",c=", m_program.c(), ",G=", bundleG,
+                     ",F=", bundleF, ".\n");
     }
 
     // extract solution and statistics, see (1)
