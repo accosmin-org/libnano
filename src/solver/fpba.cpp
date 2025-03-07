@@ -69,15 +69,17 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
         if (status == csearch_status::descent_step)
         {
-            proximal.update(t, bundle.x(), y, bundle.gx(), gy);
+            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
             apply_nesterov_sequence(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
         {
+            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
             apply_nesterov_sequence(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
         {
+            proximal.update(false, t, bundle.x(), bundle.gx(), y, gy);
             bundle.append(y, gy, fy);
         }
     }

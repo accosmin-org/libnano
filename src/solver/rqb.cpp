@@ -32,9 +32,6 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     auto csearch  = csearch_t::make(function, *this, prefix);
     auto proximal = proximal_t::make(state, *this, prefix);
 
-    auto Gn  = state.gx(); ///< approximation of the gradient of Moreau-Yosida regularization model at x_n
-    auto Gn1 = state.gx(); ///< same at x_{n+1} - the next proximal center
-
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] =
@@ -51,10 +48,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         {
             assert(fy < state.fx());
 
-            Gn1 = ghat;
-            proximal.update(t, bundle.x(), y, bundle.gx(), gy, Gn, Gn1);
-            Gn = Gn1;
-
+            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
@@ -62,13 +56,13 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         {
             assert(fy < state.fx());
 
-            Gn = ghat;
-
+            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
         {
+            proximal.update(false, t, bundle.x(), bundle.gx(), y, gy);
             bundle.append(y, gy, fy);
         }
     }

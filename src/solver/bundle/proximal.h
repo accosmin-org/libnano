@@ -15,13 +15,11 @@ namespace nano
 /// see (5) "Fast proximal algorithms for nonsmooth convex optimization", by Ouorou, 2020
 /// see (6) "A NU-algorithm for convex minimization", by Mifflin, Sagastizabal, 2005
 ///
-/// NB: the proximal parameter is initialized and safeguarded following (6) (ch. 6).
+/// NB: the implementation follows the notation and the algorithm from (1) to update `tau`.
 ///
-/// TODO: different proximal update rules:
-///     - see (3) - only for descent steps, but with safeguards like in 6
-///     - see (1) - for both descent and null steps, but with safeguardes like in 6
+/// NB: some bundle algorithms like (3) or (5) use the inverse `miu = 1/tau` convention.
 ///
-/// TODO: experiment with variant of not using ghat
+/// TODO: implement variation from PBM-1 from (1)!
 ///
 class NANO_PUBLIC proximal_t
 {
@@ -29,7 +27,7 @@ public:
     ///
     /// \brief constructor
     ///
-    proximal_t(const solver_state_t& state, scalar_t miu0_min, scalar_t miu0_max, scalar_t min_dot_nuv);
+    proximal_t(const solver_state_t& state, scalar_t tau_min, scalar_t alpha);
 
     ///
     /// \brief
@@ -42,23 +40,28 @@ public:
     static proximal_t make(const solver_state_t&, const configurable_t&, const string_t& prefix);
 
     ///
-    /// \brief return the current proximal parameter value.
+    /// \brief return the current proximal parameter value (`tau` like in (1)).
+    ///
+    scalar_t tau() const;
+
+    ///
+    /// \brief return the current proximal parameter value (`miu = 1/tau` like in (3) or (5)).
     ///
     scalar_t miu() const;
 
     ///
-    /// \brief update the proximal parameter given a new proximal center.
+    /// \brief update the proximal parameter following strategy PBM-1 or PBM-2 from (1).
     ///
-    void update(scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn, const vector_t& gn1);
-    void update(scalar_t t, const vector_t& xn, const vector_t& xn1, const vector_t& gn, const vector_t& gn1,
-                const vector_t& Gn, const vector_t& Gn1);
+    /// NB: the scaling factor `t` is computed following the curve search algorithm from (3), thus `miu/t = 1/tau`.
+    ///
+    void update(bool descent_step, scalar_t t, const vector_t& xn0, const vector_t& gn0, const vector_t& xn1,
+                const vector_t& gn1);
 
 private:
-    void safeguard(scalar_t miu);
-
     // attributes
-    scalar_t m_miu0{1.0};        ///< initial proximal parameter value
-    scalar_t m_miu{1.0};         ///< current proximal parameter value
-    scalar_t m_min_dot_nuv{0.0}; ///< minimum nu.dot(v) to accept to adjust the proximal parameter, see (2) or (3)
+    scalar_t      m_tau{1.0};              ///<
+    scalar_t      m_tau_min{1e-5};         ///< minimum value of the proximal parameter
+    scalar_t      m_alpha{4.0};            ///< scaling factor for the proximal parameter
+    tensor_size_t m_past_descent_steps{0}; ///< number of steps with consecutive descent steps
 };
 } // namespace nano
