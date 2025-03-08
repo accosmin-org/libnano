@@ -224,7 +224,7 @@ void bundle_t::store_aggregate()
 void bundle_t::append_aggregate()
 {
     // NB: load the aggregation from the last slot!
-    const auto ilast          = capacity() - 1;
+    const auto ilast = capacity() - 1;
     assert(m_bsize + 1 < ilast);
     m_bundleH(m_bsize)        = m_bundleH(ilast);
     m_bundleG.vector(m_bsize) = m_bundleG.vector(ilast);

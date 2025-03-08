@@ -1,10 +1,24 @@
 #pragma once
 
-#include <nano/configurable.h>
-#include <nano/solver/state.h>
+#include <solver/bundle/csearch.h>
 
 namespace nano
 {
+enum class proximal_strategy : uint8_t
+{
+    pbm1, ///< PBM-1 from (1)
+    pbm2, ///< PBM-2 from (2)
+};
+
+template <>
+inline enum_map_t<proximal_strategy> enum_string<proximal_strategy>()
+{
+    return {
+        {proximal_strategy::pbm1, "pbm1"},
+        {proximal_strategy::pbm2, "pbm2"}
+    };
+}
+
 ///
 /// \brief models the proximal parameter as used by penalized (proximal) bundle algorithms.
 ///
@@ -19,15 +33,13 @@ namespace nano
 ///
 /// NB: some bundle algorithms like (3) or (5) use the inverse `miu = 1/tau` convention.
 ///
-/// TODO: implement variation from PBM-1 from (1)!
-///
 class NANO_PUBLIC proximal_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    proximal_t(const solver_state_t& state, scalar_t tau_min, scalar_t alpha);
+    proximal_t(const solver_state_t& state, scalar_t tau_min, scalar_t alpha, proximal_strategy);
 
     ///
     /// \brief
@@ -54,14 +66,14 @@ public:
     ///
     /// NB: the scaling factor `t` is computed following the curve search algorithm from (3), thus `miu/t = 1/tau`.
     ///
-    void update(bool descent_step, scalar_t t, const vector_t& xn0, const vector_t& gn0, const vector_t& xn1,
-                const vector_t& gn1);
+    void update(const bundle_t& bundle, const csearch_t::point_t& point_t);
 
 private:
     // attributes
-    scalar_t      m_tau{1.0};              ///<
-    scalar_t      m_tau_min{1e-5};         ///< minimum value of the proximal parameter
-    scalar_t      m_alpha{4.0};            ///< scaling factor for the proximal parameter
-    tensor_size_t m_past_descent_steps{0}; ///< number of steps with consecutive descent steps
+    scalar_t          m_tau{1.0};                          ///< proximal parameter
+    scalar_t          m_tau_min{1e-5};                     ///< minimum value of the proximal parameter
+    scalar_t          m_alpha{4.0};                        ///< scaling factor for the proximal parameter
+    tensor_size_t     m_past_descent_steps{0};             ///< number of steps with consecutive descent steps
+    proximal_strategy m_strategy{proximal_strategy::pbm1}; ///< strategy to update the proximal parameter
 };
 } // namespace nano

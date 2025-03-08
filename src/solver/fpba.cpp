@@ -57,8 +57,8 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] =
-            csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        const auto& cpoint = csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] = cpoint;
 
         const auto iter_ok   = status != csearch_status::failed;
         const auto converged = status == csearch_status::converged;
@@ -69,17 +69,17 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
         if (status == csearch_status::descent_step)
         {
-            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             apply_nesterov_sequence(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
         {
-            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             apply_nesterov_sequence(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
         {
-            proximal.update(false, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             bundle.append(y, gy, fy);
         }
     }

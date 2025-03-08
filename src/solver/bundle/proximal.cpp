@@ -12,10 +12,12 @@ scalar_t make_tau0(const solver_state_t& state, const scalar_t tau_min)
 }
 } // namespace
 
-proximal_t::proximal_t(const solver_state_t& state, const scalar_t tau_min, const scalar_t alpha)
+proximal_t::proximal_t(const solver_state_t& state, const scalar_t tau_min, const scalar_t alpha,
+                       const proximal_strategy strategy)
     : m_tau(make_tau0(state, tau_min))
     , m_tau_min(tau_min)
     , m_alpha(alpha)
+    , m_strategy(strategy)
 {
 }
 
@@ -31,20 +33,33 @@ scalar_t proximal_t::miu() const
     return 1.0 / tau();
 }
 
-void proximal_t::update(const bool descent_step, const scalar_t t, const vector_t& xn0, const vector_t& gn0,
-                        const vector_t& xn1, const vector_t& gn1)
+void proximal_t::update(const bundle_t& bundle, const csearch_t::point_t& point)
 {
     // scale by the factor produced by the curve search
-    m_tau *= t;
+    m_tau *= point.m_t;
 
     // update descent step statistics
+    const auto descent_step =
+        (point.m_status == csearch_status::descent_step) || (point.m_status == csearch_status::cutting_plane_step);
+
     m_past_descent_steps = descent_step ? (m_past_descent_steps + 1) : 0;
 
-    // TODO: implement variation PBM-1 from (1)
-
-    // compute auxiliary update named PBM-1 from (1), original from (3)
-    const auto tau_mul = (gn1 - gn0).dot(xn1 - xn0) / (gn1 - gn0).squaredNorm();
-    const auto tau_aux = m_tau * (1.0 + (std::isfinite(tau_mul) ? tau_mul : 0.0));
+    // compute auxiliary update named PBM-1/PBM-2 from (1)
+    const auto tau_aux = [&]()
+    {
+        if (m_strategy == proximal_strategy::pbm1)
+        {
+            const auto tau_mul = (bundle.fx() - point.m_fy) / (bundle.fx() - point.m_fyhat);
+            return 2.0 * m_tau * (1.0 + (std::isfinite(tau_mul) ? tau_mul : 0.0));
+        }
+        else
+        {
+            const auto delta_x = point.m_y - bundle.x();
+            const auto delta_g = point.m_gy - bundle.gx();
+            const auto tau_mul = delta_g.dot(delta_x) / delta_g.squaredNorm();
+            return m_tau * (1.0 + (std::isfinite(tau_mul) ? tau_mul : 0.0));
+        }
+    }();
 
     // update decision from (1)
     if (!descent_step)
@@ -64,13 +79,15 @@ void proximal_t::update(const bool descent_step, const scalar_t t, const vector_
 void proximal_t::config(configurable_t& c, const string_t& prefix)
 {
     c.register_parameter(parameter_t::make_scalar(scat(prefix, "::prox::tau_min"), 0.0, LT, 1e-5, LT, 1e+9));
-    c.register_parameter(parameter_t::make_scalar(scat(prefix, "::prox::alpha"), 1.0, LT, 4.0, LT, 1e+3));
+    c.register_parameter(parameter_t::make_scalar(scat(prefix, "::prox::alpha"), 1.0, LT, 2.0, LT, 1e+3));
+    c.register_parameter(parameter_t::make_enum(scat(prefix, "::prox::strategy"), proximal_strategy::pbm1));
 }
 
 proximal_t proximal_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
 {
-    const auto tau_min = c.parameter(scat(prefix, "::prox::tau_min")).value<scalar_t>();
-    const auto alpha   = c.parameter(scat(prefix, "::prox::alpha")).value<scalar_t>();
+    const auto tau_min  = c.parameter(scat(prefix, "::prox::tau_min")).value<scalar_t>();
+    const auto alpha    = c.parameter(scat(prefix, "::prox::alpha")).value<scalar_t>();
+    const auto strategy = c.parameter(scat(prefix, "::prox::strategy")).value<proximal_strategy>();
 
-    return {state, tau_min, alpha};
+    return {state, tau_min, alpha, strategy};
 }

@@ -34,8 +34,8 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] =
-            csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        const auto& cpoint = csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] = cpoint;
 
         const auto iter_ok   = status != csearch_status::failed;
         const auto converged = status == csearch_status::converged;
@@ -48,7 +48,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         {
             assert(fy < state.fx());
 
-            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
@@ -56,13 +56,13 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         {
             assert(fy < state.fx());
 
-            proximal.update(true, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::null_step)
         {
-            proximal.update(false, t, bundle.x(), bundle.gx(), y, gy);
+            proximal.update(bundle, cpoint);
             bundle.append(y, gy, fy);
         }
     }
