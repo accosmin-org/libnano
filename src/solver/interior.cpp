@@ -139,7 +139,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         // stop if the linear system of equations is not stable
         if (!ipmst.valid() || !program.valid())
         {
-            break;
+            logger.warn("linear system of equations not stable!\n");
         }
 
         // backtracking line-search: stage 1
@@ -189,6 +189,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto curr_eta   = ipmst.m_eta;
         const auto curr_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
         const auto curr_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
+
+        logger.info("line-search: iter=", iter, ",s=", s, "\n");
 
         // check stopping criteria:
         //  * numerical instabilities
