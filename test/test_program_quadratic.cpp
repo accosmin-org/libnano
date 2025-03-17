@@ -9,9 +9,21 @@ using namespace constraint;
 
 namespace
 {
-strings_t make_solver_ids()
+rsolvers_t make_solvers()
 {
-    return {"ipm"};
+    auto solvers = rsolvers_t{};
+    for (const auto s0 : {0.5, 0.7, 0.9, 0.99, 0.999})
+    {
+        for (const auto miu : {2.0, 5.0, 10.0})
+        {
+            auto solver                           = make_solver("ipm");
+            solver->parameter("solver::ipm::s0")  = s0;
+            solver->parameter("solver::ipm::miu") = miu;
+            solver->parameter("solver::max_evals") = 100;
+            solvers.emplace_back(std::move(solver));
+        }
+    }
+    return solvers;
 }
 } // namespace
 
@@ -56,7 +68,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program2)
@@ -73,7 +85,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program3)
@@ -90,7 +102,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program4)
@@ -107,7 +119,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program5)
@@ -124,7 +136,7 @@ UTEST_CASE(program5)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program6)
@@ -141,7 +153,7 @@ UTEST_CASE(program6)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(bundle_cases)
@@ -187,12 +199,12 @@ UTEST_CASE(bundle_cases)
          {std::make_tuple(c0, G0, h0), std::make_tuple(c1, G1, h1), std::make_tuple(c2, G2, h2)})
     {
         static auto index    = 0;
-        const auto Gscale   = 1.0 + G.array().abs().maxCoeff();
+        const auto  Gscale   = 1.0 + G.array().abs().maxCoeff();
         auto        function = quadratic_program_t{scat("qp-bundle-scaled-case", index++), Q, c};
         UTEST_REQUIRE((G / Gscale) * function.variable() <= (h / Gscale));
 
         check_convexity(function);
-        check_minimize(make_solver_ids(), function);
+        check_minimize(make_solvers(), function);
     }
 
     for (const auto& [c, G, h] :
@@ -203,7 +215,7 @@ UTEST_CASE(bundle_cases)
         UTEST_REQUIRE(G * function.variable() <= h);
 
         check_convexity(function);
-        check_minimize(make_solver_ids(), function);
+        check_minimize(make_solvers(), function);
     }
 }
 
@@ -212,7 +224,7 @@ UTEST_CASE(factory)
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
         check_convexity(*function);
-        check_minimize(make_solver_ids(), *function);
+        check_minimize(make_solvers(), *function);
     }
 }
 
