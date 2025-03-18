@@ -1,4 +1,5 @@
 #include <nano/function/util.h>
+#include <solver/interior/minres.h>
 #include <solver/interior/program.h>
 
 using namespace nano;
@@ -25,7 +26,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lvec(n() + p())
     , m_lsol(n() + p())
 {
-    // allocate buffers for the linear system of equations
+    // fill the constant part of the matrix
     const auto n = this->n();
     const auto p = this->p();
 
@@ -39,10 +40,9 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    const auto div = m_lmat.squaredNorm();
-
-    m_ldlt.compute(m_lmat.matrix() / div);
-    m_lsol.vector() = m_ldlt.solve(m_lvec.vector() / div);
+    // solve the linear system of equations
+    m_lsol.full(0.0);
+    MINRES(m_lmat, m_lvec, m_lsol);
     return m_lsol;
 }
 
