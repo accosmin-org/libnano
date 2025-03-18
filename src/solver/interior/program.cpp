@@ -2,6 +2,7 @@
 #include <nano/function/util.h>
 #include <solver/interior/minres.h>
 #include <solver/interior/program.h>
+#include <unsupported/Eigen/IterativeSolvers>
 
 using namespace nano;
 
@@ -48,6 +49,21 @@ const vector_t& program_t::solve() const
     // m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
 
     // MINRES(m_lmat, m_lvec, m_lsol);
+    // auto solver = Eigen::MINRES<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper,
+    // Eigen::IdentityPreconditioner>{}; solver.compute(m_lmat.matrix()); m_lsol.vector() =
+    // solver.solve(m_lvec.vector());
+
+    // GMRES
+    // auto solver = Eigen::GMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
+    // solver.setTolerance(1e-15);
+    // solver.compute(m_lmat.matrix());
+    // m_lsol.vector() = solver.solve(m_lvec.vector());
+
+    // DGMRES
+    auto solver = Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
+    solver.setTolerance(1e-12);
+    solver.compute(m_lmat.matrix());
+    m_lsol.vector() = solver.solve(m_lvec.vector());
 
     // CG (as symmetric matrix)
     // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper>{};
@@ -56,10 +72,10 @@ const vector_t& program_t::solve() const
     // m_lsol.vector() = solver.solve(m_lvec.vector());
 
     // BiCBSTAB (as square matrix)
-    auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{};
-    solver.setTolerance(1e-10);
-    solver.compute(m_lmat.matrix());
-    m_lsol.vector() = solver.solve(m_lvec.vector());
+    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{};
+    // solver.setTolerance(1e-10);
+    // solver.compute(m_lmat.matrix());
+    // m_lsol.vector() = solver.solve(m_lvec.vector());
 
     return m_lsol;
 }
