@@ -1,3 +1,4 @@
+#include <Eigen/IterativeLinearSolvers>
 #include <nano/function/util.h>
 #include <solver/interior/minres.h>
 #include <solver/interior/program.h>
@@ -26,6 +27,8 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lvec(n() + p())
     , m_lsol(n() + p())
 {
+    m_lsol.full(0.0);
+
     // fill the constant part of the matrix
     const auto n = this->n();
     const auto p = this->p();
@@ -40,9 +43,24 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    // solve the linear system of equations
-    m_lsol.full(0.0);
-    MINRES(m_lmat, m_lvec, m_lsol);
+    // LDLT (as positive semi-definite matrix)
+    // m_ldlt.compute(m_lmat.matrix());
+    // m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
+
+    // MINRES(m_lmat, m_lvec, m_lsol);
+
+    // CG (as symmetric matrix)
+    // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper>{};
+    // solver.setTolerance(1e-12);
+    // solver.compute(m_lmat.matrix());
+    // m_lsol.vector() = solver.solve(m_lvec.vector());
+
+    // BiCBSTAB (as square matrix)
+    auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{};
+    solver.setTolerance(1e-10);
+    solver.compute(m_lmat.matrix());
+    m_lsol.vector() = solver.solve(m_lvec.vector());
+
     return m_lsol;
 }
 
