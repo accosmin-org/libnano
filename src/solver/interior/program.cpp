@@ -28,8 +28,6 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lvec(n() + p())
     , m_lsol(n() + p())
 {
-    m_lsol.full(0.0);
-
     // fill the constant part of the matrix
     const auto n = this->n();
     const auto p = this->p();
@@ -44,6 +42,26 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
+    const auto n = this->n();
+    const auto p = this->p();
+
+    auto solver = lin_solver_t{};
+
+    const auto H  = m_lmat.block(0, 0, n, n);
+    const auto b1 = m_lvec.segment(0, n);
+    const auto b2 = m_lvec.segment(n, p);
+
+    solver.compute(H);
+
+    if (p > 0)
+    {
+        const auto S = matrix_t{-m_A * solver.solve(m_A.transpose())};
+    }
+    else
+    {
+        m_lsol.vector() = solver.solve(m_lvec.vector());
+    }
+
     // LDLT (as positive semi-definite matrix)
     // m_ldlt.compute(m_lmat.matrix());
     // m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
@@ -60,10 +78,10 @@ const vector_t& program_t::solve() const
     // m_lsol.vector() = solver.solve(m_lvec.vector());
 
     // DGMRES
-    auto solver = Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
-    solver.setTolerance(1e-12);
-    solver.compute(m_lmat.matrix());
-    m_lsol.vector() = solver.solve(m_lvec.vector());
+    // auto solver = Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
+    // solver.setTolerance(1e-12);
+    // solver.compute(m_lmat.matrix());
+    // m_lsol.vector() = solver.solve(m_lvec.vector());
 
     // CG (as symmetric matrix)
     // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper>{};
