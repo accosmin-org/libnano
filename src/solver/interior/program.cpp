@@ -45,21 +45,30 @@ const vector_t& program_t::solve() const
     const auto n = this->n();
     const auto p = this->p();
 
-    auto solver = lin_solver_t{};
-
+    const auto A  = m_A.matrix();
     const auto H  = m_lmat.block(0, 0, n, n);
     const auto b1 = m_lvec.segment(0, n);
     const auto b2 = m_lvec.segment(n, p);
 
-    solver.compute(H);
+    auto x1 = m_lsol.segment(0, n);
+    auto x2 = m_lsol.segment(n, p);
+
+    auto Hsolver = lin_solver_t{};
+    Hsolver.compute(H);
 
     if (p > 0)
     {
-        const auto S = matrix_t{-m_A * solver.solve(m_A.transpose())};
+        const auto S = matrix_t{-A * Hsolver.solve(A.transpose())};
+
+        auto x1solver = lin_solver_t{};
+        x1solver.compute(S.matrix());
+
+        x2 = x1solver.solve(b2 - A * Hsolver.solve(b1));
+        x1 = Hsolver.solve(b1 - A.transpose() * x2);
     }
     else
     {
-        m_lsol.vector() = solver.solve(m_lvec.vector());
+        x1 = Hsolver.solve(b1);
     }
 
     // LDLT (as positive semi-definite matrix)
