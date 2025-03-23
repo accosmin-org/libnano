@@ -4,7 +4,43 @@
 #include <solver/interior/program.h>
 #include <unsupported/Eigen/IterativeSolvers>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
+
+namespace
+{
+auto scale_ruiz(const matrix_t& A, const scalar_t epsilon = epsilon0<scalar_t>())
+{
+    auto Ak = A;
+    auto D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
+    auto D2 = make_full_vector<scalar_t>(A.cols(), 1.0);
+    auto Dr = vector_t{A.rows()};
+    auto Dc = vector_t{A.cols()};
+
+    for (auto k = 0; k < 100; ++k)
+    {
+        const auto critr = (1.0 - Dr.array()).matrix().lpNorm<Eigen::Infinity>();
+        const auto critc = (1.0 - Dc.array()).matrix().lpNorm<Eigen::Infinity>();
+        if (std::max({critr, critc}) < epsilon)
+        {
+            break;
+        }
+
+        Dr = Ak.matrix().rowwise().lpNorm<Eigen::Infinity>().array().sqrt();
+        Dc = Ak.matrix().colwise().lpNorm<Eigen::Infinity>().array().sqrt();
+
+        Ak = (1.0 / Dr.array()).matrix().asDiagonal() * Ak.matrix();
+        Ak = Ak.matrix() * (1.0 / Dc.array()).matrix().asDiagonal();
+
+        D1.array() /= Dr.array();
+        D2.array() /= Dc.array();
+    }
+
+    return std::make_tuple(std::move(D1), std::move(Ak), std::move(D2));
+}
+} // namespace
 
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints)
     : program_t(program, matrix_t{}, program.c(), std::move(constraints))
@@ -38,10 +74,13 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
         m_lmat.block(n, 0, p, n) = m_A.matrix();
     }
     m_lmat.block(n, n, p, p).array() = 0.0;
+
+    m_lsol.full(0.0);
 }
 
 const vector_t& program_t::solve() const
 {
+    /* SCHUR complement approach
     const auto n = this->n();
     const auto p = this->p();
 
@@ -56,20 +95,31 @@ const vector_t& program_t::solve() const
     auto Hsolver = lin_solver_t{};
     Hsolver.compute(H);
 
+    std::cout << std::setprecision(12) << "H =" << H << std::endl;
+    std::cout << std::setprecision(12) << "b1=" << b1.transpose() << std::endl;
+    std::cout << std::setprecision(12) << "b2=" << b2.transpose() << std::endl;
+    std::cout << std::endl;
+
     if (p > 0)
     {
         const auto S = matrix_t{-A * Hsolver.solve(A.transpose())};
 
-        auto x1solver = lin_solver_t{};
-        x1solver.compute(S.matrix());
+        auto xsolver = lin_solver_t{};
+        xsolver.compute(S.matrix());
 
-        x2 = x1solver.solve(b2 - A * Hsolver.solve(b1));
+        x2 = xsolver.solve(b2 - A * Hsolver.solve(b1));
         x1 = Hsolver.solve(b1 - A.transpose() * x2);
     }
     else
     {
         x1 = Hsolver.solve(b1);
-    }
+    }*/
+
+    // Ruiz scaling algorithm that keeps the matrix symmetric
+    const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+    m_ldlt.compute(Ahat.matrix());
+    m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
+    m_lsol.array() *= D2.array();
 
     // LDLT (as positive semi-definite matrix)
     // m_ldlt.compute(m_lmat.matrix());
