@@ -6,6 +6,8 @@
 
 #include <iomanip>
 #include <iostream>
+#include <nano/function/lambda.h>
+#include <nano/solver.h>
 
 using namespace nano;
 
@@ -64,6 +66,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lvec(n() + p())
     , m_lsol(n() + p())
 {
+
     // fill the constant part of the matrix
     const auto n = this->n();
     const auto p = this->p();
@@ -80,7 +83,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    /* SCHUR complement approach
+    // SCHUR complement approach
     const auto n = this->n();
     const auto p = this->p();
 
@@ -89,6 +92,7 @@ const vector_t& program_t::solve() const
     const auto b1 = m_lvec.segment(0, n);
     const auto b2 = m_lvec.segment(n, p);
 
+    // TODO: Ruiz scaling for H directly
     auto x1 = m_lsol.segment(0, n);
     auto x2 = m_lsol.segment(n, p);
 
@@ -113,10 +117,38 @@ const vector_t& program_t::solve() const
     else
     {
         x1 = Hsolver.solve(b1);
+    }
+
+    /*{
+        const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+
+        const auto solver = solver_t::all().get("lbfgs");
+        solver->parameter("solver::max_evals") = 10000;
+        solver->parameter("solver::epsilon") = 1e-12;
+
+        const auto lambda = [&](vector_cmap_t x, vector_map_t gx)
+        {
+            const auto b = (D1.array() * m_lvec.array()).matrix();
+
+            if (gx.size() == x.size())
+            {
+                gx = Ahat * (Ahat * x - b);
+            }
+            return 0.5 * (Ahat * x - b).squaredNorm();
+        };
+        const auto function = make_function(m_lsol.size(), convexity::yes, smoothness::yes, 0.0, lambda);
+
+        const auto state = solver->minimize(function, m_lvec, make_null_logger());
+        m_lvec           = D2.array() * state.x().array();
+        return m_lvec;
     }*/
 
     // Ruiz scaling algorithm that keeps the matrix symmetric
     const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+
+    std::cout << std::setprecision(12) << "m_lmat =\n" << m_lmat << std::endl;
+    std::cout << std::setprecision(12) << "ruized =\n" << Ahat << std::endl;
+
     m_ldlt.compute(Ahat.matrix());
     m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
     m_lsol.array() *= D2.array();
