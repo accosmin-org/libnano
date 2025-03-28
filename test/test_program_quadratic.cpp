@@ -16,9 +16,9 @@ rsolvers_t make_solvers()
     {
         for (const auto miu : {3.0, 6.0, 10.0})
         {
-            auto solver                           = make_solver("ipm");
-            solver->parameter("solver::ipm::s0")  = s0;
-            solver->parameter("solver::ipm::miu") = miu;
+            auto solver                            = make_solver("ipm");
+            solver->parameter("solver::ipm::s0")   = s0;
+            solver->parameter("solver::ipm::miu")  = miu;
             solver->parameter("solver::max_evals") = 100;
             solvers.emplace_back(std::move(solver));
         }

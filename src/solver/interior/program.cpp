@@ -83,7 +83,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    // SCHUR complement approach
+    /*// SCHUR complement approach
     const auto n = this->n();
     const auto p = this->p();
 
@@ -117,7 +117,7 @@ const vector_t& program_t::solve() const
     else
     {
         x1 = Hsolver.solve(b1);
-    }
+    }*/
 
     /*{
         const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
@@ -145,9 +145,6 @@ const vector_t& program_t::solve() const
 
     // Ruiz scaling algorithm that keeps the matrix symmetric
     const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
-
-    std::cout << std::setprecision(12) << "m_lmat =\n" << m_lmat << std::endl;
-    std::cout << std::setprecision(12) << "ruized =\n" << Ahat << std::endl;
 
     m_ldlt.compute(Ahat.matrix());
     m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
@@ -189,13 +186,14 @@ const vector_t& program_t::solve() const
     return m_lsol;
 }
 
-void program_t::update(const scalar_t s, const scalar_t miu, state_t& state) const
+void program_t::update(const scalar_t ustep, const scalar_t xstep, const scalar_t miu, state_t& state) const
 {
     const auto m = this->m();
     const auto p = this->p();
-    const auto x = state.m_x + s * state.m_dx;
-    const auto u = state.m_u + s * state.m_du;
-    const auto v = state.m_v + s * state.m_dv;
+
+    state.m_x += xstep * state.m_dx;
+    state.m_u += ustep * state.m_du;
+    state.m_v += ustep * state.m_dv;
 
     // objective
     if (m_Q.size() == 0)
@@ -204,28 +202,28 @@ void program_t::update(const scalar_t s, const scalar_t miu, state_t& state) con
     }
     else
     {
-        state.m_rdual = Q() * x + m_c;
+        state.m_rdual = Q() * state.m_x + m_c;
     }
 
     // surrogate duality gap
     if (m > 0)
     {
-        state.m_eta = -u.dot(m_G * x - m_h);
+        state.m_eta = -state.m_u.dot(m_G * state.m_x - m_h);
     }
 
     // residual contributions of linear equality constraints
     if (p > 0)
     {
-        state.m_rdual += m_A.transpose() * v;
-        state.m_rprim = m_A * x - m_b;
+        state.m_rdual += m_A.transpose() * state.m_v;
+        state.m_rprim = m_A * state.m_x - m_b;
     }
 
     // residual contributions of linear inequality constraints
     if (m > 0)
     {
         const auto sm = static_cast<scalar_t>(m);
-        state.m_rdual += m_G.transpose() * u;
-        state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
+        state.m_rdual += m_G.transpose() * state.m_u;
+        state.m_rcent = -state.m_eta / (miu * sm) - state.m_u.array() * (m_G * state.m_x - m_h).array();
     }
 }
 

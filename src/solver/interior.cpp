@@ -7,20 +7,39 @@ using namespace nano;
 
 namespace
 {
-auto make_smax(const vector_t& u, const vector_t& du)
+auto make_umax(const vector_t& u, const vector_t& du)
 {
     assert(u.size() == du.size());
 
-    auto smax = std::numeric_limits<scalar_t>::max();
+    auto umax = std::numeric_limits<scalar_t>::max();
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
     {
         if (du(i) < 0.0)
         {
-            smax = std::min(smax, -u(i) / du(i));
+            umax = std::min(umax, -u(i) / du(i));
         }
     }
 
-    return std::min(smax, 1.0);
+    return std::min(umax, 1.0);
+}
+
+auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h, tensor_size_t max_iters,
+               const scalar_t beta)
+{
+    auto step = 1.0;
+    for (; max_iters > 0; --max_iters)
+    {
+        if ((G * (x + step * dx) - h).maxCoeff() < 0.0)
+        {
+            return step;
+        }
+        else
+        {
+            step *= beta;
+        }
+    }
+
+    return 0.0;
 }
 } // namespace
 
@@ -29,7 +48,6 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-2, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LE, 1e-24, LE, 1e-3));
     register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
@@ -90,7 +108,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
 {
     const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
-    const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
     const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
@@ -117,7 +134,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     auto ipmst = state_t{x0, -1.0 / (G * x0 - h).array(), vector_t::zero(p)};
 
     // update residuals
-    program.update(0.0, miu, ipmst);
+    program.update(0.0, 0.0, miu, ipmst);
 
     // primal-dual interior-point solver...
     while (function.fcalls() + function.gcalls() < max_evals)
@@ -142,61 +159,31 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
             logger.warn("linear system of equations not stable!\n");
         }
 
-        // backtracking line-search: stage 1
-        auto s    = s0 * make_smax(ipmst.m_u, ipmst.m_du);
-        auto iter = tensor_size_t{0};
-        for (iter = 0; iter < max_lsearch_iters; ++iter)
-        {
-            if ((G * (ipmst.m_x + s * ipmst.m_dx) - h).maxCoeff() < 0.0)
-            {
-                break;
-            }
-            else
-            {
-                s *= beta;
-            }
-        }
-        if (iter == max_lsearch_iters)
-        {
-            break;
-        }
+        // separate lengths for primal and dual steps (x + sx * dx, u + su * du)
+        const auto ustep = s0 * make_umax(ipmst.m_u, ipmst.m_du);
+        const auto xstep = s0 * make_xmax(ipmst.m_x, ipmst.m_dx, G, h, max_lsearch_iters, beta);
 
-        // backtracking line-search: stage 2
-        const auto r0 = ipmst.residual();
-        for (iter = 0; iter < max_lsearch_iters; ++iter)
-        {
-            program.update(s, miu, ipmst);
-            if (ipmst.residual() <= (1.0 - alpha * s) * r0)
-            {
-                break;
-            }
-            else
-            {
-                s *= beta;
-            }
-        }
-        if (iter == max_lsearch_iters)
+        logger.info("line-search: ustep=", ustep, ",xstep=", xstep, ".\n");
+
+        if (std::max(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
         // update state
-        ipmst.m_x += s * ipmst.m_dx;
-        ipmst.m_u += s * ipmst.m_du;
-        ipmst.m_v += s * ipmst.m_dv;
+        program.update(ustep, xstep, miu, ipmst);
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
         const auto curr_eta   = ipmst.m_eta;
         const auto curr_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
         const auto curr_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
 
-        logger.info("line-search: iter=", iter, ",s=", s, "\n");
-
         // check stopping criteria:
         //  * numerical instabilities
         //  * stalling has been detected
         if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim) ||
-            std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0)
+            std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0 ||
+            std::max(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
@@ -234,7 +221,7 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     ipmst.m_v       = sol.segment(n, p);
     ipmst.m_eta     = 0.0;
 
-    program.update(0.0, miu, ipmst);
+    program.update(0.0, 0.0, miu, ipmst);
     state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
     // final convergence decision

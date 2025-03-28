@@ -11,4 +11,4 @@ namespace nano
 ///
 bool MINRES(const matrix_t& A, const vector_t& b, vector_t& x, tensor_size_t max_iters = 1000,
             scalar_t tolerance = 1e-15);
-}
+} // namespace nano
