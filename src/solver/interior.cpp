@@ -165,7 +165,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
 
         logger.info("line-search: ustep=", ustep, ",xstep=", xstep, ".\n");
 
-        if (std::max(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
+        if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
