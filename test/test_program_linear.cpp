@@ -9,9 +9,23 @@ using namespace constraint;
 
 namespace
 {
-strings_t make_solver_ids()
+rsolvers_t make_solvers()
 {
-    return {"ipm"};
+    auto solvers = rsolvers_t{};
+    for (const auto s0 : {0.9, 0.99, 0.999})
+    {
+        for (const auto miu : {3.0, 6.0, 10.0})
+        {
+            auto solver                            = make_solver("ipm");
+            solver->parameter("solver::ipm::s0")   = s0;
+            solver->parameter("solver::ipm::miu")  = miu;
+            solver->parameter("solver::max_evals") = 100;
+            solver->parameter("solver::epsilon")   = 1e-12;
+
+            solvers.emplace_back(std::move(solver));
+        }
+    }
+    return solvers;
 }
 } // namespace
 
@@ -55,7 +69,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(program2)
@@ -72,7 +86,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solver_ids(), function);
+    check_minimize(make_solvers(), function);
 }
 
 UTEST_CASE(factory)
@@ -80,7 +94,7 @@ UTEST_CASE(factory)
     for (const auto& function : function_t::make({2, 16, function_type::linear_program}))
     {
         check_convexity(*function);
-        check_minimize(make_solver_ids(), *function);
+        check_minimize(make_solvers(), *function);
     }
 }
 

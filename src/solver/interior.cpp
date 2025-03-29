@@ -46,11 +46,10 @@ auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const v
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.5, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LE, 1e-24, LE, 1e-3));
-    register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 50, LE, 1000));
+    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.9, LT, 1.0));
+    register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 100, LE, 1000));
 }
 
 rsolver_t solver_ipm_t::clone() const
@@ -110,7 +109,6 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
     const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
-    const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
     const auto max_lsearch_iters = parameter("solver::ipm::max_lsearch_iters").value<tensor_size_t>();
 
     const auto& G = program.G();
@@ -137,12 +135,9 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     program.update(0.0, 0.0, miu, ipmst);
 
     // primal-dual interior-point solver...
+    auto iter = 0;
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto prev_eta   = ipmst.m_eta;
-        const auto prev_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
-        const auto prev_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
-
         // solve primal-dual linear system of equations to get (dx, du, dv)
         const auto  Gxh   = G * ipmst.m_x - h;
         const auto  hess  = G.transpose() * (ipmst.m_u.array() / Gxh.array()).matrix().asDiagonal() * G.matrix();
@@ -160,10 +155,11 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         }
 
         // separate lengths for primal and dual steps (x + sx * dx, u + su * du)
-        const auto ustep = s0 * make_umax(ipmst.m_u, ipmst.m_du);
-        const auto xstep = s0 * make_xmax(ipmst.m_x, ipmst.m_dx, G, h, max_lsearch_iters, beta);
+        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 2.0);
+        const auto ustep = s * make_umax(ipmst.m_u, ipmst.m_du);
+        const auto xstep = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h, max_lsearch_iters, beta);
 
-        logger.info("line-search: ustep=", ustep, ",xstep=", xstep, ".\n");
+        logger.info("line-search: s0=", s0, ",s=", s, ",ustep=", ustep, ",xstep=", xstep, ".\n");
 
         if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
         {
@@ -174,28 +170,12 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         program.update(ustep, xstep, miu, ipmst);
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
-        const auto curr_eta   = ipmst.m_eta;
-        const auto curr_rdual = ipmst.m_rdual.lpNorm<Eigen::Infinity>();
-        const auto curr_rprim = ipmst.m_rprim.lpNorm<Eigen::Infinity>();
-
-        // check stopping criteria:
-        //  * numerical instabilities
-        //  * stalling has been detected
-        if (!std::isfinite(curr_eta) || !std::isfinite(curr_rdual) || !std::isfinite(curr_rprim) ||
-            std::max({prev_eta - curr_eta, prev_rdual - curr_rdual, prev_rprim - curr_rprim}) < epsilon0 ||
-            std::max(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
+        // check convergence
+        if (done_kkt_optimality_test(state, state.valid(), logger))
         {
             break;
         }
-        else
-        {
-            // not converged, continue the iterations
-            done(state, state.valid(), state.status(), logger);
-        }
     }
-
-    // final convergence decision
-    done_kkt_optimality_test(state, state.valid(), logger);
 
     return state;
 }
