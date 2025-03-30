@@ -20,8 +20,6 @@ rsolvers_t make_solvers()
             solver->parameter("solver::ipm::s0")   = s0;
             solver->parameter("solver::ipm::miu")  = miu;
             solver->parameter("solver::max_evals") = 100;
-            solver->parameter("solver::epsilon")   = 1e-12;
-
             solvers.emplace_back(std::move(solver));
         }
     }
