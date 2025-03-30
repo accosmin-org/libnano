@@ -25,6 +25,11 @@ struct state_t
                m_rdual.all_finite() && m_rcent.all_finite() && m_rprim.all_finite();
     }
 
+    scalar_t residual() const
+    {
+        return std::sqrt(m_rdual.squaredNorm() + m_rcent.squaredNorm() + m_rprim.squaredNorm());
+    }
+
     // attributes
     vector_t m_x;        ///< solution (primal problem)
     vector_t m_u;        ///< Lagrange multipliers (inequality constraints)

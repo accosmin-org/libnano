@@ -65,7 +65,7 @@ public:
 
     bool valid(scalar_t epsilon = 1e-6) const;
 
-    void update(scalar_t ustep, scalar_t xstep, scalar_t miu, state_t& state) const;
+    scalar_t update(scalar_t ustep, scalar_t xstep, scalar_t miu, state_t& state, bool apply = false) const;
 
 private:
     using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;

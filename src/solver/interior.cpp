@@ -37,10 +37,11 @@ auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const v
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.9, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.9, LT, 1.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::max_lsearch_iters", 10, LE, 100, LE, 1000));
+    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-2, LT, 1.0));
+    register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
 
 rsolver_t solver_ipm_t::clone() const
@@ -98,6 +99,9 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
 {
     const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
+    const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
+    const auto lsearch_max_iters = parameter("solver::ipm::lsearch_max_iters").value<tensor_size_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& G = program.G();
@@ -147,16 +151,37 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 1.0);
         const auto ustep = s * make_umax(ipmst.m_u, ipmst.m_du);
         const auto xstep = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h);
+        const auto residual0 = ipmst.residual();
 
-        logger.info("line-search: s0=", s0, ",s=", s, ",ustep=", ustep, ",xstep=", xstep, ".\n");
+        // line-search to reduce the residual starting from the potentially different lengths for primal and dual steps
+        auto lsearch_iter     = 0;
+        auto lsearch_step     = 1.0;
+        auto lsearch_residual = residual0;
 
-        if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon())
+        for (; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
+        {
+            lsearch_residual = program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, false);
+            if (lsearch_residual <= (1.0 - alpha * lsearch_step) * residual0)
+            {
+                break;
+            }
+
+            lsearch_step *= beta;
+        }
+
+        logger.info("line-search: s0=", s0, ",s=", s, ",ustep=", ustep, ",xstep=", xstep,
+                    ",lsearch_iter=", lsearch_iter, ",lsearch_step=", lsearch_step,
+                    ",lsearch_residual=", lsearch_residual, "/", residual0, ".\n");
+
+        if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon() || lsearch_iter == lsearch_max_iters)
         {
             break;
         }
 
         // update state
-        program.update(ustep, xstep, miu, ipmst);
+        [[maybe_unused]] const auto residual =
+            program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, true);
+        assert(close(residual, lsearch_residual, 1e-15));
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
         // check convergence

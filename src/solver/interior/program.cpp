@@ -186,14 +186,15 @@ const vector_t& program_t::solve() const
     return m_lsol;
 }
 
-void program_t::update(const scalar_t ustep, const scalar_t xstep, const scalar_t miu, state_t& state) const
+scalar_t program_t::update(const scalar_t ustep, const scalar_t xstep, const scalar_t miu, state_t& state,
+                           const bool apply) const
 {
     const auto m = this->m();
     const auto p = this->p();
 
-    state.m_x += xstep * state.m_dx;
-    state.m_u += ustep * state.m_du;
-    state.m_v += ustep * state.m_dv;
+    const auto x = state.m_x + xstep * state.m_dx;
+    const auto u = state.m_u + ustep * state.m_du;
+    const auto v = state.m_v + ustep * state.m_dv;
 
     // objective
     if (m_Q.size() == 0)
@@ -202,29 +203,38 @@ void program_t::update(const scalar_t ustep, const scalar_t xstep, const scalar_
     }
     else
     {
-        state.m_rdual = Q() * state.m_x + m_c;
+        state.m_rdual = Q() * x + m_c;
     }
 
     // surrogate duality gap
     if (m > 0)
     {
-        state.m_eta = -state.m_u.dot(m_G * state.m_x - m_h);
+        state.m_eta = -u.dot(m_G * x - m_h);
     }
 
     // residual contributions of linear equality constraints
     if (p > 0)
     {
-        state.m_rdual += m_A.transpose() * state.m_v;
-        state.m_rprim = m_A * state.m_x - m_b;
+        state.m_rdual += m_A.transpose() * v;
+        state.m_rprim = m_A * x - m_b;
     }
 
     // residual contributions of linear inequality constraints
     if (m > 0)
     {
         const auto sm = static_cast<scalar_t>(m);
-        state.m_rdual += m_G.transpose() * state.m_u;
-        state.m_rcent = -state.m_eta / (miu * sm) - state.m_u.array() * (m_G * state.m_x - m_h).array();
+        state.m_rdual += m_G.transpose() * u;
+        state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
     }
+
+    if (apply)
+    {
+        state.m_x = x;
+        state.m_u = u;
+        state.m_v = v;
+    }
+
+    return state.residual();
 }
 
 bool program_t::valid(const scalar_t epsilon) const
