@@ -7,39 +7,30 @@ using namespace nano;
 
 namespace
 {
-auto make_umax(const vector_t& u, const vector_t& du)
+template <class tvectoru, class tvectordu>
+auto make_umax(const tvectoru& u, const tvectordu& du)
 {
     assert(u.size() == du.size());
 
-    auto umax = std::numeric_limits<scalar_t>::max();
+    auto step = std::numeric_limits<scalar_t>::max();
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
     {
         if (du(i) < 0.0)
         {
-            umax = std::min(umax, -u(i) / du(i));
+            step = std::min(step, -u(i) / du(i));
         }
     }
 
-    return std::min(umax, 1.0);
+    return std::min(step, 1.0);
 }
 
-auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h, tensor_size_t max_iters,
-               const scalar_t beta)
+auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h)
 {
-    auto step = 1.0;
-    for (; max_iters > 0; --max_iters)
-    {
-        if ((G * (x + step * dx) - h).maxCoeff() < 0.0)
-        {
-            return step;
-        }
-        else
-        {
-            step *= beta;
-        }
-    }
+    assert(x.size() == dx.size());
+    assert(x.size() == G.cols());
+    assert(h.size() == G.rows());
 
-    return 0.0;
+    return make_umax(h - G * x, -G * dx);
 }
 } // namespace
 
@@ -107,9 +98,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
 {
     const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
-    const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
-    const auto max_lsearch_iters = parameter("solver::ipm::max_lsearch_iters").value<tensor_size_t>();
 
     const auto& G = program.G();
     const auto& h = program.h();
@@ -154,10 +143,10 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
             logger.warn("linear system of equations not stable!\n");
         }
 
-        // separate lengths for primal and dual steps (x + sx * dx, u + su * du)
-        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 2.0);
+        // separate lengths for primal and dual steps (x + sx * dx, u + su * du, v + su * dv)
+        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 1.0);
         const auto ustep = s * make_umax(ipmst.m_u, ipmst.m_du);
-        const auto xstep = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h, max_lsearch_iters, beta);
+        const auto xstep = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h);
 
         logger.info("line-search: s0=", s0, ",s=", s, ",ustep=", ustep, ",xstep=", xstep, ".\n");
 
