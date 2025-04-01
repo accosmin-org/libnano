@@ -41,6 +41,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
     register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
 
@@ -101,6 +102,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
     const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
     const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
+    const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
     const auto lsearch_max_iters = parameter("solver::ipm::lsearch_max_iters").value<tensor_size_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
 
@@ -173,7 +175,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
                     ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual0, ").\n");
 
         if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon() || lsearch_iter == lsearch_max_iters ||
-            std::fabs(residual0 - lsearch_residual) < std::numeric_limits<scalar_t>::epsilon())
+            std::fabs(residual0 - lsearch_residual) < epsilon0)
         {
             break;
         }

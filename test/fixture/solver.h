@@ -294,6 +294,8 @@ struct solver_description_t
             expected_minimum = state.fx();
 
             log_info(std::setprecision(10), function.name(), ": solver=", solver_id, ",fx=", state.fx(),
+                     function.constraints().empty() ? scat(",gtest=", state.gradient_test()) : string_t{},
+                     !function.constraints().empty() ? scat(",ktest=", state.kkt_optimality_test()) : string_t{},
                      ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
         }
     }
