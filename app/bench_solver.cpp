@@ -104,10 +104,10 @@ struct solver_stats_t
     {
         const auto itrial    = static_cast<tensor_size_t>(trial);
         values()(itrial)     = result.m_value;
-        gtests()(itrial)     = result.m_gtest;
-        ktests()(itrial)     = result.m_ktest;
-        etests()(itrial)     = result.m_etest;
-        itests()(itrial)     = result.m_itest;
+        gtests()(itrial)     = std::log10(std::max(result.m_gtest, epsilon0<scalar_t>()));
+        ktests()(itrial)     = std::log10(std::max(result.m_ktest, epsilon0<scalar_t>()));
+        etests()(itrial)     = std::log10(std::max(result.m_etest, epsilon0<scalar_t>()));
+        itests()(itrial)     = std::log10(std::max(result.m_itest, epsilon0<scalar_t>()));
         errors()(itrial)     = (result.m_status == solver_status::failed) ? 1.0 : 0.0;
         maxits()(itrial)     = (result.m_status == solver_status::max_iters) ? 1.0 : 0.0;
         fcalls()(itrial)     = static_cast<scalar_t>(result.m_fcalls);
@@ -149,9 +149,11 @@ auto relative_precision(const result_t& result, const result_t& best_result, con
 {
     switch (fun_type)
     {
-    case function_type::convex:
     case function_type::smooth:
     case function_type::convex_smooth:
+        return relative_precision(result.m_gtest, best_result.m_gtest, epsilon);
+
+    case function_type::convex:
     case function_type::convex_nonsmooth:
         return relative_precision(result.m_value, best_result.m_value, epsilon);
 
@@ -201,12 +203,12 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
     {
     case function_type::smooth:
     case function_type::convex_smooth:
-        header << align("grad test", 12);
+        header << align("log10(grad test)", 12);
         break;
 
     case function_type::linear_program:
     case function_type::quadratic_program:
-        header << align("kkt test", 12);
+        header << align("log10(kkt test)", 12);
         break;
 
     default:
