@@ -63,7 +63,7 @@ public:
 
     const vector_t& solve() const;
 
-    bool valid(scalar_t epsilon = 1e-6) const;
+    bool valid(scalar_t epsilon = 1e-8) const;
 
     scalar_t update(scalar_t ustep, scalar_t xstep, scalar_t miu, state_t& state, bool apply = false) const;
 

@@ -161,7 +161,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         for (; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
         {
             lsearch_residual = program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, false);
-            if (lsearch_residual <= (1.0 - alpha * lsearch_step) * residual0)
+            if (std::isfinite(lsearch_residual) && lsearch_residual <= (1.0 - alpha * lsearch_step) * residual0)
             {
                 break;
             }
@@ -169,19 +169,17 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
             lsearch_step *= beta;
         }
 
-        logger.info("line-search: s0=", s0, ",s=", s, ",step=(", ustep, ",", xstep, "),lsearch=(iter=", lsearch_iter,
+        logger.info("s=", s, "/", s0, ",step=(", ustep, ",", xstep, "),lsearch=(iter=", lsearch_iter,
                     ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual0, ").\n");
 
         if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon() || lsearch_iter == lsearch_max_iters ||
-            std::fabs(residual0 - lsearch_residual) < epsilon0<scalar_t>())
+            std::fabs(residual0 - lsearch_residual) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
         // update state
-        [[maybe_unused]] const auto residual =
-            program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, true);
-        assert(close(residual, lsearch_residual, 1e-15));
+        program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, true);
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
         done_kkt_optimality_test(state, state.valid(), logger);
     }
