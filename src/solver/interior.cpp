@@ -41,7 +41,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
+    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-24, LE, 1e-8));
     register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
 
@@ -153,7 +153,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         const auto s         = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 2.0);
         const auto ustep     = s * make_umax(ipmst.m_u, ipmst.m_du);
         const auto xstep     = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h);
-        const auto residual0 = ipmst.residual();
+        const auto residual0 = program.kkt_optimality_test(ipmst);
 
         // line-search to reduce the residual starting from the potentially different lengths for primal and dual steps
         auto lsearch_iter     = 0;
@@ -172,7 +172,8 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         }
 
         logger.info("s=", s, "/", s0, ",step=(", ustep, ",", xstep, "),lsearch=(iter=", lsearch_iter,
-                    ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual0, ").\n");
+                    ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual0, ",",
+                    program.kkt_optimality_test(ipmst), ").\n");
 
         if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon() || lsearch_iter == lsearch_max_iters ||
             std::fabs(residual0 - lsearch_residual) < epsilon0)
