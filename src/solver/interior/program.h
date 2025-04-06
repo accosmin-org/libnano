@@ -65,9 +65,11 @@ public:
 
     bool valid(scalar_t epsilon = 1e-8) const;
 
-    scalar_t kkt_optimality_test(const state_t& state) const;
+    void update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu, state_t&) const;
 
-    scalar_t update(scalar_t ustep, scalar_t xstep, scalar_t miu, state_t& state, bool apply = false) const;
+    scalar_t kkt_test(const state_t&) const;
+
+    scalar_t kkt_test(scalar_t xstep, scalar_t ustep, scalar_t vstep, const state_t&) const;
 
 private:
     using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
@@ -78,15 +80,17 @@ private:
         const auto m = this->m();
         const auto p = this->p();
 
-        const auto kkt1 = (m == 0) ? 0.0 : (m_G * x - m_h).array().max(0.0).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt2 = (p == 0) ? 0.0 : (m_A * x - m_b).template lpNorm<Eigen::Infinity>();
+        const auto Gxmh = m_G * x - m_h;
+        const auto Axmb = m_A * x - m_b;
+        const auto Atv  = m_A.transpose() * v;
+        const auto Gtu  = m_G.transpose() * u;
+
+        const auto kkt1 = (m == 0) ? 0.0 : Gxmh.array().max(0.0).matrix().template lpNorm<Eigen::Infinity>();
+        const auto kkt2 = (p == 0) ? 0.0 : Axmb.template lpNorm<Eigen::Infinity>();
         const auto kkt3 = (m == 0) ? 0.0 : (-u.array()).max(0.0).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt4 =
-            (m == 0) ? 0.0 : (u.array() * (m_G * x - m_h).array()).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt5 =
-            (m_Q.size() > 0)
-                ? (m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * u).template lpNorm<Eigen::Infinity>()
-                : (m_c + m_A.transpose() * v + m_G.transpose() * u).template lpNorm<Eigen::Infinity>();
+        const auto kkt4 = (m == 0) ? 0.0 : (u.array() * Gxmh.array()).matrix().template lpNorm<Eigen::Infinity>();
+        const auto kkt5 = (m_Q.size() > 0) ? (m_Q * x + m_c + Atv + Gtu).template lpNorm<Eigen::Infinity>()
+                                           : (m_c + Atv + Gtu).template lpNorm<Eigen::Infinity>();
 
         return std::max({kkt1, kkt2, kkt3, kkt4, kkt5});
     }
@@ -103,5 +107,5 @@ private:
     mutable matrix_t     m_lmat;     ///<
     mutable vector_t     m_lvec;     ///<
     mutable vector_t     m_lsol;     ///<
-};
-} // namespace nano
+        };
+    } // namespace nano

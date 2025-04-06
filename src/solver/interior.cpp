@@ -40,7 +40,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-5, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-24, LE, 1e-8));
     register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }
@@ -127,7 +127,7 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     auto ipmst = state_t{x0, -1.0 / (G * x0 - h).array(), vector_t::zero(p)};
 
     // update residuals
-    program.update(0.0, 0.0, miu, ipmst);
+    program.update(0.0, 0.0, 0.0, miu, ipmst);
 
     // primal-dual interior-point solver...
     auto iter = 0;
@@ -147,23 +147,25 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
         if (!ipmst.valid() || !program.valid())
         {
             logger.warn("linear system of equations not stable!\n");
+            break;
         }
 
         // separate lengths for primal and dual steps (x + sx * dx, u + su * du, v + su * dv)
-        const auto s         = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 2.0);
-        const auto ustep     = s * make_umax(ipmst.m_u, ipmst.m_du);
-        const auto xstep     = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h);
-        const auto residual0 = program.kkt_optimality_test(ipmst);
+        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(++iter), 2.0);
+        const auto ustep = s * make_umax(ipmst.m_u, ipmst.m_du);
+        const auto xstep = s * make_xmax(ipmst.m_x, ipmst.m_dx, G, h);
+        const auto vstep = ustep;
+        const auto kkt0  = program.kkt_test(ipmst);
 
         // line-search to reduce the residual starting from the potentially different lengths for primal and dual steps
-        auto lsearch_iter     = 0;
-        auto lsearch_step     = 1.0;
-        auto lsearch_residual = residual0;
+        auto lsearch_iter = 0;
+        auto lsearch_step = 1.0;
+        auto lsearch_kkt  = 0.0;
 
         for (; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
         {
-            lsearch_residual = program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, false);
-            if (std::isfinite(lsearch_residual) && lsearch_residual <= (1.0 - alpha * lsearch_step) * residual0)
+            lsearch_kkt = program.kkt_test(lsearch_step * xstep, lsearch_step * ustep, lsearch_step * vstep, ipmst);
+            if (lsearch_kkt <= (1.0 - alpha * lsearch_step) * kkt0)
             {
                 break;
             }
@@ -171,18 +173,17 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
             lsearch_step *= beta;
         }
 
-        logger.info("s=", s, "/", s0, ",step=(", ustep, ",", xstep, "),lsearch=(iter=", lsearch_iter,
-                    ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual0, ",",
-                    program.kkt_optimality_test(ipmst), ").\n");
+        logger.info("s=", s, "/", s0, ",step=(", xstep, ",", ustep, "),lsearch=(iter=", lsearch_iter,
+                    ",step=", lsearch_step, ",kkt=", lsearch_kkt, "/", kkt0, ").\n");
 
-        if (std::min(ustep, xstep) < std::numeric_limits<scalar_t>::epsilon() || lsearch_iter == lsearch_max_iters ||
-            std::fabs(residual0 - lsearch_residual) < epsilon0)
+        if (std::min({xstep, ustep, lsearch_step}) < std::numeric_limits<scalar_t>::epsilon() ||
+            lsearch_iter >= lsearch_max_iters || std::fabs(lsearch_kkt - kkt0) < epsilon0)
         {
             break;
         }
 
         // update state
-        program.update(ustep * lsearch_step, xstep * lsearch_step, miu, ipmst, true);
+        program.update(lsearch_step * xstep, lsearch_step * ustep, lsearch_step * vstep, miu, ipmst);
         state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
         done_kkt_optimality_test(state, state.valid(), logger);
     }
@@ -214,7 +215,7 @@ solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& pro
     ipmst.m_v       = sol.segment(n, p);
     ipmst.m_eta     = 0.0;
 
-    program.update(0.0, 0.0, miu, ipmst);
+    program.update(0.0, 0.0, 0.0, miu, ipmst);
     state.update(ipmst.m_x, ipmst.m_v, ipmst.m_u);
 
     // final convergence decision

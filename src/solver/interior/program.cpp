@@ -186,19 +186,26 @@ const vector_t& program_t::solve() const
     return m_lsol;
 }
 
-scalar_t program_t::kkt_optimality_test(const state_t& state) const
+scalar_t program_t::kkt_test(const state_t& state) const
 {
     return kkt_optimality_test(state.m_x, state.m_u, state.m_v);
 }
 
-scalar_t program_t::update(const scalar_t ustep, const scalar_t xstep, const scalar_t miu, state_t& state,
-                           const bool apply) const
+scalar_t program_t::kkt_test(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep,
+                             const state_t& state) const
+{
+    return kkt_optimality_test(state.m_x + xstep * state.m_dx, state.m_u + ustep * state.m_du,
+                               state.m_v + vstep * state.m_dv);
+}
+
+void program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep, const scalar_t miu,
+                       state_t& state) const
 {
     const auto m = this->m();
     const auto p = this->p();
     const auto x = state.m_x + xstep * state.m_dx;
     const auto u = state.m_u + ustep * state.m_du;
-    const auto v = state.m_v + ustep * state.m_dv;
+    const auto v = state.m_v + vstep * state.m_dv;
 
     // objective
     if (m_Q.size() == 0)
@@ -231,14 +238,9 @@ scalar_t program_t::update(const scalar_t ustep, const scalar_t xstep, const sca
         state.m_rcent = -state.m_eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
     }
 
-    if (apply)
-    {
-        state.m_x = x;
-        state.m_u = u;
-        state.m_v = v;
-    }
-
-    return kkt_optimality_test(x, u, v);
+    state.m_x = x;
+    state.m_u = u;
+    state.m_v = v;
 }
 
 bool program_t::valid(const scalar_t epsilon) const
