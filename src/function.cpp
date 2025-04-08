@@ -115,7 +115,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
 
     else if (function->parameter_if("numopt162::neqs") != nullptr)
     {
-        for (const auto neqs : {1e-6, 0.8, 1.0})
+        for (const auto neqs : {1e-6, 0.1, 0.2, 0.5, 0.8, 1.0})
         {
             function->config("numopt162::neqs", neqs);
             functions.emplace_back(function->make(dims));

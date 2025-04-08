@@ -13,7 +13,7 @@ using namespace nano;
 
 namespace
 {
-auto scale_ruiz(const matrix_t& A, const scalar_t epsilon = epsilon0<scalar_t>())
+/*auto scale_ruiz(const matrix_t& A, const scalar_t epsilon = epsilon0<scalar_t>())
 {
     auto Ak = A;
     auto D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
@@ -41,7 +41,7 @@ auto scale_ruiz(const matrix_t& A, const scalar_t epsilon = epsilon0<scalar_t>()
     }
 
     return std::make_tuple(std::move(D1), std::move(Ak), std::move(D2));
-}
+}*/
 } // namespace
 
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints)
@@ -83,40 +83,42 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
 const vector_t& program_t::solve() const
 {
-    /*// SCHUR complement approach
-    const auto n = this->n();
-    const auto p = this->p();
+    // SCHUR complement approach
+    /*{
+        const auto n = this->n();
+        const auto p = this->p();
 
-    const auto A  = m_A.matrix();
-    const auto H  = m_lmat.block(0, 0, n, n);
-    const auto b1 = m_lvec.segment(0, n);
-    const auto b2 = m_lvec.segment(n, p);
+        const auto A  = m_A.matrix();
+        const auto H  = m_lmat.block(0, 0, n, n);
+        const auto b1 = m_lvec.segment(0, n);
+        const auto b2 = m_lvec.segment(n, p);
 
-    // TODO: Ruiz scaling for H directly
-    auto x1 = m_lsol.segment(0, n);
-    auto x2 = m_lsol.segment(n, p);
+        // TODO: Ruiz scaling for H directly
+        auto x1 = m_lsol.segment(0, n);
+        auto x2 = m_lsol.segment(n, p);
 
-    auto Hsolver = lin_solver_t{};
-    Hsolver.compute(H);
+        auto Hsolver = lin_solver_t{};
+        Hsolver.compute(H);
 
-    std::cout << std::setprecision(12) << "H =" << H << std::endl;
-    std::cout << std::setprecision(12) << "b1=" << b1.transpose() << std::endl;
-    std::cout << std::setprecision(12) << "b2=" << b2.transpose() << std::endl;
-    std::cout << std::endl;
+        std::cout << std::setprecision(12) << "H =" << H << std::endl;
+        std::cout << std::setprecision(12) << "b1=" << b1.transpose() << std::endl;
+        std::cout << std::setprecision(12) << "b2=" << b2.transpose() << std::endl;
+        std::cout << std::endl;
 
-    if (p > 0)
-    {
-        const auto S = matrix_t{-A * Hsolver.solve(A.transpose())};
+        if (p > 0)
+        {
+            const auto S = matrix_t{-A * Hsolver.solve(A.transpose())};
 
-        auto xsolver = lin_solver_t{};
-        xsolver.compute(S.matrix());
+            auto xsolver = lin_solver_t{};
+            xsolver.compute(S.matrix());
 
-        x2 = xsolver.solve(b2 - A * Hsolver.solve(b1));
-        x1 = Hsolver.solve(b1 - A.transpose() * x2);
-    }
-    else
-    {
-        x1 = Hsolver.solve(b1);
+            x2 = xsolver.solve(b2 - A * Hsolver.solve(b1));
+            x1 = Hsolver.solve(b1 - A.transpose() * x2);
+        }
+        else
+        {
+            x1 = Hsolver.solve(b1);
+        }
     }*/
 
     /*{
@@ -144,15 +146,14 @@ const vector_t& program_t::solve() const
     }*/
 
     // Ruiz scaling algorithm that keeps the matrix symmetric
-    const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
-
-    m_ldlt.compute(Ahat.matrix());
-    m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
-    m_lsol.array() *= D2.array();
+    // const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+    // m_ldlt.compute(Ahat.matrix());
+    // m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
+    // m_lsol.array() *= D2.array();
 
     // LDLT (as positive semi-definite matrix)
-    // m_ldlt.compute(m_lmat.matrix());
-    // m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
+    m_ldlt.compute(m_lmat.matrix());
+    m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
 
     // MINRES(m_lmat, m_lvec, m_lsol);
     // auto solver = Eigen::MINRES<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper,
@@ -179,7 +180,7 @@ const vector_t& program_t::solve() const
 
     // BiCBSTAB (as square matrix)
     // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{};
-    // solver.setTolerance(1e-10);
+    // solver.setTolerance(1e-14);
     // solver.compute(m_lmat.matrix());
     // m_lsol.vector() = solver.solve(m_lvec.vector());
 
