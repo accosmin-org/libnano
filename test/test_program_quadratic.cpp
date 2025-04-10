@@ -12,7 +12,7 @@ namespace
 rsolvers_t make_solvers()
 {
     auto solvers = rsolvers_t{};
-    for (const auto s0 : {0.9, 0.99, 0.999})
+    for (const auto s0 : {0.99, 0.995, 0.999, 0.9995})
     {
         for (const auto miu : {3.0, 6.0, 10.0})
         {

@@ -50,7 +50,8 @@ rsolver_t solver_ipm_t::clone() const
     return std::make_unique<solver_ipm_t>(*this);
 }
 
-solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(const function_t& function, [[maybe_unused]] const vector_t& x0,
+                                         const logger_t& logger) const
 {
     if (auto lconstraints = make_linear_constraints(function); !lconstraints)
     {
@@ -58,12 +59,12 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     }
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        return do_minimize(program_t{*lprogram, std::move(lconstraints).value()}, x0, logger);
+        return do_minimize(program_t{*lprogram, std::move(lconstraints).value()}, logger);
     }
     else if (const auto* const qprogram = dynamic_cast<const quadratic_program_t*>(&function); qprogram)
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
-        return do_minimize(program_t{*qprogram, std::move(lconstraints).value()}, x0, logger);
+        return do_minimize(program_t{*qprogram, std::move(lconstraints).value()}, logger);
     }
     else
     {
@@ -71,46 +72,35 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     }
 }
 
-solver_state_t solver_ipm_t::do_minimize(const program_t& program, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(const program_t& program, const logger_t& logger) const
 {
     if (program.m() > 0)
     {
-        const auto& G = program.G();
-        const auto& h = program.h();
-
-        // the starting point must be strictly feasible wrt inequality constraints
-        if ((G * x0 - h).maxCoeff() >= 0.0)
-        {
-            if (const auto x00 = make_strictly_feasible(G, h); x00)
-            {
-                return do_minimize_with_inequality(program, x00.value(), logger);
-            }
-        }
-
-        return do_minimize_with_inequality(program, x0, logger);
+        return do_minimize_with_inequality(program, logger);
     }
     else
     {
-        return do_minimize_without_inequality(program, x0, logger);
+        return do_minimize_without_inequality(program, logger);
     }
 }
 
-solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& program, const vector_t& x0,
-                                                         const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& program, const logger_t& logger) const
 {
     const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
-    const auto& G = program.G();
-    const auto& h = program.h();
-    const auto  n = program.n();
-    const auto  p = program.p();
-
+    const auto& G        = program.G();
+    const auto& h        = program.h();
     const auto& function = program.function();
+    const auto  n        = program.n();
+    const auto  p        = program.p();
+
+    // the starting point must be strictly feasible wrt inequality constraints
+    const auto x00 = make_strictly_feasible(G, h);
+    const auto x0  = x00.has_value() ? x00.value() : vector_t{vector_t::zero(n)};
 
     auto state = solver_state_t{function, x0};
 
-    // the starting point must be strictly feasible wrt inequality constraints
     if (const auto mGxh = (G * x0 - h).maxCoeff(); mGxh >= 0.0)
     {
         state.status(solver_status::unfeasible);
@@ -162,16 +152,21 @@ solver_state_t solver_ipm_t::do_minimize_with_inequality(const program_t& progra
     return state;
 }
 
-solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& program, const vector_t& x0,
-                                                            const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize_without_inequality(const program_t& program, const logger_t& logger) const
 {
     const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
-    const auto  n = program.n();
-    const auto  p = program.p();
-
+    const auto& A        = program.A();
+    const auto& b        = program.b();
     const auto& function = program.function();
+    const auto  n        = program.n();
+    const auto  p        = program.p();
+
+    // the starting point is (one of the) solution to the linear equality constraints
+    const auto Ab = Eigen::LDLT<eigen_matrix_t<scalar_t>>{(A.transpose() * A).matrix()};
+    auto       x0 = vector_t{n};
+    x0.vector()   = Ab.solve(A.transpose() * b);
 
     auto state = solver_state_t{function, x0};
 
