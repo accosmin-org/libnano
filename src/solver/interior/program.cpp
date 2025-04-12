@@ -11,39 +11,6 @@
 
 using namespace nano;
 
-namespace
-{
-/*auto scale_ruiz(const matrix_t& A, const scalar_t epsilon = epsilon0<scalar_t>())
-{
-    auto Ak = A;
-    auto D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
-    auto D2 = make_full_vector<scalar_t>(A.cols(), 1.0);
-    auto Dr = vector_t{A.rows()};
-    auto Dc = vector_t{A.cols()};
-
-    for (auto k = 0; k < 100; ++k)
-    {
-        const auto critr = (1.0 - Dr.array()).matrix().lpNorm<Eigen::Infinity>();
-        const auto critc = (1.0 - Dc.array()).matrix().lpNorm<Eigen::Infinity>();
-        if (std::max({critr, critc}) < epsilon)
-        {
-            break;
-        }
-
-        Dr = Ak.matrix().rowwise().lpNorm<Eigen::Infinity>().array().sqrt();
-        Dc = Ak.matrix().colwise().lpNorm<Eigen::Infinity>().array().sqrt();
-
-        Ak = (1.0 / Dr.array()).matrix().asDiagonal() * Ak.matrix();
-        Ak = Ak.matrix() * (1.0 / Dc.array()).matrix().asDiagonal();
-
-        D1.array() /= Dr.array();
-        D2.array() /= Dc.array();
-    }
-
-    return std::make_tuple(std::move(D1), std::move(Ak), std::move(D2));
-}*/
-} // namespace
-
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints)
     : program_t(program, matrix_t{}, program.c(), std::move(constraints))
 {

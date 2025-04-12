@@ -291,3 +291,33 @@ std::optional<linear_constraints_t> nano::make_linear_constraints(const function
         return lc;
     }
 }
+
+ruiz_scaled_t nano::scale_ruiz(const matrix_t& A, const scalar_t epsilon)
+{
+    auto Ak = A;
+    auto D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
+    auto D2 = make_full_vector<scalar_t>(A.cols(), 1.0);
+    auto Dr = vector_t{A.rows()};
+    auto Dc = vector_t{A.cols()};
+
+    for (auto k = 0; k < 100; ++k)
+    {
+        const auto critr = (1.0 - Dr.array()).matrix().lpNorm<Eigen::Infinity>();
+        const auto critc = (1.0 - Dc.array()).matrix().lpNorm<Eigen::Infinity>();
+        if (std::max({critr, critc}) < epsilon)
+        {
+            break;
+        }
+
+        Dr = Ak.matrix().rowwise().lpNorm<Eigen::Infinity>().array().sqrt();
+        Dc = Ak.matrix().colwise().lpNorm<Eigen::Infinity>().array().sqrt();
+
+        Ak = (1.0 / Dr.array()).matrix().asDiagonal() * Ak.matrix();
+        Ak = Ak.matrix() * (1.0 / Dc.array()).matrix().asDiagonal();
+
+        D1.array() /= Dr.array();
+        D2.array() /= Dc.array();
+    }
+
+    return {std::move(Ak), std::move(D1), std::move(D2)};
+}
