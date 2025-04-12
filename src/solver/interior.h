@@ -12,6 +12,8 @@ namespace nano
 /// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
+/// NB: the implementation follows the notation from (2).
+///
 class NANO_PUBLIC solver_ipm_t final : public solver_t
 {
 public:
@@ -31,10 +33,6 @@ public:
     solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 
 private:
-    solver_state_t do_minimize(const program_t&, const logger_t&) const;
-    solver_state_t do_minimize_with_inequality(const program_t&, const logger_t&) const;
-    solver_state_t do_minimize_without_inequality(const program_t&, const logger_t&) const;
-
-    bool lsearch(const program_t&, const tensor_size_t iter, solver_state_t&, state_t&, const logger_t&) const;
+    solver_state_t do_minimize(program_t&, const logger_t&) const;
 };
 } // namespace nano

@@ -1,21 +1,38 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
-#include <solver/interior/state.h>
 
 namespace nano
 {
+///
+/// \brief solver for the the linear system of equations resulting from the KKT conditions solved with the primal-dual
+/// interior point method applied
+///
+/// to the linear program:
+///     min  c.dot(x)
+///     s.t. G * x <= h
+///          A * x = b
+///
+/// or to the quadratic program:
+///
+///     min  0.5 * x.dot(Q * x) + c.dot(x)
+///     s.t. G * x <= h
+///          A * x = b
+///
+/// see (1) ch.5,6 "Primal-dual interior-point methods", by S. Wright, 1997.
+/// see (2) ch.11 "Convex Optimization", by S. Boyd and L. Vandenberghe, 2004.
+/// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+/// NB: the implementation follows the notation from (2).
+///
 class program_t
 {
 public:
     program_t(const linear_program_t&, linear_constraints_t);
 
     program_t(const quadratic_program_t&, linear_constraints_t);
-
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
 
     const matrix_t& Q() const { return m_Q; }
 
@@ -29,6 +46,18 @@ public:
 
     const vector_t& h() const { return m_h; }
 
+    const vector_t& x() const { return m_x; }
+
+    const vector_t& u() const { return m_u; }
+
+    const vector_t& v() const { return m_v; }
+
+    const vector_t& dx() const { return m_dx; }
+
+    const vector_t& du() const { return m_du; }
+
+    const vector_t& dv() const { return m_dv; }
+
     tensor_size_t n() const { return m_c.size(); }
 
     tensor_size_t p() const { return m_A.rows(); }
@@ -37,42 +66,16 @@ public:
 
     const function_t& function() const { return m_function; }
 
-    template <class thessvar, class trdual, class trprim>
-    const vector_t& solve(const thessvar& hessvar, const trdual& rdual, const trprim& rprim) const
-    {
-        const auto n = this->n();
-        const auto p = this->p();
+    std::tuple<bool, scalar_t> solve();
 
-        // setup additional hessian components
-        if (!m_Q.size())
-        {
-            m_lmat.block(0, 0, n, n) = -hessvar;
-        }
-        else
-        {
-            m_lmat.block(0, 0, n, n) = Q() - hessvar;
-        }
+    scalar_t kkt_test() const;
+    scalar_t kkt_test(scalar_t xstep, scalar_t ustep, scalar_t vstep) const;
 
-        // setup residuals
-        m_lvec.segment(0, n) = -rdual;
-        m_lvec.segment(n, p) = -rprim;
-
-        // solve the linear system of equations
-        return solve();
-    }
-
-    const vector_t& solve() const;
-
-    bool valid(scalar_t epsilon = 1e-8) const;
-
-    void update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu, state_t&) const;
-
-    scalar_t kkt_test(const state_t&) const;
-
-    scalar_t kkt_test(scalar_t xstep, scalar_t ustep, scalar_t vstep, const state_t&) const;
+    void update(vector_t x0, vector_t u0, vector_t v0, scalar_t miu);
+    void update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu);
 
 private:
-    using lin_solver_t = Eigen::LDLT<eigen_matrix_t<scalar_t>>;
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
 
     template <class tx, class tu, class tv>
     scalar_t kkt_optimality_test(const tx& x, const tu& u, const tv& v) const
@@ -99,13 +102,18 @@ private:
     const function_t&    m_function; ///< original function to minimize
     matrix_t             m_Q;        ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
     vector_t             m_c;        ///<
-    matrix_t             m_A;        ///< equality constraint: A * x = b
+    matrix_t             m_A;        ///< equality constraints: A * x = b
     vector_t             m_b;        ///<
-    matrix_t             m_G;        ///< inequality constraint: Gx <= h
+    matrix_t             m_G;        ///< inequality constraints: G * x <= h
     vector_t             m_h;        ///<
-    mutable lin_solver_t m_ldlt;     ///< buffers for the linear system of equations coupling (dx, dv)
-    mutable matrix_t     m_lmat;     ///<
-    mutable vector_t     m_lvec;     ///<
-    mutable vector_t     m_lsol;     ///<
-        };
-    } // namespace nano
+    vector_t             m_x;        ///< solution
+    vector_t             m_u;        ///< Lagrange multipliers for the inequality constraints
+    vector_t             m_v;        ///< Lagrange multipliers for the equality constraints
+    vector_t             m_dx;       ///< current variation of the solution
+    vector_t             m_du;       ///< current variation of Lagrange multipliers for the inequality constraints
+    vector_t             m_dv;       ///< current variation of Lagrange multipliers for the equality constraints
+    vector_t             m_rdual;    ///< dual residual
+    vector_t             m_rcent;    ///< centering residual
+    vector_t             m_rprim;    ///< primal residual
+};
+} // namespace nano
