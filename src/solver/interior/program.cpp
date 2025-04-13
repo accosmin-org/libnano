@@ -84,7 +84,10 @@ program_t::solve_stats_t program_t::solve_noA()
     const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
     lvec.array() *= D1.array();
 
-    auto solver   = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    // auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+
     lsol.vector() = solver.solve(lvec.vector());
     lsol.array() *= D2.array();
 
