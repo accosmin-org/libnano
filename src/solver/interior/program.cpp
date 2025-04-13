@@ -60,9 +60,8 @@ program_t::solve_stats_t program_t::solve()
 program_t::solve_stats_t program_t::solve_noA()
 {
     const auto n = this->n();
-    const auto p = this->p();
 
-    // solve primal-dual linear system of equations to get (dx, du, dv)
+    // construct system of equations to obtain (dx, du, dv)
     auto lmat = matrix_t{n, n};
     auto lvec = vector_t{n};
     auto lsol = vector_t{n};
@@ -79,20 +78,21 @@ program_t::solve_stats_t program_t::solve_noA()
     {
         lmat = m_Q - hess;
     }
+    lvec = -rdual;
 
-    lvec.segment(0, n) = -rdual;
-    lvec.segment(n, p) = -m_rprim;
-
+    // Ruiz-scale the system and solve it
     const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
+    lvec.array() *= D1.array();
 
-    auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    lsol.vector() = ldlt.solve((D1.array() * lvec.array()).matrix());
-    lsol.vector() = D2.array() * lsol.array();
+    auto solver   = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    lsol.vector() = solver.solve(lvec.vector());
+    lsol.array() *= D2.array();
 
     m_dx = lsol.segment(0, n);
     m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
 
-    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
+    // verify solution
+    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite() && lsol.all_finite();
     const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
 
     return {valid, delta};

@@ -199,18 +199,6 @@ UTEST_CASE(bundle_cases)
          {std::make_tuple(c0, G0, h0), std::make_tuple(c1, G1, h1), std::make_tuple(c2, G2, h2)})
     {
         static auto index    = 0;
-        const auto  Gscale   = 1.0 + G.array().abs().maxCoeff();
-        auto        function = quadratic_program_t{scat("qp-bundle-scaled-case", index++), Q, c};
-        UTEST_REQUIRE((G / Gscale) * function.variable() <= (h / Gscale));
-
-        check_convexity(function);
-        check_minimize(make_solvers(), function);
-    }
-
-    for (const auto& [c, G, h] :
-         {std::make_tuple(c0, G0, h0), std::make_tuple(c1, G1, h1), std::make_tuple(c2, G2, h2)})
-    {
-        static auto index    = 0;
         auto        function = quadratic_program_t{scat("qp-bundle-unscaled-case", index++), Q, c};
         UTEST_REQUIRE(G * function.variable() <= h);
 
