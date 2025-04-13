@@ -41,7 +41,100 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 {
 }
 
-std::tuple<bool, scalar_t> program_t::solve()
+program_t::solve_stats_t program_t::solve()
+{
+    if (m_A.size() == 0 && m_G.size() > 0)
+    {
+        return solve_noA();
+    }
+    else if (m_G.size() == 0 && m_A.size() > 0)
+    {
+        return solve_noG();
+    }
+    else
+    {
+        return solve_wAG();
+    }
+}
+
+program_t::solve_stats_t program_t::solve_noA()
+{
+    const auto n = this->n();
+    const auto p = this->p();
+
+    // solve primal-dual linear system of equations to get (dx, du, dv)
+    auto lmat = matrix_t{n, n};
+    auto lvec = vector_t{n};
+    auto lsol = vector_t{n};
+
+    const auto Gxmh  = m_G * m_x - m_h;
+    const auto hess  = m_G.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * m_G.matrix();
+    const auto rdual = m_rdual + m_G.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
+
+    if (m_Q.size() == 0)
+    {
+        lmat = -hess;
+    }
+    else
+    {
+        lmat = m_Q - hess;
+    }
+
+    lvec.segment(0, n) = -rdual;
+    lvec.segment(n, p) = -m_rprim;
+
+    const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
+
+    auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    lsol.vector() = ldlt.solve((D1.array() * lvec.array()).matrix());
+    lsol.vector() = D2.array() * lsol.array();
+
+    m_dx = lsol.segment(0, n);
+    m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
+
+    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
+    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+
+    return {valid, delta};
+}
+
+program_t::solve_stats_t program_t::solve_noG()
+{
+    const auto n = this->n();
+    const auto p = this->p();
+
+    // solve primal-dual linear system of equations to get (dx, du, dv)
+    auto lmat = matrix_t{n + p, n + p};
+    auto lvec = vector_t{n + p};
+    auto lsol = vector_t{n + p};
+
+    if (m_Q.size() == 0)
+    {
+        lmat.block(0, 0, n, n).array() = 0.0;
+    }
+    else
+    {
+        lmat.block(0, 0, n, n) = m_Q.matrix();
+    }
+    lmat.block(0, n, n, p)         = m_A.transpose();
+    lmat.block(n, 0, p, n)         = m_A.matrix();
+    lmat.block(n, n, p, p).array() = 0.0;
+
+    lvec.segment(0, n) = -m_rdual;
+    lvec.segment(n, p) = -m_rprim;
+
+    auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    lsol.vector() = ldlt.solve(lvec.vector());
+
+    m_dx = lsol.segment(0, n);
+    m_dv = lsol.segment(n, p);
+
+    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
+    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+    return {valid, delta};
+}
+
+program_t::solve_stats_t program_t::solve_wAG()
 {
     const auto n = this->n();
     const auto p = this->p();
@@ -106,7 +199,7 @@ std::tuple<bool, scalar_t> program_t::solve()
     const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
     const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
 
-    return std::make_tuple(valid, delta);
+    return {valid, delta};
 
     // SCHUR complement approach
     /*{

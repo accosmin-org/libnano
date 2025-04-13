@@ -61,12 +61,13 @@ NANO_PUBLIC std::optional<linear_constraints_t> make_linear_constraints(const fu
 ///
 /// see (1) "A scaling algorithm to equalibrate both rows and columns norms in matrices", D. Ruiz, 2001
 ///
+/// NB: the scaling is performed in-place.
+///
 struct ruiz_scaled_t
 {
-    matrix_t m_Ahat;
     vector_t m_D1;
     vector_t m_D2;
 };
 
-NANO_PUBLIC ruiz_scaled_t scale_ruiz(const matrix_t& A, scalar_t epsilon = epsilon0<scalar_t>());
+NANO_PUBLIC ruiz_scaled_t scale_ruiz(matrix_t& A, scalar_t epsilon = epsilon0<scalar_t>());
 } // namespace nano

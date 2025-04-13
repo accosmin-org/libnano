@@ -66,16 +66,46 @@ public:
 
     const function_t& function() const { return m_function; }
 
-    std::tuple<bool, scalar_t> solve();
-
+    ///
+    /// \brief compute the KKT optimality test for the current state (x, u, v).
+    ///
     scalar_t kkt_test() const;
+
+    ///
+    /// \brief compute the KKT optimality test for the trial line-search state
+    ///     (x + xstep * dx, u + ustep * du, v + vstep * dv).
+    ///
     scalar_t kkt_test(scalar_t xstep, scalar_t ustep, scalar_t vstep) const;
 
+    ///
+    /// \brief change state to (x0, u0, v0) and update residuals.
+    ///
     void update(vector_t x0, vector_t u0, vector_t v0, scalar_t miu);
+
+    ///
+    /// \brief change state to the result of the line-search (x + xstep * dx, u + ustep * du, v + vstep * dv) and update
+    /// residuals.
+    ///
     void update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu);
+
+    ///
+    /// \brief compute the state update (dx, du, dv) by solving the linear system of equations derived from the KKT
+    /// conditions.
+    ///
+    struct solve_stats_t
+    {
+        bool     m_valid{false};   ///< indicates if the updates are finite
+        scalar_t m_precision{0.0}; ///< precision with which the linear system of equations was solved
+    };
+
+    solve_stats_t solve();
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
+
+    solve_stats_t solve_noA();
+    solve_stats_t solve_noG();
+    solve_stats_t solve_wAG();
 
     template <class tx, class tu, class tv>
     scalar_t kkt_optimality_test(const tx& x, const tu& u, const tv& v) const

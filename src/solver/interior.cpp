@@ -162,10 +162,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             break;
         }
 
-        if (precision > 1e-10)
-        {
-            logger.warn("linear system of equations not stable!\n");
-        }
+        logger.info("linear system of equations solved with accuracy=", precision, "\n");
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
