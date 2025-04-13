@@ -77,7 +77,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-6, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
     register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 }

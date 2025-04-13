@@ -11,6 +11,29 @@
 
 using namespace nano;
 
+namespace
+{
+auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
+{
+    // Ruiz-scale the system and solve it
+    const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
+    lvec.array() *= D1.array();
+
+    auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+
+    lsol.vector() = solver.solve(lvec.vector());
+    lsol.array() *= D2.array();
+
+    // verify solution
+    const auto valid = lmat.all_finite() && lvec.all_finite() && lsol.all_finite();
+    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+
+    return program_t::solve_stats_t{valid, delta};
+}
+} // namespace
+
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints)
     : program_t(program, matrix_t{}, program.c(), std::move(constraints))
 {
@@ -61,7 +84,6 @@ program_t::solve_stats_t program_t::solve_noA()
 {
     const auto n = this->n();
 
-    // construct system of equations to obtain (dx, du, dv)
     auto lmat = matrix_t{n, n};
     auto lvec = vector_t{n};
     auto lsol = vector_t{n};
@@ -80,25 +102,12 @@ program_t::solve_stats_t program_t::solve_noA()
     }
     lvec = -rdual;
 
-    // Ruiz-scale the system and solve it
-    const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
-    lvec.array() *= D1.array();
-
-    // auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-
-    lsol.vector() = solver.solve(lvec.vector());
-    lsol.array() *= D2.array();
+    const auto stats = solve_kkt(lmat, lvec, lsol);
 
     m_dx = lsol.segment(0, n);
     m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
 
-    // verify solution
-    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite() && lsol.all_finite();
-    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
-
-    return {valid, delta};
+    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
 
 program_t::solve_stats_t program_t::solve_noG()
@@ -106,7 +115,6 @@ program_t::solve_stats_t program_t::solve_noG()
     const auto n = this->n();
     const auto p = this->p();
 
-    // solve primal-dual linear system of equations to get (dx, du, dv)
     auto lmat = matrix_t{n + p, n + p};
     auto lvec = vector_t{n + p};
     auto lsol = vector_t{n + p};
@@ -126,15 +134,12 @@ program_t::solve_stats_t program_t::solve_noG()
     lvec.segment(0, n) = -m_rdual;
     lvec.segment(n, p) = -m_rprim;
 
-    auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    lsol.vector() = ldlt.solve(lvec.vector());
+    const auto stats = solve_kkt(lmat, lvec, lsol);
 
     m_dx = lsol.segment(0, n);
     m_dv = lsol.segment(n, p);
 
-    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
-    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
-    return {valid, delta};
+    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
 
 program_t::solve_stats_t program_t::solve_wAG()
@@ -142,67 +147,36 @@ program_t::solve_stats_t program_t::solve_wAG()
     const auto n = this->n();
     const auto p = this->p();
 
-    // solve primal-dual linear system of equations to get (dx, du, dv)
     auto lmat = matrix_t{n + p, n + p};
     auto lvec = vector_t{n + p};
     auto lsol = vector_t{n + p};
 
-    if (m_G.size() > 0)
+    const auto Gxmh  = m_G * m_x - m_h;
+    const auto hess  = m_G.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * m_G.matrix();
+    const auto rdual = m_rdual + m_G.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
+
+    if (!m_Q.size())
     {
-        const auto Gxmh  = m_G * m_x - m_h;
-        const auto hess  = m_G.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * m_G.matrix();
-        const auto rdual = m_rdual + m_G.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
-
-        if (!m_Q.size())
-        {
-            lmat.block(0, 0, n, n) = -hess;
-        }
-        else
-        {
-            lmat.block(0, 0, n, n) = m_Q - hess;
-        }
-        lmat.block(0, n, n, p)         = m_A.transpose();
-        lmat.block(n, 0, p, n)         = m_A.matrix();
-        lmat.block(n, n, p, p).array() = 0.0;
-
-        lvec.segment(0, n) = -rdual;
-        lvec.segment(n, p) = -m_rprim;
-
-        auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-        lsol.vector() = ldlt.solve(lvec.vector());
-
-        m_dx = lsol.segment(0, n);
-        m_dv = lsol.segment(n, p);
-        m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
+        lmat.block(0, 0, n, n) = -hess;
     }
     else
     {
-        if (!m_Q.size())
-        {
-            lmat.block(0, 0, n, n).array() = 0.0;
-        }
-        else
-        {
-            lmat.block(0, 0, n, n) = m_Q.matrix();
-        }
-        lmat.block(0, n, n, p)         = m_A.transpose();
-        lmat.block(n, 0, p, n)         = m_A.matrix();
-        lmat.block(n, n, p, p).array() = 0.0;
-
-        lvec.segment(0, n) = -m_rdual;
-        lvec.segment(n, p) = -m_rprim;
-
-        auto ldlt     = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-        lsol.vector() = ldlt.solve(lvec.vector());
-
-        m_dx = lsol.segment(0, n);
-        m_dv = lsol.segment(n, p);
+        lmat.block(0, 0, n, n) = m_Q - hess;
     }
+    lmat.block(0, n, n, p)         = m_A.transpose();
+    lmat.block(n, 0, p, n)         = m_A.matrix();
+    lmat.block(n, n, p, p).array() = 0.0;
 
-    const auto valid = m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
-    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+    lvec.segment(0, n) = -rdual;
+    lvec.segment(n, p) = -m_rprim;
 
-    return {valid, delta};
+    const auto stats = solve_kkt(lmat, lvec, lsol);
+
+    m_dx = lsol.segment(0, n);
+    m_dv = lsol.segment(n, p);
+    m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
+
+    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 
     // SCHUR complement approach
     /*{
