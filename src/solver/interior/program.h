@@ -118,12 +118,12 @@ private:
         const auto Atv  = m_A.transpose() * v;
         const auto Gtu  = m_G.transpose() * u;
 
-        const auto kkt1 = (m == 0) ? 0.0 : Gxmh.array().max(0.0).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt2 = (p == 0) ? 0.0 : Axmb.template lpNorm<Eigen::Infinity>();
-        const auto kkt3 = (m == 0) ? 0.0 : (-u.array()).max(0.0).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt4 = (m == 0) ? 0.0 : (u.array() * Gxmh.array()).matrix().template lpNorm<Eigen::Infinity>();
-        const auto kkt5 = (m_Q.size() > 0) ? (m_Q * x + m_c + Atv + Gtu).template lpNorm<Eigen::Infinity>()
-                                           : (m_c + Atv + Gtu).template lpNorm<Eigen::Infinity>();
+        const auto kkt1 = (m == 0) ? 0.0 : Gxmh.array().max(0.0).matrix().template lpNorm<2>();
+        const auto kkt2 = (p == 0) ? 0.0 : Axmb.template lpNorm<2>();
+        const auto kkt3 = (m == 0) ? 0.0 : (-u.array()).max(0.0).matrix().template lpNorm<2>();
+        const auto kkt4 = (m == 0) ? 0.0 : (u.array() * Gxmh.array()).matrix().template lpNorm<2>();
+        const auto kkt5 = (m_Q.size() > 0) ? (m_Q * x + m_c + Atv + Gtu).template lpNorm<2>()
+                                           : (m_c + Atv + Gtu).template lpNorm<2>();
 
         return std::max({kkt1, kkt2, kkt3, kkt4, kkt5});
     }
