@@ -144,8 +144,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     const auto lsearch_max_iters = parameter("solver::ipm::lsearch_max_iters").value<tensor_size_t>();
     const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
 
-    const auto& G = program.G();
-    const auto& h = program.h();
+    const auto& G        = program.G();
+    const auto& h        = program.h();
     const auto& function = program.function();
 
     auto state = solver_state_t{function, program.x()};

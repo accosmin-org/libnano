@@ -129,21 +129,21 @@ private:
     }
 
     // attributes
-    const function_t&    m_function; ///< original function to minimize
-    matrix_t             m_Q;        ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
-    vector_t             m_c;        ///<
-    matrix_t             m_A;        ///< equality constraints: A * x = b
-    vector_t             m_b;        ///<
-    matrix_t             m_G;        ///< inequality constraints: G * x <= h
-    vector_t             m_h;        ///<
-    vector_t             m_x;        ///< solution
-    vector_t             m_u;        ///< Lagrange multipliers for the inequality constraints
-    vector_t             m_v;        ///< Lagrange multipliers for the equality constraints
-    vector_t             m_dx;       ///< current variation of the solution
-    vector_t             m_du;       ///< current variation of Lagrange multipliers for the inequality constraints
-    vector_t             m_dv;       ///< current variation of Lagrange multipliers for the equality constraints
-    vector_t             m_rdual;    ///< dual residual
-    vector_t             m_rcent;    ///< centering residual
-    vector_t             m_rprim;    ///< primal residual
+    const function_t& m_function; ///< original function to minimize
+    matrix_t          m_Q;        ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
+    vector_t          m_c;        ///<
+    matrix_t          m_A;        ///< equality constraints: A * x = b
+    vector_t          m_b;        ///<
+    matrix_t          m_G;        ///< inequality constraints: G * x <= h
+    vector_t          m_h;        ///<
+    vector_t          m_x;        ///< solution
+    vector_t          m_u;        ///< Lagrange multipliers for the inequality constraints
+    vector_t          m_v;        ///< Lagrange multipliers for the equality constraints
+    vector_t          m_dx;       ///< current variation of the solution
+    vector_t          m_du;       ///< current variation of Lagrange multipliers for the inequality constraints
+    vector_t          m_dv;       ///< current variation of Lagrange multipliers for the equality constraints
+    vector_t          m_rdual;    ///< dual residual
+    vector_t          m_rcent;    ///< centering residual
+    vector_t          m_rprim;    ///< primal residual
 };
 } // namespace nano
