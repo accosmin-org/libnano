@@ -100,7 +100,6 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto bundleG = m_bundleG.slice(0, m);
     const auto bundleH = m_bundleH.slice(0, m);
     const auto bundleF = m_fx - bundleH.array();
-    const auto bgscale = 1.0 + bundleG.array().abs().maxCoeff();
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
@@ -108,7 +107,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     m_program.c()(n)                                   = tau;
 
     m_program.clear_constraints();
-    critical((bundleG / bgscale) * m_program.variable() <= (bundleF / bgscale));
+    critical(bundleG * m_program.variable() <= bundleF);
     if (has_level)
     {
         m_wlevel(n) = 1.0;
