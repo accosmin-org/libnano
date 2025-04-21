@@ -138,6 +138,11 @@ struct is_eigen<Eigen::Diagonal<MatrixType, DiagIndex>> : std::true_type
 {
 };
 
+template <class DiagonalVectorType>
+struct is_eigen<Eigen::DiagonalWrapper<DiagonalVectorType>> : std::true_type
+{
+};
+
 template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
