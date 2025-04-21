@@ -133,6 +133,11 @@ struct is_eigen<Eigen::Block<XprType, BlockRows, BlockCols, InnerPanel>> : std::
 {
 };
 
+template <class MatrixType, int DiagIndex>
+struct is_eigen<Eigen::Diagonal<MatrixType, DiagIndex>> : std::true_type
+{
+};
+
 template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
