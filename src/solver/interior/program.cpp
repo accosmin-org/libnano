@@ -15,6 +15,8 @@ namespace
 {
 auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
 {
+    // FIXME: is Ruiz scaling still needed here?!
+
     // Ruiz-scale the system and solve it
     const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
     lvec.array() *= D1.array();
@@ -62,10 +64,11 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_rcent(m())
     , m_rprim(p())
 {
-    const auto n = this->n();
+    /*const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
 
+    // TODO: can compute the scaling factors without allocating M?!
     auto M                  = matrix_t{matrix_t::zero(n + m + p, n + m + p)};
     M.block(0, 0, n, n)     = m_Q.matrix();
     M.block(n, 0, m, n)     = m_G.matrix();
@@ -73,37 +76,21 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     M.block(0, n, n, m)     = m_G.transpose();
     M.block(0, n + m, n, p) = m_A.transpose();
 
+    // TODO: add a variation for symmetric matrices
     const auto& [M1, M2] = ::nano::scale_ruiz(M);
-    std::cout << "M1=" << std::endl << M1 << std::endl;
-    std::cout << "MM=" << std::endl << M << std::endl;
-    std::cout << "M2=" << std::endl << M2 << std::endl;
 
     const auto dQ = M1.segment(0, n);
     const auto dG = M1.segment(n, m);
     const auto dA = M1.segment(n + m, p);
 
-    std::cout << "dQ=" << dQ << std::endl;
-    std::cout << "dG=" << dG << std::endl;
-    std::cout << "dA=" << dA << std::endl;
+    m_Q.matrix().noalias() = dQ.asDiagonal() * m_Q * dQ.asDiagonal();
+    m_c.vector().noalias() = dQ.asDiagonal() * m_c;
 
-    const auto Qhat = matrix_t{dQ.asDiagonal() * m_Q * dQ.asDiagonal()};
-    const auto chat = vector_t{dQ.asDiagonal() * m_c};
+    m_A.matrix().noalias() = dA.asDiagonal() * m_A * dQ.asDiagonal();
+    m_b.vector().noalias() = dA.asDiagonal() * m_b;
 
-    std::cout << "Q=" << std::endl << m_Q << std::endl;
-    std::cout << "Qhat=" << std::endl << Qhat << std::endl;
-    std::cout << "chat=" << std::endl << chat << std::endl;
-
-    const auto Ahat = matrix_t{dA.asDiagonal() * m_A * dQ.asDiagonal()};
-    const auto bhat = vector_t{dA.asDiagonal() * m_b};
-
-    std::cout << "A=" << std::endl << m_A << std::endl;
-    std::cout << "Ahat=" << std::endl << Ahat << std::endl;
-
-    const auto Ghat = matrix_t{dG.asDiagonal() * m_G * dQ.asDiagonal()};
-    const auto hhat = vector_t{dG.asDiagonal() * m_h};
-
-    std::cout << "G=" << std::endl << m_G << std::endl;
-    std::cout << "Ghat=" << std::endl << Ghat << std::endl;
+    m_G.matrix().noalias() = dG.asDiagonal() * m_G * dQ.asDiagonal();
+    m_h.vector().noalias() = dG.asDiagonal() * m_h;*/
 
     // TODO: solve using `xhat = dQ^-1 * x`, Qhat, chat, Ghat, ...
 }

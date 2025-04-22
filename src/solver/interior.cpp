@@ -2,6 +2,7 @@
 #include <nano/critical.h>
 #include <nano/function/util.h>
 #include <solver/interior.h>
+#include <solver/interior/util.h>
 
 using namespace nano;
 
@@ -42,32 +43,6 @@ auto make_init(const linear_constraints_t& lconstraints) -> std::tuple<vector_t,
 
         return std::make_tuple(std::move(x0), std::move(u0), std::move(v0));
     }
-}
-
-template <class tvectoru, class tvectordu>
-auto make_umax(const tvectoru& u, const tvectordu& du)
-{
-    assert(u.size() == du.size());
-
-    auto step = std::numeric_limits<scalar_t>::max();
-    for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
-    {
-        if (du(i) < 0.0)
-        {
-            step = std::min(step, -u(i) / du(i));
-        }
-    }
-
-    return std::min(step, 1.0);
-}
-
-auto make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h)
-{
-    assert(x.size() == dx.size());
-    assert(x.size() == G.cols());
-    assert(h.size() == G.rows());
-
-    return make_umax(h - G * x, -G * dx);
 }
 } // namespace
 
