@@ -13,17 +13,72 @@ using namespace nano;
 
 namespace
 {
+[[maybe_unused]] auto make_solver_LDLT(const matrix_t& lmat)
+{
+    return Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+}
+
+[[maybe_unused]] auto make_solver_BiCGSTAB(const matrix_t& lmat)
+{
+    return Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>, Eigen::DiagonalPreconditioner<scalar_t>>{lmat.matrix()};
+}
+
+[[maybe_unused]] auto make_solver_CG(const matrix_t& lmat)
+{
+    return Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper,
+                                    Eigen::DiagonalPreconditioner<scalar_t>>{lmat.matrix()};
+}
+
+[[maybe_unused]] auto make_solver_MINRES(const matrix_t& lmat)
+{
+    return Eigen::MINRES<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper>{lmat.matrix()};
+}
+
+[[maybe_unused]] auto make_solver_GMRES(const matrix_t& lmat)
+{
+    return Eigen::GMRES<eigen_matrix_t<scalar_t>, Eigen::DiagonalPreconditioner<scalar_t>>{lmat.matrix()};
+}
+
+[[maybe_unused]] auto make_solver_DGMRES(const matrix_t& lmat)
+{
+    return Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::DiagonalPreconditioner<scalar_t>>{lmat.matrix()};
+}
+
 auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
 {
     // FIXME: is Ruiz scaling still needed here?!
+    // TODO: add a variation for symmetric matrices
 
     // Ruiz-scale the system and solve it
     const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
     lvec.array() *= D1.array();
 
-    auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{lmat.matrix()};
-    // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>>{lmat.matrix()};
+    const auto solver = make_solver_LDLT(lmat);
+
+    // LBFGS (iterative)
+    /*{
+        const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+
+        const auto solver = solver_t::all().get("lbfgs");
+        solver->parameter("solver::max_evals") = 10000;
+        solver->parameter("solver::epsilon") = 1e-12;
+
+        const auto lambda = [&](vector_cmap_t x, vector_map_t gx)
+        {
+            const auto b = (D1.array() * m_lvec.array()).matrix();
+
+            if (gx.size() == x.size())
+            {
+                gx = Ahat * (Ahat * x - b);
+            }
+            return 0.5 * (Ahat * x - b).squaredNorm();
+        };
+        const auto function = make_function(m_lsol.size(), convexity::yes, smoothness::yes, 0.0, lambda);
+
+        const auto state = solver->minimize(function, m_lvec, make_null_logger());
+        m_lvec           = D2.array() * state.x().array();
+        return m_lvec;
+    }*/
 
     lsol.vector() = solver.solve(lvec.vector());
     lsol.array() *= D2.array();
@@ -208,107 +263,6 @@ program_t::solve_stats_t program_t::solve_wAG()
     m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
 
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
-
-    // SCHUR complement approach
-    /*{
-        const auto n = this->n();
-        const auto p = this->p();
-
-        const auto A  = m_A.matrix();
-        const auto H  = m_lmat.block(0, 0, n, n);
-        const auto b1 = m_lvec.segment(0, n);
-        const auto b2 = m_lvec.segment(n, p);
-
-        // TODO: Ruiz scaling for H directly
-        auto x1 = m_lsol.segment(0, n);
-        auto x2 = m_lsol.segment(n, p);
-
-        auto Hsolver = lin_solver_t{};
-        Hsolver.compute(H);
-
-        std::cout << std::setprecision(12) << "H =" << H << std::endl;
-        std::cout << std::setprecision(12) << "b1=" << b1.transpose() << std::endl;
-        std::cout << std::setprecision(12) << "b2=" << b2.transpose() << std::endl;
-        std::cout << std::endl;
-
-        if (p > 0)
-        {
-            const auto S = matrix_t{-A * Hsolver.solve(A.transpose())};
-
-            auto xsolver = lin_solver_t{};
-            xsolver.compute(S.matrix());
-
-            x2 = xsolver.solve(b2 - A * Hsolver.solve(b1));
-            x1 = Hsolver.solve(b1 - A.transpose() * x2);
-        }
-        else
-        {
-            x1 = Hsolver.solve(b1);
-        }
-    }*/
-
-    /*{
-        const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
-
-        const auto solver = solver_t::all().get("lbfgs");
-        solver->parameter("solver::max_evals") = 10000;
-        solver->parameter("solver::epsilon") = 1e-12;
-
-        const auto lambda = [&](vector_cmap_t x, vector_map_t gx)
-        {
-            const auto b = (D1.array() * m_lvec.array()).matrix();
-
-            if (gx.size() == x.size())
-            {
-                gx = Ahat * (Ahat * x - b);
-            }
-            return 0.5 * (Ahat * x - b).squaredNorm();
-        };
-        const auto function = make_function(m_lsol.size(), convexity::yes, smoothness::yes, 0.0, lambda);
-
-        const auto state = solver->minimize(function, m_lvec, make_null_logger());
-        m_lvec           = D2.array() * state.x().array();
-        return m_lvec;
-    }*/
-
-    // Ruiz scaling algorithm that keeps the matrix symmetric
-    // const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
-    // m_ldlt.compute(Ahat.matrix());
-    // m_lsol.vector() = m_ldlt.solve((D1.array() * m_lvec.array()).matrix());
-    // m_lsol.array() *= D2.array();
-
-    // LDLT (as positive semi-definite matrix)
-    // m_ldlt.compute(m_lmat.matrix());
-    // m_lsol.vector() = m_ldlt.solve(m_lvec.vector());
-
-    // MINRES(m_lmat, m_lvec, m_lsol);
-    // auto solver = Eigen::MINRES<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper,
-    // Eigen::IdentityPreconditioner>{}; solver.compute(m_lmat.matrix()); m_lsol.vector() =
-    // solver.solve(m_lvec.vector());
-
-    // GMRES
-    // auto solver = Eigen::GMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
-    // solver.setTolerance(1e-15);
-    // solver.compute(m_lmat.matrix());
-    // m_lsol.vector() = solver.solve(m_lvec.vector());
-
-    // DGMRES
-    // auto solver = Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::IdentityPreconditioner>{};
-    // solver.setTolerance(1e-12);
-    // solver.compute(m_lmat.matrix());
-    // m_lsol.vector() = solver.solve(m_lvec.vector());
-
-    // CG (as symmetric matrix)
-    // auto solver = Eigen::ConjugateGradient<eigen_matrix_t<scalar_t>, Eigen::Lower | Eigen::Upper>{};
-    // solver.setTolerance(1e-12);
-    // solver.compute(m_lmat.matrix());
-    // m_lsol.vector() = solver.solve(m_lvec.vector());
-
-    // BiCBSTAB (as square matrix)
-    // auto solver = Eigen::BiCGSTAB<eigen_matrix_t<scalar_t>>{};
-    // solver.setTolerance(1e-14);
-    // solver.compute(m_lmat.matrix());
-    // m_lsol.vector() = solver.solve(m_lvec.vector());
 }
 
 scalar_t program_t::kkt_test() const
