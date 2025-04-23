@@ -58,24 +58,19 @@ public:
 
     const vector_t& dv() const { return m_dv; }
 
-    tensor_size_t n() const { return m_c.size(); }
+    const vector_t& original_x() const { return m_original_x; }
 
-    tensor_size_t p() const { return m_A.rows(); }
+    const vector_t& original_u() const { return m_original_u; }
 
-    tensor_size_t m() const { return m_G.rows(); }
+    const vector_t& original_v() const { return m_original_v; }
 
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief compute the KKT optimality test for the current state (x, u, v).
+    /// \brief compute the residual for the current state (x, u, v) or the line-search step (x + xstep * dx, u + ustep *
+    /// du, v + vstep * dv).
     ///
-    scalar_t kkt_test() const;
-
-    ///
-    /// \brief compute the KKT optimality test for the trial line-search state
-    ///     (x + xstep * dx, u + ustep * du, v + vstep * dv).
-    ///
-    scalar_t kkt_test(scalar_t xstep, scalar_t ustep, scalar_t vstep) const;
+    scalar_t residual() const;
 
     ///
     /// \brief change state to (x0, u0, v0) and update residuals.
@@ -83,10 +78,9 @@ public:
     void update(vector_t x0, vector_t u0, vector_t v0, scalar_t miu);
 
     ///
-    /// \brief change state to the result of the line-search (x + xstep * dx, u + ustep * du, v + vstep * dv) and update
-    /// residuals.
+    /// \brief update and return the residual for the line-search step (x + xstep * dx, u + ustep * du, v + vstep * dv).
     ///
-    void update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu);
+    scalar_t update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu, bool apply = false);
 
     ///
     /// \brief compute the state update (dx, du, dv) by solving the linear system of equations derived from the KKT
@@ -103,30 +97,15 @@ public:
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
 
+    tensor_size_t n() const { return m_c.size(); }
+
+    tensor_size_t p() const { return m_A.rows(); }
+
+    tensor_size_t m() const { return m_G.rows(); }
+
     solve_stats_t solve_noA();
     solve_stats_t solve_noG();
     solve_stats_t solve_wAG();
-
-    template <class tx, class tu, class tv>
-    scalar_t kkt_optimality_test(const tx& x, const tu& u, const tv& v) const
-    {
-        const auto m = this->m();
-        const auto p = this->p();
-
-        const auto Gxmh = m_G * x - m_h;
-        const auto Axmb = m_A * x - m_b;
-        const auto Atv  = m_A.transpose() * v;
-        const auto Gtu  = m_G.transpose() * u;
-
-        const auto kkt1 = (m == 0) ? 0.0 : Gxmh.array().max(0.0).matrix().template lpNorm<2>();
-        const auto kkt2 = (p == 0) ? 0.0 : Axmb.template lpNorm<2>();
-        const auto kkt3 = (m == 0) ? 0.0 : (-u.array()).max(0.0).matrix().template lpNorm<2>();
-        const auto kkt4 = (m == 0) ? 0.0 : (u.array() * Gxmh.array()).matrix().template lpNorm<2>();
-        const auto kkt5 = (m_Q.size() > 0) ? (m_Q * x + m_c + Atv + Gtu).template lpNorm<2>()
-                                           : (m_c + Atv + Gtu).template lpNorm<2>();
-
-        return std::max({kkt1, kkt2, kkt3, kkt4, kkt5});
-    }
 
     // attributes
     const function_t& m_function; ///< original function to minimize
@@ -142,8 +121,14 @@ private:
     vector_t          m_dx;       ///< current variation of the solution
     vector_t          m_du;       ///< current variation of Lagrange multipliers for the inequality constraints
     vector_t          m_dv;       ///< current variation of Lagrange multipliers for the equality constraints
+    vector_t          m_dQ;       ///<
+    vector_t          m_dA;       ///<
+    vector_t          m_dG;       ///<
     vector_t          m_rdual;    ///< dual residual
     vector_t          m_rcent;    ///< centering residual
     vector_t          m_rprim;    ///< primal residual
+    vector_t          m_original_x; ///<
+    vector_t          m_original_u; ///<
+    vector_t          m_original_v; ///<
 };
 } // namespace nano

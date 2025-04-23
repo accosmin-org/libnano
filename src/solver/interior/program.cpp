@@ -118,8 +118,11 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_rdual(n())
     , m_rcent(m())
     , m_rprim(p())
+    , m_original_x(n())
+    , m_original_u(m())
+    , m_original_v(p())
 {
-    /*const auto n = this->n();
+    const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
 
@@ -134,20 +137,17 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     // TODO: add a variation for symmetric matrices
     const auto& [M1, M2] = ::nano::scale_ruiz(M);
 
-    const auto dQ = M1.segment(0, n);
-    const auto dG = M1.segment(n, m);
-    const auto dA = M1.segment(n + m, p);
+    m_dQ = M1.segment(0, n);
+    m_dG = M1.segment(n, m);
+    m_dA = M1.segment(n + m, p);
 
-    m_Q.matrix().noalias() = dQ.asDiagonal() * m_Q * dQ.asDiagonal();
-    m_c.vector().noalias() = dQ.asDiagonal() * m_c;
+    m_Q.matrix().noalias() = m_dQ.vector().asDiagonal() * m_Q * m_dQ.vector().asDiagonal();
+    m_G.matrix().noalias() = m_dG.vector().asDiagonal() * m_G * m_dQ.vector().asDiagonal();
+    m_A.matrix().noalias() = m_dA.vector().asDiagonal() * m_A * m_dQ.vector().asDiagonal();
 
-    m_A.matrix().noalias() = dA.asDiagonal() * m_A * dQ.asDiagonal();
-    m_b.vector().noalias() = dA.asDiagonal() * m_b;
-
-    m_G.matrix().noalias() = dG.asDiagonal() * m_G * dQ.asDiagonal();
-    m_h.vector().noalias() = dG.asDiagonal() * m_h;*/
-
-    // TODO: solve using `xhat = dQ^-1 * x`, Qhat, chat, Ghat, ...
+    m_c.array() *= m_dQ.array();
+    m_h.array() *= m_dG.array();
+    m_b.array() *= m_dA.array();
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -265,14 +265,9 @@ program_t::solve_stats_t program_t::solve_wAG()
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
 
-scalar_t program_t::kkt_test() const
+scalar_t program_t::residual() const
 {
-    return kkt_optimality_test(m_x, m_u, m_v);
-}
-
-scalar_t program_t::kkt_test(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep) const
-{
-    return kkt_optimality_test(m_x + xstep * m_dx, m_u + ustep * m_du, m_v + vstep * m_dv);
+    return std::sqrt(m_rdual.squaredNorm() + m_rcent.squaredNorm() + m_rprim.squaredNorm());
 }
 
 void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
@@ -281,10 +276,19 @@ void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
     m_u = std::move(u);
     m_v = std::move(v);
 
+    m_original_x = m_x;
+    m_original_u = m_u;
+    m_original_v = m_v;
+
+    m_x.array() /= m_dQ.array();
+    m_u.array() /= m_dG.array();
+    m_v.array() /= m_dA.array();
+
     update(0.0, 0.0, 0.0, miu);
 }
 
-void program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep, const scalar_t miu)
+scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep, const scalar_t miu,
+                           const bool apply)
 {
     const auto m = this->m();
     const auto p = this->p();
@@ -320,8 +324,17 @@ void program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_
         m_rcent = -eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
     }
 
-    // apply the change
-    m_x = x;
-    m_u = u;
-    m_v = v;
+    // apply the change if requested
+    if (apply)
+    {
+        m_x = x;
+        m_u = u;
+        m_v = v;
+
+        m_original_x.array() = m_dQ.array() * m_x.array();
+        m_original_u.array() = m_dG.array() * m_u.array();
+        m_original_v.array() = m_dA.array() * m_v.array();
+    }
+
+    return residual();
 }
