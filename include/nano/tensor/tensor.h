@@ -532,6 +532,21 @@ public:
     }
 
     ///
+    /// \brief return the Eigen-expression associated to the given column index.
+    ///
+    auto col(const tensor_size_t col)
+    {
+        static_assert(trank == 2);
+        return matrix().col(col);
+    }
+
+    auto col(const tensor_size_t col) const
+    {
+        static_assert(trank == 2);
+        return matrix().col(col);
+    }
+
+    ///
     /// \brief return the Eigen-expression associated to the flatten segment [begin, begin + length).
     ///
     auto segment(const tensor_size_t begin, const tensor_size_t length)

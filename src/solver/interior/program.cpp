@@ -1,13 +1,8 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <nano/function/util.h>
-#include <solver/interior/minres.h>
 #include <solver/interior/program.h>
+#include <solver/interior/util.h>
 #include <unsupported/Eigen/IterativeSolvers>
-
-#include <iomanip>
-#include <iostream>
-#include <nano/function/lambda.h>
-#include <nano/solver.h>
 
 using namespace nano;
 
@@ -50,14 +45,14 @@ auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
     // TODO: add a variation for symmetric matrices
 
     // Ruiz-scale the system and solve it
-    const auto& [D1, D2] = ::nano::scale_ruiz(lmat);
+    const auto& [D1, D2] = ::nano::ruiz_equilibration(lmat);
     lvec.array() *= D1.array();
 
     const auto solver = make_solver_LDLT(lmat);
 
     // LBFGS (iterative)
     /*{
-        const auto [D1, Ahat, D2] = ::scale_ruiz(m_lmat);
+        const auto [D1, Ahat, D2] = ::ruiz_equilibration(m_lmat);
 
         const auto solver = solver_t::all().get("lbfgs");
         solver->parameter("solver::max_evals") = 10000;
@@ -105,16 +100,19 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
-    , m_A(std::move(constraints.m_A))
-    , m_b(std::move(constraints.m_b))
     , m_G(std::move(constraints.m_G))
     , m_h(std::move(constraints.m_h))
+    , m_A(std::move(constraints.m_A))
+    , m_b(std::move(constraints.m_b))
     , m_x(vector_t::zero(n()))
     , m_u(vector_t::zero(m()))
     , m_v(vector_t::zero(p()))
     , m_dx(vector_t::zero(n()))
     , m_du(vector_t::zero(m()))
     , m_dv(vector_t::zero(p()))
+    , m_dQ(vector_t::zero(n()))
+    , m_dG(vector_t::zero(m()))
+    , m_dA(vector_t::zero(p()))
     , m_rdual(n())
     , m_rcent(m())
     , m_rprim(p())
@@ -122,32 +120,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_original_u(m())
     , m_original_v(p())
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    // TODO: can compute the scaling factors without allocating M?!
-    auto M                  = matrix_t{matrix_t::zero(n + m + p, n + m + p)};
-    M.block(0, 0, n, n)     = m_Q.matrix();
-    M.block(n, 0, m, n)     = m_G.matrix();
-    M.block(n + m, 0, p, n) = m_A.matrix();
-    M.block(0, n, n, m)     = m_G.transpose();
-    M.block(0, n + m, n, p) = m_A.transpose();
-
-    // TODO: add a variation for symmetric matrices
-    const auto& [M1, M2] = ::nano::scale_ruiz(M);
-
-    m_dQ = M1.segment(0, n);
-    m_dG = M1.segment(n, m);
-    m_dA = M1.segment(n + m, p);
-
-    m_Q.matrix().noalias() = m_dQ.vector().asDiagonal() * m_Q * m_dQ.vector().asDiagonal();
-    m_G.matrix().noalias() = m_dG.vector().asDiagonal() * m_G * m_dQ.vector().asDiagonal();
-    m_A.matrix().noalias() = m_dA.vector().asDiagonal() * m_A * m_dQ.vector().asDiagonal();
-
-    m_c.array() *= m_dQ.array();
-    m_h.array() *= m_dG.array();
-    m_b.array() *= m_dA.array();
+    ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 }
 
 program_t::solve_stats_t program_t::solve()

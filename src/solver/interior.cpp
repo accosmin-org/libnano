@@ -55,6 +55,8 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
     register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
+
+    parameter("solver::max_evals") = 100;
 }
 
 rsolver_t solver_ipm_t::clone() const

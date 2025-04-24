@@ -11,13 +11,13 @@ namespace nano
 /// interior point method applied
 ///
 /// to the linear program:
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. G * x <= h
 ///          A * x = b
 ///
 /// or to the quadratic program:
 ///
-///     min  0.5 * x.dot(Q * x) + c.dot(x)
+///     min. 0.5 * x.dot(Q * x) + c.dot(x)
 ///     s.t. G * x <= h
 ///          A * x = b
 ///
@@ -111,10 +111,10 @@ private:
     const function_t& m_function; ///< original function to minimize
     matrix_t          m_Q;        ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
     vector_t          m_c;        ///<
-    matrix_t          m_A;        ///< equality constraints: A * x = b
-    vector_t          m_b;        ///<
     matrix_t          m_G;        ///< inequality constraints: G * x <= h
     vector_t          m_h;        ///<
+    matrix_t          m_A;        ///< equality constraints: A * x = b
+    vector_t          m_b;        ///<
     vector_t          m_x;        ///< solution
     vector_t          m_u;        ///< Lagrange multipliers for the inequality constraints
     vector_t          m_v;        ///< Lagrange multipliers for the equality constraints
@@ -122,8 +122,8 @@ private:
     vector_t          m_du;       ///< current variation of Lagrange multipliers for the inequality constraints
     vector_t          m_dv;       ///< current variation of Lagrange multipliers for the equality constraints
     vector_t          m_dQ;       ///<
-    vector_t          m_dA;       ///<
     vector_t          m_dG;       ///<
+    vector_t          m_dA;       ///<
     vector_t          m_rdual;    ///< dual residual
     vector_t          m_rcent;    ///< centering residual
     vector_t          m_rprim;    ///< primal residual

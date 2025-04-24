@@ -292,7 +292,7 @@ std::optional<linear_constraints_t> nano::make_linear_constraints(const function
     }
 }
 
-ruiz_scaled_t nano::scale_ruiz(matrix_t& A, const scalar_t epsilon)
+ruiz_scaled_t nano::ruiz_equilibration(matrix_t& A, const scalar_t epsilon)
 {
     auto& Ak = A;
     auto  D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
