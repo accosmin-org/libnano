@@ -1,5 +1,6 @@
 #include <solver/interior/util.h>
 
+#include <iomanip>
 #include <iostream>
 
 using namespace nano;
@@ -7,10 +8,26 @@ using namespace nano;
 namespace
 {
 template <class Qrow, class Grow, class Arow>
+auto inorm(const Qrow& qrow, const Grow& grow, const Arow& arow)
+{
+    const auto Qnorm = qrow.template lpNorm<Eigen::Infinity>();
+    const auto Gnorm = grow.template lpNorm<Eigen::Infinity>();
+    const auto Anorm = arow.template lpNorm<Eigen::Infinity>();
+    return std::max({Qnorm, Gnorm, Anorm});
+}
+
+template <class Qrow, class Grow, class Arow>
 auto delta(const Qrow& qrow, const Grow& grow, const Arow& arow)
 {
-    return std::max({qrow.template lpNorm<Eigen::Infinity>(), grow.template lpNorm<Eigen::Infinity>(),
-                     arow.template lpNorm<Eigen::Infinity>()});
+    const auto Qdelta = (1.0 - qrow.array()).matrix().template lpNorm<Eigen::Infinity>();
+    const auto Gdelta = (1.0 - grow.array()).matrix().template lpNorm<Eigen::Infinity>();
+    const auto Adelta = (1.0 - arow.array()).matrix().template lpNorm<Eigen::Infinity>();
+    return std::max({Qdelta, Gdelta, Adelta});
+}
+
+auto scale(const scalar_t row_norm, const scalar_t tau)
+{
+    return (row_norm > tau) ? (1.0 / std::sqrt(row_norm)) : 1.0;
 }
 } // namespace
 
@@ -24,11 +41,13 @@ scalar_t nano::make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& 
 }
 
 void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G, vector_t& h,
-                                       vector_t& dA, matrix_t& A, vector_t& b, const scalar_t epsilon)
+                                       vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
+                                       const scalar_t tolerance)
 {
-    const auto n = dQ.size();
-    const auto m = dG.size();
-    const auto p = dA.size();
+    const auto n         = dQ.size();
+    const auto m         = dG.size();
+    const auto p         = dA.size();
+    const auto max_iters = 100;
 
     assert(Q.rows() == n);
     assert(Q.cols() == n);
@@ -42,56 +61,51 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
     assert(A.cols() == n);
     assert(b.size() == p);
 
-    dQ.full(0.0);
-    dG.full(0.0);
-    dA.full(0.0);
+    dQ.full(1.0);
+    dG.full(1.0);
+    dA.full(1.0);
 
-    auto scale = 1.0;
+    auto cQ = make_full_vector<scalar_t>(n, 1.0);
+    auto cG = make_full_vector<scalar_t>(m, 1.0);
+    auto cA = make_full_vector<scalar_t>(p, 1.0);
 
-    for (auto k = 0; k < 100 && 1.0 - delta(dQ, dG, dA) > epsilon; ++k)
+    // TODO: the scaling factor `c` from (2) is not working!
+
+    for (auto k = 0; k < max_iters && (k == 0 || ::delta(cQ, cG, cA) > tolerance); ++k)
     {
-        std::cout << "k=" << k << ",delta=" << delta(dQ, dG, dA) << std::endl;
+        std::cout << std::setprecision(16) << "k=" << k << ",delta=" << ::delta(cQ, cG, cA) << std::endl;
 
         for (tensor_size_t i = 0; i < n; ++i)
         {
-            dQ(i) = 1.0 / std::sqrt(delta(Q.row(i), G.col(i), A.col(i)));
+            cQ(i) = ::scale(::inorm(Q.row(i), G.col(i), A.col(i)), tau);
         }
-
         for (tensor_size_t i = 0; i < m; ++i)
         {
-            dG(i) = 1.0 / std::sqrt(G.row(i).lpNorm<Eigen::Infinity>());
+            cG(i) = ::scale(G.row(i).lpNorm<Eigen::Infinity>(), tau);
         }
-
         for (tensor_size_t i = 0; i < p; ++i)
         {
-            dA(i) = 1.0 / std::sqrt(A.row(i).lpNorm<Eigen::Infinity>());
+            cA(i) = ::scale(A.row(i).lpNorm<Eigen::Infinity>(), tau);
         }
 
-        std::cout << "k=" << k << ",dQ=" << dQ.transpose() << std::endl;
-        std::cout << "k=" << k << ",dG=" << dG.transpose() << std::endl;
-        std::cout << "k=" << k << ",dA=" << dA.transpose() << std::endl;
-        std::cout << "k=" << k << ",delta=" << delta(dQ, dG, dA) << std::endl;
+        Q.matrix().noalias() = cQ.vector().asDiagonal() * Q * cQ.vector().asDiagonal();
+        G.matrix().noalias() = cG.vector().asDiagonal() * G * cQ.vector().asDiagonal();
+        A.matrix().noalias() = cA.vector().asDiagonal() * A * cQ.vector().asDiagonal();
 
-        Q.matrix().noalias() = dQ.vector().asDiagonal() * Q * dQ.vector().asDiagonal();
-        G.matrix().noalias() = dG.vector().asDiagonal() * G * dQ.vector().asDiagonal();
-        A.matrix().noalias() = dA.vector().asDiagonal() * A * dQ.vector().asDiagonal();
-
-        c.array() *= dQ.array();
-        h.array() *= dG.array();
-        b.array() *= dA.array();
-
-        continue;
-
-        Q.array() *= scale;
-        c.array() *= scale;
+        c.array() *= cQ.array();
+        h.array() *= cG.array();
+        b.array() *= cA.array();
 
         const auto gamma =
             1.0 / std::max(Q.matrix().rowwise().lpNorm<Eigen::Infinity>().mean(), c.lpNorm<Eigen::Infinity>());
 
-        std::cout << "k=" << k << ",scale=" << scale << ",gamma=" << gamma << std::endl;
+        std::cout << "k=" << k << ",gamma=" << gamma << std::endl;
 
-        scale *= gamma;
         Q.array() *= gamma;
         c.array() *= gamma;
+
+        dQ.array() *= cQ.array();
+        dG.array() *= cG.array();
+        dA.array() *= cA.array();
     }
 }

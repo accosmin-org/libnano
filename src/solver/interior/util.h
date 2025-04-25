@@ -37,8 +37,11 @@ NANO_PUBLIC scalar_t make_xmax(const vector_t& x, const vector_t& dx, const matr
 ///
 /// see (1) "A scaling algorithm to equalibrate both rows and columns norms in matrices", D. Ruiz, 2001
 /// see (2) "OSQP: an operator splitting solver for quadratic programs", B. Stellato et al., 2020
+/// see (3) "COSMO: A conic operator splitting method for convex conic problems", M. Garstka et al., 2020
+///
+/// NB: the implementation follows (3).
 ///
 NANO_PUBLIC void modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
-                                             vector_t& h, vector_t& dA, matrix_t& A, vector_t& b,
-                                             scalar_t epsilon = epsilon0<scalar_t>());
+                                             vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, scalar_t tau = 1e-6,
+                                             scalar_t tolerance = 1e-8);
 }
