@@ -1,8 +1,5 @@
 #include <solver/interior/util.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 namespace
@@ -43,9 +40,9 @@ scalar_t nano::make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& 
     return make_umax(h - G * x, -G * dx);
 }
 
-void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G, vector_t& h,
-                                       vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
-                                       const scalar_t tolerance)
+scalar_t nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
+                                           vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
+                                           const scalar_t tolerance)
 {
     const auto n         = dQ.size();
     const auto m         = dG.size();
@@ -68,17 +65,14 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
     dG.full(1.0);
     dA.full(1.0);
 
+    auto cc = 1.0;
     auto cQ = make_full_vector<scalar_t>(n, 1.0);
     auto cG = make_full_vector<scalar_t>(m, 1.0);
     auto cA = make_full_vector<scalar_t>(p, 1.0);
 
-    // TODO: the scaling factor `c` from (2) is not working!
-    // TODO: the scaling factor `gamma` from (2) is not working!
-
     for (auto k = 0; k < max_iters && (k == 0 || ::delta(cQ, cG, cA) > tolerance); ++k)
     {
-        std::cout << std::setprecision(16) << "k=" << k << ",delta=" << ::delta(cQ, cG, cA) << std::endl;
-
+        // matrix equilibration
         for (tensor_size_t i = 0; i < n; ++i)
         {
             ::scale(::inorm(Q.row(i), G.col(i), A.col(i)), tau, cQ(i));
@@ -100,16 +94,20 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
         h.array() *= cG.array();
         b.array() *= cA.array();
 
-        /*const auto gamma =
-            1.0 / std::max(Q.matrix().rowwise().lpNorm<Eigen::Infinity>().mean(), c.lpNorm<Eigen::Infinity>());
-
-        std::cout << "k=" << k << ",gamma=" << gamma << std::endl;
-
-        Q.array() *= gamma;
-        c.array() *= gamma;*/
-
+        // update equilibration matrices
         dQ.array() *= cQ.array();
         dG.array() *= cG.array();
         dA.array() *= cA.array();
+
+        // cost scaling
+        const auto Qnorm = Q.matrix().rowwise().lpNorm<Eigen::Infinity>().mean();
+        const auto cnorm = c.lpNorm<Eigen::Infinity>();
+        const auto gamma = 1.0 / std::max(Qnorm, cnorm);
+
+        cc *= gamma;
+        Q.array() *= gamma;
+        c.array() *= gamma;
     }
+
+    return cc;
 }

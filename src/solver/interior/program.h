@@ -58,11 +58,11 @@ public:
 
     const vector_t& dv() const { return m_dv; }
 
-    const vector_t& original_x() const { return m_original_x; }
+    const vector_t& original_x() const { return m_orig_x; }
 
-    const vector_t& original_u() const { return m_original_u; }
+    const vector_t& original_u() const { return m_orig_u; }
 
-    const vector_t& original_v() const { return m_original_v; }
+    const vector_t& original_v() const { return m_orig_v; }
 
     const function_t& function() const { return m_function; }
 
@@ -124,11 +124,12 @@ private:
     vector_t          m_dQ;       ///<
     vector_t          m_dG;       ///<
     vector_t          m_dA;       ///<
+    scalar_t          m_dc{1.0};  ///<
     vector_t          m_rdual;    ///< dual residual
     vector_t          m_rcent;    ///< centering residual
     vector_t          m_rprim;    ///< primal residual
-    vector_t          m_original_x; ///<
-    vector_t          m_original_u; ///<
-    vector_t          m_original_v; ///<
+    vector_t          m_orig_x;   ///< scaled solution
+    vector_t          m_orig_u;   ///< scaled Lagrange multipliers for the inequality constraints
+    vector_t          m_orig_v;   ///< scaled Lagrange multipliers for the equality constraints
 };
 } // namespace nano

@@ -116,11 +116,11 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_rdual(n())
     , m_rcent(m())
     , m_rprim(p())
-    , m_original_x(n())
-    , m_original_u(m())
-    , m_original_v(p())
+    , m_orig_x(n())
+    , m_orig_u(m())
+    , m_orig_v(p())
 {
-    ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
+    m_dc = ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -245,17 +245,13 @@ scalar_t program_t::residual() const
 
 void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
 {
-    m_x = std::move(x);
-    m_u = std::move(u);
-    m_v = std::move(v);
+    m_orig_x = std::move(x);
+    m_orig_u = std::move(u);
+    m_orig_v = std::move(v);
 
-    m_original_x = m_x;
-    m_original_u = m_u;
-    m_original_v = m_v;
-
-    m_x.array() /= m_dQ.array();
-    m_u.array() /= m_dG.array();
-    m_v.array() /= m_dA.array();
+    m_x.array() = m_orig_x.array() / m_dQ.array();
+    m_u.array() = m_orig_u.array() / m_dG.array() * m_dc;
+    m_v.array() = m_orig_v.array() / m_dA.array() * m_dc;
 
     update(0.0, 0.0, 0.0, miu);
 }
@@ -304,9 +300,9 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
         m_u = u;
         m_v = v;
 
-        m_original_x.array() = m_dQ.array() * m_x.array();
-        m_original_u.array() = m_dG.array() * m_u.array();
-        m_original_v.array() = m_dA.array() * m_v.array();
+        m_orig_x.array() = m_dQ.array() * m_x.array();
+        m_orig_u.array() = m_dG.array() * m_u.array() / m_dc;
+        m_orig_v.array() = m_dA.array() * m_v.array() / m_dc;
     }
 
     return residual();
