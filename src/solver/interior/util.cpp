@@ -40,9 +40,9 @@ scalar_t nano::make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& 
     return make_umax(h - G * x, -G * dx);
 }
 
-scalar_t nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
-                                           vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
-                                           const scalar_t tolerance)
+void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G, vector_t& h,
+                                       vector_t& dA, matrix_t& A, vector_t& b, const scalar_t tau,
+                                       const scalar_t tolerance)
 {
     const auto n         = dQ.size();
     const auto m         = dG.size();
@@ -109,5 +109,7 @@ scalar_t nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& 
         c.array() *= gamma;
     }
 
-    return cc;
+    // upscale Lagrange multipliers to recover the original problem
+    dG.array() /= cc;
+    dA.array() /= cc;
 }

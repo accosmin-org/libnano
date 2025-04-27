@@ -41,7 +41,7 @@ NANO_PUBLIC scalar_t make_xmax(const vector_t& x, const vector_t& dx, const matr
 ///
 /// NB: the implementation follows (3).
 ///
-NANO_PUBLIC scalar_t modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
-                                                 vector_t& h, vector_t& dA, matrix_t& A, vector_t& b,
-                                                 scalar_t tau = 1e-6, scalar_t tolerance = 1e-8);
+NANO_PUBLIC void modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, vector_t& dG, matrix_t& G,
+                                             vector_t& h, vector_t& dA, matrix_t& A, vector_t& b, scalar_t tau = 1e-8,
+                                             scalar_t tolerance = 1e-12);
 }

@@ -124,7 +124,6 @@ private:
     vector_t          m_dQ;       ///<
     vector_t          m_dG;       ///<
     vector_t          m_dA;       ///<
-    scalar_t          m_dc{1.0};  ///<
     vector_t          m_rdual;    ///< dual residual
     vector_t          m_rcent;    ///< centering residual
     vector_t          m_rprim;    ///< primal residual

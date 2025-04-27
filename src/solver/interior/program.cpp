@@ -45,8 +45,8 @@ auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
     // TODO: add a variation for symmetric matrices
 
     // Ruiz-scale the system and solve it
-    const auto& [D1, D2] = ::nano::ruiz_equilibration(lmat);
-    lvec.array() *= D1.array();
+    // const auto& [D1, D2] = ::nano::ruiz_equilibration(lmat);
+    // lvec.array() *= D1.array();
 
     const auto solver = make_solver_LDLT(lmat);
 
@@ -76,7 +76,7 @@ auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
     }*/
 
     lsol.vector() = solver.solve(lvec.vector());
-    lsol.array() *= D2.array();
+    // lsol.array() *= D2.array();
 
     // verify solution
     const auto valid = lmat.all_finite() && lvec.all_finite() && lsol.all_finite();
@@ -120,7 +120,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_orig_u(m())
     , m_orig_v(p())
 {
-    m_dc = ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
+    ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -250,8 +250,8 @@ void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
     m_orig_v = std::move(v);
 
     m_x.array() = m_orig_x.array() / m_dQ.array();
-    m_u.array() = m_orig_u.array() / m_dG.array() * m_dc;
-    m_v.array() = m_orig_v.array() / m_dA.array() * m_dc;
+    m_u.array() = m_orig_u.array() / m_dG.array();
+    m_v.array() = m_orig_v.array() / m_dA.array();
 
     update(0.0, 0.0, 0.0, miu);
 }
@@ -301,8 +301,8 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
         m_v = v;
 
         m_orig_x.array() = m_dQ.array() * m_x.array();
-        m_orig_u.array() = m_dG.array() * m_u.array() / m_dc;
-        m_orig_v.array() = m_dA.array() * m_v.array() / m_dc;
+        m_orig_u.array() = m_dG.array() * m_u.array();
+        m_orig_v.array() = m_dA.array() * m_v.array();
     }
 
     return residual();
