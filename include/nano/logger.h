@@ -127,7 +127,7 @@ private:
 
     // attributes
     class impl_t;
-    std::unique_ptr<impl_t> m_pimpl;  ///< implementation details
+    std::unique_ptr<impl_t> m_pimpl; ///< implementation details
 };
 
 ///
