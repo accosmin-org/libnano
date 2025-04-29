@@ -26,7 +26,7 @@ void scale(const scalar_t row_norm, const scalar_t tau, scalar_t& current_scale)
 {
     if (row_norm > tau)
     {
-        current_scale = 1.0 / std::sqrt(row_norm);
+        current_scale = 1.0 / std::sqrt(std::min(row_norm, 1.0 / tau));
     }
 }
 } // namespace

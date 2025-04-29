@@ -143,14 +143,14 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
-        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), 2.0);
-        const auto ustep = G.size() == 0 ? s : (s * make_umax(program.u(), program.du()));
-        const auto xstep = G.size() == 0 ? s : (s * make_xmax(program.x(), program.dx(), G, h));
-        const auto vstep = ustep;
+        const auto s        = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), 2.0);
+        const auto ustep    = G.size() == 0 ? s : (s * make_umax(program.u(), program.du()));
+        const auto xstep    = G.size() == 0 ? s : (s * make_xmax(program.x(), program.dx(), G, h));
+        const auto vstep    = ustep;
         const auto residual = program.residual();
 
-        auto lsearch_iter = 0;
-        auto lsearch_step = 1.0;
+        auto lsearch_iter     = 0;
+        auto lsearch_step     = 1.0;
         auto lsearch_residual = 0.0;
 
         for (; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
