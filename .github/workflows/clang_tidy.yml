@@ -16,10 +16,10 @@ jobs:
           misc, cert, hicpp, bugprone, modernize, performance, portability, readability,
           clang-analyzer, cppcoreguidelines]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
+      run: bash scripts/setup_ubuntu2404.sh --default
     - name: clang-tidy-${{matrix.check_type}}
       run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-${{matrix.check_type}}
