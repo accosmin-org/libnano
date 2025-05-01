@@ -49,10 +49,7 @@ scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     const auto b = bias(x);
     const auto W = weights(x);
 
-    for (auto& accumulator : m_accumulators)
-    {
-        accumulator.clear();
-    }
+    std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     m_iterator.loop(
         [&](tensor_range_t range, size_t tnum, tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
@@ -70,9 +67,8 @@ scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
                 m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
 
                 const auto gmatrix = accumulator.m_vgrads.reshape(range.size(), m_tsize);
-
-                accumulator.m_gb1.vector() += gmatrix.matrix().colwise().sum();
-                accumulator.m_gW1.matrix() += gmatrix.transpose() * inputs;
+                accumulator.m_gb1  = accumulator.m_gb1 + gmatrix.matrix().colwise().sum();
+                accumulator.m_gW1  = accumulator.m_gW1 + gmatrix.transpose() * inputs;
             }
         });
 
