@@ -67,8 +67,8 @@ scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
                 m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
 
                 const auto gmatrix = accumulator.m_vgrads.reshape(range.size(), m_tsize);
-                accumulator.m_gb1  = accumulator.m_gb1 + gmatrix.matrix().colwise().sum();
-                accumulator.m_gW1  = accumulator.m_gW1 + gmatrix.transpose() * inputs;
+                accumulator.m_gb1 += gmatrix.matrix().colwise().sum().transpose();
+                accumulator.m_gW1 += gmatrix.matrix().transpose() * inputs;
             }
         });
 

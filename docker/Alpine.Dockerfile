@@ -8,4 +8,4 @@ RUN apk add --no-cache bash cmake git eigen-dev grep gdb
 
 RUN apk add --no-cache ccache samurai g++ clang clang-extra-tools valgrind cppcheck
 
-CMD bash
+CMD ["bash"]
