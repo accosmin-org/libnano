@@ -5,17 +5,6 @@
 using namespace nano;
 using namespace nano::gboost;
 
-namespace
-{
-void clear(accumulators_t& accumulators)
-{
-    for (auto& accumulator : accumulators)
-    {
-        accumulator.clear();
-    }
-}
-} // namespace
-
 scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const cluster_t& cluster,
                                    const tensor4d_t& soutputs, const tensor4d_t& woutputs)
     : function_t("gboost-scale", cluster.groups())
@@ -46,7 +35,7 @@ scalar_t scale_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == m_cluster.groups());
 
-    ::clear(m_accumulators);
+    std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     const auto& samples = m_iterator.samples();
 
@@ -122,7 +111,7 @@ scalar_t bias_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == tsize);
 
-    ::clear(m_accumulators);
+    std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     m_iterator.loop(
         [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
@@ -143,7 +132,8 @@ scalar_t bias_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
 
-                accumulator.m_gb1 += vgrads.reshape(range.size(), tsize).matrix().colwise().sum();
+                const auto gmatrix = vgrads.reshape(range.size(), tsize);
+                accumulator.m_gb1 += gmatrix.matrix().colwise().sum().transpose();
             }
         });
 

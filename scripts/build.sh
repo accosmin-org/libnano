@@ -17,6 +17,14 @@ threads=$((cores+1))
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"
 
+function setup_gcc {
+    export CXX=g++
+}
+
+function setup_clang {
+    export CXX=clang++
+}
+
 function setup_lto {
     export CXXFLAGS="${CXXFLAGS} -flto"
 }
@@ -564,6 +572,10 @@ usage: $0 [OPTIONS]
 options:
     -h,--help
         print usage
+    --gcc
+        setup g++ compiler
+    --clang
+        setup clang++ compiler
     --lld
         setup compiler and linker flags to enable the llvm linker
     --lto
@@ -651,6 +663,8 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
+        --gcc)                          setup_gcc;;
+        --clang)                        setup_clang;;
         --lld)                          setup_lld;;
         --lto)                          setup_lto;;
         --thinlto)                      setup_thinlto;;

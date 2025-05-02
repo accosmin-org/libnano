@@ -8,10 +8,10 @@ concurrency:
 
 jobs:
   clang-format:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --llvm 18
+      run: bash scripts/setup_ubuntu2404.sh --default
     - name: clang-format
-      run: bash scripts/build.sh --clang-suffix -18 --clang-format
+      run: bash scripts/build.sh --clang-format

@@ -19,22 +19,22 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
-        CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        GCOV=gcov bash scripts/build.sh --gcc --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov \
           --codecov
 
   llvm-cov-and-sonar:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: setup
-      run: bash scripts/setup_ubuntu2204.sh --default
+      run: bash scripts/setup_ubuntu2404.sh --default
     - name: code quality (clang, libcpp, llvm-cov, sonar scanner)
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        bash scripts/build.sh --clang --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov \
           --sonar
