@@ -14,4 +14,4 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: cppcheck
-      run: CXX=g++ bash scripts/build.sh --config --cppcheck
+      run: bash scripts/build.sh --gcc --config --cppcheck

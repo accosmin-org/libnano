@@ -19,7 +19,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
-        CXX=g++ GCOV=gcov bash scripts/build.sh --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        GCOV=gcov bash scripts/build.sh --gcc --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov \
           --codecov
 
@@ -35,6 +35,6 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-        CXX=clang++ bash scripts/build.sh --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        bash scripts/build.sh --clang --suffix llvm-lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --llvm-coverage --libcpp -DNANO_ENABLE_LLVM_COV=ON --config --build --test --llvm-cov \
           --sonar

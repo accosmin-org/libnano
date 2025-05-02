@@ -14,7 +14,7 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: ASAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
+      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
 
   lsan-gcc:
     runs-on: ubuntu-24.04
@@ -23,7 +23,7 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: LSAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
+      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
 
   usan-gcc:
     runs-on: ubuntu-24.04
@@ -32,7 +32,7 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: USAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
+      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
 
   tsan-gcc:
     runs-on: ubuntu-24.04
@@ -41,4 +41,4 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: TSAN (gcc)
-      run: CXX=g++ bash scripts/build.sh -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
+      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test

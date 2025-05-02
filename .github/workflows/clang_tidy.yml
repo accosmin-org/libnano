@@ -22,4 +22,4 @@ jobs:
     - name: setup
       run: bash scripts/setup_ubuntu2404.sh --default
     - name: clang-tidy-${{matrix.check_type}}
-      run: CXX=clang++ bash scripts/build.sh --config --build --clang-tidy-${{matrix.check_type}}
+      run: bash scripts/build.sh --clang --config --build --clang-tidy-${{matrix.check_type}}
