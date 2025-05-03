@@ -51,10 +51,8 @@ solver_ipm_t::solver_ipm_t()
 {
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
-    register_parameter(parameter_t::make_scalar("solver::ipm::beta", 0.0, LT, 0.7, LT, 1.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::alpha", 0.0, LT, 1e-4, LT, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
-    register_parameter(parameter_t::make_integer("solver::ipm::lsearch_max_iters", 10, LE, 100, LE, 1000));
 
     parameter("solver::max_evals") = 100;
 }
@@ -113,13 +111,11 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, [[maybe_unu
 
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
-    const auto s0                = parameter("solver::ipm::s0").value<scalar_t>();
-    const auto miu               = parameter("solver::ipm::miu").value<scalar_t>();
-    const auto beta              = parameter("solver::ipm::beta").value<scalar_t>();
-    const auto alpha             = parameter("solver::ipm::alpha").value<scalar_t>();
-    const auto epsilon0          = parameter("solver::ipm::epsilon0").value<scalar_t>();
-    const auto lsearch_max_iters = parameter("solver::ipm::lsearch_max_iters").value<tensor_size_t>();
-    const auto max_evals         = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
+    const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
+    const auto epsilon0  = parameter("solver::ipm::epsilon0").value<scalar_t>();
+    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& G        = program.G();
     const auto& h        = program.h();
@@ -143,38 +139,25 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
-        const auto s        = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), 2.0);
+        const auto s        = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
         const auto ustep    = G.size() == 0 ? s : (s * make_umax(program.u(), program.du()));
         const auto xstep    = G.size() == 0 ? s : (s * make_xmax(program.x(), program.dx(), G, h));
         const auto vstep    = ustep;
-        const auto residual = program.residual();
 
-        auto lsearch_iter     = 0;
-        auto lsearch_step     = 1.0;
-        auto lsearch_residual = 0.0;
+        const auto curr_residual = program.residual();
+        const auto next_residual = program.update(xstep, ustep, vstep, miu);
 
-        for (; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
-        {
-            lsearch_residual = program.update(lsearch_step * xstep, lsearch_step * ustep, lsearch_step * vstep, miu);
-            if (lsearch_residual <= (1.0 - alpha * lsearch_step) * residual)
-            {
-                break;
-            }
+        logger.info("s=", s, "/", s0, ",step=(", xstep, ",", ustep, "),residual=", next_residual, "/", curr_residual,
+                    ".\n");
 
-            lsearch_step *= beta;
-        }
-
-        logger.info("s=", s, "/", s0, ",step=(", xstep, ",", ustep, "),lsearch=(iter=", lsearch_iter,
-                    ",step=", lsearch_step, ",residual=", lsearch_residual, "/", residual, ").\n");
-
-        if (std::min({xstep, ustep, lsearch_step}) < std::numeric_limits<scalar_t>::epsilon() ||
-            lsearch_iter >= lsearch_max_iters || std::fabs(lsearch_residual - residual) < epsilon0)
+        if (std::min({xstep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon() ||
+            std::fabs(next_residual - curr_residual) < epsilon0 || next_residual > 1e+3 * curr_residual)
         {
             break;
         }
 
         // update state
-        program.update(lsearch_step * xstep, lsearch_step * ustep, lsearch_step * vstep, miu, true);
+        program.update(xstep, ustep, vstep, miu, true);
         state.update(program.original_x(), program.original_v(), program.original_u());
 
         done_kkt_optimality_test(state, state.valid(), logger);
