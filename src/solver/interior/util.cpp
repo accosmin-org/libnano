@@ -48,9 +48,10 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
     const auto m         = dG.size();
     const auto p         = dA.size();
     const auto max_iters = 100;
+    const auto is_linear = Q.size() == 0;
 
-    assert(Q.rows() == n);
-    assert(Q.cols() == n);
+    assert(is_linear || Q.rows() == n);
+    assert(is_linear || Q.cols() == n);
     assert(c.size() == n);
 
     assert(G.rows() == m);
@@ -73,7 +74,7 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
     for (auto k = 0; k < max_iters && (k == 0 || ::delta(cQ, cG, cA) > tolerance); ++k)
     {
         // matrix equilibration
-        for (tensor_size_t i = 0; i < n; ++i)
+        for (tensor_size_t i = 0; i < n && !is_linear; ++i)
         {
             ::scale(::inorm(Q.row(i), G.col(i), A.col(i)), tau, cQ(i));
         }
@@ -86,7 +87,10 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
             ::scale(A.row(i).lpNorm<Eigen::Infinity>(), tau, cA(i));
         }
 
-        Q.matrix().noalias() = cQ.vector().asDiagonal() * Q * cQ.vector().asDiagonal();
+        if (!is_linear)
+        {
+            Q.matrix().noalias() = cQ.vector().asDiagonal() * Q * cQ.vector().asDiagonal();
+        }
         G.matrix().noalias() = cG.vector().asDiagonal() * G * cQ.vector().asDiagonal();
         A.matrix().noalias() = cA.vector().asDiagonal() * A * cQ.vector().asDiagonal();
 
@@ -95,12 +99,15 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
         b.array() *= cA.array();
 
         // update equilibration matrices
-        dQ.array() *= cQ.array();
+        if (!is_linear)
+        {
+            dQ.array() *= cQ.array();
+        }
         dG.array() *= cG.array();
         dA.array() *= cA.array();
 
         // cost scaling
-        const auto Qnorm = Q.matrix().rowwise().lpNorm<Eigen::Infinity>().mean();
+        const auto Qnorm = is_linear ? 0.0 : Q.matrix().rowwise().lpNorm<Eigen::Infinity>().mean();
         const auto cnorm = c.lpNorm<Eigen::Infinity>();
         const auto gamma = 1.0 / std::max(Qnorm, cnorm);
 
