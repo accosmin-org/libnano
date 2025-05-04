@@ -52,7 +52,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::epsilon0", 0.0, LT, 1e-20, LE, 1e-8));
+    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 5, LE, 50));
 
     parameter("solver::max_evals") = 100;
 }
@@ -114,14 +114,17 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto epsilon0  = parameter("solver::ipm::epsilon0").value<scalar_t>();
+    const auto patience  = parameter("solver::ipm::patience").value<tensor_size_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& G        = program.G();
     const auto& h        = program.h();
     const auto& function = program.function();
 
-    auto state = solver_state_t{function, program.x()};
+    auto bstate = solver_state_t{function, program.x()}; ///< best state (KKT optimality criterion-wise)
+    auto cstate = bstate;                                ///< current state
+                                                         ///
+    auto last_better_iter = tensor_size_t{0};
 
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
@@ -150,21 +153,33 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         logger.info("s=", s, "/", s0, ",step=(", xstep, ",", ustep, "),residual=", next_residual, "/", curr_residual,
                     ".\n");
 
-        if (std::min({xstep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon() ||
-            std::fabs(next_residual - curr_residual) < epsilon0 || next_residual > 1e+3 * curr_residual)
+        if (std::min({xstep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
-        // update state
+        // update current state
         program.update(xstep, ustep, vstep, miu, true);
-        state.update(program.original_x(), program.original_v(), program.original_u());
+        cstate.update(program.original_x(), program.original_v(), program.original_u());
 
-        done_kkt_optimality_test(state, state.valid(), logger);
+        done_kkt_optimality_test(cstate, cstate.valid(), logger);
+
+        // update best state (if possible)
+        if (cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
+        {
+            last_better_iter = 0;
+            bstate           = cstate;
+            continue;
+        }
+
+        if ((++last_better_iter) > patience)
+        {
+            break;
+        }
     }
 
     // check convergence
-    done_kkt_optimality_test(state, state.valid(), logger);
+    done_kkt_optimality_test(bstate, bstate.valid(), logger);
 
-    return state;
+    return bstate;
 }
