@@ -39,15 +39,8 @@ namespace
     return Eigen::DGMRES<eigen_matrix_t<scalar_t>, Eigen::DiagonalPreconditioner<scalar_t>>{lmat.matrix()};
 }
 
-auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
+auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 {
-    // FIXME: is Ruiz scaling still needed here?!
-    // TODO: add a variation for symmetric matrices
-
-    // Ruiz-scale the system and solve it
-    // const auto& [D1, D2] = ::nano::ruiz_equilibration(lmat);
-    // lvec.array() *= D1.array();
-
     const auto solver = make_solver_LDLT(lmat);
 
     // LBFGS (iterative)
@@ -76,7 +69,6 @@ auto solve_kkt(matrix_t& lmat, vector_t& lvec, vector_t& lsol)
     }*/
 
     lsol.vector() = solver.solve(lvec.vector());
-    // lsol.array() *= D2.array();
 
     // verify solution
     const auto valid = lmat.all_finite() && lvec.all_finite() && lsol.all_finite();
@@ -124,84 +116,6 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 }
 
 program_t::solve_stats_t program_t::solve()
-{
-    if (m_A.size() == 0 && m_G.size() > 0)
-    {
-        return solve_noA();
-    }
-    else if (m_G.size() == 0 && m_A.size() > 0)
-    {
-        return solve_noG();
-    }
-    else
-    {
-        return solve_wAG();
-    }
-}
-
-program_t::solve_stats_t program_t::solve_noA()
-{
-    const auto n = this->n();
-
-    auto lmat = matrix_t{n, n};
-    auto lvec = vector_t{n};
-    auto lsol = vector_t{n};
-
-    const auto Gxmh  = m_G * m_x - m_h;
-    const auto hess  = m_G.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * m_G.matrix();
-    const auto rdual = m_rdual + m_G.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
-
-    if (m_Q.size() == 0)
-    {
-        lmat = -hess;
-    }
-    else
-    {
-        lmat = m_Q - hess;
-    }
-    lvec = -rdual;
-
-    const auto stats = solve_kkt(lmat, lvec, lsol);
-
-    m_dx = lsol.segment(0, n);
-    m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
-
-    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
-}
-
-program_t::solve_stats_t program_t::solve_noG()
-{
-    const auto n = this->n();
-    const auto p = this->p();
-
-    auto lmat = matrix_t{n + p, n + p};
-    auto lvec = vector_t{n + p};
-    auto lsol = vector_t{n + p};
-
-    if (m_Q.size() == 0)
-    {
-        lmat.block(0, 0, n, n).array() = 0.0;
-    }
-    else
-    {
-        lmat.block(0, 0, n, n) = m_Q.matrix();
-    }
-    lmat.block(0, n, n, p)         = m_A.transpose();
-    lmat.block(n, 0, p, n)         = m_A.matrix();
-    lmat.block(n, n, p, p).array() = 0.0;
-
-    lvec.segment(0, n) = -m_rdual;
-    lvec.segment(n, p) = -m_rprim;
-
-    const auto stats = solve_kkt(lmat, lvec, lsol);
-
-    m_dx = lsol.segment(0, n);
-    m_dv = lsol.segment(n, p);
-
-    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
-}
-
-program_t::solve_stats_t program_t::solve_wAG()
 {
     const auto n = this->n();
     const auto p = this->p();

@@ -103,10 +103,6 @@ private:
 
     tensor_size_t m() const { return m_G.rows(); }
 
-    solve_stats_t solve_noA();
-    solve_stats_t solve_noG();
-    solve_stats_t solve_wAG();
-
     // attributes
     const function_t& m_function; ///< original function to minimize
     matrix_t          m_Q;        ///< objective: 1/2 * x.dot(Q * x) + c.dot(x)
