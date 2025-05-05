@@ -9,7 +9,7 @@ namespace nano
 ///     exercise 4.8 (c), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over a rectangle:
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. l <= x <= u.
 ///
 class NANO_PUBLIC linear_program_cvx48c_t final : public linear_program_t

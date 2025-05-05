@@ -8,21 +8,21 @@ namespace nano
 /// \brief models the class of linear programs.
 ///
 /// general form (equality constraint, inequality constraint):
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. A * x = b
 ///     and  G * x <= h.
 ///
 /// standard form (equality constraint, no inequality constraint):
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. A * x = b
 ///     and  x >= 0.0.
 ///
 /// inequality form (no equality constraint, inequality constraint):
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. A * x <= b.
 ///
 /// rectangle-inequality form (no equality constraint, inequality constraint):
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. l <= x <= u.
 ///
 /// NB: the equality and the inequality constraints are optional.

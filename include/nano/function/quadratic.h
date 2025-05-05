@@ -6,7 +6,7 @@ namespace nano
 {
 ///
 /// \brief models the general quadratic programs:
-///     min  f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
+///     min. f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
 ///     s.t. A * x = b
 ///     and  G * x <= h.
 ///

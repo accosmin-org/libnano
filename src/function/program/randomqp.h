@@ -6,23 +6,19 @@ namespace nano
 {
 ///
 /// \brief test/benchmark quadratic program from
-///     exercise 16.2, "Numerical optimization", Nocedal & Wright, 2nd edition
+///     appendix A.1, "OSQP: an operator splitting solver for quadratic programs", B. Stellato et al, 2020
 ///
 /// minimize a convex quadratic function:
-///     min. 1/2 * (x - x0).dot(x - x0)
-///     s.t. A * x = b
-///     and  1 <= neqs=A.rows() <= n.
+///     min. 1/2 * x.dot(P * x) + q.dot(x)
+///     s.t. l <= A * x <= u.
 ///
-/// NB: the implementation scales the number of equalities `neqs` to the number of dimensions `n`, thus it uses a
-/// dimension-free parameter in the range (0, 1].
-///
-class NANO_PUBLIC quadratic_program_numopt162_t final : public quadratic_program_t
+class NANO_PUBLIC quadratic_program_randomqp_t final : public quadratic_program_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit quadratic_program_numopt162_t(tensor_size_t dims = 10, scalar_t neqs = 1.0);
+    explicit quadratic_program_randomqp_t(tensor_size_t dims = 10, scalar_t ineqs = 10.0, scalar_t alpha = 1e-2);
 
     ///
     /// \brief @see clonable_t

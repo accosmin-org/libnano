@@ -9,9 +9,9 @@ namespace nano
 ///     exercise 4.9, see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize the square linear program:
-///  min  c.dot(x)
-///  s.t. Ax <= b
-///  and  A is square and nonsingular and A^T * c <= 0 (to be feasible).
+///     min. c.dot(x)
+///     s.t. Ax <= b
+///     and  A is square and nonsingular and A^T * c <= 0 (to be feasible).
 ///
 class NANO_PUBLIC linear_program_cvx49_t final : public linear_program_t
 {

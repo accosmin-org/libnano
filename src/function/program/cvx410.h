@@ -9,9 +9,9 @@ namespace nano
 ///     exercise 4.10, see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// standard form linear program:
-///  min  c.dot(x)
-///  s.t. Ax = b, x >= 0
-///  and  the linear equality has exactly one solution (in this case A = D^t * D + I).
+///     min. c.dot(x)
+///     s.t. Ax = b, x >= 0
+///     and  the linear equality has exactly one solution (in this case A = D^t * D + I).
 ///
 /// NB: b is generated as A * x, where x has all positive components (thus a feasible program).
 ///

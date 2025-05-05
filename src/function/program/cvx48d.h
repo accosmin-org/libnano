@@ -9,7 +9,7 @@ namespace nano
 ///     exercise 4.8 (d), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over the probability simplex:
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. 1.dot(x) = 1, x >= 0.
 ///
 class NANO_PUBLIC linear_program_cvx48d_eq_t final : public linear_program_t
@@ -36,7 +36,7 @@ public:
 ///     exercise 4.8 (d), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over the probability simplex:
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. 1.dot(x) <= 1, x >= 0.
 ///
 class NANO_PUBLIC linear_program_cvx48d_ineq_t final : public linear_program_t

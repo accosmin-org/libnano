@@ -9,7 +9,7 @@ namespace nano
 ///     exercise 4.8 (b), see "Convex Optimization", by S. Boyd and L. Vanderberghe.
 ///
 /// minimize a linear function over a halfspace:
-///     min  c.dot(x)
+///     min. c.dot(x)
 ///     s.t. a.dot(x) <= b,
 ///     s.t. c = lambda * a
 ///     and  lambda <= 0.0.

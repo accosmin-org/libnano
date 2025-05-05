@@ -9,9 +9,9 @@ namespace nano
 ///     exercise 4.8 (f), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over a unit box with a weighted budget constraint:
-///  min  c.dot(x)
-///  s.t. d.dot(x) = alpha * 1.dot(d), 0 <= x <= 1
-///  and  d > 0 and 0 <= alpha <= 1.
+///     min. c.dot(x)
+///     s.t. d.dot(x) = alpha * 1.dot(d), 0 <= x <= 1
+///     and  d > 0 and 0 <= alpha <= 1.
 ///
 class NANO_PUBLIC linear_program_cvx48f_t final : public linear_program_t
 {

@@ -11,13 +11,13 @@ using namespace nano;
 int main(const int, char*[])
 {
     // construct a quadratic program in general form:
-    //  min f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
-    //  s.t A * x = b
-    //  and G * x <= h.
+    //      min. f(x) = 1/2 * x.dot(Q * x) + c.dot(x)
+    //      s.t. A * x = b
+    //      and  G * x <= h.
     //
     // in particular:
-    //  min x1^2 + 4 * x2^2 - 8 * x1 - 16 * x2
-    //  s.t x1 + 2 * x2 = 12, x1 + x2 <= 10, 1 <= x1 <= 3, 1 <= x2 <= 6.
+    //      min. x1^2 + 4 * x2^2 - 8 * x1 - 16 * x2
+    //      s.t. x1 + 2 * x2 = 12, x1 + x2 <= 10, 1 <= x1 <= 3, 1 <= x2 <= 6.
     //
     // with solution: (3, 4.5)
     const auto n_equals   = 1;

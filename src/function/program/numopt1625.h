@@ -9,7 +9,7 @@ namespace nano
 ///     exercise 16.25, "Numerical optimization", Nocedal & Wright, 2nd edition
 ///
 /// minimize a convex quadratic function:
-///     min  1/2 * (x - xhat).dot(x - xhat)
+///     min. 1/2 * (x - xhat).dot(x - xhat)
 ///     s.t. l <= x <= u.
 ///
 class NANO_PUBLIC quadratic_program_numopt1625_t final : public quadratic_program_t

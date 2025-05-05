@@ -34,6 +34,7 @@
 #include <function/program/cvx49.h>
 #include <function/program/numopt162.h>
 #include <function/program/numopt1625.h>
+#include <function/program/randomqp.h>
 
 #include <function/mlearn/elasticnet.h>
 #include <function/mlearn/lasso.h>
@@ -118,6 +119,15 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
         for (const auto neqs : {1e-6, 0.1, 0.2, 0.5, 0.8, 1.0})
         {
             function->config("numopt162::neqs", neqs);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("randomqp::nineqs") != nullptr)
+    {
+        for (const auto nineqs : {5.0, 10.0, 20.0})
+        {
+            function->config("randomqp::nineqs", nineqs);
             functions.emplace_back(function->make(dims));
         }
     }
@@ -333,6 +343,8 @@ factory_t<function_t>& function_t::all()
             "quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition");
         manager.add<quadratic_program_numopt1625_t>(
             "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
+        manager.add<quadratic_program_randomqp_t>(
+            "quadratic program: A.1, 'OSQP: an operator splitting solver for quadratic programs'");
     };
 
     static std::once_flag flag;

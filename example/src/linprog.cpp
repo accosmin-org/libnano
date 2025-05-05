@@ -11,13 +11,13 @@ using namespace nano;
 int main(const int, char*[])
 {
     // construct a linear program in standard form:
-    //  min c.dot(x)
-    //  s.t Ax = b
-    //  and x >= 0.
+    //      min. c.dot(x)
+    //      s.t. Ax = b
+    //      and  x >= 0.
     //
     // in particular:
-    //  min x1 + x2 + x3
-    //  s.t 2 * x1 + x2 = 4, x1 + x3 = 1, x1 >= 0, x2 >= 0, x3 >= 0.
+    //      min. x1 + x2 + x3
+    //      s.t. 2 * x1 + x2 = 4, x1 + x3 = 1, x1 >= 0, x2 >= 0, x3 >= 0.
     //
     // with solution: (1, 2, 0, 0)
     const auto n_equals = 2;

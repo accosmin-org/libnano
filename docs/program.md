@@ -17,34 +17,34 @@ Linear and quadratic programs can be defined using the associated classes [linea
 
 * the `standard linear program` consists of equality contraints and positive element-wise solutions:
 ```
- min  c.dot(x)                          auto program = linear_program_t{"lp", c};
+ min. c.dot(x)                          auto program = linear_program_t{"lp", c};
  s.t. A * x = b,                        A * program.variable() == b;
       x >= 0.                           program.variable() >= 0.0;
 ```
 
 * the `inequality linear program` consists of only inequality constraints:
 ```
- min  c.dot(x)                          auto program = linear_program_t{"lp", c};
+ min. c.dot(x)                          auto program = linear_program_t{"lp", c};
  s.t. A * x <= b.                       A * program.variable() <= b;
 ```
 
 * the `general linear program` consists of both equality and inequality constraints:
 ```
- min  c.dot(x)                          auto program = linear_program_t{"lp", c};
+ min. c.dot(x)                          auto program = linear_program_t{"lp", c};
  s.t. A * x = b,                        A * program.variable() == b;
       G * x <= h.                       G * program.variable() <= h;
 ```
 
 * the `rectangle linear program` consists of element-wise inequality constraints:
 ```
- min  c.dot(x)                          auto program = linear_program_t{"lp", c};
+ min. c.dot(x)                          auto program = linear_program_t{"lp", c};
  s.t. A * x = b,                        A * program.variable() == b;
       l <= x <= u.                      l <= program.variable(); program.variable() <= u;
 ```
 
 * the `general quadratic program` consists of both equality and inequality constraints:
 ```
- min  1/2 x.dot(Q * x) + c.dot(x)       auto program = quadratic_program_t{"qp", Q, c};
+ min. 1/2 x.dot(Q * x) + c.dot(x)       auto program = quadratic_program_t{"qp", Q, c};
  s.t. A * x = b,                        A * program.variable() == b;
       G * x <= h.                       G * program.variable() <= h;
 ```
@@ -64,7 +64,7 @@ program.variable() >= 0.0;
 ```
 illustrates how to define the following standard-form linear program:
 ```
- min  x1 + x2 + x3
+ min. x1 + x2 + x3
  s.t. 2 * x1 + x2 = 4,
       x1 + x3 = 1,
       (x1, x2, x3) >= 0.

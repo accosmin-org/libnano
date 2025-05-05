@@ -9,9 +9,9 @@ namespace nano
 ///     exercise 4.8 (e), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over a unit box with a total budget constraint:
-///  min  c.dot(x)
-///  s.t. 1.dot(x) = alpha, 0 <= x <= 1
-///  and  alpha is an integer between 0 and n.
+///     min. c.dot(x)
+///     s.t. 1.dot(x) = alpha, 0 <= x <= 1
+///     and  alpha is an integer between 0 and n.
 ///
 /// NB: the implementation scales `alpha` to the number of dimensions `n`, thus it uses a dimension-free parameter in
 /// the range [0, 1].
@@ -45,9 +45,9 @@ public:
 ///     exercise 4.8 (e), see "Convex Optimization", by S. Boyd and L. Vanderberghe
 ///
 /// minimize a linear function over a unit box with a total budget constraint:
-///  min  c.dot(x)
-///  s.t. 1.dot(x) <= alpha, 0 <= x <= 1
-///  and  alpha is an integer between 1 and n.
+///     min. c.dot(x)
+///     s.t. 1.dot(x) <= alpha, 0 <= x <= 1
+///     and  alpha is an integer between 1 and n.
 ///
 /// NB: the implementation scales `alpha` to the number of dimensions `n`, resulting in (0, 1].
 ///
