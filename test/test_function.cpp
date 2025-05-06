@@ -387,6 +387,34 @@ UTEST_CASE(make_strictly_feasible_inequalities)
     }
 }
 
+UTEST_CASE(make_strictly_feasible_builtin_programs)
+{
+    auto functions = function_t::make({2, 16, function_type::linear_program});
+
+    for (auto& function : function_t::make({2, 16, function_type::quadratic_program}))
+    {
+        functions.push_back(std::move(function));
+    }
+
+    for (const auto& function : functions)
+    {
+        UTEST_NAMED_CASE(scat(function->name()));
+
+        const auto lconstraints = make_linear_constraints(*function);
+        UTEST_REQUIRE(lconstraints.has_value());
+
+        const auto& G = lconstraints.value().m_G;
+        const auto& h = lconstraints.value().m_h;
+
+        if (G.size() > 0)
+        {
+            const auto x0 = make_strictly_feasible(G, h);
+            UTEST_REQUIRE(x0.has_value());
+            UTEST_CHECK_LESS((G * x0.value() - h).maxCoeff(), 0.0);
+        }
+    }
+}
+
 UTEST_CASE(make_strictly_feasible_bundle)
 {
     // NB: generating a strictly feasible point fails for the FPBA solvers generated for the `chained_cb3I[4D]` problem.
