@@ -37,6 +37,7 @@ public:
     solver_state_t do_minimize(const function_t&, const vector_t& x0, const logger_t&) const override;
 
 private:
-    solver_state_t do_minimize(program_t&, const logger_t&) const;
+    solver_state_t do_minimize(program_t&, const vector_t& x0, const logger_t&) const;
+    solver_state_t do_minimize_phase2(program_t&, const logger_t&) const;
 };
 } // namespace nano
