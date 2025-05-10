@@ -81,6 +81,12 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         auto fu0 = vector_t{-1.0 / (fprogram.G() * fx0 - fprogram.h()).array()};
         auto fv0 = vector_t{vector_t::zero(p)};
 
+        assert(fx0.size() == n + m);
+        assert(fu0.size() == n + m);
+        assert(fv0.size() == p);
+        assert(fprogram.n() == n + m);
+        assert(fprogram.m() == m + m);
+        assert(fprogram.p() == p);
         assert((fprogram.G() * fx0 - fprogram.h()).maxCoeff() < 0.0);
 
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);

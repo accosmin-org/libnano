@@ -113,6 +113,14 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_orig_v(p())
 {
     ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
+
+    assert(m_A.rows() == p());
+    assert(m_A.cols() == n());
+    assert(m_b.size() == p());
+
+    assert(m_G.rows() == m());
+    assert(m_G.cols() == n());
+    assert(m_h.size() == m());
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -159,6 +167,10 @@ scalar_t program_t::residual() const
 
 void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
 {
+    assert(x.size() == n());
+    assert(u.size() == m());
+    assert(v.size() == p());
+
     m_orig_x = std::move(x);
     m_orig_u = std::move(u);
     m_orig_v = std::move(v);
