@@ -34,6 +34,12 @@ public:
 
     program_t(const quadratic_program_t&, linear_constraints_t);
 
+    tensor_size_t n() const { return m_c.size(); }
+
+    tensor_size_t p() const { return m_A.rows(); }
+
+    tensor_size_t m() const { return m_G.rows(); }
+
     const matrix_t& Q() const { return m_Q; }
 
     const vector_t& c() const { return m_c; }
@@ -96,12 +102,6 @@ public:
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
-
-    tensor_size_t n() const { return m_c.size(); }
-
-    tensor_size_t p() const { return m_A.rows(); }
-
-    tensor_size_t m() const { return m_G.rows(); }
 
     // attributes
     const function_t& m_function; ///< original function to minimize

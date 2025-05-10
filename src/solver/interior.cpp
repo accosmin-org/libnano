@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <nano/critical.h>
+#include <nano/tensor/stack.h>
 #include <solver/interior.h>
 #include <solver/interior/util.h>
 
@@ -52,15 +53,14 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0, const logger_t& logger) const
 {
-    const auto& A = lconstraints.m_A;
-    const auto& b = lconstraints.m_b;
-    const auto& G = lconstraints.m_G;
-    const auto& h = lconstraints.m_h;
-
-    const auto n   = G.cols();
-    const auto m   = G.rows();
-    const auto p   = A.rows();
-    const auto miu = parameter("solver::ipm::miu").value<scalar_t>();
+    const auto& A   = program.A();
+    const auto& b   = program.b();
+    const auto& G   = program.G();
+    const auto& h   = program.h();
+    const auto  n   = program.n();
+    const auto  m   = program.m();
+    const auto  p   = program.p();
+    const auto  miu = parameter("solver::ipm::miu").value<scalar_t>();
 
     if (G.size() > 0)
     {
@@ -68,12 +68,12 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         auto fc = stack<scalar_t>(n + m, vector_t::zero(n), vector_t::constant(m, 1.0));
 
         auto fA = stack<scalar_t>(p, n + m, A, matrix_t::zero(p, m));
-        auto fb = stack<scalar_t>(n + m, b, vector_t::zero(m));
-        auto fG =
-            stack<scalar_t>(n + m, n + m, G, -matrix_t::identity(m, m), matrix_t::zero(n, n), matrix_t::identity(m, m));
-        auto fh = stack<scalar_t>(n + m, h, vector_t::constant(n, 0.0));
+        auto fb = stack<scalar_t>(p, b);
+        auto fG = stack<scalar_t>(m + m, n + m, G, -matrix_t::identity(m, m), matrix_t::zero(m, n),
+                                  -matrix_t::identity(m, m));
+        auto fh = stack<scalar_t>(m + m, h, vector_t::constant(m, 0.0));
 
-        auto fobjective   = linear_program_t{std::move(fc)};
+        auto fobjective   = linear_program_t{"lp-phase1", std::move(fc)};
         auto fconstraints = linear_constraints_t{std::move(fA), std::move(fb), std::move(fG), std::move(fh)};
         auto fprogram     = program_t{fobjective, std::move(fconstraints)};
 
@@ -81,12 +81,14 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         auto fu0 = vector_t{-1.0 / (fprogram.G() * fx0 - fprogram.h()).array()};
         auto fv0 = vector_t{vector_t::zero(p)};
 
+        assert((fprogram.G() * fx0 - fprogram.h()).maxCoeff() < 0.0);
+
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
         const auto state = do_minimize_phase2(program, logger);
         if (state.valid() && state.kkt_optimality_test() < 1e-8 && std::fabs(state.fx()) < 1e-12)
         {
-            auto ffx0 = vector_t{state.fx().segment(0, n)};
+            auto ffx0 = vector_t{state.x().segment(0, n)};
             auto ffu0 = vector_t{-1.0 / (program.G() * ffx0 - program.h()).array()};
             auto ffv0 = vector_t{vector_t::zero(p)};
 
@@ -98,12 +100,13 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
     {
         // the starting point is (one of the) solution to the linear equality constraints
         const auto Ab  = Eigen::LDLT<eigen_matrix_t<scalar_t>>{(A.transpose() * A).matrix()};
-        auto       fx0 = vector_t{Ab.solve(A.transpose() * b)};
+        auto       fx0 = vector_t{n};
+        fx0.vector()   = Ab.solve(A.transpose() * b);
 
-        if ((A * fx0).isApprox(b))
+        if ((A * fx0).isApprox(b.vector()))
         {
             auto fu0 = vector_t{};
-            auto fv0 = vector_t{};
+            auto fv0 = vector_t{vector_t::zero(p)};
 
             program.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
             return do_minimize_phase2(program, logger);
@@ -111,7 +114,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
     }
 
     // no feasible point was found
-    auto state = solver_state_t{function, x0};
+    auto state = solver_state_t{program.function(), x0};
     state.status(solver_status::unfeasible);
     done(state, state.valid(), state.status(), logger);
     return state;
