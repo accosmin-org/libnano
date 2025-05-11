@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <nano/critical.h>
+#include <nano/function/cuts.h>
 #include <nano/tensor/stack.h>
 #include <solver/interior.h>
 #include <solver/interior/util.h>
@@ -74,6 +75,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         auto fh = stack<scalar_t>(m + m, h, vector_t::constant(m, 0.0));
 
         auto fobjective   = linear_program_t{"lp-phase1", std::move(fc)};
+        critical(fA * fobjective.variable() == fb);
+        critical(fG * fobjective.variable() <= fh);
+
         auto fconstraints = linear_constraints_t{std::move(fA), std::move(fb), std::move(fG), std::move(fh)};
         auto fprogram     = program_t{fobjective, std::move(fconstraints)};
 
@@ -81,12 +85,6 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         auto fu0 = vector_t{-1.0 / (fprogram.G() * fx0 - fprogram.h()).array()};
         auto fv0 = vector_t{vector_t::zero(p)};
 
-        assert(fx0.size() == n + m);
-        assert(fu0.size() == n + m);
-        assert(fv0.size() == p);
-        assert(fprogram.n() == n + m);
-        assert(fprogram.m() == m + m);
-        assert(fprogram.p() == p);
         assert((fprogram.G() * fx0 - fprogram.h()).maxCoeff() < 0.0);
 
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
