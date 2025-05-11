@@ -90,16 +90,17 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
         const auto state = do_minimize_phase2(fprogram, logger);
-        if (state.valid() && state.kkt_optimality_test() < 1e-8 && std::fabs(state.fx()) < 1e-12)
+        if (state.valid() && state.status() == solver_status::kkt_optimality_test)
         {
             auto ffx0 = vector_t{state.x().segment(0, n)};
             auto ffu0 = vector_t{-1.0 / (program.G() * ffx0 - program.h()).array()};
             auto ffv0 = vector_t{vector_t::zero(p)};
 
-            assert((program.G() * ffx0 - program.h()).maxCoeff() < 0.0);
-
-            program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
-            return do_minimize_phase2(program, logger);
+            if ((program.G() * ffx0 - program.h()).maxCoeff() < 0.0)
+            {
+                program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
+                return do_minimize_phase2(program, logger);
+            }
         }
     }
     else
