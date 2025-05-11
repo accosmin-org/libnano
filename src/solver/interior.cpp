@@ -89,18 +89,24 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
 
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
-        const auto state = do_minimize_phase2(fprogram, logger);
-        if (state.valid() && state.status() == solver_status::kkt_optimality_test)
+        auto       found_strictly_feasible = false;
+        const auto callback                = [&](const vector_t& x)
+        {
+            found_strictly_feasible = x.all_finite() && (program.G() * x.segment(0, n) - program.h()).maxCoeff() < 0.0;
+            return found_strictly_feasible;
+        };
+
+        const auto state = do_minimize(fprogram, logger, callback);
+        if (state.valid() && found_strictly_feasible)
         {
             auto ffx0 = vector_t{state.x().segment(0, n)};
             auto ffu0 = vector_t{-1.0 / (program.G() * ffx0 - program.h()).array()};
             auto ffv0 = vector_t{vector_t::zero(p)};
 
-            if ((program.G() * ffx0 - program.h()).maxCoeff() < 0.0)
-            {
-                program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
-                return do_minimize_phase2(program, logger);
-            }
+            assert((program.G() * ffx0 - program.h()).maxCoeff() < 0.0);
+
+            program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
+            return do_minimize(program, logger, {});
         }
     }
     else
@@ -116,7 +122,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
             auto fv0 = vector_t{vector_t::zero(p)};
 
             program.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
-            return do_minimize_phase2(program, logger);
+            return do_minimize(program, logger, {});
         }
     }
 
@@ -127,7 +133,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
     return state;
 }
 
-solver_state_t solver_ipm_t::do_minimize_phase2(program_t& program, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger, const callback_t& callback) const
 {
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
@@ -147,6 +153,11 @@ solver_state_t solver_ipm_t::do_minimize_phase2(program_t& program, const logger
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
+        if (callback && callback(bstate.x()))
+        {
+            return bstate;
+        }
+
         // solve primal-dual linear system of equations to get (dx, du, dv)
         if (const auto [valid, precision] = program.solve(); !valid)
         {
