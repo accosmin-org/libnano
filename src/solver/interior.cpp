@@ -65,7 +65,18 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
 
     if (G.size() > 0)
     {
-        // phase 1: sum of infeasibilities program, see (2) p. 580
+        // initial point already strictly feasible (inequality wise)
+        if ((G * x0 - h).maxCoeff() < 0.0)
+        {
+            auto u0 = vector_t{-1.0 / (G * x0 - h).array()};
+            auto v0 = vector_t{vector_t::zero(p)};
+
+            program.update(x0, std::move(u0), std::move(v0), miu);
+            return do_minimize(program, logger, {});
+        }
+
+        // need to find a strictly feasible point (inequality wise):
+        // see "base phase 1 method", the sum of infeasibilities program, see (2) p. 580
         auto fc = stack<scalar_t>(n + m, vector_t::zero(n), vector_t::constant(m, 1.0));
 
         auto fA = stack<scalar_t>(p, n + m, A, matrix_t::zero(p, m));
@@ -89,21 +100,21 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
 
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
-        auto       found_strictly_feasible = false;
-        const auto callback                = [&](const vector_t& x)
+        auto       strictly_feasible = false;
+        const auto callback          = [&](const vector_t& x, const scalar_t epsilon = 1e-3)
         {
-            found_strictly_feasible = x.all_finite() && (program.G() * x.segment(0, n) - program.h()).maxCoeff() < 0.0;
-            return found_strictly_feasible;
+            strictly_feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < -epsilon;
+            return strictly_feasible;
         };
 
         const auto state = do_minimize(fprogram, logger, callback);
-        if (state.valid() && found_strictly_feasible)
+        if (state.valid() && strictly_feasible)
         {
             auto ffx0 = vector_t{state.x().segment(0, n)};
-            auto ffu0 = vector_t{-1.0 / (program.G() * ffx0 - program.h()).array()};
+            auto ffu0 = vector_t{-1.0 / (G * ffx0 - h).array()};
             auto ffv0 = vector_t{vector_t::zero(p)};
 
-            assert((program.G() * ffx0 - program.h()).maxCoeff() < 0.0);
+            assert((G * ffx0 - h).maxCoeff() < 0.0);
 
             program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
             return do_minimize(program, logger, {});
