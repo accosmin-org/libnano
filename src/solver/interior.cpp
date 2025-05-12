@@ -13,7 +13,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 5, LE, 50));
+    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 10, LE, 50));
 
     parameter("solver::max_evals") = 100;
 }
@@ -101,9 +101,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
         auto       strictly_feasible = false;
-        const auto callback          = [&](const vector_t& x, const scalar_t epsilon = 1e-3)
+        const auto callback          = [&](const vector_t& x)
         {
-            strictly_feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < -epsilon;
+            strictly_feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < 0.0;
             return strictly_feasible;
         };
 
@@ -180,12 +180,19 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
             logger.info("linear system of equations solved with accuracy=", precision, ".\n");
         }
 
+        assert(program.u().size() == 0 || program.u().min() > 0.0);
+        assert(program.G().size() == 0 || (program.G() * program.x() - program.h()).maxCoeff() < 0.0);
+
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
         const auto ustep = G.size() == 0 ? s : (s * make_umax(program.u(), program.du()));
         const auto xstep = G.size() == 0 ? s : (s * make_xmax(program.x(), program.dx(), G, h));
         const auto vstep = ustep;
+
+        assert(ustep >= 0.0);
+        assert(xstep >= 0.0);
+        assert(vstep >= 0.0);
 
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ustep, vstep, miu);
@@ -203,6 +210,15 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         cstate.update(program.original_x(), program.original_v(), program.original_u());
 
         done_kkt_optimality_test(cstate, cstate.valid(), logger);
+
+        if (program.u().size() > 0 && program.u().min() <= 0.0)
+        {
+            break;
+        }
+        if (program.G().size() > 0 && (program.G() * program.x() - program.h()).maxCoeff() >= 0.0)
+        {
+            break;
+        }
 
         // update best state (if possible)
         if (cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
