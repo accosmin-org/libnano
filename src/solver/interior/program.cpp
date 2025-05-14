@@ -78,17 +78,18 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 }
 } // namespace
 
-program_t::program_t(const linear_program_t& program, linear_constraints_t constraints)
-    : program_t(program, matrix_t{}, program.c(), std::move(constraints))
+program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const scale_type scale)
+    : program_t(program, matrix_t{}, program.c(), std::move(constraints), scale)
 {
 }
 
-program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints)
-    : program_t(program, program.Q(), program.c(), std::move(constraints))
+program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const scale_type scale)
+    : program_t(program, program.Q(), program.c(), std::move(constraints), scale)
 {
 }
 
-program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints)
+program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints,
+                     const scale_type scale)
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -102,9 +103,9 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_dx(vector_t::zero(n()))
     , m_du(vector_t::zero(m()))
     , m_dv(vector_t::zero(p()))
-    , m_dQ(vector_t::zero(n()))
-    , m_dG(vector_t::zero(m()))
-    , m_dA(vector_t::zero(p()))
+    , m_dQ(vector_t::constant(n(), 1.0))
+    , m_dG(vector_t::constant(m(), 1.0))
+    , m_dA(vector_t::constant(p(), 1.0))
     , m_rdual(n())
     , m_rcent(m())
     , m_rprim(p())
@@ -112,7 +113,15 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_orig_u(m())
     , m_orig_v(p())
 {
-    ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
+    switch (scale)
+    {
+    case scale_type::ruiz:
+        ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
+        break;
+
+    default:
+        break;
+    }
 
     assert(m_A.rows() == p());
     assert(m_A.cols() == n());
@@ -171,14 +180,11 @@ void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
     assert(u.size() == m());
     assert(v.size() == p());
 
-    m_orig_x = std::move(x);
-    m_orig_u = std::move(u);
-    m_orig_v = std::move(v);
+    m_x = std::move(x);
+    m_u = std::move(u);
+    m_v = std::move(v);
 
-    m_x.array() = m_orig_x.array() / m_dQ.array();
-    m_u.array() = m_orig_u.array() / m_dG.array();
-    m_v.array() = m_orig_v.array() / m_dA.array();
-
+    update_original();
     update(0.0, 0.0, 0.0, miu);
 }
 
@@ -226,10 +232,20 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
         m_u = u;
         m_v = v;
 
-        m_orig_x.array() = m_dQ.array() * m_x.array();
-        m_orig_u.array() = m_dG.array() * m_u.array();
-        m_orig_v.array() = m_dA.array() * m_v.array();
+        update_original();
     }
 
     return residual();
+}
+
+void program_t::update_original()
+{
+    m_orig_x.array() = m_dQ.array() * m_x.array();
+    m_orig_u.array() = m_dG.array() * m_u.array();
+    m_orig_v.array() = m_dA.array() * m_v.array();
+}
+
+vector_t program_t::x(const vector_t& original_x) const
+{
+    return original_x.array() / m_dQ.array();
 }

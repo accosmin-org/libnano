@@ -39,7 +39,7 @@ public:
 private:
     using callback_t = std::function<bool(const vector_t&)>;
 
-    solver_state_t do_minimize(program_t&, const vector_t& x0, const logger_t&) const;
-    solver_state_t do_minimize(program_t&, const logger_t&, const callback_t&) const;
+    solver_state_t do_minimize(program_t&, vector_t x0, const logger_t&) const;
+    solver_state_t do_minimize_feasible(program_t&, const logger_t&, const callback_t&) const;
 };
 } // namespace nano

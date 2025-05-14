@@ -8,7 +8,7 @@ namespace nano
 {
 ///
 /// \brief solver for the the linear system of equations resulting from the KKT conditions solved with the primal-dual
-/// interior point method applied
+/// interior point method applied.
 ///
 /// to the linear program:
 ///     min. c.dot(x)
@@ -26,13 +26,21 @@ namespace nano
 /// see (3) ch.14,16,19 "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
 /// NB: the implementation follows the notation from (2).
+/// NB: the original tensors (Q, c, G, h, A, b) are scaled in-place.
+/// NB: the primal-dual iterate (x, u, v) are also scaled similarly.
 ///
 class program_t
 {
 public:
-    program_t(const linear_program_t&, linear_constraints_t);
+    enum class scale_type : uint8_t
+    {
+        ruiz,
+        none,
+    };
 
-    program_t(const quadratic_program_t&, linear_constraints_t);
+    program_t(const linear_program_t&, linear_constraints_t, scale_type);
+
+    program_t(const quadratic_program_t&, linear_constraints_t, scale_type);
 
     tensor_size_t n() const { return m_c.size(); }
 
@@ -64,6 +72,8 @@ public:
 
     const vector_t& dv() const { return m_dv; }
 
+    vector_t x(const vector_t& original_x) const;
+
     const vector_t& original_x() const { return m_orig_x; }
 
     const vector_t& original_u() const { return m_orig_u; }
@@ -73,15 +83,14 @@ public:
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief compute the residual for the current state (x, u, v) or the line-search step (x + xstep * dx, u + ustep *
-    /// du, v + vstep * dv).
+    /// \brief compute the residual for the current state (x, u, v).
     ///
     scalar_t residual() const;
 
     ///
-    /// \brief change state to (x0, u0, v0) and update residuals.
+    /// \brief change state to (x, u, v) and update residuals.
     ///
-    void update(vector_t x0, vector_t u0, vector_t v0, scalar_t miu);
+    void update(vector_t x, vector_t u, vector_t v, scalar_t miu);
 
     ///
     /// \brief update and return the residual for the line-search step (x + xstep * dx, u + ustep * du, v + vstep * dv).
@@ -101,7 +110,9 @@ public:
     solve_stats_t solve();
 
 private:
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t);
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, scale_type);
+
+    void update_original();
 
     // attributes
     const function_t& m_function; ///< original function to minimize

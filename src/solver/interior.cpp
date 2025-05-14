@@ -33,7 +33,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     // linear programs
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        auto program = program_t{*lprogram, std::move(lconstraints.value())};
+        auto program = program_t{*lprogram, std::move(lconstraints.value()), program_t::scale_type::ruiz};
         return do_minimize(program, x0, logger);
     }
 
@@ -42,7 +42,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
 
-        auto program = program_t{*qprogram, std::move(lconstraints.value())};
+        auto program = program_t{*qprogram, std::move(lconstraints.value()), program_t::scale_type::ruiz};
         return do_minimize(program, x0, logger);
     }
 
@@ -52,7 +52,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     }
 }
 
-solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0, const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(program_t& program, vector_t x0, const logger_t& logger) const
 {
     const auto& A   = program.A();
     const auto& b   = program.b();
@@ -65,6 +65,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
 
     if (G.size() > 0)
     {
+        // scale starting point to the Ruiz-scaled program
+        x0 = program.x(x0);
+
         // initial point already strictly feasible (inequality wise)
         if ((G * x0 - h).maxCoeff() < 0.0)
         {
@@ -72,7 +75,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
             auto v0 = vector_t{vector_t::zero(p)};
 
             program.update(x0, std::move(u0), std::move(v0), miu);
-            return do_minimize(program, logger, {});
+            return do_minimize_feasible(program, logger, {});
         }
 
         // need to find a strictly feasible point (inequality wise):
@@ -90,7 +93,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
         critical(fG * fobjective.variable() <= fh);
 
         auto fconstraints = linear_constraints_t{std::move(fA), std::move(fb), std::move(fG), std::move(fh)};
-        auto fprogram     = program_t{fobjective, std::move(fconstraints)};
+        auto fprogram     = program_t{fobjective, std::move(fconstraints), program_t::scale_type::none};
 
         auto fx0 = stack<scalar_t>(n + m, x0, (G * x0 - h).array().max(0.0) + 1.0);
         auto fu0 = vector_t{-1.0 / (fprogram.G() * fx0 - fprogram.h()).array()};
@@ -107,9 +110,11 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
             return feasible;
         };
 
-        const auto state = do_minimize(fprogram, logger, callback);
+        const auto state = do_minimize_feasible(fprogram, logger, callback);
         if (state.valid() && feasible)
         {
+            // found a strictly feasible point (inequality wise):
+            // continue with phase 2
             auto ffx0 = vector_t{state.x().segment(0, n)};
             auto ffu0 = vector_t{-1.0 / (G * ffx0 - h).array()};
             auto ffv0 = vector_t{vector_t::zero(p)};
@@ -117,7 +122,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
             assert((G * ffx0 - h).maxCoeff() < 0.0);
 
             program.update(std::move(ffx0), std::move(ffu0), std::move(ffv0), miu);
-            return do_minimize(program, logger, {});
+            return do_minimize_feasible(program, logger, {});
         }
     }
     else
@@ -133,7 +138,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
             auto fv0 = vector_t{vector_t::zero(p)};
 
             program.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
-            return do_minimize(program, logger, {});
+            return do_minimize_feasible(program, logger, {});
         }
     }
 
@@ -144,7 +149,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
     return state;
 }
 
-solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger, const callback_t& callback) const
+solver_state_t solver_ipm_t::do_minimize_feasible(program_t& program, const logger_t& logger,
+                                                  const callback_t& callback) const
 {
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
     const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
@@ -156,9 +162,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     const auto& h        = program.h();
     const auto& function = program.function();
 
-    auto bstate = solver_state_t{function, program.x()}; ///< best state (KKT optimality criterion-wise)
-    auto cstate = bstate;                                ///< current state
-                                                         ///
+    auto bstate = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
+    auto cstate = bstate;                                         ///< current state
+                                                                  ///
     auto last_better_iter = tensor_size_t{0};
 
     // primal-dual interior-point solver...
