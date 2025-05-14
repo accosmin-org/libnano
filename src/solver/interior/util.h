@@ -11,12 +11,11 @@ template <class tvectoru, class tvectordu>
 scalar_t make_umax(const tvectoru& u, const tvectordu& du)
 {
     assert(u.size() == du.size());
+    assert(u.array().minCoeff() > 0.0);
 
     auto step = std::numeric_limits<scalar_t>::max();
     for (tensor_size_t i = 0, size = u.size(); i < size; ++i)
     {
-        assert(u(i) >= 0.0);
-
         if (du(i) < 0.0)
         {
             step = std::min(step, -u(i) / du(i));

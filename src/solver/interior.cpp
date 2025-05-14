@@ -100,15 +100,15 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const vector_t& x0,
 
         fprogram.update(std::move(fx0), std::move(fu0), std::move(fv0), miu);
 
-        auto       strictly_feasible = false;
-        const auto callback          = [&](const vector_t& x)
+        auto       feasible = false;
+        const auto callback = [&](const vector_t& x)
         {
-            strictly_feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < 0.0;
-            return strictly_feasible;
+            feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < 0.0;
+            return feasible;
         };
 
         const auto state = do_minimize(fprogram, logger, callback);
-        if (state.valid() && strictly_feasible)
+        if (state.valid() && feasible)
         {
             auto ffx0 = vector_t{state.x().segment(0, n)};
             auto ffu0 = vector_t{-1.0 / (G * ffx0 - h).array()};
@@ -164,9 +164,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
-        if (callback && callback(bstate.x()))
+        if (callback && callback(cstate.x()))
         {
-            return bstate;
+            return cstate;
         }
 
         // solve primal-dual linear system of equations to get (dx, du, dv)
@@ -181,7 +181,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         assert(program.u().size() == 0 || program.u().min() > 0.0);
-        assert(program.G().size() == 0 || (program.G() * program.x() - program.h()).maxCoeff() < 0.0);
+        assert(G.size() == 0 || (G * program.x() - h).maxCoeff() < 0.0);
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
@@ -189,10 +189,6 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto ustep = G.size() == 0 ? s : (s * make_umax(program.u(), program.du()));
         const auto xstep = G.size() == 0 ? s : (s * make_xmax(program.x(), program.dx(), G, h));
         const auto vstep = ustep;
-
-        assert(ustep >= 0.0);
-        assert(xstep >= 0.0);
-        assert(vstep >= 0.0);
 
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ustep, vstep, miu);
@@ -211,24 +207,17 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         done_kkt_optimality_test(cstate, cstate.valid(), logger);
 
-        if (program.u().size() > 0 && program.u().min() <= 0.0)
-        {
-            break;
-        }
-        if (program.G().size() > 0 && (program.G() * program.x() - program.h()).maxCoeff() >= 0.0)
-        {
-            break;
-        }
-
         // update best state (if possible)
         if (cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
         {
             last_better_iter = 0;
             bstate           = cstate;
-            continue;
         }
 
-        if ((++last_better_iter) > patience)
+        // stop if no significant improvement or not strictly feasible anymore
+        if ((++last_better_iter) > patience ||                         ///<
+            (program.u().size() > 0 && program.u().min() <= 0.0) ||    ///<
+            (G.size() > 0 && (G * program.x() - h).maxCoeff() >= 0.0)) ///<
         {
             break;
         }
