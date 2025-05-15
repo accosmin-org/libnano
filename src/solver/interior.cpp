@@ -69,8 +69,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, vector_t x0, const 
         x0 = program.x(x0);
 
         // initial point already strictly feasible (inequality wise)
-        if ((G * x0 - h).maxCoeff() < 0.0)
+        if (const auto delta = (G * x0 - h).maxCoeff(); delta < 0.0)
         {
+            logger.info("inequality feasibility: initial delta=", delta, ".\n");
             auto u0 = vector_t{-1.0 / (G * x0 - h).array()};
             auto v0 = vector_t{vector_t::zero(p)};
 
@@ -106,12 +107,14 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, vector_t x0, const 
         auto       feasible = false;
         const auto callback = [&](const vector_t& x)
         {
-            feasible = x.all_finite() && (G * x.segment(0, n) - h).maxCoeff() < 0.0;
+            const auto delta = (G * x.segment(0, n) - h).maxCoeff();
+            logger.info("inequality feasibility: phase1 delta=", delta, ".\n");
+            feasible = x.all_finite() && delta < 0.0;
             return feasible;
         };
 
-        const auto state = do_minimize_feasible(fprogram, logger, callback);
-        if (state.valid() && feasible)
+        logger.info("inequality feasibility: searching a strictly feasible initial point.\n");
+        if (const auto state = do_minimize_feasible(fprogram, logger, callback); state.valid() && feasible)
         {
             // found a strictly feasible point (inequality wise):
             // continue with phase 2
@@ -132,7 +135,10 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, vector_t x0, const 
         auto       fx0 = vector_t{n};
         fx0.vector()   = Ab.solve(A.transpose() * b);
 
-        if ((A * fx0).isApprox(b.vector()))
+        const auto delta = (A * fx0 - b).lpNorm<2>() / (1.0 + b.lpNorm<2>());
+        logger.info("equality feasibility: delta=", delta, ".\n");
+
+        if (delta < epsilon1<scalar_t>())
         {
             auto fu0 = vector_t{};
             auto fv0 = vector_t{vector_t::zero(p)};
