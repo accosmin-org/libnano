@@ -78,18 +78,20 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 }
 } // namespace
 
-program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const scale_type scale)
-    : program_t(program, matrix_t{}, program.c(), std::move(constraints), scale)
+program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const scale_type scale,
+                     const scalar_t miu)
+    : program_t(program, matrix_t{}, program.c(), std::move(constraints), scale, miu)
 {
 }
 
-program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const scale_type scale)
-    : program_t(program, program.Q(), program.c(), std::move(constraints), scale)
+program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const scale_type scale,
+                     const scalar_t miu)
+    : program_t(program, program.Q(), program.c(), std::move(constraints), scale, miu)
 {
 }
 
 program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints,
-                     const scale_type scale)
+                     const scale_type scale, const scalar_t miu)
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -97,22 +99,30 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_h(std::move(constraints.m_h))
     , m_A(std::move(constraints.m_A))
     , m_b(std::move(constraints.m_b))
-    , m_x(vector_t::zero(n()))
+    , m_x(vector_t::zero(n() + m()))
     , m_u(vector_t::zero(m()))
-    , m_v(vector_t::zero(p()))
-    , m_dx(vector_t::zero(n()))
-    , m_du(vector_t::zero(m()))
-    , m_dv(vector_t::zero(p()))
+    , m_v(vector_t::zero(p() + m()))
+    , m_dx(vector_t::zero(m_x.size()))
+    , m_du(vector_t::zero(m_u.size()))
+    , m_dv(vector_t::zero(m_v.size()))
     , m_dQ(vector_t::constant(n(), 1.0))
     , m_dG(vector_t::constant(m(), 1.0))
     , m_dA(vector_t::constant(p(), 1.0))
-    , m_rdual(n())
+    , m_rdual(n() + m())
     , m_rcent(m())
-    , m_rprim(p())
+    , m_rprim(p() + m())
     , m_orig_x(n())
     , m_orig_u(m())
     , m_orig_v(p())
 {
+    assert(m_A.rows() == p());
+    assert(m_A.cols() == n());
+    assert(m_b.size() == p());
+
+    assert(m_G.rows() == m());
+    assert(m_G.cols() == n());
+    assert(m_h.size() == m());
+
     switch (scale)
     {
     case scale_type::ruiz:
@@ -123,13 +133,10 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
         break;
     }
 
-    assert(m_A.rows() == p());
-    assert(m_A.cols() == n());
-    assert(m_b.size() == p());
+    m_x.segment(n(), m()).array() = 1.0;
+    m_u.array()                   = 1.0;
 
-    assert(m_G.rows() == m());
-    assert(m_G.cols() == n());
-    assert(m_h.size() == m());
+    update(0.0, 0.0, 0.0, miu);
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -174,23 +181,10 @@ scalar_t program_t::residual() const
     return std::sqrt(m_rdual.squaredNorm() + m_rcent.squaredNorm() + m_rprim.squaredNorm());
 }
 
-void program_t::update(vector_t x, vector_t u, vector_t v, scalar_t miu)
-{
-    assert(x.size() == n());
-    assert(u.size() == m());
-    assert(v.size() == p());
-
-    m_x = std::move(x);
-    m_u = std::move(u);
-    m_v = std::move(v);
-
-    update_original();
-    update(0.0, 0.0, 0.0, miu);
-}
-
 scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep, const scalar_t miu,
                            const bool apply)
 {
+    const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
     const auto x = m_x + xstep * m_dx;
@@ -204,7 +198,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     }
     else
     {
-        m_rdual = Q() * x + m_c;
+        m_rdual = m_Q * x.segment(0, n) + m_c;
     }
 
     // surrogate duality gap
@@ -238,14 +232,28 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     return residual();
 }
 
-void program_t::update_original()
+scalar_t program_t::max_xstep() const
 {
-    m_orig_x.array() = m_dQ.array() * m_x.array();
-    m_orig_u.array() = m_dG.array() * m_u.array();
-    m_orig_v.array() = m_dA.array() * m_v.array();
+    const auto n = this->n();
+    const auto m = this->m();
+
+    return (m == 0) ? 1.0 : make_umax(m_x.segment(n, m), m_dx.segment(n, m));
 }
 
-vector_t program_t::x(const vector_t& original_x) const
+scalar_t program_t::max_ustep() const
 {
-    return original_x.array() / m_dQ.array();
+    const auto m = this->m();
+
+    return (m == 0) ? 1.0 : make_umax(m_u, m_du);
+}
+
+void program_t::update_original()
+{
+    const auto n = this->n();
+    const auto m = this->m();
+    const auto p = this->p();
+
+    m_orig_x.array() = m_dQ.array() * m_x.segment(0, n).array();
+    m_orig_u.array() = m_dG.array() * m_v.segment(p, m).array();
+    m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
 }

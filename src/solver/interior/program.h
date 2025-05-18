@@ -7,8 +7,7 @@
 namespace nano
 {
 ///
-/// \brief solver for the the linear system of equations resulting from the KKT conditions solved with the primal-dual
-/// interior point method applied.
+/// \brief models the linear equations following produced by the primal-dual interior point method applied
 ///
 /// to the linear program:
 ///     min. c.dot(x)
@@ -28,37 +27,22 @@ namespace nano
 /// NB: the implementation follows the notation from (2).
 /// NB: the original tensors (Q, c, G, h, A, b) are scaled in-place.
 /// NB: the primal-dual iterate (x, u, v) are also scaled similarly.
+/// NB: internally the inequality constraints `G * x <= h` are transformed to `G * x + y = h` and `-y <= 0`
+///     (so that a strictly feasible starting point is easily produced, e.g. `y = 1.0`).
 ///
 class program_t
 {
 public:
+    // FIXME: make this an option of the interior point solver
     enum class scale_type : uint8_t
     {
         ruiz,
         none,
     };
 
-    program_t(const linear_program_t&, linear_constraints_t, scale_type);
+    program_t(const linear_program_t&, linear_constraints_t, scale_type, scalar_t miu);
 
-    program_t(const quadratic_program_t&, linear_constraints_t, scale_type);
-
-    tensor_size_t n() const { return m_c.size(); }
-
-    tensor_size_t p() const { return m_A.rows(); }
-
-    tensor_size_t m() const { return m_G.rows(); }
-
-    const matrix_t& Q() const { return m_Q; }
-
-    const vector_t& c() const { return m_c; }
-
-    const matrix_t& A() const { return m_A; }
-
-    const matrix_t& G() const { return m_G; }
-
-    const vector_t& b() const { return m_b; }
-
-    const vector_t& h() const { return m_h; }
+    program_t(const quadratic_program_t&, linear_constraints_t, scale_type, scalar_t miu);
 
     const vector_t& x() const { return m_x; }
 
@@ -71,8 +55,6 @@ public:
     const vector_t& du() const { return m_du; }
 
     const vector_t& dv() const { return m_dv; }
-
-    vector_t x(const vector_t& original_x) const;
 
     const vector_t& original_x() const { return m_orig_x; }
 
@@ -88,14 +70,19 @@ public:
     scalar_t residual() const;
 
     ///
-    /// \brief change state to (x, u, v) and update residuals.
-    ///
-    void update(vector_t x, vector_t u, vector_t v, scalar_t miu);
-
-    ///
-    /// \brief update and return the residual for the line-search step (x + xstep * dx, u + ustep * du, v + vstep * dv).
+    /// \brief update and return the residual for the trial (x + xstep * dx, u + ustep * du, v + vstep * dv).
     ///
     scalar_t update(scalar_t xstep, scalar_t ustep, scalar_t vstep, scalar_t miu, bool apply = false);
+
+    ///
+    /// \brief return the maximum step that can be take in the direction (x, x + xstep * dx) that keeps y > 0.
+    ///
+    scalar_t max_xstep() const;
+
+    ///
+    /// \brief return the maximum step that can be take in the direction (u, u + ustep * du) that keeps u > 0.
+    ///
+    scalar_t max_ustep() const;
 
     ///
     /// \brief compute the state update (dx, du, dv) by solving the linear system of equations derived from the KKT
@@ -110,9 +97,15 @@ public:
     solve_stats_t solve();
 
 private:
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, scale_type);
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, scale_type, scalar_t miu);
 
     void update_original();
+
+    tensor_size_t n() const { return m_c.size(); }
+
+    tensor_size_t p() const { return m_A.rows(); }
+
+    tensor_size_t m() const { return m_G.rows(); }
 
     // attributes
     const function_t& m_function; ///< original function to minimize
