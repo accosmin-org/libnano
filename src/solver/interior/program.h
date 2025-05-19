@@ -27,6 +27,7 @@ namespace nano
 /// NB: the implementation follows the notation from (2).
 /// NB: the original tensors (Q, c, G, h, A, b) are scaled in-place.
 /// NB: the primal-dual iterate (x, u, v) are also scaled similarly.
+///
 /// NB: internally the inequality constraints `G * x <= h` are transformed to `G * x + y = h` and `-y <= 0`
 ///     (so that a strictly feasible starting point is easily produced, e.g. `y = 1.0`).
 ///

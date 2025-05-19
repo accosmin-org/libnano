@@ -1,5 +1,6 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <nano/function/util.h>
+#include <nano/tensor/stack.h>
 #include <solver/interior/program.h>
 #include <solver/interior/util.h>
 #include <unsupported/Eigen/IterativeSolvers>
@@ -142,36 +143,58 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 program_t::solve_stats_t program_t::solve()
 {
     const auto n = this->n();
+    const auto m = this->m();
     const auto p = this->p();
 
-    auto lmat = matrix_t{n + p, n + p};
-    auto lvec = vector_t{n + p};
-    auto lsol = vector_t{n + p};
+    //  Q' = |Q 0|, c' = |c|
+    //       |0 0|       |0|
+    //
+    //  A' = |A 0|, b' = |b|
+    //       |G I|       |h|
+    //
+    //  G' = |0 -I|, h' = 0
 
-    const auto Gxmh  = m_G * m_x - m_h;
-    const auto hess  = m_G.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * m_G.matrix();
-    const auto rdual = m_rdual + m_G.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
+    // FIXME: re-use the allocated matrices
+    // FIXME: check if possible to solve smaller systems
 
-    if (!m_Q.size())
+    const auto Qp =
+        nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n), matrix_t::zero(m, m));
+    const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
+
+    const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
+    const auto bp = nano::stack<scalar_t>(p + m, m_b, m_h);
+
+    const auto Gp = nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
+    const auto hp = vector_t::zero(m);
+
+    const auto Gxmh  = Gp * m_x - hp;
+    const auto hess  = Gp.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * Gp.matrix();
+    const auto rdual = m_rdual + Gp.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
+
+    auto lmat = matrix_t{n + m + p, n + m + p};
+    auto lvec = vector_t{n + m + p};
+    auto lsol = vector_t{n + m + p};
+
+    if (Qp.size() == 0)
     {
-        lmat.block(0, 0, n, n) = -hess;
+        lmat.block(0, 0, n + m, n + m) = -hess;
     }
     else
     {
-        lmat.block(0, 0, n, n) = m_Q - hess;
+        lmat.block(0, 0, n + m, n + m) = Qp - hess;
     }
-    lmat.block(0, n, n, p)         = m_A.transpose();
-    lmat.block(n, 0, p, n)         = m_A.matrix();
-    lmat.block(n, n, p, p).array() = 0.0;
+    lmat.block(0, n + m, n + m, p)         = Ap.transpose();
+    lmat.block(n + m, 0, p, n + m)         = Ap.matrix();
+    lmat.block(n + m, n + m, p, p).array() = 0.0;
 
-    lvec.segment(0, n) = -rdual;
-    lvec.segment(n, p) = -m_rprim;
+    lvec.segment(0, n + m) = -rdual;
+    lvec.segment(n + m, p) = -m_rprim;
 
     const auto stats = solve_kkt(lmat, lvec, lsol);
 
-    m_dx = lsol.segment(0, n);
-    m_dv = lsol.segment(n, p);
-    m_du = (m_rcent.array() - m_u.array() * (m_G * m_dx).array()) / Gxmh.array();
+    m_dx = lsol.segment(0, n + m);
+    m_dv = lsol.segment(n + m, p);
+    m_du = (m_rcent.array() - m_u.array() * (Gp * m_dx).array()) / Gxmh.array();
 
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
@@ -187,36 +210,47 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
+
     const auto x = m_x + xstep * m_dx;
     const auto u = m_u + ustep * m_du;
     const auto v = m_v + vstep * m_dv;
 
+    const auto Qp =
+        nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n), matrix_t::zero(m, m));
+    const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
+
+    const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
+    const auto bp = nano::stack<scalar_t>(p + m, m_b, m_h);
+
+    const auto Gp = nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
+    const auto hp = vector_t::zero(m);
+
     // objective
-    if (m_Q.size() == 0)
+    if (Qp.size() == 0)
     {
-        m_rdual = m_c;
+        m_rdual = cp;
     }
     else
     {
-        m_rdual = m_Q * x.segment(0, n) + m_c;
+        m_rdual = Qp * x + cp;
     }
 
     // surrogate duality gap
-    const auto eta = (m > 0) ? scalar_t{-u.dot(m_G * x - m_h)} : 0.0;
+    const auto eta = (m > 0) ? scalar_t{-u.dot(Gp * x - hp)} : 0.0;
 
     // residual contributions of linear equality constraints
-    if (p > 0)
+    if (Ap.size() > 0)
     {
-        m_rdual += m_A.transpose() * v;
-        m_rprim = m_A * x - m_b;
+        m_rdual += Ap.transpose() * v;
+        m_rprim = Ap * x - bp;
     }
 
     // residual contributions of linear inequality constraints
-    if (m > 0)
+    if (Gp.size() > 0)
     {
-        const auto sm = static_cast<scalar_t>(m);
-        m_rdual += m_G.transpose() * u;
-        m_rcent = -eta / (miu * sm) - u.array() * (m_G * x - m_h).array();
+        const auto sm = static_cast<scalar_t>(p + m);
+        m_rdual += Gp.transpose() * u;
+        m_rcent = -eta / (miu * sm) - u.array() * (Gp * x - hp).array();
     }
 
     // apply the change if requested
