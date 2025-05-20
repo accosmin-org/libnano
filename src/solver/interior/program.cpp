@@ -116,6 +116,11 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_orig_u(m())
     , m_orig_v(p())
 {
+    assert(m_Q.size() == 0 || m_Q.rows() == n());
+    assert(m_Q.size() == 0 || m_Q.cols() == n());
+
+    assert(m_c.size() == n());
+
     assert(m_A.rows() == p());
     assert(m_A.cols() == n());
     assert(m_b.size() == p());
@@ -157,8 +162,7 @@ program_t::solve_stats_t program_t::solve()
     // FIXME: re-use the allocated matrices
     // FIXME: check if possible to solve smaller systems
 
-    const auto Qp =
-        nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n), matrix_t::zero(m, m));
+    const auto Qp = nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
     const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
 
     const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
@@ -215,8 +219,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto u = m_u + ustep * m_du;
     const auto v = m_v + vstep * m_dv;
 
-    const auto Qp =
-        nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n), matrix_t::zero(m, m));
+    const auto Qp = nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
     const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
 
     const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
