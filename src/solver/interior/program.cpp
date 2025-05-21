@@ -162,22 +162,27 @@ program_t::solve_stats_t program_t::solve()
     // FIXME: re-use the allocated matrices
     // FIXME: check if possible to solve smaller systems
 
-    const auto Qp = nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
-    const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
+    const auto Qp =
+        (m == 0) ? m_Q : nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
+    const auto cp = (m == 0) ? m_c : nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
 
-    const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
-    const auto bp = nano::stack<scalar_t>(p + m, m_b, m_h);
+    const auto Ap = (m == 0) ? m_A
+                  : (p == 0)
+                      ? nano::stack<scalar_t>(m, n + m, m_G, matrix_t::identity(m, m))
+                      : nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
+    const auto bp = (m == 0) ? m_b : nano::stack<scalar_t>(p + m, m_b, m_h);
 
-    const auto Gp = nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
+    const auto Gp =
+        (m == 0) ? matrix_t{0, n} : nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
     const auto hp = vector_t::zero(m);
 
     const auto Gxmh  = Gp * m_x - hp;
     const auto hess  = Gp.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * Gp.matrix();
     const auto rdual = m_rdual + Gp.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
 
-    auto lmat = matrix_t{n + m + p, n + m + p};
-    auto lvec = vector_t{n + m + p};
-    auto lsol = vector_t{n + m + p};
+    auto lmat = matrix_t{n + 2 * m + p, n + 2 * m + p};
+    auto lvec = vector_t{n + 2 * m + p};
+    auto lsol = vector_t{n + 2 * m + p};
 
     if (Qp.size() == 0)
     {
@@ -187,17 +192,17 @@ program_t::solve_stats_t program_t::solve()
     {
         lmat.block(0, 0, n + m, n + m) = Qp - hess;
     }
-    lmat.block(0, n + m, n + m, p)         = Ap.transpose();
-    lmat.block(n + m, 0, p, n + m)         = Ap.matrix();
-    lmat.block(n + m, n + m, p, p).array() = 0.0;
+    lmat.block(0, n + m, n + m, p + m)             = Ap.transpose();
+    lmat.block(n + m, 0, p + m, n + m)             = Ap.matrix();
+    lmat.block(n + m, n + m, p + m, p + m).array() = 0.0;
 
     lvec.segment(0, n + m) = -rdual;
-    lvec.segment(n + m, p) = -m_rprim;
+    lvec.segment(n + m, p + m) = -m_rprim;
 
     const auto stats = solve_kkt(lmat, lvec, lsol);
 
     m_dx = lsol.segment(0, n + m);
-    m_dv = lsol.segment(n + m, p);
+    m_dv = lsol.segment(n + m, p + m);
     m_du = (m_rcent.array() - m_u.array() * (Gp * m_dx).array()) / Gxmh.array();
 
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
@@ -219,13 +224,18 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto u = m_u + ustep * m_du;
     const auto v = m_v + vstep * m_dv;
 
-    const auto Qp = nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
-    const auto cp = nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
+    const auto Qp =
+        (m == 0) ? m_Q : nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
+    const auto cp = (m == 0) ? m_c : nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
 
-    const auto Ap = nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
-    const auto bp = nano::stack<scalar_t>(p + m, m_b, m_h);
+    const auto Ap = (m == 0) ? m_A
+                  : (p == 0)
+                      ? nano::stack<scalar_t>(m, n + m, m_G, matrix_t::identity(m, m))
+                      : nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
+    const auto bp = (m == 0) ? m_b : nano::stack<scalar_t>(p + m, m_b, m_h);
 
-    const auto Gp = nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
+    const auto Gp =
+        (m == 0) ? matrix_t{0, n} : nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
     const auto hp = vector_t::zero(m);
 
     // objective
