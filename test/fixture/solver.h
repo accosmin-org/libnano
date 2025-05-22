@@ -275,29 +275,34 @@ struct solver_description_t
     return check_with_logger(op);
 }
 
+[[maybe_unused]] static void check_minimize(const rsolvers_t& solvers, const function_t& function, const vector_t& x0)
+{
+    auto expected_minimum = std::numeric_limits<scalar_t>::quiet_NaN();
+    for (const auto& solver : solvers)
+    {
+        const auto& solver_id = solver->type_id();
+        UTEST_NAMED_CASE(scat(function.name(), "/", solver_id));
+
+        const auto description = make_description(solver_id);
+
+        auto config = function.smooth() ? description.m_smooth_config : description.m_nonsmooth_config;
+        config.expected_minimum(expected_minimum);
+
+        const auto state = check_minimize(*solver, function, x0, config);
+        expected_minimum = state.fx();
+
+        log_info(std::setprecision(10), function.name(), ": solver=", solver_id, ",fx=", state.fx(),
+                 function.constraints().empty() ? scat(",gtest=", state.gradient_test()) : string_t{},
+                 !function.constraints().empty() ? scat(",ktest=", state.kkt_optimality_test()) : string_t{},
+                 ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
+    }
+}
+
 [[maybe_unused]] static void check_minimize(const rsolvers_t& solvers, const function_t& function)
 {
     for (const auto& x0 : make_random_x0s(function))
     {
-        auto expected_minimum = std::numeric_limits<scalar_t>::quiet_NaN();
-        for (const auto& solver : solvers)
-        {
-            const auto& solver_id = solver->type_id();
-            UTEST_NAMED_CASE(scat(function.name(), "/", solver_id));
-
-            const auto description = make_description(solver_id);
-
-            auto config = function.smooth() ? description.m_smooth_config : description.m_nonsmooth_config;
-            config.expected_minimum(expected_minimum);
-
-            const auto state = check_minimize(*solver, function, x0, config);
-            expected_minimum = state.fx();
-
-            log_info(std::setprecision(10), function.name(), ": solver=", solver_id, ",fx=", state.fx(),
-                     function.constraints().empty() ? scat(",gtest=", state.gradient_test()) : string_t{},
-                     !function.constraints().empty() ? scat(",ktest=", state.kkt_optimality_test()) : string_t{},
-                     ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
-        }
+        check_minimize(solvers, function, x0);
     }
 }
 

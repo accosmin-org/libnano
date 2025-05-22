@@ -72,7 +72,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(program2)
@@ -89,7 +89,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(program3)
@@ -106,7 +106,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(program4)
@@ -123,7 +123,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(program5)
@@ -140,7 +140,7 @@ UTEST_CASE(program5)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(program6)
@@ -157,7 +157,7 @@ UTEST_CASE(program6)
     UTEST_REQUIRE(function.optimum(x));
 
     check_convexity(function);
-    check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
 }
 
 UTEST_CASE(bundle_cases)
@@ -234,7 +234,7 @@ UTEST_CASE(bundle_cases)
         UTEST_REQUIRE(G * function.variable() <= h);
 
         check_convexity(function);
-        check_minimize(make_solvers(), function);
+        check_minimize(make_solvers(), function, make_full_vector<scalar_t>(function.size(), 0.0));
     }
 }
 
@@ -243,7 +243,7 @@ UTEST_CASE(factory)
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
         check_convexity(*function);
-        check_minimize(make_solvers(), *function);
+        check_minimize(make_solvers(), *function, make_full_vector<scalar_t>(function->size(), 0.0));
     }
 }
 
