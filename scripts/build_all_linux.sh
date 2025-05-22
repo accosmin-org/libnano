@@ -6,7 +6,7 @@ trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
 cmake_options="-GNinja" #-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=iwyu"
 
-export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -O0 -g"
+export CXXFLAGS="${CXXFLAGS} -march=x86-64-v3 -Og"
 
 ###############################################################################################################
 # generic checks:

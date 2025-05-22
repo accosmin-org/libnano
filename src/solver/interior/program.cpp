@@ -196,7 +196,7 @@ program_t::solve_stats_t program_t::solve()
     lmat.block(n + m, 0, p + m, n + m)             = Ap.matrix();
     lmat.block(n + m, n + m, p + m, p + m).array() = 0.0;
 
-    lvec.segment(0, n + m) = -rdual;
+    lvec.segment(0, n + m)     = -rdual;
     lvec.segment(n + m, p + m) = -m_rprim;
 
     const auto stats = solve_kkt(lmat, lvec, lsol);
