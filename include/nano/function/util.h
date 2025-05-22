@@ -34,11 +34,6 @@ NANO_PUBLIC bool is_convex(const matrix_t&, scalar_t tol = 1e-10);
 NANO_PUBLIC scalar_t strong_convexity(const matrix_t&);
 
 ///
-/// \brief return a strictly feasible point wrt the given inequality constraints `Ax <= b`, if possible.
-///
-NANO_PUBLIC std::optional<vector_t> make_strictly_feasible(const matrix_t& A, const vector_t& b);
-
-///
 /// \brief return a compact linear representation (A, b, G, h) of the functional constraints (if possible):
 ///     Ax = b (gathers all equality constraints) and
 ///     Gx <= b (gathers all inequality constraints).
@@ -54,18 +49,4 @@ struct linear_constraints_t
 };
 
 NANO_PUBLIC std::optional<linear_constraints_t> make_linear_constraints(const function_t&);
-
-///
-/// \brief perform in-place the Ruiz equilibration of the given matrix `A` so that the rows and the columns
-///     of `Ahat = diag(D1) * A * diag(D2)` have norm (close to) 1 and the symmetry is preserved.
-///
-/// see (1) "A scaling algorithm to equalibrate both rows and columns norms in matrices", D. Ruiz, 2001
-///
-struct ruiz_scaled_t
-{
-    vector_t m_D1;
-    vector_t m_D2;
-};
-
-NANO_PUBLIC ruiz_scaled_t ruiz_equilibration(matrix_t& A, scalar_t epsilon = epsilon0<scalar_t>());
 } // namespace nano

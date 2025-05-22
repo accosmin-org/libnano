@@ -218,45 +218,6 @@ scalar_t nano::strong_convexity(const matrix_t& P)
     return std::max(0.0, it->real());
 }
 
-std::optional<vector_t> nano::make_strictly_feasible(const matrix_t& A, const vector_t& b)
-{
-    std::optional<vector_t> ret;
-
-    if (A.rows() == b.size())
-    {
-        const auto ldlt = (A.transpose() * A).ldlt();
-        auto       x    = vector_t{A.cols()};
-        const auto eval = [&](const scalar_t y)
-        {
-            x.vector() = ldlt.solve(A.transpose() * (b + vector_t::constant(A.rows(), -y)));
-            if ((A * x.vector() - b).maxCoeff() < 0.0)
-            {
-                ret = std::move(x);
-                return true;
-            }
-            return false;
-        };
-
-        static constexpr auto gamma  = 0.3;
-        static constexpr auto trials = 100;
-
-        // NB: try both smaller and bigger distances to the edges!
-        auto ym = 1.0;
-        auto yM = 1.0 / gamma;
-        for (auto trial = 0; trial < trials; trial += 2)
-        {
-            if (eval(ym) || eval(yM))
-            {
-                break;
-            }
-            ym *= gamma;
-            yM /= gamma;
-        }
-    }
-
-    return ret;
-}
-
 std::optional<linear_constraints_t> nano::make_linear_constraints(const function_t& function)
 {
     if (const auto [valid, neqs, nineqs] = is_linear_constrained(function); !valid)
@@ -290,34 +251,4 @@ std::optional<linear_constraints_t> nano::make_linear_constraints(const function
 
         return lc;
     }
-}
-
-ruiz_scaled_t nano::ruiz_equilibration(matrix_t& A, const scalar_t epsilon)
-{
-    auto& Ak = A;
-    auto  D1 = make_full_vector<scalar_t>(A.rows(), 1.0);
-    auto  D2 = make_full_vector<scalar_t>(A.cols(), 1.0);
-    auto  Dr = vector_t{A.rows()};
-    auto  Dc = vector_t{A.cols()};
-
-    for (auto k = 0; k < 100; ++k)
-    {
-        const auto critr = (1.0 - Dr.array()).matrix().lpNorm<Eigen::Infinity>();
-        const auto critc = (1.0 - Dc.array()).matrix().lpNorm<Eigen::Infinity>();
-        if (std::max({critr, critc}) < epsilon)
-        {
-            break;
-        }
-
-        Dr = Ak.matrix().rowwise().lpNorm<Eigen::Infinity>().array().sqrt();
-        Dc = Ak.matrix().colwise().lpNorm<Eigen::Infinity>().array().sqrt();
-
-        Ak.matrix().noalias() = (1.0 / Dr.array()).matrix().asDiagonal() * Ak.matrix();
-        Ak.matrix().noalias() = Ak.matrix() * (1.0 / Dc.array()).matrix().asDiagonal();
-
-        D1.array() /= Dr.array();
-        D2.array() /= Dc.array();
-    }
-
-    return {std::move(D1), std::move(D2)};
 }
