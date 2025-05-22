@@ -235,10 +235,6 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
                       : nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
     const auto bp = (m == 0) ? m_b : nano::stack<scalar_t>(p + m, m_b, m_h);
 
-    const auto Gp =
-        (m == 0) ? matrix_t{0, n} : nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
-    const auto hp = vector_t::zero(m);
-
     // objective
     if (Qp.size() == 0)
     {
@@ -250,7 +246,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     }
 
     // surrogate duality gap
-    const auto eta = (m > 0) ? scalar_t{-u.dot(Gp * x - hp)} : 0.0;
+    const auto eta = (m > 0) ? u.dot(y) : 0.0;
 
     // residual contributions of linear equality constraints
     if (Ap.size() > 0)
@@ -263,7 +259,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     if (m > 0)
     {
         const auto sm = static_cast<scalar_t>(p + m);
-        m_rdual += Gp.transpose() * u;
+        m_rdual.segment(n, m) -= u;
         m_rcent = -eta / (miu * sm) + u.array() * y.array();
     }
 
