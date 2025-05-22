@@ -223,6 +223,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto x = m_x + xstep * m_dx;
     const auto u = m_u + ustep * m_du;
     const auto v = m_v + vstep * m_dv;
+    const auto y = x.segment(n, m);
 
     const auto Qp =
         (m == 0) ? m_Q : nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
@@ -259,11 +260,11 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     }
 
     // residual contributions of linear inequality constraints
-    if (Gp.size() > 0)
+    if (m > 0)
     {
         const auto sm = static_cast<scalar_t>(p + m);
         m_rdual += Gp.transpose() * u;
-        m_rcent = -eta / (miu * sm) - u.array() * (Gp * x - hp).array();
+        m_rcent = -eta / (miu * sm) + u.array() * y.array();
     }
 
     // apply the change if requested
