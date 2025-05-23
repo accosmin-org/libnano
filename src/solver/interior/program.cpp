@@ -223,36 +223,35 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto x = m_x + xstep * m_dx;
     const auto u = m_u + ustep * m_du;
     const auto v = m_v + vstep * m_dv;
+
+    const auto z = x.segment(0, n);
     const auto y = x.segment(n, m);
 
-    const auto Qp =
-        (m == 0) ? m_Q : nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
-    const auto cp = (m == 0) ? m_c : nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
-
-    const auto Ap = (m == 0) ? m_A
-                  : (p == 0)
-                      ? nano::stack<scalar_t>(m, n + m, m_G, matrix_t::identity(m, m))
-                      : nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
-    const auto bp = (m == 0) ? m_b : nano::stack<scalar_t>(p + m, m_b, m_h);
-
     // objective
-    if (Qp.size() == 0)
+    if (m_Q.size() == 0)
     {
-        m_rdual = cp;
+        m_rdual.segment(0, n).matrix() = m_c.vector();
     }
     else
     {
-        m_rdual = Qp * x + cp;
+        m_rdual.segment(0, n).matrix() = m_Q * z + m_c;
     }
+    m_rdual.segment(n, m).array() = 0.0;
 
     // surrogate duality gap
     const auto eta = (m > 0) ? u.dot(y) : 0.0;
 
     // residual contributions of linear equality constraints
-    if (Ap.size() > 0)
+    if (p > 0)
     {
-        m_rdual += Ap.transpose() * v;
-        m_rprim = Ap * x - bp;
+        m_rdual.segment(0, n) += m_A.transpose() * v.segment(0, p);
+        m_rprim.segment(0, p) = m_A * z - m_b;
+    }
+    if (m > 0)
+    {
+        m_rdual.segment(0, n) += m_G.transpose() * v.segment(p, m);
+        m_rdual.segment(n, m) += v.segment(p, m);
+        m_rprim.segment(p, m) = m_G * z + y - m_h;
     }
 
     // residual contributions of linear inequality constraints
