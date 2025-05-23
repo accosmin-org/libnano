@@ -227,7 +227,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     const auto z = x.segment(0, n);
     const auto y = x.segment(n, m);
 
-    // objective
+    // dual residual
     if (m_Q.size() == 0)
     {
         m_rdual.segment(0, n).matrix() = m_c.vector();
@@ -236,30 +236,19 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     {
         m_rdual.segment(0, n).matrix() = m_Q * z + m_c;
     }
-    m_rdual.segment(n, m).array() = 0.0;
+    m_rdual.segment(0, n) += m_A.transpose() * v.segment(0, p);
+    m_rdual.segment(0, n) += m_G.transpose() * v.segment(p, m);
 
-    // surrogate duality gap
-    const auto eta = (m > 0) ? u.dot(y) : 0.0;
+    m_rdual.segment(n, m) = v.segment(p, m) - u;
 
-    // residual contributions of linear equality constraints
-    if (p > 0)
-    {
-        m_rdual.segment(0, n) += m_A.transpose() * v.segment(0, p);
-        m_rprim.segment(0, p) = m_A * z - m_b;
-    }
+    // primal residual
+    m_rprim.segment(0, p) = m_A * z - m_b;
+    m_rprim.segment(p, m) = m_G * z + y - m_h;
+
+    // centering residual
     if (m > 0)
     {
-        m_rdual.segment(0, n) += m_G.transpose() * v.segment(p, m);
-        m_rdual.segment(n, m) += v.segment(p, m);
-        m_rprim.segment(p, m) = m_G * z + y - m_h;
-    }
-
-    // residual contributions of linear inequality constraints
-    if (m > 0)
-    {
-        const auto sm = static_cast<scalar_t>(p + m);
-        m_rdual.segment(n, m) -= u;
-        m_rcent = -eta / (miu * sm) + u.array() * y.array();
+        m_rcent.array() = -u.dot(y) / (miu * static_cast<scalar_t>(m)) + u.array() * y.array();
     }
 
     // apply the change if requested
