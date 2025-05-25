@@ -151,6 +151,8 @@ program_t::solve_stats_t program_t::solve()
     const auto m = this->m();
     const auto p = this->p();
 
+    const auto y = m_x.segment(n, m);
+
     //  Q' = |Q 0|, c' = |c|
     //       |0 0|       |0|
     //
@@ -174,11 +176,9 @@ program_t::solve_stats_t program_t::solve()
 
     const auto Gp =
         (m == 0) ? matrix_t{0, n} : nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
-    const auto hp = vector_t::zero(m);
 
-    const auto Gxmh  = Gp * m_x - hp;
-    const auto hess  = Gp.transpose() * (m_u.array() / Gxmh.array()).matrix().asDiagonal() * Gp.matrix();
-    const auto rdual = m_rdual + Gp.transpose() * (m_rcent.array() / Gxmh.array()).matrix();
+    const auto hess  = Gp.transpose() * (-m_u.array() / y.array()).matrix().asDiagonal() * Gp.matrix();
+    const auto rdual = m_rdual + Gp.transpose() * (-m_rcent.array() / y.array()).matrix();
 
     auto lmat = matrix_t{n + 2 * m + p, n + 2 * m + p};
     auto lvec = vector_t{n + 2 * m + p};
@@ -203,7 +203,7 @@ program_t::solve_stats_t program_t::solve()
 
     m_dx = lsol.segment(0, n + m);
     m_dv = lsol.segment(n + m, p + m);
-    m_du = (m_rcent.array() - m_u.array() * (Gp * m_dx).array()) / Gxmh.array();
+    m_du = -(m_rcent.array() - m_u.array() * (Gp * m_dx).array()) / y.array();
 
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
