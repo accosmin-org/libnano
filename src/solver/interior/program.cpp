@@ -153,14 +153,6 @@ program_t::solve_stats_t program_t::solve()
 
     const auto y = m_x.segment(n, m);
 
-    //  Q' = |Q 0|, c' = |c|
-    //       |0 0|       |0|
-    //
-    //  A' = |A 0|, b' = |b|
-    //       |G I|       |h|
-    //
-    //  G' = |0 -I|, h' = 0
-
     // FIXME: re-use the allocated matrices
     // FIXME: check if possible to solve smaller systems
 

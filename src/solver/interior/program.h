@@ -31,6 +31,19 @@ namespace nano
 /// NB: internally the inequality constraints `G * x <= h` are transformed to `G * x + y = h` and `-y <= 0`
 ///     (so that a strictly feasible starting point is easily produced, e.g. `y = 1.0`).
 ///
+///     the matrices for the transformed quadratic program are:
+///         Q' = |Q 0|,  c' = |c|
+///              |0 0|        |0|
+///
+///         A' = |A 0|,  b' = |b|
+///              |G I|        |h|
+///
+///         G' = |0 -I|, h' = 0
+///
+///     with:
+///         x'           = |x y|^T
+///         G' * x' - h' = -y
+///
 class program_t
 {
 public:
