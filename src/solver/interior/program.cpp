@@ -151,51 +151,47 @@ program_t::solve_stats_t program_t::solve()
     const auto m = this->m();
     const auto p = this->p();
 
-    const auto y = m_x.segment(n, m);
+    const auto y  = m_x.segment(n, m);
+    const auto b1 = -m_rdual.segment(0, n);
+    const auto b2 = -m_rdual.segment(n, m);
+    const auto b3 = -m_rcent.segment(0, m);
+    const auto b4 = -m_rprim.segment(0, p);
+    const auto b5 = -m_rprim.segment(p, m);
 
     // FIXME: re-use the allocated matrices
     // FIXME: check if possible to solve smaller systems
 
-    const auto Qp =
-        (m == 0) ? m_Q : nano::stack<scalar_t>(n + m, n + m, m_Q, matrix_t::zero(n, m), matrix_t::zero(m, n + m));
-    const auto cp = (m == 0) ? m_c : nano::stack<scalar_t>(n + m, m_c, vector_t::zero(m));
+    auto lmat = matrix_t{n + p, n + p};
+    auto lvec = vector_t{n + p};
+    auto lsol = vector_t{n + p};
 
-    const auto Ap = (m == 0) ? m_A
-                  : (p == 0)
-                      ? nano::stack<scalar_t>(m, n + m, m_G, matrix_t::identity(m, m))
-                      : nano::stack<scalar_t>(p + m, n + m, m_A, matrix_t::zero(m, m), m_G, matrix_t::identity(m, m));
-    const auto bp = (m == 0) ? m_b : nano::stack<scalar_t>(p + m, m_b, m_h);
+    // |Q     0       0     A^T   G^T|   |dxn|   |-rdn|
+    // |0     0      -I      0     I |   |dxm|   |-rdm|
+    // |0  diag(u) diag(y)   0     0 | * |du | = |-rc |
+    // |A     0       0      0     0 |   |dvp|   |-rpp|
+    // |G     I       0      0     0 |   |dvm|   |-rpm|
 
-    const auto Gp =
-        (m == 0) ? matrix_t{0, n} : nano::stack<scalar_t>(m, n + m, matrix_t::zero(m, n), -matrix_t::identity(m, m));
+    lmat.block(0, 0, n, n) = m_Q + m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
+    lmat.block(0, n, n, p) = m_A.transpose();
+    lmat.block(n, 0, p, n) = m_A.matrix();
+    lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
-    const auto hess  = Gp.transpose() * (-m_u.array() / y.array()).matrix().asDiagonal() * Gp.matrix();
-    const auto rdual = m_rdual + Gp.transpose() * (-m_rcent.array() / y.array()).matrix();
+    const auto a7 = -m_u.array() * b5.array() + y.array() * b2.array() + b3.array();
 
-    auto lmat = matrix_t{n + 2 * m + p, n + 2 * m + p};
-    auto lvec = vector_t{n + 2 * m + p};
-    auto lsol = vector_t{n + 2 * m + p};
-
-    if (Qp.size() == 0)
-    {
-        lmat.block(0, 0, n + m, n + m) = -hess;
-    }
-    else
-    {
-        lmat.block(0, 0, n + m, n + m) = Qp - hess;
-    }
-    lmat.block(0, n + m, n + m, p + m)             = Ap.transpose();
-    lmat.block(n + m, 0, p + m, n + m)             = Ap.matrix();
-    lmat.block(n + m, n + m, p + m, p + m).array() = 0.0;
-
-    lvec.segment(0, n + m)     = -rdual;
-    lvec.segment(n + m, p + m) = -m_rprim;
+    lvec.segment(0, n) = b1 - m_G.transpose() * (a7.array() / y.array()).matrix();
+    lvec.segment(n, p) = b4;
 
     const auto stats = solve_kkt(lmat, lvec, lsol);
 
-    m_dx = lsol.segment(0, n + m);
-    m_dv = lsol.segment(n + m, p + m);
-    m_du = -(m_rcent.array() - m_u.array() * (Gp * m_dx).array()) / y.array();
+    const auto dxn = lsol.segment(0, n);
+    const auto dvp = lsol.segment(n, p);
+    const auto dvm = a7.array() / y.array() + (m_du.array() / y.array()) * (m_G * dxn).array();
+
+    m_dx.segment(0, n) = dxn;
+    m_dx.segment(n, m) = b5 - m_G * dxn;
+    m_du.segment(0, m) = dvm - b2.array();
+    m_dv.segment(0, p) = dvp;
+    m_dv.segment(p, m) = dvm;
 
     return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
 }
