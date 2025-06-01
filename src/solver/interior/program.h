@@ -41,8 +41,8 @@ namespace nano
 ///         G' = |0 -I|, h' = 0
 ///
 ///     with:
-///         x'           = |x y|^T
-///         G' * x' - h' = -y
+///         x'        = |x y|^T
+///         G * x - h = -y
 ///
 class program_t
 {

@@ -185,7 +185,7 @@ program_t::solve_stats_t program_t::solve()
 
     const auto dxn = lsol.segment(0, n);
     const auto dvp = lsol.segment(n, p);
-    const auto dvm = a7.array() / y.array() + (m_du.array() / y.array()) * (m_G * dxn).array();
+    const auto dvm = a7.array() / y.array() + (m_u.array() / y.array()) * (m_G * dxn).array();
 
     m_dx.segment(0, n) = dxn;
     m_dx.segment(n, m) = b5 - m_G * dxn;
