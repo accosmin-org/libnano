@@ -144,5 +144,8 @@ private:
     vector_t          m_orig_x;   ///< scaled solution
     vector_t          m_orig_u;   ///< scaled Lagrange multipliers for the inequality constraints
     vector_t          m_orig_v;   ///< scaled Lagrange multipliers for the equality constraints
+    matrix_t          m_lmat;     ///< reduced KKT system: lmat * lsol = lvec
+    vector_t          m_lvec;     ///<
+    vector_t          m_lsol;     ///<
 };
 } // namespace nano

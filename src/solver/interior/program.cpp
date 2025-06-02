@@ -115,6 +115,9 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_orig_x(n())
     , m_orig_u(m())
     , m_orig_v(p())
+    , m_lmat(n() + p(), n() + p())
+    , m_lvec(n() + p())
+    , m_lsol(n() + p())
 {
     assert(m_Q.size() == 0 || m_Q.rows() == n());
     assert(m_Q.size() == 0 || m_Q.cols() == n());
@@ -158,33 +161,26 @@ program_t::solve_stats_t program_t::solve()
     const auto b4 = -m_rprim.segment(0, p);
     const auto b5 = -m_rprim.segment(p, m);
 
-    // FIXME: re-use the allocated matrices
-    // FIXME: check if possible to solve smaller systems
-
-    auto lmat = matrix_t{n + p, n + p};
-    auto lvec = vector_t{n + p};
-    auto lsol = vector_t{n + p};
-
     // |Q     0       0     A^T   G^T|   |dxn|   |-rdn|
     // |0     0      -I      0     I |   |dxm|   |-rdm|
     // |0  diag(u) diag(y)   0     0 | * |du | = |-rc |
     // |A     0       0      0     0 |   |dvp|   |-rpp|
     // |G     I       0      0     0 |   |dvm|   |-rpm|
 
-    lmat.block(0, 0, n, n) = m_Q + m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
-    lmat.block(0, n, n, p) = m_A.transpose();
-    lmat.block(n, 0, p, n) = m_A.matrix();
-    lmat.block(n, n, p, p) = matrix_t::zero(p, p);
+    m_lmat.block(0, 0, n, n) = m_Q + m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
+    m_lmat.block(0, n, n, p) = m_A.transpose();
+    m_lmat.block(n, 0, p, n) = m_A.matrix();
+    m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
 
     const auto a7 = -m_u.array() * b5.array() + y.array() * b2.array() + b3.array();
 
-    lvec.segment(0, n) = b1 - m_G.transpose() * (a7.array() / y.array()).matrix();
-    lvec.segment(n, p) = b4;
+    m_lvec.segment(0, n) = b1 - m_G.transpose() * (a7.array() / y.array()).matrix();
+    m_lvec.segment(n, p) = b4;
 
-    const auto stats = solve_kkt(lmat, lvec, lsol);
+    const auto stats = solve_kkt(m_lmat, m_lvec, m_lsol);
 
-    const auto dxn = lsol.segment(0, n);
-    const auto dvp = lsol.segment(n, p);
+    const auto dxn = m_lsol.segment(0, n);
+    const auto dvp = m_lsol.segment(n, p);
     const auto dvm = a7.array() / y.array() + (m_u.array() / y.array()) * (m_G * dxn).array();
 
     m_dx.segment(0, n) = dxn;
