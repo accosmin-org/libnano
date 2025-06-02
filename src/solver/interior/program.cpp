@@ -167,7 +167,11 @@ program_t::solve_stats_t program_t::solve()
     // |A     0       0      0     0 |   |dvp|   |-rpp|
     // |G     I       0      0     0 |   |dvm|   |-rpm|
 
-    m_lmat.block(0, 0, n, n) = m_Q + m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
+    m_lmat.block(0, 0, n, n) = m_G.transpose() * (m_u.array() / y.array()).matrix().asDiagonal() * m_G;
+    if (m_Q.size() > 0)
+    {
+        m_lmat.block(0, 0, n, n) += m_Q.matrix();
+    }
     m_lmat.block(0, n, n, p) = m_A.transpose();
     m_lmat.block(n, 0, p, n) = m_A.matrix();
     m_lmat.block(n, n, p, p) = matrix_t::zero(p, p);
