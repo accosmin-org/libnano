@@ -9,7 +9,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 10, LE, 50));
+    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 20, LE, 50));
 
     parameter("solver::max_evals") = 100;
 }
@@ -86,8 +86,6 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto ustep = s * program.max_ustep();
         const auto xstep = s * program.max_xstep();
         const auto vstep = ustep;
-
-        // FIXME: make it an option to either do the line-search from (2) or the current geometrically decreasing steps
 
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ustep, vstep, miu);
