@@ -6,6 +6,7 @@ target_sources(function PRIVATE
     cvx48f.h
     cvx49.h
     cvx410.h
+    eqcqp.h
     numopt162.h
     numopt1625.h
     randomqp.h
@@ -16,6 +17,7 @@ target_sources(function PRIVATE
     cvx48f.cpp
     cvx49.cpp
     cvx410.cpp
+    eqcqp.cpp
     numopt162.cpp
     numopt1625.cpp
     randomqp.cpp)
