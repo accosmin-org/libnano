@@ -148,7 +148,7 @@ struct solver_description_t
     {
         // NB: methods that can solve linear and quadratic convex programs very reliable.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(5e-9).expected_status(
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-9).expected_status(
                 solver_status::kkt_optimality_test))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
     }
