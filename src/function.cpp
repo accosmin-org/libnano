@@ -35,6 +35,7 @@
 #include <function/program/eqcqp.h>
 #include <function/program/numopt162.h>
 #include <function/program/numopt1625.h>
+#include <function/program/portfolio.h>
 #include <function/program/randomqp.h>
 
 #include <function/mlearn/elasticnet.h>
@@ -138,6 +139,15 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
         for (const auto neqs : {0.1, 0.5, 0.9})
         {
             function->config("eqcqp::neqs", neqs);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+
+    else if (function->parameter_if("portfolio::factors") != nullptr)
+    {
+        for (const auto factors : {0.1, 0.5, 0.9})
+        {
+            function->config("portfolio::factors", factors);
             functions.emplace_back(function->make(dims));
         }
     }
@@ -354,9 +364,11 @@ factory_t<function_t>& function_t::all()
         manager.add<quadratic_program_numopt1625_t>(
             "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
         manager.add<quadratic_program_randomqp_t>(
-            "quadratic program: A.1, 'OSQP: an operator splitting solver for quadratic programs'");
+            "random quadratic program: A.1, 'OSQP: an operator splitting solver for quadratic programs'");
         manager.add<quadratic_program_eqcqp_t>(
-            "quadratic program: A.2, 'OSQP: an operator splitting solver for quadratic programs'");
+            "equality constrained quadratic program: A.2, 'OSQP: an operator splitting solver for quadratic programs'");
+        manager.add<quadratic_program_portfolio_t>(
+            "portfolio optimization: A.4, 'OSQP: an operator splitting solver for quadratic programs'");
     };
 
     static std::once_flag flag;

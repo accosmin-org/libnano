@@ -9,6 +9,7 @@ target_sources(function PRIVATE
     eqcqp.h
     numopt162.h
     numopt1625.h
+    portfolio.h
     randomqp.h
     cvx48b.cpp
     cvx48c.cpp
@@ -20,4 +21,5 @@ target_sources(function PRIVATE
     eqcqp.cpp
     numopt162.cpp
     numopt1625.cpp
+    portfolio.cpp
     randomqp.cpp)
