@@ -12,6 +12,8 @@ namespace nano
 ///     min. 1/2 * x.dot(P * x) + q.dot(x)
 ///     s.t. A * x = b.
 ///
+/// NB: b is generated so that the equality constrained can be solved exactly.
+///
 class NANO_PUBLIC quadratic_program_eqcqp_t final : public quadratic_program_t
 {
 public:

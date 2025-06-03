@@ -30,10 +30,10 @@ quadratic_program_eqcqp_t::quadratic_program_eqcqp_t(const tensor_size_t dims, c
     auto sdist = std::uniform_real_distribution<scalar_t>{0.0, 1.0};
 
     auto q = vector_t{dims};
-    auto b = vector_t{nneqs};
+    auto x = vector_t{dims};
 
     std::generate(q.begin(), q.end(), [&]() { return gdist(rng); });
-    std::generate(b.begin(), b.end(), [&]() { return gdist(rng); });
+    std::generate(x.begin(), x.end(), [&]() { return gdist(rng); });
 
     auto M = matrix_t{dims, dims};
     auto A = matrix_t{nneqs, dims};
@@ -44,7 +44,7 @@ quadratic_program_eqcqp_t::quadratic_program_eqcqp_t(const tensor_size_t dims, c
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(dims, dims);
     this->c() = q;
 
-    critical((A * variable()) == b);
+    critical((A * variable()) == (A * x));
 }
 
 rfunction_t quadratic_program_eqcqp_t::clone() const
