@@ -5,7 +5,7 @@
 namespace nano
 {
 ///
-/// \brief test/benchmark quadratic program from
+/// \brief test/benchmark quadratic program from:
 ///     appendix A.2, "OSQP: an operator splitting solver for quadratic programs", B. Stellato et al, 2020
 ///
 /// minimize a convex quadratic function:
@@ -14,13 +14,13 @@ namespace nano
 ///
 /// NB: b is generated so that the equality constrained can be solved exactly.
 ///
-class NANO_PUBLIC quadratic_program_eqcqp_t final : public quadratic_program_t
+class NANO_PUBLIC equality_constrained_quadratic_program_t final : public quadratic_program_t
 {
 public:
     ///
     /// \brief constructor
     ///
-    explicit quadratic_program_eqcqp_t(tensor_size_t dims = 10, scalar_t neqs = 0.5, scalar_t alpha = 1e-2);
+    explicit equality_constrained_quadratic_program_t(tensor_size_t dims = 10, const function_t* reference = nullptr);
 
     ///
     /// \brief @see clonable_t
@@ -36,5 +36,8 @@ public:
     /// \brief @see function_t
     ///
     rfunction_t make(tensor_size_t dims) const override;
+
+private:
+    void generate(const function_t& reference);
 };
 } // namespace nano

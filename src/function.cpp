@@ -163,6 +163,7 @@ function_t::function_t(string_t id, tensor_size_t size)
     : typed_t(std::move(id))
     , m_size(size)
 {
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, 42, LE, 1024));
 }
 
 void function_t::convex(const convexity c)
