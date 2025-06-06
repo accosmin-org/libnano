@@ -16,12 +16,17 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_geometric_optimization_t(tensor_size_t dims = 10, scalar_t sample_ratio = 10.0);
+    explicit function_geometric_optimization_t(tensor_size_t dims = 10, uint64_t seed = 42, scalar_t sratio = 10.0);
 
     ///
     /// \brief @see clonable_t
     ///
     rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    string_t do_name() const override;
 
     ///
     /// \brief @see function_t

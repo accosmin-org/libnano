@@ -5,7 +5,8 @@
 namespace nano
 {
 ///
-/// \brief random kinks function: f(x) = sum(|x - k_i|, i=1,K).
+/// \brief random kinks function: f(x) = sum(|x - k_i|, i=1,K),
+///  where the kinks `k_i` are generated randomly.
 ///
 class NANO_PUBLIC function_kinks_t final : public function_t
 {
@@ -13,12 +14,17 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_kinks_t(tensor_size_t dims = 10);
+    explicit function_kinks_t(tensor_size_t dims = 10, uint64_t seed = 42);
 
     ///
     /// \brief @see clonable_t
     ///
     rfunction_t clone() const override;
+
+    ///
+    /// \brief @see function_t
+    ///
+    string_t do_name() const override;
 
     ///
     /// \brief @see function_t

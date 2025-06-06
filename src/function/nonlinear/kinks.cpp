@@ -4,11 +4,13 @@
 
 using namespace nano;
 
-function_kinks_t::function_kinks_t(const tensor_size_t dims)
+function_kinks_t::function_kinks_t(const tensor_size_t dims, const uint64_t seed)
     : function_t("kinks", dims)
     , m_kinks(make_random_matrix<scalar_t>(std::max(tensor_size_t(1), static_cast<tensor_size_t>(std::sqrt(dims))),
-                                           dims, -1.0, +1.0, seed_t{42U}))
+                                           dims, -1.0, +1.0, seed))
 {
+    parameter("function::seed") = seed;
+
     convex(convexity::yes);
     smooth(smoothness::no);
 
@@ -49,7 +51,16 @@ scalar_t function_kinks_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     return fx - m_offset;
 }
 
+string_t function_kinks_t::do_name() const
+{
+    const auto seed = parameter("function::seed").value<uint64_t>();
+
+    return scat(type_id(), "[seed=", seed, "]");
+}
+
 rfunction_t function_kinks_t::make(const tensor_size_t dims) const
 {
-    return std::make_unique<function_kinks_t>(dims);
+    const auto seed = parameter("function::seed").value<uint64_t>();
+
+    return std::make_unique<function_kinks_t>(dims, seed);
 }
