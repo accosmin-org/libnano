@@ -20,8 +20,8 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit function_elasticnet_t(tensor_size_t dims = 10, scalar_t alpha1 = 1.0, scalar_t alpha2 = 1.0,
-                                   scalar_t sratio = 10.0, tensor_size_t modulo = 1);
+    explicit function_elasticnet_t(tensor_size_t dims = 10, uint64_t seed = 42, scalar_t alpha1 = 1.0,
+                                   scalar_t alpha2 = 1.0, scalar_t sratio = 10.0, tensor_size_t modulo = 1);
 
     ///
     /// \brief @see clonable_t

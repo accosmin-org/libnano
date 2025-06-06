@@ -14,7 +14,7 @@ namespace nano
 class NANO_PUBLIC linear_model_t
 {
 public:
-    linear_model_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs,
+    linear_model_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs, uint64_t seed,
                    tensor_size_t modulo_correlated_inputs, bool regression);
 
     const matrix_t& wopt() const { return m_wopt; }

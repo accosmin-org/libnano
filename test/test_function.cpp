@@ -1,5 +1,5 @@
 #include <fixture/function.h>
-#include <function/benchmark/sphere.h>
+#include <function/nonlinear/sphere.h>
 #include <nano/critical.h>
 #include <nano/function/bounds.h>
 #include <nano/function/cuts.h>

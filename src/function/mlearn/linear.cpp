@@ -3,11 +3,11 @@
 using namespace nano;
 
 linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t outputs, const tensor_size_t inputs,
-                               const tensor_size_t modulo_correlated_inputs, const bool regression)
-    : m_inputs(make_random_tensor<scalar_t>(make_dims(samples, inputs), +0.0, +1.0, seed_t{42}))
+                               const uint64_t seed, const tensor_size_t modulo_correlated_inputs, const bool regression)
+    : m_inputs(make_random_tensor<scalar_t>(make_dims(samples, inputs), +0.0, +1.0, seed))
     , m_targets(samples, outputs)
-    , m_wopt(make_random_tensor<scalar_t>(make_dims(outputs, inputs), +0.0, +1.0, seed_t{42}))
-    , m_bopt(make_random_tensor<scalar_t>(make_dims(outputs), -0.5, +0.5, seed_t{42}))
+    , m_wopt(make_random_tensor<scalar_t>(make_dims(outputs, inputs), +0.0, +1.0, seed))
+    , m_bopt(make_random_tensor<scalar_t>(make_dims(outputs), -0.5, +0.5, seed))
 {
     for (tensor_size_t o = 0; o < outputs; ++o)
     {

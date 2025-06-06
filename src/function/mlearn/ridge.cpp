@@ -27,18 +27,15 @@ auto make_samples(const tensor_size_t dims, const scalar_t sratio)
 } // namespace
 
 template <class tloss>
-function_ridge_t<tloss>::function_ridge_t(const tensor_size_t dims, const scalar_t alpha2, const scalar_t sratio,
-                                          const tensor_size_t modulo)
+function_ridge_t<tloss>::function_ridge_t(const tensor_size_t dims, const uint64_t seed, const scalar_t alpha2,
+                                          const scalar_t sratio, const tensor_size_t modulo)
     : function_t(scat(tloss::basename, "+ridge"), ::make_size(dims))
-    , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), modulo, tloss::regression)
+    , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
-    register_parameter(parameter_t::make_scalar("ridge::alpha2", 0.0, LE, 0.0, LE, 1e+8));
-    register_parameter(parameter_t::make_scalar("ridge::sratio", 0.1, LE, 10.0, LE, 1e+3));
-    register_parameter(parameter_t::make_integer("ridge::modulo", 1, LE, 1, LE, 100));
-
-    parameter("ridge::alpha2") = alpha2;
-    parameter("ridge::sratio") = sratio;
-    parameter("ridge::modulo") = modulo;
+    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_scalar("function::ridge::alpha2", 0.0, LE, alpha2, LE, 1e+8));
+    register_parameter(parameter_t::make_scalar("function::ridge::sratio", 0.1, LE, sratio, LE, 1e+3));
+    register_parameter(parameter_t::make_integer("function::ridge::modulo", 1, LE, modulo, LE, 100));
 
     function_t::convex(tloss::convex ? convexity::yes : convexity::no);
     function_t::smooth(tloss::smooth ? smoothness::yes : smoothness::no);
@@ -54,17 +51,18 @@ rfunction_t function_ridge_t<tloss>::clone() const
 template <class tloss>
 string_t function_ridge_t<tloss>::do_name() const
 {
-    const auto alpha2 = parameter("ridge::alpha2").template value<scalar_t>();
-    const auto sratio = parameter("ridge::sratio").template value<scalar_t>();
-    const auto modulo = parameter("ridge::modulo").template value<tensor_size_t>();
+    const auto seed   = parameter("function::seed").template value<uint64_t>();
+    const auto alpha2 = parameter("function::ridge::alpha2").template value<scalar_t>();
+    const auto sratio = parameter("function::ridge::sratio").template value<scalar_t>();
+    const auto modulo = parameter("function::ridge::modulo").template value<tensor_size_t>();
 
-    return scat(type_id(), "[alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, "]");
+    return scat(type_id(), "[alpha2=", alpha2, ",sratio=", sratio, ",modulo=", modulo, ",seed=", seed, "]");
 }
 
 template <class tloss>
 scalar_t function_ridge_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
 {
-    const auto alpha2 = parameter("ridge::alpha2").template value<scalar_t>();
+    const auto alpha2 = parameter("function::ridge::alpha2").template value<scalar_t>();
 
     auto fx = tloss::vgrad(m_model, m_model.outputs(x), m_model.targets(), gx);
 
@@ -80,11 +78,12 @@ scalar_t function_ridge_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) con
 template <class tloss>
 rfunction_t function_ridge_t<tloss>::make(const tensor_size_t dims) const
 {
-    const auto alpha2 = parameter("ridge::alpha2").template value<scalar_t>();
-    const auto sratio = parameter("ridge::sratio").template value<scalar_t>();
-    const auto modulo = parameter("ridge::modulo").template value<tensor_size_t>();
+    const auto seed   = parameter("function::seed").template value<uint64_t>();
+    const auto alpha2 = parameter("function::ridge::alpha2").template value<scalar_t>();
+    const auto sratio = parameter("function::ridge::sratio").template value<scalar_t>();
+    const auto modulo = parameter("function::ridge::modulo").template value<tensor_size_t>();
 
-    return std::make_unique<function_ridge_t<tloss>>(dims, alpha2, sratio, modulo);
+    return std::make_unique<function_ridge_t<tloss>>(dims, seed, alpha2, sratio, modulo);
 }
 
 template class nano::function_ridge_t<nano::loss_mse_t>;

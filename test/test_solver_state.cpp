@@ -2,7 +2,7 @@
 #include <fixture/lsearch0.h>
 #include <fixture/lsearchk.h>
 #include <fixture/solver.h>
-#include <function/benchmark/sphere.h>
+#include <function/nonlinear/sphere.h>
 #include <nano/function/bounds.h>
 #include <nano/function/cuts.h>
 #include <nano/function/linear.h>

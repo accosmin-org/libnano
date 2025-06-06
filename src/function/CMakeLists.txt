@@ -17,6 +17,7 @@ target_sources(function PRIVATE
     quadratic.cpp
     util.cpp)
 
-add_subdirectory(benchmark)
-add_subdirectory(program)
+add_subdirectory(lp)
+add_subdirectory(qp)
 add_subdirectory(mlearn)
+add_subdirectory(nonlinear)

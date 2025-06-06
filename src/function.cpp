@@ -1,46 +1,47 @@
 #include <mutex>
 
-#include <function/benchmark/axis_ellipsoid.h>
-#include <function/benchmark/cauchy.h>
-#include <function/benchmark/chained_cb3I.h>
-#include <function/benchmark/chained_cb3II.h>
-#include <function/benchmark/chained_lq.h>
-#include <function/benchmark/chung_reynolds.h>
-#include <function/benchmark/dixon_price.h>
-#include <function/benchmark/exponential.h>
-#include <function/benchmark/geometric.h>
-#include <function/benchmark/kinks.h>
-#include <function/benchmark/maxhilb.h>
-#include <function/benchmark/maxq.h>
-#include <function/benchmark/maxquad.h>
-#include <function/benchmark/powell.h>
-#include <function/benchmark/qing.h>
-#include <function/benchmark/quadratic.h>
-#include <function/benchmark/rosenbrock.h>
-#include <function/benchmark/rotated_ellipsoid.h>
-#include <function/benchmark/sargan.h>
-#include <function/benchmark/schumer_steiglitz.h>
-#include <function/benchmark/sphere.h>
-#include <function/benchmark/styblinski_tang.h>
-#include <function/benchmark/trid.h>
-#include <function/benchmark/zakharov.h>
+#include <function/lp/cvx410.h>
+#include <function/lp/cvx48b.h>
+#include <function/lp/cvx48c.h>
+#include <function/lp/cvx48d.h>
+#include <function/lp/cvx48e.h>
+#include <function/lp/cvx48f.h>
+#include <function/lp/cvx49.h>
 
-#include <function/program/cvx410.h>
-#include <function/program/cvx48b.h>
-#include <function/program/cvx48c.h>
-#include <function/program/cvx48d.h>
-#include <function/program/cvx48e.h>
-#include <function/program/cvx48f.h>
-#include <function/program/cvx49.h>
-#include <function/program/eqcqp.h>
-#include <function/program/numopt162.h>
-#include <function/program/numopt1625.h>
-#include <function/program/portfolio.h>
-#include <function/program/randomqp.h>
+#include <function/qp/numopt162.h>
+#include <function/qp/numopt1625.h>
+#include <function/qp/osqp1.h>
+#include <function/qp/osqp2.h>
+#include <function/qp/osqp4.h>
 
 #include <function/mlearn/elasticnet.h>
 #include <function/mlearn/lasso.h>
 #include <function/mlearn/ridge.h>
+
+#include <function/nonlinear/axis_ellipsoid.h>
+#include <function/nonlinear/cauchy.h>
+#include <function/nonlinear/chained_cb3I.h>
+#include <function/nonlinear/chained_cb3II.h>
+#include <function/nonlinear/chained_lq.h>
+#include <function/nonlinear/chung_reynolds.h>
+#include <function/nonlinear/dixon_price.h>
+#include <function/nonlinear/exponential.h>
+#include <function/nonlinear/geometric.h>
+#include <function/nonlinear/kinks.h>
+#include <function/nonlinear/maxhilb.h>
+#include <function/nonlinear/maxq.h>
+#include <function/nonlinear/maxquad.h>
+#include <function/nonlinear/powell.h>
+#include <function/nonlinear/qing.h>
+#include <function/nonlinear/quadratic.h>
+#include <function/nonlinear/rosenbrock.h>
+#include <function/nonlinear/rotated_ellipsoid.h>
+#include <function/nonlinear/sargan.h>
+#include <function/nonlinear/schumer_steiglitz.h>
+#include <function/nonlinear/sphere.h>
+#include <function/nonlinear/styblinski_tang.h>
+#include <function/nonlinear/trid.h>
+#include <function/nonlinear/zakharov.h>
 
 #include <nano/core/strutil.h>
 
@@ -52,102 +53,102 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
 {
     // NB: generate different regularization parameters for various linear ML models
     // to assess the difficulty of the resulting numerical optimization problems.
-    if (function->parameter_if("lasso::alpha1") != nullptr)
+    if (function->parameter_if("function::lasso::alpha1") != nullptr)
     {
         for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("lasso::alpha1", alpha1);
+            function->config("function::lasso::alpha1", alpha1);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("ridge::alpha2") != nullptr)
+    else if (function->parameter_if("function::ridge::alpha2") != nullptr)
     {
         for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("ridge::alpha2", alpha2);
+            function->config("function::ridge::alpha2", alpha2);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("elasticnet::alpha1") != nullptr)
+    else if (function->parameter_if("function::elasticnet::alpha1") != nullptr)
     {
         for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("elasticnet::alpha1", alpha12);
-            function->config("elasticnet::alpha2", alpha12);
+            function->config("function::elasticnet::alpha1", alpha12);
+            function->config("function::elasticnet::alpha2", alpha12);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("cvx48b::lambda") != nullptr)
+    else if (function->parameter_if("function::cvx48b::lambda") != nullptr)
     {
         for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
         {
-            function->config("cvx48b::lambda", lambda);
+            function->config("function::cvx48b::lambda", lambda);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("cvx48e-eq::alpha") != nullptr)
+    else if (function->parameter_if("function::cvx48e-eq::alpha") != nullptr)
     {
         for (const auto alpha : {0.0, 0.5, 1.0})
         {
-            function->config("cvx48e-eq::alpha", alpha);
+            function->config("function::cvx48e-eq::alpha", alpha);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("cvx48e-ineq::alpha") != nullptr)
+    else if (function->parameter_if("function::cvx48e-ineq::alpha") != nullptr)
     {
         for (const auto alpha : {1e-6, 0.5, 1.0})
         {
-            function->config("cvx48e-ineq::alpha", alpha);
+            function->config("function::cvx48e-ineq::alpha", alpha);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("cvx48f::alpha") != nullptr)
+    else if (function->parameter_if("function::cvx48f::alpha") != nullptr)
     {
         for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
         {
-            function->config("cvx48f::alpha", alpha);
+            function->config("function::cvx48f::alpha", alpha);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("numopt162::neqs") != nullptr)
+    else if (function->parameter_if("function::numopt162::neqs") != nullptr)
     {
         for (const auto neqs : {1e-6, 0.1, 0.2, 0.5, 0.8, 1.0})
         {
-            function->config("numopt162::neqs", neqs);
+            function->config("function::numopt162::neqs", neqs);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("randomqp::nineqs") != nullptr)
+    else if (function->parameter_if("function::osqp1::nineqs") != nullptr)
     {
         for (const auto nineqs : {5.0, 10.0, 20.0})
         {
-            function->config("randomqp::nineqs", nineqs);
+            function->config("function::osqp1::nineqs", nineqs);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("eqcqp::neqs") != nullptr)
+    else if (function->parameter_if("function::osqp2::neqs") != nullptr)
     {
         for (const auto neqs : {0.1, 0.5, 0.9})
         {
-            function->config("eqcqp::neqs", neqs);
+            function->config("function::osqp2::neqs", neqs);
             functions.emplace_back(function->make(dims));
         }
     }
 
-    else if (function->parameter_if("portfolio::factors") != nullptr)
+    else if (function->parameter_if("function::osqp4::factors") != nullptr)
     {
         for (const auto factors : {0.1, 0.5, 0.9})
         {
-            function->config("portfolio::factors", factors);
+            function->config("function::osqp4::factors", factors);
             functions.emplace_back(function->make(dims));
         }
     }
@@ -364,11 +365,11 @@ factory_t<function_t>& function_t::all()
             "quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition");
         manager.add<quadratic_program_numopt1625_t>(
             "quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition");
-        manager.add<quadratic_program_randomqp_t>(
+        manager.add<quadratic_program_osqp1_t>(
             "random quadratic program: A.1, 'OSQP: an operator splitting solver for quadratic programs'");
-        manager.add<quadratic_program_eqcqp_t>(
+        manager.add<quadratic_program_osqp2_t>(
             "equality constrained quadratic program: A.2, 'OSQP: an operator splitting solver for quadratic programs'");
-        manager.add<quadratic_program_portfolio_t>(
+        manager.add<quadratic_program_osqp4_t>(
             "portfolio optimization: A.4, 'OSQP: an operator splitting solver for quadratic programs'");
     };
 
