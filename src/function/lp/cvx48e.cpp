@@ -60,7 +60,7 @@ linear_program_cvx48e_eq_t::linear_program_cvx48e_eq_t(const tensor_size_t dims,
                                                        const scalar_t alpha)
     : linear_program_t("cvx48e-eq", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48e-eq::alpha", 0.0, LE, alpha, LE, 1.0));
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
@@ -101,7 +101,7 @@ linear_program_cvx48e_ineq_t::linear_program_cvx48e_ineq_t(const tensor_size_t d
                                                            const scalar_t alpha)
     : linear_program_t("cvx48e-ineq", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48e-ineq::alpha", 0.0, LT, alpha, LE, 1.0));
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);

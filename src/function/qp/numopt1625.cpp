@@ -7,7 +7,7 @@ using namespace nano;
 quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size_t dims, const uint64_t seed)
     : quadratic_program_t("numopt1625", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
     const auto x0 = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
     const auto Q  = matrix_t::identity(dims, dims);

@@ -30,7 +30,7 @@ auto make_xbest_cvx48d(const vector_t& c)
 linear_program_cvx48d_eq_t::linear_program_cvx48d_eq_t(const tensor_size_t dims, const uint64_t seed)
     : linear_program_t("cvx48d-eq", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
     const auto A = vector_t::constant(dims, 1.0);
@@ -65,7 +65,7 @@ rfunction_t linear_program_cvx48d_eq_t::make(const tensor_size_t dims) const
 linear_program_cvx48d_ineq_t::linear_program_cvx48d_ineq_t(const tensor_size_t dims, const uint64_t seed)
     : linear_program_t("cvx48d-ineq", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
     const auto A = vector_t::constant(dims, 1.0);

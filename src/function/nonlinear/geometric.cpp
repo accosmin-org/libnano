@@ -18,7 +18,7 @@ function_geometric_optimization_t::function_geometric_optimization_t(const tenso
     , m_A(make_random_matrix<scalar_t>(make_samples(dims, sratio), dims, -1.0 / static_cast<scalar_t>(dims),
                                        +1.0 / static_cast<scalar_t>(dims), seed))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::geometric::sratio", 0.1, LE, sratio, LE, 1e+3));
 
     convex(convexity::yes);

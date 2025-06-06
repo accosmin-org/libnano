@@ -32,7 +32,7 @@ function_lasso_t<tloss>::function_lasso_t(const tensor_size_t dims, const uint64
     : function_t(scat(tloss::basename, "+lasso"), ::make_size(dims))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::lasso::alpha1", 0.0, LE, alpha1, LE, 1e+8));
     register_parameter(parameter_t::make_scalar("function::lasso::sratio", 0.1, LE, sratio, LE, 1e+3));
     register_parameter(parameter_t::make_integer("function::lasso::modulo", 1, LE, modulo, LE, 100));

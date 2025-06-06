@@ -47,7 +47,7 @@ auto make_xbest_cvx48f(const vector_t& d, const std::vector<std::pair<scalar_t, 
 linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, const uint64_t seed, scalar_t alpha)
     : linear_program_t("cvx48f", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48f::alpha", 0.0, LE, alpha, LE, 1.0));
 
     const auto d = make_random_vector<scalar_t>(dims, 1.0, +2.0, seed);

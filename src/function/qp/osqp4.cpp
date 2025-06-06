@@ -10,7 +10,7 @@ quadratic_program_osqp4_t::quadratic_program_osqp4_t(const tensor_size_t dims, c
                                                      const scalar_t factors, const scalar_t gamma)
     : quadratic_program_t("osqp4", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::osqp4::factors", 0.0, LT, factors, LT, 1.0));
     register_parameter(parameter_t::make_scalar("function::osqp4::gamma", 0.0, LT, gamma, LE, 1e+6));
 

@@ -10,7 +10,7 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
                                                              const scalar_t neqs)
     : quadratic_program_t("numopt162", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::numopt162::neqs", 0.0, LT, neqs, LE, 1.0));
 
     const auto n = dims;

@@ -7,7 +7,7 @@ using namespace nano;
 linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims, const uint64_t seed)
     : linear_program_t("cvx49", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
     const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0, seed);
     const auto A = matrix_t::identity(dims, dims);

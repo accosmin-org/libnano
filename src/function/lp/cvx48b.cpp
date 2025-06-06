@@ -8,7 +8,7 @@ using namespace nano;
 linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const uint64_t seed, const scalar_t lambda)
     : linear_program_t("cvx48b", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48b::lambda", -1e+10, LE, lambda, LT, 0.0));
 
     const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0, seed);

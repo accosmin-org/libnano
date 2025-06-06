@@ -9,7 +9,7 @@ using namespace nano;
 linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const uint64_t seed)
     : linear_program_t("cvx410", vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
     const auto D = make_random_matrix<scalar_t>(dims, dims, -1.0, +1.0, seed);
     const auto A = D.transpose() * D + matrix_t::identity(dims, dims);

@@ -33,7 +33,7 @@ function_elasticnet_t<tloss>::function_elasticnet_t(const tensor_size_t dims, co
     : function_t(scat(tloss::basename, "+elasticnet"), ::make_size(dims))
     , m_model(make_samples(dims, sratio), make_outputs(dims), make_inputs(dims), seed, modulo, tloss::regression)
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::elasticnet::alpha1", 0.0, LE, alpha1, LE, 1e+8));
     register_parameter(parameter_t::make_scalar("function::elasticnet::alpha2", 0.0, LE, alpha2, LE, 1e+8));
     register_parameter(parameter_t::make_scalar("function::elasticnet::sratio", 0.1, LE, sratio, LE, 1e+3));

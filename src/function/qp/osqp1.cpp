@@ -9,7 +9,7 @@ quadratic_program_osqp1_t::quadratic_program_osqp1_t(const tensor_size_t dims, c
                                                      const scalar_t nineqs, const scalar_t alpha)
     : quadratic_program_t("osqp1", matrix_t{matrix_t::zero(dims, dims)}, vector_t::zero(dims))
 {
-    parameter("function::seed") = seed;
+    register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::osqp1::nineqs", 1.0, LE, nineqs, LE, 100.0));
     register_parameter(parameter_t::make_scalar("function::osqp1::alpha", 0.0, LT, alpha, LE, 100.0));
 
