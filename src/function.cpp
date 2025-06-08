@@ -51,6 +51,8 @@ namespace
 {
 void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions)
 {
+    // FIXME: always generate some fixed seeds and some random seeds
+
     // NB: generate different regularization parameters for various linear ML models
     // to assess the difficulty of the resulting numerical optimization problems.
     if (function->parameter_if("function::lasso::alpha1") != nullptr)
@@ -440,7 +442,7 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
                 break;
 
             case function_type::any:
-                functions.emplace_back(function->make(dims));
+                make_function(function, dims, functions);
                 break;
             }
         }

@@ -444,4 +444,60 @@ UTEST_CASE(make_linear_constraints)
     }
 }
 
+UTEST_CASE(reproducibility)
+{
+    for (const auto& rfunction : function_t::make({2, 16, function_type::any}))
+    {
+        auto& function = *rfunction;
+        UTEST_NAMED_CASE(function.name());
+
+        auto rfunctions = rfunctions_t{};
+        if (function.parameter_if("function::seed") != nullptr)
+        {
+            for (const auto seed : {0, 42, 111, 1023, 1024})
+            {
+                function.parameter("function::seed") = seed;
+                rfunctions.emplace_back(function.make(function.size()));
+            }
+        }
+        else
+        {
+            rfunctions.emplace_back(function.clone());
+        }
+
+        for (tensor_size_t trial = 0, trials = 7; trial < trials; ++trial)
+        {
+            const auto x      = make_random_vector<scalar_t>(function.size());
+            const auto nseeds = static_cast<tensor_size_t>(rfunctions.size());
+
+            auto fx1s = make_random_vector<scalar_t>(nseeds);
+            auto fx2s = make_random_vector<scalar_t>(nseeds);
+            auto gx1s = make_random_matrix<scalar_t>(nseeds, function.size());
+            auto gx2s = make_random_matrix<scalar_t>(nseeds, function.size());
+
+            // should obtain the same output for the same random input for a given seed
+            for (tensor_size_t i = 0; i < nseeds; ++i)
+            {
+                const auto& seed_function = *(rfunctions[static_cast<size_t>(i)]);
+
+                fx1s(i) = seed_function(x, gx1s.tensor(i));
+                fx2s(i) = seed_function(x, gx2s.tensor(i));
+
+                UTEST_CHECK_CLOSE(fx1s(i), fx2s(i), epsilon0<scalar_t>());
+                UTEST_CHECK_CLOSE(gx1s.vector(i), gx1s.vector(i), epsilon0<scalar_t>());
+            }
+
+            // should obtain different outputs for the same random input for different seeds
+            for (tensor_size_t i = 0; i + 1 < nseeds; ++i)
+            {
+                for (tensor_size_t j = i + 1; j < nseeds; ++j)
+                {
+                    UTEST_CHECK_NOT_CLOSE(fx1s(i), fx1s(j), epsilon2<scalar_t>());
+                    UTEST_CHECK_NOT_CLOSE(gx1s.tensor(i), gx1s.tensor(j), epsilon2<scalar_t>());
+                }
+            }
+        }
+    }
+}
+
 UTEST_END_MODULE()

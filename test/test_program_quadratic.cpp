@@ -243,6 +243,7 @@ UTEST_CASE(factory)
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
         check_convexity(*function);
+        // FIXME: use random points as well!!!
         check_minimize(make_solvers(), *function, make_full_vector<scalar_t>(function->size(), 0.0));
     }
 }
