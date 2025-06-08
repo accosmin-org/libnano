@@ -19,8 +19,7 @@ rsolver_t solver_ipm_t::clone() const
     return std::make_unique<solver_ipm_t>(*this);
 }
 
-solver_state_t solver_ipm_t::do_minimize(const function_t& function, [[maybe_unused]] const vector_t& x0,
-                                         const logger_t& logger) const
+solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vector_t& x0, const logger_t& logger) const
 {
     const auto miu = parameter("solver::ipm::miu").value<scalar_t>();
 
@@ -32,7 +31,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, [[maybe_unu
     // linear programs
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        auto program = program_t{*lprogram, std::move(lconstraints.value()), program_t::scale_type::ruiz, miu};
+        auto program = program_t{*lprogram, std::move(lconstraints.value()), x0, program_t::scale_type::ruiz, miu};
         return do_minimize(program, logger);
     }
 
@@ -41,7 +40,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, [[maybe_unu
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
 
-        auto program = program_t{*qprogram, std::move(lconstraints.value()), program_t::scale_type::ruiz, miu};
+        auto program = program_t{*qprogram, std::move(lconstraints.value()), x0, program_t::scale_type::ruiz, miu};
         return do_minimize(program, logger);
     }
 

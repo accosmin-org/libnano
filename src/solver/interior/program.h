@@ -54,9 +54,9 @@ public:
         none,
     };
 
-    program_t(const linear_program_t&, linear_constraints_t, scale_type, scalar_t miu);
+    program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
 
-    program_t(const quadratic_program_t&, linear_constraints_t, scale_type, scalar_t miu);
+    program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
 
     const vector_t& x() const { return m_x; }
 
@@ -111,7 +111,8 @@ public:
     solve_stats_t solve();
 
 private:
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, scale_type, scalar_t miu);
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,
+              scalar_t miu);
 
     void update_original();
 

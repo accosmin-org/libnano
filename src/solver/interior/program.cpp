@@ -79,20 +79,20 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 }
 } // namespace
 
-program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const scale_type scale,
-                     const scalar_t miu)
-    : program_t(program, matrix_t{}, program.c(), std::move(constraints), scale, miu)
+program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0,
+                     const scale_type scale, const scalar_t miu)
+    : program_t(program, matrix_t{}, program.c(), std::move(constraints), x0, scale, miu)
 {
 }
 
-program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const scale_type scale,
-                     const scalar_t miu)
-    : program_t(program, program.Q(), program.c(), std::move(constraints), scale, miu)
+program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const vector_t& x0,
+                     const scale_type scale, const scalar_t miu)
+    : program_t(program, program.Q(), program.c(), std::move(constraints), x0, scale, miu)
 {
 }
 
 program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints,
-                     const scale_type scale, const scalar_t miu)
+                     const vector_t& x0, const scale_type scale, const scalar_t miu)
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -142,7 +142,8 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
         break;
     }
 
-    m_x.segment(n(), m()).array() = 1.0;
+    m_x.segment(0, n())           = x0.vector();
+    m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
     m_u.array()                   = 1.0;
 
     update(0.0, 0.0, 0.0, miu);
