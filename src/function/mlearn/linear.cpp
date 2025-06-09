@@ -20,10 +20,6 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     {
         m_wopt.row(o) /= m_wopt.row(o).sum();
     }
-    for (tensor_size_t i = 0; i < inputs; ++i)
-    {
-        m_inputs.matrix().col(i) /= m_inputs.matrix().col(i).sum();
-    }
 
     for (tensor_size_t i = 0; i < inputs; ++i)
     {

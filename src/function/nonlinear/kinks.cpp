@@ -37,18 +37,18 @@ scalar_t function_kinks_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
     if (gx.size() == x.size())
     {
         gx.full(0);
-        for (tensor_size_t i = 0; i < m_kinks.rows(); ++i)
+        for (tensor_size_t i = 0; i < km.rows(); ++i)
         {
             gx.array() += (xv.transpose().array() - km.row(i).array()).sign();
         }
     }
 
-    scalar_t fx = 0;
-    for (tensor_size_t i = 0; i < m_kinks.rows(); ++i)
+    scalar_t fx = -m_offset;
+    for (tensor_size_t i = 0; i < km.rows(); ++i)
     {
         fx += (xv.transpose().array() - km.row(i).array()).abs().sum();
     }
-    return fx - m_offset;
+    return fx;
 }
 
 string_t function_kinks_t::do_name() const
