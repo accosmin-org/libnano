@@ -414,7 +414,7 @@ public:
     }
 
     ///
-    /// \brief set all elements to random values in the [min, max] range.
+    /// \brief set all elements to uniformly distributed random values in the [min, max] range.
     ///
     auto& random(const tscalar min = default_min_random<tscalar>(), const tscalar max = +1,
                  const seed_t seed = seed_t{})

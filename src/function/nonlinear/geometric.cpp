@@ -14,12 +14,17 @@ auto make_samples(const tensor_size_t dims, const scalar_t sample_ratio)
 function_geometric_optimization_t::function_geometric_optimization_t(const tensor_size_t dims, const uint64_t seed,
                                                                      const scalar_t sratio)
     : function_t("geometric-optimization", dims)
-    , m_a(make_random_vector<scalar_t>(make_samples(dims, sratio), -1.0, +1.0, seed))
-    , m_A(make_random_matrix<scalar_t>(make_samples(dims, sratio), dims, -1.0 / static_cast<scalar_t>(dims),
-                                       +1.0 / static_cast<scalar_t>(dims), seed))
+    , m_a(make_samples(dims, sratio))
+    , m_A(make_samples(dims, sratio), dims)
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::geometric::sratio", 0.1, LE, sratio, LE, 1e+3));
+
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    std::generate(m_a.begin(), m_a.end(), [&]() { return udist(rng); });
+    std::generate(m_A.begin(), m_A.end(), [&]() { return udist(rng) / static_cast<scalar_t>(dims); });
 
     convex(convexity::yes);
     smooth(smoothness::yes);

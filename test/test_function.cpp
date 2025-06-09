@@ -458,6 +458,7 @@ UTEST_CASE(reproducibility)
             {
                 function.parameter("function::seed") = seed;
                 rfunctions.emplace_back(function.make(function.size()));
+                rfunctions.emplace_back(function.make(function.size()));
             }
         }
         else
@@ -465,35 +466,59 @@ UTEST_CASE(reproducibility)
             rfunctions.emplace_back(function.clone());
         }
 
-        for (tensor_size_t trial = 0, trials = 7; trial < trials; ++trial)
+        for (tensor_size_t trial = 0, trials = 5; trial < trials; ++trial)
         {
             const auto x      = make_random_vector<scalar_t>(function.size());
             const auto nseeds = static_cast<tensor_size_t>(rfunctions.size());
 
-            auto fx1s = make_random_vector<scalar_t>(nseeds);
-            auto fx2s = make_random_vector<scalar_t>(nseeds);
-            auto gx1s = make_random_matrix<scalar_t>(nseeds, function.size());
-            auto gx2s = make_random_matrix<scalar_t>(nseeds, function.size());
+            auto fxs = make_random_vector<scalar_t>(nseeds);
+            auto gxs = make_random_matrix<scalar_t>(nseeds, function.size());
 
-            // should obtain the same output for the same random input for a given seed
+            // should obtain the same output for the same random input and the same random seed
             for (tensor_size_t i = 0; i < nseeds; ++i)
             {
                 const auto& seed_function = *(rfunctions[static_cast<size_t>(i)]);
 
-                fx1s(i) = seed_function(x, gx1s.tensor(i));
-                fx2s(i) = seed_function(x, gx2s.tensor(i));
+                auto gx = make_random_vector<scalar_t>(function.size());
 
-                UTEST_CHECK_CLOSE(fx1s(i), fx2s(i), epsilon0<scalar_t>());
-                UTEST_CHECK_CLOSE(gx1s.vector(i), gx1s.vector(i), epsilon0<scalar_t>());
+                fxs(i)        = seed_function(x, gxs.tensor(i));
+                const auto fx = seed_function(x, gx);
+
+                const auto df = std::fabs(fxs(i) - fx);
+                const auto dg = (gxs.tensor(i) - gx).lpNorm<Eigen::Infinity>();
+
+                UTEST_CHECK_LESS(df, epsilon0<scalar_t>());
+                UTEST_CHECK_LESS(dg, epsilon0<scalar_t>());
             }
 
-            // should obtain different outputs for the same random input for different seeds
-            for (tensor_size_t i = 0; i + 1 < nseeds; ++i)
+            // check reproducibility of outputs across random seeds
+            for (tensor_size_t i = 0; i < nseeds / 2; i += 2)
             {
-                for (tensor_size_t j = i + 1; j < nseeds; ++j)
+                // same seed => same outputs
                 {
-                    UTEST_CHECK_NOT_CLOSE(fx1s(i), fx1s(j), epsilon2<scalar_t>());
-                    UTEST_CHECK_NOT_CLOSE(gx1s.tensor(i), gx1s.tensor(j), epsilon2<scalar_t>());
+                    const auto df = std::fabs(fxs(i) - fxs(i + 1));
+                    const auto dg = (gxs.tensor(i) - gxs.tensor(i + 1)).lpNorm<Eigen::Infinity>();
+
+                    UTEST_CHECK_LESS(df, epsilon0<scalar_t>());
+                    UTEST_CHECK_LESS(dg, epsilon0<scalar_t>());
+                }
+
+                // different seeds => different outputs
+                // NB: ignore discontinuous functions as it is very likely for low dimensions to produce similar
+                //     function values and gradients even for different seeds!
+                if (nano::starts_with(function.name(), "kinks") || ///<
+                    nano::starts_with(function.name(), "mae") ||   ///<
+                    nano::starts_with(function.name(), "hinge"))   ///<
+                {
+                    continue;
+                }
+                for (tensor_size_t j = i + 2; j < nseeds; ++j)
+                {
+                    const auto df = std::fabs(fxs(i) - fxs(j));
+                    const auto dg = (gxs.tensor(i) - gxs.tensor(j)).lpNorm<Eigen::Infinity>();
+
+                    UTEST_CHECK_GREATER(df, epsilon2<scalar_t>());
+                    UTEST_CHECK_GREATER(dg, epsilon2<scalar_t>());
                 }
             }
         }

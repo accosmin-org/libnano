@@ -6,7 +6,7 @@ using namespace nano;
 
 function_kinks_t::function_kinks_t(const tensor_size_t dims, const uint64_t seed)
     : function_t("kinks", dims)
-    , m_kinks(make_random_matrix<scalar_t>(std::max(tensor_size_t(1), static_cast<tensor_size_t>(std::sqrt(dims))),
+    , m_kinks(make_random_matrix<scalar_t>(std::max(tensor_size_t{1}, static_cast<tensor_size_t>(std::sqrt(dims))),
                                            dims, -1.0, +1.0, seed))
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));

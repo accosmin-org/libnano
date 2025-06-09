@@ -57,7 +57,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     // to assess the difficulty of the resulting numerical optimization problems.
     if (function->parameter_if("function::lasso::alpha1") != nullptr)
     {
-        for (const auto alpha1 : {1e+0, 1e+2, 1e+4, 1e+6})
+        for (const auto alpha1 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
             function->config("function::lasso::alpha1", alpha1);
             functions.emplace_back(function->make(dims));
@@ -66,7 +66,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
 
     else if (function->parameter_if("function::ridge::alpha2") != nullptr)
     {
-        for (const auto alpha2 : {1e+0, 1e+2, 1e+4, 1e+6})
+        for (const auto alpha2 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
             function->config("function::ridge::alpha2", alpha2);
             functions.emplace_back(function->make(dims));
@@ -75,7 +75,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
 
     else if (function->parameter_if("function::elasticnet::alpha1") != nullptr)
     {
-        for (const auto alpha12 : {1e+0, 1e+2, 1e+4, 1e+6})
+        for (const auto alpha12 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
             function->config("function::elasticnet::alpha1", alpha12);
             function->config("function::elasticnet::alpha2", alpha12);

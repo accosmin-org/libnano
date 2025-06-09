@@ -4,11 +4,18 @@ using namespace nano;
 
 linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t outputs, const tensor_size_t inputs,
                                const uint64_t seed, const tensor_size_t modulo_correlated_inputs, const bool regression)
-    : m_inputs(make_random_tensor<scalar_t>(make_dims(samples, inputs), +0.0, +1.0, seed))
+    : m_inputs(samples, inputs)
     , m_targets(samples, outputs)
-    , m_wopt(make_random_tensor<scalar_t>(make_dims(outputs, inputs), +0.0, +1.0, seed))
-    , m_bopt(make_random_tensor<scalar_t>(make_dims(outputs), -0.5, +0.5, seed))
+    , m_wopt(outputs, inputs)
+    , m_bopt(outputs)
 {
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(0.0, 1.0);
+
+    std::generate(m_inputs.begin(), m_inputs.end(), [&]() { return udist(rng); });
+    std::generate(m_wopt.begin(), m_wopt.end(), [&]() { return udist(rng); });
+    std::generate(m_bopt.begin(), m_bopt.end(), [&]() { return udist(rng) - 0.5; });
+
     for (tensor_size_t o = 0; o < outputs; ++o)
     {
         m_wopt.row(o) /= m_wopt.row(o).sum();
