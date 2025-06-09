@@ -517,8 +517,8 @@ UTEST_CASE(reproducibility)
                     const auto df = std::fabs(fxs(i) - fxs(j));
                     const auto dg = (gxs.tensor(i) - gxs.tensor(j)).lpNorm<Eigen::Infinity>();
 
-                    UTEST_CHECK_GREATER(df, epsilon1<scalar_t>());
-                    UTEST_CHECK_GREATER(dg, epsilon1<scalar_t>());
+                    UTEST_CHECK_GREATER(df, 1e+2 * epsilon0<scalar_t>());
+                    UTEST_CHECK_GREATER(dg, epsilon2<scalar_t>());
                 }
             }
         }
