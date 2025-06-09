@@ -20,17 +20,11 @@ quadratic_program_osqp2_t::quadratic_program_osqp2_t(const tensor_size_t dims, c
     auto gdist = std::normal_distribution<scalar_t>{0.0, 1.0};
     auto sdist = std::uniform_real_distribution<scalar_t>{0.0, 1.0};
 
-    auto q = vector_t{n};
-    auto x = vector_t{n};
+    const auto q = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
+    const auto x = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
 
-    std::generate(q.begin(), q.end(), [&]() { return gdist(rng); });
-    std::generate(x.begin(), x.end(), [&]() { return gdist(rng); });
-
-    auto M = matrix_t{n, n};
-    auto A = matrix_t{p, n};
-
-    std::generate(M.begin(), M.end(), [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
-    std::generate(A.begin(), A.end(), [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
+    const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
+    const auto A = make_full_matrix<scalar_t>(p, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
 
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(n, n);
     this->c() = q;

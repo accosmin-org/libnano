@@ -50,8 +50,11 @@ linear_program_cvx48f_t::linear_program_cvx48f_t(const tensor_size_t dims, const
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48f::alpha", 0.0, LE, alpha, LE, 1.0));
 
-    const auto d = make_random_vector<scalar_t>(dims, 1.0, +2.0, seed);
-    const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto d = make_full_vector<scalar_t>(dims, [&]() { return udist(rng) * 0.5 + 1.5; });
+    const auto c = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
     const auto v = make_sorted_cvx48f(c, d);
 
     alpha = alpha * d.sum();

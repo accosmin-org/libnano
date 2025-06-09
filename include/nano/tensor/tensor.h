@@ -425,6 +425,16 @@ public:
     }
 
     ///
+    /// \brief set all elements to values produces by the given generator.
+    ///
+    template <class tgenerator, std::enable_if_t<std::is_invocable_v<tgenerator>, bool> = true>
+    auto& full(tgenerator&& generator)
+    {
+        std::generate(begin(), end(), generator);
+        return *this;
+    }
+
+    ///
     /// \brief set all elements in an arithmetic progression from min to max.
     ///
     auto& lin_spaced(const tscalar min, const tscalar max)
@@ -862,7 +872,8 @@ auto make_indices(tindices... indices)
 ///
 /// \brief create a tensor and fill it with the given value.
 ///
-template <class tscalar, size_t trank, class tscalar_value>
+template <class tscalar, size_t trank, class tscalar_value = tscalar,
+          std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
@@ -873,7 +884,8 @@ auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
 ///
 /// \brief create a tensor and fill it with random values.
 ///
-template <class tscalar, size_t trank, class tscalar_value = tscalar>
+template <class tscalar, size_t trank, class tscalar_value = tscalar,
+          std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
@@ -881,6 +893,17 @@ auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value mi
     tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), seed);
     return tensor;
 } // LCOV_EXCL_LINE
+
+///
+/// \brief create a tensor and fill it with values produced with the given generator.
+///
+template <class tscalar, size_t trank, class tgenerator, std::enable_if_t<std::is_invocable_v<tgenerator>, bool> = true>
+auto make_full_tensor(const tensor_dims_t<trank>& dims, tgenerator&& generator)
+{
+    tensor_mem_t<tscalar, trank> tensor(dims);
+    tensor.full(generator);
+    return tensor;
+}
 
 ///
 /// \brief create a matrix from an initializer list.
@@ -913,7 +936,7 @@ auto make_vector(tvalues... values)
 ///
 /// \brief create a vector and fill it with the given value.
 ///
-template <class tscalar, class tscalar_value>
+template <class tscalar, class tscalar_value, std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows), value);
@@ -922,7 +945,8 @@ auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
 ///
 /// \brief create a vector and fill it with random values uniformly distributed in the given range.
 ///
-template <class tscalar, class tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar,
+          std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
@@ -930,9 +954,19 @@ auto make_random_vector(const tensor_size_t rows, const tscalar_value min_value 
 }
 
 ///
+/// \brief create a vector and fill it with values produced with the given generator.
+///
+template <class tscalar, class tgenerator, std::enable_if_t<std::is_invocable_v<tgenerator>, bool> = true>
+auto make_full_vector(const tensor_size_t rows, tgenerator&& generator)
+{
+    return make_full_tensor<tscalar>(make_dims(rows), generator);
+}
+
+///
 /// \brief create a vector and fill it with the given value.
 ///
-template <class tscalar, class tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar,
+          std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows, cols), value);
@@ -941,10 +975,20 @@ auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, const 
 ///
 /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
 ///
-template <class tscalar, class tscalar_value = tscalar>
+template <class tscalar, class tscalar_value = tscalar,
+          std::enable_if_t<std::is_arithmetic_v<tscalar_value>, bool> = true>
 auto make_random_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value min_value = -1,
                         const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
     return make_random_tensor<tscalar>(make_dims(rows, cols), min_value, max_value, seed);
+}
+
+///
+/// \brief create a matrix and fill it with values produced with the given generator.
+///
+template <class tscalar, class tgenerator, std::enable_if_t<std::is_invocable_v<tgenerator>, bool> = true>
+auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, tgenerator&& generator)
+{
+    return make_full_tensor<tscalar>(make_dims(rows, cols), generator);
 }
 } // namespace nano

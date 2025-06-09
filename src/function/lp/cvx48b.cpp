@@ -11,8 +11,11 @@ linear_program_cvx48b_t::linear_program_cvx48b_t(const tensor_size_t dims, const
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::cvx48b::lambda", -1e+10, LE, lambda, LT, 0.0));
 
-    const auto a = make_random_vector<scalar_t>(dims, +1.0, +2.0, seed);
-    const auto b = urand<scalar_t>(-1.0, +1.0);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto a = make_full_vector<scalar_t>(dims, [&]() { return udist(rng) * 0.5 + 1.5; });
+    const auto b = udist(rng);
     const auto c = lambda * a;
 
     this->c() = c;

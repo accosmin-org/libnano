@@ -12,9 +12,9 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     auto rng   = make_rng(seed);
     auto udist = make_udist<scalar_t>(0.0, 1.0);
 
-    std::generate(m_inputs.begin(), m_inputs.end(), [&]() { return udist(rng); });
-    std::generate(m_wopt.begin(), m_wopt.end(), [&]() { return udist(rng); });
-    std::generate(m_bopt.begin(), m_bopt.end(), [&]() { return udist(rng) - 0.5; });
+    m_inputs.full([&]() { return udist(rng); });
+    m_wopt.full([&]() { return udist(rng); });
+    m_bopt.full([&]() { return udist(rng) - 0.5; });
 
     for (tensor_size_t o = 0; o < outputs; ++o)
     {

@@ -13,15 +13,18 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::numopt162::neqs", 0.0, LT, neqs, LE, 1.0));
 
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
     const auto n = dims;
     const auto p = std::max(tensor_size_t{1}, static_cast<tensor_size_t>(neqs * static_cast<scalar_t>(n)));
 
-    const auto x0 = make_random_vector<scalar_t>(n, -1.0, +1.0, seed);
+    const auto x0 = make_full_vector<scalar_t>(n, [&]() { return udist(rng); });
     const auto Q  = matrix_t::identity(dims, dims);
     const auto c  = -x0;
 
-    auto L = make_random_matrix<scalar_t>(p, p, -1.0, +1.0, seed);
-    auto U = make_random_matrix<scalar_t>(p, n, -1.0, +1.0, seed);
+    auto L = make_full_matrix<scalar_t>(p, p, [&]() { return udist(rng); });
+    auto U = make_full_matrix<scalar_t>(p, n, [&]() { return udist(rng); });
 
     L.matrix().triangularView<Eigen::Upper>().setZero();
     U.matrix().triangularView<Eigen::Lower>().setZero();
@@ -29,7 +32,7 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     U.diagonal().array() = 1.0;
 
     const auto A     = L * U;
-    const auto b     = make_random_vector<scalar_t>(p, -1.0, +1.0, seed);
+    const auto b     = make_full_vector<scalar_t>(p, [&]() { return udist(rng); });
     const auto invAA = (A * A.transpose()).inverse();
     const auto xbest = x0 + A.transpose() * invAA * (b - A * x0);
 

@@ -23,8 +23,8 @@ function_geometric_optimization_t::function_geometric_optimization_t(const tenso
     auto rng   = make_rng(seed);
     auto udist = make_udist<scalar_t>(-1.0, +1.0);
 
-    std::generate(m_a.begin(), m_a.end(), [&]() { return udist(rng); });
-    std::generate(m_A.begin(), m_A.end(), [&]() { return udist(rng) / static_cast<scalar_t>(dims); });
+    m_a.full([&]() { return udist(rng); });
+    m_A.full([&]() { return udist(rng) / static_cast<scalar_t>(dims); });
 
     convex(convexity::yes);
     smooth(smoothness::yes);

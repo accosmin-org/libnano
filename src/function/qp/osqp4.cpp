@@ -22,17 +22,12 @@ quadratic_program_osqp4_t::quadratic_program_osqp4_t(const tensor_size_t dims, c
     auto sdist = std::uniform_real_distribution<scalar_t>{0.0, 1.0};
     auto ddist = std::uniform_real_distribution<scalar_t>{0.0, std::sqrt(static_cast<scalar_t>(k))};
 
-    auto miu = vector_t{n};
+    const auto miu = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
 
-    std::generate(miu.begin(), miu.end(), [&]() { return gdist(rng); });
+    const auto F = make_full_matrix<scalar_t>(n, k, [&]() { return (sdist(rng) < 0.50) ? gdist(rng) : 0.0; });
+    const auto d = make_full_vector<scalar_t>(n, [&]() { return ddist(rng); });
 
-    auto F = matrix_t{n, k};
     auto Q = matrix_t{n, n};
-    auto d = vector_t{n};
-
-    std::generate(F.begin(), F.end(), [&]() { return (sdist(rng) < 0.50) ? gdist(rng) : 0.0; });
-    std::generate(d.begin(), d.end(), [&]() { return ddist(rng); });
-
     Q = F * F.transpose();
     Q.matrix().diagonal() += d.vector();
 

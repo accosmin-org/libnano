@@ -9,9 +9,12 @@ linear_program_cvx49_t::linear_program_cvx49_t(const tensor_size_t dims, const u
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
-    const auto c = make_random_vector<scalar_t>(dims, -1.0, -0.0, seed);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto c = make_full_vector<scalar_t>(dims, [&]() { return udist(rng) * 0.5 - 0.5; });
     const auto A = matrix_t::identity(dims, dims);
-    const auto b = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
+    const auto b = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
 
     this->c() = c;
     optimum(b);

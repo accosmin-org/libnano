@@ -11,12 +11,15 @@ linear_program_cvx410_t::linear_program_cvx410_t(const tensor_size_t dims, const
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
-    const auto D = make_random_matrix<scalar_t>(dims, dims, -1.0, +1.0, seed);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto D = make_full_matrix<scalar_t>(dims, dims, [&]() { return udist(rng); });
     const auto A = D.transpose() * D + matrix_t::identity(dims, dims);
-    const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
+    const auto c = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
 
     // the solution is feasible
-    const auto x = make_random_vector<scalar_t>(dims, +1.0, +2.0, seed);
+    const auto x = make_full_vector<scalar_t>(dims, [&]() { return udist(rng) * 0.5 + 1.5; });
     const auto b = A * x;
 
     this->c() = c;

@@ -21,19 +21,12 @@ quadratic_program_osqp1_t::quadratic_program_osqp1_t(const tensor_size_t dims, c
     auto udist = std::uniform_real_distribution<scalar_t>{0.0, 1.0};
     auto sdist = std::uniform_real_distribution<scalar_t>{0.0, 1.0};
 
-    auto q = vector_t{n};
-    auto l = vector_t{m};
-    auto u = vector_t{m};
+    const auto q = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
+    const auto l = make_full_vector<scalar_t>(m, [&]() { return -udist(rng); });
+    const auto u = make_full_vector<scalar_t>(m, [&]() { return udist(rng); });
 
-    std::generate(q.begin(), q.end(), [&]() { return gdist(rng); });
-    std::generate(l.begin(), l.end(), [&]() { return -udist(rng); });
-    std::generate(u.begin(), u.end(), [&]() { return udist(rng); });
-
-    auto M = matrix_t{n, n};
-    auto A = matrix_t{m, n};
-
-    std::generate(M.begin(), M.end(), [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
-    std::generate(A.begin(), A.end(), [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
+    const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
+    const auto A = make_full_matrix<scalar_t>(m, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
 
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(n, n);
     this->c() = q;

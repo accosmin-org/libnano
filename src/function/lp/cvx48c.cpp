@@ -10,9 +10,12 @@ linear_program_cvx48c_t::linear_program_cvx48c_t(const tensor_size_t dims, const
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
-    const auto c = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
-    const auto l = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
-    const auto u = make_random_vector<scalar_t>(dims, +1.0, +3.0, seed);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto c = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
+    const auto l = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
+    const auto u = make_full_vector<scalar_t>(dims, [&]() { return udist(rng) + 2.0; });
 
     this->c() = c;
     optimum(l.array() * c.array().max(0.0).sign() - u.array() * c.array().min(0.0).sign());

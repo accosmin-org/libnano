@@ -9,10 +9,13 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
 {
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
 
-    const auto x0 = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
+    auto rng   = make_rng(seed);
+    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+
+    const auto x0 = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
     const auto Q  = matrix_t::identity(dims, dims);
     const auto c  = -x0;
-    const auto l  = make_random_vector<scalar_t>(dims, -1.0, +1.0, seed);
+    const auto l  = make_full_vector<scalar_t>(dims, [&]() { return udist(rng); });
     const auto u  = l.array() + 0.1;
 
     this->Q() = Q;
