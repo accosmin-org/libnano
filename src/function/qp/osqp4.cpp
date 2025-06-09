@@ -28,7 +28,7 @@ quadratic_program_osqp4_t::quadratic_program_osqp4_t(const tensor_size_t dims, c
     const auto d = make_full_vector<scalar_t>(n, [&]() { return ddist(rng); });
 
     auto Q = matrix_t{n, n};
-    Q = F * F.transpose();
+    Q      = F * F.transpose();
     Q.matrix().diagonal() += d.vector();
 
     this->Q() = Q;

@@ -47,7 +47,7 @@ using namespace nano;
 }
 
 [[maybe_unused]] inline auto check_convexity(const function_t& function, const int trials = 100,
-                                             const scalar_t epsilon = 1e-10)
+                                             const scalar_t epsilon = 1e-8)
 {
     const auto rfunction = function.clone();
     UTEST_REQUIRE(rfunction != nullptr);

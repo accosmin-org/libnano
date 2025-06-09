@@ -142,7 +142,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
 }
 
 bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps,
-                     scalar_t epsilon)
+                     const scalar_t epsilon)
 {
     assert(steps > 2);
     assert(x1.size() == function.size());
@@ -152,7 +152,7 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     const auto f2 = function(x2);
     const auto dx = (x1 - x2).squaredNorm();
 
-    epsilon *= 0.5 * (std::fabs(f1) + std::fabs(f2));
+    const auto delta = epsilon * 0.5 * (std::fabs(f1) + std::fabs(f2));
 
     assert(std::isfinite(f1));
     assert(std::isfinite(f2));
@@ -161,11 +161,11 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
 
     for (int step = 1; step < steps; step++)
     {
-        const auto t1 = scalar_t(step) / scalar_t(steps);
-        const auto t2 = 1.0 - t1;
+        const auto t1 = static_cast<scalar_t>(step) / static_cast<scalar_t>(steps);
+        const auto t2 = 1.0L - t1;
 
         tx = t1 * x1 + t2 * x2;
-        if (function(tx) > t1 * f1 + t2 * f2 - t1 * t2 * function.strong_convexity() * 0.5 * dx + epsilon)
+        if (function(tx) > t1 * f1 + t2 * f2 - t1 * t2 * function.strong_convexity() * 0.5 * dx + delta)
         {
             return false;
         }
