@@ -49,18 +49,40 @@ using namespace nano;
 
 namespace
 {
+template <class targ, class... targs>
+void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions,
+                   const char* const param_name, const targ value, const targs... args)
+{
+    auto rng   = make_rng();
+    auto udist = make_udist<uint64_t>(0, 10000);
+
+    // NB: generate random seeds if possile
+    const auto seeds = std::vector<uint64_t>{udist(rng), udist(rng), udist(rng), udist(rng)};
+
+    if (function->parameter_if("function::seed") != nullptr)
+    {
+        for (const auto seed : seeds)
+        {
+            function->config("function::seed", seed, param_name, value, args...);
+            functions.emplace_back(function->make(dims));
+        }
+    }
+    else
+    {
+        function->config(param_name, value, args...);
+        functions.emplace_back(function->make(dims));
+    }
+}
+
 void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions)
 {
-    // FIXME: always generate some fixed seeds and some random seeds
-
     // NB: generate different regularization parameters for various linear ML models
     // to assess the difficulty of the resulting numerical optimization problems.
     if (function->parameter_if("function::lasso::alpha1") != nullptr)
     {
         for (const auto alpha1 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("function::lasso::alpha1", alpha1);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::lasso::alpha1", alpha1);
         }
     }
 
@@ -68,8 +90,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha2 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("function::ridge::alpha2", alpha2);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::ridge::alpha2", alpha2);
         }
     }
 
@@ -77,9 +98,8 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha12 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            function->config("function::elasticnet::alpha1", alpha12);
-            function->config("function::elasticnet::alpha2", alpha12);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::elasticnet::alpha1", alpha12,
+                          "function::elasticnet::alpha2", alpha12);
         }
     }
 
@@ -87,8 +107,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
         {
-            function->config("function::cvx48b::lambda", lambda);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::cvx48b::lambda", lambda);
         }
     }
 
@@ -96,8 +115,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {0.0, 0.5, 1.0})
         {
-            function->config("function::cvx48e-eq::alpha", alpha);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::cvx48e-eq::alpha", alpha);
         }
     }
 
@@ -105,8 +123,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {1e-6, 0.5, 1.0})
         {
-            function->config("function::cvx48e-ineq::alpha", alpha);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::cvx48e-ineq::alpha", alpha);
         }
     }
 
@@ -114,8 +131,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
         {
-            function->config("function::cvx48f::alpha", alpha);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::cvx48f::alpha", alpha);
         }
     }
 
@@ -123,8 +139,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto neqs : {1e-6, 0.1, 0.2, 0.5, 0.8, 1.0})
         {
-            function->config("function::numopt162::neqs", neqs);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::numopt162::neqs", neqs);
         }
     }
 
@@ -132,8 +147,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto nineqs : {5.0, 10.0, 20.0})
         {
-            function->config("function::osqp1::nineqs", nineqs);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::osqp1::nineqs", nineqs);
         }
     }
 
@@ -141,8 +155,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto neqs : {0.1, 0.5, 0.9})
         {
-            function->config("function::osqp2::neqs", neqs);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::osqp2::neqs", neqs);
         }
     }
 
@@ -150,8 +163,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto factors : {0.1, 0.5, 0.9})
         {
-            function->config("function::osqp4::factors", factors);
-            functions.emplace_back(function->make(dims));
+            make_function(function, dims, functions, "function::osqp4::factors", factors);
         }
     }
 
