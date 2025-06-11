@@ -152,7 +152,7 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     const auto f2 = function(x2);
     const auto dx = (x1 - x2).squaredNorm();
 
-    const auto delta = std::max(epsilon, epsilon * 0.5 * (std::fabs(f1) + std::fabs(f2)));
+    const auto delta = epsilon * (1.0 + 0.5 * (std::fabs(f1) + std::fabs(f2)));
 
     assert(std::isfinite(f1));
     assert(std::isfinite(f2));
