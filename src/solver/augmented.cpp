@@ -9,8 +9,8 @@ namespace
 auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-1, const scalar_t ro_max = 10.0)
 {
     const auto  f = state.fx();
-    const auto& h = state.ceq();
-    const auto& g = state.cineq();
+    const auto& h = state.v();
+    const auto& g = state.u();
     const auto  G = g.array().max(0.0).matrix();
 
     const auto ro = 2.0 * std::fabs(f) / std::max(h.dot(h) + G.dot(G), 1e-6);
@@ -19,8 +19,8 @@ auto make_ro1(const solver_state_t& state, const scalar_t ro_min = 1e-1, const s
 
 auto make_criterion(const solver_state_t& state, const vector_t& miu, const scalar_t ro)
 {
-    const auto hinf = state.ceq().lpNorm<Eigen::Infinity>();
-    const auto Vinf = state.cineq().array().max(-miu.array() / ro).matrix().lpNorm<Eigen::Infinity>();
+    const auto hinf = state.v().lpNorm<Eigen::Infinity>();
+    const auto Vinf = state.u().array().max(-miu.array() / ro).matrix().lpNorm<Eigen::Infinity>();
     return std::max(hinf, Vinf);
 }
 } // namespace
@@ -68,8 +68,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
     auto bstate           = solver_state_t{function, x0}; ///< best state
     auto cstate           = bstate;                       ///< current state
     auto ro               = make_ro1(bstate, ro_min, ro_min * 1e+2);
-    auto lambda           = make_full_vector<scalar_t>(bstate.ceq().size(), 0.0);
-    auto miu              = make_full_vector<scalar_t>(bstate.cineq().size(), 0.0);
+    auto lambda           = make_full_vector<scalar_t>(bstate.v().size(), 0.0);
+    auto miu              = make_full_vector<scalar_t>(bstate.u().size(), 0.0);
     auto old_kkt          = std::numeric_limits<scalar_t>::max();
     auto old_criterion    = make_criterion(bstate, miu, ro);
     auto penalty_function = augmented_lagrangian_function_t{function, lambda, miu};
@@ -100,7 +100,7 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         }
 
         // update best state (if KKT optimality criterion is improved)
-        cstate.update(pstate.x(), lambda, miu);
+        cstate.update(pstate.x(), miu, lambda);
         if (const auto kkt = cstate.kkt_optimality_test(); kkt < old_kkt)
         {
             old_kkt = kkt;
@@ -126,8 +126,8 @@ solver_state_t solver_augmented_lagrangian_t::do_minimize(const function_t& func
         old_criterion = criterion;
 
         // update lagrange multipliers
-        lambda.array() = (lambda.array() + old_ro * cstate.ceq().array()).max(lambda_min).min(lambda_max);
-        miu.array()    = (miu.array() + old_ro * cstate.cineq().array()).max(0.0).min(miu_max);
+        lambda.array() = (lambda.array() + old_ro * cstate.v().array()).max(lambda_min).min(lambda_max);
+        miu.array()    = (miu.array() + old_ro * cstate.u().array()).max(0.0).min(miu_max);
     }
 
     bstate.update_calls();

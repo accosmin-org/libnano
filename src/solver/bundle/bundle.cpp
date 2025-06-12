@@ -118,7 +118,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto solution = m_solver->minimize(m_program, m_wlevel, logger);
 
     const auto& x = solution.x();
-    const auto& u = solution.mineq();
+    const auto& u = solution.u();
 
     assert(x.size() == n + 1);
     assert(u.size() == (has_level ? (m + 1) : m));

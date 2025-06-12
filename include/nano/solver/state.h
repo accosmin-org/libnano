@@ -39,21 +39,20 @@ public:
     ///
     /// \brief move to another point and returns true if the new point is valid.
     ///
-    /// NB: optionally the Lagrangian multipliers for the equality and the inequality constraints can be given as well
-    /// (if applicable).
+    /// NB: optionally the Lagrangian multipliers for the inequality and the equality constraints
+    /// can be given as well (if applicable).
     ///
     template <class tvector>
-    bool update(const tvector& x, vector_cmap_t multiplier_equalities = vector_cmap_t{},
-                vector_cmap_t multiplier_inequalities = vector_cmap_t{})
+    bool update(const tvector& x, vector_cmap_t u = vector_cmap_t{}, vector_cmap_t v = vector_cmap_t{})
     {
         assert(x.size() == m_x.size());
         m_x  = x;
         m_fx = m_function(m_x, m_gx);
-        return update(m_x, m_gx, m_fx, multiplier_equalities, multiplier_inequalities);
+        return update(m_x, m_gx, m_fx, u, v);
     }
 
-    bool update(vector_cmap_t x, vector_cmap_t gx, scalar_t fx, vector_cmap_t multiplier_equalities = vector_cmap_t{},
-                vector_cmap_t multiplier_inequalities = vector_cmap_t{});
+    bool update(vector_cmap_t x, vector_cmap_t gx, scalar_t fx, vector_cmap_t u = vector_cmap_t{},
+                vector_cmap_t v = vector_cmap_t{});
 
     ///
     /// \brief update the number of function value and gradient evaluations.
@@ -105,12 +104,20 @@ public:
     /// NB: the optimality test is the maximum of the infinite norm of the 5 vector conditions.
     /// NB: only appropriate for constrained smooth problems.
     ///
-    scalar_t kkt_optimality_test1() const;
-    scalar_t kkt_optimality_test2() const;
-    scalar_t kkt_optimality_test3() const;
-    scalar_t kkt_optimality_test4() const;
-    scalar_t kkt_optimality_test5() const;
-    scalar_t kkt_optimality_test() const;
+    scalar_t kkt_optimality_test1() const { return m_dual.m_kkt1; }
+
+    scalar_t kkt_optimality_test2() const { return m_dual.m_kkt2; }
+
+    scalar_t kkt_optimality_test3() const { return m_dual.m_kkt3; }
+
+    scalar_t kkt_optimality_test4() const { return m_dual.m_kkt4; }
+
+    scalar_t kkt_optimality_test5() const { return m_dual.m_kkt5; }
+
+    scalar_t kkt_optimality_test() const
+    {
+        return std::max({m_dual.m_kkt1, m_dual.m_kkt2, m_dual.m_kkt3, m_dual.m_kkt4, m_dual.m_kkt5});
+    }
 
     ///
     /// \brief feasability test: the maximum deviation across all equality and inequality constraints
@@ -215,38 +222,51 @@ public:
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief returns the value of the equality constraints (if any).
-    ///
-    const vector_t& ceq() const { return m_ceq; }
-
-    ///
-    /// \brief returns the value of the inequality constraints (if any).
-    ///
-    const vector_t& cineq() const { return m_cineq; }
-
-    ///
     /// \brief returns the Lagrange multipliers for the equality constraints (if any).
     ///
-    const vector_t& meq() const { return m_meq; }
+    const vector_t& v() const { return m_dual.m_v; }
 
     ///
     /// \brief returns the Lagrange multipliers for the inequality constraints (if any).
     ///
-    const vector_t& mineq() const { return m_mineq; }
+    const vector_t& u() const { return m_dual.m_u; }
+
+    ///
+    /// \brief returns the component-wise deviations for the equality constraints (if any).
+    ///
+    const vector_t& dv() const { return m_dual.m_dv; }
+
+    ///
+    /// \brief returns the component-wise deviations for the inequality constraints (if any).
+    ///
+    const vector_t& du() const { return m_dual.m_du; }
 
 private:
-    void update_constraints();
+    void update_duals();
+
+    struct dual_t
+    {
+        dual_t() = default;
+        dual_t(tensor_size_t n, tensor_size_t nu, tensor_size_t nv);
+
+        vector_t m_u;         ///< Lagrange multipliers for inequality constraints
+        vector_t m_v;         ///< Lagrange multipliers for equality constraints
+        vector_t m_du;        ///< inequality constraint deviations
+        vector_t m_dv;        ///< equality constraint deviations
+        vector_t m_gL;        ///< gradient of the Lagrangian dual function
+        scalar_t m_kkt1{0.0}; ///< KKT conditions (1)
+        scalar_t m_kkt2{0.0}; ///< KKT conditions (2)
+        scalar_t m_kkt3{0.0}; ///< KKT conditions (3)
+        scalar_t m_kkt4{0.0}; ///< KKT conditions (4)
+        scalar_t m_kkt5{0.0}; ///< KKT conditions (5)
+    };
 
     // attributes
     const function_t& m_function;  ///< objective
     vector_t          m_x;         ///< parameter
     vector_t          m_gx;        ///< gradient
     scalar_t          m_fx{0};     ///< function value
-    vector_t          m_ceq;       ///< equality constraint values
-    vector_t          m_cineq;     ///< inequality constraint values
-    vector_t          m_meq;       ///< Lagrange multiplies for equality constraints
-    vector_t          m_mineq;     ///< Lagrange multiplies for inequality constraints
-    vector_t          m_lgx;       ///< gradient of the Lagrangian dual function
+    dual_t            m_dual;      ///<
     solver_status     m_status{};  ///< optimization status
     tensor_size_t     m_fcalls{0}; ///< number of function value evaluations so far
     tensor_size_t     m_gcalls{0}; ///< number of function gradient evaluations so far

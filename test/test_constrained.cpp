@@ -699,25 +699,25 @@ UTEST_CASE(minimize_objective1)
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-2.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-2.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 2.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
@@ -745,19 +745,19 @@ UTEST_CASE(minimize_objective2)
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 3.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
@@ -784,19 +784,19 @@ UTEST_CASE(minimize_objective3)
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(2.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
@@ -824,19 +824,19 @@ UTEST_CASE(minimize_objective4)
     check_penalties(function, convexity::no, smoothness::yes, 4.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(-1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(-1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.ceq(), make_vector<scalar_t>(1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.dv(), make_vector<scalar_t>(1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 1.0, 1e-12);
     }
@@ -868,19 +868,19 @@ UTEST_CASE(minimize_objective5)
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0, -1.0, -1.0, -1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(-1.0, -1.0, -1.0, -1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-2.0, 0.0, -2.0, 0.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(-2.0, 0.0, -2.0, 0.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-3.0, -1.0, -1.0, 1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(-3.0, -1.0, -1.0, 1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
@@ -910,19 +910,19 @@ UTEST_CASE(minimize_objective6)
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 0.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(0.0, -1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(0.0, -1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 0.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(-1.0, 1.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(-1.0, 1.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 1.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(-1.0, -1.0)};
-        UTEST_CHECK_CLOSE(state.cineq(), make_vector<scalar_t>(1.0, 4.0), 1e-12);
+        UTEST_CHECK_CLOSE(state.du(), make_vector<scalar_t>(1.0, 4.0), 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test1(), 4.0, 1e-12);
         UTEST_CHECK_CLOSE(state.kkt_optimality_test2(), 0.0, 1e-12);
     }
