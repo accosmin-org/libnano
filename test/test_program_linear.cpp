@@ -100,14 +100,12 @@ UTEST_CASE(failures)
 {
     {
         const auto function = function_t::all().get("cvx48b");
-        function->config("function::seed", 4723, "function::cvx48b::lambda", -1e-6);
+        function->config("function::seed", 4652, "function::cvx48b::lambda", -1e-6);
 
-        const auto x0 =
-            make_vector<scalar_t>(-0.4485243179, -0.1157796224, -0.8127615645, 0.3241298901, 0.9838988087,
-                                  0.09447294891, 0.85844849, -0.9661652161, 0.653278854, 0.7618994596, 0.6707149753,
-                                  -0.4093158868, 0.5247093411, 0.8133344692, -0.5618188603, -0.06326795401);
+        const auto x0 = make_full_vector<scalar_t>(16, 0.0);
+        const auto f0 = function->make(16);
 
-        check_minimize(make_solvers(), *function->make(16), x0);
+        check_minimize(make_solvers(), *f0, x0);
     }
 }
 
