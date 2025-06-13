@@ -247,4 +247,18 @@ UTEST_CASE(factory)
     }
 }
 
+UTEST_CASE(failures)
+{
+    {
+        const auto function = function_t::all().get("osqp2");
+        function->config("function::seed", 1894, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
+
+        const auto x0 =
+            make_vector<scalar_t>(0.6833148467036176, -0.8698072994354415, 0.5088158871743331, 0.07382461531056927,
+                                  -0.4301091992632454, -0.7665646813503784, 0.75793037827692, -0.4707277155873197);
+
+        check_minimize(make_solvers(), *(function->make(8)), x0);
+    }
+}
+
 UTEST_END_MODULE()
