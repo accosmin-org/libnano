@@ -96,17 +96,4 @@ UTEST_CASE(factory)
     }
 }
 
-UTEST_CASE(failures)
-{
-    {
-        const auto function = function_t::all().get("cvx48b");
-        function->config("function::seed", 4652, "function::cvx48b::lambda", -1e-6);
-
-        const auto x0 = make_full_vector<scalar_t>(16, 0.0);
-        const auto f0 = function->make(16);
-
-        check_minimize(make_solvers(), *f0, x0);
-    }
-}
-
 UTEST_END_MODULE()

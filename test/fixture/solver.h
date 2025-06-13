@@ -184,12 +184,12 @@ struct solver_description_t
         const auto lsearch0_id = solver.has_lsearch() ? solver.lsearch0().type_id() : "N/A";
         const auto lsearchk_id = solver.has_lsearch() ? solver.lsearchk().type_id() : "N/A";
 
-        logger.info(std::setprecision(20), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id, "]:\n");
+        logger.info(std::setprecision(16), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id, "]:\n");
         for (const auto& param : function.parameters())
         {
-            logger.info(std::setprecision(20), param.name(), "=", param.value(), "\n");
+            logger.info(std::setprecision(16), param.name(), "=", param.value(), "\n");
         }
-        logger.info(std::setprecision(20), "x0=[", state0.x().transpose(), "],", state0, "\n");
+        logger.info(std::setprecision(16), "x0=[", state0.x().transpose(), "],", state0, "\n");
 
         function.clear_statistics();
 
