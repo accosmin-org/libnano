@@ -146,7 +146,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
     m_u.array()                   = 1.0;
 
-    update(0.0, 0.0, 0.0, miu);
+    update(0.0, 0.0, 0.0, miu, true);
 }
 
 program_t::solve_stats_t program_t::solve()

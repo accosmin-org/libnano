@@ -108,7 +108,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         {
             break;
         }
-        else if (iter == 1 || (cstate.kkt_optimality_test() < bstate.kkt_optimality_test()))
+        else if (cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
         {
             last_better_iter = 0;
             bstate           = cstate;
