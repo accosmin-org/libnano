@@ -69,14 +69,15 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
         // solve primal-dual linear system of equations to get (dx, du, dv)
-        if (const auto [valid, precision] = program.solve(); !valid)
+        if (const auto [precision, valid, rcond, positive, negative] = program.solve(); !valid)
         {
             logger.error("linear system of equations cannot be solved, invalid state!\n");
             break;
         }
         else
         {
-            logger.info("linear system of equations solved with accuracy=", precision, ".\n");
+            logger.info("linear system of equations solved with accuracy=", precision, " (rcond=", rcond,
+                        ",negative=", negative, ",positive=", positive, ").\n");
         }
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths

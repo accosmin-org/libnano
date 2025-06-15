@@ -72,10 +72,13 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
     lsol.vector() = solver.solve(lvec.vector());
 
     // verify solution
-    const auto valid = lmat.all_finite() && lvec.all_finite() && lsol.all_finite();
-    const auto delta = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+    const auto valid    = lmat.all_finite() && lvec.all_finite() && lsol.all_finite();
+    const auto delta    = (lmat * lsol - lvec).lpNorm<Eigen::Infinity>();
+    const auto rcond    = solver.rcond();
+    const auto positive = solver.isPositive();
+    const auto negative = solver.isNegative();
 
-    return program_t::solve_stats_t{valid, delta};
+    return program_t::solve_stats_t{delta, rcond, valid, positive, negative};
 }
 } // namespace
 
@@ -182,7 +185,7 @@ program_t::solve_stats_t program_t::solve()
     m_lvec.segment(0, n) = b1 - m_G.transpose() * (a7.array() / y.array()).matrix();
     m_lvec.segment(n, p) = b4;
 
-    const auto stats = solve_kkt(m_lmat, m_lvec, m_lsol);
+    auto stats = solve_kkt(m_lmat, m_lvec, m_lsol);
 
     const auto dxn = m_lsol.segment(0, n);
     const auto dvp = m_lsol.segment(n, p);
@@ -194,7 +197,8 @@ program_t::solve_stats_t program_t::solve()
     m_dv.segment(0, p) = dvp;
     m_dv.segment(p, m) = dvm;
 
-    return {stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite(), stats.m_precision};
+    stats.m_valid = stats.m_valid && m_dx.all_finite() && m_du.all_finite() && m_dv.all_finite();
+    return stats;
 }
 
 scalar_t program_t::residual() const

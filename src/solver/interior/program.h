@@ -104,8 +104,11 @@ public:
     ///
     struct solve_stats_t
     {
-        bool     m_valid{false};   ///< indicates if the updates are finite
-        scalar_t m_precision{0.0}; ///< precision with which the linear system of equations was solved
+        scalar_t m_precision{0.0};  ///< precision with which the linear system of equations was solved
+        scalar_t m_rcond{0.0};      ///< estimation of the reciprocal condition of the matrix to decompose
+        bool     m_valid{false};    ///< indicates if the updates are finite
+        bool     m_positive{false}; ///< is the original matrix positive semidefinite?
+        bool     m_negative{false}; ///< is the original matrix negative semidefinite?
     };
 
     solve_stats_t solve();
