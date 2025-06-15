@@ -69,15 +69,13 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
         // solve primal-dual linear system of equations to get (dx, du, dv)
-        if (const auto [precision, valid, rcond, positive, negative] = program.solve(); !valid)
+        const auto [precision, valid, rcond, positive, negative] = program.solve();
+        logger.info("accuracy=", precision, ",rcond=", rcond, ",neg=", negative, ",pos=", positive, ",valid=", valid,
+                    ".\n");
+        if (!valid)
         {
             logger.error("linear system of equations cannot be solved, invalid state!\n");
             break;
-        }
-        else
-        {
-            logger.info("linear system of equations solved with accuracy=", precision, " (rcond=", rcond,
-                        ",negative=", negative, ",positive=", positive, ").\n");
         }
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
@@ -90,8 +88,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ustep, vstep, miu);
 
-        logger.info("s=", s, "/", s0, ",step=(", xstep, ",", ustep, "),residual=", next_residual, "/", curr_residual,
-                    ".\n");
+        logger.info("step=", s, "/", s0, ",lstep=(", xstep, ",", ustep, "),residual=", next_residual, "/",
+                    curr_residual, ".\n");
 
         if (std::min({xstep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
         {
