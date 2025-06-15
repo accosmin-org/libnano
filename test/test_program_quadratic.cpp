@@ -269,6 +269,18 @@ UTEST_CASE(regression)
 
         check_minimize(make_solvers(), *(function->make(8)), x0);
     }
+    {
+        const auto function = function_t::all().get("numopt162");
+        function->config("function::seed", 9698, "function::numopt162::neqs", 1);
+
+        const auto x0 =
+            make_vector<scalar_t>(0.7326329873172612, -0.6842653813965672, -0.2972664394270459, 0.8389639339082133,
+                                  0.1619169083199714, 0.6236557700384397, 0.02678093479072019, 0.8177771686474076,
+                                  0.06325828286269197, -0.1145326652044967, 0.7802038518498364, 0.8341076792629174,
+                                  0.048690535272083, 0.9165273500484878, -0.6285973855133675, 0.3916753021809161);
+
+        check_minimize(make_solvers(), *(function->make(16)), x0);
+    }
 }
 
 UTEST_END_MODULE()
