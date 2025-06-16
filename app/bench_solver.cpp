@@ -390,7 +390,7 @@ int unsafe_main(int argc, const char* argv[])
     // check arguments and options
     const auto min_dims = options.get<tensor_size_t>("--min-dims");
     const auto max_dims = options.get<tensor_size_t>("--max-dims");
-    const auto trials   = options.get<size_t>("--trials");
+    const auto trials       = options.get<tensor_size_t>("--trials");
     const auto fun_type = nano::from_string<function_type>(options.get<string_t>("--function-type"));
     const auto log_dir = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
     const auto fregex  = std::regex(options.get<string_t>("--function"));
@@ -414,7 +414,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto solver_ids = solver_t::all().ids(sregex);
     critical(!solver_ids.empty(), "at least a solver needs to be selected!");
 
-    const auto functions = function_t::make({min_dims, max_dims, fun_type}, fregex);
+    const auto functions = function_t::make({min_dims, max_dims, fun_type, trials}, fregex);
     critical(!functions.empty(), "at least a function needs to be selected!");
 
     auto rconfig = cmdconfig_t{options};
@@ -459,7 +459,8 @@ int unsafe_main(int argc, const char* argv[])
     for (size_t ifunction = 0U; ifunction < functions.size(); ++ifunction)
     {
         const auto& function = functions[ifunction];
-        const auto  funstats = benchmark(thread_pool, *function, solvers, trials, log_dir, fun_type);
+        const auto  funstats =
+            benchmark(thread_pool, *function, solvers, static_cast<size_t>(trials), log_dir, fun_type);
         for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
         {
             const auto& stats = funstats[isolver];

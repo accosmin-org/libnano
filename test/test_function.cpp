@@ -454,9 +454,10 @@ UTEST_CASE(reproducibility)
         auto rfunctions = rfunctions_t{};
         if (function.parameter_if("function::seed") != nullptr)
         {
-            for (const auto seed : {0, 42, 111, 1023, 1024})
+            const auto seed0 = function.parameter("function::seed").value<uint64_t>();
+            for (const auto seed : {seed0, seed0 + 1, seed0 + 87, seed0 + 347, seed0 + 1786})
             {
-                function.parameter("function::seed") = seed;
+                function.parameter("function::seed") = seed % 10000U;
                 rfunctions.emplace_back(function.make(function.size()));
                 rfunctions.emplace_back(function.make(function.size()));
             }

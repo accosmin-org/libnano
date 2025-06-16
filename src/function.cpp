@@ -50,19 +50,17 @@ using namespace nano;
 namespace
 {
 template <class targ, class... targs>
-void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions,
+void make_function(rfunction_t& function, const tensor_size_t dims, const tensor_size_t seeds, rfunctions_t& functions,
                    const char* const param_name, const targ value, const targs... args)
 {
-    auto rng   = make_rng();
-    auto udist = make_udist<uint64_t>(0, 10000);
-
-    // NB: generate random seeds if possile
-    const auto seeds = std::vector<uint64_t>{udist(rng), udist(rng), udist(rng), udist(rng)};
-
     if (function->parameter_if("function::seed") != nullptr)
     {
-        for (const auto seed : seeds)
+        auto rng   = make_rng();
+        auto udist = make_udist<uint64_t>(0, 10000);
+
+        for (tensor_size_t i = 0; i < seeds; ++i)
         {
+            const auto seed = udist(rng);
             function->config("function::seed", seed, param_name, value, args...);
             functions.emplace_back(function->make(dims));
         }
@@ -74,7 +72,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     }
 }
 
-void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t& functions)
+void make_function(rfunction_t& function, const tensor_size_t dims, const tensor_size_t seeds, rfunctions_t& functions)
 {
     // NB: generate different regularization parameters for various linear ML models
     // to assess the difficulty of the resulting numerical optimization problems.
@@ -82,7 +80,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha1 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            make_function(function, dims, functions, "function::lasso::alpha1", alpha1);
+            make_function(function, dims, seeds, functions, "function::lasso::alpha1", alpha1);
         }
     }
 
@@ -90,7 +88,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha2 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            make_function(function, dims, functions, "function::ridge::alpha2", alpha2);
+            make_function(function, dims, seeds, functions, "function::ridge::alpha2", alpha2);
         }
     }
 
@@ -98,7 +96,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha12 : {1e-2, 1e+0, 1e+2, 1e+4, 1e+6})
         {
-            make_function(function, dims, functions, "function::elasticnet::alpha1", alpha12,
+            make_function(function, dims, seeds, functions, "function::elasticnet::alpha1", alpha12,
                           "function::elasticnet::alpha2", alpha12);
         }
     }
@@ -107,7 +105,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto lambda : {-1e-6, -1e+0, -1e+1, -1e+2})
         {
-            make_function(function, dims, functions, "function::cvx48b::lambda", lambda);
+            make_function(function, dims, seeds, functions, "function::cvx48b::lambda", lambda);
         }
     }
 
@@ -115,7 +113,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {0.0, 0.5, 1.0})
         {
-            make_function(function, dims, functions, "function::cvx48e-eq::alpha", alpha);
+            make_function(function, dims, seeds, functions, "function::cvx48e-eq::alpha", alpha);
         }
     }
 
@@ -123,7 +121,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {1e-6, 0.5, 1.0})
         {
-            make_function(function, dims, functions, "function::cvx48e-ineq::alpha", alpha);
+            make_function(function, dims, seeds, functions, "function::cvx48e-ineq::alpha", alpha);
         }
     }
 
@@ -131,7 +129,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto alpha : {0.0, 0.3, 0.7, 1.0})
         {
-            make_function(function, dims, functions, "function::cvx48f::alpha", alpha);
+            make_function(function, dims, seeds, functions, "function::cvx48f::alpha", alpha);
         }
     }
 
@@ -139,7 +137,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto neqs : {1e-6, 0.1, 0.2, 0.5, 0.8, 1.0})
         {
-            make_function(function, dims, functions, "function::numopt162::neqs", neqs);
+            make_function(function, dims, seeds, functions, "function::numopt162::neqs", neqs);
         }
     }
 
@@ -147,7 +145,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto nineqs : {5.0, 10.0, 20.0})
         {
-            make_function(function, dims, functions, "function::osqp1::nineqs", nineqs);
+            make_function(function, dims, seeds, functions, "function::osqp1::nineqs", nineqs);
         }
     }
 
@@ -155,7 +153,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto neqs : {0.1, 0.5, 0.9})
         {
-            make_function(function, dims, functions, "function::osqp2::neqs", neqs);
+            make_function(function, dims, seeds, functions, "function::osqp2::neqs", neqs);
         }
     }
 
@@ -163,7 +161,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, rfunctions_t
     {
         for (const auto factors : {0.1, 0.5, 0.9})
         {
-            make_function(function, dims, functions, "function::osqp4::factors", factors);
+            make_function(function, dims, seeds, functions, "function::osqp4::factors", factors);
         }
     }
 
@@ -414,47 +412,47 @@ rfunctions_t function_t::make(const function_t::config_t& config, const std::reg
             case function_type::convex:
                 if (function->convex() && function->constraints().empty())
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::smooth:
                 if (function->smooth() && function->constraints().empty())
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::convex_smooth:
                 if (function->convex() && function->smooth() && function->constraints().empty())
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::convex_nonsmooth:
                 if (function->convex() && !function->smooth() && function->constraints().empty())
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::linear_program:
                 if (dynamic_cast<const linear_program_t*>(function.get()) != nullptr)
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::quadratic_program:
                 if (dynamic_cast<const quadratic_program_t*>(function.get()) != nullptr)
                 {
-                    make_function(function, dims, functions);
+                    make_function(function, dims, config.m_seeds, functions);
                 }
                 break;
 
             case function_type::any:
-                make_function(function, dims, functions);
+                make_function(function, dims, config.m_seeds, functions);
                 break;
             }
         }
