@@ -13,8 +13,10 @@ quadratic_program_numopt162_t::quadratic_program_numopt162_t(const tensor_size_t
     register_parameter(parameter_t::make_integer("function::seed", 0, LE, seed, LE, 10000));
     register_parameter(parameter_t::make_scalar("function::numopt162::neqs", 0.0, LT, neqs, LE, 1.0));
 
+    const auto scale = std::sqrt(static_cast<scalar_t>(dims));
+
     auto rng   = make_rng(seed);
-    auto udist = make_udist<scalar_t>(-1.0, +1.0);
+    auto udist = make_udist<scalar_t>(-1.0 / scale, +1.0 / scale);
 
     const auto n = dims;
     const auto p = std::max(tensor_size_t{1}, static_cast<tensor_size_t>(neqs * static_cast<scalar_t>(n)));
