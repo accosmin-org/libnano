@@ -149,7 +149,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
     m_u.array()                   = 1.0;
 
-    update(0.0, 0.0, 0.0, miu, true);
+    update(0.0, 0.0, 0.0, 0.0, miu, true);
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -206,19 +206,18 @@ scalar_t program_t::residual() const
     return std::sqrt(m_rdual.squaredNorm() + m_rcent.squaredNorm() + m_rprim.squaredNorm());
 }
 
-scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const scalar_t vstep, const scalar_t miu,
-                           const bool apply)
+scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const scalar_t ustep, const scalar_t vstep,
+                           const scalar_t miu, const bool apply)
 {
     const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
 
-    const auto x = m_x + xstep * m_dx;
-    const auto u = m_u + ustep * m_du;
-    const auto v = m_v + vstep * m_dv;
-
-    const auto z = x.segment(0, n);
-    const auto y = x.segment(n, m);
+    const auto x  = m_x.segment(0, n) + xstep * m_dx.segment(0, n);
+    const auto y  = m_x.segment(n, m) + ystep * m_dx.segment(n, m);
+    const auto u  = m_u + ustep * m_du;
+    const auto vp = m_v.segment(0, p) + vstep * m_dv.segment(0, p);
+    const auto vm = m_v.segment(p, m) + vstep * m_dv.segment(p, m);
 
     // dual residual
     if (m_Q.size() == 0)
@@ -227,16 +226,16 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     }
     else
     {
-        m_rdual.segment(0, n).matrix() = m_Q * z + m_c;
+        m_rdual.segment(0, n).matrix() = m_Q * x + m_c;
     }
-    m_rdual.segment(0, n) += m_A.transpose() * v.segment(0, p);
-    m_rdual.segment(0, n) += m_G.transpose() * v.segment(p, m);
+    m_rdual.segment(0, n) += m_A.transpose() * vp;
+    m_rdual.segment(0, n) += m_G.transpose() * vm;
 
-    m_rdual.segment(n, m) = v.segment(p, m) - u;
+    m_rdual.segment(n, m) = vm - u;
 
     // primal residual
-    m_rprim.segment(0, p) = m_A * z - m_b;
-    m_rprim.segment(p, m) = m_G * z + y - m_h;
+    m_rprim.segment(0, p) = m_A * x - m_b;
+    m_rprim.segment(p, m) = m_G * x + y - m_h;
 
     // centering residual
     if (m > 0)
@@ -247,9 +246,11 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     // apply the change if requested
     if (apply)
     {
-        m_x = x;
-        m_u = u;
-        m_v = v;
+        m_x.segment(0, n) = x;
+        m_x.segment(n, m) = y;
+        m_u               = u;
+        m_v.segment(0, p) = vp;
+        m_v.segment(p, m) = vm;
 
         update_original();
     }
@@ -257,7 +258,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ustep, const sca
     return residual();
 }
 
-scalar_t program_t::max_xstep() const
+scalar_t program_t::max_ystep() const
 {
     const auto n = this->n();
     const auto m = this->m();

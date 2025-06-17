@@ -81,23 +81,24 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
+        const auto xstep = s;
+        const auto vstep = s;
         const auto ustep = s * program.max_ustep();
-        const auto xstep = s * program.max_xstep();
-        const auto vstep = ustep;
+        const auto ystep = s * program.max_ystep();
 
         const auto curr_residual = program.residual();
-        const auto next_residual = program.update(xstep, ustep, vstep, miu);
+        const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu);
 
-        logger.info("step=", s, "/", s0, ",lstep=(", xstep, ",", ustep, "),residual=", next_residual, "/",
+        logger.info("step=", s, "/", s0, ",max_step=(", ystep, ",", ustep, "),residual=", next_residual, "/",
                     curr_residual, ".\n");
 
-        if (std::min({xstep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
+        if (std::min({ustep, ystep}) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
         // update current state
-        program.update(xstep, ustep, vstep, miu, true);
+        program.update(xstep, ystep, ustep, vstep, miu, true);
         cstate.update(program.original_x(), program.original_u(), program.original_v());
 
         done_kkt_optimality_test(cstate, cstate.valid(), logger);
