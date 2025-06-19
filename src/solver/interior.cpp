@@ -79,46 +79,26 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
-        // for the primal and dual steps: (x + sx * dx, u + su * du, v + su * dv)
+        // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
         const auto xstep = s;
         const auto vstep = s;
         const auto ustep = s * program.max_ustep();
         const auto ystep = s * program.max_ystep();
 
-        const auto alpha             = 1e-4;
-        const auto beta              = 0.7;
-        const auto lsearch_max_iters = 100;
-
         const auto curr_residual = program.residual();
+        const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu, true);
 
-        auto lsearch_step  = 1.0;
-        auto next_residual = curr_residual;
+        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",vstep=", vstep, ",residual=", next_residual,
+                    "/", curr_residual, ".\n");
 
-        for (auto lsearch_iter = 0; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
-        {
-            next_residual = program.update(lsearch_step * xstep, lsearch_step * ystep, lsearch_step * ustep,
-                                           lsearch_step * vstep, miu, false);
-
-            if (next_residual <= (1.0 - alpha * lsearch_step) * curr_residual)
-            {
-                break;
-            }
-
-            lsearch_step *= beta;
-        }
-
-        logger.info("lstep=", lsearch_step, ",s=", s, "/", s0, ",ustep=", ustep, ",ystep=", ystep,
-                    ",residual=", next_residual, "/", curr_residual, ".\n");
-
-        if (lsearch_step < std::numeric_limits<scalar_t>::epsilon())
+        if (std::max({xstep, ystep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
         // update current state
-        program.update(lsearch_step * xstep, lsearch_step * ystep, lsearch_step * ustep, lsearch_step * vstep, miu,
-                       true);
+        // program.update(xstep, ystep, ustep, vstep, miu, true);
         cstate.update(program.original_x(), program.original_u(), program.original_v());
 
         done_kkt_optimality_test(cstate, cstate.valid(), logger);

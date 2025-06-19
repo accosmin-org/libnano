@@ -215,7 +215,7 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const sca
 
     const auto x  = m_x.segment(0, n) + xstep * m_dx.segment(0, n);
     const auto y  = m_x.segment(n, m) + ystep * m_dx.segment(n, m);
-    const auto u  = m_u + ustep * m_du;
+    const auto u  = m_u.segment(0, m) + ustep * m_du.segment(0, m);
     const auto vp = m_v.segment(0, p) + vstep * m_dv.segment(0, p);
     const auto vm = m_v.segment(p, m) + vstep * m_dv.segment(p, m);
 
