@@ -70,8 +70,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     {
         // solve primal-dual linear system of equations to get (dx, du, dv)
         const auto [precision, rcond, valid, positive, negative] = program.solve();
-        logger.info("accuracy=", precision, ",rcond=", rcond, ",neg=", negative, ",pos=", positive, ",valid=", valid,
-                    ".\n");
+        logger.info("accuracy=", precision, ",rcond=", rcond, ",neg=", negative, ",pos=", positive,
+                    ",valid=", valid ? 'y' : 'n', ".\n");
         if (!valid)
         {
             logger.error("linear system of equations cannot be solved, invalid state!\n");
@@ -89,8 +89,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu, true);
 
-        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",vstep=", vstep, ",residual=", next_residual,
-                    "/", curr_residual, ".\n");
+        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",residual=", next_residual, "/",
+                    curr_residual, ".\n");
 
         if (std::max({xstep, ystep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
         {
@@ -98,17 +98,15 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // update current state
-        // program.update(xstep, ystep, ustep, vstep, miu, true);
         cstate.update(program.original_x(), program.original_u(), program.original_v());
-
         done_kkt_optimality_test(cstate, cstate.valid(), logger);
 
-        // update best state (if possible)
+        // update best state (if possible and an improvement)
         if (!cstate.valid())
         {
             break;
         }
-        else if (cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
+        else if (iter == 1 || cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
         {
             last_better_iter = 0;
             bstate           = cstate;

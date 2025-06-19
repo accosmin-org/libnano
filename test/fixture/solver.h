@@ -179,12 +179,12 @@ struct solver_description_t
 {
     const auto op = [&](const logger_t& logger)
     {
+        function.clear_statistics();
+
         const auto state0      = solver_state_t{function, x0};
         const auto solver_id   = solver.type_id();
         const auto lsearch0_id = solver.has_lsearch() ? solver.lsearch0().type_id() : "N/A";
         const auto lsearchk_id = solver.has_lsearch() ? solver.lsearchk().type_id() : "N/A";
-
-        function.clear_statistics();
 
         logger.info(std::setprecision(16), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id, "]:\n");
         logger.info("-------------------------------------------------------------\n");
