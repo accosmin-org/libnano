@@ -69,7 +69,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
         // solve primal-dual linear system of equations to get (dx, du, dv)
-        const auto [precision, valid, rcond, positive, negative] = program.solve();
+        const auto [precision, rcond, valid, positive, negative] = program.solve();
         logger.info("accuracy=", precision, ",rcond=", rcond, ",neg=", negative, ",pos=", positive, ",valid=", valid,
                     ".\n");
         if (!valid)
@@ -86,19 +86,39 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto ustep = s * program.max_ustep();
         const auto ystep = s * program.max_ystep();
 
+        const auto alpha             = 1e-4;
+        const auto beta              = 0.7;
+        const auto lsearch_max_iters = 100;
+
         const auto curr_residual = program.residual();
-        const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu);
 
-        logger.info("step=", s, "/", s0, ",max_step=(", ystep, ",", ustep, "),residual=", next_residual, "/",
-                    curr_residual, ".\n");
+        auto lsearch_step  = 1.0;
+        auto next_residual = curr_residual;
 
-        if (std::min({ustep, ystep}) < std::numeric_limits<scalar_t>::epsilon())
+        for (auto lsearch_iter = 0; lsearch_iter < lsearch_max_iters; ++lsearch_iter)
+        {
+            next_residual = program.update(lsearch_step * xstep, lsearch_step * ystep, lsearch_step * ustep,
+                                           lsearch_step * vstep, miu, false);
+
+            if (next_residual <= (1.0 - alpha * lsearch_step) * curr_residual)
+            {
+                break;
+            }
+
+            lsearch_step *= beta;
+        }
+
+        logger.info("lstep=", lsearch_step, ",s=", s, "/", s0, ",ustep=", ustep, ",ystep=", ystep,
+                    ",residual=", next_residual, "/", curr_residual, ".\n");
+
+        if (lsearch_step < std::numeric_limits<scalar_t>::epsilon())
         {
             break;
         }
 
         // update current state
-        program.update(xstep, ystep, ustep, vstep, miu, true);
+        program.update(lsearch_step * xstep, lsearch_step * ystep, lsearch_step * ustep, lsearch_step * vstep, miu,
+                       true);
         cstate.update(program.original_x(), program.original_u(), program.original_v());
 
         done_kkt_optimality_test(cstate, cstate.valid(), logger);

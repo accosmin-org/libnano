@@ -84,12 +84,6 @@ public:
     scalar_t residual() const;
 
     ///
-    /// \brief update and return the residual for the trial (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep *
-    /// dv).
-    ///
-    scalar_t update(scalar_t xstep, scalar_t ystep, scalar_t ustep, scalar_t vstep, scalar_t miu, bool apply = false);
-
-    ///
     /// \brief return the maximum step that can be take in the direction (y, y + ystep * dy) that keeps y > 0.
     ///
     scalar_t max_ystep() const;
@@ -98,6 +92,12 @@ public:
     /// \brief return the maximum step that can be take in the direction (u, u + ustep * du) that keeps u > 0.
     ///
     scalar_t max_ustep() const;
+
+    ///
+    /// \brief update and return the residual for the trial (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep *
+    /// dv).
+    ///
+    scalar_t update(scalar_t xstep, scalar_t ystep, scalar_t ustep, scalar_t vstep, scalar_t miu, bool apply = false);
 
     ///
     /// \brief compute the state update (dx, du, dv) by solving the linear system of equations derived from the KKT
