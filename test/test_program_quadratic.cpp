@@ -90,6 +90,8 @@ UTEST_CASE(program2)
 
     check_convexity(function);
     check_minimize(make_solvers(), function);
+    check_minimize(make_solvers(), function, make_vector<scalar_t>(0.1086039277146398, -0.5283505579626659));
+    check_minimize(make_solvers(), function, make_vector<scalar_t>(-0.1403887120993625, 0.7972989463671512));
 }
 
 UTEST_CASE(program3)

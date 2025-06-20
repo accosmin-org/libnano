@@ -187,7 +187,10 @@ struct solver_description_t
         const auto lsearchk_id = solver.has_lsearch() ? solver.lsearchk().type_id() : "N/A";
 
         logger.info(std::setprecision(16), function.name(), " ", solver_id, "[", lsearch0_id, ",", lsearchk_id, "]:\n");
-        logger.info("-------------------------------------------------------------\n");
+        if (!function.parameters().empty())
+        {
+            logger.info("-------------------------------------------------------------\n");
+        }
         for (const auto& param : function.parameters())
         {
             logger.info(std::setprecision(16), param.name(), "=", param.value(), "\n");

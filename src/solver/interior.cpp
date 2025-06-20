@@ -89,8 +89,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto curr_residual = program.residual();
         const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu, true);
 
-        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",residual=", next_residual, "/",
-                    curr_residual, ".\n");
+        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",res=", next_residual, "/", curr_residual,
+                    ".\n");
 
         if (std::max({xstep, ystep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
         {
