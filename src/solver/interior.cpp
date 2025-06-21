@@ -83,11 +83,13 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
         const auto xstep = s;
         const auto vstep = s;
+        const auto wstep = s;
         const auto ustep = s * program.max_ustep();
         const auto ystep = s * program.max_ystep();
 
+        // FIXME: the current residual is computed twice, use an accumulator from iteration to another one.
         const auto curr_residual = program.residual();
-        const auto next_residual = program.update(xstep, ystep, ustep, vstep, miu, true);
+        const auto next_residual = program.update(xstep, ystep, ustep, vstep, wstep, miu, true);
 
         logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",res=", next_residual, "/", curr_residual,
                     ".\n");

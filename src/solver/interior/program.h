@@ -44,6 +44,9 @@ namespace nano
 ///         x'        = |x y|^T
 ///         G * x - h = -y
 ///
+///     the primal variables are thus (x, y), while
+///     the dual variables are (u, v for A * x = b, w for G * x + y = h).
+///
 class program_t
 {
 public:
@@ -79,7 +82,7 @@ public:
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief compute the residual for the current state (x, u, v).
+    /// \brief compute the residual for the current state (x, y, u, v, w).
     ///
     scalar_t residual() const;
 
@@ -94,14 +97,15 @@ public:
     scalar_t max_ustep() const;
 
     ///
-    /// \brief update and return the residual for the trial (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep *
-    /// dv).
+    /// \brief update and return the residual for the trial
+    ///     (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep * dv, w + wstep * dw).
     ///
-    scalar_t update(scalar_t xstep, scalar_t ystep, scalar_t ustep, scalar_t vstep, scalar_t miu, bool apply = false);
+    scalar_t update(scalar_t xstep, scalar_t ystep, scalar_t ustep, scalar_t vstep, scalar_t wstep, scalar_t miu,
+                    bool apply = false);
 
     ///
-    /// \brief compute the state update (dx, du, dv) by solving the linear system of equations derived from the KKT
-    /// conditions.
+    /// \brief compute the state update (dx, dy, du, dv, dw) by solving the linear system of equations derived from the
+    /// KKT conditions.
     ///
     struct solve_stats_t
     {

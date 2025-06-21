@@ -207,17 +207,17 @@ scalar_t program_t::residual() const
 }
 
 scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const scalar_t ustep, const scalar_t vstep,
-                           const scalar_t miu, const bool apply)
+                           const scalar_t wstep, const scalar_t miu, const bool apply)
 {
     const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
 
-    const auto x  = m_x.segment(0, n) + xstep * m_dx.segment(0, n);
-    const auto y  = m_x.segment(n, m) + ystep * m_dx.segment(n, m);
-    const auto u  = m_u.segment(0, m) + ustep * m_du.segment(0, m);
-    const auto vp = m_v.segment(0, p) + vstep * m_dv.segment(0, p);
-    const auto vm = m_v.segment(p, m) + vstep * m_dv.segment(p, m);
+    const auto x = m_x.segment(0, n) + xstep * m_dx.segment(0, n);
+    const auto y = m_x.segment(n, m) + ystep * m_dx.segment(n, m);
+    const auto u = m_u.segment(0, m) + ustep * m_du.segment(0, m);
+    const auto v = m_v.segment(0, p) + vstep * m_dv.segment(0, p);
+    const auto w = m_v.segment(p, m) + wstep * m_dv.segment(p, m);
 
     // dual residual
     if (m_Q.size() == 0)
@@ -228,10 +228,10 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const sca
     {
         m_rdual.segment(0, n).matrix() = m_Q * x + m_c;
     }
-    m_rdual.segment(0, n) += m_A.transpose() * vp;
-    m_rdual.segment(0, n) += m_G.transpose() * vm;
+    m_rdual.segment(0, n) += m_A.transpose() * v;
+    m_rdual.segment(0, n) += m_G.transpose() * w;
 
-    m_rdual.segment(n, m) = vm - u;
+    m_rdual.segment(n, m) = w - u;
 
     // primal residual
     m_rprim.segment(0, p) = m_A * x - m_b;
@@ -249,8 +249,8 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const sca
         m_x.segment(0, n) = x;
         m_x.segment(n, m) = y;
         m_u               = u;
-        m_v.segment(0, p) = vp;
-        m_v.segment(p, m) = vm;
+        m_v.segment(0, p) = v;
+        m_v.segment(p, m) = w;
 
         update_original();
     }
