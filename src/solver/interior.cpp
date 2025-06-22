@@ -1,4 +1,5 @@
 #include <nano/critical.h>
+#include <set>
 #include <solver/interior.h>
 
 using namespace nano;
@@ -81,23 +82,82 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto xstep = s;
-        const auto vstep = s;
-        const auto wstep = s;
-        const auto ustep = s * program.max_ustep();
-        const auto ystep = s * program.max_ystep();
+        const auto max_xstep = s;
+        const auto max_vstep = s;
+        const auto max_wstep = s;
+        const auto max_ustep = s * program.max_ustep();
+        const auto max_ystep = s * program.max_ystep();
+
+        using trial_t  = std::tuple<scalar_t, scalar_t, scalar_t, scalar_t, scalar_t>;
+        using trials_t = std::set<trial_t>;
 
         // FIXME: the current residual is computed twice, use an accumulator from iteration to another one.
         const auto curr_residual = program.residual();
-        const auto next_residual = program.update(xstep, ystep, ustep, vstep, wstep, miu, true);
 
-        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",res=", next_residual, "/", curr_residual,
-                    ".\n");
+        auto trials        = trials_t{};
+        auto best_trial    = trial_t{max_xstep, max_ystep, max_ustep, max_vstep, max_wstep};
+        auto best_residual = std::numeric_limits<scalar_t>::max();
 
-        if (std::max({xstep, ystep, ustep, vstep}) < std::numeric_limits<scalar_t>::epsilon())
+        const auto evaluate = [&](const trial_t& trial)
+        {
+            if (std::find(trials.begin(), trials.end(), trial) == trials.end())
+            {
+                trials.insert(trial);
+                const auto [xstep, ystep, ustep, vstep, wstep] = trial;
+                const auto residual = program.update(xstep, ystep, ustep, vstep, wstep, miu, false);
+
+                logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",trials=", trials.size(),
+                            ",res=", residual, "/", curr_residual, ".\n");
+
+                if (residual < best_residual)
+                {
+                    best_trial    = trial;
+                    best_residual = residual;
+                }
+            }
+        };
+
+        const auto beta       = 0.7;
+        const auto alpha      = 1e-2;
+        const auto max_trials = 100U;
+
+        evaluate(best_trial);
+
+        while (trials.size() < max_trials)
+        {
+            const auto [xstep, ystep, ustep, vstep, wstep] = best_trial;
+            const auto old_size                            = trials.size();
+
+            for (const auto next_xstep : {xstep, xstep * beta})
+            {
+                for (const auto next_ystep : {ystep, ystep * beta})
+                {
+                    for (const auto next_ustep : {ustep, ustep * beta})
+                    {
+                        for (const auto next_vstep : {vstep, vstep * beta})
+                        {
+                            for (const auto next_wstep : {wstep, wstep * beta})
+                            {
+                                evaluate({next_xstep, next_ystep, next_ustep, next_vstep, next_wstep});
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (trials.size() == old_size || best_residual < alpha * curr_residual)
+            {
+                break;
+            }
+        }
+
+        if (best_residual >= curr_residual)
         {
             break;
         }
+
+        program.update(std::get<0>(best_trial), std::get<1>(best_trial), std::get<2>(best_trial),
+                       std::get<3>(best_trial), std::get<4>(best_trial), miu, true);
 
         // update current state
         cstate.update(program.original_x(), program.original_u(), program.original_v());
