@@ -61,18 +61,6 @@ public:
 
     program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
 
-    const vector_t& x() const { return m_x; }
-
-    const vector_t& u() const { return m_u; }
-
-    const vector_t& v() const { return m_v; }
-
-    const vector_t& dx() const { return m_dx; }
-
-    const vector_t& du() const { return m_du; }
-
-    const vector_t& dv() const { return m_dv; }
-
     const vector_t& original_x() const { return m_orig_x; }
 
     const vector_t& original_u() const { return m_orig_u; }
