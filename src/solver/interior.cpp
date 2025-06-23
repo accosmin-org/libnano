@@ -92,7 +92,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",residual=", residual, ".\n");
 
-        if (std::max({xstep, ystep, ustep, vstep, wstep}) < epsilon0<scalar_t>())
+        if (std::min({ystep, ustep}) < epsilon0<scalar_t>())
         {
             break;
         }
