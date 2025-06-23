@@ -5,11 +5,18 @@
 namespace nano
 {
 ///
-/// \brief return the maximum scalar factor `step` so that `u + step * du > 0` element-wise.
+/// \brief return the maximum scalar factor `step` so that `u + step * du > beta * u` element-wise.
 ///
-template <class tvectoru, class tvectordu>
-scalar_t make_umax(const tvectoru& u, const tvectordu& du)
+/// NB: it is assumed that the vector `u` is strictly positive element-wise.
+///
+template <class tvectoru, class tvectordu,
+          std::enable_if_t<(is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) &&
+                               (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>),
+                           bool> = true>
+scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t beta = 1e-8)
 {
+    assert(beta > 0.0);
+    assert(beta < 1.0);
     assert(u.size() == du.size());
     assert(u.array().minCoeff() > 0.0);
 
@@ -18,7 +25,7 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du)
     {
         if (du(i) < 0.0)
         {
-            step = std::min(step, -u(i) / du(i));
+            step = std::min(step, -(1.0 - beta) * u(i) / du(i));
         }
     }
 
@@ -27,6 +34,8 @@ scalar_t make_umax(const tvectoru& u, const tvectordu& du)
 
 ///
 /// \brief return the maximum scalar factor `step` so that `G * (x + step * dx) <= h` element-wise.
+///
+/// NB: it is assumed that the condition `G * x <= h` holds element-wise.
 ///
 NANO_PUBLIC scalar_t make_xmax(const vector_t& x, const vector_t& dx, const matrix_t& G, const vector_t& h);
 
