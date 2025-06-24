@@ -97,14 +97,15 @@ public:
         scalar_t m_residual{0.0};
     };
 
-    lsearch_stats_t lsearch(scalar_t s, scalar_t miu);
+    lsearch_stats_t lsearch(scalar_t s);
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,
               scalar_t miu);
 
+    void update_t();
     void update_original();
-    void update_residual(scalar_t miu);
+    void update_residual();
 
     tensor_size_t n() const { return m_c.size(); }
 
@@ -138,5 +139,7 @@ private:
     matrix_t          m_lmat;     ///< reduced KKT system: lmat * lsol = lvec
     vector_t          m_lvec;     ///<
     vector_t          m_lsol;     ///<
+    scalar_t          m_miu{1.0}; ///<
+    scalar_t          m_t{1.0};   ///<
 };
 } // namespace nano

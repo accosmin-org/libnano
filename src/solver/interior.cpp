@@ -54,7 +54,6 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
-    const auto miu       = parameter("solver::ipm::miu").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
     const auto patience  = parameter("solver::ipm::patience").value<tensor_size_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
@@ -82,7 +81,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto lstats = program.lsearch(s, miu);
+        const auto lstats = program.lsearch(s);
 
         logger.info("xstep=", lstats.m_xstep, ",ystep=", lstats.m_ystep, ",ustep=", lstats.m_ustep,
                     ",residual=", lstats.m_residual, ".\n");

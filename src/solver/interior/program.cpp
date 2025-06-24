@@ -121,6 +121,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lmat(n() + p(), n() + p())
     , m_lvec(n() + p())
     , m_lsol(n() + p())
+    , m_miu(miu)
 {
     assert(m_Q.size() == 0 || m_Q.rows() == n());
     assert(m_Q.size() == 0 || m_Q.cols() == n());
@@ -149,19 +150,19 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
     m_u.array()                   = 1.0; // FIXME: have it parametrizable
 
+    update_t();
     update_original();
-    update_residual(miu);
+    update_residual();
 
-    return;
-
+    /*
     // TODO: heuristic page 485 to initialize (y, u)
     solve();
 
-    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(1.0);
-    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(1.0);
+    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(10.0);
+    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(10.0);
 
     update_original();
-    update_residual(miu);
+    update_residual(miu);*/
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -213,7 +214,7 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const scalar_t miu)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -234,38 +235,67 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const scalar_t m
     const auto max_ystep = (m == 0) ? 1.0 : make_umax(y, dy);
     const auto max_ustep = (m == 0) ? 1.0 : make_umax(u, du);
 
+    const auto evaluate = [&](const scalar_t xstep, const scalar_t ystep, const scalar_t ustep, const scalar_t vstep,
+                              const scalar_t wstep)
+    {
+        // dual residual
+        if (m_Q.size() == 0)
+        {
+            m_rdual.segment(0, n).matrix() = m_c.vector();
+        }
+        else
+        {
+            m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
+        }
+        m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
+        m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
+
+        m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
+
+        // primal residual
+        m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
+        m_rprim.segment(p, m) = m_G * (x + xstep * dx) + y + ystep * dy - m_h;
+
+        // centering residual
+        if (m > 0)
+        {
+            m_rcent.array() = (u + ustep * du).array() * (y + ystep * dy).array() - 1.0 / m_t;
+        }
+
+        return m_rdual.lpNorm<1>() + m_rprim.lpNorm<1>() + m_rcent.lpNorm<1>();
+    };
+
+    // TODO: minimize surrogate residual
+    // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
+
+    const auto residual0 = evaluate(0.0, 0.0, 0.0, 0.0, 0.0);
+
+    const auto beta  = 0.5;
+    const auto alpha = 1e-2;
+
     auto xstep = s;
     auto ystep = s * max_ystep;
     auto ustep = s * max_ustep;
     auto vstep = s;
     auto wstep = s;
+    auto gamma = 1.0;
+    auto residual = residual0;
 
-    // TODO: minimize surrogate residual
-
-    /*
-    // dual residual
-    if (m_Q.size() == 0)
+    for (auto iter = 0; iter < 50; ++iter)
     {
-        m_rdual.segment(0, n).matrix() = m_c.vector();
+        residual = evaluate(xstep, ystep, ustep, vstep, wstep);
+        if (residual < (1.0 - alpha * gamma) * residual0)
+        {
+            break;
+        }
+
+        xstep *= beta;
+        ystep *= beta;
+        ustep *= beta;
+        vstep *= beta;
+        wstep *= beta;
+        gamma *= beta;
     }
-    else
-    {
-        m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
-    }
-    m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
-    m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
-
-    m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
-
-    // primal residual
-    m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
-    m_rprim.segment(p, m) = m_G * (x + xstep * dx) + y + ystep * dy - m_h;
-
-    // centering residual
-    if (m > 0)
-    {
-        m_rcent.array() = -u.dot(y) / (miu * static_cast<scalar_t>(m)) + u.array() * y.array();
-    }*/
 
     // apply the change
     m_x.segment(0, n) = x + xstep * dx;
@@ -274,8 +304,9 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const scalar_t m
     m_v.segment(0, p) = v + vstep * dv;
     m_v.segment(p, m) = w + wstep * dw;
 
+    update_t();
     update_original();
-    update_residual(miu);
+    update_residual();
 
     //
     auto stats    = lsearch_stats_t{};
@@ -284,9 +315,27 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const scalar_t m
     stats.m_ustep = ustep;
     stats.m_vstep = vstep;
     stats.m_wstep = wstep;
-    stats.m_residual = m_rdual.lpNorm<1>() + m_rprim.lpNorm<1>() + m_rcent.lpNorm<1>();
+    stats.m_residual = residual;
 
     return stats;
+}
+
+void program_t::update_t()
+{
+    const auto n = this->n();
+    const auto m = this->m();
+
+    const auto y = m_x.segment(n, m);
+    const auto u = m_u.segment(0, m);
+
+    if (m > 0)
+    {
+        assert(y.minCoeff() > 0);
+        assert(u.minCoeff() > 0);
+
+        m_t = (m_miu * static_cast<scalar_t>(m)) / y.dot(u);
+        assert(m_t > 0.0);
+    }
 }
 
 void program_t::update_original()
@@ -300,7 +349,7 @@ void program_t::update_original()
     m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
 }
 
-void program_t::update_residual(const scalar_t miu)
+void program_t::update_residual()
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -333,6 +382,6 @@ void program_t::update_residual(const scalar_t miu)
     // centering residual
     if (m > 0)
     {
-        m_rcent.array() = -u.dot(y) / (miu * static_cast<scalar_t>(m)) + u.array() * y.array();
+        m_rcent.array() = u.array() * y.array() - 1.0 / m_t;
     }
 }
