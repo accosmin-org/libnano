@@ -70,30 +70,7 @@ public:
     const function_t& function() const { return m_function; }
 
     ///
-    /// \brief compute the residual for the current state (x, y, u, v, w).
-    ///
-    scalar_t residual() const;
-
-    ///
-    /// \brief return the maximum step that can be take in the direction (y, y + ystep * dy) that keeps y > 0.
-    ///
-    scalar_t max_ystep() const;
-
-    ///
-    /// \brief return the maximum step that can be take in the direction (u, u + ustep * du) that keeps u > 0.
-    ///
-    scalar_t max_ustep() const;
-
-    ///
-    /// \brief update and return the residual for the trial
-    ///     (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep * dv, w + wstep * dw).
-    ///
-    scalar_t update(scalar_t xstep, scalar_t ystep, scalar_t ustep, scalar_t vstep, scalar_t wstep, scalar_t miu,
-                    bool apply = false);
-
-    ///
-    /// \brief compute the state update (dx, dy, du, dv, dw) by solving the linear system of equations derived from the
-    /// KKT conditions.
+    /// \brief compute the state update (dx, dy, du, dv, dw) by solving the KKT linear system.
     ///
     struct solve_stats_t
     {
@@ -106,11 +83,28 @@ public:
 
     solve_stats_t solve();
 
+    ///
+    /// \brief compute the step lengths for the primal-dual updates and change the current state accordingly
+    ///     (x + xstep * dx, y + ystep * dy, u + ustep * du, v + vstep * dv, w + wstep * dw).
+    ///
+    struct lsearch_stats_t
+    {
+        scalar_t m_xstep{0.0};
+        scalar_t m_ystep{0.0};
+        scalar_t m_ustep{0.0};
+        scalar_t m_vstep{0.0};
+        scalar_t m_wstep{0.0};
+        scalar_t m_residual{0.0};
+    };
+
+    lsearch_stats_t lsearch(scalar_t s, scalar_t miu);
+
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,
               scalar_t miu);
 
     void update_original();
+    void update_residual(scalar_t miu);
 
     tensor_size_t n() const { return m_c.size(); }
 

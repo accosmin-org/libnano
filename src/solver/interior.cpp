@@ -69,11 +69,11 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
     {
-        // solve primal-dual linear system of equations to get (dx, du, dv)
-        const auto [precision, rcond, valid, positive, negative] = program.solve();
-        logger.info("accuracy=", precision, ",rcond=", rcond, ",neg=", negative, ",pos=", positive,
-                    ",valid=", valid ? 'y' : 'n', ".\n");
-        if (!valid)
+        // solve primal-dual linear system of equations to get (dx, dy, du, dv, dw)
+        const auto sstats = program.solve();
+        logger.info("accuracy=", sstats.m_precision, ",rcond=", sstats.m_rcond, ",neg=", sstats.m_negative,
+                    ",pos=", sstats.m_positive, ",valid=", sstats.m_valid ? 'y' : 'n', ".\n");
+        if (!sstats.m_valid)
         {
             logger.error("linear system of equations cannot be solved, invalid state!\n");
             break;
@@ -81,18 +81,13 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
-        const auto s     = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto xstep = s;
-        const auto vstep = s;
-        const auto wstep = s;
-        const auto ustep = s * program.max_ustep();
-        const auto ystep = s * program.max_ystep();
+        const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
+        const auto lstats = program.lsearch(s, miu);
 
-        const auto residual = program.update(xstep, ystep, ustep, vstep, wstep, miu, true);
+        logger.info("xstep=", lstats.m_xstep, ",ystep=", lstats.m_ystep, ",ustep=", lstats.m_ustep,
+                    ",residual=", lstats.m_residual, ".\n");
 
-        logger.info("xstep=", xstep, ",ystep=", ystep, ",ustep=", ustep, ",residual=", residual, ".\n");
-
-        if (std::min({ystep, ustep}) < epsilon0<scalar_t>())
+        if (std::min({lstats.m_ystep, lstats.m_ustep}) < epsilon0<scalar_t>())
         {
             break;
         }

@@ -147,9 +147,21 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
 
     m_x.segment(0, n())           = x0.vector();
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
-    m_u.array()                   = 1.0;
+    m_u.array()                   = 1.0; // FIXME: have it parametrizable
 
-    update(0.0, 0.0, 0.0, 0.0, miu, true);
+    update_original();
+    update_residual(miu);
+
+    return;
+
+    // TODO: heuristic page 485 to initialize (y, u)
+    solve();
+
+    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(1.0);
+    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(1.0);
+
+    update_original();
+    update_residual(miu);
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -201,23 +213,104 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-scalar_t program_t::residual() const
-{
-    return std::sqrt(m_rdual.squaredNorm() + m_rcent.squaredNorm() + m_rprim.squaredNorm());
-}
-
-scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const scalar_t ustep, const scalar_t vstep,
-                           const scalar_t wstep, const scalar_t miu, const bool apply)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const scalar_t miu)
 {
     const auto n = this->n();
     const auto m = this->m();
     const auto p = this->p();
 
-    const auto x = m_x.segment(0, n) + xstep * m_dx.segment(0, n);
-    const auto y = m_x.segment(n, m) + ystep * m_dx.segment(n, m);
-    const auto u = m_u.segment(0, m) + ustep * m_du.segment(0, m);
-    const auto v = m_v.segment(0, p) + vstep * m_dv.segment(0, p);
-    const auto w = m_v.segment(p, m) + wstep * m_dv.segment(p, m);
+    const auto x = m_x.segment(0, n);
+    const auto y = m_x.segment(n, m);
+    const auto u = m_u.segment(0, m);
+    const auto v = m_v.segment(0, p);
+    const auto w = m_v.segment(p, m);
+
+    const auto dx = m_dx.segment(0, n);
+    const auto dy = m_dx.segment(n, m);
+    const auto du = m_du.segment(0, m);
+    const auto dv = m_dv.segment(0, p);
+    const auto dw = m_dv.segment(p, m);
+
+    const auto max_ystep = (m == 0) ? 1.0 : make_umax(y, dy);
+    const auto max_ustep = (m == 0) ? 1.0 : make_umax(u, du);
+
+    auto xstep = s;
+    auto ystep = s * max_ystep;
+    auto ustep = s * max_ustep;
+    auto vstep = s;
+    auto wstep = s;
+
+    // TODO: minimize surrogate residual
+
+    /*
+    // dual residual
+    if (m_Q.size() == 0)
+    {
+        m_rdual.segment(0, n).matrix() = m_c.vector();
+    }
+    else
+    {
+        m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
+    }
+    m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
+    m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
+
+    m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
+
+    // primal residual
+    m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
+    m_rprim.segment(p, m) = m_G * (x + xstep * dx) + y + ystep * dy - m_h;
+
+    // centering residual
+    if (m > 0)
+    {
+        m_rcent.array() = -u.dot(y) / (miu * static_cast<scalar_t>(m)) + u.array() * y.array();
+    }*/
+
+    // apply the change
+    m_x.segment(0, n) = x + xstep * dx;
+    m_x.segment(n, m) = y + ystep * dy;
+    m_u               = u + ustep * du;
+    m_v.segment(0, p) = v + vstep * dv;
+    m_v.segment(p, m) = w + wstep * dw;
+
+    update_original();
+    update_residual(miu);
+
+    //
+    auto stats    = lsearch_stats_t{};
+    stats.m_xstep = xstep;
+    stats.m_ystep = ystep;
+    stats.m_ustep = ustep;
+    stats.m_vstep = vstep;
+    stats.m_wstep = wstep;
+    stats.m_residual = m_rdual.lpNorm<1>() + m_rprim.lpNorm<1>() + m_rcent.lpNorm<1>();
+
+    return stats;
+}
+
+void program_t::update_original()
+{
+    const auto n = this->n();
+    const auto m = this->m();
+    const auto p = this->p();
+
+    m_orig_x.array() = m_dQ.array() * m_x.segment(0, n).array();
+    m_orig_u.array() = m_dG.array() * m_v.segment(p, m).array();
+    m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
+}
+
+void program_t::update_residual(const scalar_t miu)
+{
+    const auto n = this->n();
+    const auto m = this->m();
+    const auto p = this->p();
+
+    const auto x = m_x.segment(0, n);
+    const auto y = m_x.segment(n, m);
+    const auto u = m_u.segment(0, m);
+    const auto v = m_v.segment(0, p);
+    const auto w = m_v.segment(p, m);
 
     // dual residual
     if (m_Q.size() == 0)
@@ -242,44 +335,4 @@ scalar_t program_t::update(const scalar_t xstep, const scalar_t ystep, const sca
     {
         m_rcent.array() = -u.dot(y) / (miu * static_cast<scalar_t>(m)) + u.array() * y.array();
     }
-
-    // apply the change if requested
-    if (apply)
-    {
-        m_x.segment(0, n) = x;
-        m_x.segment(n, m) = y;
-        m_u               = u;
-        m_v.segment(0, p) = v;
-        m_v.segment(p, m) = w;
-
-        update_original();
-    }
-
-    return residual();
-}
-
-scalar_t program_t::max_ystep() const
-{
-    const auto n = this->n();
-    const auto m = this->m();
-
-    return (m == 0) ? 1.0 : make_umax(m_x.segment(n, m), m_dx.segment(n, m));
-}
-
-scalar_t program_t::max_ustep() const
-{
-    const auto m = this->m();
-
-    return (m == 0) ? 1.0 : make_umax(m_u, m_du);
-}
-
-void program_t::update_original()
-{
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
-
-    m_orig_x.array() = m_dQ.array() * m_x.segment(0, n).array();
-    m_orig_u.array() = m_dG.array() * m_v.segment(p, m).array();
-    m_orig_v.array() = m_dA.array() * m_v.segment(0, p).array();
 }
