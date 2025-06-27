@@ -80,6 +80,63 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 
     return program_t::solve_stats_t{delta, rcond, valid, positive, negative};
 }
+
+auto unpack(const tensor_size_t m, const tensor_size_t p, const vector_cmap_t xx)
+{
+    auto       index = 0;
+    const auto xstep = xx(index++);
+    const auto ystep = (m == 0) ? 0.0 : xx(index++);
+    const auto ustep = (m == 0) ? 0.0 : xx(index++);
+    const auto vstep = (p == 0) ? 0.0 : xx(index++);
+    const auto wstep = (m == 0) ? 0.0 : xx(index++);
+
+    return std::make_tuple(xstep, ystep, ustep, vstep, wstep);
+}
+
+void pack(const tensor_size_t m, const tensor_size_t p, const scalar_t xstep, const scalar_t ystep,
+          const scalar_t ustep, const scalar_t vstep, const scalar_t wstep, vector_map_t xx)
+{
+    auto index  = 0;
+    xx(index++) = xstep;
+    if (m == 0)
+    {
+        xx(index++) = ystep;
+    }
+    if (m == 0)
+    {
+        xx(index++) = ustep;
+    }
+    if (p == 0)
+    {
+        xx(index++) = vstep;
+    }
+    if (m == 0)
+    {
+        xx(index++) = wstep;
+    }
+}
+
+auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ystep, const scalar_t max_ustep)
+{
+    if (m == 0)
+    {
+        // (xstep, vstep)
+        return make_vector<scalar_t>(0.5, 0.5);
+    }
+    else
+    {
+        if (p == 0)
+        {
+            // (xstep, ystep, ustep, wstep)
+            return make_vector<scalar_t>(0.5, 0.5 * max_ystep, 0.5 * max_ustep, 0.5);
+        }
+        else
+        {
+            // (xstep, ystep, ustep, vstep, wstep)
+            return make_vector<scalar_t>(0.5, 0.5 * max_ystep, 0.5 * max_ustep, 0.5, 0.5);
+        }
+    }
+}
 } // namespace
 
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0,
@@ -150,7 +207,6 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
     m_u.array()                   = 1.0; // FIXME: have it parametrizable
 
-    update_t();
     update_original();
     update_residual();
 
@@ -214,7 +270,7 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& logger)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -232,110 +288,133 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto max_ystep = (m == 0) ? 1.0 : make_umax(y, dy);
-    const auto max_ustep = (m == 0) ? 1.0 : make_umax(u, du);
+    const auto min_xstep = epsilon0<scalar_t>();
+    const auto min_ystep = epsilon0<scalar_t>();
+    const auto min_ustep = epsilon0<scalar_t>();
+    const auto min_vstep = epsilon0<scalar_t>();
+    const auto min_wstep = epsilon0<scalar_t>();
 
-    const auto evaluate = [&](const scalar_t xstep, const scalar_t ystep, const scalar_t ustep, const scalar_t vstep,
-                              const scalar_t wstep)
+    const auto max_xstep = s;
+    const auto max_ystep = (m == 0) ? s : (s * make_umax(y, dy));
+    const auto max_ustep = (m == 0) ? s : (s * make_umax(u, du));
+    const auto max_vstep = s;
+    const auto max_wstep = s;
+
+    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {})
     {
-        // dual residual
-        if (m_Q.size() == 0)
-        {
-            m_rdual.segment(0, n).matrix() = m_c.vector();
-        }
-        else
-        {
-            m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
-        }
-        m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
-        m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
+        const auto [xstep, ystep, ustep, vstep, wstep] = unpack(m, p, xx);
 
-        m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
-
-        // primal residual
-        m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
-        m_rprim.segment(p, m) = m_G * (x + xstep * dx) + y + ystep * dy - m_h;
-
-        // centering residual
-        if (m > 0)
+        // check if out-of bounds
+        if (xstep < min_xstep || xstep > max_xstep || ystep < min_ystep || ystep > max_ystep || ustep < min_ustep ||
+            ustep > max_ustep || vstep < min_vstep || vstep > max_vstep || wstep < min_wstep || wstep > max_wstep)
         {
-            m_rcent.array() = (u + ustep * du).array() * (y + ystep * dy).array() - 1.0 / m_t;
+            return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        return m_rdual.lpNorm<1>() + m_rprim.lpNorm<1>() + m_rcent.lpNorm<1>();
+        // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
+        const auto rdual0 = vector_t{m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w};
+        const auto rdualx = vector_t{m_Q * dx};
+        const auto rdualv = vector_t{m_A.transpose() * dv};
+        const auto rdualw = vector_t{m_G.transpose() * dw};
+
+        const auto rprimA0 = vector_t{m_A * x - m_b};
+        const auto rprimAx = vector_t{m_A * dx};
+
+        const auto rprimG0 = vector_t{m_G * x + y - m_h};
+        const auto rprimGx = vector_t{m_G * dx};
+
+        const auto rcent0  = u.dot(y);
+        const auto rcentu  = du.dot(y);
+        const auto rcenty  = dy.dot(u);
+        const auto rcentuy = du.dot(dy);
+
+        if (gx.size() == xx.size())
+        {
+            const auto gxstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualx.vector()) + ///<
+                                (rprimA0 + xstep * rprimAx).dot(rprimAx.vector()) +                                ///<
+                                (rprimG0 + xstep * rprimGx + ystep * dy).dot(rprimGx.vector());                    ///<
+
+            const auto gystep = (rprimG0 + xstep * rprimGx + ystep * dy).dot(dy) + ///<
+                                (rcenty + ustep * rcentuy);                        ///<
+
+            const auto gustep = (w - u + wstep * dw - ustep * du).dot(-du) + ///<
+                                (rcentu + ystep * rcentuy);                  ///<
+
+            const auto gvstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualv.vector()); ///<
+
+            const auto gwstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualw.vector()) + ///<
+                                (w - u + wstep * dw - ustep * du).dot(dw);                                         ///<
+
+            ::pack(m, p, gxstep, gystep, gustep, gvstep, gwstep, gx);
+        }
+
+        return (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).squaredNorm() + ///<
+               (w - u + wstep * dw - ustep * du).squaredNorm() +                           ///<
+               (rprimA0 + xstep * rprimAx).squaredNorm() +                                 ///<
+               (rprimG0 + xstep * rprimGx + ystep * dy).squaredNorm() +                    ///<
+               (rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy);       ///<
     };
 
-    // TODO: minimize surrogate residual
-    // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
+    const auto beta              = 0.7;
+    const auto alpha             = 1e-2;
+    const auto gtol              = 1.0 - s;
+    const auto ltol              = epsilon0<scalar_t>();
+    const auto max_iters         = 100;
+    const auto max_lsearch_iters = 100;
 
-    const auto residual0 = evaluate(0.0, 0.0, 0.0, 0.0, 0.0);
+    auto xx = make_x0(m, p, max_ystep, max_ustep);
+    auto fx = 0.0;
+    auto xp = vector_t{xx.size()};
+    auto gx = vector_t{vector_t::zero(xx.size())};
 
-    const auto beta  = 0.5;
-    const auto alpha = 1e-2;
-
-    auto xstep = s;
-    auto ystep = s * max_ystep;
-    auto ustep = s * max_ustep;
-    auto vstep = s;
-    auto wstep = s;
-    auto gamma = 1.0;
-    auto residual = residual0;
-
-    for (auto iter = 0; iter < 50; ++iter)
+    // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
+    //  - use gradient descent
+    //  - w/  backtracking line-search
+    for (auto iter = 0; iter < max_iters; ++iter)
     {
-        residual = evaluate(xstep, ystep, ustep, vstep, wstep);
-        if (residual < (1.0 - alpha * gamma) * residual0)
+        fx            = vgrad(xx, gx);
+        const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
+
+        logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",residual=", fx, ",g=", gg, "\n");
+
+        if (gg < gtol)
         {
             break;
         }
 
-        xstep *= beta;
-        ystep *= beta;
-        ustep *= beta;
-        vstep *= beta;
-        wstep *= beta;
-        gamma *= beta;
+        auto lstep = 1.0;
+        for (auto liter = 0; liter < max_lsearch_iters && lstep > ltol; ++liter, lstep *= beta)
+        {
+            xp = xx + lstep * gx;
+
+            const auto fxp = vgrad(xp);
+            if (std::isfinite(fxp) && fxp < (1.0 - alpha * lstep) * fx)
+            {
+                xx = xp;
+                break;
+            }
+        }
+
+        if (lstep < ltol)
+        {
+            logger.info("lsearch: line-search failed!\n");
+            break;
+        }
     }
 
     // apply the change
+    const auto [xstep, ystep, ustep, vstep, wstep] = unpack(m, p, xx);
+
     m_x.segment(0, n) = x + xstep * dx;
     m_x.segment(n, m) = y + ystep * dy;
     m_u               = u + ustep * du;
     m_v.segment(0, p) = v + vstep * dv;
     m_v.segment(p, m) = w + wstep * dw;
 
-    update_t();
     update_original();
     update_residual();
 
-    //
-    auto stats    = lsearch_stats_t{};
-    stats.m_xstep = xstep;
-    stats.m_ystep = ystep;
-    stats.m_ustep = ustep;
-    stats.m_vstep = vstep;
-    stats.m_wstep = wstep;
-    stats.m_residual = residual;
-
-    return stats;
-}
-
-void program_t::update_t()
-{
-    const auto n = this->n();
-    const auto m = this->m();
-
-    const auto y = m_x.segment(n, m);
-    const auto u = m_u.segment(0, m);
-
-    if (m > 0)
-    {
-        assert(y.minCoeff() > 0);
-        assert(u.minCoeff() > 0);
-
-        m_t = (m_miu * static_cast<scalar_t>(m)) / y.dot(u);
-        assert(m_t > 0.0);
-    }
+    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, fx};
 }
 
 void program_t::update_original()
@@ -382,6 +461,9 @@ void program_t::update_residual()
     // centering residual
     if (m > 0)
     {
-        m_rcent.array() = u.array() * y.array() - 1.0 / m_t;
+        assert(y.minCoeff() > 0);
+        assert(u.minCoeff() > 0);
+
+        m_rcent.array() = u.array() * y.array() - y.dot(u) / (m_miu * static_cast<scalar_t>(m));
     }
 }

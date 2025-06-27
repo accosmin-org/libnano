@@ -3,6 +3,7 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
+#include <nano/logger.h>
 
 namespace nano
 {
@@ -97,13 +98,12 @@ public:
         scalar_t m_residual{0.0};
     };
 
-    lsearch_stats_t lsearch(scalar_t s);
+    lsearch_stats_t lsearch(scalar_t s, const logger_t& logger);
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,
               scalar_t miu);
 
-    void update_t();
     void update_original();
     void update_residual();
 
@@ -140,6 +140,5 @@ private:
     vector_t          m_lvec;     ///<
     vector_t          m_lsol;     ///<
     scalar_t          m_miu{1.0}; ///<
-    scalar_t          m_t{1.0};   ///<
 };
 } // namespace nano
