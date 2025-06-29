@@ -93,7 +93,7 @@ auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ys
         if (p == 0)
         {
             // (xstep, ystep, ustep, wstep)
-            return make_vector<scalar_t>(0.5, 0.5 * max_ystep, 0.5 * max_ustep, 0.5);
+            return make_vector<scalar_t>(0.99, max_ystep - 1e-6, max_ustep - 1e-6, 0.99);
         }
         else
         {
@@ -284,10 +284,11 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto rcenty  = dy.dot(u);
     const auto rcentuy = du.dot(dy);
 
-    const auto vgrad_xv = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    const auto vgrad_xv = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
     {
         assert(xx.size() == 2);
         assert(gx.size() == 0 || xx.size() == gx.size());
+        assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
 
         const auto xstep = xx(0);
         const auto vstep = xx(1);
@@ -307,13 +308,18 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(1) = term0.dot(rdualAv.vector());
         }
 
+        if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
+        {
+        }
+
         return 0.5 * (term0.squaredNorm() + term1.squaredNorm());
     };
 
-    const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
     {
         assert(xx.size() == 4);
         assert(gx.size() == 0 || xx.size() == gx.size());
+        assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
 
         const auto xstep = xx(0);
         const auto ystep = xx(1);
@@ -340,13 +346,34 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(3) = term0.dot(rdualGw.vector()) + term1.dot(dw);
         }
 
+        if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
+        {
+            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimGx.dot(rprimGx);
+            Hx(0, 1) = rprimGx.dot(du);
+            Hx(0, 2) = 0.0;
+            Hx(0, 3) = rdualGw.dot(rdualQx);
+            Hx(1, 0) = Hx(0, 1);
+            Hx(1, 1) = dy.dot(dy);
+            Hx(1, 2) = rcentuy;
+            Hx(1, 3) = 0.0;
+            Hx(2, 0) = Hx(0, 2);
+            Hx(2, 1) = Hx(1, 2);
+            Hx(2, 2) = du.dot(du);
+            Hx(2, 3) = -du.dot(dw);
+            Hx(3, 0) = Hx(0, 3);
+            Hx(3, 1) = Hx(1, 3);
+            Hx(3, 2) = Hx(2, 3);
+            Hx(3, 3) = rdualGw.dot(rdualGw) + dw.dot(dw);
+        }
+
         return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm()) + term3;
     };
 
-    const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
     {
         assert(xx.size() == 5);
         assert(gx.size() == 0 || xx.size() == gx.size());
+        assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
 
         const auto xstep = xx(0);
         const auto ystep = xx(1);
@@ -377,19 +404,23 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(4) = term0.dot(rdualGw.vector()) + term1.dot(dw);
         }
 
+        if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
+        {
+        }
+
         return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3.squaredNorm()) + term4;
     };
 
-    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
     {
         switch (xx.size())
         {
         case 2:
-            return vgrad_xv(xx, gx);
+            return vgrad_xv(xx, gx, Hx);
         case 4:
-            return vgrad_xyuw(xx, gx);
+            return vgrad_xyuw(xx, gx, Hx);
         default:
-            return vgrad_xyuvw(xx, gx);
+            return vgrad_xyuvw(xx, gx, Hx);
         }
     };
 
@@ -403,15 +434,22 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     auto xx = make_x0(m, p, max_ystep, max_ustep);
     auto fx = 0.0;
     auto xp = vector_t{xx.size()};
-    auto gx = vector_t{vector_t::zero(xx.size())};
+    auto gx = vector_t{xx.size()};
+    auto Hx = matrix_t{xx.size(), xx.size()};
 
     // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
     //  - use gradient descent
     //  - w/  backtracking line-search
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        fx            = vgrad(xx, gx);
+        fx = vgrad(xx, gx, Hx);
+        gx.vector() =
+            make_solver_LDLT(Hx.matrix()).solve(gx.vector()); // FIXME: the Hessian is constant so inverted once!
+
         const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
+
+        assert(std::isfinite(fx));
+        assert(std::isfinite(gg));
 
         logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",residual=", fx, ",g=", gg, "\n");
 
