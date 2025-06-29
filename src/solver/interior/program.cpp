@@ -81,41 +81,6 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
     return program_t::solve_stats_t{delta, rcond, valid, positive, negative};
 }
 
-auto unpack(const tensor_size_t m, const tensor_size_t p, const vector_cmap_t xx)
-{
-    auto       index = 0;
-    const auto xstep = xx(index++);
-    const auto ystep = (m == 0) ? 0.0 : xx(index++);
-    const auto ustep = (m == 0) ? 0.0 : xx(index++);
-    const auto vstep = (p == 0) ? 0.0 : xx(index++);
-    const auto wstep = (m == 0) ? 0.0 : xx(index++);
-
-    return std::make_tuple(xstep, ystep, ustep, vstep, wstep);
-}
-
-void pack(const tensor_size_t m, const tensor_size_t p, const scalar_t xstep, const scalar_t ystep,
-          const scalar_t ustep, const scalar_t vstep, const scalar_t wstep, vector_map_t xx)
-{
-    auto index  = 0;
-    xx(index++) = xstep;
-    if (m == 0)
-    {
-        xx(index++) = ystep;
-    }
-    if (m == 0)
-    {
-        xx(index++) = ustep;
-    }
-    if (p == 0)
-    {
-        xx(index++) = vstep;
-    }
-    if (m == 0)
-    {
-        xx(index++) = wstep;
-    }
-}
-
 auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ystep, const scalar_t max_ustep)
 {
     if (m == 0)
@@ -300,65 +265,138 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto max_vstep = s;
     const auto max_wstep = s;
 
-    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
+    const auto rdualQ0 = vector_t{m_Q * x + m_c};
+    const auto rdualA0 = vector_t{m_A.transpose() * v};
+    const auto rdualG0 = vector_t{m_G.transpose() * w};
+    const auto rdualQx = vector_t{m_Q * dx};
+    const auto rdualAv = vector_t{m_A.transpose() * dv};
+    const auto rdualGw = vector_t{m_G.transpose() * dw};
+
+    const auto rprimA0 = vector_t{m_A * x - m_b};
+    const auto rprimAx = vector_t{m_A * dx};
+
+    const auto rprimG0 = vector_t{m_G * x + y - m_h};
+    const auto rprimGx = vector_t{m_G * dx};
+
+    const auto rcent0  = u.dot(y);
+    const auto rcentu  = du.dot(y);
+    const auto rcenty  = dy.dot(u);
+    const auto rcentuy = du.dot(dy);
+
+    const auto vgrad_xv = [&](const vector_cmap_t xx, vector_map_t gx = {})
     {
-        const auto [xstep, ystep, ustep, vstep, wstep] = unpack(m, p, xx);
+        assert(xx.size() == 2);
+        assert(gx.size() == 0 || xx.size() == gx.size());
+
+        const auto xstep = xx(0);
+        const auto vstep = xx(1);
 
         // check if out-of bounds
-        if (xstep < min_xstep || xstep > max_xstep || ystep < min_ystep || ystep > max_ystep || ustep < min_ustep ||
-            ustep > max_ustep || vstep < min_vstep || vstep > max_vstep || wstep < min_wstep || wstep > max_wstep)
+        if ((xstep < min_xstep || xstep > max_xstep) || (vstep < min_vstep || vstep > max_vstep))
         {
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
-        const auto rdual0 = vector_t{m_Q * x + m_c + m_A.transpose() * v + m_G.transpose() * w};
-        const auto rdualx = vector_t{m_Q * dx};
-        const auto rdualv = vector_t{m_A.transpose() * dv};
-        const auto rdualw = vector_t{m_G.transpose() * dw};
-
-        const auto rprimA0 = vector_t{m_A * x - m_b};
-        const auto rprimAx = vector_t{m_A * dx};
-
-        const auto rprimG0 = vector_t{m_G * x + y - m_h};
-        const auto rprimGx = vector_t{m_G * dx};
-
-        const auto rcent0  = u.dot(y);
-        const auto rcentu  = du.dot(y);
-        const auto rcenty  = dy.dot(u);
-        const auto rcentuy = du.dot(dy);
+        const auto term0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv;
+        const auto term1 = rprimA0 + xstep * rprimAx;
 
         if (gx.size() == xx.size())
         {
-            const auto gxstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualx.vector()) + ///<
-                                (rprimA0 + xstep * rprimAx).dot(rprimAx.vector()) +                                ///<
-                                (rprimG0 + xstep * rprimGx + ystep * dy).dot(rprimGx.vector());                    ///<
-
-            const auto gystep = (rprimG0 + xstep * rprimGx + ystep * dy).dot(dy) + ///<
-                                (rcenty + ustep * rcentuy);                        ///<
-
-            const auto gustep = (w - u + wstep * dw - ustep * du).dot(-du) + ///<
-                                (rcentu + ystep * rcentuy);                  ///<
-
-            const auto gvstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualv.vector()); ///<
-
-            const auto gwstep = (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).dot(rdualw.vector()) + ///<
-                                (w - u + wstep * dw - ustep * du).dot(dw);                                         ///<
-
-            ::pack(m, p, gxstep, gystep, gustep, gvstep, gwstep, gx);
+            gx(0) = term0.dot(rdualQx.vector()) + term1.dot(rprimAx.vector());
+            gx(1) = term0.dot(rdualAv.vector());
         }
 
-        return (rdual0 + xstep * rdualx + vstep * rdualv + wstep * rdualw).squaredNorm() + ///<
-               (w - u + wstep * dw - ustep * du).squaredNorm() +                           ///<
-               (rprimA0 + xstep * rprimAx).squaredNorm() +                                 ///<
-               (rprimG0 + xstep * rprimGx + ystep * dy).squaredNorm() +                    ///<
-               (rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy);       ///<
+        return term0.squaredNorm() + term1.squaredNorm();
+    };
+
+    const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    {
+        assert(xx.size() == 4);
+        assert(gx.size() == 0 || xx.size() == gx.size());
+
+        const auto xstep = xx(0);
+        const auto ystep = xx(1);
+        const auto ustep = xx(2);
+        const auto wstep = xx(3);
+
+        // check if out-of bounds
+        if ((xstep < min_xstep || xstep > max_xstep) || (ystep < min_ystep || ystep > max_ystep) ||
+            (ustep < min_ustep || ustep > max_ustep) || (wstep < min_wstep || wstep > max_wstep))
+        {
+            return std::numeric_limits<scalar_t>::quiet_NaN();
+        }
+
+        const auto term0 = rdualQ0 + xstep * rdualQx + rdualG0 + wstep * rdualGw;
+        const auto term1 = w - u + wstep * dw - ustep * du;
+        const auto term2 = rprimG0 + xstep * rprimGx + ystep * dy;
+        const auto term3 = rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
+
+        if (gx.size() == xx.size())
+        {
+            gx(0) = term0.dot(rdualQx.vector()) + term2.dot(rprimGx.vector());
+            gx(1) = term2.dot(dy) + (rcenty + ustep * rcentuy);
+            gx(2) = term1.dot(-du) + (rcentu + ystep * rcentuy);
+            gx(3) = term0.dot(rdualGw.vector()) + term1.dot(dw);
+        }
+
+        return term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3;
+    };
+
+    const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    {
+        assert(xx.size() == 5);
+        assert(gx.size() == 0 || xx.size() == gx.size());
+
+        const auto xstep = xx(0);
+        const auto ystep = xx(1);
+        const auto ustep = xx(2);
+        const auto vstep = xx(3);
+        const auto wstep = xx(4);
+
+        // check if out-of bounds
+        if ((xstep < min_xstep || xstep > max_xstep) || (ystep < min_ystep || ystep > max_ystep) ||
+            (ustep < min_ustep || ustep > max_ustep) || (vstep < min_vstep || vstep > max_vstep) ||
+            (wstep < min_wstep || wstep > max_wstep))
+        {
+            return std::numeric_limits<scalar_t>::quiet_NaN();
+        }
+
+        const auto term0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv + rdualG0 + wstep * rdualGw;
+        const auto term1 = w - u + wstep * dw - ustep * du;
+        const auto term2 = rprimA0 + xstep * rprimAx;
+        const auto term3 = rprimG0 + xstep * rprimGx + ystep * dy;
+        const auto term4 = rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
+
+        if (gx.size() == xx.size())
+        {
+            gx(0) = term0.dot(rdualQx.vector()) + term2.dot(rprimAx.vector()) + term3.dot(rprimGx.vector());
+            gx(1) = term3.dot(dy) + (rcenty + ustep * rcentuy);
+            gx(2) = term1.dot(-du) + (rcentu + ystep * rcentuy);
+            gx(3) = term0.dot(rdualAv.vector());
+            gx(4) = term0.dot(rdualGw.vector()) + term1.dot(dw);
+        }
+
+        return term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3.squaredNorm() + term4;
+    };
+
+    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {})
+    {
+        switch (xx.size())
+        {
+        case 2:
+            return vgrad_xv(xx, gx);
+        case 4:
+            return vgrad_xyuw(xx, gx);
+        default:
+            return vgrad_xyuvw(xx, gx);
+        }
     };
 
     const auto beta              = 0.7;
-    const auto alpha             = 1e-2;
+    const auto alpha             = 1e-4;
     const auto gtol              = 1.0 - s;
-    const auto ltol              = epsilon0<scalar_t>();
+    const auto ltol              = epsilon2<scalar_t>();
     const auto max_iters         = 100;
     const auto max_lsearch_iters = 100;
 
@@ -385,9 +423,11 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         auto lstep = 1.0;
         for (auto liter = 0; liter < max_lsearch_iters && lstep > ltol; ++liter, lstep *= beta)
         {
-            xp = xx + lstep * gx;
+            xp = xx - lstep * gx;
 
             const auto fxp = vgrad(xp);
+            logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",li=", (liter + 1), "/", max_lsearch_iters,
+                        ",lstep=", lstep, ",fx=", fxp, "/", fx, "\n");
             if (std::isfinite(fxp) && fxp < (1.0 - alpha * lstep) * fx)
             {
                 xx = xp;
@@ -397,13 +437,24 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
 
         if (lstep < ltol)
         {
-            logger.info("lsearch: line-search failed!\n");
+            logger.info("lsearch: line-search failed (lstep=", lstep, ")!\n");
             break;
         }
     }
 
     // apply the change
-    const auto [xstep, ystep, ustep, vstep, wstep] = unpack(m, p, xx);
+    const auto [xstep, ystep, ustep, vstep, wstep] = [&]()
+    {
+        switch (xx.size())
+        {
+        case 2:
+            return std::make_tuple(xx(0), 0.0, 0.0, xx(1), 0.0);
+        case 4:
+            return std::make_tuple(xx(0), xx(1), xx(2), 0.0, xx(3));
+        default:
+            return std::make_tuple(xx(0), xx(1), xx(2), xx(3), xx(4));
+        }
+    }();
 
     m_x.segment(0, n) = x + xstep * dx;
     m_x.segment(n, m) = y + ystep * dy;
