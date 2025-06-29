@@ -307,7 +307,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(1) = term0.dot(rdualAv.vector());
         }
 
-        return term0.squaredNorm() + term1.squaredNorm();
+        return 0.5 * (term0.squaredNorm() + term1.squaredNorm());
     };
 
     const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {})
@@ -340,7 +340,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(3) = term0.dot(rdualGw.vector()) + term1.dot(dw);
         }
 
-        return term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3;
+        return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm()) + term3;
     };
 
     const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {})
@@ -377,7 +377,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             gx(4) = term0.dot(rdualGw.vector()) + term1.dot(dw);
         }
 
-        return term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3.squaredNorm() + term4;
+        return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3.squaredNorm()) + term4;
     };
 
     const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {})
@@ -421,7 +421,8 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         }
 
         auto lstep = 1.0;
-        for (auto liter = 0; liter < max_lsearch_iters && lstep > ltol; ++liter, lstep *= beta)
+        auto liter = 0;
+        for (; liter < max_lsearch_iters && lstep > ltol; ++liter, lstep *= beta)
         {
             xp = xx - lstep * gx;
 
@@ -435,9 +436,9 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             }
         }
 
-        if (lstep < ltol)
+        if (lstep < ltol || liter >= max_lsearch_iters)
         {
-            logger.info("lsearch: line-search failed (lstep=", lstep, ")!\n");
+            logger.info("lsearch: line-search failed (lstep=", lstep, ",liter=", liter, ")!\n");
             break;
         }
     }
