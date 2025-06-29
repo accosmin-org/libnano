@@ -86,19 +86,19 @@ auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ys
     if (m == 0)
     {
         // (xstep, vstep)
-        return make_vector<scalar_t>(0.5, 0.5);
+        return make_vector<scalar_t>(0.99, 0.99);
     }
     else
     {
         if (p == 0)
         {
             // (xstep, ystep, ustep, wstep)
-            return make_vector<scalar_t>(0.99, max_ystep - 1e-6, max_ustep - 1e-6, 0.99);
+            return make_vector<scalar_t>(0.99, max_ystep - 1e-4, max_ustep - 1e-4, 0.99);
         }
         else
         {
             // (xstep, ystep, ustep, vstep, wstep)
-            return make_vector<scalar_t>(0.5, 0.5 * max_ystep, 0.5 * max_ustep, 0.5, 0.5);
+            return make_vector<scalar_t>(0.99, max_ystep - 1e-4, max_ustep - 1e-4, 0.99, 0.99);
         }
     }
 }
