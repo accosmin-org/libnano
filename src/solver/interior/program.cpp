@@ -93,12 +93,12 @@ auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ys
         if (p == 0)
         {
             // (xstep, ystep, ustep, wstep)
-            return make_vector<scalar_t>(0.99, max_ystep - 1e-4, max_ustep - 1e-4, 0.99);
+            return make_vector<scalar_t>(0.99, 0.99 * max_ystep, 0.99 * max_ustep, 0.99);
         }
         else
         {
             // (xstep, ystep, ustep, vstep, wstep)
-            return make_vector<scalar_t>(0.99, max_ystep - 1e-4, max_ustep - 1e-4, 0.99, 0.99);
+            return make_vector<scalar_t>(0.99, 0.99 * max_ystep, 0.99 * max_ustep, 0.99, 0.99);
         }
     }
 }
@@ -276,7 +276,6 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto max_vstep = s;
     const auto max_wstep = s;
 
-    // TODO: buffer matrix-vector multiplications during line-search evaluation of the residual
     const auto rdualQ0 = vector_t{m_Q * x + m_c};
     const auto rdualA0 = vector_t{m_A.transpose() * v};
     const auto rdualG0 = vector_t{m_G.transpose() * w};
