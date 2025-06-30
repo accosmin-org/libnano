@@ -102,6 +102,17 @@ auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ys
         }
     }
 }
+
+auto fill_hessian(matrix_map_t H)
+{
+    for (tensor_size_t row = 0; row < H.rows(); ++row)
+    {
+        for (tensor_size_t col = row + 1; col < H.cols(); ++col)
+        {
+            H(col, row) = H(row, col);
+        }
+    }
+}
 } // namespace
 
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0,
@@ -299,20 +310,25 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        const auto term0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv;
-        const auto term1 = rprimA0 + xstep * rprimAx;
+        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv;
+        const auto rprimA = rprimA0 + xstep * rprimAx;
 
         if (gx.size() == xx.size())
         {
-            gx(0) = term0.dot(rdualQx.vector()) + term1.dot(rprimAx.vector());
-            gx(1) = term0.dot(rdualAv.vector());
+            gx(0) = rdual0.dot(rdualQx.vector()) + rprimA.dot(rprimAx.vector()); ///< Gx
+            gx(1) = rdual0.dot(rdualAv.vector());                                ///< Gv
         }
 
         if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
         {
+            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimAx.dot(rprimAx); ///< Hxx
+            Hx(0, 1) = rdualQx.dot(rdualAv);                        ///< Hxv
+            Hx(1, 1) = rdualAv.dot(rdualAv);                        ///< Hvv
+
+            fill_hessian(Hx);
         }
 
-        return 0.5 * (term0.squaredNorm() + term1.squaredNorm());
+        return 0.5 * (rdual0.squaredNorm() + rprimA.squaredNorm());
     };
 
     const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
@@ -333,40 +349,36 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        const auto term0 = rdualQ0 + xstep * rdualQx + rdualG0 + wstep * rdualGw;
-        const auto term1 = w - u + wstep * dw - ustep * du;
-        const auto term2 = rprimG0 + xstep * rprimGx + ystep * dy;
-        const auto term3 = rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
+        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualG0 + wstep * rdualGw;
+        const auto rdual1 = w - u + wstep * dw - ustep * du;
+        const auto rprimG = rprimG0 + xstep * rprimGx + ystep * dy;
 
         if (gx.size() == xx.size())
         {
-            gx(0) = term0.dot(rdualQx.vector()) + term2.dot(rprimGx.vector());
-            gx(1) = term2.dot(dy) + (rcenty + ustep * rcentuy);
-            gx(2) = term1.dot(-du) + (rcentu + ystep * rcentuy);
-            gx(3) = term0.dot(rdualGw.vector()) + term1.dot(dw);
+            gx(0) = rdual0.dot(rdualQx.vector()) + rprimG.dot(rprimGx.vector()); ///< Gx
+            gx(1) = rprimG.dot(dy) + (rcenty + ustep * rcentuy);                 ///< Gy
+            gx(2) = rdual1.dot(-du) + (rcentu + ystep * rcentuy);                ///< Gu
+            gx(3) = rdual0.dot(rdualGw.vector()) + rdual1.dot(dw);               ///< Gw
         }
 
         if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
         {
-            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimGx.dot(rprimGx);
-            Hx(0, 1) = rprimGx.dot(du);
-            Hx(0, 2) = 0.0;
-            Hx(0, 3) = rdualGw.dot(rdualQx);
-            Hx(1, 0) = Hx(0, 1);
-            Hx(1, 1) = dy.dot(dy);
-            Hx(1, 2) = rcentuy;
-            Hx(1, 3) = 0.0;
-            Hx(2, 0) = Hx(0, 2);
-            Hx(2, 1) = Hx(1, 2);
-            Hx(2, 2) = du.dot(du);
-            Hx(2, 3) = -du.dot(dw);
-            Hx(3, 0) = Hx(0, 3);
-            Hx(3, 1) = Hx(1, 3);
-            Hx(3, 2) = Hx(2, 3);
-            Hx(3, 3) = rdualGw.dot(rdualGw) + dw.dot(dw);
+            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimGx.dot(rprimGx); ///< Hxx
+            Hx(0, 1) = rprimGx.dot(dy);                             ///< Hxy
+            Hx(0, 2) = 0.0;                                         ///< Hxu
+            Hx(0, 3) = rdualQx.dot(rdualGw);                        ///< Hxw
+            Hx(1, 1) = dy.dot(dy);                                  ///< Hyy
+            Hx(1, 2) = rcentuy;                                     ///< Hyu
+            Hx(1, 3) = 0.0;                                         ///< Hyw
+            Hx(2, 2) = du.dot(du);                                  ///< Huu
+            Hx(2, 3) = dw.dot(-du);                                 ///< Huw
+            Hx(3, 3) = rdualGw.dot(rdualGw) + dw.dot(dw);           ///< Hww
+
+            fill_hessian(Hx);
         }
 
-        return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm()) + term3;
+        return 0.5 * (rdual0.squaredNorm() + rdual1.squaredNorm() + rprimG.squaredNorm()) + rcent0 + ustep * rcentu +
+               ystep * rcenty + ustep * ystep * rcentuy;
     };
 
     const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
@@ -389,26 +401,43 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        const auto term0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv + rdualG0 + wstep * rdualGw;
-        const auto term1 = w - u + wstep * dw - ustep * du;
-        const auto term2 = rprimA0 + xstep * rprimAx;
-        const auto term3 = rprimG0 + xstep * rprimGx + ystep * dy;
-        const auto term4 = rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
+        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv + rdualG0 + wstep * rdualGw;
+        const auto rdual1 = w - u + wstep * dw - ustep * du;
+        const auto rprimA = rprimA0 + xstep * rprimAx;
+        const auto rprimG = rprimG0 + xstep * rprimGx + ystep * dy;
 
         if (gx.size() == xx.size())
         {
-            gx(0) = term0.dot(rdualQx.vector()) + term2.dot(rprimAx.vector()) + term3.dot(rprimGx.vector());
-            gx(1) = term3.dot(dy) + (rcenty + ustep * rcentuy);
-            gx(2) = term1.dot(-du) + (rcentu + ystep * rcentuy);
-            gx(3) = term0.dot(rdualAv.vector());
-            gx(4) = term0.dot(rdualGw.vector()) + term1.dot(dw);
+            gx(0) = rdual0.dot(rdualQx.vector()) + rprimA.dot(rprimAx.vector()) + rprimG.dot(rprimGx.vector()); ///< Gx
+            gx(1) = rprimG.dot(dy) + (rcenty + ustep * rcentuy);                                                ///< Gy
+            gx(2) = rdual1.dot(-du) + (rcentu + ystep * rcentuy);                                               ///< Gu
+            gx(3) = rdual0.dot(rdualAv.vector());                                                               ///< Gv
+            gx(4) = rdual0.dot(rdualGw.vector()) + rdual1.dot(dw);                                              ///< Gw
         }
 
         if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
         {
+            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimAx.dot(rprimAx) + rprimGx.dot(rprimGx); ///< Hxx
+            Hx(0, 1) = rprimGx.dot(dy);                                                    ///< Hxy
+            Hx(0, 2) = 0.0;                                                                ///< Hxu
+            Hx(0, 3) = rdualQx.dot(rdualAv);                                               ///< Hxv
+            Hx(0, 4) = rdualQx.dot(rdualGw);                                               ///< Hxw
+            Hx(1, 1) = dy.dot(dy);                                                         ///< Hyy
+            Hx(1, 2) = rcentuy;                                                            ///< Hyu
+            Hx(1, 3) = 0.0;                                                                ///< Hyv
+            Hx(1, 4) = 0.0;                                                                ///< Hyw
+            Hx(2, 2) = du.dot(du);                                                         ///< Huu
+            Hx(2, 3) = 0.0;                                                                ///< Huv
+            Hx(2, 4) = dw.dot(-du);                                                        ///< Huw
+            Hx(3, 3) = rdualAv.dot(rdualAv);                                               ///< Hvv
+            Hx(3, 4) = rdualAv.dot(rdualGw);                                               ///< Hvw
+            Hx(4, 4) = rdualGw.dot(rdualGw) + dw.dot(dw);                                  ///< Hww
+
+            fill_hessian(Hx);
         }
 
-        return 0.5 * (term0.squaredNorm() + term1.squaredNorm() + term2.squaredNorm() + term3.squaredNorm()) + term4;
+        return 0.5 * (rdual0.squaredNorm() + rdual1.squaredNorm() + rprimA.squaredNorm() + rprimG.squaredNorm()) +
+               rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
     };
 
     const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
