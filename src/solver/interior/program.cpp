@@ -465,14 +465,17 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     auto gx = vector_t{xx.size()};
     auto Hx = matrix_t{xx.size(), xx.size()};
 
+    // NB: the Hessian is constant, so invert it once!
+    vgrad(xx, {}, Hx);
+    const auto Hsolver = make_solver_LDLT(Hx.matrix());
+
     // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
     //  - use gradient descent
     //  - w/  backtracking line-search
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        fx = vgrad(xx, gx, Hx);
-        gx.vector() =
-            make_solver_LDLT(Hx.matrix()).solve(gx.vector()); // FIXME: the Hessian is constant so inverted once!
+        fx          = vgrad(xx, gx);
+        gx.vector() = Hsolver.solve(gx.vector());
 
         const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
 
