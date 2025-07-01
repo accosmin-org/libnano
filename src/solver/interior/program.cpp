@@ -452,12 +452,11 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         }
     };
 
-    const auto beta              = 0.7;
+    const auto beta              = 0.1;
     const auto alpha             = 1e-4;
     const auto gtol              = 1.0 - s;
-    const auto ltol              = epsilon2<scalar_t>();
     const auto max_iters         = 100;
-    const auto max_lsearch_iters = 100;
+    const auto max_lsearch_iters = 20;
 
     auto xx = make_x0(m, p, max_ystep, max_ustep);
     auto fx = 0.0;
@@ -489,23 +488,25 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
             break;
         }
 
+        auto lok   = false;
         auto lstep = 1.0;
         auto liter = 0;
-        for (; liter < max_lsearch_iters && lstep > ltol; ++liter, lstep *= beta)
+        for (; liter < max_lsearch_iters; ++liter, lstep *= beta)
         {
             xp = xx - lstep * gx;
 
             const auto fxp = vgrad(xp);
             logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",li=", (liter + 1), "/", max_lsearch_iters,
                         ",lstep=", lstep, ",fx=", fxp, "/", fx, "\n");
-            if (std::isfinite(fxp) && fxp < (1.0 - alpha * lstep) * fx)
+            if (std::isfinite(fxp) && fxp <= fx - alpha * lstep * gx.dot(gx))
             {
                 xx = xp;
+                lok = true;
                 break;
             }
         }
 
-        if (lstep < ltol || liter >= max_lsearch_iters)
+        if (!lok)
         {
             logger.info("lsearch: line-search failed (lstep=", lstep, ",liter=", liter, ")!\n");
             break;
