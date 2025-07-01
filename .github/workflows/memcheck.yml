@@ -8,10 +8,10 @@ concurrency:
 
 jobs:
   memcheck:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2404.sh --default
+      run: bash scripts/setup_ubuntu.sh --default
     - name: memcheck
       run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=RelWithDebInfo --config --build --memcheck

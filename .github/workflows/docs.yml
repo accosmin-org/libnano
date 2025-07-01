@@ -8,19 +8,19 @@ concurrency:
 
 jobs:
   check-markdown-docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2404.sh --default
+      run: bash scripts/setup_ubuntu.sh --default
     - name: check-markdown-docs
       run: bash scripts/build.sh --check-markdown-docs
 
   check-source-files:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
-      run: bash scripts/setup_ubuntu2404.sh --default
+      run: bash scripts/setup_ubuntu.sh --default
     - name: check-source-files
       run: bash scripts/build.sh --check-source-files

@@ -29,7 +29,7 @@ jobs:
         elif [[ "${{matrix.os}}" == "ubuntu-22.04" ]]; then
           bash scripts/setup_ubuntu2204.sh --default
         else
-          bash scripts/setup_ubuntu2404.sh --default
+          bash scripts/setup_ubuntu.sh --default
         fi
     - name: build-test-install-example
       run: |
