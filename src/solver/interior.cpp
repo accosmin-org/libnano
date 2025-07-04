@@ -1,5 +1,4 @@
 #include <nano/critical.h>
-#include <set>
 #include <solver/interior.h>
 
 using namespace nano;

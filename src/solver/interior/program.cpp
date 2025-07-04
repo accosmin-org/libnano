@@ -7,6 +7,8 @@
 
 using namespace nano;
 
+#include <iostream>
+
 namespace
 {
 [[maybe_unused]] auto make_solver_LDLT(const matrix_t& lmat)
@@ -86,19 +88,19 @@ auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ys
     if (m == 0)
     {
         // (xstep, vstep)
-        return make_vector<scalar_t>(0.99, 0.99);
+        return make_vector<scalar_t>(1.0, 1.0);
     }
     else
     {
         if (p == 0)
         {
             // (xstep, ystep, ustep, wstep)
-            return make_vector<scalar_t>(0.99, 0.99 * max_ystep, 0.99 * max_ustep, 0.99);
+            return make_vector<scalar_t>(1.0, max_ystep, max_ustep, 1.0);
         }
         else
         {
             // (xstep, ystep, ustep, vstep, wstep)
-            return make_vector<scalar_t>(0.99, 0.99 * max_ystep, 0.99 * max_ustep, 0.99, 0.99);
+            return make_vector<scalar_t>(1.0, max_ystep, max_ustep, 1.0, 1.0);
         }
     }
 }
@@ -112,6 +114,84 @@ auto fill_hessian(matrix_map_t H)
             H(col, row) = H(row, col);
         }
     }
+}
+
+template <class tfunction>
+auto newton_step(vector_t x0, const tfunction& function, const logger_t& logger)
+{
+    const auto beta              = 0.1;
+    const auto alpha             = 1e-4;
+    const auto gtol              = 1e-8;
+    const auto max_iters         = 100;
+    const auto max_lsearch_iters = 15;
+
+    auto xx = std::move(x0);
+    auto fx = 0.0;
+    auto xp = vector_t{xx.size()};
+    auto gx = vector_t{xx.size()};
+    auto dx = vector_t{xx.size()};
+    auto Hx = matrix_t{xx.size(), xx.size()};
+
+    // NB: the Hessian is constant, so invert it once!
+    function(xx, {}, Hx);
+    const auto Hsolver = make_solver_LDLT(Hx.matrix());
+    logger.info("Hsolver: dims=", Hx.dims(), ",pos=", Hsolver.isPositive(), ",neg=", Hsolver.isNegative(),
+                ",rcond=", Hsolver.rcond(), "\n");
+    std::cout << "Hsolver: dims=" << Hx.dims() << ",pos=" << Hsolver.isPositive() << ",neg=" << Hsolver.isNegative()
+              << ",rcond=" << Hsolver.rcond() << std::endl;
+    std::cout << "Hx=" << Hx << std::endl;
+
+    // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
+    //  - use gradient descent
+    //  - w/  backtracking line-search
+    for (auto iter = 0; iter < max_iters; ++iter)
+    {
+        fx          = function(xx, gx);
+        dx.vector() = -Hsolver.solve(gx.vector());
+
+        const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
+        const auto dg = dx.dot(gx);
+
+        logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",residual=", fx, ",g=", gg, ",dg=", dg, "\n");
+        std::cout << "lsearch: i=" << (iter + 1) << "/" << max_iters << ",residual=" << fx << ",g=" << gg
+                  << ",dg=" << dg << std::endl;
+
+        assert(dg < 0.0);
+        assert(std::isfinite(fx));
+        assert(std::isfinite(gg));
+
+        if (gg < gtol)
+        {
+            break;
+        }
+
+        auto lok   = false;
+        auto lstep = 1.0;
+        auto liter = 0;
+        for (; liter < max_lsearch_iters; ++liter, lstep *= beta)
+        {
+            xp = xx + lstep * dx;
+
+            const auto fxp = function(xp);
+            logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",li=", (liter + 1), "/", max_lsearch_iters,
+                        ",lstep=", lstep, ",fx=", fxp, "/", fx, "\n");
+            if (std::isfinite(fxp) && fxp <= fx + alpha * lstep * dg)
+            {
+                xx  = xp;
+                fx  = fxp;
+                lok = true;
+                break;
+            }
+        }
+
+        if (!lok)
+        {
+            logger.info("lsearch: line-search failed (lstep=", lstep, ",liter=", liter, ")!\n");
+            break;
+        }
+    }
+
+    return std::make_tuple(xx, fx);
 }
 } // namespace
 
@@ -264,17 +344,11 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto min_xstep = epsilon0<scalar_t>();
     const auto min_ystep = epsilon0<scalar_t>();
     const auto min_ustep = epsilon0<scalar_t>();
-    const auto min_vstep = epsilon0<scalar_t>();
-    const auto min_wstep = epsilon0<scalar_t>();
 
-    const auto max_xstep = s;
     const auto max_ystep = (m == 0) ? s : (s * make_umax(y, dy));
     const auto max_ustep = (m == 0) ? s : (s * make_umax(u, du));
-    const auto max_vstep = s;
-    const auto max_wstep = s;
 
     const auto rdualQ0 = vector_t{m_Q * x + m_c};
     const auto rdualA0 = vector_t{m_A.transpose() * v};
@@ -302,12 +376,6 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
 
         const auto xstep = xx(0);
         const auto vstep = xx(1);
-
-        // check if out-of bounds
-        if ((xstep < min_xstep || xstep > max_xstep) || (vstep < min_vstep || vstep > max_vstep))
-        {
-            return std::numeric_limits<scalar_t>::quiet_NaN();
-        }
 
         const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv;
         const auto rprimA = rprimA0 + xstep * rprimAx;
@@ -342,8 +410,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         const auto wstep = xx(3);
 
         // check if out-of bounds
-        if ((xstep < min_xstep || xstep > max_xstep) || (ystep < min_ystep || ystep > max_ystep) ||
-            (ustep < min_ustep || ustep > max_ustep) || (wstep < min_wstep || wstep > max_wstep))
+        if ((ystep < min_ystep || ystep > max_ystep) || (ustep < min_ustep || ustep > max_ustep))
         {
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
@@ -393,9 +460,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         const auto wstep = xx(4);
 
         // check if out-of bounds
-        if ((xstep < min_xstep || xstep > max_xstep) || (ystep < min_ystep || ystep > max_ystep) ||
-            (ustep < min_ustep || ustep > max_ustep) || (vstep < min_vstep || vstep > max_vstep) ||
-            (wstep < min_wstep || wstep > max_wstep))
+        if ((ystep < min_ystep || ystep > max_ystep) || (ustep < min_ustep || ustep > max_ustep))
         {
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
@@ -452,66 +517,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
         }
     };
 
-    const auto beta              = 0.1;
-    const auto alpha             = 1e-4;
-    const auto gtol              = 1.0 - s;
-    const auto max_iters         = 100;
-    const auto max_lsearch_iters = 20;
-
-    auto xx = make_x0(m, p, max_ystep, max_ustep);
-    auto fx = 0.0;
-    auto xp = vector_t{xx.size()};
-    auto gx = vector_t{xx.size()};
-    auto Hx = matrix_t{xx.size(), xx.size()};
-
-    // NB: the Hessian is constant, so invert it once!
-    vgrad(xx, {}, Hx);
-    const auto Hsolver = make_solver_LDLT(Hx.matrix());
-
-    // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
-    //  - use gradient descent
-    //  - w/  backtracking line-search
-    for (auto iter = 0; iter < max_iters; ++iter)
-    {
-        fx          = vgrad(xx, gx);
-        gx.vector() = Hsolver.solve(gx.vector());
-
-        const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
-
-        assert(std::isfinite(fx));
-        assert(std::isfinite(gg));
-
-        logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",residual=", fx, ",g=", gg, "\n");
-
-        if (gg < gtol)
-        {
-            break;
-        }
-
-        auto lok   = false;
-        auto lstep = 1.0;
-        auto liter = 0;
-        for (; liter < max_lsearch_iters; ++liter, lstep *= beta)
-        {
-            xp = xx - lstep * gx;
-
-            const auto fxp = vgrad(xp);
-            logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",li=", (liter + 1), "/", max_lsearch_iters,
-                        ",lstep=", lstep, ",fx=", fxp, "/", fx, "\n");
-            if (std::isfinite(fxp) && fxp <= fx - alpha * lstep * gx.dot(gx))
-            {
-                xx = xp;
-                lok = true;
-                break;
-            }
-        }
-
-        if (!lok)
-        {
-            logger.info("lsearch: line-search failed (lstep=", lstep, ",liter=", liter, ")!\n");
-            break;
-        }
-    }
+    const auto [xx, fx] = newton_step(make_x0(m, p, max_ystep, max_ustep), vgrad, logger);
 
     // apply the change
     const auto [xstep, ystep, ustep, vstep, wstep] = [&]()
