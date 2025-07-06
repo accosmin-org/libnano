@@ -7,8 +7,6 @@
 
 using namespace nano;
 
-#include <iostream>
-
 namespace
 {
 [[maybe_unused]] auto make_solver_LDLT(const matrix_t& lmat)
@@ -83,39 +81,6 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
     return program_t::solve_stats_t{delta, rcond, valid, positive, negative};
 }
 
-auto make_x0(const tensor_size_t m, const tensor_size_t p, const scalar_t max_ystep, const scalar_t max_ustep)
-{
-    if (m == 0)
-    {
-        // (xstep, vstep)
-        return make_vector<scalar_t>(1.0, 1.0);
-    }
-    else
-    {
-        if (p == 0)
-        {
-            // (xstep, ystep, ustep, wstep)
-            return make_vector<scalar_t>(1.0, max_ystep, max_ustep, 1.0);
-        }
-        else
-        {
-            // (xstep, ystep, ustep, vstep, wstep)
-            return make_vector<scalar_t>(1.0, max_ystep, max_ustep, 1.0, 1.0);
-        }
-    }
-}
-
-auto fill_hessian(matrix_map_t H)
-{
-    for (tensor_size_t row = 0; row < H.rows(); ++row)
-    {
-        for (tensor_size_t col = row + 1; col < H.cols(); ++col)
-        {
-            H(col, row) = H(row, col);
-        }
-    }
-}
-
 template <class tfunction>
 auto newton_step(vector_t x0, const tfunction& function, const logger_t& logger)
 {
@@ -137,9 +102,6 @@ auto newton_step(vector_t x0, const tfunction& function, const logger_t& logger)
     const auto Hsolver = make_solver_LDLT(Hx.matrix());
     logger.info("Hsolver: dims=", Hx.dims(), ",pos=", Hsolver.isPositive(), ",neg=", Hsolver.isNegative(),
                 ",rcond=", Hsolver.rcond(), "\n");
-    std::cout << "Hsolver: dims=" << Hx.dims() << ",pos=" << Hsolver.isPositive() << ",neg=" << Hsolver.isNegative()
-              << ",rcond=" << Hsolver.rcond() << std::endl;
-    std::cout << "Hx=" << Hx << std::endl;
 
     // minimize sum of squares residuals (smooth convex function) wrt primal-dual steps
     //  - use gradient descent
@@ -147,16 +109,14 @@ auto newton_step(vector_t x0, const tfunction& function, const logger_t& logger)
     for (auto iter = 0; iter < max_iters; ++iter)
     {
         fx          = function(xx, gx);
-        dx.vector() = -Hsolver.solve(gx.vector());
+        dx.vector() = -gx.vector(); // Hsolver.solve(gx.vector());
 
         const auto gg = gx.lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx));
         const auto dg = dx.dot(gx);
 
         logger.info("lsearch: i=", (iter + 1), "/", max_iters, ",residual=", fx, ",g=", gg, ",dg=", dg, "\n");
-        std::cout << "lsearch: i=" << (iter + 1) << "/" << max_iters << ",residual=" << fx << ",g=" << gg
-                  << ",dg=" << dg << std::endl;
 
-        assert(dg < 0.0);
+        assert(dg < epsilon0<scalar_t>());
         assert(std::isfinite(fx));
         assert(std::isfinite(gg));
 
@@ -266,15 +226,14 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     update_original();
     update_residual();
 
-    /*
     // TODO: heuristic page 485 to initialize (y, u)
     solve();
 
-    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(10.0);
-    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(10.0);
+    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(1.0);
+    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(1.0);
 
     update_original();
-    update_residual(miu);*/
+    update_residual();
 }
 
 program_t::solve_stats_t program_t::solve()
@@ -344,12 +303,15 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto min_ystep = epsilon0<scalar_t>();
-    const auto min_ustep = epsilon0<scalar_t>();
+    // allowed range of the primal step length
+    const auto min_pstep = epsilon0<scalar_t>();
+    const auto max_pstep = (m == 0) ? s : make_umax(y, dy, 1.0 - s);
 
-    const auto max_ystep = (m == 0) ? s : (s * make_umax(y, dy));
-    const auto max_ustep = (m == 0) ? s : (s * make_umax(u, du));
+    // allowed range of the dual step length (to make sure `u` and `y` are kept positive)
+    const auto min_dstep = epsilon0<scalar_t>();
+    const auto max_dstep = (m == 0) ? s : make_umax(u, du, 1.0 - s);
 
+    // buffer constants
     const auto rdualQ0 = vector_t{m_Q * x + m_c};
     const auto rdualA0 = vector_t{m_A.transpose() * v};
     const auto rdualG0 = vector_t{m_G.transpose() * w};
@@ -368,170 +330,78 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, const logger_t& 
     const auto rcenty  = dy.dot(u);
     const auto rcentuy = du.dot(dy);
 
-    const auto vgrad_xv = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
+    // residual as a function of the (primal, dual) step lengths
+    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
     {
         assert(xx.size() == 2);
         assert(gx.size() == 0 || xx.size() == gx.size());
         assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
 
-        const auto xstep = xx(0);
-        const auto vstep = xx(1);
-
-        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv;
-        const auto rprimA = rprimA0 + xstep * rprimAx;
-
-        if (gx.size() == xx.size())
-        {
-            gx(0) = rdual0.dot(rdualQx.vector()) + rprimA.dot(rprimAx.vector()); ///< Gx
-            gx(1) = rdual0.dot(rdualAv.vector());                                ///< Gv
-        }
-
-        if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
-        {
-            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimAx.dot(rprimAx); ///< Hxx
-            Hx(0, 1) = rdualQx.dot(rdualAv);                        ///< Hxv
-            Hx(1, 1) = rdualAv.dot(rdualAv);                        ///< Hvv
-
-            fill_hessian(Hx);
-        }
-
-        return 0.5 * (rdual0.squaredNorm() + rprimA.squaredNorm());
-    };
-
-    const auto vgrad_xyuw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
-    {
-        assert(xx.size() == 4);
-        assert(gx.size() == 0 || xx.size() == gx.size());
-        assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
-
-        const auto xstep = xx(0);
-        const auto ystep = xx(1);
-        const auto ustep = xx(2);
-        const auto wstep = xx(3);
+        const auto pstep = xx(0); // primal step length for updating (x, y)
+        const auto dstep = xx(1); // dual step length for updating (u, v, w)
 
         // check if out-of bounds
-        if ((ystep < min_ystep || ystep > max_ystep) || (ustep < min_ustep || ustep > max_ustep))
+        if ((pstep < min_pstep || pstep > max_pstep) || (dstep < min_dstep || dstep > max_dstep))
         {
             return std::numeric_limits<scalar_t>::quiet_NaN();
         }
 
-        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualG0 + wstep * rdualGw;
-        const auto rdual1 = w - u + wstep * dw - ustep * du;
-        const auto rprimG = rprimG0 + xstep * rprimGx + ystep * dy;
+        const auto rdual0 = rdualQ0 + rdualA0 + rdualG0 + pstep * rdualQx + dstep * (rdualAv + rdualGw);
+        const auto rdual1 = w - u + dstep * (dw - du);
+        const auto rprimA = rprimA0 + pstep * rprimAx;
+        const auto rprimG = rprimG0 + pstep * (rprimGx + dy);
+        const auto rcentr = rcent0 + dstep * rcentu + pstep * rcenty + dstep * pstep * rcentuy;
 
         if (gx.size() == xx.size())
         {
-            gx(0) = rdual0.dot(rdualQx.vector()) + rprimG.dot(rprimGx.vector()); ///< Gx
-            gx(1) = rprimG.dot(dy) + (rcenty + ustep * rcentuy);                 ///< Gy
-            gx(2) = rdual1.dot(-du) + (rcentu + ystep * rcentuy);                ///< Gu
-            gx(3) = rdual0.dot(rdualGw.vector()) + rdual1.dot(dw);               ///< Gw
+            gx(0) = rdual0.dot(rdualQx.vector()) + ///<
+                    rprimA.dot(rprimAx.vector()) + ///<
+                    rprimG.dot(rprimGx + dy) +     ///<
+                    rcenty + dstep * rcentuy;      ///<
+
+            gx(1) = rdual0.dot(rdualAv + rdualGw) + ///<
+                    rdual1.dot(dw - du) +           ///<
+                    rcentu + pstep * rcentuy;       ///<
         }
 
         if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
         {
-            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimGx.dot(rprimGx); ///< Hxx
-            Hx(0, 1) = rprimGx.dot(dy);                             ///< Hxy
-            Hx(0, 2) = 0.0;                                         ///< Hxu
-            Hx(0, 3) = rdualQx.dot(rdualGw);                        ///< Hxw
-            Hx(1, 1) = dy.dot(dy);                                  ///< Hyy
-            Hx(1, 2) = rcentuy;                                     ///< Hyu
-            Hx(1, 3) = 0.0;                                         ///< Hyw
-            Hx(2, 2) = du.dot(du);                                  ///< Huu
-            Hx(2, 3) = dw.dot(-du);                                 ///< Huw
-            Hx(3, 3) = rdualGw.dot(rdualGw) + dw.dot(dw);           ///< Hww
+            Hx(0, 0) = rdualQx.dot(rdualQx) +            ///<
+                       rprimAx.dot(rprimAx) +            ///<
+                       (rprimGx + dy).dot(rprimGx + dy); ///<
 
-            fill_hessian(Hx);
-        }
+            Hx(0, 1) = rdualQx.dot(rdualAv + rdualGw) + ///<
+                       rcentuy;                         ///<
 
-        return 0.5 * (rdual0.squaredNorm() + rdual1.squaredNorm() + rprimG.squaredNorm()) + rcent0 + ustep * rcentu +
-               ystep * rcenty + ustep * ystep * rcentuy;
-    };
+            Hx(1, 1) = (rdualAv + rdualGw).dot(rdualAv + rdualGw) + ///<
+                       (dw - du).dot(dw - du);                      ///<
 
-    const auto vgrad_xyuvw = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
-    {
-        assert(xx.size() == 5);
-        assert(gx.size() == 0 || xx.size() == gx.size());
-        assert(Hx.size() == 0 || (xx.size() == Hx.rows() && xx.size() == Hx.cols()));
-
-        const auto xstep = xx(0);
-        const auto ystep = xx(1);
-        const auto ustep = xx(2);
-        const auto vstep = xx(3);
-        const auto wstep = xx(4);
-
-        // check if out-of bounds
-        if ((ystep < min_ystep || ystep > max_ystep) || (ustep < min_ustep || ustep > max_ustep))
-        {
-            return std::numeric_limits<scalar_t>::quiet_NaN();
-        }
-
-        const auto rdual0 = rdualQ0 + xstep * rdualQx + rdualA0 + vstep * rdualAv + rdualG0 + wstep * rdualGw;
-        const auto rdual1 = w - u + wstep * dw - ustep * du;
-        const auto rprimA = rprimA0 + xstep * rprimAx;
-        const auto rprimG = rprimG0 + xstep * rprimGx + ystep * dy;
-
-        if (gx.size() == xx.size())
-        {
-            gx(0) = rdual0.dot(rdualQx.vector()) + rprimA.dot(rprimAx.vector()) + rprimG.dot(rprimGx.vector()); ///< Gx
-            gx(1) = rprimG.dot(dy) + (rcenty + ustep * rcentuy);                                                ///< Gy
-            gx(2) = rdual1.dot(-du) + (rcentu + ystep * rcentuy);                                               ///< Gu
-            gx(3) = rdual0.dot(rdualAv.vector());                                                               ///< Gv
-            gx(4) = rdual0.dot(rdualGw.vector()) + rdual1.dot(dw);                                              ///< Gw
-        }
-
-        if (Hx.rows() == xx.size() && Hx.cols() == xx.size())
-        {
-            Hx(0, 0) = rdualQx.dot(rdualQx) + rprimAx.dot(rprimAx) + rprimGx.dot(rprimGx); ///< Hxx
-            Hx(0, 1) = rprimGx.dot(dy);                                                    ///< Hxy
-            Hx(0, 2) = 0.0;                                                                ///< Hxu
-            Hx(0, 3) = rdualQx.dot(rdualAv);                                               ///< Hxv
-            Hx(0, 4) = rdualQx.dot(rdualGw);                                               ///< Hxw
-            Hx(1, 1) = dy.dot(dy);                                                         ///< Hyy
-            Hx(1, 2) = rcentuy;                                                            ///< Hyu
-            Hx(1, 3) = 0.0;                                                                ///< Hyv
-            Hx(1, 4) = 0.0;                                                                ///< Hyw
-            Hx(2, 2) = du.dot(du);                                                         ///< Huu
-            Hx(2, 3) = 0.0;                                                                ///< Huv
-            Hx(2, 4) = dw.dot(-du);                                                        ///< Huw
-            Hx(3, 3) = rdualAv.dot(rdualAv);                                               ///< Hvv
-            Hx(3, 4) = rdualAv.dot(rdualGw);                                               ///< Hvw
-            Hx(4, 4) = rdualGw.dot(rdualGw) + dw.dot(dw);                                  ///< Hww
-
-            fill_hessian(Hx);
+            Hx(1, 0) = Hx(0, 1);
         }
 
         return 0.5 * (rdual0.squaredNorm() + rdual1.squaredNorm() + rprimA.squaredNorm() + rprimG.squaredNorm()) +
-               rcent0 + ustep * rcentu + ystep * rcenty + ustep * ystep * rcentuy;
+               rcentr;
     };
 
-    const auto vgrad = [&](const vector_cmap_t xx, vector_map_t gx = {}, matrix_map_t Hx = {})
-    {
-        switch (xx.size())
-        {
-        case 2:
-            return vgrad_xv(xx, gx, Hx);
-        case 4:
-            return vgrad_xyuw(xx, gx, Hx);
-        default:
-            return vgrad_xyuvw(xx, gx, Hx);
-        }
-    };
-
-    const auto [xx, fx] = newton_step(make_x0(m, p, max_ystep, max_ustep), vgrad, logger);
+    const auto x0       = make_vector<scalar_t>(max_pstep, max_dstep);
+    const auto [xx, fx] = newton_step(x0, vgrad, logger);
 
     // apply the change
-    const auto [xstep, ystep, ustep, vstep, wstep] = [&]()
-    {
-        switch (xx.size())
-        {
-        case 2:
-            return std::make_tuple(xx(0), 0.0, 0.0, xx(1), 0.0);
-        case 4:
-            return std::make_tuple(xx(0), xx(1), xx(2), 0.0, xx(3));
-        default:
-            return std::make_tuple(xx(0), xx(1), xx(2), xx(3), xx(4));
-        }
-    }();
+    const auto xstep = xx(0);
+    const auto ystep = xx(0);
+    const auto ustep = xx(1);
+    const auto vstep = xx(1);
+    const auto wstep = xx(1);
+
+    /* pre-defined step lengths
+    const auto dstep = (m == 0) ? s : make_umax(u, du, 1.0 - s);
+    const auto pstep = (m == 0) ? s : make_umax(y, dy, 1.0 - s);
+
+    const auto xstep = pstep;
+    const auto ystep = pstep;
+    const auto ustep = dstep;
+    const auto vstep = dstep;
+    const auto wstep = dstep;*/
 
     m_x.segment(0, n) = x + xstep * dx;
     m_x.segment(n, m) = y + ystep * dy;

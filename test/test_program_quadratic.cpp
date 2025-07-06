@@ -238,7 +238,7 @@ UTEST_CASE(bundle_cases)
     }
 }
 
-/*UTEST_CASE(factory)
+UTEST_CASE(factory)
 {
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
@@ -305,6 +305,6 @@ UTEST_CASE(regression)
 
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
-}*/
+}
 
 UTEST_END_MODULE()
