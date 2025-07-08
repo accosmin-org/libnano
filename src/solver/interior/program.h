@@ -95,7 +95,6 @@ public:
         scalar_t m_ustep{0.0};
         scalar_t m_vstep{0.0};
         scalar_t m_wstep{0.0};
-        scalar_t m_residual{0.0};
     };
 
     lsearch_stats_t lsearch(scalar_t s, const logger_t& logger);
