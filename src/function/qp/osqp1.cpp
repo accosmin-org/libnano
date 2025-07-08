@@ -23,7 +23,7 @@ quadratic_program_osqp1_t::quadratic_program_osqp1_t(const tensor_size_t dims, c
 
     const auto q = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
     const auto l = make_full_vector<scalar_t>(m, [&]() { return -udist(rng); });
-    const auto u = make_full_vector<scalar_t>(m, [&]() { return udist(rng); });
+    const auto u = make_full_vector<scalar_t>(m, [&]() { return +udist(rng); });
 
     const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
     const auto A = make_full_matrix<scalar_t>(m, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
