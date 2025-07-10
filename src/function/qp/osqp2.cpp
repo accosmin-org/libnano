@@ -30,11 +30,7 @@ quadratic_program_osqp2_t::quadratic_program_osqp2_t(const tensor_size_t dims, c
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(n, n);
     this->c() = q;
 
-    auto AA = A;
-    auto bb = vector_t{A * x};
-    reduce(AA, bb);
-
-    critical((AA * variable()) == bb);
+    critical((A * variable()) == (A * x));
 }
 
 rfunction_t quadratic_program_osqp2_t::clone() const

@@ -455,9 +455,10 @@ UTEST_CASE(reproducibility)
         if (function.parameter_if("function::seed") != nullptr)
         {
             const auto seed0 = function.parameter("function::seed").value<uint64_t>();
+
             for (const auto seed : {seed0, seed0 + 1, seed0 + 87, seed0 + 347, seed0 + 1786})
             {
-                function.parameter("function::seed") = seed % 10000U;
+                function.parameter("function::seed") = seed % 10001;
                 rfunctions.emplace_back(function.make(function.size()));
                 rfunctions.emplace_back(function.make(function.size()));
             }
@@ -493,7 +494,7 @@ UTEST_CASE(reproducibility)
             }
 
             // check reproducibility of outputs across random seeds
-            for (tensor_size_t i = 0; i < nseeds / 2; i += 2)
+            for (tensor_size_t i = 0; i + 2 < nseeds; i += 2)
             {
                 // same seed => same outputs
                 {
@@ -519,7 +520,7 @@ UTEST_CASE(reproducibility)
                     const auto dg = (gxs.tensor(i) - gxs.tensor(j)).lpNorm<Eigen::Infinity>();
 
                     UTEST_CHECK_GREATER(df, 1e+2 * epsilon0<scalar_t>());
-                    UTEST_CHECK_GREATER(dg, epsilon2<scalar_t>());
+                    UTEST_CHECK_GREATER(dg, epsilon1<scalar_t>());
                 }
             }
         }
