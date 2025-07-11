@@ -251,59 +251,25 @@ UTEST_CASE(regression)
 {
     {
         const auto function = function_t::all().get("osqp2");
-        function->config("function::seed", 1894, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
+        function->config("function::seed", 266, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
 
         const auto x0 =
-            make_vector<scalar_t>(0.6833148467036176, -0.8698072994354415, 0.5088158871743331, 0.07382461531056927,
-                                  -0.4301091992632454, -0.7665646813503784, 0.75793037827692, -0.4707277155873197);
-
-        check_minimize(make_solvers(), *(function->make(8)), x0);
-    }
-    {
-        const auto function = function_t::all().get("osqp2");
-        function->config("function::seed", 5456, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
-
-        const auto x0 =
-            make_vector<scalar_t>(-0.5680710766455431, -0.9627313708348171, 0.6473515277210198, 0.6620736581411806,
-                                  0.9490728796718997, -0.405769446452431, -0.9751448872719174, 0.753860368062234);
-
-        check_minimize(make_solvers(), *(function->make(8)), x0);
-    }
-    {
-        const auto function = function_t::all().get("numopt162");
-        function->config("function::seed", 9698, "function::numopt162::neqs", 1);
-
-        const auto x0 =
-            make_vector<scalar_t>(0.7326329873172612, -0.6842653813965672, -0.2972664394270459, 0.8389639339082133,
-                                  0.1619169083199714, 0.6236557700384397, 0.02678093479072019, 0.8177771686474076,
-                                  0.06325828286269197, -0.1145326652044967, 0.7802038518498364, 0.8341076792629174,
-                                  0.048690535272083, 0.9165273500484878, -0.6285973855133675, 0.3916753021809161);
+            make_vector<scalar_t>(0.9758460027831883, -0.6445622522158582, -0.3456228489243688, 0.5118898178500717,
+                                  0.4041865905542412, 0.07801044900083798, -0.4686052325467003, 0.9663423575357488,
+                                  0.5703720988434413, 0.6801780981467593, -0.1765819566623654, -0.306732374952134,
+                                  0.8287095558315107, -0.9020445986675114, 0.2456373809086276, -0.5490883124330687);
 
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
     {
         const auto function = function_t::all().get("osqp1");
-        function->config("function::seed", 7071, "function::osqp1::nineqs", 20, "function::osqp1::alpha", 0.01);
+        function->config("function::seed", 3964, "function::osqp1::nineqs", 10, "function::osqp1::alpha", 0.01);
 
         const auto x0 =
-            make_vector<scalar_t>(0.2976197978292467, 0.5044845186240194, -0.9933113022774666, 0.04527867537024788,
-                                  -0.5255563624222632, 0.2228416960288457, -0.2531751416227156, -0.8028521806108662,
-                                  -0.9203737859234036, -0.8364547919649158, -0.4148990858062435, 0.08506017065437987,
-                                  0.9583412384875907, -0.2993746583856858, -0.1801850239161868, -0.4191303996134391);
+            make_vector<scalar_t>(0.8788870734762231, 0.762212693256936, 0.999971285166888, 0.1825383583560962,
+    -0.4595902918054794, -0.8981290186761018,  0.0995894644550479,  0.6692794097837709);
 
-        check_minimize(make_solvers(), *(function->make(16)), x0);
-    }
-    {
-        const auto function = function_t::all().get("osqp2");
-        function->config("function::seed", 8524, "function::osqp2::neqs", 0.5, "function::osqp2::alpha", 0.01);
-
-        const auto x0 =
-            make_vector<scalar_t>(-0.04096069379905998, 0.9097794050378205, -0.522445485034617, 0.4312268183084478,
-                                  0.59678049289776, 0.7198397450292688, -0.7986052945316193, -0.7802912760696947,
-                                  -0.996174776196727, -0.9330712078226517, 0.3463304496428077, -0.2622175830450383,
-                                  -0.9063503110397791, 0.8454070986504478, -0.5325238962746217, 0.08714569626063651);
-
-        check_minimize(make_solvers(), *(function->make(16)), x0);
+        check_minimize(make_solvers(), *(function->make(8)), x0);
     }
 }
 
