@@ -153,14 +153,14 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     update_original();
     update_residual();
 
-    // TODO: heuristic page 485 to initialize (y, u)
+    /*// TODO: heuristic page 485 to initialize (y, u)
     solve();
 
     m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(1.0);
     m_u.array()                   = (m_u.array() + m_du.array()).abs().max(1.0);
 
     update_original();
-    update_residual();
+    update_residual();*/
 }
 
 program_t::solve_stats_t program_t::solve()
