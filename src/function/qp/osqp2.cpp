@@ -27,10 +27,16 @@ quadratic_program_osqp2_t::quadratic_program_osqp2_t(const tensor_size_t dims, c
     const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
     const auto A = make_full_matrix<scalar_t>(p, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
 
+    // NB: need to remove rows with all zero components from the linear constraints!
+    auto Aeq = A;
+    auto beq = vector_t{A * x};
+    remove_zero_rows_equality(Aeq, beq);
+    make_full_rank(Aeq, beq);
+
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(n, n);
     this->c() = q;
 
-    critical((A * variable()) == (A * x));
+    critical((Aeq * variable()) == beq);
 }
 
 rfunction_t quadratic_program_osqp2_t::clone() const

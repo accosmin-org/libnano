@@ -22,12 +22,15 @@ scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
 
 UTEST_BEGIN_MODULE(test_function_util)
 
-UTEST_CASE(reduce)
+UTEST_CASE(make_full_rank)
 {
     {
         auto A = matrix_t{};
         auto b = vector_t{};
-        UTEST_CHECK(!reduce(A, b));
+
+        const auto stats = make_full_rank(A, b);
+        UTEST_CHECK_EQUAL(stats.m_rank, 0);
+        UTEST_CHECK_EQUAL(stats.m_changed, false);
     }
 
     for (const tensor_size_t dims : {3, 7, 11})
@@ -43,7 +46,10 @@ UTEST_CASE(reduce)
 
             const auto expected_A = A;
             const auto expected_b = b;
-            UTEST_CHECK(!reduce(A, b));
+
+            const auto stats = make_full_rank(A, b);
+            UTEST_CHECK_EQUAL(stats.m_rank, dims);
+            UTEST_CHECK_EQUAL(stats.m_changed, false);
             UTEST_CHECK_CLOSE(A, expected_A, epsilon0<scalar_t>());
             UTEST_CHECK_CLOSE(b, expected_b, epsilon0<scalar_t>());
             UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-15);
@@ -53,7 +59,10 @@ UTEST_CASE(reduce)
         {
             auto A = ::nano::stack<scalar_t>(2 * dims, dims, Q, Q);
             auto b = ::nano::stack<scalar_t>(2 * dims, Q * x, Q * x);
-            UTEST_CHECK(reduce(A, b));
+
+            const auto stats = make_full_rank(A, b);
+            UTEST_CHECK_EQUAL(stats.m_rank, dims);
+            UTEST_CHECK_EQUAL(stats.m_changed, true);
             UTEST_CHECK_EQUAL(A.rows(), dims);
             UTEST_CHECK_EQUAL(b.size(), dims);
             UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-14);
@@ -63,11 +72,132 @@ UTEST_CASE(reduce)
         {
             auto A = ::nano::stack<scalar_t>(2 * dims, dims, Q, 2.0 * Q);
             auto b = ::nano::stack<scalar_t>(2 * dims, Q * x, 2.0 * (Q * x));
-            UTEST_CHECK(reduce(A, b));
+
+            const auto stats = make_full_rank(A, b);
+            UTEST_CHECK_EQUAL(stats.m_rank, dims);
+            UTEST_CHECK_EQUAL(stats.m_changed, true);
             UTEST_CHECK_EQUAL(A.rows(), dims);
             UTEST_CHECK_EQUAL(b.size(), dims);
             UTEST_CHECK_CLOSE(vector_t{A * x}, b, 1e-14);
         }
+    }
+}
+
+UTEST_CASE(remove_zero_rows_none)
+{
+    // clang-format off
+    const auto A = make_matrix<scalar_t>(5,
+        0.1, 0.0, 0.0,
+        0.0, 0.2, 0.8,
+        0.2, -0.1, 1.0,
+        0.0, 0.0, 0.1,
+        -1.0, -10.0, 0.0);
+    const auto b = make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0, 1.0);
+    // clang-format on
+
+    const auto expected_A = A;
+    const auto expected_b = b;
+    {
+        auto Ax = A;
+        auto bx = b;
+
+        const auto stats = remove_zero_rows_equality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 0);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b;
+
+        const auto stats = remove_zero_rows_inequality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 0);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+}
+
+UTEST_CASE(remove_zero_rows_some)
+{
+    // clang-format off
+    const auto A = make_matrix<scalar_t>(5,
+        0.0, 0.0, 0.0,
+        0.0, 0.2, 0.8,
+        0.2, -0.1, 1.0,
+        0.0, 0.0, 0.0,
+        -1.0, -10.0, 0.0);
+    const auto b1 = make_vector<scalar_t>(1.0, 1.0, 2.0, 1.0, 3.0);
+    const auto b2 = make_vector<scalar_t>(0.0, 1.0, 2.0, -1.0, 3.0);
+    const auto b3 = make_vector<scalar_t>(0.0, 1.0, 2.0, 0.0, 3.0);
+
+    const auto expected_A = make_matrix<scalar_t>(3,
+        0.0, 0.2, 0.8,
+        0.2, -0.1, 1.0,
+        -1.0, -10.0, 0.0);
+    const auto expected_b = make_vector<scalar_t>(1.0, 2.0, 3.0);
+    // clang-format on
+
+    {
+        auto Ax = A;
+        auto bx = b1;
+
+        const auto stats = remove_zero_rows_equality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 2);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b2;
+
+        const auto stats = remove_zero_rows_equality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 1);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b3;
+
+        const auto stats = remove_zero_rows_equality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b1;
+
+        const auto stats = remove_zero_rows_inequality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b2;
+
+        const auto stats = remove_zero_rows_inequality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 1);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+    }
+    {
+        auto Ax = A;
+        auto bx = b3;
+
+        const auto stats = remove_zero_rows_inequality(Ax, bx);
+        UTEST_CHECK_EQUAL(stats.m_removed, 2);
+        UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
+        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
     }
 }
 

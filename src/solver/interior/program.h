@@ -58,6 +58,8 @@ public:
         none,
     };
 
+    // FIXME: make the linear solver an option of the interior point solver
+
     program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
 
     program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);

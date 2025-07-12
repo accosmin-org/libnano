@@ -105,7 +105,7 @@ Please refer to the [quadratic programming example](../example/src/quadprog.cpp)
 
 * Convexity can be checked for quadratic problems using the `is_convex(Q)` function.
 
-* If the number of equality constraints is larger than the number of variables or the constraints may be linear dependent, then it is better to call `reduce(A, b)` to transform the equality constraints `A` in a full row-rank matrix. This speeds-up the solver and often improves accuracy.
+* If the number of equality constraints is larger than the number of variables or the constraints may be linear dependent, then it is better to call `make_full_rank(A, b)` to transform the equality constraints `A` in a full row-rank matrix. This speeds-up the solver and often improves accuracy.
 
 * Convergence speed and accuracy can be greatly improved by scaling the objective and the constraints.
 

@@ -2,6 +2,7 @@
 #include <nano/core/scat.h>
 #include <nano/critical.h>
 #include <nano/function/cuts.h>
+#include <nano/function/util.h>
 
 using namespace nano;
 
@@ -23,16 +24,22 @@ quadratic_program_osqp1_t::quadratic_program_osqp1_t(const tensor_size_t dims, c
 
     const auto q = make_full_vector<scalar_t>(n, [&]() { return gdist(rng); });
     const auto l = make_full_vector<scalar_t>(m, [&]() { return -udist(rng); });
-    const auto u = make_full_vector<scalar_t>(m, [&]() { return +udist(rng); });
 
     const auto M = make_full_matrix<scalar_t>(n, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
     const auto A = make_full_matrix<scalar_t>(m, n, [&]() { return (sdist(rng) < 0.15) ? gdist(rng) : 0.0; });
 
+    // NB: need to remove rows with all zero components from the linear constraints!
+    auto Ax = A;
+    auto lx = l;
+    remove_zero_rows_inequality(Ax, lx);
+
+    const auto ux = make_full_vector<scalar_t>(lx.size(), [&]() { return +udist(rng); });
+
     this->Q() = M * M.transpose() + alpha * matrix_t::identity(n, n);
     this->c() = q;
 
-    critical((A * variable()) >= l);
-    critical((A * variable()) <= u);
+    critical((Ax * variable()) >= lx);
+    critical((Ax * variable()) <= ux);
 }
 
 rfunction_t quadratic_program_osqp1_t::clone() const

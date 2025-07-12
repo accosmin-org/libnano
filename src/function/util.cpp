@@ -9,13 +9,13 @@ using namespace constraint;
 
 namespace
 {
-bool reduce(matrix_t& A)
+tensor_size_t reduce(matrix_t& A)
 {
     // independant linear constraints
     const auto dd = A.transpose().fullPivLu();
     if (dd.rank() == A.rows())
     {
-        return false;
+        return dd.rank();
     }
 
     // dependant linear constraints, use decomposition to formulate equivalent linear equality constraints
@@ -27,7 +27,47 @@ bool reduce(matrix_t& A)
     const auto U = LU.topRows(n).triangularView<Eigen::Upper>().toDenseMatrix();
 
     A = U.transpose().block(0, 0, dd.rank(), U.rows()) * L.transpose() * P;
-    return true;
+    return dd.rank();
+}
+
+template <typename tverifier>
+zero_rows_stats_t remove_zero_rows(matrix_t& A, vector_t& b, const tverifier& verifier)
+{
+    const auto tiny = 1e-40;
+
+    auto valid_rows   = tensor_size_t{0};
+    auto removed      = tensor_size_t{0};
+    auto inconsistent = tensor_size_t{0};
+
+    for (tensor_size_t row = 0; row < A.rows(); ++row)
+    {
+        if (A.row(row).lpNorm<Eigen::Infinity>() < tiny)
+        {
+            ++removed;
+            if (verifier(b(row), tiny))
+            {
+                ++inconsistent;
+            }
+        }
+
+        else
+        {
+            if (row > valid_rows)
+            {
+                A.row(valid_rows) = A.row(row);
+                b(valid_rows)     = b(row);
+            }
+            ++valid_rows;
+        }
+    }
+
+    if (A.rows() != valid_rows)
+    {
+        A = matrix_t{A.slice(0, valid_rows)};
+        b = vector_t{b.slice(0, valid_rows)};
+    }
+
+    return {removed, inconsistent};
 }
 
 auto is_linear_constrained(const function_t& function)
@@ -174,22 +214,42 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     return true;
 }
 
-bool nano::reduce(matrix_t& A, vector_t& b)
+full_rank_stats_t nano::make_full_rank(matrix_t& A, vector_t& b)
 {
     assert(A.rows() == b.size());
 
     if (A.rows() == 0)
     {
-        return false;
+        return {};
     }
 
     // NB: need to reduce [A|b] altogether!
-    auto       Ab      = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
-    const auto reduced = ::reduce(Ab);
+    auto Ab = ::nano::stack<scalar_t>(A.rows(), A.cols() + 1, A.matrix(), b.vector());
 
-    A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
-    b = Ab.matrix().col(Ab.cols() - 1);
-    return reduced;
+    if (const auto rank = ::reduce(Ab); rank == A.rows())
+    {
+        return {rank, false};
+    }
+    else
+    {
+        A = Ab.block(0, 0, Ab.rows(), Ab.cols() - 1);
+        b = Ab.matrix().col(Ab.cols() - 1);
+        return {rank, true};
+    }
+}
+
+zero_rows_stats_t nano::remove_zero_rows_equality(matrix_t& A, vector_t& b)
+{
+    assert(A.rows() == b.size());
+
+    return ::remove_zero_rows(A, b, [](const scalar_t brow, const scalar_t tiny) { return std::fabs(brow) > tiny; });
+}
+
+zero_rows_stats_t nano::remove_zero_rows_inequality(matrix_t& A, vector_t& b)
+{
+    assert(A.rows() == b.size());
+
+    return ::remove_zero_rows(A, b, [](const scalar_t brow, [[maybe_unused]] const scalar_t) { return brow < 0.0; });
 }
 
 bool nano::is_convex(const matrix_t& P, const scalar_t tol)
