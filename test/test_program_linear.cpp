@@ -110,6 +110,14 @@ UTEST_CASE(regression)
 
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
+    {
+        const auto function = function_t::all().get("cvx48e-ineq");
+        function->config("function::seed", 6512, "function::cvx48e-ineq::alpha", 1e-6);
+
+        const auto x0 = make_vector<scalar_t>(-0.962132710072084, -0.4827775792380838, 0.5287349089933873);
+
+        check_minimize(make_solvers(), *(function->make(3)), x0);
+    }
 }
 
 UTEST_END_MODULE()
