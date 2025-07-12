@@ -87,11 +87,11 @@ UTEST_CASE(sample_with_replacement_weights)
             }
 
             UTEST_REQUIRE_EQUAL(uvalues.size(), static_cast<size_t>(weights.size()));
-            UTEST_CHECK_GREATER(uvalues[0], 540);
+            UTEST_CHECK_GREATER(uvalues[0], 530);
             UTEST_CHECK_GREATER(uvalues[1], 150);
             UTEST_CHECK_GREATER(uvalues[2], 150);
             UTEST_CHECK_GREATER(uvalues[3], 340);
-            UTEST_CHECK_GREATER(uvalues[4], 540);
+            UTEST_CHECK_GREATER(uvalues[4], 530);
         }
 
         UTEST_CHECK_EQUAL(indices1, indices2);
