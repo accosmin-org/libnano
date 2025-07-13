@@ -212,7 +212,7 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t s, [[maybe_unused]] const logger_t& logger)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
 {
     const auto n = this->n();
     const auto m = this->m();

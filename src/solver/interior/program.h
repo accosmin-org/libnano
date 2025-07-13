@@ -3,7 +3,6 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
-#include <nano/logger.h>
 
 namespace nano
 {
@@ -99,7 +98,7 @@ public:
         scalar_t m_wstep{0.0};
     };
 
-    lsearch_stats_t lsearch(scalar_t s, const logger_t& logger);
+    lsearch_stats_t lsearch(scalar_t s);
 
 private:
     program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,

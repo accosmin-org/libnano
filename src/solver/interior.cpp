@@ -9,7 +9,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 5, LE, 50));
+    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 10, LE, 50));
 
     parameter("solver::max_evals") = 100;
 }
@@ -80,7 +80,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto lstats = program.lsearch(s, logger);
+        const auto lstats = program.lsearch(s);
 
         if (std::max({lstats.m_xstep, lstats.m_ystep, lstats.m_ustep, lstats.m_vstep, lstats.m_wstep}) <
             epsilon0<scalar_t>())
