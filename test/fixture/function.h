@@ -6,6 +6,15 @@
 
 using namespace nano;
 
+template <class... targs>
+[[maybe_unused]] inline auto make_function(const string_t& name, const targs&... args)
+{
+    auto function = function_t::all().get(name);
+    UTEST_REQUIRE(function);
+    UTEST_REQUIRE_NOTHROW(function->config(args...));
+    return function;
+}
+
 [[maybe_unused]] inline auto make_random_x0(const function_t& function, const scalar_t scale = 1.0)
 {
     return make_random_vector<scalar_t>(function.size(), -scale, +scale);

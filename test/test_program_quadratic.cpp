@@ -250,8 +250,8 @@ UTEST_CASE(factory)
 UTEST_CASE(regression)
 {
     {
-        const auto function = function_t::all().get("osqp2");
-        function->config("function::seed", 266, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
+        const auto function =
+            make_function("osqp2", "function::seed", 266, "function::osqp2::neqs", 0.9, "function::osqp2::alpha", 1e-2);
 
         const auto x0 =
             make_vector<scalar_t>(0.9758460027831883, -0.6445622522158582, -0.3456228489243688, 0.5118898178500717,
@@ -262,8 +262,8 @@ UTEST_CASE(regression)
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
     {
-        const auto function = function_t::all().get("osqp1");
-        function->config("function::seed", 3849, "function::osqp1::nineqs", 20, "function::osqp1::alpha", 1e-2);
+        const auto function = make_function("osqp1", "function::seed", 3849, "function::osqp1::nineqs", 20,
+                                            "function::osqp1::alpha", 1e-2);
 
         const auto x0 =
             make_vector<scalar_t>(0.668425765576367, 0.2905673792850159, -0.7024952794498051, 0.3922410585264389,
@@ -274,8 +274,8 @@ UTEST_CASE(regression)
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
     {
-        const auto function = function_t::all().get("osqp1");
-        function->config("function::seed", 8663, "function::osqp1::nineqs", 20, "function::osqp1::alpha", 1e-2);
+        const auto function = make_function("osqp1", "function::seed", 8663, "function::osqp1::nineqs", 20,
+                                            "function::osqp1::alpha", 1e-2);
 
         const auto x0 =
             make_vector<scalar_t>(-0.5946316878653621, 0.3467531147620639, -0.6216705703153838, 0.2428857778681006,

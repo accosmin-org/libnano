@@ -99,8 +99,8 @@ UTEST_CASE(factory)
 UTEST_CASE(regression)
 {
     {
-        const auto function = function_t::all().get("cvx48e-ineq");
-        function->config("function::seed", 3991, "function::cvx48e-ineq::alpha", 1e-6);
+        const auto function =
+            make_function("cvx48e-ineq", "function::seed", 3991, "function::cvx48e-ineq::alpha", 1e-6);
 
         const auto x0 =
             make_vector<scalar_t>(-0.2764936187966942, -0.2222212963715804, 0.09466578040479257, 0.5659487082254151,
@@ -111,8 +111,8 @@ UTEST_CASE(regression)
         check_minimize(make_solvers(), *(function->make(16)), x0);
     }
     {
-        const auto function = function_t::all().get("cvx48e-ineq");
-        function->config("function::seed", 6512, "function::cvx48e-ineq::alpha", 1e-6);
+        const auto function =
+            make_function("cvx48e-ineq", "function::seed", 6512, "function::cvx48e-ineq::alpha", 1e-6);
 
         const auto x0 = make_vector<scalar_t>(-0.962132710072084, -0.4827775792380838, 0.5287349089933873);
 
