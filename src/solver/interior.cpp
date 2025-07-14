@@ -9,7 +9,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 5, LE, 50));
+    register_parameter(parameter_t::make_scalar("solver::ipm::tiny", 0.0, LT, 1e-24, LE, 1.0));
 
     parameter("solver::max_evals") = 100;
 }
@@ -53,16 +53,14 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
+    const auto tiny      = parameter("solver::ipm::tiny").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
-    const auto patience  = parameter("solver::ipm::patience").value<tensor_size_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
 
     auto bstate = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
     auto cstate = bstate;                                         ///< current state
-
-    auto last_better_iter = tensor_size_t{0};
 
     // primal-dual interior-point solver...
     for (tensor_size_t iter = 1; function.fcalls() + function.gcalls() < max_evals; ++iter)
@@ -95,20 +93,18 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // update best state (if possible and an improvement)
         if (!cstate.valid())
         {
+            logger.error("invalid current state after update!\n");
             break;
         }
         else if (iter == 1 || cstate.kkt_optimality_test() < bstate.kkt_optimality_test())
         {
-            last_better_iter = 0;
-            bstate           = cstate;
+            bstate = cstate;
         }
 
         // stop if no significant improvement
-        // if ((++last_better_iter) > patience)
-        (void)last_better_iter;
-        (void)patience;
+        if (lstats.m_residual < tiny)
         {
-            // break;
+            break;
         }
     }
 

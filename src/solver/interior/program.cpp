@@ -268,14 +268,17 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
     const auto max_iters = 50;
     const auto beta      = 0.5;
-    const auto alpha     = 1e-4;
+    const auto alpha     = 1e-6;
 
     auto stepX     = step0;
     auto residualX = residual0;
 
     for (auto iter = 0; iter < max_iters; ++iter)
     {
-        if (residualX = make_residual(); residualX < (1.0 - stepX * alpha) * residual0)
+        residualX = make_residual();
+        logger.info("residual=", residual0, " (pstep=", xstep, ",dstep=", ustep, ") -> ", residualX, ".\n");
+
+        if (residualX < (1.0 - stepX * alpha) * residual0)
         {
             break;
         }
@@ -296,8 +299,6 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
 
     update_original();
     update_residual();
-
-    logger.info("residual=", residual0, " -> ", residualX, ".\n");
 
     return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, residualX};
 }

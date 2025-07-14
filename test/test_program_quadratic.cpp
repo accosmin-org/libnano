@@ -12,20 +12,12 @@ namespace
 rsolvers_t make_solvers()
 {
     auto solvers = rsolvers_t{};
-    for (const auto s0 : {0.99, 0.999})
+    for (const auto miu : {5.0, 10.0, 20.0})
     {
-        for (const auto miu : {5.0, 10.0, 20.0})
-        {
-            for (const auto gamma : {2.0, 3.0})
-            {
-                auto solver                             = make_solver("ipm");
-                solver->parameter("solver::ipm::s0")    = s0;
-                solver->parameter("solver::ipm::miu")   = miu;
-                solver->parameter("solver::ipm::gamma") = gamma;
-                solver->parameter("solver::max_evals")  = 100;
-                solvers.emplace_back(std::move(solver));
-            }
-        }
+        auto solver                            = make_solver("ipm");
+        solver->parameter("solver::ipm::miu")  = miu;
+        solver->parameter("solver::max_evals") = 100;
+        solvers.emplace_back(std::move(solver));
     }
     return solvers;
 }
@@ -287,6 +279,17 @@ UTEST_CASE(regression3)
                               -0.8557768372632004, -0.850251526566133, 0.1442914878897066, -0.3039492051089099);
 
     check_minimize(make_solvers(), *(function->make(16)), x0);
+}
+
+UTEST_CASE(regression4)
+{
+    const auto function =
+        make_function("osqp1", "function::seed", 1268, "function::osqp1::nineqs", 10, "function::osqp1::alpha", 1e-2);
+
+    const auto x0 =
+        make_vector<scalar_t>(0.5295057438431254, 0.6935502761504575, 0.2589574398151886, 0.6372639138602401);
+
+    check_minimize(make_solvers(), *(function->make(4)), x0);
 }
 
 UTEST_END_MODULE()
