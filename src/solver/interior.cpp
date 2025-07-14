@@ -9,7 +9,7 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 10, LE, 50));
+    register_parameter(parameter_t::make_integer("solver::ipm::patience", 0, LT, 5, LE, 50));
 
     parameter("solver::max_evals") = 100;
 }
@@ -31,7 +31,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     // linear programs
     else if (const auto* const lprogram = dynamic_cast<const linear_program_t*>(&function); lprogram)
     {
-        auto program = program_t{*lprogram, std::move(lconstraints.value()), x0, program_t::scale_type::ruiz, miu};
+        auto program = program_t{*lprogram, std::move(lconstraints.value()), x0, miu};
         return do_minimize(program, logger);
     }
 
@@ -40,7 +40,7 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
     {
         critical(is_convex(qprogram->Q()), "interior point solver can only solve convex quadratic programs!");
 
-        auto program = program_t{*qprogram, std::move(lconstraints.value()), x0, program_t::scale_type::ruiz, miu};
+        auto program = program_t{*qprogram, std::move(lconstraints.value()), x0, miu};
         return do_minimize(program, logger);
     }
 
@@ -61,7 +61,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
 
     auto bstate = solver_state_t{function, program.original_x()}; ///< best state (KKT optimality criterion-wise)
     auto cstate = bstate;                                         ///< current state
-                                                                  ///
+
     auto last_better_iter = tensor_size_t{0};
 
     // primal-dual interior-point solver...
@@ -80,7 +80,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // line-search to reduce the KKT optimality criterion starting from the potentially different lengths
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
-        const auto lstats = program.lsearch(s);
+        const auto lstats = program.lsearch(s, logger);
 
         if (std::max({lstats.m_xstep, lstats.m_ystep, lstats.m_ustep, lstats.m_vstep, lstats.m_wstep}) <
             epsilon0<scalar_t>())
@@ -104,9 +104,11 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // stop if no significant improvement
-        if ((++last_better_iter) > patience)
+        // if ((++last_better_iter) > patience)
+        (void)last_better_iter;
+        (void)patience;
         {
-            break;
+            // break;
         }
     }
 

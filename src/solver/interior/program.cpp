@@ -83,19 +83,19 @@ auto solve_kkt(const matrix_t& lmat, const vector_t& lvec, vector_t& lsol)
 } // namespace
 
 program_t::program_t(const linear_program_t& program, linear_constraints_t constraints, const vector_t& x0,
-                     const scale_type scale, const scalar_t miu)
-    : program_t(program, matrix_t{}, program.c(), std::move(constraints), x0, scale, miu)
+                     const scalar_t miu)
+    : program_t(program, matrix_t{}, program.c(), std::move(constraints), x0, miu)
 {
 }
 
 program_t::program_t(const quadratic_program_t& program, linear_constraints_t constraints, const vector_t& x0,
-                     const scale_type scale, const scalar_t miu)
-    : program_t(program, program.Q(), program.c(), std::move(constraints), x0, scale, miu)
+                     const scalar_t miu)
+    : program_t(program, program.Q(), program.c(), std::move(constraints), x0, miu)
 {
 }
 
 program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_constraints_t constraints,
-                     const vector_t& x0, const scale_type scale, const scalar_t miu)
+                     const vector_t& x0, const scalar_t miu)
     : m_function(function)
     , m_Q(std::move(Q))
     , m_c(std::move(c))
@@ -136,15 +136,7 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     assert(m_G.cols() == n());
     assert(m_h.size() == m());
 
-    switch (scale)
-    {
-    case scale_type::ruiz:
-        ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
-        break;
-
-    default:
-        break;
-    }
+    ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 
     m_x.segment(0, n())           = x0.vector();
     m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
@@ -212,7 +204,7 @@ program_t::solve_stats_t program_t::solve()
     return stats;
 }
 
-program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
+program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger_t& logger)
 {
     const auto n = this->n();
     const auto m = this->m();
@@ -230,14 +222,71 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
     const auto dv = m_dv.segment(0, p);
     const auto dw = m_dv.segment(p, m);
 
-    const auto dstep = (m == 0) ? s : make_umax(u, du, 1.0 - s);
-    const auto pstep = (m == 0) ? s : make_umax(y, dy, 1.0 - s);
+    const auto dstep = (m == 0) ? step0 : make_umax(u, du, 1.0 - step0);
+    const auto pstep = (m == 0) ? step0 : make_umax(y, dy, 1.0 - step0);
 
-    const auto xstep = pstep;
-    const auto ystep = pstep;
-    const auto ustep = dstep;
-    const auto vstep = dstep;
-    const auto wstep = dstep;
+    auto xstep = pstep;
+    auto ystep = pstep;
+    auto ustep = dstep;
+    auto vstep = dstep;
+    auto wstep = dstep;
+
+    const auto make_residual = [&]() -> scalar_t
+    {
+        auto residual = 0.0;
+
+        // dual residual
+        if (m_Q.size() == 0)
+        {
+            m_rdual.segment(0, n).matrix() = m_c.vector();
+        }
+        else
+        {
+            m_rdual.segment(0, n).matrix() = m_Q * (x + xstep * dx) + m_c;
+        }
+        m_rdual.segment(0, n) += m_A.transpose() * (v + vstep * dv);
+        m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
+        m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
+
+        residual += m_rdual.squaredNorm();
+
+        // primal residual
+        m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
+        m_rprim.segment(p, m) = m_G * (x + xstep * dx) + (y + ystep * dy) - m_h;
+
+        residual += m_rprim.squaredNorm();
+
+        // centering residual
+        if (m > 0)
+        {
+            residual += (y + ystep * dy).dot(u + ustep * du);
+        }
+
+        return residual;
+    };
+
+    const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
+    const auto max_iters = 50;
+    const auto beta      = 0.5;
+    const auto alpha     = 1e-4;
+
+    auto stepX     = step0;
+    auto residualX = residual0;
+
+    for (auto iter = 0; iter < max_iters; ++iter)
+    {
+        if (residualX = make_residual(); residualX < (1.0 - stepX * alpha) * residual0)
+        {
+            break;
+        }
+
+        stepX *= beta;
+        xstep *= beta;
+        ystep *= beta;
+        ustep *= beta;
+        vstep *= beta;
+        wstep *= beta;
+    }
 
     m_x.segment(0, n) = x + xstep * dx;
     m_x.segment(n, m) = y + ystep * dy;
@@ -248,7 +297,9 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t s)
     update_original();
     update_residual();
 
-    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep};
+    logger.info("residual=", residual0, " -> ", residualX, ".\n");
+
+    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, residualX};
 }
 
 void program_t::update_original()

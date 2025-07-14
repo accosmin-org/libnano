@@ -3,6 +3,7 @@
 #include <nano/function/linear.h>
 #include <nano/function/quadratic.h>
 #include <nano/function/util.h>
+#include <nano/logger.h>
 
 namespace nano
 {
@@ -50,18 +51,9 @@ namespace nano
 class program_t
 {
 public:
-    // FIXME: make this an option of the interior point solver
-    enum class scale_type : uint8_t
-    {
-        ruiz,
-        none,
-    };
+    program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0, scalar_t miu);
 
-    // FIXME: make the linear solver an option of the interior point solver
-
-    program_t(const linear_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
-
-    program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scale_type, scalar_t miu);
+    program_t(const quadratic_program_t&, linear_constraints_t, const vector_t& x0, scalar_t miu);
 
     const vector_t& original_x() const { return m_orig_x; }
 
@@ -96,13 +88,13 @@ public:
         scalar_t m_ustep{0.0};
         scalar_t m_vstep{0.0};
         scalar_t m_wstep{0.0};
+        scalar_t m_residual{0.0};
     };
 
-    lsearch_stats_t lsearch(scalar_t s);
+    lsearch_stats_t lsearch(scalar_t step0, const logger_t& logger);
 
 private:
-    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scale_type,
-              scalar_t miu);
+    program_t(const function_t&, matrix_t Q, vector_t c, linear_constraints_t, const vector_t& x0, scalar_t miu);
 
     void update_original();
     void update_residual();
