@@ -155,6 +155,7 @@ struct solver_description_t
     else if (solver_id == "augmented-lagrangian")
     {
         // NB: methods that can solve linear and quadratic convex programs very reliable.
+        // NB: also works reasonably well for constrained nonlinear convex problems.
         return solver_description_t{}
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-1));
