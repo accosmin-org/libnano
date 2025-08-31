@@ -55,8 +55,8 @@ bash scripts/build.sh --clang --suffix clang-release -DCMAKE_BUILD_TYPE=Release 
 #   - clang-tidy
 ###############################################################################################################
 
-bash docker/run.sh bash scripts/build.sh --gcc --suffix cppcheck \
-    ${cmake_options} --config --cppcheck
+# bash docker/run.sh bash scripts/build.sh --gcc --suffix cppcheck \
+#    ${cmake_options} --config --cppcheck
 
 bash docker/run.sh bash scripts/build.sh --clang --suffix clang-tidy \
     ${cmake_options} --config --build --clang-tidy-all

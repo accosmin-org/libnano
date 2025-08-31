@@ -17,7 +17,7 @@ The project is organized as follows:
 #### Dependencies
 
 System:
-* compiler supporting [C++17](https://isocpp.org/wiki/faq/cpp17)
+* compiler supporting [C++20](https://isocpp.org/get-started)
 * [CMake](https://cmake.org)
 * [Eigen3](https://eigen.tuxfamily.org) - high-performance linear-algebra C++ library
 

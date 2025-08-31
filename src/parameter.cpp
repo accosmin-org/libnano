@@ -102,7 +102,7 @@ auto make_flag(LEorLT comp)
 }
 
 template <class tscalar>
-auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
+auto read_param(const string_t& name, std::istream& stream, parameter_t::range_t<tscalar>)
 {
     tscalar  value = 0;
     tscalar  min   = 0;
@@ -118,7 +118,7 @@ auto read(const string_t& name, std::istream& stream, parameter_t::range_t<tscal
 }
 
 template <class tscalar>
-auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
+auto read_param(const string_t& name, std::istream& stream, parameter_t::pair_range_t<tscalar>)
 {
     tscalar  value1  = 0;
     tscalar  value2  = 0;
@@ -138,7 +138,7 @@ auto read(const string_t& name, std::istream& stream, parameter_t::pair_range_t<
 }
 
 template <class tscalar>
-void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
+void write_param(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::range_t<tscalar>& param)
 {
     critical(::nano::write(stream, type) && ::nano::write(stream, name) && ::nano::write(stream, param.m_value) &&
                  ::nano::write(stream, param.m_min) && ::nano::write(stream, param.m_max) &&
@@ -147,7 +147,8 @@ void write(const string_t& name, std::ostream& stream, int32_t type, const param
 }
 
 template <class tscalar>
-void write(const string_t& name, std::ostream& stream, int32_t type, const parameter_t::pair_range_t<tscalar>& param)
+void write_param(const string_t& name, std::ostream& stream, int32_t type,
+                 const parameter_t::pair_range_t<tscalar>& param)
 {
     critical(::nano::write(stream, type) && ::nano::write(stream, name) && ::nano::write(stream, param.m_value1) &&
                  ::nano::write(stream, param.m_value2) && ::nano::write(stream, param.m_min) &&
@@ -331,10 +332,8 @@ std::istream& parameter_t::read(std::istream& stream)
     switch (type)
     {
     case -1:
-    {
         m_storage = storage_t{};
-    }
-    break;
+        break;
     case 0:
     {
         string_t  value;
@@ -345,16 +344,16 @@ std::istream& parameter_t::read(std::istream& stream)
     }
     break;
     case 1:
-        m_storage = ::read(m_name, stream, irange_t{});
+        m_storage = ::read_param(m_name, stream, irange_t{});
         break;
     case 2:
-        m_storage = ::read(m_name, stream, frange_t{});
+        m_storage = ::read_param(m_name, stream, frange_t{});
         break;
     case 3:
-        m_storage = ::read(m_name, stream, iprange_t{});
+        m_storage = ::read_param(m_name, stream, iprange_t{});
         break;
     case 4:
-        m_storage = ::read(m_name, stream, fprange_t{});
+        m_storage = ::read_param(m_name, stream, fprange_t{});
         break;
     case 5:
     {
@@ -386,10 +385,10 @@ std::ostream& parameter_t::write(std::ostream& stream) const
                                            ::nano::write(stream, param.m_domain),
                                        "parameter (", m_name, "): failed to write to stream!");
                           },
-                          [&](const irange_t& param) { ::write(m_name, stream, 1, param); },
-                          [&](const frange_t& param) { ::write(m_name, stream, 2, param); },
-                          [&](const iprange_t& param) { ::write(m_name, stream, 3, param); },
-                          [&](const fprange_t& param) { ::write(m_name, stream, 4, param); },
+                          [&](const irange_t& param) { ::write_param(m_name, stream, 1, param); },
+                          [&](const frange_t& param) { ::write_param(m_name, stream, 2, param); },
+                          [&](const iprange_t& param) { ::write_param(m_name, stream, 3, param); },
+                          [&](const fprange_t& param) { ::write_param(m_name, stream, 4, param); },
                           [&](const string_t& param)
                           {
                               const int32_t type = 5;

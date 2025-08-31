@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <type_traits>
 
@@ -30,15 +31,11 @@ uint64_t hash(const tscalar* data, const tsize size)
         {
             if constexpr (sizeof(tscalar) == 4)
             {
-                // FIXME: use std::bit_cast here when moving to C++20!
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                hash = hash_combine(hash, reinterpret_cast<const uint32_t&>(data[i]));
+                hash = hash_combine(hash, std::bit_cast<uint32_t>(data[i]));
             }
             else
             {
-                // FIXME: use std::bit_cast here when moving to C++20!
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                hash = hash_combine(hash, reinterpret_cast<const uint64_t&>(data[i]));
+                hash = hash_combine(hash, std::bit_cast<uint64_t>(data[i]));
             }
         }
         else
