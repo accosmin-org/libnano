@@ -70,8 +70,8 @@ auto& update(const string_t& name, parameter_t::pair_range_t<tscalar>& param, tv
     return param;
 }
 
-template <class tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
-void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
+template <class tvalue>
+requires std::is_arithmetic_v<tvalue> void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
 {
     std::visit(overloaded{[&](parameter_t::irange_t& param) { ::update(name, param, value); },
                           [&](parameter_t::frange_t& param) { ::update(name, param, value); },
@@ -79,8 +79,9 @@ void update(const string_t& name, parameter_t::storage_t& storage, tvalue value)
                storage);
 }
 
-template <class tvalue, std::enable_if_t<std::is_arithmetic_v<tvalue>, bool> = true>
-void update(const string_t& name, parameter_t::storage_t& storage, std::tuple<tvalue, tvalue> value)
+template <class tvalue>
+requires std::is_arithmetic_v<tvalue> void update(const string_t& name, parameter_t::storage_t& storage,
+                                                  std::tuple<tvalue, tvalue> value)
 {
     const auto value1 = std::get<0>(value);
     const auto value2 = std::get<1>(value);

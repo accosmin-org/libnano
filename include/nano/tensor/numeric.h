@@ -57,9 +57,9 @@ bool operator!=(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_
 ///
 /// \brief divide the tensor element-wise by the given factor and return the associated Eigen expression.
 ///
-template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor,
-          std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
-auto operator/(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_factor factor)
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor>
+requires std::is_arithmetic_v<tscalar_factor> auto operator/(const tensor_t<tstorage, tscalar, trank>& lhs,
+                                                             const tscalar_factor                      factor)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -76,9 +76,9 @@ auto operator/(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_fact
 ///
 /// \brief multiply the tensor element-wise with the given factor and return the associated Eigen expression.
 ///
-template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor,
-          std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
-auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_factor factor)
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class tscalar_factor>
+requires std::is_arithmetic_v<tscalar_factor> auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs,
+                                                             const tscalar_factor                      factor)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -92,9 +92,9 @@ auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const tscalar_fact
     }
 }
 
-template <class tscalar_factor, template <class, size_t> class tstorage, class tscalar, size_t trank,
-          std::enable_if_t<std::is_arithmetic_v<tscalar_factor>, bool> = true>
-auto operator*(const tscalar_factor factor, const tensor_t<tstorage, tscalar, trank>& rhs)
+template <class tscalar_factor, template <class, size_t> class tstorage, class tscalar, size_t trank>
+requires std::is_arithmetic_v<tscalar_factor> auto operator*(const tscalar_factor                      factor,
+                                                             const tensor_t<tstorage, tscalar, trank>& rhs)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -145,9 +145,9 @@ auto operator-(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t
     }
 }
 
-template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator-(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression>
+requires is_eigen_v<texpression> auto operator-(const tensor_t<tstorage, tscalar, trank>& lhs,
+                                                const texpression&                        expression)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -161,9 +161,9 @@ auto operator-(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression&
     }
 }
 
-template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator-(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& lhs)
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank>
+requires is_eigen_v<texpression> auto operator-(const texpression&                        expression,
+                                                const tensor_t<tstorage, tscalar, trank>& lhs)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -196,9 +196,9 @@ auto operator+(const tensor_t<tstorage_lhs, tscalar, trank>& lhs, const tensor_t
     }
 }
 
-template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator+(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression>
+requires is_eigen_v<texpression> auto operator+(const tensor_t<tstorage, tscalar, trank>& lhs,
+                                                const texpression&                        expression)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -212,9 +212,9 @@ auto operator+(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression&
     }
 }
 
-template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator+(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& lhs)
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank>
+requires is_eigen_v<texpression> auto operator+(const texpression&                        expression,
+                                                const tensor_t<tstorage, tscalar, trank>& lhs)
 {
     static_assert(trank == 1U || trank == 2U);
 
@@ -231,18 +231,18 @@ auto operator+(const texpression& expression, const tensor_t<tstorage, tscalar, 
 ///
 /// \brief multiply the two tensors or Eigen expressions and return the associated Eigen expression.
 ///
-template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs, const texpression& expression)
+template <template <class, size_t> class tstorage, class tscalar, size_t trank, class texpression>
+requires is_eigen_v<texpression> auto operator*(const tensor_t<tstorage, tscalar, trank>& lhs,
+                                                const texpression&                        expression)
 {
     static_assert(trank == 2U);
 
     return lhs.matrix() * expression;
 }
 
-template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank,
-          std::enable_if_t<is_eigen_v<texpression>, bool> = true>
-auto operator*(const texpression& expression, const tensor_t<tstorage, tscalar, trank>& rhs)
+template <class texpression, template <class, size_t> class tstorage, class tscalar, size_t trank>
+requires is_eigen_v<texpression> auto operator*(const texpression&                        expression,
+                                                const tensor_t<tstorage, tscalar, trank>& rhs)
 {
     static_assert(trank == 1U || trank == 2U);
 

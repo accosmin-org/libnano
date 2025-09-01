@@ -9,11 +9,9 @@ namespace nano
 ///
 /// NB: it is assumed that the vector `u` is strictly positive element-wise.
 ///
-template <class tvectoru, class tvectordu,
-          std::enable_if_t<(is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) &&
-                               (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>),
-                           bool> = true>
-scalar_t make_umax(const tvectoru& u, const tvectordu& du, const scalar_t beta = 1e-8)
+template <class tvectoru, class tvectordu>
+requires((is_tensor_v<tvectoru> || is_eigen_v<tvectoru>) && (is_tensor_v<tvectordu> || is_eigen_v<tvectordu>)) scalar_t
+    make_umax(const tvectoru& u, const tvectordu& du, const scalar_t beta = 1e-8)
 {
     assert(beta > 0.0);
     assert(beta < 1.0);

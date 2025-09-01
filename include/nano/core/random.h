@@ -22,8 +22,9 @@ NANO_PUBLIC rng_t make_rng(seed_t seed = seed_t{});
 ///
 /// \brief create an uniform distribution for the [min, max] range.
 ///
-template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-inline auto make_udist(const tscalar min, const tscalar max)
+template <class tscalar>
+requires std::is_arithmetic_v<std::remove_reference_t<tscalar>> inline auto make_udist(const tscalar min,
+                                                                                       const tscalar max)
 {
     assert(min <= max);
     if constexpr (std::is_floating_point_v<tscalar>)
@@ -43,15 +44,17 @@ inline auto make_udist(const tscalar min, const tscalar max)
 ///
 /// \brief generate a random value uniformaly distributed in the [min, max] range.
 ///
-template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-tscalar urand(const tscalar min, const tscalar max, rng_t& rng)
+template <class tscalar>
+requires std::is_arithmetic_v<std::remove_reference_t<tscalar>> tscalar urand(const tscalar min, const tscalar max,
+                                                                              rng_t& rng)
 {
     auto udist = make_udist<tscalar>(min, max);
     return static_cast<tscalar>(udist(rng));
 }
 
-template <class tscalar, std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-tscalar urand(const tscalar min, const tscalar max, const seed_t seed = seed_t{})
+template <class tscalar>
+requires std::is_arithmetic_v<std::remove_reference_t<tscalar>> tscalar urand(const tscalar min, const tscalar max,
+                                                                              const seed_t seed = seed_t{})
 {
     auto rng = make_rng(seed);
     return urand(min, max, rng);
@@ -61,9 +64,9 @@ tscalar urand(const tscalar min, const tscalar max, const seed_t seed = seed_t{}
 /// \brief fill the [begin, range) range of elements with random values uniformaly distributed in the [min, max]
 /// range.
 ///
-template <class tscalar, class titerator,
-          std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, rng_t& rng)
+template <class tscalar, class titerator>
+requires std::is_arithmetic_v<std::remove_reference_t<tscalar>> void
+         urand(const tscalar min, const tscalar max, titerator begin, const titerator end, rng_t& rng)
 {
     auto udist = make_udist<tscalar>(min, max);
     for (; begin != end; ++begin)
@@ -72,9 +75,9 @@ void urand(const tscalar min, const tscalar max, titerator begin, const titerato
     }
 }
 
-template <class tscalar, class titerator,
-          std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true>
-void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, const seed_t seed = seed_t{})
+template <class tscalar, class titerator>
+requires std::is_arithmetic_v<std::remove_reference_t<tscalar>> void
+         urand(const tscalar min, const tscalar max, titerator begin, const titerator end, const seed_t seed = seed_t{})
 {
     auto rng = make_rng(seed);
     return urand(min, max, begin, end, rng);

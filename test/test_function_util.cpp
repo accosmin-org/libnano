@@ -95,8 +95,6 @@ UTEST_CASE(remove_zero_rows_none)
     const auto b = make_vector<scalar_t>(1.0, 1.0, 1.0, 1.0, 1.0);
     // clang-format on
 
-    const auto expected_A = A;
-    const auto expected_b = b;
     {
         auto Ax = A;
         auto bx = b;
@@ -104,8 +102,8 @@ UTEST_CASE(remove_zero_rows_none)
         const auto stats = remove_zero_rows_equality(Ax, bx);
         UTEST_CHECK_EQUAL(stats.m_removed, 0);
         UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
-        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
-        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(Ax, A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, b, epsilon0<scalar_t>());
     }
     {
         auto Ax = A;
@@ -114,8 +112,8 @@ UTEST_CASE(remove_zero_rows_none)
         const auto stats = remove_zero_rows_inequality(Ax, bx);
         UTEST_CHECK_EQUAL(stats.m_removed, 0);
         UTEST_CHECK_EQUAL(stats.m_inconsistent, 0);
-        UTEST_CHECK_CLOSE(Ax, expected_A, epsilon0<scalar_t>());
-        UTEST_CHECK_CLOSE(bx, expected_b, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(Ax, A, epsilon0<scalar_t>());
+        UTEST_CHECK_CLOSE(bx, b, epsilon0<scalar_t>());
     }
 }
 

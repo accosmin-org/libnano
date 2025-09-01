@@ -8,8 +8,8 @@ namespace nano
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(const function_variable_t& variable, const tvector& upper)
+template <class tvector>
+requires is_vector_v<tvector> bool operator<=(const function_variable_t& variable, const tvector& upper)
 {
     bool ok = upper.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < upper.size() && ok; ++i)
@@ -22,8 +22,8 @@ bool operator<=(const function_variable_t& variable, const tvector& upper)
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: lower[i] <= x[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator<=(const tvector& lower, const function_variable_t& variable)
+template <class tvector>
+requires is_vector_v<tvector> bool operator<=(const tvector& lower, const function_variable_t& variable)
 {
     bool ok = lower.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < lower.size() && ok; ++i)
@@ -36,8 +36,8 @@ bool operator<=(const tvector& lower, const function_variable_t& variable)
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(const function_variable_t& variable, const tvector& lower)
+template <class tvector>
+requires is_vector_v<tvector> bool operator>=(const function_variable_t& variable, const tvector& lower)
 {
     return lower <= variable;
 }
@@ -45,8 +45,8 @@ bool operator>=(const function_variable_t& variable, const tvector& lower)
 ///
 /// \brief register a one-sided inequality contraint for all dimensions: upper[i] >= x[i].
 ///
-template <class tvector, std::enable_if_t<is_vector_v<tvector>, bool> = true>
-bool operator>=(const tvector& upper, const function_variable_t& variable)
+template <class tvector>
+requires is_vector_v<tvector> bool operator>=(const tvector& upper, const function_variable_t& variable)
 {
     return variable <= upper;
 }

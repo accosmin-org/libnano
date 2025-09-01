@@ -44,15 +44,7 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
             break;
         }
 
-        if (status == csearch_status::descent_step)
-        {
-            assert(fy < state.fx());
-
-            proximal.update(bundle, cpoint);
-            bundle.moveto(y, gy, fy);
-            state.update(y, gy, fy);
-        }
-        else if (status == csearch_status::cutting_plane_step)
+        if (status == csearch_status::descent_step || status == csearch_status::cutting_plane_step)
         {
             assert(fy < state.fx());
 
