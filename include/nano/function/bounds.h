@@ -9,7 +9,8 @@ namespace nano
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] <= upper[i].
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator<=(const function_variable_t& variable, const tvector& upper)
+requires is_vector_v<tvector>
+bool operator<=(const function_variable_t& variable, const tvector& upper)
 {
     bool ok = upper.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < upper.size() && ok; ++i)
@@ -23,7 +24,8 @@ requires is_vector_v<tvector> bool operator<=(const function_variable_t& variabl
 /// \brief register a one-sided inequality contraint for all dimensions: lower[i] <= x[i].
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator<=(const tvector& lower, const function_variable_t& variable)
+requires is_vector_v<tvector>
+bool operator<=(const tvector& lower, const function_variable_t& variable)
 {
     bool ok = lower.size() == variable.m_function.size();
     for (tensor_size_t i = 0; i < lower.size() && ok; ++i)
@@ -37,7 +39,8 @@ requires is_vector_v<tvector> bool operator<=(const tvector& lower, const functi
 /// \brief register a one-sided inequality contraint for all dimensions: x[i] >= lower[i].
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator>=(const function_variable_t& variable, const tvector& lower)
+requires is_vector_v<tvector>
+bool operator>=(const function_variable_t& variable, const tvector& lower)
 {
     return lower <= variable;
 }
@@ -46,7 +49,8 @@ requires is_vector_v<tvector> bool operator>=(const function_variable_t& variabl
 /// \brief register a one-sided inequality contraint for all dimensions: upper[i] >= x[i].
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator>=(const tvector& upper, const function_variable_t& variable)
+requires is_vector_v<tvector>
+bool operator>=(const tvector& upper, const function_variable_t& variable)
 {
     return variable <= upper;
 }

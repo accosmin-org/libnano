@@ -150,9 +150,8 @@ inline constexpr bool is_eigen_v = is_eigen<T>::value;
 /// \brief returns true if the two Eigen vectors or matrices are close.
 ///
 template <class teigen1, class teigen2, class tscalar>
-requires(is_eigen_v<teigen1>&& is_eigen_v<teigen2>&& std::is_arithmetic_v<tscalar>) bool close(const teigen1& lhs,
-                                                                                               const teigen2& rhs,
-                                                                                               tscalar epsilon) noexcept
+requires(is_eigen_v<teigen1> && is_eigen_v<teigen2> && std::is_arithmetic_v<tscalar>)
+bool close(const teigen1& lhs, const teigen2& rhs, tscalar epsilon) noexcept
 {
     if (lhs.size() != rhs.size())
     {

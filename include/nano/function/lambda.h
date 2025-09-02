@@ -12,7 +12,8 @@ inline constexpr bool is_lambda_function_v = std::is_invocable_v<tlambda, vector
 ///     fx = lambda(vector_cmap_t x, vector_map_t gx)
 ///
 template <class tlambda>
-requires is_lambda_function_v<tlambda> class NANO_PUBLIC lambda_function_t final : public function_t
+requires is_lambda_function_v<tlambda>
+class NANO_PUBLIC lambda_function_t final : public function_t
 {
 public:
     ///
@@ -53,9 +54,9 @@ private:
 /// \brief create a compatible function_t from the given lambda.
 ///
 template <class tlambda>
-requires is_lambda_function_v<tlambda> auto make_function(const tensor_size_t dims, const convexity convex,
-                                                          const smoothness smooth, const scalar_t strong_convexity,
-                                                          tlambda lambda)
+requires is_lambda_function_v<tlambda>
+auto make_function(const tensor_size_t dims, const convexity convex, const smoothness smooth,
+                   const scalar_t strong_convexity, tlambda lambda)
 {
     return lambda_function_t{dims, convex, smooth, strong_convexity, std::move(lambda)};
 }

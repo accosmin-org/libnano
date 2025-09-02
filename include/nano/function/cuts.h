@@ -10,7 +10,8 @@ namespace nano
 ///     useful for easily defining constraints.
 ///
 template <class ttensor>
-requires(is_matrix_v<ttensor> || is_vector_v<ttensor>) struct lhs_multiplied_variable_t
+requires(is_matrix_v<ttensor> || is_vector_v<ttensor>)
+struct lhs_multiplied_variable_t
 {
     template <class tlambda>
     bool call_scalar(const tlambda& lambda) const
@@ -29,7 +30,8 @@ requires(is_matrix_v<ttensor> || is_vector_v<ttensor>) struct lhs_multiplied_var
     }
 
     template <class tvector, class tlambda>
-    requires is_vector_v<tvector> bool call_vector(const tvector& b, const tlambda& lambda) const
+    requires is_vector_v<tvector>
+    bool call_vector(const tvector& b, const tlambda& lambda) const
     {
         const auto& A = m_tensor;
         if constexpr (is_eigen_v<ttensor>)
@@ -64,8 +66,8 @@ requires(is_matrix_v<ttensor> || is_vector_v<ttensor>) struct lhs_multiplied_var
 };
 
 template <class ttensor>
-requires(is_matrix_v<ttensor> || is_vector_v<ttensor>) auto operator*(const ttensor&             tensor,
-                                                                      const function_variable_t& variable)
+requires(is_matrix_v<ttensor> || is_vector_v<ttensor>)
+auto operator*(const ttensor& tensor, const function_variable_t& variable)
 {
     return lhs_multiplied_variable_t<ttensor>{tensor, variable};
 }
@@ -74,8 +76,8 @@ requires(is_matrix_v<ttensor> || is_vector_v<ttensor>) auto operator*(const tten
 /// \brief register a linear equality constraint: A * x = b.
 ///
 template <class ttensor, class tvector>
-requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>) bool
-operator==(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
+requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>)
+bool operator==(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_equality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -85,8 +87,8 @@ operator==(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, co
 /// \brief register a linear equality constraint: A * x <= b.
 ///
 template <class ttensor, class tvector>
-requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>) bool
-operator<=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
+requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>)
+bool operator<=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{a, -b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -96,8 +98,8 @@ operator<=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, co
 /// \brief register a linear equality constraint: A * x >= b.
 ///
 template <class ttensor, class tvector>
-requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>) bool
-operator>=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
+requires((is_matrix_v<ttensor> || is_vector_v<ttensor>) && is_vector_v<tvector>)
+bool operator>=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, const tvector& vb)
 {
     const auto op = [&](const auto& a, const scalar_t b) { return constraint::linear_inequality_t{-a, b}; };
     return lhs_multiplied_variable.call_vector(vb, op);
@@ -107,8 +109,8 @@ operator>=(const lhs_multiplied_variable_t<ttensor>& lhs_multiplied_variable, co
 /// \brief register a linear equality constraint: a.dot(x) = b.
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator==(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable,
-                                              const scalar_t                            b)
+requires is_vector_v<tvector>
+bool operator==(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_equality_t{a, -b}; };
     return lhs_multiplied_variable.call_scalar(op);
@@ -118,8 +120,8 @@ requires is_vector_v<tvector> bool operator==(const lhs_multiplied_variable_t<tv
 /// \brief register a linear equality constraint: a.dot(x) <= b.
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator<=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable,
-                                              const scalar_t                            b)
+requires is_vector_v<tvector>
+bool operator<=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{a, -b}; };
     return lhs_multiplied_variable.call_scalar(op);
@@ -129,8 +131,8 @@ requires is_vector_v<tvector> bool operator<=(const lhs_multiplied_variable_t<tv
 /// \brief register a linear equality constraint: a.dot(x) >= b.
 ///
 template <class tvector>
-requires is_vector_v<tvector> bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable,
-                                              const scalar_t                            b)
+requires is_vector_v<tvector>
+bool operator>=(const lhs_multiplied_variable_t<tvector>& lhs_multiplied_variable, const scalar_t b)
 {
     const auto op = [&](const auto& a) { return constraint::linear_inequality_t{-a, b}; };
     return lhs_multiplied_variable.call_scalar(op);

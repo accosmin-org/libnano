@@ -177,7 +177,8 @@ public:
     ///     op(index, tnum)
     ///
     template <class tsize, class toperator>
-    requires std::is_integral_v<tsize> void map(tsize elements, const toperator& op, bool raise = true)
+    requires std::is_integral_v<tsize>
+    void map(tsize elements, const toperator& op, bool raise = true)
     {
         if (size() == 1 || elements <= 1)
         {
@@ -211,7 +212,8 @@ public:
     ///     op(begin, end, tnum)
     ///
     template <class tsize, class toperator>
-    requires std::is_integral_v<tsize> void map(tsize elements, tsize chunksize, const toperator& op, bool raise = true)
+    requires std::is_integral_v<tsize>
+    void map(tsize elements, tsize chunksize, const toperator& op, bool raise = true)
     {
         assert(chunksize >= tsize(1));
 

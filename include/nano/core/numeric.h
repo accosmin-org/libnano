@@ -10,7 +10,8 @@ namespace nano
 /// \brief square: x^2.
 ///
 template <class tscalar>
-requires std::is_arithmetic_v<tscalar> tscalar square(const tscalar value) noexcept
+requires std::is_arithmetic_v<tscalar>
+tscalar square(const tscalar value) noexcept
 {
     return value * value;
 }
@@ -19,7 +20,8 @@ requires std::is_arithmetic_v<tscalar> tscalar square(const tscalar value) noexc
 /// \brief cube: x^3.
 ///
 template <class tscalar>
-requires std::is_arithmetic_v<tscalar> tscalar cube(const tscalar value) noexcept
+requires std::is_arithmetic_v<tscalar>
+tscalar cube(const tscalar value) noexcept
 {
     return value * square(value);
 }
@@ -28,7 +30,8 @@ requires std::is_arithmetic_v<tscalar> tscalar cube(const tscalar value) noexcep
 /// \brief quartic: x^4.
 ///
 template <class tscalar>
-requires std::is_arithmetic_v<tscalar> tscalar quartic(const tscalar value) noexcept
+requires std::is_arithmetic_v<tscalar>
+tscalar quartic(const tscalar value) noexcept
 {
     return square(square(value));
 }
@@ -37,8 +40,8 @@ requires std::is_arithmetic_v<tscalar> tscalar quartic(const tscalar value) noex
 /// \brief integer division with rounding.
 ///
 template <class tnominator, class tdenominator>
-requires(std::is_integral_v<tnominator>&& std::is_integral_v<tdenominator>) tnominator
-    idiv(const tnominator nominator, const tdenominator denominator) noexcept
+requires(std::is_integral_v<tnominator> && std::is_integral_v<tdenominator>)
+tnominator idiv(const tnominator nominator, const tdenominator denominator) noexcept
 {
     return (nominator + static_cast<tnominator>(denominator) / 2) / static_cast<tnominator>(denominator);
 }
@@ -47,8 +50,8 @@ requires(std::is_integral_v<tnominator>&& std::is_integral_v<tdenominator>) tnom
 /// \brief integer rounding.
 ///
 template <class tvalue, class tmodulo>
-requires(std::is_integral_v<tvalue>&& std::is_integral_v<tmodulo>) tvalue
-    iround(const tvalue value, const tmodulo modulo) noexcept
+requires(std::is_integral_v<tvalue> && std::is_integral_v<tmodulo>)
+tvalue iround(const tvalue value, const tmodulo modulo) noexcept
 {
     return idiv(value, modulo) * modulo;
 }
@@ -57,9 +60,8 @@ requires(std::is_integral_v<tvalue>&& std::is_integral_v<tmodulo>) tvalue
 /// \brief check if two scalars are almost equal.
 ///
 template <class tscalar1, class tscalar2>
-requires(std::is_arithmetic_v<tscalar1>&& std::is_arithmetic_v<tscalar2>) bool close(const tscalar1 lhs,
-                                                                                     const tscalar2 rhs,
-                                                                                     const double   epsilon) noexcept
+requires(std::is_arithmetic_v<tscalar1> && std::is_arithmetic_v<tscalar2>)
+bool close(const tscalar1 lhs, const tscalar2 rhs, const double epsilon) noexcept
 {
     return std::fabs(static_cast<double>(lhs) - static_cast<double>(rhs)) <
            epsilon * (1.0 + (std::fabs(static_cast<double>(lhs)) + std::fabs(static_cast<double>(rhs)) / 2));
@@ -69,7 +71,8 @@ requires(std::is_arithmetic_v<tscalar1>&& std::is_arithmetic_v<tscalar2>) bool c
 /// \brief round to the closest power of 10.
 ///
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> inline tscalar roundpow10(const tscalar v) noexcept
+requires std::is_floating_point_v<tscalar>
+inline tscalar roundpow10(const tscalar v) noexcept
 {
     return std::pow(tscalar(10), std::round(std::log10(v)));
 }
@@ -78,32 +81,37 @@ requires std::is_floating_point_v<tscalar> inline tscalar roundpow10(const tscal
 /// \brief precision level [0=very precise, 1=quite precise, 2=precise, 3=loose] for different scalars.
 ///
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> tscalar epsilon() noexcept
+requires std::is_floating_point_v<tscalar>
+tscalar epsilon() noexcept
 {
     return std::numeric_limits<tscalar>::epsilon();
 }
 
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> tscalar epsilon0() noexcept
+requires std::is_floating_point_v<tscalar>
+tscalar epsilon0() noexcept
 {
     return roundpow10(10 * epsilon<tscalar>());
 }
 
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> tscalar epsilon1() noexcept
+requires std::is_floating_point_v<tscalar>
+tscalar epsilon1() noexcept
 {
     const auto cb = std::cbrt(epsilon<tscalar>());
     return roundpow10(cb * cb);
 }
 
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> tscalar epsilon2() noexcept
+requires std::is_floating_point_v<tscalar>
+tscalar epsilon2() noexcept
 {
     return roundpow10(std::sqrt(epsilon<tscalar>()));
 }
 
 template <class tscalar>
-requires std::is_floating_point_v<tscalar> tscalar epsilon3() noexcept
+requires std::is_floating_point_v<tscalar>
+tscalar epsilon3() noexcept
 {
     return roundpow10(std::cbrt(epsilon<tscalar>()));
 }
@@ -113,7 +121,8 @@ requires std::is_floating_point_v<tscalar> tscalar epsilon3() noexcept
 /// NB: handles explicitly integer values as MSVC doesn't cast it to the appropriate floating point types.
 ///
 template <class tscalar>
-requires std::is_arithmetic_v<tscalar> bool isfinite([[maybe_unused]] const tscalar value) noexcept
+requires std::is_arithmetic_v<tscalar>
+bool isfinite([[maybe_unused]] const tscalar value) noexcept
 {
     if constexpr (std::is_floating_point_v<tscalar>)
     {

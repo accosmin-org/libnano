@@ -206,7 +206,8 @@ public:
     /// \brief assignment operator from an Eigen expression.
     ///
     template <class texpression>
-    requires is_eigen_v<texpression> tensor_t& operator=(const texpression& expression)
+    requires is_eigen_v<texpression>
+    tensor_t& operator=(const texpression& expression)
     {
         assign(expression);
         return *this;
@@ -429,7 +430,8 @@ public:
     /// \brief set all elements to values produces by the given generator.
     ///
     template <class tgenerator>
-    requires std::is_invocable_v<tgenerator> auto& full(tgenerator&& generator)
+    requires std::is_invocable_v<tgenerator>
+    auto& full(tgenerator&& generator)
     {
         std::generate(begin(), end(), std::forward<tgenerator>(generator));
         return *this;
@@ -522,7 +524,8 @@ public:
     /// \brief return the dot product of the flatten array with the given Eigen expression.
     ///
     template <class texpression>
-    requires is_eigen_v<texpression> auto dot(const texpression& expression) const
+    requires is_eigen_v<texpression>
+    auto dot(const texpression& expression) const
     {
         return vector().dot(expression);
     }
@@ -638,7 +641,8 @@ public:
     /// \brief multiply element-wise by the given factor.
     ///
     template <class tscalar_factor>
-    requires std::is_arithmetic_v<tscalar_factor> tensor_t& operator*=(const tscalar_factor factor)
+    requires std::is_arithmetic_v<tscalar_factor>
+    tensor_t& operator*=(const tscalar_factor factor)
     {
         vector() *= static_cast<tscalar>(factor);
         return *this;
@@ -648,7 +652,8 @@ public:
     /// \brief divide element-wise by the given factor.
     ///
     template <class tscalar_factor>
-    requires std::is_arithmetic_v<tscalar_factor> tensor_t& operator/=(const tscalar_factor factor)
+    requires std::is_arithmetic_v<tscalar_factor>
+    tensor_t& operator/=(const tscalar_factor factor)
     {
         vector() /= static_cast<tscalar>(factor);
         return *this;
@@ -658,7 +663,8 @@ public:
     /// \brief subtract element-wise the given Eigen expression.
     ///
     template <class texpression>
-    requires is_eigen_v<texpression> tensor_t& operator-=(const texpression& expression)
+    requires is_eigen_v<texpression>
+    tensor_t& operator-=(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
         if constexpr (trank == 1)
@@ -687,7 +693,8 @@ public:
     /// \brief add element-wise the given Eigen expression.
     ///
     template <class texpression>
-    requires is_eigen_v<texpression> tensor_t& operator+=(const texpression& expression)
+    requires is_eigen_v<texpression>
+    tensor_t& operator+=(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
         if constexpr (trank == 1)
@@ -801,7 +808,8 @@ private:
     }
 
     template <class texpression>
-    requires is_eigen_v<texpression> void assign(const texpression& expression)
+    requires is_eigen_v<texpression>
+    void assign(const texpression& expression)
     {
         static_assert(trank == 1 || trank == 2);
         if constexpr (trank == 1)
@@ -874,8 +882,8 @@ auto make_indices(tindices... indices)
 /// \brief create a tensor and fill it with the given value.
 ///
 template <class tscalar, size_t trank, class tscalar_value = tscalar>
-requires std::is_arithmetic_v<tscalar_value> auto make_full_tensor(const tensor_dims_t<trank>& dims,
-                                                                   tscalar_value               value)
+requires std::is_arithmetic_v<tscalar_value>
+auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
     tensor.full(static_cast<tscalar>(value));
@@ -886,9 +894,9 @@ requires std::is_arithmetic_v<tscalar_value> auto make_full_tensor(const tensor_
 /// \brief create a tensor and fill it with random values.
 ///
 template <class tscalar, size_t trank, class tscalar_value = tscalar>
-requires std::is_arithmetic_v<tscalar_value> auto
-         make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
-                            const tscalar_value max_value = +1, const seed_t seed = seed_t{})
+requires std::is_arithmetic_v<tscalar_value>
+auto make_random_tensor(const tensor_dims_t<trank>& dims, const tscalar_value min_value = -1,
+                        const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
     tensor.random(static_cast<tscalar>(min_value), static_cast<tscalar>(max_value), seed);
@@ -899,7 +907,8 @@ requires std::is_arithmetic_v<tscalar_value> auto
 /// \brief create a tensor and fill it with values produced with the given generator.
 ///
 template <class tscalar, size_t trank, class tgenerator>
-requires std::is_invocable_v<tgenerator> auto make_full_tensor(const tensor_dims_t<trank>& dims, tgenerator&& generator)
+requires std::is_invocable_v<tgenerator>
+auto make_full_tensor(const tensor_dims_t<trank>& dims, tgenerator&& generator)
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
     tensor.full(std::forward<tgenerator>(generator));
@@ -938,7 +947,8 @@ auto make_vector(tvalues... values)
 /// \brief create a vector and fill it with the given value.
 ///
 template <class tscalar, class tscalar_value>
-requires std::is_arithmetic_v<tscalar_value> auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
+requires std::is_arithmetic_v<tscalar_value>
+auto make_full_vector(const tensor_size_t rows, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows), value);
 }
@@ -947,9 +957,9 @@ requires std::is_arithmetic_v<tscalar_value> auto make_full_vector(const tensor_
 /// \brief create a vector and fill it with random values uniformly distributed in the given range.
 ///
 template <class tscalar, class tscalar_value = tscalar>
-requires std::is_arithmetic_v<tscalar_value> auto
-make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1, const tscalar_value max_value = +1,
-                   const seed_t seed = seed_t{})
+requires std::is_arithmetic_v<tscalar_value>
+auto make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1,
+                        const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
     return make_random_tensor<tscalar>(make_dims(rows), min_value, max_value, seed);
 }
@@ -958,7 +968,8 @@ make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1,
 /// \brief create a vector and fill it with values produced with the given generator.
 ///
 template <class tscalar, class tgenerator>
-requires std::is_invocable_v<tgenerator> auto make_full_vector(const tensor_size_t rows, tgenerator&& generator)
+requires std::is_invocable_v<tgenerator>
+auto make_full_vector(const tensor_size_t rows, tgenerator&& generator)
 {
     return make_full_tensor<tscalar>(make_dims(rows), std::forward<tgenerator>(generator));
 }
@@ -967,8 +978,8 @@ requires std::is_invocable_v<tgenerator> auto make_full_vector(const tensor_size
 /// \brief create a vector and fill it with the given value.
 ///
 template <class tscalar, class tscalar_value = tscalar>
-requires std::is_arithmetic_v<tscalar_value> auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols,
-                                                                   const tscalar_value value)
+requires std::is_arithmetic_v<tscalar_value>
+auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value value)
 {
     return make_full_tensor<tscalar>(make_dims(rows, cols), value);
 }
@@ -977,9 +988,9 @@ requires std::is_arithmetic_v<tscalar_value> auto make_full_matrix(const tensor_
 /// \brief create a matrix and fill it with random values uniformly distributed in the given range.
 ///
 template <class tscalar, class tscalar_value = tscalar>
-requires std::is_arithmetic_v<tscalar_value> auto
-         make_random_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value min_value = -1,
-                            const tscalar_value max_value = +1, const seed_t seed = seed_t{})
+requires std::is_arithmetic_v<tscalar_value>
+auto make_random_matrix(const tensor_size_t rows, const tensor_size_t cols, const tscalar_value min_value = -1,
+                        const tscalar_value max_value = +1, const seed_t seed = seed_t{})
 {
     return make_random_tensor<tscalar>(make_dims(rows, cols), min_value, max_value, seed);
 }
@@ -988,8 +999,8 @@ requires std::is_arithmetic_v<tscalar_value> auto
 /// \brief create a matrix and fill it with values produced with the given generator.
 ///
 template <class tscalar, class tgenerator>
-requires std::is_invocable_v<tgenerator> auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols,
-                                                               tgenerator&& generator)
+requires std::is_invocable_v<tgenerator>
+auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols, tgenerator&& generator)
 {
     return make_full_tensor<tscalar>(make_dims(rows, cols), std::forward<tgenerator>(generator));
 }

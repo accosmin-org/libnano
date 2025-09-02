@@ -52,7 +52,8 @@ public:
     };
 
     template <class tscalar>
-    requires std::is_arithmetic_v<tscalar> struct range_t
+    requires std::is_arithmetic_v<tscalar>
+    struct range_t
     {
         template <class tvalue>
         auto value() const
@@ -68,7 +69,8 @@ public:
     };
 
     template <class tscalar>
-    requires std::is_arithmetic_v<tscalar> struct pair_range_t
+    requires std::is_arithmetic_v<tscalar>
+    struct pair_range_t
     {
         template <class tvalue>
         auto value() const
@@ -101,7 +103,8 @@ public:
     /// \brief return a constrained enumeration parameter.
     ///
     template <class tenum>
-    requires std::is_enum_v<tenum> static parameter_t make_enum(string_t name, tenum value)
+    requires std::is_enum_v<tenum>
+    static parameter_t make_enum(string_t name, tenum value)
     {
         return make_enum_(std::move(name), value);
     }
@@ -116,8 +119,8 @@ public:
     ///     min LE/LT value LE/LT max.
     ///
     template <class tmin, class tvalue, class tmax>
-    requires(std::is_arithmetic_v<tmin>&& std::is_arithmetic_v<tvalue>&& std::is_arithmetic_v<tmax>) static parameter_t
-        make_scalar(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
+    requires(std::is_arithmetic_v<tmin> && std::is_arithmetic_v<tvalue> && std::is_arithmetic_v<tmax>)
+    static parameter_t make_scalar(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
     {
         return make_scalar_<scalar_t>(std::move(name), min, mincomp, value, maxcomp, max);
     }
@@ -127,8 +130,8 @@ public:
     ///     min LE/LT value LE/LT max.
     ///
     template <class tmin, class tvalue, class tmax>
-    requires(std::is_arithmetic_v<tmin>&& std::is_arithmetic_v<tvalue>&& std::is_arithmetic_v<tmax>) static parameter_t
-        make_integer(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
+    requires(std::is_arithmetic_v<tmin> && std::is_arithmetic_v<tvalue> && std::is_arithmetic_v<tmax>)
+    static parameter_t make_integer(string_t name, tmin min, LEorLT mincomp, tvalue value, LEorLT maxcomp, tmax max)
     {
         return make_scalar_<int64_t>(std::move(name), min, mincomp, value, maxcomp, max);
     }
@@ -138,10 +141,10 @@ public:
     ///     min LE/LT value1 LE/LT value2 LE/LT max.
     ///
     template <class tmin, class tvalue1, class tvalue2, class tmax>
-    requires(std::is_arithmetic_v<tmin>&& std::is_arithmetic_v<tvalue1>&& std::is_arithmetic_v<tvalue2>&&
-                                                                          std::is_arithmetic_v<tmax>) static parameter_t
-        make_scalar_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2,
-                         LEorLT maxcomp, tmax max)
+    requires(std::is_arithmetic_v<tmin> && std::is_arithmetic_v<tvalue1> && std::is_arithmetic_v<tvalue2> &&
+             std::is_arithmetic_v<tmax>)
+    static parameter_t make_scalar_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp,
+                                        tvalue2 value2, LEorLT maxcomp, tmax max)
     {
         return make_scalar_<scalar_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
     }
@@ -151,10 +154,10 @@ public:
     ///     min LE/LT value1 LE/LT value2 LE/LT max.
     ///
     template <class tmin, class tvalue1, class tvalue2, class tmax>
-    requires(std::is_arithmetic_v<tmin>&& std::is_arithmetic_v<tvalue1>&& std::is_arithmetic_v<tvalue2>&&
-                                                                          std::is_arithmetic_v<tmax>) static parameter_t
-        make_integer_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp, tvalue2 value2,
-                          LEorLT maxcomp, tmax max)
+    requires(std::is_arithmetic_v<tmin> && std::is_arithmetic_v<tvalue1> && std::is_arithmetic_v<tvalue2> &&
+             std::is_arithmetic_v<tmax>)
+    static parameter_t make_integer_pair(string_t name, tmin min, LEorLT mincomp, tvalue1 value1, LEorLT valcomp,
+                                         tvalue2 value2, LEorLT maxcomp, tmax max)
     {
         return make_scalar_<int64_t>(std::move(name), min, mincomp, value1, valcomp, value2, maxcomp, max);
     }
@@ -168,7 +171,8 @@ public:
     parameter_t& operator=(std::tuple<scalar_t, scalar_t>);
 
     template <class tscalar>
-    requires std::is_arithmetic_v<tscalar> parameter_t& operator=(const tscalar value)
+    requires std::is_arithmetic_v<tscalar>
+    parameter_t& operator=(const tscalar value)
     {
         if constexpr (std::is_integral_v<tscalar>)
         {
@@ -182,7 +186,8 @@ public:
     }
 
     template <class tenum>
-    requires std::is_enum_v<tenum> parameter_t& operator=(const tenum value)
+    requires std::is_enum_v<tenum>
+    parameter_t& operator=(const tenum value)
     {
         if (std::get_if<enum_t>(&m_storage))
         {
@@ -199,7 +204,8 @@ public:
     /// \brief retrieve the current parameter's value.
     ///
     template <class tstring>
-    requires std::is_same_v<tstring, string_t> string_t value() const
+    requires std::is_same_v<tstring, string_t>
+    string_t value() const
     {
         if (const auto* param = std::get_if<string_t>(&m_storage))
         {
@@ -209,7 +215,8 @@ public:
     }
 
     template <class tenum>
-    requires std::is_enum_v<tenum> tenum value() const
+    requires std::is_enum_v<tenum>
+    tenum value() const
     {
         if (const auto* param = std::get_if<enum_t>(&m_storage))
         {
@@ -219,7 +226,8 @@ public:
     }
 
     template <class tscalar>
-    requires std::is_arithmetic_v<tscalar> tscalar value() const
+    requires std::is_arithmetic_v<tscalar>
+    tscalar value() const
     {
         return std::visit(overloaded{[](const irange_t& param) { return param.value<tscalar>(); },
                                      [](const frange_t& param) { return param.value<tscalar>(); },
@@ -232,7 +240,8 @@ public:
     }
 
     template <class tscalar>
-    requires std::is_arithmetic_v<tscalar> std::tuple<tscalar, tscalar> value_pair() const
+    requires std::is_arithmetic_v<tscalar>
+    std::tuple<tscalar, tscalar> value_pair() const
     {
         return std::visit(overloaded{[](const iprange_t& param) { return param.value<tscalar>(); },
                                      [](const fprange_t& param) { return param.value<tscalar>(); },

@@ -6,7 +6,8 @@ using namespace nano;
 namespace
 {
 template <class tindex>
-requires std::is_integral_v<tindex> tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
+requires std::is_integral_v<tindex>
+tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 {
     auto iter = combinatorial_iterator_t{counts};
 

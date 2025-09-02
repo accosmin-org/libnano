@@ -12,8 +12,8 @@
 namespace nano
 {
 template <class tscalar>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::ostream& write(std::ostream& stream,
-                                                                                              tscalar       scalar)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::ostream& write(std::ostream& stream, tscalar scalar)
 {
     return stream.write(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -21,9 +21,8 @@ requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::o
 }
 
 template <class tscalar, class tcount>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::ostream& write(std::ostream&  stream,
-                                                                                              const tscalar* data,
-                                                                                              const tcount   count)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
 {
     return stream.write(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -32,9 +31,8 @@ requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::o
 }
 
 template <class twscalar, class tscalar, class tcount>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::ostream& write_cast(std::ostream& stream,
-                                                                                                   const tscalar* data,
-                                                                                                   const tcount   count)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
 {
     for (tcount i = 0; i < count; ++i)
     {
@@ -53,8 +51,8 @@ inline std::ostream& write(std::ostream& stream, const std::string_view& string)
 /// \brief serialize objects with a write method to binary stream.
 ///
 template <class tobject>
-requires std::is_member_function_pointer_v<decltype(&tobject::write)> std::ostream& write(std::ostream&  stream,
-                                                                                          const tobject& object)
+requires std::is_member_function_pointer_v<decltype(&tobject::write)>
+std::ostream& write(std::ostream& stream, const tobject& object)
 {
     return object.write(stream);
 }
@@ -92,8 +90,8 @@ std::ostream& write(std::ostream& stream, const std::vector<tvalue>& values)
 }
 
 template <class tscalar>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::istream& read(std::istream& stream,
-                                                                                             tscalar&      scalar)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::istream& read(std::istream& stream, tscalar& scalar)
 {
     return stream.read(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -101,9 +99,8 @@ requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::i
 }
 
 template <class tscalar, class tcount>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::istream& read(std::istream& stream,
-                                                                                             tscalar*      data,
-                                                                                             tcount        count)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::istream& read(std::istream& stream, tscalar* data, tcount count)
 {
     return stream.read(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -112,8 +109,8 @@ requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::i
 }
 
 template <class trscalar, class tscalar>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::istream& read_cast(std::istream& stream,
-                                                                                                  tscalar&      scalar)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::istream& read_cast(std::istream& stream, tscalar& scalar)
 {
     trscalar value{};
     read(stream, value);
@@ -122,9 +119,8 @@ requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::i
 }
 
 template <class trscalar, class tscalar, class tcount>
-requires(std::is_standard_layout_v<tscalar>&& std::is_trivial_v<tscalar>) std::istream& read_cast(std::istream& stream,
-                                                                                                  tscalar*      data,
-                                                                                                  const tcount  count)
+requires(std::is_standard_layout_v<tscalar> && std::is_trivial_v<tscalar>)
+std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
 {
     for (tcount i = 0; i < count; ++i)
     {
@@ -153,8 +149,8 @@ inline std::istream& read(std::istream& stream, std::string& string)
 /// \brief serialize objects with a read method from binary stream.
 ///
 template <class tobject>
-requires std::is_member_function_pointer_v<decltype(&tobject::read)> std::istream& read(std::istream& stream,
-                                                                                        tobject&      object)
+requires std::is_member_function_pointer_v<decltype(&tobject::read)>
+std::istream& read(std::istream& stream, tobject& object)
 {
     return object.read(stream);
 }

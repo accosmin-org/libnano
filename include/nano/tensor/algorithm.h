@@ -38,7 +38,7 @@ void copy(const tensor_size_t isrc, const tensor_size_t idst, ttensor& tensor)
 ///
 template <class toperator, class... ttensors>
 auto remove_if(const toperator& op, ttensors&&... tensors) -> tensor_size_t
-    requires(is_tensor_v<std::remove_reference_t<ttensors>>&&...)
+requires(is_tensor_v<std::remove_reference_t<ttensors>> && ...)
 {
     const auto last = detail::size(std::forward<ttensors>(tensors)...);
 
