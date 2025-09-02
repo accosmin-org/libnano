@@ -431,7 +431,7 @@ public:
     template <class tgenerator>
     requires std::is_invocable_v<tgenerator> auto& full(tgenerator&& generator)
     {
-        std::generate(begin(), end(), generator);
+        std::generate(begin(), end(), std::forward<tgenerator>(generator));
         return *this;
     }
 
@@ -902,7 +902,7 @@ template <class tscalar, size_t trank, class tgenerator>
 requires std::is_invocable_v<tgenerator> auto make_full_tensor(const tensor_dims_t<trank>& dims, tgenerator&& generator)
 {
     tensor_mem_t<tscalar, trank> tensor(dims);
-    tensor.full(generator);
+    tensor.full(std::forward<tgenerator>(generator));
     return tensor;
 }
 
@@ -960,7 +960,7 @@ make_random_vector(const tensor_size_t rows, const tscalar_value min_value = -1,
 template <class tscalar, class tgenerator>
 requires std::is_invocable_v<tgenerator> auto make_full_vector(const tensor_size_t rows, tgenerator&& generator)
 {
-    return make_full_tensor<tscalar>(make_dims(rows), generator);
+    return make_full_tensor<tscalar>(make_dims(rows), std::forward<tgenerator>(generator));
 }
 
 ///
@@ -991,6 +991,6 @@ template <class tscalar, class tgenerator>
 requires std::is_invocable_v<tgenerator> auto make_full_matrix(const tensor_size_t rows, const tensor_size_t cols,
                                                                tgenerator&& generator)
 {
-    return make_full_tensor<tscalar>(make_dims(rows, cols), generator);
+    return make_full_tensor<tscalar>(make_dims(rows, cols), std::forward<tgenerator>(generator));
 }
 } // namespace nano

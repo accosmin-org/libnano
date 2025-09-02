@@ -172,7 +172,7 @@ bool solver_t::done_gradient_test(solver_state_t& state, const bool iter_ok, con
 }
 
 bool solver_t::done_specific_test(solver_state_t& state, const bool iter_ok, const bool converged,
-                                  const logger_t& logger) const
+                                  const logger_t& logger)
 {
     state.update_calls();
     state.update_history();

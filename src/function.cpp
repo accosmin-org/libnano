@@ -61,6 +61,7 @@ void make_function(rfunction_t& function, const tensor_size_t dims, const tensor
         for (tensor_size_t i = 0; i < seeds; ++i)
         {
             const auto seed = udist(rng);
+            // NOLINTNEXTLINE(readability-suspicious-call-argument)
             function->config("function::seed", seed, param_name, value, args...);
             functions.emplace_back(function->make(dims));
         }

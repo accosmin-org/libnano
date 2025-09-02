@@ -111,8 +111,8 @@ void stack(tensor_mem_t<tscalar, 1U>& vector, const tensor_size_t row, const tbl
 ///             +------------------------------------+
 ///
 template <class tscalar, class... tblocks>
-auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks) ->
-    typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...), tensor_mem_t<tscalar, 2U>>
+auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&... blocks)
+    -> tensor_mem_t<tscalar, 2U> requires((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...)
 {
     auto matrix = tensor_mem_t<tscalar, 2U>{rows, cols};
 
@@ -127,9 +127,8 @@ auto stack(const tensor_size_t rows, const tensor_size_t cols, const tblocks&...
 /// NB: the segments are given in row-major fashion and are assumed to be compatible in size and without gaps.
 ///
 template <class tscalar, class... tblocks>
-auto stack(const tensor_size_t rows, const tblocks&... blocks) ->
-    typename std::enable_if_t<((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...), tensor_mem_t<tscalar, 1U>>
-
+auto stack(const tensor_size_t rows, const tblocks&... blocks)
+    -> tensor_mem_t<tscalar, 1U> requires((is_eigen_v<tblocks> || is_tensor_v<tblocks>) && ...)
 {
     auto vector = tensor_mem_t<tscalar, 1U>{rows};
 

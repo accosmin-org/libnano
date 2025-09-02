@@ -250,7 +250,7 @@ UTEST_CASE(accumulator_cluster)
 
 UTEST_CASE(criterion)
 {
-    const auto rss = std::exp(1.0);
+    const auto rss = std::numbers::e;
     const auto n   = 100;
     const auto k   = 3;
 

@@ -101,7 +101,7 @@ UTEST_CASE(gradient)
             for (int power = 0; power <= max_power; ++power)
             {
                 auto tx = make_random_tensor<scalar_t>(make_dims(function.size()), -1.0, +1.0);
-                tx.array() *= std::pow(std::exp(1.0), power);
+                tx.array() *= std::pow(std::numbers::e, power);
 
                 const vector_t x = tx.vector();
 

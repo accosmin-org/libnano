@@ -96,11 +96,13 @@ UTEST_CASE(regression1)
 {
     const auto function = make_function("cvx48e-ineq", "function::seed", 3991, "function::cvx48e-ineq::alpha", 1e-6);
 
+    // NOLINTBEGIN(modernize-use-std-numbers)
     const auto x0 =
         make_vector<scalar_t>(-0.2764936187966942, -0.2222212963715804, 0.09466578040479257, 0.5659487082254151,
                               0.6548357325973591, -0.2565754309721414, -0.7536298826268002, 0.8886021436691338,
                               -0.9769280576612476, 0.6916720138178716, -0.4352138222311691, -0.08738905703404498,
                               0.09437059025466077, -0.6509127504009076, 0.5330721389348336, -0.8400094985342113);
+    // NOLINTEND(modernize-use-std-numbers)
 
     check_minimize(make_solvers(), *(function->make(16)), x0);
 }

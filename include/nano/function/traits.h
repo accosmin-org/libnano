@@ -11,7 +11,7 @@ struct is_tensor_matrix : std::false_type
 
 template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 struct is_tensor_matrix<tensor_t<tstorage, tscalar, trank>>
-    : std::conditional<trank <= 2U, std::true_type, std::false_type>::type
+    : std::conditional_t<trank <= 2U, std::true_type, std::false_type>
 {
 };
 
@@ -22,7 +22,7 @@ struct is_tensor_vector : std::false_type
 
 template <template <class, size_t> class tstorage, class tscalar, size_t trank>
 struct is_tensor_vector<tensor_t<tstorage, tscalar, trank>>
-    : std::conditional<trank == 1U, std::true_type, std::false_type>::type
+    : std::conditional_t<trank == 1U, std::true_type, std::false_type>
 {
 };
 

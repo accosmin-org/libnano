@@ -87,9 +87,9 @@ public:
 
 protected:
     static bool done(solver_state_t&, bool iter_ok, solver_status, const logger_t&);
+    static bool done_specific_test(solver_state_t&, bool iter_ok, bool converged, const logger_t&);
     bool        done_value_test(solver_state_t&, bool iter_ok, const logger_t&) const;
     bool        done_gradient_test(solver_state_t&, bool iter_ok, const logger_t&) const;
-    bool        done_specific_test(solver_state_t&, bool iter_ok, bool converged, const logger_t&) const;
     bool        done_kkt_optimality_test(solver_state_t&, bool iter_ok, const logger_t&) const;
 
     static void warn_nonconvex(const function_t&, const logger_t&);

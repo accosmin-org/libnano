@@ -10,7 +10,7 @@ UTEST_BEGIN_MODULE(test_stats)
 
 UTEST_CASE(IC)
 {
-    const auto rss = std::exp(1.0);
+    const auto rss = std::numbers::e;
     const auto n   = 100;
     const auto k   = 3;
 
