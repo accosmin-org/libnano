@@ -2,6 +2,7 @@
 #include <nano/wlearner/accumulator.h>
 #include <nano/wlearner/criterion.h>
 #include <nano/wlearner/util.h>
+#include <numbers>
 #include <utest/utest.h>
 
 using namespace nano;

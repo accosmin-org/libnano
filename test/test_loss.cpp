@@ -6,6 +6,7 @@
 #include <nano/function/util.h>
 #include <nano/loss.h>
 #include <nano/loss/class.h>
+#include <numbers>
 #include <utest/utest.h>
 
 using namespace nano;

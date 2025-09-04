@@ -2,6 +2,7 @@
 #include <nano/core/stats.h>
 #include <nano/core/strutil.h>
 #include <nano/tensor/tensor.h>
+#include <numbers>
 #include <utest/utest.h>
 
 using namespace nano;
