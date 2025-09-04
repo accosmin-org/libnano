@@ -176,7 +176,7 @@ UTEST_CASE(prefix)
     UTEST_CHECK_EQUAL(stream.str(), "test\nbase_prefix: test2\n");
 
     {
-        [[maybe_unused]] const auto _ = logger_prefix_scope_t{logger, "detailed_prefix: "};
+        [[maybe_unused]] const auto logger_scoper = logger_prefix_scope_t{logger, "detailed_prefix: "};
 
         logger.log(logger.prefix(), "test3\n");
         UTEST_CHECK_EQUAL(logger.prefix(), "base_prefix: detailed_prefix: ");

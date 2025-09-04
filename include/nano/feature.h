@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <compare>
 #include <nano/arch.h>
 #include <nano/core/strutil.h>
 #include <nano/task.h>
@@ -60,6 +61,8 @@ inline enum_map_t<feature_type> enum_string()
 class NANO_PUBLIC feature_t
 {
 public:
+    auto operator<=>(const feature_t& other) const noexcept = default;
+
     ///
     /// \brief default constructor
     ///
@@ -180,7 +183,5 @@ private:
     mutable strings_t m_labels;                      ///< possible labels (if the feature is discrete/categorical)
 };
 
-NANO_PUBLIC bool operator==(const feature_t& lhs, const feature_t& rhs);
-NANO_PUBLIC bool operator!=(const feature_t& lhs, const feature_t& rhs);
 NANO_PUBLIC std::ostream& operator<<(std::ostream&, const feature_t&);
 } // namespace nano
