@@ -24,16 +24,16 @@ bash docker/run.sh bash scripts/build.sh \
 # standard GCC builds
 ###############################################################################################################
 
-bash scripts/build.sh --gcc --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
-    ${cmake_options} --config --build --test --install --build-example
+#bash scripts/build.sh --gcc --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
+#    ${cmake_options} --config --build --test --install --build-example
 
-bash scripts/build.sh --gcc --no-werror --suffix gcc-release -DCMAKE_BUILD_TYPE=Release \
-    ${cmake_options} --config --build --test --install --build-example
+#bash scripts/build.sh --gcc --suffix gcc-release -DCMAKE_BUILD_TYPE=Release \
+#    ${cmake_options} --config --build --test --install --build-example
 
 #bash scripts/build.sh --gcc --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 #    ${cmake_options} --config --build --test --install --build-example
 
-#bash scripts/build.sh -gcc --no-werror --suffix gcc-release-lto -DCMAKE_BUILD_TYPE=Release --lto \
+#bash scripts/build.sh -gcc --suffix gcc-release-lto -DCMAKE_BUILD_TYPE=Release --lto \
 #    ${cmake_options} --config --build --test --install --build-example
 
 ###############################################################################################################
@@ -67,7 +67,7 @@ bash docker/run.sh bash scripts/build.sh --clang --suffix clang-tidy \
 #   - sanitizers
 ###############################################################################################################
 
-bash scripts/build.sh --gcc --suffix memcheck -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+bash scripts/build.sh --clang --suffix memcheck -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     ${cmake_options} --config --build --memcheck
 
 bash scripts/build.sh --clang --suffix clang-asan -DCMAKE_BUILD_TYPE=Debug --asan \

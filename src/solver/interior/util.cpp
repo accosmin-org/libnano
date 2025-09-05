@@ -4,13 +4,10 @@ using namespace nano;
 
 namespace
 {
-template <class Qrow, class Grow, class Arow>
-auto inorm(const Qrow& qrow, const Grow& grow, const Arow& arow)
+template <class Qrow, class... Xrows>
+auto inorm(const Qrow& qrow, const Xrows&... xrows)
 {
-    const auto Qnorm = qrow.template lpNorm<Eigen::Infinity>();
-    const auto Gnorm = grow.template lpNorm<Eigen::Infinity>();
-    const auto Anorm = arow.template lpNorm<Eigen::Infinity>();
-    return std::max({Qnorm, Gnorm, Anorm});
+    return std::max({qrow.template lpNorm<Eigen::Infinity>(), (xrows.template lpNorm<Eigen::Infinity>(), ...)});
 }
 
 template <class Qrow, class Grow, class Arow>
@@ -76,7 +73,18 @@ void nano::modified_ruiz_equilibration(vector_t& dQ, matrix_t& Q, vector_t& c, v
         // matrix equilibration
         for (tensor_size_t i = 0; i < n && !is_linear; ++i)
         {
-            ::scale(::inorm(Q.row(i), G.col(i), A.col(i)), tau, cQ(i));
+            if (m > 0 && p > 0)
+            {
+                ::scale(::inorm(Q.row(i), G.col(i), A.col(i)), tau, cQ(i));
+            }
+            else if (m > 0)
+            {
+                ::scale(::inorm(Q.row(i), G.col(i)), tau, cQ(i));
+            }
+            else if (p > 0)
+            {
+                ::scale(::inorm(Q.row(i), A.col(i)), tau, cQ(i));
+            }
         }
         for (tensor_size_t i = 0; i < m; ++i)
         {

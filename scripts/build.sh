@@ -48,6 +48,8 @@ function setup_usan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=undefined"
     export CXXFLAGS="${CXXFLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1 -g"
     export CXXFLAGS="${CXXFLAGS} -fno-sanitize-recover=all"
+    export CXXFLAGS="${CXXFLAGS} -fno-sanitize-merge"
+    export UBSAN_OPTIONS=print_stacktrace=1
 }
 
 function setup_msan {
