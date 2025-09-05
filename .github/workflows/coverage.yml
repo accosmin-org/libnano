@@ -19,7 +19,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
-        GCOV=gcov bash scripts/build.sh --gcc --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        GCOV=gcov bash scripts/build.sh --gcc --no-werror --suffix lcov -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           --coverage -DBUILD_SHARED_LIBS=OFF ${cmake_options} --config --build --lcov-init --test --lcov \
           --codecov
 

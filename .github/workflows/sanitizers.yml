@@ -7,38 +7,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  asan-gcc:
+  asan-clang:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
       run: bash scripts/setup_ubuntu.sh --default
-    - name: ASAN (gcc)
-      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
+    - name: ASAN (clang)
+      run: bash scripts/build.sh --clang -DCMAKE_BUILD_TYPE=Debug --asan --config --build --test
 
-  lsan-gcc:
+  lsan-clang:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
       run: bash scripts/setup_ubuntu.sh --default
-    - name: LSAN (gcc)
-      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
+    - name: LSAN (clang)
+      run: bash scripts/build.sh --clang -DCMAKE_BUILD_TYPE=Debug --lsan --config --build --test
 
-  usan-gcc:
+  usan-clang:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
       run: bash scripts/setup_ubuntu.sh --default
-    - name: USAN (gcc)
-      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
+    - name: USAN (clang)
+      run: bash scripts/build.sh --clang -DCMAKE_BUILD_TYPE=Debug --usan --config --build --test
 
-  tsan-gcc:
+  tsan-clang:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: setup
       run: bash scripts/setup_ubuntu.sh --default
-    - name: TSAN (gcc)
-      run: bash scripts/build.sh --gcc -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
+    - name: TSAN (clang)
+      run: bash scripts/build.sh --clang -DCMAKE_BUILD_TYPE=Debug --tsan --config --build --test
