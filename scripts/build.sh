@@ -68,6 +68,10 @@ function setup_lld {
     export CXXFLAGS="${CXXFLAGS} -fuse-ld=lld"
 }
 
+function setup_no_werror {
+    export CXXFLAGS="${CXXFLAGS} -Wno-error"
+}
+
 function setup_native {
     export CXXFLAGS="${CXXFLAGS} -mtune=native -march=native"
 }
@@ -594,6 +598,8 @@ options:
         setup compiler and linker flags to enable the memory sanitizer
     --gold
         setup compiler and linker flags to enable the gold linker
+    --no-werror
+        disable treating compilation warnings as errors
     --native
         setup compiler flags to optimize for the native platform
     --libcpp
@@ -674,6 +680,7 @@ while [ "$1" != "" ]; do
         --tsan)                         setup_tsan;;
         --msan)                         setup_msan;;
         --gold)                         setup_gold;;
+        --no-werror)                    setup_no_werror;;
         --native)                       setup_native;;
         --libcpp)                       setup_libcpp;;
         --coverage)                     setup_coverage;;
