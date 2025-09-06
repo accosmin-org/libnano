@@ -120,9 +120,9 @@ static auto make_features_too_few()
 
 static auto make_features_too_many()
 {
-    auto       features = make_features();
-    const auto feature  = features[2U];
-    features.insert(features.begin() + 1U, feature);
+    auto features = make_features();
+    auto feature  = features[2U];
+    features.insert(features.begin() + 1U, std::move(feature));
     return features;
 }
 

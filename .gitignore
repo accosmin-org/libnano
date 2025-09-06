@@ -54,5 +54,7 @@ llvmcovhtml
 datasets
 doxygen
 
-.vs
+vs
 .cache
+
+*.log
