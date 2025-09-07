@@ -108,7 +108,7 @@ public:
     /// \brief evaluate the function's value at the given point
     ///     (and optionally its gradient or sub-gradient if not smooth).
     ///
-    scalar_t operator()(vector_cmap_t x, vector_map_t gx = vector_map_t{}) const;
+    scalar_t operator()(vector_cmap_t x, vector_map_t gx = {}, matrix_map_t Hx = {}) const;
 
     ///
     /// \brief returns the number of function evaluation calls registered so far.

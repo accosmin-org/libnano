@@ -186,16 +186,16 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
 
     // analytical hessian
     auto       Hx = matrix_t{n, n};
-    const auto fx = function(x, Hx);
+    const auto fx = function(x, {}, Hx);
 
     // central finite-difference approximated hessian
     auto dH = std::numeric_limits<scalar_t>::max();
     for (const auto deta : {1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0})
     {
         vector_t xx = x;
-        matrix_t gxp(n, n);
-        matrix_t gxn(n, );
-        matrix_t Hx_approx(n, n);
+        vector_t gxp(n);
+        vector_t gxn(n);
+        matrix_t Hx_approx = matrix_t::zero(n, n);
 
         for (auto i = 0; i < n; i++)
         {
@@ -207,23 +207,13 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
             const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
 
             xx(i) = x(i) + hi;
-            function(xx, gxp.vector(i));
+            function(xx, gxp);
 
             xx(i) = x(i) - hi;
-            function(xx, gxn.vector(i));
+            function(xx, gxn);
 
-            // FIXME: can update the approximation of the Hessian in-place using only two gradients in memory?!
-        }
-
-        for (auto i = 0; i < n; ++i)
-        {
-            for (auto j = 0; j < n; ++j)
-            {
-                const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
-                const auto hj = deta * eta * (1.0 + std::fabs(x(j)));
-
-                Hx_approx(i, j) = ((gxp(i, j) - gxn(i, j)) / (4.0 * hj) + ((gxp(j, i) - gxn(j, i)) / (4.0 * hi));
-            }
+            Hx_approx.row(i) += (gxp - gxn) / (4.0 * hi);
+            Hx_approx.col(i) += (gxp - gxn) / (4.0 * hi);
         }
 
         dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>()) / (1.0 + std::fabs(fx));
