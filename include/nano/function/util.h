@@ -5,9 +5,20 @@
 namespace nano
 {
 ///
-/// \brief compute the gradient accuracy (given vs. central finite difference approximation).
+/// \brief compute the difference between the analytical gradient and the gradient approximated
+///     using central finite difference approximation.
 ///
-NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_t desired_epsilon = 0.0);
+/// see (1) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_t desired_accuracy = 1e-10);
+
+///
+/// \brief compute the difference between the analytical hessian and the hessian approximated
+///     using central finite difference approximation.
+///
+/// see (1) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
+///
+NANO_PUBLIC scalar_t hess_accuracy(const function_t&, const vector_t& x, scalar_t desired_accuracy = 1e-10);
 
 ///
 /// \brief check if the function is convex along the [x1, x2] line.

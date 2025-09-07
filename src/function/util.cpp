@@ -135,43 +135,39 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
 {
     assert(x.size() == function.size());
 
-    const auto n = function.size();
-
-    vector_t xp(n);
-    vector_t xn(n);
-    vector_t gx(n);
-    vector_t gx_approx(n);
+    const auto n   = function.size();
+    const auto eta = std::sqrt(std::numeric_limits<scalar_t>::epsilon());
 
     // analytical gradient
+    auto       gx = vector_t{n};
     const auto fx = function(x, gx);
-    assert(gx.size() == function.size());
 
-    // finite-difference approximated gradient
-    //      see "Numerical optimization", Nocedal & Wright, 2nd edition, p.197
+    // central finite-difference approximated gradient
     auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto dx : {1e-9, 3e-9, 1e-8, 3e-8, 5e-8, 8e-8, 1e-7, 3e-7, 5e-7, 8e-7, 1e-6, 3e-6})
+    for (const auto deta : {1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0})
     {
-        xp = x;
-        xn = x;
+        vector_t xx = x;
+        vector_t gx_approx(n);
+
         for (auto i = 0; i < n; i++)
         {
             if (i > 0)
             {
-                xp(i - 1) = x(i - 1);
-                xn(i - 1) = x(i - 1);
+                xx(i - 1) = x(i - 1);
             }
-            xp(i) = x(i) + dx * std::max(scalar_t{1}, std::fabs(x(i)));
-            xn(i) = x(i) - dx * std::max(scalar_t{1}, std::fabs(x(i)));
 
-            const auto dfi = function(xp) - function(xn);
-            const auto dxi = xp(i) - xn(i);
-            gx_approx(i)   = dfi / dxi;
+            const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
 
-            assert(std::isfinite(gx(i)));
-            assert(std::isfinite(gx_approx(i)));
+            xx(i)          = x(i) + hi;
+            const auto fxp = function(xx);
+
+            xx(i)          = x(i) - hi;
+            const auto fxn = function(xx);
+
+            gx_approx(i) = (fxp - fxn) / (2.0 * hi);
         }
 
-        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>()) / (1.0 + std::fabs(fx));
+        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
         if (dg < desired_accuracy)
         {
             break;
@@ -179,6 +175,65 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
     }
 
     return dg;
+}
+
+scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, const scalar_t desired_accuracy)
+{
+    assert(x.size() == function.size());
+
+    const auto n = function.size();
+    const auto eta = std::cbrt(std::numeric_limits<scalar_t>::epsilon());
+
+    // analytical hessian
+    auto       Hx = matrix_t{n, n};
+    const auto fx = function(x, Hx);
+
+    // central finite-difference approximated hessian
+    auto dH = std::numeric_limits<scalar_t>::max();
+    for (const auto deta : {1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0})
+    {
+        vector_t xx = x;
+        matrix_t gxp(n, n);
+        matrix_t gxn(n, );
+        matrix_t Hx_approx(n, n);
+
+        for (auto i = 0; i < n; i++)
+        {
+            if (i > 0)
+            {
+                xx(i) = xx(i - 1);
+            }
+
+            const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
+
+            xx(i) = x(i) + hi;
+            function(xx, gxp.vector(i));
+
+            xx(i) = x(i) - hi;
+            function(xx, gxn.vector(i));
+
+            // FIXME: can update the approximation of the Hessian in-place using only two gradients in memory?!
+        }
+
+        for (auto i = 0; i < n; ++i)
+        {
+            for (auto j = 0; j < n; ++j)
+            {
+                const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
+                const auto hj = deta * eta * (1.0 + std::fabs(x(j)));
+
+                Hx_approx(i, j) = ((gxp(i, j) - gxn(i, j)) / (4.0 * hj) + ((gxp(j, i) - gxn(j, i)) / (4.0 * hi));
+            }
+        }
+
+        dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>()) / (1.0 + std::fabs(fx));
+        if (dH < desired_accuracy)
+        {
+            break;
+        }
+    }
+
+    return dH;
 }
 
 bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps,
