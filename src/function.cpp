@@ -242,7 +242,7 @@ tensor_size_t function_t::n_inequalities() const
     return ::nano::n_inequalities(m_constraints);
 }
 
-scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, [[maybe_unused]] matrix_map_t Hx) const
+scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const
 {
     assert(x.size() == size());
     assert(gx.size() == 0 || gx.size() == size());
@@ -250,7 +250,7 @@ scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, [[maybe_unused
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;
-    return do_vgrad(x, gx);
+    return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_Hx = Hx});
 }
 
 tensor_size_t function_t::fcalls() const

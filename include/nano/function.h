@@ -108,6 +108,12 @@ public:
     /// \brief evaluate the function's value at the given point
     ///     (and optionally its gradient or sub-gradient if not smooth).
     ///
+    struct eval_t
+    {
+        vector_cmap_t m_x{};  ///< input buffer of size (n,)
+        vector_map_t m_gx{}; ///< optional gradient buffer of size (n,)
+        matrix_map_t m_Hx{}; ///< optional Hessian buffer of size (n, n)
+    };
     scalar_t operator()(vector_cmap_t x, vector_map_t gx = {}, matrix_map_t Hx = {}) const;
 
     ///
@@ -176,7 +182,7 @@ protected:
     void strong_convexity(scalar_t);
 
     virtual string_t do_name() const;
-    virtual scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const = 0;
+    virtual scalar_t do_eval(eval_t) const = 0;
 
 private:
     // attributes

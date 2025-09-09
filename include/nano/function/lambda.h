@@ -5,11 +5,11 @@
 namespace nano
 {
 template <class tlambda>
-inline constexpr bool is_lambda_function_v = std::is_invocable_v<tlambda, vector_cmap_t, vector_cmap_t>;
+inline constexpr bool is_lambda_function_v = std::is_invocable_v<tlambda, vector_cmap_t, vector_map_t, matrix_map_t>;
 
 ///
 /// \brief maps a given lambda to the `function_t` interface.
-///     fx = lambda(vector_cmap_t x, vector_map_t gx)
+///     fx = lambda(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
 ///
 template <class tlambda>
 requires is_lambda_function_v<tlambda>
@@ -37,12 +37,13 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const override
     {
         assert(x.size() == size());
         assert(gx.size() == 0 || gx.size() == size());
+        assert(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()));
 
-        return m_lambda(x, gx);
+        return m_lambda(x, gx, Hx);
     }
 
 private:

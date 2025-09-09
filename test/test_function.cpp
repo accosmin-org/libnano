@@ -189,6 +189,21 @@ UTEST_CASE(grad_accuracy)
     }
 }
 
+UTEST_CASE(hess_accuracy)
+{
+    for (const auto& rfunction : function_t::make({2, 4, function_type::smooth}))
+    {
+        const auto& function = *rfunction;
+        UTEST_NAMED_CASE(function.name());
+
+        const auto dims = function.size();
+        UTEST_CHECK_LESS_EQUAL(dims, 4);
+        UTEST_CHECK_GREATER_EQUAL(dims, 2);
+
+        check_hessian(function, 100, 1e-8, 1e-8);
+    }
+}
+
 UTEST_CASE(reproducibility)
 {
     for (const auto& rfunction : function_t::make({2, 16, function_type::any}))
