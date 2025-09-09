@@ -15,15 +15,15 @@ rfunction_t function_maxq_t::clone() const
     return std::make_unique<function_maxq_t>(*this);
 }
 
-scalar_t function_maxq_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_maxq_t::do_vgrad(eval_t eval) const
 {
     auto       idx = tensor_size_t{0};
-    const auto fx  = x.array().square().maxCoeff(&idx);
+    const auto fx  = eval.m_x.array().square().maxCoeff(&idx);
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx.array() = 0.0;
-        gx(idx)    = 2.0 * x(idx);
+        eval.m_gx.array() = 0.0;
+        eval.m_gx(idx)    = 2.0 * eval.m_x(idx);
     }
 
     return fx;

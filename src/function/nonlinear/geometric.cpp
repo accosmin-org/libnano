@@ -35,17 +35,22 @@ rfunction_t function_geometric_optimization_t::clone() const
     return std::make_unique<function_geometric_optimization_t>(*this);
 }
 
-scalar_t function_geometric_optimization_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_geometric_optimization_t::do_vgrad(eval_t eval) const
 {
     const auto a = m_a.vector();
     const auto A = m_A.matrix();
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = A.transpose() * (a + A * x.vector()).array().exp().matrix();
+        eval.m_gx = A.transpose() * (a + A * eval.m_x.vector()).array().exp().matrix();
     }
 
-    return (a + A * x.vector()).array().exp().sum();
+    if (eval.has_hess())
+    {
+        // TODO
+    }
+
+    return (a + A * eval.m_x.vector()).array().exp().sum();
 }
 
 string_t function_geometric_optimization_t::do_name() const

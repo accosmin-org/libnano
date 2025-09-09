@@ -110,9 +110,20 @@ public:
     ///
     struct eval_t
     {
+        ///
+        /// \brief returns true if the gradient buffer is given.
+        ///
+        bool has_grad() const { return m_gx.size() == m_x.size(); }
+
+        ///
+        /// \brief returns true if the Hessian buffer is given.
+        ///
+        bool has_hess() const { return m_Hx.rows() == m_x.size() && m_Hx.cols() == m_x.size(); }
+
+        // attributes
         vector_cmap_t m_x{};  ///< input buffer of size (n,)
-        vector_map_t m_gx{}; ///< optional gradient buffer of size (n,)
-        matrix_map_t m_Hx{}; ///< optional Hessian buffer of size (n, n)
+        vector_map_t  m_gx{}; ///< optional gradient buffer of size (n,)
+        matrix_map_t  m_Hx{}; ///< optional Hessian buffer of size (n, n)
     };
     scalar_t operator()(vector_cmap_t x, vector_map_t gx = {}, matrix_map_t Hx = {}) const;
 
@@ -125,6 +136,11 @@ public:
     /// \brief returns the number of function gradient calls registered so far.
     ///
     tensor_size_t gcalls() const;
+
+    ///
+    /// \brief returns the number of function Hessian calls registered so far.
+    ///
+    tensor_size_t hcalls() const;
 
     ///
     /// \brief clear collected statistics (e.g. function calls).
@@ -193,6 +209,7 @@ private:
     constraints_t         m_constraints;                ///< optional equality and inequality constraints
     mutable tensor_size_t m_fcalls{0};                  ///< number of function value evaluations
     mutable tensor_size_t m_gcalls{0};                  ///< number of function gradient evaluations
+    mutable tensor_size_t m_hcalls{0};                  ///< number of function Hessian evaluations
     optimum_t             m_optimum;                    ///< optimum solution (if unique and known)
 };
 } // namespace nano

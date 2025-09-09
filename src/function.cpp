@@ -250,7 +250,16 @@ scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t H
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;
-    return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_Hx = Hx});
+    m_hcalls += (smooth() == smoothness::yes && Hx.rows() == size() && Hx.cols() == size()) ? 1 : 0;
+
+    if (smooth() == smoothness::yes)
+    {
+        return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_Hx = Hx});
+    }
+    else
+    {
+        return do_eval(eval_t{.m_x = x, .m_gx = gx});
+    }
 }
 
 tensor_size_t function_t::fcalls() const
@@ -267,6 +276,7 @@ void function_t::clear_statistics() const
 {
     m_fcalls = 0;
     m_gcalls = 0;
+    m_hcalls = 0;
 }
 
 rfunction_t function_t::make(tensor_size_t) const
