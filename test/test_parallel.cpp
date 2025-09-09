@@ -73,7 +73,7 @@ auto thread_counts()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_parallel)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(init)
 {

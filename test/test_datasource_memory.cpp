@@ -260,7 +260,7 @@ void check_inputs_or_target(const datasource_t& datasource, const features_t& fe
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_datasource_memory)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(check_samples)
 {

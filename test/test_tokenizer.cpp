@@ -1,7 +1,7 @@
 #include <nano/core/tokenizer.h>
 #include <utest/utest.h>
 
-UTEST_BEGIN_MODULE(test_tokenizer)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(split_str)
 {

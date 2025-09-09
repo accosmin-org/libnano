@@ -47,7 +47,7 @@ public:
 };
 } // namespace
 
-UTEST_BEGIN_MODULE(test_learner)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(fit_predict)
 {

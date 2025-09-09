@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_histogram)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(make_equidistant_ratios)
 {

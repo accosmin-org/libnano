@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_datasource_storage)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scalar)
 {

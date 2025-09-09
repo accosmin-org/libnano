@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_tensor_numeric)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(from_eigen_vector_expression)
 {

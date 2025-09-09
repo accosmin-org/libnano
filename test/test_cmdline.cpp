@@ -34,7 +34,7 @@ void check(const cmdresult_t& result, const cmdvalues_t& expected_values)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_cmdline)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(handle_help)
 {

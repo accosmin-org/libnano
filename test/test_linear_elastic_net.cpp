@@ -6,7 +6,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-UTEST_BEGIN_MODULE(test_linear_elastic_net)
+UTEST_BEGIN_MODULE()
 
 // FIXME: enable the test when an efficient optimizer with strong theoretical guarantees is available!
 /*UTEST_CASE(elasticnet)

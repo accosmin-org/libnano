@@ -196,7 +196,7 @@ auto make_targets(const dataset_t& dataset, const indices_t& samples)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_dataset_stats)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scaling)
 {

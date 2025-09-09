@@ -114,7 +114,7 @@ void check_value_pair(parameter_t param, tvalue value1, tvalue value2)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_parameter)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(monostate)
 {

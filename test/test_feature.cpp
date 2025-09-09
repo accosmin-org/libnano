@@ -31,7 +31,7 @@ void check_stream(const feature_t& feature)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_feature)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(_default)
 {

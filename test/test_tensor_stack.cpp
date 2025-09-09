@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_tensor_stack)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(vector)
 {

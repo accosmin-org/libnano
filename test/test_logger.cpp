@@ -52,7 +52,7 @@ private:
 };
 } // namespace
 
-UTEST_BEGIN_MODULE(test_logger)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(critical)
 {

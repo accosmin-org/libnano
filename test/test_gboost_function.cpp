@@ -120,7 +120,7 @@ void check_value(const function_t& function, const ttmatrix& tmatrix, const toma
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_gboost_function)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(bias)
 {

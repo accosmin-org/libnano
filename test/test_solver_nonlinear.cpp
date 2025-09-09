@@ -10,7 +10,7 @@ auto make_solver_ids()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_solver_nonlinear)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(smooth)
 {

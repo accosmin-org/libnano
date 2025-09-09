@@ -21,7 +21,7 @@ namespace
 } // namespace
 */
 
-UTEST_BEGIN_MODULE(test_solver_bundle)
+UTEST_BEGIN_MODULE()
 
 /*UTEST_CASE(smooth_bundle)
 {

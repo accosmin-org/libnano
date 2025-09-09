@@ -31,7 +31,7 @@ auto make_vector_storage(const vector_t& data)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_tensor_storage)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(begin_end)
 {

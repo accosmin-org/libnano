@@ -194,7 +194,7 @@ auto make_gbooster_to_fit(const targs... args)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_gboost_model)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(empty)
 {

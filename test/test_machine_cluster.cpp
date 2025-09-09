@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_machine_cluster)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(_default)
 {

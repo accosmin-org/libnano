@@ -114,7 +114,7 @@ void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const tensor1
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_tuner)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(factory)
 {

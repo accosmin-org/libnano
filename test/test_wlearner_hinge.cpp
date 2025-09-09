@@ -70,7 +70,7 @@ private:
     hinge_type m_hinge{hinge_type::left};
 };
 
-UTEST_BEGIN_MODULE(test_wlearner_hinge)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(str_enum)
 {

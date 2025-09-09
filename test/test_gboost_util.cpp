@@ -21,7 +21,7 @@ void check_samples(const indices_t& selected_samples, const indices_t& train_sam
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_gboost_util)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(accumulator)
 {

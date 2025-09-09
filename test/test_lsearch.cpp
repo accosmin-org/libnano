@@ -97,7 +97,7 @@ void test(const rlsearchk_t& lsearch, const function_t& function)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_lsearch)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(lsearch_type_str)
 {
