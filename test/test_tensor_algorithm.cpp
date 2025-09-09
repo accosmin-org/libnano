@@ -13,7 +13,7 @@ auto copy_remove_if(const toperator& op, ttensors... tensors)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_tensor_algorithm)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(vector)
 {

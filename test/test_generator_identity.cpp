@@ -191,7 +191,7 @@ auto expected_flatten()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_generator_identity)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(empty)
 {

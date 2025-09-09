@@ -243,7 +243,7 @@ private:
     maker_t       m_maker;
 };
 
-UTEST_BEGIN_MODULE(test_wlearner_table)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(fit_predict_sclass_dense)
 {

@@ -78,7 +78,7 @@ auto make_accumulator()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_wlearner_util)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scale)
 {

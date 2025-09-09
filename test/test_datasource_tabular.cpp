@@ -185,7 +185,7 @@ private:
 };
 } // namespace
 
-UTEST_BEGIN_MODULE(test_datasource_tabular)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(empty)
 {

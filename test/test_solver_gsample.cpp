@@ -11,7 +11,7 @@ using namespace nano;
 } // namespace
 */
 
-UTEST_BEGIN_MODULE(test_solver_gsample)
+UTEST_BEGIN_MODULE()
 
 // FIXME: the gradient sampling solvers are not robust
 /*UTEST_CASE(smooth)

@@ -65,7 +65,7 @@ private:
     }
 };
 
-UTEST_BEGIN_MODULE(test_wlearner_affine)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(fit_predict)
 {

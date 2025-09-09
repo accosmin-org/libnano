@@ -26,7 +26,7 @@ auto make_target(const dataset_t& dataset)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_linear_dataset)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(dataset)
 {

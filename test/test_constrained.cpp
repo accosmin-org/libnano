@@ -196,7 +196,7 @@ public:
 };
 } // namespace
 
-UTEST_BEGIN_MODULE(test_constrained)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(minimum)
 {

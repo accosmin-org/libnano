@@ -39,7 +39,7 @@ auto check_read_tensor(const std::string& str)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_tensor_stream)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(read_write_int32)
 {

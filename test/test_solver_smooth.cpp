@@ -37,7 +37,7 @@ auto make_solver_ids()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_solver_smooth)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(default_solvers)
 {

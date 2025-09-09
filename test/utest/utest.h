@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cmath>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -88,6 +89,11 @@ static std::ostream& operator<<(std::ostream& stream, const std::vector<tvalue>&
     return stream << "}";
 }
 
+static std::string make_module_name(const char* const filename)
+{
+    return std::filesystem::path(filename).stem().string();
+}
+
 struct utest_location_t
 {
 };
@@ -172,12 +178,12 @@ static auto check_with_logger(const toperator& op)
     }
 }
 
-#define UTEST_BEGIN_MODULE(name)                                                                                       \
+#define UTEST_BEGIN_MODULE()                                                                                           \
     int main(int, char*[]) /*NOLINT(hicpp-function-size,readability-function-size)*/                                   \
     {                                                                                                                  \
         try                                                                                                            \
         {                                                                                                              \
-            utest_module_name = #name;
+            utest_module_name = make_module_name(__FILE__);
 
 #define UTEST_CASE(name)                                                                                               \
     ++utest_n_cases;                                                                                                   \

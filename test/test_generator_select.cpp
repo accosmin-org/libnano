@@ -4,7 +4,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_generator_select)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(select_scalar)
 {

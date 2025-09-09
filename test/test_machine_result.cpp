@@ -27,7 +27,7 @@ void check_stats(const stats_t& stats, const scalar_t expected_mean, const scala
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_machine_result)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(result_optimum)
 {

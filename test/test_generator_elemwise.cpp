@@ -190,7 +190,7 @@ public:
     }
 };
 
-UTEST_BEGIN_MODULE(test_generator_elemwise)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scalar)
 {

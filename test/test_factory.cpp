@@ -40,7 +40,7 @@ std::ostream& operator<<(std::ostream& stream, const strings_t& strings)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_factory)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(empty)
 {

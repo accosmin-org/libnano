@@ -50,7 +50,7 @@ struct loss_function_t final : public function_t
     mutable tensor1d_t m_values;
 };
 
-UTEST_BEGIN_MODULE(test_loss)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(factory)
 {

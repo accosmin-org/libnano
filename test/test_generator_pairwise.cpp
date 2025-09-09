@@ -144,7 +144,7 @@ public:
     }
 };
 
-UTEST_BEGIN_MODULE(test_generator_pairwise)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scalar_scalar)
 {

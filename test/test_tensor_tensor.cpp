@@ -6,7 +6,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_tensor_tensor)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(print)
 {

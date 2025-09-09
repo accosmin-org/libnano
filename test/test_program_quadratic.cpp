@@ -23,7 +23,7 @@ rsolvers_t make_solvers()
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_program_quadratic)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(constrain)
 {

@@ -74,7 +74,7 @@ auto check(const tensor_t<tstorage, tscalar, 4>& tensor, tensor_size_t index0, t
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_tensor_integral)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(integral1d)
 {

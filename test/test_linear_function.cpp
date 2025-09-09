@@ -65,7 +65,7 @@ auto check_minimize(const function_t& function)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_linear_function)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(function_noreg)
 {

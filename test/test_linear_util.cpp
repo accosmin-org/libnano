@@ -7,7 +7,7 @@
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_linear_util)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(accumulator)
 {

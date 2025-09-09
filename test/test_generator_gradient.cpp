@@ -103,7 +103,7 @@ auto make_dataset(const datasource_t& datasource)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_generator_gradient)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(kernel)
 {

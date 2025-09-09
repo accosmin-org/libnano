@@ -20,7 +20,7 @@ scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_function_util)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(make_full_rank)
 {

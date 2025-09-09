@@ -6,7 +6,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-UTEST_BEGIN_MODULE(test_linear_ridge)
+UTEST_BEGIN_MODULE()
 
 // FIXME: have a robust bundle solver
 /*UTEST_CASE(ridge)

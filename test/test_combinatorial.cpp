@@ -24,7 +24,7 @@ tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_combinatorial)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(exhaustive)
 {

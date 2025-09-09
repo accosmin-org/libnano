@@ -366,7 +366,7 @@ private:
     }
 };
 
-UTEST_BEGIN_MODULE(test_wlearner_dtree)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(node_equal)
 {

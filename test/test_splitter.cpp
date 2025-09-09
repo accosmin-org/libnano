@@ -47,7 +47,7 @@ void check_split(const indices_t& train, const indices_t& valid, const tensor_si
 }
 } // namespace
 
-UTEST_BEGIN_MODULE(test_splitter)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(factory)
 {

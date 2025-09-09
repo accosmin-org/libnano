@@ -4,7 +4,7 @@
 using namespace nano;
 using namespace nano::ml;
 
-UTEST_BEGIN_MODULE(test_machine_params)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(_default)
 {

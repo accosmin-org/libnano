@@ -21,7 +21,7 @@ enum_map_t<nano::enum_type> enum_string<nano::enum_type>() // cppcheck-suppress 
 }
 } // namespace nano
 
-UTEST_BEGIN_MODULE(test_strutil)
+UTEST_BEGIN_MODULE()
 
 UTEST_CASE(scat)
 {
