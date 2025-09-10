@@ -253,9 +253,9 @@ scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t H
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;
-    m_hcalls += (smooth() == smoothness::yes && Hx.rows() == size() && Hx.cols() == size()) ? 1 : 0;
+    m_hcalls += (smooth() && Hx.rows() == size() && Hx.cols() == size()) ? 1 : 0;
 
-    if (smooth() == smoothness::yes)
+    if (smooth())
     {
         return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_Hx = Hx});
     }
@@ -298,7 +298,7 @@ bool function_t::optimum(vector_t xbest)
     else
     {
         m_optimum.m_xbest = std::move(xbest);
-        m_optimum.m_fbest = do_vgrad(m_optimum.m_xbest, vector_map_t{});
+        m_optimum.m_fbest = operator()(m_optimum.m_xbest);
         return true;
     }
 }

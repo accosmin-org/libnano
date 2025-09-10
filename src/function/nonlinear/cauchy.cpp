@@ -16,12 +16,20 @@ rfunction_t function_cauchy_t::clone() const
 
 scalar_t function_cauchy_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == x.size())
+    const auto xTx = eval.m_x.dot(eval.m_x);
+
+    if (eval.has_grad())
     {
-        gx = 2 * x / (1 + x.dot(x));
+        eval.m_gx = 2 * eval.m_x / (1 + xTx);
     }
 
-    return std::log1p(x.dot(x));
+    if (eval.has_hess())
+    {
+        eval.m_Hx = -4 * (eval.m_x.vector() * eval.m_x.transpose()) / square(1 + xTx);
+        eval.m_Hx.diagonal().array() += 2 / (1 + xTx);
+    }
+
+    return std::log1p(xTx);
 }
 
 rfunction_t function_cauchy_t::make(const tensor_size_t dims) const

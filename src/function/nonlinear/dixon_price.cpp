@@ -20,20 +20,26 @@ rfunction_t function_dixon_price_t::clone() const
 
 scalar_t function_dixon_price_t::do_eval(eval_t eval) const
 {
-    const auto xsegm0 = x.segment(0, size() - 1);
-    const auto xsegm1 = x.segment(1, size() - 1);
+    const auto xsegm0 = eval.m_x.segment(0, size() - 1);
+    const auto xsegm1 = eval.m_x.segment(1, size() - 1);
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
         const auto weight = m_bias.segment(1, size() - 1).array() * 2 * (2 * xsegm1.array().square() - xsegm0.array());
 
-        gx.full(0);
-        gx(0) = 2 * (x(0) - 1);
-        gx.segment(1, size() - 1).array() += weight * 4 * xsegm1.array();
-        gx.segment(0, size() - 1).array() -= weight;
+        eval.m_gx.full(0);
+        eval.m_gx(0) = 2 * (eval.m_x(0) - 1);
+        eval.m_gx.segment(1, size() - 1).array() += weight * 4 * xsegm1.array();
+        eval.m_gx.segment(0, size() - 1).array() -= weight;
     }
 
-    return nano::square(x(0) - 1) +
+    if (eval.has_hess())
+    {
+        // FIXME:
+        eval.m_Hx.full(0.0);
+    }
+
+    return nano::square(eval.m_x(0) - 1) +
            (m_bias.segment(1, size() - 1).array() * (2 * xsegm1.array().square() - xsegm0.array()).square()).sum();
 }
 

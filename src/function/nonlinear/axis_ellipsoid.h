@@ -5,7 +5,7 @@
 namespace nano
 {
 ///
-/// \brief axis-parallel hyper-ellipsoid function: f(x) = sum(i*x+i^2, i=1,D).
+/// \brief axis-parallel hyper-ellipsoid function: f(x) = sum(i*x_i^2, i=1,D).
 ///
 class NANO_PUBLIC function_axis_ellipsoid_t final : public function_t
 {

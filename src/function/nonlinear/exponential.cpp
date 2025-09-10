@@ -19,11 +19,17 @@ scalar_t function_exponential_t::do_eval(eval_t eval) const
 {
     const auto alpha = 1.0 / static_cast<scalar_t>(size());
 
-    const auto fx = std::exp(1 + x.dot(x) * alpha);
+    const auto fx = std::exp(1 + eval.m_x.dot(eval.m_x) * alpha);
 
     if (eval.has_grad())
     {
-        gx = (2 * fx * alpha) * x.vector();
+        eval.m_gx = (2 * fx * alpha) * eval.m_x.vector();
+    }
+
+    if (eval.has_hess())
+    {
+        eval.m_Hx = (4 * fx * alpha * alpha) * (eval.m_x.vector() * eval.m_x.transpose());
+        eval.m_Hx.diagonal().array() += 2 * fx * alpha;
     }
 
     return fx;
