@@ -30,7 +30,7 @@ rfunction_t scale_function_t::clone() const
     return std::make_unique<scale_function_t>(*this);
 }
 
-scalar_t scale_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t scale_function_t::do_eval(eval_t eval) const
 {
     assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == m_cluster.groups());
@@ -103,7 +103,7 @@ rfunction_t bias_function_t::clone() const
     return std::make_unique<bias_function_t>(*this);
 }
 
-scalar_t bias_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t bias_function_t::do_eval(eval_t eval) const
 {
     const auto& samples = m_iterator.samples();
     const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
@@ -158,7 +158,7 @@ rfunction_t grads_function_t::clone() const
     return std::make_unique<grads_function_t>(*this);
 }
 
-scalar_t grads_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t grads_function_t::do_eval(eval_t eval) const
 {
     const auto& samples = m_iterator.samples();
     const auto  odims   = cat_dims(samples.size(), m_iterator.dataset().target_dims());

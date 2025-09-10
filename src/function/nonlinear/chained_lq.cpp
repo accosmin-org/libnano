@@ -16,7 +16,7 @@ rfunction_t function_chained_lq_t::clone() const
     return std::make_unique<function_chained_lq_t>(*this);
 }
 
-scalar_t function_chained_lq_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_chained_lq_t::do_eval(eval_t eval) const
 {
     const auto values = [&](const tensor_size_t i = 0)
     {

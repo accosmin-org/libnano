@@ -41,7 +41,7 @@ rfunction_t linear::function_t::clone() const
     return std::make_unique<linear::function_t>(*this);
 }
 
-scalar_t linear::function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t linear::function_t::do_eval(eval_t eval) const
 {
     assert(gx.size() == 0 || gx.size() == x.size());
     assert(x.size() == (m_isize + 1) * m_tsize);

@@ -15,7 +15,7 @@ rfunction_t function_rotated_ellipsoid_t::clone() const
     return std::make_unique<function_rotated_ellipsoid_t>(*this);
 }
 
-scalar_t function_rotated_ellipsoid_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_rotated_ellipsoid_t::do_eval(eval_t eval) const
 {
     scalar_t fi = 0;
     scalar_t fx = 0;

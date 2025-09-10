@@ -18,7 +18,7 @@ rfunction_t function_zakharov_t::clone() const
     return std::make_unique<function_zakharov_t>(*this);
 }
 
-scalar_t function_zakharov_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_zakharov_t::do_eval(eval_t eval) const
 {
     const auto u = x.dot(x);
     const auto v = x.dot(m_bias);

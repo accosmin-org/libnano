@@ -43,6 +43,7 @@
 #include <function/nonlinear/trid.h>
 #include <function/nonlinear/zakharov.h>
 
+#include <nano/critical.h>
 #include <nano/core/strutil.h>
 
 using namespace nano;
@@ -244,9 +245,11 @@ tensor_size_t function_t::n_inequalities() const
 
 scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const
 {
-    assert(x.size() == size());
-    assert(gx.size() == 0 || gx.size() == size());
-    assert(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()));
+    critical(x.size() == size(), "function: invalid input size, expecting (", size(), ",), got (", x.size(), ",) instead!");
+
+    critical(gx.size() == 0 || gx.size() == size(), "function: invalid gradient size, expecting (", size(), ",) or empty, got (", gx.size(), ",) instead!");
+
+    critical(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()), "function: invalid Hessian size, expecting (", size(), ", ", size(), ") or empty, got (", Hx.rows(), ", ", Hx.cols(), ") instead!");
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;
@@ -258,6 +261,8 @@ scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t H
     }
     else
     {
+        critical(Hx.size() == 0, "function: cannot compute the Hessian for non-smooth functions!");
+
         return do_eval(eval_t{.m_x = x, .m_gx = gx});
     }
 }

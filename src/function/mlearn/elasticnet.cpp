@@ -64,7 +64,7 @@ string_t function_elasticnet_t<tloss>::do_name() const
 }
 
 template <class tloss>
-scalar_t function_elasticnet_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_elasticnet_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::elasticnet::alpha1").template value<scalar_t>();
     const auto alpha2 = parameter("function::elasticnet::alpha2").template value<scalar_t>();

@@ -33,7 +33,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
+    scalar_t do_eval(eval_t) const override;
 
     ///
     /// \brief compute the gradient wrt output for each sample.
@@ -70,7 +70,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
+    scalar_t do_eval(eval_t) const override;
 
 private:
     // attributes
@@ -105,7 +105,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override;
+    scalar_t do_eval(eval_t) const override;
 
 private:
     // attributes

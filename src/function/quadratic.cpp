@@ -50,14 +50,17 @@ rfunction_t quadratic_program_t::clone() const
     return std::make_unique<quadratic_program_t>(*this);
 }
 
-scalar_t quadratic_program_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t quadratic_program_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == size())
-    {
-        gx = m_Q * x + m_c;
+    if (eval.has_grad()) {
+        eval.m_gx = m_Q * eval.m_x + m_c;
     }
 
-    return x.dot(0.5 * (m_Q * x) + m_c);
+    if (eval.has_hess()) {
+        eval.m_Hx = m_Q;
+    }
+
+    return eval.m_x.dot(0.5 * (m_Q * eval.m_x) + m_c);
 }
 
 bool quadratic_program_t::constrain(constraint_t&& constraint)

@@ -43,7 +43,7 @@ rfunction_t quadratic_surrogate_fit_t::clone() const
     return std::make_unique<quadratic_surrogate_fit_t>(*this);
 }
 
-scalar_t quadratic_surrogate_fit_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t quadratic_surrogate_fit_t::do_eval(eval_t eval) const
 {
     m_loss_outputs.vector() = m_p2.matrix() * x;
 
@@ -76,7 +76,7 @@ rfunction_t quadratic_surrogate_t::clone() const
     return std::make_unique<quadratic_surrogate_t>(*this);
 }
 
-scalar_t quadratic_surrogate_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t quadratic_surrogate_t::do_eval(eval_t eval) const
 {
     if (gx.size() == x.size())
     {

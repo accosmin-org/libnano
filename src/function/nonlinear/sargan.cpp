@@ -15,7 +15,7 @@ rfunction_t function_sargan_t::clone() const
     return std::make_unique<function_sargan_t>(*this);
 }
 
-scalar_t function_sargan_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_sargan_t::do_eval(eval_t eval) const
 {
     const auto x2sum = x.dot(x);
 

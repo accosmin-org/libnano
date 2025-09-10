@@ -106,7 +106,8 @@ public:
 
     ///
     /// \brief evaluate the function's value at the given point
-    ///     (and optionally its gradient or sub-gradient if not smooth).
+    ///     and optionally its gradient (or sub-gradient if not smooth)
+    ///     and optionally its Hessian if smooth.
     ///
     struct eval_t
     {

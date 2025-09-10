@@ -15,7 +15,7 @@ rfunction_t function_powell_t::clone() const
     return std::make_unique<function_powell_t>(*this);
 }
 
-scalar_t function_powell_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_powell_t::do_eval(eval_t eval) const
 {
     scalar_t fx = 0;
     for (tensor_size_t i = 0, i4 = 0; i < size() / 4; ++i, i4 += 4)

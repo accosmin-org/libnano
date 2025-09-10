@@ -60,7 +60,7 @@ string_t function_lasso_t<tloss>::do_name() const
 }
 
 template <class tloss>
-scalar_t function_lasso_t<tloss>::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_lasso_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
 

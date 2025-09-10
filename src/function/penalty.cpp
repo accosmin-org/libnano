@@ -76,7 +76,7 @@ rfunction_t linear_penalty_function_t::clone() const
     return std::make_unique<linear_penalty_function_t>(*this);
 }
 
-scalar_t linear_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t linear_penalty_function_t::do_eval(eval_t eval) const
 {
     assert(x.size() == size());
 
@@ -104,7 +104,7 @@ rfunction_t quadratic_penalty_function_t::clone() const
     return std::make_unique<quadratic_penalty_function_t>(*this);
 }
 
-scalar_t quadratic_penalty_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t quadratic_penalty_function_t::do_eval(eval_t eval) const
 {
     assert(x.size() == size());
 
@@ -138,7 +138,7 @@ rfunction_t augmented_lagrangian_function_t::clone() const
     return std::make_unique<augmented_lagrangian_function_t>(*this);
 }
 
-scalar_t augmented_lagrangian_function_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t augmented_lagrangian_function_t::do_eval(eval_t eval) const
 {
     assert(x.size() == size());
 

@@ -17,7 +17,7 @@ rfunction_t function_qing_t::clone() const
     return std::make_unique<function_qing_t>(*this);
 }
 
-scalar_t function_qing_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_qing_t::do_eval(eval_t eval) const
 {
     const auto xa = x.array();
     const auto ba = m_bias.array();

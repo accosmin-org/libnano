@@ -21,7 +21,7 @@ rfunction_t function_quadratic_t::clone() const
     return std::make_unique<function_quadratic_t>(*this);
 }
 
-scalar_t function_quadratic_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t function_quadratic_t::do_eval(eval_t eval) const
 {
     const auto a = m_a.vector();
     const auto A = m_A.matrix();

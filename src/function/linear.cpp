@@ -18,14 +18,17 @@ rfunction_t linear_program_t::clone() const
     return std::make_unique<linear_program_t>(*this);
 }
 
-scalar_t linear_program_t::do_vgrad(vector_cmap_t x, vector_map_t gx) const
+scalar_t linear_program_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == size())
-    {
-        gx = m_c;
+    if (eval.has_grad()) {
+        eval.m_gx = m_c;
     }
 
-    return m_c.dot(x);
+    if (eval.has_hess()) {
+        eval.m_Hx.full(0.0);
+    }
+
+    return m_c.dot(eval.m_x);
 }
 
 bool linear_program_t::constrain(constraint_t&& constraint)
