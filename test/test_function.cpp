@@ -191,6 +191,8 @@ UTEST_CASE(grad_accuracy)
 
 UTEST_CASE(hess_accuracy)
 {
+    // TODO: if a function is convex, then the Hessian should be PSD
+
     for (const auto& rfunction : function_t::make({2, 4, function_type::smooth}))
     {
         const auto& function = *rfunction;

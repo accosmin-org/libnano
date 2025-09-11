@@ -64,14 +64,14 @@ scalar_t function_lasso_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
 
-    auto fx = tloss::vgrad(m_model, m_model.outputs(x), m_model.targets(), gx);
+    auto fx = tloss::vgrad(m_model, m_model.outputs(eval.m_x), m_model.targets(), eval.m_gx);
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx.array() += alpha1 * x.array().sign();
+        eval.m_gx.array() += alpha1 * eval.m_x.array().sign();
     }
 
-    fx += alpha1 * x.template lpNorm<1>();
+    fx += alpha1 * eval.m_x.template lpNorm<1>();
     return fx;
 }
 

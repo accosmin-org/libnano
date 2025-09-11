@@ -27,12 +27,12 @@ rfunction_t function_maxhilb_t::clone() const
 scalar_t function_maxhilb_t::do_eval(eval_t eval) const
 {
     auto       idx = tensor_size_t{0};
-    const auto fx  = (m_weights * x).array().abs().maxCoeff(&idx);
+    const auto fx  = (m_weights * eval.m_x).array().abs().maxCoeff(&idx);
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
         const auto wei = m_weights.row(idx).transpose();
-        gx             = wei * (std::signbit(x.dot(wei)) ? -1.0 : +1.0);
+        eval.m_gx      = wei * (std::signbit(eval.m_x.dot(wei)) ? -1.0 : +1.0);
     }
 
     return fx;

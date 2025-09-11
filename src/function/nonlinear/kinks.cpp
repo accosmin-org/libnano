@@ -31,15 +31,15 @@ rfunction_t function_kinks_t::clone() const
 
 scalar_t function_kinks_t::do_eval(eval_t eval) const
 {
-    const auto xv = x.vector();
+    const auto xv = eval.m_x.vector();
     const auto km = m_kinks.matrix();
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx.full(0);
+        eval.m_gx.full(0);
         for (tensor_size_t i = 0; i < km.rows(); ++i)
         {
-            gx.array() += (xv.transpose().array() - km.row(i).array()).sign();
+            eval.m_gx.array() += (xv.transpose().array() - km.row(i).array()).sign();
         }
     }
 

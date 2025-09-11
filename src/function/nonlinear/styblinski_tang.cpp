@@ -16,12 +16,17 @@ rfunction_t function_styblinski_tang_t::clone() const
 
 scalar_t function_styblinski_tang_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 4 * x.array().cube() - 32 * x.array() + 5;
+        eval.m_gx = 4 * eval.m_x.array().cube() - 32 * eval.m_x.array() + 5;
     }
 
-    return (x.array().square().square() - 16 * x.array().square() + 5 * x.array()).sum();
+    if (eval.has_hess())
+    {
+        eval.m_Hx = (12 * eval.m_x.array().square() - 32).matrix().asDiagonal();
+    }
+
+    return (eval.m_x.array().square().square() - 16 * eval.m_x.array().square() + 5 * eval.m_x.array()).sum();
 }
 
 rfunction_t function_styblinski_tang_t::make(const tensor_size_t dims) const

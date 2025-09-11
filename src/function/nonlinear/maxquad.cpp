@@ -71,7 +71,7 @@ scalar_t function_maxquad_t::do_eval(eval_t eval) const
     auto fx = std::numeric_limits<scalar_t>::lowest();
     for (tensor_size_t k = 0; k < m_Aks.size<0>(); ++k)
     {
-        const auto kfx = x.dot(m_Aks.matrix(k) * x - m_bks.vector(k));
+        const auto kfx = eval.m_x.dot(m_Aks.matrix(k) * eval.m_x - m_bks.vector(k));
         if (kfx > fx)
         {
             fx   = kfx;
@@ -79,9 +79,9 @@ scalar_t function_maxquad_t::do_eval(eval_t eval) const
         }
     }
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 2.0 * m_Aks.matrix(kmax) * x - m_bks.vector(kmax);
+        eval.m_gx = 2.0 * m_Aks.matrix(kmax) * eval.m_x - m_bks.vector(kmax);
     }
 
     return fx;

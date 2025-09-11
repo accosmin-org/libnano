@@ -17,14 +17,20 @@ rfunction_t function_sargan_t::clone() const
 
 scalar_t function_sargan_t::do_eval(eval_t eval) const
 {
-    const auto x2sum = x.dot(x);
+    const auto xsum = eval.m_x.sum();
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = (1.2 + 1.6 * x2sum) * x;
+        eval.m_gx = (1.2 + 0.8 * xsum) * eval.m_x;
     }
 
-    return 0.6 * x2sum + 0.4 * nano::square(x2sum);
+    if (eval.has_hess())
+    {
+        eval.m_Hx.matrix().rowwise() = 0.8 * eval.m_x;
+        eval.m_Hx.diagonal().array() += 1.2 + 0.8 * xsum;
+    }
+
+    return 0.6 * eval.m_x.dot(eval.m_x) + 0.4 * nano::square(xsum);
 }
 
 rfunction_t function_sargan_t::make(const tensor_size_t dims) const

@@ -26,12 +26,17 @@ scalar_t function_quadratic_t::do_eval(eval_t eval) const
     const auto a = m_a.vector();
     const auto A = m_A.matrix();
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = a + A * x.vector();
+        eval.m_gx = a + A * eval.m_x.vector();
     }
 
-    return x.dot(a + 0.5 * (A * x.vector()));
+    if (eval.has_hess())
+    {
+        eval.m_Hx = A;
+    }
+
+    return eval.m_x.dot(a + 0.5 * (A * eval.m_x.vector()));
 }
 
 rfunction_t function_quadratic_t::make(const tensor_size_t dims) const

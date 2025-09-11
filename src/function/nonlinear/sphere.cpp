@@ -17,12 +17,17 @@ rfunction_t function_sphere_t::clone() const
 
 scalar_t function_sphere_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 2 * x;
+        eval.m_gx = eval.m_x;
     }
 
-    return x.dot(x);
+    if (eval.has_hess())
+    {
+        eval.m_Hx = matrix_t::identity(size(), size());
+    }
+
+    return 0.5 * eval.m_x.dot(eval.m_x);
 }
 
 rfunction_t function_sphere_t::make(const tensor_size_t dims) const

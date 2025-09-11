@@ -15,7 +15,7 @@ rfunction_t function_maxq_t::clone() const
     return std::make_unique<function_maxq_t>(*this);
 }
 
-scalar_t function_maxq_t::do_vgrad(eval_t eval) const
+scalar_t function_maxq_t::do_eval(eval_t eval) const
 {
     auto       idx = tensor_size_t{0};
     const auto fx  = eval.m_x.array().square().maxCoeff(&idx);

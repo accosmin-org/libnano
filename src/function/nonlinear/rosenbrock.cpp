@@ -17,24 +17,27 @@ rfunction_t function_rosenbrock_t::clone() const
 
 scalar_t function_rosenbrock_t::do_eval(eval_t eval) const
 {
+    const auto x  = eval.m_x;
     const auto ct = scalar_t(100);
 
     scalar_t fx = 0;
-    for (tensor_size_t i = 0; i + 1 < size(); ++i)
+    for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
     {
         fx += ct * nano::square(x(i + 1) - x(i) * x(i)) + nano::square(x(i) - 1);
     }
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx.full(0.0);
-        for (tensor_size_t i = 0; i + 1 < size(); ++i)
+        eval.m_gx.full(0.0);
+        for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
         {
-            gx(i) += 2 * (x(i) - 1);
-            gx(i) += ct * 2 * (x(i + 1) - x(i) * x(i)) * (-2 * x(i));
-            gx(i + 1) += ct * 2 * (x(i + 1) - x(i) * x(i));
+            eval.m_gx(i) += 2 * (x(i) - 1);
+            eval.m_gx(i) += ct * 2 * (x(i + 1) - x(i) * x(i)) * (-2 * x(i));
+            eval.m_gx(i + 1) += ct * 2 * (x(i + 1) - x(i) * x(i));
         }
     }
+
+    // FIXME: Hessian calculation
 
     return fx;
 }
