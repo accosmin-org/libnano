@@ -126,6 +126,7 @@ public:
         vector_map_t  m_gx{}; ///< optional gradient buffer of size (n,)
         matrix_map_t  m_Hx{}; ///< optional Hessian buffer of size (n, n)
     };
+
     scalar_t operator()(vector_cmap_t x, vector_map_t gx = {}, matrix_map_t Hx = {}) const;
 
     ///

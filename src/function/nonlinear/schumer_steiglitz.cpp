@@ -16,12 +16,17 @@ rfunction_t function_schumer_steiglitz_t::clone() const
 
 scalar_t function_schumer_steiglitz_t::do_eval(eval_t eval) const
 {
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 4 * x.array().cube();
+        eval.m_gx = 4 * eval.m_x.array().cube();
     }
 
-    return x.array().square().square().sum();
+    if (eval.has_hess())
+    {
+        eval.m_Hx = (12 * eval.m_x.array().square()).matrix().asDiagonal();
+    }
+
+    return eval.m_x.array().square().square().sum();
 }
 
 rfunction_t function_schumer_steiglitz_t::make(const tensor_size_t dims) const

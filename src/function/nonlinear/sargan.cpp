@@ -26,7 +26,7 @@ scalar_t function_sargan_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.matrix().rowwise() = 0.8 * eval.m_x;
+        eval.m_Hx.matrix().colwise() = 0.8 * eval.m_x.vector();
         eval.m_Hx.diagonal().array() += 1.2 + 0.8 * xsum;
     }
 

@@ -20,11 +20,13 @@ rfunction_t linear_program_t::clone() const
 
 scalar_t linear_program_t::do_eval(eval_t eval) const
 {
-    if (eval.has_grad()) {
+    if (eval.has_grad())
+    {
         eval.m_gx = m_c;
     }
 
-    if (eval.has_hess()) {
+    if (eval.has_hess())
+    {
         eval.m_Hx.full(0.0);
     }
 

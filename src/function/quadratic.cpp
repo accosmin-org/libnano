@@ -52,11 +52,13 @@ rfunction_t quadratic_program_t::clone() const
 
 scalar_t quadratic_program_t::do_eval(eval_t eval) const
 {
-    if (eval.has_grad()) {
+    if (eval.has_grad())
+    {
         eval.m_gx = m_Q * eval.m_x + m_c;
     }
 
-    if (eval.has_hess()) {
+    if (eval.has_hess())
+    {
         eval.m_Hx = m_Q;
     }
 

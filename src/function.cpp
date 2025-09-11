@@ -43,8 +43,8 @@
 #include <function/nonlinear/trid.h>
 #include <function/nonlinear/zakharov.h>
 
-#include <nano/critical.h>
 #include <nano/core/strutil.h>
+#include <nano/critical.h>
 
 using namespace nano;
 
@@ -245,11 +245,15 @@ tensor_size_t function_t::n_inequalities() const
 
 scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const
 {
-    critical(x.size() == size(), "function: invalid input size, expecting (", size(), ",), got (", x.size(), ",) instead!");
+    critical(x.size() == size(), "function: invalid input size, expecting (", size(), ",), got (", x.size(),
+             ",) instead!");
 
-    critical(gx.size() == 0 || gx.size() == size(), "function: invalid gradient size, expecting (", size(), ",) or empty, got (", gx.size(), ",) instead!");
+    critical(gx.size() == 0 || gx.size() == size(), "function: invalid gradient size, expecting (", size(),
+             ",) or empty, got (", gx.size(), ",) instead!");
 
-    critical(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()), "function: invalid Hessian size, expecting (", size(), ", ", size(), ") or empty, got (", Hx.rows(), ", ", Hx.cols(), ") instead!");
+    critical(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()),
+             "function: invalid Hessian size, expecting (", size(), ", ", size(), ") or empty, got (", Hx.rows(), ", ",
+             Hx.cols(), ") instead!");
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;

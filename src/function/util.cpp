@@ -181,7 +181,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
 {
     assert(x.size() == function.size());
 
-    const auto n = function.size();
+    const auto n   = function.size();
     const auto eta = std::cbrt(std::numeric_limits<scalar_t>::epsilon());
 
     // analytical hessian

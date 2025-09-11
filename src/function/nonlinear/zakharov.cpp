@@ -20,12 +20,19 @@ rfunction_t function_zakharov_t::clone() const
 
 scalar_t function_zakharov_t::do_eval(eval_t eval) const
 {
+    const auto x = eval.m_x;
     const auto u = x.dot(x);
     const auto v = x.dot(m_bias);
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 2 * x + (2 * v + 4 * nano::cube(v)) * m_bias;
+        eval.m_gx = 2 * x + (2 * v + 4 * nano::cube(v)) * m_bias;
+    }
+
+    if (eval.has_hess())
+    {
+        eval.m_Hx = (2 + 12 * v * v) * (m_bias.vector() * m_bias.transpose());
+        eval.m_Hx.diagonal().array() += 2;
     }
 
     return u + nano::square(v) + nano::quartic(v);

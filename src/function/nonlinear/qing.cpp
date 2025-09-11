@@ -19,15 +19,20 @@ rfunction_t function_qing_t::clone() const
 
 scalar_t function_qing_t::do_eval(eval_t eval) const
 {
-    const auto xa = x.array();
-    const auto ba = m_bias.array();
+    const auto x = eval.m_x.array();
+    const auto b = m_bias.array();
 
-    if (gx.size() == x.size())
+    if (eval.has_grad())
     {
-        gx = 4 * (xa.square() - ba) * xa;
+        eval.m_gx = 4 * (x.square() - b) * x;
     }
 
-    return (xa.square() - ba).square().sum();
+    if (eval.has_hess())
+    {
+        eval.m_Hx = (12 * x.square() - 4 * b).matrix().asDiagonal();
+    }
+
+    return (x.square() - b).square().sum();
 }
 
 rfunction_t function_qing_t::make(const tensor_size_t dims) const

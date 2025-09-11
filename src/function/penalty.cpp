@@ -78,18 +78,18 @@ rfunction_t linear_penalty_function_t::clone() const
 
 scalar_t linear_penalty_function_t::do_eval(eval_t eval) const
 {
-    assert(x.size() == size());
-
     const auto op = [&](const scalar_t fc, const vector_t& gc)
     {
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            gx += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
+            eval.m_gx += penalty() * (fc >= 0.0 ? +1.0 : -1.0) * gc;
         }
         return penalty() * std::fabs(fc);
     };
 
-    return penalty_vgrad(function(), x, gx, op);
+    // FIXME: add hessian calculation when smooth
+
+    return penalty_vgrad(function(), eval.m_x, eval.m_gx, op);
 }
 
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
@@ -106,18 +106,18 @@ rfunction_t quadratic_penalty_function_t::clone() const
 
 scalar_t quadratic_penalty_function_t::do_eval(eval_t eval) const
 {
-    assert(x.size() == size());
-
     const auto op = [&](const scalar_t fc, const vector_t& gc)
     {
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            gx += penalty() * 2.0 * fc * gc;
+            eval.m_gx += penalty() * 2.0 * fc * gc;
         }
         return penalty() * fc * fc;
     };
 
-    return penalty_vgrad(function(), x, gx, op);
+    // FIXME: add hessian calculation
+
+    return penalty_vgrad(function(), eval.m_x, eval.m_gx, op);
 }
 
 augmented_lagrangian_function_t::augmented_lagrangian_function_t(const function_t& function, const vector_t& lambda,
@@ -140,26 +140,24 @@ rfunction_t augmented_lagrangian_function_t::clone() const
 
 scalar_t augmented_lagrangian_function_t::do_eval(eval_t eval) const
 {
-    assert(x.size() == size());
-
-    auto fx      = function()(x, gx);
+    auto fx      = function()(eval.m_x, eval.m_gx);
     auto ilambda = tensor_size_t{0};
     auto imiu    = tensor_size_t{0};
-    auto gc      = vector_t{gx.size()};
+    auto gc      = vector_t{size()};
 
     for (const auto& constraint : function().constraints())
     {
         const auto ro = penalty();
-        const auto fc = ::nano::vgrad(constraint, x, gc);
+        const auto fc = ::nano::vgrad(constraint, eval.m_x, gc);
         const auto eq = is_equality(constraint);
         const auto mu = eq ? m_lambda(ilambda++) : m_miu(imiu++);
 
         if (eq || (fc + mu / ro > 0.0))
         {
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
-            if (gx.size() == x.size())
+            if (eval.has_grad())
             {
-                gx += ro * (fc + mu / ro) * gc;
+                eval.m_gx += ro * (fc + mu / ro) * gc;
             }
         }
     }
