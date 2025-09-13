@@ -10,13 +10,19 @@ using namespace nano;
 
 namespace
 {
-scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
+scalar_t lambda(const vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
 {
     if (gx.size() == x.size())
     {
-        gx = 2 * x;
+        gx = x;
     }
-    return x.dot(x);
+
+    if (Hx.rows() == x.size() && Hx.cols() == x.size())
+    {
+        Hx = matrix_t::identity(x.size(), x.size());
+    }
+
+    return 0.5 * x.dot(x);
 }
 } // namespace
 
