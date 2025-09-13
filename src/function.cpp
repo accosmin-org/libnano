@@ -281,6 +281,11 @@ tensor_size_t function_t::gcalls() const
     return m_gcalls;
 }
 
+tensor_size_t function_t::hcalls() const
+{
+    return m_hcalls;
+}
+
 void function_t::clear_statistics() const
 {
     m_fcalls = 0;
@@ -301,6 +306,7 @@ bool function_t::optimum(vector_t xbest)
     }
     else
     {
+        m_fcalls -= 1;
         m_optimum.m_xbest = std::move(xbest);
         m_optimum.m_fbest = operator()(m_optimum.m_xbest);
         return true;

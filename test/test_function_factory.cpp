@@ -41,8 +41,11 @@ UTEST_CASE(lambda)
 
             auto g1 = make_random_vector<scalar_t>(dims);
             auto g2 = make_random_vector<scalar_t>(dims);
-            UTEST_CHECK_CLOSE(sphere_function(x, g1), lambda_function.clone()->operator()(x, g2), 1e-14);
+            auto h1 = make_random_matrix<scalar_t>(dims, dims);
+            auto h2 = make_random_matrix<scalar_t>(dims, dims);
+            UTEST_CHECK_CLOSE(sphere_function(x, g1, h1), lambda_function.clone()->operator()(x, g2, h2), 1e-14);
             UTEST_CHECK_CLOSE(g1, g2, 1e-14);
+            UTEST_CHECK_CLOSE(h1, h2, 1e-14);
         }
     }
 }
@@ -51,24 +54,38 @@ UTEST_CASE(stats)
 {
     for (const auto& function : function_t::make({2, 4, function_type::any}))
     {
+        UTEST_NAMED_CASE(function->name());
+
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
+        UTEST_CHECK_EQUAL(function->hcalls(), 0);
 
         const auto x = make_random_x0(*function);
-        function->operator()(x);
+        auto       gx = vector_t{x.size()};
+        auto       Hx = matrix_t{x.size(), x.size()};
 
+        function->operator()(x);
         UTEST_CHECK_EQUAL(function->fcalls(), 1);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
+        UTEST_CHECK_EQUAL(function->hcalls(), 0);
 
-        vector_t gx(x.size());
         function->operator()(x, gx);
-
         UTEST_CHECK_EQUAL(function->fcalls(), 2);
         UTEST_CHECK_EQUAL(function->gcalls(), 1);
+        UTEST_CHECK_EQUAL(function->hcalls(), 0);
+
+        if (function->smooth())
+        {
+            function->operator()(x, gx, Hx);
+            UTEST_CHECK_EQUAL(function->fcalls(), 3);
+            UTEST_CHECK_EQUAL(function->gcalls(), 2);
+            UTEST_CHECK_EQUAL(function->hcalls(), 1);
+        }
 
         function->clear_statistics();
         UTEST_CHECK_EQUAL(function->fcalls(), 0);
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
+        UTEST_CHECK_EQUAL(function->hcalls(), 0);
     }
 }
 
