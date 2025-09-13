@@ -1,8 +1,5 @@
 #include <fixture/function.h>
 #include <function/nonlinear/sphere.h>
-#include <nano/critical.h>
-#include <nano/function/bounds.h>
-#include <nano/function/cuts.h>
 #include <nano/function/lambda.h>
 #include <nano/tensor/stack.h>
 #include <unordered_map>
@@ -22,13 +19,6 @@ scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
 } // namespace
 
 UTEST_BEGIN_MODULE()
-
-UTEST_CASE(name)
-{
-    const auto function = function_sphere_t{3};
-    UTEST_CHECK_EQUAL(function.name(false), "sphere");
-    UTEST_CHECK_EQUAL(function.name(true), "sphere[3D]");
-}
 
 UTEST_CASE(lambda)
 {
@@ -157,55 +147,6 @@ UTEST_CASE(select)
     }
 }
 
-UTEST_CASE(convexity)
-{
-    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
-    {
-        const auto& function = *rfunction;
-        UTEST_NAMED_CASE(function.name());
-
-        const auto dims = function.size();
-        UTEST_CHECK_LESS_EQUAL(dims, 4);
-        UTEST_CHECK_GREATER_EQUAL(dims, 2);
-
-        check_convexity(function);
-
-        UTEST_CHECK_GREATER_EQUAL(function.strong_convexity(), 0.0);
-    }
-}
-
-UTEST_CASE(grad_accuracy)
-{
-    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
-    {
-        const auto& function = *rfunction;
-        UTEST_NAMED_CASE(function.name());
-
-        const auto dims = function.size();
-        UTEST_CHECK_LESS_EQUAL(dims, 4);
-        UTEST_CHECK_GREATER_EQUAL(dims, 2);
-
-        check_gradient(function, 100, 1e-8, 1e-8);
-    }
-}
-
-UTEST_CASE(hess_accuracy)
-{
-    // TODO: if a function is convex, then the Hessian should be PSD
-
-    for (const auto& rfunction : function_t::make({2, 4, function_type::smooth}))
-    {
-        const auto& function = *rfunction;
-        UTEST_NAMED_CASE(function.name());
-
-        const auto dims = function.size();
-        UTEST_CHECK_LESS_EQUAL(dims, 4);
-        UTEST_CHECK_GREATER_EQUAL(dims, 2);
-
-        check_hessian(function, 100, 1e-8, 1e-8);
-    }
-}
-
 UTEST_CASE(reproducibility)
 {
     for (const auto& rfunction : function_t::make({2, 16, function_type::any}))
@@ -286,6 +227,20 @@ UTEST_CASE(reproducibility)
                 }
             }
         }
+    }
+}
+
+UTEST_CASE(evaluation)
+{
+    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
+    {
+        const auto& function = *rfunction;
+
+        const auto dims = function.size();
+        UTEST_CHECK_LESS_EQUAL(dims, 4);
+        UTEST_CHECK_GREATER_EQUAL(dims, 2);
+
+        check_function(function);
     }
 }
 

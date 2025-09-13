@@ -29,9 +29,10 @@ make_test(test_tuner NANO::machine)
 make_test(test_feature NANO::machine)
 make_test(test_splitter NANO::machine)
 
-make_test(test_function NANO::function)
-make_test(test_function_util NANO::function)
-make_test(test_constrained NANO::solver)
+make_test(test_function_factory NANO::function)
+make_test(test_function_evaluate NANO::function)
+make_test(test_function_constrain NANO::function)
+make_test(test_function_utilities NANO::function)
 
 make_test(test_program_linear NANO::solver)
 make_test(test_program_quadratic NANO::solver)
