@@ -1,20 +1,25 @@
 #include <fixture/function.h>
 #include <function/nonlinear/sphere.h>
 #include <nano/function/lambda.h>
-#include <nano/tensor/stack.h>
 #include <unordered_map>
 
 using namespace nano;
 
 namespace
 {
-scalar_t lambda(const vector_cmap_t x, vector_map_t gx)
+scalar_t lambda(const vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
 {
     if (gx.size() == x.size())
     {
-        gx = 2 * x;
+        gx = x;
     }
-    return x.dot(x);
+
+    if (Hx.rows() == x.size() && Hx.cols() == x.size())
+    {
+        Hx = matrix_t::identity(x.size(), x.size());
+    }
+
+    return 0.5 * x.dot(x);
 }
 } // namespace
 
@@ -227,20 +232,6 @@ UTEST_CASE(reproducibility)
                 }
             }
         }
-    }
-}
-
-UTEST_CASE(evaluation)
-{
-    for (const auto& rfunction : function_t::make({2, 4, function_type::any}))
-    {
-        const auto& function = *rfunction;
-
-        const auto dims = function.size();
-        UTEST_CHECK_LESS_EQUAL(dims, 4);
-        UTEST_CHECK_GREATER_EQUAL(dims, 2);
-
-        check_function(function);
     }
 }
 

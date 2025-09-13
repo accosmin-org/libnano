@@ -14,7 +14,7 @@ UTEST_CASE(evaluate)
         UTEST_CHECK_LESS_EQUAL(dims, 4);
         UTEST_CHECK_GREATER_EQUAL(dims, 2);
 
-        check_function(function);
+        check_function(function, function_config_t{});
     }
 }
 

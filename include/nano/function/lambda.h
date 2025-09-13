@@ -37,14 +37,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const override
-    {
-        assert(x.size() == size());
-        assert(gx.size() == 0 || gx.size() == size());
-        assert(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()));
-
-        return m_lambda(x, gx, Hx);
-    }
+    scalar_t do_eval(eval_t eval) const override { return m_lambda(eval.m_x, eval.m_gx, eval.m_Hx); }
 
 private:
     // attributes
