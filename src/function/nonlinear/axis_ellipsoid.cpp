@@ -22,15 +22,15 @@ scalar_t function_axis_ellipsoid_t::do_eval(eval_t eval) const
 {
     if (eval.has_grad())
     {
-        eval.m_gx = 2 * eval.m_x.array() * m_bias.array();
+        eval.m_gx = eval.m_x.array() * m_bias.array();
     }
 
     if (eval.has_hess())
     {
-        eval.m_Hx = (2 * m_bias.array()).matrix().asDiagonal();
+        eval.m_Hx = m_bias.array().matrix().asDiagonal();
     }
 
-    return (eval.m_x.array().square() * m_bias.array()).sum();
+    return 0.5 * (eval.m_x.array().square() * m_bias.array()).sum();
 }
 
 rfunction_t function_axis_ellipsoid_t::make(const tensor_size_t dims) const
