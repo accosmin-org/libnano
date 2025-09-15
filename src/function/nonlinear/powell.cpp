@@ -44,7 +44,34 @@ scalar_t function_powell_t::do_eval(eval_t eval) const
         }
     }
 
-    // TODO: Hessian calculation
+    if (eval.has_hess())
+    {
+        eval.m_Hx.full(0.0);
+        for (tensor_size_t i = 0, i4 = 0; i < size() / 4; ++i, i4 += 4)
+        {
+            eval.m_Hx(i4 + 0, i4 + 0) += 2.0;
+            eval.m_Hx(i4 + 0, i4 + 1) += 20.0;
+            eval.m_Hx(i4 + 1, i4 + 0) += 20.0;
+            eval.m_Hx(i4 + 1, i4 + 1) += 200.0;
+
+            eval.m_Hx(i4 + 2, i4 + 2) += 10.0;
+            eval.m_Hx(i4 + 2, i4 + 3) += -10.0;
+            eval.m_Hx(i4 + 3, i4 + 2) += -10.0;
+            eval.m_Hx(i4 + 3, i4 + 3) += 10.0;
+
+            const auto f2 = nano::square(x(i4 + 1) - x(i4 + 2) * 2);
+            eval.m_Hx(i4 + 1, i4 + 1) += 12.0 * f2;
+            eval.m_Hx(i4 + 1, i4 + 2) += -24.0 * f2;
+            eval.m_Hx(i4 + 2, i4 + 1) += -24.0 * f2;
+            eval.m_Hx(i4 + 2, i4 + 2) += 48.0 * f2;
+
+            const auto f3 = nano::square(x(i4 + 0) - x(i4 + 3));
+            eval.m_Hx(i4 + 0, i4 + 0) += 120.0 * f3;
+            eval.m_Hx(i4 + 0, i4 + 3) -= 120.0 * f3;
+            eval.m_Hx(i4 + 3, i4 + 0) -= 120.0 * f3;
+            eval.m_Hx(i4 + 3, i4 + 3) += 120.0 * f3;
+        }
+    }
 
     return fx;
 }
