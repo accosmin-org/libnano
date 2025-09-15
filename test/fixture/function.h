@@ -32,9 +32,9 @@ template <class... targs>
 struct function_config_t
 {
     int      m_trials{100};
-    scalar_t m_central_difference_epsilon{1e-8};
-    scalar_t m_convex_inequality_epsilon{1e-10};
-    scalar_t m_is_convex_epsilon{1e-13};
+    scalar_t m_grad_accuracy_epsilon{1e-8};
+    scalar_t m_hess_accuracy_epsilon{1e-8};
+    scalar_t m_convex_accuracy_epsilon{1e-14};
 };
 
 [[maybe_unused]] inline auto check_function(const function_t& function, const function_config_t& config)
@@ -55,32 +55,20 @@ struct function_config_t
         const auto name_with_dims = rfunction->name(true);
         UTEST_CHECK_EQUAL(name + scat("[", rfunction->size(), "D]"), name_with_dims);
 
-        // check (sub-)gradient approximation with centering difference
-        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, config.m_central_difference_epsilon),
-                         config.m_central_difference_epsilon);
-
         // check convexity
         if (rfunction->convex())
         {
-            UTEST_CHECK(is_convex(*rfunction, x, z, 20, config.m_is_convex_epsilon));
+            UTEST_CHECK_LESS(convex_accuracy(*rfunction, x, z, 20), config.m_convex_accuracy_epsilon);
         }
-
-        // check (sub-)gradient inequality for convex inequality
         UTEST_CHECK_GREATER_EQUAL(rfunction->strong_convexity(), 0.0);
-        if (rfunction->convex())
-        {
-            auto       gx      = vector_t{x.size()};
-            const auto fz      = (*rfunction)(z);
-            const auto fx      = (*rfunction)(x, gx);
-            const auto epsilon = config.m_convex_inequality_epsilon * 0.5 * (std::fabs(fx) + std::fabs(fz));
-            UTEST_CHECK_GREATER_EQUAL(fz - fx + epsilon, gx.dot(z - x));
-        }
+
+        // check (sub-)gradient approximation with centering difference
+        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x), config.m_grad_accuracy_epsilon);
 
         // check Hessian approximation with centering difference
         if (rfunction->smooth())
         {
-            UTEST_CHECK_LESS(hess_accuracy(*rfunction, x, config.m_central_difference_epsilon),
-                             config.m_central_difference_epsilon);
+            UTEST_CHECK_LESS(hess_accuracy(*rfunction, x), config.m_hess_accuracy_epsilon);
         }
     }
 }

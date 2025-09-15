@@ -5,26 +5,33 @@
 namespace nano
 {
 ///
-/// \brief compute the difference between the analytical gradient and the gradient approximated
+/// \brief return the minimum difference between the analytical gradient and the gradient approximated
 ///     using central finite difference approximation.
 ///
 /// see (1) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_t desired_accuracy = 1e-10);
+/// NB: if significantly bigger than zero, then the (sub-)gradient is not correctly computed.
+///
+NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x);
 
 ///
-/// \brief compute the difference between the analytical hessian and the hessian approximated
+/// \brief return the minimum difference between the analytical hessian and the hessian approximated
 ///     using central finite difference approximation.
 ///
 /// see (1) "Numerical Optimization", by J. Nocedal, S. Wright, 2006.
 ///
-NANO_PUBLIC scalar_t hess_accuracy(const function_t&, const vector_t& x, scalar_t desired_accuracy = 1e-10);
+/// NB: this can be used only for smooth functions.
+/// NB: if significantly bigger than zero, then the Hessian is not correctly computed.
+///
+NANO_PUBLIC scalar_t hess_accuracy(const function_t&, const vector_t& x);
 
 ///
-/// \brief check if the function is convex along the [x1, x2] line.
+/// \brief return the maximum violation (if any) of the convexity inequality along the [x1, x2] line.
 ///
-NANO_PUBLIC bool is_convex(const function_t&, const vector_t& x1, const vector_t& x2, int steps,
-                           scalar_t epsilon = epsilon1<scalar_t>());
+/// NB: if non-zero, then the function is not convex.
+/// NB: the strong-convexity coefficient is used as well.
+///
+NANO_PUBLIC scalar_t convex_accuracy(const function_t&, const vector_t& x1, const vector_t& x2, int steps);
 
 ///
 /// \brief transform in-place the given (A, b) so that the equality constraint `Ax = b` is full row rank

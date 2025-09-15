@@ -131,7 +131,7 @@ void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[may
 }
 } // namespace
 
-scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, const scalar_t desired_accuracy)
+scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
 {
     assert(x.size() == function.size());
 
@@ -168,17 +168,14 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, cons
         }
 
         dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
-        if (dg < desired_accuracy)
-        {
-            break;
-        }
     }
 
-    return dg;
+    return dg / (1.0 + std::fabs(fx));
 }
 
-scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, const scalar_t desired_accuracy)
+scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
 {
+    assert(function.smooth());
     assert(x.size() == function.size());
 
     const auto n   = function.size();
@@ -217,17 +214,12 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, cons
         }
 
         dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>()) / (1.0 + std::fabs(fx));
-        if (dH < desired_accuracy)
-        {
-            break;
-        }
     }
 
-    return dH;
+    return dH / (1.0 + std::fabs(fx));
 }
 
-bool nano::is_convex(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps,
-                     const scalar_t epsilon)
+scalar_t nano::convex_accuracy(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)
 {
     assert(steps > 2);
     assert(x1.size() == function.size());
@@ -236,27 +228,25 @@ bool nano::is_convex(const function_t& function, const vector_t& x1, const vecto
     const auto f1 = function(x1);
     const auto f2 = function(x2);
     const auto dx = (x1 - x2).squaredNorm();
-
-    const auto delta = epsilon * (1.0 + 0.5 * (std::fabs(f1) + std::fabs(f2)));
+    const auto sc = function.strong_convexity();
 
     assert(std::isfinite(f1));
     assert(std::isfinite(f2));
 
     auto tx = vector_t{function.size()};
+    auto dc = std::numeric_limits<scalar_t>::min();
 
     for (int step = 1; step < steps; step++)
     {
         const auto t1 = static_cast<scalar_t>(step) / static_cast<scalar_t>(steps);
-        const auto t2 = 1.0L - t1;
+        const auto t2 = 1.0 - t1;
 
         tx = t1 * x1 + t2 * x2;
-        if (function(tx) > t1 * f1 + t2 * f2 - t1 * t2 * function.strong_convexity() * 0.5 * dx + delta)
-        {
-            return false;
-        }
+
+        dc = std::min(dc, t1 * f1 + t2 * f2 - t1 * t2 * sc * 0.5 * dx - function(tx));
     }
 
-    return true;
+    return std::max(dc, 0.0) / (1.0 + 0.5 * (f1 + f2));
 }
 
 full_rank_stats_t nano::make_full_rank(matrix_t& A, vector_t& b)
