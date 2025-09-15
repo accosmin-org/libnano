@@ -144,7 +144,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
 
     // central finite-difference approximated gradient
     auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0})
+    for (const auto deta : {1e-2, 3e-1, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2})
     {
         vector_t xx = x;
         vector_t gx_approx(n);
@@ -187,7 +187,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
 
     // central finite-difference approximated hessian
     auto dH = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0})
+    for (const auto deta : {1e-2, 3e-1, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2})
     {
         vector_t xx = x;
         vector_t gxp(n);
@@ -198,7 +198,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
         {
             if (i > 0)
             {
-                xx(i) = xx(i - 1);
+                xx(i - 1) = xx(i - 1);
             }
 
             const auto hi = deta * eta * (1.0 + std::fabs(x(i)));

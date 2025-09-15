@@ -21,13 +21,13 @@ scalar_t function_sargan_t::do_eval(eval_t eval) const
 
     if (eval.has_grad())
     {
-        eval.m_gx = (1.2 + 0.8 * xsum) * eval.m_x;
+        eval.m_gx.array() = 1.2 * eval.m_x.array() + 0.8 * xsum;
     }
 
     if (eval.has_hess())
     {
-        eval.m_Hx.matrix().colwise() = 0.8 * eval.m_x.vector();
-        eval.m_Hx.diagonal().array() += 1.2 + 0.8 * xsum;
+        eval.m_Hx.array() = 0.8;
+        eval.m_Hx.diagonal().array() += 1.2;
     }
 
     return 0.6 * eval.m_x.dot(eval.m_x) + 0.4 * nano::square(xsum);
