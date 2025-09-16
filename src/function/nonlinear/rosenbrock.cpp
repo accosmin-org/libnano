@@ -31,13 +31,26 @@ scalar_t function_rosenbrock_t::do_eval(eval_t eval) const
         eval.m_gx.full(0.0);
         for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
         {
-            eval.m_gx(i) += 2 * (x(i) - 1);
-            eval.m_gx(i) += ct * 2 * (x(i + 1) - x(i) * x(i)) * (-2 * x(i));
-            eval.m_gx(i + 1) += ct * 2 * (x(i + 1) - x(i) * x(i));
+            const auto xi0 = x(i + 0);
+            const auto xi1 = x(i + 1);
+            eval.m_gx(i + 0) -= ct * 4 * (xi1 - xi0 * xi0) * xi0 - 2 * (xi0 - 1);
+            eval.m_gx(i + 1) += ct * 2 * (xi1 - xi0 * xi0);
         }
     }
 
-    // FIXME: Hessian calculation
+    if (eval.has_hess())
+    {
+        eval.m_Hx.full(0.0);
+        for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
+        {
+            const auto xi0 = x(i + 0);
+            const auto xi1 = x(i + 1);
+            eval.m_Hx(i + 0, i + 0) += 2 - ct * 4 * xi1 + ct * 12 * xi0 * xi0;
+            eval.m_Hx(i + 0, i + 1) -= ct * 4 * xi0;
+            eval.m_Hx(i + 1, i + 0) -= ct * 4 * xi0;
+            eval.m_Hx(i + 1, i + 1) += ct * 2;
+        }
+    }
 
     return fx;
 }
