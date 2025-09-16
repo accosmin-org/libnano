@@ -35,8 +35,18 @@ scalar_t function_dixon_price_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        // FIXME:
         eval.m_Hx.full(0.0);
+        eval.m_Hx(0, 0) = 2;
+        for (tensor_size_t i = 1, size = this->size(); i < size; ++i)
+        {
+            const auto wei = m_bias(i);
+            const auto xi0 = eval.m_x(i + 0);
+            const auto xi1 = eval.m_x(i - 1);
+            eval.m_Hx(i + 0, i + 0) += 8 * wei * (2 * xi0 * xi0 - xi1) + 32 * wei * xi0 * xi0;
+            eval.m_Hx(i + 0, i - 1) -= 8 * wei * xi0;
+            eval.m_Hx(i - 1, i + 0) -= 8 * wei * xi0;
+            eval.m_Hx(i - 1, i - 1) += 2 * wei;
+        }
     }
 
     return nano::square(eval.m_x(0) - 1) +
