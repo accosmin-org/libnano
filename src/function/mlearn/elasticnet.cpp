@@ -76,7 +76,10 @@ scalar_t function_elasticnet_t<tloss>::do_eval(eval_t eval) const
         eval.m_gx.array() += alpha1 * eval.m_x.array().sign() + alpha2 * eval.m_x.array();
     }
 
-    // FIXME: add hessian computation for alpha1 == 0
+    if (eval.has_hess())
+    {
+        // FIXME: add hessian computation for alpha1 == 0
+    }
 
     fx += alpha1 * eval.m_x.template lpNorm<1>() + 0.5 * (std::sqrt(alpha2) * eval.m_x).squaredNorm();
     return fx;

@@ -1,11 +1,12 @@
 target_sources(function PRIVATE
     elasticnet.h
+    lasso.h
     linear.h
     loss.h
-    lasso.h
     ridge.h
 
     elasticnet.cpp
-    linear.cpp
     lasso.cpp
+    linear.cpp
+    loss.cpp
     ridge.cpp)
