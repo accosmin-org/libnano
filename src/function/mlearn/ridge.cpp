@@ -73,7 +73,7 @@ scalar_t function_ridge_t<tloss>::do_eval(eval_t eval) const
 
     if (smooth() && m_model.eval_hess(eval.m_Hx))
     {
-        eval.m_Hx.diagonal() += alpha2 * matrix_t::identity(size(), size());
+        eval.m_Hx.diagonal().array() += alpha2;
     }
 
     fx += 0.5 * (std::sqrt(alpha2) * eval.m_x).squaredNorm();

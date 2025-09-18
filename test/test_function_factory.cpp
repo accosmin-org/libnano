@@ -60,7 +60,7 @@ UTEST_CASE(stats)
         UTEST_CHECK_EQUAL(function->gcalls(), 0);
         UTEST_CHECK_EQUAL(function->hcalls(), 0);
 
-        const auto x = make_random_x0(*function);
+        const auto x  = make_random_x0(*function);
         auto       gx = vector_t{x.size()};
         auto       Hx = matrix_t{x.size(), x.size()};
 

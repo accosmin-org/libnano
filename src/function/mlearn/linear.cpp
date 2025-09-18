@@ -59,9 +59,10 @@ const tensor2d_t& linear_model_t::outputs(const matrix_cmap_t w) const
 
 bool linear_model_t::eval_grad(vector_map_t gx) const
 {
-    const auto [samples, outputs] = m_gradients.dims();
+    const auto nparams = m_woptimum.size();
+    const auto samples = m_gradients.rows();
 
-    if (gx.size() == m_woptimum.size())
+    if (gx.size() == nparams)
     {
         auto gw = make_w(gx).matrix();
 
@@ -79,14 +80,29 @@ bool linear_model_t::eval_grad(vector_map_t gx) const
 
 bool linear_model_t::eval_hess(matrix_map_t Hx) const
 {
-    const auto [samples, outputs] = m_gradients.dims();
+    const auto nparams = m_woptimum.size();
+    const auto samples = m_gradients.rows();
+    const auto outputs = m_gradients.cols();
 
-    if (Hx.rows() == outputs && Hx.cols() == outputs)
+    if (Hx.rows() == nparams && Hx.cols() == nparams)
     {
         Hx.full(0.0);
 
         // TODO: write the following operations using Eigen3 calls for improved performance
+        for (tensor_size_t i = 0; i < nparams; ++i)
+        {
+            for (tensor_size_t j = 0; j < nparams; ++j)
+            {
+                for (tensor_size_t sample = 0; sample < samples; ++sample)
+                {
+                    Hx(i, j) += m_hessians(sample, i % outputs, j % outputs) * m_inputs(sample, i / outputs) *
+                                m_inputs(sample, j / outputs);
+                }
+            }
+        }
+
         // Hx(i, j) = sum_k(hh(k, i, j) * inputs(k, i) * inputs(k, j));
+        Hx.array() /= static_cast<scalar_t>(samples);
         return true;
     }
     else
