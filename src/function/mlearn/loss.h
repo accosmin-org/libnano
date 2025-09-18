@@ -15,8 +15,7 @@ public:
     static constexpr auto basename   = "mse";
     static constexpr auto regression = true;
 
-    static scalar_t eval(const linear_model_t&, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx,
-                         matrix_map_t Hx);
+    static scalar_t eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx);
 };
 
 ///
@@ -30,8 +29,7 @@ public:
     static constexpr auto basename   = "mae";
     static constexpr auto regression = true;
 
-    static scalar_t eval(const linear_model_t&, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx,
-                         matrix_map_t Hx);
+    static scalar_t eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx);
 };
 
 ///
@@ -45,8 +43,7 @@ public:
     static constexpr auto basename   = "cauchy";
     static constexpr auto regression = true;
 
-    static scalar_t eval(const linear_model_t&, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx,
-                         matrix_map_t Hx);
+    static scalar_t eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx);
 };
 
 ///
@@ -60,8 +57,7 @@ public:
     static constexpr auto basename   = "hinge";
     static constexpr auto regression = false;
 
-    static scalar_t eval(const linear_model_t&, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx,
-                         matrix_map_t Hx);
+    static scalar_t eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx);
 };
 
 ///
@@ -75,7 +71,6 @@ public:
     static constexpr auto basename   = "logistic";
     static constexpr auto regression = false;
 
-    static scalar_t eval(const linear_model_t&, matrix_cmap_t outputs, matrix_cmap_t targets, vector_map_t gx,
-                         matrix_map_t Hx);
+    static scalar_t eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx);
 };
 } // namespace nano

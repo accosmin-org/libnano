@@ -143,6 +143,11 @@ struct is_eigen<Eigen::DiagonalWrapper<DiagonalVectorType>> : std::true_type
 {
 };
 
+template <class XprType>
+struct is_eigen<Eigen::MatrixWrapper<XprType>> : std::true_type
+{
+};
+
 template <class T>
 inline constexpr bool is_eigen_v = is_eigen<T>::value;
 
