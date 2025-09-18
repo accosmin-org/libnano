@@ -4,12 +4,11 @@ using namespace nano;
 
 scalar_t loss_mse_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
 {
-    const auto osize = outputs.cols();
     const auto delta = outputs - targets;
 
     gx = delta;
 
-    for (tensor_size_t sample = 0, samples = outputs.rows(); sample < samples; ++sample)
+    for (tensor_size_t sample = 0, samples = outputs.rows(), osize = outputs.cols(); sample < samples; ++sample)
     {
         Hx.tensor(sample) = matrix_t::identity(osize, osize);
     }

@@ -32,7 +32,8 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
         }
     }
 
-    this->outputs(wopt());
+    m_outputs.matrix() = m_inputs * m_woptimum.transpose();
+    m_outputs.matrix().rowwise() += m_boptimum.transpose();
 
     if (regression)
     {
@@ -40,11 +41,7 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     }
     else
     {
-        for (tensor_size_t s = 0; s < samples; ++s)
-        {
-            const auto woutput = m_outputs.matrix().array().row(s) - bopt().array();
-            m_targets.row(s)   = (woutput - 0.5).sign();
-        }
+        m_targets = ((m_outputs.matrix().array().rowwise() - m_boptimum.transpose().array()) - 0.5).sign();
     }
 }
 
@@ -64,7 +61,7 @@ bool linear_model_t::eval_grad(vector_map_t gx) const
 {
     const auto [samples, outputs] = m_gradients.dims();
 
-    if (gx.size() == outputs)
+    if (gx.size() == m_woptimum.size())
     {
         auto gw = make_w(gx).matrix();
 
