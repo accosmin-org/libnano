@@ -69,14 +69,14 @@ scalar_t function_elasticnet_t<tloss>::do_eval(eval_t eval) const
     const auto alpha1 = parameter("function::elasticnet::alpha1").template value<scalar_t>();
     const auto alpha2 = parameter("function::elasticnet::alpha2").template value<scalar_t>();
 
-    auto fx = tloss::eval(m_model.outputs(eval.m_x), m_model.targets(), m_model.gradients(), m_model.hessians());
+    auto fx = m_model.eval<tloss>(eval);
 
-    if (m_model.eval_grad(eval.m_gx))
+    if (eval.has_grad())
     {
         eval.m_gx.array() += alpha1 * eval.m_x.array().sign() + alpha2 * eval.m_x.array();
     }
 
-    if (smooth() && m_model.eval_hess(eval.m_Hx))
+    if (eval.has_hess())
     {
         eval.m_Hx.diagonal().array() += alpha2;
     }

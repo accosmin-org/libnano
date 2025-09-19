@@ -7,8 +7,8 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     : m_inputs(samples, inputs)
     , m_targets(samples, outputs)
     , m_outputs(samples, outputs)
-    , m_gradients(samples, outputs)
-    , m_hessians(samples, outputs, outputs)
+    , m_gradbuffs(samples, outputs)
+    , m_hessbuffs(samples, outputs, outputs)
     , m_woptimum(outputs, inputs)
     , m_boptimum(outputs)
 {
@@ -32,8 +32,7 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
         }
     }
 
-    m_outputs.matrix() = m_inputs * m_woptimum.transpose();
-    m_outputs.matrix().rowwise() += m_boptimum.transpose();
+    eval_outputs(m_woptimum);
 
     if (regression)
     {
@@ -45,68 +44,58 @@ linear_model_t::linear_model_t(const tensor_size_t samples, const tensor_size_t 
     }
 }
 
-const tensor2d_t& linear_model_t::outputs(const vector_cmap_t x) const
+void linear_model_t::eval_outputs(const vector_cmap_t x) const
 {
-    return outputs(make_w(x));
+    eval_outputs(make_w(x));
 }
 
-const tensor2d_t& linear_model_t::outputs(const matrix_cmap_t w) const
+void linear_model_t::eval_outputs(const matrix_cmap_t w) const
 {
-    m_outputs.matrix() = m_inputs * w.transpose();
+    m_outputs.matrix().noalias() = m_inputs * w.transpose();
     m_outputs.matrix().rowwise() += m_boptimum.transpose();
-    return m_outputs;
 }
 
-bool linear_model_t::eval_grad(vector_map_t gx) const
+void linear_model_t::eval_grad(vector_map_t gx) const
 {
-    const auto nparams = m_woptimum.size();
-    const auto samples = m_gradients.rows();
+    const auto samples = m_gradbuffs.rows();
 
-    if (gx.size() == nparams)
-    {
-        auto gw = make_w(gx).matrix();
+    auto gw = make_w(gx).matrix();
 
-        // cppcheck-suppress redundantInitialization
-        // cppcheck-suppress unreadVariable
-        gw = m_gradients.matrix().transpose() * m_inputs.matrix();
-        gw.array() /= static_cast<scalar_t>(samples);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    // cppcheck-suppress redundantInitialization
+    // cppcheck-suppress unreadVariable
+    gw.noalias() = m_gradbuffs.matrix().transpose() * m_inputs.matrix() / static_cast<scalar_t>(samples);
 }
 
-bool linear_model_t::eval_hess(matrix_map_t Hx) const
+void linear_model_t::eval_hess(matrix_map_t Hx) const
 {
-    const auto nparams = m_woptimum.size();
-    const auto samples = m_gradients.rows();
-    const auto outputs = m_gradients.cols();
+    // const auto nparams = m_woptimum.size();
+    const auto samples = m_gradbuffs.rows();
+    [[maybe_unused]] const auto outputs = m_gradbuffs.cols();
 
-    if (Hx.rows() == nparams && Hx.cols() == nparams)
+    // TODO: add multivariate versions!!!
+    // TODO: check for .noalias()
+    // TODO: update bench_function with Hessian related statistics
+    assert(outputs == 1);
+
+    // TODO: write the following operations using Eigen3 calls for improved performance
+    Hx.full(0.0);
+    for (tensor_size_t sample = 0; sample < samples; ++sample)
     {
-        Hx.full(0.0);
+        Hx.matrix().noalias() += m_hessbuffs(sample, 0, 0) * (m_inputs.vector(sample) * m_inputs.vector(sample).transpose());
+    }
 
-        // TODO: write the following operations using Eigen3 calls for improved performance
-        for (tensor_size_t i = 0; i < nparams; ++i)
+    // TODO: write the following operations using Eigen3 calls for improved performance
+    /*for (tensor_size_t i = 0; i < nparams; ++i)
+    {
+        for (tensor_size_t j = 0; j < nparams; ++j)
         {
-            for (tensor_size_t j = 0; j < nparams; ++j)
+            for (tensor_size_t sample = 0; sample < samples; ++sample)
             {
-                for (tensor_size_t sample = 0; sample < samples; ++sample)
-                {
-                    Hx(i, j) += m_hessians(sample, i % outputs, j % outputs) * m_inputs(sample, i / outputs) *
-                                m_inputs(sample, j / outputs);
-                }
+                Hx(i, j) += m_hessbuffs(sample, i % outputs, j % outputs) * m_inputs(sample, i / outputs) *
+                            m_inputs(sample, j / outputs);
             }
         }
+    }*/
 
-        // Hx(i, j) = sum_k(hh(k, i, j) * inputs(k, i) * inputs(k, j));
-        Hx.array() /= static_cast<scalar_t>(samples);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    Hx.array() /= static_cast<scalar_t>(samples);
 }

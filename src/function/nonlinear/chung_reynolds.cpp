@@ -25,7 +25,7 @@ scalar_t function_chung_reynolds_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = 8 * eval.m_x.vector() * eval.m_x.transpose();
+        eval.m_Hx.matrix().noalias() = 8 * eval.m_x.vector() * eval.m_x.transpose();
         eval.m_Hx.diagonal().array() += 4 * u;
     }
 

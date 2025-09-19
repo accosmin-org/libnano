@@ -25,7 +25,7 @@ scalar_t function_cauchy_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = -4 * (eval.m_x.vector() * eval.m_x.transpose()) / square(1 + xTx);
+        eval.m_Hx.matrix().noalias() = -4 * (eval.m_x.vector() / (1 + xTx)) * (eval.m_x.transpose() / (1 + xTx));
         eval.m_Hx.diagonal().array() += 2 / (1 + xTx);
     }
 

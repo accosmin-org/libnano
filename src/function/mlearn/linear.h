@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/tensor.h>
+#include <nano/function.h>
 
 namespace nano
 {
@@ -17,38 +17,40 @@ public:
     linear_model_t(tensor_size_t samples, tensor_size_t outputs, tensor_size_t inputs, uint64_t seed,
                    tensor_size_t modulo_correlated_inputs, bool regression);
 
-    const matrix_t& wopt() const { return m_woptimum; }
+    template <class tloss>
+    scalar_t eval(function_t::eval_t eval) const
+    {
+        eval_outputs(eval.m_x);
 
-    const vector_t& bopt() const { return m_boptimum; }
+        if (eval.has_grad())
+        {
+            tloss::gx(m_outputs, m_targets, m_gradbuffs);
+            eval_grad(eval.m_gx);
+        }
 
-    const matrix_t& inputs() const { return m_inputs; }
+        if (eval.has_hess())
+        {
+            tloss::hx(m_outputs, m_targets, m_hessbuffs);
+            eval_hess(eval.m_Hx);
+        }
 
-    const matrix_t& targets() const { return m_targets; }
-
-    const matrix_t& outputs() const { return m_outputs; }
-
-    const matrix_t& outputs(vector_cmap_t x) const;
-
-    const matrix_t& outputs(matrix_cmap_t w) const;
-
-    matrix_map_t gradients() const { return m_gradients.tensor(); }
-
-    tensor3d_map_t hessians() const { return m_hessians.tensor(); }
-
-    matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
-
-    matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
-
-    bool eval_grad(vector_map_t gx) const;
-
-    bool eval_hess(matrix_map_t Hx) const;
+        return tloss::fx(m_outputs, m_targets);
+    }
 
 private:
+    void eval_grad(vector_map_t gx) const;
+    void eval_hess(matrix_map_t Hx) const;
+    void eval_outputs(vector_cmap_t x) const;
+    void eval_outputs(matrix_cmap_t w) const;
+
+    matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
+    matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
+
     matrix_t           m_inputs;    ///< inputs (#samples, #inputs)
     matrix_t           m_targets;   ///< targets (#samples, #outputs: univariate regression or classification)
     mutable matrix_t   m_outputs;   ///< outputs (#samples, #outputs)
-    mutable matrix_t   m_gradients; ///< gradients of the loss wrt output (#samples, #outputs)
-    mutable tensor3d_t m_hessians;  ///< hessians of the loss wrt output (#samples, #outputs, #outputs)
+    mutable matrix_t   m_gradbuffs; ///< gradients of the loss wrt output (#samples, #outputs)
+    mutable tensor3d_t m_hessbuffs;  ///< hessians of the loss wrt output (#samples, #outputs, #outputs)
     matrix_t           m_woptimum;  ///< weights used for generating the synthetic dataset
     vector_t           m_boptimum;  ///< bias used for generating the synthetic dataset
 };

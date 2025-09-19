@@ -2,72 +2,121 @@
 
 using namespace nano;
 
-scalar_t loss_mse_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
+scalar_t loss_mse_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
+{
+    const auto samples = outputs.rows();
+    const auto delta = outputs - targets;
+
+    return 0.5 * delta.squaredNorm() / static_cast<scalar_t>(samples);
+}
+
+void loss_mse_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
 {
     const auto delta = outputs - targets;
 
     gx = delta;
+}
 
-    for (tensor_size_t sample = 0, samples = outputs.rows(), osize = outputs.cols(); sample < samples; ++sample)
+void loss_mse_t::hx(matrix_cmap_t outputs, matrix_cmap_t, tensor3d_map_t Hx)
+{
+    const auto [samples, osize] = outputs.dims();
+
+    for (tensor_size_t sample = 0; sample < samples; ++sample)
     {
         Hx.tensor(sample) = matrix_t::identity(osize, osize);
     }
-
-    return 0.5 * delta.squaredNorm() / static_cast<scalar_t>(outputs.rows());
 }
 
-scalar_t loss_mae_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
+scalar_t loss_mae_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
+{
+    const auto samples = outputs.rows();
+    const auto delta = outputs - targets;
+
+    return delta.array().abs().sum() / static_cast<scalar_t>(samples);
+}
+
+void loss_mae_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
 {
     const auto delta = outputs - targets;
 
     gx = delta.array().sign().matrix();
-
-    Hx.full(0.0);
-
-    return delta.array().abs().sum() / static_cast<scalar_t>(outputs.rows());
 }
 
-scalar_t loss_cauchy_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
+void loss_mae_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
+{
+    Hx.full(0.0);
+}
+
+scalar_t loss_cauchy_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
+{
+    const auto samples = outputs.rows();
+    const auto delta = outputs - targets;
+
+    return (delta.array().square() + 1.0).log().sum() / static_cast<scalar_t>(samples);
+}
+
+void loss_cauchy_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
 {
     const auto delta = outputs - targets;
 
     gx = (2.0 * delta.array() / (1.0 + delta.array().square())).matrix();
-
-    for (tensor_size_t sample = 0, samples = outputs.rows(); sample < samples; ++sample)
-    {
-        const auto odelta = delta.matrix().row(sample).array();
-
-        Hx.tensor(sample).full(0.0);
-        Hx.tensor(sample).diagonal().array() = 2.0 * (1.0 - odelta.square()) / (1.0 + odelta.square()).square();
-    }
-
-    return (delta.array().square() + 1.0).log().sum() / static_cast<scalar_t>(outputs.rows());
 }
 
-scalar_t loss_hinge_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
+void loss_cauchy_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx)
+{
+    const auto samples = outputs.rows();
+
+    for (tensor_size_t sample = 0; sample < samples; ++sample)
+    {
+        const auto odelta = outputs.array(sample) - targets.array(sample);
+
+        Hx.tensor(sample) = (2.0 * (1.0 - odelta.square()) / (1.0 + odelta.square()).square()).matrix().asDiagonal();
+    }
+}
+
+scalar_t loss_hinge_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
+{
+    const auto samples = outputs.rows();
+    const auto edges = -outputs.array() * targets.array();
+
+    return (1.0 + edges).max(0.0).sum() / static_cast<scalar_t>(samples);
+}
+
+void loss_hinge_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
 {
     const auto edges = -outputs.array() * targets.array();
 
     gx = (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix();
-
-    Hx.full(0.0);
-
-    return (1.0 + edges).max(0.0).sum() / static_cast<scalar_t>(outputs.rows());
 }
 
-scalar_t loss_logistic_t::eval(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx, tensor3d_map_t Hx)
+void loss_hinge_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
+{
+    Hx.full(0.0);
+}
+
+scalar_t loss_logistic_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
+{
+    const auto samples = outputs.rows();
+    const auto edges = (-outputs.array() * targets.array()).exp();
+
+    return (1.0 + edges).log().sum() / static_cast<scalar_t>(samples);
+}
+
+void loss_logistic_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
 {
     const auto edges = (-outputs.array() * targets.array()).exp();
 
     gx = ((-targets.array() * edges) / (1.0 + edges)).matrix();
+}
 
-    for (tensor_size_t sample = 0, samples = outputs.rows(); sample < samples; ++sample)
+void loss_logistic_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx)
+{
+    const auto samples = outputs.rows();
+
+    for (tensor_size_t sample = 0; sample < samples; ++sample)
     {
-        const auto oedge = edges.matrix().row(sample).array();
+        const auto oedge = (-outputs.array(sample) * targets.array(sample)).exp();
 
-        Hx.tensor(sample).full(0.);
-        Hx.tensor(sample).diagonal().array() = oedge / (1.0 + oedge).square();
+        Hx.tensor(sample) = (oedge / (1.0 + oedge).square()).matrix().asDiagonal();
     }
-
-    return (1.0 + edges).log().sum() / static_cast<scalar_t>(outputs.rows());
 }

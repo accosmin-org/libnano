@@ -64,9 +64,9 @@ scalar_t function_lasso_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha1 = parameter("function::lasso::alpha1").template value<scalar_t>();
 
-    auto fx = tloss::eval(m_model.outputs(eval.m_x), m_model.targets(), m_model.gradients(), m_model.hessians());
+    auto fx = m_model.eval<tloss>(eval);
 
-    if (m_model.eval_grad(eval.m_gx))
+    if (eval.has_grad())
     {
         eval.m_gx.array() += alpha1 * eval.m_x.array().sign();
     }

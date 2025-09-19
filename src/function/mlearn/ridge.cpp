@@ -64,14 +64,14 @@ scalar_t function_ridge_t<tloss>::do_eval(eval_t eval) const
 {
     const auto alpha2 = parameter("function::ridge::alpha2").template value<scalar_t>();
 
-    auto fx = tloss::eval(m_model.outputs(eval.m_x), m_model.targets(), m_model.gradients(), m_model.hessians());
+    auto fx = m_model.eval<tloss>(eval);
 
-    if (m_model.eval_grad(eval.m_gx))
+    if (eval.has_grad())
     {
         eval.m_gx.array() += alpha2 * eval.m_x.array();
     }
 
-    if (smooth() && m_model.eval_hess(eval.m_Hx))
+    if (eval.has_hess())
     {
         eval.m_Hx.diagonal().array() += alpha2;
     }
