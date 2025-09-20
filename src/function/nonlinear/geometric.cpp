@@ -48,9 +48,13 @@ scalar_t function_geometric_optimization_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        // FIXME: write it as linear algebra operations
-        // eval.m_Hx(i, j) += e(k) * A(k, i) * A(k, j);
         eval.m_Hx.full(0.0);
+
+        const auto samples = m_a.size();
+        for (tensor_size_t sample = 0; sample < samples; ++sample)
+        {
+            eval.m_Hx += e(sample) * (m_A.vector(sample) * m_A.vector(sample).transpose());
+        }
     }
 
     return e.sum();
