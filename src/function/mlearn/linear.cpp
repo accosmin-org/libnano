@@ -75,19 +75,17 @@ void linear_model_t::eval_hess(matrix_map_t Hx) const
     // TODO: add multivariate versions!!!
     // TODO: update bench_function with Hessian related statistics
 
-    Hx.full(0.0);
-
-    // TODO: write the following operations using Eigen3 calls for improved performance
     if (outputs == 1)
     {
-        // TODO: write the following operations using Eigen3 calls for improved performance
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            Hx += m_hessbuffs(sample, 0, 0) * (m_inputs.vector(sample) * m_inputs.vector(sample).transpose());
-        }
+        const auto inputs = m_inputs.matrix();
+
+        Hx.matrix().noalias() = (inputs.array().colwise() * m_hessbuffs.array()).matrix().transpose() * inputs;
     }
     else
     {
+        Hx.full(0.0);
+
+        // TODO: write the following operations using Eigen3 calls for improved performance
         for (tensor_size_t i = 0; i < nparams; ++i)
         {
             for (tensor_size_t j = 0; j < nparams; ++j)
