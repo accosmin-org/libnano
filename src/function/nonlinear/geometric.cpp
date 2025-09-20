@@ -48,13 +48,7 @@ scalar_t function_geometric_optimization_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.full(0.0);
-
-        const auto samples = m_a.size();
-        for (tensor_size_t sample = 0; sample < samples; ++sample)
-        {
-            eval.m_Hx += e(sample) * (m_A.vector(sample) * m_A.vector(sample).transpose());
-        }
+        eval.m_Hx.matrix().noalias() = (A.array().colwise() * e).matrix().transpose() * A;
     }
 
     return e.sum();
