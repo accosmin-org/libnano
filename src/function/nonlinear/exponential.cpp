@@ -28,7 +28,7 @@ scalar_t function_exponential_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.matrix().noalias() = (4 * fx * alpha * alpha) * (eval.m_x.vector() * eval.m_x.transpose());
+        eval.m_Hx = (4 * fx * alpha * alpha) * (eval.m_x.vector() * eval.m_x.transpose());
         eval.m_Hx.diagonal().array() += 2 * fx * alpha;
     }
 

@@ -31,7 +31,7 @@ scalar_t function_zakharov_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.matrix().noalias() = (2 + 12 * v * v) * (m_bias.vector() * m_bias.transpose());
+        eval.m_Hx = (2 + 12 * v * v) * (m_bias.vector() * m_bias.transpose());
         eval.m_Hx.diagonal().array() += 2;
     }
 
