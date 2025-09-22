@@ -70,5 +70,13 @@ struct function_config_t
         {
             UTEST_CHECK_LESS(hess_accuracy(*rfunction, x), config.m_hess_accuracy_epsilon);
         }
+
+        // check Hessian is symmetric
+        if (rfunction->smooth())
+        {
+            auto H = make_random_matrix<scalar_t>(function.size(), function.size());
+            (*rfunction)(x, {}, H);
+            UTEST_CHECK(H.matrix().isApprox(H.transpose()));
+        }
     }
 }
