@@ -68,36 +68,30 @@ void linear_model_t::eval_grad(vector_map_t gx) const
 
 void linear_model_t::eval_hess(matrix_map_t Hx) const
 {
-    const auto nparams = m_woptimum.size();
+    const auto inputs  = m_inputs.matrix();
     const auto samples = m_gradbuffs.rows();
     const auto outputs = m_gradbuffs.cols();
 
-    // TODO: add multivariate versions!!!
-    // TODO: update bench_function with Hessian related statistics
+    assert(outputs == 1);
 
-    if (outputs == 1)
+    Hx.matrix().noalias() = (inputs.array().colwise() * m_hessbuffs.array()).matrix().transpose() * inputs;
+
+    // NB: multivariate version, but harder to guarantee the expected number of free dimensions!
+    // TODO: write the following operations using Eigen3 calls for improved performance
+    /*
+    const auto nparams = m_woptimum.size();
+    Hx.full(0.0);
+    for (tensor_size_t i = 0; i < nparams; ++i)
     {
-        const auto inputs = m_inputs.matrix();
-
-        Hx.matrix().noalias() = (inputs.array().colwise() * m_hessbuffs.array()).matrix().transpose() * inputs;
-    }
-    else
-    {
-        Hx.full(0.0);
-
-        // TODO: write the following operations using Eigen3 calls for improved performance
-        for (tensor_size_t i = 0; i < nparams; ++i)
+        for (tensor_size_t j = 0; j < nparams; ++j)
         {
-            for (tensor_size_t j = 0; j < nparams; ++j)
+            for (tensor_size_t sample = 0; sample < samples; ++sample)
             {
-                for (tensor_size_t sample = 0; sample < samples; ++sample)
-                {
-                    Hx(i, j) += m_hessbuffs(sample, i % outputs, j % outputs) * m_inputs(sample, i / outputs) *
-                                m_inputs(sample, j / outputs);
-                }
+                Hx(i, j) += m_hessbuffs(sample, i % outputs, j % outputs) * m_inputs(sample, i / outputs) *
+                            m_inputs(sample, j / outputs);
             }
         }
-    }
+    }*/
 
     Hx.array() /= static_cast<scalar_t>(samples);
 }

@@ -33,7 +33,7 @@ struct function_config_t
 {
     int      m_trials{100};
     scalar_t m_grad_accuracy_epsilon{1e-8};
-    scalar_t m_hess_accuracy_epsilon{5e-7};
+    scalar_t m_hess_accuracy_epsilon{5e-8};
     scalar_t m_convex_accuracy_epsilon{1e-14};
 };
 
