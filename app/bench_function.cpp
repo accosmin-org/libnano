@@ -15,11 +15,13 @@ void eval_func(const function_t& function, table_t& table)
     const auto dims = function.size();
     const auto x    = make_full_vector<scalar_t>(dims, 0);
     auto       g    = make_full_vector<scalar_t>(dims, 0);
+    auto       H    = make_full_matrix<scalar_t>(dims, dims, 0);
 
     const size_t trials = 16;
 
     volatile scalar_t fx = 0;
     volatile scalar_t gx = 0;
+    volatile scalar_t hx = 0;
 
     const auto measure_fval = [&]()
     {
@@ -34,19 +36,34 @@ void eval_func(const function_t& function, table_t& table)
         function(x, g);
         gx = old_value + g.lpNorm<Eigen::Infinity>();
     };
+    const auto measure_hess = [&]()
+    {
+        const auto old_value = hx;
+
+        function(x, {}, H);
+        hx = old_value + H.lpNorm<Eigen::Infinity>();
+    };
 
     const auto fval_time = measure<nanoseconds_t>(measure_fval, trials).count();
     const auto grad_time = measure<nanoseconds_t>(measure_grad, trials).count();
+    const auto hess_time = function.smooth() ? measure<nanoseconds_t>(measure_hess, trials).count() : int64_t{};
 
     scalar_t grad_accuracy = 0;
+    scalar_t hess_accuracy = 0;
     for (size_t i = 0; i < trials; ++ i)
     {
         grad_accuracy += ::nano::grad_accuracy(function, make_random_vector<scalar_t>(dims));
+        if (function.smooth())
+        {
+            hess_accuracy += ::nano::hess_accuracy(function, make_random_vector<scalar_t>(dims));
+        }
     }
 
     auto& row = table.append();
-    row << function.name() << fval_time << grad_time
-        << scat(std::setprecision(12), std::fixed, grad_accuracy / static_cast<scalar_t>(trials));
+    row << function.name() << fval_time << grad_time << (function.smooth() ? scat(hess_time) : string_t{"N/A"})
+        << scat(std::setprecision(12), std::fixed, grad_accuracy / static_cast<scalar_t>(trials))
+        << (function.smooth() ? scat(std::setprecision(12), std::fixed, hess_accuracy / static_cast<scalar_t>(trials))
+                              : string_t{"N/A"});
 }
 
 int unsafe_main(int argc, const char* argv[])
@@ -70,7 +87,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto fconfig  = function_t::config_t{min_dims, max_dims, function_type::any};
 
     table_t table;
-    table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "grad accuracy";
+    table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "f(x,g)[ns]" << "grad accuracy" << "hess accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
