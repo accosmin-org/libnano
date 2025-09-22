@@ -44,13 +44,14 @@ private:
     void eval_outputs(matrix_cmap_t w) const;
 
     matrix_map_t make_w(vector_map_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
+
     matrix_cmap_t make_w(vector_cmap_t x) const { return map_tensor(x.data(), m_woptimum.dims()); }
 
     matrix_t           m_inputs;    ///< inputs (#samples, #inputs)
     matrix_t           m_targets;   ///< targets (#samples, #outputs: univariate regression or classification)
     mutable matrix_t   m_outputs;   ///< outputs (#samples, #outputs)
     mutable matrix_t   m_gradbuffs; ///< gradients of the loss wrt output (#samples, #outputs)
-    mutable tensor3d_t m_hessbuffs;  ///< hessians of the loss wrt output (#samples, #outputs, #outputs)
+    mutable tensor3d_t m_hessbuffs; ///< hessians of the loss wrt output (#samples, #outputs, #outputs)
     matrix_t           m_woptimum;  ///< weights used for generating the synthetic dataset
     vector_t           m_boptimum;  ///< bias used for generating the synthetic dataset
 };

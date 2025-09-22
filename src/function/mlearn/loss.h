@@ -16,8 +16,8 @@ public:
     static constexpr auto regression = true;
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
-    static void gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
 };
 
 ///
@@ -32,8 +32,8 @@ public:
     static constexpr auto regression = true;
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
-    static void gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
 };
 
 ///
@@ -48,8 +48,8 @@ public:
     static constexpr auto regression = true;
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
-    static void gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
 };
 
 ///
@@ -64,8 +64,8 @@ public:
     static constexpr auto regression = false;
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
-    static void gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
 };
 
 ///
@@ -80,7 +80,7 @@ public:
     static constexpr auto regression = false;
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
-    static void gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
 };
 } // namespace nano

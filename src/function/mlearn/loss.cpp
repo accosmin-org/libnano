@@ -5,7 +5,7 @@ using namespace nano;
 scalar_t loss_mse_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto delta = outputs - targets;
+    const auto delta   = outputs - targets;
 
     return 0.5 * delta.squaredNorm() / static_cast<scalar_t>(samples);
 }
@@ -30,7 +30,7 @@ void loss_mse_t::hx(matrix_cmap_t outputs, matrix_cmap_t, tensor3d_map_t Hx)
 scalar_t loss_mae_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto delta = outputs - targets;
+    const auto delta   = outputs - targets;
 
     return delta.array().abs().sum() / static_cast<scalar_t>(samples);
 }
@@ -50,7 +50,7 @@ void loss_mae_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
 scalar_t loss_cauchy_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto delta = outputs - targets;
+    const auto delta   = outputs - targets;
 
     return (delta.array().square() + 1.0).log().sum() / static_cast<scalar_t>(samples);
 }
@@ -77,7 +77,7 @@ void loss_cauchy_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_ma
 scalar_t loss_hinge_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto edges = -outputs.array() * targets.array();
+    const auto edges   = -outputs.array() * targets.array();
 
     return (1.0 + edges).max(0.0).sum() / static_cast<scalar_t>(samples);
 }
@@ -97,7 +97,7 @@ void loss_hinge_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
 scalar_t loss_logistic_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto edges = (-outputs.array() * targets.array()).exp();
+    const auto edges   = (-outputs.array() * targets.array()).exp();
 
     return (1.0 + edges).log().sum() / static_cast<scalar_t>(samples);
 }
