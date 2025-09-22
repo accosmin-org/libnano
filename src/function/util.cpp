@@ -198,7 +198,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
         {
             if (i > 0)
             {
-                xx(i - 1) = xx(i - 1);
+                xx(i - 1) = x(i - 1);
             }
 
             const auto hi = deta * eta * (1.0 + std::fabs(x(i)));
