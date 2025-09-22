@@ -131,7 +131,7 @@ void handle(linear_constraints_t& lc, [[maybe_unused]] tensor_size_t& ieq, [[may
 }
 } // namespace
 
-scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
+scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x, const scalar_t early_stopping_epsilon)
 {
     assert(x.size() == function.size());
 
@@ -147,7 +147,7 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
 
     // central finite-difference approximated gradient
     auto dg = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1e-4, 1e-3, 1e-2, 1e-1, 1e+0, 1e+1, 1e+2})
+    for (const auto deta : {1e-2, 3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1, 3e+1, 1e+2, 3e+2})
     {
         xx = x;
 
@@ -169,13 +169,17 @@ scalar_t nano::grad_accuracy(const function_t& function, const vector_t& x)
             gx_approx(i) = (fxp - fxn) / (2.0 * hi);
         }
 
-        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>());
+        dg = std::min(dg, (gx - gx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
+        if (dg < early_stopping_epsilon)
+        {
+            break;
+        }
     }
 
-    return dg / (1.0 + std::fabs(fx));
+    return dg;
 }
 
-scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
+scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x, const scalar_t early_stopping_epsilon)
 {
     assert(function.smooth());
     assert(x.size() == function.size());
@@ -194,7 +198,7 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
 
     // central finite-difference approximated hessian
     auto dH = std::numeric_limits<scalar_t>::max();
-    for (const auto deta : {1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1e+0, 3e+0, 1e+1})
+    for (const auto deta : {1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1e+0})
     {
         xx = x;
         Hx_approx.full(0);
@@ -218,10 +222,14 @@ scalar_t nano::hess_accuracy(const function_t& function, const vector_t& x)
             Hx_approx.col(i) += (gxp - gxn) / (4.0 * hi);
         }
 
-        dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>());
+        dH = std::min(dH, (Hx - Hx_approx).lpNorm<Eigen::Infinity>() / (1.0 + std::fabs(fx)));
+        if (dH < early_stopping_epsilon)
+        {
+            break;
+        }
     }
 
-    return dH / (1.0 + std::fabs(fx));
+    return dH;
 }
 
 scalar_t nano::convex_accuracy(const function_t& function, const vector_t& x1, const vector_t& x2, const int steps)

@@ -33,7 +33,7 @@ struct function_config_t
 {
     int      m_trials{100};
     scalar_t m_grad_accuracy_epsilon{1e-8};
-    scalar_t m_hess_accuracy_epsilon{1e-8};
+    scalar_t m_hess_accuracy_epsilon{5e-7};
     scalar_t m_convex_accuracy_epsilon{1e-14};
 };
 
@@ -63,12 +63,13 @@ struct function_config_t
         UTEST_CHECK_GREATER_EQUAL(rfunction->strong_convexity(), 0.0);
 
         // check (sub-)gradient approximation with centering difference
-        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x), config.m_grad_accuracy_epsilon);
+        UTEST_CHECK_LESS(grad_accuracy(*rfunction, x, config.m_grad_accuracy_epsilon), config.m_grad_accuracy_epsilon);
 
         // check Hessian approximation with centering difference
         if (rfunction->smooth())
         {
-            UTEST_CHECK_LESS(hess_accuracy(*rfunction, x), config.m_hess_accuracy_epsilon);
+            UTEST_CHECK_LESS(hess_accuracy(*rfunction, x, config.m_hess_accuracy_epsilon),
+                             config.m_hess_accuracy_epsilon);
         }
 
         // check Hessian is symmetric

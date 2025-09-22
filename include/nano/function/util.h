@@ -12,7 +12,7 @@ namespace nano
 ///
 /// NB: if significantly bigger than zero, then the (sub-)gradient is not correctly computed.
 ///
-NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x);
+NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x, scalar_t early_stopping_epsilon = 1e-10);
 
 ///
 /// \brief return the minimum difference between the analytical hessian and the hessian approximated
@@ -23,7 +23,7 @@ NANO_PUBLIC scalar_t grad_accuracy(const function_t&, const vector_t& x);
 /// NB: this can be used only for smooth functions.
 /// NB: if significantly bigger than zero, then the Hessian is not correctly computed.
 ///
-NANO_PUBLIC scalar_t hess_accuracy(const function_t&, const vector_t& x);
+NANO_PUBLIC scalar_t hess_accuracy(const function_t&, const vector_t& x, scalar_t early_stopping_epsilon = 1e-10);
 
 ///
 /// \brief return the maximum violation (if any) of the convexity inequality along the [x1, x2] line.
