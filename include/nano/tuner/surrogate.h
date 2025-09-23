@@ -36,11 +36,12 @@ public:
 private:
     // attributes
     const loss_t&      m_loss;         ///<
-    tensor2d_t         m_p2;           ///< quadratic terms of hyper-parameter values p
-    tensor1d_t         m_y;            ///< target
-    mutable tensor4d_t m_loss_outputs; ///<
-    mutable tensor1d_t m_loss_values;  ///<
-    mutable tensor4d_t m_loss_vgrads;  ///<
+    tensor2d_t         m_p2;           ///< (#samples, quadratic terms of hyper-parameter values p)
+    tensor1d_t         m_y;            ///< (#samples,) -> errors associated to the hyper-parameter values p
+    mutable tensor4d_t m_loss_outputs; ///< (#samples, dim1, dim2, dim3)
+    mutable tensor1d_t m_loss_values;  ///< (#samples,)
+    mutable tensor4d_t m_loss_grads;   ///< (#samples, dim1, dim2, dim3)
+    mutable tensor3d_t m_loss_hesss;   ///< (#samples, dim1 * dim2 * dim3, dim1 * dim2 * dim3)
 };
 
 ///

@@ -31,14 +31,19 @@ public:
     static factory_t<loss_t>& all();
 
     ///
-    /// \brief compute the error value, the loss value and the loss' gradient wrt the output for the given samples
+    /// \brief compute the error value, the loss value, the loss' gradient and the loss' hessian
+    ///     wrt the output for the given samples.
     ///
     /// NB: the targets and the outputs are given as 4D tensors,
-    ///     where the first index is the sample index
+    ///     where the first index is the sample index.
+    ///
+    /// NB: the gradients keep the same shape as the targets and the outputs.
+    /// NB: the hessians are flatten across the target dimensions.
     ///
     virtual void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
     virtual void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
-    virtual void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const = 0;
+    virtual void grad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const  = 0;
+    virtual void hess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t) const  = 0;
 
     ///
     /// \brief overloads to simplify usage.
@@ -57,10 +62,17 @@ public:
         value(targets, outputs, values.tensor());
     }
 
-    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& vgrads) const
+    void grad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& grads) const
     {
-        vgrads.resize(targets.dims());
-        vgrad(targets, outputs, vgrads.tensor());
+        grads.resize(targets.dims());
+        grad(targets, outputs, grads.tensor());
+    }
+
+    void hess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_t& vhess) const
+    {
+        const auto dims = targets.size<1>() * targets.size<2>() * targets.size<3>();
+        vhess.resize(targets.size<0>(), dims, dims);
+        hess(targets, outputs, vhess.tensor());
     }
 
     ///
