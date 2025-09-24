@@ -29,19 +29,25 @@ struct loss_function_t final : public function_t
 
     rfunction_t clone() const override { return std::make_unique<loss_function_t>(*this); }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        UTEST_REQUIRE_EQUAL(x.size(), m_target.size());
-        const auto output = map_tensor(x.data(), m_target.dims());
+        UTEST_REQUIRE_EQUAL(eval.m_x.size(), m_target.size());
+        const auto output = map_tensor(eval.m_x.data(), m_target.dims());
 
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            m_loss->vgrad(m_target, output, map_tensor(gx.data(), m_target.dims()));
-            UTEST_REQUIRE(gx.array().isFinite().all());
+            m_loss->vgrad(m_target, output, map_tensor(eval.m_gx.data(), m_target.dims()));
+            UTEST_REQUIRE(eval.m_gx.all_finite());
+        }
+
+        if (eval.has_hess())
+        {
+            m_loss->vgrad(m_target, output, map_tensor(eval.m_gx.data(), m_target.dims()));
+            UTEST_REQUIRE(eval.m_Hx.all_finite());
         }
 
         m_loss->value(m_target, output, m_values.tensor());
-        UTEST_REQUIRE(m_values.array().isFinite().all());
+        UTEST_REQUIRE(m_values.all_finite());
         return m_values.array().sum();
     }
 
@@ -112,8 +118,7 @@ UTEST_CASE(gradient)
                 UTEST_CHECK_LESS(grad_accuracy(function, x), 5 * epsilon2<scalar_t>());
             }
 
-            check_gradient(function);
-            check_convexity(function);
+            check_function(function, function_config_t{});
         }
     }
 }
