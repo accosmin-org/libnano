@@ -53,7 +53,7 @@ public:
     ///
     /// \brief constructor
     ///
-    explicit quadratic_surrogate_t(vector_t model);
+    explicit quadratic_surrogate_t(const vector_t& model);
 
     ///
     /// \brief @see clonable_t
@@ -67,7 +67,8 @@ public:
 
 private:
     // attributes
-    vector_t m_model; ///< coefficients of the quadratic terms of hyper-parameter values p
+    matrix_t m_Q; ///< quadratic term
+    vector_t m_c; ///< linear term
 };
 
 ///

@@ -12,7 +12,8 @@ quadratic_surrogate_fit_t::quadratic_surrogate_fit_t(const loss_t& loss, tensor2
     , m_y(std::move(y))
     , m_loss_outputs(p.size<0>(), 1, 1, 1)
     , m_loss_values(p.size<0>())
-    , m_loss_vgrads(p.size<0>(), 1, 1, 1)
+    , m_loss_grads(p.size<0>(), 1, 1, 1)
+    , m_loss_hesss(p.size<0>(), 1, 1)
 {
     convex(loss.convex() ? convexity::yes : convexity::no);
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);
@@ -52,13 +53,13 @@ scalar_t quadratic_surrogate_fit_t::do_eval(eval_t eval) const
 
     if (eval.has_grad())
     {
-        m_loss.grad(targets, m_loss_outputs, m_loss_grads);
-        eval.m_gx = m_p2.matrix().transpose() * m_loss_vgrads.vector();
+        m_loss.vgrad(targets, m_loss_outputs, m_loss_grads);
+        eval.m_gx = m_p2.matrix().transpose() * m_loss_grads.vector();
     }
 
     if (eval.has_hess())
     {
-        m_loss.hess(targets, m_loss_outputs, m_loss_hesss);
+        m_loss.vhess(targets, m_loss_outputs, m_loss_hesss);
         eval.m_Hx.matrix().noalias() = (m_p2.array().colwise() * m_loss_hesss.array()).matrix().transpose() * m_p2;
     }
 
@@ -66,15 +67,26 @@ scalar_t quadratic_surrogate_fit_t::do_eval(eval_t eval) const
     return m_loss_values.sum();
 }
 
-quadratic_surrogate_t::quadratic_surrogate_t(vector_t model)
+quadratic_surrogate_t::quadratic_surrogate_t(const vector_t& model)
     : function_t("quadratic surrogate function", static_cast<tensor_size_t>(std::sqrt(2 * model.size())) - 1)
-    , m_model(std::move(model))
+    , m_Q(matrix_t::zero(size(), size()))
+    , m_c(vector_t::zero(size()))
 {
     convex(convexity::no);
     smooth(smoothness::yes);
 
     assert(size() > 0);
-    assert(m_model.size() == (size() + 1) * (size() + 2) / 2);
+    assert(model.size() == (size() + 1) * (size() + 2) / 2);
+
+    m_c = model.segment(1, size());
+
+    for (tensor_size_t i = 0, k = size() + 1; i < size(); ++i)
+    {
+        for (tensor_size_t j = i; j < size(); ++j, ++k)
+        {
+            m_Q(i, j) = model(k);
+        }
+    }
 }
 
 rfunction_t quadratic_surrogate_t::clone() const
@@ -84,47 +96,17 @@ rfunction_t quadratic_surrogate_t::clone() const
 
 scalar_t quadratic_surrogate_t::do_eval(eval_t eval) const
 {
-    const auto x = eval.m_x;
-
     if (eval.has_grad())
     {
-        eval.m_gx.zero();
-
-        auto k = tensor_size_t{1};
-        for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
-        {
-            eval.m_gx(i) += m_model(k++);
-        }
-        for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
-        {
-            for (tensor_size_t j = i; j < size; ++j)
-            {
-                eval.m_gx(i) += m_model(k) * x(j);
-                eval.m_gx(j) += m_model(k++) * x(i);
-            }
-        }
+        eval.m_gx = 2.0 * m_Q * eval.m_x + m_c;
     }
 
     if (eval.has_hess())
     {
-        // tODO
+        eval.m_Hx = 2.0 * m_Q;
     }
 
-    scalar_t fx = m_model(0);
-
-    auto k = tensor_size_t{1};
-    for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
-    {
-        fx += m_model(k++) * x(i);
-    }
-    for (tensor_size_t i = 0, size = x.size(); i < size; ++i)
-    {
-        for (tensor_size_t j = i; j < size; ++j)
-        {
-            fx += m_model(k++) * x(i) * x(j);
-        }
-    }
-    return fx;
+    return eval.m_x.dot(m_Q * eval.m_x + m_c);
 }
 
 surrogate_tuner_t::surrogate_tuner_t()

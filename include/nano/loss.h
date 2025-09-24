@@ -42,8 +42,8 @@ public:
     ///
     virtual void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
     virtual void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
-    virtual void grad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const  = 0;
-    virtual void hess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t) const  = 0;
+    virtual void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const = 0;
+    virtual void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t) const = 0;
 
     ///
     /// \brief overloads to simplify usage.
@@ -62,17 +62,17 @@ public:
         value(targets, outputs, values.tensor());
     }
 
-    void grad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& grads) const
+    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& vgrads) const
     {
-        grads.resize(targets.dims());
-        grad(targets, outputs, grads.tensor());
+        vgrads.resize(targets.dims());
+        vgrad(targets, outputs, vgrads.tensor());
     }
 
-    void hess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_t& vhess) const
+    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_t& vhesss) const
     {
         const auto dims = targets.size<1>() * targets.size<2>() * targets.size<3>();
-        vhess.resize(targets.size<0>(), dims, dims);
-        hess(targets, outputs, vhess.tensor());
+        vhesss.resize(targets.size<0>(), dims, dims);
+        vhess(targets, outputs, vhesss.tensor());
     }
 
     ///

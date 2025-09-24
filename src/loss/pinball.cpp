@@ -52,3 +52,13 @@ void pinball_loss_t::vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, ten
         vgrads.array(i) = -alpha + 0.5 * (1.0 - (itarget - ioutput).sign());
     }
 }
+
+void pinball_loss_t::vhess([[maybe_unused]] tensor4d_cmap_t targets, [[maybe_unused]] tensor4d_cmap_t outputs,
+                           [[maybe_unused]] tensor3d_map_t vhesss) const
+{
+    assert(targets.size<0>() == vhesss.size<0>());
+    assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<1>());
+    assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<2>());
+    assert(targets.dims() == outputs.dims());
+    assert(false);
+}

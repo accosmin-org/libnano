@@ -1,4 +1,4 @@
-target_sources(machine PRIVATE
+target_sources(gboost PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/gboost/accumulator.h
     ${CMAKE_SOURCE_DIR}/include/nano/gboost/early_stopping.h
     ${CMAKE_SOURCE_DIR}/include/nano/gboost/enums.h

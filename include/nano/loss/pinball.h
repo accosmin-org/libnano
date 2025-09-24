@@ -36,5 +36,10 @@ public:
     /// \brief @see loss_t
     ///
     void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const override;
+
+    ///
+    /// \brief @see loss_t
+    ///
+    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t vhesss) const override;
 };
 } // namespace nano

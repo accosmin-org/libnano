@@ -83,6 +83,22 @@ public:
             tloss::vgrad(targets.array(i), outputs.array(i), vgrads.array(i));
         }
     }
+
+    ///
+    /// \brief @see loss_t
+    ///
+    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t vhesss) const override
+    {
+        assert(targets.size<0>() == vhesss.size<0>());
+        assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<1>());
+        assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<2>());
+        assert(targets.dims() == outputs.dims());
+
+        for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
+        {
+            tloss::vhess(targets.array(i), outputs.array(i), vhesss.tensor(i));
+        }
+    }
 };
 
 namespace detail
@@ -136,6 +152,19 @@ struct classnll_t : public terror
             }
         }
     }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        vhess.full(0.0);
+        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
+        {
+            const auto x = -target(i) * output(i);
+            const auto h = (x < 1.0) ? (std::exp(x) * (1.0 - std::exp(x)) / square(1.0 + std::exp(x)))
+                                     : ((std::exp(-x) - 1) / square(1.0 + std::exp(-x)));
+            vhess(i, i)  = target(i) * target(i) * h;
+        }
+    }
 };
 
 ///
@@ -158,6 +187,12 @@ struct exponential_t : public terror
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = -target * (-target * output).exp();
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        vhess = (-target * output).exp().matrix().asDiagonal();
     }
 };
 
@@ -193,6 +228,19 @@ struct logistic_t : public terror
             vgrad(i)     = -target(i) * g;
         }
     }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        vhess.full(0.0);
+        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
+        {
+            const auto x = -target(i) * output(i);
+            const auto h = (x < 1.0) ? (std::exp(x) * (1.0 - std::exp(x)) / square(1.0 + std::exp(x)))
+                                     : ((std::exp(-x) - 1) / square(1.0 + std::exp(-x)));
+            vhess(i, i)  = target(i) * target(i) * h;
+        }
+    }
 };
 
 ///
@@ -208,13 +256,20 @@ struct hinge_t : public terror
     template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (1 - target * output).max(0).sum();
+        return (1.0 - target * output).max(0).sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = -target * ((1 - target * output).sign() + 1) * 0.5;
+        vgrad = -target * ((1.0 - target * output).sign() + 1.0) * 0.5;
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess([[maybe_unused]] const tarray& target, [[maybe_unused]] const tarray& output, thmatrix vhess)
+    {
+        assert(false);
+        vhess.full(0.0);
     }
 };
 
@@ -225,19 +280,26 @@ template <class terror>
 struct squared_hinge_t : public terror
 {
     static constexpr auto convex   = true;
-    static constexpr auto smooth   = true;
+    static constexpr auto smooth   = false;
     static constexpr auto basename = "squared-hinge";
 
     template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (1 - target * output).max(0).square().sum();
+        return (1.0 - target * output).max(0).square().sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = -target * ((1 - target * output).max(0)) * 2.0;
+        vgrad = -target * (1.0 - target * output).max(0) * 2.0;
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess([[maybe_unused]] const tarray& target, [[maybe_unused]] const tarray& output, thmatrix vhess)
+    {
+        assert(false);
+        vhess.full(0.0);
     }
 };
 
@@ -254,13 +316,25 @@ struct savage_t : public terror
     template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (1 / (1 + (target * output).exp()).square()).sum();
+        const auto edges = (target * output).exp();
+
+        return (1.0 / (1.0 + edges).square()).sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = -2 * target / ((1 + (target * output).exp()).square() * (1 + (-target * output).exp()));
+        const auto edges = (target * output).exp();
+
+        vgrad = -2.0 * target / (1.0 + edges).cube();
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        const auto edges = (target * output).exp();
+
+        vhess = -2.0 * (edges - 2.0 * edges.square()) / (1.0 + edges).square().square();
     }
 };
 
@@ -275,15 +349,35 @@ struct tangent_t : public terror
     static constexpr auto basename = "tangent";
 
     template <class tarray>
+    static auto atan(const tarray& target, const tarray& output)
+    {
+        return 2.0 * (target * output).atan() - 1.0;
+    }
+
+    template <class tarray>
+    static auto gdiv(const tarray& target, const tarray& output)
+    {
+        return 1.0 + (target * output).square();
+    }
+
+    template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (2 * (target * output).atan() - 1).square().sum();
+        return atan(target, output).square().sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = 4 * target * (2 * (target * output).atan() - 1) / (1 + (target * output).square());
+        vgrad = 4.0 * target * atan(target, output) / gdiv(target, output);
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        vhess = (8.0 * target * (1.0 - output * atan(target, output)) / gdiv(target, output).square())
+                    .matrix()
+                    .asDiagonal();
     }
 };
 
@@ -308,6 +402,13 @@ struct mae_t : public terror
     {
         vgrad = (output - target).sign();
     }
+
+    template <class tarray, class thmatrix>
+    static void vhess([[maybe_unused]] const tarray& target, [[maybe_unused]] const tarray& output, thmatrix vhess)
+    {
+        assert(false);
+        vhess.full(0.0);
+    }
 };
 
 ///
@@ -323,13 +424,19 @@ struct mse_t : public terror
     template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return scalar_t(0.5) * (output - target).square().sum();
+        return 0.5 * (output - target).square().sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = output - target;
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess([[maybe_unused]] const tarray& target, [[maybe_unused]] const tarray& output, thmatrix vhess)
+    {
+        vhess = matrix_t::identity(vhess.rows(), vhess.cols());
     }
 };
 
@@ -346,13 +453,19 @@ struct cauchy_t : public terror
     template <class tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return scalar_t(0.5) * ((target - output).square() + 1).log().sum();
+        return 0.5 * ((target - output).square() + 1).log().sum();
     }
 
     template <class tarray, class tgarray>
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
         vgrad = (output - target) / (1 + (output - target).square());
+    }
+
+    template <class tarray, class thmatrix>
+    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    {
+        vhess = ((output - target) / (1 + (output - target).square()).square()).matrix().asDiagonal();
     }
 };
 } // namespace detail
