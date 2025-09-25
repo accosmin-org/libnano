@@ -30,10 +30,6 @@ public:
     ///
     static factory_t<loss_t>& all();
 
-    static tensor7d_dims_t make_hess_dims(tensor4d_cmap_t targets);
-    static tensor7d_dims_t make_hess_dims(tensor4d_dims_t targets_dims);
-    static tensor7d_dims_t make_hess_dims(tensor_size_t samples, tensor3d_dims_t target_dims);
-
     ///
     /// \brief compute the error value and the loss (value, gradient and hessian) for each sample
     ///     given the targets (the ground truth) and the outputs (the predictions).
@@ -69,6 +65,14 @@ public:
     /// NB: if not, then only sub-gradients are available.
     ///
     bool smooth() const { return m_smooth; }
+
+    ///
+    /// \brief returns the expected dimensions of the cross-samples hessians given
+    ///     the number of samples and the target dimensions.
+    ///
+    static tensor7d_dims_t make_hess_dims(tensor4d_cmap_t targets);
+    static tensor7d_dims_t make_hess_dims(tensor4d_dims_t targets_dims);
+    static tensor7d_dims_t make_hess_dims(tensor_size_t samples, tensor3d_dims_t target_dims);
 
 protected:
     void convex(bool);

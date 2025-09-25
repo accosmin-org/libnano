@@ -18,21 +18,23 @@ struct cauchy_t : public terror
     requires is_eigen_v<tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return 0.5 * ((target - output).square() + 1).log().sum();
+        return 0.5 * ((target - output).square() + 1.0).log().sum();
     }
 
     template <class tarray, class tgarray>
     requires(is_eigen_v<tarray> && is_eigen_v<tgarray>)
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = (output - target) / (1 + (output - target).square());
+        vgrad = (output - target) / (1.0 + (output - target).square());
     }
 
     template <class tarray, class thmatrix>
     requires(is_eigen_v<tarray> && is_eigen_v<thmatrix>)
     static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
     {
-        vhess = ((output - target) / (1 + (output - target).square()).square()).matrix().asDiagonal();
+        const auto delta2 = (output - target).square();
+
+        vhess = ((1.0 - delta2) / (1.0 + delta2).square()).matrix().asDiagonal();
     }
 };
 } // namespace nano::detail
