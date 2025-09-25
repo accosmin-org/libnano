@@ -20,7 +20,7 @@ struct savage_t : public terror
     {
         const auto edges = (target * output).exp();
 
-        return (1.0 / (1.0 + edges).square()).sum();
+        return (1.0 / (1.0 + edges)).square().sum();
     }
 
     template <class tarray, class tgarray>
@@ -29,7 +29,7 @@ struct savage_t : public terror
     {
         const auto edges = (target * output).exp();
 
-        vgrad = -2.0 * target / (1.0 + edges).cube();
+        vgrad = -2.0 * target * (1.0 / (1.0 + edges)).square() * (edges / (1.0 + edges));
     }
 
     template <class tarray, class thmatrix>
@@ -38,7 +38,10 @@ struct savage_t : public terror
     {
         const auto edges = (target * output).exp();
 
-        vhess = (-2.0 * (edges - 2.0 * edges.square()) / (1.0 + edges).square().square()).matrix().asDiagonal();
+        vhess = (-2.0 * target * target * ((edges - 2.0 * edges) / edges) * (edges / (1.0 + edges)) *
+                 (1.0 / (1.0 + edges)).square())
+                    .matrix()
+                    .asDiagonal();
     }
 };
 } // namespace nano::detail

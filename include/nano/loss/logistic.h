@@ -47,8 +47,8 @@ struct logistic_t : public terror
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
         {
             const auto x = -target(i) * output(i);
-            const auto h = (x < 1.0) ? (std::exp(x) * (1.0 - std::exp(x)) / square(1.0 + std::exp(x)))
-                                     : ((std::exp(-x) - 1) / square(1.0 + std::exp(-x)));
+            const auto h =
+                (x < 1.0) ? (std::exp(x) / square(1.0 + std::exp(x))) : (std::exp(-x) / square(1.0 + std::exp(-x)));
             vhess(i, i)  = target(i) * target(i) * h;
         }
     }
