@@ -43,7 +43,7 @@ struct logistic_t : public terror
     requires(is_eigen_v<tarray> && is_eigen_v<thmatrix>)
     static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
     {
-        vhess.full(0.0);
+        vhess.fill(0.0);
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
         {
             const auto x = -target(i) * output(i);

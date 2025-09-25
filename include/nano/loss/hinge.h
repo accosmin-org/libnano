@@ -33,7 +33,7 @@ struct hinge_t : public terror
     static void vhess([[maybe_unused]] const tarray& target, [[maybe_unused]] const tarray& output, thmatrix vhess)
     {
         assert(false);
-        vhess.full(0.0);
+        vhess.fill(0.0);
     }
 };
 } // namespace nano::detail

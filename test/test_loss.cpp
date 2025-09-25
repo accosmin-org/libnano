@@ -13,15 +13,15 @@ using namespace nano;
 
 struct loss_function_t final : public function_t
 {
-    loss_function_t(const rloss_t& loss, const tensor_size_t xmaps)
-        : function_t("loss", 3 * xmaps)
+    loss_function_t(const rloss_t& loss, const tensor_size_t classes)
+        : function_t("loss", 3 * classes)
         , m_loss(loss)
-        , m_target(3, xmaps, 1, 1)
+        , m_target(3, classes, 1, 1)
         , m_values(3)
     {
-        m_target.tensor(0) = class_target(xmaps, 11 % xmaps);
-        m_target.tensor(1) = class_target(xmaps, 12 % xmaps);
-        m_target.tensor(2) = class_target(xmaps, 13 % xmaps);
+        m_target.tensor(0) = class_target(classes, 11 % classes);
+        m_target.tensor(1) = class_target(classes, 12 % classes);
+        m_target.tensor(2) = class_target(classes, 13 % classes);
 
         convex(m_loss->convex() ? convexity::yes : convexity::no);
         smooth(m_loss->smooth() ? smoothness::yes : smoothness::no);
@@ -42,8 +42,9 @@ struct loss_function_t final : public function_t
 
         if (eval.has_hess())
         {
-            assert(false);
-            m_loss->vhess(m_target, output, map_tensor(eval.m_Hx.data(), m_target.dims()));
+            auto Hx = tensor7d_t{};
+            m_loss->vhess(m_target, output, Hx);
+            eval.m_Hx = Hx.array().matrix().asDiagonal();
             UTEST_REQUIRE(eval.m_Hx.all_finite());
         }
 
