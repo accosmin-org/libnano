@@ -44,7 +44,7 @@ struct tangent_t : public terror
     requires(is_eigen_v<tarray> && is_eigen_v<thmatrix>)
     static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
     {
-        vhess = (8.0 * target * (1.0 - output * atan(target, output)) / gdiv(target, output).square())
+        vhess = (8.0 * target * target * (1.0 - output * target * atan(target, output)) / gdiv(target, output).square())
                     .matrix()
                     .asDiagonal();
     }
