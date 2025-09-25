@@ -18,11 +18,11 @@ struct classnll_t : public terror
     requires is_eigen_v<tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        tensor_size_t imax = 0;
-        const auto    omax = output.maxCoeff(&imax);
+        auto       imax = tensor_size_t{0};
+        const auto omax = output.maxCoeff(&imax);
 
-        scalar_t value = std::numeric_limits<scalar_t>::epsilon();
-        scalar_t posum = 0;
+        auto value = std::numeric_limits<scalar_t>::epsilon();
+        auto posum = 0.0;
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
         {
             value += std::exp(output(i) - omax);
@@ -38,8 +38,8 @@ struct classnll_t : public terror
     requires(is_eigen_v<tarray> && is_eigen_v<tgarray>)
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        tensor_size_t imax = 0;
-        const auto    omax = output.maxCoeff(&imax);
+        auto       imax = tensor_size_t{0};
+        const auto omax = output.maxCoeff(&imax);
 
         scalar_t value = 0;
         for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
@@ -58,16 +58,18 @@ struct classnll_t : public terror
 
     template <class tarray, class thmatrix>
     requires(is_eigen_v<tarray> && is_eigen_v<thmatrix>)
-    static void vhess(const tarray& target, const tarray& output, thmatrix vhess)
+    static void vhess([[maybe_unused]] const tarray& target, const tarray& output, thmatrix vhess)
     {
-        vhess.fill(0.0);
-        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
-        {
-            const auto x = -target(i) * output(i);
-            const auto h = (x < 1.0) ? (std::exp(x) * (1.0 - std::exp(x)) / square(1.0 + std::exp(x)))
-                                     : ((std::exp(-x) - 1) / square(1.0 + std::exp(-x)));
-            vhess(i, i)  = target(i) * target(i) * h;
-        }
+        auto       imax = tensor_size_t{0};
+        const auto omax = output.maxCoeff(&imax);
+
+        const auto exps = (output - omax).exp();
+        const auto esum = exps.sum();
+
+        const auto coef = exps / esum;
+
+        vhess = -coef.matrix() * coef.matrix().transpose();
+        vhess.diagonal().array() += coef;
     }
 };
 } // namespace nano::detail
