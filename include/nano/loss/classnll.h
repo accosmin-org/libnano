@@ -21,17 +21,7 @@ struct classnll_t : public terror
         auto       imax = tensor_size_t{0};
         const auto omax = output.maxCoeff(&imax);
 
-        auto value = std::numeric_limits<scalar_t>::epsilon();
-        auto posum = 0.0;
-        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
-        {
-            value += std::exp(output(i) - omax);
-            if (is_pos_target(target(i)))
-            {
-                posum += output(i);
-            }
-        }
-        return std::log(value) - posum + omax;
+        return std::log((output - omax).exp().sum()) - 0.5 * ((1.0 + target) * output).sum() + omax;
     }
 
     template <class tarray, class tgarray>
@@ -41,19 +31,9 @@ struct classnll_t : public terror
         auto       imax = tensor_size_t{0};
         const auto omax = output.maxCoeff(&imax);
 
-        scalar_t value = 0;
-        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
-        {
-            value += (vgrad(i) = std::exp(output(i) - omax));
-        }
-        for (tensor_size_t i = 0, size = target.size(); i < size; ++i)
-        {
-            vgrad(i) /= value;
-            if (is_pos_target(target(i)))
-            {
-                vgrad(i) -= 1.0;
-            }
-        }
+        vgrad = (output - omax).exp();
+        vgrad /= vgrad.sum();
+        vgrad -= 0.5 * (1.0 + target);
     }
 
     template <class tarray, class thmatrix>
@@ -64,9 +44,7 @@ struct classnll_t : public terror
         const auto omax = output.maxCoeff(&imax);
 
         const auto exps = (output - omax).exp();
-        const auto esum = exps.sum();
-
-        const auto coef = exps / esum;
+        const auto coef = exps / exps.sum();
 
         vhess = -coef.matrix() * coef.matrix().transpose();
         vhess.diagonal().array() += coef;
