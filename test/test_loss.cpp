@@ -14,7 +14,7 @@ using namespace nano;
 struct loss_function_t final : public function_t
 {
     loss_function_t(const rloss_t& loss, const tensor_size_t classes)
-        : function_t("loss", 3 * classes)
+        : function_t(loss->type_id(), 3 * classes)
         , m_loss(loss)
         , m_target(3, classes, 1, 1)
         , m_values(3)
@@ -44,7 +44,23 @@ struct loss_function_t final : public function_t
         {
             auto Hx = tensor7d_t{};
             m_loss->vhess(m_target, output, Hx);
-            eval.m_Hx = Hx.array().matrix().asDiagonal();
+
+            const auto samples = m_target.size<0>();
+            const auto classes = m_target.size<1>();
+
+            eval.m_Hx.full(0.0);
+            for (tensor_size_t sample = 0; sample < samples; ++sample)
+            {
+                for (tensor_size_t class1 = 0; class1 < classes; ++class1)
+                {
+                    for (tensor_size_t class2 = 0; class2 < classes; ++class2)
+                    {
+                        eval.m_Hx(sample * classes + class1, sample * classes + class2) =
+                            Hx(sample, class1, 0, 0, class2, 0, 0);
+                    }
+                }
+            }
+
             UTEST_REQUIRE(eval.m_Hx.all_finite());
         }
 
@@ -90,12 +106,11 @@ UTEST_CASE(gradient)
 
     for (const auto& loss_id : loss_t::all().ids())
     {
-        UTEST_NAMED_CASE(loss_id);
-
         for (tensor_size_t cmd_dims = cmd_min_dims; cmd_dims <= cmd_max_dims; ++cmd_dims)
         {
             const auto loss     = make_loss(loss_id);
             const auto function = loss_function_t(loss, cmd_dims);
+            UTEST_NAMED_CASE(function.name());
 
             UTEST_CHECK_EQUAL(loss->convex(), function.convex());
             UTEST_CHECK_EQUAL(loss->smooth(), function.smooth());

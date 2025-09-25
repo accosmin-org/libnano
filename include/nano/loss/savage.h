@@ -38,7 +38,7 @@ struct savage_t : public terror
     {
         const auto edges = (target * output).exp();
 
-        vhess = -2.0 * (edges - 2.0 * edges.square()) / (1.0 + edges).square().square();
+        vhess = (-2.0 * (edges - 2.0 * edges.square()) / (1.0 + edges).square().square()).matrix().asDiagonal();
     }
 };
 } // namespace nano::detail
