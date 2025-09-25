@@ -16,16 +16,13 @@ rloss_t pinball_loss_t::clone() const
     return std::make_unique<pinball_loss_t>(*this);
 }
 
-void pinball_loss_t::error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const
+void pinball_loss_t::do_error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const
 {
     value(targets, outputs, errors);
 }
 
-void pinball_loss_t::value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const
+void pinball_loss_t::do_value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const
 {
-    assert(targets.dims() == outputs.dims());
-    assert(values.size() == targets.size<0>());
-
     const auto alpha = parameter("loss::pinball::alpha").value<scalar_t>();
 
     for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
@@ -37,11 +34,8 @@ void pinball_loss_t::value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, ten
     }
 }
 
-void pinball_loss_t::vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const
+void pinball_loss_t::do_vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const
 {
-    assert(targets.dims() == vgrads.dims());
-    assert(targets.dims() == outputs.dims());
-
     const auto alpha = parameter("loss::pinball::alpha").value<scalar_t>();
 
     for (tensor_size_t i = 0, samples = targets.size<0>(); i < samples; ++i)
@@ -53,12 +47,8 @@ void pinball_loss_t::vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, ten
     }
 }
 
-void pinball_loss_t::vhess([[maybe_unused]] tensor4d_cmap_t targets, [[maybe_unused]] tensor4d_cmap_t outputs,
-                           [[maybe_unused]] tensor3d_map_t vhesss) const
+void pinball_loss_t::do_vhess([[maybe_unused]] tensor4d_cmap_t targets, [[maybe_unused]] tensor4d_cmap_t outputs,
+                              [[maybe_unused]] tensor7d_map_t vhesss) const
 {
-    assert(targets.size<0>() == vhesss.size<0>());
-    assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<1>());
-    assert(targets.size<1>() * targets.size<2>() * targets.size<3>() == vhesss.size<2>());
-    assert(targets.dims() == outputs.dims());
     assert(false);
 }

@@ -13,7 +13,7 @@ quadratic_surrogate_fit_t::quadratic_surrogate_fit_t(const loss_t& loss, tensor2
     , m_loss_outputs(p.size<0>(), 1, 1, 1)
     , m_loss_values(p.size<0>())
     , m_loss_grads(p.size<0>(), 1, 1, 1)
-    , m_loss_hesss(p.size<0>(), 1, 1)
+    , m_loss_hesss(p.size<0>(), 1, 1, 1, 1, 1, 1)
 {
     convex(loss.convex() ? convexity::yes : convexity::no);
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);

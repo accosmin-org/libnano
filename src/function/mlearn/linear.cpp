@@ -70,9 +70,6 @@ void linear_model_t::eval_hess(matrix_map_t Hx) const
 {
     const auto inputs  = m_inputs.matrix();
     const auto samples = m_gradbuffs.rows();
-    const auto outputs = m_gradbuffs.cols();
-
-    assert(outputs == 1);
 
     Hx.matrix().noalias() = (inputs.array().colwise() * m_hessbuffs.array()).matrix().transpose() * inputs;
 

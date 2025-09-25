@@ -42,7 +42,8 @@ struct loss_function_t final : public function_t
 
         if (eval.has_hess())
         {
-            m_loss->vgrad(m_target, output, map_tensor(eval.m_gx.data(), m_target.dims()));
+            assert(false);
+            m_loss->vhess(m_target, output, map_tensor(eval.m_Hx.data(), m_target.dims()));
             UTEST_REQUIRE(eval.m_Hx.all_finite());
         }
 

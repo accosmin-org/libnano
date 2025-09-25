@@ -30,50 +30,33 @@ public:
     ///
     static factory_t<loss_t>& all();
 
+    static tensor7d_dims_t make_hess_dims(tensor4d_cmap_t targets);
+    static tensor7d_dims_t make_hess_dims(tensor4d_dims_t targets_dims);
+    static tensor7d_dims_t make_hess_dims(tensor_size_t samples, tensor3d_dims_t target_dims);
+
     ///
-    /// \brief compute the error value, the loss value, the loss' gradient and the loss' hessian
-    ///     wrt the output for the given samples.
+    /// \brief compute the error value and the loss (value, gradient and hessian) for each sample
+    ///     given the targets (the ground truth) and the outputs (the predictions).
     ///
     /// NB: the targets and the outputs are given as 4D tensors,
     ///     where the first index is the sample index.
     ///
-    /// NB: the gradients keep the same shape as the targets and the outputs.
-    /// NB: the hessians are flatten across the target dimensions.
+    /// NB: the gradients and the hessians keep the same shape as the targets and the outputs.
     ///
-    virtual void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
-    virtual void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
-    virtual void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const = 0;
-    virtual void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t) const = 0;
+    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const;
+    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const;
+    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const;
+    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor7d_map_t) const;
 
     ///
     /// \brief overloads to simplify usage.
     ///
     /// NB: the output tensors are allocated accordingly.
     ///
-    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& errors) const
-    {
-        errors.resize(targets.size<0>());
-        error(targets, outputs, errors.tensor());
-    }
-
-    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& values) const
-    {
-        values.resize(targets.size<0>());
-        value(targets, outputs, values.tensor());
-    }
-
-    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& vgrads) const
-    {
-        vgrads.resize(targets.dims());
-        vgrad(targets, outputs, vgrads.tensor());
-    }
-
-    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_t& vhesss) const
-    {
-        const auto dims = targets.size<1>() * targets.size<2>() * targets.size<3>();
-        vhesss.resize(targets.size<0>(), dims, dims);
-        vhess(targets, outputs, vhesss.tensor());
-    }
+    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& errors) const;
+    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_t& values) const;
+    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_t& vgrads) const;
+    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor7d_t& vhesss) const;
 
     ///
     /// \brief returns whether the loss function is convex.
@@ -90,6 +73,11 @@ public:
 protected:
     void convex(bool);
     void smooth(bool);
+
+    virtual void do_error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
+    virtual void do_value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t) const = 0;
+    virtual void do_vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t) const = 0;
+    virtual void do_vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor7d_map_t) const = 0;
 
 private:
     // attributes

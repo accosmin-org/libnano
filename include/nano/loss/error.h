@@ -13,6 +13,7 @@ struct absdiff_t
     static constexpr auto prefix = "";
 
     template <class tarray>
+    requires is_eigen_v<tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         return (target - output).abs().sum();
@@ -28,6 +29,7 @@ struct mclass_t
     static constexpr auto prefix = "m-";
 
     template <class tarray>
+    requires is_eigen_v<tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         const auto     edges   = target * output;
@@ -46,6 +48,7 @@ struct sclass_t
     static constexpr auto prefix = "s-";
 
     template <class tarray>
+    requires is_eigen_v<tarray>
     static auto error(const tarray& target, const tarray& output)
     {
         if (target.size() > 1)

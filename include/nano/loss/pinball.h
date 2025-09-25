@@ -25,21 +25,21 @@ public:
     ///
     /// \brief @see loss_t
     ///
-    void error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const override;
+    void do_error(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t errors) const override;
 
     ///
     /// \brief @see loss_t
     ///
-    void value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const override;
+    void do_value(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor1d_map_t values) const override;
 
     ///
     /// \brief @see loss_t
     ///
-    void vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const override;
+    void do_vgrad(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor4d_map_t vgrads) const override;
 
     ///
     /// \brief @see loss_t
     ///
-    void vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor3d_map_t vhesss) const override;
+    void do_vhess(tensor4d_cmap_t targets, tensor4d_cmap_t outputs, tensor7d_map_t vhesss) const override;
 };
 } // namespace nano

@@ -41,7 +41,7 @@ private:
     mutable tensor4d_t m_loss_outputs; ///< (#samples, dim1, dim2, dim3)
     mutable tensor1d_t m_loss_values;  ///< (#samples,)
     mutable tensor4d_t m_loss_grads;   ///< (#samples, dim1, dim2, dim3)
-    mutable tensor3d_t m_loss_hesss;   ///< (#samples, dim1 * dim2 * dim3, dim1 * dim2 * dim3)
+    mutable tensor7d_t m_loss_hesss;   ///< (#samples, dim1, dim2, dim3, dim1, dim2, dim3)
 };
 
 ///
