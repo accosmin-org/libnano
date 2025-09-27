@@ -71,6 +71,7 @@ quadratic_surrogate_t::quadratic_surrogate_t(const vector_t& model)
     : function_t("quadratic surrogate function", static_cast<tensor_size_t>(std::sqrt(2 * model.size())) - 1)
     , m_Q(matrix_t::zero(size(), size()))
     , m_c(vector_t::zero(size()))
+    , m_d(model(0))
 {
     convex(convexity::no);
     smooth(smoothness::yes);
@@ -87,6 +88,16 @@ quadratic_surrogate_t::quadratic_surrogate_t(const vector_t& model)
             m_Q(i, j) = model(k);
         }
     }
+
+    m_Q.diagonal().array() *= 2.0;
+
+    for (tensor_size_t i = 0; i < size(); ++i)
+    {
+        for (tensor_size_t j = 0; j < i; ++j)
+        {
+            m_Q(i, j) = m_Q(j, i);
+        }
+    }
 }
 
 rfunction_t quadratic_surrogate_t::clone() const
@@ -98,15 +109,15 @@ scalar_t quadratic_surrogate_t::do_eval(eval_t eval) const
 {
     if (eval.has_grad())
     {
-        eval.m_gx = 2.0 * m_Q * eval.m_x + m_c;
+        eval.m_gx = m_Q * eval.m_x + m_c;
     }
 
     if (eval.has_hess())
     {
-        eval.m_Hx = 2.0 * m_Q;
+        eval.m_Hx = m_Q;
     }
 
-    return eval.m_x.dot(m_Q * eval.m_x + m_c);
+    return eval.m_x.dot(0.5 * m_Q * eval.m_x + m_c) + m_d;
 }
 
 surrogate_tuner_t::surrogate_tuner_t()
