@@ -62,7 +62,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -79,7 +79,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(function.variable() >= 0.0);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -87,7 +87,7 @@ UTEST_CASE(factory)
 {
     for (const auto& function : function_t::make({2, 16, function_type::linear_program}))
     {
-        check_convexity(*function);
+        check_function(*function);
         check_minimize(make_solvers(), *function);
     }
 }

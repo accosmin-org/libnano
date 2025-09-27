@@ -43,11 +43,8 @@ rfunction_t linear::function_t::clone() const
 
 scalar_t linear::function_t::do_eval(eval_t eval) const
 {
-    assert(gx.size() == 0 || gx.size() == x.size());
-    assert(x.size() == (m_isize + 1) * m_tsize);
-
-    const auto b = bias(x);
-    const auto W = weights(x);
+    const auto b = bias(eval.m_x);
+    const auto W = weights(eval.m_x);
 
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
@@ -62,7 +59,7 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
 
             accumulator.m_vm1 += accumulator.m_values.sum();
 
-            if (gx.size() > 0)
+            if (eval.has_grad())
             {
                 m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
 
@@ -75,10 +72,10 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, m_iterator.samples().size());
 
     // OK, normalize and add the regularization terms
-    if (gx.size() > 0)
+    if (eval.has_grad())
     {
-        auto gb = bias(gx);
-        auto gW = weights(gx);
+        auto gb = bias(eval.m_gx);
+        auto gW = weights(eval.m_gx);
 
         gb = accumulator.m_gb1;
         gW = accumulator.m_gW1;
@@ -91,6 +88,12 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
         {
             gW.array() += m_l2reg * W.array() / W.size();
         }
+    }
+
+    if (eval.has_hess())
+    {
+        // TODO:
+        eval.m_Hx.full(0.0);
     }
 
     auto fx = accumulator.m_vm1;

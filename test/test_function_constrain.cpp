@@ -3,6 +3,7 @@
 #include <nano/function/cuts.h>
 #include <nano/function/lambda.h>
 #include <nano/function/penalty.h>
+#include <nano/solver/state.h>
 
 using namespace nano;
 using namespace nano::constraint;
@@ -14,13 +15,8 @@ void check_penalty(penalty_function_t& penalty_function, const convexity expecte
 {
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
-        const auto trials  = 100;
-        const auto epsilon = 1e-7;
-
         penalty_function.penalty(penalty);
-
-        check_convexity(penalty_function);
-        check_gradient(penalty_function, trials, epsilon);
+        check_function(penalty_function);
         UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), expected_strong_convexity);
         UTEST_CHECK_EQUAL(penalty_function.convex(), expected_convexity == convexity::yes);
         UTEST_CHECK_EQUAL(penalty_function.smooth(), expected_smoothness == smoothness::yes);
@@ -140,13 +136,17 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<sum_function_t>(*this); }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            gx.array() = 1.0;
+            eval.m_gx.full(1.0);
         }
-        return x.sum();
+        if (eval.has_hess())
+        {
+            eval.m_Hx.full(0.0);
+        }
+        return eval.m_x.sum();
     }
 };
 
@@ -162,11 +162,12 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<cauchy_function_t>(*this); }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        if (gx.size() == x.size())
+        const auto x = eval.m_x;
+        if (eval.has_grad())
         {
-            gx = 2.0 * x / (0.36 + x.dot(x));
+            eval.m_gx = 2.0 * x / (0.36 + x.dot(x));
         }
         return std::log(0.36 + x.dot(x));
     }
@@ -184,11 +185,12 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<sumabsm1_function_t>(*this); }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        if (gx.size() == x.size())
+        const auto x = eval.m_x;
+        if (eval.has_grad())
         {
-            gx.array() = x.array().sign();
+            eval.m_gx.array() = x.array().sign();
         }
         return x.array().abs().sum() - 1.0;
     }
@@ -683,11 +685,15 @@ UTEST_CASE(constrained_quadratic3x3_equality)
 UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx.array() = 1.0;
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx.full(0.0);
         }
         return x.sum();
     };
@@ -695,8 +701,7 @@ UTEST_CASE(minimize_objective1)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(-1.0, -1.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -728,12 +733,19 @@ UTEST_CASE(minimize_objective1)
 UTEST_CASE(minimize_objective2)
 {
     // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = -10.0 * x(0);
             gx(1) = +2.0 * x(1);
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx(0, 0) = -10.0;
+            Hx(0, 1) = 0.0;
+            Hx(1, 0) = 0.0;
+            Hx(1, 1) = 2.0;
         }
         return -5.0 * x(0) * x(0) + x(1) * x(1);
     };
@@ -741,8 +753,7 @@ UTEST_CASE(minimize_objective2)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(constant_t{1.0, 0}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -768,11 +779,15 @@ UTEST_CASE(minimize_objective2)
 UTEST_CASE(minimize_objective3)
 {
     // see 17.24, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx.array() = 1.0;
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx.full(0.0);
         }
         return x.sum();
     };
@@ -780,8 +795,7 @@ UTEST_CASE(minimize_objective3)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0)));
     UTEST_CHECK(function.constrain(minimum_t{1.0, 0}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0)};
@@ -807,12 +821,16 @@ UTEST_CASE(minimize_objective3)
 UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 4.0 * x(0) - 1.0;
             gx(1) = 4.0 * x(1);
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx.full(0.0);
         }
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
@@ -820,8 +838,7 @@ UTEST_CASE(minimize_objective4)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::no, smoothness::yes, 4.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -848,12 +865,16 @@ UTEST_CASE(minimize_objective5)
 {
     // see 12.36, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 2.0 * (x(0) - 1.5);
             gx(1) = 4.0 * cube(x(1) - 0.5);
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx.full(0.0);
         }
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
@@ -864,8 +885,7 @@ UTEST_CASE(minimize_objective5)
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0}));
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, +1.0), -1.0}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -892,12 +912,16 @@ UTEST_CASE(minimize_objective6)
 {
     // see 12.56, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 1.0;
             gx(1) = 0.0;
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx.full(0.0);
         }
         return x(0);
     };
@@ -906,8 +930,7 @@ UTEST_CASE(minimize_objective6)
     UTEST_CHECK(function.constrain(minimum_t{0.0, 1}));
     UTEST_CHECK(function.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 0.0), 1.0}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 0.0)};
@@ -933,7 +956,7 @@ UTEST_CASE(minimize_objective6)
 UTEST_CASE(minimize_objective7)
 {
     // see exercise 4.3, "Convex optimization", Boyd & Vanderberghe
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
     {
         static const auto P = make_matrix<scalar_t>(3, 13, 12, -2, 12, 17, 6, -2, 6, 12);
         static const auto q = make_vector<scalar_t>(-22, -14.5, 13.0);
@@ -941,6 +964,10 @@ UTEST_CASE(minimize_objective7)
         if (gx.size() == x.size())
         {
             gx = P * x + q;
+        }
+        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        {
+            Hx = P;
         }
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };
@@ -953,8 +980,7 @@ UTEST_CASE(minimize_objective7)
     UTEST_CHECK(function.constrain(maximum_t{+1.0, 1}));
     UTEST_CHECK(function.constrain(maximum_t{+1.0, 2}));
 
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     check_penalty_solver(function, 1e-1);
 }

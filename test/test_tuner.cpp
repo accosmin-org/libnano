@@ -92,8 +92,7 @@ void check_minimizer(const function_t& function, const vector_t& optimum)
 void check_surrogate(const tensor1d_t& p, const tensor1d_t& q)
 {
     const auto function = quadratic_surrogate_t(q.vector());
-    check_gradient(function);
-    check_convexity(function);
+    check_function(function);
     check_minimizer(function, p.vector());
     UTEST_CHECK_EQUAL(function.size(), p.size());
 }
@@ -106,8 +105,7 @@ void check_surrogate_fit(const tensor1d_t& q, const tensor2d_t& p, const tensor1
 
         const auto loss     = make_loss(loss_id);
         const auto function = quadratic_surrogate_fit_t(*loss, p, y);
-        check_gradient(function);
-        check_convexity(function);
+        check_function(function);
         check_minimizer(function, q.vector());
         UTEST_CHECK_EQUAL(function.size(), q.size());
     }

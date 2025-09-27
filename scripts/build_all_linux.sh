@@ -24,11 +24,11 @@ bash docker/run.sh bash scripts/build.sh \
 # standard GCC builds
 ###############################################################################################################
 
-#bash scripts/build.sh --gcc --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
-#    ${cmake_options} --config --build --test --install --build-example
+bash scripts/build.sh --gcc --suffix gcc-debug -DCMAKE_BUILD_TYPE=Debug \
+    ${cmake_options} --config --build --test --install --build-example
 
-#bash scripts/build.sh --gcc --suffix gcc-release -DCMAKE_BUILD_TYPE=Release \
-#    ${cmake_options} --config --build --test --install --build-example
+bash scripts/build.sh --gcc --suffix gcc-release -DCMAKE_BUILD_TYPE=Release \
+    ${cmake_options} --config --build --test --install --build-example
 
 #bash scripts/build.sh --gcc --suffix gcc-relwithdebinfo -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 #    ${cmake_options} --config --build --test --install --build-example

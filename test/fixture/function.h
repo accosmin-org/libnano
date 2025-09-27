@@ -37,7 +37,8 @@ struct function_config_t
     scalar_t m_convex_accuracy_epsilon{1e-14};
 };
 
-[[maybe_unused]] inline auto check_function(const function_t& function, const function_config_t& config)
+[[maybe_unused]] inline auto check_function(const function_t&        function,
+                                            const function_config_t& config = function_config_t{})
 {
     UTEST_NAMED_CASE(function.name());
 

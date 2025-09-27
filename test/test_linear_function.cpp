@@ -92,8 +92,7 @@ UTEST_CASE(function_noreg)
     UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
 
     check_vgrad(function, iterator, *loss, trials);
-    check_gradient(function, trials);
-    check_convexity(function, trials);
+    check_function(function, function_config_t{.m_trials = trials});
 }
 
 UTEST_CASE(function_l1reg)
@@ -120,8 +119,7 @@ UTEST_CASE(function_l1reg)
     UTEST_CHECK(!function.smooth());
     UTEST_CHECK_EQUAL(function.strong_convexity(), 0.0);
 
-    check_gradient(function, trials);
-    check_convexity(function, trials);
+    check_function(function, function_config_t{.m_trials = trials});
 }
 
 UTEST_CASE(function_l2reg)
@@ -148,8 +146,7 @@ UTEST_CASE(function_l2reg)
     UTEST_CHECK(function.smooth() || !loss->smooth());
     UTEST_CHECK_EQUAL(function.strong_convexity(), 1.0 / targets / 13.0);
 
-    check_gradient(function, trials);
-    check_convexity(function, trials);
+    check_function(function, function_config_t{.m_trials = trials});
 }
 
 UTEST_CASE(minimize_noreg)

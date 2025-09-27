@@ -124,6 +124,7 @@ UTEST_BEGIN_MODULE()
 
 UTEST_CASE(bias)
 {
+    const auto trials     = 10;
     const auto loss       = make_loss();
     const auto datasource = make_datasource(100);
     const auto dataset    = make_dataset(datasource);
@@ -139,8 +140,7 @@ UTEST_CASE(bias)
         const auto function = bias_function_t{iterator, *loss};
 
         UTEST_CHECK_EQUAL(function.size(), 2);
-        check_gradient(function, 10);
-        check_convexity(function, 10);
+        check_function(function, function_config_t{.m_trials = trials});
         check_value(function, tmatrix, omatrix);
         check_optimum(function, bias);
     }
@@ -148,6 +148,7 @@ UTEST_CASE(bias)
 
 UTEST_CASE(scale)
 {
+    const auto trials     = 10;
     const auto loss       = make_loss();
     const auto datasource = make_datasource(50);
     const auto dataset    = make_dataset(datasource);
@@ -170,8 +171,7 @@ UTEST_CASE(scale)
         const auto function = scale_function_t{iterator, *loss, cluster, outputs, woutputs};
 
         UTEST_CHECK_EQUAL(function.size(), datasource.groups());
-        check_gradient(function, 10);
-        check_convexity(function, 10);
+        check_function(function, function_config_t{.m_trials = trials});
         if (samples.size() == datasource.samples())
         {
             check_value(function, tmatrix, omatrix);
@@ -182,6 +182,7 @@ UTEST_CASE(scale)
 
 UTEST_CASE(grads)
 {
+    const auto trials     = 10;
     const auto loss       = make_loss();
     const auto datasource = make_datasource(10);
     const auto dataset    = make_dataset(datasource);
@@ -195,8 +196,7 @@ UTEST_CASE(grads)
     const auto function = grads_function_t{iterator, *loss};
 
     UTEST_CHECK_EQUAL(function.size(), all_samples.size() * 2);
-    check_gradient(function, 10);
-    check_convexity(function, 10);
+    check_function(function, function_config_t{.m_trials = trials});
     check_value(function, tmatrix, omatrix);
     check_optimum(function, targets.vector());
 }

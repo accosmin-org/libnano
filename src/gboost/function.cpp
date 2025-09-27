@@ -32,9 +32,6 @@ rfunction_t scale_function_t::clone() const
 
 scalar_t scale_function_t::do_eval(eval_t eval) const
 {
-    assert(gx.size() == 0 || gx.size() == x.size());
-    assert(x.size() == m_cluster.groups());
-
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     const auto& samples = m_iterator.samples();
@@ -53,7 +50,7 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
             for (tensor_size_t i = begin; i < end; ++i)
             {
                 const auto group          = m_cluster.group(samples(i));
-                const auto scale          = (group < 0) ? 0.0 : x(group);
+                const auto scale          = (group < 0) ? 0.0 : eval.m_x(group);
                 outputs.vector(i - begin) = m_soutputs.vector(samples(i)) + scale * m_woutputs.vector(samples(i));
             }
 
@@ -61,7 +58,7 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
             m_loss.value(targets, outputs, values);
             accumulator.update(values);
 
-            if (gx.size() == x.size())
+            if (eval.has_grad())
             {
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
@@ -82,7 +79,7 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
 
     // OK
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(gx);
+    return accumulator.vgrad(eval.m_gx);
 }
 
 bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss)
@@ -108,9 +105,6 @@ scalar_t bias_function_t::do_eval(eval_t eval) const
     const auto& samples = m_iterator.samples();
     const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
 
-    assert(gx.size() == 0 || gx.size() == x.size());
-    assert(x.size() == tsize);
-
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     m_iterator.loop(
@@ -121,13 +115,13 @@ scalar_t bias_function_t::do_eval(eval_t eval) const
 
             // output = bias (fixed vector)
             auto outputs                                         = m_outputs.slice(range);
-            outputs.reshape(range.size(), -1).matrix().rowwise() = x.transpose();
+            outputs.reshape(range.size(), -1).matrix().rowwise() = eval.m_x.transpose();
 
             auto values = m_values.slice(range);
             m_loss.value(targets, outputs, values);
             accumulator.update(values);
 
-            if (gx.size() > 0)
+            if (eval.has_grad())
             {
                 auto vgrads = m_vgrads.slice(range);
                 m_loss.vgrad(targets, outputs, vgrads);
@@ -139,7 +133,7 @@ scalar_t bias_function_t::do_eval(eval_t eval) const
 
     // OK
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(gx);
+    return accumulator.vgrad(eval.m_gx);
 }
 
 grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss)
@@ -163,13 +157,10 @@ scalar_t grads_function_t::do_eval(eval_t eval) const
     const auto& samples = m_iterator.samples();
     const auto  odims   = cat_dims(samples.size(), m_iterator.dataset().target_dims());
 
-    assert(gx.size() == 0 || gx.size() == x.size());
-    assert(x.size() == nano::size(odims));
-
-    const auto& grads = gradients(map_tensor(x.data(), odims));
-    if (gx.size() > 0)
+    const auto& grads = gradients(map_tensor(eval.m_x.data(), odims));
+    if (eval.has_grad())
     {
-        gx = grads.vector() / static_cast<scalar_t>(samples.size());
+        eval.m_gx = grads.vector() / static_cast<scalar_t>(samples.size());
     }
 
     // OK

@@ -49,7 +49,7 @@ struct logistic_t : public terror
             const auto x = -target(i) * output(i);
             const auto h =
                 (x < 1.0) ? (std::exp(x) / square(1.0 + std::exp(x))) : (std::exp(-x) / square(1.0 + std::exp(-x)));
-            vhess(i, i)  = target(i) * target(i) * h;
+            vhess(i, i) = target(i) * target(i) * h;
         }
     }
 };

@@ -63,7 +63,7 @@ UTEST_CASE(program1)
     UTEST_REQUIRE(A * function.variable() == b);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -80,7 +80,7 @@ UTEST_CASE(program2)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
     check_minimize(make_solvers(), function, make_vector<scalar_t>(0.1086039277146398, -0.5283505579626659));
     check_minimize(make_solvers(), function, make_vector<scalar_t>(-0.1403887120993625, 0.7972989463671512));
@@ -99,7 +99,7 @@ UTEST_CASE(program3)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -116,7 +116,7 @@ UTEST_CASE(program4)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -133,7 +133,7 @@ UTEST_CASE(program5)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -150,7 +150,7 @@ UTEST_CASE(program6)
     UTEST_REQUIRE(G * function.variable() <= h);
     UTEST_REQUIRE(function.optimum(x));
 
-    check_convexity(function);
+    check_function(function);
     check_minimize(make_solvers(), function);
 }
 
@@ -225,7 +225,7 @@ UTEST_CASE(bundle_cases)
         auto        function = quadratic_program_t{scat("qp-bundle-case", index++), Q, c};
         UTEST_REQUIRE(G * function.variable() <= h);
 
-        check_convexity(function);
+        check_function(function);
         check_minimize(make_solvers(), function);
     }
 }
@@ -234,7 +234,7 @@ UTEST_CASE(factory)
 {
     for (const auto& function : function_t::make({2, 16, function_type::quadratic_program}))
     {
-        check_convexity(*function);
+        check_function(*function);
         check_minimize(make_solvers(), *function);
     }
 }

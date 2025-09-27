@@ -1,4 +1,4 @@
-target_sources(machine PRIVATE
+target_sources(gboost PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/wlearner/accumulator.h
     ${CMAKE_SOURCE_DIR}/include/nano/wlearner/affine.h
     ${CMAKE_SOURCE_DIR}/include/nano/wlearner/criterion.h

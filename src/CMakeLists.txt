@@ -77,10 +77,19 @@ target_sources(machine PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/datasource.h
     ${CMAKE_SOURCE_DIR}/include/nano/generator.h
     ${CMAKE_SOURCE_DIR}/include/nano/loss.h
+    ${CMAKE_SOURCE_DIR}/include/nano/feature.h
+    ${CMAKE_SOURCE_DIR}/include/nano/learner.h
+    ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
+    ${CMAKE_SOURCE_DIR}/include/nano/task.h
+    ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
     dataset.cpp
     datasource.cpp
     generator.cpp
-    loss.cpp)
+    loss.cpp
+    feature.cpp
+    learner.cpp
+    splitter.cpp
+    tuner.cpp)
 
 target_sources(solver PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/lsearch0.h
@@ -90,17 +99,8 @@ target_sources(solver PRIVATE
     lsearchk.cpp
     solver.cpp)
 
-target_sources(machine PRIVATE
-    ${CMAKE_SOURCE_DIR}/include/nano/feature.h
-    ${CMAKE_SOURCE_DIR}/include/nano/learner.h
-    ${CMAKE_SOURCE_DIR}/include/nano/splitter.h
-    ${CMAKE_SOURCE_DIR}/include/nano/task.h
-    ${CMAKE_SOURCE_DIR}/include/nano/tuner.h
+target_sources(gboost PRIVATE
     ${CMAKE_SOURCE_DIR}/include/nano/wlearner.h
-    feature.cpp
-    learner.cpp
-    splitter.cpp
-    tuner.cpp
     wlearner.cpp)
 
 target_sources(linear PRIVATE
