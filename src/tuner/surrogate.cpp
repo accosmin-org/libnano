@@ -90,14 +90,7 @@ quadratic_surrogate_t::quadratic_surrogate_t(const vector_t& model)
     }
 
     m_Q.diagonal().array() *= 2.0;
-
-    for (tensor_size_t i = 0; i < size(); ++i)
-    {
-        for (tensor_size_t j = 0; j < i; ++j)
-        {
-            m_Q(i, j) = m_Q(j, i);
-        }
-    }
+    m_Q.matrix().triangularView<Eigen::Lower>() = m_Q.matrix().triangularView<Eigen::Upper>().transpose();
 }
 
 rfunction_t quadratic_surrogate_t::clone() const
