@@ -85,6 +85,11 @@ UTEST_CASE(state_update_if_better)
     const auto x2       = make_vector<scalar_t>(2.0, 2.0);
     const auto x09      = make_vector<scalar_t>(0.9, 0.9);
 
+    UTEST_CHECK_CLOSE(function(x0), 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(function(x1), 1.0, 1e-15);
+    UTEST_CHECK_CLOSE(function(x2), 4.0, 1e-15);
+    UTEST_CHECK_CLOSE(function(x09), 0.81, 1e-15);
+
     // update path: x1, x2 (up), NaN (div), x1 (=), x09 (down), x0 (down)
 
     auto state = solver_state_t{function, x1};
@@ -133,11 +138,11 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.x(), x09, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x09), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(1), 0.38, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(2), 0.38, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(3), 0.38, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(4), 0.38, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(5), 0.38, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(1), 0.19, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(2), 0.19, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(3), 0.19, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(4), 0.19, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(5), 0.19, 1e-12);
 
     UTEST_CHECK(state.update_if_better(x0, function(x0)));
     state.update_history();
@@ -145,11 +150,11 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.x(), x0, 1e-12);
     UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(1), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(2), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(3), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(4), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(5), 1.62, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(1), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(2), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(3), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(4), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(5), 0.9, 1e-12);
 
     UTEST_CHECK(!state.update_if_better(x0, function(x0)));
     state.update_history();
@@ -158,10 +163,10 @@ UTEST_CASE(state_update_if_better)
     UTEST_CHECK_CLOSE(state.fx(), function(x0), 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(0), 0.0, 1e-12);
     UTEST_CHECK_CLOSE(state.value_test(1), 0.0, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(2), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(3), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(4), 1.62, 1e-12);
-    UTEST_CHECK_CLOSE(state.value_test(5), 1.62, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(2), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(3), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(4), 0.9, 1e-12);
+    UTEST_CHECK_CLOSE(state.value_test(5), 0.9, 1e-12);
 }
 
 UTEST_CASE(state_gradient_test0)
