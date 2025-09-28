@@ -39,10 +39,12 @@ public:
     // attributes
     tensor4d_t m_outputs; ///< buffer: predictions
     tensor4d_t m_vgrads;  ///< buffer: gradients wrt predictions
-    tensor1d_t m_values;  ///< buffer: loss values
-    scalar_t   m_vm1{0};  ///< first order momentum of the loss values
-    tensor1d_t m_gb1;     ///< first order momentum of the gradient wrt bias
-    tensor2d_t m_gW1;     ///< first order momentum of the gradient wrt weights
+    tensor7d_t m_vhesss;  ///< buffer: hessians wrt predictions
+    tensor1d_t m_values;  ///< buffer: loss values wrt predictions
+    scalar_t   m_vm1{0};  ///< loss value
+    tensor1d_t m_gb1;     ///< loss gradient wrt bias
+    tensor2d_t m_gW1;     ///< loss gradient wrt weights
+    tensor2d_t m_HbW;     ///< loss hessian wrt weigths and bias
 };
 
 using accumulators_t = std::vector<accumulator_t>;

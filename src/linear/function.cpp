@@ -67,6 +67,13 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                 accumulator.m_gb1 += gmatrix.matrix().colwise().sum().transpose();
                 accumulator.m_gW1 += gmatrix.matrix().transpose() * inputs;
             }
+
+            if (eval.has_hess())
+            {
+                m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_vhesss);
+
+                // TODO
+            }
         });
 
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, m_iterator.samples().size());
@@ -92,8 +99,12 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        // TODO:
-        eval.m_Hx.full(0.0);
+        eval.m_Hx = accumulator.m_HbW;
+
+        if (m_l2reg > 0.0)
+        {
+            eval.m_Hx.block(0, 0, W.size(), W.size()).diagonal().array() += m_l2reg / static_cast<scalar_t>(W.size());
+        }
     }
 
     auto fx = accumulator.m_vm1;

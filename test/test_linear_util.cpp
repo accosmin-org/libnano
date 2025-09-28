@@ -16,6 +16,7 @@ UTEST_CASE(accumulator)
         accumulator.m_vm1 = value;
         accumulator.m_gb1.full(value);
         accumulator.m_gW1.full(value);
+        accumulator.m_HbW.full(value);
     };
 
     const auto make_accumulators = [&]()
@@ -34,6 +35,7 @@ UTEST_CASE(accumulator)
         UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0 / 6.0, 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_full_tensor<scalar_t>(make_dims(2), 6.0 / 6.0), 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gW1, make_full_tensor<scalar_t>(make_dims(2, 3), 6.0 / 6.0), 1e-12);
+        UTEST_CHECK_CLOSE(accumulator0.m_HbW, make_full_tensor<scalar_t>(make_dims(8, 8), 6.0 / 6.0), 1e-12);
     }
 }
 
