@@ -60,7 +60,8 @@ scalar_t quadratic_surrogate_fit_t::do_eval(eval_t eval) const
     if (eval.has_hess())
     {
         m_loss.vhess(targets, m_loss_outputs, m_loss_hesss);
-        eval.m_Hx.matrix().noalias() = (m_p2.array().colwise() * m_loss_hesss.array()).matrix().transpose() * m_p2;
+        const auto inputs            = m_p2.matrix();
+        eval.m_Hx.matrix().noalias() = (inputs.array().colwise() * m_loss_hesss.array()).matrix().transpose() * inputs;
     }
 
     m_loss.value(targets, m_loss_outputs, m_loss_values);
