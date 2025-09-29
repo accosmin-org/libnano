@@ -72,7 +72,57 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
             {
                 m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_vhesss);
 
-                // TODO
+                // TODO: write it as a more efficient linear algebra operations
+                for (tensor_size_t k = 0; k < range.size(); ++k)
+                {
+                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
+                    {
+                        for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
+                        {
+                            for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
+                            {
+                                for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
+                                {
+                                    accumulator.m_HbW(t1 * m_isize + i1, t2 * m_isize + i2) +=
+                                        accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1) * inputs(k, i2);
+                                }
+                            }
+                        }
+                    }
+
+                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
+                    {
+                        for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
+                        {
+                            for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
+                            {
+                                accumulator.m_HbW(t1 * m_isize + i1, m_tsize * m_isize + t2) +=
+                                    accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1);
+                            }
+                        }
+                    }
+
+                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
+                    {
+                        for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
+                        {
+                            for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
+                            {
+                                accumulator.m_HbW(m_tsize * m_isize + t1, t2 * m_isize + i2) +=
+                                    accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i2);
+                            }
+                        }
+                    }
+
+                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
+                    {
+                        for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
+                        {
+                            accumulator.m_HbW(m_tsize * m_isize + t1, m_tsize * m_isize + t2) +=
+                                accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0);
+                        }
+                    }
+                }
             }
         });
 
