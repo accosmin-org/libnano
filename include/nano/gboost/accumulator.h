@@ -28,7 +28,7 @@ public:
     ///
     /// \brief returns the function value and optionally its gradient.
     ///
-    scalar_t vgrad(vector_map_t gx) const;
+    scalar_t vgrad(vector_map_t gx, matrix_map_t Hx = {}) const;
 
     ///
     /// \brief cumulate partial results.
@@ -42,7 +42,8 @@ public:
 
     // attributes
     scalar_t m_vm1{0}; ///< first order momentum of the loss values
-    vector_t m_gb1{0}; ///< first order momentum of the gradient wrt scale
+    vector_t m_gb1;    ///< first order momentum of the gradient wrt scale
+    matrix_t m_hb2;    ///<
 };
 
 using accumulators_t = std::vector<accumulator_t>;
