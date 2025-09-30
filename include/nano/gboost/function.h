@@ -46,6 +46,7 @@ private:
     const loss_t&             m_loss;     ///<
     mutable tensor1d_t        m_values;   ///<
     mutable tensor4d_t        m_vgrads;   ///<
+    mutable tensor7d_t        m_vhesss;   ///<
 };
 
 ///

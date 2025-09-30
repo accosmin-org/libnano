@@ -75,6 +75,7 @@ grads_function_t::grads_function_t(const targets_iterator_t& iterator, const los
     , m_loss(loss)
     , m_values(iterator.samples().size())
     , m_vgrads(cat_dims(iterator.samples().size(), iterator.dataset().target_dims()))
+    , m_vhesss(loss_t::make_hess_dims(iterator.samples().size(), iterator.dataset().target_dims()))
 {
     smooth(loss.smooth() ? smoothness::yes : smoothness::no);
     convex(loss.convex() ? convexity::yes : convexity::no);
@@ -88,12 +89,26 @@ rfunction_t grads_function_t::clone() const
 scalar_t grads_function_t::do_eval(eval_t eval) const
 {
     const auto& samples = m_iterator.samples();
+    const auto  tsize   = ::nano::size(m_iterator.dataset().target_dims());
     const auto  odims   = cat_dims(samples.size(), m_iterator.dataset().target_dims());
+    const auto  denom   = static_cast<scalar_t>(samples.size());
 
     const auto& grads = gradients(map_tensor(eval.m_x.data(), odims));
     if (eval.has_grad())
     {
-        eval.m_gx = grads.vector() / static_cast<scalar_t>(samples.size());
+        eval.m_gx = grads.vector() / denom;
+    }
+    if (eval.has_hess())
+    {
+        eval.m_Hx.full(0.0);
+
+        for (tensor_size_t sample = 0; sample < samples.size(); ++sample)
+        {
+            eval.m_Hx.matrix().block(sample * tsize, sample * tsize, tsize, tsize) =
+                m_vhesss.tensor(sample).reshape(tsize, tsize).matrix();
+        }
+
+        eval.m_Hx.array() /= denom;
     }
 
     // OK
@@ -109,6 +124,7 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
         {
             m_loss.value(targets, outputs.slice(range), m_values.slice(range));
             m_loss.vgrad(targets, outputs.slice(range), m_vgrads.slice(range));
+            m_loss.vhess(targets, outputs.slice(range), m_vhesss.slice(range));
         });
 
     return m_vgrads;
