@@ -107,24 +107,24 @@ public:
     ///
     /// \brief evaluate the function's value at the given point
     ///     and optionally its gradient (or sub-gradient if not smooth)
-    ///     and optionally its Hessian if smooth.
+    ///     and optionally its hessian if smooth.
     ///
     struct eval_t
     {
         ///
         /// \brief returns true if the gradient buffer is given.
         ///
-        bool has_grad() const { return m_gx.size() == m_x.size(); }
+        bool has_grad() const { return m_gx.dims() == m_x.dims(); }
 
         ///
-        /// \brief returns true if the Hessian buffer is given.
+        /// \brief returns true if the hessian buffer is given.
         ///
-        bool has_hess() const { return m_Hx.rows() == m_x.size() && m_Hx.cols() == m_x.size(); }
+        bool has_hess() const { return m_hx.rows() == m_x.size() && m_hx.cols() == m_x.size(); }
 
         // attributes
         vector_cmap_t m_x{};  ///< input buffer of size (n,)
         vector_map_t  m_gx{}; ///< optional gradient buffer of size (n,)
-        matrix_map_t  m_Hx{}; ///< optional Hessian buffer of size (n, n)
+        matrix_map_t  m_hx{}; ///< optional hessian buffer of size (n, n)
     };
 
     scalar_t operator()(vector_cmap_t x, vector_map_t gx = {}, matrix_map_t Hx = {}) const;

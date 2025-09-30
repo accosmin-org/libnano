@@ -9,7 +9,7 @@ inline constexpr bool is_lambda_function_v = std::is_invocable_v<tlambda, vector
 
 ///
 /// \brief maps a given lambda to the `function_t` interface.
-///     fx = lambda(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+///     fx = lambda(vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 ///
 template <class tlambda>
 requires is_lambda_function_v<tlambda>
@@ -37,7 +37,7 @@ public:
     ///
     /// \brief @see function_t
     ///
-    scalar_t do_eval(eval_t eval) const override { return m_lambda(eval.m_x, eval.m_gx, eval.m_Hx); }
+    scalar_t do_eval(eval_t eval) const override { return m_lambda(eval.m_x, eval.m_gx, eval.m_hx); }
 
 private:
     // attributes

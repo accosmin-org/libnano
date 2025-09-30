@@ -40,15 +40,15 @@ scalar_t function_rosenbrock_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.full(0.0);
+        eval.m_hx.full(0.0);
         for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
         {
             const auto xi0 = x(i + 0);
             const auto xi1 = x(i + 1);
-            eval.m_Hx(i + 0, i + 0) += 2 - ct * 4 * xi1 + ct * 12 * xi0 * xi0;
-            eval.m_Hx(i + 0, i + 1) -= ct * 4 * xi0;
-            eval.m_Hx(i + 1, i + 0) -= ct * 4 * xi0;
-            eval.m_Hx(i + 1, i + 1) += ct * 2;
+            eval.m_hx(i + 0, i + 0) += 2 - ct * 4 * xi1 + ct * 12 * xi0 * xi0;
+            eval.m_hx(i + 0, i + 1) -= ct * 4 * xi0;
+            eval.m_hx(i + 1, i + 0) -= ct * 4 * xi0;
+            eval.m_hx(i + 1, i + 1) += ct * 2;
         }
     }
 

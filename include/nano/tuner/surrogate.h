@@ -67,8 +67,8 @@ public:
 
 private:
     // attributes
-    matrix_t m_Q; ///< quadratic term
-    vector_t m_c; ///< linear term
+    matrix_t m_Q;      ///< quadratic term
+    vector_t m_c;      ///< linear term
     scalar_t m_d{0.0}; ///< constant term
 };
 

@@ -5,70 +5,6 @@
 using namespace nano;
 using namespace nano::gboost;
 
-bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss)
-    : function_t("gboost-bias", ::nano::size(iterator.dataset().target_dims()))
-    , m_iterator(iterator)
-    , m_loss(loss)
-    , m_values(m_iterator.samples().size())
-    , m_vgrads(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
-    , m_vhesss(loss_t::make_hess_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
-    , m_outputs(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
-    , m_accumulators(m_iterator.concurrency(), accumulator_t{this->size()})
-{
-    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
-    convex(loss.convex() ? convexity::yes : convexity::no);
-}
-
-rfunction_t bias_function_t::clone() const
-{
-    return std::make_unique<bias_function_t>(*this);
-}
-
-scalar_t bias_function_t::do_eval(eval_t eval) const
-{
-    const auto& samples = m_iterator.samples();
-    const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
-
-    std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
-
-    m_iterator.loop(
-        [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
-        {
-            assert(tnum < m_accumulators.size());
-            auto& accumulator = m_accumulators[tnum];
-
-            // output = bias (fixed vector)
-            auto outputs                                         = m_outputs.slice(range);
-            outputs.reshape(range.size(), -1).matrix().rowwise() = eval.m_x.transpose();
-
-            auto values = m_values.slice(range);
-            m_loss.value(targets, outputs, values);
-            accumulator.update(values);
-
-            if (eval.has_grad())
-            {
-                auto vgrads = m_vgrads.slice(range);
-                m_loss.vgrad(targets, outputs, vgrads);
-
-                const auto gmatrix = vgrads.reshape(range.size(), tsize);
-                accumulator.m_gb1 += gmatrix.matrix().colwise().sum().transpose();
-            }
-
-            if (eval.has_hess())
-            {
-                auto vhesss = m_vhesss.slice(range);
-                m_loss.vhess(targets, outputs, vhesss);
-
-                const auto hmatrix = vhesss.reshape(range.size(), tsize * tsize);
-                accumulator.m_hb2.array() += hmatrix.matrix().colwise().sum().array();
-            }
-        });
-
-    // OK
-    const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(eval.m_gx, eval.m_Hx);
-}
-
 grads_function_t::grads_function_t(const targets_iterator_t& iterator, const loss_t& loss)
     : function_t("gboost-grads", iterator.samples().size() * nano::size(iterator.dataset().target_dims()))
     , m_iterator(iterator)
@@ -100,15 +36,13 @@ scalar_t grads_function_t::do_eval(eval_t eval) const
     }
     if (eval.has_hess())
     {
-        eval.m_Hx.full(0.0);
+        eval.m_hx.full(0.0);
 
         for (tensor_size_t sample = 0; sample < samples.size(); ++sample)
         {
-            eval.m_Hx.matrix().block(sample * tsize, sample * tsize, tsize, tsize) =
-                m_vhesss.tensor(sample).reshape(tsize, tsize).matrix();
+            eval.m_hx.matrix().block(sample * tsize, sample * tsize, tsize, tsize) =
+                m_vhesss.tensor(sample).reshape(tsize, tsize).matrix() / denom;
         }
-
-        eval.m_Hx.array() /= denom;
     }
 
     // OK
@@ -130,6 +64,67 @@ const tensor4d_t& grads_function_t::gradients(const tensor4d_cmap_t& outputs) co
     return m_vgrads;
 }
 
+bias_function_t::bias_function_t(const targets_iterator_t& iterator, const loss_t& loss)
+    : function_t("gboost-bias", ::nano::size(iterator.dataset().target_dims()))
+    , m_iterator(iterator)
+    , m_loss(loss)
+    , m_accumulators(m_iterator.concurrency(), accumulator_t{this->size()})
+{
+    smooth(loss.smooth() ? smoothness::yes : smoothness::no);
+    convex(loss.convex() ? convexity::yes : convexity::no);
+}
+
+rfunction_t bias_function_t::clone() const
+{
+    return std::make_unique<bias_function_t>(*this);
+}
+
+scalar_t bias_function_t::do_eval(eval_t eval) const
+{
+    const auto& samples = m_iterator.samples();
+    const auto  tdims   = m_iterator.dataset().target_dims();
+    const auto  tsize   = nano::size(tdims);
+
+    std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
+
+    m_iterator.loop(
+        [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
+        {
+            assert(tnum < m_accumulators.size());
+            auto& accumulator = m_accumulators[tnum];
+
+            // output = bias (fixed vector)
+            accumulator.m_outputs.resize(cat_dims(range.size(), tdims));
+            accumulator.m_outputs.reshape(range.size(), -1).matrix().rowwise() = eval.m_x.transpose();
+
+            // cumulate values
+            m_loss.value(targets, accumulator.m_outputs, accumulator.m_loss_fx);
+            accumulator.m_fx += accumulator.m_loss_fx.sum();
+
+            // cumulate gradients
+            if (eval.has_grad())
+            {
+                m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_loss_gx);
+
+                const auto gmatrix = accumulator.m_loss_gx.reshape(range.size(), tsize);
+                accumulator.m_gx += gmatrix.matrix().colwise().sum().transpose();
+            }
+
+            // cumulate hessians
+            if (eval.has_hess())
+            {
+                m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_loss_hx);
+
+                const auto hmatrix = accumulator.m_loss_hx.reshape(range.size(), tsize * tsize);
+                accumulator.m_hx.array() += hmatrix.matrix().colwise().sum().array();
+            }
+        });
+
+    // OK
+    const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
+    return accumulator.value(eval.m_gx, eval.m_hx);
+}
+
 scale_function_t::scale_function_t(const targets_iterator_t& iterator, const loss_t& loss, const cluster_t& cluster,
                                    const tensor4d_t& soutputs, const tensor4d_t& woutputs)
     : function_t("gboost-scale", cluster.groups())
@@ -138,10 +133,6 @@ scale_function_t::scale_function_t(const targets_iterator_t& iterator, const los
     , m_cluster(cluster)
     , m_soutputs(soutputs)
     , m_woutputs(woutputs)
-    , m_values(m_iterator.samples().size())
-    , m_vgrads(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
-    , m_vhesss(loss_t::make_hess_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
-    , m_outputs(cat_dims(m_iterator.samples().size(), m_iterator.dataset().target_dims()))
     , m_accumulators(m_iterator.concurrency(), accumulator_t{this->size()})
 {
     assert(m_soutputs.dims() == m_woutputs.dims());
@@ -161,7 +152,8 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
     const auto& samples = m_iterator.samples();
-    const auto  tsize   = nano::size(m_iterator.dataset().target_dims());
+    const auto  tdims   = m_iterator.dataset().target_dims();
+    const auto  tsize   = nano::size(tdims);
 
     m_iterator.loop(
         [&](const tensor_range_t& range, const size_t tnum, const tensor4d_cmap_t& targets)
@@ -173,22 +165,24 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
             const auto end   = range.end();
 
             // output = output(strong learner) + scale * output(weak learner)
-            auto outputs = m_outputs.slice(range);
+            accumulator.m_outputs.resize(cat_dims(range.size(), tdims));
             for (tensor_size_t i = begin; i < end; ++i)
             {
-                const auto group          = m_cluster.group(samples(i));
-                const auto scale          = (group < 0) ? 0.0 : eval.m_x(group);
-                outputs.vector(i - begin) = m_soutputs.vector(samples(i)) + scale * m_woutputs.vector(samples(i));
+                const auto group                        = m_cluster.group(samples(i));
+                const auto scale                        = (group < 0) ? 0.0 : eval.m_x(group);
+                const auto soutput                      = m_soutputs.vector(samples(i));
+                const auto woutput                      = m_woutputs.vector(samples(i));
+                accumulator.m_outputs.vector(i - begin) = soutput + scale * woutput;
             }
 
-            auto values = m_values.slice(range);
-            m_loss.value(targets, outputs, values);
-            accumulator.update(values);
+            // cumulate values
+            m_loss.value(targets, accumulator.m_outputs, accumulator.m_loss_fx);
+            accumulator.m_fx += accumulator.m_loss_fx.sum();
 
+            // cumulate gradients
             if (eval.has_grad())
             {
-                auto vgrads = m_vgrads.slice(range);
-                m_loss.vgrad(targets, outputs, vgrads);
+                m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_loss_gx);
 
                 for (tensor_size_t i = begin; i < end; ++i)
                 {
@@ -197,16 +191,17 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
                     {
                         continue;
                     }
-                    const auto gw = vgrads.vector(i - begin).dot(m_woutputs.vector(samples(i)));
 
-                    accumulator.m_gb1(group) += gw;
+                    const auto woutput = m_woutputs.vector(samples(i));
+                    const auto gvector = accumulator.m_loss_gx.vector(i - begin);
+                    accumulator.m_gx(group) += gvector.dot(woutput);
                 }
             }
 
+            // cumulate hessians
             if (eval.has_hess())
             {
-                auto vhesss = m_vhesss.slice(range);
-                m_loss.vhess(targets, outputs, vhesss);
+                m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_loss_hx);
 
                 for (tensor_size_t i = begin; i < end; ++i)
                 {
@@ -216,15 +211,14 @@ scalar_t scale_function_t::do_eval(eval_t eval) const
                         continue;
                     }
 
-                    const auto wo = m_woutputs.vector(samples(i));
-                    const auto hh = wo.transpose() * vhesss.tensor(i - begin).reshape(tsize, tsize).matrix() * wo;
-
-                    accumulator.m_hb2(group, group) += hh;
+                    const auto woutput = m_woutputs.vector(samples(i));
+                    const auto hmatrix = accumulator.m_loss_hx.tensor(i - begin).reshape(tsize, tsize).matrix();
+                    accumulator.m_hx(group, group) += woutput.transpose() * hmatrix * woutput;
                 }
             }
         });
 
     // OK
     const auto& accumulator = ::nano::sum_reduce(m_accumulators, samples.size());
-    return accumulator.vgrad(eval.m_gx, eval.m_Hx);
+    return accumulator.value(eval.m_gx, eval.m_hx);
 }

@@ -31,7 +31,7 @@ public:
         if (eval.has_hess())
         {
             tloss::hx(m_outputs, m_targets, m_hessbuffs);
-            eval_hess(eval.m_Hx);
+            eval_hess(eval.m_hx);
         }
 
         return tloss::fx(m_outputs, m_targets);
@@ -39,7 +39,7 @@ public:
 
 private:
     void eval_grad(vector_map_t gx) const;
-    void eval_hess(matrix_map_t Hx) const;
+    void eval_hess(matrix_map_t hx) const;
     void eval_outputs(vector_cmap_t x) const;
     void eval_outputs(matrix_cmap_t w) const;
 

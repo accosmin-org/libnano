@@ -31,8 +31,8 @@ scalar_t function_zakharov_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = (2 + 12 * v * v) * (m_bias.vector() * m_bias.transpose());
-        eval.m_Hx.diagonal().array() += 2;
+        eval.m_hx = (2 + 12 * v * v) * (m_bias.vector() * m_bias.transpose());
+        eval.m_hx.diagonal().array() += 2;
     }
 
     return u + nano::square(v) + nano::quartic(v);

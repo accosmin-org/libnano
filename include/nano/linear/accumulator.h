@@ -37,14 +37,14 @@ public:
     accumulator_t& operator/=(tensor_size_t samples);
 
     // attributes
-    tensor4d_t m_outputs; ///< buffer: predictions
-    tensor4d_t m_vgrads;  ///< buffer: gradients wrt predictions
-    tensor7d_t m_vhesss;  ///< buffer: hessians wrt predictions
-    tensor1d_t m_values;  ///< buffer: loss values wrt predictions
-    scalar_t   m_vm1{0};  ///< loss value
-    tensor1d_t m_gb1;     ///< loss gradient wrt bias
-    tensor2d_t m_gW1;     ///< loss gradient wrt weights
-    tensor2d_t m_HbW;     ///< loss hessian wrt weigths and bias
+    tensor4d_t m_outputs; ///< predictions
+    tensor1d_t m_loss_fx; ///< loss values
+    tensor4d_t m_loss_gx; ///< loss gradients wrt outputs
+    tensor7d_t m_loss_hx; ///< loss hessians wrt outputs
+    scalar_t   m_fx{0};   ///< sum of loss values
+    tensor1d_t m_gb;      ///< sum of loss gradients wrt bias
+    tensor2d_t m_gw;      ///< sum of loss gradients wrt weights
+    tensor2d_t m_hx;      ///< sum of loss hessians wrt weigths+bias
 };
 
 using accumulators_t = std::vector<accumulator_t>;

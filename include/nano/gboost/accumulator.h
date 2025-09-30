@@ -21,16 +21,6 @@ public:
     void clear();
 
     ///
-    /// \brief update with new values.
-    ///
-    void update(const tensor1d_cmap_t& values);
-
-    ///
-    /// \brief returns the function value and optionally its gradient.
-    ///
-    scalar_t vgrad(vector_map_t gx, matrix_map_t Hx = {}) const;
-
-    ///
     /// \brief cumulate partial results.
     ///
     accumulator_t& operator+=(const accumulator_t& other);
@@ -40,10 +30,19 @@ public:
     ///
     accumulator_t& operator/=(tensor_size_t samples);
 
+    ///
+    /// \brief return the cumulated loss values and optionally the cumulated gradients and hessians.
+    ///
+    scalar_t value(vector_map_t gx, matrix_map_t hx) const;
+
     // attributes
-    scalar_t m_vm1{0}; ///< first order momentum of the loss values
-    vector_t m_gb1;    ///< first order momentum of the gradient wrt scale
-    matrix_t m_hb2;    ///<
+    tensor4d_t m_outputs; ///< predictions
+    tensor1d_t m_loss_fx; ///< loss values
+    tensor4d_t m_loss_gx; ///< loss gradients wrt outputs
+    tensor7d_t m_loss_hx; ///< loss hessians wrt outputs
+    scalar_t   m_fx{0};   ///< sum of loss values
+    vector_t   m_gx;      ///< sum of loss gradients wrt outputs
+    matrix_t   m_hx;      ///< sum of loss hessians wrt outputs
 };
 
 using accumulators_t = std::vector<accumulator_t>;

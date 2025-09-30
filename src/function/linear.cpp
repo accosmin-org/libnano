@@ -27,7 +27,7 @@ scalar_t linear_program_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.full(0.0);
+        eval.m_hx.full(0.0);
     }
 
     return m_c.dot(eval.m_x);

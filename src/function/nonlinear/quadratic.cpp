@@ -33,7 +33,7 @@ scalar_t function_quadratic_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = A;
+        eval.m_hx = A;
     }
 
     return eval.m_x.dot(a + 0.5 * (A * eval.m_x.vector()));

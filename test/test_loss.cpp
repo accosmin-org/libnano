@@ -42,26 +42,26 @@ struct loss_function_t final : public function_t
 
         if (eval.has_hess())
         {
-            auto Hx = tensor7d_t{};
-            m_loss->vhess(m_target, output, Hx);
+            auto hx = tensor7d_t{};
+            m_loss->vhess(m_target, output, hx);
 
             const auto samples = m_target.size<0>();
             const auto classes = m_target.size<1>();
 
-            eval.m_Hx.full(0.0);
+            eval.m_hx.full(0.0);
             for (tensor_size_t sample = 0; sample < samples; ++sample)
             {
                 for (tensor_size_t class1 = 0; class1 < classes; ++class1)
                 {
                     for (tensor_size_t class2 = 0; class2 < classes; ++class2)
                     {
-                        eval.m_Hx(sample * classes + class1, sample * classes + class2) =
-                            Hx(sample, class1, 0, 0, class2, 0, 0);
+                        eval.m_hx(sample * classes + class1, sample * classes + class2) =
+                            hx(sample, class1, 0, 0, class2, 0, 0);
                     }
                 }
             }
 
-            UTEST_REQUIRE(eval.m_Hx.all_finite());
+            UTEST_REQUIRE(eval.m_hx.all_finite());
         }
 
         m_loss->value(m_target, output, m_values.tensor());

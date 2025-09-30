@@ -23,7 +23,7 @@ scalar_t function_schumer_steiglitz_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = (12 * eval.m_x.array().square()).matrix().asDiagonal();
+        eval.m_hx = (12 * eval.m_x.array().square()).matrix().asDiagonal();
     }
 
     return eval.m_x.array().square().square().sum();

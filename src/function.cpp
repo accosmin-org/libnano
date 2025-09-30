@@ -243,7 +243,7 @@ tensor_size_t function_t::n_inequalities() const
     return ::nano::n_inequalities(m_constraints);
 }
 
-scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t Hx) const
+scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t hx) const
 {
     critical(x.size() == size(), "function: invalid input size, expecting (", size(), ",), got (", x.size(),
              ",) instead!");
@@ -251,21 +251,21 @@ scalar_t function_t::operator()(vector_cmap_t x, vector_map_t gx, matrix_map_t H
     critical(gx.size() == 0 || gx.size() == size(), "function: invalid gradient size, expecting (", size(),
              ",) or empty, got (", gx.size(), ",) instead!");
 
-    critical(Hx.size() == 0 || (Hx.rows() == size() && Hx.cols() == size()),
-             "function: invalid Hessian size, expecting (", size(), ", ", size(), ") or empty, got (", Hx.rows(), ", ",
-             Hx.cols(), ") instead!");
+    critical(hx.size() == 0 || (hx.rows() == size() && hx.cols() == size()),
+             "function: invalid Hessian size, expecting (", size(), ", ", size(), ") or empty, got (", hx.rows(), ", ",
+             hx.cols(), ") instead!");
 
     m_fcalls += 1;
     m_gcalls += (gx.size() == size()) ? 1 : 0;
-    m_hcalls += (smooth() && Hx.rows() == size() && Hx.cols() == size()) ? 1 : 0;
+    m_hcalls += (smooth() && hx.rows() == size() && hx.cols() == size()) ? 1 : 0;
 
     if (smooth())
     {
-        return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_Hx = Hx});
+        return do_eval(eval_t{.m_x = x, .m_gx = gx, .m_hx = hx});
     }
     else
     {
-        critical(Hx.size() == 0, "function: cannot compute the Hessian for non-smooth functions!");
+        critical(hx.size() == 0, "function: cannot compute the Hessian for non-smooth functions!");
 
         return do_eval(eval_t{.m_x = x, .m_gx = gx});
     }

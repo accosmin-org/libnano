@@ -28,39 +28,39 @@ UTEST_CASE(accumulator)
     auto accumulator0 = gboost::accumulator_t{3};
     auto accumulator1 = gboost::accumulator_t{3};
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 
-    accumulator0.update(make_tensor<scalar_t>(make_dims(3), 1.0, 2.0, 3.0));
+    accumulator0.m_fx += make_tensor<scalar_t>(make_dims(3), 1.0, 2.0, 3.0).sum();
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 6.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 6.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 
-    accumulator0.update(make_tensor<scalar_t>(make_dims(3), 1.0, 4.0, 0.0));
+    accumulator0.m_fx += make_tensor<scalar_t>(make_dims(3), 1.0, 4.0, 0.0).sum();
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 11.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 11.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 
-    accumulator1.update(make_tensor<scalar_t>(make_dims(3), 3.0, 5.0, 4.0));
+    accumulator1.m_fx += make_tensor<scalar_t>(make_dims(3), 3.0, 5.0, 4.0).sum();
 
-    UTEST_CHECK_CLOSE(accumulator1.m_vm1, 12.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator1.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator1.m_fx, 12.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator1.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 
     accumulator0 += accumulator1;
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 23.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 23.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 
-    accumulator0.m_gb1(0) = 1.0;
+    accumulator0.m_gx(0) = 1.0;
     accumulator0 /= 5;
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 4.6, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.2, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 4.6, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.2, 0.0, 0.0), 1e-15);
 
     accumulator0.clear();
 
-    UTEST_CHECK_CLOSE(accumulator0.m_vm1, 0.0, 1e-15);
-    UTEST_CHECK_CLOSE(accumulator0.m_gb1, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_fx, 0.0, 1e-15);
+    UTEST_CHECK_CLOSE(accumulator0.m_gx, make_vector<scalar_t>(0.0, 0.0, 0.0), 1e-15);
 }
 
 UTEST_CASE(evaluate)

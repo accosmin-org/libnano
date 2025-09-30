@@ -27,14 +27,14 @@ scalar_t function_trid_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = 2 * matrix_t::identity(size(), size());
+        eval.m_hx = 2 * matrix_t::identity(size(), size());
         for (tensor_size_t i = 0, size = this->size(); i + 1 < size; ++i)
         {
-            eval.m_Hx(i, i + 1) -= 1.0;
+            eval.m_hx(i, i + 1) -= 1.0;
         }
         for (tensor_size_t i = 1, size = this->size(); i < size; ++i)
         {
-            eval.m_Hx(i, i - 1) -= 1.0;
+            eval.m_hx(i, i - 1) -= 1.0;
         }
     }
 

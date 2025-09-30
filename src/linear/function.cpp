@@ -44,7 +44,7 @@ rfunction_t linear::function_t::clone() const
 scalar_t linear::function_t::do_eval(eval_t eval) const
 {
     const auto b = bias(eval.m_x);
-    const auto W = weights(eval.m_x);
+    const auto w = weights(eval.m_x);
 
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
@@ -54,24 +54,25 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
             assert(tnum < m_accumulators.size());
             auto& accumulator = m_accumulators[tnum];
 
-            ::nano::linear::predict(inputs, W, b, accumulator.m_outputs);
-            m_loss.value(targets, accumulator.m_outputs, accumulator.m_values);
+            ::nano::linear::predict(inputs, w, b, accumulator.m_outputs);
+            m_loss.value(targets, accumulator.m_outputs, accumulator.m_loss_fx);
 
-            accumulator.m_vm1 += accumulator.m_values.sum();
+            accumulator.m_fx += accumulator.m_loss_fx.sum();
 
             if (eval.has_grad())
             {
-                m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_vgrads);
+                m_loss.vgrad(targets, accumulator.m_outputs, accumulator.m_loss_gx);
 
-                const auto gmatrix = accumulator.m_vgrads.reshape(range.size(), m_tsize);
-                accumulator.m_gb1 += gmatrix.matrix().colwise().sum().transpose();
-                accumulator.m_gW1 += gmatrix.matrix().transpose() * inputs;
+                const auto gmatrix = accumulator.m_loss_gx.reshape(range.size(), m_tsize);
+                accumulator.m_gb += gmatrix.matrix().colwise().sum().transpose();
+                accumulator.m_gw += gmatrix.matrix().transpose() * inputs;
             }
 
             if (eval.has_hess())
             {
-                m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_vhesss);
+                m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_loss_hx);
 
+                const auto& hmatrix = accumulator.m_loss_hx;
                 // TODO: write it as a more efficient linear algebra operations
                 for (tensor_size_t k = 0; k < range.size(); ++k)
                 {
@@ -83,8 +84,8 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                             {
                                 for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
                                 {
-                                    accumulator.m_HbW(t1 * m_isize + i1, t2 * m_isize + i2) +=
-                                        accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1) * inputs(k, i2);
+                                    accumulator.m_hx(t1 * m_isize + i1, t2 * m_isize + i2) +=
+                                        hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1) * inputs(k, i2);
                                 }
                             }
                         }
@@ -96,8 +97,8 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                         {
                             for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                             {
-                                accumulator.m_HbW(t1 * m_isize + i1, m_tsize * m_isize + t2) +=
-                                    accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1);
+                                accumulator.m_hx(t1 * m_isize + i1, m_tsize * m_isize + t2) +=
+                                    hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1);
                             }
                         }
                     }
@@ -108,8 +109,8 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                         {
                             for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
                             {
-                                accumulator.m_HbW(m_tsize * m_isize + t1, t2 * m_isize + i2) +=
-                                    accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0) * inputs(k, i2);
+                                accumulator.m_hx(m_tsize * m_isize + t1, t2 * m_isize + i2) +=
+                                    hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i2);
                             }
                         }
                     }
@@ -118,8 +119,8 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                     {
                         for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                         {
-                            accumulator.m_HbW(m_tsize * m_isize + t1, m_tsize * m_isize + t2) +=
-                                accumulator.m_vhesss(k, t1, 0, 0, t2, 0, 0);
+                            accumulator.m_hx(m_tsize * m_isize + t1, m_tsize * m_isize + t2) +=
+                                hmatrix(k, t1, 0, 0, t2, 0, 0);
                         }
                     }
                 }
@@ -132,39 +133,39 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
     if (eval.has_grad())
     {
         auto gb = bias(eval.m_gx);
-        auto gW = weights(eval.m_gx);
+        auto gw = weights(eval.m_gx);
 
-        gb = accumulator.m_gb1;
-        gW = accumulator.m_gW1;
+        gb = accumulator.m_gb;
+        gw = accumulator.m_gw;
 
         if (m_l1reg > 0.0)
         {
-            gW.array() += m_l1reg * W.array().sign() / W.size();
+            gw.array() += m_l1reg * w.array().sign() / static_cast<scalar_t>(w.size());
         }
         if (m_l2reg > 0.0)
         {
-            gW.array() += m_l2reg * W.array() / W.size();
+            gw.array() += m_l2reg * w.array() / static_cast<scalar_t>(w.size());
         }
     }
 
     if (eval.has_hess())
     {
-        eval.m_Hx = accumulator.m_HbW;
+        eval.m_hx = accumulator.m_hx;
 
         if (m_l2reg > 0.0)
         {
-            eval.m_Hx.block(0, 0, W.size(), W.size()).diagonal().array() += m_l2reg / static_cast<scalar_t>(W.size());
+            eval.m_hx.block(0, 0, w.size(), w.size()).diagonal().array() += m_l2reg / static_cast<scalar_t>(w.size());
         }
     }
 
-    auto fx = accumulator.m_vm1;
+    auto fx = accumulator.m_fx;
     if (m_l1reg > 0.0)
     {
-        fx += m_l1reg * W.array().abs().mean();
+        fx += m_l1reg * w.array().abs().mean();
     }
     if (m_l2reg > 0.0)
     {
-        fx += 0.5 * (std::sqrt(m_l2reg) * W.array()).square().mean();
+        fx += 0.5 * (std::sqrt(m_l2reg) * w.array()).square().mean();
     }
     return fx;
 }

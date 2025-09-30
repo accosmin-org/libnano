@@ -144,7 +144,7 @@ public:
         }
         if (eval.has_hess())
         {
-            eval.m_Hx.full(0.0);
+            eval.m_hx.full(0.0);
         }
         return eval.m_x.sum();
     }
@@ -685,15 +685,15 @@ UTEST_CASE(constrained_quadratic3x3_equality)
 UTEST_CASE(minimize_objective1)
 {
     // see 17.3, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx.array() = 1.0;
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx.full(0.0);
+            hx.full(0.0);
         }
         return x.sum();
     };
@@ -733,19 +733,19 @@ UTEST_CASE(minimize_objective1)
 UTEST_CASE(minimize_objective2)
 {
     // see 17.5, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = -10.0 * x(0);
             gx(1) = +2.0 * x(1);
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx(0, 0) = -10.0;
-            Hx(0, 1) = 0.0;
-            Hx(1, 0) = 0.0;
-            Hx(1, 1) = 2.0;
+            hx(0, 0) = -10.0;
+            hx(0, 1) = 0.0;
+            hx(1, 0) = 0.0;
+            hx(1, 1) = 2.0;
         }
         return -5.0 * x(0) * x(0) + x(1) * x(1);
     };
@@ -779,15 +779,15 @@ UTEST_CASE(minimize_objective2)
 UTEST_CASE(minimize_objective3)
 {
     // see 17.24, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx.array() = 1.0;
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx.full(0.0);
+            hx.full(0.0);
         }
         return x.sum();
     };
@@ -821,16 +821,16 @@ UTEST_CASE(minimize_objective3)
 UTEST_CASE(minimize_objective4)
 {
     // see 15.34, "Numerical optimization", Nocedal & Wright, 2nd edition
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 4.0 * x(0) - 1.0;
             gx(1) = 4.0 * x(1);
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx.full(0.0);
+            hx.full(0.0);
         }
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
@@ -865,16 +865,16 @@ UTEST_CASE(minimize_objective5)
 {
     // see 12.36, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 2.0 * (x(0) - 1.5);
             gx(1) = 4.0 * cube(x(1) - 0.5);
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx.full(0.0);
+            hx.full(0.0);
         }
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
@@ -912,16 +912,16 @@ UTEST_CASE(minimize_objective6)
 {
     // see 12.56, "Numerical optimization", Nocedal & Wright, 2nd edition
     // NB: the convention for the inequality constraints in the library is the opposite!
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         if (gx.size() == x.size())
         {
             gx(0) = 1.0;
             gx(1) = 0.0;
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx.full(0.0);
+            hx.full(0.0);
         }
         return x(0);
     };
@@ -956,7 +956,7 @@ UTEST_CASE(minimize_objective6)
 UTEST_CASE(minimize_objective7)
 {
     // see exercise 4.3, "Convex optimization", Boyd & Vanderberghe
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t Hx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         static const auto P = make_matrix<scalar_t>(3, 13, 12, -2, 12, 17, 6, -2, 6, 12);
         static const auto q = make_vector<scalar_t>(-22, -14.5, 13.0);
@@ -965,9 +965,9 @@ UTEST_CASE(minimize_objective7)
         {
             gx = P * x + q;
         }
-        if (Hx.rows() == x.size() && Hx.cols() == x.size())
+        if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            Hx = P;
+            hx = P;
         }
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };

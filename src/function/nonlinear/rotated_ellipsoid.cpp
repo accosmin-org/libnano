@@ -28,7 +28,7 @@ scalar_t function_rotated_ellipsoid_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = m_bias.array().matrix().asDiagonal();
+        eval.m_hx = m_bias.array().matrix().asDiagonal();
     }
 
     return 0.5 * (eval.m_x.array().square() * m_bias.array()).sum();

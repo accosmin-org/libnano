@@ -44,9 +44,9 @@ private:
     // attributes
     const targets_iterator_t& m_iterator; ///<
     const loss_t&             m_loss;     ///<
-    mutable tensor1d_t        m_values;   ///<
-    mutable tensor4d_t        m_vgrads;   ///<
-    mutable tensor7d_t        m_vhesss;   ///<
+    mutable tensor1d_t        m_values;   ///< loss values: (#samples,)
+    mutable tensor4d_t        m_vgrads;   ///< loss gradients: (#samples, dim1, dim2, dim3)
+    mutable tensor7d_t        m_vhesss;   ///< loss hessians: (#samples, dim1, dim2, dim3, dim1, dim2, dim3)
 };
 
 ///
@@ -77,10 +77,6 @@ private:
     // attributes
     const targets_iterator_t& m_iterator;     ///<
     const loss_t&             m_loss;         ///<
-    mutable tensor1d_t        m_values;       ///< loss values: (#samples,)
-    mutable tensor4d_t        m_vgrads;       ///< loss gradients: (#samples, dim1, dim2, dim3)
-    mutable tensor7d_t        m_vhesss;       ///< loss hessians: (#samples, dim1, dim2, dim3, dim1, dim2, dim3)
-    mutable tensor4d_t        m_outputs;      ///<
     mutable accumulators_t    m_accumulators; ///<
 };
 
@@ -116,10 +112,6 @@ private:
     const cluster_t&          m_cluster;      ///<
     const tensor4d_t&         m_soutputs;     ///< predictions of the strong learner so far
     const tensor4d_t&         m_woutputs;     ///< predictions of the current weak learner
-    mutable tensor1d_t        m_values;       ///< loss values: (#samples,)
-    mutable tensor4d_t        m_vgrads;       ///< loss gradients: (#samples, dim1, dim2, dim3)
-    mutable tensor7d_t        m_vhesss;       ///< loss hessians: (#samples, dim1, dim2, dim3, dim1, dim2, dim3)
-    mutable tensor4d_t        m_outputs;      ///<
     mutable accumulators_t    m_accumulators; ///<
 };
 } // namespace nano::gboost

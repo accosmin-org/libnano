@@ -48,7 +48,7 @@ scalar_t function_geometric_optimization_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx.matrix().noalias() = (A.array().colwise() * e).matrix().transpose() * A;
+        eval.m_hx.matrix().noalias() = (A.array().colwise() * e).matrix().transpose() * A;
     }
 
     return e.sum();

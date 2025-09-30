@@ -23,7 +23,7 @@ scalar_t function_styblinski_tang_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = (12 * eval.m_x.array().square() - 32).matrix().asDiagonal();
+        eval.m_hx = (12 * eval.m_x.array().square() - 32).matrix().asDiagonal();
     }
 
     return (eval.m_x.array().square().square() - 16 * eval.m_x.array().square() + 5 * eval.m_x.array()).sum();

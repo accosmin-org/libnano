@@ -24,7 +24,7 @@ scalar_t function_sphere_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = matrix_t::identity(size(), size());
+        eval.m_hx = matrix_t::identity(size(), size());
     }
 
     return 0.5 * eval.m_x.dot(eval.m_x);

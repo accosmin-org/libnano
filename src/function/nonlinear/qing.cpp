@@ -29,7 +29,7 @@ scalar_t function_qing_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_Hx = (12 * x.square() - 4 * b).matrix().asDiagonal();
+        eval.m_hx = (12 * x.square() - 4 * b).matrix().asDiagonal();
     }
 
     return (x.square() - b).square().sum();
