@@ -70,7 +70,7 @@ UTEST_BEGIN_MODULE()
 UTEST_CASE(function_noreg)
 {
     const auto trials   = 10;
-    const auto targets  = tensor_size_t{1};
+    const auto targets  = tensor_size_t{2};
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
     const auto scaling  = scaling_type::none;
@@ -125,7 +125,7 @@ UTEST_CASE(function_l1reg)
 UTEST_CASE(function_l2reg)
 {
     const auto trials   = 10;
-    const auto targets  = tensor_size_t{1};
+    const auto targets  = tensor_size_t{3};
     const auto samples  = tensor_size_t{10};
     const auto features = tensor_size_t{4};
     const auto scaling  = scaling_type::minmax;
