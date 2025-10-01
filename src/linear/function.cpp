@@ -72,22 +72,46 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
             {
                 m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_loss_hx);
 
-                const auto& hmatrix = accumulator.m_loss_hx;
+                const auto& htensor = accumulator.m_loss_hx;
+                // const auto  imatrix = inputs.matrix();
+                const auto  wsize   = w.size();
+                const auto  bsize   = b.size();
+
+                // accumulator.m_hx.matrix().block(0, 0, wsize, wsize).noalias() +=
+                //    (imatrix.array().colwise() * htensor.array()).matrix().transpose() * imatrix;
+
+                // accumulator.m_hx.matrix().block(0, wsize, wsize, bsize).noalias() +=
+                //    (imatrix.array().colwise() * htensor.array()).matrix().transpose();
+
+                // imatrix = (ssize, isize)
+                // htensor = (ssize, osize, osize)
+                //
+
+                // accumulator.m_hx.matrix().block(wsize, wsize, bsize, bsize).noalias() +=
+                //    htensor.reshape(range.size(), bsize * bsize).matrix().colwise().sum().matrix();
+
                 // TODO: write it as a more efficient linear algebra operations
                 for (tensor_size_t k = 0; k < range.size(); ++k)
                 {
+                    const auto kinput   = inputs.vector(k);
+                    const auto khmatrix = htensor.tensor(k).reshape(m_tsize, m_tsize).matrix();
+                    const auto khtensor = htensor.tensor(k).reshape(m_tsize, m_tsize).tensor();
+
                     for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
-                        for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
+                        for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                         {
-                            for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
+                            accumulator.m_hx.matrix().block(t1 * m_isize, t2 * m_isize, m_isize, m_isize) +=
+                                khmatrix(t1, t2) * (kinput * kinput.transpose());
+
+                            /*for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
                             {
                                 for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
                                 {
                                     accumulator.m_hx(t1 * m_isize + i1, t2 * m_isize + i2) +=
-                                        hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1) * inputs(k, i2);
+                                        khmatrix(t1, t2) * kinput(i1) * kinput(i2);
                                 }
-                            }
+                            }*/
                         }
                     }
 
@@ -98,31 +122,39 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
                             for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                             {
                                 accumulator.m_hx(t1 * m_isize + i1, m_tsize * m_isize + t2) +=
-                                    hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i1);
+                                    khmatrix(t1, t2) * kinput(i1);
                             }
                         }
                     }
 
+                    // accumulator.m_hx.matrix().block(wsize, 0, m_tsize, m_isize).noalias() +=
+                    //    khmatrix.matrix().colwise().sum() * kinput.transpose();
+
                     for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
+                        // accumulator.m_hx.matrix().block(m_tsize * m_isize + t1, 0, m_tsize, m_isize) +=
+                        //    khmatrix.vector(t1) * kinput.transpose();
+
                         for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                         {
                             for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
                             {
                                 accumulator.m_hx(m_tsize * m_isize + t1, t2 * m_isize + i2) +=
-                                    hmatrix(k, t1, 0, 0, t2, 0, 0) * inputs(k, i2);
+                                    khmatrix(t1, t2) * kinput(i2);
                             }
                         }
                     }
 
-                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
+                    accumulator.m_hx.matrix().block(wsize, wsize, bsize, bsize).noalias() += khmatrix;
+
+                    /*for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
                         for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                         {
                             accumulator.m_hx(m_tsize * m_isize + t1, m_tsize * m_isize + t2) +=
-                                hmatrix(k, t1, 0, 0, t2, 0, 0);
+                                khmatrix(t1, t2);
                         }
-                    }
+                    }*/
                 }
             }
         });
