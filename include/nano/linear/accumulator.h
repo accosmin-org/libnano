@@ -44,7 +44,9 @@ public:
     scalar_t   m_fx{0};   ///< sum of loss values
     tensor1d_t m_gb;      ///< sum of loss gradients wrt bias
     tensor2d_t m_gw;      ///< sum of loss gradients wrt weights
-    tensor2d_t m_hx;      ///< sum of loss hessians wrt weigths+bias
+    tensor2d_t m_hww;     ///< sum of loss hessians wrt weigths+bias
+    tensor2d_t m_hwb;     ///< sum of loss hessians wrt weigths+bias
+    tensor2d_t m_hbb;     ///< sum of loss hessians wrt weigths+bias
 };
 
 using accumulators_t = std::vector<accumulator_t>;

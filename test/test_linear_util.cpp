@@ -16,7 +16,9 @@ UTEST_CASE(accumulator)
         accumulator.m_fx = value;
         accumulator.m_gb.full(value);
         accumulator.m_gw.full(value);
-        accumulator.m_hx.full(value);
+        accumulator.m_hww.full(value);
+        accumulator.m_hwb.full(value);
+        accumulator.m_hbb.full(value);
     };
 
     const auto make_accumulators = [&]()
@@ -35,7 +37,9 @@ UTEST_CASE(accumulator)
         UTEST_CHECK_CLOSE(accumulator0.m_fx, 6.0 / 6.0, 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gb, make_full_tensor<scalar_t>(make_dims(2), 6.0 / 6.0), 1e-12);
         UTEST_CHECK_CLOSE(accumulator0.m_gw, make_full_tensor<scalar_t>(make_dims(2, 3), 6.0 / 6.0), 1e-12);
-        UTEST_CHECK_CLOSE(accumulator0.m_hx, make_full_tensor<scalar_t>(make_dims(8, 8), 6.0 / 6.0), 1e-12);
+        UTEST_CHECK_CLOSE(accumulator0.m_hww, make_full_tensor<scalar_t>(make_dims(6, 6), 6.0 / 6.0), 1e-12);
+        UTEST_CHECK_CLOSE(accumulator0.m_hwb, make_full_tensor<scalar_t>(make_dims(6, 2), 6.0 / 6.0), 1e-12);
+        UTEST_CHECK_CLOSE(accumulator0.m_hbb, make_full_tensor<scalar_t>(make_dims(2, 2), 6.0 / 6.0), 1e-12);
     }
 }
 

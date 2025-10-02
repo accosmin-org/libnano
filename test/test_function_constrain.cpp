@@ -164,12 +164,20 @@ public:
 
     scalar_t do_eval(eval_t eval) const override
     {
-        const auto x = eval.m_x;
+        const auto x    = eval.m_x.vector();
+        const auto x2x  = x.dot(x);
+        const auto beta = 0.36;
+
         if (eval.has_grad())
         {
-            eval.m_gx = 2.0 * x / (0.36 + x.dot(x));
+            eval.m_gx = 2.0 * x / (beta + x2x);
         }
-        return std::log(0.36 + x.dot(x));
+        if (eval.has_hess())
+        {
+            eval.m_hx.matrix() = -4.0 * (x * x.transpose()) / square(beta + x2x);
+            eval.m_hx.matrix().diagonal().array() += 2.0 / (beta + x2x);
+        }
+        return std::log(beta + x2x);
     }
 };
 

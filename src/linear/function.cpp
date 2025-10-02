@@ -43,8 +43,10 @@ rfunction_t linear::function_t::clone() const
 
 scalar_t linear::function_t::do_eval(eval_t eval) const
 {
-    const auto b = bias(eval.m_x);
-    const auto w = weights(eval.m_x);
+    const auto b     = bias(eval.m_x);
+    const auto w     = weights(eval.m_x);
+    const auto wsize = w.size();
+    const auto bsize = b.size();
 
     std::for_each(m_accumulators.begin(), m_accumulators.end(), [&](auto& accumulator) { accumulator.clear(); });
 
@@ -72,36 +74,20 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
             {
                 m_loss.vhess(targets, accumulator.m_outputs, accumulator.m_loss_hx);
 
+                // TODO: write it using more efficient linear algebra operations
                 const auto& htensor = accumulator.m_loss_hx;
-                // const auto  imatrix = inputs.matrix();
-                const auto  wsize   = w.size();
-                const auto  bsize   = b.size();
 
-                // accumulator.m_hx.matrix().block(0, 0, wsize, wsize).noalias() +=
-                //    (imatrix.array().colwise() * htensor.array()).matrix().transpose() * imatrix;
-
-                // accumulator.m_hx.matrix().block(0, wsize, wsize, bsize).noalias() +=
-                //    (imatrix.array().colwise() * htensor.array()).matrix().transpose();
-
-                // imatrix = (ssize, isize)
-                // htensor = (ssize, osize, osize)
-                //
-
-                // accumulator.m_hx.matrix().block(wsize, wsize, bsize, bsize).noalias() +=
-                //    htensor.reshape(range.size(), bsize * bsize).matrix().colwise().sum().matrix();
-
-                // TODO: write it as a more efficient linear algebra operations
                 for (tensor_size_t k = 0; k < range.size(); ++k)
                 {
                     const auto kinput   = inputs.vector(k);
                     const auto khmatrix = htensor.tensor(k).reshape(m_tsize, m_tsize).matrix();
-                    const auto khtensor = htensor.tensor(k).reshape(m_tsize, m_tsize).tensor();
+                    // const auto khvector = htensor.tensor(k).reshape(m_tsize, m_tsize).vector();
 
                     for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
                         for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                         {
-                            accumulator.m_hx.matrix().block(t1 * m_isize, t2 * m_isize, m_isize, m_isize) +=
+                            accumulator.m_hww.matrix().block(t1 * m_isize, t2 * m_isize, m_isize, m_isize) +=
                                 khmatrix(t1, t2) * (kinput * kinput.transpose());
 
                             /*for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
@@ -117,44 +103,19 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
 
                     for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
-                        for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
+                        accumulator.m_hwb.reshape(m_tsize, m_isize, m_tsize).matrix(t1) += kinput * khmatrix.row(t1);
+
+                        /*for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
                         {
                             for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
                             {
-                                accumulator.m_hx(t1 * m_isize + i1, m_tsize * m_isize + t2) +=
+                                accumulator.m_hwb(t1 * m_isize + i1, t2) +=
                                     khmatrix(t1, t2) * kinput(i1);
                             }
-                        }
+                        }*/
                     }
 
-                    // accumulator.m_hx.matrix().block(wsize, 0, m_tsize, m_isize).noalias() +=
-                    //    khmatrix.matrix().colwise().sum() * kinput.transpose();
-
-                    for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
-                    {
-                        // accumulator.m_hx.matrix().block(m_tsize * m_isize + t1, 0, m_tsize, m_isize) +=
-                        //    khmatrix.vector(t1) * kinput.transpose();
-
-                        for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
-                        {
-                            for (tensor_size_t i2 = 0; i2 < m_isize; ++i2)
-                            {
-                                accumulator.m_hx(m_tsize * m_isize + t1, t2 * m_isize + i2) +=
-                                    khmatrix(t1, t2) * kinput(i2);
-                            }
-                        }
-                    }
-
-                    accumulator.m_hx.matrix().block(wsize, wsize, bsize, bsize).noalias() += khmatrix;
-
-                    /*for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
-                    {
-                        for (tensor_size_t t2 = 0; t2 < m_tsize; ++t2)
-                        {
-                            accumulator.m_hx(m_tsize * m_isize + t1, m_tsize * m_isize + t2) +=
-                                khmatrix(t1, t2);
-                        }
-                    }*/
+                    accumulator.m_hbb += khmatrix;
                 }
             }
         });
@@ -182,11 +143,14 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
 
     if (eval.has_hess())
     {
-        eval.m_hx = accumulator.m_hx;
+        eval.m_hx.matrix().block(0, 0, wsize, wsize)         = accumulator.m_hww.matrix();
+        eval.m_hx.matrix().block(0, wsize, wsize, bsize)     = accumulator.m_hwb.matrix();
+        eval.m_hx.matrix().block(wsize, 0, bsize, wsize)     = accumulator.m_hwb.matrix().transpose();
+        eval.m_hx.matrix().block(wsize, wsize, bsize, bsize) = accumulator.m_hbb.matrix();
 
         if (m_l2reg > 0.0)
         {
-            eval.m_hx.block(0, 0, w.size(), w.size()).diagonal().array() += m_l2reg / static_cast<scalar_t>(w.size());
+            eval.m_hx.block(0, 0, wsize, wsize).diagonal().array() += m_l2reg / static_cast<scalar_t>(w.size());
         }
     }
 
