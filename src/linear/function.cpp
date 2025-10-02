@@ -103,7 +103,8 @@ scalar_t linear::function_t::do_eval(eval_t eval) const
 
                     for (tensor_size_t t1 = 0; t1 < m_tsize; ++t1)
                     {
-                        accumulator.m_hwb.reshape(m_tsize, m_isize, m_tsize).matrix(t1) += kinput * khmatrix.row(t1);
+                        accumulator.m_hwb.reshape(m_tsize, m_isize, m_tsize).matrix(t1).noalias() +=
+                            kinput * khmatrix.row(t1);
 
                         /*for (tensor_size_t i1 = 0; i1 < m_isize; ++i1)
                         {
