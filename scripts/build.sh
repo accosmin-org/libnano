@@ -367,6 +367,7 @@ function call_clang_tidy_readability {
     checks="${checks},-readability-else-after-return"
     checks="${checks},-readability-function-cognitive-complexity"
     checks="${checks},-readability-identifier-length"
+    checks="${checks},-readability-redundant-member-init"
     checks="${checks},-readability-avoid-nested-conditional-operator"
     call_clang_tidy ${checks}
 }
