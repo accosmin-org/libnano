@@ -170,9 +170,11 @@ NANO_PUBLIC scalar_t valid(const constraint_t&, vector_cmap_t x);
 
 ///
 /// \brief evaluate the given constraint's function value at the given point
-///     (and its gradient or sub-gradient if not smooth).
+///     and optionally its gradient (or sub-gradient if not smooth)
+///     and optionally its hessian if smooth.
 ///
-NANO_PUBLIC scalar_t vgrad(const constraint_t&, vector_cmap_t x, vector_map_t gx = vector_map_t{});
+NANO_PUBLIC scalar_t eval(const constraint_t&, vector_cmap_t x, vector_map_t gx = vector_map_t{},
+    matrix_map_t hx = matrix_map_t{});
 
 ///
 /// \brief returns true if the given function and constraint are compatible.

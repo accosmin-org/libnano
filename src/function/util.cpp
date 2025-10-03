@@ -259,7 +259,7 @@ scalar_t nano::convex_accuracy(const function_t& function, const vector_t& x1, c
         dc = std::min(dc, t1 * f1 + t2 * f2 - t1 * t2 * sc * 0.5 * dx - function(tx));
     }
 
-    return std::max(dc, 0.0) / (1.0 + 0.5 * (f1 + f2));
+    return std::max(dc, 0.0) / (1.0 + 0.5 * (std::fabs(f1) + std::fabs(f2)));
 }
 
 full_rank_stats_t nano::make_full_rank(matrix_t& A, vector_t& b)

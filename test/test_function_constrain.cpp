@@ -10,13 +10,22 @@ using namespace nano::constraint;
 
 namespace
 {
+auto make_function_config()
+{
+    return function_config_t{
+        .m_trials                = 100,
+        .m_grad_accuracy_epsilon = 1e-7,
+        .m_hess_accuracy_epsilon = 5e-7,
+    };
+}
+
 void check_penalty(penalty_function_t& penalty_function, const convexity expected_convexity,
                    const smoothness expected_smoothness, const scalar_t expected_strong_convexity)
 {
     for (const auto penalty : {1e-1, 1e+0, 1e+1, 1e+2, 1e+3})
     {
         penalty_function.penalty(penalty);
-        check_function(penalty_function);
+        check_function(penalty_function, make_function_config());
         UTEST_CHECK_EQUAL(penalty_function.strong_convexity(), expected_strong_convexity);
         UTEST_CHECK_EQUAL(penalty_function.convex(), expected_convexity == convexity::yes);
         UTEST_CHECK_EQUAL(penalty_function.smooth(), expected_smoothness == smoothness::yes);
@@ -709,7 +718,7 @@ UTEST_CASE(minimize_objective1)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(-1.0, -1.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), std::sqrt(2.0)}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -761,7 +770,7 @@ UTEST_CASE(minimize_objective2)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(constant_t{1.0, 0}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::no, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -803,7 +812,7 @@ UTEST_CASE(minimize_objective3)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0)));
     UTEST_CHECK(function.constrain(minimum_t{1.0, 0}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0)};
@@ -838,7 +847,7 @@ UTEST_CASE(minimize_objective4)
         }
         if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            hx.full(0.0);
+            hx = 4.0 * matrix_t::identity(x.size(), x.size());
         }
         return 2.0 * (x(0) * x(0) + x(1) * x(1) - 1.0) - x(0);
     };
@@ -846,7 +855,7 @@ UTEST_CASE(minimize_objective4)
     UTEST_CHECK(function.optimum(make_vector<scalar_t>(1.0, 0.0)));
     UTEST_CHECK(function.constrain(euclidean_ball_equality_t{make_vector<scalar_t>(0.0, 0.0), 1.0}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::no, smoothness::yes, 4.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -882,7 +891,10 @@ UTEST_CASE(minimize_objective5)
         }
         if (hx.rows() == x.size() && hx.cols() == x.size())
         {
-            hx.full(0.0);
+            hx(0, 0) = 2.0;
+            hx(0, 1) = 0.0;
+            hx(1, 0) = 0.0;
+            hx(1, 1) = 12.0 * square(x(1) - 0.5);
         }
         return square(x(0) - 1.5) + quartic(x(1) - 0.5);
     };
@@ -893,7 +905,7 @@ UTEST_CASE(minimize_objective5)
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, -1.0), -1.0}));
     UTEST_CHECK(function.constrain(linear_inequality_t{make_vector<scalar_t>(+1.0, +1.0), -1.0}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(0.0, 0.0)};
@@ -938,7 +950,7 @@ UTEST_CASE(minimize_objective6)
     UTEST_CHECK(function.constrain(minimum_t{0.0, 1}));
     UTEST_CHECK(function.constrain(euclidean_ball_inequality_t{make_vector<scalar_t>(1.0, 0.0), 1.0}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     {
         const auto state = solver_state_t{function, make_vector<scalar_t>(1.0, 0.0)};
@@ -988,7 +1000,7 @@ UTEST_CASE(minimize_objective7)
     UTEST_CHECK(function.constrain(maximum_t{+1.0, 1}));
     UTEST_CHECK(function.constrain(maximum_t{+1.0, 2}));
 
-    check_function(function);
+    check_function(function, make_function_config());
     check_penalties(function, convexity::yes, smoothness::yes, 0.0);
     check_penalty_solver(function, 1e-1);
 }

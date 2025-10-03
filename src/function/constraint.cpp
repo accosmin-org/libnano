@@ -57,25 +57,33 @@ scalar_t strong_convexity(const functional_t& constraint)
     return constraint.m_function->strong_convexity();
 }
 
-auto vgrad(const euclidean_ball_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const euclidean_ball_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     if (gx.size() == x.size())
     {
         gx = 2.0 * (x - constraint.m_origin);
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx = 2.0 * matrix_t::identity(x.size(), x.size());
+    }
     return (x - constraint.m_origin).squaredNorm() - constraint.m_radius * constraint.m_radius;
 }
 
-auto vgrad(const linear_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const linear_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     if (gx.size() == x.size())
     {
         gx = constraint.m_q;
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx.full(0.0);
+    }
     return constraint.m_q.dot(x) + constraint.m_r;
 }
 
-auto vgrad(const quadratic_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const quadratic_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     const auto P = constraint.m_P.matrix();
     const auto q = constraint.m_q.vector();
@@ -83,39 +91,55 @@ auto vgrad(const quadratic_t& constraint, vector_cmap_t x, vector_map_t gx)
     {
         gx = P * x.vector() + q;
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx = P;
+    }
     return 0.5 * x.vector().dot(P * x.vector()) + q.dot(x.vector()) + constraint.m_r;
 }
 
-auto vgrad(const minimum_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const minimum_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     if (gx.size() == x.size())
     {
         gx.full(0.0)(constraint.m_dimension) = -1.0;
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx.full(0.0);
+    }
     return constraint.m_value - x(constraint.m_dimension);
 }
 
-auto vgrad(const maximum_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const maximum_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     if (gx.size() == x.size())
     {
         gx.full(0.0)(constraint.m_dimension) = +1.0;
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx.full(0.0);
+    }
     return x(constraint.m_dimension) - constraint.m_value;
 }
 
-auto vgrad(const constant_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const constant_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     if (gx.size() == x.size())
     {
         gx.full(0.0)(constraint.m_dimension) = +1.0;
     }
+    if (hx.rows() == x.size() && hx.cols() == x.size())
+    {
+        hx.full(0.0);
+    }
     return x(constraint.m_dimension) - constraint.m_value;
 }
 
-auto vgrad(const functional_t& constraint, vector_cmap_t x, vector_map_t gx)
+auto eval(const functional_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
-    return (*constraint.m_function)(x, gx);
+    return (*constraint.m_function)(x, gx, hx);
 }
 
 bool convex(const euclidean_ball_t&)
@@ -160,42 +184,42 @@ auto valid(const maximum_t& constraint, vector_cmap_t x)
 
 auto valid(const euclidean_ball_equality_t& constraint, vector_cmap_t x)
 {
-    return std::fabs(::vgrad(constraint, x));
+    return std::fabs(::eval(constraint, x));
 }
 
 auto valid(const euclidean_ball_inequality_t& constraint, vector_cmap_t x)
 {
-    return std::max(::vgrad(constraint, x), 0.0);
+    return std::max(::eval(constraint, x), 0.0);
 }
 
 auto valid(const linear_equality_t& constraint, vector_cmap_t x)
 {
-    return std::fabs(::vgrad(constraint, x));
+    return std::fabs(::eval(constraint, x));
 }
 
 auto valid(const linear_inequality_t& constraint, vector_cmap_t x)
 {
-    return std::max(::vgrad(constraint, x), 0.0);
+    return std::max(::eval(constraint, x), 0.0);
 }
 
 auto valid(const quadratic_equality_t& constraint, vector_cmap_t x)
 {
-    return std::fabs(::vgrad(constraint, x));
+    return std::fabs(::eval(constraint, x));
 }
 
 auto valid(const quadratic_inequality_t& constraint, vector_cmap_t x)
 {
-    return std::max(::vgrad(constraint, x), 0.0);
+    return std::max(::eval(constraint, x), 0.0);
 }
 
 auto valid(const functional_equality_t& constraint, vector_cmap_t x)
 {
-    return std::fabs(::vgrad(constraint, x));
+    return std::fabs(::eval(constraint, x));
 }
 
 auto valid(const functional_inequality_t& constraint, vector_cmap_t x)
 {
-    return std::max(::vgrad(constraint, x), 0.0);
+    return std::max(::eval(constraint, x), 0.0);
 }
 
 auto compatible(const function_t& function, const euclidean_ball_t& constraint)
@@ -259,17 +283,17 @@ scalar_t nano::strong_convexity(const constraint_t& constraint)
                       constraint);
 }
 
-scalar_t nano::vgrad(const constraint_t& constraint, vector_cmap_t x, vector_map_t gx)
+scalar_t nano::eval(const constraint_t& constraint, vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
 {
     return std::visit(
         // clang-format off
-        overloaded{[&](const euclidean_ball_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const linear_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const constant_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const maximum_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const minimum_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const quadratic_t& ct) { return ::vgrad(ct, x, gx); },
-                   [&](const functional_t& ct) { return ::vgrad(ct, x, gx); }},
+        overloaded{[&](const euclidean_ball_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const linear_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const constant_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const maximum_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const minimum_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const quadratic_t& ct) { return ::eval(ct, x, gx, hx); },
+                   [&](const functional_t& ct) { return ::eval(ct, x, gx, hx); }},
         // clang-format on
         constraint);
 }

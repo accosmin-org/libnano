@@ -119,13 +119,13 @@ void solver_state_t::update_duals()
     {
         if (::nano::is_equality(constraint))
         {
-            m_dual.m_dv(eq) = ::vgrad(constraint, m_x, gc);
+            m_dual.m_dv(eq) = ::eval(constraint, m_x, gc);
             m_dual.m_gL += m_dual.m_v(eq) * gc;
             ++eq;
         }
         else
         {
-            m_dual.m_du(ineq) = ::vgrad(constraint, m_x, gc);
+            m_dual.m_du(ineq) = ::eval(constraint, m_x, gc);
             m_dual.m_gL += m_dual.m_u(ineq) * gc;
             ++ineq;
         }

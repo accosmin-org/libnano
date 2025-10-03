@@ -28,19 +28,23 @@ auto smooth(const function_t& function)
 }
 
 template <class toperator>
-auto penalty_vgrad(const function_t& function, vector_cmap_t x, vector_map_t gx, const toperator& op)
+auto penalty_eval(const function_t& function, vector_cmap_t x, vector_map_t gx, matrix_map_t hx, const toperator& op)
 {
-    auto fx = function(x, gx);
+    auto fx = function(x, gx, hx);
+    auto gc = vector_t{(gx.size() > 0 || hx.size() > 0) ? x.size() : 0};
+    auto hc = matrix_t{hx.dims()};
 
     for (const auto& constraint : function.constraints())
     {
-        auto       gc = vector_t{gx.size()}; // FIXME: is this allocation really necessary?!
-        const auto fc = ::nano::vgrad(constraint, x, gc);
+        gc.zero();
+        hc.zero();
+
+        const auto fc = ::nano::eval(constraint, x, gc, hc);
         const auto eq = is_equality(constraint);
 
         if (eq || fc > 0.0)
         {
-            fx += op(fc, gc);
+            fx += op(fc, gc, hc);
         }
     }
 
@@ -78,7 +82,7 @@ rfunction_t linear_penalty_function_t::clone() const
 
 scalar_t linear_penalty_function_t::do_eval(eval_t eval) const
 {
-    const auto op = [&](const scalar_t fc, const vector_t& gc)
+    const auto op = [&](const scalar_t fc, const vector_t& gc, [[maybe_unused]] const matrix_t& hc)
     {
         if (eval.has_grad())
         {
@@ -87,9 +91,7 @@ scalar_t linear_penalty_function_t::do_eval(eval_t eval) const
         return penalty() * std::fabs(fc);
     };
 
-    // FIXME: add hessian calculation when smooth
-
-    return penalty_vgrad(function(), eval.m_x, eval.m_gx, op);
+    return penalty_eval(function(), eval.m_x, eval.m_gx, eval.m_hx, op);
 }
 
 quadratic_penalty_function_t::quadratic_penalty_function_t(const function_t& function)
@@ -106,18 +108,20 @@ rfunction_t quadratic_penalty_function_t::clone() const
 
 scalar_t quadratic_penalty_function_t::do_eval(eval_t eval) const
 {
-    const auto op = [&](const scalar_t fc, const vector_t& gc)
+    const auto op = [&](const scalar_t fc, const vector_t& gc, const matrix_t& hc)
     {
         if (eval.has_grad())
         {
             eval.m_gx += penalty() * 2.0 * fc * gc;
         }
+        if (eval.has_hess())
+        {
+            eval.m_hx += penalty() * 2.0 * fc * hc + penalty() * 2.0 * (gc.vector() * gc.transpose());
+        }
         return penalty() * fc * fc;
     };
 
-    // FIXME: add hessian calculation
-
-    return penalty_vgrad(function(), eval.m_x, eval.m_gx, op);
+    return penalty_eval(function(), eval.m_x, eval.m_gx, eval.m_hx, op);
 }
 
 augmented_lagrangian_function_t::augmented_lagrangian_function_t(const function_t& function, const vector_t& lambda,
@@ -140,15 +144,16 @@ rfunction_t augmented_lagrangian_function_t::clone() const
 
 scalar_t augmented_lagrangian_function_t::do_eval(eval_t eval) const
 {
-    auto fx      = function()(eval.m_x, eval.m_gx);
+    auto fx      = function()(eval.m_x, eval.m_gx, eval.m_hx);
     auto ilambda = tensor_size_t{0};
     auto imiu    = tensor_size_t{0};
-    auto gc      = vector_t{size()};
+    auto gc      = vector_t{(eval.m_gx.size() > 0 || eval.m_hx.size() > 0) ? eval.m_x.size() : 0};
+    auto hc      = matrix_t{eval.m_hx.dims()};
 
     for (const auto& constraint : function().constraints())
     {
         const auto ro = penalty();
-        const auto fc = ::nano::vgrad(constraint, eval.m_x, gc);
+        const auto fc = ::nano::eval(constraint, eval.m_x, gc, hc);
         const auto eq = is_equality(constraint);
         const auto mu = eq ? m_lambda(ilambda++) : m_miu(imiu++);
 
@@ -157,7 +162,11 @@ scalar_t augmented_lagrangian_function_t::do_eval(eval_t eval) const
             fx += 0.5 * ro * (fc + mu / ro) * (fc + mu / ro);
             if (eval.has_grad())
             {
-                eval.m_gx += ro * (fc + mu / ro) * gc;
+                eval.m_gx += (ro * fc + mu) * gc;
+            }
+            if (eval.has_hess())
+            {
+                eval.m_hx += (ro * fc + mu) * hc + ro * (gc.vector() * gc.transpose());
             }
         }
     }
