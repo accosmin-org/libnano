@@ -20,7 +20,7 @@ int main(const int, char*[])
     //
     // see exercise 4.3, "Convex optimization", Boyd & Vanderberghe
     const auto xbest  = make_vector<scalar_t>(1.0, 0.5, -1.0);
-    const auto lambda = [](vector_cmap_t x, vector_map_t gx)
+    const auto lambda = [](vector_cmap_t x, vector_map_t gx, matrix_map_t hx)
     {
         static const auto P = make_matrix<scalar_t>(3, 13, 12, -2, 12, 17, 6, -2, 6, 12);
         static const auto q = make_vector<scalar_t>(-22, -14.5, 13.0);
@@ -28,6 +28,10 @@ int main(const int, char*[])
         if (gx.size() == x.size())
         {
             gx = P * x + q;
+        }
+        if (hx.rows() == x.size() && hx.cols() == x.size())
+        {
+            hx = P;
         }
         return 0.5 * x.dot(P * x) + x.dot(q) + r;
     };

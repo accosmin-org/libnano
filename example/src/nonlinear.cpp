@@ -18,16 +18,20 @@ public:
 
     rfunction_t clone() const override { return std::make_unique<objective_t>(*this); }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        assert(size() == x.size());
-        assert(size() == m_b.size());
+        const auto x  = eval.m_x;
+        const auto dx = 1.0 + 0.5 * (x - m_b).dot(x - m_b);
 
-        const auto dx = 1.0 + (x - m_b).dot(x - m_b) / 2;
-
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            gx = (x - m_b) / dx;
+            eval.m_gx = (x - m_b) / dx;
+        }
+
+        if (eval.has_hess())
+        {
+            eval.m_hx = -((x - m_b) * (x - m_b).transpose()) / square(dx);
+            eval.m_hx.diagonal().array() += 1.0 / dx;
         }
 
         return std::log(dx);
@@ -54,6 +58,9 @@ int main(const int, char*[])
 
         std::cout << std::fixed << std::setprecision(12) << "check_grad[" << (trial + 1) << "/" << trials
                   << "]: dg=" << grad_accuracy(objective, x0) << std::endl;
+
+        std::cout << std::fixed << std::setprecision(12) << "check_hess[" << (trial + 1) << "/" << trials
+                  << "]: dh=" << hess_accuracy(objective, x0) << std::endl;
     }
     std::cout << std::endl;
 

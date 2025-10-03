@@ -48,16 +48,20 @@ public:
         return std::make_unique<objective_t>(*this);
     }
 
-    scalar_t do_vgrad(vector_cmap_t x, vector_map_t gx) const override
+    scalar_t do_eval(eval_t eval) const override
     {
-        assert(size() == x.size());
-        assert(size() == m_b.size());
+        const auto x  = eval.m_x;
+        const auto dx = 1.0 + 0.5 * (x - m_b).dot(x - m_b);
 
-        const auto dx = 1 + (x - m_b).dot(x - m_b) / 2;
-
-        if (gx.size() == x.size())
+        if (eval.has_grad())
         {
-            gx = (x - m_b) / dx;
+            eval.m_gx = (x - m_b) / dx;
+        }
+
+        if (eval.has_hess())
+        {
+            eval.m_hx = -((x - m_b) * (x - m_b).transpose()) / square(dx);
+            eval.m_hx.diagonal().array() += 1.0 / dx;
         }
 
         return std::log(dx);
@@ -152,7 +156,7 @@ const auto  state = solver->minimize(objective, x0, make_stdout_logger());
 const auto& x     = state.x;
 
 std::cout << std::fixed << std::setprecision(12)
-    << "f0=" << objective.vgrad(x0, nullptr) << ", f=" << state.fx()
+    << "f0=" << objective(x0) << ", f=" << state.fx()
     << ", g=" << state.gradient_test()
     << ", x-x*=" << (state.x() - objective.b()).lpNorm<Eigen::Infinity>()
     << ", fcalls=" << state.fcalls()
