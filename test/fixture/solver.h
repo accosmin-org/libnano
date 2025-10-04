@@ -216,6 +216,7 @@ struct solver_description_t
         UTEST_CHECK(state.valid());
         UTEST_CHECK_EQUAL(state.fcalls(), function.fcalls());
         UTEST_CHECK_EQUAL(state.gcalls(), function.gcalls());
+        UTEST_CHECK_EQUAL(state.hcalls(), function.hcalls());
         if (function.constraints().empty())
         {
             UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
@@ -311,7 +312,7 @@ struct solver_description_t
         log_info(std::setprecision(10), function.name(), ": solver=", solver_id, ",fx=", state.fx(),
                  function.constraints().empty() ? scat(",gtest=", state.gradient_test()) : string_t{},
                  !function.constraints().empty() ? scat(",ktest=", state.kkt_optimality_test()) : string_t{},
-                 ",calls=", state.fcalls(), "|", state.gcalls(), ".\n");
+                 ",calls=", state.fcalls(), "|", state.gcalls(), "|", state.hcalls(), ".\n");
     }
 }
 

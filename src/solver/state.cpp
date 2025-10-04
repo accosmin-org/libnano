@@ -101,6 +101,7 @@ void solver_state_t::update_calls()
 {
     m_fcalls = m_function.fcalls();
     m_gcalls = m_function.gcalls();
+    m_hcalls = m_function.hcalls();
 }
 
 void solver_state_t::update_history()
@@ -214,7 +215,7 @@ scalar_t solver_state_t::feasibility_test() const
 
 std::ostream& nano::operator<<(std::ostream& stream, const solver_state_t& state)
 {
-    stream << "calls=" << state.fcalls() << "|" << state.gcalls();
+    stream << "calls=" << state.fcalls() << "|" << state.gcalls() << "|" << state.hcalls();
     stream << ",f=" << state.fx();
     if (state.function().smooth())
     {

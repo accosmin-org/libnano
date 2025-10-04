@@ -212,6 +212,11 @@ public:
     tensor_size_t gcalls() const { return m_gcalls; }
 
     ///
+    /// \brief returns the number of function hessian calls registered so far.
+    ///
+    tensor_size_t hcalls() const { return m_hcalls; }
+
+    ///
     /// \brief returns the optimization status.
     ///
     solver_status status() const { return m_status; }
@@ -270,6 +275,7 @@ private:
     solver_status     m_status{};  ///< optimization status
     tensor_size_t     m_fcalls{0}; ///< number of function value evaluations so far
     tensor_size_t     m_gcalls{0}; ///< number of function gradient evaluations so far
+    tensor_size_t     m_hcalls{0}; ///< number of function hessian evaluations so far
     solver_track_t    m_track;     ///< history of updates
 };
 
