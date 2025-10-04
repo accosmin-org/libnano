@@ -10,6 +10,7 @@
 #include <solver/gsample.h>
 #include <solver/interior.h>
 #include <solver/lbfgs.h>
+#include <solver/newton.h>
 #include <solver/osga.h>
 #include <solver/pdsgm.h>
 #include <solver/penalty.h>
@@ -221,6 +222,7 @@ factory_t<solver_t>& solver_t::all()
     const auto  op      = []()
     {
         manager.add<solver_gd_t>("gradient descent");
+        manager.add<solver_newton_t>("truncated newton method");
         manager.add<solver_gs_t>("gradient sampling (P-nNGS)");
         manager.add<solver_ags_t>("adaptive gradient sampling (P-nNGS + AGS)");
         manager.add<solver_gs_lbfgs_t>("gradient sampling with LBFGS-like updates (P-nNGS + LBFGS)");

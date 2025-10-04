@@ -26,6 +26,8 @@ target_sources(solver PRIVATE
     lbfgs.h
     lsearch.cpp
     lstep.cpp
+    newton.cpp
+    newton.h
     osga.cpp
     osga.h
     pdsgm.cpp

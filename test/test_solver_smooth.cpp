@@ -31,6 +31,7 @@ auto make_solver_ids()
         "gd",
         "cgd-n", "cgd-hs", "cgd-fr", "cgd-pr", "cgd-cd", "cgd-ls", "cgd-dy", "cgd-dycd", "cgd-dyhs", "cgd-frpr",
         "lbfgs",
+        "newton",
         "sr1", "dfp", "bfgs", "hoshino", "fletcher"
         // clang-format on
     };

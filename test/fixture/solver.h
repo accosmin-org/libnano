@@ -83,7 +83,7 @@ struct solver_description_t
     if (solver_id == "cgd-n" || solver_id == "cgd-hs" || solver_id == "cgd-fr" || solver_id == "cgd-pr" ||
         solver_id == "cgd-cd" || solver_id == "cgd-ls" || solver_id == "cgd-dy" || solver_id == "cgd-dycd" ||
         solver_id == "cgd-dyhs" || solver_id == "cgd-frpr" || solver_id == "lbfgs" || solver_id == "sr1" ||
-        solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher")
+        solver_id == "bfgs" || solver_id == "hoshino" || solver_id == "fletcher" || solver_id == "newton")
     {
         // NB: very fast, accurate and reliable on smooth problems.
         return solver_description_t{}
