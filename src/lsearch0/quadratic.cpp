@@ -5,7 +5,6 @@ using namespace nano;
 lsearch0_quadratic_t::lsearch0_quadratic_t()
     : lsearch0_t("quadratic")
 {
-    register_parameter(parameter_t::make_scalar("lsearch0::quadratic::beta", 1, LT, 10.0, LT, 1e+6));
     register_parameter(parameter_t::make_scalar("lsearch0::quadratic::alpha", 1, LT, 1.01, LT, 1e+6));
 }
 
@@ -16,9 +15,7 @@ rlsearch0_t lsearch0_quadratic_t::clone() const
 
 scalar_t lsearch0_quadratic_t::get(const solver_state_t& state, const vector_t& descent, const scalar_t last_step_size)
 {
-    const auto beta    = parameter("lsearch0::quadratic::beta").value<scalar_t>();
-    const auto alpha   = parameter("lsearch0::quadratic::alpha").value<scalar_t>();
-    const auto epsilon = parameter("lsearch0::epsilon").value<scalar_t>();
+    const auto alpha = parameter("lsearch0::quadratic::alpha").value<scalar_t>();
 
     scalar_t t0 = 0;
     if (last_step_size < 0.0)
@@ -27,7 +24,7 @@ scalar_t lsearch0_quadratic_t::get(const solver_state_t& state, const vector_t& 
     }
     else
     {
-        t0 = std::min(1.0, -alpha * 2.0 * std::max(m_prevf - state.fx(), beta * epsilon) / m_prevdg);
+        t0 = std::min(1.0, alpha * 2.0 * (state.fx() - m_prevf) / m_prevdg);
     }
 
     m_prevf  = state.fx();
