@@ -94,7 +94,6 @@ lsearch_t solver_t::make_lsearch() const
     auto lsearch0 = m_lsearch0->clone();
     auto lsearchk = m_lsearchk->clone();
 
-    lsearch0->parameter("lsearch0::epsilon")   = parameter("solver::epsilon").value<scalar_t>();
     lsearchk->parameter("lsearchk::tolerance") = parameter("solver::tolerance").value_pair<scalar_t>();
     return lsearch_t{std::move(lsearch0), std::move(lsearchk)};
 }

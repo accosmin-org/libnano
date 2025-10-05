@@ -9,7 +9,6 @@ using namespace nano;
 lsearch0_t::lsearch0_t(string_t id)
     : typed_t(std::move(id))
 {
-    register_parameter(parameter_t::make_scalar("lsearch0::epsilon", 0, LT, 1e-6, LT, 1));
 }
 
 factory_t<lsearch0_t>& lsearch0_t::all()
