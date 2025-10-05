@@ -57,7 +57,7 @@ solver_state_t solver_newton_t::do_minimize(const function_t& function, const ve
 
         // TODO: check the descent direction can be computed (hessian PSD)
 
-        pstate  = cstate;
+        pstate = cstate;
 
         // line-search
         const auto iter_ok = lsearch.get(cstate, descent, logger);
