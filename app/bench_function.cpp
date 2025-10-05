@@ -61,9 +61,8 @@ void eval_func(const function_t& function, table_t& table)
 
     auto& row = table.append();
     row << function.name() << fval_time << grad_time << (function.smooth() ? scat(hess_time) : string_t{"N/A"})
-        << scat(std::setprecision(12), std::fixed, grad_accuracy / static_cast<scalar_t>(trials))
-        << (function.smooth() ? scat(std::setprecision(12), std::fixed, hess_accuracy / static_cast<scalar_t>(trials))
-                              : string_t{"N/A"});
+        << (grad_accuracy / static_cast<scalar_t>(trials))
+        << (function.smooth() ? scat(hess_accuracy / static_cast<scalar_t>(trials)) : string_t{"N/A"});
 }
 
 int unsafe_main(int argc, const char* argv[])
@@ -87,7 +86,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto fconfig  = function_t::config_t{min_dims, max_dims, function_type::any};
 
     table_t table;
-    table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "f(x,g)[ns]" << "grad accuracy" << "hess accuracy";
+    table.header() << "function" << "f(x)[ns]" << "f(x,g)[ns]" << "f(x,h)[ns]" << "grad accuracy" << "hess accuracy";
     table.delim();
 
     tensor_size_t prev_size = min_dims;
