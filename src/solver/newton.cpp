@@ -45,14 +45,15 @@ solver_state_t solver_newton_t::do_minimize(const function_t& function, const ve
     auto lsearch = make_lsearch();
     auto descent = vector_t{function.size()};
     auto hessian = matrix_t{function.size(), function.size()};
+    auto solver  = Eigen::LDLT<eigen_matrix_t<scalar_t>>{};
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
         // descent direction
         function(cstate.x(), {}, hessian);
 
-        const auto solver = Eigen::LDLT<eigen_matrix_t<scalar_t>>{hessian.matrix()};
-        descent.vector()  = solver.solve(-cstate.gx());
+        solver.compute(hessian.matrix());
+        descent.vector() = solver.solve(-cstate.gx());
 
         // TODO: check the descent direction can be computed (hessian PSD)
 
