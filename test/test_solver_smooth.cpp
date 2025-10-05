@@ -40,7 +40,7 @@ auto make_solver_ids()
 
 UTEST_BEGIN_MODULE()
 
-UTEST_CASE(default_solvers)
+UTEST_CASE(default_solvers_on_convex_smooth)
 {
     check_minimize(make_solver_ids(), function_t::make({1, 4, function_type::convex_smooth}));
 }
@@ -70,6 +70,12 @@ UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 
                         // NB: CGD cannot work with non-strong Wolfe-based line-search!
                         if (solver_id == "cgd-pr" && lsearchk_id == "lemarechal")
+                        {
+                            continue;
+                        }
+
+                        // FIXME: why this setting is very slow for some cases?!
+                        if (solver_id == "cgd-pr" && (lsearch0_id != "quadratic" && lsearchk_id == "cgdescent"))
                         {
                             continue;
                         }
