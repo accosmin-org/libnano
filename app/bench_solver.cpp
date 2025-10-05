@@ -26,6 +26,7 @@ struct result_t
         , m_status(state.status())
         , m_fcalls(state.fcalls())
         , m_gcalls(state.gcalls())
+        , m_hcalls(state.hcalls())
         , m_milliseconds(milliseconds)
     {
     }
@@ -38,13 +39,14 @@ struct result_t
     solver_status m_status{solver_status::failed}; ///<
     tensor_size_t m_fcalls{0};                     ///<
     tensor_size_t m_gcalls{0};                     ///<
+    tensor_size_t m_hcalls{0};                     ///<
     int64_t       m_milliseconds{0};               ///<
 };
 
 struct solver_stats_t
 {
     explicit solver_stats_t(const size_t trials)
-        : m_stats(12, static_cast<tensor_size_t>(trials))
+        : m_stats(13, static_cast<tensor_size_t>(trials))
     {
     }
 
@@ -86,17 +88,21 @@ struct solver_stats_t
     auto gcalls() { return m_stats.tensor(8); }
     auto gcalls() const { return m_stats.tensor(8); }
 
+    ///< #hessian calls
+    auto hcalls() { return m_stats.tensor(9); }
+    auto hcalls() const { return m_stats.tensor(9); }
+
     ///< number of milliseconds
-    auto millis() { return m_stats.tensor(9); }
-    auto millis() const { return m_stats.tensor(9); }
+    auto millis() { return m_stats.tensor(10); }
+    auto millis() const { return m_stats.tensor(10); }
 
     ///< rank as ordered by the function value
-    auto ranks() { return m_stats.tensor(10); }
-    auto ranks() const { return m_stats.tensor(10); }
+    auto ranks() { return m_stats.tensor(11); }
+    auto ranks() const { return m_stats.tensor(11); }
 
     ///< relative precision to the best solver
-    auto precisions() { return m_stats.tensor(11); }
-    auto precisions() const { return m_stats.tensor(11); }
+    auto precisions() { return m_stats.tensor(12); }
+    auto precisions() const { return m_stats.tensor(12); }
 
     // clang-format on
 
@@ -112,6 +118,7 @@ struct solver_stats_t
         maxits()(itrial)     = (result.m_status == solver_status::max_iters) ? 1.0 : 0.0;
         fcalls()(itrial)     = static_cast<scalar_t>(result.m_fcalls);
         gcalls()(itrial)     = static_cast<scalar_t>(result.m_gcalls);
+        hcalls()(itrial)     = static_cast<scalar_t>(result.m_hcalls);
         millis()(itrial)     = static_cast<scalar_t>(result.m_milliseconds);
         ranks()(itrial)      = static_cast<scalar_t>(rank);
         precisions()(itrial) = precision;
@@ -129,6 +136,7 @@ struct solver_stats_t
         maxits()(itrial)     = stats.maxits().sum();
         fcalls()(itrial)     = stats.fcalls().mean();
         gcalls()(itrial)     = stats.gcalls().mean();
+        hcalls()(itrial)     = stats.hcalls().mean();
         millis()(itrial)     = stats.millis().mean();
         ranks()(itrial)      = stats.ranks().mean();
         precisions()(itrial) = stats.precisions().mean();
@@ -203,19 +211,20 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
     {
     case function_type::smooth:
     case function_type::convex_smooth:
-        header << align("log10(grad test)", 12);
+        header << align("log10(gtest)", 10);
         break;
 
     case function_type::linear_program:
     case function_type::quadratic_program:
-        header << align("log10(kkt test)", 12);
+        header << align("log10(ktest)", 10);
         break;
 
     default:
         break;
     }
     header << "errors"
-           << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls) << align("[ms]", 5);
+           << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls)
+           << align("hcalls", max_digits_calls) << align("[ms]", 5);
     table.delim();
 
     for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
@@ -248,6 +257,7 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
         print_integer(row, stat.maxits().sum());
         print_integer(row, stat.fcalls().mean());
         print_integer(row, stat.gcalls().mean());
+        print_integer(row, stat.hcalls().mean());
         print_integer(row, stat.millis().mean());
     }
 
