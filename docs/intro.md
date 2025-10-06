@@ -10,6 +10,7 @@ The project is organized as follows:
 * [test](../test) - C++ unit tests run with [ctest](https://cmake.org/cmake/help/v3.16/manual/ctest.1.html#ctest-1).
 * [docs](../docs) - documentation written in Markdown.
 * [cmake](../cmake) - various CMake utilities (e.g. to simplify building unit tests).
+* [docker](../docker) - Docker images to mirror the CI/CD enviroment for reproducible builds (e.g. clang-format, clang-tidy).
 * [scripts](../scripts) - various Bash utilities (e.g. to simplify configuring and building of the library, to download datasets or to run experiments).
 * [example](../example) - example programs used for testing the setup of the library and for showcasing some of its functionality.
 
@@ -39,6 +40,10 @@ usage: scripts/build.sh [OPTIONS]
 options:
     -h,--help
         print usage
+    --gcc
+        setup g++ compiler
+    --clang
+        setup clang++ compiler
     --lld
         setup compiler and linker flags to enable the llvm linker
     --lto
@@ -57,6 +62,8 @@ options:
         setup compiler and linker flags to enable the memory sanitizer
     --gold
         setup compiler and linker flags to enable the gold linker
+    --no-werror
+        disable treating compilation warnings as errors
     --native
         setup compiler flags to optimize for the native platform
     --libcpp
@@ -109,6 +116,8 @@ options:
         check formatting with clang-format (the code will be modified in-place)
     --check-markdown-docs
         check the markdown documentation (e.g. invalid C++ includes, invalid local links)
+    --check-source-files
+        check the source files are used properly (e.g. unreferenced files in CMake scripts)
     -D[option]
         options to pass directly to cmake build (e.g. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON)
     -G[option]
@@ -141,6 +150,9 @@ bash scripts/build.sh --suffix debug -DCMAKE_BUILD_TYPE=Debug -GNinja \
 NB: Use the ```--native``` flag when compiling for ```Release``` builds to maximize performance on a given machine. This is because Eigen3 uses vectorization internally for the linear algebra operations. Please note that the resulting binaries may not be usable on another platform.
 
 
+The commands can be prefixed with `bash docker/run.sh` and they will be run inside the default docker image used by GitHub workflows.
+
+
 #### Library design
 
 The library is designed by mapping all relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/gcc-release``` using one of the example above.
@@ -153,6 +165,7 @@ Examples:
 | solver               | description                                                               |
 |----------------------|---------------------------------------------------------------------------|
 | gd                   | gradient descent                                                          |
+| newton               | truncated newton method                                                   |
 | gs                   | gradient sampling (P-nNGS)                                                |
 | ags                  | adaptive gradient sampling (P-nNGS + AGS)                                 |
 | gs-lbfgs             | gradient sampling with LBFGS-like updates (P-nNGS + LBFGS)                |
@@ -214,7 +227,7 @@ Examples:
 | |...   | solver::patience              | 100          | 1 <= 100 <= 1000000      |
 | |...   | solver::max_evals             | 1000         | 10 <= 1000 <= 1000000000 |
 | |...   | solver::tolerance             | (0.0001,0.9) | 0 < 0.0001 < 0.9 < 1     |
-| |...   | solver::lbfgs::history        | 20           | 1 <= 20 <= 1000          |
+| |...   | solver::lbfgs::history        | 50           | 1 <= 50 <= 1000          |
 |--------|-------------------------------|--------------|--------------------------|
 | bfgs   | quasi-newton method (BFGS)                                              |
 |--------|-------------------------------|--------------|--------------------------|
@@ -229,58 +242,61 @@ Examples:
 * list the available benchmark test functions useful for comparing numerical optimization methods (solvers):
 ```
 ./build/libnano/gcc-release/app/info --list-function
-|------------------------|-------------------------------------------------------------------------------------|
-| function               | description                                                                         |
-|------------------------|-------------------------------------------------------------------------------------|
-| maxq                   | MAXQ function: f(x) = max(i, x_i^2)                                                 |
-| maxquad                | MAXQUAD function: f(x) = max(k, x.dot(A_k*x) - b_k.dot(x))                          |
-| maxhilb                | MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))                            |
-| chained_lq             | chained LQ function (see documentation)                                             |
-| chained_cb3I           | chained CB3 I function (see documentation)                                          |
-| chained_cb3II          | chained CB3 II function (see documentation)                                         |
-| trid                   | Trid function: https://www.sfu.ca/~ssurjano/trid.html                               |
-| qing                   | Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html                  |
-| kinks                  | random kinks: f(x) = sum(|x - K_i|, i)                                              |
-| cauchy                 | Cauchy function: f(x) = log(1 + x.dot(x))                                           |
-| sargan                 | Sargan function: http://infinity77.net/global_optimization/test_functions_nd_S.html |
-| powell                 | Powell function: https://www.sfu.ca/~ssurjano/powell.html                           |
-| sphere                 | sphere function: f(x) = x.dot(x)                                                    |
-| zakharov               | Zakharov function: https://www.sfu.ca/~ssurjano/zakharov.html                       |
-| quadratic              | random quadratic function: f(x) = x.dot(a) + x * A * x, where A is PD               |
-| rosenbrock             | Rosenbrock function: https://en.wikipedia.org/wiki/Test_functions_for_optimization  |
-| exponential            | exponential function: f(x) = exp(1 + x.dot(x) / D)                                  |
-| dixon-price            | Dixon-Price function: https://www.sfu.ca/~ssurjano/dixonpr.html                     |
-| chung-reynolds         | Chung-Reynolds function: f(x) = (x.dot(x))^2                                        |
-| axis-ellipsoid         | axis-parallel hyper-ellipsoid function: f(x) = sum(i*x+i^2, i=1,D)                  |
-| styblinski-tang        | Styblinski-Tang function: https://www.sfu.ca/~ssurjano/stybtang.html                |
-| schumer-steiglitz      | Schumer-Steiglitz No. 02 function: f(x) = sum(x_i^4, i=1,D)                         |
-| rotated-ellipsoid      | rotated hyper-ellipsoid function: https://www.sfu.ca/~ssurjano/rothyp.html          |
-| geometric-optimization | generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))   |
-| mse+lasso              | mean squared error (MSE) with lasso regularization                                  |
-| mae+lasso              | mean absolute error (MAE) with lasso regularization                                 |
-| hinge+lasso            | hinge loss (linear SVM) with lasso regularization                                   |
-| cauchy+lasso           | cauchy loss (robust regression) with lasso regularization                           |
-| logistic+lasso         | logistic loss (logistic regression) with lasso regularization                       |
-| mse+ridge              | mean squared error (MSE) with ridge regularization                                  |
-| mae+ridge              | mean absolute error (MAE) with ridge regularization                                 |
-| hinge+ridge            | hinge loss (linear SVM) with ridge regularization                                   |
-| cauchy+ridge           | cauchy loss (robust regression) with ridge regularization                           |
-| logistic+ridge         | logistic loss (logistic regression) with ridge regularization                       |
-| mse+elasticnet         | mean squared error (MSE) with elastic net regularization                            |
-| mae+elasticnet         | mean absolute error (MAE) with elastic net regularization                           |
-| hinge+elasticnet       | hinge loss (linear SVM) with elastic net regularization                             |
-| cauchy+elasticnet      | cauchy loss (robust regression) with elastic net regularization                     |
-| logistic+elasticnet    | logistic loss (logistic regression) with elastic net regularization                 |
-| cvx48b                 | linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition                      |
-| cvx48c                 | linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition                      |
-| cvx48d-eq              | linear program: ex. 4.8(d) - equality case, 'Convex Optimization', 2nd edition      |
-| cvx48d-ineq            | linear program: ex. 4.8(d) - inequality case, 'Convex Optimization', 2nd edition    |
-| cvx48e-eq              | linear program: ex. 4.8(e) - equality case, 'Convex Optimization', 2nd edition      |
-| cvx48e-ineq            | linear program: ex. 4.8(e) - inequality case, 'Convex Optimization', 2nd edition    |
-| cvx48f                 | linear program: ex. 4.8(f), 'Convex Optimization', 2nd edition                      |
-| cvx49                  | linear program: ex. 4.9, 'Convex Optimization', 2nd edition                         |
-| cvx410                 | linear program: ex. 4.10, 'Convex Optimization', 2nd edition                        |
-| numopt162              | quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition                  |
-| numopt1625             | quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition                 |
-|------------------------|-------------------------------------------------------------------------------------|
+|------------------------|----------------------------------------------------------------------------------------------------------|
+| function               | description                                                                                              |
+|------------------------|----------------------------------------------------------------------------------------------------------|
+| maxq                   | MAXQ function: f(x) = max(i, x_i^2)                                                                      |
+| maxquad                | MAXQUAD function: f(x) = max(k, x.dot(A_k*x) - b_k.dot(x))                                               |
+| maxhilb                | MAXHILB function: f(x) = max(i, sum(j, xj / (i + j = 1))                                                 |
+| chained_lq             | chained LQ function (see documentation)                                                                  |
+| chained_cb3I           | chained CB3 I function (see documentation)                                                               |
+| chained_cb3II          | chained CB3 II function (see documentation)                                                              |
+| trid                   | Trid function: https://www.sfu.ca/~ssurjano/trid.html                                                    |
+| qing                   | Qing function: http://benchmarkfcns.xyz/benchmarkfcns/qingfcn.html                                       |
+| kinks                  | random kinks: f(x) = sum(|x - K_i|, i)                                                                   |
+| cauchy                 | Cauchy function: f(x) = log(1 + x.dot(x))                                                                |
+| sargan                 | Sargan function: http://infinity77.net/global_optimization/test_functions_nd_S.html                      |
+| powell                 | Powell function: https://www.sfu.ca/~ssurjano/powell.html                                                |
+| sphere                 | sphere function: f(x) = x.dot(x)                                                                         |
+| zakharov               | Zakharov function: https://www.sfu.ca/~ssurjano/zakharov.html                                            |
+| quadratic              | random quadratic function: f(x) = x.dot(a) + x * A * x, where A is PD                                    |
+| rosenbrock             | Rosenbrock function: https://en.wikipedia.org/wiki/Test_functions_for_optimization                       |
+| exponential            | exponential function: f(x) = exp(1 + x.dot(x) / D)                                                       |
+| dixon-price            | Dixon-Price function: https://www.sfu.ca/~ssurjano/dixonpr.html                                          |
+| chung-reynolds         | Chung-Reynolds function: f(x) = (x.dot(x))^2                                                             |
+| axis-ellipsoid         | axis-parallel hyper-ellipsoid function: f(x) = sum(i*x+i^2, i=1,D)                                       |
+| styblinski-tang        | Styblinski-Tang function: https://www.sfu.ca/~ssurjano/stybtang.html                                     |
+| schumer-steiglitz      | Schumer-Steiglitz No. 02 function: f(x) = sum(x_i^4, i=1,D)                                              |
+| rotated-ellipsoid      | rotated hyper-ellipsoid function: https://www.sfu.ca/~ssurjano/rothyp.html                               |
+| geometric-optimization | generic geometric optimization function: f(x) = sum(i, exp(alpha_i + a_i.dot(x)))                        |
+| mse+lasso              | mean squared error (MSE) with lasso regularization                                                       |
+| mae+lasso              | mean absolute error (MAE) with lasso regularization                                                      |
+| hinge+lasso            | hinge loss (linear SVM) with lasso regularization                                                        |
+| cauchy+lasso           | cauchy loss (robust regression) with lasso regularization                                                |
+| logistic+lasso         | logistic loss (logistic regression) with lasso regularization                                            |
+| mse+ridge              | mean squared error (MSE) with ridge regularization                                                       |
+| mae+ridge              | mean absolute error (MAE) with ridge regularization                                                      |
+| hinge+ridge            | hinge loss (linear SVM) with ridge regularization                                                        |
+| cauchy+ridge           | cauchy loss (robust regression) with ridge regularization                                                |
+| logistic+ridge         | logistic loss (logistic regression) with ridge regularization                                            |
+| mse+elasticnet         | mean squared error (MSE) with elastic net regularization                                                 |
+| mae+elasticnet         | mean absolute error (MAE) with elastic net regularization                                                |
+| hinge+elasticnet       | hinge loss (linear SVM) with elastic net regularization                                                  |
+| cauchy+elasticnet      | cauchy loss (robust regression) with elastic net regularization                                          |
+| logistic+elasticnet    | logistic loss (logistic regression) with elastic net regularization                                      |
+| cvx48b                 | linear program: ex. 4.8(b), 'Convex Optimization', 2nd edition                                           |
+| cvx48c                 | linear program: ex. 4.8(c), 'Convex Optimization', 2nd edition                                           |
+| cvx48d-eq              | linear program: ex. 4.8(d) - equality case, 'Convex Optimization', 2nd edition                           |
+| cvx48d-ineq            | linear program: ex. 4.8(d) - inequality case, 'Convex Optimization', 2nd edition                         |
+| cvx48e-eq              | linear program: ex. 4.8(e) - equality case, 'Convex Optimization', 2nd edition                           |
+| cvx48e-ineq            | linear program: ex. 4.8(e) - inequality case, 'Convex Optimization', 2nd edition                         |
+| cvx48f                 | linear program: ex. 4.8(f), 'Convex Optimization', 2nd edition                                           |
+| cvx49                  | linear program: ex. 4.9, 'Convex Optimization', 2nd edition                                              |
+| cvx410                 | linear program: ex. 4.10, 'Convex Optimization', 2nd edition                                             |
+| numopt162              | quadratic program: ex. 16.2, 'Numerical optimization', 2nd edition                                       |
+| numopt1625             | quadratic program: ex. 16.25, 'Numerical optimization', 2nd edition                                      |
+| osqp1                  | random quadratic program: A.1, 'OSQP: an operator splitting solver for quadratic programs'               |
+| osqp2                  | equality constrained quadratic program: A.2, 'OSQP: an operator splitting solver for quadratic programs' |
+| osqp4                  | portfolio optimization: A.4, 'OSQP: an operator splitting solver for quadratic programs'                 |
+|------------------------|----------------------------------------------------------------------------------------------------------|
 ```

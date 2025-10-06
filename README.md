@@ -33,6 +33,7 @@ Examples:
 | `L-BFGS` | unconstrained smooth nonlinear optimization |
 | quasi-Newton methods (e.g. `BFGS`) | unconstrained smooth nonlinear optimization |
 | non-linear conjugate gradient descent (CGD) methods | unconstrained smooth nonlinear optimization |
+| truncated Newton method | unconstrained smooth nonlinear optimization |
 | optimal sub-gradient algorithm (`OSGA`) | unconstrained smooth/non-smooth nonlinear optimization |
 | proximal bundle methods (e.g. `RQB`) | unconstrained smooth/non-smooth nonlinear optimization |
 | primal-dual interior-point method | `linear and quadratic programs` |

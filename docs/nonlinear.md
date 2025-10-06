@@ -95,6 +95,7 @@ std::cout << make_table("solver", solver_t::all());
 | solver               | description                                                               |
 |----------------------|---------------------------------------------------------------------------|
 | gd                   | gradient descent                                                          |
+| newton               | truncated newton method                                                   |
 | gs                   | gradient sampling (P-nNGS)                                                |
 | ags                  | adaptive gradient sampling (P-nNGS + AGS)                                 |
 | gs-lbfgs             | gradient sampling with LBFGS-like updates (P-nNGS + LBFGS)                |
@@ -161,6 +162,7 @@ std::cout << std::fixed << std::setprecision(12)
     << ", x-x*=" << (state.x() - objective.b()).lpNorm<Eigen::Infinity>()
     << ", fcalls=" << state.fcalls()
     << ", gcalls=" << state.gcalls()
+    << ", hcalls=" << state.hcalls()
     << ", status=" << nano::scat(state.status()) << std::endl;
 ```
 
