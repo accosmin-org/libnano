@@ -212,7 +212,7 @@ struct blas24_t
         auto x = make_vector<tscalar>(dims);
         auto y = make_vector<tscalar>(dims);
 
-        store(row, 2 * dims * dims + dims, [&]() { Z.noalias() = x * y.transpose() + C; });
+        store(row, 3 * dims * dims + dims, [&]() { Z.noalias() = x * y.transpose() + C; });
     }
 };
 
