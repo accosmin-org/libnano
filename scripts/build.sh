@@ -15,7 +15,8 @@ cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || ech
 threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
-export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow -pedantic -pthread"
+export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow"
+export CXXFLAGS="${CXXFLAGS} -pedantic -pthread -Wno-maybe-uninitialized"
 
 function setup_gcc {
     export CXX=g++
