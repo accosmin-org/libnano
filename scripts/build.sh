@@ -16,10 +16,11 @@ threads=$((cores+1))
 
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -Wshadow"
-export CXXFLAGS="${CXXFLAGS} -pedantic -pthread -Wno-maybe-uninitialized"
+export CXXFLAGS="${CXXFLAGS} -pedantic -pthread"
 
 function setup_gcc {
     export CXX=g++
+    export CXXFLAGS="${CXXFLAGS} -Wno-maybe-uninitialized"
 }
 
 function setup_clang {
