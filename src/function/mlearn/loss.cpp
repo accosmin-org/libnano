@@ -97,9 +97,24 @@ void loss_hinge_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t hx)
 scalar_t loss_logistic_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
 {
     const auto samples = outputs.rows();
-    const auto edges   = (-outputs.array() * targets.array()).exp();
+    // const auto edges   = (-outputs.array() * targets.array()).exp();
 
-    return (1.0 + edges).log().sum() / static_cast<scalar_t>(samples);
+    // return edges.log1p().sum() / static_cast<scalar_t>(samples);
+
+    auto fx = 0.0;
+    for (tensor_size_t sample = 0; sample < samples; ++sample)
+    {
+        const auto output = outputs.array(sample);
+        const auto target = targets.array(sample);
+
+        for (tensor_size_t i = 0, size = output.size(); i < size; ++i)
+        {
+            const auto x = -output(i) * target(i);
+            fx += (x < 1.0) ? std::log1p(std::exp(x)) : (x + std::log1p(std::exp(-x)));
+        }
+    }
+
+    return fx / static_cast<scalar_t>(samples);
 }
 
 void loss_logistic_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx)
@@ -126,8 +141,10 @@ void loss_logistic_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_
         for (tensor_size_t i = 0, size = output.size(); i < size; ++i)
         {
             const auto x = output(i) * target(i);
+            const auto h =
+                (x < 1.0) ? (std::exp(x) / square(std::exp1p(x))) : (std::exp(-x) / square(1.0 + std::exp(-x)));
 
-            hx(sample, i, i) = 1.0 / (1.0 + std::exp(x)) / (1.0 + std::exp(-x));
+            hx(sample, i, i) = target(i) * target(i) * h;
         }
     }
 }
