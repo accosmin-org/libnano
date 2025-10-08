@@ -54,12 +54,10 @@ solver_state_t solver_newton_t::do_minimize(const function_t& function, const ve
 
         solver.compute(hessian.matrix());
         descent.vector() = solver.solve(-cstate.gx());
-
         // TODO: check the descent direction can be computed (hessian PSD)
 
-        pstate = cstate;
-
         // line-search
+        pstate             = cstate;
         const auto iter_ok = lsearch.get(cstate, descent, logger);
         if (solver_t::done_gradient_test(cstate, iter_ok, logger))
         {

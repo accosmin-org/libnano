@@ -50,7 +50,7 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     // adjust the initial step size if it produces an invalid state
     const auto state0 = state;
 
-    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), 1.0) : scalar_t(1);
+    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), 1.0) : 1.0;
     for (int i = 0; i < max_iterations && !update(state, state0, descent, step_size, logger); ++i)
     {
         step_size *= 0.3;

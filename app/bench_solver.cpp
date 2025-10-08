@@ -195,18 +195,19 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
                  const function_type fun_type)
 {
     // gather statistics per solver
+    const auto max_table_name   = size_t{64U};
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
-    if (table_name.size() > 32U)
+    if (table_name.size() > max_table_name)
     {
-        table_name = table_name.substr(0U, 24U) + "..." + table_name.substr(table_name.size() - 5U, 5U);
+        table_name = table_name.substr(0U, max_table_name - 8U) + "..." + table_name.substr(table_name.size() - 5U, 5U);
     }
 
     // display per-function statistics
     table_t table;
     auto&   header = table.header();
-    header << align(table_name, 32) << align("precision", 9) << align("rank", 4) << align("value", 12);
+    header << align(table_name, max_table_name) << align("precision", 9) << align("rank", 4) << align("value", 12);
     switch (fun_type)
     {
     case function_type::smooth:

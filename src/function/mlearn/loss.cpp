@@ -17,13 +17,13 @@ void loss_mse_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t g
     gx = delta;
 }
 
-void loss_mse_t::hx(matrix_cmap_t outputs, matrix_cmap_t, tensor3d_map_t Hx)
+void loss_mse_t::hx(matrix_cmap_t outputs, matrix_cmap_t, tensor3d_map_t hx)
 {
     const auto [samples, osize] = outputs.dims();
 
     for (tensor_size_t sample = 0; sample < samples; ++sample)
     {
-        Hx.tensor(sample) = matrix_t::identity(osize, osize);
+        hx.tensor(sample) = matrix_t::identity(osize, osize);
     }
 }
 
@@ -42,9 +42,9 @@ void loss_mae_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t g
     gx = delta.array().sign().matrix();
 }
 
-void loss_mae_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
+void loss_mae_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t hx)
 {
-    Hx.full(0.0);
+    hx.full(0.0);
 }
 
 scalar_t loss_cauchy_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
@@ -62,7 +62,7 @@ void loss_cauchy_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_
     gx = (2.0 * delta.array() / (1.0 + delta.array().square())).matrix();
 }
 
-void loss_cauchy_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx)
+void loss_cauchy_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx)
 {
     const auto samples = outputs.rows();
 
@@ -70,7 +70,7 @@ void loss_cauchy_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_ma
     {
         const auto odelta = outputs.array(sample) - targets.array(sample);
 
-        Hx.tensor(sample) = (2.0 * (1.0 - odelta.square()) / (1.0 + odelta.square()).square()).matrix().asDiagonal();
+        hx.tensor(sample) = (2.0 * (1.0 - odelta.square()) / (1.0 + odelta.square()).square()).matrix().asDiagonal();
     }
 }
 
@@ -89,9 +89,9 @@ void loss_hinge_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t
     gx = (-targets.array() * ((1.0 + edges).sign() * 0.5 + 0.5)).matrix();
 }
 
-void loss_hinge_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t Hx)
+void loss_hinge_t::hx(matrix_cmap_t, matrix_cmap_t, tensor3d_map_t hx)
 {
-    Hx.full(0.0);
+    hx.full(0.0);
 }
 
 scalar_t loss_logistic_t::fx(matrix_cmap_t outputs, matrix_cmap_t targets)
@@ -109,14 +109,25 @@ void loss_logistic_t::gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_ma
     gx = ((-targets.array() * edges) / (1.0 + edges)).matrix();
 }
 
-void loss_logistic_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx)
+void loss_logistic_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx)
 {
     const auto samples = outputs.rows();
 
     for (tensor_size_t sample = 0; sample < samples; ++sample)
     {
-        const auto oedge = (-outputs.array(sample) * targets.array(sample)).exp();
+        // const auto oedge = (-outputs.array(sample) * targets.array(sample)).exp();
+        //
+        // hx.matrix(sample) = (oedge / (1.0 + oedge).square()).matrix().asDiagonal();
 
-        Hx.tensor(sample) = (oedge / (1.0 + oedge).square()).matrix().asDiagonal();
+        const auto output = outputs.array(sample);
+        const auto target = targets.array(sample);
+
+        hx.array(sample) = 0.0;
+        for (tensor_size_t i = 0, size = output.size(); i < size; ++i)
+        {
+            const auto x = output(i) * target(i);
+
+            hx(sample, i, i) = 1.0 / (1.0 + std::exp(x)) / (1.0 + std::exp(-x));
+        }
     }
 }

@@ -75,7 +75,7 @@ void linear_model_t::eval_hess(matrix_map_t hx) const
 
     // NB: multivariate version, but harder to guarantee the expected number of free dimensions!
     // TODO: write the following operations using Eigen3 calls for improved performance
-    /*
+    /*const auto outputs = m_outputs.cols();
     const auto nparams = m_woptimum.size();
     hx.full(0.0);
     for (tensor_size_t i = 0; i < nparams; ++i)

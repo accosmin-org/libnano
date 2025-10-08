@@ -17,7 +17,7 @@ public:
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
     static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx);
 };
 
 ///
@@ -33,7 +33,7 @@ public:
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
     static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx);
 };
 
 ///
@@ -49,7 +49,7 @@ public:
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
     static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx);
 };
 
 ///
@@ -65,7 +65,7 @@ public:
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
     static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx);
 };
 
 ///
@@ -81,6 +81,6 @@ public:
 
     static scalar_t fx(matrix_cmap_t outputs, matrix_cmap_t targets);
     static void     gx(matrix_cmap_t outputs, matrix_cmap_t targets, matrix_map_t gx);
-    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t Hx);
+    static void     hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_map_t hx);
 };
 } // namespace nano
