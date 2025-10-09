@@ -140,11 +140,10 @@ void loss_logistic_t::hx(matrix_cmap_t outputs, matrix_cmap_t targets, tensor3d_
         hx.array(sample) = 0.0;
         for (tensor_size_t i = 0, size = output.size(); i < size; ++i)
         {
-            const auto x = output(i) * target(i);
+            const auto x = -target(i) * output(i);
             const auto h =
                 (x < 1.0) ? (std::exp(x) / square(1.0 + std::exp(x))) : (std::exp(-x) / square(1.0 + std::exp(-x)));
-
-            hx(sample, i, i) = target(i) * target(i) * h;
+            hx(sample, i, i) = h;
         }
     }
 }
