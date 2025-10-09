@@ -37,7 +37,7 @@ struct loss_function_t final : public function_t
         if (eval.has_grad())
         {
             m_loss->vgrad(m_target, output, map_tensor(eval.m_gx.data(), m_target.dims()));
-            UTEST_REQUIRE(eval.m_gx.all_finite());
+            UTEST_CHECK(eval.m_gx.all_finite());
         }
 
         if (eval.has_hess())
@@ -61,11 +61,11 @@ struct loss_function_t final : public function_t
                 }
             }
 
-            UTEST_REQUIRE(eval.m_hx.all_finite());
+            UTEST_CHECK(eval.m_hx.all_finite());
         }
 
         m_loss->value(m_target, output, m_values.tensor());
-        UTEST_REQUIRE(m_values.all_finite());
+        UTEST_CHECK(m_values.all_finite());
         return m_values.array().sum();
     }
 
@@ -121,7 +121,10 @@ UTEST_CASE(gradient)
                                                           static_cast<scalar_t>(cmd_max_dims - cmd_min_dims + 2);
             }
 
-            const auto max_power = (loss_id == "m-exponential" || loss_id == "s-exponential") ? 5 : 20;
+            const auto is_exponential = loss_id == "m-exponential" || loss_id == "s-exponential";
+            const auto is_savage      = loss_id == "m-savage" || loss_id == "s-savage";
+            const auto max_power      = (is_exponential || is_savage) ? 6 : 20;
+
             for (int power = 0; power <= max_power; ++power)
             {
                 auto tx = make_random_tensor<scalar_t>(make_dims(function.size()), -1.0, +1.0);
@@ -133,6 +136,10 @@ UTEST_CASE(gradient)
                 UTEST_CHECK_EQUAL(std::isfinite(f), true);
                 UTEST_CHECK_GREATER_EQUAL(f, scalar_t(0));
                 UTEST_CHECK_LESS(grad_accuracy(function, x), 5 * epsilon2<scalar_t>());
+                if (function.smooth())
+                {
+                    UTEST_CHECK_LESS(hess_accuracy(function, x), 5 * epsilon2<scalar_t>());
+                }
             }
 
             check_function(function, function_config_t{});
