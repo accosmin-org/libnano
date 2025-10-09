@@ -18,14 +18,14 @@ struct squared_hinge_t : public terror
     requires is_eigen_v<tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (1.0 - target * output).max(0).square().sum();
+        return (1.0 - target * output).max(0.0).square().sum();
     }
 
     template <class tarray, class tgarray>
     requires(is_eigen_v<tarray> && is_eigen_v<tgarray>)
     static void vgrad(const tarray& target, const tarray& output, tgarray vgrad)
     {
-        vgrad = -target * (1.0 - target * output).max(0) * 2.0;
+        vgrad = -target * (1.0 - target * output).max(0.0) * 2.0;
     }
 
     template <class tarray, class thmatrix>

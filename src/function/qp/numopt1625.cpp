@@ -20,7 +20,7 @@ quadratic_program_numopt1625_t::quadratic_program_numopt1625_t(const tensor_size
 
     this->Q() = Q;
     this->c() = c;
-    optimum(x0.array().max(l.array()).min(u.array()));
+    optimum(x0.array().max(l.array()).min(u));
 
     critical(l <= variable());
     critical(variable() <= u);

@@ -18,7 +18,7 @@ struct hinge_t : public terror
     requires is_eigen_v<tarray>
     static auto value(const tarray& target, const tarray& output)
     {
-        return (1.0 - target * output).max(0).sum();
+        return (1.0 - target * output).max(0.0).sum();
     }
 
     template <class tarray, class tgarray>
