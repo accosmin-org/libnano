@@ -462,6 +462,8 @@ int unsafe_main(int argc, const char* argv[])
         }
     }
 
+    critical(!solvers.empty(), "at least a solver needs to be selected (check lsearch0 and lsearchk selection)!");
+
     // benchmark solvers and display statistics independently per function
     auto thread_pool  = parallel::pool_t{};
     auto solver_stats = std::vector<solver_stats_t>{solvers.size(), solver_stats_t{functions.size()}};
