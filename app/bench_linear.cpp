@@ -81,9 +81,7 @@ int unsafe_main(int argc, const char* argv[])
     if (options.has("--list-linear-params"))
     {
         table_t table;
-        table.header() << "parameter"
-                       << "value"
-                       << "domain";
+        table.header() << "parameter" << "value" << "domain";
         table.delim();
         for (const auto& param : rmodel->parameters())
         {
@@ -119,12 +117,7 @@ int unsafe_main(int argc, const char* argv[])
     //      fit (and tune) on the training samples
     //      evaluate on the validation samples
     auto table = table_t{};
-    table.header() << "fold"
-                   << "optimum params"
-                   << "train error"
-                   << "valid error"
-                   << "refit error"
-                   << "test error";
+    table.header() << "fold" << "optimum params" << "train error" << "valid error" << "refit error" << "test error";
     table.delim();
 
     const auto test_samples = rdatasource->test_samples();

@@ -7,7 +7,7 @@
 #include <nano/tensor.h>
 
 #if defined(_OPENMP)
-#include <omp.h>
+    #include <omp.h>
 #endif
 
 using namespace nano;
@@ -61,7 +61,7 @@ template <class toperator>
 scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 {
     scalar_t value = 0;
-    for (tensor_size_t i = 0, size = targets.rows(); i < size; ++ i)
+    for (tensor_size_t i = 0, size = targets.rows(); i < size; ++i)
     {
         value += sti<toperator>(i, targets, outputs);
     }
@@ -83,10 +83,10 @@ template <class toperator>
 scalar_t reduce_op(const matrix_t& targets, const matrix_t& outputs)
 {
     auto       values = make_full_vector<scalar_t>(omp_get_max_threads(), 0);
-    const auto size = targets.rows();
+    const auto size   = targets.rows();
 
     #pragma omp parallel for
-    for (tensor_size_t i = 0; i < size; ++ i)
+    for (tensor_size_t i = 0; i < size; ++i)
     {
         const auto t = omp_get_thread_num();
         values(t) += sti<toperator>(i, targets, outputs);
@@ -126,12 +126,12 @@ bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_
     {
         auto targets = make_full_matrix<scalar_t>(size, 10, -1);
         auto outputs = make_random_matrix<scalar_t>(size, 10);
-        for (tensor_size_t i = 0; i < size; ++ i)
+        for (tensor_size_t i = 0; i < size; ++i)
         {
             targets(i, i % 10) = +1;
         }
 
-        scalar_t value = 0;
+        scalar_t   value = 0;
         const auto delta = measure<nanoseconds_t>([&] { value = reduce_st<toperator>(targets, outputs); }, 16);
         row1 << "1.00";
 
@@ -144,35 +144,41 @@ bool evaluate(const tensor_size_t min_size, const tensor_size_t max_size, table_
     // multi-threaded (using the thread pool)
     auto& row2 = table.append();
     row2 << scat("reduce-", toperator::name()) << scat("tpool(x", pool.size(), ")");
-    for (size_t i = 0; i < single_deltas.size(); ++ i)
+    for (size_t i = 0; i < single_deltas.size(); ++i)
     {
-        const auto deltaST = single_deltas[i];
-        const auto valueST = single_values[i];
+        const auto  deltaST = single_deltas[i];
+        const auto  valueST = single_values[i];
         const auto& targets = single_targets[i];
         const auto& outputs = single_outputs[i];
 
-        scalar_t valueMT = 0;
+        scalar_t   valueMT = 0;
         const auto deltaMT =
             measure<nanoseconds_t>([&] { valueMT = reduce_mt<toperator>(pool, targets, outputs); }, 16);
         row2 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
-        if (!close(valueST, valueMT, "tpool", epsilon1<scalar_t>())) { return false; }
+        if (!close(valueST, valueMT, "tpool", epsilon1<scalar_t>()))
+        {
+            return false;
+        }
     }
 
 #ifdef _OPENMP
     // multi-threaded (using OpenMP)
     auto& row3 = table.append();
     row3 << scat("reduce-", toperator::name()) << "openmp";
-    for (size_t i = 0; i < single_deltas.size(); ++ i)
+    for (size_t i = 0; i < single_deltas.size(); ++i)
     {
-        const auto deltaST = single_deltas[i];
-        const auto valueST = single_values[i];
+        const auto  deltaST = single_deltas[i];
+        const auto  valueST = single_values[i];
         const auto& targets = single_targets[i];
         const auto& outputs = single_outputs[i];
 
-        scalar_t valueMT = 0;
+        scalar_t   valueMT = 0;
         const auto deltaMT = measure<nanoseconds_t>([&] { valueMT = reduce_op<toperator>(targets, outputs); }, 16);
         row3 << scat(std::setprecision(2), std::fixed, deltaST / static_cast<double>(deltaMT.count()));
-        if (!close(valueST, valueMT, "openmp", epsilon1<scalar_t>())) { return false; }
+        if (!close(valueST, valueMT, "openmp", epsilon1<scalar_t>()))
+        {
+            return false;
+        }
     }
 #endif
 
@@ -199,7 +205,7 @@ int unsafe_main(int argc, const char* argv[])
     const auto cmd_max_size = std::clamp(kilo * options.get<tensor_size_t>("--max-size"), cmd_min_size, giga);
 
     table_t table;
-    auto& header = table.header();
+    auto&   header = table.header();
     header << "problem" << "method";
     for (auto size = cmd_min_size; size <= cmd_max_size; size *= 2)
     {
@@ -208,11 +214,20 @@ int unsafe_main(int argc, const char* argv[])
     table.delim();
 
     // benchmark for different problem sizes and processing chunk sizes
-    if (!evaluate<exp_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
+    if (!evaluate<exp_t>(cmd_min_size, cmd_max_size, table))
+    {
+        return EXIT_FAILURE;
+    }
     table.delim();
-    if (!evaluate<log_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
+    if (!evaluate<log_t>(cmd_min_size, cmd_max_size, table))
+    {
+        return EXIT_FAILURE;
+    }
     table.delim();
-    if (!evaluate<mse_t>(cmd_min_size, cmd_max_size, table)) { return EXIT_FAILURE; }
+    if (!evaluate<mse_t>(cmd_min_size, cmd_max_size, table))
+    {
+        return EXIT_FAILURE;
+    }
 
     // print results
     std::cout << table;

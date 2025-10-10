@@ -53,11 +53,7 @@ auto benchmark_flatten(const string_t& generator_id, const dataset_t& dataset)
 
     // vary the sample batch size
     auto table = table_t{};
-    table.header() << "generator"
-                   << "batch size"
-                   << "build [time]"
-                   << "flatten [time]"
-                   << "targets [time]";
+    table.header() << "generator" << "batch size" << "build [time]" << "flatten [time]" << "targets [time]";
     table.delim();
     for (const auto batch : {10, 20, 50, 100, 200, 500, 1000, 2000, 5000})
     {

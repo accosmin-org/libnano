@@ -177,7 +177,7 @@ auto make_solver_name(const rsolver_t& solver)
              : solver->type_id();
 }
 
-using points_t = std::vector<vector_t>;
+using points_t  = std::vector<vector_t>;
 using results_t = std::vector<result_t>;
 using solvers_t = std::vector<rsolver_t>;
 
@@ -223,8 +223,7 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
     default:
         break;
     }
-    header << "errors"
-           << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls)
+    header << "errors" << "maxits" << align("fcalls", max_digits_calls) << align("gcalls", max_digits_calls)
            << align("hcalls", max_digits_calls) << align("[ms]", 5);
     table.delim();
 
@@ -399,15 +398,15 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // check arguments and options
-    const auto min_dims = options.get<tensor_size_t>("--min-dims");
-    const auto max_dims = options.get<tensor_size_t>("--max-dims");
+    const auto min_dims     = options.get<tensor_size_t>("--min-dims");
+    const auto max_dims     = options.get<tensor_size_t>("--max-dims");
     const auto trials       = options.get<tensor_size_t>("--trials");
-    const auto fun_type = nano::from_string<function_type>(options.get<string_t>("--function-type"));
-    const auto log_dir = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
-    const auto fregex  = std::regex(options.get<string_t>("--function"));
-    const auto sregex  = std::regex(options.get<string_t>("--solver"));
-    const auto l0regex = std::regex(options.get<string_t>("--lsearch0"));
-    const auto lkregex = std::regex(options.get<string_t>("--lsearchk"));
+    const auto fun_type     = nano::from_string<function_type>(options.get<string_t>("--function-type"));
+    const auto log_dir      = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
+    const auto fregex       = std::regex(options.get<string_t>("--function"));
+    const auto sregex       = std::regex(options.get<string_t>("--solver"));
+    const auto l0regex      = std::regex(options.get<string_t>("--lsearch0"));
+    const auto lkregex      = std::regex(options.get<string_t>("--lsearchk"));
     const auto lsearch0_ids = options.has("--lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
     const auto lsearchk_ids = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
 

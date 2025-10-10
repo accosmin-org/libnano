@@ -50,7 +50,7 @@ void eval_func(const function_t& function, table_t& table)
 
     scalar_t grad_accuracy = 0;
     scalar_t hess_accuracy = 0;
-    for (size_t i = 0; i < trials; ++ i)
+    for (size_t i = 0; i < trials; ++i)
     {
         grad_accuracy += ::nano::grad_accuracy(function, make_random_vector<scalar_t>(dims));
         if (function.smooth())

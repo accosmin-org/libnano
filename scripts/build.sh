@@ -404,6 +404,7 @@ function call_clang_tidy_all {
 
 function call_clang_format {
     files=$(find \
+        ${basedir}/app \
         ${basedir}/src \
         ${basedir}/test \
         ${basedir}/example \
@@ -439,7 +440,7 @@ function call_clang_format {
 function call_sonar {
     cd ${basedir}
 
-    export SONAR_SCANNER_VERSION=5.0.1.3006
+    export SONAR_SCANNER_VERSION=7.3.0.5186
     export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
     curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
         https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
@@ -455,7 +456,7 @@ function call_sonar {
     sonar-scanner \
         -Dsonar.organization=accosmin \
         -Dsonar.projectKey=libnano \
-        -Dsonar.sources=${basedir}/src,${basedir}/include/nano \
+        -Dsonar.sources=${basedir}/src,${basedir}/include/nano,${basedir}/app,${basedir}/example \
         -Dsonar.projectVersion=0.0.1 \
         -Dsonar.python.version=3 \
         -Dsonar.cfamily.compile-commands=${libnanodir}/compile_commands.json \
