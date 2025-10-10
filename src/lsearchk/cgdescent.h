@@ -7,8 +7,11 @@ namespace nano
 ///
 /// \brief CG_DESCENT:
 ///
-/// see (1) "A new conjugate gradient method with guaranteed descent and an efficient line search", by Hager, Zhang,
-/// 2005 see (2) "Algorithm 851: CG_DESCENT, a Conjugate Gradient Method with Guaranteed Descent", by Hager, Zhang, 2006
+/// see (1) "A new conjugate gradient method with guaranteed descent and an efficient line search",
+///         by Hager, Zhang, 2005
+///
+/// see (2) "Algorithm 851: CG_DESCENT, a Conjugate Gradient Method with Guaranteed Descent",
+///         by Hager, Zhang, 2006
 ///
 /// NB: The implementation follows the notation from (1).
 ///

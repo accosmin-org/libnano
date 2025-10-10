@@ -174,7 +174,7 @@ lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0
     scalar_t stmin = 0;
     scalar_t stmax = stp + stp * 4;
 
-    scalar_t width  = stpmax() - stpmin();
+    scalar_t width  = lsearch_step_t::stpmax() - lsearch_step_t::stpmin();
     scalar_t width1 = 2 * width;
 
     scalar_t stx = 0;
@@ -201,11 +201,11 @@ lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0
         {
             return {true, stp};
         }
-        if (stp >= stpmax() && f <= ftest && g <= gtest)
+        if (stp >= lsearch_step_t::stpmax() && f <= ftest && g <= gtest)
         {
             return {true, stp};
         }
-        if (stp <= stpmin() && (f > ftest || g >= gtest))
+        if (stp <= lsearch_step_t::stpmin() && (f > ftest || g >= gtest))
         {
             return {true, stp};
         }
@@ -260,7 +260,7 @@ lsearchk_t::result_t lsearchk_morethuente_t::do_get(const solver_state_t& state0
         }
 
         // Force the step to be within the bounds stpmax and stpmin
-        stp = std::clamp(stp, stpmin(), stpmax());
+        stp = std::clamp(stp, lsearch_step_t::stpmin(), lsearch_step_t::stpmax());
 
         // If further progress is not possible, let stp be the best point obtained during the search
         if ((brackt && (stp <= stmin || stp >= stmax)) || (brackt && stmax - stmin <= xtol * stmax))

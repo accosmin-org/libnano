@@ -50,7 +50,7 @@ lsearchk_t::result_t lsearchk_t::get(solver_state_t& state, const vector_t& desc
     // adjust the initial step size if it produces an invalid state
     const auto state0 = state;
 
-    step_size = std::isfinite(step_size) ? std::clamp(step_size, stpmin(), 1.0) : 1.0;
+    step_size = std::isfinite(step_size) ? std::clamp(step_size, lsearch_step_t::stpmin(), 1.0) : 1.0;
     for (int i = 0; i < max_iterations && !update(state, state0, descent, step_size, logger); ++i)
     {
         step_size *= 0.3;
@@ -85,22 +85,14 @@ bool lsearchk_t::update(solver_state_t& state, const solver_state_t& state0, con
                 ",wolfe=", state.has_wolfe(state0, descent, c2),
                 ",swolfe=", state.has_strong_wolfe(state0, descent, c2), ".\n");
 
+    assert(step_size > 0.0);
+
     return ok;
 }
 
 void lsearchk_t::type(const lsearch_type type)
 {
     m_type = type;
-}
-
-scalar_t lsearchk_t::stpmin()
-{
-    return scalar_t(10) * std::numeric_limits<scalar_t>::epsilon();
-}
-
-scalar_t lsearchk_t::stpmax()
-{
-    return scalar_t(1) / stpmin();
 }
 
 lsearch_type lsearchk_t::type() const

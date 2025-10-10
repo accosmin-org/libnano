@@ -79,6 +79,16 @@ public:
     ///
     static scalar_t interpolate(const lsearch_step_t& u, const lsearch_step_t& v, interpolation_type);
 
+    ///
+    /// \brief minimum allowed line-search step.
+    ///
+    static scalar_t stpmin();
+
+    ///
+    /// \brief maximum allowed line-search step.
+    ///
+    static scalar_t stpmax();
+
     // attributes
     scalar_t t{0}; ///< line-search step
     scalar_t f{0}; ///< line-search function value

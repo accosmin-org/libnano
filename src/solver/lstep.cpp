@@ -2,6 +2,14 @@
 
 using namespace nano;
 
+namespace
+{
+scalar_t clamp(const scalar_t t)
+{
+    return std::clamp(t, lsearch_step_t::stpmin(), lsearch_step_t::stpmax());
+}
+} // namespace
+
 lsearch_step_t::lsearch_step_t(const scalar_t tt, const scalar_t ff, const scalar_t dg)
     : t(tt)
     , f(ff)
@@ -18,7 +26,7 @@ scalar_t lsearch_step_t::cubic(const lsearch_step_t& u, const lsearch_step_t& v)
 {
     const auto d1 = u.g + v.g - 3.0 * (u.f - v.f) / (u.t - v.t);
     const auto d2 = (v.t > u.t ? +1.0 : -1.0) * std::sqrt(d1 * d1 - u.g * v.g);
-    return v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2.0 * d2);
+    return ::clamp(v.t - (v.t - u.t) * (v.g + d2 - d1) / (v.g - u.g + 2.0 * d2));
 }
 
 scalar_t lsearch_step_t::quadratic(const lsearch_step_t& u, const lsearch_step_t& v, bool* convexity)
@@ -29,12 +37,12 @@ scalar_t lsearch_step_t::quadratic(const lsearch_step_t& u, const lsearch_step_t
     {
         *convexity = (dt * u.g - df) > 0.0;
     }
-    return u.t - 0.5 * u.g * dt / (u.g - df / dt);
+    return ::clamp(u.t - 0.5 * u.g * dt / (u.g - df / dt));
 }
 
 scalar_t lsearch_step_t::secant(const lsearch_step_t& u, const lsearch_step_t& v)
 {
-    return (v.t * u.g - u.t * v.g) / (u.g - v.g);
+    return ::clamp((v.t * u.g - u.t * v.g) / (u.g - v.g));
 }
 
 scalar_t lsearch_step_t::bisection(const lsearch_step_t& u, const lsearch_step_t& v)
@@ -67,4 +75,14 @@ scalar_t lsearch_step_t::interpolate(const lsearch_step_t& u, const lsearch_step
     default:
         return tb;
     }
+}
+
+scalar_t lsearch_step_t::stpmin()
+{
+    return 10.0 * std::numeric_limits<scalar_t>::epsilon();
+}
+
+scalar_t lsearch_step_t::stpmax()
+{
+    return 1.0 / stpmin();
 }

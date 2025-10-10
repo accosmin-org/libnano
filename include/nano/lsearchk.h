@@ -63,16 +63,6 @@ public:
     result_t get(solver_state_t&, const vector_t& descent, scalar_t initial_step_size, const logger_t&) const;
 
     ///
-    /// \brief minimum allowed line-search step.
-    ///
-    static scalar_t stpmin();
-
-    ///
-    /// \brief maximum allowed line-search step.
-    ///
-    static scalar_t stpmax();
-
-    ///
     /// \brief returns the objective type optimized by the line-search implementation.
     ///
     lsearch_type type() const;

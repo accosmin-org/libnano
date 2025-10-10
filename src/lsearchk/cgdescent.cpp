@@ -103,7 +103,8 @@ void lsearchk_cgdescent_t::move(interval_t& interval, const scalar_t step_size, 
 
 void lsearchk_cgdescent_t::updateU(interval_t& interval, const params_t& params, const logger_t& logger) const
 {
-    for (; params.m_max_iterations > 0 && (interval.b.t - interval.a.t) > stpmin(); --params.m_max_iterations)
+    for (; params.m_max_iterations > 0 && (interval.b.t - interval.a.t) > lsearch_step_t::stpmin();
+         --params.m_max_iterations)
     {
         move(interval, (1 - params.m_theta) * interval.a.t + params.m_theta * interval.b.t, logger);
         if (!interval.c.valid())
@@ -214,7 +215,7 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
     };
 
     // iteratively update the search interval [a, b]
-    for (int i = 0; i < params.m_max_iterations && (interval.b.t - interval.a.t) > stpmin(); ++i)
+    for (int i = 0; i < params.m_max_iterations && (interval.b.t - interval.a.t) > lsearch_step_t::stpmin(); ++i)
     {
         const auto& a = interval.a;
         const auto& b = interval.b;
