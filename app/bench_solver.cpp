@@ -195,7 +195,7 @@ void print_table(string_t table_name, const solvers_t& solvers, const std::vecto
                  const function_type fun_type)
 {
     // gather statistics per solver
-    const auto max_table_name   = size_t{64U};
+    const auto max_table_name   = size_t{42U};
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
