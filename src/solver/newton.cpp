@@ -7,10 +7,6 @@ solver_newton_t::solver_newton_t()
     : solver_t("newton")
 {
     parameter("solver::tolerance") = std::make_tuple(1e-1, 9e-1);
-
-    // TODO: backtracking line-search should work as well?!
-    // lsearch0("quadratic");
-    // lsearchk("cgdescent");
 }
 
 rsolver_t solver_newton_t::clone() const
@@ -47,14 +43,13 @@ solver_state_t solver_newton_t::do_minimize(const function_t& function, const ve
     auto hessian = matrix_t{function.size(), function.size()};
     auto solver  = Eigen::LDLT<eigen_matrix_t<scalar_t>>{};
 
-    while (function.fcalls() + function.gcalls() < max_evals)
+    while (function.fcalls() + function.gcalls() + function.hcalls() < max_evals)
     {
         // descent direction
         function(cstate.x(), {}, hessian);
 
         solver.compute(hessian.matrix());
         descent.vector() = solver.solve(-cstate.gx());
-        // TODO: check the descent direction can be computed (hessian PSD)
 
         // line-search
         pstate             = cstate;
