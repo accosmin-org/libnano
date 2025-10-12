@@ -192,10 +192,9 @@ auto& print_integer(row_t& row, const scalar_t value)
 }
 
 void print_table(string_t table_name, const solvers_t& solvers, const std::vector<solver_stats_t>& stats,
-                 const function_type fun_type)
+                 const function_type fun_type, const size_t max_table_name = 32U)
 {
     // gather statistics per solver
-    const auto max_table_name   = size_t{42U};
     const auto max_evals        = solvers[0U]->parameter("solver::max_evals").value<int>();
     const auto max_digits_calls = static_cast<size_t>(std::log10(max_evals)) + 1U;
 
@@ -306,7 +305,7 @@ auto minimize_all(parallel::pool_t& pool, const function_t& function, const solv
 }
 
 auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers_t& solvers, const size_t trials,
-               const string_t& log_dir, const function_type fun_type)
+               const string_t& log_dir, const function_type fun_type, const size_t max_table_name)
 {
     // generate a fixed set of random initial points
     points_t x0s(trials);
@@ -367,7 +366,7 @@ auto benchmark(parallel::pool_t& pool, const function_t& function, const solvers
     }
 
     // display per-function statistics
-    print_table(function.name(), solvers, stats, fun_type);
+    print_table(function.name(), solvers, stats, fun_type, max_table_name);
 
     return stats;
 }
@@ -390,6 +389,7 @@ int unsafe_main(int argc, const char* argv[])
         "function type, one of [convex, smooth, convex-smooth, convex-nonsmooth, linear-program, quadratic-program]",
         "convex-smooth");
     cmdline.add("--log-dir", "directory to log the optimization trajectories");
+    cmdline.add("--max-table-name", "maximum table header name in characters", 32);
 
     const auto options = cmdline.process(argc, argv);
     if (cmdline.handle(options))
@@ -398,17 +398,18 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // check arguments and options
-    const auto min_dims     = options.get<tensor_size_t>("--min-dims");
-    const auto max_dims     = options.get<tensor_size_t>("--max-dims");
-    const auto trials       = options.get<tensor_size_t>("--trials");
-    const auto fun_type     = nano::from_string<function_type>(options.get<string_t>("--function-type"));
-    const auto log_dir      = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
-    const auto fregex       = std::regex(options.get<string_t>("--function"));
-    const auto sregex       = std::regex(options.get<string_t>("--solver"));
-    const auto l0regex      = std::regex(options.get<string_t>("--lsearch0"));
-    const auto lkregex      = std::regex(options.get<string_t>("--lsearchk"));
-    const auto lsearch0_ids = options.has("--lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
-    const auto lsearchk_ids = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
+    const auto min_dims       = options.get<tensor_size_t>("--min-dims");
+    const auto max_dims       = options.get<tensor_size_t>("--max-dims");
+    const auto trials         = options.get<tensor_size_t>("--trials");
+    const auto fun_type       = nano::from_string<function_type>(options.get<string_t>("--function-type"));
+    const auto log_dir        = options.has("--log-dir") ? options.get("--log-dir") : string_t{};
+    const auto fregex         = std::regex(options.get<string_t>("--function"));
+    const auto sregex         = std::regex(options.get<string_t>("--solver"));
+    const auto l0regex        = std::regex(options.get<string_t>("--lsearch0"));
+    const auto lkregex        = std::regex(options.get<string_t>("--lsearchk"));
+    const auto lsearch0_ids   = options.has("--lsearch0") ? lsearch0_t::all().ids(l0regex) : strings_t{""};
+    const auto lsearchk_ids   = options.has("--lsearchk") ? lsearchk_t::all().ids(lkregex) : strings_t{""};
+    const auto max_table_name = options.get<size_t>("--max-table-name");
 
     // clang-format off
     critical(
@@ -472,7 +473,7 @@ int unsafe_main(int argc, const char* argv[])
     {
         const auto& function = functions[ifunction];
         const auto  funstats =
-            benchmark(thread_pool, *function, solvers, static_cast<size_t>(trials), log_dir, fun_type);
+            benchmark(thread_pool, *function, solvers, static_cast<size_t>(trials), log_dir, fun_type, max_table_name);
         for (size_t isolver = 0U; isolver < solvers.size(); ++isolver)
         {
             const auto& stats = funstats[isolver];
@@ -481,7 +482,7 @@ int unsafe_main(int argc, const char* argv[])
     }
 
     // display global statistics
-    print_table("solver", solvers, solver_stats, fun_type);
+    print_table("solver", solvers, solver_stats, fun_type, max_table_name);
 
     // OK
     return EXIT_SUCCESS;
