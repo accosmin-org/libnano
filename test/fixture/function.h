@@ -25,7 +25,6 @@ template <class... targs>
     std::vector<vector_t> vectors;
     vectors.emplace_back(make_random_x0(function, scale));
     vectors.emplace_back(make_full_vector<scalar_t>(function.size(), 0.0));
-
     return vectors;
 }
 

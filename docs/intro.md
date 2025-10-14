@@ -155,7 +155,7 @@ The commands can be prefixed with `bash docker/run.sh` and they will be run insi
 
 #### Library design
 
-The library is designed by mapping all relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/gcc-release``` using one of the example above.
+The library is designed by mapping the relevant concepts and algorithms in numerical optimization and machine learning to proper interfaces. The available implementations are fully parametrizable and are all registered to extendable factories. These can be easily discovered using the builtin command line utility [app/info](../app/info.cpp) assumed in the following examples to be built in the folder ```build/libnano/gcc-release``` using one of the example above.
 
 Examples:
 * list the available numerical optimization algorithms (solvers):

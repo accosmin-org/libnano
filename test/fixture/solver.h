@@ -356,3 +356,15 @@ struct solver_description_t
 
     check_minimize(solvers, function);
 }
+
+[[maybe_unused]] static void check_minimize(const strings_t& solver_ids, const function_t& function, const vector_t& x0)
+{
+    auto solvers = rsolvers_t{};
+    solvers.reserve(solver_ids.size());
+    for (const auto& solver_id : solver_ids)
+    {
+        solvers.emplace_back(make_solver(solver_id));
+    }
+
+    check_minimize(solvers, function, x0);
+}

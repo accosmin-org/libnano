@@ -147,7 +147,7 @@ solver_state_t solver_quasi_t::do_minimize(const function_t& function, const vec
         update(pstate, cstate, H);
     }
 
-    return cstate.valid() ? cstate : pstate;
+    return choose(cstate, pstate);
 }
 
 solver_quasi_dfp_t::solver_quasi_dfp_t()

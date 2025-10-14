@@ -215,6 +215,14 @@ void solver_t::warn_constrained(const function_t& function, const logger_t& logg
     }
 }
 
+solver_state_t solver_t::choose(solver_state_t& curr, solver_state_t& prev)
+{
+    curr.update_calls();
+    prev.update_calls();
+
+    return curr.valid() ? curr : prev;
+}
+
 factory_t<solver_t>& solver_t::all()
 {
     static auto manager = factory_t<solver_t>{};

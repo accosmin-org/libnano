@@ -60,5 +60,5 @@ solver_state_t solver_newton_t::do_minimize(const function_t& function, const ve
         }
     }
 
-    return cstate.valid() ? cstate : pstate;
-} // LCOV_EXCL_LINE
+    return choose(cstate, pstate);
+}

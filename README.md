@@ -19,12 +19,12 @@
 
 ### Description
 
-Libnano implements parameter-free and flexible machine learning algorithms complemented by an extensive collection of numerical optimization algorithms. The implementation is `cross-platform` (tested on recent versions of Linux, macOS and Windows) with `minimal dependencies` (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
+Libnano implements numerical optimization algorithms and flexible machine learning models. The implementation is `cross-platform` (tested on recent versions of Linux, macOS and Windows) with `minimal dependencies` (standard library and [Eigen3](https://eigen.tuxfamily.org)) and it follows recent C++ standards and core guidelines. The library uses modern [CMake](https://cmake.org/) and as such it is easy to install and to package.
 
 
 ### Numerical optimization module
 
-The library implements `state-of-the-art algorithms for both unconstrained and constrained numerical optimization problems`. Additionally builtin test functions of varying number of dimensions are provided for benchmarking these algorithms. Some of these test functions are specific to ML applications like logistic regression or multivariate linear regression with various loss functions and synthetic data.
+The library implements `state-of-the-art algorithms for both unconstrained and constrained numerical optimization problems`. Additionally builtin test functions of varying number of dimensions are provided to test and to benchmark these algorithms. Some of these test functions are specific to ML applications like logistic regression or multivariate linear regression with various loss functions and synthetic data.
 
 Examples:
 
@@ -32,13 +32,11 @@ Examples:
 | --------- | ----------- |
 | `L-BFGS` | unconstrained smooth nonlinear optimization |
 | quasi-Newton methods (e.g. `BFGS`) | unconstrained smooth nonlinear optimization |
-| non-linear conjugate gradient descent (CGD) methods | unconstrained smooth nonlinear optimization |
+| non-linear conjugate gradient methods (`CGD`) | unconstrained smooth nonlinear optimization |
 | truncated Newton method | unconstrained smooth nonlinear optimization |
 | optimal sub-gradient algorithm (`OSGA`) | unconstrained smooth/non-smooth nonlinear optimization |
 | proximal bundle methods (e.g. `RQB`) | unconstrained smooth/non-smooth nonlinear optimization |
-| primal-dual interior-point method | `linear and quadratic programs` |
-| penalty methods | constrained nonlinear optimization |
-| `augmented lagrangian` method | constrained nonlinear optimization |
+| primal-dual interior-point method (`IPM`) | linear and quadratic programming |
 
 
 ### Machine learning module
@@ -57,7 +55,7 @@ In particular the following requirements were considered when designing the API:
 
 * the `hyper-parameters to regularize ML models are automatically tuned` using standard model evaluation protocols (e.g. cross-validation). The values of the hyper-parameters are fixed a-priori to reduce the risk of overfitting the validation dataset or of adjusting the parameter grid based on the results on the test dataset. The user can override the tuning strategy (e.g. local search) and the evaluation protocol (e.g. cross-validation, bootstrapping) using appropriate interfaces. For example the builtin parameter grid is adapted to standard regularization methods of linear models (e.g. like in lasso, ridge, elastic net). Note that models with few hyper-parameters are prefered as they are simpler to understand and tune.
 
-* `gradient boosting models should work with arbitrary weak learners`. Standard weak learners (e.g. decision trees, decision stumps, lool-up-tables, linear models) are builtin. The user can implement new weak learners using the appropriate interface.
+* `gradient boosting models should work with arbitrary weak learners`. Standard weak learners (e.g. decision trees, decision stumps, look-up-tables, linear models) are builtin. The user can implement new weak learners using the appropriate interface.
 
 Note that the library makes heavy use of its own implementation of `tensors of arbitrary rank and scalar type` designed for machine learning applications. This uses Eigen3 as backend and as such fast and easy-to-use linear algebra operations are readily available.
 

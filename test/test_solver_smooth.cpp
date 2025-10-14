@@ -45,6 +45,14 @@ UTEST_CASE(default_solvers_on_convex_smooth)
     check_minimize(make_solver_ids(), function_t::make({1, 4, function_type::convex_smooth}));
 }
 
+UTEST_CASE(default_solvers_on_convex_smooth_regression1)
+{
+    const auto function = function_t::all().get("exponential")->make(1);
+    const auto x0       = make_vector<scalar_t>(-0.9964325451912027);
+
+    check_minimize(make_solver_ids(), *function, x0);
+}
+
 UTEST_CASE(best_solvers_with_lsearches_on_smooth)
 {
     for (const auto& function : function_t::make({4, 4, function_type::smooth}))

@@ -37,7 +37,7 @@ public:
     result_t do_get(const solver_state_t&, const vector_t&, scalar_t, solver_state_t&, const logger_t&) const override;
 
 private:
-    void move(interval_t&, scalar_t step_size, const logger_t&) const;
+    bool move(interval_t&, scalar_t step_size, const logger_t&) const;
     void update(interval_t&, const params_t&, const logger_t&) const;
     void updateU(interval_t&, const params_t&, const logger_t&) const;
     void bracket(interval_t&, const params_t&, const logger_t&) const;

@@ -120,5 +120,5 @@ solver_state_t solver_lbfgs_t::do_minimize(const function_t& function, const vec
         }
     }
 
-    return cstate.valid() ? cstate : pstate;
+    return choose(cstate, pstate);
 }

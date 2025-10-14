@@ -13,7 +13,7 @@ REM set VCPKG_INSTALLATION_ROOT=C:\Users\accos\vcpkg
 REM set Eigen3_DIR=%VCPKG_INSTALLATION_ROOT%\installed\x64-windows\share\eigen3
 
 set cmake_options=-DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake ^
-    -DCMAKE_CXX_FLAGS="/W4 /WX /bigobj /EHsc /wd4251 /wd4702 /MP" ^
+    -DCMAKE_CXX_FLAGS="/W4 /WX /bigobj /EHsc /wd4251 /wd4702 /MP /arch:AVX2" ^
     -DCMAKE_CONFIGURATION_TYPES="Debug;Release"
 
 cd %basedir%
@@ -88,6 +88,8 @@ REM ----------------------------------------------------------------------------
 :config
 REM ---------------------------------------------------------------------------------
 cd %basedir%
+git -C %VCPKG_INSTALLATION_ROOT% pull || exit /B 1
+vcpkg update
 cmake -H%basedir% -B%libnanodir% %cmake_options% ^
     -DCMAKE_INSTALL_RPATH=%installdir%\lib ^
     -DCMAKE_INSTALL_PREFIX=%installdir% || exit /B 1

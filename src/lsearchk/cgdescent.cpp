@@ -95,10 +95,10 @@ rlsearchk_t lsearchk_cgdescent_t::clone() const
     return std::make_unique<lsearchk_cgdescent_t>(*this);
 }
 
-void lsearchk_cgdescent_t::move(interval_t& interval, const scalar_t step_size, const logger_t& logger) const
+bool lsearchk_cgdescent_t::move(interval_t& interval, const scalar_t step_size, const logger_t& logger) const
 {
     interval.step_size = step_size;
-    lsearchk_t::update(interval.c, interval.state0, interval.descent, interval.step_size, logger);
+    return lsearchk_t::update(interval.c, interval.state0, interval.descent, interval.step_size, logger);
 }
 
 void lsearchk_cgdescent_t::updateU(interval_t& interval, const params_t& params, const logger_t& logger) const
@@ -204,7 +204,12 @@ lsearchk_t::result_t lsearchk_cgdescent_t::do_get(const solver_state_t& state0, 
             return false;
         }
 
-        move(interval, t, logger);
+        if (!move(interval, t, logger))
+        {
+            // interpolation failed, go on with bisection?!
+            return false;
+        }
+
         if (interval.done(params.m_c1, params.m_c2, params.m_epsilonk))
         {
             return true;

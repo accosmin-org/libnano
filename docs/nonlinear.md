@@ -190,7 +190,7 @@ std::cout << make_table("lsearchk", lsearchk_t::all());
 #### Examples
 
 
-A working example for constructing and minimizing an objective function can be found in the [example](../example/src/nonlinear.cpp). The source shows additionally how to:
+A working example for constructing and minimizing an objective function can be found in the [example](../example/src/nonlinear.cpp). The source shows how to:
 * compute objective function values at various points,
 * compute the accuracy of the gradient using central finite difference,
 * retrieve and configure the solver,
@@ -204,64 +204,98 @@ Additionally the command line utility [app/bench_solver](../app/bench_solver.cpp
 ##### Compare solvers on convex smooth problems
 
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
-    --solver "gd|cgd-pr|lbfgs|bfgs" \
-    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 8
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| solver                           | precision | rank | value        | grad test    | errors | maxits | fcalls | gcalls | [ms]  |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| lbfgs [quadratic,cgdescent]      | -6.9420   | 2.56 | N/A          | 2.58606e-08  | 0      | 0      | 49     | 49     | 0     |
-| bfgs [quadratic,cgdescent]       | -6.9147   | 2.86 | N/A          | 3.18915e-08  | 0      | 0      | 38     | 38     | 12    |
-| cgd-pr [quadratic,cgdescent]     | -6.7318   | 2.40 | N/A          | 2.43024e-08  | 0      | 0      | 106    | 106    | 0     |
-| gd [quadratic,cgdescent]         | -6.1569   | 2.19 | N/A          | 0.0192149    | 0      | 253    | 472    | 472    | 1     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+./build/libnano/gcc-release/app/bench_solver \
+    --min-dims 100 --max-dims 100 --function-type convex-smooth \
+    --solver "gd|cgd-pr|lbfgs|bfgs|hoshino|fletcher|newton" \
+    --trials 20 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 11
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | log10(gtest) | errors | maxits | fcalls | gcalls | hcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| newton [quadratic,cgdescent]     | -7.0000   | 2.45 | N/A          | -11.8102     | 0      | 0      | 6      | 3      | 2      | 3     |
+| cgd-pr [quadratic,cgdescent]     | -7.0000   | 4.03 | N/A          | -8.52384     | 0      | 0      | 34     | 34     | 0      | 1     |
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 4.25 | N/A          | -9.84792     | 0      | 0      | 24     | 24     | 0      | 1     |
+| bfgs [quadratic,cgdescent]       | -7.0000   | 4.13 | N/A          | -8.65299     | 0      | 0      | 35     | 35     | 0      | 6     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 4.08 | N/A          | -8.91487     | 0      | 0      | 38     | 38     | 0      | 9     |
+| fletcher [quadratic,cgdescent]   | -7.0000   | 4.46 | N/A          | -8.84036     | 0      | 0      | 38     | 38     | 0      | 5     |
+| gd [quadratic,cgdescent]         | -6.9496   | 4.60 | N/A          | -8.09401     | 0      | 295    | 373    | 373    | 0      | 17    |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
 ```
-The results are typical: the BFGS algorithm is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the CGD and L-BFGS algorithms are fairly close. The steepest gradient descent method needs as expected many more iterations to converge. Note that BFGS scales quadratically with the problem size, while CGD and L-BFGS scale linearly and are thus recommended for very large problems.
+The results are typical: the truncated Newton method is faster in terms of function value and gradient evaluations, but it requires the most in terms of processing time while the quasi-Newton methods and CGD and L-BFGS algorithms are fairly close. The steepest gradient descent method needs as expected many more iterations to converge. Note that BFGS scales quadratically with the problem size, while CGD and L-BFGS scale linearly and are thus recommended for very large problems.
 
 
 ##### Compare line-search methods on convex smooth problems
 
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
-    --solver "lbfgs|bfgs" \
+./build/libnano/gcc-release/app/bench_solver \
+    --min-dims 100 --max-dims 100 --function-type convex-smooth \
+    --solver "cgd-pr|lbfgs|bfgs|hoshino|fletcher|newton" \
     --lsearchk ".+" \
-    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 14
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| solver                           | precision | rank | value        | grad test    | errors | maxits | fcalls | gcalls | [ms]  |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,lemarechal]      | -6.8718   | 6.53 | N/A          | 7.24873e-08  | 124    | 0      | 54     | 54     | 14    |
-| bfgs [quadratic,fletcher]        | -6.8712   | 4.82 | N/A          | 6.27586e-08  | 159    | 0      | 47     | 47     | 14    |
-| bfgs [quadratic,morethuente]     | -6.8691   | 6.96 | N/A          | 3.10749e-08  | 0      | 0      | 42     | 42     | 13    |
-| bfgs [quadratic,backtrack]       | -6.8662   | 5.66 | N/A          | 7.25283e-08  | 0      | 76     | 133    | 133    | 22    |
-| bfgs [quadratic,cgdescent]       | -6.8658   | 5.98 | N/A          | 3.05747e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.8493   | 4.74 | N/A          | 2.58819e-08  | 0      | 0      | 48     | 48     | 0     |
-| lbfgs [quadratic,morethuente]    | -6.8171   | 5.62 | N/A          | 2.72689e-08  | 0      | 0      | 50     | 50     | 0     |
-| lbfgs [quadratic,backtrack]      | -6.8170   | 4.75 | N/A          | 4.31076e-08  | 0      | 79     | 145    | 145    | 5     |
-| lbfgs [quadratic,fletcher]       | -6.7991   | 4.17 | N/A          | 6.11294e-08  | 130    | 0      | 57     | 57     | 0     |
-| lbfgs [quadratic,lemarechal]     | -6.7932   | 5.78 | N/A          | 5.24941e-08  | 99     | 0      | 62     | 62     | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+    --trials 20 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 34
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank  | value        | log10(gtest) | errors | maxits | fcalls | gcalls | hcalls | [ms]  |
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| newton [quadratic,fletcher]      | -7.0000   | 7.65  | N/A          | -11.6398     | 0      | 0      | 6      | 3      | 2      | 3     |
+| newton [quadratic,backtrack]     | -7.0000   | 8.60  | N/A          | -11.6492     | 0      | 0      | 6      | 3      | 2      | 3     |
+| newton [quadratic,cgdescent]     | -7.0000   | 9.42  | N/A          | -11.8051     | 0      | 0      | 6      | 3      | 2      | 3     |
+| newton [quadratic,lemarechal]    | -7.0000   | 10.46 | N/A          | -11.6464     | 0      | 0      | 6      | 3      | 2      | 3     |
+| newton [quadratic,morethuente]   | -7.0000   | 11.34 | N/A          | -11.7017     | 0      | 0      | 6      | 3      | 2      | 3     |
+| cgd-pr [quadratic,cgdescent]     | -7.0000   | 15.85 | N/A          | -8.53309     | 0      | 0      | 34     | 34     | 0      | 1     |
+| cgd-pr [quadratic,morethuente]   | -7.0000   | 16.33 | N/A          | -8.39877     | 0      | 0      | 27     | 27     | 0      | 1     |
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 18.21 | N/A          | -9.84905     | 0      | 0      | 24     | 24     | 0      | 1     |
+| lbfgs [quadratic,morethuente]    | -7.0000   | 16.91 | N/A          | -9.63575     | 0      | 0      | 23     | 23     | 0      | 1     |
+| bfgs [quadratic,cgdescent]       | -7.0000   | 17.09 | N/A          | -8.66312     | 0      | 0      | 34     | 34     | 0      | 5     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 17.02 | N/A          | -8.92809     | 0      | 0      | 38     | 38     | 0      | 9     |
+| fletcher [quadratic,cgdescent]   | -7.0000   | 18.25 | N/A          | -8.84129     | 0      | 0      | 38     | 38     | 0      | 5     |
+| lbfgs [quadratic,lemarechal]     | -6.9977   | 16.59 | N/A          | -9.09815     | 14     | 0      | 27     | 27     | 0      | 1     |
+| lbfgs [quadratic,fletcher]       | -6.9969   | 16.31 | N/A          | -8.70927     | 17     | 0      | 24     | 24     | 0      | 1     |
+| fletcher [quadratic,morethuente] | -6.9918   | 17.44 | N/A          | -8.55925     | 0      | 62     | 98     | 98     | 0      | 11    |
+| cgd-pr [quadratic,fletcher]      | -6.9914   | 15.50 | N/A          | -8.12543     | 61     | 0      | 35     | 35     | 0      | 1     |
+| cgd-pr [quadratic,lemarechal]    | -6.9907   | 16.99 | N/A          | -8.13962     | 50     | 0      | 45     | 45     | 0      | 2     |
+| hoshino [quadratic,morethuente]  | -6.9891   | 16.79 | N/A          | -8.53061     | 0      | 71     | 103    | 103    | 0      | 18    |
+| bfgs [quadratic,morethuente]     | -6.9887   | 16.97 | N/A          | -8.47358     | 0      | 58     | 84     | 84     | 0      | 12    |
+| lbfgs [quadratic,backtrack]      | -6.9855   | 15.58 | N/A          | -9.19055     | 0      | 70     | 70     | 70     | 0      | 5     |
+| bfgs [quadratic,backtrack]       | -6.9511   | 16.25 | N/A          | -8.18337     | 0      | 202    | 205    | 205    | 0      | 26    |
+| cgd-pr [quadratic,backtrack]     | -6.9508   | 15.48 | N/A          | -8.13753     | 0      | 100    | 294    | 294    | 0      | 17    |
+| fletcher [quadratic,backtrack]   | -6.9485   | 17.02 | N/A          | -8.51573     | 0      | 219    | 257    | 257    | 0      | 30    |
+| hoshino [quadratic,backtrack]    | -6.9473   | 15.99 | N/A          | -8.56424     | 0      | 216    | 259    | 259    | 0      | 49    |
+| bfgs [quadratic,lemarechal]      | -6.9246   | 17.09 | N/A          | -8.04096     | 292    | 0      | 71     | 71     | 0      | 10    |
+| hoshino [quadratic,lemarechal]   | -6.9153   | 16.78 | N/A          | -7.98973     | 341    | 0      | 74     | 74     | 0      | 15    |
+| fletcher [quadratic,lemarechal]  | -6.9052   | 17.72 | N/A          | -7.98371     | 378    | 0      | 72     | 72     | 0      | 9     |
+| bfgs [quadratic,fletcher]        | -6.8971   | 16.52 | N/A          | -7.99241     | 370    | 0      | 60     | 60     | 0      | 9     |
+| hoshino [quadratic,fletcher]     | -6.8736   | 15.95 | N/A          | -7.95861     | 499    | 0      | 62     | 62     | 0      | 14    |
+| fletcher [quadratic,fletcher]    | -6.8657   | 16.88 | N/A          | -7.90974     | 536    | 0      | 60     | 60     | 0      | 8     |
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
 ```
-Notice that the CG-descent line-search method is the only one that doesn't fail while also has the smallest number of function evaluations.
+Notice that the CG-descent and the More&Thuente line-search methods are the most efficient ones across all solvers.
 
 
-Very precise solutions can be obtained efficiently using the CG-descent line-search method:
+Very precise solutions can be obtained efficiently only using the CG-descent line-search method:
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
-    --solver "cgd-pr|lbfgs|bfgs" \
+./build/libnano/gcc-release/app/bench_solver \
+    --min-dims 100 --max-dims 100 --function-type convex-smooth \
+    --trials 20 --max-table-name 32 \
+    --solver "cgd-pr|lbfgs|bfgs|hoshino|fletcher|newton" \
     --lsearchk "morethuente|cgdescent" \
-    --trials 128 --solver::epsilon 1e-14 --solver::max_evals 10000 | tail -n 10
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| solver                           | precision | rank | value        | grad test    | errors | maxits | fcalls | gcalls | [ms]  |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,morethuente]     | -13.9813  | 3.82 | N/A          | 5.19544e-10  | 0      | 495    | 1258   | 1258   | 67    |
-| bfgs [quadratic,cgdescent]       | -13.9457  | 4.50 | N/A          | 2.34693e-15  | 0      | 0      | 198    | 198    | 24    |
-| cgd-pr [quadratic,cgdescent]     | -13.8782  | 2.83 | N/A          | 2.49759e-15  | 0      | 0      | 382    | 382    | 1     |
-| lbfgs [quadratic,cgdescent]      | -13.8681  | 3.72 | N/A          | 3.06282e-15  | 0      | 0      | 194    | 194    | 1     |
-| lbfgs [quadratic,morethuente]    | -13.7364  | 3.47 | N/A          | 1.05953e-09  | 0      | 408    | 984    | 984    | 24    |
-| cgd-pr [quadratic,morethuente]   | -13.5462  | 2.67 | N/A          | 1.24311e-09  | 0      | 451    | 1123   | 1123   | 31    |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+    --solver::epsilon 1e-14 --solver::max_evals 10000 | tail -n 16
+cosmin@fedora:~/libnano$ time bash scripts/bench_solver_cgdescent.sh
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank  | value        | log10(gtest) | errors | maxits | fcalls | gcalls | hcalls | [ms]  |
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| newton [quadratic,cgdescent]     | -14.0000  | 5.46  | N/A          | -14.9295     | 0      | 0      | 21     | 18     | 3      | 5     |
+| lbfgs [quadratic,cgdescent]      | -14.0000  | 7.71  | N/A          | -14.6943     | 0      | 0      | 129    | 129    | 0      | 8     |
+| hoshino [quadratic,cgdescent]    | -14.0000  | 9.56  | N/A          | -14.6711     | 0      | 0      | 198    | 198    | 0      | 24    |
+| fletcher [quadratic,cgdescent]   | -14.0000  | 10.55 | N/A          | -14.6765     | 0      | 0      | 199    | 199    | 0      | 19    |
+| cgd-pr [quadratic,cgdescent]     | -13.9883  | 6.74  | N/A          | -14.7252     | 0      | 20     | 179    | 179    | 0      | 10    |
+| bfgs [quadratic,cgdescent]       | -13.9771  | 8.70  | N/A          | -14.5484     | 0      | 283    | 564    | 564    | 0      | 41    |
+| newton [quadratic,morethuente]   | -13.3869  | 5.01  | N/A          | -14.0709     | 0      | 973    | 1188   | 1173   | 15     | 116   |
+| lbfgs [quadratic,morethuente]    | -12.6061  | 5.01  | N/A          | -13.0693     | 0      | 1775   | 2230   | 2230   | 0      | 184   |
+| bfgs [quadratic,morethuente]     | -12.0493  | 4.54  | N/A          | -12.3091     | 0      | 2388   | 3049   | 3049   | 0      | 250   |
+| hoshino [quadratic,morethuente]  | -12.0287  | 5.11  | N/A          | -12.3193     | 0      | 2358   | 3007   | 3007   | 0      | 253   |
+| fletcher [quadratic,morethuente] | -12.0071  | 5.59  | N/A          | -12.2838     | 0      | 2441   | 3092   | 3092   | 0      | 245   |
+| cgd-pr [quadratic,morethuente]   | -11.9273  | 4.04  | N/A          | -12.2333     | 0      | 2447   | 3014   | 3014   | 0      | 231   |
+|----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|--------|-------|
 ```
-Notice that the CG-descent line-search method is the only one that doesn't fail to reach such a precision and also with around 3 times fewer function calls.
+Notice that the CG-descent line-search method is the only one that doesn't fail to reach such a precision and also with around 10 times fewer function calls.
 
 
 ##### Compare solvers on convex non-smooth problems
@@ -269,7 +303,8 @@ Notice that the CG-descent line-search method is the only one that doesn't fail 
 The line-search monotonic solvers (like L-BFGS) are not guaranteed to converge for non-smooth problems. As such non-monotonic solvers may be more appropriate in this case.
 
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex \
+./build/libnano/gcc-release/app/bench_solver \
+    --min-dims 100 --max-dims 100 --function-type convex \
     --solver "gd|gs|cgd-pr|lbfgs|bfgs|osga|cocob|sgm|sda|wda|pgm|dgm|fgm|asga2|asga4" \
     --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 19
 |----------------------------------|-----------|-------|--------------|--------------|--------|--------|--------|--------|-------|
@@ -303,41 +338,43 @@ Indeed the monotonic solvers are not converging, but surprisingly they produce t
 The limited-memory quasi-Newton (L-BFGS) method uses a small number of last known gradients to build a low-rank inverse of the Hessian matrix. This results in much more efficient iterations than quasi-Newton methods, but at a lower convergence rate and potential larger number of iterations. However it is not clear from the literature what is the optimum number of last gradients to use. The benchmark program allows to measure the impact of this parameter on the number of iterations until convergence.
 
 ```
-./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
-    --solver "lbfgs|bfgs" \
+./build/libnano/gcc-release/app/bench_solver \
+    --min-dims 100 --max-dims 100 --function-type convex-smooth \
+    --solver "lbfgs|hoshino" \
     --solver::lbfgs::history 5 \
-    --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 6
+    --trials 20 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 6
 for hsize in 10 20 50 100 150 200
 do
-    ./build/libnano/gcc-release/app/bench_solver --min-dims 100 --max-dims 100 --function-type convex-smooth \
-        --solver "lbfgs|bfgs" \
+    ${BENCH} \
+        --min-dims 100 --max-dims 100 --function-type convex-smooth \
+        --solver "lbfgs|hoshino" \
         --solver::lbfgs::history ${hsize} \
-        --trials 128 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 3
+        --trials 20 --solver::epsilon 1e-7 --solver::max_evals 5000 | tail -n 3
 done
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| solver                           | precision | rank | value        | grad test    | errors | maxits | fcalls | gcalls | [ms]  |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -6.9667   | 1.65 | N/A          | 3.23335e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.8471   | 1.35 | N/A          | 2.91432e-08  | 0      | 6      | 134    | 134    | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -6.9602   | 1.64 | N/A          | 3.14235e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.8383   | 1.36 | N/A          | 2.76048e-08  | 0      | 0      | 96     | 96     | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -6.9453   | 1.66 | N/A          | 3.19484e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.8650   | 1.34 | N/A          | 2.72612e-08  | 0      | 0      | 71     | 71     | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -6.9206   | 1.68 | N/A          | 3.13979e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.9163   | 1.32 | N/A          | 2.56038e-08  | 0      | 0      | 48     | 48     | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| lbfgs [quadratic,cgdescent]      | -6.9233   | 1.31 | N/A          | 2.58559e-08  | 0      | 0      | 43     | 43     | 0     |
-| bfgs [quadratic,cgdescent]       | -6.8930   | 1.69 | N/A          | 3.1198e-08   | 0      | 0      | 38     | 38     | 12    |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| bfgs [quadratic,cgdescent]       | -6.9218   | 1.68 | N/A          | 3.08453e-08  | 0      | 0      | 38     | 38     | 12    |
-| lbfgs [quadratic,cgdescent]      | -6.9075   | 1.32 | N/A          | 2.57515e-08  | 0      | 0      | 43     | 43     | 0     |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
-| lbfgs [quadratic,cgdescent]      | -6.9162   | 1.33 | N/A          | 2.60451e-08  | 0      | 0      | 43     | 43     | 0     |
-| bfgs [quadratic,cgdescent]       | -6.9151   | 1.67 | N/A          | 3.25824e-08  | 0      | 0      | 38     | 38     | 12    |
-|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|-------|
+cosmin@fedora:~/libnano$ time bash scripts/bench_solver_lbfgs_history.sh
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| solver                           | precision | rank | value        | log10(gtest) | errors | maxits | fcalls | gcalls | hcalls | [ms]  |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.48 | N/A          | -9.81196     | 0      | 0      | 30     | 30     | 0      | 2     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.52 | N/A          | -8.92582     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.46 | N/A          | -9.86578     | 0      | 0      | 27     | 27     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.54 | N/A          | -8.91147     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.47 | N/A          | -9.84288     | 0      | 0      | 25     | 25     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.53 | N/A          | -8.93516     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.46 | N/A          | -9.86558     | 0      | 0      | 24     | 24     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.54 | N/A          | -8.91544     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.46 | N/A          | -9.85619     | 0      | 0      | 24     | 24     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.54 | N/A          | -8.93524     | 0      | 0      | 37     | 37     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.46 | N/A          | -9.84131     | 0      | 0      | 24     | 24     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.54 | N/A          | -8.88926     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
+| lbfgs [quadratic,cgdescent]      | -7.0000   | 1.47 | N/A          | -9.85997     | 0      | 0      | 24     | 24     | 0      | 1     |
+| hoshino [quadratic,cgdescent]    | -7.0000   | 1.53 | N/A          | -8.93451     | 0      | 0      | 38     | 38     | 0      | 7     |
+|----------------------------------|-----------|------|--------------|--------------|--------|--------|--------|--------|--------|-------|
 ```
-
-L-BFGS is catching up to BFGS in terms of both accuracy and number of iterations by increasing the number of past gradients to use at very little additional computation cost.
+The performance of L-BFGS saturates at 20 past gradients kept in the model.

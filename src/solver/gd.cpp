@@ -50,5 +50,5 @@ solver_state_t solver_gd_t::do_minimize(const function_t& function, const vector
         }
     }
 
-    return cstate.valid() ? cstate : pstate;
-} // LCOV_EXCL_LINE
+    return choose(cstate, pstate);
+}
