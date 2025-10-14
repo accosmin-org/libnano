@@ -2,8 +2,6 @@
 
 using namespace nano;
 
-// FIXME: HAve the RQB, FPBAx, DSBM solvers more robust
-/*
 namespace
 {
 [[maybe_unused]] auto make_solvers(const tensor_size_t bundle_max_size = 10)
@@ -19,11 +17,10 @@ namespace
     return solvers;
 }
 } // namespace
-*/
 
 UTEST_BEGIN_MODULE()
 
-/*UTEST_CASE(smooth_bundle)
+UTEST_CASE(smooth_bundle)
 {
     check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}));
 }
@@ -31,6 +28,6 @@ UTEST_BEGIN_MODULE()
 UTEST_CASE(nonsmooth_bundle)
 {
     check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex}));
-}*/
+}
 
 UTEST_END_MODULE()
