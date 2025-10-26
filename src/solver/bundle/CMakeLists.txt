@@ -6,4 +6,6 @@ target_sources(solver PRIVATE
     nesterov.cpp
     nesterov.h
     proximal.cpp
-    proximal.h)
+    proximal.h
+    quasi.cpp
+    quasi.h)
