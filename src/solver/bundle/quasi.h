@@ -52,6 +52,9 @@ public:
     const matrix_t& update(const vector_t& x, const vector_t& g, const vector_t& G, bool is_descent_step);
 
 private:
+    void update_miu();
+    void update_sr1();
+
     // attributes
     matrix_t   m_M;                     ///<
     vector_t   m_xn, m_xn1;             ///<

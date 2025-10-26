@@ -48,16 +48,46 @@ const matrix_t& quasi_t::update(const vector_t& x, const vector_t& g, const vect
 
     if (is_descent_step)
     {
-        const auto e = m_xn1 - m_xn;
-        const auto v = m_Gn1 - m_Gn;
+        switch (m_type)
+        {
+        case quasi_type::miu:
+            update_miu();
+            break;
 
-        // TODO: implement the SR1 version
-
-        const auto miu         = m_M(0, 0);
-        m_M.diagonal().array() = 1.0 / (v.dot(e) / v.dot(v) + 1.0 / miu);
+        default:
+            update_sr1();
+            break;
+        }
     }
 
     return m_M;
+}
+
+void quasi_t::update_miu()
+{
+    const auto e = m_xn1 - m_xn;
+    const auto v = m_Gn1 - m_Gn;
+
+    // TODO: implement the version that choses the smallest miu
+    // TODO: safeguard miu?!
+
+    const auto miu_prev = m_M(0, 0);
+    const auto miu_next = 1.0 / (v.dot(e) / v.dot(v) + 1.0 / miu_prev);
+
+    m_M.diagonal().array() = miu_next;
+}
+
+void quasi_t::update_sr1()
+{
+    const auto e = m_xn1 - m_xn;
+    const auto v = m_Gn1 - m_Gn;
+
+    // TODO: which v should use?!
+    // TODO: safeguard SR1 like in quasi-newton methods?!
+
+    const auto Me = m_M * e;
+
+    m_M = m_M - (Me * Me.transpose()) / e.dot(Me + v);
 }
 
 void quasi_t::config(configurable_t& c, const string_t& prefix)
