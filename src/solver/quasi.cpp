@@ -13,7 +13,7 @@ void SR1(matrix_t& H, const tvector& dx, const tvector& dg)
 template <class tvector>
 void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
 {
-    const auto denom = (dx - H * dg).dot(dg);
+    const auto denom = (dx - H * dg).dot(dx);
     const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
 
     if (apply)
