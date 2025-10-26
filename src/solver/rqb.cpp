@@ -1,16 +1,17 @@
 #include <solver/bundle/csearch.h>
-#include <solver/bundle/proximal.h>
+#include <solver/bundle/quasi.h>
 #include <solver/rqb.h>
 
 using namespace nano;
+using namespace nano::bundle;
 
 solver_rqb_t::solver_rqb_t()
     : solver_t("rqb")
 {
     const auto prefix = string_t{"solver::rqb"};
+    quasi_t::config(*this, prefix);
     bundle_t::config(*this, prefix);
     csearch_t::config(*this, prefix);
-    proximal_t::config(*this, prefix);
 }
 
 rsolver_t solver_rqb_t::clone() const
@@ -28,13 +29,13 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
 
     auto state    = solver_state_t{function, x0};
+    auto quasi    = quasi_t::make(state, *this, prefix);
     auto bundle   = bundle_t::make(state, *this, prefix);
     auto csearch  = csearch_t::make(function, *this, prefix);
-    auto proximal = proximal_t::make(state, *this, prefix);
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto& cpoint = csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        const auto& cpoint = csearch.search(bundle, quasi.M(), max_evals, epsilon, logger);
         [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] = cpoint;
 
         const auto iter_ok   = status != csearch_status::failed;
@@ -49,17 +50,13 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
 
         if (status == csearch_status::descent_step)
         {
-            assert(fy < state.fx());
-
-            proximal.update(bundle, cpoint);
+            quasi.update(y, gy, ghat, true);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }
         else if (status == csearch_status::cutting_plane_step)
         {
-            assert(fy < state.fx());
-
-            proximal.update(bundle, cpoint);
+            quasi.update(y, gy, ghat, false);
             bundle.moveto(y, gy, fy);
             state.update(y, gy, fy);
         }

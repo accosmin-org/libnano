@@ -35,7 +35,7 @@ csearch_t::csearch_t(const function_t& function, const scalar_t m1, const scalar
 {
 }
 
-const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu, const tensor_size_t max_evals,
+const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const matrix_t& M, const tensor_size_t max_evals,
                                             const scalar_t epsilon, const logger_t& logger)
 {
     constexpr auto level = std::numeric_limits<scalar_t>::quiet_NaN();
@@ -72,12 +72,12 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto  fxhat  = bundle.fhat(x);
 
         // step (1) - get proximal point, compute statistics
-        const auto& proxim = bundle.solve(t / miu, level, logger);
+        const auto& proxim = bundle.solve(M, t, level, logger);
 
         y     = proxim.m_x;
         fy    = m_function(y, gy);
         fyhat = bundle.fhat(y);
-        gyhat = (miu / t) * (x - y);
+        gyhat = M * (x - y) / t;
 
         const auto delta = fx - fyhat + 0.5 * gyhat.dot(y - x);
         const auto error = fx - fy + gy.dot(y - x);
@@ -91,8 +91,8 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",delta=", delta, ",error=", error, ".\n");
         logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",epsil=", epsil, "/",
                     bundle.etol(epsilon), ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ".\n");
-        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",bsize=", bundle.size(), ",miu=", miu,
-                    ",t=", t, "[", tL, ",", tR, "].\n");
+        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",bsize=", bundle.size(), ",t=", t, "[",
+                    tL, ",", tR, "].\n");
 
         // compute tests...
         const auto test_failed        = !std::isfinite(fy) || (delta < 0.0) || (error < 0.0);

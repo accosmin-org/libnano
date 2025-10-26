@@ -23,8 +23,8 @@ enum class csearch_status : uint8_t
 /// see (4) "A NU-algorithm for convex minimization", by Mifflin, Sagastizabal, 2005
 ///
 /// NB: the implementation follows the notation from (2).
-/// NB: the stopping criterion is not clearly given in the references, but some papers specify the following:
-///     smeared_error < epsilon * sqrt(N) && smeared_grad < epsilon * sqrt(N).
+/// NB: the stopping criterion is not clearly given in the references, here we use the heuristics defined in
+/// `bundle_t::etol` and `bundle_t::gtol`.
 ///
 class NANO_PUBLIC csearch_t
 {
@@ -61,7 +61,7 @@ public:
     ///
     /// \brief return a new stability center.
     ///
-    const point_t& search(bundle_t&, scalar_t miu, tensor_size_t max_evals, scalar_t epsilon, const logger_t&);
+    const point_t& search(bundle_t&, const matrix_t& M, tensor_size_t max_evals, scalar_t epsilon, const logger_t&);
 
 private:
     // attributes

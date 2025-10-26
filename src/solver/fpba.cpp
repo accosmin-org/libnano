@@ -57,7 +57,8 @@ solver_state_t base_solver_fpba_t<tsequence>::do_minimize(const function_t& func
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
-        const auto& cpoint = csearch.search(bundle, proximal.miu(), max_evals, epsilon, logger);
+        // FIXME: replace proximal_t with bundle_t
+        const auto& cpoint = csearch.search(bundle, matrix_t::identity(0, 0), max_evals, epsilon, logger);
         [[maybe_unused]] const auto& [t, status, y, gy, fy, ghat, fhat] = cpoint;
 
         const auto iter_ok   = status != csearch_status::failed;
