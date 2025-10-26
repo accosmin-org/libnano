@@ -67,8 +67,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
     {
         // solve primal-dual linear system of equations to get (dx, dy, du, dv, dw)
         const auto sstats = program.solve();
-        logger.info("accuracy=", sstats.m_precision, ",rcond=", sstats.m_rcond, ",neg=", sstats.m_negative,
-                    ",pos=", sstats.m_positive, ",valid=", sstats.m_valid ? 'y' : 'n', ".\n");
+        logger.info("accuracy=", sstats.m_precision, ",rcond=", sstats.m_rcond, ",pos=", sstats.m_positive ? 'y' : 'n',
+                    ",valid=", sstats.m_valid ? 'y' : 'n', ".\n");
         if (!sstats.m_valid)
         {
             logger.error("linear system of equations cannot be solved, invalid state!\n");

@@ -276,7 +276,7 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     for (auto iter = 0; iter < max_iters; ++iter)
     {
         residualX = make_residual();
-        logger.info("residual=", residual0, " (pstep=", xstep, ",dstep=", ustep, ") -> ", residualX, ".\n");
+        logger.info("residual=", residual0, "(pstep=", xstep, ",dstep=", ustep, ")->", residualX, ".\n");
 
         if (residualX < (1.0 - stepX * alpha) * residual0)
         {

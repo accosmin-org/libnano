@@ -90,6 +90,31 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
 
 const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
+    const auto n         = dims();
+
+    // construct quadratic programming problem
+    // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
+    m_program.Q().block(0, 0, n, n) = matrix_t::identity(n, n) / tau;
+    m_program.c()(n)                = 1.0;
+
+    return do_solve(tau, level, logger);
+}
+
+const bundle_t::solution_t& bundle_t::solve(const matrix_t& M, const scalar_t tau, const scalar_t level,
+                                            const logger_t& logger)
+{
+    const auto n = dims();
+
+    // construct quadratic programming problem
+    // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
+    m_program.Q().block(0, 0, n, n) = M / tau;
+    m_program.c()(n)                = 1.0;
+
+    return do_solve(tau, level, logger);
+}
+
+const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
+{
     assert(size() > 0);
     assert(dims() == m_x.size());
 
@@ -101,11 +126,7 @@ const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t l
     const auto bundleH = m_bundleH.slice(0, m);
     const auto bundleF = m_fx - bundleH.array();
 
-    // construct quadratic programming problem
-    // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
-    m_program.Q().block(0, 0, n, n).diagonal().array() = 1.0;
-    m_program.c()(n)                                   = tau;
-
+    // add constraints
     m_program.clear_constraints();
     critical(bundleG * m_program.variable() <= bundleF);
     if (has_level)

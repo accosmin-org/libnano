@@ -87,9 +87,12 @@ const csearch_t::point_t& csearch_t::search(bundle_t& bundle, const scalar_t miu
         const auto gconv = gnorm <= bundle.gtol(epsilon);
 
         logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",fx=", fx, ",fxhat=", fxhat, ",fy=", fy,
-                    ",fyhat=", fyhat, ",delta=", delta, ",error=", error, ",epsil=", epsil, "/", bundle.etol(epsilon),
-                    ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ",bsize=", bundle.size(), ",miu=", miu, ",t=", t, "[",
-                    tL, ",", tR, "].\n");
+                    ",fyhat=", fyhat, ".\n");
+        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",delta=", delta, ",error=", error, ".\n");
+        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",epsil=", epsil, "/",
+                    bundle.etol(epsilon), ",gnorm=", gnorm, "/", bundle.gtol(epsilon), ".\n");
+        logger.info("calls=", m_function.fcalls(), "|", m_function.gcalls(), ",bsize=", bundle.size(), ",miu=", miu,
+                    ",t=", t, "[", tL, ",", tR, "].\n");
 
         // compute tests...
         const auto test_failed        = !std::isfinite(fy) || (delta < 0.0) || (error < 0.0);

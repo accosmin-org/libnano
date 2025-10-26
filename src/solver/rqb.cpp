@@ -44,7 +44,18 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
             break;
         }
 
-        if (status == csearch_status::descent_step || status == csearch_status::cutting_plane_step)
+        // FIXME: descent step and cutting plane step are the same ?!
+        // FIXME: the proximal parameter is updated from time to time
+
+        if (status == csearch_status::descent_step)
+        {
+            assert(fy < state.fx());
+
+            proximal.update(bundle, cpoint);
+            bundle.moveto(y, gy, fy);
+            state.update(y, gy, fy);
+        }
+        else if (status == csearch_status::cutting_plane_step)
         {
             assert(fy < state.fx());
 
@@ -54,7 +65,6 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
         }
         else if (status == csearch_status::null_step)
         {
-            proximal.update(bundle, cpoint);
             bundle.append(y, gy, fy);
         }
     }

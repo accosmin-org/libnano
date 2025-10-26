@@ -111,15 +111,18 @@ public:
 
     ///
     /// \brief return the solution of the doubly stabilized bundle problem (1):
-    ///     argmin_(x, r) r + ||x - x_k^||^2 / (2 * tau)
+    ///     argmin_(x, r) r + 1/(2 * tau) * (x - x_k^).dot(M * (x - x_k^))
     ///             s.t.  f_j + <g_j, x - x_j> <= r (for all sub-gradients j in the bundle)
     ///             s.t.  r <= l_k (the level parameter).
     ///
-    ///     where x_k^ is the current proximal stability center.
+    ///     where x_k^ is the current proximal stability center and
+    ///           M is a symmetric positive-definite matrix.
     ///
     /// NB: a convex quadratic program.
+    /// NB: M is the identity matrix in (1).
     ///
     const solution_t& solve(scalar_t tau, scalar_t level, const logger_t&);
+    const solution_t& solve(const matrix_t& M, scalar_t tau, scalar_t level, const logger_t&);
 
 private:
     tensor_size_t dims() const { return m_x.size(); }
@@ -141,6 +144,8 @@ private:
     void store_aggregate();
     void append_aggregate();
     void append(vector_cmap_t y, vector_cmap_t gy, scalar_t fy, bool serious_step);
+
+    const solution_t& do_solve(scalar_t tau, scalar_t level, const logger_t&);
 
     // attributes
     quadratic_program_t m_program;  ///< quadratic program
