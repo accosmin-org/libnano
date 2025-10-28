@@ -28,8 +28,7 @@ public:
     ///
     /// \brief constructor
     ///
-    quasi_t(tensor_size_t dims, quasi_type);
-    quasi_t(const solver_state_t&, quasi_type);
+    quasi_t(const solver_state_t&, quasi_type, scalar_t tau_min);
 
     ///
     /// \brief

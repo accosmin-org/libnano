@@ -13,10 +13,10 @@ void SR1(matrix_t& H, const tvector& dx, const tvector& dg)
 template <class tvector>
 void SR1(matrix_t& H, const tvector& dx, const tvector& dg, const scalar_t r)
 {
-    const auto denom = (dx - H * dg).dot(dx);
-    const auto apply = std::fabs(denom) >= r * dx.norm() * (dx - H * dg).norm();
+    const auto dz           = dx - H * dg;
+    const auto should_apply = std::fabs(dz.dot(dg)) >= r * dz.norm() * dg.norm();
 
-    if (apply)
+    if (should_apply)
     {
         SR1(H, dx, dg);
     }
