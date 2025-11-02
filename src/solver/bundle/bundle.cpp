@@ -2,8 +2,6 @@
 #include <nano/function/cuts.h>
 #include <solver/bundle/bundle.h>
 
-#include <iomanip>
-
 using namespace nano;
 
 namespace
@@ -124,7 +122,7 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
 
     const auto bundleG = m_bundleG.slice(0, m);
     const auto bundleH = m_bundleH.slice(0, m);
-    const auto bundleF = m_fx - bundleH.array();
+    const auto bundleF = -bundleH.array();
 
     // add constraints
     m_program.clear_constraints();
@@ -132,7 +130,7 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     if (has_level)
     {
         m_wlevel(n) = 1.0;
-        critical(m_wlevel * m_program.variable() <= level - m_fx);
+        critical(m_wlevel * m_program.variable() <= level);
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
@@ -144,18 +142,9 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     assert(x.size() == n + 1);
     assert(u.size() == (has_level ? (m + 1) : m));
 
-    // NB: the quadratic program may be unfeasible, so the level needs to be moved towards the stability center!
-    if (state.status() != solver_status::kkt_optimality_test && !has_level)
-    {
-        logger.error("bundle: failed to solve, status=", state.status(), ".\n");
-
-        logger.error(std::setprecision(20), "tau=", tau, ",Q=", m_program.Q(), ",c=", m_program.c(), ",G=", bundleG,
-                     ",F=", bundleF, ".\n");
-    }
-
     // extract solution and statistics, see (1)
     m_solution.m_x      = x.segment(0, n) + m_x;
-    m_solution.m_r      = x(n) + m_fx;
+    m_solution.m_r      = x(n);
     m_solution.m_tau    = tau;
     m_solution.m_alphas = u.segment(0, m);
     m_solution.m_lambda = has_level ? u(m) : 0.0;
