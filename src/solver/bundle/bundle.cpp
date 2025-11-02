@@ -228,7 +228,7 @@ void bundle_t::store_aggregate()
     // NB: stored the aggregation in the last slot!
     const auto ilast = capacity() - 1;
     const auto fhat  = this->fhat(m_solution.m_x);
-    const auto ghat  = (m_x - m_solution.m_x) / m_solution.m_tau;
+    const auto ghat  = (m_x - m_solution.m_x) / (m_solution.m_tau * (1.0 + m_solution.m_lambda));
     write_cutting_plane(m_bundleG.tensor(ilast), m_bundleH(ilast), m_x, m_solution.m_x, ghat, fhat);
 }
 
