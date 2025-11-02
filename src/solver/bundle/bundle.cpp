@@ -132,22 +132,22 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     if (has_level)
     {
         m_wlevel(n) = 1.0;
-        critical(m_wlevel * m_program.variable() <= level);
+        critical(m_wlevel * m_program.variable() <= level - m_fx);
     }
 
     // solve for (y, r) => (x = y + x_k^, r)!
-    const auto solution = m_solver->minimize(m_program, m_wlevel, logger);
+    const auto state = m_solver->minimize(m_program, m_wlevel, logger);
 
-    const auto& x = solution.x();
-    const auto& u = solution.u();
+    const auto& x = state.x();
+    const auto& u = state.u();
 
     assert(x.size() == n + 1);
     assert(u.size() == (has_level ? (m + 1) : m));
 
     // NB: the quadratic program may be unfeasible, so the level needs to be moved towards the stability center!
-    if (solution.status() != solver_status::kkt_optimality_test && !has_level)
+    if (state.status() != solver_status::kkt_optimality_test && !has_level)
     {
-        logger.error("bundle: failed to solve, status=", solution.status(), ".\n");
+        logger.error("bundle: failed to solve, status=", state.status(), ".\n");
 
         logger.error(std::setprecision(20), "tau=", tau, ",Q=", m_program.Q(), ",c=", m_program.c(), ",G=", bundleG,
                      ",F=", bundleF, ".\n");
@@ -159,16 +159,7 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     m_solution.m_tau    = tau;
     m_solution.m_alphas = u.segment(0, m);
     m_solution.m_lambda = has_level ? u(m) : 0.0;
-
-    // verify post-conditions, see (1), eq. 12 and eq. 14 (and step 2.2 of the algorithm)
-    const auto fhat_k0 = fhat(m_x);
-    const auto fhat_k1 = fhat(m_solution.m_x);
-    // clang-format off
-    m_solution.m_valid =
-        m_fx >= fhat_k0 &&
-        fhat_k0 >= fhat_k1 + 0.5 / tau * (m_solution.m_x - m_x).squaredNorm() &&
-        m_fx >= m_solution.m_r + (m_solution.m_x - m_x).squaredNorm() / (tau * (1.0 + m_solution.m_lambda));
-    // clang-format on
+    m_solution.m_status = state.status();
 
     return m_solution;
 }

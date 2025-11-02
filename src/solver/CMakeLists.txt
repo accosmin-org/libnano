@@ -12,6 +12,8 @@ target_sources(solver PRIVATE
     cgd.h
     cocob.cpp
     cocob.h
+    dsbm.cpp
+    dsbm.h
     ellipsoid.cpp
     ellipsoid.h
     fpba.cpp

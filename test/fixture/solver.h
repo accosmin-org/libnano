@@ -113,7 +113,7 @@ struct solver_description_t
             .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000))
             .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000));
     }
-    else if (solver_id == "rqb" || solver_id == "fpba1" || solver_id == "fpba2")
+    else if (solver_id == "dsbm" || solver_id == "rqb" || solver_id == "fpba1" || solver_id == "fpba2")
     {
         // NB: the (fast) proximal bundle algorithms are very precise and very reliable.
         // NB: the stopping criterion is working very well in practice.

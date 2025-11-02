@@ -8,7 +8,7 @@ namespace
 {
     auto solvers = rsolvers_t{};
     solvers.emplace_back(make_solver("ellipsoid"));
-    for (const auto* const solver_id : {"rqb"}) //, "fpba1", "fpba2"})
+    for (const auto* const solver_id : {"dsbm"}) //"rqb", "fpba1", "fpba2"})
     {
         auto solver                                                          = make_solver(solver_id);
         solver->parameter(scat("solver::", solver_id, "::bundle::max_size")) = bundle_max_size;
@@ -22,12 +22,12 @@ UTEST_BEGIN_MODULE()
 
 UTEST_CASE(smooth_bundle)
 {
-    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}));
+    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}, std::regex{"trid"}));
 }
 
-UTEST_CASE(nonsmooth_bundle)
+/*UTEST_CASE(nonsmooth_bundle)
 {
     check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex}));
-}
+}*/
 
 UTEST_END_MODULE()

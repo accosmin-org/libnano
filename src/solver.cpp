@@ -4,6 +4,7 @@
 #include <solver/augmented.h>
 #include <solver/cgd.h>
 #include <solver/cocob.h>
+#include <solver/dsbm.h>
 #include <solver/ellipsoid.h>
 #include <solver/fpba.h>
 #include <solver/gd.h>
@@ -262,6 +263,7 @@ factory_t<solver_t>& solver_t::all()
         manager.add<solver_dgm_t>("universal dual gradient method (DGM)");
         manager.add<solver_fgm_t>("universal fast gradient method (FGM)");
         manager.add<solver_rqb_t>("reversal quasi-newton bundle algorithm (RQB)");
+        manager.add<solver_dsbm_t>("doubly stabilized bundle method (DSBM)");
         manager.add<solver_fpba1_t>("fast proximal bundle algorithm (FPBA1)");
         manager.add<solver_fpba2_t>("fast proximal bundle algorithm (FPBA2)");
         manager.add<solver_ipm_t>("primal-dual interior point method for linear and quadratic programs (IPM)");

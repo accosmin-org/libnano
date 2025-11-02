@@ -35,12 +35,12 @@ public:
         explicit solution_t(tensor_size_t dims = 0);
 
         // attributes
-        vector_t m_x;            ///< optimum: stability center
-        scalar_t m_r{0.0};       ///< optimum: level (if applicable)
-        scalar_t m_tau{0.0};     ///< proximal parameter
-        vector_t m_alphas;       ///< Lagrangian multiplier associated to the bundle inequalities
-        scalar_t m_lambda{0.0};  ///< Lagrangian multiplier associated to the level inequality (if applicable)
-        bool     m_valid{false}; ///< indicates if the post-conditions of the solution are satisfied
+        vector_t      m_x;           ///< optimum: stability center
+        scalar_t      m_r{0.0};      ///< optimum: level (if applicable)
+        scalar_t      m_tau{0.0};    ///< proximal parameter
+        vector_t      m_alphas;      ///< Lagrangian multiplier associated to the bundle inequalities
+        scalar_t      m_lambda{0.0}; ///< Lagrangian multiplier associated to the level inequality (if applicable)
+        solver_status m_status{};    ///< status of the QP solver
     };
 
     ///

@@ -54,6 +54,8 @@ void proximal_t::update(const bundle_t& bundle, const csearch_t::point_t& point)
         }
         else
         {
+            // FIXME: this is not correct!!! should be previous m_y?!
+
             const auto delta_x = point.m_y - bundle.x();
             const auto delta_g = point.m_gy - bundle.gx();
             const auto tau_mul = delta_g.dot(delta_x) / delta_g.squaredNorm();
