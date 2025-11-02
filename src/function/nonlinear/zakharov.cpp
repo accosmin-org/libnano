@@ -11,6 +11,8 @@ function_zakharov_t::function_zakharov_t(const tensor_size_t dims)
 
     convex(convexity::yes);
     smooth(smoothness::yes);
+
+    optimum(vector_t::zero(dims));
 }
 
 rfunction_t function_zakharov_t::clone() const
