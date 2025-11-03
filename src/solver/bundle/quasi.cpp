@@ -3,7 +3,8 @@
 using namespace nano;
 using namespace nano::bundle;
 
-namespace{
+namespace
+{
 scalar_t make_tau0(const solver_state_t& state, const scalar_t tau_min)
 {
     // see (6)
@@ -70,13 +71,13 @@ const matrix_t& quasi_t::update(const vector_t& x, const vector_t& g, const vect
 void quasi_t::update_miu()
 {
     // see (3)
-    const auto e = m_xn1 - m_xn;
+    const auto e  = m_xn1 - m_xn;
     const auto v1 = m_Gn1 - m_Gn;
     const auto v2 = m_Gn1 - m_gn;
     const auto v3 = m_gn1 - m_Gn;
     const auto v4 = m_gn1 - m_gn;
 
-    const auto miu_prev = m_M(0, 0);
+    const auto miu_prev  = m_M(0, 0);
     const auto miu_next1 = 1.0 / (v1.dot(e) / v1.dot(v1) + 1.0 / miu_prev);
     const auto miu_next2 = 1.0 / (v2.dot(e) / v1.dot(v2) + 1.0 / miu_prev);
     const auto miu_next3 = 1.0 / (v3.dot(e) / v1.dot(v3) + 1.0 / miu_prev);
@@ -102,7 +103,7 @@ void quasi_t::update_sr1()
     // TODO: which v should use?!
     // TODO: safeguard SR1 like in quasi-newton methods?!
 
-    const auto Me = m_M * e;
+    const auto Me           = m_M * e;
     const auto should_apply = std::fabs(e.dot(Me + v)) >= r * e.norm() * (Me + v).norm();
 
     if (should_apply)
@@ -119,8 +120,8 @@ void quasi_t::config(configurable_t& c, const string_t& prefix)
 
 quasi_t quasi_t::make(const solver_state_t& state, const configurable_t& c, const string_t& prefix)
 {
-    const auto type = c.parameter(scat(prefix, "::prox::type")).value<quasi_type>();
-    const auto tau_min  = c.parameter(scat(prefix, "::prox::tau_min")).value<scalar_t>();
+    const auto type    = c.parameter(scat(prefix, "::prox::type")).value<quasi_type>();
+    const auto tau_min = c.parameter(scat(prefix, "::prox::tau_min")).value<scalar_t>();
 
     return {state, type, tau_min};
 }

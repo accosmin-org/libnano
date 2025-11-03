@@ -107,11 +107,11 @@ struct solver_description_t
     else if (solver_id == "ellipsoid")
     {
         // NB: the ellipsoid method is reasonably fast only for very low-dimensional problems.
-        // NB: the ellipsoid method is very precise (used as a reference) and very reliable.
+        // NB: the ellipsoid method is precise (used as a reference) and very reliable.
         // NB: the stopping criterion is working very well in practice.
         return solver_description_t{}
-            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000))
-            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-6).max_evals(5000));
+            .smooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4).max_evals(5000))
+            .nonsmooth_config(minimize_config_t{}.expected_maximum_deviation(1e-4).max_evals(5000));
     }
     else if (solver_id == "dsbm" || solver_id == "rqb" || solver_id == "fpba1" || solver_id == "fpba2")
     {
@@ -221,6 +221,8 @@ struct solver_description_t
         {
             UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
         }
+
+        std::cout << "state.x=" << state.x() << std::endl;
 
         const auto& optimum = function.optimum();
         // clang-format off

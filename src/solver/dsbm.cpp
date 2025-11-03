@@ -24,11 +24,11 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
     warn_nonconvex(function, logger);
     warn_constrained(function, logger);
 
-    const auto prefix    = string_t{"solver::dsbm"};
-    const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
-    const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
-    const auto ml        = parameter("solver::dsbm::ml").value<scalar_t>();
-    const auto mf        = parameter("solver::dsbm::mf").value<scalar_t>();
+    const auto prefix          = string_t{"solver::dsbm"};
+    const auto max_evals       = parameter("solver::max_evals").value<tensor_size_t>();
+    const auto epsilon         = parameter("solver::epsilon").value<scalar_t>();
+    const auto ml              = parameter("solver::dsbm::ml").value<scalar_t>();
+    const auto mf              = parameter("solver::dsbm::mf").value<scalar_t>();
     const auto [tau_min, tau1] = parameter("solver::dsbm::tau_min_tau_one").value_pair<scalar_t>();
 
     auto state  = solver_state_t{function, x0};
@@ -36,6 +36,7 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
 
     auto tau  = tau1;
     auto gxk1 = vector_t{function.size()};
+    // FIXME: can it be done without a lower limit of the optimum?!
     // auto nuL  = 1.0 + std::fabs(state.fx());                // NB: assumes no known lower bound
     // auto flow = std::numeric_limits<scalar_t>::quiet_NaN(); // NB: assumes no known lower bound
 
@@ -51,7 +52,8 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         // FIXME: flow is not correct (-12.xxx) -> it should be <= -16!!!
 
         state.update_calls();
-        logger.info(state, ",flow=", flow, ",tau=", tau, ",nuL=", nuL, ",delta=", (bundle.fx() - flow), ",bsize=", bundle.size(), ".\n");
+        logger.info(state, ",flow=", flow, ",tau=", tau, ",nuL=", nuL, ",delta=", (bundle.fx() - flow),
+                    ",bsize=", bundle.size(), ".\n");
 
         // first stopping criterion: optimality gap test
         if (const auto delta = bundle.fx() - flow; std::isfinite(delta) && delta < tol_delta)
@@ -68,6 +70,9 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
         const auto  level    = bundle.fx() - nuL;
         const auto& proximal = bundle.solve(tau, level, logger);
 
+        logger.info("level=", level, ",fxhat=", bundle.fhat(bundle.x()), ",fx1hat=", bundle.fhat(proximal.m_x),
+                    ",r=", proximal.m_r, ",status=", scat(proximal.m_status), ".\n");
+
         if (proximal.m_status != solver_status::kkt_optimality_test)
         {
             // NB: no feasible solution, update level constraint!
@@ -75,8 +80,6 @@ solver_state_t solver_dsbm_t::do_minimize(const function_t& function, const vect
             nuL  = (1.0 - ml) * (bundle.fx() - flow);
             continue;
         }
-
-        logger.info("level=", level, ",fxhat=", bundle.fhat(bundle.x()), ",fx1hat=", bundle.fhat(proximal.m_x), ".\n");
 
         // second stopping criterion: aggregate linearization error and gradient
         const auto& xk1   = proximal.m_x;

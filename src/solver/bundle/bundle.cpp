@@ -2,6 +2,9 @@
 #include <nano/function/cuts.h>
 #include <solver/bundle/bundle.h>
 
+#include <iomanip>
+#include <iostream>
+
 using namespace nano;
 
 namespace
@@ -88,7 +91,7 @@ void bundle_t::append(const vector_cmap_t y, const vector_cmap_t gy, const scala
 
 const bundle_t::solution_t& bundle_t::solve(const scalar_t tau, const scalar_t level, const logger_t& logger)
 {
-    const auto n         = dims();
+    const auto n = dims();
 
     // construct quadratic programming problem
     // NB: equivalent and simpler problem is to solve for `y = x - x_k^`!
@@ -135,6 +138,16 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
 
     // solve for (y, r) => (x = y + x_k^, r)!
     const auto state = m_solver->minimize(m_program, m_wlevel, logger);
+    if (state.status() != solver_status::kkt_optimality_test)
+    {
+        std::cout << std::setprecision(20) << std::endl;
+        std::cout << "Q=" << m_program.Q() << std::endl;
+        std::cout << "c=" << m_program.c() << std::endl;
+        std::cout << "G=" << bundleG << std::endl;
+        std::cout << "F=" << bundleF << std::endl;
+        std::cout << "w=" << m_wlevel << std::endl;
+        std::cout << "l=" << level << std::endl << std::endl;
+    }
 
     const auto& x = state.x();
     const auto& u = state.u();

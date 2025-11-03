@@ -28,10 +28,10 @@ solver_state_t solver_rqb_t::do_minimize(const function_t& function, const vecto
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
     const auto epsilon   = parameter("solver::epsilon").value<scalar_t>();
 
-    auto state    = solver_state_t{function, x0};
-    auto quasi    = quasi_t::make(state, *this, prefix);
-    auto bundle   = bundle_t::make(state, *this, prefix);
-    auto csearch  = csearch_t::make(function, *this, prefix);
+    auto state   = solver_state_t{function, x0};
+    auto quasi   = quasi_t::make(state, *this, prefix);
+    auto bundle  = bundle_t::make(state, *this, prefix);
+    auto csearch = csearch_t::make(function, *this, prefix);
 
     while (function.fcalls() + function.gcalls() < max_evals)
     {
