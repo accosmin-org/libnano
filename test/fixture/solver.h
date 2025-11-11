@@ -222,8 +222,6 @@ struct solver_description_t
             UTEST_CHECK_LESS_EQUAL(state.fx(), state0.fx() + epsilon1<scalar_t>());
         }
 
-        std::cout << "state.x=" << state.x() << std::endl;
-
         const auto& optimum = function.optimum();
         // clang-format off
         UTEST_CHECK(optimum.m_xbest.size() == 0 ||

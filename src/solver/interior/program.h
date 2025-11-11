@@ -89,6 +89,7 @@ public:
         scalar_t m_vstep{0.0};
         scalar_t m_wstep{0.0};
         scalar_t m_residual{0.0};
+        bool     m_success{false};
     };
 
     lsearch_stats_t lsearch(scalar_t step0, const logger_t& logger);

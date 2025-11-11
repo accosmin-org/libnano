@@ -79,9 +79,8 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         // for the primal and dual steps: (x + sx * dx, y + sy * dy, u + su * du, v + sv * dv)
         const auto s      = 1.0 - (1.0 - s0) / std::pow(static_cast<scalar_t>(iter), gamma);
         const auto lstats = program.lsearch(s, logger);
-
-        if (std::max({lstats.m_xstep, lstats.m_ystep, lstats.m_ustep, lstats.m_vstep, lstats.m_wstep}) <
-            epsilon0<scalar_t>())
+        logger.info("residual=", lstats.m_residual, ",success=", lstats.m_success ? 'y' : 'n', ".\n");
+        if (!lstats.m_success)
         {
             break;
         }

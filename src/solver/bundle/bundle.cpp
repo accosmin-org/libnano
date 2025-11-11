@@ -2,9 +2,6 @@
 #include <nano/function/cuts.h>
 #include <solver/bundle/bundle.h>
 
-#include <iomanip>
-#include <iostream>
-
 using namespace nano;
 
 namespace
@@ -140,13 +137,12 @@ const bundle_t::solution_t& bundle_t::do_solve(const scalar_t tau, const scalar_
     const auto state = m_solver->minimize(m_program, m_wlevel, logger);
     if (state.status() != solver_status::kkt_optimality_test)
     {
-        std::cout << std::setprecision(20) << std::endl;
-        std::cout << "Q=" << m_program.Q() << std::endl;
-        std::cout << "c=" << m_program.c() << std::endl;
-        std::cout << "G=" << bundleG << std::endl;
-        std::cout << "F=" << bundleF << std::endl;
-        std::cout << "w=" << m_wlevel << std::endl;
-        std::cout << "l=" << level << std::endl << std::endl;
+        logger.info("Q=", m_program.Q(), "\n");
+        logger.info("c=", m_program.c(), "\n");
+        logger.info("G=", bundleG, "\n");
+        logger.info("F=", bundleF, "\n");
+        logger.info("w=", m_wlevel, "\n");
+        logger.info("l=", level, "\n");
     }
 
     const auto& x = state.x();
