@@ -227,49 +227,10 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     const auto max_dstep = (m == 0) ? step0 : (step0 * make_umax(u, du));
     const auto max_pstep = (m == 0) ? step0 : (step0 * make_umax(y, dy));
 
-    const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
-
-    // dual residual
-    auto the_hx = matrix_t{2, 2};
-    if (m_Q.size() == 0)
+    const auto make_residual = [&](const scalar_t xstep, const scalar_t ystep, const scalar_t ustep,
+                                   const scalar_t vstep, const scalar_t wstep) -> scalar_t
     {
-        the_hx(0, 0) = 0.0;
-        the_hx(1, 0) = 0.0;
-    }
-    else
-    {
-        the_hx(0, 0) = 2.0 * (m_Q * dx).dot(m_Q * dx);
-        the_hx(1, 0) = 2.0 * (m_Q * dx).dot(m_A.transpose() * dv + m_G.transpose() * dw);
-    }
-    the_hx(0, 1) = the_hx(1, 0);
-    the_hx(1, 1) = 2.0 * (dw - du).dot(dw - du) +
-                   2.0 * (m_A.transpose() * dv + m_G.transpose() * dw).dot(m_A.transpose() * dv + m_G.transpose() * dw);
-
-    // primal residual
-    the_hx(0, 0) += 2.0 * (m_A * dx).dot(m_A * dx) + 2.0 * (m_G * dx + dy).dot(m_G * dx + dy);
-
-    // centering residual
-    if (m > 0)
-    {
-        the_hx(0, 1) += dy.dot(du);
-        the_hx(1, 0) += du.dot(dy);
-    }
-
-    const auto make_residual = [&](const vector_cmap_t xx, vector_map_t gx, matrix_map_t hx)
-    {
-        const auto xstep = xx(0);
-        const auto ystep = xx(0);
-        const auto ustep = xx(1);
-        const auto vstep = xx(1);
-        const auto wstep = xx(1);
-
-        if (xstep < 0.0 || xstep >= max_pstep ||
-            ustep < 0.0 || ustep >= max_dstep)
-        {
-            return std::numeric_limits<scalar_t>::quiet_NaN();
-        }
-
-        auto fx = 0.0;
+        auto residual = 0.0;
 
         // dual residual
         if (m_Q.size() == 0)
@@ -284,68 +245,53 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
         m_rdual.segment(0, n) += m_G.transpose() * (w + wstep * dw);
         m_rdual.segment(n, m) = (w + wstep * dw) - (u + ustep * du);
 
-        fx += m_rdual.segment(0, n).squaredNorm();
-        fx += m_rdual.segment(n, m).squaredNorm();
-
-        if (gx.size() == xx.size())
-        {
-            if (m_Q.size() == 0)
-            {
-                gx(0) = 0.0;
-            }
-            else
-            {
-                gx(0) = 2.0 * m_rdual.segment(0, n).dot(m_Q * dx);
-            }
-            gx(1) = 2.0 * m_rdual.segment(0, n).dot(m_A.transpose() * dv + m_G.transpose() * dw) +
-                    2.0 * m_rdual.segment(n, m).dot(dw - du);
-        }
+        residual += m_rdual.squaredNorm();
 
         // primal residual
         m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
         m_rprim.segment(p, m) = m_G * (x + xstep * dx) + (y + ystep * dy) - m_h;
 
-        fx += m_rprim.squaredNorm();
-
-        if (gx.size() == xx.size())
-        {
-            gx(0) += 2.0 * m_rprim.segment(0, p).dot(m_A * dx) +
-                     2.0 * m_rprim.segment(p, m).dot(m_G * dx + dy);
-        }
+        residual += m_rprim.squaredNorm();
 
         // centering residual
         if (m > 0)
         {
-            fx += (y + ystep * dy).dot(u + ustep * du);
-
-            if (gx.size() == xx.size())
-            {
-                gx(0) += dy.dot(u + ustep * du);
-                gx(1) += du.dot(y + ystep * dy);
-            }
+            residual += (y + ystep * dy).dot(u + ustep * du);
         }
 
-        if (hx.rows() == xx.size() && hx.cols() == xx.size())
-        {
-            hx = the_hx;
-        }
-
-        return fx;
+        return residual;
     };
 
-    const auto solver = solver_t::all().get("newton");
-    solver->lsearchk("backtrack");
+    const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
+    const auto max_iters = 100;
+    const auto beta      = 0.9;
+    const auto alpha     = 1e-6;
 
-    const auto function = make_function(2, convexity::no, smoothness::yes, 0.0, make_residual);
-    const auto x0       = make_vector<scalar_t>(0.9 * max_pstep, 0.9 * max_dstep);
-    const auto state    = solver->minimize(function, x0, logger);
+    auto stepX     = step0;
+    auto xstep     = max_pstep;
+    auto ystep     = max_pstep;
+    auto ustep     = max_dstep;
+    auto vstep     = max_dstep;
+    auto wstep     = max_dstep;
+    auto residualX = residual0;
 
-    const auto residual = state.fx();
-    const auto xstep    = state.x()(0);
-    const auto ystep    = state.x()(0);
-    const auto ustep    = state.x()(1);
-    const auto vstep    = state.x()(1);
-    const auto wstep    = state.x()(1);
+    for (auto iter = 0; iter < max_iters; ++iter)
+    {
+        residualX = make_residual(xstep, ystep, ustep, vstep, wstep);
+        logger.info("residual=", residual0, " (pstep=", xstep, ",dstep=", ustep, ") -> ", residualX, ".\n");
+
+        if (residualX < (1.0 - stepX * alpha) * residual0)
+        {
+            break;
+        }
+
+        stepX *= beta;
+        xstep *= beta;
+        ystep *= beta;
+        ustep *= beta;
+        vstep *= beta;
+        wstep *= beta;
+    }
 
     m_x.segment(0, n) = x + xstep * dx;
     m_x.segment(n, m) = y + ystep * dy;
@@ -353,83 +299,10 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
     m_v.segment(0, p) = v + vstep * dv;
     m_v.segment(p, m) = w + wstep * dw;
 
-    logger.info("residual=", residual0, "(pstep=", xstep, ",dstep=", ustep, ")->", residual, ".\n");
-
     update_original();
     update_residual();
 
-    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, residual, residual < residual0};
-
-    /*const auto max_iters     = 30;
-    const auto max_log_pstep = std::log10(pstep);
-    const auto max_log_dstep = std::log10(dstep);
-    const auto min_log_pstep = max_log_pstep - 4.0;
-    const auto min_log_dstep = max_log_dstep - 4.0;
-
-    auto best_residual   = std::numeric_limits<scalar_t>::max();
-    auto best_xstep      = 0.0;
-    auto best_ystep      = 0.0;
-    auto best_ustep      = 0.0;
-    auto best_vstep      = 0.0;
-    auto best_wstep      = 0.0;
-    auto best_log_pstep  = 0.5 * (min_log_pstep + max_log_pstep);
-    auto best_log_dstep  = 0.5 * (min_log_dstep + max_log_dstep);
-    auto delta_log_pstep = max_log_pstep - min_log_pstep;
-    auto delta_log_dstep = max_log_dstep - min_log_dstep;
-
-    const auto update_best = [&](const scalar_t log_pstep, const scalar_t log_dstep)
-    {
-        const auto xstep = std::min(std::pow(10.0, log_pstep), pstep);
-        const auto ystep = std::min(std::pow(10.0, log_pstep), pstep);
-        const auto ustep = std::min(std::pow(10.0, log_dstep), dstep);
-        const auto vstep = std::min(std::pow(10.0, log_dstep), dstep);
-        const auto wstep = std::min(std::pow(10.0, log_dstep), dstep);
-
-        if (const auto residual = this->residual(xstep, ystep, ustep, vstep, wstep); residual < best_residual)
-        {
-            best_residual  = residual;
-            best_xstep     = xstep;
-            best_ystep     = ystep;
-            best_ustep     = ustep;
-            best_vstep     = vstep;
-            best_wstep     = wstep;
-            best_log_pstep = log_pstep;
-            best_log_dstep = log_dstep;
-        }
-    };
-
-    for (auto iters = 0; iters < max_iters; ++ iters)
-    {
-        const auto ref_log_pstep = best_log_pstep;
-        const auto ref_log_dstep = best_log_dstep;
-
-        update_best(ref_log_pstep - 0.5 * delta_log_pstep, ref_log_dstep - 0.5 * delta_log_dstep);
-        update_best(ref_log_pstep - 0.5 * delta_log_pstep, ref_log_dstep + 0.0 * delta_log_dstep);
-        update_best(ref_log_pstep - 0.5 * delta_log_pstep, ref_log_dstep + 0.5 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.0 * delta_log_pstep, ref_log_dstep - 0.5 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.0 * delta_log_pstep, ref_log_dstep + 0.0 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.0 * delta_log_pstep, ref_log_dstep + 0.5 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.5 * delta_log_pstep, ref_log_dstep - 0.5 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.5 * delta_log_pstep, ref_log_dstep + 0.0 * delta_log_dstep);
-        update_best(ref_log_pstep + 0.5 * delta_log_pstep, ref_log_dstep + 0.5 * delta_log_dstep);
-
-        logger.info("residual=", residual0, "(delta_log=", delta_log_pstep, ":", delta_log_dstep, ",iters=", iters, ")->", best_residual, ".\n");
-
-        delta_log_pstep *= 0.5;
-        delta_log_dstep *= 0.5;
-    }
-
-    m_x.segment(0, n) = x + best_xstep * dx;
-    m_x.segment(n, m) = y + best_ystep * dy;
-    m_u               = u + best_ustep * du;
-    m_v.segment(0, p) = v + best_vstep * dv;
-    m_v.segment(p, m) = w + best_wstep * dw;
-
-    update_original();
-    update_residual();
-
-    return lsearch_stats_t{best_xstep, best_ystep, best_ustep, best_vstep, best_wstep, best_residual, best_residual < residual0};
-    */
+    return lsearch_stats_t{xstep, ystep, ustep, vstep, wstep, residualX, residualX < residual0};
 }
 
 void program_t::update_original()
