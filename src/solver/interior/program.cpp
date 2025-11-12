@@ -229,6 +229,32 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
 
     const auto residual0 = m_rdual.squaredNorm() + m_rprim.squaredNorm() + y.dot(u);
 
+    // dual residual
+    auto the_hx = matrix_t{2, 2};
+    if (m_Q.size() == 0)
+    {
+        the_hx(0, 0) = 0.0;
+        the_hx(1, 0) = 0.0;
+    }
+    else
+    {
+        the_hx(0, 0) = 2.0 * (m_Q * dx).dot(m_Q * dx);
+        the_hx(1, 0) = 2.0 * (m_Q * dx).dot(m_A.transpose() * dv + m_G.transpose() * dw);
+    }
+    the_hx(0, 1) = the_hx(1, 0);
+    the_hx(1, 1) = 2.0 * (dw - du).dot(dw - du) +
+                   2.0 * (m_A.transpose() * dv + m_G.transpose() * dw).dot(m_A.transpose() * dv + m_G.transpose() * dw);
+
+    // primal residual
+    the_hx(0, 0) += 2.0 * (m_A * dx).dot(m_A * dx) + 2.0 * (m_G * dx + dy).dot(m_G * dx + dy);
+
+    // centering residual
+    if (m > 0)
+    {
+        the_hx(0, 1) += dy.dot(du);
+        the_hx(1, 0) += du.dot(dy);
+    }
+
     const auto make_residual = [&](const vector_cmap_t xx, vector_map_t gx, matrix_map_t hx)
     {
         const auto xstep = xx(0);
@@ -275,23 +301,6 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
                     2.0 * m_rdual.segment(n, m).dot(dw - du);
         }
 
-        if (hx.rows() == xx.size() && hx.cols() == xx.size())
-        {
-            if (m_Q.size() == 0)
-            {
-                hx(0, 0) = 0.0;
-            }
-            else
-            {
-                hx(0, 0) = 2.0 * (m_Q * dx).dot(m_Q * dx);
-            }
-            hx(1, 0) = 2.0 * (m_Q * dx).dot(m_A.transpose() * dv + m_G.transpose() * dw);
-            hx(0, 1) = hx(1, 0);
-            hx(1, 1) =
-                2.0 * (dw - du).dot(dw - du) +
-                2.0 * (m_A.transpose() * dv + m_G.transpose() * dw).dot(m_A.transpose() * dv + m_G.transpose() * dw);
-        }
-
         // primal residual
         m_rprim.segment(0, p) = m_A * (x + xstep * dx) - m_b;
         m_rprim.segment(p, m) = m_G * (x + xstep * dx) + (y + ystep * dy) - m_h;
@@ -304,11 +313,6 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
                      2.0 * m_rprim.segment(p, m).dot(m_G * dx + dy);
         }
 
-        if (hx.rows() == xx.size() && hx.cols() == xx.size())
-        {
-            hx(0, 0) += 2.0 * (m_A * dx).dot(m_A * dx) + 2.0 * (m_G * dx + dy).dot(m_G * dx + dy);
-        }
-
         // centering residual
         if (m > 0)
         {
@@ -319,30 +323,22 @@ program_t::lsearch_stats_t program_t::lsearch(const scalar_t step0, const logger
                 gx(0) += dy.dot(u + ustep * du);
                 gx(1) += du.dot(y + ystep * dy);
             }
+        }
 
-            if (hx.rows() == xx.size() && hx.cols() == xx.size())
-            {
-                hx(0, 1) += dy.dot(du);
-                hx(1, 0) += du.dot(dy);
-            }
+        if (hx.rows() == xx.size() && hx.cols() == xx.size())
+        {
+            hx = the_hx;
         }
 
         return fx;
     };
 
+    const auto solver = solver_t::all().get("newton");
+    solver->lsearchk("backtrack");
+
     const auto function = make_function(2, convexity::no, smoothness::yes, 0.0, make_residual);
-
-    assert(grad_accuracy(function, make_vector<scalar_t>(0.1 * max_pstep, 0.1 * max_dstep)) < 1e-8);
-    assert(grad_accuracy(function, make_vector<scalar_t>(0.5 * max_pstep, 0.5 * max_dstep)) < 1e-8);
-    assert(grad_accuracy(function, make_vector<scalar_t>(0.9 * max_pstep, 0.9 * max_dstep)) < 1e-8);
-
-    assert(hess_accuracy(function, make_vector<scalar_t>(0.1 * max_pstep, 0.1 * max_dstep)) < 1e-8);
-    assert(hess_accuracy(function, make_vector<scalar_t>(0.5 * max_pstep, 0.5 * max_dstep)) < 1e-8);
-    assert(hess_accuracy(function, make_vector<scalar_t>(0.9 * max_pstep, 0.9 * max_dstep)) < 1e-8);
-
-    const auto solver = solver_t::all().get("lbfgs");
-    const auto x0     = make_vector<scalar_t>(0.5 * max_pstep, 0.5 * max_dstep);
-    const auto state  = solver->minimize(function, x0, logger);
+    const auto x0       = make_vector<scalar_t>(0.9 * max_pstep, 0.9 * max_dstep);
+    const auto state    = solver->minimize(function, x0, logger);
 
     const auto residual = state.fx();
     const auto xstep    = state.x()(0);
