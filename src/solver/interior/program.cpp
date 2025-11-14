@@ -1,10 +1,7 @@
-#include <nano/solver.h>
-#include <nano/tensor/stack.h>
-#include <nano/function/util.h>
-#include <nano/function/lambda.h>
-#include <solver/interior/util.h>
-#include <solver/interior/program.h>
 #include <Eigen/IterativeLinearSolvers>
+#include <nano/tensor/stack.h>
+#include <solver/interior/program.h>
+#include <solver/interior/util.h>
 #include <unsupported/Eigen/IterativeSolvers>
 
 using namespace nano;
@@ -125,36 +122,41 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lsol(n() + p())
     , m_miu(miu)
 {
-    assert(m_Q.size() == 0 || m_Q.rows() == n());
-    assert(m_Q.size() == 0 || m_Q.cols() == n());
+    const auto n = this->n();
+    const auto m = this->m();
+    const auto p = this->p();
 
-    assert(m_c.size() == n());
+    assert(m_Q.size() == 0 || m_Q.rows() == n);
+    assert(m_Q.size() == 0 || m_Q.cols() == n);
 
-    assert(m_A.rows() == p());
-    assert(m_A.cols() == n());
-    assert(m_b.size() == p());
+    assert(m_c.size() == n);
 
-    assert(m_G.rows() == m());
-    assert(m_G.cols() == n());
-    assert(m_h.size() == m());
+    assert(m_A.rows() == p);
+    assert(m_A.cols() == n);
+    assert(m_b.size() == p);
+
+    assert(m_G.rows() == m);
+    assert(m_G.cols() == n);
+    assert(m_h.size() == m);
 
     ::nano::modified_ruiz_equilibration(m_dQ, m_Q, m_c, m_dG, m_G, m_h, m_dA, m_A, m_b);
 
-    m_x.segment(0, n())           = x0.vector();
-    m_x.segment(n(), m()).array() = 1.0; // FIXME: have it parametrizable
-    m_u.array()                   = 1.0; // FIXME: have it parametrizable
+    // initialize: see (2), p. 613, u = -1 / (G * x - h) = 1 / y
+    m_x.segment(0, n)         = x0.vector();
+    m_x.segment(n, m).array() = (m_h - m_G * x0).array().abs().max(1.0);
+    m_u.array()               = 1.0 / m_x.segment(n, m).array();
 
     update_original();
     update_residual();
 
-    // FIXME: heuristic page 485 (numerical optimization book) to initialize (y, u)
-    /*solve();
+    // move towards the center of the feasibility set to improve convergence: see (1), p. 485
+    solve();
 
-    m_x.segment(n(), m()).array() = (m_x.segment(n(), m()).array() + m_dx.segment(n(), m()).array()).abs().max(1.0);
-    m_u.array()                   = (m_u.array() + m_du.array()).abs().max(1.0);
+    m_x.segment(n, m).array() = (m_x.segment(n, m).array() + m_dx.segment(n, m).array()).abs().max(1.0);
+    m_u.array()               = (m_u.array() + m_du.array()).abs().max(1.0);
 
     update_original();
-    update_residual();*/
+    update_residual();
 }
 
 program_t::solve_stats_t program_t::solve()

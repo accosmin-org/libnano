@@ -6,7 +6,7 @@ using namespace nano;
 solver_ipm_t::solver_ipm_t()
     : solver_t("ipm")
 {
-    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.99, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::tiny", 0.0, LT, 1e-24, LE, 1.0));
