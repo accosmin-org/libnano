@@ -92,7 +92,7 @@ public:
 
     ///
     /// \brief return the tolerance for the smeared gradient:
-    ///     |G_hat| <= epsilon * 1e+2 * (1 + |f(x_k)|).
+    ///     |G_hat| <= epsilon * (1 + |f(x_k)|).
     ///
     /// NB: this is different from any of the given references as (3) doesn't use a specific criterion,
     ///     while (1) uses `epsilon * sqrt(n)` which doesn't work for badly scaled problems.

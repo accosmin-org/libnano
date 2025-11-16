@@ -101,8 +101,9 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // stop if no significant improvement
-        if (lstats.m_residual < tiny)
+        if (lstats.m_residual < tiny || bstate.kkt_optimality_test() < tiny)
         {
+            logger.info("stopping as residual too small!\n");
             break;
         }
     }

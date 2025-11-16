@@ -22,8 +22,7 @@ UTEST_BEGIN_MODULE()
 
 UTEST_CASE(smooth_bundle)
 {
-    check_minimize(make_solvers(),
-                   function_t::make({4, 4, function_type::convex_smooth}, std::regex{"(trid|zakharov)"}));
+    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}));
 }
 
 /*UTEST_CASE(nonsmooth_bundle)

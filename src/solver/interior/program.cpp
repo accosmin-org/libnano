@@ -122,9 +122,9 @@ program_t::program_t(const function_t& function, matrix_t Q, vector_t c, linear_
     , m_lsol(n() + p())
     , m_miu(miu)
 {
-    const auto n = this->n();
-    const auto m = this->m();
-    const auto p = this->p();
+    [[maybe_unused]] const auto n = this->n();
+    [[maybe_unused]] const auto m = this->m();
+    [[maybe_unused]] const auto p = this->p();
 
     assert(m_Q.size() == 0 || m_Q.rows() == n);
     assert(m_Q.size() == 0 || m_Q.cols() == n);

@@ -71,7 +71,7 @@ scalar_t bundle_t::etol(const scalar_t epsilon) const
 
 scalar_t bundle_t::gtol(const scalar_t epsilon) const
 {
-    return epsilon * 1e+2 * (1.0 + std::fabs(m_fx));
+    return epsilon * (1.0 + std::fabs(m_fx));
 }
 
 void bundle_t::moveto(const vector_cmap_t y, const vector_cmap_t gy, const scalar_t fy)
