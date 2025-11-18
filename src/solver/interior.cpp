@@ -9,7 +9,8 @@ solver_ipm_t::solver_ipm_t()
     register_parameter(parameter_t::make_scalar("solver::ipm::s0", 0.0, LT, 0.9, LE, 1.0));
     register_parameter(parameter_t::make_scalar("solver::ipm::miu", 1.0, LT, 10.0, LE, 1e+6));
     register_parameter(parameter_t::make_scalar("solver::ipm::gamma", 0.0, LT, 2.0, LE, 5.0));
-    register_parameter(parameter_t::make_scalar("solver::ipm::tiny", 0.0, LT, 1e-24, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::tiny_res", 0.0, LT, 1e-24, LE, 1.0));
+    register_parameter(parameter_t::make_scalar("solver::ipm::tiny_kkt", 0.0, LT, 1e-18, LE, 1.0));
 
     parameter("solver::max_evals") = 100;
 }
@@ -53,8 +54,9 @@ solver_state_t solver_ipm_t::do_minimize(const function_t& function, const vecto
 solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& logger) const
 {
     const auto s0        = parameter("solver::ipm::s0").value<scalar_t>();
-    const auto tiny      = parameter("solver::ipm::tiny").value<scalar_t>();
     const auto gamma     = parameter("solver::ipm::gamma").value<scalar_t>();
+    const auto tiny_res  = parameter("solver::ipm::tiny_res").value<scalar_t>();
+    const auto tiny_kkt  = parameter("solver::ipm::tiny_kkt").value<scalar_t>();
     const auto max_evals = parameter("solver::max_evals").value<tensor_size_t>();
 
     const auto& function = program.function();
@@ -101,7 +103,7 @@ solver_state_t solver_ipm_t::do_minimize(program_t& program, const logger_t& log
         }
 
         // stop if no significant improvement
-        if (lstats.m_residual < tiny || bstate.kkt_optimality_test() < tiny)
+        if (lstats.m_residual < tiny_res || bstate.kkt_optimality_test() < tiny_kkt)
         {
             logger.info("stopping as residual too small!\n");
             break;
