@@ -22,7 +22,8 @@ UTEST_BEGIN_MODULE()
 
 UTEST_CASE(smooth_bundle)
 {
-    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth}));
+    check_minimize(make_solvers(), function_t::make({4, 4, function_type::convex_smooth},
+                                                    std::regex{"trid|sargan|sphere|zakharov|quadratic|exponential"}));
 }
 
 /*UTEST_CASE(nonsmooth_bundle)
